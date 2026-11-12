@@ -212,6 +212,39 @@ jobs:
           set -euo pipefail
           npx wrangler d1 migrations apply DB --remote --config wrangler.jsonc
 
+      # The egress Worker deploys only when its inputs change, so a deploy of
+      # the main Worker starts no needless container. A failure warns and
+      # keeps the last egress version serving.
+      - name: Deploy ChatGPT egress Worker
+        id: egress
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          EGRESS_CONFIG: worker/chatgpt-egress/wrangler.jsonc
+        run: |
+          set -euo pipefail
+          inputs=$({
+            git ls-files -s -- worker/chatgpt-egress tools/chatgpt-egress |
+              grep -vE '(\.test\.ts|README\.md)$'
+            node -p "require('./package-lock.json').packages['node_modules/@cloudflare/containers'].version"
+          } | sha256sum)
+          tag="egress-${inputs:0:16}"
+          deployed=''
+          if version=$(npx wrangler deployments status --config "$EGRESS_CONFIG" --json |
+            node -e 'let s="";process.stdin.on("data",(d)=>(s+=d)).on("end",()=>console.log(JSON.parse(s).versions[0].version_id))'); then
+            deployed=$(npx wrangler versions view "$version" --config "$EGRESS_CONFIG" --json |
+              node -e 'let s="";process.stdin.on("data",(d)=>(s+=d)).on("end",()=>console.log(JSON.parse(s).annotations?.["workers/tag"] ?? ""))') || deployed=''
+          fi
+          if [[ "$deployed" == "$tag" ]]; then
+            echo "The egress Worker is current: $tag."
+            echo 'result=current' >> "$GITHUB_OUTPUT"
+          elif npx wrangler deploy --config "$EGRESS_CONFIG" --tag "$tag" --message "main at $GITHUB_SHA"; then
+            echo 'result=deployed' >> "$GITHUB_OUTPUT"
+          else
+            echo '::warning::The ChatGPT egress Worker did not deploy. Its last version keeps serving. See docs/automatic-deploys.md#when-a-deploy-fails.'
+            echo 'result=failed' >> "$GITHUB_OUTPUT"
+          fi
+
       # Wrangler follows the build redirect to the built Worker.
       - name: Deploy Worker
         env:
@@ -331,12 +364,14 @@ jobs:
         env:
           ARCHIVE_URL: ${{ steps.runner.outputs.url }}
           PUBLISH_RESULT: ${{ steps.publish.outputs.result }}
+          EGRESS_RESULT: ${{ steps.egress.outputs.result }}
         run: |
           set -euo pipefail
           {
             printf 'Commit: %s\n\n' "$GITHUB_SHA"
             printf 'Runner archive: %s\n\n' "$ARCHIVE_URL"
-            printf 'Archive publish result: %s\n' "$PUBLISH_RESULT"
+            printf 'Archive publish result: %s\n\n' "$PUBLISH_RESULT"
+            printf 'ChatGPT egress Worker: %s\n' "$EGRESS_RESULT"
           } >> "$GITHUB_STEP_SUMMARY"
 
   software-image:

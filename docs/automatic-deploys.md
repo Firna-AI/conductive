@@ -70,6 +70,7 @@ account-owned token both work.
 | Workers R2 Storage Edit | Account | The account of the Worker | The upload of the runner archive |
 | Workers Routes Edit | Zone | `conductive.page` | The route `*.conductive.page/*` |
 | Zone Read | Zone | `conductive.page` | Wrangler finds the zone of that route by its name |
+| Containers Edit | Account | The account of the Worker | The image and the instances of the [ChatGPT egress Worker](../worker/chatgpt-egress/README.md) |
 
 - With Workers Routes Edit on all zones of the account, Wrangler sets the
   route in one call and needs no Zone Read.
@@ -108,14 +109,22 @@ Each run takes these steps, in this order:
    says.
 5. It applies the D1 migrations with
    `npx wrangler d1 migrations apply DB --remote --config wrangler.jsonc`.
-6. It makes a new random deploy token, and deploys the Worker with
+6. It deploys the [ChatGPT egress Worker](../worker/chatgpt-egress/README.md)
+   with Docker, when its inputs changed. The inputs are the files of
+   `worker/chatgpt-egress` and `tools/chatgpt-egress` without the tests
+   and the README, and the version of `@cloudflare/containers`. The step
+   compares a hash of the inputs with the tag of the deployed version, and
+   tags the new version with that hash. A failure of this deploy gives a
+   warning and does not stop the run. The last egress version then keeps
+   serving.
+7. It makes a new random deploy token, and deploys the Worker with
    `npx wrangler deploy`. Two `--var` options set the runner variables to
    the archive. A third sets the SHA-256 digest of the token. The deploy
    also publishes the model list and app default from `wrangler.jsonc`.
-7. It checks that `https://app.conductive.build/api/health` answers
+8. It checks that `https://app.conductive.build/api/health` answers
    `{"status":"ok"}`. When that answer does not come within about a
    minute, the run fails.
-8. It asks the Worker for the
+9. It asks the Worker for the
    [software image](protocol/org-image.md#the-software-image) of the new
    version, with the deploy token, and waits for it for up to 15 minutes.
    The log of the run shows the output of the build. When the image of
@@ -123,8 +132,8 @@ Each run takes these steps, in this order:
    not ready at the end of the step, a later job fails the run, and the
    summary names the cause.
 
-A failed step stops the run. An app build error stops the run before it
-changes anything live.
+A failed step stops the run, except a failed deploy of the egress Worker.
+An app build error stops the run before it changes anything live.
 
 - The `--var` options set only `CONDUCTIVE_RUNNER_ARCHIVE_URL`,
   `CONDUCTIVE_RUNNER_ARCHIVE_SHA256`, and `CONDUCTIVE_DEPLOY_TOKEN_SHA256`.
@@ -137,7 +146,8 @@ changes anything live.
 - The deploy tags the new Worker version with the short commit hash. So
   the Cloudflare dashboard shows which commit is live.
 - The summary of each run names the commit, the archive URL, whether the
-  run uploaded the archive, and the result of the software image.
+  run uploaded the archive, the result of the egress deploy, and the result
+  of the software image.
 - The health route reads no D1 data and gives no version. So the check
   proves only that the Worker answers. Wrangler names the deployed version
   in the log of the run.
@@ -145,6 +155,11 @@ changes anything live.
 ## When a deploy fails
 
 A failed run does not roll back.
+
+- A failed deploy of the egress Worker warns, and the run goes on. The
+  last egress version keeps serving the ChatGPT requests. The next run
+  with a change to its inputs tries again. A missing Containers Edit
+  permission is the usual cause.
 
 - A run can fail after the new Worker is live, when its software image is
   not ready at the end of the wait. The Worker stays live. Builds of an

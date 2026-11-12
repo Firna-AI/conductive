@@ -14,12 +14,15 @@ turns, or the ChatGPT sign-in flow on `auth.openai.com`.
 
 ## Decisions
 
-- **User decision, 12 November 2026, on decision 3:** deploy the egress
+- **User decision, 12 November 2026, egress decision 3:** deploy the egress
   Worker automatically, and let open streams finish when a container is
   replaced. This is option G below. Alternatives: options A to F. Reason:
   a manual deploy can drift from `main`, and a deploy must not cut
   answers.
-- **User decision, 11 November 2026:** host the proxy in a Cloudflare
+- **User decision, 12 November 2026, egress decision 4:** retire the Mac
+  proxy after one day of good container traffic, and keep the address
+  path in the code. This is option B below.
+- **User decision, 11 November 2026, egress decision 1:** host the proxy in a Cloudflare
   Container. Alternatives: keep the Mac proxy, a dedicated Boat sandbox,
   or Google Cloud Run. Reason: the product already runs on Cloudflare. The
   tests of the same day support it:
@@ -59,8 +62,13 @@ turns, or the ChatGPT sign-in flow on `auth.openai.com`.
 - **My call, 12 November 2026:** the deploy run deploys the egress Worker
   only when a hash of its inputs differs from the tag of the deployed
   version. The inputs are the egress Worker code, the proxy, the
-  Dockerfile, and the lock file. Reason: a deploy with no change would
-  still start a new instance, and a CI image build can change its digest.
+  Dockerfile, and the version of `@cloudflare/containers` in the lock
+  file. Reason: a deploy with no change would still start a new instance,
+  and a CI image build can change its digest.
+- **My call, 12 November 2026:** a failed deploy of the egress Worker
+  gives a warning, and the run goes on to deploy the main Worker. Reason:
+  the last egress version keeps serving, and the repository rules prefer a
+  warning for a failure that the service survives.
 
 ### 3. How the egress Worker deploys
 
@@ -170,6 +178,7 @@ turns, or the ChatGPT sign-in flow on `auth.openai.com`.
   fastest fallback. E best protects the codebase.
 - **Action:** ask the user, because the options change production
   settings and your Mac.
+- **Outcome:** the user chose B on 12 November 2026.
 
 Contract owners:
 
@@ -185,47 +194,56 @@ Depends on: none
 The docs state where ChatGPT requests leave Cloudflare, and that the
 container sees the login only in transit.
 
-- [ ] `docs/protocol/model-gateway.md`: requests to `chatgpt.com` leave
+- [x] `docs/protocol/model-gateway.md`: requests to `chatgpt.com` leave
       from a container that the app's Cloudflare account owns, with no
       public address. Record the decision, the rejected hosts, and why a
       plain Worker cannot send them.
-- [ ] `docs/architecture/components.md`: add the egress Worker and its
+- [x] `docs/architecture/components.md`: add the egress Worker and its
       container.
-- [ ] `docs/architecture/data-and-trust.md`: the container sees a ChatGPT
+- [x] `docs/architecture/data-and-trust.md`: the container sees a ChatGPT
       login only in transit and stores nothing.
-- [ ] Read the Terms page, the Privacy page, and each public guide in
+- [x] Read the Terms page, the Privacy page, and each public guide in
       full. Update each sentence that restates where model requests go.
+      No sentence changes: each says that model requests pass through
+      Conductive on Cloudflare, and the container is on the app's
+      Cloudflare account. The audit also moved three sentences of the
+      security guide about copied logins of an older computer out of its
+      ChatGPT paragraph, with no word changed.
+- [x] `docs/architecture/flows.md`: the ChatGPT requests pass through the
+      egress container.
 
 ## Milestone 2: Egress Worker
 
 Depends on: 1
 
-- [ ] Add `@cloudflare/containers` with `npm install`.
-- [ ] `tools/chatgpt-egress/proxy.ts`: a listen address setting, and a
-      private network setting that skips the secret check. Log an OpenAI
-      error reply only after the bearer token and the account ID of the
-      request are removed from it.
-- [ ] On `SIGTERM`, the proxy takes no new connection, lets each open
+- [x] Add `@cloudflare/containers` with `npm install`.
+- [x] `tools/chatgpt-egress/proxy.ts`: a listen address setting, and a
+      private network setting that skips the secret check. Log only the
+      method, the path, the status, and the duration, never a body or a
+      header value, as the protocol and the legal pages promise.
+- [x] On `SIGTERM`, the proxy takes no new connection, lets each open
       stream finish, and then exits. Test: an open stream finishes after
       `SIGTERM`, and a new connection is refused.
-- [ ] `tools/chatgpt-egress/Dockerfile`: Node 24, the proxy, the private
+- [x] `tools/chatgpt-egress/Dockerfile`: Node 24, the proxy, the private
       network setting, port 8080.
-- [ ] `worker/chatgpt-egress/`: the Worker, the Container class with the
+- [x] `worker/chatgpt-egress/`: the Worker, the Container class with the
       relay, version instances, its Wrangler config, and its README.
-- [ ] A unit test of the relay: bytes pass in order, and a closed client
+- [x] A unit test of the relay: bytes pass in order, and a closed client
       cancels the container read.
-- [ ] Typecheck, lint, format, file length, and the targeted tests.
+- [x] Typecheck, lint, format, file length, and the targeted tests.
+- [x] Add the proxy tests to the Vitest include list and the proxy to the
+      Node typecheck, and add the two new entry files to `knip.jsonc`.
 
 ## Milestone 3: Gateway binding
 
 Depends on: 2
 
-- [ ] `wrangler.jsonc`: the `CHATGPT_EGRESS` service binding.
-- [ ] `worker/env.ts` and `worker/model-gateway/egress.ts`: the binding
+- [x] `wrangler.jsonc`: the `CHATGPT_EGRESS` service binding.
+- [x] `worker/env.ts` and `worker/model-gateway/egress.ts`: the binding
       path, before the address path.
-- [ ] Add the binding case to `worker/model-gateway/egress.test.ts`.
-- [ ] Update the model gateway README.
-- [ ] `docs/deployment.md`: list the `CHATGPT_EGRESS` binding, and the
+- [x] Add the binding case to `worker/model-gateway/egress.test.ts`.
+- [x] Update the model gateway README.
+- [x] `docs/deployment.md`: list the `CHATGPT_EGRESS` binding, and the
       `CHATGPT_EGRESS_URL` and `CHATGPT_EGRESS_SECRET` settings of PR #259.
 
 ## Milestone 4: Automatic deploy
@@ -234,10 +252,10 @@ Depends on: 2
 
 - [ ] Cal: give the deploy token of the `production` environment the
       Containers permission. This blocks the first automatic deploy.
-- [ ] `.github/workflows/deploy.yml`: before the main Worker, hash the
+- [x] `.github/workflows/deploy.yml`: before the main Worker, hash the
       egress inputs, and deploy the egress Worker when the hash differs
       from the tag of its deployed version.
-- [ ] Update `docs/automatic-deploys.md`.
+- [x] Update `docs/automatic-deploys.md`.
 
 ## Milestone 5: Deploy and verify
 
@@ -269,4 +287,7 @@ Depends on: every other milestone
 
 ## Post-merge follow-up (non-blocking)
 
-- [ ] Apply the answer to decision 4 after one day of container traffic.
+- [ ] After one day of good container traffic, retire the Mac proxy, as
+      egress decision 4 says: delete `CHATGPT_EGRESS_URL` and
+      `CHATGPT_EGRESS_SECRET` from the Worker, stop the two Mac services,
+      and delete the tunnel and its DNS name.

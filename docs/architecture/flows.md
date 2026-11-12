@@ -29,8 +29,9 @@ record, as [Decision numbers](../architecture.md#decision-numbers) says.
 3. The agent sends each model request to the model gateway of the Worker,
    with the turn token. The gateway checks the token with the Durable
    Object, adds the agent login of the starter, and streams the answer of
-   Anthropic or OpenAI back. A settings file in the repository can send
-   the requests of Claude to another address, as
+   Anthropic or OpenAI back. The requests of a ChatGPT sign-in pass
+   through the egress container on their way to OpenAI. A settings file
+   in the repository can send the requests of Claude to another address, as
    [How the agents reach the gateway](../protocol/model-gateway.md#how-the-agents-reach-the-gateway)
    says. With a runner of version 1, the agent sends its model requests
    to the provider itself.

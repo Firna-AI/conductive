@@ -1,0 +1,28 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "conductive-chatgpt-egress",
+  "main": "./index.ts",
+  "compatibility_date": "2026-11-06",
+  // Only the main Worker reaches this Worker, through its service binding.
+  "workers_dev": false,
+  "preview_urls": false,
+  "version_metadata": { "binding": "VERSION" },
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+    "redact_query_string": true,
+  },
+  "containers": [
+    {
+      "class_name": "ChatGptEgress",
+      "image": "../../tools/chatgpt-egress/Dockerfile",
+      "instance_type": "lite",
+      // A new version starts its own instance while an old one drains.
+      "max_instances": 5,
+    },
+  ],
+  "durable_objects": {
+    "bindings": [{ "name": "EGRESS", "class_name": "ChatGptEgress" }],
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["ChatGptEgress"] }],
+}

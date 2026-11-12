@@ -32,6 +32,7 @@
     "runner:test": "npm --prefix runner run test"
   },
   "dependencies": {
+    "@cloudflare/containers": "^0.3.7",
     "@firna/ui": "4.0.0",
     "@lexical/react": "0.53.0",
     "@xterm/addon-fit": "^0.11.0",
