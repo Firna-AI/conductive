@@ -6,6 +6,8 @@ export const PROXY_IMAGE = 'proxy'
 const IDLE_MS = 15 * 60 * 1000
 const READY_TRIES = 100
 const READY_WAIT_MS = 200
+// A probe of a port that is not open yet can hang, so each probe has a limit.
+const READY_PROBE_MS = 1000
 
 /** The members of a container that the egress Worker uses. */
 interface ProxyContainer {
@@ -64,7 +66,9 @@ export function proxyStarter(
     const port = container.getTcpPort(PROXY_PORT)
     for (let attempt = 1; ; attempt++) {
       try {
-        const answer = await port.fetch('http://proxy/ready')
+        const answer = await port.fetch('http://proxy/ready', {
+          signal: AbortSignal.timeout(READY_PROBE_MS),
+        })
         await answer.body?.cancel()
         listening = true
         return
