@@ -15,7 +15,6 @@ import { PrivatePorts } from './ports'
 import { PreviewRegistry } from './registry'
 import { PreviewTiming, SERVER_TIMING_HEADER } from './timing'
 import { bridgeSocket } from './socket'
-import { readPreviewAccess } from './viewer-access'
 import type { ToolDependencies } from './types'
 
 export class PreviewProxy {
@@ -88,22 +87,23 @@ export class PreviewProxy {
         url.hostname,
         this.dependencies.now(),
       )
-      const row = identity
-        ? await timing.step('access', () =>
-            readPreviewAccess(this.env, identity, this.dependencies.now()),
-          )
-        : null
-      if (!identity || !row)
+      if (!identity)
         throw new HttpError(
           404,
           'preview_not_found',
           'The preview is not available.',
         )
-      const scope = this.registry.get(row, identity)
-      connection = scope.connect()
+      const scope = this.registry.get(identity)
+      const active = scope.connect()
+      connection = active
+      // One read checks the viewer before the sandbox call. It also covers the window that follows.
+      const row = await timing.step('access', () => scope.access(active))
+      const ready = this.ports.isReady(row)
       const port = await timing.step('relay', () => this.ports.get(row))
       recordActivity(this.dependencies, row.workspaceId)
-      await timing.step('check', scope.authorize)
+      // A relay lookup that called the provider can outlast a sandbox change, so it needs a new read.
+      if (!ready) scope.refresh()
+      await timing.step('check', active.authorize)
       let upstream: Response
       try {
         const outgoing = portRequest(request, port, row.port, {
@@ -123,7 +123,7 @@ export class PreviewProxy {
         upstream.webSocket?.close(1008, 'Connection closed.')
         throw new ProviderError('unavailable', 503)
       }
-      await timing.step('check-after', scope.authorize)
+      await timing.step('check-after', active.authorize)
       const headers = portResponseHeaders(upstream, request, port, row.port)
       // Only a reply that passed every check gets timings, so no refusal shows its reason.
       headers.set(SERVER_TIMING_HEADER, timing.header())
@@ -144,7 +144,7 @@ export class PreviewProxy {
         }
         const bridge = bridgeSocket(upstream, this.dependencies, {
           headers,
-          authorize: scope.authorize,
+          authorize: active.authorize,
           onClose: () => connection?.close(),
         })
         connection.watch(bridge.close)
