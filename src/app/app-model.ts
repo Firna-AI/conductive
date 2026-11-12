@@ -19,7 +19,7 @@ import { failedBoot, readShared, type Boot } from './boot'
 import { InvitationsModel } from './invitations-model'
 import { OrgList } from './org-list'
 import { OrgModel } from './org-model'
-import { suspendedOrg } from './permissions'
+import { OrgSuspensions } from './org-suspensions'
 import type { AppServices } from './services'
 import { setupSteps } from './setup-steps'
 import { Store, type Readable } from './store'
@@ -37,13 +37,13 @@ export class AppModel {
   private readonly orgList = new OrgList()
   /** The orgs of the person in their own order, as `OrgList` says. */
   readonly orgs: Readable<readonly OrgSummary[]> = this.orgList
+  /** The suspension of each org, from its summary and the API's refusals. */
+  private readonly suspensions = new OrgSuspensions(this.orgs)
   /**
-   * The orgs whose requests the API refused with `org_suspended`. Such a
-   * refusal shows that the org is suspended, also while its summary is old.
-   * It gives no time of the suspension, so the summary stays as the server
-   * sent it.
+   * The orgs whose requests the API refused with `org_suspended`, as
+   * `OrgSuspensions.refused` says.
    */
-  readonly refusedOrgs = new Store<ReadonlySet<string>>(new Set())
+  readonly refusedOrgs: Readable<ReadonlySet<string>> = this.suspensions.refused
   /**
    * The org that the person opened last in this tab, also a deleted one.
    * A page without an org works on it, as `keptOrg` says. The tab keeps it
@@ -183,7 +183,7 @@ export class AppModel {
     let model = this.orgModels.get(orgId)
     if (!model) {
       model = new OrgModel(this.services, orgId, {
-        suspended: suspendedOrg(orgId, this.orgs, this.refusedOrgs),
+        suspended: this.suspensions.suspended(orgId),
         note: () => this.noteSuspended(orgId),
       })
       this.orgModels.set(orgId, model)
@@ -203,14 +203,11 @@ export class AppModel {
   }
 
   /**
-   * Takes a refusal with `org_suspended` for one of the org's requests, also
-   * while the org list still shows the org in use. So a page with an old
-   * org list shows the suspended org at once, and keeps it after an owner
-   * change of a workspace.
+   * Takes a refusal with `org_suspended` for one of the org's requests, as
+   * `OrgSuspensions.note` says.
    */
   noteSuspended(orgId: string): void {
-    const refused = this.refusedOrgs.get()
-    if (!refused.has(orgId)) this.refusedOrgs.set(new Set([...refused, orgId]))
+    this.suspensions.note(orgId)
   }
 
   /**
