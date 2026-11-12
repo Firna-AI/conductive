@@ -55,9 +55,15 @@ This page lists each protocol doc and what it covers.
     - [Version pins](../protocol/version-pins.md): the login rules and the
       risks of each version pin.
   - [Tokens and secrets](../protocol/tokens-and-secrets.md)
+    - [Own endpoint logins](../protocol/own-endpoint-logins.md): the
+      endpoint and the key of each agent, the model list of the endpoint,
+      and the addresses that the app accepts.
   - [Terminal, previews, and desktop](../protocol/terminal-previews-and-desktop.md)
 - [Model gateway](../protocol/model-gateway.md): the turn token, and the
   Worker routes that add the agent login to each model request.
+  - [Model gateway: requests and answers](../protocol/model-gateway-requests.md):
+    the upstream of each login, what passes to it and back, the own
+    endpoints, the streams, and the risks.
 - [GitHub banner](../protocol/github-banner.md): the pull request bar, its
   actions, Merge, and its events.
   - [The GitHub state](../protocol/github-summary.md): the four summary

@@ -134,9 +134,10 @@ describe('the Connect form of Codex', () => {
       first: [
         { kind: 'API key', selected: true },
         { kind: 'ChatGPT plan', selected: false },
+        { kind: 'Own endpoint', selected: false },
       ],
       intro: {
-        item: `Codex API key ChatGPT plan ${copy.intro} ${copy.settingsLink.label} Cancel ${copy.getCode}`,
+        item: `Codex API key ChatGPT plan Own endpoint ${copy.intro} ${copy.settingsLink.label} Cancel ${copy.getCode}`,
         settings: [copy.settingsLink.href, '_blank'],
       },
       code: {

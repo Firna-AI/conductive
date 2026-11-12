@@ -15,7 +15,10 @@ It checks the plain message of a refused retry in a tab that missed newer events
 `state/linked-replies.test.tsx` drives replies of Send and Try again that
 name a linked session, in both orders, and two chats with different readers
 on one fake stream. `components/SessionLogin.test.tsx` renders the login
-label and its notices. `components/SourceLink.dom.test.tsx` presses the link
+label and its notices. `components/ComposerModels.dom.test.tsx` opens the
+model picker of a reader whose own endpoint list leaves models out, in the
+reader's own session, in the session of another member, and before a
+message that starts a linked session. `components/SourceLink.dom.test.tsx` presses the link
 of a linked session to its open and its closed source. In an archived
 workspace, it opens a linked session that closed before the archive from the
 session history. Its source link writes nothing.

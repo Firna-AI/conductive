@@ -1,6 +1,6 @@
 import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 import type { Agent } from '../../src/shared/agents'
-import type { RunnerLoginKind } from '../../src/shared/runner'
+import type { AgentLoginKind } from '../chat/login-kind'
 
 export const codexTokenPaths = {
   bundle: '/backend-api/wham/config/bundle',
@@ -26,7 +26,7 @@ export function allowedModelRoute(
   agent: Agent,
   method: string,
   path: string,
-  kind?: RunnerLoginKind['kind'],
+  kind?: AgentLoginKind['kind'],
 ) {
   if (agent === 'claude')
     return (
@@ -35,7 +35,7 @@ export function allowedModelRoute(
     )
   if (kind !== 'token' && method === 'POST' && path === '/responses')
     return true
-  if (kind === 'api-key') return false
+  if (kind !== undefined && kind !== 'token') return false
   return method === 'POST'
     ? path === codexTokenPaths.responses
     : method === 'GET' &&

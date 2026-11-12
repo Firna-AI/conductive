@@ -22,6 +22,11 @@ message:
   claims for its temporary login file. It has no `login`.
 - `RunnerMessageDuringTurnV2` carries no credential and no login.
 
+`RunnerTurnCredential.promptCacheTtl` is optional and accepts only `'1h'`.
+The Worker sets it only for Claude own endpoint turns, which keep the `api-key` kind.
+The runner ignores unknown values. An older runner ignores the field.
+Neither requires a new protocol version.
+
 `RunnerTurn`, `RunnerMessageDuringTurn`, `RunnerCommand`, and
 `WorkspaceToRunner` cover both versions. Their `V1` and `V2` forms give the
 shapes of one version. The runner imports the `V2` forms and uses

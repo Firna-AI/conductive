@@ -34,7 +34,7 @@ Each path is relative to `src/app/`, the folder of this page.
   app and the Mac app keep their transport. Its `sendFile` sends a raw file
   through the file transport of the services: `api/xhr-files.ts` in the
   browser and in the Mac app. `api/read-*.ts`: the readers.
-  [api/read-core.ts](api/read-core.ts) reads both shortcut keyboards and
+  [api/read-shortcuts.ts](api/read-shortcuts.ts) reads both shortcut keyboards and
   the reply of a shortcut save with the shared reply readers. A malformed
   account structure remains an `invalid_response` error from the API
   client.
@@ -114,7 +114,10 @@ Each path is relative to `src/app/`, the folder of this page.
   default model, the New workspace view, the shortcut changes of each
   keyboard, the GitHub App installations, and the repositories that
   Create org offers. `saveShortcuts` saves one batch of changes for one
-  keyboard and keeps the confirmed changes of the reply. A screen watches the
+  keyboard and keeps the confirmed changes of the reply. The save of an own endpoint
+  login and `refreshModels` read the account again for the model list of
+  the endpoint, which only the account holds. A later change of the same
+  login makes that read old, so it does not show. A screen watches the
   installations: they read at once, and again with the steps of Get started
   each time that the user comes back to the page. It also reads the
   waitlist state for the invite code of the account.

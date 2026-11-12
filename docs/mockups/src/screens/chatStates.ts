@@ -31,7 +31,8 @@ export const tabStates = [
  * stay out of the message. `workspace-link` holds a message with a pasted
  * link to another workspace of the org, which shows as a chip.
  * `session-link` holds pasted links to two sessions, which show as session
- * chips.
+ * chips. `picker-unlisted` opens the picker on an own endpoint whose model
+ * list lacks a model.
  *
  * The `mention-` states open the list of `@`: with a query, without one,
  * with no match, while the tree loads, and with no tree. `file-chips` holds
@@ -54,6 +55,7 @@ export const composerStates = [
   'upload-failed',
   'too-large',
   'picker',
+  'picker-unlisted',
   'no-agent',
   'no-starter-login',
   'not-shared',

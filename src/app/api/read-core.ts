@@ -21,12 +21,6 @@ import type { MessageSender } from '../../shared/messages'
 import type { GetStartedResponse } from '../../shared/onboarding'
 import type { OrgSummary } from '../../shared/orgs'
 import type { Section } from '../../shared/sections'
-import { ShortcutContractError } from '../../shared/shortcut-key'
-import {
-  readSaveShortcutsResponse,
-  readShortcutPreferences,
-} from '../../shared/shortcut-read'
-import type { SaveShortcutsResponse } from '../../shared/shortcuts'
 import { getStartedOrder } from '../get-started'
 import {
   choice,
@@ -36,10 +30,11 @@ import {
   maybeNested,
   maybeText,
   nested,
-  ParseError,
   record,
   text,
+  texts,
 } from './parse'
+import { readShortcuts } from './read-shortcuts'
 
 export const AGENTS = ['claude', 'codex'] as const satisfies readonly Agent[]
 export const EFFORTS = [
@@ -135,6 +130,27 @@ export function readLogin(value: unknown): AgentLoginStatus {
   if (!flag(login, 'connected')) return { agent, connected: false }
   const updatedAt = count(login, 'updatedAt')
   const noReuse = flag(login, 'noReuse')
+  if (login.kind === 'endpoint') {
+    return {
+      agent,
+      connected: true,
+      kind: 'endpoint',
+      host: text(login, 'host'),
+      ...(login.modelList === undefined
+        ? {}
+        : {
+            modelList: nested(login, 'modelList', (value) => {
+              const list = record(value, 'endpoint model list')
+              return {
+                missing: texts(list, 'missing'),
+                checkedAt: count(list, 'checkedAt'),
+              }
+            }),
+          }),
+      noReuse,
+      updatedAt,
+    }
+  }
   return {
     agent,
     connected: true,
@@ -199,26 +215,6 @@ export function readCodexDevicePoll(value: unknown): PollCodexDeviceResponse {
     case 'failed':
       return { state, cause: text(poll, 'cause') }
   }
-}
-
-/** A shared shortcut reader whose contract error is a parse error of the reply. */
-function shortcutReply<T>(read: (value: unknown) => T, value: unknown): T {
-  try {
-    return read(value)
-  } catch (error) {
-    if (error instanceof ShortcutContractError)
-      throw new ParseError(error.message)
-    throw error
-  }
-}
-
-function readShortcuts(value: unknown) {
-  return shortcutReply(readShortcutPreferences, value)
-}
-
-/** The confirmed changes of the keyboard that a shortcut save saved. */
-export function readSavedShortcuts(value: unknown): SaveShortcutsResponse {
-  return shortcutReply(readSaveShortcutsResponse, value)
 }
 
 export function readAccount(value: unknown): AccountResponse {

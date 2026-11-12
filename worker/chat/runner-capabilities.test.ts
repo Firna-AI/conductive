@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
+import { agentLoginPath } from '../../src/shared/account'
 import { RUNNER_SUPPORTED_LOGIN_KINDS } from '../../src/shared/runner'
 import { codexTestTokens } from '../model-gateway/codex-login.test-support'
 import { encrypt } from '../security/crypto'
@@ -183,6 +184,79 @@ it('ends a running turn before refusing a later unsupported login and stops its 
     expect(messageCommands(runner, 'api-key-start')).toHaveLength(1)
     expect(messageCommands(runner, 'unsupported-message')).toEqual([])
     expect(await failedEnds(fixture, session.id)).toHaveLength(1)
+    await fixture.chat.closeConnections()
+  }
+})
+
+it('requires the API-key capability for an own endpoint and sends only its API-key turn credential', async () => {
+  const fixture = await createChatFixture(harness)
+  try {
+    const saved = await harness.request(
+      agentLoginPath('codex'),
+      fixture.ownerCookie,
+      {
+        method: 'PUT',
+        body: JSON.stringify({
+          agent: 'codex',
+          kind: 'endpoint',
+          endpoint: 'https://proxy.example.test/v1',
+          secret: 'endpoint-key-kept-in-worker',
+        }),
+      },
+    )
+    expect(saved.status).toBe(200)
+    const session = await fixture.createSession(CODEX)
+    await fixture.send(
+      session.id,
+      'unsupported-endpoint',
+      fixture.ownerCookie,
+      CODEX,
+    )
+    const incompatible = new FakeRunner({
+      workspaceId: WORKSPACE_ID,
+      protocolVersion: 2,
+      loginKinds: [{ agent: 'codex', kind: 'token' }],
+    })
+    incompatible.emit({ type: 'runner.ready' })
+    await fixture.connect(incompatible)
+    expect(incompatible.commands).toEqual([])
+    expect(
+      (await failedEnds(fixture, session.id)).map(({ error }) => error),
+    ).toEqual([
+      {
+        code: 'agent_login_required',
+        message:
+          'This cloud computer cannot use this agent login. Ask an admin to build the org image again. Then start a new workspace.',
+      },
+    ])
+    const capable = new FakeRunner({
+      workspaceId: WORKSPACE_ID,
+      protocolVersion: 2,
+      streamId: 'endpoint-capable',
+      loginKinds: [{ agent: 'codex', kind: 'api-key' }],
+    })
+    capable.emit({ type: 'runner.ready' })
+    await fixture.connect(capable)
+    await fixture.send(
+      session.id,
+      'supported-endpoint',
+      fixture.ownerCookie,
+      CODEX,
+    )
+    expect(messageCommands(capable, 'supported-endpoint')).toMatchObject([
+      {
+        type: 'turn',
+        credential: {
+          agent: 'codex',
+          kind: 'api-key',
+          token: expect.stringMatching(/^sk-/),
+        },
+      },
+    ])
+    expect(JSON.stringify(capable.received)).not.toMatch(
+      /endpoint-key-kept-in-worker|proxy\.example\.test/,
+    )
+  } finally {
     await fixture.chat.closeConnections()
   }
 })

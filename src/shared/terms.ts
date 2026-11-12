@@ -2,7 +2,7 @@ import { API_PATHS } from './api'
 import { INVITE_CODE_PARAMETER } from './waitlist'
 
 export const TERMS_VERSION =
-  '2026-11-11-codex-chatgpt-device-signin-agent-tools'
+  '2026-11-11-own-endpoints-codex-chatgpt-device-signin-agent-tools'
 export const TERMS_VERSION_PARAMETER = 'terms_version'
 
 export function acceptedTermsSignInPath(inviteCode?: string): string {

@@ -70,6 +70,7 @@ export const paths = {
   accountSetup: 'app/account/setup',
   connectClaude: 'app/account/connect-claude',
   connectCodex: 'app/account/connect-codex',
+  ownEndpointConnected: 'app/account/own-endpoint/connected',
   connectCodexChatGptCode: 'app/account/connect-codex/chatgpt/code',
   codexSignInAgain: 'app/account/codex-token/sign-in-again',
   codexSignInAgainCode: 'app/account/codex-token/sign-in-again-code',

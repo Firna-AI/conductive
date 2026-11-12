@@ -102,6 +102,9 @@ Without it, `fakeGitHubSummary` gives the summary of the banner and its checks, 
 The dev fake of `../app/dev/` uses `fakeGitHubSummary` too.
 Its seed makes `email-dark-mode` work without GitHub state, so its grey mark moves.
 Replace a reply to draw a missing login, a first run, or a deleted org.
+`endpointLoginFixtures(updatedAt)` in `fixtures/agent-logins.ts` supplies
+connected own endpoint metadata for both agents. The development seed uses
+it for `?login=endpoint`. The fixture holds no key or full address.
 The fake answers `GET /api/invites` with no invitations. A test sets its own list with `server.json`.
 `server.signIn(user)` serves the session of another person, with app access, as a sign-in of that person does.
 The session reply has app access, and `GET /api/waitlist` answers with `accessState` of `fixtures/waitlist.ts`: no pause, the waitlist on, and the invite code of the mockups with 2 of its 5 invites used.

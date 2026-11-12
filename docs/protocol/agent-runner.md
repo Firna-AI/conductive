@@ -105,6 +105,11 @@ the change that keeps a turn open for background work.
   [Agent logins in a sandbox](isolation.md#agent-logins-in-a-sandbox)
   says. A runner of version 2 or later gets a turn token in its place, as
   [The turn token](model-gateway.md#the-turn-token) says.
+- A turn on a Claude own endpoint login also asks the runner for a prompt
+  cache of 1 hour, as
+  [How the agents reach the gateway](model-gateway.md#how-the-agents-reach-the-gateway)
+  says. A runner that does not support this request ignores it. Claude
+  then asks for the default cache of about 5 minutes.
 - Each turn that the runner accepts gets exactly one end: `turn.completed`
   or `turn.failed`. This holds also when Stop, a shutdown, or a crash of
   the runner comes before the agent starts.

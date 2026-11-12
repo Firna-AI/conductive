@@ -190,6 +190,18 @@ Existing runs keep null because their original choice is not known.
 A null base branch uses the repository default branch.
 Existing rows keep that fallback.
 
+`202611101600_agent_login_endpoints.sql` rebuilds `agent_logins` to accept
+the `endpoint` kind for both agents. The nullable `endpoint_origin` column
+is required only for that kind. The full endpoint stays inside the
+ciphertext with its key. The rebuild copies every existing row, ciphertext,
+timestamp, and `no_reuse` choice. It also keeps Codex token rows and the
+refresh claim, claim expiry, and failure cause. Existing rows get a null origin.
+
+`202611110407_agent_login_models.sql` adds nullable endpoint model IDs,
+the last successful read time, the last attempt time, and an attempt ID to
+`agent_logins`. It alters the table without replacing or deleting rows.
+The attempt ID prevents a late response from overwriting a newer read.
+
 `202611101600_shortcuts.sql` adds `user_shortcuts`.
 Each row holds one account's changed command for one keyboard, with its
 ordered keys as JSON. An empty list keeps a command without keys.

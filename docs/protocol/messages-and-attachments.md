@@ -8,6 +8,8 @@ sessions, what the chat shows, and the events.
 message carries. The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
+says. An own endpoint decision number names a decision of the change that
+adds the own endpoint logins, as [Tokens and secrets](tokens-and-secrets.md)
 says.
 
 ## Messages
@@ -56,6 +58,10 @@ says.
 - When a message runs on the login of another member, the composer names
   that member inside the message box, such as "Priya's login". A line under
   the box was rejected, because the box then moved between sessions.
+- The label names an own endpoint login in the same way, such as "Priya's
+  login". A label that names the host of the endpoint was rejected, because
+  the members of an org trust each other with their logins (own endpoint
+  decision 5).
 - The composer names no login when a message runs on the user's own login.
   A name for the own login was rejected, because it tells the user nothing
   new.

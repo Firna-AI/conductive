@@ -1,5 +1,6 @@
 import { chatGptSignInCopy } from '../components/settings/chatGptSignInCopy'
 import type { AgentKey } from './agents'
+import { proxyModelCheck, type ModelListCheck } from './endpointModels'
 
 /**
  * How a user connects an agent: Claude with a subscription token from
@@ -8,7 +9,7 @@ import type { AgentKey } from './agents'
  * (decisions 24, 37, and 175). The Claude token and the ChatGPT sign-in
  * are both of the kind `token`.
  */
-export const loginKinds = ['token', 'api-key'] as const
+export const loginKinds = ['token', 'api-key', 'endpoint'] as const
 
 export type LoginKind = (typeof loginKinds)[number]
 
@@ -19,8 +20,16 @@ export type LoginKind = (typeof loginKinds)[number]
 export const loginLabels: Readonly<
   Record<AgentKey, Readonly<Record<LoginKind, string>>>
 > = {
-  claude: { token: 'Subscription token', 'api-key': 'API key' },
-  codex: { token: 'ChatGPT plan', 'api-key': 'API key' },
+  claude: {
+    token: 'Subscription token',
+    'api-key': 'API key',
+    endpoint: 'Own endpoint',
+  },
+  codex: {
+    token: 'ChatGPT plan',
+    'api-key': 'API key',
+    endpoint: 'Own endpoint',
+  },
 }
 
 /**
@@ -32,17 +41,45 @@ export const loginLabels: Readonly<
 export const connectKinds: Readonly<
   Record<AgentKey, readonly [LoginKind, ...LoginKind[]]>
 > = {
-  claude: ['token', 'api-key'],
-  codex: ['api-key', 'token'],
+  claude: ['token', 'api-key', 'endpoint'],
+  codex: ['api-key', 'token', 'endpoint'],
 }
 
+/**
+ * A connected login, as the account shows it: its kind, and the host of an
+ * own endpoint. The key and the full address never go back to the browser.
+ * `models` is the last read of the model list of an own endpoint, when that
+ * list lacks models of the app.
+ */
+export type AgentLogin =
+  | { kind: 'token' | 'api-key' }
+  | { kind: 'endpoint'; host: string; models?: ModelListCheck }
+
 /** The agents that a user connected, and how. */
-export type AgentLogins = Readonly<Partial<Record<AgentKey, LoginKind>>>
+export type AgentLogins = Readonly<Partial<Record<AgentKey, AgentLogin>>>
 
 /** The logins of the account: Claude with a token, Codex with an API key. */
-export const accountLogins: Readonly<Record<AgentKey, LoginKind>> = {
-  claude: 'token',
-  codex: 'api-key',
+export const accountLogins: Readonly<Record<AgentKey, AgentLogin>> = {
+  claude: { kind: 'token' },
+  codex: { kind: 'api-key' },
+}
+
+/** The host of Cal's proxy, which serves both agents. */
+const endpointHost = 'proxy.example.com'
+
+/** The logins of the account after Cal connected both agents to the proxy. */
+export const endpointLogins: AgentLogins = {
+  claude: { kind: 'endpoint', host: endpointHost },
+  codex: { kind: 'endpoint', host: endpointHost },
+}
+
+/**
+ * The same logins when the model list of the proxy lacks a Claude model of
+ * the app. The list names every Codex model of the app.
+ */
+export const unlistedModelLogins: AgentLogins = {
+  claude: { kind: 'endpoint', host: endpointHost, models: proxyModelCheck },
+  codex: { kind: 'endpoint', host: endpointHost },
 }
 
 /**
@@ -55,8 +92,8 @@ export const accountLogins: Readonly<Record<AgentKey, LoginKind>> = {
 export const sharedByDefault: Readonly<
   Record<AgentKey, Readonly<Record<LoginKind, boolean>>>
 > = {
-  claude: { token: false, 'api-key': true },
-  codex: { token: false, 'api-key': true },
+  claude: { token: false, 'api-key': true, endpoint: true },
+  codex: { token: false, 'api-key': true, endpoint: true },
 }
 
 /**
@@ -74,6 +111,68 @@ export const anthropicKeyPage = 'https://console.anthropic.com/settings/keys'
 /** The page where a user makes an OpenAI API key for Codex. */
 export const openAiKeyPage = 'https://platform.openai.com/api-keys'
 
+/**
+ * How the gateway calls an own endpoint for each agent. The base address of
+ * Claude has no `/v1`, and the base address of Codex ends with `/v1`, as
+ * `basePath` says. The gateway adds `requestPath` of the agent program to
+ * the base address.
+ */
+export const endpointApis: Readonly<
+  Record<AgentKey, { name: string; basePath: string; requestPath: string }>
+> = {
+  claude: {
+    name: 'the Anthropic Messages API',
+    basePath: '',
+    requestPath: '/v1/messages',
+  },
+  codex: {
+    name: 'the OpenAI Responses API',
+    basePath: '/v1',
+    requestPath: '/responses',
+  },
+}
+
+/** The origin of the example address that the form shows. */
+export const exampleEndpointOrigin = 'https://gateway.example.com'
+
+/**
+ * The address of Cal's proxy as Cal types it for each agent, and the base
+ * address that the form saves from it. One shared rule checks the address
+ * and builds each request address from it. It keeps a query, and it drops
+ * a fragment, a trailing slash, and a final `/v1` of a Claude address.
+ */
+export const typedEndpoints: Readonly<
+  Record<AgentKey, { typed: string; saved: string }>
+> = {
+  claude: {
+    typed: `https://${endpointHost}/v1/`,
+    saved: `https://${endpointHost}`,
+  },
+  codex: {
+    typed: `https://${endpointHost}/v1/`,
+    saved: `https://${endpointHost}/v1`,
+  },
+}
+
+/**
+ * The origin of an address that the rule refuses: a proxy on Cal's own
+ * computer, on `http://`. The gateway calls each endpoint over the internet,
+ * so the rule accepts only an `https://` address with a public host name and
+ * no user name or password. It refuses `localhost`, names of one label,
+ * internal names, and the names of the app and of its previews. It also
+ * refuses each IP address, IPv4 or IPv6, as the host, because a fetch from
+ * the Worker to an IP address can fail. A host name that points to the IP
+ * address, such as `136.115.241.64.sslip.io`, works when the server has a
+ * certificate for that name. The refusal names the rule in plain words.
+ */
+export const refusedEndpoint = {
+  origin: 'http://localhost:8317',
+  cause:
+    'Use a public https:// address with a host name, without a user name or a password.',
+} as const
+
+/** A key in its field, which shows only as dots. */
+export const pastedKey = 'pasted-key-of-the-endpoint'
 /** The page of OpenAI where a user enters the code of a ChatGPT sign-in. */
 export const chatGptDevicePage = 'https://auth.openai.com/codex/device'
 

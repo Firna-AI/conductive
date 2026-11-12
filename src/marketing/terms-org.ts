@@ -53,10 +53,12 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
         repositories of the org.`,
       text`Each login that you connect has a setting that lets other
         members use it in the sessions that you start. For a Claude
-        subscription or a ChatGPT sign-in, the setting starts off. For
-        an API key, it starts on. When you replace a login with one of the
-        same kind, the setting stays. You can change it on your account page. Share a
-        login only when its provider's terms allow that use.`,
+        subscription or a ChatGPT sign-in, the setting starts off. For an API key or an own
+        endpoint, it starts on. An own endpoint can use personal
+        subscriptions. Other members can spend those subscriptions until
+        you turn sharing off. When you replace a login with one of the same
+        kind, the setting stays. You can change it on your account page.
+        Share a login only when its provider's terms allow that use.`,
       text`Codex can use your ChatGPT plan through device code sign-in.
         ${productName} stores and renews that sign-in. OpenAI sends hosted
         apps to its sign-in waitlist and can block this use. OpenAI's terms
@@ -71,8 +73,10 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
         while the fetch runs. A member with a terminal can also get the
         workspace owner's GitHub token without a running turn.`,
       text`In a newer cloud computer, each turn gets a credential in place
-        of the agent login. A member with a terminal or a program in that
-        cloud computer can read the credential of a turn that runs there.
+        of the agent login. A turn on an own endpoint gets this kind of
+        credential in any cloud computer. A member with a terminal or a
+        program in that cloud computer can read the credential of a turn
+        that runs there.
         Through ${productName}, that credential can use the agent login of
         the member who started the session. It works while the turn runs,
         also from outside the cloud computer. A program that keeps running,
@@ -86,10 +90,10 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
         ends within 30 seconds after the turn ends. If the member who
         started the session removes or changes the login, or loses access
         to the org, the turn ends at its next model request.`,
-      text`In an older cloud computer, the agent login itself can be in the
-        cloud computer while a turn runs. A member with a terminal or a
-        program in that cloud computer can read it. A program that a tool
-        of the agent starts, such as a dev server, can keep the agent login
+      text`For a subscription token or an API key, an older cloud computer
+        can hold the agent login itself while a turn runs. A member with a
+        terminal or a program in that cloud computer can read it. A program
+        that a tool of the agent starts, such as a dev server, can keep the agent login
         after the turn ends. A member with a terminal can read it there
         too. Agent settings in the repository can make the agent send that
         login to another address. A commit, the agent, or other code can

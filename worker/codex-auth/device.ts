@@ -4,6 +4,7 @@ import type {
 } from '../../src/shared/account'
 import { chatGptSignInCopy } from '../../docs/mockups/src/components/settings/chatGptSignInCopy'
 import { accountLogins } from '../app-api/account-data'
+import { configuredModels } from '../app-api/models'
 import { agentLoginContext } from '../chat/queries'
 import type { AppDependencies, AppEnv } from '../env'
 import type { CodexTaskOwner } from './tasks'
@@ -45,9 +46,12 @@ async function publicDevice(
   if (device.state === 'connected')
     return {
       state: 'connected',
-      login: (await accountLogins(env.DB, userId)).find(
-        (login) => login.agent === 'codex',
-      ) ?? { agent: 'codex', connected: false },
+      login: (
+        await accountLogins(env.DB, userId, () => configuredModels(env))
+      ).find((login) => login.agent === 'codex') ?? {
+        agent: 'codex',
+        connected: false,
+      },
     }
   return { state: 'waiting', pollIntervalMs: device.pollIntervalMs }
 }

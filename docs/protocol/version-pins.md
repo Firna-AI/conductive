@@ -34,7 +34,8 @@ decision number names a decision of the change that adds the
 - Such a process or member can spend the login of the starter through the
   gateway while the turn runs. A copy of the token works in the same way
   outside the sandbox. A request that still runs at the end of the turn
-  stops within 30 seconds, as [Streams](model-gateway.md#streams) says.
+  stops within 30 seconds, as
+  [Streams](model-gateway-requests.md#streams) says.
 - The token works only on the model routes of the gateway.
   [The turn token](model-gateway.md#the-turn-token) states when it works.
   It never gives the login itself.
@@ -58,7 +59,8 @@ decision number names a decision of the change that adds the
 
 - The workspace of a sandbox with a version pin of 1 accepts an older
   runner and a newer runner. An older runner gets a supported agent login
-  itself with each turn (gateway decision 2). It never gets a ChatGPT sign-in.
+  itself with each turn (gateway decision 2). It never gets a ChatGPT
+  sign-in or an own endpoint login.
 - Reason: an older runner cannot use a turn token, and a sandbox keeps the
   runner of its org image. A refusal of each turn of an older runner was
   rejected, because each workspace with an older runner would then lose

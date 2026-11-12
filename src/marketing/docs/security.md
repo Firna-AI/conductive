@@ -31,7 +31,7 @@ Its sender is the person whose message started that turn.
 
 | Action | Account or person it uses |
 | --- | --- |
-| Agent model use | The session starter's connected agent account |
+| Agent model use | The session starter's agent login, including a chosen endpoint |
 | Git and GitHub CLI in a turn | The turn sender's GitHub account |
 | GitHub commands in the shared Terminal | The workspace owner's GitHub account |
 | GitHub CLI outside a turn | The workspace owner's GitHub account |
@@ -47,7 +47,7 @@ Its sender is the person whose message started that turn.
 In a workspace with older cloud computer software, agent commits name the workspace owner.
 [Apply setup changes](/docs/cloud-computer#apply-setup-changes) says how to get newer software.
 
-Other members' messages can spend a session starter's account while that person shares the login.
+Other members' messages can spend a session starter's login while that person shares it.
 Without sharing, another member's message starts a new session on their own login.
 The agent can identify the member who sent each message.
 Another member's message during a turn does not change its GitHub account, commit author, or receiving Mac.
@@ -110,10 +110,18 @@ Use **Stop** in each affected session to end its turn.
 
 Conductive stores your connected agent login encrypted.
 Account shows its status and kind without returning the stored value.
+For an own endpoint, Conductive encrypts the address and key and keeps the host in plain text.
+Account shows the host, including any non-default port.
+Your browser gets neither the saved key nor the full saved address back.
 
 A newer cloud computer starts from a shared setup that requires Conductive to keep agent logins outside the computer.
 Its model requests and answers pass through Conductive on Cloudflare.
-Conductive adds the session starter's login before sending each request to Anthropic or OpenAI.
+Conductive adds the session starter's login before sending each request to Anthropic, OpenAI, or the chosen endpoint.
+
+A chosen endpoint gets the messages, files, and command results of each turn on its login, whoever sent the message.
+It processes them where its owner runs it.
+An own endpoint login starts with sharing on.
+Its owner can turn sharing off in **Account**.
 
 Each turn there gets a temporary credential called a turn token.
 It gives no copy of the stored login.
@@ -134,7 +142,11 @@ Conductive keeps no copy of a model request or answer as it passes them on.
 It writes no body or header value from those requests or answers to its logs.
 The normal chat history and Mac command records still stay on the service.
 
-An older cloud computer starts from an earlier setup that still permits software to receive the session starter's agent login itself.
+An own endpoint's address and key never reach a cloud computer, including an older computer.
+Its turn needs agent software that supports temporary credentials.
+If the software cannot use them, the turn cannot start.
+
+For subscription tokens and provider API keys, an older cloud computer still permits software to receive the session starter's agent login itself.
 A program or member with terminal access can read or copy that login during a turn.
 A copied login can remain usable after the turn ends.
 Agent settings in the repository can also send that login to another address.

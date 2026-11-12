@@ -8,6 +8,7 @@ import type { LostReason, LostWhat } from '../components/chat/lostCopy'
 import { agentStopConversations } from './agentStopConversations'
 import { attachmentConversations } from './attachmentConversations'
 import type { Attachment } from './attachments'
+import { endpointConversations } from './endpointModels'
 import {
   autocompleteStart,
   autocompleteTests,
@@ -183,6 +184,7 @@ export const conversations: Readonly<
       text: 'Claude is overloaded right now.',
     },
   ],
+  ...endpointConversations({ history, followUp: followUpDraft }),
   ...newWorkspaceConversations,
   ...macConversations(history),
   ...lostConversations(history),

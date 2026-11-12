@@ -1,4 +1,4 @@
-import type { RunnerLogin } from '../../src/shared/runner'
+import type { AgentLogin } from '../chat/login-kind'
 
 const requestNames = new Set([
   'accept',
@@ -58,7 +58,7 @@ export function hasClaudeMarkers(headers: Headers): boolean {
   )
 }
 
-export function upstreamHeaders(headers: Headers, login: RunnerLogin): Headers {
+export function upstreamHeaders(headers: Headers, login: AgentLogin): Headers {
   const result = new Headers()
   const connection = connectionHeaders(headers)
   const tokenMode = login.agent === 'codex' && login.kind === 'token'
@@ -74,7 +74,7 @@ export function upstreamHeaders(headers: Headers, login: RunnerLogin): Headers {
     )
       result.set(name, value)
   })
-  if (login.agent === 'claude' && login.kind === 'api-key') {
+  if (login.agent === 'claude' && login.kind !== 'token') {
     result.set('x-api-key', login.secret)
     const beta = result.get('anthropic-beta')
     if (beta !== null)
@@ -91,7 +91,7 @@ export function upstreamHeaders(headers: Headers, login: RunnerLogin): Headers {
 
 export function downstreamHeaders(
   headers: Headers,
-  secret: string,
+  secrets: readonly string[],
   codexToken = false,
 ): Headers {
   const result = new Headers()
@@ -104,7 +104,16 @@ export function downstreamHeaders(
         name.startsWith('anthropic-ratelimit-') ||
         name.startsWith('x-ratelimit-'))
     )
-      result.set(name, secret ? value.replaceAll(secret, '[redacted]') : value)
+      result.set(
+        name,
+        secrets
+          .filter(Boolean)
+          .sort((a, b) => b.length - a.length)
+          .reduce(
+            (text, secret) => text.replaceAll(secret, '[redacted]'),
+            value,
+          ),
+      )
   })
   return result
 }

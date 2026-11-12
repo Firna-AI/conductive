@@ -9,7 +9,11 @@ The terms are those of the [architecture doc](../architecture.md#terms). A
 decision number names a dated record, as
 [Decision numbers](../architecture.md#decision-numbers) says. A gateway
 decision number names a decision of the change that adds the
-[model gateway](model-gateway.md), as that doc says.
+[model gateway](model-gateway.md), as that doc says. An own endpoint
+decision number, such as own endpoint decision 9, names the dated record of
+one decision of the change that adds the
+[own endpoint logins](own-endpoint-logins.md). Its plan keeps these records
+while the change is open. Its pull request keeps them after the merge.
 
 ## The workspace token
 
@@ -51,7 +55,9 @@ decision number names a decision of the change that adds the
 
 ## Secrets that users enter
 
-- The app stores the env var values and the agent logins encrypted.
+- The app stores the env var values and the agent logins encrypted. It
+  also keeps the host of an own endpoint in plain text, as
+  [Own endpoint logins](own-endpoint-logins.md) says.
 - The values of env vars are write-only. The settings never return a
   stored value to the browser, whatever the mark of the env var.
 - An admin marks each env var of the org as secret or not secret
@@ -103,6 +109,8 @@ decision number names a decision of the change that adds the
 
 - A user connects Claude with a subscription token from
   `claude setup-token`, or with an Anthropic API key (decisions 24 and 37).
+- A user can also connect each agent with an own endpoint, as
+  [Own endpoint logins](own-endpoint-logins.md) says.
 - A user connects Codex with a device code sign-in to their ChatGPT plan,
   or with an OpenAI API key (decision 175).
 - The account page starts the device code sign-in. It shows the code,
@@ -167,7 +175,14 @@ decision number names a decision of the change that adds the
   the disk of one workspace.
 - A user's agent logins serve all of that user's orgs (decision 21).
 - The app uses a user's agent login only for a turn of a session that the
-  user started. Only an older runner gets the login itself, as
+  user started. The one exception is that the Worker reads the model list
+  of an own endpoint with its key, at the times that
+  [Own endpoint logins](own-endpoint-logins.md) gives.
+  Only an older runner gets the login itself, as
   [Agent logins in a sandbox](isolation.md#agent-logins-in-a-sandbox)
   says. The GitHub token of a turn still belongs to its sender, as
   [GitHub tokens](#github-tokens) says.
+
+### Own endpoint logins
+
+[Own endpoint logins](own-endpoint-logins.md) holds these requirements.

@@ -13,6 +13,7 @@ export const conversationKeys = [
   'stopped-from',
   'stopped-from-other',
   'failed',
+  'model-not-served',
   'queued',
   'queued-follow-up',
   'queued-retry',

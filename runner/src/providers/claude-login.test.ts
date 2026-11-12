@@ -115,24 +115,33 @@ it('starts Claude with profile selectors and no gateway settings or credential d
   expect(h.child.signals).toEqual(['SIGTERM'])
 })
 
-it('requests a one-hour Claude cache for gateway subscription turns', async () => {
-  vi.stubEnv('CLAUDE_CODE_PROMPT_CACHE_TTL', '5m')
-  const h = await fixture()
-  const provider = await createClaudeFactory(
-    h.start,
-    () => '/fake/claude',
-  )({
-    ...h.options,
-    credential: { ...h.options.credential, kind: 'token' },
-  })
-  onTestFinished(() => provider.close())
-  expect(h.sdk.parameters?.options?.env?.CLAUDE_CODE_PROMPT_CACHE_TTL).toBe(
-    '1h',
-  )
-  expect(
-    vi.mocked(spawn).mock.calls[0][2]?.env?.CLAUDE_CODE_PROMPT_CACHE_TTL,
-  ).toBe('1h')
-})
+it.each([
+  { name: 'subscription', credential: { kind: 'token' } },
+  {
+    name: 'own endpoint',
+    credential: { kind: 'api-key', promptCacheTtl: '1h' },
+  },
+] as const)(
+  'requests a one-hour Claude cache for gateway $name turns',
+  async ({ credential }) => {
+    vi.stubEnv('CLAUDE_CODE_PROMPT_CACHE_TTL', '5m')
+    const h = await fixture()
+    const provider = await createClaudeFactory(
+      h.start,
+      () => '/fake/claude',
+    )({
+      ...h.options,
+      credential: { ...h.options.credential, ...credential },
+    })
+    onTestFinished(() => provider.close())
+    expect(h.sdk.parameters?.options?.env?.CLAUDE_CODE_PROMPT_CACHE_TTL).toBe(
+      '1h',
+    )
+    expect(
+      vi.mocked(spawn).mock.calls[0][2]?.env?.CLAUDE_CODE_PROMPT_CACHE_TTL,
+    ).toBe('1h')
+  },
+)
 
 it('keeps the Claude cache default for gateway API-key turns', async () => {
   vi.stubEnv('CLAUDE_CODE_PROMPT_CACHE_TTL', '1h')
