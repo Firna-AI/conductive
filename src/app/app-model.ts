@@ -1,5 +1,5 @@
 import type { AgentModel } from '../shared/agents'
-import { API_PATHS, orgPath, type User } from '../shared/api'
+import { API_PATHS, type User } from '../shared/api'
 import { GET_STARTED_PATH, type GetStartedResponse } from '../shared/onboarding'
 import {
   leaveOrgPath,
@@ -9,8 +9,8 @@ import {
   type RenameOrgRequest,
 } from '../shared/orgs'
 import type { ApiClient } from './api/client'
-import { ignore, nested, record } from './api/parse'
-import { readGetStarted, readOrg } from './api/read-core'
+import { ignore } from './api/parse'
+import { readGetStarted } from './api/read-core'
 import { readSession } from './api/read-waitlist'
 import { AccountModel } from './account-model'
 import type { ComposerFocusRequest } from './composer-focus'
@@ -19,13 +19,12 @@ import { failedBoot, readShared, type Boot } from './boot'
 import { InvitationsModel } from './invitations-model'
 import { OrgList } from './org-list'
 import { OrgModel } from './org-model'
+import { patchOrg, postOrg } from './org-writes'
 import { isSuspended } from './permissions'
 import type { AppServices } from './services'
 import { setupSteps } from './setup-steps'
 import { Store, type Readable } from './store'
 import { WaitlistModel } from './waitlist-model'
-
-const readOrgResponse = (body: unknown) => nested(record(body), 'org', readOrg)
 
 /**
  * The data that every screen shares: the person signed in, their orgs, the
@@ -269,26 +268,14 @@ export class AppModel {
    * of the repositories that it chose from the account's list.
    */
   async createOrg(request: CreateOrgRequest): Promise<OrgSummary> {
-    const org = await this.services.api.send(
-      'POST',
-      API_PATHS.orgs,
-      request,
-      readOrgResponse,
-    )
+    const org = await postOrg(this.services.api, request)
     this.putOrg(org)
     return org
   }
 
   /** Saves the name and the initials of an org. */
   async renameOrg(orgId: string, request: RenameOrgRequest): Promise<void> {
-    this.putOrg(
-      await this.orgApi(orgId).send(
-        'PATCH',
-        orgPath(orgId),
-        request,
-        readOrgResponse,
-      ),
-    )
+    this.putOrg(await patchOrg(this.orgApi(orgId), orgId, request))
   }
 
   /**
