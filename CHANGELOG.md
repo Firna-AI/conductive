@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.13.0](https://github.com/Firna-AI/conductive/compare/v0.12.0...v0.13.0) (2026-11-12)
+
+
+### Features
+
+* **agent-tools:** manage workspaces, sessions, sections, and previews ([#267](https://github.com/Firna-AI/conductive/issues/267)) ([b8ed3c8](https://github.com/Firna-AI/conductive/commit/b8ed3c8f69e7ab69e8324860e48287812d9432ea))
+* **list:** run the mark light while checks run ([#277](https://github.com/Firna-AI/conductive/issues/277)) ([d789f9e](https://github.com/Firna-AI/conductive/commit/d789f9e904dfb4a74497f473c665cd3baed43e17))
+* **previews:** put Close on each preview tab ([#255](https://github.com/Firna-AI/conductive/issues/255)) ([10da61a](https://github.com/Firna-AI/conductive/commit/10da61afdb00e9e32b374c86a2db342ac7e436e7))
+
+
+### Bug Fixes
+
+* **list:** brighten the working light of the workspace mark ([#274](https://github.com/Firna-AI/conductive/issues/274)) ([e778799](https://github.com/Firna-AI/conductive/commit/e778799c7a77d2041e28088deb584cc4da029775))
+* **list:** keep the Archived group as it was after an Archive ([#271](https://github.com/Firna-AI/conductive/issues/271)) ([b504e8b](https://github.com/Firna-AI/conductive/commit/b504e8b8ab8a9d5e700c9a2aad99104434975166))
+
 ## [0.12.0](https://github.com/Firna-AI/conductive/compare/v0.11.0...v0.12.0) (2026-11-11)
 
 
