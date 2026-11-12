@@ -232,4 +232,38 @@ describe('the chip text field', () => {
       text: messageText(view.field),
     }).toEqual({ readOnly: 'true', tab: 0, text: 'Sending' })
   })
+
+  test('a field without attached files keeps private-use characters as typed text in a draft that comes back, in typing, in a paste, and in a copy', async () => {
+    const marked = 'notes'
+    const view = await mountField()
+    await view.set((owner) => owner.setValue(`Back ${marked} here`))
+    const restored = { draft: view.draft(), text: messageText(view.field) }
+    typeMessage(view.field, `Typed ${marked} too`)
+    const typed = view.draft()
+    pasteMessage(view.field, ` and ${marked}`)
+    const pasted = view.draft()
+    view.field.focus()
+    pressInField(view.field, 'a', { ctrlKey: true })
+    const data = new DataTransfer()
+    act(() => {
+      view.field.dispatchEvent(
+        new ClipboardEvent('copy', {
+          bubbles: true,
+          cancelable: true,
+          clipboardData: data,
+        }),
+      )
+    })
+    expect({
+      restored,
+      typed,
+      pasted,
+      copied: data.getData('text/plain'),
+    }).toEqual({
+      restored: { draft: `Back ${marked} here`, text: `Back ${marked} here` },
+      typed: `Typed ${marked} too`,
+      pasted: `Typed ${marked} too and ${marked}`,
+      copied: `Typed ${marked} too and ${marked}`,
+    })
+  })
 })

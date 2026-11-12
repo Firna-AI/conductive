@@ -79,7 +79,7 @@ export class FakeApiServer implements FakeRouteWriter {
   readonly events: FakeWorkspaceEvents
   private readonly replies = new Map<
     string,
-    Response | ((request: Request) => Promise<Response>)
+    Response | Promise<Response> | ((request: Request) => Promise<Response>)
   >()
 
   constructor(options: FakeApiOptions = {}) {
@@ -124,6 +124,13 @@ export class FakeApiServer implements FakeRouteWriter {
   }
 
   json(method: FakeMethod, path: string, body: unknown, status = 200): void {
+    if (body instanceof Promise) {
+      this.replies.set(
+        routeKey(method, path),
+        body.then((value: unknown) => Response.json(value, { status })),
+      )
+      return
+    }
     this.response(method, path, Response.json(body, { status }))
   }
 
@@ -154,7 +161,7 @@ export class FakeApiServer implements FakeRouteWriter {
     this.requests.push(request.clone())
     const url = new URL(request.url)
     const key = routeKey(request.method, request.url)
-    const response = this.replies.get(key) ?? this.uploadReply(request)
+    const response = await (this.replies.get(key) ?? this.uploadReply(request))
     if (typeof response === 'function') return response(request)
     if (response) return response.clone()
     const historyPath = new URL(
@@ -178,7 +185,13 @@ export class FakeApiServer implements FakeRouteWriter {
   }
 
   /** The reply for the path of a raw file upload, whatever file it names. */
-  private uploadReply(request: Request) {
+  private uploadReply(
+    request: Request,
+  ):
+    | Response
+    | Promise<Response>
+    | ((request: Request) => Promise<Response>)
+    | undefined {
     if (request.headers.get('Content-Type') !== 'application/octet-stream') {
       return undefined
     }

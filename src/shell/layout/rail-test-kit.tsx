@@ -133,7 +133,7 @@ export function orgOrder(root: ParentNode): string[] {
 /** The names that the rail can show beside its tiles, on hover or focus. */
 export function railNames(view: HTMLElement): string[] {
   const names = view.querySelectorAll('li > span[aria-hidden="true"]')
-  return Array.from(names, (name) => name.textContent)
+  return Array.from(names, (name) => name.firstChild?.textContent ?? '')
 }
 
 /** The items of the open menu with this label, and whether each is off. */

@@ -2,6 +2,8 @@ import { Fragment, type ReactNode, type Ref } from 'react'
 import { Gauge, Plus } from 'lucide-react'
 import { LogoTile } from '../../../docs/mockups/src/components/brand/Logo'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
+import { KeyChips } from '../../../docs/mockups/src/components/common/KeyChips'
+import { orgCommand } from '../../app/palette/commands'
 import styles from '../../../docs/mockups/src/components/layout/OrgRail.module.css'
 import orgDrag from '../../../docs/mockups/src/components/orgs/OrgDrag.module.css'
 import { isSuspended } from '../../app/permissions'
@@ -12,7 +14,16 @@ import type { OrgSummary } from '../../shared/orgs'
 import { useApp } from '../context'
 import list from '../list/list.module.css'
 import { LiftedOrg, OrgDropLine } from '../orgs/OrgDragParts'
-import { AppLink } from '../ui/AppLink'
+import {
+  useShortcutOffers,
+  type CommandOffer,
+} from '../shortcuts/shortcut-context'
+import {
+  shortcutTip,
+  useShortcutHint,
+  type ShortcutHint,
+} from '../shortcuts/shortcut-hints'
+import { AppLink, useOpenPage } from '../ui/AppLink'
 import { OrgTile, PersonAvatar } from '../ui/Avatars'
 import ui from '../ui/ui.module.css'
 import layout from './layout.module.css'
@@ -25,6 +36,11 @@ import { useRailOrder } from './useRailOrder'
 export type RailCurrent =
   { org: string } | 'create' | 'account' | 'operator' | null
 
+/**
+ * A link of the rail. A link that runs a command of the keys names the key
+ * of its hint to a screen reader. `tip` gives it a tooltip with the label
+ * and the key, for a link without the drawn hint of an org.
+ */
 function RailLink({
   linkRef,
   ...props
@@ -35,11 +51,14 @@ function RailLink({
   className?: string
   /** The link, which takes the focus back after a move of its tile. */
   linkRef?: Ref<HTMLAnchorElement>
+  hint?: ShortcutHint
+  tip?: boolean
   children: ReactNode
 }) {
   return (
     <AppLink
       aria-current={props.current ? 'page' : undefined}
+      aria-keyshortcuts={props.hint?.aria}
       aria-label={props.label}
       className={classes(
         styles.link,
@@ -47,6 +66,7 @@ function RailLink({
         props.className,
       )}
       ref={linkRef}
+      title={props.tip ? shortcutTip(props.label, props.hint) : undefined}
       to={props.to}
     >
       {props.children}
@@ -55,10 +75,15 @@ function RailLink({
 }
 
 /** The name of an item of the rail, which shows on hover and on focus. */
-function RailHint(props: { name: string }) {
+function RailHint(props: { name: string; hint?: ShortcutHint }) {
   return (
     <span aria-hidden className={classes(styles.hint, layout.railHint)}>
       {props.name}
+      {props.hint ? (
+        <span className={styles.hintKey}>
+          <KeyChips shortcut={props.hint.text} />
+        </span>
+      ) : null}
     </span>
   )
 }
@@ -68,6 +93,58 @@ function RailTile(props: { org: OrgSummary; current: boolean }) {
   const tile = <OrgTile current={props.current} org={props.org} size={26} />
   if (!props.org.deletion) return tile
   return <span className={styles.deleted}>{tile}</span>
+}
+
+/**
+ * Offers the keys of Switch to org 1 to 9 while the rail shows. Each key
+ * opens the org at its place, counted from the top, as the tile does, also
+ * a deleted org and the org of the page.
+ */
+function useOrgKeys(orgs: readonly OrgSummary[]): void {
+  const open = useOpenPage()
+  useShortcutOffers(
+    orgs.flatMap((org, place): CommandOffer[] => {
+      const command = orgCommand(place)
+      if (command === null) return []
+      return [{ command, run: () => open(routes.org(org.id)) }]
+    }),
+  )
+}
+
+/**
+ * An org of the rail, with the name of the org and the key that opens it
+ * in its drawn hint. A screen reader hears the key on the link.
+ */
+function OrderedOrg(props: {
+  org: OrgSummary
+  index: number
+  current: boolean
+  label: string
+  order: ReturnType<typeof useRailOrder>
+}) {
+  const { org, index, current, order } = props
+  const hint = useShortcutHint(orgCommand(index) ?? undefined)
+  return (
+    <li
+      {...order.tile(org, index)}
+      className={classes(styles.item, layout.railItem, list.dragSurface)}
+    >
+      <RailLink
+        className={classes(
+          order.menuOpen === org.id && styles.menuOpen,
+          order.drag.dragged?.id === org.id && orgDrag.placeholder,
+        )}
+        current={current}
+        hint={hint}
+        label={props.label}
+        linkRef={order.linkRef(org.id)}
+        to={routes.org(org.id)}
+      >
+        <RailTile current={current} org={org} />
+      </RailLink>
+      {order.drag.dragged ? null : <RailHint name={org.name} hint={hint} />}
+    </li>
+  )
 }
 
 /** The link of an operator to the operator section, above the account. */
@@ -91,6 +168,7 @@ function OperatorItem(props: { current: boolean; hint: boolean }) {
  * A suspended org looks the same, and the name of its link says that it is
  * suspended. An operator also gets Operator above the account. Nobody else
  * sees it.
+ * While the rail shows, the keys of Switch to org 1 to 9 open its orgs.
  */
 export function OrgRail(props: {
   orgs: readonly OrgSummary[]
@@ -106,6 +184,9 @@ export function OrgRail(props: {
       ? props.current.org
       : null
   const refused = useStore(useApp().refusedOrgs)
+  const createHint = useShortcutHint('create-org')
+  const accountHint = useShortcutHint('account-page')
+  useOrgKeys(props.orgs)
   const order = useRailOrder(props.orgs)
   const { drag } = order
   const labelOf = (org: OrgSummary) => {
@@ -126,28 +207,13 @@ export function OrgRail(props: {
           return (
             <Fragment key={org.id}>
               {drag.lineBefore === org.id ? <OrgDropLine at="rail" /> : null}
-              <li
-                {...order.tile(org, index)}
-                className={classes(
-                  styles.item,
-                  layout.railItem,
-                  list.dragSurface,
-                )}
-              >
-                <RailLink
-                  className={classes(
-                    order.menuOpen === org.id && styles.menuOpen,
-                    drag.dragged?.id === org.id && orgDrag.placeholder,
-                  )}
-                  current={current}
-                  label={labelOf(org)}
-                  linkRef={order.linkRef(org.id)}
-                  to={routes.org(org.id)}
-                >
-                  <RailTile current={current} org={org} />
-                </RailLink>
-                {drag.dragged ? null : <RailHint name={org.name} />}
-              </li>
+              <OrderedOrg
+                org={org}
+                index={index}
+                current={current}
+                label={labelOf(org)}
+                order={order}
+              />
             </Fragment>
           )
         })}
@@ -155,6 +221,8 @@ export function OrgRail(props: {
         <li className={styles.item}>
           <RailLink
             current={props.current === 'create'}
+            hint={createHint}
+            tip
             label="Create org"
             to={props.firstRun ? routes.getStarted() : routes.createOrg()}
           >
@@ -172,6 +240,8 @@ export function OrgRail(props: {
       ) : null}
       <RailLink
         current={props.current === 'account'}
+        hint={accountHint}
+        tip
         label="Account"
         to={routes.account()}
       >

@@ -1,0 +1,17 @@
+/*
+ * The kind and the host of an own endpoint under the row of its login, in
+ * the same box as the rows, at the inset of the share setting below it. A
+ * long host wraps.
+ */
+.endpoint {
+  margin: 0;
+  padding: 0 8px 10px 12px;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  line-height: 1.45;
+}
+
+.host {
+  color: var(--ui-ink2);
+  overflow-wrap: anywhere;
+}

@@ -15,6 +15,7 @@ import { NewOrgEmpty } from './listParts'
 import { pageOrg, railOf, sidebarOf } from './newWorkspacePageParts'
 import {
   formNotices,
+  hasWords,
   newWorkspaceDraft,
   newWorkspaceFormProperties,
   taskPlaceholder,
@@ -120,25 +121,24 @@ export function NewWorkspaceDialogScreen(props: {
       />,
     )
   }
+  const ownDraft = (state.org === 'new' || waiting) && state.draft !== 'empty'
   const dialog = (
     <NewWorkspaceDialog
       attachments={draft.files}
+      caret={ownDraft ? undefined : draft.caret}
       choice={page.choice}
+      drop={state.files === 'drop-over'}
       notices={notices}
       place={`${org.name} · ${sections[defaultSection].name}`}
       placeholder={taskPlaceholder}
-      ready={draft.text !== '' && !waits(state) && !building && !waiting}
+      ready={hasWords(draft.text) && !waits(state) && !building && !waiting}
       repository={chosen ? page.repository.name : undefined}
       repositoryMenu={
         chosen && state.repositoryMenu === 'open'
           ? repositoryMenu(page, state.waitingBuild)
           : undefined
       }
-      text={
-        (state.org === 'new' || waiting) && state.draft !== 'empty'
-          ? page.draft
-          : draft.text
-      }
+      text={ownDraft ? page.draft : draft.text}
     />
   )
   if (state.org === 'new') {

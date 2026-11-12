@@ -14,6 +14,7 @@ export interface WorkspaceCreationBase {
 
 export interface WorkspaceCreationInput extends CreateWorkspaceRequest {
   name?: string
+  firstSessionTitle?: string
 }
 
 export async function prepareCreationRequest(
@@ -66,6 +67,7 @@ export async function prepareCreationRequest(
       ...(input.name !== undefined && { name: input.name }),
       branch,
       sessionId,
+      firstSessionTitle: input.firstSessionTitle,
       request: input.firstMessage,
       createdAt: dependencies.now(),
     },

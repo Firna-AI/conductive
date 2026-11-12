@@ -34,8 +34,10 @@ plan limits.
   changes no login, and the cloud computer keeps running.
 - When a message uses the login of another member, the bar of the
   composer names that login after the model picker, such as "Cal's login"
-  in `app/composer/login`. So the box keeps its place. A message on the own
-  login of the viewer shows no name. When the login of the member who
+  in `app/composer/login`. So the box keeps its place. The label names an
+  own endpoint login in the same way, with no host, as [Logins](#logins)
+  says. A message on
+  the own login of the viewer shows no name. When the login of the member who
   started a session is not available, a message of another member starts
   a new session. The notice over the composer of the first session says
   so, and its chat stays as it was, as `app/sessions/no-starter-login`
@@ -53,7 +55,10 @@ plan limits.
   see the name of that member, such as "Cal stopped the agent" in
   `app/reassign/member-stop`. When no member pressed Stop, such as when
   the cloud computer stopped during the turn, the chat says "The agent
-  stopped", as `app/shell/stopped/during-turn` shows.
+  stopped", as `app/shell/stopped/during-turn` shows. When the agent of a
+  session stopped the turn with a workspace tool, the chat names that
+  session, not a member, from decision 279. It says "Stopped from" and
+  shows the session chip of that session, as `app/chat/agent-stops` shows.
 - Each branch starts with the GitHub login of the owner of its workspace,
   such as `calummoore/lisbon-7k2q`, from decision 53.
 - Archive stops the cloud computer at once, with no check and no question,
@@ -132,9 +137,11 @@ plan limits.
   from decision 175. `AgentConnectForm` opens under the row of the agent,
   as `app/account/connect-claude` and `app/account/connect-codex` show. Its
   switch chooses the kind of the login, and the first kind starts
-  selected: Subscription token, then API key, for Claude, and API key, then
-  ChatGPT plan, for Codex. For a token or a key, the words above the field
+  selected: Subscription token, API key, and Own endpoint for Claude, and
+  API key, ChatGPT plan, and Own endpoint for Codex. For a token or a key, the words above the field
   say what to paste and where to make it.
+- [Own endpoint login mockups](own-endpoint-logins.md) describes the fields,
+  connected host, model list, and address refusal for both agents.
 - ChatGPT plan has no field. Its words say that Codex then runs on the
   plan, and that device code sign-in must be on first in the ChatGPT
   security settings, as `app/account/connect-codex/chatgpt` shows. They
@@ -172,7 +179,7 @@ plan limits.
 - Under each connected login, the switch "Let other members use this
   login" says whether the messages of other members in the sessions of the
   user run on it, from decision 116. The switch starts off for a Claude
-  subscription token and on for an API key, as `app/account` shows. A
+  subscription token and on for an API key or own endpoint, as `app/account` shows. A
   ChatGPT plan of Codex starts off too, from decisions 171 and 175, as
   `app/account/codex-token` shows. The switch saves at once. A
   change that the app did not save shows its cause beside the switch, as
@@ -181,7 +188,10 @@ plan limits.
 - Get started has three steps: install the GitHub App, create an org, and
   connect Claude or Codex, from decision 33. The next step opens its form.
   It opens only after app access, so a person who waits sees the
-  waitlist instead.
+  waitlist instead. The agent step offers the kinds of the account, also
+  the own endpoint, and it shows no share switch. Its text says that the
+  agents run on the own Claude or OpenAI account of the person, or on
+  their own endpoint (decision 7 B of the own endpoint plan).
 - Create org starts the first build of the cloud computer of the org, from
   decision 150. The org step shows that build under the org: preparing
   with its time, then ready, or the failure with its saved message, Try

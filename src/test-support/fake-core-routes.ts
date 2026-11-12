@@ -27,6 +27,7 @@ import {
   type RoutineRunResponse,
 } from '../shared/routines'
 import { sectionPath, sectionsPath } from '../shared/sections'
+import type { SaveShortcutsResponse } from '../shared/shortcuts'
 import { WAITLIST_PATHS } from '../shared/waitlist'
 import type { FakeRouteWriter } from './fake-api-routes'
 import { fakeOrgOrderRoutes } from './fake-org-order-routes'
@@ -60,6 +61,10 @@ export function fakeCoreRoutes(routes: FakeRouteWriter, role: OrgRole) {
   routes.json('PUT', ACCOUNT_PATHS.newWorkspaceView, {
     view: data.account.newWorkspaceView,
   })
+  routes.json('PUT', ACCOUNT_PATHS.shortcuts, {
+    keyboard: 'mac',
+    changes: data.account.shortcuts.mac,
+  } satisfies SaveShortcutsResponse)
   routes.json('POST', ACCOUNT_PATHS.deleteAccount, { deleted: true })
   for (const login of data.account.agentLogins) {
     routes.json('PUT', agentLoginPath(login.agent), login)

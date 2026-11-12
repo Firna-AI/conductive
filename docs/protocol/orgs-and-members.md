@@ -119,6 +119,8 @@ decision number names a dated record, as
   section.
 - A workspace moves to another section by drag and drop. On a phone, a
   long press lifts the row.
+- A focused row also moves by keys.
+  [Fixed keys](keyboard-shortcuts-fixed-keys.md#fixed-keys) gives the keys.
 - Move to section in the
   [menu of a workspace row](workspace-menu.md#move-to-section) moves it too.
 - Deleting a section moves its workspaces to General, also the archived

@@ -32,7 +32,9 @@ import {
   nested,
   record,
   text,
+  texts,
 } from './parse'
+import { readShortcuts } from './read-shortcuts'
 
 export const AGENTS = ['claude', 'codex'] as const satisfies readonly Agent[]
 export const EFFORTS = [
@@ -128,6 +130,27 @@ export function readLogin(value: unknown): AgentLoginStatus {
   if (!flag(login, 'connected')) return { agent, connected: false }
   const updatedAt = count(login, 'updatedAt')
   const noReuse = flag(login, 'noReuse')
+  if (login.kind === 'endpoint') {
+    return {
+      agent,
+      connected: true,
+      kind: 'endpoint',
+      host: text(login, 'host'),
+      ...(login.modelList === undefined
+        ? {}
+        : {
+            modelList: nested(login, 'modelList', (value) => {
+              const list = record(value, 'endpoint model list')
+              return {
+                missing: texts(list, 'missing'),
+                checkedAt: count(list, 'checkedAt'),
+              }
+            }),
+          }),
+      noReuse,
+      updatedAt,
+    }
+  }
   return {
     agent,
     connected: true,
@@ -200,6 +223,7 @@ export function readAccount(value: unknown): AccountResponse {
     user: nested(account, 'user', readUser),
     defaultChoice: nested(account, 'defaultChoice', readChoice),
     newWorkspaceView: choice(account, 'newWorkspaceView', NEW_WORKSPACE_VIEWS),
+    shortcuts: nested(account, 'shortcuts', readShortcuts),
     agentLogins: items(account, 'agentLogins', readLogin),
     operator: flag(account, 'operator'),
     githubAppUrl: text(account, 'githubAppUrl'),

@@ -16,27 +16,32 @@ import type { BarAction } from '../../docs/mockups/src/components/workspace/barM
 import type { ButtonTint } from '../../docs/mockups/src/components/common/tint'
 import { ActionButton } from './ActionButton'
 import { classes, GitHubLink } from './bannerParts'
+import { buttonKey, type CommandKeyOf } from './barKeys'
 import type { BarControls, BarMessage } from './barView'
 
 /**
  * One button of the bar. An agent action sends its fixed prompt, Merge
  * merges as the member, Continue moves the workspace to a new branch, and
- * Archive opens its question. The main action takes the tint of a tinted
- * bar. On a bar without a tint, it takes the outline tone, as Archive does,
- * so the bar shows no primary fill.
+ * Archive archives the workspace at once. The main action takes the tint of
+ * a tinted bar. On a bar without a tint, it takes the outline tone, as
+ * Archive does, so the bar shows no primary fill. A button that takes a
+ * click names the key of its command in its tooltip.
  */
 function BarButton(props: {
   action: BarAction
   onPress: (action: BarAction) => void
   touch: boolean
   tint: ButtonTint | null
+  keyOf?: CommandKeyOf
 }) {
   const { action, touch, tint } = props
   const press = () => props.onPress(action)
+  const commandKey = buttonKey(action, props.keyOf)
   switch (action.kind) {
     case 'agent':
       return (
         <ActionButton
+          commandKey={commandKey}
           icon={agentIcons[action.action]}
           onPress={press}
           tint={tint}
@@ -49,6 +54,7 @@ function BarButton(props: {
       return (
         <ActionButton
           busy={action.busy}
+          commandKey={commandKey}
           icon={GitMerge}
           onPress={press}
           tint={tint}
@@ -62,6 +68,7 @@ function BarButton(props: {
       return (
         <ActionButton
           busy={action.busy}
+          commandKey={commandKey}
           disabled={action.waiting}
           icon={GitBranchPlus}
           onPress={press}
@@ -75,6 +82,7 @@ function BarButton(props: {
       return (
         <ActionButton
           busy={action.busy}
+          commandKey={commandKey}
           disabled={action.disabled}
           icon={Archive}
           onPress={press}
@@ -89,9 +97,11 @@ function BarButton(props: {
 /**
  * The buttons and the link of the bar, in order: the main action first, and
  * the link to GitHub last. Without `link`, it shows no link: the desktop bar
- * of a pull request links its number instead.
+ * of a pull request links its number instead. `keyOf` gives the key of
+ * each command, which the tooltips name.
  */
 export function BarButtons(props: {
+  keyOf?: CommandKeyOf
   controls: BarControls
   touch?: boolean
   link?: boolean
@@ -104,6 +114,7 @@ export function BarButtons(props: {
         <BarButton
           action={action}
           key={action.kind}
+          keyOf={props.keyOf}
           onPress={onAction}
           tint={view.tint}
           touch={touch}
@@ -112,6 +123,7 @@ export function BarButtons(props: {
       {view.link && props.link !== false ? (
         <GitHubLink
           href={view.link.href}
+          keyOf={props.keyOf}
           label={view.link.label}
           touch={touch}
         />
@@ -128,6 +140,7 @@ export function BarButtons(props: {
 export function BarMessageLine(props: {
   message: BarMessage
   touch?: boolean
+  keyOf?: CommandKeyOf
 }) {
   const { message } = props
   const waits = message.tone === 'status'
@@ -142,6 +155,7 @@ export function BarMessageLine(props: {
       {message.href ? (
         <GitHubLink
           href={message.href}
+          keyOf={props.keyOf}
           label={barLabels.openOnGitHub}
           touch={props.touch}
         />

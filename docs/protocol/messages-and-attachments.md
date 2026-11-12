@@ -8,6 +8,8 @@ sessions, what the chat shows, and the events.
 message carries. The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
+says. An own endpoint decision number names a decision of the change that
+adds the own endpoint logins, as [Tokens and secrets](tokens-and-secrets.md)
 says.
 
 ## Messages
@@ -17,7 +19,7 @@ says.
 - A change to another model of the same agent stays in the session
   (decision 51).
 - A model of the other agent opens a new session with that agent, and the
-  draft moves there with its files.
+  draft moves there with its files, each at its place in the text.
 - Reason: neither SDK can switch agents inside one session. A hand-over of
   the transcript to the other agent was rejected. The user chose the way
   that Conductor works.
@@ -56,6 +58,10 @@ says.
 - When a message runs on the login of another member, the composer names
   that member inside the message box, such as "Priya's login". A line under
   the box was rejected, because the box then moved between sessions.
+- The label names an own endpoint login in the same way, such as "Priya's
+  login". A label that names the host of the endpoint was rejected, because
+  the members of an org trust each other with their logins (own endpoint
+  decision 5).
 - The composer names no login when a message runs on the user's own login.
   A name for the own login was rejected, because it tells the user nothing
   new.
@@ -111,6 +117,13 @@ says.
   set it, because agent code runs on the same cloud computer.
 - A turn that stops with no Stop request, such as when the cloud
   computer stops, shows "The agent stopped".
+- A close of a session that stops its turn counts as a Stop of the member
+  who closed the session. So the chat names that member too. Reason: that
+  member confirmed the stop when the close asked first, as
+  [Sessions](agents-and-sessions.md#sessions) says.
+- When a turn gets more than one stop, its line names the first one.
+- [Stops by the workspace tools](#stops-by-the-workspace-tools) states the
+  line of a stop by an agent.
 - While the login of the starter can be used, the next message of the
   starter after a stop continues the same session. The next message of
   another member does the same while the starter shares the login.
@@ -144,9 +157,12 @@ says.
   on the account that hosts the app.
 - The model writes the title from the text of that message. It leaves out
   the `---` line and the `Sent by:` line of a message from the agent tools.
-  Reason: the title names the task, not its sender. The request holds no
-  other data of the workspace. It uses no agent login of a member. The
-  chat does not show it.
+  Reason: the title names the task, not its sender.
+- In that text, each mention of one of its attached files becomes the name
+  of the file (decision 262 D). The request holds no other data of the
+  workspace. It uses no agent login of a member. The chat does not show it.
+- Reason: a path makes a poor title. A request with the copy path of each
+  file was rejected for that reason.
 - The reply to the message does not wait for the title. The workspace
   then takes the title as its name, as
   [Workspace and session names](agents-and-sessions.md#workspace-and-session-names) says.
@@ -158,6 +174,9 @@ says.
   starts it.
 - A first message with no text starts no request. The next message with
   text in the workspace then starts it.
+- For the title request, a message whose text holds only the mentions of
+  its own attached files counts as a message with no text. The same holds
+  for a session title, as [Sessions](agents-and-sessions.md#sessions) says.
 - Reason: the name shows within seconds, while the sandbox starts, and the
   operator chooses the model and its speed.
 - A request in the sandbox on the agent login of the member was rejected.
@@ -203,11 +222,36 @@ says.
   as it is. The chat shows it as a message of that member, with no mark of
   the action. Reason: an action is a message (decision 220).
 
+### Stops by the workspace tools
+
+- A stop through the workspace tools names no member (decision 279). This
+  holds for `stop_session`, and for each `close_session` that stops a
+  turn.
+- The chat shows "Stopped from" and the session chip of the sending
+  session, as [Session chips](workspace-links.md#session-chips) says. The
+  sending session is the session of the calling turn.
+- The workspace records the sending session when the stop request
+  arrives, as it records the member of a Stop. It takes that session from
+  its own record of the calling turn, never from the call.
+- Reason: the member whose message started the calling turn pressed
+  nothing. The same chip names the session of a tool message, as
+  [The `Sent by:` line](session-calls.md#the-sent-by-line) says.
+- A line that names that member, as if the member pressed Stop, was
+  rejected (decision 279). Members would then believe that a colleague
+  stopped their agent. A line that names both the member and the session
+  was rejected too, because the chip already tells the truth.
+- The line names the sending session also when an agent stops its own
+  session.
+- The [mockup catalogue](../mockups/catalogue.md) draws the line at
+  `app/chat/agent-stops`, with its words.
+
 ## Attachments
 
 [Message attachments](message-attachments.md#attachments) states the size
 limit, the upload, the storage, the copy into the cloud computer, and the
-deletion of the files of a message.
+deletion of the files of a message. It also states the files in the
+message field, their drop, their place in the text, and the files of a
+sent message.
 
 ## Workspace links
 

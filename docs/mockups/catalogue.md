@@ -18,31 +18,31 @@ how a screen is built, and links to the other pages.
 | `app/shell`         | The workspace list, and the sandbox starting, also with a diff tab open, stopped, with an error, and with a refused start |
 | `app/sections`      | The menu of a section, and a workspace dragged to another section             |
 | `app/workspace-menu` | The menu of a workspace row from a right click: its section and owner choices, Rename, Archive from the list with its toast and Restore, and the menus of each role |
-| `app/command-palette` | The command palette over the list: the All tab, then the other tabs with the Help group, searches and their states, and a search by number |
+| `app/command-palette` | The command palette over the list, with the keys of a browser tab: the All tab, then the other tabs with the Help group, searches and their states, and a search by number |
 | `app/feedback`      | The Feedback dialog that Send feedback opens over the list, then its states, the toast after a send, and the files that it does not add |
 | `app/orgs`          | The org switcher of a phone, Create org, the first org, new orgs, deleted, suspended, and the order of the orgs |
-| `app/account`       | General with the GitHub sign-in, the GitHub App, the agent logins, and the invite code, then Preferences with the model and how New workspace opens, the first run, the Connect forms with the ChatGPT sign-in of Codex, Codex on a ChatGPT plan and its sign-in that stopped working, and a share not saved |
+| `app/account`       | General with the GitHub sign-in, the GitHub App, the agent logins with own endpoints, and the invite code, then Preferences with the model and how New workspace opens, Keyboard shortcuts in a browser, the first run, the Connect forms with the ChatGPT sign-in of Codex, Codex on a ChatGPT plan and its sign-in that stopped working, and a share not saved |
 | `app/operator`      | The operator's Overview, Orgs, Users, Waitlist, and Invite codes tabs, the page of an org and of a user with Suspend, Lift, and Approve, the pause of sign-ups, the waitlist switch, and where an operator opens the section |
 | `app/banner`        | The pull request bar and Checks: no pull request, its other states, Merge, local work, the agent actions in the chat, and Continue |
 | `app/new-workspace` | An empty chat, the first build of a new org, a repository that waits for its build, its error, files on the first message, the dialog, a pasted workspace link, the start, a queued second message, the first turn, a failed start, Try again |
 | `app/routines` | The routines of the org, a routine, its triggers, its runs, and a run workspace |
 | `app/org-settings`  | General with Delete org, then Repositories and Cloud computer with the notice of a repository change, the first build of a new org, and Members |
-| `app/chat`          | A finished turn with its work folded, then running turns, open work, tables in replies, lists in replies, headings in replies, lost data, lost updates, unread files, and the time limit of background work |
+| `app/chat`          | A finished turn with its work folded, then running turns, turns that an agent stopped, open work, tables in replies, lists in replies, headings in replies, lost data, lost updates, unread files, and the time limit of background work |
 | `app/mac-commands`  | A command that an agent runs on the Mac of the sender, in the chat            |
 | `app/sessions`      | A new session, the history, closing one while it works, and a linked session  |
 | `app/reassign`      | The owner of a workspace, its reassign menu, a member's view, a stopped turn  |
 | `app/archive`       | An archived workspace with Restore, the toast after Archive, the Archived group, the restored workspace, the end of Restore, and the bar after the delete |
-| `app/composer`      | Attached files, the picker, another member's login, and a missing agent       |
-| `app/attachments`   | A file that uploads, a failed upload, a file over 25 MB, sent files, and a first message with files |
+| `app/composer`      | Two uploaded files in a sentence, the picker, another member's login, and a missing agent |
+| `app/attachments`   | A file that uploads in the text, then a drop, a failed upload, a file over 25 MB, sent files, the file tab of a sent screenshot, and a first message with files |
 | `app/workspace-links` | Chips in a message and an answer, then Copy link and its failure, a pasted link, a link of another org, session chips, and messages that an agent sent |
 | `app/file-mentions` | The list of `@` with a query, then the list without one, its other states, and the file chips of the composer and of a sent message |
-| `app/files`         | All files, Changes with its summary, and a file, Markdown, and diff tab       |
+| `app/files`         | All files, Changes with its summary, and a file, Markdown, diff, and image tab |
 | `app/tabs`          | A dragged tab, the moved row, a full row, the tab menu, and the rename field  |
 | `app/transcripts`   | Copy a transcript from the tab menu: the toast after a copy, a failed copy, and the menu of an archived workspace |
-| `app/tools`         | The terminal, then the Preview tool with its detected servers and its failed list repair, and the hidden Desktop, kept for its return |
+| `app/tools`         | The terminal tabs and their states, then the Preview tool with its detected servers and its failed list repair, and the hidden Desktop, kept for its return |
 | `app/panels`        | The right column, widened by the handle on its inner edge, and then hidden    |
-| `mac-app`           | The Mac app: its window, the waitlist, its device commands, and This Mac      |
-| `user-flows`        | Sign up, sign up during open sign-up, join with an invite link, create a workspace, create one in the dialog, reopen it, open one from the palette, send feedback, archive one from its row, create an org, run a Mac command, create a routine, link a workspace, open a session link, merge and continue, mention a file |
+| `mac-app`           | The Mac app: its window, the waitlist, its device commands, This Mac, Keyboard shortcuts, and the palette with keys |
+| `user-flows`        | Sign up, sign up during open sign-up, join with an invite link, create a workspace, create one in the dialog, reopen it, open one from the palette, send feedback, archive one from its row, create an org, run a Mac command, create a routine, link a workspace, open a session link, merge and continue, mention a file, drop a file |
 
 A folder page shows at most five screens, saved states included. A folder
 with child folders shows only its canonical screen, as `marketing`, `marketing/docs`, `app`,
@@ -50,7 +50,7 @@ with child folders shows only its canonical screen, as `marketing`, `marketing/d
 `app/orgs/suspended`, `app/account`, `app/account/connect-codex`, `app/new-workspace`,
 `app/new-workspace/dialog`, `app/org-settings`,
 `app/org-settings/cloud-computer`, `app/operator`, `app/operator/user`, `app/operator/user/access`, `app/operator/codes`, `app/banner`, `app/chat`, `app/archive`, `app/workspace-links`, `app/routines`, `app/routines/routine`,
-`app/routines/triggers`, `app/orgs/suspended/routines`, `app/file-mentions`, and `app/tools` do. `marketing/pictures` has no screen of its own. Each picture's capture
+`app/routines/triggers`, `app/orgs/suspended/routines`, `app/file-mentions`, `app/attachments`, `app/files`, `app/tools`, `app/account/shortcuts`, and `mac-app/shortcuts` do. `marketing/pictures` has no screen of its own. Each picture's capture
 page is its own entry at `marketing/pictures/<picture>`, so each page shows
 one screen. `marketing/from-conductor` has no screen of its own either. Its
 index document, `index.md`, gives the notes of the page and where its
@@ -60,9 +60,10 @@ and build-failed states moved from `app/repository-settings` and its updating
 and update-failed states, and declare `movedFrom`. The states of `app/shell`,
 `app/account`, `app/sign-in/waitlist`, `app/new-workspace`,
 `app/new-workspace/dialog`, `app/org-settings/cloud-computer`,
-`app/operator/user/access`, `app/archive`, and `app/command-palette/search`
-moved into their own folders and kept their paths, so that each of those pages
-shows only its canonical screen. `app/sign-in/get-started` moved into its own folder and
+`app/operator/user/access`, `app/archive`, `app/command-palette/search`, `app/attachments`, and
+`app/files` moved into their own folders and kept their paths. Each page
+shows only its canonical screen. `app/sign-in/get-started` moved into its
+own folder and
 kept its path. Its saved states `installed`, `org-created`, `connected`,
 and `no-org` moved into their own folders and kept their paths, so that
 the page shows only its canonical screen. Get started is the only first
@@ -151,7 +152,7 @@ Acme, which adds acme/admin-dashboard and removes acme/marketing-site:
   of the install script.
 
 `app/account` shows the General tab of the account, with Claude connected
-by a subscription token and Codex by an API key. Its tabs are links, as
+by a subscription token and Codex by an API key. Its three tabs are links, as
 the tabs of the org settings are. Its child pages:
 
 - `app/account/preferences` shows the Preferences tab, from decision 142
@@ -184,12 +185,30 @@ the tabs of the org settings are. Its child pages:
 - `app/account/invites` has the invite code while sign-ups are paused.
   [The waitlist, suspensions, and the operator](catalogue-operator.md)
   gives its variants.
+- `app/account/shortcuts` shows the Keyboard shortcuts tab in a browser, as
+  the keyboard shortcuts section below gives.
+
+`app/account/own-endpoint` shows the form of Claude on the own endpoint
+kind, while Codex runs on an own endpoint. Its `typed` variant has a
+typed address, and the hint names the address that the form saves from
+it. Its `codex` variant has the form of Codex on that kind. Its `refused`
+variant has an `http://localhost` address that the shared address rule
+refused. Its `connected` variant has both agents on an own endpoint, each
+with its host and its share switch on.
+`app/account/endpoint-models` shows option G of decision 10 of the own
+endpoint plan, which Cal chose on 10 November 2026: the pickers of the
+owner of a login hide each model that its endpoint does not list. Both
+agents run on Cal's proxy, whose model list does not name Fable 5.1. The
+Claude row says that Fable 5.1 is hidden from Cal's model pickers, and
+why, with the model ID, the time of the last read of the list, and
+Refresh.
 
 `app/new-workspace/dialog` draws New workspace as a dialog over the ready
 workspace of `app`, for a user who chose the dialog. Its states are child
 pages. `first-build` shows Firna before its first good build, with the
 notice and Create off. The other child pages show files that upload, a
-draft with uploaded files and the notice of a missing agent login, a
+drop of files on the whole dialog card, a draft with uploaded files and
+the notice of a missing agent login, a
 create request that failed, an org without chosen repositories, and a
 pasted workspace link as a chip. The dialog uses the file chips of
 `app/new-workspace/files`. A phone always opens the page, so each phone
@@ -252,6 +271,78 @@ chose these four actions on 9 November 2026. Its child pages:
 child pages of `app/command-palette` and of `app/feedback`, and the flow
 that sends feedback.
 
+The catalogue draws the Keyboard shortcuts tab in the Mac app and in a
+browser, from decisions 190 to 196. The pages of
+`app/account` and `mac-app/this-mac` show it as the third tab of the
+account.
+
+- `app/account/shortcuts` shows the tab in a normal Chrome tab on a Mac.
+  The search field of decision 195 stands at the top. The lines under it
+  say which keys the terminal keeps, and where the dimmed keys work. A
+  key that the tab keeps, or that decisions 192 and 196 leave to the
+  browser, is dimmed. Its child pages:
+  - `app/account/shortcuts/windows` has a normal Chrome tab on Windows,
+    with the keys of decision 194 and the terminal line of Windows.
+  - `app/account/shortcuts/linux` has a normal Chrome tab on Linux, with
+    the keys of Windows and Linux. From decision 196, the app leaves
+    Ctrl+1 to Ctrl+9, Alt+1 to Alt+9, and Ctrl+L to Chrome, so Switch to
+    org 1 to 9 show only dimmed keys. Its `firefox` variant has a normal
+    Firefox tab on Linux, where the app leaves only Alt+1 to Alt+9 and
+    Ctrl+L to Firefox, so Ctrl+1 to Ctrl+9 are not dimmed.
+  - `app/account/shortcuts/firefox` has a normal Firefox tab on a Mac,
+    which keeps ⌥⌘↑, ⌥⌘↓, and ⇧⌘P and lets the page take ⇧⌘T.
+  - `app/account/shortcuts/installed` has the installed app of Chrome on
+    a Mac, where no key is dimmed.
+  - `app/account/shortcuts/search` has a search for "tab", with dimmed
+    keys in its rows. Its `no-match` variant has a search without a
+    match.
+  - `app/account/shortcuts/recording` has a row that records new keys,
+    with Remove beside Cancel. Its `adding` variant has the recorder of +,
+    which adds a shortcut and shows only Cancel. Its `fixed-key` variant
+    has ⌘Z, a text key that the recorder did not take. Its `enter-key`
+    variant has ⇧⌘Enter, a fixed key that no row lists, so the line says
+    only that it is fixed. Its `conflict` variant has a recorded shortcut
+    of another command, with Replace and Cancel.
+  - `app/account/shortcuts/changes` has changed rows with Reset, and Reset
+    all. Its `reset-conflict` variant has a search for "model" and the
+    Reset of Model picker, whose default shortcut Keyboard shortcuts now
+    holds, with Replace and Cancel. Its `reset-all` variant has the
+    question before Reset all, a sheet on a phone. Its `reset-all-failed`
+    variant has a Reset all that failed. Its `not-saved` variant has a
+    save that failed.
+
+  The phone views of these pages put the shortcuts of each row on a line
+  under its label.
+- `mac-app/shortcuts` shows the Keyboard shortcuts tab of the account in
+  the Mac app, which gives the page every key. The search field of
+  decision 195 stands at the top, and the line under it says which keys
+  the terminal keeps. Its child pages:
+  - `mac-app/shortcuts/search` has a search for "tab". It finds commands
+    by their labels and by their search words, and fixed rows. Its
+    `fixed-keys` variant has a search for "move". It finds the fixed keys
+    of decision 193, those of a focused workspace row and of a focused
+    divider, and the text keys that move by word or by line. Its
+    `no-match` variant has a search without a match.
+  - `mac-app/shortcuts/recording` has a row that records new keys, with
+    Remove beside Cancel. Its `adding` variant has the recorder of +, which
+    adds a shortcut and shows only Cancel. Its `fixed-key` variant has a
+    fixed shortcut that the recorder did not take. Its `space-key` variant
+    has Space, which presses a focused button, so the line names that row.
+    Its `conflict` variant has a recorded shortcut of another command, with
+    Replace and Cancel.
+  - `mac-app/shortcuts/changes` has changed rows with Reset, and Reset
+    all. Its `reset-conflict` variant has a search for "model" and the
+    Reset of Model picker, whose default shortcut Keyboard shortcuts now
+    holds, with Replace and Cancel. Its `reset-all` variant has the
+    question before Reset all. Its `reset-all-failed` variant has a Reset
+    all that failed. Its `not-saved` variant has a save that failed.
+- `mac-app/command-palette` shows the All tab of the palette over a
+  workspace in the Mac app, with the key of each command row. The Search
+  row of each Mac app page opens it. Its `actions` and `settings` variants
+  have those tabs. The Settings tab adds This Mac to the Account group,
+  which ends with Keyboard shortcuts. Its `changed-key` variant has the
+  Search row with ⇧⌘P, the person's key of the palette.
+
 [The pull request bar](catalogue-bar.md) gives `app/banner`, the bar of a
 workspace with its actions, its child pages, and the flow
 `user-flows/merge-and-continue`.
@@ -279,3 +370,6 @@ pages, their child pages, and their related flows.
 
 [Workspace links, file mentions, and tools](catalogue-workspace-tools.md)
 gives those catalogue pages and their related flows.
+
+[Attachments and files](catalogue-attachments-and-files.md) gives the child
+pages of `app/attachments` and `app/files`, and their related flow.

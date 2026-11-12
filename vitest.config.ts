@@ -7,6 +7,7 @@ export default defineConfig({
     include: [
       'src/**/*.test.{ts,tsx}',
       'worker/**/*.test.ts',
+      'tools/chatgpt-egress/**/*.test.ts',
       'desktop/src/**/*.test.ts',
       'desktop/renderer/**/*.test.ts',
       'desktop/scripts/**/*.test.ts',

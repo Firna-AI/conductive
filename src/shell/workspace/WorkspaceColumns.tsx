@@ -12,10 +12,13 @@ import chat from '../../../docs/mockups/src/components/chat/ChatPane.module.css'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import tabs from '../../../docs/mockups/src/components/workspace/MobileTabBar.module.css'
 import column from '../../../docs/mockups/src/components/workspace/RightColumn.module.css'
+import { splitStyles } from '../../../docs/mockups/src/components/workspace/RightColumn'
 import { routes } from '../../app/router'
 import { useStore } from '../../app/store'
 import { ResizeHandle } from '../layout/ResizeHandle'
+import { SplitHandle } from '../layout/SplitHandle'
 import { usePanelLayout } from '../layout/panels'
+import { useShortcutOffer } from '../shortcuts/shortcut-context'
 import { IconButton } from '../ui/actions'
 import { AppLink } from '../ui/AppLink'
 import type { WorkspaceContext } from './features'
@@ -24,24 +27,28 @@ import workspace from './workspace.module.css'
 
 /**
  * The toggle at the end of the workspace header on desktop. It hides the
- * right column, and shows it again.
+ * right column, and shows it again. The key of the command does the same.
  */
 export function RightColumnToggle() {
   const panels = usePanelLayout()
   const shown = useStore(panels.rightShown)
+  useShortcutOffer('toggle-right-column', panels.toggleRight)
   return (
     <IconButton
       icon={PanelRight}
       label={shown ? 'Hide the right column' : 'Show the right column'}
       onPress={panels.toggleRight}
+      shortcut="toggle-right-column"
     />
   )
 }
 
 /**
  * The column beside the chat: the pull request bar, the file lists, and the
- * tools panel below them. A handle on its inner edge resizes it. Without
- * `tools`, the files part fills the column, as for an archived workspace.
+ * tools panel below them. A handle on its inner edge resizes it. A second
+ * handle on the top edge of the tools panel moves the split between the
+ * file lists and the tools. Without `tools`, the files part fills the
+ * column, as for an archived workspace.
  *
  * A column that the user hid stays mounted. So the file lists keep the
  * connection that the file tabs of the centre use, and the terminal keeps
@@ -55,7 +62,11 @@ export function RightColumn(props: {
   const panels = usePanelLayout()
   const width = useStore(panels.widths).right
   const shown = useStore(panels.rightShown)
+  const share = useStore(panels.split.share)
   const aside = useRef<HTMLElement>(null)
+  const files = useRef<HTMLDivElement>(null)
+  const tools = useRef<HTMLDivElement>(null)
+  const split = props.tools && share !== null ? splitStyles(share) : undefined
   return (
     <aside
       aria-label="Files and tools"
@@ -71,8 +82,19 @@ export function RightColumn(props: {
         panelRef={aside}
       />
       {props.pullRequest}
-      <div className={column.files}>{props.files}</div>
-      {props.tools ? <div className={column.tools}>{props.tools}</div> : null}
+      <div className={column.files} ref={files} style={split?.files}>
+        {props.files}
+      </div>
+      {props.tools ? (
+        <div className={column.tools} ref={tools} style={split?.tools}>
+          <SplitHandle
+            filesRef={files}
+            label="Resize the files and the tools"
+            toolsRef={tools}
+          />
+          {props.tools}
+        </div>
+      ) : null}
     </aside>
   )
 }

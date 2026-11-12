@@ -6,7 +6,11 @@ pages of the chat and of routines.
 `app/chat` shows a finished turn, whose work folds into one line. Its child
 pages: `app/chat/turns` has the running turn, steer, interrupt, and a
 failure, which moved from `app/chat/running`, `steer`, `interrupted`, and
-`failed` and declare `movedFrom`. `app/chat/work` draws the work of ended
+`failed` and declare `movedFrom`. `app/chat/agent-stops` draws a turn that
+the agent of another session stopped with a workspace tool, from decision
+279. Its line says "Stopped from" and shows the session chip of that
+session, for a session of the same workspace and, in `other-workspace`, of
+another workspace. `app/chat/work` draws the work of ended
 turns, from decisions 150 and 151: the open work of the finished turn with
 one message open, a turn with a message that the user sent during it, whose
 two parts each fold their own work, a turn whose open work holds a Mac
@@ -44,6 +48,15 @@ could not read: a finished turn and a stopped turn
 without their changed files, All files with its saved list under a notice,
 and a new workspace with no list. The `tree` state draws the two states of
 All files.
+`app/chat/endpoint-models` shows option G of decision 10 of the own
+endpoint plan, which Cal chose on 10 November 2026: the pickers of the
+owner of a login hide each model that its endpoint does not list. In a
+session of Cal, the picker shows the models of the app without Fable 5.1,
+because the model list of Cal's proxy does not name it. Its `not-served`
+variant has a stopped turn on Fable 5.1, which the session kept as its
+model, and the notice names the model ID and no host. Its `member`
+variant has the same notice as Priya sees it.
+
 `app/chat/background-limit` draws a turn that waited for the background
 work of its agent, a watch of the checks of pull request #482. The checks
 still ran at the time limit, so the turn ends as finished, with

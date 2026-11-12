@@ -29,10 +29,11 @@ This page lists each protocol doc and what it covers.
   - [Messages and attachments](../protocol/messages-and-attachments.md)
     - [Message attachments](../protocol/message-attachments.md): the size
       limit, the upload, the storage, the copy into the cloud computer, and
-      the deletion of the files of a message.
+      the deletion of the files of a message, and their chips and their
+      drop in the message field.
   - [File mentions](../protocol/file-mentions.md): the list of `@` in the
-    composer, the chips of files and folders, and the removal of each chip
-    of the composer.
+    composer, the chips of files and folders, the sent chips of attached
+    files, and the removal of each chip of the composer.
   - [Agent runner](../protocol/agent-runner.md): the connection of the runner,
     its events and their limits, its turns, the background work of Claude
     turns with its note and its time limit, its port reports, and the repair
@@ -43,8 +44,9 @@ This page lists each protocol doc and what it covers.
       reports that belong to no session, the repair request after a refused
       update, and the notice of a failed repair.
   - [Session transcripts](../protocol/session-transcripts.md): copying a
-    session as concise or full Markdown, its route, and the reads of
-    agents.
+    session as concise or full Markdown, and the text of a copy.
+    - [Transcript routes](../protocol/transcript-routes.md): the route of
+      a copy.
     - [Transcript reads by agents](../protocol/transcript-reads.md): the
       route of `read_session`, and the parts of a long text.
 - [Access and security](../protocol/access-and-security.md): sign-in, the
@@ -53,17 +55,35 @@ This page lists each protocol doc and what it covers.
     - [Version pins](../protocol/version-pins.md): the login rules and the
       risks of each version pin.
   - [Tokens and secrets](../protocol/tokens-and-secrets.md)
+    - [Own endpoint logins](../protocol/own-endpoint-logins.md): the
+      endpoint and the key of each agent, the model list of the endpoint,
+      and the addresses that the app accepts.
   - [Terminal, previews, and desktop](../protocol/terminal-previews-and-desktop.md)
 - [Model gateway](../protocol/model-gateway.md): the turn token, and the
   Worker routes that add the agent login to each model request.
+  - [Model gateway: requests and answers](../protocol/model-gateway-requests.md):
+    the upstream of each login, what passes to it and back, the own
+    endpoints, the streams, and the risks.
 - [GitHub banner](../protocol/github-banner.md): the pull request bar, its
   actions, Merge, and its events.
   - [The GitHub state](../protocol/github-summary.md): the four summary
     values for workspace list marks and their order.
 - [Agent tools](../protocol/agent-tools.md): the tools that agents use in a
-  sandbox.
+  sandbox, and Mac commands.
+  - [Agent tool access](../protocol/agent-tool-access.md): what each call
+    reaches, which calls need an active turn, and the rights of the sender.
+  - [Workspace calls](../protocol/workspace-calls.md): the calls that
+    create, list, get, rename, move, and archive workspaces, and the lists
+    that a create call takes.
   - [Session calls](../protocol/session-calls.md): the calls that start,
     list, message, and read the sessions of the org.
+    - [Session management](../protocol/session-management.md): the calls
+      that get, rename, close, and stop a session, and get a message.
+  - [Section and preview calls](../protocol/section-and-preview-calls.md):
+    the calls that create and delete sections, and list, open, and close
+    port previews.
+  - [Names from the workspace tools](../protocol/tool-names.md): the rule
+    for the names and titles that the calls give.
 - [Orgs and members](../protocol/orgs-and-members.md): orgs, sections,
   roles, the first run, and the end of an org.
   - [Org rail order](../protocol/org-rail-order.md): the order of the orgs
@@ -92,6 +112,13 @@ This page lists each protocol doc and what it covers.
 - [Feedback](../protocol/feedback.md): the Feedback dialog that Send
   feedback opens, its screenshots and context, the reply address, the
   routes, and the email to the team inbox.
+- [Keyboard shortcuts](../protocol/keyboard-shortcuts.md): the commands that
+  keys run, where a key goes, and where the changes of a person live.
+  - [Keyboard shortcuts: the keys](../protocol/keyboard-shortcuts-keys.md)
+  - [Keyboard shortcuts: fixed keys and text keys](../protocol/keyboard-shortcuts-fixed-keys.md)
+  - [Keyboard shortcuts: the hosts](../protocol/keyboard-shortcuts-hosts.md)
+  - [Keyboard shortcuts: matching a press](../protocol/keyboard-shortcuts-matching.md)
+  - [Keyboard shortcuts: the settings tab](../protocol/keyboard-shortcuts-tab.md)
 - [Org image](../protocol/org-image.md): the org image, its builds and its
   refreshes, and the first build of a new org.
 - [Agents and sessions](../protocol/agents-and-sessions.md): the agents and

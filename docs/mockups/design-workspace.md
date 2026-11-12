@@ -36,6 +36,14 @@ the cloud computer.
   and its tabs. `TabScroll.module.css` styles a full row, `TabDrag.module.css`
   a drag, and `TabRename.module.css` the rename field. The app shares these
   modules.
+- `TerminalTabs` in `src/components/tools/` draws the terminals of a
+  workspace as a row of tabs above the shown terminal, with + at its end,
+  from decisions 1 to 3 of the terminal tabs change, as `app/tools` shows. Its tabs are
+  the tabs of the centre column. The titles differ only in their number, so
+  each tab keeps its whole title, and a row that does not fit scrolls. The
+  last terminal has no close button. At the limit of 10 the + is off, and a
+  line under the row says how to open another. `TerminalTool` beside it
+  adds the shown terminal and the Disconnected bar.
 - Each workspace has a number in its org, and `workspaceLabel` in
   `src/components/workspaces/label.ts` shows it as `W-395`. The number
   shows in the header, in chips, and in a row of the command palette
@@ -48,7 +56,9 @@ the cloud computer.
     the content, so nothing moves. When the copy fails, the note says
     "The link didn't copy. Try again." in the danger colour. The note is
     a status, so screen readers hear it. The name of the button is "Copy
-    link to W-395".
+    link to W-395". On desktop, `ShortcutTip` in `src/components/common/`
+    gives it the tooltip "Copy link to W-395 (⇧⌘C)", with the first key
+    of Copy link that works where the page runs. A phone shows no key.
   - On desktop, the repository takes only the room that the other parts
     leave. The name is cut short only when the repository has no room left.
   - On a phone the label leads the line under the name, before the

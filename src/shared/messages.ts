@@ -42,6 +42,7 @@ export interface MessageSender {
 export interface Attachment {
   id: string
   name: string
+  path: string | null
   kind: 'image' | 'file'
   mediaType: string
   sizeBytes: number

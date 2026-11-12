@@ -40,6 +40,7 @@ export function createChatContext(
   options: ChatContextOptions,
   store: ChatStore,
   live: () => boolean,
+  draftEpoch: number,
 ): ChatContext {
   const { target, subscribe, timers } = options
   const api = createChatApi(options.client, target)
@@ -58,7 +59,7 @@ export function createChatContext(
     prompts: new Map(),
     newDraftId: () => {
       drafts += 1
-      return `draft-${drafts}`
+      return `draft:new:${draftEpoch}:${drafts}`
     },
     newFileId: () => {
       files += 1

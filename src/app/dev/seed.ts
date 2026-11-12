@@ -26,6 +26,7 @@ import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
 import { AGENTS } from '../api/read-core'
 import { getStartedOrder } from '../get-started'
 import { addReferralCode, referralCodeOf } from './access-codes'
+import { devEndpointLogins } from './endpoint-logins'
 import type { DevOptions } from './options'
 import {
   freshOrg,
@@ -271,7 +272,9 @@ export function seedState(options: DevOptions): DevState {
       operator: options.operator,
       agentLogins: noLogin
         ? AGENTS.map((agent): AgentLoginStatus => ({ agent, connected: false }))
-        : core.account.agentLogins,
+        : options.endpointLogins
+          ? devEndpointLogins(options.modelList)
+          : core.account.agentLogins,
     },
     getStarted: {
       orgId: noOrg ? null : FAKE_IDS.org,

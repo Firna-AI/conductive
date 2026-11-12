@@ -96,6 +96,27 @@ it('parses a turn credential and a message without a credential', () => {
   ).toThrow()
 })
 
+it('keeps stable attachment paths and reads older metadata with a null path', () => {
+  const original = command()
+  const file = {
+    id: 'file',
+    name: 'trace.txt',
+    kind: 'file',
+    mediaType: 'text/plain',
+    sizeBytes: 7,
+  }
+  for (const path of ['.context/attachments/file/trace.txt', null, undefined]) {
+    const attachment = { ...file, path }
+    const input = {
+      ...original,
+      message: { ...original.message, attachments: [attachment] },
+    }
+    expect(parse(input)).toMatchObject({
+      message: { attachments: [{ ...file, path: path ?? null }] },
+    })
+  }
+})
+
 it('keeps public ChatGPT identity and requires its typed fields on token turns', () => {
   const input = turn('chatgpt', 'alice', 'codex')
   const credential = {
@@ -166,6 +187,26 @@ it('keeps the supplied commit author only on a turn command', () => {
     parseWorkspaceMessage({ ...command, type: 'message' }, warn),
   ).not.toHaveProperty('commitAuthor')
 })
+
+it.each([
+  { value: '1h', expected: { promptCacheTtl: '1h' } },
+  { value: undefined, expected: {} },
+  { value: 'unsupported', expected: {} },
+])(
+  'parses the Claude prompt cache value $value without refusing the turn',
+  ({ value, expected }) => {
+    const input = command()
+    expect(
+      parse({
+        ...input,
+        credential: { ...input.credential, promptCacheTtl: value },
+      }),
+    ).toEqual({
+      ...input,
+      credential: { ...input.credential, ...expected },
+    })
+  },
+)
 
 it.each(['missing', 'null'])(
   'keeps a turn with a %s commit author and no warning',

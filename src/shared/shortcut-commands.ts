@@ -1,0 +1,70 @@
+export const shortcutDigits = [
+  '1',
+  '2',
+  '3',
+  '4',
+  '5',
+  '6',
+  '7',
+  '8',
+  '9',
+] as const
+
+/** The stable account keys of the commands that a person can change. */
+export const shortcutCommandIds = [
+  'command-palette',
+  'keyboard-shortcuts',
+  'account-page',
+  'create-org',
+  'send-feedback',
+  'toggle-sidebar',
+  'toggle-right-column',
+  'back',
+  'forward',
+  'workspace-list',
+  'previous-tab',
+  'next-tab',
+  'close-tab',
+  'reopen-session',
+  ...shortcutDigits.map((digit) => `org-${digit}` as const),
+  'repositories-settings',
+  'new-workspace',
+  'new-section',
+  'archive-workspace',
+  'restore-workspace',
+  'copy-link',
+  ...shortcutDigits.map((digit) => `workspace-${digit}` as const),
+  'previous-workspace',
+  'next-workspace',
+  'next-needs-input',
+  'create-pull-request',
+  'fix-checks',
+  'resolve-conflicts',
+  'address-review',
+  'commit-and-push',
+  'merge-pull-request',
+  'continue-after-merge',
+  'open-pull-request',
+  'go-to-all-files',
+  'go-to-changes',
+  'go-to-checks',
+  'go-to-terminal',
+  'go-to-preview',
+  'new-session',
+  'session-history',
+  'focus-message',
+  'attach-files',
+  'model-picker',
+  'next-effort',
+  'stop-agent',
+  'copy-concise-transcript',
+  'copy-full-transcript',
+] as const
+
+export type ShortcutCommandId = (typeof shortcutCommandIds)[number]
+
+export function isShortcutCommandId(
+  value: unknown,
+): value is ShortcutCommandId {
+  return shortcutCommandIds.some((id) => id === value)
+}

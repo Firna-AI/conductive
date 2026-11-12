@@ -1,41 +1,71 @@
 # Agent tools
 
 This doc holds the requirements and the decisions in force for the tools
-that the app gives the agents in each sandbox. The terms are those of the
-[architecture doc](../architecture.md#terms). A decision number names a
-dated record, as [Decision numbers](../architecture.md#decision-numbers)
-says.
+that the app gives the agents in each sandbox. It covers the workspace
+tools as a whole, Mac commands, and the computer tools. Linked pages state
+the calls of the workspace tools:
+
+- [Agent tool access](agent-tool-access.md): what each call reaches, which
+  calls need an active turn, and the rights of the sender.
+- [Workspace calls](workspace-calls.md): the create call, the workspace
+  list, the calls of one workspace, and the lists that a create call
+  takes.
+- [Session calls](session-calls.md) and
+  [Session management](session-management.md): the calls of sessions and
+  messages.
+- [Section and preview calls](section-and-preview-calls.md): the calls of
+  the sections and of the port previews.
+- [Names from the workspace tools](tool-names.md): the rule for each name
+  and title that a call gives.
+
+The terms are those of the [architecture doc](../architecture.md#terms). A
+decision number names a dated record, as
+[Decision numbers](../architecture.md#decision-numbers) says.
 
 ## Workspace tools
 
 - Every sandbox has two workspace tools: an MCP server and a CLI.
-- Both tools let an agent make ten calls:
-  - create a workspace
-  - list the workspaces of the org
-  - list the repositories that a create call accepts
-  - list the sections of the org
-  - list the models of the app
-  - start a session in a workspace of the org
-  - list the sessions of a workspace of the org
-  - send a message to a session
-  - read the chat of a session
-  - ask to run a command on a Mac, as [Mac commands](#mac-commands) says
-- [Session calls](session-calls.md) states the four calls of sessions.
+- Both tools give each call. Reason: the two tools stay equal.
+- The tools have 24 calls:
+  - 9 workspace calls: create, list, get, rename, move, and archive a
+    workspace, and list the repositories, the sections, and the models
+    that a create call takes
+  - 9 session calls: list, read, get, start, rename, close, and stop a
+    session, send a message, and get a message
+  - 5 section and preview calls: create and delete a section, and list,
+    open, and close the previews of a workspace
+  - 1 call that asks to run a command on a Mac, as
+    [Mac commands](#mac-commands) says
+- The calls cover each command of Conductor's CLI whose feature Conductive
+  has (decision 277). Reason: an agent can then manage the work that it
+  hands out.
+- Calls for routines, for the env vars of one workspace, and for fast mode
+  were left out (decision 277). Reason: Conductor's CLI refuses the
+  workspace token for its routine commands, so its agents cannot use them
+  either. Conductive has no env vars for one workspace and no fast mode.
 - Both tools call the Worker with the workspace token of their sandbox.
-- With the workspace token, the tools can make only these ten calls.
+- With the workspace token, the tools can make only these calls.
   [The workspace token](tokens-and-secrets.md#the-workspace-token) states
   what the token allows.
 - For each refusal of the Worker, both tools give the agent its error code
   and its message. Reason: an agent can act on a refusal, such as a closed
   session.
+- An input of the wrong form, such as a word where a call takes a number,
+  gets HTTP 400 with the error code `invalid_input`.
 - The tools call `api.conductive.build`, the hostname for machines. Its
   gate checks the workspace token in place of a sign-in.
-- Create calls and workspace list calls use `/v1/tools/workspaces`. The
-  session calls use addresses under it, as
-  [The calls](session-calls.md#the-calls) says.
-  [Repository, section, and model lists](#repository-section-and-model-lists)
-  gives the routes of the other three lists. Mac command requests use
-  `/v1/tools/mac-command` and the addresses under it.
+- Each call has a fixed route of its own under `/v1/tools/`. The table of
+  each linked page gives the routes. Mac command requests use
+  `/v1/tools/mac-command` and the addresses under it. Reason: the token
+  gate of the machine host keeps one list of routes.
+- The CLI takes the text of a message from a file, or from stdin with `-`,
+  for each call that takes a message. Reason: Conductor's CLI takes a
+  message file. The MCP server takes the text only.
+- A cloud computer has the workspace tools of the org image that it starts
+  from. A full build of the org image installs the current tools. A
+  refresh and a resume keep the tools of the cloud computer.
+- Tools from an older org image keep working with the Worker. They offer
+  only their own calls.
 - The app sets no limit of its own on the workspaces that agents create
   (decision 8). The plan limits of the app's Boat account apply, as
   [The provider](workspaces-and-sandboxes.md#the-provider) says.
@@ -43,128 +73,38 @@ says.
 - A workspace that an agent creates starts with no approval step in the
   app.
 
+## Names of the calls
+
+- Each MCP tool has a verb and a noun, such as `archive_workspace`. Each
+  CLI command has the form `conductive <nouns> <verb>`, such as
+  `conductive workspaces archive` (decision 278).
+- Conductor's command names were rejected for the CLI, for the MCP tools,
+  and as aliases. A second program with Conductor's commands was rejected
+  too. Reason: agents learn the tools from their descriptions and help, so
+  names matter little.
+
+## Tool descriptions
+
+- The help of the CLI and the descriptions of the MCP tools say these
+  things:
+  - which calls need an active turn
+  - that the calls reach each workspace of the org
+  - that a write acts with the rights of the sender in the app, so only the
+    workspace owner or an admin can archive a workspace
+  - which links each reply gives
+- [Tool descriptions](session-calls.md#tool-descriptions) states the
+  other text of the session calls.
+
 ## Create and list calls
 
-- A create call takes a repository of the same org and a first message
-  (decision 52).
-- A create call can also choose the model, and with it the agent. It can
-  also choose the effort and the section.
-- The new workspace gets the org and the workspace owner of the calling
-  workspace.
-- Without a choice in the call, the new workspace gets the default section
-  and the default model of its workspace owner.
-- The agent of the new workspace starts on the first message at once.
-- The sender of the calling turn sends the first message. So the GitHub
-  token of the first turn belongs to that member.
-- The first message ends with a `Sent by:` line, as
-  [The `Sent by:` line](session-calls.md#the-sent-by-line) says
-  (decision 259).
-- A create call can also give the new workspace a name. The Worker cleans
-  the name with this rule:
-  1. It keeps only the first line that has text.
-  2. It makes each run of white space one space.
-  3. It removes one final full stop, but it keeps an ellipsis.
-  4. It cuts a name over 60 Unicode code points at its last space within
-     the limit. When the first word is longer than the limit, it cuts the
-     name at the limit.
-- The answer of the create call holds the stored name.
-- A name that is blank after this rule counts as no name. The app then
-  shows "Untitled", as
-  [Create a workspace](create-a-workspace.md#the-branch-and-the-name)
-  says.
-- The name does not change the branch. The branch keeps its rule: the
-  GitHub login, a city name, and four random characters.
-- Reason: a name that sandbox code sends reaches the workspace list of
-  every member. A short name on one line keeps each list readable.
-- A refusal of a blank or long name was rejected, because the agent then
-  gets an error for a name that the rule can clean.
-- For the name, the CLI help and the description of `create_workspace`
-  say: "Use plain words separated by spaces. Avoid underscores unless the
-  user tells you to add them."
-- The rule keeps each underscore of the name (decision 256). Reason: only
-  the agent knows whether the member asked for underscores.
-- A rule step that changes each underscore to a space was rejected, because
-  the agent could then not keep underscores that a member asked for. A
-  field that marks a name from the member was rejected, because no agent
-  name showed the risk, and the agent must still set the field.
-- A step that keeps only the underscores of words from the member's
-  messages was rejected, because a request in other words, such as "use
-  snake case", then loses its underscores. A rule that an agent names a
-  workspace only when a member names it was rejected, because agents then
-  name fewer workspaces.
-- Risk: an agent that ignores the text still adds underscores. A cloud
-  computer gets the new text only from a full build of its org image.
-- The reply to a create call gives the new workspace with its number and
-  its link, as
-  [Workspace numbers and links](workspaces-and-sandboxes.md#workspace-numbers-and-links)
-  says (decision 212).
-- A workspace list call returns every workspace of the org, with its
-  number, its link, its name, its branch, and its state. Reason: every
-  member of the org already sees these workspaces.
-- The help of the CLI and the descriptions of the MCP tools say that a
-  workspace link in a message names the workspace with that link. They
-  also say that a workspace link in an answer shows as a chip, as
-  [Workspace links](workspace-links.md#messages-and-answers) says.
-- Reason: the agent can then match a link in a message to its workspace,
-  and point to a workspace that it created.
+[Create a workspace](workspace-calls.md#create-a-workspace) and
+[List the workspaces](workspace-calls.md#list-the-workspaces) state the
+create call and the workspace list.
 
 ## Repository, section, and model lists
 
-Three list calls give the repositories, the sections, and the models that
-a create call takes, with their IDs.
-
-| List | MCP tool | CLI command | Route |
-| --- | --- | --- | --- |
-| Repositories | `list_repositories` | `conductive repositories list` | `GET /v1/tools/repositories` |
-| Sections | `list_sections` | `conductive sections list` | `GET /v1/tools/sections` |
-| Models | `list_models` | `conductive models list` | `GET /v1/tools/models` |
-
-- One call that returns all three lists was rejected, because most create
-  calls need only the repository.
-- Each list call needs only the workspace token, as the workspace list
-  does. It needs no active turn.
-- Reason: the calls read data that every member of the org already sees,
-  and they start no work.
-
-### Repositories
-
-- The repository list returns exactly the repositories that a create call
-  accepts at that time. These are the repositories of the newest good org
-  image of the org of the calling workspace.
-- A list of the repositories that the org chose was rejected, because a
-  chosen repository that no image holds yet fails the create.
-- Each entry gives the repository ID that a create call takes, the GitHub
-  name, such as `acme/web`, and the default branch.
-- Each entry also says whether it is the repository of the calling
-  workspace.
-- The list is in the order of the GitHub names.
-- When the org has no good image, the call fails with HTTP 409
-  `image_required`, the same error as a create.
-- Reason: an empty list would hide why no create can work.
-
-### Sections
-
-- The section list returns every section of the org of the calling
-  workspace, in the order of the sidebar.
-- Each entry gives the section ID and the name.
-- Each entry also says whether it is the default section, the section that
-  a create uses when it names none.
-
-### Models
-
-- The model list returns the models that the app offers, in the order of
-  the app's model setting. The model picker of the app offers the same
-  models.
-- Each entry gives the agent, the model ID, the label, and the efforts of
-  the model.
-- The answer also gives the default choice. A create uses it for the model
-  or the effort that the call does not name.
-- The default choice is the saved default of the owner of the calling
-  workspace. Without a saved default, it is the default choice of the app.
-- The default choice is `null` when the owner has no saved default and the
-  app has no valid default choice.
-- When the app has no valid model list, the call fails with HTTP 503
-  `models_unavailable`, as the app's own model route does.
+[Repository, section, and model lists](workspace-calls.md#repository-section-and-model-lists)
+states the three lists that a create call takes.
 
 ## Mac commands
 

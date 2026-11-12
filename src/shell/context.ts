@@ -1,9 +1,11 @@
 import { createContext, useContext } from 'react'
 import type { AppModel } from '../app/app-model'
+import { offeredModels } from '../app/endpoint-models'
 import type { OrgModel } from '../app/org-model'
 import type { AppServices } from '../app/services'
 import { isSuspended, type OrgAccess } from '../app/permissions'
 import { useStore } from '../app/store'
+import type { AgentChoice, AgentModel } from '../shared/agents'
 import type { OrgSummary } from '../shared/orgs'
 
 export const AppModelContext = createContext<AppModel | null>(null)
@@ -13,6 +15,21 @@ export function useApp(): AppModel {
   const app = useContext(AppModelContext)
   if (!app) throw new Error('The app has no model.')
   return app
+}
+
+/**
+ * The models that a model picker of the person signed in offers: the models
+ * of the app, without each one that the last model list of the person's own
+ * endpoint login does not name, as `offeredModels` says. The picker keeps
+ * `current`, the model that it shows.
+ */
+export function useOfferedModels(
+  current: AgentChoice | undefined,
+): readonly AgentModel[] {
+  const app = useApp()
+  const models = useStore(app.models)
+  const account = useStore(app.account.account)
+  return offeredModels(models, account?.agentLogins ?? [], current)
 }
 
 /** The data of one org, which loads part by part as screens need it. */

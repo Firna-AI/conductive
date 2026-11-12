@@ -2,7 +2,9 @@ import { useEffect, useId, useState, type ReactNode } from 'react'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import { StatusText } from '../../../docs/mockups/src/components/common/StatusText'
 import styles from '../../../docs/mockups/src/components/settings/AccountSections.module.css'
+import { LoginEndpoint } from '../../../docs/mockups/src/components/settings/LoginEndpoint'
 import { AGENTS } from '../../app/api/read-core'
+import { unlistedModels } from '../../app/endpoint-models'
 import { useStore } from '../../app/store'
 import type { AccountResponse, AgentLoginStatus } from '../../shared/account'
 import type { Agent } from '../../shared/agents'
@@ -10,6 +12,7 @@ import { useApp } from '../context'
 import { ActionButton } from '../ui/actions'
 import { useAction } from '../ui/useAction'
 import { AgentConnectForm } from './AgentConnectForm'
+import { EndpointModels } from './EndpointModels'
 import { agentNames, loginLabels } from './labels'
 import {
   LoginNotUsable,
@@ -83,9 +86,11 @@ function AgentRow(props: {
             ) : (
               <SignedOutStatus />
             )}
-            <span className={styles.kind}>
-              {loginLabels[login.agent][login.kind]}
-            </span>
+            {login.kind === 'endpoint' ? null : (
+              <span className={styles.kind}>
+                {loginLabels[login.agent][login.kind]}
+              </span>
+            )}
           </>
         ) : null}
       </span>
@@ -96,13 +101,14 @@ function AgentRow(props: {
 
 /**
  * Claude and Codex, each with Connect, or Connected and the kind of its
- * login. In a narrow list, as on a phone, Connected and the kind go on a
- * second line under the name, so that the kind shows in full. Connect opens
- * the form of the agent under its row, one form at a time. `initial` opens
- * a form at first. `removable` gives each connected login its Remove, and
- * `shares` its share setting, as on the account. `closable` gives each form
- * its Cancel. `disabled` turns Connect off, as in a later step of Get
- * started.
+ * login. An own endpoint login shows its kind with the host of its endpoint
+ * under its row, so that a phone shows both in full. Under them come the
+ * models of the app that the last model list of the endpoint does not name,
+ * with Refresh. Connect opens the form of the agent under its row, one form
+ * at a time. `initial` opens a form at first. `removable` gives each
+ * connected login its Remove, and `shares` its share setting, as on the
+ * account. `closable` gives each form its Cancel. `disabled` turns Connect
+ * off, as in a later step of Get started.
  *
  * A login that the app can no longer use says Signed out in place of
  * Connected, with its cause and Sign in again under its row. Sign in again,
@@ -121,6 +127,7 @@ export function AgentList(props: {
 }) {
   const app = useApp()
   const account = useStore(app.account.account)
+  const models = useStore(app.models)
   useEffect(() => {
     void app.account.refreshLogins()
   }, [app])
@@ -135,6 +142,7 @@ export function AgentList(props: {
         const cause = unusableCause(login)
         const formOpen = open === agent && (login === null || cause !== null)
         const nameId = `${ids}-${agent}`
+        const unlisted = login ? unlistedModels(models, login) : null
         return (
           <li key={agent}>
             <AgentRow
@@ -147,6 +155,15 @@ export function AgentList(props: {
               open={() => setOpen(agent)}
               removable={props.removable}
             />
+            {login?.kind === 'endpoint' ? (
+              <LoginEndpoint
+                host={login.host}
+                kind={loginLabels[agent].endpoint}
+              />
+            ) : null}
+            {unlisted ? (
+              <EndpointModels agent={agent} unlisted={unlisted} />
+            ) : null}
             {cause !== null && !formOpen ? (
               <LoginNotUsable
                 cause={cause}

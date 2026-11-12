@@ -8,11 +8,13 @@ import { agentKeys, type AgentKey } from '../fixtures/agents'
 import {
   accountLogins,
   codexUnusableCause,
+  endpointLogins,
+  unlistedModelLogins,
   type AgentLogins,
-  type LoginKind,
+  type AgentLogin,
 } from '../fixtures/logins'
 import { paths } from '../paths'
-import type { AccountState } from './AccountScreen'
+import type { AccountState } from './accountState'
 
 type FormKey = Exclude<AccountState['form'], 'none'>
 
@@ -65,15 +67,26 @@ function signingInAgain(state: AccountState): boolean {
  * row while the form is open.
  */
 function loginsFor(state: AccountState): AgentLogins {
-  const logins: Partial<Record<AgentKey, LoginKind>> = {}
+  const logins: Partial<Record<AgentKey, AgentLogin>> = {}
   if (state.connections === 'not-connected') return logins
-  const kinds = { ...accountLogins, codex: state.codexLogin }
+  const kinds: AgentLogins =
+    state.ownEndpoint === 'none'
+      ? {
+          ...accountLogins,
+          codex:
+            state.codexLogin === 'endpoint'
+              ? endpointLogins.codex
+              : { kind: state.codexLogin },
+        }
+      : state.ownEndpoint === 'unlisted'
+        ? unlistedModelLogins
+        : endpointLogins
   const formAgent =
     state.form === 'none' || signingInAgain(state)
       ? null
       : openForms[state.form].agent
   for (const key of agentKeys) {
-    if (key !== formAgent) logins[key] = kinds[key]
+    if (key !== formAgent && kinds[key]) logins[key] = kinds[key]
   }
   return logins
 }
@@ -86,6 +99,21 @@ function loginsFor(state: AccountState): AgentLogins {
 function formFor(state: AccountState): OpenAgentForm | undefined {
   if (state.form === 'none') return undefined
   const form = { ...openForms[state.form], signIn: state.codexSignIn }
+  const endpoint =
+    state.ownEndpoint === 'form'
+      ? 'empty'
+      : state.ownEndpoint === 'typed'
+        ? 'typed'
+        : state.ownEndpoint === 'refused'
+          ? 'refused'
+          : null
+  if (endpoint)
+    return {
+      ...form,
+      kind: 'endpoint',
+      endpoint,
+      connectTo: paths.ownEndpointConnected,
+    }
   if (state.form !== 'codex-token' || !signingInAgain(state)) return form
   return { ...form, connectTo: paths.codexSignInAgainCode }
 }

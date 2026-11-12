@@ -24,8 +24,9 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
   disables codes, pauses sign-ups, and turns the waitlist off and on.
   [Operator section](../protocol/operator-section.md) states its rules.
 - Tabs are links, so each tool and each file view has its own address.
-- The browser stores only the panel widths. All other state comes from
-  the Worker. A tab keeps the chats that it showed in memory, as
+- The browser stores only the panel sizes: the widths of the sidebar and
+  the right column, and the split of the right column. All other state
+  comes from the Worker. A tab keeps the chats that it showed in memory, as
   [Chat and events](../protocol/chat-and-events.md#events) says.
 
 ## Mac app
@@ -44,8 +45,12 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
 - It runs the model gateway. The gateway takes the model requests of the
   agent programs in a sandbox, with the
   [turn token](../protocol/model-gateway.md#terms) of their turn. It adds the
-  agent login of the turn, and forwards each request to Anthropic or
-  OpenAI. [Model gateway](../protocol/model-gateway.md) states its rules.
+  agent login of the turn, and forwards each request to Anthropic, to
+  OpenAI, or to the endpoint of an own endpoint login, as
+  [External services](#external-services) says.
+  [Model gateway](../protocol/model-gateway.md) states its rules.
+  It sends the requests of a ChatGPT sign-in through the
+  [ChatGPT egress Worker](#chatgpt-egress-worker).
 - It reaches Boat through one provider adapter, so that a later change can
   add another provider. It calls only a fixed list of Boat routes.
 - It calls each sandbox and each saved snapshot through the client of its
@@ -62,6 +67,19 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
 - Two Cron Triggers run the timed work. One runs every 15 minutes for
   deleted orgs, lifecycle repairs, and pending approval emails. One runs
   every minute for due routine runs and runs that stayed queued.
+
+## ChatGPT egress Worker
+
+- A second Cloudflare Worker owns the egress container. It has no route
+  and no public address. Only the Worker reaches it, through a service
+  binding.
+- The egress container sends the ChatGPT requests of the model gateway to
+  OpenAI, because OpenAI refuses them from a Worker.
+  [Requests and answers](../protocol/model-gateway.md#requests-and-answers)
+  states its rules.
+- It sees a ChatGPT login only in transit and keeps no copy.
+- Each push to `main` that changes its code deploys it, before the
+  Worker, as [Automatic deploys](../automatic-deploys.md) says.
 
 ## D1
 
@@ -141,8 +159,10 @@ Every org image holds the app's own sandbox software:
 - the agent runner, a Node program that runs as an always-on service
 - the terminal service, on a private port
 - the preview relay, on a private port
-- the agent tools: an MCP server and a CLI that create and list workspaces,
-  start, list, read, and message sessions, and ask for Mac commands
+- the agent tools: an MCP server and a CLI that create, list, and change
+  the workspaces of the org, start, read, message, close, and stop its
+  sessions, change its sections, open port previews, and ask for Mac
+  commands
 - a git credential helper that gets a fresh GitHub token for each git
   operation
 
@@ -185,14 +205,25 @@ the rules.
 
 - **GitHub App:** one app gives the sign-in, the repository access, and the
   webhooks of every org.
-- **Anthropic and OpenAI:** the model use of each turn bills to the own
-  Claude or OpenAI account of the starter of its session. With a runner of
-  protocol version 2 or later, the model requests of a turn reach them
-  through the model gateway of the Worker. A settings file in the
-  repository can send the requests of Claude to another address instead.
-  The gateway keeps no copy of a request or an answer. With a runner of
-  version 1, the agent programs send their model requests from the sandbox
-  to the provider.
+- **Anthropic and OpenAI:** the model use of each turn on a subscription
+  token or an API key bills to the own Claude or OpenAI account of the
+  starter of its session. With a runner of protocol version 2 or later,
+  the model requests of a turn reach them through the model gateway of the
+  Worker. A settings file in the repository can send the requests of
+  Claude to another address instead. The gateway keeps no copy of a
+  request or an answer. With a runner of version 1, the agent programs
+  send their model requests from the sandbox to the provider.
+- **Own endpoints:** an own endpoint is a gateway or a proxy that a user
+  chose, such as a proxy that pools subscriptions. A user can connect one
+  as the agent login of Claude or of Codex. For each turn on such a login,
+  the model gateway forwards the model requests of the turn to the
+  endpoint, with the key that the user saved. So the endpoint gets the
+  messages, the files, and the command results of those turns. Only a
+  runner of protocol version 2 or later runs such a turn, and no sandbox
+  gets the address or the key.
+  [Own endpoint logins](../protocol/own-endpoint-logins.md)
+  and [Own endpoints](../protocol/model-gateway-requests.md#own-endpoints)
+  state the rules.
 - **Workers AI:** the Cloudflare model service writes a title for a
   workspace that has no name, from its first message. Its use bills to the
   Cloudflare account of the app (decision 184).

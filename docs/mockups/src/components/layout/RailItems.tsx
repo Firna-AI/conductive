@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import type { Org } from '../../fixtures/orgs'
 import { paths } from '../../paths'
+import { KeyChips, type Shortcut } from '../common/KeyChips'
 import { Menu, type MenuEntry } from '../common/Menu'
 import { ScreenLink } from '../common/ScreenLink'
 import a11y from '../common/a11y.module.css'
@@ -73,6 +74,8 @@ export function OrgItem(props: {
   org: Org
   current: boolean
   hint: boolean
+  /** The key that opens the org, which its hint shows. */
+  shortcut?: Shortcut
   state?: OrgState
   placeholder?: boolean
   menu?: readonly MenuEntry[]
@@ -110,6 +113,11 @@ export function OrgItem(props: {
       {props.hint ? (
         <span aria-hidden className={styles.hint}>
           {org.name}
+          {props.shortcut ? (
+            <span className={styles.hintKey}>
+              <KeyChips shortcut={props.shortcut} />
+            </span>
+          ) : null}
         </span>
       ) : null}
       {menu ? (

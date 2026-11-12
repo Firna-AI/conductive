@@ -1,6 +1,6 @@
 import { useMemo, type CSSProperties } from 'react'
 import { splitLines } from '../model/file-text'
-import { highlightLines, type TokenKind } from './highlight'
+import { highlightLines, type Token, type TokenKind } from './highlight'
 import { languageOf } from './languages'
 import styles from './code.module.css'
 
@@ -20,6 +20,15 @@ export function digitStyle(lastLine: number): DigitStyle {
   return { '--number-digits': String(String(lastLine).length) }
 }
 
+/** The coloured tokens of one line. */
+export function TokenSpans(props: { tokens: readonly Token[] }) {
+  return props.tokens.map((token, index) => (
+    <span className={tokenClass[token.kind]} key={index}>
+      {token.text}
+    </span>
+  ))
+}
+
 /** A text file with line numbers, and syntax colours for known languages. */
 export function CodeView(props: { text: string; name: string }) {
   const lines = useMemo(
@@ -33,11 +42,7 @@ export function CodeView(props: { text: string; name: string }) {
           <div className={styles.line} key={index}>
             <span className={styles.number}>{index + 1}</span>
             <span className={styles.text}>
-              {tokens.map((token, tokenIndex) => (
-                <span className={tokenClass[token.kind]} key={tokenIndex}>
-                  {token.text}
-                </span>
-              ))}
+              <TokenSpans tokens={tokens} />
             </span>
           </div>
         ))}

@@ -10,7 +10,8 @@ Each handler returns `null` for a path that it does not own. The
 
 | Handler | Routes |
 | --- | --- |
-| `bootRoute` in [`boot.ts`](boot.ts) | `GET /api/account`, `GET /api/models`, `GET /api/get-started`, `PUT /api/account/default-model`, `PUT /api/account/new-workspace-view`, and `PUT`, `PATCH`, and `DELETE` of `/api/account/agent-logins/:agent` |
+| `bootRoute` in [`boot.ts`](boot.ts) | `GET /api/account`, `GET /api/models`, `GET /api/get-started`, `PUT /api/account/default-model`, `PUT /api/account/new-workspace-view`, `PUT /api/account/shortcuts`, and `PUT`, `PATCH`, and `DELETE` of `/api/account/agent-logins/:agent` |
+| `endpointModelsRoute` in [`endpoint-models.ts`](endpoint-models.ts) | `POST /api/account/agent-logins/:agent/models/refresh` |
 | `codexDeviceRoute` in [`codex-device.ts`](codex-device.ts) | `POST /api/account/agent-logins/codex/device` starts a ChatGPT sign-in. `POST` of its `/:handle` polls and exchanges it |
 | `shellRoute` in [`shell.ts`](shell.ts) | `GET` of the sections, the repositories, the members, and the workspace list of an org. `GET` and `PUT` of the view of a workspace, and `PUT` of its read mark |
 | `featureShellRoute` in [`feature-shell.ts`](feature-shell.ts) | GitHub installations and available repositories of the account; Create org with initials and repositories; settings reads and writes; repository choices; section writes; workspace names and moves |
@@ -43,13 +44,60 @@ View writes cannot change this branch.
   `CONDUCTIVE_DEFAULT_CHOICE`, as
   [Deployment inputs](../../docs/deployment.md#models) says. A missing or
   invalid value gives a 503 on its own route only.
-- An account reply reads `user_preferences` and the records of the agent
+- An account reply reads `user_preferences`, `user_shortcuts`, and the records of the agent
   logins. It also gives the page of the GitHub App from `GITHUB_APP_SLUG`,
   so a screen links to that page without a GitHub read. A login write
   encrypts the secret with `agentLoginContext(userId, agent)` and
   `BOAT_KEY_ENCRYPTION_KEY`. No reply holds a stored secret.
+- An own endpoint save uses `readEndpointAddress` from
+  [`endpoint-address.ts`](../../src/shared/endpoint-address.ts). It encrypts
+  one JSON value with the normalized endpoint and the whitespace-free key,
+  under the same context. Only the endpoint origin stays in plain text.
+  Save and preference replies give the host, kind, share setting, and last
+  secret-save time. They never give the full address.
+  `accountLogins` requires the app model getter for account reads and share replies.
+  Both replies keep the saved `modelList`, including its missing app IDs and read time.
+  Save reads the endpoint model list without making a failed read fail the save.
+  Each replacement drops the old model list and its attempt time.
+  [`account-models.ts`](account-models.ts) adds the optional `modelList` to
+  an own endpoint login in the signed-in user's account reply.
+  Its `missing` array holds app model IDs absent from the last successful list.
+  Its `checkedAt` holds that successful read's Unix millisecond time.
+  No successful read means no `modelList`.
+  A list with no matching app model reports all of that agent's app IDs as missing.
+  The browser uses that case to keep every model available.
+  An unavailable model configuration leaves discovery metadata out of the account reply.
+  The model-list route keeps its existing configuration error.
+  Refresh reads only the signed-in user's login and answers 204, also after a failed read.
+  A removed or native login makes Refresh do nothing.
+  Read the account again after Refresh to obtain the last successful result.
+  The builder accepts public HTTPS addresses with host names.
+  It refuses every IPv4 and IPv6 address, credentials, and non-public names.
+  It reads the product domain from the shared brand source.
+  The save also passes `env.PREVIEW_DOMAIN` to refuse that deployment's preview domain and its subdomains.
+  It preserves the query and drops the fragment and trailing slash.
+  For Claude, it also drops a final `/v1`.
+  A valid own endpoint can run through the model gateway on protocol 2.
+  An invalid saved address or a protocol 1 runner makes it unavailable in chat.
+- `PUT /api/account/shortcuts` takes `SaveShortcutsRequest` and returns
+  `SaveShortcutsResponse` from the shared shortcut contracts. The shared
+  reader checks the whole request before any write. A contract error
+  returns HTTP 400 with `invalid_input` and the reader's message.
+  Enter with any modifiers and plain Space are fixed keys on both keyboards.
+  Only keypad digits can use keypad names in a saved key.
+  `shortcuts-data.ts` batches the changes and the reply's read in one D1
+  transaction. Null keys delete a row. Empty keys keep an empty override.
+  The account's `shortcuts` field carries both keyboards and skips retired
+  commands. The shared reply reader drops unreadable or fixed stored keys.
+  It preserves valid keys in order and keeps empty overrides. A change
+  that loses every key falls back to defaults. Each unreadable stored row,
+  including bad JSON, is skipped without blocking the account or save reply.
+  The Worker logs fixed warning text when it skips unreadable data.
+  The foreign key deletes these rows
+  with their user. [Storage](../../docs/protocol/keyboard-shortcuts.md#storage)
+  gives the requirements.
 - A new login or a change of kind sets `noReuse` to true for a Claude
-  subscription token or a Codex ChatGPT sign-in, and false for an API key.
+  subscription token or a Codex ChatGPT sign-in, and false for an API key or an own endpoint.
   The Worker and the dev backend use `defaultAgentLoginNoReuse` in the
   [account contract](../../src/shared/account.ts) for these defaults.
   Replacing a secret of the same kind keeps its preference. A `PATCH`
@@ -163,66 +211,7 @@ Run `npm run test -- worker/app-api worker/chat/integration` from the
 repository root. The integration tests use the production Worker entry,
 local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
 
-- `boot.test.ts` checks the boot routes, the saved preferences, the
-  encrypted logins, and a missing model list. Two users save different
-  defaults, New workspace views, and logins, including a Codex ChatGPT
-  sign-in. After each save and a delete, each reads only their own account
-  and Get started step.
-  `boot-account.test-support.ts` holds the account helpers of that test.
-- `agent-login-secret.test.ts` checks that a saved login keeps no
-  whitespace, and that a read removes the whitespace of an older login.
-  It also checks that an older runner gets no ChatGPT login and reports
-  the next steps for a turn that it cannot run.
-- `codex-device.test.ts` checks the device exchange, encrypted storage,
-  account isolation, expiry, and overlapping polls.
-  Repeated finished polls keep the current share setting, failure cause, login kind, and removal.
-  `codex-device-failure.test.ts` keeps the failed exchange and safe-cause checks.
-  `codex-device-owner.test.ts` checks that an approved exchange commits after the polling client leaves.
-  `codex-device-login-change.test.ts` checks removals, API key saves, and newer
-  ChatGPT sign-ins before polling, between OpenAI calls, and before the final save.
-  It also checks the accepted save-and-remove return to an absent login.
-  Its OpenAI replies come from `codex-device.test-support.ts`.
-- `agent-login-reuse.test.ts` checks the login-kind defaults, the private
-  preference update, and unchanged secret data and timestamps.
-- `agent-login-migration.test.ts` checks that the table rebuild keeps
-  existing login values and accepts Codex tokens.
-- `feature-github-install.test.ts` checks the install link of the GitHub
-  App, and the default app when the slug is missing or not valid.
-- `shell-resources.test.ts` and `chat-read-state.test.ts` check the lists,
-  the private views, the encoded workspace IDs, the archived writes, and
-  the read marks.
-- `chat-create-journey.test.ts` boots the shell, creates a workspace, and
-  delivers the first message through a Stop and a resume.
-- `machine-credentials.test.ts` checks the two machine credential routes.
-- `feature-shell-settings.test.ts` checks shared scripts, encrypted env
-  values, secret marks, mark changes without replacement values, member
-  reads, and refused member writes through the Worker.
-- `feature-shell-sections.test.ts` checks section order, private collapse,
-  workspace moves, section deletion, and workspace event publication.
-- `feature-workspaces-data.test.ts` and `feature-sections-data.test.ts`
-  commit a second move just before the batch of a first move. They check
-  that the order keeps both moves: a move out of the target section, two
-  moves in one section, and two section moves. They also check refused
-  moves when an org suspension commits before the batch, and a move
-  without `sectionId` after the workspace moved to another section.
-- [`workspace-data.test.ts`](../lifecycle/workspace-data.test.ts) in the
-  lifecycle folder checks that a new workspace lists first, before and
-  after a move. It runs with the lifecycle tests.
-- `shell-list.test-support.ts` gives these three test files their org,
-  sections, and rows. Its D1 wrapper commits the second move of the move
-  tests.
-- `feature-shell-github.test.ts` checks the user's GitHub access, paginated
-  repository reads, saved org initials, and admin repository selection.
-- `feature-org.test.ts` checks the repository requirement, the first build,
-  and a failed build start that keeps the org.
-- `feature-settings-builds.test.ts` checks the install script change in
-  the build history before and after the first image.
-- `feature-repository-builds.test.ts` checks the admin's repository build,
-  repeated saves, removals, adds after a failed build, and a failed start
-  that keeps the choice.
-- `feedback.test.ts`, `feedback-refusals.test.ts`, and
-  `feedback-body.test.ts` check the feedback routes with a fake Resend, as
-  [Feedback routes](feedback.md#development) says.
+[App API tests](tests.md) lists the cases and their test helpers.
 
 ### Key code
 
@@ -230,6 +219,8 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
   [`get-started-data.ts`](get-started-data.ts), and
   [`models.ts`](models.ts): the account, its logins, Get started, and the
   model variables.
+- [`shortcuts-data.ts`](shortcuts-data.ts): account shortcut reads and
+  atomic batch saves, checked with the shared shortcut readers.
 - [`codex-device.ts`](codex-device.ts): the account routes for ChatGPT
   device sign-in, over the [Codex auth service](../codex-auth/README.md).
 - [`get-started-github.ts`](get-started-github.ts):
@@ -249,6 +240,16 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
   [`feature-sections.ts`](feature-sections.ts)
   and [`feature-workspaces.ts`](feature-workspaces.ts) save list changes and
   publish workspace metadata through the workspace object.
+  `featureSectionWrite` takes only the request method and the user, org,
+  and body of its context. So the
+  [agent section calls](../tools/sections-and-previews.md#sections) reuse
+  it with the sender as the user.
+- [`workspace-metadata.ts`](workspace-metadata.ts):
+  `changeWorkspaceMetadata`, the rename and the move of one workspace. It
+  checks the member and the archive state, runs `updateShellWorkspace`, and
+  publishes the metadata. `feature-workspaces.ts` and the
+  [agent workspace tools](../tools/workspaces.md#rename-and-move) both call
+  it. A tool move to the current section of a workspace changes nothing.
 - [`feature-workspaces-data.ts`](feature-workspaces-data.ts):
   `updateShellWorkspace`, the rename and the move of a workspace in one D1
   batch. [`feature-sections-data.ts`](feature-sections-data.ts): the

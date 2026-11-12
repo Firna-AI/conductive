@@ -1,6 +1,9 @@
 import { useEffect } from 'react'
 
-/** The mark of a file chip in a sent message: the text of its mention. */
+/**
+ * The mark of a file chip, or of the chip of an attached file, in a sent
+ * message: the text of its mention.
+ */
 const MENTION = 'data-mention'
 
 /**

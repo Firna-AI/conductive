@@ -78,7 +78,11 @@ A prior lease check or a cached fence cannot authorize a later write.
 The helper rejects a generation from another org.
 Concurrent calls must be safe, including a late call whose lease has expired.
 Production lifecycle phases capture their receiver generation before provider work.
+Each phase keeps that generation on its own [chat queue task](../chat/history.md).
+The guarded writes and each `fetch` of the workspace lifecycle check the fence against the generation of the task that holds the chat queue.
 Restore installs a newer suspended fence and drains those phases before it arms active timers.
+`suspend`, `restore`, and `remove` of `WorkspaceMembersReceiver` wait for `chat.store.idle()` after their first fence write, outside any chat queue task.
+So a drain also waits for a task that is in an `outside` call.
 
 Restore must install its generation in every org, build, and workspace receiver before its callback returns.
 Its input includes every workspace ID, including archived and sandbox-free workspaces.

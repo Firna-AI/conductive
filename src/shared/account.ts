@@ -1,5 +1,6 @@
 import type { Agent, AgentChoice } from './agents'
 import type { Timestamp, User } from './api'
+import type { ShortcutPreferences } from './shortcuts'
 
 export interface SessionResponse {
   user: User
@@ -10,6 +11,7 @@ export const ACCOUNT_PATHS = {
   account: '/api/account',
   defaultModel: '/api/account/default-model',
   newWorkspaceView: '/api/account/new-workspace-view',
+  shortcuts: '/api/account/shortcuts',
   agentLogins: '/api/account/agent-logins',
   codexDevice: '/api/account/agent-logins/codex/device',
   githubInstallations: '/api/account/github-installations',
@@ -22,6 +24,16 @@ export type NewWorkspaceView = (typeof NEW_WORKSPACE_VIEWS)[number]
 
 export function agentLoginPath(agent: Agent): string {
   return `${ACCOUNT_PATHS.agentLogins}/${agent}`
+}
+
+export function refreshAgentLoginModelsPath(agent: Agent): string {
+  return `${agentLoginPath(agent)}/models/refresh`
+}
+
+export interface EndpointModelList {
+  /** App model IDs absent from the last successful endpoint list. */
+  missing: readonly string[]
+  checkedAt: Timestamp
 }
 
 export function codexDevicePath(handle: string): string {
@@ -46,16 +58,17 @@ export type PollCodexDeviceResponse =
 export type SaveAgentLoginRequest =
   | { agent: 'claude'; kind: 'token' | 'api-key'; secret: string }
   | { agent: 'codex'; kind: 'api-key'; secret: string }
+  | { agent: Agent; kind: 'endpoint'; endpoint: string; secret: string }
 
 type AgentLoginKinds = {
-  [A in Agent]: Extract<AgentLoginStatus, { agent: A; connected: true }>['kind']
+  [A in Agent]: Extract<AgentLoginStatus, { connected: true }>['kind']
 }
 
 const loginNoReuseDefaults: {
   [A in Agent]: Record<AgentLoginKinds[A], boolean>
 } = {
-  claude: { token: true, 'api-key': false },
-  codex: { token: true, 'api-key': false },
+  claude: { token: true, 'api-key': false, endpoint: false },
+  codex: { token: true, 'api-key': false, endpoint: false },
 }
 
 export function defaultAgentLoginNoReuse<A extends Agent>(
@@ -82,6 +95,15 @@ export type AgentLoginStatus =
       updatedAt: Timestamp
       unusableCause?: string
     }
+  | {
+      agent: Agent
+      connected: true
+      kind: 'endpoint'
+      host: string
+      modelList?: EndpointModelList
+      noReuse: boolean
+      updatedAt: Timestamp
+    }
 
 export interface GitHubInstallation {
   id: number
@@ -105,6 +127,7 @@ export interface AccountResponse {
   operator: boolean
   defaultChoice: AgentChoice
   newWorkspaceView: NewWorkspaceView
+  shortcuts: ShortcutPreferences
   agentLogins: readonly AgentLoginStatus[]
   /**
    * The page of the shared GitHub App on GitHub. It lists the GitHub

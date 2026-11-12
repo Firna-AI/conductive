@@ -32,6 +32,7 @@ import {
 } from '../components/workspaces/SidebarLinks'
 import { deletedOrg, orgs, suspendedOrg, type Org } from '../fixtures/orgs'
 import type { Membership } from '../fixtures/members'
+import { paletteShortcut } from '../fixtures/shortcutChanges'
 import { paths } from '../paths'
 import styles from './WorkspaceListScreen.module.css'
 
@@ -120,7 +121,10 @@ export function HomeList(props: {
             to={suspended ? paths.suspendedRoutines : undefined}
             variant="page"
           />
-          <SearchLink keys={props.keys ?? false} variant="page" />
+          <SearchLink
+            shortcut={props.keys ? paletteShortcut() : undefined}
+            variant="page"
+          />
         </div>
         {props.failed ? (
           <LoadFailure title="The workspaces didn't load" />

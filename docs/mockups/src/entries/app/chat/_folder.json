@@ -1,6 +1,7 @@
 {
   "order": [
     "turns",
+    "agent-stops",
     "work",
     "tables",
     "lists",
@@ -9,6 +10,7 @@
     "lost-updates",
     "unavailable-files",
     "background-limit",
-    "masked-paths"
+    "masked-paths",
+    "endpoint-models"
   ]
 }

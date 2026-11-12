@@ -2,10 +2,17 @@
 
 This doc holds the requirements and the decisions in force for the base
 prompt of Claude agents and the base instructions of Codex agents.
-[Agent instructions](agent-instructions.md) states the agent
-instructions that come after them, and gives the terms of this page.
+A base prompt holds the general rules for work that
+an agent gets before the agent instructions. It belongs to
+[Agent instructions](agent-instructions.md), which states the agent
+instructions, and how long a session keeps them. The terms are those of
+the [architecture doc](../architecture.md#terms). A decision number names
+a dated record, as [Decision numbers](../architecture.md#decision-numbers)
+says.
 
 ## Base prompts
+
+### The base prompt of Claude agents
 
 - A Claude agent gets a short base prompt of the app, then the agent
   instructions, as one text of system instructions.
@@ -42,6 +49,9 @@ instructions that come after them, and gives the terms of this page.
   - A setting for each org that chooses between these two. It needs a
     setting, a mockup, storage, and a runner field, for a choice that no
     user asked for.
+
+## Codex agents
+
 - A Codex agent keeps the default base instructions of Codex. It gets the
   agent instructions in addition to them.
 - Reason: Codex gives its agents base instructions of its own. The Claude

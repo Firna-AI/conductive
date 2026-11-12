@@ -6,8 +6,10 @@ import { browserDelay, socketEventSource } from './events'
 import { APP_VERSION } from './version'
 import {
   windowFocus,
+  windowHost,
   windowInput,
   windowKeys,
+  windowNewTab,
   windowPlatform,
   windowStorage,
   windowVisibility,
@@ -45,10 +47,12 @@ export function createLiveServices(target: Window): AppServices {
     onInput: windowInput(target),
     onKey: windowKeys(target),
     platform: windowPlatform(target),
+    host: windowHost(target),
     visible: windowVisibility(target),
     storage: windowStorage(target),
     newId: () => target.crypto.randomUUID(),
     leave: (url) => target.location.assign(url),
+    openInNewTab: windowNewTab(target),
     appOrigin: appHostOrigin(target.location),
     appVersion: APP_VERSION,
     copy: (text) => copyText(target, text),

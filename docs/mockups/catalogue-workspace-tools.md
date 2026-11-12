@@ -40,16 +40,31 @@ starts at the message in Saved carts. A press on the chip of the closed
 session opens `W-395` on its workspace page, at its first session, and a
 press on the chip of the `Sent by:` line there shows the second session.
 
-`app/tools` shows the terminal. Its child pages show the Preview tool,
-from decisions 220 C and 221 D, its list after a failed repair, and the
-hidden Desktop:
+`app/tools` shows three terminals as tabs of the Terminal tool, from
+decisions 1 to 3 of the terminal tabs change, with the test run of
+Terminal 2 shown. Its child
+pages show the other states of the terminals, the Preview tool, from
+decisions 220 C and 221 D, its list after a failed repair, and the hidden
+Desktop:
 
+- `app/tools/terminals` has the one terminal that a workspace starts
+  with. Its `limit` variant has ten terminals, with the + off and the line
+  that says how to open another. Its `close` variant has the question
+  before Terminal 2 closes. Its `open-failed` and `close-failed` variants
+  have the toast of a failed open and of a failed close.
+- `app/tools/disconnected` has Terminal 2 after its connection ended, with
+  Reconnect.
+- `app/tools/older-software` has the one terminal of a cloud computer with
+  older software, without tabs.
 - `app/tools/preview` has an open port preview. Each tab shows the port
   and the program name of its server, cut to 10 characters, such as
   `6006 storybook…`. Its tooltip and its spoken name give the port, the
-  full name, and the folder. Two named tabs do not fit beside the actions
-  of the frame, so the end of the tab row fades, as the centre tab row
-  does. Its variants:
+  full name, and the folder. Each tab has its Close button after its
+  label, as the tabs of the centre tab row have: it shows on the current
+  tab, on hover, and while the focus is in the tab, and a hidden one keeps
+  its place. The bar has no Close of its own. Two named tabs do not fit
+  beside the actions of the frame, so the end of the tab row fades, as the
+  centre tab row does. Its variants:
   - `detected` has the port form with no preview open. Each server that
     the runner detects is a button with its port, its name, and its
     folder. A folder that does not fit keeps its end, after "…". The
@@ -85,7 +100,7 @@ pages:
   file chip, where a × takes the place of the icon. Its `sent` variant has
   the sent message with both chips. Its `workspace-chip` and
   `attached-file` variants show the same × on a pasted workspace link and
-  on an attached file.
+  on an attached file in the text.
 
 On a phone each chip of the composer keeps its icon and ends with a ×.
 The flow `user-flows/mention-a-file` goes from the query to the sent

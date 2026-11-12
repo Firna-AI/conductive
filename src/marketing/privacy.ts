@@ -69,11 +69,14 @@ export const privacyDocument: LegalDocument = {
             Germany, Finland, and France. UK adequacy regulations approve
             transfers to countries in the European Economic Area. Other
             provider operations can involve processing outside that area.`,
-          text`Anthropic and OpenAI process agent requests under the
-            agreement for the connected account that the session uses.
+          text`For a Claude subscription, ChatGPT plan, or provider API key, Anthropic or OpenAI processes agent requests under
+            the agreement for the connected account that the session uses.
             Their published privacy and data processing terms describe
             adequacy approvals, standard contractual clauses, and the UK
             Addendum where they apply.`,
+          text`For an own endpoint login, the chosen endpoint processes
+            agent requests where its owner runs it. Its terms and privacy
+            notice govern that processing.`,
         ),
         paragraph`For copies of the published safeguards named above,
           contact ${mailLink(legalAddress)}.`,
@@ -102,7 +105,7 @@ export const privacyDocument: LegalDocument = {
           stopped. When ${productName} passes on model requests and their
           answers, it keeps no copy of them.`,
         paragraph`A connected agent login stays until you remove or replace
-          it. Panel widths stay in your browser until you clear its saved
+          it. Panel sizes stay in your browser until you clear its saved
           data. The providers above can keep their own records under their
           terms and privacy notices.`,
         paragraph`The team keeps each feedback email in its inbox while it
@@ -120,11 +123,14 @@ export const privacyDocument: LegalDocument = {
       blocks: [
         list(
           text`${productName} stores each env var value and agent login
-            encrypted.`,
+            encrypted. An own endpoint login includes its address and key.
+            Only its host, with any non-default port, stays in plain text.`,
           text`It does not send the key of its cloud computer provider to
             your browser or into a cloud computer.`,
           text`The settings never return a stored env var value or agent login
-            to your browser.`,
+            to your browser. For an own endpoint login, your browser gets
+            only its host and any non-default port, without the full address
+            or key.`,
           text`An env var is secret until an admin clears its mark. Before
             ${productName} puts agent output in the chat history or on a
             screen, it hides each exact copy of a secret value in it. It also

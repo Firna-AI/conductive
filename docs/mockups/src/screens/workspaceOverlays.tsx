@@ -1,13 +1,16 @@
 import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
-import { Square } from 'lucide-react'
+import { Square, X } from 'lucide-react'
 import { nameLabel } from '../../../../src/shared/name-label'
 import { ActionButton } from '../components/common/actions'
 import { ToastLayer } from '../components/common/ToastLayer'
 import { ConfirmDialog, DialogText } from '../components/common/ConfirmDialog'
+import { FailureToast } from '../components/common/FailureToast'
 import { Menu } from '../components/common/Menu'
 import { ScreenLink } from '../components/common/ScreenLink'
 import { Sheet } from '../components/common/Sheet'
+import { CommandPalette } from '../components/palette/CommandPalette'
+import type { PaletteContext } from '../components/palette/paletteContent'
 import { ArchivedToast } from '../components/workspace/ArchivedToast'
 import { ContinueDialog } from '../components/workspace/ContinueDialog'
 import { reassignMenu } from '../components/workspace/OwnerPicker'
@@ -15,10 +18,27 @@ import type { WorkspaceTab } from '../components/workspace/TabItem'
 import { TabMenuSheet } from '../components/workspace/TabMenu'
 import { transcriptToasts } from '../components/workspace/transcriptCopy'
 import { workspaceSessions } from '../fixtures/sessions'
+import { closedTerminal, cloudComputerSilent } from '../fixtures/terminals'
 import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
 import type { WorkspaceState } from './workspaceState'
 import { historyFor } from './workspaceTabs'
+
+/** The open palette. A phone opens it from the list, with no workspace actions. */
+export function workspacePalette(
+  state: WorkspaceState,
+  viewport: Viewport,
+  context: PaletteContext,
+): ReactNode {
+  if (state.palette === 'closed') return null
+  return (
+    <CommandPalette
+      context={viewport === 'mobile' ? { archivable: false } : context}
+      view={state.palette}
+      viewport={viewport}
+    />
+  )
+}
 
 /**
  * The question before the tab of a running session closes. Closing stops
@@ -46,6 +66,45 @@ function CloseSessionDialog(props: { viewport: Viewport }) {
         the session history, where you can reopen it.
       </DialogText>
     </ConfirmDialog>
+  )
+}
+
+/**
+ * The question before a terminal closes. The close ends its shell and its
+ * running commands for every member, as decision 1 of the terminal tabs
+ * change says.
+ */
+function CloseTerminalDialog(props: { viewport: Viewport }) {
+  return (
+    <ConfirmDialog
+      actions={
+        <>
+          <ScreenLink asChild to={paths.terminal}>
+            <ActionButton>Cancel</ActionButton>
+          </ScreenLink>
+          <ActionButton icon={X} tone="danger">
+            Close terminal
+          </ActionButton>
+        </>
+      }
+      title={`Close ${closedTerminal}?`}
+      viewport={props.viewport}
+    >
+      <DialogText>
+        Its shell and any running commands end for everyone in this workspace.
+      </DialogText>
+    </ConfirmDialog>
+  )
+}
+
+/** The toast of a terminal that did not open or close, with its message. */
+function TerminalFailure(props: { title: string; viewport: Viewport }) {
+  return (
+    <FailureToast
+      message={cloudComputerSilent}
+      phone={props.viewport === 'mobile'}
+      title={props.title}
+    />
   )
 }
 
@@ -126,6 +185,22 @@ export function workspaceOverlay(
           tabs={row.tabs}
         />
       ) : null
+    case 'close-terminal':
+      return <CloseTerminalDialog viewport={viewport} />
+    case 'terminal-open-failed':
+      return (
+        <TerminalFailure
+          title="The new terminal didn't open."
+          viewport={viewport}
+        />
+      )
+    case 'terminal-close-failed':
+      return (
+        <TerminalFailure
+          title={`${closedTerminal} didn't close.`}
+          viewport={viewport}
+        />
+      )
   }
 }
 

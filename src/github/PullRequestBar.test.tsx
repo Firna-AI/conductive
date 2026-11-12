@@ -1,5 +1,6 @@
 import { expect, it } from 'vitest'
 import { FAKE_TIME } from '../test-support/fixtures/core'
+import type { CommandKeyOf } from './barKeys'
 import type { BarInput } from './barView'
 import type { GitHubFeed } from './githubStore'
 import { PullRequestBar } from './PullRequestBar'
@@ -144,5 +145,43 @@ it('shows Merging on the running merge, and a refusal as one alert line under th
       ],
     },
     waits: { status: true, text: true },
+  })
+})
+
+it('names the key of the command of each button and of the number in its tooltip, only while the button takes a click', () => {
+  // The app gives each key. Here each tooltip names its command instead.
+  const keyOf: CommandKeyOf = (command, label) => ({
+    title: `${label} (${command})`,
+    aria: command,
+  })
+  const merged = readyFeed(snapshotOf('merged'))
+  const tooltips = (input: Partial<Omit<BarInput, 'snapshot'>>) => {
+    const html = render(
+      <PullRequestBar
+        controls={controlsOf(merged, input)}
+        github={merged}
+        keyOf={keyOf}
+        now={FAKE_TIME}
+      />,
+    )
+    const titles = [...html.matchAll(/title="([^"]*)"/g)].map(([, title]) =>
+      textOf(title),
+    )
+    return titles.filter((title) => / \([a-z-]+\)$/.test(title))
+  }
+  const number = 'Open pull request #482 on GitHub (open-pull-request)'
+  const continues = 'Continue (continue-after-merge)'
+  const archive = 'Archive (archive-workspace)'
+
+  expect({
+    idle: tooltips({}),
+    continuing: tooltips({ outcome: { kind: 'continuing' } }),
+    waiting: tooltips({ turnRuns: true }),
+    archiving: tooltips({ archiving: true }),
+  }).toEqual({
+    idle: [number, continues, archive],
+    continuing: [number],
+    waiting: [number, archive],
+    archiving: [number, continues],
   })
 })

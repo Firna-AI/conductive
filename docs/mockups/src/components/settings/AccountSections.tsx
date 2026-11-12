@@ -9,14 +9,18 @@ import {
   type LoginKind,
 } from '../../fixtures/logins'
 import { account, installations } from '../../fixtures/orgs'
+import type { ShortcutHost } from '../../fixtures/shortcutHosts'
 import { noop } from '../../noop'
 import { paths } from '../../paths'
 import { ActionButton } from '../common/actions'
 import { classes } from '../common/classes'
-import { LinkTabs } from '../common/LinkTabs'
+import { LinkTabs, type LinkTab } from '../common/LinkTabs'
 import { AccountAvatar } from '../orgs/OrgTile'
 import { StatusText } from '../common/StatusText'
 import { AgentConnectForm } from './AgentConnectForm'
+import type { EndpointEntry } from './EndpointFields'
+import { EndpointModels } from './EndpointModels'
+import { LoginEndpoint } from './LoginEndpoint'
 import type { SignInStep } from './chatGptSignInCopy'
 import {
   LoginNotUsable,
@@ -25,6 +29,7 @@ import {
 } from './LoginNotUsable'
 import { LoginShare } from './LoginShare'
 import { Section } from './Section'
+import { shortcutPages } from './shortcutPages'
 import styles from './AccountSections.module.css'
 
 const connected = <StatusText label="Connected" tone="success" />
@@ -97,15 +102,24 @@ export type OpenAgentForm = {
   connectTo: string
   /** The form can close, because it did not open as the next step. */
   cancel: boolean
+  /**
+   * The form shows the own endpoint kind, and what its address field holds.
+   * Without it, the form shows the first kind of the agent.
+   */
+  endpoint?: EndpointEntry
   /** The step of the ChatGPT sign-in, when the switch selects it. */
   signIn?: SignInStep
 }
 
 /**
  * Claude and Codex, each with Connect, or Connected and the kind of its
- * login. `form` opens the Connect form of an agent under its row.
- * `removable` gives each connected login its Remove, and `shares` its
- * share setting, as on the account. `unusable` names a connected login
+ * login. An own endpoint login shows its kind with the host of its endpoint
+ * under its row, so that a phone shows both in full. Under them come the
+ * models of the app that the model list of the endpoint does not name, with
+ * Refresh. `form` opens the Connect form of an agent under its row.
+ * `removable` gives each connected login its Remove, and `shares` its share
+ * setting, as on the account.
+ * `unusable` names a connected login
  * that the app can no longer use: its row says Signed out, with the cause
  * and Sign in again. Sign in again opens the form in the place of the
  * cause, and the login keeps its row, Remove, and its share setting, as in
@@ -153,14 +167,25 @@ export function AgentList(props: {
                 {login ? (
                   <>
                     {unusable ? <SignedOutStatus /> : connected}
-                    <span className={styles.kind}>
-                      {loginLabels[key][login]}
-                    </span>
+                    {login.kind === 'endpoint' ? null : (
+                      <span className={styles.kind}>
+                        {loginLabels[key][login.kind]}
+                      </span>
+                    )}
                   </>
                 ) : null}
               </span>
               {action}
             </div>
+            {login?.kind === 'endpoint' ? (
+              <LoginEndpoint
+                host={login.host}
+                kind={loginLabels[key].endpoint}
+              />
+            ) : null}
+            {login?.kind === 'endpoint' && login.models ? (
+              <EndpointModels agent={agents[key].name} check={login.models} />
+            ) : null}
             {unusable && !form ? (
               <LoginNotUsable
                 cause={unusable.cause}
@@ -174,6 +199,7 @@ export function AgentList(props: {
                 connectTo={form.connectTo}
                 kind={form.kind}
                 signIn={form.signIn}
+                endpoint={form.endpoint}
               />
             ) : null}
             {login && props.shares ? (
@@ -183,7 +209,7 @@ export function AgentList(props: {
                 }
                 nameId={nameId}
                 onChange={noop}
-                shared={sharedByDefault[key][login]}
+                shared={sharedByDefault[key][login.kind]}
               />
             ) : null}
           </li>
@@ -195,8 +221,9 @@ export function AgentList(props: {
 
 /**
  * The agents that every org uses, Claude and Codex: each connected login
- * with its kind, Remove, and its share setting, or Connect, which opens the
- * form of the agent. `unusable` names a login that the app can no longer
+ * with its kind, the host of an own endpoint, Remove, and its share setting,
+ * or Connect, which opens the form of the agent.
+ * `unusable` names a login that the app can no longer
  * use.
  */
 export function AgentsSection(props: {
@@ -218,29 +245,37 @@ export function AgentsSection(props: {
   )
 }
 
-/** The two pages of the account. */
-export type AccountTab = 'general' | 'preferences'
+/** The pages of the account. */
+export type AccountTab = 'general' | 'preferences' | 'shortcuts'
 
 /**
  * The pages of the account, as tabs that link to each one: General, with
- * the sign-in and the connections, and Preferences.
+ * the sign-in and the connections, Preferences, and Keyboard shortcuts.
+ * The Mac app's General tab links to its own page, which has This Mac, and
+ * Keyboard shortcuts links to the tab of the host. `flow` moves a tab that
+ * does not fit to a second line, for a phone.
  */
-export function AccountTabs(props: { tab: AccountTab }) {
-  return (
-    <LinkTabs
-      label="Account"
-      tabs={[
-        {
-          label: 'General',
-          to: paths.account,
-          selected: props.tab === 'general',
-        },
-        {
-          label: 'Preferences',
-          to: paths.accountPreferences,
-          selected: props.tab === 'preferences',
-        },
-      ]}
-    />
-  )
+export function AccountTabs(props: {
+  tab: AccountTab
+  host: ShortcutHost
+  flow?: boolean
+}) {
+  const tabs: LinkTab[] = [
+    {
+      label: 'General',
+      to: props.host === 'mac-app' ? paths.thisMac : paths.account,
+      selected: props.tab === 'general',
+    },
+    {
+      label: 'Preferences',
+      to: paths.accountPreferences,
+      selected: props.tab === 'preferences',
+    },
+    {
+      label: 'Keyboard shortcuts',
+      to: shortcutPages[props.host].tab,
+      selected: props.tab === 'shortcuts',
+    },
+  ]
+  return <LinkTabs flow={props.flow} label="Account" tabs={tabs} />
 }

@@ -177,7 +177,7 @@ export function settingsLink(view: HTMLElement): (string | null)[] | null {
 
 /** The text of the Codex form while it shows `userCode` and waits. */
 export function codeShown(userCode: string): string {
-  return `Codex API key ChatGPT plan ${copy.steps.before} auth.openai.com/codex/device ${copy.steps.after} ${userCode} ${copy.keep} ${copy.waiting} Cancel`
+  return `Codex API key ChatGPT plan Own endpoint ${copy.steps.before} auth.openai.com/codex/device ${copy.steps.after} ${userCode} ${copy.keep} ${copy.waiting} Cancel`
 }
 
 /** Runs the timer of the next poll, and lets its answer show. */

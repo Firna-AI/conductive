@@ -1,7 +1,7 @@
 import type {
   AgentReadSessionRequest,
   AgentTranscriptWindow,
-} from '../../src/shared/agent-tools'
+} from '../../src/shared/agent-sessions'
 
 interface Line {
   start: number

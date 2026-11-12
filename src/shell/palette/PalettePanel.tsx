@@ -1,14 +1,10 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react'
 import styles from '../../../docs/mockups/src/components/palette/CommandPalette.module.css'
-import { useNavigation } from '../../app/navigation'
-import type { OwnActionId } from '../../app/palette/commands'
 import type { PaletteController } from '../../app/palette/controller'
 import { paletteResults } from '../../app/palette/palette-results'
 import type { PaletteRow } from '../../app/palette/palette-rows'
 import type { PaletteQuery } from '../../app/palette/palette-source'
 import { useNow } from '../../app/time'
-import { useApp } from '../context'
-import { useNewWorkspace } from '../new-workspace/NewWorkspaceHost'
 import { ActionButton } from '../ui/actions'
 import { Overlay, useLayerFocus, usePressOutside } from '../ui/Overlay'
 import { trapTab } from '../ui/Sheet'
@@ -18,6 +14,7 @@ import { PaletteTabs, SearchField, type FieldHandle } from './PaletteControls'
 import { PaletteFilters } from './PaletteFilters'
 import { PaletteList } from './PaletteList'
 import { PaletteSurface } from './PaletteSurface'
+import { useRowAction } from './row-action'
 import { usePaletteSource } from './use-palette-source'
 
 /** Each open starts on the All tab, with an empty field and the first filters. */
@@ -26,20 +23,6 @@ const firstQuery: PaletteQuery = {
   text: '',
   repositoryId: null,
   archived: false,
-}
-
-/** What running a row does: its own action, or the page that it opens. */
-function rowAction(row: PaletteRow, go: (to: string) => void): () => void {
-  if (row.kind === 'command' && row.run) return row.run
-  const { href } = row
-  return href === undefined ? () => undefined : () => go(href)
-}
-
-/** Whether a row is the action of the palette with the ID. */
-function isAction(row: PaletteRow, id: OwnActionId): boolean {
-  return (
-    row.kind === 'command' && row.lead.kind === 'action' && row.lead.id === id
-  )
 }
 
 /**
@@ -52,14 +35,12 @@ function isAction(row: PaletteRow, id: OwnActionId): boolean {
 export function PalettePanel(props: { controller: PaletteController }) {
   const { controller } = props
   const phone = useViewport() === 'phone'
-  const navigation = useNavigation()
-  const { feedback } = useApp()
-  const newWorkspace = useNewWorkspace().open
   const panel = useRef<HTMLElement>(null)
   const fieldRef = useRef<FieldHandle>(null)
   const [query, setQuery] = useState(firstQuery)
   const [highlight, setHighlight] = useState(0)
   const { source, retry } = usePaletteSource()
+  const action = useRowAction(source)
   const now = useNow(30_000)
   const id = useId()
   const close = () => controller.close()
@@ -82,24 +63,7 @@ export function PalettePanel(props: { controller: PaletteController }) {
     setQuery((current) => ({ ...current, ...next }))
     setHighlight(0)
   }
-  // Send feedback opens the dialog over the page with the org of the
-  // palette and the open workspace, once the palette left the page.
-  const sendFeedback = () =>
-    void feedback.open({
-      orgId: source.org?.id ?? null,
-      workspaceId: source.openWorkspaceId,
-      desktop: source.mac,
-    })
-  const run = (row: PaletteRow) => {
-    const orgId = source.org?.id
-    let action = rowAction(row, (to) => navigation.push(to))
-    if (isAction(row, 'new-workspace') && orgId !== undefined) {
-      action = () => newWorkspace({ orgId, sectionId: null })
-    } else if (isAction(row, 'send-feedback')) {
-      action = sendFeedback
-    }
-    controller.close(action)
-  }
+  const run = (row: PaletteRow) => controller.close(action(row))
   const onKeyDown = (event: KeyboardEvent<HTMLElement>) => {
     const { target } = event
     // A sheet of a filter lies outside the panel, with its own keys.

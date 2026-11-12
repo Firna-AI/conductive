@@ -38,16 +38,29 @@ Use its back action to return to **All files**.
 
 Text shows line numbers and syntax colours.
 Markdown offers **Preview** for its rendered content and **Source** for its text.
-Binary files offer **Download** so you can open them with another application.
+PNG, JPEG, GIF, and WebP files show as pictures up to the 5 MiB read limit.
+A picture keeps its proportions and fits the view.
+SVG files show their source as text.
+
+Other binary files offer **Download** so you can open them with another application.
+The file view also offers **Download** if the browser cannot draw an image within the read limit.
 
 These views let you read the files.
 Ask the agent to change a file, or use **Terminal**.
+
+You can also open an attached file from its chip in a sent message.
+It opens the copy in the workspace's repository folder after the message reaches the agent.
+Restore an archived workspace before opening its attached files.
+
+- [Attach files to messages](/docs/sessions-and-chat#attach-files)
 
 ## Inspect changes
 
 1. Open **Changes**.
 2. Select a changed file.
 3. Review its diff against the workspace's base branch.
+
+The diff shows syntax colours, as a file does.
 
 The base branch is the branch that the workspace's work targets.
 A workspace you create uses the repository's default branch.

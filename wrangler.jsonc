@@ -53,6 +53,11 @@
       "migrations_dir": "migrations",
     },
   ],
+  // The model gateway sends its chatgpt.com requests through this Worker,
+  // because OpenAI refuses them from a Worker.
+  "services": [
+    { "binding": "CHATGPT_EGRESS", "service": "conductive-chatgpt-egress" },
+  ],
   "r2_buckets": [
     {
       "binding": "CHAT_ATTACHMENTS",

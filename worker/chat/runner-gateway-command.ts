@@ -1,7 +1,6 @@
 import type {
   RunnerCommandV1,
   RunnerCommandV2,
-  RunnerLogin,
   RunnerMessageDuringTurnV2,
   RunnerTurnCredential,
   RunnerTurnV2,
@@ -9,10 +8,11 @@ import type {
 import { isRunnerV1Login } from '../../src/shared/runner'
 import { chatGptSignInCopy } from '../../docs/mockups/src/components/settings/chatGptSignInCopy'
 import type { WorkspaceTurnTokens } from '../model-gateway/workspace'
+import type { AgentLogin } from './login-kind'
 import { parseCodexTokens, parseCodexIdentity } from '../codex-auth/tokens'
 import type { ResolvedCommand } from './types'
 
-export function compatibilityFailure(login: RunnerLogin): string {
+export function compatibilityFailure(login: AgentLogin): string {
   if (login.agent === 'codex' && login.kind === 'token')
     return 'This cloud computer cannot run Codex with ChatGPT. Ask an admin to build the org image again. Then start a new workspace. You can also connect an OpenAI API key.'
   return 'This cloud computer cannot use this agent login. Ask an admin to build the org image again. Then start a new workspace.'
@@ -20,7 +20,7 @@ export function compatibilityFailure(login: RunnerLogin): string {
 
 export function legacyRunnerCommand(command: ResolvedCommand): RunnerCommandV1 {
   if (command.type !== 'turn' && command.type !== 'message') return command
-  if (!isRunnerV1Login(command.login))
+  if (command.login.kind === 'endpoint' || !isRunnerV1Login(command.login))
     throw new Error('The runner cannot use this login kind.')
   return { ...command, login: command.login }
 }
@@ -47,7 +47,7 @@ export async function gatewayRunnerCommand(
 }
 
 function nativeCredential(
-  login: RunnerLogin,
+  login: AgentLogin,
   token: string,
 ): RunnerTurnCredential {
   if (login.agent === 'codex' && login.kind === 'token') {
@@ -57,7 +57,12 @@ function nativeCredential(
       throw new Error(chatGptSignInCopy.causes.notRenewed)
     return { agent: 'codex', kind: 'token', token, account }
   }
-  return login.agent === 'claude'
-    ? { agent: 'claude', kind: login.kind, token }
-    : { agent: 'codex', kind: 'api-key', token }
+  return login.agent === 'codex'
+    ? { agent: 'codex', kind: 'api-key', token }
+    : {
+        agent: 'claude',
+        kind: login.kind === 'token' ? 'token' : 'api-key',
+        token,
+        ...(login.kind === 'endpoint' ? { promptCacheTtl: '1h' } : {}),
+      }
 }

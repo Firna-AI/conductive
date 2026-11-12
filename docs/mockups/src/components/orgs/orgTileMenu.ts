@@ -3,7 +3,7 @@ import { ArrowDown, ArrowUp } from 'lucide-react'
 import type { MenuEntry } from '../common/Menu'
 
 /** A move of the tile menu: one place up or down the rail. */
-export type TileMove = 'up' | 'down'
+type TileMove = 'up' | 'down'
 
 /** One item of the menu of an org tile in the rail. */
 export type TileMenuItem = {

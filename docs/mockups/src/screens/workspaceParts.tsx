@@ -5,7 +5,7 @@ import { FilesPanel, type FileTabView } from '../components/files/FilesPanel'
 import type { BackLink } from '../components/layout/Page'
 import { DesktopView } from '../components/tools/DesktopView'
 import { PreviewTool } from '../components/tools/PortPreview'
-import { TerminalView } from '../components/tools/TerminalView'
+import { TerminalTool } from '../components/tools/TerminalTool'
 import { SandboxPanel } from '../components/workspace/SandboxNotice'
 import { replacesLists } from '../components/workspace/sandboxNoticeState'
 import {
@@ -24,7 +24,8 @@ import {
 } from '../fixtures/starting'
 import { orgs } from '../fixtures/orgs'
 import type { Membership } from '../fixtures/members'
-import { workspaceSession } from '../fixtures/terminal'
+import type { ShortcutChanges } from '../fixtures/shortcutChanges'
+import { terminalSets } from '../fixtures/terminals'
 import type { ActivityStatus, Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
 import { freshPromptFor, runStartingLog } from './workspaceRun'
@@ -45,6 +46,10 @@ export function openFile(state: WorkspaceState): FileTabView | undefined {
       return state.paths === 'masked' ? 'masked-diff' : 'diff'
     case 'unnamed-file':
       return 'unnamed'
+    case 'image':
+    case 'image-not-drawn':
+    case 'attachment':
+      return state.tab
     case 'session':
     case 'new-session':
     case 'linked-session':
@@ -64,6 +69,9 @@ function backFrom(open: FileTabView): BackLink {
       return { label: 'All files', to: paths.maskedPathsAllFiles }
     case 'code':
     case 'markdown':
+    case 'image':
+    case 'image-not-drawn':
+    case 'attachment':
       return { label: 'All files', to: paths.filesAll }
   }
 }
@@ -149,6 +157,36 @@ export function FilesContent(props: {
   )
 }
 
+/**
+ * The Terminal tool of the state. A new workspace waits at the first prompt
+ * of its one terminal. The close button of the shown terminal opens the
+ * question before the close. The cloud computer software of `older` opens
+ * one terminal only, so the tool shows no tabs.
+ */
+function TerminalContent(props: { state: WorkspaceState; viewport: Viewport }) {
+  const { state } = props
+  const set = terminalSets[state.terminals]
+  const fresh = isNew(state)
+  return (
+    <TerminalTool
+      disconnected={state.terminals === 'disconnected'}
+      lines={fresh ? [] : set.lines}
+      prompt={fresh ? freshPromptFor(state) : set.prompt}
+      tabs={
+        state.terminals === 'older'
+          ? null
+          : {
+              numbers: set.numbers,
+              shown: set.shown,
+              atLimit: state.terminals === 'limit',
+              closeTo: paths.closeTerminal,
+            }
+      }
+      viewport={props.viewport}
+    />
+  )
+}
+
 /** The tool of the tools panel, or the sandbox state while it is down. */
 export function ToolContent(props: {
   state: WorkspaceState
@@ -160,15 +198,7 @@ export function ToolContent(props: {
   if (panel) return <SandboxPanel phone={mobile} state={panel} />
   switch (state.tool) {
     case 'terminal':
-      return isNew(state) ? (
-        <TerminalView
-          extraKeys={mobile}
-          lines={[]}
-          prompt={freshPromptFor(state)}
-        />
-      ) : (
-        <TerminalView extraKeys={mobile} lines={workspaceSession} />
-      )
+      return <TerminalContent state={state} viewport={props.viewport} />
     case 'preview':
       return <PreviewTool state={state.ports} />
     case 'desktop':
@@ -190,8 +220,10 @@ export function workspaceSidebar(props: {
   changed: readonly ChangedWorkspace[]
   /** The last day of Restore of the archived workspace has not passed. */
   restoreOpen: boolean
+  /** The person's changes to the shortcuts, for the key of the Search row. */
+  shortcuts?: ShortcutChanges
 }): ReactNode {
-  const { workspace, status, suspended, viewer, changed } = props
+  const { workspace, status, suspended, viewer, changed, shortcuts } = props
   if (status !== 'archived') {
     const sections = suspended
       ? suspendedSections(workspace)
@@ -200,6 +232,7 @@ export function workspaceSidebar(props: {
       <Sidebar
         org={orgs.acme}
         sections={sections}
+        shortcuts={shortcuts}
         suspended={suspended}
         viewer={viewer}
       />
@@ -211,6 +244,7 @@ export function workspaceSidebar(props: {
       archived={list.archived}
       org={orgs.acme}
       sections={list.sections}
+      shortcuts={shortcuts}
       suspended={suspended}
       viewer={viewer}
     />

@@ -2,9 +2,14 @@ import { Fragment } from 'react'
 import { Gauge, Plus } from 'lucide-react'
 import type { Person } from '../../fixtures/members'
 import { account, orgList, type Org, type OrgKey } from '../../fixtures/orgs'
+import { shownShortcut } from '../../fixtures/shortcutChanges'
+import { orgCommand } from '../../fixtures/shortcutCommands'
+import { pageHost, type ShortcutHost } from '../../fixtures/shortcutHosts'
 import { paths } from '../../paths'
+import type { Shortcut } from '../common/KeyChips'
 import { classes } from '../common/classes'
 import { LogoTile } from '../brand/Logo'
+import { useMacApp } from '../mac/MacApp'
 import { OrgDrop, placeAfterDrop, type OrgDrag } from '../orgs/OrgDrop'
 import { tileMenuOf } from '../orgs/orgTileMenu'
 import { PersonAvatar } from '../orgs/OrgTile'
@@ -15,7 +20,10 @@ export type RailState = {
   orgs: readonly Org[]
   /** The current org, or the create, account, and operator pages. */
   current?: OrgKey | 'create' | 'account' | 'operator'
-  /** The org, or Operator, whose name shows beside it, as on hover. */
+  /**
+   * The org, or Operator, whose name shows beside it, as on hover. An org
+   * also shows the key that opens it.
+   */
   hint?: OrgKey | 'operator'
   /** An org that an admin deleted, which waits for its restore. */
   deleted?: OrgKey
@@ -59,6 +67,16 @@ function orgState(rail: RailState, key: OrgKey): OrgState | undefined {
   return undefined
 }
 
+/**
+ * The key that opens the org at a place in the rail, from 0: the first key
+ * of its Switch to org command that works on the host. The rail draws the
+ * default keys. An org after the ninth has no key.
+ */
+function orgShortcut(index: number, host: ShortcutHost): Shortcut | undefined {
+  const command = orgCommand(index)
+  return command === undefined ? undefined : shownShortcut(command, {}, host)
+}
+
 /** The link of an operator to the operator page, above the account. */
 function OperatorItem(props: { current: boolean; hint: boolean }) {
   return (
@@ -80,8 +98,11 @@ function OperatorItem(props: { current: boolean; hint: boolean }) {
  * their own order, a way to create another, and the account at the bottom.
  * An operator also gets Operator above the account. Each org tile moves by
  * drag or by its menu. Create org, Operator, and the account stay.
+ * The hint of an org shows the key of its place, counted from the top,
+ * on the keyboard of the page.
  */
 export function OrgRail(props: RailState) {
+  const host = pageHost(useMacApp() !== undefined)
   const { orgs, drag } = props
   const from = orgs.findIndex((org) => org.key === drag?.org)
   const dragged = orgs[from]
@@ -118,6 +139,7 @@ export function OrgRail(props: RailState) {
                   : undefined
               }
               org={org}
+              shortcut={orgShortcut(index, host)}
               placeholder={org === dragged}
               state={orgState(props, org.key)}
             />

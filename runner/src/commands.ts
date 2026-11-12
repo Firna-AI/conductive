@@ -33,6 +33,7 @@ function parseCredential(value: unknown): RunnerTurnCredential {
       agent: 'claude',
       kind: oneOf(input.kind, ['token', 'api-key']),
       token,
+      ...(input.promptCacheTtl === '1h' ? { promptCacheTtl: '1h' } : {}),
     }
   }
   if (input.agent === 'codex') {
@@ -59,6 +60,7 @@ function parseAttachment(value: unknown): Attachment {
   return {
     id: string(input.id),
     name: string(input.name),
+    path: nullable(input.path ?? null),
     kind: oneOf(input.kind, ['file', 'image']),
     mediaType: string(input.mediaType),
     sizeBytes: integer(input.sizeBytes),

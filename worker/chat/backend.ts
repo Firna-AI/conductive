@@ -1,22 +1,23 @@
-import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 import {
   type WorkspaceEvent,
   type WorkspaceEventEnvelope,
 } from './workspace-events'
 import type { UserMessage } from '../../src/shared/messages'
-import type { ToolSessionAccess, ToolSessionWrite } from '../tools/services'
+import type {
+  ToolSessionAccess,
+  ToolSessionWrite,
+  ToolSessionManagement,
+} from '../tools/services'
 import type { FirstWorkspaceMessage } from '../lifecycle/workspace-runtime'
 import type { RunnerFileCommand } from '../../src/shared/runner-files'
 import type { AppEnv } from '../env'
-import { errorResponse, HttpError, privateResponse } from '../http'
 import { WorkspaceTurnTokens } from '../model-gateway/workspace'
 import { chatDependencies } from './dependencies'
 import {
   authorizeChatBrowser,
   type BrowserAccess,
 } from './browser-authorization'
-import { afterNumber } from './http-routes'
-import { browserRequest } from './browser-request'
+import { fetchWorkspaceChat } from './backend-fetch'
 import {
   BrowserConnections,
   type NativeBrowserConnections,
@@ -29,12 +30,13 @@ import type { ChatWorkspaceSummary } from './workspace-summary'
 import { ChatOperation } from './operation'
 import { RunnerChannel } from './runner-channel'
 import type { ChatStore, ChatTransaction } from './store'
+import type { QueueTurn } from './queue-turn'
 import { createWorkspaceChatStore } from './workspace-store'
 import {
   runWorkspaceOperation,
   type WorkspaceOperation,
 } from './workspace-operation'
-import { browserUpgrade, runnerUpgrade } from './sockets'
+import { openBrowser } from './sockets'
 import type {
   BrowserPeer,
   ChatDependencies,
@@ -59,7 +61,7 @@ export class WorkspaceChat {
     return this.operations.summary(workspaceId)
   }
 
-  runLifecycle<T>(operation: () => Promise<T>): Promise<T> {
+  runLifecycle<T>(operation: (turn: QueueTurn) => Promise<T>): Promise<T> {
     return this.store.run(operation)
   }
 
@@ -72,6 +74,14 @@ export class WorkspaceChat {
     authorize: () => Promise<ToolSessionAccess>,
   ) {
     return this.operations.writeTool(input, authorize)
+  }
+
+  manageToolSession(
+    input: ToolSessionManagement,
+    origin: string,
+    authorize: () => Promise<ToolSessionAccess>,
+  ) {
+    return this.operations.manageTool(input, origin, authorize)
   }
 
   async acceptFirstMessage(first: FirstWorkspaceMessage): Promise<UserMessage> {
@@ -105,7 +115,12 @@ export class WorkspaceChat {
     this.binding = new ChatWorkspaceBinding(
       overrides.matchesObject ?? (() => true),
     )
-    this.dependencies = chatDependencies(env, () => this.binding.id, overrides)
+    this.dependencies = chatDependencies(
+      env,
+      () => this.binding.id,
+      overrides,
+      () => this.runner?.connections.current?.protocolVersion ?? null,
+    )
     this.store = createWorkspaceChatStore(
       storage,
       env,
@@ -151,26 +166,15 @@ export class WorkspaceChat {
     })
   }
 
-  async fetch(request: Request): Promise<Response> {
-    try {
-      if (new URL(request.url).pathname === MACHINE_PATHS.runner)
-        return await runnerUpgrade(this, request)
-      const access = await this.authorizeBrowser(request)
-      if (access.suffix === '/events')
-        return await browserUpgrade(this, request, access)
-      return await browserRequest(
-        request,
-        access,
-        this.store,
-        this.storage,
-        this.env,
-        this.dependencies,
-        this.operation(access.workspace.id),
-        () => this.runner.flush(),
-      )
-    } catch (error) {
-      return privateResponse(errorResponse(error))
-    }
+  fetch(request: Request): Promise<Response> {
+    return fetchWorkspaceChat(request, {
+      chat: this,
+      store: this.store,
+      storage: this.storage,
+      env: this.env,
+      dependencies: this.dependencies,
+      operation: (id) => this.operation(id),
+    })
   }
 
   async authorizeBrowser(request: Request): Promise<BrowserAccess> {
@@ -265,10 +269,7 @@ export class WorkspaceChat {
   }
 
   async openBrowser(request: Request, peer: BrowserPeer): Promise<() => void> {
-    const access = await this.authorizeBrowser(request)
-    if (access.suffix !== '/events')
-      throw new HttpError(404, 'not_found', 'The page is not available.')
-    return this.subscribe(access, afterNumber(new URL(request.url)), peer)
+    return openBrowser(this, request, peer)
   }
 
   subscribe(

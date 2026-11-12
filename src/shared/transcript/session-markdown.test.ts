@@ -229,3 +229,56 @@ it('keeps tool details on one plain list line and escapes title and stop-member 
     ].join('\n'),
   )
 })
+
+it('copies attached-file names in place and lists only files without a mention', () => {
+  const { document } = markdownFixture()
+  const builder = new SessionMarkdown({ ...document, commands: [] })
+  const path = '.context/attachments/image/Login-screen.png'
+  const file = {
+    id: 'image',
+    name: 'Login [screen].png',
+    path,
+    kind: 'image' as const,
+    mediaType: 'image/png',
+    sizeBytes: 25,
+  }
+  builder.merge([
+    {
+      eventNumber: 1,
+      occurredAt: 1,
+      event: {
+        type: 'message.accepted',
+        message: {
+          id: 'files',
+          sessionId: document.session.id,
+          sender: {
+            id: 'cal',
+            githubLogin: 'cal',
+            displayName: 'Cal',
+            avatarUrl: null,
+          },
+          text: `Compare @${path} with @src/login.ts`,
+          attachments: [
+            file,
+            {
+              ...file,
+              id: 'trace',
+              path: null,
+              name: 'trace.txt',
+              kind: 'file',
+            },
+          ],
+          choice: document.session.choice,
+          createdAt: 0,
+          state: 'queued',
+        },
+      },
+    },
+  ])
+  const result = builder.render('full')
+  expect(result).toContain(
+    'Compare Login \\[screen\\].png with @src/login.ts\n\nAttachments: trace.txt',
+  )
+  expect(result).not.toContain(`@${path}`)
+  expect(result).not.toContain('Attachments: Login')
+})

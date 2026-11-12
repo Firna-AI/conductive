@@ -1,4 +1,8 @@
 import { describe, expect, test } from 'vitest'
+import { attachmentPath } from '../shared/attachment-paths'
+import { pickWorkspaceFiles } from './draft-files.test-support'
+import { mentionText } from '../shared/mention-text'
+import { fileMark } from './draft-marks'
 import { attachmentUploadPath } from '../shared/messages'
 import { workspacesPath } from '../shared/workspaces'
 import { FakeApiServer } from '../test-support/fake-api'
@@ -50,7 +54,7 @@ describe('NewWorkspaceModel', () => {
     draft.setText('Let shoppers save their cart.')
     draft.setRepository('billing-service')
     draft.setChoice(choice)
-    await draft.attach([
+    await pickWorkspaceFiles(draft, [
       new File(['Cart notes'], 'notes.txt', { type: 'text/plain' }),
     ])
     // The raw file goes before the workspace exists, and names the message.
@@ -71,7 +75,7 @@ describe('NewWorkspaceModel', () => {
       { error: { code: 'too_large', message: 'The file is too large.' } },
       413,
     )
-    await draft.attach([new File(['Big'], 'big.bin')])
+    await pickWorkspaceFiles(draft, [new File(['Big'], 'big.bin')])
     const failed = draft.draft.get().files.at(-1)
     expect(failed).toMatchObject({
       state: 'failed',
@@ -79,14 +83,14 @@ describe('NewWorkspaceModel', () => {
     })
     // Send waits for the failed file until the user takes it off.
     expect(await draft.send(defaults)).toBeNull()
-    draft.removeFile(failed?.id ?? '')
+    draft.setText(`Let shoppers save their cart. ${fileMark('client-2')}  `)
     const created = await draft.send(defaults)
     expect(await server.requests.at(-1)?.json()).toEqual({
       repositoryId: 'billing-service',
       sectionId: 'checkout',
       firstMessage: {
         id: 'client-1',
-        text: 'Let shoppers save their cart.',
+        text: `Let shoppers save their cart. ${mentionText(await attachmentPath({ id: 'draft-attachment-1', name: 'postcode-overlap.png' }), false)}  `,
         attachmentIds: ['draft-attachment-1'],
         choice,
       },
@@ -124,18 +128,20 @@ describe('NewWorkspaceModel', () => {
     )
     const draft = (await loaded(server)).newWorkspace(null)
     draft.setText('Fix the flaky cart test.')
-    await draft.attach([notes()])
+    await pickWorkspaceFiles(draft, [notes()])
     expect(await draft.send(defaults)).toBeNull()
     expect(draft.create.get()).toMatchObject({
       state: 'failed',
       error: { code: 'start_failed' },
     })
-    expect(draft.draft.get().text).toBe('Fix the flaky cart test.')
+    expect(draft.draft.get().text).toBe(
+      `Fix the flaky cart test. ${fileMark('client-2')} `,
+    )
     expect(draft.draft.get()).toMatchObject({
       files: [{ state: 'ready', attachment: { id: 'draft-attachment-1' } }],
       messageId: 'client-1',
     })
-    draft.setText('Fix the flaky cart test first.')
+    draft.setText(`Fix the flaky cart test first. ${fileMark('client-2')} `)
     await draft.send(defaults)
     const [first, second] = server.requests.slice(-2)
     const firstBody = await first.json()
@@ -143,14 +149,14 @@ describe('NewWorkspaceModel', () => {
     expect(firstBody).not.toHaveProperty('sectionId')
     expect(secondBody.firstMessage.id).toBe(firstBody.firstMessage.id)
     expect(draft.draft.get()).toMatchObject({
-      text: 'Fix the flaky cart test first.',
+      text: `Fix the flaky cart test first. ${fileMark('client-2')} `,
       files: [{ state: 'ready', attachment: { id: 'draft-attachment-1' } }],
       messageId: 'client-1',
     })
     expect(firstBody.firstMessage.attachmentIds).toEqual(['draft-attachment-1'])
     expect(secondBody.firstMessage).toEqual({
       id: 'client-1',
-      text: 'Fix the flaky cart test first.',
+      text: `Fix the flaky cart test first. ${mentionText(await attachmentPath({ id: 'draft-attachment-1', name: 'postcode-overlap.png' }), false)} `,
       attachmentIds: ['draft-attachment-1'],
       choice: defaults.choice,
     })
@@ -169,7 +175,7 @@ describe('NewWorkspaceModel', () => {
     draft.setText('Fix the flaky cart test.')
     await draft.send(defaults)
     held.hold('POST', uploadPath)
-    const uploading = draft.attach([notes()])
+    const uploading = pickWorkspaceFiles(draft, [notes()])
     await draft.send(defaults)
     const whileUploading = received(server, 'POST', createPath).length
     held.release('POST', uploadPath)
@@ -188,6 +194,7 @@ describe('NewWorkspaceModel', () => {
         { ...message, attachmentIds: [], choice: defaults.choice },
         {
           ...message,
+          text: `Fix the flaky cart test. ${mentionText(await attachmentPath({ id: 'draft-attachment-1', name: 'postcode-overlap.png' }), false)} `,
           attachmentIds: ['draft-attachment-1'],
           choice: defaults.choice,
         },
@@ -202,13 +209,16 @@ describe('NewWorkspaceModel', () => {
     draft.setText('Let shoppers save their cart.')
     held.hold('POST', createPath)
     const creating = draft.send(defaults)
-    await draft.attach([notes()])
+    await pickWorkspaceFiles(draft, [notes()])
+    expect(draft.attach([], ['Ignored folder'])).toEqual([])
+    expect(draft.draft.get()).toMatchObject({ refused: [], refusedFolders: [] })
     held.release('POST', createPath)
     const created = await creating
     expect({
       uploads: received(server, 'POST', uploadPath).length,
       created: created?.workspace.id,
       files: draft.draft.get().files,
-    }).toEqual({ uploads: 0, created: 'saved-carts', files: [] })
+      folders: draft.draft.get().refusedFolders,
+    }).toEqual({ uploads: 0, created: 'saved-carts', files: [], folders: [] })
   })
 })

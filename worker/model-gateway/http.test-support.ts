@@ -17,6 +17,7 @@ import type { CodexTaskOwner } from '../codex-auth/tasks'
 import { fakeCodexTasks } from '../codex-auth/tasks.test-support'
 import { FakeAnthropic } from '../test-support/fake-anthropic'
 import { FakeOpenAI } from '../test-support/fake-openai'
+import { FakeModelUpstream } from '../test-support/fake-model-upstream'
 import type { TestHarness } from '../test-support/harness'
 import { runningGatewayTurn } from './fixture.test-support'
 import { routeModelGateway } from './route'
@@ -36,7 +37,7 @@ export function gatewayPath(agent: 'claude' | 'codex', suffix?: string) {
 export async function gatewayHttp(
   harness: TestHarness,
   choice: AgentChoice = CLAUDE,
-  kind: 'api-key' | 'token' = 'api-key',
+  kind: 'api-key' | 'token' | 'endpoint' = 'api-key',
   protocolVersion: RunnerProtocolVersion = 1,
   upstream?: HttpFetch,
   recovery: {
@@ -45,16 +46,27 @@ export async function gatewayHttp(
     beforeFailure?: () => Promise<void>
     tasks?: CodexTaskOwner
   } = {},
+  endpointLogin: { secret?: string; endpoint?: string } = {},
 ) {
   const turn = await runningGatewayTurn(harness, choice, {
     kind,
     protocolVersion,
+    ...endpointLogin,
   })
   const { fixture } = turn
   const clock = new ManualChatClock(fixture.clock.now())
   const tasks = recovery.tasks ?? fakeCodexTasks().owner
   const anthropic = new FakeAnthropic()
   const openai = new FakeOpenAI()
+  const ownEndpoint = new FakeModelUpstream(
+    'https://proxy.example.test:8443',
+    [
+      '/private/v1/messages',
+      '/private/v1/messages/count_tokens',
+      '/private/v1/responses',
+    ],
+    () => Response.json({ output: [] }),
+  )
   const checks: string[] = []
   const workspaceLookups: string[] = []
   const workspaceCalls: string[] = []
@@ -66,6 +78,7 @@ export async function gatewayHttp(
   }
   const fetch = requestBodyEntry(async (request) => {
     const response = await routeModelGateway(request, {
+      previewDomain: fixture.env.PREVIEW_DOMAIN,
       codexTasks: tasks,
       dependencies: {
         now: clock.now,
@@ -74,9 +87,11 @@ export async function gatewayHttp(
         fetch:
           upstream ??
           ((request) =>
-            new URL(request.url).hostname === 'api.anthropic.com'
-              ? anthropic.fetch(request)
-              : openai.fetch(request)),
+            new URL(request.url).hostname === 'proxy.example.test'
+              ? ownEndpoint.fetch(request)
+              : new URL(request.url).hostname === 'api.anthropic.com'
+                ? anthropic.fetch(request)
+                : openai.fetch(request)),
       },
       workspaceAllowed(id) {
         workspaceLookups.push(id)
@@ -162,13 +177,15 @@ export async function gatewayHttp(
     },
     anthropic,
     openai,
+    ownEndpoint,
     checks,
     endpoint,
     workspaceLookups,
     workspaceCalls,
     request,
     fetch: (request: Request) => fetch(request, fixture.env),
-    secret: `secret-${fixture.member.id}-${choice.agent}`,
+    secret:
+      endpointLogin.secret ?? `secret-${fixture.member.id}-${choice.agent}`,
     async dispose() {
       await fixture.chat.closeConnections()
     },

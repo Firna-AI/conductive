@@ -94,13 +94,13 @@
   font-size: var(--ui-text-md);
   text-align: left;
   white-space: nowrap;
-  cursor: default;
+  cursor: pointer;
   box-sizing: border-box;
 }
 
 .item:focus,
 .item:hover {
-  background: var(--ui-soft);
+  background: var(--ui-menu-hover);
   outline: none;
 }
 

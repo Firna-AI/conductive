@@ -1,0 +1,4 @@
+/* The tooltip of a control draws no box, so the control keeps its layout. */
+.tip {
+  display: contents;
+}

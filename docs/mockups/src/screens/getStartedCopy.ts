@@ -39,7 +39,7 @@ export const getStartedCopy = {
   agent: {
     title: '3. Connect Claude or Codex',
     description:
-      'Your agents run on your own Claude or OpenAI account. Connect at least one now, and the other at any time in your account.',
+      'Your agents run on your own Claude or OpenAI account, or on your own endpoint. Connect at least one now, and the other at any time in your account.',
     done: 'Connected',
   },
   finish: (org: string) => `${org} is ready for a new workspace.`,

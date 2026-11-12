@@ -5,8 +5,10 @@ gives the rules of the screens of the app shell: the account and Get
 started, sign-in, invitations, orgs, panels and layers, the focus, saved
 drafts, New workspace as a page or a dialog, and
 [the waitlist](#the-waitlist).
-[The command palette and Feedback](palette-screens.md) gives the rules of
-the command palette and of the Feedback dialog.
+[Command palette and keys](palette-and-keys.md) gives the rules of the
+command palette and of the keyboard shortcuts.
+[Feedback](palette-screens.md) gives the rules of the Feedback dialog that
+the Help row of the command palette opens.
 
 - The app runs every cloud computer in its own Boat account, so no org has
   a Boat key. The app has no key screen, tab, notice, or Get started step,
@@ -40,35 +42,8 @@ the command palette and of the Feedback dialog.
   Continue to workspaces. Without invitations, or after Continue to
   workspaces, it opens Get started or the org of Get started. The
   `?invite=` link of an invitation email leads there.
-- The account has two tabs, General and Preferences, as the org settings
-  have. Each tab is a link with its own address. General holds the
-  sign-in, This Mac, GitHub, and the agents. The `?connect=` address of an
-  agent opens its Connect form on General. Preferences holds the New
-  workspaces section: Model and effort, and
-  [the choice of how New workspace opens](../../docs/protocol/create-a-workspace.md#the-preference).
-- The account of the Mac app shows This Mac after the sign-in section. A
-  browser shows none and asks no Mac.
-- Each connected login of the account shows its share switch, "Let other
-  members use this login", and Get started shows none. The switch saves
-  at once through `AccountModel.setNoReuse`. While it saves, it shows the
-  new value and takes no other change. A failed save shows its cause under
-  the switch until the next change, and the switch shows the saved value.
-  A share reply that a later save or remove of the same login overtook does
-  not show, so a removed login stays removed.
-- The Codex form offers API key, selected first, then ChatGPT plan.
-  ChatGPT plan asks the Worker for a code. The form shows the code with
-  the link to the page of OpenAI. It asks the Worker for the state of the
-  sign-in after each wait that the Worker gives. The sign-in ends when it
-  connects, when the code expires, or when the Worker refuses it. An
-  expired code and a refused sign-in offer a new code.
-- Cancel, the other kind in the switch, and leaving the page stop the
-  sign-in. A poll that gets no answer, or a failure of the server, waits
-  and asks again while the code works.
-- A login that the app can no longer use, such as a ChatGPT sign-in that
-  OpenAI did not renew, shows Signed out, its cause, and Sign in again.
-  Sign in again and the `?connect=` address open its form with its kind.
-  The composers and Get started count such a login as missing, so their
-  Connect notice leads to that form.
+- [Account and agent screens](account-screens.md) describes the account tabs,
+  keyboard shortcuts, sharing, own endpoint model lists, and the ChatGPT sign-in.
 - Create org asks for the name and the initials, and lists the
   repositories that the person and the GitHub App both reach, from
   `AccountModel.repositories`, before the org exists. The create sends the
@@ -112,10 +87,15 @@ the command palette and of the Feedback dialog.
   panel shows. It stays in a range that holds that width, so a shrink
   never widens a panel that the layout shows narrower than its range. A
   step that ends at its start width stores nothing.
+- A focused divider takes only its own keys, through `dividerKey` of the
+  shortcut model: Left and Right, alone or with Shift for a larger step,
+  and Home and End alone. A key with other modifiers, such as ⌥⌘←, goes to
+  its shortcut.
 - On desktop, the toggle at the end of the workspace header hides the
-  right column and shows it again. The choice holds for every workspace
-  of the tab until the page closes. A hidden column stays mounted, so its
-  file lists keep their connection and the terminal keeps its session.
+  right column and shows it again, and so does the key of Hide or show the
+  right column. The choice holds for every workspace of the tab until the
+  page closes. A hidden column stays mounted, so its file lists keep their
+  connection and the terminal keeps its session.
 - A menu item that is off keeps its place and fades each of its parts,
   except its note, so that the reader can read why it is off. The arrow
   keys and the first focus of the menu skip it.
@@ -133,9 +113,12 @@ the command palette and of the Feedback dialog.
   as Send after a long feedback draft, stay within a swipe.
 - Escape closes only the newest open layer, such as a menu in a dialog.
   A press outside closes each layer that it misses.
-- [The command palette and Feedback](palette-screens.md) gives the rules
-  of the palette layer, its key, its offers, and its reads, and of the
-  Feedback dialog that its Help row opens, with its screenshots.
+- The command palette and the keyboard shortcuts follow
+  [Command palette and keys](palette-and-keys.md): the layer of the
+  palette, the shortcut layer, the owners of the commands, the key hints,
+  and the keys of the workspace list.
+- [Feedback](palette-screens.md) gives the rules of the Feedback dialog
+  that the Help row of the palette opens, with its screenshots.
 - A move of a workspace row by keys keeps the focus on the row. The list
   gives back only a lost focus, as a layer does: when a render takes the
   focused row out of the page and the focus falls to the page, the
@@ -206,10 +189,11 @@ the command palette and of the Feedback dialog.
   empty page of the org says. Both ask only after the repositories load.
 - New workspace sends and uploads one at a time: the create waits for the
   files, and the paperclip is off while the create runs. Send, Create, Try
-  again, and Enter read one readiness: the text, the files, the agent
-  login, the image of the org, the repository and its build, the model,
-  and an org that is not suspended. In a suspended org, the refused bar
-  takes the place of the composer of the dialog, as on the page.
+  again, and Enter read one readiness: the text outside the chips of its
+  files, the files of its chips, the agent login, the image of the org, the
+  repository and its build, the model, and an org that is not suspended.
+  In a suspended org, the refused bar takes the place of the composer of
+  the dialog, as on the page.
 - While the builds of the org show no good image, New workspace shows the
   notice of the first build on the page and in the dialog, as
   [Create a workspace](../../docs/protocol/create-a-workspace.md#before-the-first-good-build)
@@ -246,6 +230,15 @@ the command palette and of the Feedback dialog.
   does, and the dialog shows 7 to 14 lines. The field of the dialog takes
   the focus through the handle of the field. While a create runs, the
   field takes no change, and it keeps the focus.
+- The page and the dialog give their field `NewWorkspaceModel.filesSource`.
+  So each attached file of the draft is a chip in the text, as
+  [The message field](../chat/message-field.md) says. A pick attaches its
+  files with `NewWorkspaceModel.attach`, and puts their chips at the caret,
+  or at the end, in the same event. The page box and the whole dialog card
+  take a drop of files, except during a create and in a suspended org. The
+  files of the draft follow its marks, and a create that succeeds or a
+  sign-out ends them, as
+  [Attached files of a draft](../chat/draft-files.md) says.
 - A create request that fails keeps the message in the form, with "The
   workspace wasn't created". Try again sends the same message ID. A failed
   first start keeps its workspace instead, as

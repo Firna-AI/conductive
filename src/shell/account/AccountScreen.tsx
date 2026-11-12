@@ -12,12 +12,30 @@ import { AgentsSection, SignInSection } from './AccountSections'
 import { GitHubSection } from './GitHubSection'
 import { InviteCodeSection } from './InviteCodeSection'
 import { DefaultsSection } from './PreferencesSections'
+import { ShortcutsTab } from './shortcuts/ShortcutsTab'
 
 /** The tabs of the account, in their order. */
 const tabs = [
   { tab: 'general', label: 'General' },
   { tab: 'preferences', label: 'Preferences' },
+  { tab: 'shortcuts', label: 'Keyboard shortcuts' },
 ] as const satisfies readonly { tab: AccountTab; label: string }[]
+
+/** The content of a tab of the account. */
+function TabContent(props: {
+  tab: AccountTab
+  user: User
+  connect: Agent | null
+}) {
+  switch (props.tab) {
+    case 'general':
+      return <GeneralTab connect={props.connect} user={props.user} />
+    case 'preferences':
+      return <DefaultsSection />
+    case 'shortcuts':
+      return <ShortcutsTab />
+  }
+}
 
 /**
  * This Mac, in the account of the Mac app only: the Mac that the app
@@ -59,23 +77,26 @@ function GeneralTab(props: { user: User; connect: Agent | null }) {
 }
 
 /**
- * The account, in two tabs. Each tab is a link with its own address.
+ * The account, in three tabs. Each tab is a link with its own address.
  * General holds the GitHub sign-in, what every org shares, and the invite
- * code of the user. Preferences
- * holds how new workspaces start: their model, and how New workspace
- * opens. The product is free, so the page shows no plan and no billing.
+ * code of the user. Preferences holds how new workspaces start: their
+ * model, and how New workspace opens. Keyboard shortcuts holds the keys of
+ * the commands. A phone moves a tab that does not fit to a second line.
+ * The product is free, so the page shows no plan and no billing.
  */
 export function AccountScreen(props: {
   user: User
   tab: AccountTab
   connect: Agent | null
 }) {
+  const phone = useViewport() === 'phone'
   return (
     <Page
       back={{ label: 'Workspaces', to: routes.home() }}
       subtitle={`@${props.user.githubLogin}`}
       tabs={
         <LinkTabs
+          flow={phone}
           label="Account"
           tabs={tabs.map((item) => ({
             label: item.label,
@@ -86,11 +107,7 @@ export function AccountScreen(props: {
       }
       title="Account"
     >
-      {props.tab === 'general' ? (
-        <GeneralTab connect={props.connect} user={props.user} />
-      ) : (
-        <DefaultsSection />
-      )}
+      <TabContent connect={props.connect} tab={props.tab} user={props.user} />
     </Page>
   )
 }

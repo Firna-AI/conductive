@@ -25,6 +25,11 @@ for local development.
     `high`, `xhigh`, or `max`.
 - `CONDUCTIVE_DEFAULT_CHOICE` is one JSON object with `agent`, `model`, and
   `effort`. The saved default of a user comes before it.
+- An own endpoint login uses the same list. The owner's pickers hide each
+  model of the list that the endpoint does not name in its own model
+  list, as
+  [Own endpoint logins](../protocol/own-endpoint-logins.md)
+  says. The endpoint gets the full model ID that the agent program sends.
 - These routes read the two variables:
   - `GET /api/models` of the app reads `CONDUCTIVE_MODELS`. A missing or
     invalid value gives `503 models_unavailable`.
@@ -40,7 +45,7 @@ for local development.
     When the owner of the calling workspace has no saved default, a
     missing or invalid `CONDUCTIVE_DEFAULT_CHOICE` gives an empty default
     choice, not an error.
-    [Agent tools](../protocol/agent-tools.md#models) states the list.
+    [Models](../protocol/workspace-calls.md#models) states the list.
 - No other route reads these two variables.
 - The web app reads `GET /api/models` and `GET /api/account` when it
   starts. So it does not start without a valid model list. A user with no

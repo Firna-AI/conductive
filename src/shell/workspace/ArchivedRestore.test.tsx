@@ -26,9 +26,9 @@ import {
 import {
   openPaletteTab,
   options,
-  pressPaletteKey,
   searchField,
 } from '../palette/palette-test-kit'
+import { pressCommand } from '../shortcuts/shortcut-test-kit'
 import { click, press, settle, typeText } from '../test-mount'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
@@ -72,7 +72,7 @@ function archivedBar(view: HTMLElement): string[] | null {
 
 /** The names of the options of the palette for a search, which then closes. */
 function paletteOptions(search: string): string[] {
-  pressPaletteKey('other', document.body)
+  pressCommand('command-palette', 'other', document.body)
   typeText(searchField(), search)
   const names = options().map(accessibleName)
   press(searchField(), 'Escape')

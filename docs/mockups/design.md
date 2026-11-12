@@ -124,9 +124,26 @@ sessions as tabs above the chat, and four tabs at the bottom.
   place of the workspace groups: a spinner, or `LoadFailure`. The list and
   the workspace screens own it as their `palette` state. The Search row
   under New workspace opens it, and on desktop that row shows ⌘K.
-  `paletteSearch.ts` beside it holds the rule of a search. A search also
-  finds a workspace by the label of its number, such as `W-395` or `39`.
-  A workspace row then shows the label before the name, as a chip does.
+  `paletteSearch.ts` beside it holds the rule of a search, which the
+  Keyboard shortcuts tab also uses. `PaletteEmpty.tsx` holds the empty
+  state, which also answers a search of that tab without a match. A search
+  also finds a workspace by the label of its number, such as `W-395` or
+  `39`. A workspace row then shows the label before the name, as a chip
+  does. On desktop, each command row ends with the first key of its
+  command that works where the palette opens. The Mac app gives the page
+  every key, so New workspace shows ⌘N there. A browser page draws a
+  normal Chrome tab on a Mac, which keeps ⌘N, so New workspace shows ⌥⌘N.
+  A workspace row shows no key, and a phone shows no keys. In the Mac app
+  the Search row shows the person's key of the palette, such as ⇧⌘P.
+- `KeyChips` in `src/components/common/` draws a shortcut as small key
+  chips, one for each key: ⌘ then K on a Mac, and Ctrl then K on Windows,
+  whose modifiers show as words. The chips use the sans font, which draws
+  ⌘, ⌥, ⇧, ⌃, ⌫, and ⌦ on every system. A dimmed shortcut, which does not
+  work where the page runs, has an outline with dashes, no fill, and muted
+  text. The Search row keeps its text hint in the label font.
+- `SearchField` in `src/components/common/` draws the search field at the
+  top of a list that it narrows: the repositories of an org, the tabs of
+  the operator, and Keyboard shortcuts.
 - `LoadFailure` in `src/components/common/` draws data that did not load,
   as the lists of the app show it: what failed, the message of the server,
   and Try again.
@@ -152,12 +169,61 @@ sessions as tabs above the chat, and four tabs at the bottom.
   and the attach button and Create, with the hint of the Enter key, at the
   bottom right. A phone always opens the page, so the dialog has no phone
   layout.
-- The account has two tabs, General and Preferences, as links, as the org
-  settings have. Preferences holds the New workspaces section, whose rows
-  put each label beside its control in two columns. A segmented control
-  chooses how New workspace opens, with a helper line under it, and a
-  narrow section puts it under its label. A failed save shows its error
-  under the control.
+- The account has three tabs, General, Preferences, and Keyboard
+  shortcuts, as links, as the org settings have. On a phone, a tab that
+  does not fit moves to a second line. Preferences holds the New
+  workspaces section, whose rows put each label beside its control in two
+  columns. A segmented control chooses how New workspace opens, with a
+  helper line under it, and a narrow section puts it under its label. A
+  failed save shows its error under the control.
+- `ShortcutsSections` in `src/components/settings/` draws the Keyboard
+  shortcuts tab, in the Mac app and in each browser. It shows the keys of
+  a host: the Mac app, a normal tab of Chrome or Firefox, or the installed
+  app of Chrome, with a Mac keyboard or the keyboard of Windows and
+  Linux. `src/fixtures/shortcutHosts.ts` holds the keyboard of each host,
+  `browserTabKeys.ts` beside it holds the keys that each normal browser
+  tab keeps, and `windowsShortcuts.ts` holds the keys of Windows and
+  Linux. A search field at the top keeps each row whose label or search
+  words hold every word of the query, by the rule of the palette, from
+  `shortcutSearch.ts`.
+  Fixed rows match too. A group without a matching row hides, and a search
+  without a match says so, as the palette does. The lines under the field,
+  from `ShortcutIntro.tsx`, say how to change a shortcut and which keys
+  the terminal keeps on the keyboard of the page. In a normal browser tab,
+  a key that the browser keeps, or that decisions 192 and 196 leave to it,
+  is dimmed, and one more line says where the dimmed keys work. A dimmed key
+  stays a button that records new keys. A browser leaves out the commands
+  and the groups that only the Mac app has. Each group of commands is a
+  section with its rows in one box. A row ends with its shortcuts. Each
+  shortcut is a button that records new keys, + adds one, and a row
+  without a shortcut shows Add shortcut. The commands that a person can
+  change come first, and the fixed shortcuts follow them with no control.
+  A fixed row among other commands shows Fixed shortcut. The General group
+  ends with Esc and with Enter and Space, which press a focused button. The
+  Navigation group ends with the keys that open the menu of a focused tab,
+  and the Workspace group with the fixed keys of a focused workspace row and
+  of a focused divider. Each of their labels names the control that has the
+  focus. The Chat group ends with the keys of the message field, and its
+  Send row shows Enter with ⌘ or Ctrl, so the tab shows that Enter with a
+  modifier is fixed too. A group of fixed shortcuts says it once, under its
+  title. The Text group lists the text keys of the keyboard, with the keys
+  that move or delete by word or by line in one row each, and its line
+  says that the other text keys are fixed too. A narrow box, on a phone or
+  in a narrow window, puts the label of a row on its first line, and the
+  shortcuts and the control at the end on a second line. The recorder is a
+  field with a full outline in the accent colour. While it replaces a
+  shortcut, Remove stands beside Cancel. A recorder that adds a shortcut
+  shows only Cancel. A line under the row names a fixed shortcut that the
+  recorder did not take, the command that has the recorded shortcut, or a
+  failed save. The line of a fixed shortcut names its fixed row. When
+  several rows hold the shortcut, or no row lists it, the line says only
+  that the shortcut is fixed. A row that names the command of a recorded
+  shortcut shows only Replace and Cancel. A changed row shows Reset. When
+  another command holds a default shortcut of the row, Reset shows that
+  shortcut in the field of the recorder, the line that names the command,
+  and Replace and Cancel. Reset all asks first with `ConfirmDialog`,
+  because nothing brings the changes back. The error of a failed Reset all
+  stands under the lines and Reset all, across the width of the tab.
 - [The marks](design-marks.md) give the list mark, the mark
   of the header, and the marks of routine runs. They also give the mark of
   an agent.
@@ -230,7 +296,9 @@ sessions as tabs above the chat, and four tabs at the bottom.
 - On desktop the sidebar and the right column resize from `ResizeHandle` in
   `src/components/layout/`, a hairline on their inner edge. On hover and
   during a drag a short grip in the accent colour shows in its middle, so no
-  panel gets an accent edge.
+  panel gets an accent edge. The same handle lies across the top edge of the
+  tools panel, and moves the split between the file lists and the tools, as
+  `app/panels/split` shows.
 - A state tints a whole bar or box, and its edges stay neutral. No box has
   an accent strip on any edge.
 - `sizes.ts` in `src/components/chat/` holds the one size formatter.

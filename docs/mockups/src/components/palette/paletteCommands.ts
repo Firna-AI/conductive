@@ -2,26 +2,21 @@ import type { LucideIcon } from 'lucide-react'
 import {
   Archive,
   ArchiveRestore,
-  Bot,
   Building2,
   FileDiff,
   Files,
-  FolderGit2,
   FolderPlus,
   Globe,
   History,
   ListChecks,
-  LogIn,
   MessageSquareHeart,
   MessageSquarePlus,
   Plus,
-  Server,
-  Settings2,
-  SlidersHorizontal,
+  SquarePlus,
   SquareTerminal,
-  Users,
 } from 'lucide-react'
-import { orgList, orgs, type Org } from '../../fixtures/orgs'
+import { orgList, type Org } from '../../fixtures/orgs'
+import { orgCommand, type CommandId } from '../../fixtures/shortcutCommands'
 import { checksPaths, paths } from '../../paths'
 import { sendFeedbackLabel, sendFeedbackWords } from '../feedback/feedbackCopy'
 import { orgLinks } from '../orgs/orgLinks'
@@ -35,34 +30,59 @@ export type CommandLead =
 /**
  * An action or a setting of the palette. `words` are more words that a
  * search finds it by, which the row does not show. `to` is the screen that
- * running it shows, when the mockups draw one.
+ * running it shows, when the mockups draw one. `shortcut` is the command of
+ * the Keyboard shortcuts tab, whose key the row can show.
  */
 export type Command = {
   label: string
   lead: CommandLead
   words?: readonly string[]
   to?: string
+  shortcut?: CommandId
 }
 
-function icon(value: LucideIcon): CommandLead {
+export function icon(value: LucideIcon): CommandLead {
   return { kind: 'icon', icon: value }
 }
 
 const rightColumnActions: readonly Command[] = [
-  { label: 'Go to All files', lead: icon(Files), to: paths.filesAll },
-  { label: 'Go to Changes', lead: icon(FileDiff), to: paths.filesChanges },
+  {
+    label: 'Go to All files',
+    lead: icon(Files),
+    to: paths.filesAll,
+    shortcut: 'go-to-all-files',
+  },
+  {
+    label: 'Go to Changes',
+    lead: icon(FileDiff),
+    to: paths.filesChanges,
+    shortcut: 'go-to-changes',
+  },
   {
     label: 'Go to Checks',
     lead: icon(ListChecks),
     words: ['ci'],
     to: checksPaths['ready-to-merge'],
+    shortcut: 'go-to-checks',
   },
-  { label: 'Go to Terminal', lead: icon(SquareTerminal), to: paths.terminal },
+  {
+    label: 'Go to Terminal',
+    lead: icon(SquareTerminal),
+    to: paths.terminal,
+    shortcut: 'go-to-terminal',
+  },
   {
     label: 'Go to Preview',
     lead: icon(Globe),
     words: ['port'],
     to: paths.preview,
+    shortcut: 'go-to-preview',
+  },
+  {
+    label: 'New terminal',
+    lead: icon(SquarePlus),
+    words: ['shell', 'tab'],
+    to: paths.terminal,
   },
 ]
 
@@ -83,12 +103,15 @@ const sessionHistory: Command = {
   lead: icon(History),
   words: ['closed', 'reopen'],
   to: paths.sessionHistory,
+  shortcut: 'session-history',
 }
 
 /**
  * The actions of the open workspace: a new session, the session history,
- * each tab of the right column, and Archive. An archived workspace keeps
- * its session history and offers Restore.
+ * each tab of the right column, a new terminal, and Archive. New terminal
+ * shows where the Go to rows show, while the Terminal tool offers its +
+ * button. An archived workspace keeps its session history and offers
+ * Restore, a command without a default key.
  */
 export function workspaceActions(open: OpenActions): Command[] {
   if (open.archived) {
@@ -97,6 +120,7 @@ export function workspaceActions(open: OpenActions): Command[] {
       lead: icon(ArchiveRestore),
       words: ['unarchive'],
       to: paths.restored,
+      shortcut: 'restore-workspace',
     }
     return open.restorable ? [sessionHistory, restore] : [sessionHistory]
   }
@@ -106,6 +130,7 @@ export function workspaceActions(open: OpenActions): Command[] {
       lead: icon(MessageSquarePlus),
       words: ['tab', 'agent', 'chat'],
       to: paths.sessions,
+      shortcut: 'new-session',
     },
     sessionHistory,
     ...(open.rightColumn ? rightColumnActions : []),
@@ -113,7 +138,12 @@ export function workspaceActions(open: OpenActions): Command[] {
   if (!open.archivable) return actions
   return [
     ...actions,
-    { label: 'Archive workspace', lead: icon(Archive), to: paths.justArchived },
+    {
+      label: 'Archive workspace',
+      lead: icon(Archive),
+      to: paths.justArchived,
+      shortcut: 'archive-workspace',
+    },
   ]
 }
 
@@ -124,26 +154,41 @@ export const orgActions: readonly Command[] = [
     lead: icon(Plus),
     words: ['create', 'task'],
     to: paths.newWorkspace,
+    shortcut: 'new-workspace',
   },
-  { label: 'New section', lead: icon(FolderPlus), words: ['group'] },
+  {
+    label: 'New section',
+    lead: icon(FolderPlus),
+    words: ['group'],
+    shortcut: 'new-section',
+  },
 ]
 
-/** Create org, then a switch to each other org of the person. */
+/**
+ * Create org, then a switch to each other org of the person. The switch
+ * names the place of the org in the rail, whose key it can show.
+ */
 export const appActions: readonly Command[] = [
   {
     label: 'Create org',
     lead: icon(Building2),
     words: ['new', 'team'],
     to: paths.createOrg,
+    shortcut: 'create-org',
   },
-  ...orgList
-    .filter((org) => org.key !== 'acme')
-    .map((org): Command => ({
-      label: `Switch to ${org.name}`,
-      lead: { kind: 'org', org },
-      words: ['org'],
-      to: orgLinks[org.key],
-    })),
+  ...orgList.flatMap((org, index): Command[] =>
+    org.key === 'acme'
+      ? []
+      : [
+          {
+            label: `Switch to ${org.name}`,
+            lead: { kind: 'org', org },
+            words: ['org'],
+            to: orgLinks[org.key],
+            shortcut: orgCommand(index),
+          },
+        ],
+  ),
 ]
 
 /**
@@ -157,64 +202,6 @@ export const helpActions: readonly Command[] = [
     lead: icon(MessageSquareHeart),
     words: sendFeedbackWords,
     to: paths.feedbackEmpty,
+    shortcut: 'send-feedback',
   },
 ]
-
-/** The tabs of the settings of Acme. */
-export const orgSettings: readonly Command[] = [
-  {
-    label: 'General',
-    lead: icon(Settings2),
-    words: ['name', 'initials', 'delete org', 'leave org'],
-    to: paths.orgSettings,
-  },
-  {
-    label: 'Repositories',
-    lead: icon(FolderGit2),
-    words: ['github'],
-    to: paths.repositories,
-  },
-  {
-    label: 'Cloud computer',
-    lead: icon(Server),
-    words: ['install', 'startup script', 'env', 'build', 'sandbox'],
-    to: paths.cloudComputer,
-  },
-  {
-    label: 'Members',
-    lead: icon(Users),
-    words: ['invite', 'admin', 'role'],
-    to: paths.members,
-  },
-]
-
-/** The sections of the Account page, which every org shares. */
-export const accountSettings: readonly Command[] = [
-  {
-    label: 'Sign-in',
-    lead: icon(LogIn),
-    words: ['sign out', 'account'],
-    to: paths.account,
-  },
-  {
-    label: 'GitHub',
-    lead: { kind: 'github' },
-    words: ['github app', 'install'],
-    to: paths.account,
-  },
-  {
-    label: 'Agents',
-    lead: icon(Bot),
-    words: ['claude', 'codex', 'login', 'api key', 'token'],
-    to: paths.account,
-  },
-  {
-    label: 'New workspaces',
-    lead: icon(SlidersHorizontal),
-    words: ['model', 'effort', 'default'],
-    to: paths.accountPreferences,
-  },
-]
-
-/** The name of the group of the settings of the current org. */
-export const orgSettingsLabel = `${orgs.acme.name} settings`
