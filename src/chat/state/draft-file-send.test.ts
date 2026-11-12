@@ -81,19 +81,24 @@ describe('sending draft marks', () => {
     })
   })
 
-  it('removes sent marks after an edit while preserving new text, new files and literal escapes', async () => {
+  it('clears the sent marks at Send, and keeps new text, new files, and literal escapes from during the send', async () => {
     const chat = await attached(true)
     const sending = chat.controller.send(session)
     await vi.waitFor(() => expect(chat.held).toHaveLength(1), {
       timeout: 10_000,
     })
+    expect(chat.draftOf(session)).toMatchObject({
+      text: '',
+      files: [],
+      detached: [],
+    })
     chat.controller.attachFiles(session, [note('new.txt')])
-    const newer = `${literalText('Next \uE000typed\uE001-\uE0020 ')}${fileMark('file-1')} ${fileMark('file-3')}`
+    const newer = `${literalText('Next \uE000typed\uE001-\uE0020 ')}${fileMark('file-3')}`
     chat.controller.setDraft(session, newer)
     chat.held.shift()?.()
     await sending
     expect(chat.draftOf(session)).toMatchObject({
-      text: `${literalText('Next \uE000typed\uE001-\uE0020 ')} ${fileMark('file-3')}`,
+      text: newer,
       files: [{ id: 'file-3', state: 'uploading' }],
       detached: [],
     })
@@ -113,26 +118,22 @@ describe('sending draft marks', () => {
     ).toEqual(['@returned/first.txt @"returned/second file.txt"'])
   })
 
-  it('marks a sent file as expired even when its chip was detached during the send', async () => {
+  it('marks each sent file as expired when the Worker no longer has it, and gives back its chips', async () => {
     const chat = await attached(true, 'missing')
+    const before = chat.draftOf(session)?.text
     const sending = chat.controller.send(session)
     await vi.waitFor(() => expect(chat.held).toHaveLength(1), {
       timeout: 10_000,
     })
-    chat.controller.setDraft(session, fileMark('file-1'))
     chat.held.shift()?.()
     await sending
     expect(chat.draftOf(session)).toMatchObject({
-      files: [{ id: 'file-1', state: 'failed' }],
-      detached: [{ id: 'file-2', state: 'failed' }],
+      text: before,
+      files: [
+        { id: 'file-1', state: 'failed' },
+        { id: 'file-2', state: 'failed' },
+      ],
+      detached: [],
     })
-    chat.controller.setDraft(
-      session,
-      `${fileMark('file-2')} ${fileMark('file-1')}`,
-    )
-    expect(chat.draftOf(session)?.files.map(({ state }) => state)).toEqual([
-      'failed',
-      'failed',
-    ])
   })
 })

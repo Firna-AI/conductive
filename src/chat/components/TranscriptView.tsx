@@ -1,7 +1,7 @@
 import { Fragment, type ReactNode } from 'react'
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
-import type { UserMessage } from '../../shared/messages'
+import type { PendingMessage } from '../state/chat-snapshot'
 import styles from '../../../docs/mockups/src/components/chat/ChatItemView.module.css'
 import { formatDuration } from '../../shared/transcript/duration'
 import { retryItemId } from '../../shared/transcript/known-turns'
@@ -35,15 +35,15 @@ function WorkingRow(props: { turn: RunningTurn; now: number }) {
 /**
  * The parts of a session's chat in order: messages, answers, folded tool
  * calls, the folded work of each ended turn, the end of each turn, and the
- * line of each lost event. Sent messages that the stream has not shown yet
- * follow, then the running turn, then `children`, such as the steps of a
+ * line of each lost event. Messages that the stream has not shown yet
+ * follow, also while their send waits, then the running turn, then `children`, such as the steps of a
  * sandbox start.
  */
 export function TranscriptView(props: {
   transcript: Transcript
   inserts?: readonly TranscriptInsert<ReactNode>[]
   readers: ChatReaders
-  pending: readonly UserMessage[]
+  pending: readonly PendingMessage[]
   now: number
   readOnly: boolean
   retrying: boolean

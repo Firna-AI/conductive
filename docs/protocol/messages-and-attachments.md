@@ -69,6 +69,12 @@ says.
   says.
 - [The send key](create-a-workspace.md#the-send-key) gives the key that
   sends a message from the composer (decision 143 of PR #73).
+- A message shows in the chat at once when the user sends it, and the
+  composer clears at once. A message that the Worker refuses leaves the
+  chat and goes back to the composer with its files, before any text that
+  the user typed during the send. A notice says that it did not send.
+  Reason: a message that stayed in the composer until the reply made each
+  send feel slow.
 - The composer shows a notice when the user has no login for the agent of
   the chosen model (decision 33). It shows no such notice when the message
   runs on the login of another member.

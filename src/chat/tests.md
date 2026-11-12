@@ -4,7 +4,10 @@ This guide belongs to [the chat](README.md). It says what each test file of
 the chat checks. [Tests](README.md#tests) gives the command and the shared
 helpers.
 
-`state/prompt-actions.test.ts` sends fixed prompts over the fake API. It
+`state/instant-send.test.ts` checks a message while its send waits: it
+leaves the composer and shows in the chat at once, and it goes back to the
+composer, before newer text, when the Worker refuses it. It also shows a
+fixed prompt at once. `state/prompt-actions.test.ts` sends fixed prompts over the fake API. It
 checks the request and the unchanged draft, a send during a turn, a missing
 login, a linked session, and the client ID of a second try in the same and
 in another session. `components/ContinuedNote.test.tsx` folds the note of
@@ -247,10 +250,10 @@ queued start. Undo of several stopped uploads starts them again in one
 new queue, and the stopped queue starts none of them.
 `state/draft-file-send.test.ts` sends a chat with only chips. It writes
 the returned path at every mark, with each attachment ID once, in the
-order of the first marks. After an edit during the send, the new text,
-the new files, and the escapes of literal text stay, without the sent
-marks. A refused send keeps the encoded text and the files, and a missing
-file turns failed, also when its chip left during the send.
+order of the first marks. Send clears the sent marks at once, and the
+text, the files, and the escapes of literal text from during the send
+stay. A refused send gives back the encoded text and the files, and each
+sent file that the Worker no longer has turns failed.
 `state/draft-file-moves.test.ts` reads the files of a moving draft through
 its source during store notifications. A model change sends the encoded
 text as it is, and its reply takes out each mark of an unkept file, also
@@ -273,7 +276,8 @@ at its place: in order, with spaces, as one step of undo, and without the
 dragged path. A dropped folder gets no chip and no upload, and its notice
 names it, also for a folder alone. An empty file attaches, and Attach
 files of the notice opens the file picker. The box takes a drop during a
-send and an upload, and a drop on the bar puts the chips at the caret.
+send, after the sent text left, and during an upload, and a drop on the
+bar puts the chips at the caret.
 
 `state/refused-folders.test.ts` gives a chat draft folder names with no
 files, and checks that the draft keeps a copy of the names with no upload.

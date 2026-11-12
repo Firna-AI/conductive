@@ -225,13 +225,16 @@ at `app/attachments`, in New workspace, and in the flow
   stored token that the Worker turns into the path for the runner was
   rejected, because the agent then reads other text than the stored
   message (decision 216).
-- A send that succeeds clears the text, unless the member changed the text
-  during the send. A failed send keeps the text with its chips. So Send
-  again sends the same text.
+- In a chat, Send clears the text with its chips at once, as
+  [Messages](messages-and-attachments.md#messages) says. A failed send
+  gives back the text with its chips, so Send again sends the same text.
+- In New workspace, a create that succeeds clears the text, unless the
+  member changed the text during the create. A failed create keeps the
+  text with its chips, so Send again sends the same text.
 - When a file leaves the draft without its chip, its chip leaves the text
-  too. Examples are a send whose text the member changed during the send,
-  a model change that keeps fewer files, and a sign-out. Reason: the text
-  never shows a chip without its file.
+  too. Examples are a create whose text the member changed during the
+  create, a model change that keeps fewer files, and a sign-out. Reason:
+  the text never shows a chip without its file.
 - A draft that a model change moves to a new session keeps each chip at its
   place.
 - The first message of a new workspace needs text beside the chips of its

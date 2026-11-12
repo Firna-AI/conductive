@@ -37,6 +37,8 @@ Select **Resume** if the restored workspace is already open.
 On a computer, **Enter** sends the message.
 Use **Shift+Enter** to add a line.
 On a phone, **Enter** adds a line.
+Your message appears in the chat at once.
+If it cannot send, it goes back to the message box, and the chat shows the cause.
 
 You can send a message while the workspace's computer starts.
 The chat shows the steps of that start.
