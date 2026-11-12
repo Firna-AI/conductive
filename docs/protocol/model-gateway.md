@@ -15,6 +15,8 @@ decision of the change that adds the gateway. Its plan keeps these records
 while the change is open. Its pull request keeps them after the merge. An
 own endpoint decision number names a decision of the change that adds the
 own endpoint logins, as [Tokens and secrets](tokens-and-secrets.md) says.
+An egress decision number, such as egress decision 1, names the dated
+record of one decision of the change that adds the egress container.
 
 ## Terms
 
@@ -26,6 +28,9 @@ own endpoint logins, as [Tokens and secrets](tokens-and-secrets.md) says.
   gets a model request from the gateway.
 - **Profile:** a pair of Anthropic files that Claude reads: a config file
   with an address, and a credentials file with a token.
+- **Egress container:** a container on the app's Cloudflare account that
+  sends the ChatGPT requests of the gateway to OpenAI. It has no public
+  address.
 
 ## No login in the sandbox
 

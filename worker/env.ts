@@ -34,7 +34,9 @@ export interface AppEnv {
   RESEND_API_KEY?: string
   FEEDBACK_EMAIL?: string
   OPERATOR_GITHUB_IDS?: string
-  /** Optional proxy outside Cloudflare for chatgpt.com requests. */
+  /** The egress Worker that sends the chatgpt.com requests of the gateway. */
+  CHATGPT_EGRESS?: { fetch(request: Request): Promise<Response> }
+  /** A fallback egress proxy for a deployment without the egress Worker. */
   CHATGPT_EGRESS_URL?: string
   CHATGPT_EGRESS_SECRET?: string
 }
