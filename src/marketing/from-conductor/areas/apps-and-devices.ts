@@ -68,8 +68,8 @@ export const appsAndDevicesFeatures: readonly ParityFeature[] = [
     id: 'product-changelog',
     area: 'apps-and-devices',
     name: 'Product changelog',
-    status: 'planned',
-    note: 'A public website changelog is planned. GitHub releases already list changes.',
+    status: 'in-progress',
+    note: 'A public website changelog is in progress. GitHub releases already list changes.',
     due: null,
   },
   {
