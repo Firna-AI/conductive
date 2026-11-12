@@ -24,10 +24,14 @@ import {
 } from '../chat/integration/runner-socket.test-support'
 import type { Workspace } from './entry.test-support'
 
-export async function agentWriteFixture(bundle: string) {
+export async function agentWriteFixture(
+  bundle: string,
+  options: Parameters<typeof createOuterRuntime>[1] = {},
+) {
   const directory = '.context/agent-session-tools/evidence/m4-runtimes/'
   await mkdir(directory, { recursive: true })
   const active = await createOuterRuntime(bundle, {
+    ...options,
     persistencePath: await mkdtemp(directory + 'case-'),
     configuration: {
       CONDUCTIVE_DEFAULT_CHOICE: JSON.stringify(CLAUDE),
@@ -36,6 +40,7 @@ export async function agentWriteFixture(bundle: string) {
       CONDUCTIVE_MODELS: JSON.stringify([
         { ...CLAUDE, label: 'Test Claude', efforts: ['high', 'max'] },
       ]),
+      ...options.configuration,
     },
   })
   await seedShellWorkspaceRuntime(active)

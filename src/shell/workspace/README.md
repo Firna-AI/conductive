@@ -130,7 +130,7 @@ refusal of a suspended org, and the context that each part gets.
 [Development page](development-page.md) says how to run the page over the
 fake API, with its address options, its controls, and the test command.
 
-## Key code
+### Key Code
 
 - `WorkspaceScreen.tsx`: the screen of one open workspace. It takes a view
   of the kept workspace through `useWorkspaceStore`, and places the header,
@@ -210,7 +210,9 @@ fake API, with its address options, its controls, and the test command.
   GitHub store of the screen, the bar or the row, and the GitHub events of
   the ordered stream. `github/bar-controls.ts` gives the one action state of
   the bar and its controls, and `github/bar-feed.ts` shows a GitHub state of
-  another branch as loading.
+  another branch as loading. `github/bar-keys.tsx`: `BarKeys`, the keys of
+  the bar, beside the bar of the right column and beside the actions at
+  the top of the Checks tab of a phone.
 - `files/kept-files.tsx`: `KeptFilesConnection`, the one connection of the
   kept files for the whole screen.
 - `ContinueDialog.tsx`: the question of Continue with the local work, which
@@ -221,12 +223,15 @@ fake API, with its address options, its controls, and the test command.
   phone Checks top, the prompts from a file and a phone, a prompt that did
   not send, Continue with its question, a stop, the wait for a turn, the
   new branch and its note, and the local work of a phone on the chat tab.
+  They also press the keys of the bar where it shows a button that takes a
+  click, and where it does not.
 - `tools/ToolsWiring.test.tsx` and `github/GitHubWiring.test.tsx`: mount
   the whole app over the fake API. They check the terminal socket across
   tool switches, the saved tool, the tabs and the state of a stopped
   sandbox with no tool mounted, a revoke before the Preview tool shows, a
   preview address on a phone, one GitHub read for the bar and Checks with a
-  live event, the Checks row of a phone, and an archived phone.
+  live event, the Checks row of a phone, an archived phone, and the key of
+  Open PR on GitHub.
   `wiring-test-kit.tsx` holds their helpers.
 - `header-notices.ts`: `HeaderNotices`, the failed repairs of the name and
   the start steps. `follow` reads a stream, `dismiss` hides a notice in
@@ -246,6 +251,8 @@ fake API, with its address options, its controls, and the test command.
   columns, the toggle of the right column, and the tab bar of a phone.
   `RightColumnToggle.test.tsx` mounts the whole app over the fake API. It
   hides the right column, opens the workspace again, and shows the column.
+  `WorkspaceKeys.test.tsx` runs the keys of the tab row, of the
+  composer, and the copy keys of the shown session in the whole app.
 - `CopyLink.tsx`: the label of the number, such as `W-395`, as the Copy
   link button of the header, as
   [Copy link](../../../docs/protocol/workspace-links.md#copy-link) says.
@@ -254,8 +261,10 @@ fake API, with its address options, its controls, and the test command.
   `AppServices.delay`. A failed copy asks to try again until the next
   press, as the file page does. On desktop the button follows the name,
   and the repository fills the `.metas` group. On a phone
-  it leads the line under the name. `CopyLink.test.tsx` mounts the whole
-  app and presses the button for a copy and for a failed copy.
+  it leads the line under the name. The key of Copy link does what a press
+  does while the button shows, and on desktop the tooltip names the key.
+  `CopyLink.test.tsx` mounts the whole app and presses the button for a
+  copy and for a failed copy, and the key.
 - `RunLine.tsx`: the line under the header of a run workspace, which links to its routine and the pull request of a pull request run. `RunLine.test.tsx` checks the line and its links.
 - `SandboxNotice.tsx`, `notice-copy.ts`, and `StartingCard.tsx`: the
   states of the cloud computer, their words, and the start steps. The bar
@@ -272,6 +281,8 @@ fake API, with its address options, its controls, and the test command.
   for Restore by a member and for its end at the last day.
 - `dev/`: the development page, with its options in `dev-options.ts` and
   its controls in `DevControls.tsx`.
+  `dev/main.tsx` supplies the real window host, keyboard, and key events
+  through `AppServices`.
 
 ## Related docs
 

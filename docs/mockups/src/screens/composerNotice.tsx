@@ -1,5 +1,7 @@
 import { CircleAlert, MessageSquarePlus, Paperclip } from 'lucide-react'
 import {
+  attachFilesLabel,
+  folderBody,
   notAttachedTitle,
   smallerFileLabel,
   tooLargeBody,
@@ -14,7 +16,7 @@ import { ActionButton } from '../components/common/actions'
 import { Notice } from '../components/common/Notice'
 import { ScreenLink } from '../components/common/ScreenLink'
 import { agents } from '../fixtures/agents'
-import { largeRecording } from '../fixtures/attachments'
+import { droppedFolder, largeRecording } from '../fixtures/attachments'
 import { people } from '../fixtures/members'
 import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
@@ -54,9 +56,31 @@ function tooLargeNotice() {
 }
 
 /**
+ * The notice for a dropped folder. The composer does not attach a folder,
+ * and the files of the same drop stay. The notice names the folder and
+ * says to attach its files. Its action opens the file picker.
+ */
+function folderNotice() {
+  return (
+    <Notice
+      action={
+        // The mockups draw one upload, which the chosen files lead to.
+        <ScreenLink asChild to={paths.attachments}>
+          <ActionButton icon={Paperclip}>{attachFilesLabel}</ActionButton>
+        </ScreenLink>
+      }
+      body={folderBody}
+      icon={CircleAlert}
+      title={notAttachedTitle(droppedFolder)}
+      tone="danger"
+    />
+  )
+}
+
+/**
  * The notice over the composer when the agent of the chosen model is not
  * connected. Its action opens the Connect form of that agent in the account.
- * A file over the size limit has its own notice.
+ * A file over the size limit and a dropped folder have their own notices.
  *
  * A message in the session of another member runs on the login of that
  * starter, so the own login of the viewer does not matter there. When the
@@ -68,6 +92,9 @@ function tooLargeNotice() {
 export function composerNotice(state: WorkspaceState, workspace: Workspace) {
   if (state.composer === 'too-large' && state.tab !== 'new-session') {
     return tooLargeNotice()
+  }
+  if (state.composer === 'dropped-folder' && state.tab !== 'new-session') {
+    return folderNotice()
   }
   const { choice } = workspace
   const agent = agents[choice.agent].name

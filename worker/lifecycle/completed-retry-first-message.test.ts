@@ -7,6 +7,7 @@ import { SOFTWARE } from './backend-test-support'
 import { handleLifecycleRequest, type LifecycleBrowserOptions } from './browser'
 import { FIRST_MESSAGE } from './durable-test-support'
 import type { FirstWorkspaceMessage } from './workspace-runtime'
+import { fakeAttachments } from '../test-support/attachments'
 
 const fixtureForTest = setupBackendTests()
 
@@ -32,13 +33,7 @@ it('retries a completed create with the admitted first message after initial cha
         sessionId: first.sessionId,
         sender: first.sender,
         text: first.request.text,
-        attachments: first.request.attachmentIds.map((id) => ({
-          id,
-          name: `${id}.txt`,
-          kind: 'file',
-          mediaType: 'text/plain',
-          sizeBytes: 7,
-        })),
+        attachments: await fakeAttachments(first.request.attachmentIds),
         choice: first.request.choice,
         createdAt: runtime.dependencies.now(),
         state: 'queued',

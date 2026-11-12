@@ -59,7 +59,7 @@ function Row(props: { entry: TreeEntry; open: boolean }) {
  */
 export function FileTree(props: {
   entries: readonly TreeEntry[]
-  open?: 'code' | 'markdown'
+  open?: TreeEntry['preview']
 }) {
   return (
     <ul aria-label="All files" className={styles.tree}>

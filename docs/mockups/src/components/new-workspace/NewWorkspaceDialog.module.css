@@ -17,6 +17,18 @@
 }
 
 /*
+ * While files hover over the dialog, a full border in the accent colour
+ * shows that a drop anywhere on the card attaches them. The card is the
+ * message box of the dialog, and it keeps its fill and its shadow.
+ */
+.dropping {
+  border-color: var(--ui-primary);
+  box-shadow:
+    0 0 0 1px var(--ui-primary),
+    0 24px 60px -24px var(--ui-shadow);
+}
+
+/*
  * The repository picker at the start, and the place of the workspace at the
  * end. The texts of the header, the message, and the footer start on one
  * line, and the boxes of the notices and the buttons on another.
@@ -54,7 +66,7 @@
   white-space: nowrap;
 }
 
-/* The files of the message above its text, as in every composer. */
+/* The message, with a chip for each of its files in its text. */
 .body {
   display: flex;
   flex-direction: column;

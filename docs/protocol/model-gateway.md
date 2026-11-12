@@ -11,6 +11,8 @@ A decision number names a dated record, as
 decision number, such as gateway decision 6, names the dated record of one
 decision of the change that adds the gateway. Its plan keeps these records
 while the change is open. Its pull request keeps them after the merge.
+An egress decision number, such as egress decision 1, names the dated
+record of one decision of the change that adds the egress container.
 
 ## Terms
 
@@ -22,6 +24,9 @@ while the change is open. Its pull request keeps them after the merge.
   gateway.
 - **Profile:** a pair of Anthropic files that Claude reads: a config file
   with an address, and a credentials file with a token.
+- **Egress container:** a container on the app's Cloudflare account that
+  sends the ChatGPT requests of the gateway to OpenAI. It has no public
+  address.
 
 ## No login in the sandbox
 
@@ -219,6 +224,20 @@ while the change is open. Its pull request keeps them after the merge.
   that these requests need. It gets the routing header from OpenAI.
 - A routed backend must be an HTTPS origin with no user credentials,
   path, query, or fragment. Failed or invalid routing stops the request.
+- The gateway sends each request of a ChatGPT sign-in through the egress
+  container (egress decision 1). It sends each request to another
+  upstream directly.
+- Reason: OpenAI refuses the requests to `chatgpt.com` that a Cloudflare
+  Worker sends. It accepts them from a Cloudflare container.
+- A proxy on a computer of the operator, on Google Cloud Run, or in a
+  sandbox of Boat was rejected. Each puts a machine or a vendor outside
+  Cloudflare in the path of the login. A runner that calls OpenAI itself
+  was rejected, because the login would then reach the sandbox.
+- The egress container calls only an `https` origin on `chatgpt.com` or
+  on a subdomain of it. It sends no Cloudflare header to OpenAI.
+- When a deployment has no egress container, the gateway sends these
+  requests to the egress proxy that its settings name, with a shared
+  secret. Without that setting, it sends them directly.
 - The gateway refuses WebSocket upgrades. Codex then uses HTTP streaming.
   The runner turns off request compression for ChatGPT turns.
 - The gateway refuses every other route, with no call to the upstream.
@@ -294,6 +313,13 @@ while the change is open. Its pull request keeps them after the merge.
   could then spend the login for minutes after the turn.
 - When the agent program closes its connection, the gateway cancels the
   request to the upstream.
+- A new version of the egress container takes each new ChatGPT request at
+  once. The container of the old version takes no new request. It keeps
+  its open answers for up to 15 minutes after the deploy (egress decision
+  3).
+- Reason: a deploy must not end the answers that stream through the
+  container. A deploy replaces no running container, and the egress
+  Worker lets the code of an old version run for 15 minutes.
 - The gateway can replay a body-less ChatGPT metadata request once after
   renewal. It never copies or replays a model upload. Codex decides its resend.
 - The gateway adds no model filter, no rate limit, and no time or byte
@@ -307,6 +333,9 @@ while the change is open. Its pull request keeps them after the merge.
 
 - The gateway keeps no copy of a model request or of an answer.
 - The gateway writes no body and no header value to a log.
+- The egress container sees a ChatGPT login only in transit. It keeps no
+  copy of a login, a request, or an answer, and it writes no body and no
+  header value to a log.
 
 ## Risks
 

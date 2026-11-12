@@ -1,7 +1,7 @@
 import type {
   AgentCreateSessionRequest,
   AgentSendMessageRequest,
-} from '../../src/shared/agent-tools'
+} from '../../src/shared/agent-sessions'
 import {
   effort,
   identifier,

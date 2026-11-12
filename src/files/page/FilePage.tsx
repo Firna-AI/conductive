@@ -1,8 +1,8 @@
-import type { ReactNode } from 'react'
+import { useMemo, type ReactNode } from 'react'
 import type { FilesClient } from '../api/files-client'
 import { labelName, pageLabel } from '../model/file-labels'
 import type { WorkspaceFiles } from '../model/files-store'
-import { fileText, splitLines } from '../model/file-text'
+import { splitLines } from '../model/file-text'
 import type { FileTab, FilesLayout, FilesNavigation } from '../navigation'
 import { isMarkdown } from '../code/file-kind'
 import { useFilesSnapshot } from '../panel/FilesPanel'
@@ -10,6 +10,7 @@ import { LoadingFile, ReadError } from '../ui/FileStates'
 import { LayoutRoot } from '../ui/layout'
 import type { FileActionTargets } from './file-actions'
 import { FileContent } from './FileBody'
+import { fileView } from './file-view'
 import { PageHeader } from './PageHeader'
 import { useFileActions } from './use-file-actions'
 import { useFollowed } from './use-followed'
@@ -27,13 +28,15 @@ function lineCount(lines: number): string {
  * One file as a page: a tab of the centre column on desktop, and a page
  * of the Files tab on a phone, with a way back to All files. Markdown
  * shows rendered, with a switch to its source. Other text shows with line
- * numbers. The page reads the file again when an event changes it.
+ * numbers. An image file shows as a picture, by its name. The page reads
+ * the file again when an event changes it.
  *
  * The view and the line count use the view text. Copy takes the original
- * text, with each byte order mark. Download reads the file with the same
+ * text, with each byte order mark, and is off for a picture and for each
+ * other file that is not text. Download reads the file with the same
  * limit as the page, so the page offers it only after a read that fits.
- * The header shows the label of the path, and each read, Copy, and
- * Download uses the real path.
+ * The header and the picture show the label of the path, and each read,
+ * view, Copy, and Download uses the real path.
  */
 export function FilePage(props: {
   files: WorkspaceFiles
@@ -63,9 +66,12 @@ export function FilePage(props: {
   const reply = state?.status === 'ready' ? state.value : null
   const label = pageLabel(snapshot, tab.path, 'file', reply)
   const markdown = isMarkdown(tab.path)
-  const text = state?.status === 'ready' ? fileText(state.value) : null
-  const shownAsCode =
-    text?.kind === 'text' && !(markdown && tab.mode === 'preview')
+  const view = useMemo(
+    () => (reply ? fileView(tab.path, reply) : null),
+    [tab.path, reply],
+  )
+  const text = view?.kind === 'text' ? view : null
+  const shownAsCode = text !== null && !(markdown && tab.mode === 'preview')
   const download =
     state?.status === 'ready' && !placeholder ? actions.download : undefined
   let body: ReactNode = <LoadingFile />
@@ -73,13 +79,14 @@ export function FilePage(props: {
     body = placeholder
   } else if (state?.status === 'failed' && state.error.kind !== 'aborted') {
     body = <ReadError error={state.error} onRetry={retry} subject="file" />
-  } else if (text) {
+  } else if (view) {
     body = (
       <FileContent
         mode={tab.mode}
+        name={labelName(label)}
         onDownload={download}
         path={tab.path}
-        text={text}
+        view={view}
       />
     )
   }
@@ -97,14 +104,10 @@ export function FilePage(props: {
         }
         downloading={actions.downloading}
         meta={
-          shownAsCode && text.kind === 'text'
-            ? lineCount(splitLines(text.viewText).length)
-            : undefined
+          shownAsCode ? lineCount(splitLines(text.viewText).length) : undefined
         }
         navigation={navigation}
-        onCopy={
-          text?.kind === 'text' ? () => actions.copy(text.text) : undefined
-        }
+        onCopy={text ? () => actions.copy(text.text) : undefined}
         label={label}
         onDownload={download}
         path={tab.path}

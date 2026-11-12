@@ -35,7 +35,7 @@ export const devTextFiles: ReadonlyMap<string, string> = new Map([
 /** The read limit of the development routes. A sample, not product policy. */
 const sampleLimitBytes = 1_048_576
 
-/** A 1 × 1 PNG, so the page shows its binary state. */
+/** A 1 × 1 PNG: its file tab shows a picture, and its diff is binary. */
 const pixel =
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
 

@@ -44,7 +44,7 @@ export const sampleTree: readonly FileEntry[] = [
  * unavailable tree or a failed read, come from the real store of the Files
  * screens over the fake API, as `realFiles` gives it.
  */
-class FakeFiles {
+export class FakeFiles {
   private snapshot: MentionFilesSnapshot
   private readonly listeners = new Set<() => void>()
 

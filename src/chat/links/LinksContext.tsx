@@ -19,6 +19,13 @@ export interface ChatLinks {
    * shows the chip of its workspace.
    */
   sessions?: SessionLinks
+  /**
+   * The origin of the links of the app, from the link of the chat's own
+   * workspace. A session that the chat names by its IDs, such as the
+   * session whose agent stopped a turn, shows its link with it when no
+   * workspace of the list matches.
+   */
+  origin?: string
 }
 
 const LinksContext = createContext<ChatLinks>({

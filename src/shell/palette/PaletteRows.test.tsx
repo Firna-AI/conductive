@@ -14,6 +14,7 @@ import {
   MOUNTED_TEST_TIMEOUT,
 } from '../../test-support/mount'
 import { serveSuspendedAcme } from '../../test-support/suspended-org'
+import { pressCommand } from '../shortcuts/shortcut-test-kit'
 import { click, press, settle, typeText } from '../test-mount'
 import {
   groupLabels,
@@ -21,7 +22,6 @@ import {
   openPaletteTab,
   options,
   palette,
-  pressPaletteKey,
   searchField,
   status,
 } from './palette-test-kit'
@@ -69,7 +69,7 @@ describe('the rows of the command palette', () => {
   test('the arrows move the highlight with a wrap at each end, and Enter closes the palette and opens the workspace', async () => {
     holdAnimationFrames()
     const { navigation } = await openPaletteTab(routes.org(org))
-    pressPaletteKey('other', document.body)
+    pressCommand('command-palette', 'other', document.body)
     const first = highlighted()?.getAttribute('href')
     press(searchField(), 'ArrowDown')
     const second = highlighted()?.getAttribute('href')
@@ -106,7 +106,7 @@ describe('the rows of the command palette', () => {
       workspacePaths.restore(org, workspace),
     ].map((path) => `POST ${path}`)
     const run = async (search: string) => {
-      pressPaletteKey('other', document.body)
+      pressCommand('command-palette', 'other', document.body)
       typeText(searchField(), search)
       press(searchField(), 'Enter')
       await settle()
@@ -121,7 +121,7 @@ describe('the rows of the command palette', () => {
     const restore = await run('restore')
     act(() => navigation.push(routes.org(org)))
     await settle()
-    pressPaletteKey('other', document.body)
+    pressCommand('command-palette', 'other', document.body)
     typeText(searchField(), 'new section')
     press(searchField(), 'Enter')
     await settle()
@@ -146,7 +146,7 @@ describe('the rows of the command palette', () => {
   test('a search finds active and archived workspaces, also by number with the label before the name, each row says its GitHub state before its state, the tabs keep the query, the filters choose the repository and the state, and an empty tab says why', async () => {
     const server = new FakeApiServer({ workspaceState: 'archived' })
     await openPaletteTab(routes.org(org), { server })
-    pressPaletteKey('other', document.body)
+    pressCommand('command-palette', 'other', document.body)
     typeText(searchField(), '39')
     const number = {
       groups: groupLabels(),
@@ -260,7 +260,7 @@ describe('the rows of the command palette', () => {
     await openPaletteTab(routes.workspace(org, workspace), {
       server: server(),
     })
-    pressPaletteKey('other', document.body)
+    pressCommand('command-palette', 'other', document.body)
     click(byRole('tab', 'Actions'))
     expect({ groups: groupLabels(), rows: optionNames() }).toEqual({
       groups,
@@ -272,7 +272,7 @@ describe('the rows of the command palette', () => {
     const { navigation } = await openPaletteTab(routes.org('futex'))
     act(() => navigation.push(routes.account()))
     await settle()
-    pressPaletteKey('other', document.body)
+    pressCommand('command-palette', 'other', document.body)
     click(byRole('tab', 'Settings'))
     const groups = groupLabels()
     act(() => navigation.push(routes.org(org)))

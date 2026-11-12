@@ -1,9 +1,9 @@
 import { defineScreen } from '@mokly/mokly'
+import { AccountScreen } from '../../../../../screens/AccountScreen'
 import {
-  AccountScreen,
   accountGeneral,
   accountSchema,
-} from '../../../../../screens/AccountScreen'
+} from '../../../../../screens/accountState'
 
 export const connectCodexChatGpt = defineScreen({
   title: 'Connect Codex with a ChatGPT plan',

@@ -35,6 +35,10 @@ const waitingCommand: MacAppState = {
   page: 'workspace',
   command: 'prompt',
   change: 'none',
+  palette: 'closed',
+  keyChange: 'none',
+  shortcutSearch: 'none',
+  shortcuts: 'default',
 }
 
 function workspace(state: WorkspaceState, viewport: ScreenViewport) {

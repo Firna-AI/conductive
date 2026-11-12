@@ -24,6 +24,29 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the tools at
 - Reading a file has a size limit of 5 MiB, or 5,242,880 bytes.
   Reason: Boat's file read stops at 5 MiB, so a file read that falls back
   to it cannot read more.
+- A PNG, JPEG, GIF, or WebP file up to the read limit shows as a picture
+  (decision 265 B). This holds for each image of the workspace, also one
+  that All files or the chip of a sent message opens.
+- The tab knows such a file by the extension of its name. Reason: the file
+  reads do not give the correct media type for each of these images.
+- The picture keeps its proportions, in the middle of the tab. It shows at
+  its own size, or smaller, so that it fits the width and the height of the
+  tab.
+- When the browser cannot draw the bytes, the tab shows "Download this file
+  to open it", with Download, as for each other binary file.
+- An image over the read limit shows "Open this file in the terminal", as
+  each other file over the limit does.
+- The header keeps Copy and Download. Copy is off for a picture, as for
+  each other binary file.
+- An SVG file stays text with line numbers. Reason: its source is what a
+  member edits.
+- Reason: a press on a screenshot then shows its picture in the file tab,
+  for each image of the workspace, with no new route. A tab with only
+  Download was rejected, because a member then downloads each screenshot
+  to see it.
+- A read of a larger attached image from the storage of the app, and a
+  picture of each attached image in its message, were not chosen. Each
+  needs a new read route with its access checks, or many large reads.
 - The Markdown preview fills short table rows only up to 65,536 empty
   cells in one file. Then it shows the rest of the file as text
   (decision 88).

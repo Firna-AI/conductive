@@ -11,11 +11,8 @@ import { TurnScopes } from './turns'
 import { applyRunnerLifecycle, registerTrustedTurn } from './runner-lifecycle'
 import { WorkspaceStartCoordinator } from './start-coordinator'
 import type { WorkspaceStartIntent, WorkspaceStartJob } from './start-types'
-import {
-  durableStartStorage,
-  readStartLog,
-  START_JOB_KEY,
-} from './start-storage'
+import { durableStartStorage, START_JOB_KEY } from './start-storage'
+import { readStartLog } from './start-log-storage'
 import { FIRST_MESSAGE_ADMISSION_KEY } from './workspace-runtime'
 import { workspaceActionContext } from './workspace-actions'
 import { initializeWorkspaceLifecycle } from './lifecycle-admission'
@@ -27,12 +24,14 @@ import type { WorkspaceLifecycleEndpoint } from './workspace-runtime'
 import type { WorkspacePlatform } from './workspace-platform'
 import type { WorkspaceController } from './workspace-controller-types'
 import { WorkspaceArchive } from './archive-state'
+import { workspaceArchivePlatform } from './archive-context'
 import { restoreWorkspace } from './restore-workspace'
 import {
   taskWorkspaceStorage,
   workspaceTaskAlarms,
 } from './workspace-task-alarms'
 import { ComputerStopTask } from './computer-stop-task'
+import { startGuard } from './start-guard'
 
 export function createWorkspaceController(
   env: AppEnv & { GITHUB_APP_PRIVATE_KEY?: string },
@@ -250,8 +249,9 @@ export function createWorkspaceController(
         lifecycle,
       )
     },
-    async alarm(): Promise<void> {
+    async alarm(turn): Promise<void> {
       await runWorkspaceAlarm({
+        turn,
         storage: platform.storage,
         env: env,
         dependencies: dependencies,
@@ -277,16 +277,15 @@ export function createWorkspaceController(
       await turns.clear()
       await lifecycle.stopFailedStart(error, cancelled)
     },
+    (turn) => startGuard(platform, turn),
   )
   const archive = new WorkspaceArchive({
+    ...workspaceArchivePlatform(platform),
     env,
     dependencies,
-    storage: taskWorkspaceStorage(platform.storage, 'lifecycle:archive'),
     lifecycle,
     starts,
     startJobs,
-    publish: platform.publish,
-    stopped: platform.stopped,
     alarms,
   })
   return controller

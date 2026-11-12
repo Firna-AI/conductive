@@ -14,7 +14,7 @@ import {
   type NodeKey,
 } from 'lexical'
 import type { FileEntry } from '../../../shared/files'
-import { mentionAt, mentionText } from '../../mentions/mention-text'
+import { mentionAt, mentionText } from '../../../shared/mention-text'
 import { findMentioned, type MentionTree } from '../../mentions/MentionsContext'
 import {
   $createFileMentionNode,

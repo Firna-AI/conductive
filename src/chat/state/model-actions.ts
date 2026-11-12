@@ -1,4 +1,5 @@
 import { readyIds } from '../../app/draft-files'
+import { markedFiles } from '../../app/draft-file-state'
 import type { AgentChoice } from '../../shared/agents'
 import type {
   ChangeModelRequest,
@@ -53,7 +54,7 @@ export async function chooseModel(
     choice,
     draft: {
       text: draft.text,
-      attachmentIds: readyIds(draft.files),
+      attachmentIds: readyIds(markedFiles(draft.text, draft.files)),
     },
     newSessionId: context.newId(),
   }

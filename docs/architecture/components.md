@@ -46,6 +46,8 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
   [turn token](../protocol/model-gateway.md#terms) of their turn. It adds the
   agent login of the turn, and forwards each request to Anthropic or
   OpenAI. [Model gateway](../protocol/model-gateway.md) states its rules.
+  It sends the requests of a ChatGPT sign-in through the
+  [ChatGPT egress Worker](#chatgpt-egress-worker).
 - It reaches Boat through one provider adapter, so that a later change can
   add another provider. It calls only a fixed list of Boat routes.
 - It calls each sandbox and each saved snapshot through the client of its
@@ -62,6 +64,19 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
 - Two Cron Triggers run the timed work. One runs every 15 minutes for
   deleted orgs, lifecycle repairs, and pending approval emails. One runs
   every minute for due routine runs and runs that stayed queued.
+
+## ChatGPT egress Worker
+
+- A second Cloudflare Worker owns the egress container. It has no route
+  and no public address. Only the Worker reaches it, through a service
+  binding.
+- The egress container sends the ChatGPT requests of the model gateway to
+  OpenAI, because OpenAI refuses them from a Worker.
+  [Requests and answers](../protocol/model-gateway.md#requests-and-answers)
+  states its rules.
+- It sees a ChatGPT login only in transit and keeps no copy.
+- Each push to `main` that changes its code deploys it, before the
+  Worker, as [Automatic deploys](../automatic-deploys.md) says.
 
 ## D1
 
@@ -141,8 +156,10 @@ Every org image holds the app's own sandbox software:
 - the agent runner, a Node program that runs as an always-on service
 - the terminal service, on a private port
 - the preview relay, on a private port
-- the agent tools: an MCP server and a CLI that create and list workspaces,
-  start, list, read, and message sessions, and ask for Mac commands
+- the agent tools: an MCP server and a CLI that create, list, and change
+  the workspaces of the org, start, read, message, close, and stop its
+  sessions, change its sections, open port previews, and ask for Mac
+  commands
 - a git credential helper that gets a fresh GitHub token for each git
   operation
 

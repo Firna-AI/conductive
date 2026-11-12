@@ -1,10 +1,10 @@
 import { afterEach, beforeAll, expect, it } from 'vitest'
 
+import { AGENT_TRANSCRIPT_MAX_BYTES } from '../../src/shared/agent-sessions'
 import {
   agentSessionsPath,
   agentSessionTranscriptPath,
-  AGENT_TRANSCRIPT_MAX_BYTES,
-} from '../../src/shared/agent-tools'
+} from '../../src/shared/agent-session-paths'
 import { sessionAddressPath } from '../../src/shared/session-link'
 import { sessionsPath, sessionPaths } from '../../src/shared/sessions'
 import { CLAUDE } from '../chat/harness.test-support'

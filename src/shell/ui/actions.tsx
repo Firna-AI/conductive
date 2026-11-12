@@ -1,8 +1,21 @@
-import { useState, type ReactNode, type Ref, type SyntheticEvent } from 'react'
+import {
+  useCallback,
+  useState,
+  type ReactNode,
+  type Ref,
+  type RefCallback,
+  type SyntheticEvent,
+} from 'react'
 import type { LucideIcon } from 'lucide-react'
 import { Button } from '@firna/ui/button'
 import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
 import styles from '../../../docs/mockups/src/components/common/actions.module.css'
+import type { ShortcutCommandId } from '../../shared/shortcut-commands'
+import {
+  ShortcutTip,
+  useAriaShortcut,
+  useShortcutHint,
+} from '../shortcuts/shortcut-hints'
 import ui from './ui.module.css'
 
 export type ActionTone = 'primary' | 'secondary' | 'plain' | 'danger'
@@ -112,7 +125,8 @@ export function ActionButton(
 /**
  * A compact icon-only button with a muted icon, for bars and toolbars. A
  * quiet button has a fainter, smaller icon, for actions on every row. On a
- * phone its box is 44px.
+ * phone its box is 44px. A button that runs a command of the keys names
+ * the key of that command in its tooltip and to a screen reader.
  */
 export function IconButton(
   props: MenuTrigger & {
@@ -123,16 +137,35 @@ export function IconButton(
     /** A spinner shows while the action runs. */
     busy?: boolean
     quiet?: boolean
+    /** The command of the keys that the button runs. */
+    shortcut?: ShortcutCommandId
+    /** Takes the element of the button, for an owner that moves the focus to it. */
+    buttonRef?: RefCallback<unknown>
   },
 ) {
   const Icon = props.icon
   const control = useControlSizes()
-  return (
+  const hint = useShortcutHint(props.shortcut)
+  const keyRef = useAriaShortcut(hint)
+  const { buttonRef } = props
+  const bothRefs = useCallback(
+    (element: unknown) => {
+      keyRef(element)
+      buttonRef?.(element)
+    },
+    [keyRef, buttonRef],
+  )
+  const button = (
     <Button
       {...triggerProps(props)}
       accessibilityLabel={props.label}
       boxSize={control.height}
       busy={props.busy}
+      buttonRef={
+        props.shortcut === undefined && buttonRef === undefined
+          ? undefined
+          : bothRefs
+      }
       disabled={props.disabled}
       iconNode={
         <Icon
@@ -145,5 +178,11 @@ export function IconButton(
       size="sm"
       tone="plain"
     />
+  )
+  if (props.shortcut === undefined) return button
+  return (
+    <ShortcutTip hint={hint} label={props.label}>
+      {button}
+    </ShortcutTip>
   )
 }

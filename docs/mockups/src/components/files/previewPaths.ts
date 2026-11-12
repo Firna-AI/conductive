@@ -4,4 +4,6 @@ import { paths } from '../../paths'
 export const previewPaths = {
   code: paths.code,
   markdown: paths.markdown,
+  image: paths.image,
+  'image-not-drawn': paths.imageNotDrawn,
 } as const

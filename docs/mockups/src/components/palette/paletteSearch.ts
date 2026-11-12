@@ -11,8 +11,11 @@ function queryWords(query: string): string[] {
     .filter((word) => word !== '')
 }
 
-/** Whether each word of the query is in one of the texts, in any case. */
-function matches(query: string, texts: readonly string[]): boolean {
+/**
+ * Whether each word of the query is in one of the texts, in any case. The
+ * Keyboard shortcuts tab finds its rows with the same rule.
+ */
+export function matches(query: string, texts: readonly string[]): boolean {
   const haystack = texts.join(' ').toLowerCase()
   return queryWords(query).every((word) => haystack.includes(word))
 }

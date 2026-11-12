@@ -37,7 +37,7 @@ function focusPlace(): string {
 }
 
 describe('the workspace list', () => {
-  test('moves keep row focus from the link or Archive and respect later focus changes', async () => {
+  test('only Alt with Up or Down moves a row, and moves keep row focus from the link or Archive and respect later focus changes', async () => {
     const server = new FakeApiServer()
     const held = new HeldRequests(server)
     const app = await startedApp(server, { fetch: held.fetch })
@@ -66,6 +66,16 @@ describe('the workspace list', () => {
       press(link(workspaceId), 'ArrowDown', { alt: true })
       await settle()
       return focusPlace()
+    }
+    // ⌥⌘↑ and Alt+Shift+↑ belong to Previous workspace, so the row stays.
+    act(() => link('pricing-copy').focus())
+    const sent = server.requests.length
+    press(link('pricing-copy'), 'ArrowUp', { alt: true, meta: true })
+    press(link('pricing-copy'), 'ArrowUp', { alt: true, shift: true })
+    await settle()
+    const shortcutKeys = {
+      place: focusPlace(),
+      requests: server.requests.length - sent,
     }
     // The last row of General moves to the next section.
     const pricingPath = workspacePath(org, 'pricing-copy')
@@ -106,6 +116,7 @@ describe('the workspace list', () => {
     held.release('PATCH', pricingPath)
     await settle()
     expect({
+      shortcutKeys,
       archiveShortcut,
       nextSection,
       afterRead,
@@ -113,6 +124,7 @@ describe('the workspace list', () => {
       moving,
       failedMove: focusPlace(),
     }).toEqual({
+      shortcutKeys: { place: 'pricing-copy in General', requests: 0 },
       archiveShortcut: 'pricing-copy in Checkout',
       nextSection: 'pricing-copy in Checkout',
       afterRead: 'Search',

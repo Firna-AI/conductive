@@ -15,15 +15,16 @@ import {
 } from './chat-snapshot'
 import { showAddressSession } from './address-session'
 import { closeLocally, isArchived, showLocally } from './archive-view'
-import { attachFiles, removeFile, retryFile } from './attachment-actions'
+import { attachFiles } from './attachment-actions'
 import type { ChatContext } from './context'
 import {
   createChatContext,
   type ChatContextOptions,
 } from './controller-context'
 import { hydrate, watchShownSession } from './history'
-import { loadChat } from './load'
 import { followSources, withSources } from './sources'
+import { loadChat } from './load'
+import { endDraftFiles } from './drafts'
 import {
   interruptTurn,
   resumeWorkspace,
@@ -32,6 +33,7 @@ import {
   setDraftText,
 } from './message-actions'
 import { chooseModel } from './model-actions'
+import { draftFileSource } from './draft-file-source'
 import { sendPrompt, type PromptOutcome } from './prompt-actions'
 import { moveTab } from './tab-actions'
 import type { TabPlace } from './tab-order'
@@ -110,10 +112,9 @@ export class ChatController {
     this.started = true
     this.context = this.createContext(this.run)
     const { sources } = this.options
+    const fresh = { ...initialSnapshot, draftEpoch: this.run }
     // The values of the app replace the reset ones at once, then follow it.
-    this.store.update(() =>
-      sources ? withSources(initialSnapshot, sources) : initialSnapshot,
-    )
+    this.store.update(() => (sources ? withSources(fresh, sources) : fresh))
     this.unfollow = sources ? followSources(this.store, sources) : null
     this.unwatch = watchShownSession(this.context)
     this.unlist = this.workspaceList.watch()
@@ -125,6 +126,15 @@ export class ChatController {
     this.context.sessionReads.close()
     for (const upload of this.context.uploads.values()) upload.abort()
     this.context.uploads.clear()
+    this.store.update((snapshot) => ({
+      ...snapshot,
+      sessionStates: Object.fromEntries(
+        Object.entries(snapshot.sessionStates).map(([id, state]) => [
+          id,
+          { ...state, draft: endDraftFiles(state.draft) },
+        ]),
+      ),
+    }))
     this.unwatch?.()
     this.unwatch = null
     this.unfollow?.()
@@ -161,7 +171,8 @@ export class ChatController {
   }
 
   private createContext(run: number): ChatContext {
-    return createChatContext(this.options, this.store, () => this.run === run)
+    const live = () => this.run === run
+    return createChatContext(this.options, this.store, live, run)
   }
 
   private overlay(overlay: Overlay): void {
@@ -219,13 +230,19 @@ export class ChatController {
     hydrate(this.context, sessionId, true)
   readonly setDraft = (sessionId: string, text: string) =>
     setDraftText(this.context, sessionId, text)
-  readonly attachFiles = (sessionId: string, files: readonly File[]) =>
-    this.write(() => attachFiles(this.context, sessionId, files))
-  /** Try again on a file whose upload failed. */
-  readonly retryFile = (sessionId: string, fileId: string) =>
-    this.write(() => retryFile(this.context, sessionId, fileId))
-  readonly removeFile = (sessionId: string, fileId: string) =>
-    removeFile(this.context, sessionId, fileId)
+  readonly attachFiles = (
+    sessionId: string,
+    files: readonly File[],
+    folders: readonly string[] = [],
+  ) =>
+    this.readOnly() ? [] : attachFiles(this.context, sessionId, files, folders)
+  /** A field follows its draft identity, also during a move before React renders. */
+  readonly draftFiles = (draftId: string) =>
+    draftFileSource(
+      () => this.context,
+      draftId,
+      () => this.readOnly(),
+    )
   readonly send = (sessionId: string) =>
     this.write(() => sendDraft(this.context, sessionId))
   /** Sends a fixed prompt to the session of the chat, as `sendPrompt` says. */
