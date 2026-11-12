@@ -1,6 +1,7 @@
 {
   "order": [
     "turns",
+    "agent-stops",
     "work",
     "tables",
     "lists",

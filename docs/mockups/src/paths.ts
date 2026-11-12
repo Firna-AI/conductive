@@ -168,6 +168,8 @@ export const paths = {
   removeMember: 'app/org-settings/members/remove',
   deleteOrg: 'app/org-settings/delete',
   chat: 'app/chat',
+  agentStop: 'app/chat/agent-stops',
+  agentStopOther: 'app/chat/agent-stops/other-workspace',
   sessions: 'app/sessions',
   sessionHistory: 'app/sessions/history',
   noStarterLogin: 'app/sessions/no-starter-login',

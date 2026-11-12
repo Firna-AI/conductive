@@ -2,8 +2,8 @@
 
 This doc holds the requirements and the decisions in force for the isolation
 of orgs and sandboxes. It covers the checks that keep the orgs apart, the
-app's Boat key, what a sandbox holds, what its session calls reach, and the
-agent logins and the turn tokens in a sandbox. It belongs to
+app's Boat key, what a sandbox holds, what its workspace tools reach, and
+the agent logins and the turn tokens in a sandbox. It belongs to
 [Access and security](access-and-security.md), which covers sign-in, the
 gates of the Worker, the request bodies, and the content security policy.
 The terms are those of the [architecture doc](../architecture.md#terms). A
@@ -23,7 +23,7 @@ logins, as [Tokens and secrets](tokens-and-secrets.md) says.
   member of that org.
 - The workspace token of a sandbox reaches the workspaces of its own org
   through the agent tools, as
-  [What the session calls reach](#what-the-session-calls-reach) says.
+  [What the workspace tools reach](#what-the-workspace-tools-reach) says.
 - An operator is the one exception. An operator can suspend or lift any
   user or org, as [Operator actions](operator-actions.md) says. In the
   [operator section](operator-section.md#what-the-section-shows), an
@@ -111,17 +111,19 @@ logins, as [Tokens and secrets](tokens-and-secrets.md) says.
 - A build sandbox gets GitHub access only for the Git command that copies
   each repository, as [GitHub tokens](tokens-and-secrets.md#github-tokens) says (decision 90).
 
-## What the session calls reach
+## What the workspace tools reach
 
-- The [session calls](session-calls.md) of a sandbox reach each workspace
-  of its org, and no workspace of another org (decision 257).
-  [Reach](session-calls.md#reach) gives the reasons and the smaller reaches
-  that were rejected.
+- The calls of the [workspace tools](agent-tools.md#workspace-tools) of a
+  sandbox reach each workspace of its org, and no workspace of another org
+  (decisions 257 and 277). [Reach](agent-tool-access.md#reach) gives the
+  reasons and the smaller reaches that were rejected.
 - Risk: every process in a sandbox can read its workspace token, and so can
   every member with a terminal there. With the token, such a process can
-  read every chat of the org at any time, also between turns.
-- Risk: a copy of the token keeps that read after the member who copied it
-  leaves the org or is suspended. The copy works until the token stops
+  read every chat of the org at any time, also between turns. It can also
+  read each workspace, session, and message of the org, and list the
+  previews of each workspace.
+- Risk: a copy of the token keeps these reads after the member who copied
+  it leaves the org or is suspended. The copy works until the token stops
   working, as
   [Workspace tokens and runners](operator-actions.md#workspace-tokens-and-runners)
   says.
@@ -133,6 +135,14 @@ logins, as [Tokens and secrets](tokens-and-secrets.md) says.
 - Risk: such a message also starts the cloud computer of a workspace that
   does not run, as an open does. Each start counts toward the starts that
   all orgs share.
+- Risk: while a turn of its workspace runs, such a process can also
+  rename, move, and archive workspaces, close and stop sessions, change the
+  sections, and open and close previews in the whole org. It acts with the
+  rights of the sender of the turn.
+- So with a turn of an admin, such a process can archive each workspace of
+  the org. Archive deletes the cloud computer of a workspace 14 days later.
+  Until then, a member can restore the workspace, as
+  [Restore](workspace-life.md#restore) says.
 - Risk: a read gives each Mac command of a session with its output, as a
   copy does. So sandbox code in each workspace of the org can read output
   from the Mac of a member.

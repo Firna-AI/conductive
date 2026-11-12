@@ -176,9 +176,10 @@ says.
   2 of 4". The focus then goes back to the tab.
 - Rename session opens a field for the title in that tab. The shown tab
   does not change.
-- The tab menu is the one way to rename a session. A Rename button on the
-  shown session tab was rejected, because the tab menu already holds
-  Rename session.
+- In the app, the tab menu is the one way to rename a session. A Rename
+  button on the shown session tab was rejected, because the tab menu
+  already holds Rename session. An agent can also rename a session, as
+  [Rename a session](session-management.md#rename-a-session) says.
 - Keys that move a tab were rejected, because the user chose the menu. Alt
   with Left or Right also goes Back and Forward in browsers on Windows and
   Linux.

@@ -79,9 +79,10 @@ mount the chat.
   says. The chip of each attached file of the message still shows, but it
   opens nothing.
 - `onOpenPage` gets the page of a workspace chip or a session chip in a
-  sent message or an answer, such as `/orgs/acme/workspaces/<id>/files`,
-  after a plain click. The app opens it in the same window. A click with a
-  modifier key stays with the browser, as for each link of the app.
+  sent message, an answer, or a stop line, such as
+  `/orgs/acme/workspaces/<id>/files`, after a plain click. The app opens it
+  in the same window. A click with a modifier key stays with the browser,
+  as for each link of the app.
   Without `onOpenPage`, a chip is a plain link. The app then shows the
   session of a session address with `ChatController.showAddress`.
 - `content` takes a page that the app shows in place of the chat of the

@@ -55,7 +55,10 @@ plan limits.
   see the name of that member, such as "Cal stopped the agent" in
   `app/reassign/member-stop`. When no member pressed Stop, such as when
   the cloud computer stopped during the turn, the chat says "The agent
-  stopped", as `app/shell/stopped/during-turn` shows.
+  stopped", as `app/shell/stopped/during-turn` shows. When the agent of a
+  session stopped the turn with a workspace tool, the chat names that
+  session, not a member, from decision 279. It says "Stopped from" and
+  shows the session chip of that session, as `app/chat/agent-stops` shows.
 - Each branch starts with the GitHub login of the owner of its workspace,
   such as `calummoore/lisbon-7k2q`, from decision 53.
 - Archive stops the cloud computer at once, with no check and no question,

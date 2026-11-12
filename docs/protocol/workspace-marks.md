@@ -16,13 +16,20 @@ This page belongs to [Workspace life](workspace-life.md).
 - The motion of the mark shows whether the agent works (list mark
   decision 1). A light runs around the outer ring of cells while the agent
   works. The whole mark pulses slowly while the agent needs input. In each
-  other state, the mark is still.
+  other state, the mark is still, unless the checks run.
 - Reason: the pulse keeps needs input in the list, as decision 68 requires.
   A still middle column for needs input was rejected, because the user
   asked for a mark of one full colour.
+- The light also runs around the ring while the checks run, also when the
+  agent does not work (the user's decision of 11 November 2026). Reason:
+  the light means that the workspace waits on something and the user does
+  not need to act. While the agent needs input, the mark pulses, whatever
+  the checks. An archived mark stays still.
 - With reduced motion, the ring stays lit while the agent works. The middle
   column stays lit while the agent needs input. The other cells stay dim,
-  so the state of the agent stays visible without motion.
+  so the state of the agent stays visible without motion. While only the
+  checks run, every cell stays lit, so the mark does not read as an agent
+  that works.
 - Bold text alone marks unread output. A green mark for unread output was
   rejected, because green means passed checks.
 - An archived workspace shows a fainter grey mark, whatever its GitHub

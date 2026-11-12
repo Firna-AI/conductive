@@ -18,23 +18,27 @@ while the change is open. Its pull request keeps them after the merge.
 ## The workspace token
 
 - Each workspace has its own workspace token.
-- With the token, the sandbox of the workspace can do seven things:
+- With the token, the sandbox of the workspace can do these things:
   - connect its agent runner to the Durable Object of its own workspace
   - get a GitHub token for its own workspace
-  - create and list workspaces through the agent tools
-  - list the repositories of its org image, the sections of its org, and
-    the models of the app, through the agent tools
-  - list the sessions of each workspace of its org, and read the chat of
-    each session, through the agent tools (decision 257)
-  - start sessions and send messages in the workspaces of its org that are
-    not archived, while a turn runs, through the agent tools
+  - make the reads of the agent tools in its org, at any time: list and get
+    the workspaces, list the repositories of its org image, the sections
+    of its org, and the models of the app, list, read, and get the
+    sessions, get the messages, and list the previews (decisions 257 and
+    277)
+  - make the writes of the agent tools in its org while a turn of its
+    workspace runs: create, rename, move, and archive workspaces, start,
+    rename, close, and stop sessions, send messages, create and delete
+    sections, and open and close previews (decision 277)
   - ask for a command on the Mac of the sender of a turn that runs now,
     through the agent tools
+- [Agent tool access](agent-tool-access.md) states the reach of these
+  calls and the rights that each write uses.
 - The token allows nothing else. It can never answer a request for a Mac
   command, and it can never choose the Mac that gets the request.
-- Some requests act for a sender: a create call, a new session, a message,
-  and a Mac command request. The Worker reads the sender of each such
-  request from its own record of the turn that runs now.
+- Each write of the agent tools and each Mac command request acts for a
+  sender. The Worker reads the sender of each such request from its own
+  record of the turn that runs now.
 - It never takes a sender from the sandbox, and it never uses the
   workspace owner in place of the sender.
 - Reason: agent code runs in the sandbox, so a sender that the sandbox
@@ -42,8 +46,8 @@ while the change is open. Its pull request keeps them after the merge.
 - At each such request, the Worker checks that the sender is still a
   member of the org of the workspace.
 - [Agent tools](agent-tools.md#mac-commands) states the Mac command
-  requests. [The sender](session-calls.md#the-sender) states the sender of
-  the session calls.
+  requests. [The sender](agent-tool-access.md#the-sender) states the
+  sender of each write of the agent tools.
 
 ## GitHub tokens
 

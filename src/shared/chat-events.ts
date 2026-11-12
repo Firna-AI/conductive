@@ -1,3 +1,4 @@
+import type { TurnStopRequester } from './session-stop'
 import type { AgentChoice } from './agents'
 import type { Timestamp } from './api'
 import type { ChangedFile } from './files'
@@ -133,10 +134,9 @@ export type ChatEvent =
       turnId: string
     }
   | { type: 'session.updated'; session: Session }
-  | {
-      /** The workspace records it when a member presses Stop, never the runner. */
+  | ({
+      /** Only the workspace records a Stop request. */
       type: 'turn.stop-requested'
       sessionId: string
       turnId: string
-      requestedById: string
-    }
+    } & TurnStopRequester)

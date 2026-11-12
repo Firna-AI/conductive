@@ -143,8 +143,10 @@ Every org image holds the app's own sandbox software:
 - the agent runner, a Node program that runs as an always-on service
 - the terminal service, on a private port
 - the preview relay, on a private port
-- the agent tools: an MCP server and a CLI that create and list workspaces,
-  start, list, read, and message sessions, and ask for Mac commands
+- the agent tools: an MCP server and a CLI that create, list, and change
+  the workspaces of the org, start, read, message, close, and stop its
+  sessions, change its sections, open port previews, and ask for Mac
+  commands
 - a git credential helper that gets a fresh GitHub token for each git
   operation
 

@@ -105,8 +105,8 @@ Pull request runs keep their own branch and their workspace base branch.
 
 On the machine hostname, the Worker serves the Mac command routes, the git
 credential route, the image source credential route, the
-[software image deploy route](software-image/README.md#deploy-route), workspace create/list
-tools, GitHub webhooks, the model gateway, and the runner socket.
+[software image deploy route](software-image/README.md#deploy-route), the
+[workspace tools](tools/README.md), GitHub webhooks, the model gateway, and the runner socket.
 These handlers use their own machine credentials and skip the browser gate.
 The [model gateway](model-gateway/README.md) accepts only a turn token.
 It adds the starter's login to allowed Anthropic, OpenAI, or own endpoint requests.

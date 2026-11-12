@@ -1,27 +1,41 @@
 import { ChevronDown, ChevronRight } from 'lucide-react'
+import { useState } from 'react'
 import styles from '../../../docs/mockups/src/components/workspaces/SectionList.module.css'
 import type { ArchiveAction } from '../../app/archive-model'
+import type { SectionGroup } from '../../app/sections'
 import type { Workspace } from '../../shared/workspaces'
 import type { RowMenus } from './row-menu'
 import { WorkspaceRow, type RowVariant } from './WorkspaceRow'
 
 /**
- * Whether the Archived group shows its rows: it is collapsed until the user
- * opens it, and the open archived workspace opens it. The list keeps the
- * choice, because its keys count only the rows that it shows.
+ * Whether the Archived group shows its rows, and the toggle of the user. The
+ * group is collapsed until the user opens it. A workspace that is archived
+ * when it opens opens the group too, so that its row shows. A workspace that
+ * the user archives while it is open leaves the group as it was, open or
+ * collapsed. The list keeps the choice, because its keys count only the rows
+ * that it shows.
  */
-export function archivedOpen(
+export function useArchivedOpen(
+  groups: readonly SectionGroup[],
   rows: readonly Workspace[],
   selectedId: string | null,
-  opened: boolean | null,
-): boolean {
-  return opened ?? rows.some((row) => row.id === selectedId)
+): [boolean, (open: boolean) => void] {
+  const [opened, setOpened] = useState<boolean | null>(null)
+  const isLive = groups.some((group) =>
+    group.workspaces.some((row) => row.id === selectedId),
+  )
+  /** The open workspace, while it stays open after the list showed it live. */
+  const [held, setHeld] = useState<string | null>(isLive ? selectedId : null)
+  const next = isLive || held === selectedId ? selectedId : null
+  if (next !== held) setHeld(next)
+  const shown = next === null && rows.some((row) => row.id === selectedId)
+  return [opened ?? shown, setOpened]
 }
 
 /**
  * The archived workspaces at the end of the list. The group is the app's
  * own, not a section of the org, so it has no menu, and it is collapsed
- * until the user opens it, as `archivedOpen` says. An archived workspace
+ * until the user opens it, as `useArchivedOpen` says. An archived workspace
  * opens with its chat read-only. An admin's row has a menu that reassigns
  * the workspace. `restoreAction` gives a row its Restore shortcut, which
  * covers its time on hover, as Archive does.

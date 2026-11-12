@@ -45,7 +45,7 @@ for local development.
     When the owner of the calling workspace has no saved default, a
     missing or invalid `CONDUCTIVE_DEFAULT_CHOICE` gives an empty default
     choice, not an error.
-    [Agent tools](../protocol/agent-tools.md#models) states the list.
+    [Models](../protocol/workspace-calls.md#models) states the list.
 - No other route reads these two variables.
 - The web app reads `GET /api/models` and `GET /api/account` when it
   starts. So it does not start without a valid model list. A user with no
