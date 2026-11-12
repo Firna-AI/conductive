@@ -61,11 +61,12 @@ is suspended.
 - Each preview grant and each preview cookie belongs to one viewer: the
   user and the sign-in session that launched the preview.
 - Each request to a preview and each batch of its data checks the preview
-  and its viewer together.
+  and its viewer together. One check covers that viewer for 1 second, as
+  [Port previews](terminal-previews-and-desktop.md#port-previews) says.
 - The redemption of a grant checks its viewer too.
 - When a viewer is suspended, leaves or is removed from the org, or signs
   out, the grants, cookies, requests, and streams of that viewer stop
-  working.
+  working within 1 second, plus the time of one read.
 - Other viewers of the same preview keep their access.
 
 ## Owners and admins

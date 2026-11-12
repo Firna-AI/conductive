@@ -133,6 +133,11 @@ a check leaves its grant unused. Keep each new check before the redemption.
 The proxy reads only the cookie of the requested preview ID. A duplicate of
 that cookie counts as no cookie. The proxy checks the D1 record and the cookie
 before any sandbox call. A leaked hostname alone gets a 404.
+The outer route keeps the workspace of each found hostname in memory for up to
+5 minutes, and never past its expiry, with `previewHostnames` from
+[hostname-cache.ts](hostname-cache.ts). It keeps at most 1,000 hostnames and
+never an unknown one. A revoked hostname that stays there still gets its 404
+from the workspace object.
 `readPreviewAccess` in [viewer-access.ts](viewer-access.ts) reads the preview and
 the access of the cookie's viewer together, in one D1 read. It uses the
 `preview` kind of the [shared connection reader](../security/README.md#open-connections).
@@ -195,14 +200,23 @@ live connections so these hooks also cancel its fetches, HTTP streams, and
 sockets.
 The confirmed-stop chat transaction then sends `ports.updated` with a null
 list, even when the workspace had no preview to revoke.
-Each data batch waits for a D1 check that starts after the data arrives.
-This also blocks data after another instance revokes the preview, or after
-the owner of the workspace is suspended.
-Each check reads the access of its viewer session again, with no cached grant.
+The registry keeps one scope for each viewer session of a preview. Each request
+joins its scope before its access read, so a revocation during the read also ends it.
+`AuthorizationBatch` in [authorization.ts](authorization.ts) shares each D1 read
+among the checks that wait for it. A successful read also covers each check of the
+scope that starts within `PREVIEW_ACCESS_WINDOW_MS`, 1 second, after the read started.
+Each data batch waits for such a check. So data after another instance revokes the
+preview, or after the owner of the workspace is suspended, stops within that window.
+Close, workspace revocation, and expiry close the scope at once, also inside the window.
+A relay lookup that called the provider ends the window, so the next check reads again.
+Each read binds the scope to its sandbox. A read that finds another sandbox or
+provider account ends each connection that reached the old one.
 A denied viewer loses only the connections of that viewer session. Other
 viewers of the same preview keep theirs.
 The request and response streams read only when their consumer requests data.
-They read one chunk at a time. No cached authorization or time window permits data.
+They read one chunk at a time.
+Tests set `previewAccessWindowMs` to 0, so each check reads again, except in
+[window.test.ts](window.test.ts).
 A chunk of a byte stream, such as a fetch body, holds the data that waits, up to 256 KB.
 So one check covers it. The default reader of a Workers fetch body gives 4 KB at most.
 Completed HTTP connections release their registry entries.
@@ -242,6 +256,7 @@ The outer Worker keeps these rules, because it answers the preview host with `pr
 A reply that passes every check gets `Server-Timing` with `access`, `relay`, `check`,
 `upstream`, and `check-after`. The outer route in [router.ts](../features/router.ts)
 puts `lookup` and `workspace` first, only when the reply already has the header.
+A cached lookup and a check inside the access window show a duration of 0.
 So a refused request gets no timings. `workspace` holds the whole trip to the
 workspace object, so it includes the later steps. The body checks come after
 the headers, so the header leaves them out. The allowlist drops the previewed
@@ -266,6 +281,8 @@ The shared sandbox predicate refuses old grants, cookies, and each stream batch 
 - [credentials.ts](credentials.ts) issues grants with `launchGrant`, redeems each grant once with `redeemLaunchGrant`, and checks the credential cookies. Each one seals a `PreviewViewer`.
 - [proxy.ts](proxy.ts) routes the authorizer page and POST, checks the credential cookie, and owns the request flow.
 - [timing.ts](timing.ts) records the duration of each step for the `Server-Timing` header.
+- [hostname-cache.ts](hostname-cache.ts) keeps the workspace of each found preview hostname for the outer route.
+- [authorization.ts](authorization.ts) shares each access read and holds the 1-second access window.
 - [registry.ts](registry.ts) scopes HTTP and socket cancellation by workspace, preview, and viewer session.
 - [viewer-access.ts](viewer-access.ts) exports `readPreviewAccess`, the one D1 read of a preview and its viewer.
 - [connection.ts](connection.ts) wraps both HTTP directions with authorization and backpressure.
