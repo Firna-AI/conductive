@@ -14,6 +14,14 @@ server, Git credential helper, software updates, and workspace tools.
 The program parses command names with `clap`. `--help` and `--version`
 work without runtime credentials.
 
+`--version` prints the version embedded at build time. A deploy sets
+`CONDUCTIVE_RELEASE_VERSION` to `0.0.<commit count>` and
+`CONDUCTIVE_PARTS_FILE` to an absolute path to its parts JSON. Set both
+variables together. The build validates the version and the parts with
+`cnd-release`, then embeds both in the program. A build without the
+variables uses `0.0.0-dev` and an empty parts list. This development version
+sorts below every release. The program does not apply updates yet.
+
 The commands are `runner`, `relay`, `mcp`, `git-credential`, `update`,
 `workspaces`, `sessions`, `messages`, `sections`, `repositories`, `models`,
 `previews`, and `mac`. Each command currently reports "not available yet"
@@ -54,6 +62,8 @@ The musl build needs a C compiler for musl. On Ubuntu, install the
 - [cli.rs](src/cli.rs) owns `Cli` and the command execution boundary.
 - [command.rs](src/command.rs) defines the command families and reserved arguments.
 - [error.rs](src/error.rs) defines typed command errors and the internal error fallback.
+- [build.rs](build.rs) validates and embeds the release inputs.
+- [release.rs](src/release.rs) reads the embedded version and parts.
 - [cli_tests.rs](src/_tests_/cli_tests.rs) checks parsing and the unavailable-command result.
 
 ### Related Docs

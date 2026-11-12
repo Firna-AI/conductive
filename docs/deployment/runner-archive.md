@@ -60,6 +60,51 @@ steps for the archive:
    before the migrations.
 4. It deploys the Worker with both variables set to that archive.
 
+The deploy also builds the static `conductive` program for
+`x86_64-unknown-linux-musl`. Its version is `0.0.<count>`, where `<count>`
+is the commit count of `main` at that deploy. The checkout includes the
+full history. Each deploy from `main` makes a release.
+
+The program embeds its version and a versioned parts list. The list holds
+the current runner archive and the pinned private Node archive. Each part
+has its name, its absolute HTTPS URL, and its SHA-256 digest. Node stays
+at its official `nodejs.org` URL. The deploy reads that URL and digest
+from the Worker's pinned runtime settings.
+
+The deploy writes these R2 keys:
+
+- Program archive: `releases/download/conductive/<version>/<sha256>/conductive-<version>-x86_64-unknown-linux-musl.tar.gz`.
+- Parts file: `releases/download/conductive/<version>/<sha256>/parts-<version>-x86_64-unknown-linux-musl.json`.
+- Newest-version JSON: `releases/latest/conductive/x86_64-unknown-linux-musl`.
+
+Each `<sha256>` is the digest of that file's bytes. The program archive
+holds the executable `conductive`. The parts file uses schema version 1.
+Its `parts` array holds objects with `name`, `url`, and `sha256` fields.
+The archive and parts objects never change. Their cache time is one year.
+The newest-version JSON has content type `application/json` and
+`Cache-Control: max-age=60`.
+
+The newest-version JSON uses the `cli-release-interface` format. It holds
+`binary`, `version`, `target`, `asset_name`, `download_url`, and `sha256`.
+`download_url` is the absolute public program archive URL under
+`https://runner.conductive.build/`. The digest is always present.
+`HttpReleaseClient` can read this file without a release server.
+
+The deploy uploads each new immutable file and checks its public size.
+The existing runner upload completes first. After the Worker deploy and
+its health check succeed, the deploy reads the current newest-version JSON
+directly from R2, outside the public cache.
+It writes a new JSON file only for a higher version, after all file
+checks pass. A missing JSON permits the first release. A failed read or
+invalid current JSON stops publication. The workflow's existing commit
+check and serial deploy group also stay in force. The JSON upload comes
+last. The deploy checks its public size with a version query to bypass
+the previous JSON cache entry.
+
+The [release crate](../../crates/cnd-release/README.md) gives the local
+packaging commands. Publishing these files does not change the installed
+runner or the two Worker archive variables.
+
 - The same source and packages give the same digest. So an unchanged
   runner makes no new upload.
 - Old archives stay in the bucket.

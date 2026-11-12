@@ -85,6 +85,26 @@ versioned URL for each archive is a good choice.
 The Worker does not serve the archive. Image builds and refreshes read the
 two variables.
 
+## Conductive release files
+
+Each deploy from `main` also publishes a static `conductive` program and a
+versioned parts file. The program embeds its release version and parts
+list. The list holds the runner archive and the private Node archive,
+with each part's URL and SHA-256 digest. Node stays at `nodejs.org`.
+
+The program archive and the parts file have digest-named paths. The
+newest-version JSON at
+`https://runner.conductive.build/releases/latest/conductive/x86_64-unknown-linux-musl`
+holds the absolute program archive URL and its digest. Its cache time is
+60 seconds. The deploy replaces it only for a higher version, after the
+release files pass their public size checks. The release version is
+`0.0.<commit count of main>`. These files do not change the installed
+software yet. Image builds still use the runner archive variables.
+
+[The archive in each deploy](../docs/deployment/runner-archive.md#the-archive-in-each-deploy)
+gives the exact keys and publication order. The
+[release crate](../crates/cnd-release/README.md) gives local packaging commands.
+
 ## The private Node runtime
 
 [The private Node runtime](runtime.md) gives the pinned Node release, its
@@ -290,6 +310,8 @@ build, a disk retention restart, and an unfinished start start no runner.
 - [`github-cli.sh`](github-cli.sh): gives the GitHub CLI a fresh token for each command.
 - [`image-runtime.ts`](../worker/lifecycle/image-runtime.ts): the pinned
   Node release, its digest, and its paths.
+- [Release crate](../crates/cnd-release/README.md): the shared parts format
+  and the program release packager.
 - [`image-software.ts`](../worker/lifecycle/image-software.ts): stages these
   files for a build, adds the terminal install command, and makes the
   startup command for a workspace start or a disk retention restart.

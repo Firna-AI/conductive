@@ -225,12 +225,12 @@ Depends on: 1
 
 Depends on: 2
 
-- [ ] Build the program for `x86_64-unknown-linux-musl` in `.github/workflows/deploy.yml`.
-- [ ] Package each part with a digest name. At first, the parts list holds the current runner archive and the private Node, so the Node runner keeps working.
-- [ ] Upload the new files to R2 and check their public sizes, as the runner archive upload does now.
-- [ ] Write the JSON file at `releases/latest/conductive/x86_64-unknown-linux-musl` last, with the version `0.0.<count>`, the absolute download URL, and the digest. Set a cache time of about one minute.
-- [ ] A deploy of an older commit writes no JSON file, so the newest version never goes down.
-- [ ] Update `docs/deployment/runner-archive.md` and `image/README.md`.
+- [x] Build the program for `x86_64-unknown-linux-musl` in `.github/workflows/deploy.yml`.
+- [x] Package each part with a digest name. At first, the parts list holds the current runner archive and the private Node, so the Node runner keeps working.
+- [x] Upload the new files to R2 and check their public sizes, as the runner archive upload does now.
+- [x] Write the JSON file at `releases/latest/conductive/x86_64-unknown-linux-musl` last, with the version `0.0.<count>`, the absolute download URL, and the digest. Set a cache time of about one minute.
+- [x] A deploy of an older commit writes no JSON file, so the newest version never goes down.
+- [x] Update `docs/deployment/runner-archive.md` and `image/README.md`.
 
 ## Milestone 4: Updates in each sandbox
 

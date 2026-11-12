@@ -249,8 +249,29 @@ dependencies = [
  "clap",
  "cli-release-interface",
  "cli-updater",
+ "cnd-release",
  "internal-error",
+ "serde_json",
  "thiserror",
+]
+
+[[package]]
+name = "cnd-release"
+version = "0.1.0"
+dependencies = [
+ "clap",
+ "cli-release-interface",
+ "cli-updater",
+ "flate2",
+ "internal-error",
+ "semver",
+ "serde",
+ "serde_json",
+ "sha2",
+ "tar",
+ "tempfile",
+ "thiserror",
+ "url",
 ]
 
 [[package]]

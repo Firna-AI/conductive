@@ -9,6 +9,7 @@ use crate::cli::Cli;
 mod cli;
 mod command;
 mod error;
+mod release;
 
 fn main() -> ExitCode {
     match Cli::parse().execute() {
