@@ -133,7 +133,7 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     area: 'agents-and-chat',
     name: 'Rich chat rendering',
     status: 'available',
-    note: 'Chat shows Markdown, headings, tables, lists, and code. Diagrams, maths, media, and Run buttons are under consideration.',
+    note: 'Chat shows Markdown, headings, tables, lists, and code, with Copy code buttons in progress. Diagrams, maths, media, and Run buttons remain under consideration.',
   },
   {
     id: 'chat-links',
