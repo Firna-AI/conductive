@@ -49,12 +49,12 @@
   color: var(--ui-ink);
   font-size: var(--ui-text-md);
   white-space: nowrap;
-  cursor: default;
+  cursor: pointer;
 }
 
 .row:hover,
 .highlighted {
-  background: var(--ui-soft);
+  background: var(--ui-menu-hover);
 }
 
 .icon {
