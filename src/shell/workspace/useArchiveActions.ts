@@ -22,7 +22,9 @@ export interface ArchiveActions {
  * Archive and Restore from each control of the app: the row and its menu,
  * the pull request bar, the palette, the archived bar, and the toast. Each
  * control uses the one flow of its workspace, so a second press while it
- * runs sends nothing. Archive asks no question. A done Archive shows a
+ * runs sends nothing. Archive asks no question, and it shows as done at
+ * once: the row moves to the Archived group, and the open workspace shows
+ * as archived. A failed Archive brings both back. A done Archive shows a
  * toast that names the workspace. The toast offers Restore only while the
  * workspace can come back: it is still archived, its cloud computer is
  * kept, its last day of Restore has not passed, and the org is not
@@ -79,6 +81,6 @@ export function useArchiveActions(orgId: string, viewer: User): ArchiveActions {
   return {
     archive,
     restore,
-    running: (workspaceId) => running.get(workspaceId) ?? null,
+    running: (workspaceId) => running.get(workspaceId)?.action ?? null,
   }
 }

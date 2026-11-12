@@ -14,12 +14,12 @@ export const WORKSPACE_TOOLS_COMMAND = WORKSPACE_TOOLS_MCP.command
 export const WORKSPACE_TOOLS_SECRETS_FILE = '/run/ascii-secrets/env.sh'
 
 /**
- * Linux refuses one exec argument over 128 KiB (`MAX_ARG_STRLEN`). The
+ * Linux refuses one exec argument of 128 KiB or more (`MAX_ARG_STRLEN`). The
  * sandbox runs each command as one shell argument, and the sudo wrapper
  * escapes each quote again. So each install command, with that wrapper,
  * stays under this size, with room for the provider's own wrapper.
  */
-export const WORKSPACE_TOOLS_COMMAND_BYTES = 96 * 1024
+export const WORKSPACE_TOOLS_COMMAND_BYTES = 64 * 1024
 
 /** Build the same install commands, in order, for execution and versioning. */
 export function workspaceToolsCommands(
@@ -67,6 +67,7 @@ exit 1
       throw new Error('The workspace tool sources are incomplete.')
     return write(`${directory}/${path}`, source, '0644')
   })
+  // The launcher comes last, so the command exists only after its sources.
   return commandBatches([
     `install -d ${quote(`${directory}/tools`)} ${quote(`${directory}/src/shared`)} ${quote(`${prefix}/usr/local/bin`)}`,
     ...writes,
