@@ -3,7 +3,8 @@
 The marketing site is the public site at the root of the product domain,
 `conductive.build`. It has the home page, the public docs, the Terms page,
 and the Privacy page. It also has the Conductor comparison page,
-[the pricing page](pricing-page.md), and a page for an unknown address.
+[the pricing page](pricing-page.md), [the changelog page](#the-changelog-page),
+and a page for an unknown address.
 Visitors need no sign-in. The pages run no
 script and set no cookie. Every sign-in link leads to the app, on the
 `app.` host.
@@ -186,6 +187,23 @@ call to action has the sentence and the two actions of the home page.
 [The comparison page](comparison.md) gives the one source of its rows, the
 steps to change a row and keep it true, and its key code.
 [AGENTS.md](../../AGENTS.md) says when a change must update a row.
+
+## The changelog page
+
+The page at `/changelog` tells users and visitors what changed in the
+product. It shows one post for each day with a release, newest first.
+[Website changelog](../../docs/protocol/website-changelog.md) states its
+requirements, and
+[The changelog page](../../docs/mockups/marketing-site.md#the-changelog-page)
+of the marketing mockups is its visual spec. The Changelog link, the last
+link of the Product column of the footer, leads to it. The top of the page
+links the releases on GitHub, which give the complete list of changes.
+
+Each post is one Markdown file in `changelog/`, named by its day, such as
+`2026-11-12.md`. Each push to `main` deploys the site, so a post on `main`
+is public at once. [Writing the changelog posts](changelog-authoring.md)
+gives the file format, the rules for the words, and the steps and the
+prompt of the daily routine that drafts the posts.
 
 ## Development
 

@@ -8,8 +8,8 @@ decision number names a dated record, as
 ## Responsibilities
 
 - Static pages at the root of `conductive.build`: the home page, the public
-  docs, the pricing page, the Terms and Privacy pages, and the Conductor
-  comparison page. Visitors see them without a sign-in.
+  docs, the pricing page, the changelog page, the Terms and Privacy pages,
+  and the Conductor comparison page. Visitors see them without a sign-in.
 - Astro builds these pages ahead of time. The Worker serves the built files
   on `conductive.build`. It fills in the values of each request, such as
   the app address in the sign-in links and the year in the footer.
@@ -78,3 +78,24 @@ decision number names a dated record, as
 - The page sells nothing. It has no checkout, and it links no payment
   provider. Billing is a planned change, as
   [Planned changes](../protocol/pricing.md#planned-changes) says.
+
+## The changelog page
+
+- The page at `conductive.build/changelog` shows what changed in the
+  product, with one post for each day with a release.
+  [Website changelog](../protocol/website-changelog.md) states its
+  requirements.
+- Its posts are content of the site, as the rows of the comparison page
+  are. Each post is a Markdown file in the repository, so a change to a
+  post is a change to the repository.
+- A [routine](../protocol/routines.md) of the Conductive org drafts the
+  posts each day. It reads `CHANGELOG.md` and the pull requests of each
+  new version on GitHub. It opens a pull request, and a person reviews and
+  merges it.
+- No component computes a post while the site runs. The page reads nothing
+  from the app, the API, a sandbox, or GitHub.
+- The site build and the mockup catalogue read the same words of the page
+  and the same shape of a post, so the page and its mockup show the same
+  words.
+- The page links the releases on GitHub. They stay the complete list of
+  changes, which the release flow writes from the commit messages.

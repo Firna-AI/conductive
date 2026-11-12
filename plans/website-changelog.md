@@ -254,29 +254,29 @@ Depends on: 1
 
 The `docs implementor` writes the requirements and the decisions in force.
 
-- [ ] Write `docs/protocol/website-changelog.md`. State:
-  - [ ] The address, no sign-in, the site header and footer, no script,
+- [x] Write `docs/protocol/website-changelog.md`. State:
+  - [x] The address, no sign-in, the site header and footer, no script,
         no cookie, the footer link, the link preview, and the anchors. The
         mockup `marketing/changelog` is the visual spec.
-  - [ ] One post for each day with a release, newest first, with its day,
+  - [x] One post for each day with a release, newest first, with its day,
         title, versions, optional lead, and sections.
-  - [ ] What a post includes and leaves out, and the rules for its words.
-  - [ ] How a post is made: a routine drafts it daily, a person reviews
+  - [x] What a post includes and leaves out, and the rules for its words.
+  - [x] How a post is made: a routine drafts it daily, a person reviews
         and merges it, and the pull request review checks it.
-  - [ ] The defaults of a missing field, and the empty state.
-  - [ ] The decision in force: curated posts won over the GitHub
+  - [x] The defaults of a missing field, and the empty state.
+  - [x] The decision in force: curated posts won over the GitHub
         releases link, a page built from `CHANGELOG.md`, and a note in
         each pull request. Name the date of the choice.
-- [ ] Name the page in `docs/architecture/marketing-site.md` and in the
+- [x] Name the page in `docs/architecture/marketing-site.md` and in the
       hostnames table of `docs/architecture.md`. Link the new doc from
       `docs/architecture/protocol-docs.md`.
-- [ ] Write `src/marketing/changelog-authoring.md`: the file format, the
+- [x] Write `src/marketing/changelog-authoring.md`: the file format, the
       rules for the words, and the steps of the routine. Give the prompt
       of the routine. Link it from `src/marketing/README.md`.
-- [ ] Read `src/marketing/terms.ts`, `src/marketing/privacy.ts`, and each
+- [x] Read `src/marketing/terms.ts`, `src/marketing/privacy.ts`, and each
       public guide in `src/marketing/docs/` in full. Change only a
       sentence that restates a changed fact.
-- [ ] Check each relative link of each changed Markdown file. Commit.
+- [x] Check each relative link of each changed Markdown file. Commit.
 
 ## Milestone 3: Posts for the past releases
 
@@ -296,7 +296,8 @@ each version, not only its commit subject.
 
 Tags: ui
 
-Depends on: 3
+Depends on: 2. It runs beside Milestone 3, because it changes other
+files. The built-site case runs after both.
 
 - [ ] Before the page exists, the `non-ui implementor` extends
       `worker/marketing/built-site.test.ts` with one focused case.

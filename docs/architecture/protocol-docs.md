@@ -148,6 +148,10 @@ This page lists each protocol doc and what it covers.
 - [Website docs](../protocol/website-docs.md): the public guides of the
   marketing site, their addresses and navigation, and the rules for their
   words.
+- [Website changelog](../protocol/website-changelog.md): the public
+  changelog page of the marketing site, its post for each day with a
+  release, the rules for the words of a post, and the routine that drafts
+  the posts.
 - [Conductor comparison](../protocol/conductor-comparison.md): the public
   page for people who move from Conductor, with the status of each
   Conductor feature.
