@@ -51,6 +51,7 @@ system permissions. The installed runner and relay services run as `user`.
    It installs the git credential helper and the GitHub CLI wrapper.
    It installs `conductive-runner.service` and `conductive-preview-relay.service`.
    It installs `conductive-preview-relay.socket`.
+   It installs the udev rule `60-conductive-disk-cache.rules`.
 5. It makes `conductive-git-credential` the system credential helper of
    git, and sets `credential.useHttpPath`.
 6. It enables the runner service, the relay socket, and the relay service.
@@ -69,3 +70,16 @@ in this folder or in the terminal software reaches the new workspaces of an
 org only after its next build. A workspace that exists keeps its software.
 A workspace gets the relay only from a new image build.
 Start a new workspace from that image to get the relay.
+
+## Disk flushes
+
+[Disk flushes](../docs/protocol/workspaces-and-sandboxes.md#disk-flushes) gives
+the requirement. The udev rule `60-conductive-disk-cache.rules` sets
+`queue/write_cache` to `write through` on each whole virtio disk, at each
+boot. The kernel then sends no flush to the host, and `fsync` returns once
+the host has the data. Installation changes no disk setting, so the build
+sandbox keeps its flushes. A workspace gets the rule only from a new image
+build, as it gets the relay.
+
+To check a sandbox, read `/sys/block/vda/queue/write_cache`. It reads
+`write through` with the rule and `write back` without it.
