@@ -1,6 +1,7 @@
-import type { AgentCreateWorkspaceRequest } from '../../src/shared/agent-tools'
+import type { AgentCreateWorkspaceRequest } from '../../src/shared/agent-workspaces'
 import { sessionTitleFrom } from '../../src/shared/session-title'
 import { choice } from '../../tools/input'
+import { hash } from '../security/crypto'
 import { HttpError } from '../http'
 import { sessionLink } from '../../src/shared/session-link'
 import { requireCallingToolTurn } from './calling-turn'
@@ -28,6 +29,22 @@ export async function createFromTool(
     turnId,
     services,
   )
+  const firstMessageId = await hash(
+    JSON.stringify([
+      'create_workspace',
+      caller.workspaceId,
+      turn.sessionId,
+      sender.id,
+      input.requestId ?? crypto.randomUUID(),
+    ]),
+  )
+  const previous = await services.replayWorkspaceCreation({
+    orgId: caller.orgId,
+    senderUserId: sender.id,
+    firstMessageId,
+    createdByWorkspaceId: caller.workspaceId,
+  })
+  if (previous) return previous
   const owner = await memberSender(db, caller.orgId, caller.ownerUserId)
   if (!sender || !owner) {
     throw new HttpError(
@@ -59,6 +76,10 @@ export async function createFromTool(
     repositoryId: input.repositoryId,
     sectionId,
     choice: choice({ ...model, effort }),
+    firstMessageId,
+    ...(input.firstSessionTitle !== undefined && {
+      firstSessionTitle: input.firstSessionTitle,
+    }),
     firstMessage: agentToolMessage(
       input.firstMessage,
       sessionLink(origin, caller.orgId, caller.workspaceId, turn.sessionId),

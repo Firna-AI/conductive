@@ -3,13 +3,13 @@
 - **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-10, during documentation integration on `calummoore/github-status-bar-actions`.
-- **Location:** `docs/deployment.md` and `image/README.md`.
-- **Reason:** These long guides are unchanged by the pull request action diff. Their structure needs a separate documentation change.
+- **Location:** `worker/app-api/README.md` and `src/app/screens.md`.
+- **Reason:** These guides already exceed the target on the incoming main branch. Their structure needs a separate documentation change.
 
 - **Terms:**
   - **Pointer section:** A retained heading with a link to content moved to another page. It keeps an existing anchor valid.
 - **Background:** The repository asks agents to keep files near 200 lines and split files that pass 300. These guides combine several topics. The deployment guide already passed 300 lines before the latest main integration. Main's provider-account work grew the sandbox guide from 219 to 304 lines. Its computer ledger work grew the member guide from 299 to 303 lines. Its software-image work grew the image guide past the target.
-- **Problem:** `docs/deployment.md` has 405 lines and `image/README.md` has 302. Captured main `6fd184c53e77dee208687512244ebcaf5fa120e9` shortened the sandbox guide to 251 lines and the member guide to 273. Those two observations are closed. The current file-length command checks JavaScript, TypeScript, and Astro files, so it does not report these Markdown files.
+- **Problem:** `worker/app-api/README.md` has 317 lines and `src/app/screens.md` has 320 after integration with main at `d789f9e9`. Both already passed 300 lines on that main snapshot. The earlier 405-line deployment guide and 302-line image guide now have 259 and 223 lines, so both observations are closed. Captured main `6fd184c53e77dee208687512244ebcaf5fa120e9` shortened the sandbox guide to 251 lines and the member guide to 273. Those two observations are also closed. The current file-length command checks JavaScript, TypeScript, and Astro files, so it does not report these Markdown files.
 - **Impact if no action:** Readers must scan long guides. New changes must maintain several topics in each file. The files remain above the repository target.
 - **Root question:** How can these guides stay short while keeping their facts and working links?
 - **Options:**
@@ -20,6 +20,6 @@
 - **Recommendation:** A. It preserves the documentation while giving each topic a shorter home.
 - **Action:** fix after merge, apply A, because the existing long-guide structure is outside the pull request action diff.
 
-The deployment guide holds model configuration, runner and software-image deployment, and error tracking. The sandbox guide holds provider-account configuration and routing. Main added ledger cleanup facts to the member guide and shared software-image facts to the image guide. Read every guide and its linked pages before choosing a split.
+The app API guide holds request handling and its entry points. The screen guide holds the app's views and their models. Read each guide and its linked pages before choosing a split. The earlier deployment, image, sandbox, and member guide cases are closed. Their linked pages keep the moved facts and entry points.
 
 Keep requirements in protocol docs, component responsibilities in architecture docs, and code entry points in area READMEs. Preserve deployment setup, provider routing, public-text rules, and existing anchors. Do not add tests of prose or a stricter gate. Check changed Markdown links and inbound anchors after each move.

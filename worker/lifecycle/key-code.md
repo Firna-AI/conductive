@@ -8,7 +8,11 @@ points of each part.
   git credential route, and the input activity owner, with its durable
   input time and its D1 and provider update.
 - [`workspaces.ts`](workspaces.ts): `createWorkspace`, which records a
-  workspace on its fixed org account and queues its start.
+  workspace on its fixed org account and queues its start. `replayCreation`
+  finds a saved create by its first-message ID and joins its claim, plan,
+  and admission without the current defaults. The
+  [agent workspace tools](../tools/workspaces.md#creation-replay-and-first-title)
+  use it for a repeated create.
 - [`creation-attempt-data.ts`](creation-attempt-data.ts) keeps the public failure code and message after a failed create.
   [`start-failure.ts`](start-failure.ts) writes that cause and reports a run failure.
   Accepted first starts keep the workspace in its error state for Try again.

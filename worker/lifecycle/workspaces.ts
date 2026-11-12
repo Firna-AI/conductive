@@ -66,6 +66,25 @@ export async function createWorkspace(
   return joinCreation(runtime, key, claim, user, sender, input, base)
 }
 
+export async function replayCreation(
+  runtime: WorkspaceRuntime,
+  key: CreationKey,
+): Promise<ProvisionedWorkspace | null> {
+  await requireActiveOrg(runtime.env.DB, key.orgId)
+  await requireOrgMember(runtime.env.DB, key.orgId, key.senderUserId)
+  const existing = await existingCreation(runtime.env.DB, key)
+  if (!existing) return null
+  if (existing.state === 'succeeded')
+    return provisionedResponse(runtime, key.orgId, existing.id)
+  const job = await recordedCreationJob(runtime.env.DB, key, existing.id, '')
+  if (!job) return null
+  const endpoint = runtime.workspace(existing.id)
+  await endpoint.queueLifecycleStart(job)
+  const result = await endpoint.waitCreationAdmission()
+  if (!result.ok) throw workspaceStartFailure(result.error)
+  return presentProvisionedWorkspace(runtime, result.created)
+}
+
 async function joinCreation(
   runtime: WorkspaceRuntime,
   key: CreationKey,

@@ -11,6 +11,7 @@ import type {
   UserMessage,
 } from '../../shared/messages'
 import type { Session } from '../../shared/sessions'
+import { readStopRequester } from './read-stop'
 import { readChangedFile } from './read-changed-file'
 import { readContinued } from './read-continued'
 import {
@@ -258,11 +259,7 @@ export function readChatEvent(source: Record<string, unknown>): ChatEvent {
         durationMs: count(source.durationMs),
       }
     case 'turn.stop-requested':
-      return {
-        ...turn,
-        type: source.type,
-        requestedById: text(source.requestedById),
-      }
+      return { ...turn, type: source.type, ...readStopRequester(source) }
   }
   throw new UnreadableResponse('type')
 }

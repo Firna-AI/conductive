@@ -277,6 +277,16 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
   [`feature-sections.ts`](feature-sections.ts)
   and [`feature-workspaces.ts`](feature-workspaces.ts) save list changes and
   publish workspace metadata through the workspace object.
+  `featureSectionWrite` takes only the request method and the user, org,
+  and body of its context. So the
+  [agent section calls](../tools/sections-and-previews.md#sections) reuse
+  it with the sender as the user.
+- [`workspace-metadata.ts`](workspace-metadata.ts):
+  `changeWorkspaceMetadata`, the rename and the move of one workspace. It
+  checks the member and the archive state, runs `updateShellWorkspace`, and
+  publishes the metadata. `feature-workspaces.ts` and the
+  [agent workspace tools](../tools/workspaces.md#rename-and-move) both call
+  it. A tool move to the current section of a workspace changes nothing.
 - [`feature-workspaces-data.ts`](feature-workspaces-data.ts):
   `updateShellWorkspace`, the rename and the move of a workspace in one D1
   batch. [`feature-sections-data.ts`](feature-sections-data.ts): the
