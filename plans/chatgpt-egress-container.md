@@ -295,6 +295,10 @@ Depends on: 2, 3, 4
       of the main Worker has a target before the merge.
 - [x] Through a temporary Worker with the binding, check that a request
       with a fake token gets OpenAI's 401 JSON reply.
+- [x] Under the `durable_object` policy, through probe Workers built from
+      the egress code: an 18-minute answer streamed in full, and a
+      10-minute answer finished in full across a deploy of a new version,
+      while a new request got a fresh container.
 
 ## Milestone 6: Verification, commit, review, and pull request
 
@@ -302,7 +306,7 @@ Depends on: every other milestone
 
 - [x] Run the targeted tests and the complete gate named in `AGENTS.md`.
 - [x] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
