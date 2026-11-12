@@ -122,8 +122,11 @@ export const workspaceStateSchema = {
     tabRow: { enum: ['opened', 'drag', 'moved', 'full', 'rename'] },
     /** The composer, as `composerStates` says. */
     composer: { enum: composerStates },
-    /** The user drags the handle of the right column to widen it. */
-    resize: { enum: ['none', 'right'] },
+    /**
+     * The user drags the handle of the right column to widen it, or the
+     * handle between the file lists and the tools to raise the split.
+     */
+    resize: { enum: ['none', 'right', 'split'] },
     /**
      * The right column of the desktop: shown, or hidden with the toggle at
      * the end of the header. A phone has no right column.

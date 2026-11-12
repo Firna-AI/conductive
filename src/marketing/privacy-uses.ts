@@ -153,8 +153,8 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         metadata, such as a photo's location, from selected screenshots
         before sending. The reply address is your primary verified email
         on GitHub, when available.`,
-      text`Panel widths: your browser keeps the widths of the panels of
-        the app. They stay in your browser.`,
+      text`Panel sizes: your browser keeps the sizes of the panels of the
+        app. They stay in your browser.`,
     ),
     paragraph`Where data protection law requires a lawful basis, the
       operator relies on performance of a contract to provide the

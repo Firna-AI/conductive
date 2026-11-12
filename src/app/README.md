@@ -133,8 +133,10 @@ the Help row of the palette opens.
   read-only for screens, and writes go through the actions and models.
 - A secret goes out once, through `SecretForm`, and the field is empty after
   the save. No answer brings a stored secret back.
-- The browser keeps only the panel widths (`panels.ts`). A browser that
-  refuses its storage keeps them until the page closes.
+- The browser keeps only the panel sizes (`panels.ts` and
+  `column-split.ts`): the widths of the sidebar and the right column, and
+  the split of the right column. A browser that refuses its storage keeps
+  them until the page closes.
 - The open of a workspace and the settings reads of the Cloud computer
   tab count a generation. An answer that arrives after their screen
   closed or the user cancelled starts no stream, writes no older state,

@@ -62,6 +62,9 @@ import styles from './WorkspaceScreen.module.css'
 /** The right column in the middle of a drag that widens it, in px. */
 const widenedRight = 560
 
+/** The share of the file lists in the middle of a drag that raises the split. */
+const raisedSplit = 35
+
 /**
  * An open workspace: its header, its tabs of sessions and files, the pull
  * request, the file lists, and the tools. Desktop shows them side by side; a
@@ -276,6 +279,7 @@ export function WorkspaceScreen(props: {
           )
         }
         files={files}
+        filesShare={state.resize === 'split' ? raisedSplit : undefined}
         header={header}
         pullRequest={<PullRequestBar bar={bar} workspace={workspace} />}
         rightHidden={rightHidden}

@@ -283,7 +283,9 @@ sessions as tabs above the chat, and four tabs at the bottom.
 - On desktop the sidebar and the right column resize from `ResizeHandle` in
   `src/components/layout/`, a hairline on their inner edge. On hover and
   during a drag a short grip in the accent colour shows in its middle, so no
-  panel gets an accent edge.
+  panel gets an accent edge. The same handle lies across the top edge of the
+  tools panel, and moves the split between the file lists and the tools, as
+  `app/panels/split` shows.
 - A state tints a whole bar or box, and its edges stay neutral. No box has
   an accent strip on any edge.
 - `sizes.ts` in `src/components/chat/` holds the one size formatter.

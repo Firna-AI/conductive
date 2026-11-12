@@ -102,7 +102,7 @@ export const privacyDocument: LegalDocument = {
           stopped. When ${productName} passes on model requests and their
           answers, it keeps no copy of them.`,
         paragraph`A connected agent login stays until you remove or replace
-          it. Panel widths stay in your browser until you clear its saved
+          it. Panel sizes stay in your browser until you clear its saved
           data. The providers above can keep their own records under their
           terms and privacy notices.`,
         paragraph`The team keeps each feedback email in its inbox while it
