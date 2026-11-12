@@ -10,7 +10,8 @@ screens show.
 - The org list reads `suspension` of each org summary. The app keeps the
   summary as the server sends it.
 - A request of an org that the API refuses with `org_suspended` also marks
-  the org. `AppModel.refusedOrgs` holds the IDs of such orgs. A refusal
+  the org. `AppModel.refusedOrgs` holds the IDs of such orgs, from
+  `OrgSuspensions` in `org-suspensions.ts`. A refusal
   gives no time of the suspension, so it changes no summary. So a page with
   an old org list shows the suspended org at once.
 - The client of `OrgModel` reports each such refusal. `noteOrgRefusals` in

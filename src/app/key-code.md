@@ -57,6 +57,10 @@ Each path is relative to `src/app/`, the folder of this page.
 - `org-list.ts`: `OrgList`, the orgs of the person in their own order, as
   `AppModel.orgs` gives them: the list that the server confirmed, then the
   moves that wait for their answer.
+- `org-suspensions.ts`: `OrgSuspensions`, which `AppModel` keeps. It gives
+  whether each org is suspended, from its summary or from an
+  `org_suspended` refusal of the API, as
+  [A suspended org](suspended-org.md#what-the-app-knows) says.
 - `waitlist-model.ts`: `WaitlistModel`, the screen of a person who waits:
   the use of a code from the field or a join link, the invitations with
   Accept, and the read of the app access at each return to the page.
