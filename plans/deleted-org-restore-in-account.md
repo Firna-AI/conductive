@@ -62,9 +62,22 @@ Each call below is my call, made on 12 November 2026. The user said
   deleted orgs as a user with no org. So `/` opens Get started, and its
   Create org step is not complete. Reason: the rail then shows no org,
   and Get started is the page for a user without one.
+  The review of 12 November 2026 found that a phone shows no way from
+  Get started to the Account page. So this call waits for the user, as
+  the open decision below says.
 - **Command palette:** the Account group of the palette Settings tab gets
   no row for Deleted orgs. Reason: the section shows only sometimes, and
   the palette already treats a deleted org as absent.
+
+## Open decision
+
+- **Restore from Get started on a phone.** A person whose orgs are all
+  deleted lands on Get started, which has no link to the Account page on
+  a phone. The options are: A, open the page of a deleted org as before;
+  B, a link to the Account page on the phone layout of Get started; C,
+  the Deleted orgs list with Restore on Get started. The recommendation
+  is C. `plans/follow-ups/deleted-org-completes-get-started.md` holds the
+  full item.
 
 Contract owners:
 
@@ -145,19 +158,24 @@ Depends on: 3
 - [x] Add DOM tests: the section hides without a deleted org, Restore
       works, a failed Restore shows its error, and a suspended org shows
       no Restore.
-- [ ] Check the section in a browser, desktop and phone.
+- [x] Check the section in a browser, desktop and phone.
 
 ## Milestone 5: Verification, commit, review, and pull request
 
 Depends on: every other milestone
 
-- [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
-- [ ] Commit with Conventional Commits and push the branch.
+- [x] Run the targeted tests and the complete gate named in `AGENTS.md`.
+      The gate failed 18 Worker tests that fail only in this checkout
+      folder. `plans/follow-ups/worker-tests-fail-under-home-folder.md`
+      gives the cause.
+- [x] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
       once, and report.
+- [ ] Apply the answer of the open decision: the mockups, the protocol
+      line, the code, and the tests.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the

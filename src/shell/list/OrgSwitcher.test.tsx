@@ -2,16 +2,26 @@
 
 import { act } from 'react'
 import { describe, expect, test } from 'vitest'
+import type { AppModel } from '../../app/app-model'
+import { routes } from '../../app/router'
 import { FakeApiServer } from '../../test-support/fake-api'
+import { FAKE_TIME } from '../../test-support/fixtures/core'
 import { serveOperator } from '../../test-support/operator'
 import { PhoneFrame } from '../layout/frames'
 import { click, mountScreen, press } from '../test-mount'
 import { startedApp } from '../test-render'
 import { ListHeader } from './HomeList'
 
-/** Opens the org switcher of Acme on a phone, and gives its sheet. */
-async function openSwitcher(server: FakeApiServer): Promise<HTMLElement> {
+/**
+ * Opens the org switcher of Acme on a phone, and gives its sheet. `prepare`
+ * changes the app before the switcher mounts.
+ */
+async function openSwitcher(
+  server: FakeApiServer,
+  prepare: (app: AppModel) => void = () => undefined,
+): Promise<HTMLElement> {
   const app = await startedApp(server)
+  prepare(app)
   const boot = app.boot.get()
   const [org] = app.orgs.get()
   if (boot.state !== 'ready' || !org) throw new Error('The app did not start.')
@@ -52,6 +62,21 @@ describe('the org switcher of a phone', () => {
       link.getAttribute('href'),
     )
     expect(links.slice(-2)).toEqual(row.last)
+  })
+
+  test('leaves out a deleted org, which the Account page lists', async () => {
+    const sheet = await openSwitcher(new FakeApiServer(), (app) => {
+      const futex = app.orgs.get().find((item) => item.id === 'futex')
+      if (!futex) throw new Error('The app has no Futex.')
+      app.putOrg({
+        ...futex,
+        deletion: { deletedAt: FAKE_TIME, deletesAt: FAKE_TIME + 1 },
+      })
+    })
+    const links = Array.from(sheet.querySelectorAll('a'), (link) =>
+      link.getAttribute('href'),
+    )
+    expect(links.slice(0, 2)).toEqual([routes.org('acme'), routes.org('firna')])
   })
 
   test('keeps Tab and Shift+Tab inside, also from the sheet itself, and gives the focus back to its trigger, also after a press outside', async () => {

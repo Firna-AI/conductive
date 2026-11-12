@@ -148,7 +148,8 @@ Only an admin can delete the org.
 5. Select **Delete org**.
 
 Conductive stops its cloud computers and hides the org from members at once.
-The org leaves the org list, and Conductive opens your next org.
+The org leaves the org list.
+Conductive opens your next org, or **Get started** when you have no other org.
 Admins can restore it for seven days before deletion completes.
 
 To restore a deleted org:

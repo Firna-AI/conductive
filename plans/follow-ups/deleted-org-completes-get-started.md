@@ -1,24 +1,30 @@
-# Get started shows load failures for a deleted org
+# Get started for a person whose orgs are all deleted
 
-- **Severity:** Low. **Likelihood:** Rare. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-08, a new problem of the options check of `plans/follow-ups/get-started-returning-member.md`. Its report is in `.context/options-check/report.md`.
-- **Location:** `setupOrg` in `src/app/setup-steps.ts`, the finish in `src/shell/onboarding/GetStartedScreen.tsx` (`Finish`), and the cloud computer line of the org step at `src/shell/onboarding/OrgStep.tsx:69-72`.
-- **Reason:** no requirement says whether a deleted org completes the org step of Get started.
+- **Location:** `setupOrg` in `src/app/setup-steps.ts`, `OpenApp` in `src/shell/Shell.tsx`, the end of Delete org in `src/shell/settings/GeneralTab.tsx`, `GetStartedScreen` in `src/shell/onboarding/GetStartedScreen.tsx`, and the Delete org section of `docs/protocol/orgs-and-members.md`.
+- **Reason:** no requirement says how a person whose orgs are all deleted reaches Restore from Get started on a phone.
 
 - **Terms:**
-  - **Get started:** the first-run page with three steps: install the GitHub App, create an org, and connect Claude or Codex.
+  - **Get started:** the first-run page with three steps: install the GitHub App, create an org, and connect Claude or Codex. It is also the page of a person with no org.
   - **Deleted org:** an org that an admin deleted. An admin can restore it for 7 days.
-- **Background:** Get started follows the org list, also a deleted org, so that the admin of a deleted org keeps its Restore page (finding 12 of PR #52). The org step also shows the cloud computer of the org, and the finish takes its words from the builds of the org: ready, still being prepared, did not build, or needs a build. The Worker refuses each read of a deleted org with HTTP 404 and "The org is not available.".
-- **Problem:** For an admin whose only org is deleted, the org step shows done, with two load failures: "The repositories didn't load" and "The cloud computer didn't load", each with Try again that cannot succeed. After the agent connects, the finish shows the Open button of the deleted org with no words, because the builds never load.
-- **Impact if no action:** The admin sees two failures that Try again cannot clear, and no words that say that the org is deleted. The link leads to the Restore page, so nothing breaks.
-- **Root question:** What does Get started show to a person whose only org is deleted?
+  - **Deleted orgs section:** the last section of the General tab of the Account page. It lists each deleted org with Restore.
+- **Background:**
+  - On 12 November 2026 the user asked that deleted orgs leave the org rail, and that Restore moves to the Account page. Branch `calummoore/porto-a8k1` made that change.
+  - That branch also counts a person whose orgs are all deleted as a person with no org. So the address `/` and the end of Delete org of the last org open Get started, and its org step offers Create org again. This was a design call of the agent, not of the user.
+  - Before that branch, Get started counted a deleted org as an org. The org step showed done, with two load failures that Try again could not clear, and the address `/` opened the page of the deleted org with Restore.
+  - On a desktop, Get started shows the org rail, which links to the Account page. On a phone, and in a narrow window of the Mac app, Get started shows only a header and the steps. It has no link to the Account page, no org sheet, and no button that opens the palette.
+  - The address of a deleted org still opens its page with Restore.
+- **Problem:** An admin on a phone whose orgs are all deleted lands on Get started. That page has no way to the Account page, so it has no way to Restore. Only Back, or a typed address such as `/account`, leads there.
+- **Impact if no action:** A phone-only admin may not find Restore during the 7 days. Then everything of the org is deleted.
+- **Root question:** How does a person whose orgs are all deleted reach Restore on every layout?
 - **Options:**
-  - **A.** Keep the org step done, and give a deleted org its own org step and finish text that name the deleted state, show no load failures, and link to Restore. Effort: Small.
-  - **B.** Count a deleted org as no org. The org step opens Create an org, and Restore stays on the page of the org. Effort: Small.
-- **Left out:** No change, because the page then keeps two failures that cannot clear.
-- **Wider fix:** None. The rule of `plans/follow-ups/get-started-returning-member.md` keeps the words of the page true.
-- **Previous examples:** finding 12 of PR #52.
-- **Recommendation:** A. It keeps the Restore path that finding 12 chose, and the words become true.
-- **Updated:** 2026-11-09, by the plan `plans/automatic-first-build.md`, branch `calummoore/box-auto-build-onboarding`: the org step now shows the cloud computer, and the finish takes its words from the builds, so a deleted org shows load failures in place of the word "ready".
-- **Action:** ask the user later, because the user deferred this choice on 8 November 2026. No requirement says what Get started shows for a deleted org.
+  - **A.** When every org of the person is deleted, let `/` and the end of Delete org open the page of a deleted org, as before the branch. Keep deleted orgs out of the rail, the phone sheet, and the keys. That page has Restore, and its phone header leads to Create org and Account. A person who wants a new org sees the deleted page first. Get started keeps its two load failures for that person. Effort: Small.
+  - **B.** Give the phone layout of Get started a link to the Account page, as the rail gives on a desktop. This needs a phone mockup of Get started. Effort: Medium.
+  - **C.** Show the Deleted orgs list with Restore on Get started, above the org step, while the person has a deleted org. Reuse `DeletedOrgList` of the mockups. This needs a mockup and a protocol line. Effort: Medium.
+- **Left out:** No change, because a new session or the Mac app has no Back history to the page of the deleted org.
+- **Wider fix:** B. It gives every first-run case on a phone a way to the Account page.
+- **Previous examples:** finding 12 of PR #52 kept the Restore page reachable from Get started.
+- **Recommendation:** C. Restore then shows on the page where the person lands, on every layout, and the org step stays true.
+- **Action:** ask the user, because the options have real trade-offs. A puts a deleted page in front of a person who may want a new org, and B and C add new screens that need a mockup.
