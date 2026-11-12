@@ -186,7 +186,9 @@ the ordered stream of the workspace.
   [The actions of the bar](../../github/actions.md) says. It reads the
   member's own GitHub access, the local work of the kept files, and the
   turns of each session of the kept chat. A new branch of the workspace
-  makes a new action state.
+  makes a new action state. The org model keeps the last access for each
+  repository, so the bar of another workspace of the repository offers
+  its actions at once.
 - A GitHub state of another branch than the workspace's, such as the merged
   state just after Continue, shows as loading. The store then reads the
   state of the branch once.

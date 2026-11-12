@@ -89,8 +89,9 @@ export function chatRequests(server: FakeApiServer, from: number): string[] {
 
 /**
  * The reads of a return to a kept workspace, in path order: the terminal and
- * the GitHub bar read their state again, as at each show, the bar reads the
- * member's own GitHub access, and the model reads the workspace. The chat
+ * the GitHub bar read their state again, as at each show, the bar first
+ * shows the state that the Worker stored, the bar reads the member's own
+ * GitHub access, and the model reads the workspace. The chat
  * and the files read nothing again. The parts read on their own, so the
  * order in which they read is not fixed.
  */
@@ -98,6 +99,7 @@ export const returnReads = [
   `GET ${terminalPaths.connection(org, id)}`,
   `GET ${githubPaths.banner(org, id)}`,
   `GET ${githubPaths.checks(org, id)}`,
+  `GET ${githubPaths.stored(org, id)}`,
   `GET ${githubPaths.capabilities(org, id)}`,
   `GET ${workspacePath(org, id)}`,
 ].sort()
