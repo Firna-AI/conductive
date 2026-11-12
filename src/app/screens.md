@@ -51,6 +51,13 @@ the Help row of the command palette opens.
   chooses at least one, also while the list is empty or did not load.
 - The rail, the org switcher, and General show the saved initials of an
   org. An org without them shows the initials of its name.
+- The rail and the org switcher show the orgs in the person's own order.
+  The person moves an org tile by drag, by its tile menu with Move up and
+  Move down, or by Alt and Up or Down on a focused tile. On a phone, a
+  long press lifts an org in the org switcher. A move shows at once, and a
+  failed save takes back only that move, with a toast. A suspended or
+  deleted org moves like any other, as
+  [Org rail order](../../docs/protocol/org-rail-order.md) says.
 - A suspended org shows its notice, and no action that it refuses, as
   [A suspended org](suspended-org.md) says.
 - Only an operator gets the operator section, from the rail and the org
@@ -166,6 +173,10 @@ the Help row of the command palette opens.
   with no section, as the row does, so General keeps one draft. A create that the server accepts opens the new workspace, also
   when the dialog closed while the create ran. A failed create request
   keeps the dialog open with Try again.
+- The section of a draft is its key, and a pick of the Section menu of
+  the dialog (`NewWorkspaceModel.setSection`) wins over it. The pick stays
+  in the draft of the key, so the page of that key names the picked
+  section too. A send ends the pick.
 - The message field of the dialog takes the focus as the dialog opens.
   When the dialog closes and the address stays, the focus goes back to
   the control that opened it. When the address changes, such as after

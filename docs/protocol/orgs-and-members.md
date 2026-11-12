@@ -2,10 +2,10 @@
 
 This doc holds the requirements and the decisions in force for orgs, their
 sections, and their members. It also covers the first run and the end of
-an org. The terms are those of the
-[architecture doc](../architecture.md#terms). A decision number names a
-dated record, as [Decision numbers](../architecture.md#decision-numbers)
-says.
+an org. A linked page covers [the order of the org rail](org-rail-order.md).
+The terms are those of the [architecture doc](../architecture.md#terms). A
+decision number names a dated record, as
+[Decision numbers](../architecture.md#decision-numbers) says.
 
 ## Orgs
 
@@ -59,6 +59,12 @@ says.
   [open sign-up](sign-ups.md#open-sign-up), a new account waits for app
   access, as [Waitlist](waitlist.md) says (decision 230).
 
+## Org rail order
+
+- [Org rail order](org-rail-order.md) holds the requirements of the order
+  of the orgs in the rail that each person keeps: the drag, the tile menu,
+  the keys, and the long press on a phone.
+
 ## Get started
 
 - Get started is the only first run.
@@ -111,7 +117,8 @@ says.
   New section, and Delete section, in that order.
 - New workspace at the top of the list puts the workspace in General, the
   default section. New workspace in the menu of a section puts it in that
-  section.
+  section. The New workspace dialog can pick another section, as
+  [The dialog](create-a-workspace.md#the-dialog) says.
 - A workspace moves to another section by drag and drop. On a phone, a
   long press lifts the row.
 - A focused row also moves by keys.

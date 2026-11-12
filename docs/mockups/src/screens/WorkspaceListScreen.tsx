@@ -31,6 +31,7 @@ import {
   listSheet,
   newOrgs,
 } from './listStates'
+import { orderRail, orgOrderStates } from './orgOrderStates'
 import {
   isWorkspaceMenuState,
   workspaceMenuStates,
@@ -84,6 +85,12 @@ export const workspaceListSchema = {
     },
     /** The command palette, closed or open on one of its views. */
     palette: { enum: paletteViews },
+    /**
+     * The reorder of the orgs in the rail, and in the org switcher of a
+     * phone, as `orgOrderStates` says. Without it, the orgs keep their
+     * saved order.
+     */
+    orgOrder: { enum: orgOrderStates },
   },
 } as const
 
@@ -152,7 +159,7 @@ function MobileList(props: { state: WorkspaceListState; overlay?: ReactNode }) {
           suspended
           viewer={view?.viewer ?? viewer}
         />
-        {menu === 'orgs' ? listSheet(menu) : null}
+        {menu === 'orgs' ? listSheet(menu, props.state.orgOrder) : null}
       </MobileFrame>
     )
   }
@@ -173,7 +180,8 @@ function MobileList(props: { state: WorkspaceListState; overlay?: ReactNode }) {
         sections={sections}
         viewer={view?.viewer ?? viewer}
       />
-      {props.overlay ?? (view ? view.over : listSheet(menu))}
+      {props.overlay ??
+        (view ? view.over : listSheet(menu, props.state.orgOrder))}
     </MobileFrame>
   )
 }
@@ -191,7 +199,7 @@ export function WorkspaceListScreen(props: {
   viewport: Viewport
   overlay?: ReactNode
 }) {
-  const { list, menu, palette } = props.state
+  const { list, menu, palette, orgOrder } = props.state
   if (props.viewport === 'mobile') {
     return <MobileList overlay={props.overlay} state={props.state} />
   }
@@ -200,6 +208,7 @@ export function WorkspaceListScreen(props: {
     return (
       <SuspendedList
         focus={view?.focus}
+        rail={orderRail(orgOrder)}
         sections={view?.sections}
         viewer={view?.viewer ?? viewer}
       />
@@ -252,7 +261,7 @@ export function WorkspaceListScreen(props: {
       overlay={
         props.overlay ?? listPalette(palette, props.viewport) ?? view?.over
       }
-      rail={view?.rail ?? listRail(menu)}
+      rail={view?.rail ?? listRail(menu, orgOrder)}
       sidebar={<Sidebar {...listed} />}
     >
       <div className={`${responsive.wideOnly} ${styles.choose}`}>

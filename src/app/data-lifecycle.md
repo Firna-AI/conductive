@@ -35,6 +35,12 @@ of the data that the screens read and write.
   the value that shows. A part can name the errors that prove that its
   value no longer exists, as the routine page does for `routine_not_found`.
   Such a read shows its error also over the value.
+- The org list reads only at the first load of the app. `OrgList` keeps the
+  list that the server confirmed, with the answers of create, rename,
+  delete, restore, accept, and leave, and over it the moves that wait for
+  their answer, in the order that they went out. A failed move goes back
+  alone. A saved move joins the confirmed list once each earlier move has
+  its answer, so a later new org goes after it, as on the server.
 - The routine page reads its routine when it mounts and at each return to
   the page. Each field that the owner did not change takes the field of the
   newer routine, and an edited field keeps its edit. A save sends only the

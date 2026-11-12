@@ -87,6 +87,14 @@ The Desktop workflow and the release workflow run the same Mac checks.
 `desktop/scripts/publish.ts` checks the files and publishes the draft.
 It takes the file names from `latest-mac.yml` and from the signed files, so it holds no copy of the package naming rule.
 `desktop/scripts/verify-release-tag.ts` checks the release tag.
+
+The Linux release jobs run on the GitHub-hosted `ubuntu-24.04` runner.
+The signing job and the Apple silicon Mac checks run on the [Blacksmith](https://docs.blacksmith.sh/blacksmith-runners/overview) runner `blacksmith-6vcpu-macos-15`.
+Blacksmith has no Intel Macs, so the Intel Mac checks use the GitHub-hosted `macos-15-intel` runner.
+The Blacksmith GitHub App must have access to this repository.
+Without it, the Blacksmith jobs wait in the queue and never start.
+To change the size of a Mac runner, change the `blacksmith-` label in the workflow file.
+
 A release happens in these steps:
 
 1. On each push to `main`, release-please keeps one release pull request up to date.

@@ -109,7 +109,11 @@ export class GitHubTestHarness {
     return handleGitHubRead(
       new Request(`${TEST_ORIGIN}${path}`, { ...init, headers }),
       this.env,
-      { now: () => TEST_TIME, refresh: this.refresh },
+      {
+        now: () => TEST_TIME,
+        refresh: this.refresh,
+        stored: (workspace) => this.memory(workspace.id).state.stored(),
+      },
     )
   }
 

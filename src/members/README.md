@@ -97,6 +97,8 @@ with the message of the API.
   to the viewer, so it can load the workspace list again.
 - On desktop, a menu opens as a popover in the top layer of the page. So a
   box with `overflow: hidden` around its button does not cut the menu. The
+  popover is `PopoverSurface` in `src/shell/ui/`, which the shell menus use
+  too. The
   menu opens below its button when it fits. Otherwise it opens on the side
   with more room, and it gets shorter to fit. It follows its button when the
   page scrolls or the window changes size. In a long menu, only the choices

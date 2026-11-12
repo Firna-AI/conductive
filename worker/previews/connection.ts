@@ -41,7 +41,8 @@ function batchReader(body: ReadableStream<Uint8Array>): BodyReader {
 /** One connection owns fetch cancellation and every streaming body in both directions. */
 export class PreviewConnection {
   private readonly abort = new AbortController()
-  private readonly authorize: () => Promise<void>
+  /** Checks the viewer's access for this connection, as each request and each data batch must. */
+  readonly authorize: () => Promise<void>
   private readonly release: () => void
   private readonly cancellation = new Set<() => void>()
   private parts = 1
@@ -51,6 +52,10 @@ export class PreviewConnection {
   constructor(authorize: () => Promise<void>, release: () => void) {
     this.authorize = authorize
     this.release = release
+  }
+
+  get isClosed(): boolean {
+    return this.closed
   }
 
   get signal(): AbortSignal {

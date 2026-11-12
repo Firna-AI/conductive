@@ -9,6 +9,7 @@ import {
 import {
   deleteOrgPath,
   leaveOrgPath,
+  readMoveOrgRequest,
   restoreOrgPath,
 } from '../../src/shared/orgs'
 import type { Workspace } from '../../src/shared/workspaces'
@@ -21,7 +22,7 @@ import { cancelOrgInvite, inviteOrgMember } from './invites'
 import type { LifecycleOwnership } from './lifecycle-contract'
 import type { OrgMaintenanceHooks } from './maintenance-contract'
 import { changeMemberRole, listMembers, removeOrgMember } from './membership'
-import { renameOrg, visibleOrgs } from './org-data'
+import { moveOrg, renameOrg, visibleOrgs } from './org-data'
 import { reassignWorkspace } from './ownership'
 import { requireOrgAdmin, requireOrgMember } from './permissions'
 import { restoreOrg } from './restore'
@@ -61,6 +62,14 @@ export async function membersRoute(
   const body = context.body
   if (path === API_PATHS.orgs && request.method === 'GET') {
     return Response.json({ orgs: await visibleOrgs(db, actorId) })
+  }
+  if (path === API_PATHS.orgOrder && request.method === 'PUT') {
+    const move = readMoveOrgRequest(body)
+    if (!move)
+      throw new HttpError(400, 'invalid_input', 'Complete the required fields.')
+    if (!(await moveOrg(db, actorId, move)))
+      throw new HttpError(404, 'org_not_found', 'The org is not available.')
+    return new Response(null, { status: 204 })
   }
   if (!context.org) return null
   const orgId = context.org.id

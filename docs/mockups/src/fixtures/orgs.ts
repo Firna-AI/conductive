@@ -50,6 +50,12 @@ export const orgList: readonly Org[] = [orgs.acme, orgs.futex, orgs.firna]
 /** The orgs of the user after Create org made Acme Labs. */
 export const orgListWithLabs: readonly Org[] = [...orgList, orgs.labs]
 
+/**
+ * The orgs of the user after Cal moved Firna to the top of the rail, as
+ * `app/orgs/reorder/moved` shows. Each person keeps their own order.
+ */
+export const movedOrgList: readonly Org[] = [orgs.firna, orgs.acme, orgs.futex]
+
 /** The person signed in to the app, who signs in with GitHub only. */
 export const account = {
   name: 'Cal',

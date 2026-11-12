@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { Fragment } from 'react'
 import { Gauge, Plus } from 'lucide-react'
 import type { Person } from '../../fixtures/members'
 import { account, orgList, type Org, type OrgKey } from '../../fixtures/orgs'
@@ -6,14 +6,14 @@ import { shownShortcut } from '../../fixtures/shortcutChanges'
 import { orgCommand } from '../../fixtures/shortcutCommands'
 import { pageHost, type ShortcutHost } from '../../fixtures/shortcutHosts'
 import { paths } from '../../paths'
-import { KeyChips, type Shortcut } from '../common/KeyChips'
-import { ScreenLink } from '../common/ScreenLink'
-import a11y from '../common/a11y.module.css'
+import type { Shortcut } from '../common/KeyChips'
 import { classes } from '../common/classes'
 import { LogoTile } from '../brand/Logo'
 import { useMacApp } from '../mac/MacApp'
-import { orgLinks } from '../orgs/orgLinks'
-import { OrgTile, PersonAvatar } from '../orgs/OrgTile'
+import { OrgDrop, placeAfterDrop, type OrgDrag } from '../orgs/OrgDrop'
+import { tileMenuOf } from '../orgs/orgTileMenu'
+import { PersonAvatar } from '../orgs/OrgTile'
+import { OrgItem, RailLink, RailTile, type OrgState } from './RailItems'
 import styles from './OrgRail.module.css'
 
 export type RailState = {
@@ -42,35 +42,26 @@ export type RailState = {
    * mockups.
    */
   person?: Person
+  /**
+   * An org that the person drags to another place, from decision 515 C.
+   * Its tile stays as a faint copy, a line marks where it lands, and a
+   * raised copy follows the pointer. The rail names no org during a drag.
+   */
+  drag?: OrgDrag
+  /**
+   * The org whose tile menu a right click opened, from decision 515 C. The
+   * menu opens at the pointer, and the tile keeps the fill of a hover.
+   */
+  menu?: OrgKey
 }
 
 /** The rail of the canonical views: every org, with Acme open. */
 export const acmeRail: RailState = { orgs: orgList, current: 'acme' }
 
-function RailLink(props: {
-  label: string
-  to: string
-  current: boolean
-  children: ReactNode
-}) {
-  return (
-    <ScreenLink
-      aria-current={props.current ? 'page' : undefined}
-      aria-label={props.label}
-      className={classes(styles.link, props.current && styles.current)}
-      title={props.label}
-      to={props.to}
-    >
-      {props.children}
-    </ScreenLink>
-  )
-}
-
-/** The page that an org of the rail opens, and the name of its link. */
-function orgLink(org: Org, suspended: boolean): { to?: string; label: string } {
-  return suspended
-    ? { to: paths.suspendedOrg, label: `${org.name}, suspended` }
-    : { to: orgLinks[org.key], label: org.name }
+/** Whether an org of the rail is deleted or suspended. */
+function orgState(rail: RailState, key: OrgKey): OrgState | undefined {
+  if (rail.suspended === key) return 'suspended'
+  return undefined
 }
 
 /**
@@ -81,43 +72,6 @@ function orgLink(org: Org, suspended: boolean): { to?: string; label: string } {
 function orgShortcut(index: number, host: ShortcutHost): Shortcut | undefined {
   const command = orgCommand(index)
   return command === undefined ? undefined : shownShortcut(command, {}, host)
-}
-
-function OrgItem(props: {
-  org: Org
-  current: boolean
-  hint: boolean
-  /** The key that opens the org, which its hint shows. */
-  shortcut?: Shortcut
-  suspended: boolean
-}) {
-  const { org } = props
-  const { to, label } = orgLink(org, props.suspended)
-  const tile = <OrgTile current={props.current} org={org} size={26} />
-  return (
-    <li className={styles.item}>
-      {to ? (
-        <RailLink current={props.current} label={label} to={to}>
-          {tile}
-        </RailLink>
-      ) : (
-        <span className={styles.link} title={org.name}>
-          {tile}
-          <span className={a11y.hidden}>{org.name}</span>
-        </span>
-      )}
-      {props.hint ? (
-        <span aria-hidden className={styles.hint}>
-          {org.name}
-          {props.shortcut ? (
-            <span className={styles.hintKey}>
-              <KeyChips shortcut={props.shortcut} />
-            </span>
-          ) : null}
-        </span>
-      ) : null}
-    </li>
-  )
 }
 
 /** The link of an operator to the operator page, above the account. */
@@ -137,30 +91,59 @@ function OperatorItem(props: { current: boolean; hint: boolean }) {
 }
 
 /**
- * The narrow rail beside the sidebar: the logo, the orgs of the user, a
- * way to create another, and the account at the bottom. A deleted org
- * is not in the rail: the Account page lists it with Restore. An operator also
- * gets Operator above the account. The hint of an org shows the key of its
- * place, counted from the top, on the keyboard of the page.
+ * The narrow rail beside the sidebar: the logo, the orgs of the user in
+ * their own order, a way to create another, and the account at the bottom.
+ * Deleted orgs appear in Account settings with Restore.
+ * An operator also gets Operator above the account. Each org tile moves by
+ * drag or by its menu. Create org, Operator, and the account stay.
+ * The hint of an org shows the key of its place, counted from the top,
+ * on the keyboard of the page.
  */
 export function OrgRail(props: RailState) {
   const host = pageHost(useMacApp() !== undefined)
+  const { orgs, drag } = props
+  const from = orgs.findIndex((org) => org.key === drag?.org)
+  const dragged = orgs[from]
+  const dropAt = (index: number) =>
+    dragged && drag?.index === index ? (
+      <OrgDrop
+        at="rail"
+        count={orgs.length}
+        name={dragged.name}
+        place={placeAfterDrop(from, index)}
+      >
+        <RailTile
+          current={props.current === dragged.key}
+          org={dragged}
+          state={orgState(props, dragged.key)}
+        />
+      </OrgDrop>
+    ) : null
   return (
     <nav aria-label="Orgs" className={styles.rail}>
       <span className={styles.mark}>
         <LogoTile size={24} />
       </span>
       <ul className={styles.orgs}>
-        {props.orgs.map((org, index) => (
-          <OrgItem
-            current={props.current === org.key}
-            hint={props.hint === org.key}
-            key={org.key}
-            org={org}
-            shortcut={orgShortcut(index, host)}
-            suspended={props.suspended === org.key}
-          />
+        {orgs.map((org, index) => (
+          <Fragment key={org.key}>
+            {dropAt(index)}
+            <OrgItem
+              current={props.current === org.key}
+              hint={props.hint === org.key}
+              menu={
+                props.menu === org.key
+                  ? tileMenuOf(index, orgs.length)
+                  : undefined
+              }
+              org={org}
+              shortcut={orgShortcut(index, host)}
+              placeholder={org === dragged}
+              state={orgState(props, org.key)}
+            />
+          </Fragment>
         ))}
+        {dropAt(orgs.length)}
         <li className={styles.item}>
           <RailLink
             current={props.current === 'create'}
