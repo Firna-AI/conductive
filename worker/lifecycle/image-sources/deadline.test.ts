@@ -6,7 +6,11 @@ import { createHarness, type TestHarness } from '../../test-support/harness'
 import { advanceImageBuild } from '../image-builds'
 import { readBuild } from '../build-data'
 import { readOrgImage } from '../org-image-data'
-import { WORKSPACE_TOOLS_DIRECTORY } from '../../tools/image'
+import {
+  WORKSPACE_TOOLS_DIRECTORY,
+  workspaceToolsCommands,
+} from '../../tools/image'
+import { WORKSPACE_TOOL_SOURCES } from '../../tools/image-assets'
 import { nativeImageRuntime } from './image-runtime-test-support'
 import { localSourceFixture } from './local-source-test-support'
 import { readSourceJob } from './source-data'
@@ -95,7 +99,12 @@ it('returns each alarm while native Git runs and renews the builder before allow
       complete = await advance()
     }
     expect(complete).toBe(true)
-    expect(order).toEqual(['tools', 'software', 'install', 'cleanup'])
+    expect(order).toEqual([
+      ...workspaceToolsCommands(WORKSPACE_TOOL_SOURCES).map(() => 'tools'),
+      'software',
+      'install',
+      'cleanup',
+    ])
     expect(
       (await readBuild(fixture.env.DB, fixture.org.id, fixture.input.buildId))
         .build.state,

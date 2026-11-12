@@ -7,6 +7,8 @@ import { shellQuote } from './commands'
 import { advanceImageBuild, startImageBuild } from './image-builds'
 import { IMAGE_NODE_RUNTIME } from './image-runtime'
 import { lifecycleCommandBody } from './command-test-support'
+import { workspaceToolsCommands } from '../tools/image'
+import { WORKSPACE_TOOL_SOURCES } from '../tools/image-assets'
 
 const backendFixture = setupBackendTests()
 
@@ -28,14 +30,13 @@ it('runs terminal installation inside the detached software command and streams 
     phase: 'software',
     processId: 1,
   })
+  const toolCommands = workspaceToolsCommands(WORKSPACE_TOOL_SOURCES).length
   expect(boat.commandRequests).toEqual([
-    {
+    ...Array.from({ length: toolCommands }, () => ({
       sandboxId: 'bx_1',
       detached: false,
-      command: expect.stringContaining(
-        '/opt/conductive/agent-tools/tools/main.ts',
-      ),
-    },
+      command: expect.stringContaining('/opt/conductive/agent-tools/'),
+    })),
     {
       sandboxId: 'bx_1',
       detached: true,
@@ -44,10 +45,14 @@ it('runs terminal installation inside the detached software command and streams 
       ),
     },
   ])
-  expect(lifecycleCommandBody(boat.commands[1])).toContain(
+  expect(boat.commandRequests[0].command).toContain(
+    '/opt/conductive/agent-tools/tools/main.ts',
+  )
+  const software = boat.commands[toolCommands]
+  expect(lifecycleCommandBody(software)).toContain(
     'RuntimeDirectoryPreserve=yes',
   )
-  expect(lifecycleCommandBody(boat.commands[1])).toContain(
+  expect(lifecycleCommandBody(software)).toContain(
     [
       IMAGE_NODE_RUNTIME.url,
       IMAGE_NODE_RUNTIME.sha256,
@@ -56,7 +61,7 @@ it('runs terminal installation inside the detached software command and streams 
       .map(shellQuote)
       .join(' '),
   )
-  expect(lifecycleCommandBody(boat.commands[1])).not.toContain(
+  expect(lifecycleCommandBody(software)).not.toContain(
     'systemctl start conductive-terminal.service',
   )
   expect(boat.fileReads).toEqual([])
