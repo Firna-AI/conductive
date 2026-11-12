@@ -68,8 +68,18 @@ are in `.context/rust-sandbox-software/notes.md`.
   November 2026: B. A separate Rust CI job, which the `Protect main`
   ruleset requires. Rejected: Rust checks inside `npm run check`, and a
   job that is not required.
-- **8. Where the shared message types come from.** Open. See
-  [Open decision 8](#open-decision-8-where-the-shared-message-types-come-from).
+- **8. Where the shared message types come from.** Chosen by the user
+  on 12 November 2026: B. Rust owns the runner, helper, and workspace
+  tool messages now, and `ts-rs` writes their TypeScript. Rejected: A,
+  C, D, E, and F, as
+  [Decision 8](#decision-8-where-the-shared-message-types-come-from)
+  gives. The options check recommended D. This choice changes the design
+  call of the backend move plan that keeps `src/shared/` until the
+  switch, for these messages.
+- **9. Where the removal of protocol version 1 ships.** Chosen by the user
+  on 12 November 2026: A. A separate workspace runs it, with its own plan
+  and pull request, on branch `calummoore/oslo-o65g`. Milestone 5 waits for that pull request to merge, so
+  that Rust models no version 1 message.
 
 ## Design calls
 
@@ -133,7 +143,7 @@ each one.
 - The first-start measurement tools of `runner/scripts/` stay Node tools.
   They move into the helper package.
 
-## Open decision 8: where the shared message types come from
+## Decision 8: where the shared message types come from
 
 ### 8. Shared message types for the Rust runner
 
@@ -161,6 +171,7 @@ each one.
 - **Related:** Decision 3.
 - **Recommendation:** D. It keeps the Worker as the source until the backend switch, and its examples catch a field that the Worker's readers drop. The first recommendation was B. If the user wants Rust to own the types now, add the examples of D to E.
 - **Action:** ask the user, because the options have real trade-offs, and B and E conflict with the design call of the backend move plan.
+- **Chosen:** B, by the user on 12 November 2026.
 
 Contract owners:
 
@@ -177,7 +188,7 @@ Replaced ways:
 - The Node workspace CLI and MCP server in `tools/` → the `conductive` workspace tool commands and `conductive mcp`. Consumers: `worker/tools/image.ts`, `worker/tools/image-assets.ts`, `tools/image-manifest.ts`, `runner/agent-tools.md`, and `tools/README.md`. Moved and deleted in Milestone 6.
 - The Node git credential helper in `image/git-credential-helper.*` and the Node preview relay in `runner/src/relay/` → `conductive git-credential` and `conductive relay`. Consumers: `image/install.sh`, the relay units, and `worker/lifecycle/continue-commands.ts`. Moved and deleted in Milestone 7.
 - The runner archive of each deploy, its two Worker variables, and `image/install.sh` → the release files in R2 and `conductive update`. Consumers: `worker/configuration.ts`, `worker/lifecycle/image-software.ts`, `worker/software-image/version.ts`, `.github/workflows/deploy.yml`, and `docs/deployment/runner-archive.md`. Moved in Milestones 3 and 4. Deleted in Milestone 11.
-- Only when decision 8 chooses B, E, or F: the hand-written runner and tool message types in `src/shared/` → the chosen source. The consumers are their importers in `worker/`, `src/`, and `desktop/`. Moved in Milestone 5. With A, C, or D, no way is replaced, because `src/shared/` stays the source.
+- The hand-written runner, chat event, and workspace tool message types in `src/shared/` → the types that `ts-rs` writes from the `cnd-runner-interface` crate into `src/shared/generated/`. Consumers: their importers in `worker/`, `src/`, `desktop/`, `runner/`, and `tools/`, about 520 files outside `runner/` and `tools/`. The runner and chat event types move in Milestone 5, and the tool types in Milestone 6.
 
 ## Milestone 1: Documentation and protocol
 
@@ -233,17 +244,23 @@ Depends on: 3
 - [ ] Test the update logic with mocks of the `cli-updater` traits and of the disk, as the `rust` skill says.
 - [ ] Run the live check in a real sandbox: an existing workspace gets the program at its next start, downloads a newer release, and applies it at the next restart. Save the evidence under `.context/rust-sandbox-software/`.
 
-## Milestone 5: Shared message types
+## Milestone 5: Rust-owned runner and chat event types
 
-Depends on: 2, and the answer to decision 8
+Depends on: 2, and the merged removal of runner protocol version 1
 
-- [ ] Apply the option that decision 8 chooses for the runner, helper, and workspace tool messages.
+- [ ] Add the `cnd-runner-interface` crate. Define the runner handshake, commands, numbered events, and chat events of protocol version 2 in it, with serde attributes that keep the current JSON.
+- [ ] Generate their TypeScript with `ts-rs` into `src/shared/generated/`. Mark each field that serde leaves out as optional in TypeScript, and give each 64-bit number the TypeScript type `number`, so the generated types match the JSON.
+- [ ] Keep the byte limits and other constants in `src/shared/`, because `ts-rs` writes no constants.
+- [ ] Point each importer in `worker/`, `src/`, `desktop/`, and `runner/` at the generated types, and delete the hand-written types. Use no converter.
+- [ ] Add the generator, the regenerate command, the generated folder, and the wire form of 64-bit numbers to `AGENTS.md`, as the `shared-types` skill says.
+- [ ] Ask the user before a check that fails on a diff of the generated files, because it is a new gate.
 - [ ] Update `src/shared/README.md` and `src/shared/runner-contracts.md`.
 
 ## Milestone 6: Workspace tools in Rust
 
 Depends on: 4, 5
 
+- [ ] Define the workspace tool requests and replies in `cnd-runner-interface`, generate their TypeScript, and point the Worker's tool routes at the generated types.
 - [ ] Port the 24 workspace tool calls of `tools/calls.md` to `conductive` commands and to `conductive mcp`, with the same options, replies, errors, and exit codes.
 - [ ] Port the tests of `tools/` to Rust tests with mocked HTTP.
 - [ ] Ship the tools in the release, and remove the separate tools install of `worker/tools/image.ts`.
@@ -264,6 +281,7 @@ Depends on: 4, 5
 
 Depends on: 3, 4, 5
 
+- [ ] Define the helper messages in `cnd-runner-interface`, and generate their TypeScript into the helper package.
 - [ ] Move the Claude and Codex adapters of `runner/src/providers/` into a helper package that speaks JSON lines over stdin and stdout.
 - [ ] Make the Node runner use the helper as a child process, so the helper works before the Rust runner exists.
 - [ ] Ship the helper with its packages and agent programs as one release part.
