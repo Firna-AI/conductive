@@ -2,6 +2,7 @@ import type { AppDependencies, AppEnv } from '../env'
 import { forwardWorkspaceRequest } from '../chat/router'
 import { HttpError } from '../http'
 import { createPreviewHandler } from '../previews/handler'
+import { PreviewTiming, SERVER_TIMING_HEADER } from '../previews/timing'
 import { featureWorkspaceId, isFeatureWorkspacePath } from './paths'
 import { sessionGate } from '../security/gate'
 
@@ -25,16 +26,26 @@ export async function routePreview(
   const url = new URL(request.url)
   if (url.hostname === `authorize.${env.PREVIEW_DOMAIN}`)
     return createPreviewHandler(env, dependencies).proxy(request)
-  const row = await env.DB.prepare(
-    'SELECT workspace_id AS workspaceId FROM preview_hostnames WHERE hostname = ? AND revoked_at IS NULL AND expires_at > ?',
+  const timing = new PreviewTiming()
+  const row = await timing.step('lookup', () =>
+    env.DB.prepare(
+      'SELECT workspace_id AS workspaceId FROM preview_hostnames WHERE hostname = ? AND revoked_at IS NULL AND expires_at > ?',
+    )
+      .bind(url.hostname, dependencies.now())
+      .first<{ workspaceId: string }>(),
   )
-    .bind(url.hostname, dependencies.now())
-    .first<{ workspaceId: string }>()
   if (!row)
     throw new HttpError(
       404,
       'preview_not_found',
       'The preview is not available.',
     )
-  return forwardWorkspaceRequest(request, env, row.workspaceId)
+  const response = await timing.step('workspace', () =>
+    forwardWorkspaceRequest(request, env, row.workspaceId),
+  )
+  // The workspace object times only a reply that passed every check. Keep that rule here.
+  const steps = response.headers.get(SERVER_TIMING_HEADER)
+  if (steps)
+    response.headers.set(SERVER_TIMING_HEADER, `${timing.header()}, ${steps}`)
+  return response
 }
