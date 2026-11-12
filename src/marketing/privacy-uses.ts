@@ -143,7 +143,8 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         and the output. A request also names the Mac that gets it.
         The result says how the command ended. They let you and the
         agent follow the command. Always-allowed commands and 15-minute
-        permissions stay only on your Mac.`,
+        permissions, including the end time set by Extend, stay only on
+        your Mac.`,
       text`Your code: your repositories and files live in the cloud
         computers that ${productName} runs for your org. ${productName}
         reads a file or a diff when you open it, to show it to you. In a

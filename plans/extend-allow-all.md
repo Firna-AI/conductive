@@ -50,6 +50,61 @@ Answered by the user on 12 November 2026: **B**.
   on a grant that runs by its own clock, never starts one, takes the end
   from its own clock, and ignores a repeated operation ID.
 
+### 2. Which result the bar shows when two stay
+
+Open: waits for the user's answer. The mockups of Milestone 1 raised it on
+12 November 2026.
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Implementation.
+- **Category:** Docs or spec.
+- **Location:** `docs/protocol/desktop-commands.md`, section "Settings
+  results", and `src/chat/device/AllowAllBar.tsx`.
+- **Terms:**
+  - **Grant:** the 15 minutes in which every command from one workspace
+    runs on the Mac without asking.
+  - **Control key:** the key under which the web app keeps the wait and
+    the last result of one control, from `controlOf` in
+    `src/chat/device/settings-results.ts`.
+- **Background:** The bar has one line for a result. A Stop result stays
+  until the next Stop. Extend gets its own control key, so a failed Extend
+  stays until the next Extend while the grant runs. A failed Stop keeps
+  the grant, so the bar keeps Extend.
+- **Problem:** A failed Stop and a failed Extend can both stay. The plan
+  does not say which one the bar shows. The protocol says that a failure
+  stays until the next change of its control.
+- **Impact if no action:** Milestone 4 must guess. Then one failure can
+  leave the bar against the protocol, or the bar grows without a design.
+- **Root question:** How does the user see the result of a Stop and of an
+  Extend when both stay?
+- **Options:**
+  - **A.** The bar shows the result of its last Stop or Extend. A done
+    Extend shows none. A later press hides an older failure, so the
+    protocol rule gets narrower for the bar. Effort: Small.
+  - **B.** The bar shows the later of the results that show. A done Extend
+    shows none, so an older "Not stopped" stays beside a new 15:00. Only a
+    failed Extend hides a failed Stop. The protocol rule gets narrower,
+    but less than in A. Effort: Small.
+  - **C.** The bar shows each result that stays, one line each. The
+    protocol rule stays as it is. The bar grows in a rare case, and the
+    state needs a new mockup milestone. Effort: Medium.
+  - **D.** Stop and Extend share one control key, so the bar has one
+    result, as in A. A waiting Extend then makes Stop busy, against the
+    design call that keeps them apart. Effort: Small.
+- **Left out:** Another place for the Extend result, such as a toast,
+  because a toast goes away and the protocol keeps a failure in view. Hide
+  Extend while a failed Stop shows, because it does not cover a failed
+  Extend that a failed Stop follows.
+- **Wider fix:** None. The gap is one rule of one bar. This Mac lists one
+  result for each command, so it has no such gap.
+- **Previous examples:** None found.
+- **Recommendation:** A. The user saw the older failure before the later
+  press, Stop stays in the bar, and the rule is the simplest to state and
+  to test.
+- **Action:** Ask the user, because A makes the protocol rule narrower
+  for the bar: a failure no longer always stays until the next change of
+  its control. No user decision covers that.
+
 ### Design calls
 
 My calls on 12 November 2026:
@@ -75,6 +130,15 @@ My calls on 12 November 2026:
   busy, and the reverse.
 - Extend goes on the bar only. The This Mac section can get it later.
 
+Calls from the mockups of Milestone 1, on 12 November 2026:
+
+- Extend sits between the time left and Stop. Reason: Stop keeps its
+  place at the end of the bar, so a press where Stop was still stops, and
+  Extend sits beside the time that it changes.
+- Extend shows the `TimerReset` icon of lucide-react, a timer with a reset
+  arrow. Reason: Extend starts the 15 minutes again from now. A plus icon,
+  such as `ClockPlus`, would say that it adds time.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -84,46 +148,50 @@ Depends on: none
 The bar of the 15 minutes in the Mac app mockups gets Extend, and a state
 for an Extend that failed.
 
-- [ ] Add Extend beside Stop in `docs/mockups/src/components/mac/AllowAllBar.tsx`,
+- [x] Add Extend beside Stop in `docs/mockups/src/components/mac/AllowAllBar.tsx`,
       in each state that shows the time left.
-- [ ] Add the state `extend-failed`: the title Not extended, its cause, the
+- [x] Add the state `extend-failed`: the title Not extended, its cause, the
       time left, Stop, and Extend. Add its catalogue entry beside
-      `mac-app/stop`.
-- [ ] Update `docs/mockups/mac-app.md`.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
-- [ ] Update the design and the TODOs of this plan for each problem that
+      `mac-app/stop`. The entry is `mac-app/extend`. Its first screen draws
+      a done Extend at 15:00 left, without result text, and its `failed`
+      state draws `extend-failed`.
+- [x] Update `docs/mockups/mac-app.md`.
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages.
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
 
 ## Milestone 2: Documentation and protocol
 
 Depends on: 1
 
-- [ ] Update `docs/protocol/desktop-commands.md`: the bar shows the time
+- [x] Update `docs/protocol/desktop-commands.md`: the bar shows the time
       left, Stop, and Extend. Extend sets the end to 15 minutes from now,
       only while the grant runs. The page can answer a request that waits,
       and it can stop or extend a running grant. The settings results
       cover Extend.
-- [ ] Read `src/marketing/terms.ts`, the Privacy pages, and the public
+- [ ] State which result the bar shows when a Stop result and an Extend
+      result both stay. Waits for decision 2.
+- [x] Read `src/marketing/terms.ts`, the Privacy pages, and the public
       guides under `src/marketing/docs/` in full. Update each sentence that
       restates the bar or what the user can change. Known lines:
       `terms.ts` near "stop the 15 minutes", `docs/mac-app.md` near
       **Stop**, and `docs/security.md` near "Timed permission".
-- [ ] Check the rows of `src/marketing/from-conductor/` for a listed
+- [x] Check the rows of `src/marketing/from-conductor/` for a listed
       feature that this change ships.
 
 ## Milestone 3: Extend on the Mac and the Worker
 
 Depends on: 2
 
-- [ ] Add `{ action: 'extend-workspace'; workspaceId: string }` to
+- [x] Add `{ action: 'extend-workspace'; workspaceId: string }` to
       `DeviceSettingsAction` in `src/shared/device.ts`.
-- [ ] Accept it in `settingsAction` of `worker/devices/broker-routes.ts`
+- [x] Accept it in `settingsAction` of `worker/devices/broker-routes.ts`
       and in `operation` of `desktop/src/device/messages.ts`.
-- [ ] Add `extendWorkspace` to `desktop/src/device/permissions.ts`, and
+- [x] Add `extendWorkspace` to `desktop/src/device/permissions.ts`, and
       call it from `desktop/src/device/settings.ts`.
-- [ ] Tests: Worker relay, message check, permission store (runs,
+- [x] Tests: Worker relay, message check, permission store (runs,
       ended, failed save, timer moves), and the session path.
-- [ ] Update `worker/devices/README.md` and `desktop/README.md`.
+- [x] Update `worker/devices/README.md` and `desktop/README.md`.
 
 ## Milestone 4: Extend on the bar
 
@@ -133,7 +201,12 @@ Depends on: 1, 3
 
 - [ ] Add Extend to `src/chat/device/AllowAllBar.tsx` as the mockup draws.
 - [ ] Give Extend its own control key and titles in
-      `src/chat/device/settings-results.ts`.
+      `src/chat/device/settings-results.ts`. The titles went in with
+      Milestone 3, so that the typecheck passes. The key waits for
+      decision 2.
+- [ ] Show the results of Stop and Extend on the bar as decision 2 says.
+      Test a Stop result and an Extend result in both orders in
+      `AllowAllBar.dom.test.tsx`. Waits for decision 2.
 - [ ] Support Extend in `src/chat/dev/dev-mac-settings.ts`.
 - [ ] Tests in `AllowAllBar.dom.test.tsx` and `mac-settings.test.ts`.
 - [ ] Update `src/chat/device/README.md`.

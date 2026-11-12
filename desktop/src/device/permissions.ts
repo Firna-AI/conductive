@@ -165,6 +165,29 @@ export function createPermissionStore(dependencies: PermissionDependencies) {
       schedule(window)
     },
     stopWorkspace,
+    extendWorkspace(workspaceId: string): DeviceSettingsOutcome {
+      const now = clock.now()
+      const current = windows.get(workspaceId)
+      if (!current || current.expiresAt <= now)
+        return {
+          status: 'failed',
+          message:
+            'The 15 minutes already ended. Approve a request again to allow all commands.',
+        }
+      const window = { ...current, expiresAt: now + WINDOW_MS }
+      try {
+        save(commands, new Map([...windows, [workspaceId, window]]))
+      } catch {
+        dependencies.warn()
+        return {
+          status: 'failed',
+          message: 'The Mac could not extend the 15 minutes. Try again.',
+        }
+      }
+      timers.get(workspaceId)?.()
+      schedule(window)
+      return { status: 'done' }
+    },
     settings(): DeviceSettings {
       return {
         deviceName: dependencies.deviceName,

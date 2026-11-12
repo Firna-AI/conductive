@@ -54,7 +54,7 @@ export const macCommands = defineScreen({
       slug: 'allow-all',
       title: 'All commands for 15 minutes',
       description:
-        'After Allow all commands for 15 minutes, a bar at the top of the workspace says that every command from it runs on this Mac without asking. It counts down the time left and offers Stop. The command ran, and the chat shows its output.',
+        'After Allow all commands for 15 minutes, a bar at the top of the workspace says that every command from it runs on this Mac without asking. It counts down the time left and offers Extend and Stop. The command ran, and the chat shows its output.',
       rationale:
         'The 15 minutes cover one workspace on this Mac, as decision 62 says. The amber bar keeps the open permission in view.',
       props: { command: 'allow-all' },

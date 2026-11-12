@@ -229,6 +229,8 @@ Mac commands run locally with the Mac user's permissions.
 Only the connected Mac that receives a request can approve it.
 **Always allow** covers the exact command text in any requested folder on that Mac.
 Timed permission covers every command from one workspace for 15 minutes.
+While it runs, the workspace bar in the Mac app shows the time left, **Extend**, and **Stop**.
+**Extend** resets the time left to 15 minutes from now.
 
 Use **Remove** or **Stop** in **This Mac** to change those saved permissions.
 Keep the app open and retry if a permission change takes effect but cannot save.

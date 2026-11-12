@@ -103,6 +103,7 @@ it('relays local settings only to the paired Mac without applying permission rul
         message: 'The workspace permission could not be changed.',
       },
     ],
+    [{ action: 'extend-workspace', workspaceId: WID }, { status: 'done' }],
   ] as const) {
     const pending = fixture.app(
       DEVICE_SETTINGS_PATH,
@@ -136,6 +137,24 @@ it('relays local settings only to the paired Mac without applying permission rul
       outcome,
     })
   }
+})
+
+it('rejects Extend without a workspace ID before relaying it to the Mac', async () => {
+  const mac = await connected(fixture)
+  const response = await fixture.app(
+    DEVICE_SETTINGS_PATH,
+    { ...mac.device, operation: { action: 'extend-workspace' } },
+    fixture.senderToken,
+    true,
+  )
+  expect(response.status).toBe(400)
+  expect(await response.json()).toEqual({
+    error: {
+      code: 'invalid_input',
+      message: 'Complete the Mac request fields.',
+    },
+  })
+  await sendFrame(mac, { type: 'device.ping' })
 })
 
 it('rejects only the oversized settings waiter and keeps commands and other settings operations alive', async () => {

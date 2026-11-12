@@ -153,8 +153,10 @@ export const termsDocument: LegalDocument = {
           command runs in any folder that a later request names.`,
         paragraph`You answer for each command that you allow, and for what
           it does on your Mac and to your data.`,
-        paragraph`You can remove an always-allowed command, or stop the
-          15 minutes, in the Mac app at any time.`,
+        paragraph`You can remove an always-allowed command in the Mac app
+          at any time. While the 15 minutes run, the workspace bar shows
+          the time left, Extend, and Stop. Extend resets the time left to
+          15 minutes from now. Stop ends the 15 minutes.`,
       ],
     },
     {

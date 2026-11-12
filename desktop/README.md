@@ -92,7 +92,13 @@ The connection sends that hostname as display metadata for command requests.
 Remove and Stop revoke permissions in memory even when saving fails.
 The revocation stays in force for the rest of the app run, including reconnects.
 A failed save can restore the old permission after a full app restart.
+Extend sets a running workspace grant's end to the Mac's current time plus 15 minutes.
+It keeps the workspace name and never starts a grant that ended or does not exist.
+The Mac saves the new end before replacing the grant and its timer.
+A failed save keeps the old end and timer and reports failed.
+Extend reports done only after a successful save.
 Settings replies report whether the change was saved.
+Each reply includes the current effective settings.
 A settings reply that is too large fails its own operation and keeps commands connected.
 
 Always allow has a budget of 900,000 UTF-8 bytes for the JSON-encoded list of always-allowed commands.

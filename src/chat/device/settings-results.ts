@@ -102,6 +102,11 @@ const titles = {
     'done-not-saved': 'Stopped, not saved',
     failed: 'Not stopped',
   },
+  'extend-workspace': {
+    done: 'Extended',
+    'done-not-saved': 'Extended, not saved',
+    failed: 'Not extended',
+  },
 } as const satisfies Record<
   SettingsChange['action'],
   Record<DeviceSettingsOutcome['status'], string>

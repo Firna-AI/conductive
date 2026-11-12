@@ -37,7 +37,9 @@ function operation(value: unknown): value is DeviceSettingsAction {
     (value.action === 'read' ||
       (value.action === 'remove-command' &&
         typeof value.command === 'string') ||
-      (value.action === 'stop-workspace' && text(value.workspaceId)))
+      ((value.action === 'stop-workspace' ||
+        value.action === 'extend-workspace') &&
+        text(value.workspaceId)))
   )
 }
 function request(value: unknown): value is DeviceCommandRecord {

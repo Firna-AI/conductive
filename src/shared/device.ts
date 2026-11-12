@@ -141,6 +141,7 @@ export type DeviceSettingsAction =
   | { action: 'read' }
   | { action: 'remove-command'; command: string }
   | { action: 'stop-workspace'; workspaceId: string }
+  | { action: 'extend-workspace'; workspaceId: string }
 export interface DeviceSettingsRequest extends DevicePairing {
   operation: Exclude<DeviceSettingsAction, { action: 'read' }>
 }

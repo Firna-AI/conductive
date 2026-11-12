@@ -8,9 +8,10 @@ export type WindowMode = 'window' | 'full-screen'
 
 /**
  * The result of the last change of the Mac's settings: Remove of the
- * always-allowed `npm run lint`, or Stop of the 15 minutes of the
+ * always-allowed `npm run lint`, or Stop or Extend of the 15 minutes of the
  * workspace. The Mac made and saved it, made it but did not save it, or did
- * not make it.
+ * not make it. Extend is done or failed only, because the Mac saves the new
+ * end before it uses it.
  */
 export type MacChange =
   | 'removed'
@@ -19,6 +20,8 @@ export type MacChange =
   | 'stopped'
   | 'stop-not-saved'
   | 'stop-failed'
+  | 'extended'
+  | 'extend-failed'
 
 export type MacAppState = {
   mode: WindowMode

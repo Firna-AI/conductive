@@ -87,7 +87,9 @@ It shows the Mac's name and **Available** or **Not available**.
 
 - Under **Always allowed**, use **Remove** to make that command ask again.
 - Under **Allowed for 15 minutes**, use **Stop** to end that workspace's permission.
-- While timed permission runs, the workspace also shows a bar with **Stop**.
+- While timed permission runs, the workspace bar shows the time left, **Extend**, and **Stop**.
+  **Extend** resets the time left to 15 minutes from now.
+  It works only while permission runs and never starts it.
 
 Saved permissions belong to your signed-in account on that Mac.
 They do not give an agent general access to every Mac you use.

@@ -64,9 +64,9 @@ export const macAppSchema = {
     },
     /**
      * The result of the last change of the Mac's settings: none, Remove of
-     * an always-allowed command in This Mac, or Stop in the bar of the 15
-     * minutes. The Mac made and saved it, made it but did not save it, or
-     * did not make it.
+     * an always-allowed command in This Mac, or Stop or Extend in the bar of
+     * the 15 minutes. The Mac made and saved it, made it but did not save
+     * it, or did not make it. Extend is done or failed only.
      */
     change: {
       enum: [
@@ -77,6 +77,8 @@ export const macAppSchema = {
         'stopped',
         'stop-not-saved',
         'stop-failed',
+        'extended',
+        'extend-failed',
       ],
     },
     /**
