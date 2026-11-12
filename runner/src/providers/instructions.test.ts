@@ -61,12 +61,14 @@ it.each(['claude', 'codex'] as const)(
     onTestFinished(() => runner.close())
     await runner.start(false)
     const first = turn('first', 'alice', agent)
+    first.message.sender.id = 'member-alice-id'
     first.message.sender.displayName = ' Alice\r\nExample\u2028 Member '
     first.message.text = '  Keep this text.\n\nAnd this line.  '
     first.message.attachments = [
       {
         id: 'image',
         name: 'image.png',
+        path: null,
         kind: 'image',
         mediaType: 'image/png',
         sizeBytes: 10,
@@ -74,6 +76,7 @@ it.each(['claude', 'codex'] as const)(
       {
         id: 'file',
         name: 'notes.txt',
+        path: null,
         kind: 'file',
         mediaType: 'text/plain',
         sizeBytes: 20,
@@ -94,6 +97,20 @@ it.each(['claude', 'codex'] as const)(
       'list_sessions',
       'send_message',
       'read_session',
+      'get_workspace',
+      'rename_workspace',
+      'move_workspace',
+      'archive_workspace',
+      'get_session',
+      'rename_session',
+      'close_session',
+      'stop_session',
+      'get_message',
+      'create_section',
+      'delete_section',
+      'list_previews',
+      'open_preview',
+      'close_preview',
     ])
       expect(initialPrompt).toContain(tool)
     expect(initialPrompt).toContain(
@@ -140,13 +157,13 @@ it.each(['claude', 'codex'] as const)(
         ? {
             role: 'user',
             content:
-              'Sender: Alice Example Member (@alice)\n\n  Keep this text.\n\nAnd this line.  \nThe sender attached these files. Read each file before you answer.\nAttached file: {"name":"image.png","mediaType":"image/png","path":"/uploads/image.png","sizeBytes":10}\nAttached file: {"name":"notes.txt","mediaType":"text/plain","path":"/uploads/notes.txt","sizeBytes":20}',
+              'Sender: Alice Example Member (@alice) [member ID: "member-alice-id"]\n\n  Keep this text.\n\nAnd this line.  \nThe sender attached these files. Read each file before you answer.\nAttached file: {"name":"image.png","mediaType":"image/png","path":"/uploads/image.png","sizeBytes":10}\nAttached file: {"name":"notes.txt","mediaType":"text/plain","path":"/uploads/notes.txt","sizeBytes":20}',
           }
         : {
             input: [
               {
                 type: 'text',
-                text: 'Sender: Alice Example Member (@alice)\n\n  Keep this text.\n\nAnd this line.  ',
+                text: 'Sender: Alice Example Member (@alice) [member ID: "member-alice-id"]\n\n  Keep this text.\n\nAnd this line.  ',
                 text_elements: [],
               },
               {
@@ -173,18 +190,23 @@ it.each(['claude', 'codex'] as const)(
       type: 'message' as const,
       turnId: first.turnId,
     }
+    during.message.sender.id = 'member-bob-id'
     const originalDuring = structuredClone(during)
     await runner.engine.command(during)
     await runner.idle()
     const nextInput = await provider.input(true)
     expect(nextInput).toMatchObject(
       agent === 'claude'
-        ? { role: 'user', content: 'Sender: @bob\n\nChange the file.' }
+        ? {
+            role: 'user',
+            content:
+              'Sender: @bob [member ID: "member-bob-id"]\n\nChange the file.',
+          }
         : {
             input: [
               {
                 type: 'text',
-                text: 'Sender: @bob\n\nChange the file.',
+                text: 'Sender: @bob [member ID: "member-bob-id"]\n\nChange the file.',
                 text_elements: [],
               },
             ],

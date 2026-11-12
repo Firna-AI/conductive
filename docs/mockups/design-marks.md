@@ -13,11 +13,13 @@ of a workspace number with Copy link.
   while checks run, the success green when checks passed, and the
   `listMerged` purple after the merge. Without a GitHub state, every cell is
   dim grey. An archived workspace keeps faint grey cells, whatever its
-  GitHub state. A light runs around the ring while the agent works, and the
-  centre cell stays dim. The whole square pulses while the agent waits for
-  the user, such as for the approval of a command. Every other mark is
-  still, so only bold text marks unread output. With reduced motion, the
-  ring or the middle column stays lit, and the other cells stay dim.
+  GitHub state. A light runs around the ring while the agent works or the
+  checks run, and the centre cell stays dim. The whole square pulses while
+  the agent waits for the user, such as for the approval of a command,
+  whatever the checks. Every other mark is still, so only bold text marks
+  unread output. With reduced motion, the ring or the middle column stays
+  lit, and the other cells stay dim. A mark whose checks run while the
+  agent does not work stays fully lit without motion.
   `listMarkLabel` in `status.ts` beside it gives the words that screen
   readers hear, such as "Checks failed, Working". The mark imports no
   fixture value, so the app uses it too.

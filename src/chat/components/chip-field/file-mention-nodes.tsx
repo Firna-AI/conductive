@@ -13,7 +13,7 @@ import {
 } from 'lexical'
 import { FileChip } from '../../../../docs/mockups/src/components/chat/FileChip'
 import { MentionIcon } from '../../mentions/MentionIcon'
-import { mentionAt } from '../../mentions/mention-text'
+import { mentionAt } from '../../../shared/mention-text'
 import {
   findMentioned,
   useChatMentions,

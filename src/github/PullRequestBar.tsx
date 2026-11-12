@@ -12,6 +12,7 @@ import {
 } from './bannerParts'
 import { bannerDetail, bannerStatus } from './bannerStatus'
 import { BarButtons, BarMessageLine } from './BarButtons'
+import type { CommandKeyOf } from './barKeys'
 import type { BarControls } from './barView'
 import type { GitHubFeed } from './githubStore'
 import styles from './PullRequestBar.module.css'
@@ -25,6 +26,11 @@ export interface PullRequestBarProps {
    * from the one action state of the screen. Null while no state shows.
    */
   controls: BarControls | null
+  /**
+   * The key of the command of each button and of the number, which their
+   * tooltips show, as `CommandKeyOf` says.
+   */
+  keyOf?: CommandKeyOf
 }
 
 function Pending() {
@@ -66,12 +72,12 @@ export function PullRequestBar(props: PullRequestBarProps) {
   const { view } = controls
   const withActions = view.actions.length > 0 && styles.withActions
   const message = view.message ? (
-    <BarMessageLine message={view.message} />
+    <BarMessageLine keyOf={props.keyOf} message={view.message} />
   ) : null
   // The number of a pull request links to it, so the bar shows no other link.
   const actions = (
     <span className={styles.actions}>
-      <BarButtons controls={controls} link={false} />
+      <BarButtons controls={controls} keyOf={props.keyOf} link={false} />
     </span>
   )
   if (banner.pullRequest === null) {
@@ -96,6 +102,7 @@ export function PullRequestBar(props: PullRequestBarProps) {
       <div className={classes(styles.bar, styles[status.tone], withActions)}>
         <PullRequestNumber
           href={banner.pullRequest.url}
+          keyOf={props.keyOf}
           number={banner.pullRequest.number}
         />
         <StateLabel status={status} />

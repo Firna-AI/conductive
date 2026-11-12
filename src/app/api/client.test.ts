@@ -61,13 +61,34 @@ describe('createApiClient', () => {
     })
   })
 
-  test('an account with a missing or unknown workspace view is an ApiError', async () => {
+  test('the account reader keeps shortcut changes from the reply', async () => {
     const server = new FakeApiServer()
     const api = createApiClient(server.fetch)
-    for (const newWorkspaceView of [undefined, 'drawer']) {
+    const shortcuts = {
+      mac: [{ command: 'command-palette', keys: ['Meta+P'] }],
+      other: [],
+    }
+    server.json('GET', ACCOUNT_PATHS.account, {
+      ...coreFixtures().account,
+      shortcuts,
+    })
+    expect(await api.get(ACCOUNT_PATHS.account, readAccount)).toMatchObject({
+      shortcuts,
+    })
+  })
+
+  test('an account with missing or invalid preferences is an ApiError', async () => {
+    const server = new FakeApiServer()
+    const api = createApiClient(server.fetch)
+    for (const fields of [
+      { newWorkspaceView: undefined },
+      { newWorkspaceView: 'drawer' },
+      { shortcuts: undefined },
+      { shortcuts: { mac: [], other: null } },
+    ]) {
       server.json('GET', ACCOUNT_PATHS.account, {
         ...coreFixtures().account,
-        newWorkspaceView,
+        ...fields,
       })
       const error = await api
         .get(ACCOUNT_PATHS.account, readAccount)

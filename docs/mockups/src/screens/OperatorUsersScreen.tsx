@@ -1,7 +1,7 @@
 import type { SchemaProps, Viewport } from '@mokly/mokly'
 import { TableCell, type TableColumn } from '@firna/ui/table'
+import { SearchField } from '../components/common/SearchField'
 import {
-  DirectorySearch,
   DirectoryTable,
   NameCell,
   TargetState,
@@ -127,7 +127,7 @@ export function OperatorUsersScreen(props: {
   const found = results(props.state.search)
   return (
     <OperatorPage tab="users" title="Operator" viewport={props.viewport}>
-      <DirectorySearch
+      <SearchField
         label="Search users"
         placeholder="GitHub login, name, or GitHub ID"
         query={found.query}

@@ -15,111 +15,17 @@ pull request bar, and the owner picker. A host can give its own parts, as
   `import.meta.env.DEV`, so the production build never bundles it.
 - The local Worker serves the page. The
   [Get started steps](../../README.md#get-started) give its local setup.
-- The dev wiring in `dev/` keeps an in-memory state, so that an edit in the
-  browser shows on the next read. Query options choose a preview state, for
-  example `?role=member`, `?workspace=starting`, `?firstRun=org`,
-  `?login=none`, `?deleted=1`, `?suspended=1`, `?operator=1`,
-  `?waiting=1`, `?paused=1`, `?waitlist=off`, or
-  `?paths=masked`. `dev/options.ts` lists them. `?banner=<state>`, such as
-  `?banner=checks-failed`, gives `checkout-autocomplete` that pull request
-  bar, and its list mark shows the GitHub state of that bar. The other rows
-  keep the GitHub states of the mockups. `dev/attachment-routes.ts`
-  keeps the uploaded files of both composers. With `?upload=wait` each
-  upload keeps running, and with `?upload=fail` the first upload of the
-  page fails once, so Try again works. `?sent=<percent>` makes the dev
-  fixture `dev/progress-fixture.ts` report that share of each file as
-  sent, so `?upload=wait&sent=64` shows the measured state. Create org of the dev fake
-  requires at least one repository and starts a simulated build. Its
-  repository catalogue keeps the saved choices, and its custom initials
-  stay through rename, delete, and restore. Settings changes during the
-  first good build start one added build. The fake compares settings
-  revisions with builds as the Worker does.
-- `dev/feedback-routes.ts` serves the two feedback routes. By default, and
-  with `?feedback=ready` or an unknown value, the reply address is
-  `<GitHub login>@example.com`, and each send answers 204.
-  `?feedback=no-email` gives a reply without an address.
-  `?feedback=fail` fails the first send of the page with
-  `502 feedback_email_failed`, so a retry sends. With `?waiting=1`, both
-  routes refuse with `access_required`. The fake sends no email and keeps
-  no copy.
-- `?operator=1` makes the dev user an operator, so the rail and the org
-  switcher show Operator. The [operator section](../shell/operator/README.md)
-  then shows the sample orgs, users, people who wait, and codes of the
-  mockups. Suspend, Lift, Approve, New code, Disable, and the pause of
-  sign-ups change them. A suspension of Acme, Futex, or Firna also
-  suspends that org in the state of the fake, so the fake refuses each
-  write of that org with `org_suspended`. The open app does not read its orgs again, so its pages
-  of that org show the suspension only after such a refusal. Without the
-  option, each operator request gets `operator_required`, as the Worker
-  does.
-- `?waiting=1` signs in Sam Okafor of the waitlist mockups, who waits for
-  app access with a verified email, so the app shows only the
-  [waitlist](screens.md#the-waitlist). `?waiting=no-email` gives the same
-  account without a verified email. Sam starts as a new account, as
-  `?firstRun=github-app` does. With `?operator=1` nobody waits, because
-  an operator gets app access. With `?waiting`, `?invited=1` adds an
-  invitation of Acme, whose Accept makes Sam a member with app access. A
-  join link, such as `/join/V7MKC-2QDXH?waiting=1`, uses its code at once.
-  `?paused=1` pauses
-  sign-ups: each use of a code, and the Accept of a person who waits, get
-  `signups_paused`. The Account page shows the pause, and the operator
-  section shows its notice.
-  `?waitlist=off` starts with the waitlist off, by the operator of the
-  samples. Unless sign-ups are paused, a person who waits gets app access
-  at the next request, with a new referral code and no use of a code, so
-  Get started opens. The fake does this before each request, as the gate
-  of the Worker does. The operator section shows the switch off, and Zed
-  K, who came back and got in by open sign-up. The Account page names
-  open sign-up.
-  `?inviteCode=used-up` or `?inviteCode=disabled` sets the state of the
-  invite code of a user with app access, also on the page of that user in
-  the operator section.
-- The waitlist and the operator section share one pause, one waitlist
-  switch, and one set of codes, as they share the database of the Worker.
-  The codes are those of the operator mockups, with a referral code for
-  each sample user with app access. For example, `V7MKC-2QDXH` works,
-  `M4QTX-7HKWD` is the referral code of Mira Santos, `9PTXC-4WHMN` is used
-  up, `HM3PE-7KWQT` is disabled, and a code that the mockups do not list is
-  not found. A code that works counts its use, and gives app access and a
-  new invite code, so Get started opens. With `?operator=1`, a pause, a
-  turn-off of the waitlist, or a Disable in the operator section shows on
-  the Account page of the operator.
-- The fake keeps its state in the page. A reload starts again from the
-  options, so Sam waits again, and the codes, the pause, and the switch
-  are those of the options. An operator never waits, so a pause, a change
-  of the switch, or a new code of the operator section cannot reach the
-  waitlist screen.
-- Acme has the
-  routines of the mockups, each with the runs that its page in the mockups
-  lists. `?runs=failed` or `?runs=skipped` gives Review pull requests the
-  failed or the skipped runs of the mockups. A skipped run names the
-  account outside Acme by its login. The fake has no workspaces for these
-  runs, so the workspace list stays as the mockups draw it, and the link
-  of such a run opens no workspace. `?run=pull-request` or `?run=schedule`
-  makes `checkout-autocomplete` the workspace of one run, so its header
-  shows the line of that run, with the pull request of a pull request run.
-  The other orgs have no
-  routines, so their Routines page shows its empty state. A save of a
-  routine checks the prompt, each custom cron, and the time zone, as the
-  Worker does. A removal of a repository on the Repositories tab turns off
-  each routine in it, with the reason that the routine page shows, as the
-  Worker does. Its author filter knows the members of the org and a few
-  bots, such as `dependabot[bot]`. Any other login gets the refusal of a
-  login that names no GitHub account, with its trigger and its list.
-- Run now makes the workspace of the run as Create workspace does, in the
-  section of the routine, and the run takes the state of that workspace.
-  Without the agent login of the routine's model, as with `?login=none`,
-  the run fails with no workspace. A prompt that contains `fail` stands for
-  a cloud computer that did not start: the run fails and keeps its
-  workspace, in the error state with Try again, as the Worker does. The
-  recorded server has no chat for
-  a workspace that the fake made, so its chat does not load, and the line
-  of its routine does not show.
-  The dev backend records each run's agent and owner when Run now starts it.
+- [The development fake](dev-fake.md) gives the query options of the dev
+  wiring in `dev/`, such as `?operator=1`. It also covers its fake routes:
+  the uploads and their copies, Create org, feedback, the operator
+  section, the waitlist, the routines, and the workspace numbers.
 - The workspace screen shows the real chat over the dev fake. The fake
-  answers each chat write with a recorded reply, changes no state, and
-  sends no event. So a sent message stays pending, and a new session adds
-  no tab.
+  sends no chat event, so a sent message stays pending, and a new session
+  adds no tab. It answers each chat write with a recorded reply and
+  changes no state, except a send of uploaded files. That reply gives the
+  message its own text and files. In a workspace that runs, the sent chips
+  of those files open copies of their bytes in the file tab, as
+  [The development fake](dev-fake.md) says.
 - One counter numbers the events of all workspaces of the dev fake, and its
   event source ignores the workspace. So an event of another workspace
   leaves a gap in the event numbers of the chat. At the next event of the
@@ -133,10 +39,6 @@ pull request bar, and the owner picker. A host can give its own parts, as
   the page, its event socket, and an `XMLHttpRequest` for each raw file
   upload, which measures the bytes that the browser sent.
 
-The development fake keeps each org's workspace number counter.
-A create gets the next number and a web link on the fake API origin.
-Workspace readers keep the number and link that the Worker supplies.
-
 ## Composition
 
 `App` in `src/App.tsx` takes three props:
@@ -146,6 +48,13 @@ Workspace readers keep the number and link that the Worker supplies.
 | `services`   | `AppServices` from `services.ts`: the API, the events, the clock, the storage  |
 | `navigation` | The address bar: `browserNavigation(window)`, or `memoryNavigation` in tests   |
 | `features`   | `WorkspaceFeatures` from `../shell/workspace/features.ts`: the workspace parts |
+
+`App` also mounts `useFileDropGuard` of `file-drags.ts`, so a drop of files
+outside each message box does nothing, as
+[Drops](../../docs/protocol/message-attachments.md#drops) says. The guard
+hears each drag last, on the window. It leaves each drag that a part took,
+such as a message box or the Feedback dialog, and it never stops an event.
+A drag of text or of a link keeps the action of the browser.
 
 The workspace screen draws the frame, the header, the start steps, and the
 states of the sandbox, with Restore on the bar of an archived workspace
@@ -205,9 +114,12 @@ feedback draft.
 [Screens](screens.md) gives the rules of the screens of the app shell:
 the account and Get started, sign-in, invitations, orgs, panels and
 layers, the focus, saved drafts, New workspace as a page or a dialog,
-with the send key that every composer shares, and the waitlist.
-[The command palette and Feedback](palette-screens.md) gives the rules of
-the palette and of the Feedback dialog.
+with its attached files and the send key that every composer shares, and
+the waitlist.
+[Command palette and keys](palette-and-keys.md) gives the rules of the
+command palette and of the keyboard shortcuts.
+[Feedback](palette-screens.md) gives the rules of the Feedback dialog that
+the Help row of the palette opens.
 
 ## Rules for this code
 
@@ -269,11 +181,20 @@ the palette and of the Feedback dialog.
   page. The browser hears the input and the keys in the capture phase,
   before a field can stop them. An open workspace counts the input
   anywhere on the page as activity, at most once a minute. `onKey` is not
-  passive, so the palette key stops the browser's own action.
-  `AppServices.platform` says whether the keyboard is a Mac, which
-  chooses the palette key and its hint. It never says whether the page
-  runs in the Mac app: the caller of `FeedbackModel.open` gives that
-  `desktop` flag.
+  passive, so the shortcut listener stops the browser's own action of a
+  key that runs a command.
+  `AppServices.platform` chooses the shortcut defaults and their key text.
+  It never says whether the page runs in the Mac app: the caller of
+  `FeedbackModel.open` gives that `desktop` flag.
+  `AppServices.host` identifies the Mac app, an installed Chromium app,
+  or a browser tab with its browser and system. `KeyPress.code` identifies
+  the physical key. `KeyPress.stopPropagation` can stop delivery to a
+  field or terminal after a shortcut consumes the press.
+  `KeyPress.layoutModifiers` carries the modifiers taken by held layout
+  switch keys. `onKey.layoutModifiers()` gives a recorder the same state
+  for its own event. `windowKeys` shares this state per window and resets
+  it on key-up or blur. `windowLayoutModifiers(window)` reads the same
+  snapshot for callers with a window.
 - `AppServices.appVersion` is the version of the build: the version of the
   root `package.json` and the short commit, as `<version> (<commit>)`.
   `build-version.ts` at the repository root makes it for the web and Mac
@@ -311,19 +232,32 @@ mounts the screen with `../shell/test-mount.tsx`, which also presses keys,
 clicks, types, and lets the answers of the fake API settle.
 `../shell/new-workspace/dialog-test-kit.tsx` mounts the whole app in a tab
 for the tests of New workspace as a page or a dialog, and of its send key.
+Its `markOf` gives the mark of a file of the draft by the name of the file.
+
+`../shell/new-workspace/NewWorkspaceDrops.test.tsx` drops files on the
+page and on the dialog card. A drop on the text of the page puts the files
+at the point. While a create runs, the box shows no drop state or drop
+caret, also for files that hovered as it began, and takes no drop. Files
+over the card show its drop state, and a dropped folder gets its notice in
+the dialog. `../App.dom.test.tsx` mounts `App` and checks the guard
+outside each box, the browser's own drag of text and links, and the copy
+offer of a box. It also checks that the Feedback dialog still takes a
+dropped screenshot.
+
+Run `npm run test -- src/app/dev/attachment-files.test.ts src/chat/dev/dev-attachment-files.test.ts`
+for the API tests of the uploaded bytes and their copies in both
+development fakes. `dev/attachment-test-kit.ts` gives them a stub
+`window`, fake timers, a sample image, and a check of the exact bytes.
 
 ## Key code
 
-- `clipboard.ts`: `copyText`, the clipboard write for plain or pending text.
-  It starts a pending `ClipboardItem` write during the user press when the
-  browser supports it. The fallback waits for the text and calls `writeText`.
-  Both paths propagate failures. `AppServices.copy` accepts a string or a
-  promise of a string. Live services and development hosts use this owner.
-
 [Key code](key-code.md) names the files, the types, and the functions to
-open first. It covers the dev fake, the API client, the file uploads, the
+open first. It covers the dev fake, the API client, the clipboard, the
 models, the waitlist and its codes, the routines, and the workspace list.
 It also covers the event streams, the drag, and the operator section.
+[Key code: drafts and attached files](key-code-drafts.md) covers the draft
+text, the attached files, and their uploads, which the chat and New
+workspace share.
 [Key code: the palette, the layers, and the dialogs](key-code-layers.md)
 covers the command palette, the layers, the frames, New workspace as a
 dialog, and feedback with its screenshots.

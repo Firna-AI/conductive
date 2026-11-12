@@ -26,6 +26,7 @@ function attachedTurn(agent: Agent) {
     {
       id: 'image',
       name: 'Screenshot.PNG',
+      path: null,
       kind: 'image',
       mediaType: 'image/png',
       sizeBytes: 12,
@@ -33,6 +34,7 @@ function attachedTurn(agent: Agent) {
     {
       id: 'pdf',
       name: 'Plan "A".PDF',
+      path: null,
       kind: 'file',
       mediaType: 'application/pdf',
       sizeBytes: 23,
@@ -83,7 +85,7 @@ it('gives Claude original attachment metadata and copied paths', async () => {
   onTestFinished(() => provider.close())
   await provider.send(command)
   expect((await sdk.nextUser()).message.content).toBe(
-    'Sender: @alice\n\nChange the file.\n' +
+    'Sender: @alice [member ID: "alice"]\n\nChange the file.\n' +
       'The sender attached these files. Read each file before you answer.\n' +
       'Attached file: {"name":"Plan \\"A\\".PDF","mediaType":"application/pdf","path":"/test/repository/.context/attachments/11111111111111111111111111111111/Plan-A.pdf","sizeBytes":23}\n' +
       'Attached file: {"name":"Screenshot.PNG","mediaType":"image/png","path":"/test/repository/.context/attachments/22222222222222222222222222222222/Screenshot.png","sizeBytes":12}',
@@ -103,7 +105,7 @@ it('gives Codex original attachment metadata and keeps local image inputs', asyn
       input: [
         {
           type: 'text',
-          text: 'Sender: @alice\n\nChange the file.',
+          text: 'Sender: @alice [member ID: "alice"]\n\nChange the file.',
           text_elements: [],
         },
         {
@@ -142,7 +144,7 @@ it('gives Codex original attachment metadata and keeps local image inputs', asyn
       input: [
         {
           type: 'text',
-          text: 'Sender: @alice\n\nChange the file.',
+          text: 'Sender: @alice [member ID: "alice"]\n\nChange the file.',
           text_elements: [],
         },
         {
@@ -174,7 +176,7 @@ it('gives Codex original attachment metadata and keeps local image inputs', asyn
       input: [
         {
           type: 'text',
-          text: 'Sender: @alice\nCurrent branches: workspace "owner/next"; target "trunk".\n\nChange the file.',
+          text: 'Sender: @alice [member ID: "alice"]\nCurrent branches: workspace "owner/next"; target "trunk".\n\nChange the file.',
           text_elements: [],
         },
         {

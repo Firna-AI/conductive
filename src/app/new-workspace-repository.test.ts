@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest'
+import { pickWorkspaceFiles } from './draft-files.test-support'
 import { orgSettingsPaths, type BuildsResponse } from '../shared/org-settings'
 import { workspacesPath } from '../shared/workspaces'
 import { FakeApiServer } from '../test-support/fake-api'
@@ -55,7 +56,7 @@ describe('the repository of a New workspace draft', () => {
     await model.reload('builds')
     await draft.send(defaults)
     // The next draft starts with a file.
-    await draft.attach([new File(['Cart notes'], 'notes.txt')])
+    await pickWorkspaceFiles(draft, [new File(['Cart notes'], 'notes.txt')])
     const next = draft.draft.get().repository
     draft.setText('Add gift cards.')
     await draft.send(defaults)

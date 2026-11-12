@@ -1,5 +1,7 @@
 import { describe, expect, test } from 'vitest'
+import { attachmentPath } from '../../shared/attachment-paths'
 import type { FileEntry } from '../../shared/files'
+import type { Attachment } from '../../shared/messages'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
 import { chatParts, type ChatPart, type MentionLookup } from './chat-parts'
 
@@ -22,9 +24,11 @@ function shapes(parts: readonly ChatPart[]) {
   return parts.map((part) =>
     part.kind === 'file'
       ? { file: part.entry.path }
-      : part.kind === 'chip'
-        ? { chip: part.source }
-        : { [part.kind]: part.text },
+      : part.kind === 'attachment'
+        ? { attachment: part.attachment.id, path: part.path }
+        : part.kind === 'chip'
+          ? { chip: part.source }
+          : { [part.kind]: part.text },
   )
 }
 
@@ -61,6 +65,55 @@ describe('mentions in a sent message', () => {
         { text: 'Read ' },
         { code: '@src/app.ts' },
         { text: ' and @src/app.ts' },
+      ],
+    })
+  })
+
+  test('a mention of a file of the message is its chip, before an entry of the tree and also without a tree, and a mention in code stays code', async () => {
+    const path = await attachmentPath({ id: 'shot', name: 'login.png' })
+    const shot: Attachment = {
+      id: 'shot',
+      name: 'login.png',
+      path,
+      kind: 'image',
+      mediaType: 'image/png',
+      sizeBytes: 2048,
+    }
+    const legacy: Attachment = { ...shot, id: 'legacy', path: null }
+    // The tree names the copy too. The chip of the file comes first.
+    const copy: FileEntry = {
+      path,
+      name: 'login.png',
+      kind: 'file',
+      change: null,
+    }
+    const withCopy: MentionLookup = (mention) =>
+      mention.path === path && !mention.folder ? copy : lookup(mention)
+    const text = `Compare @${path} with @src/app.ts and not \`@${path}\` or @${path}/`
+    const read = (mentions?: MentionLookup) =>
+      shapes(
+        chatParts(text, links, {
+          strong: false,
+          mentions,
+          attachments: [legacy, shot],
+        }),
+      )
+    expect({ tree: read(withCopy), archived: read() }).toEqual({
+      tree: [
+        { text: 'Compare ' },
+        { attachment: 'shot', path },
+        { text: ' with ' },
+        { file: 'src/app.ts' },
+        { text: ' and not ' },
+        { code: `@${path}` },
+        { text: ` or @${path}/` },
+      ],
+      archived: [
+        { text: 'Compare ' },
+        { attachment: 'shot', path },
+        { text: ' with @src/app.ts and not ' },
+        { code: `@${path}` },
+        { text: ` or @${path}/` },
       ],
     })
   })

@@ -1,14 +1,11 @@
 import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
-import { Ban, Hourglass, Search, Trash2 } from 'lucide-react'
-import { InputFrame } from '@firna/ui/input'
+import { Ban, Hourglass, Trash2 } from 'lucide-react'
 import { Table, type TableColumn } from '@firna/ui/table'
 import type { TargetStatus } from '../../fixtures/operatorDirectory'
 import type { UserStatus } from '../../fixtures/operatorUsers'
-import { noop } from '../../noop'
 import { ActionButton } from '../common/actions'
 import { StatusText } from '../common/StatusText'
-import { useControlSizes } from '../common/touch'
 import { Section } from '../settings/Section'
 import styles from './directory.module.css'
 
@@ -52,25 +49,6 @@ export function NameCell(props: {
         ) : null}
       </span>
     </span>
-  )
-}
-
-/** The search field at the top of the Orgs, Users, Waitlist, and Invite codes tabs. */
-export function DirectorySearch(props: {
-  label: string
-  placeholder: string
-  query: string
-}) {
-  const { field } = useControlSizes()
-  return (
-    <InputFrame
-      accessibilityLabel={props.label}
-      onChangeText={noop}
-      placeholder={props.placeholder}
-      prefixIcon={Search}
-      size={field}
-      value={props.query}
-    />
   )
 }
 

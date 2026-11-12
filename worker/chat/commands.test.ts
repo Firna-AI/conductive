@@ -173,7 +173,7 @@ describe('workspace chat commands', () => {
       { turnId: continued.turnId },
     )
     expect(await stopped.json()).toEqual({
-      eventNumber: 11,
+      eventNumber: 12,
       turnId: continued.turnId,
       state: 'stopping',
     })

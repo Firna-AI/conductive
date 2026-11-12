@@ -1,5 +1,9 @@
 import type { Org } from '../../fixtures/orgs'
 import type { Membership } from '../../fixtures/members'
+import {
+  paletteShortcut,
+  type ShortcutChanges,
+} from '../../fixtures/shortcutChanges'
 import { paths } from '../../paths'
 import { classes } from '../common/classes'
 import { LoadFailure } from '../common/LoadFailure'
@@ -48,6 +52,8 @@ export function Sidebar(props: {
   /** The workspace list of the org did not load. */
   failed?: boolean
   viewer: Membership
+  /** The person's changes to the shortcuts, such as another palette key. */
+  shortcuts?: ShortcutChanges
 }) {
   const suspended = props.suspended ?? false
   const drawing = props.focus?.drawing.kind
@@ -81,7 +87,10 @@ export function Sidebar(props: {
             to={suspended ? paths.suspendedRoutines : undefined}
             variant="sidebar"
           />
-          <SearchLink keys variant="sidebar" />
+          <SearchLink
+            shortcut={paletteShortcut(props.shortcuts)}
+            variant="sidebar"
+          />
         </div>
         {props.failed ? (
           <LoadFailure title="The workspaces didn't load" />

@@ -68,6 +68,24 @@ It rebuilds the job inside workerd before calling the existing controller guard.
 This lower-level proof permits a Stop between epoch capture and admission.
 Normal production lifecycle RPC methods share the chat queue.
 
+The `start-outside-*.test.ts` files hold a `LifecycleBoat` request or reply while the production `Workspace` advances a start.
+`expectSettled` in `start-outside.test-support.ts` races each operation against a 10-second deadline.
+These tests check the order of the events, not the elapsed time.
+
+`start-outside-queue.test.ts` reads the chat history while a command status request is held.
+It also refuses a Resume during such a hold.
+`start-outside-archive.test.ts` archives during a held resume request.
+The provider stop of Archive comes only after the resume applies.
+`start-outside-restore.test.ts` runs Archive then Restore, and Archive twice then Restore, during a held resume request.
+Boat gets no other resume, and the sandbox ends stopped after the held resume applies.
+
+`start-outside-suspension.test.ts` suspends the member lifecycle during a held create reply.
+D1 keeps the sandbox ID.
+The start writes nothing after the suspension.
+`start-completion-race.test.ts` disconnects the runner during the final user check of a successful start.
+The start job stays.
+The start completes after a later readiness report.
+
 Expected RPC errors use a focused test entry when namespace serialization would discard their extra fields.
 That entry calls the actual inherited public method and copies its error before another namespace hop.
 The host reconstructs the same status, code, and message for the assertion.
@@ -94,6 +112,9 @@ Dedicated source tests keep their real local Git fixture.
 
 `LifecycleBoat` remains the provider boundary.
 Its detached process IDs, status offsets, delayed replies, and stop failures remain observable.
+Its `afterCreate` hook holds a successful create reply.
+Its `beforeResume` hook holds a resume request before the fake applies it.
+
 Tests replace the current fetch dependency to inject a provider fault.
 The native outbound route reads that current dependency for each request.
 No test needs a real provider account, GitHub App, or cloud computer.

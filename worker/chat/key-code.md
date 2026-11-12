@@ -6,6 +6,9 @@ first.
 
 - `backend.ts`: `WorkspaceChat`, its gates, its trusted methods, the open
   tabs, and the one publisher of committed events.
+- `backend-fetch.ts`: `fetchWorkspaceChat`, the HTTP dispatch of
+  `WorkspaceChat.fetch`: the runner socket, the events socket, and the
+  queued browser requests.
 - `workspace-binding.ts`: `ChatWorkspaceBinding`, which binds chat to one workspace and checks the object identity.
 - [../model-gateway/workspace.ts](../model-gateway/workspace.ts): `WorkspaceTurnTokens`, available through `WorkspaceChat.turnTokens`.
   It derives a running turn's token and checks the starter's current login in the chat queue.
@@ -21,10 +24,14 @@ first.
   the lifecycle: the first message, the stop, the summary, and the
   lifecycle events. Its stop transaction clears the port report with
   `ports: null`, including when the workspace has no previews.
+  It also runs the trusted tool session writes and the tool session
+  management, each after its access callback.
 - `first-message.ts`: the checks and the admission of the first message of
   a create.
 - `session-titles.ts`: the empty-name rule for the first session's workspace
-  title and each later session's first message with text.
+  title and each later session's first message with text. A text with only
+  the mentions of its own attached files counts as no text. In a title, each
+  such mention becomes the original name of its file.
 - `workspace-titles.ts`, `title-model.ts`, and `workspace-title.ts`: the
   background model request and the shared title storage and D1 projection.
   The shared writer checks the empty name and workspace access before it
@@ -48,13 +55,33 @@ first.
   page loop through a fixed event cutoff.
 - [session-markdown.ts](../../src/shared/transcript/session-markdown.ts):
   `SessionMarkdown`, the pure shared builder of concise and full copies.
+  `TranscriptDocument.linkContext` gives it the app origin and the org for
+  session links.
 - `http-routes.ts`, `send-message.ts`, `messages.ts`, and `sessions.ts`: the
   routes, Send and Retry with linked sessions, the turns, and session state.
+  The Stop and close routes pass the authenticated member as the stopper.
+- `session-management.ts`: `renameSession`, which the browser route and the
+  tools share, and `stopManagedSession`, a tool stop with its idle reply.
+- `stop-request.ts`: `recordStopRequest`, which keeps the first requester in
+  `StoredTurn.stopRequest`, reads it from history for an older turn, and
+  emits `turn.stop-requested`.
+- `tool-session-management.ts`: `manageToolSession`, the tool rename, close,
+  and stop in one transaction, with the calling session as the stop source.
+  `WorkspaceChat.manageToolSession` runs it in the queue.
 - `model-changes.ts`: client session IDs, the creation records that repeated
   requests match, and ID conflicts.
 - `store.ts` and `history-storage.ts`: `ChatStore` and `ChatTransaction`,
   the records, the event numbers, the GitHub view of a transaction, and the
   chunks of large file reports and tree deltas.
+- `queue-turn.ts`: `ChatQueue`, the serial queue of `ChatStore.run`, and
+  `QueueTurn`, the handle whose `outside(call)` runs one call outside the
+  queue. `hasOutsideTurns` tells Archive that a queue task is outside.
+- `queue-generation.ts`: `QueueGenerations`, which keeps the member
+  receiver generation of each queue task for the guarded storage, the Boat
+  fetch check, and the start guard.
+- `lifecycle-queue.ts`: `runWorkspaceLifecycle`, which runs one lifecycle
+  change in a queue task with its receiver generation, then calls
+  `flushRunner`.
 - `history-pages.ts`: `HistoryPages`, the pages of the stored history and
   the index of replaced answers and tool states. A page reads one storage
   list of 32 events. The session history route of the browser passes
@@ -119,6 +146,10 @@ first.
   command whose login cannot run, after the runner or at once.
 - `attachment-paths.ts`: the captured repository folder lookup and the
   absolute attachment paths of each runner send.
+- [`src/shared/attachment-paths.ts`](../../src/shared/attachment-paths.ts):
+  `attachmentPath`, the relative copy path of a file from its ID and its
+  name. The upload reply, admission, the copy, and the proof check use it.
+  The development fakes share it.
 - `ordered-dispatch.ts`: `dispatchInOrder` and `commandDispatchState`, the
   send, wait, or skip check of each pending command in stored order.
 - `report-repairs.ts`, `repair-refusal.ts`, and `repair-delivery.ts`: the
@@ -140,6 +171,8 @@ first.
   command, the retry message of a turn end, safe turn context, late data,
   terminal events, and unanswered messages.
   `TurnLifecycle.runnerEnded`, `workspaceStopped`, and `fail` handle each source of a turn end.
+  `TurnLifecycle.stop` takes an optional requester and records it before it
+  changes the turn state. `close` passes its requester to `stop`.
   `fail` ends a queued turn at once. Runner compatibility failures use its
   immediate mode for both queued and running turns. A running failure
   keeps an interrupt for the prior process after the turn ends.
@@ -150,8 +183,9 @@ first.
 - `turn-end-reports.ts`: `TurnEndReports` keeps the recorded ends of each
   committed transaction. `ChatStore.reportTurnEnds` gives each end to the
   `turnEnded` hook. It runs after the runner confirm, before each dispatch,
-  and at the end of each queued task. So the workspace lifecycle gets each
-  end by its turn ID, from one path, whatever ended the turn.
+  before a task steps outside the queue, and at the end of each queue task.
+  So the workspace lifecycle gets each end by its turn ID, from one path,
+  whatever ended the turn.
 - `sockets.ts`: the WebSocket upgrades of tabs and the runner.
 - `browser-connections.ts` and `browser-registration.ts`:
   `BrowserConnections`, the native acceptance, restore, and close of tab
@@ -174,3 +208,4 @@ first.
 - `session-record.ts`: `sessionFor`, the read of one session record.
 - `types.ts`: `ChatDependencies`, `ChatCallbackPublisher`, `ChatStorage`,
   `PreparedCommand`, `ResolvedCommand`, and the peer types.
+  `StoredTurn.stopRequest` is optional, because older records lack it.

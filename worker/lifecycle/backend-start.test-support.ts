@@ -4,7 +4,8 @@ import {
   serializeStartJob,
   type StoredWorkspaceStartJob,
 } from './start-job-codec'
-import { START_JOB_KEY, START_LOG_PREFIX } from './start-storage'
+import { START_JOB_KEY } from './start-storage'
+import { START_LOG_PREFIX } from './start-log-storage'
 import { START_ALLOCATION_CLEANUP_KEY } from './start-allocation-cleanup'
 import type { WorkspaceStartJob } from './start-types'
 

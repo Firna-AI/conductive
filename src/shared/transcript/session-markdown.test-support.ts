@@ -41,6 +41,7 @@ function message(id: string, text: string): UserMessage {
 }
 export function markdownFixture() {
   const document: TranscriptDocument = {
+    linkContext: { origin: 'https://app.example', orgId: 'org' },
     session,
     eventNumber: 100,
     copiedAt: Date.UTC(2026, 10, 9, 18, 40),
@@ -92,6 +93,7 @@ export function markdownFixture() {
           {
             id: 'file',
             name: 'trace.txt',
+            path: null,
             kind: 'file',
             mediaType: 'text/plain',
             sizeBytes: 8,

@@ -1,4 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
+import { fileMark } from '../../app/draft-marks'
+import { pickChatFiles } from './draft-files.test-support'
 import { readyIds } from '../../app/draft-files'
 import type { AgentChoice } from '../../shared/agents'
 import { filePaths } from '../../shared/files'
@@ -44,7 +46,7 @@ describe('a draft that moves to another session', () => {
   it('takes a file that still uploads, and Send waits for it in the new session', async () => {
     const chat = await chatWithCodex(isUpload)
     chat.controller.setDraft(id, 'See the screenshot.')
-    const uploading = chat.controller.attachFiles(id, [file()])
+    const uploading = pickChatFiles(chat, id, [file()])
     await vi.waitFor(() => expect(chat.held).toHaveLength(1), shortly)
     await chat.controller.chooseModel(id, codex)
     const created = await opened(chat)
@@ -90,7 +92,7 @@ describe('a draft that moves to another session', () => {
   it('shows a moved upload that fails as a failed file in the session that holds the draft', async () => {
     const chat = await chatWithCodex(isUpload)
     chat.controller.setDraft(id, 'See the screenshot.')
-    const uploading = chat.controller.attachFiles(id, [file()])
+    const uploading = pickChatFiles(chat, id, [file()])
     await vi.waitFor(() => expect(chat.held).toHaveLength(1), shortly)
     await chat.controller.chooseModel(id, codex)
     const created = await opened(chat)
@@ -133,16 +135,18 @@ describe('a draft that moves to another session', () => {
     expect(chat.draftOf(id)?.text).toBe('')
   })
 
-  it('keeps a file that the user adds while a send waits, and clears the sent text', async () => {
+  it('keeps the text and file that the user changes while a send waits', async () => {
     const chat = chatFor({ conversation: 'history', hold: isSend })
     await chat.controller.start()
     chat.controller.setDraft(id, 'Check the postcode rules.')
     const sending = chat.controller.send(id)
     await vi.waitFor(() => expect(chat.held).toHaveLength(1), shortly)
-    await chat.controller.attachFiles(id, [file()])
+    await pickChatFiles(chat, id, [file()])
     chat.held.splice(0, 1)[0]()
     await sending
-    expect(chat.draftOf(id)?.text).toBe('')
+    expect(chat.draftOf(id)?.text).toBe(
+      `Check the postcode rules. ${fileMark('file-1')} `,
+    )
     expect(readyIds(chat.draftOf(id)?.files ?? [])).toEqual(['attachment-1'])
   })
 })

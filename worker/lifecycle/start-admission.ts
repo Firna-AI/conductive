@@ -10,7 +10,7 @@ import type {
 import { readWorkspace } from './workspace-data'
 import type { WorkspaceLifecycleEndpoint } from './workspace-runtime'
 
-/** The coordinator holds its serial task until native admission is durable. */
+/** Admission commits in the caller's queue turn. */
 export async function enqueueWorkspaceStart(
   env: AppEnv,
   dependencies: AppDependencies,

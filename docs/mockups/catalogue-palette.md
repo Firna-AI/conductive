@@ -19,7 +19,8 @@ list of Acme. Send feedback comes last among its actions. Its child pages:
   the tab over an open workspace, whose actions come first.
   Its `archived` variant has the tab over an archived workspace, as Priya,
   a member who is not an admin, sees it: Session history and Restore workspace.
-- `app/command-palette/settings` has the Settings tab.
+- `app/command-palette/settings` has the Settings tab. Its Account group
+  ends with Keyboard shortcuts, which opens `app/account/shortcuts`.
 - `app/command-palette/search` has a search that finds a workspace and an
   archived one. Its states are child pages, which kept the paths of its
   saved states, so the page shows only its canonical screen:
@@ -43,6 +44,11 @@ list of Acme. Send feedback comes last among its actions. Its child pages:
 In `search/unavailable` and `workspaces/unavailable`, the list behind the
 palette on desktop shows the same failure, because it reads the same
 workspace list.
+
+On desktop, each command row of the palette ends with the first key of
+its command that works in a normal Chrome tab on a Mac, such as ⌥⌘N for
+New workspace, because the tab keeps ⌘N. A workspace row and a phone show
+no key.
 
 ## Feedback
 
@@ -74,10 +80,11 @@ child pages:
 message, a pasted screenshot, and the send, to the toast.
 
 `FeedbackDialog` in `src/components/feedback/` draws the dialog in the
-`wide` layout of `ConfirmDialog`. Its message box holds the chips of
-`AttachmentChips` above the text, and Add screenshots under it. A notice
-under the box names a file that the dialog did not add, or a send that
-failed. `FeedbackReply.tsx` beside it draws the reply line from the read of
+`wide` layout of `ConfirmDialog`. Its message box holds the row of
+`ScreenshotRow` above the text, and Add screenshots under it. Feedback
+keeps this row, while each composer of a chat puts its files into the
+text. A notice under the box names a file that the dialog did not add, or
+a send that failed. `FeedbackReply.tsx` beside it draws the reply line from the read of
 the reply address, and the `LoadFailure` notice of a read that failed.
 `feedbackCopy.ts` holds the words of the row, the dialog, and the toast, so
 the app can share them. `SuccessToast` in `src/components/common/` draws

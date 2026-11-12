@@ -1,0 +1,204 @@
+/*
+ * The lines above the groups: how to change a shortcut, the keys that the
+ * terminal keeps, and in a browser tab, where the dimmed keys work. Reset
+ * all stands beside them, and the error of a failed Reset all wraps under
+ * them. The lines keep their height in the scrolling body of a phone.
+ */
+.intro {
+  display: flex;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 4px 12px;
+  min-height: var(--ui-control-height);
+  padding: 0 2px;
+}
+
+/* The error of a failed Reset all takes a line of its own. */
+.introError {
+  flex-basis: 100%;
+}
+
+.introText {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-md);
+  line-height: 1.5;
+}
+
+.introLine {
+  margin: 0;
+}
+
+/*
+ * The rows of a group share one box, as the other lists of the account.
+ * The box is a size container, so that a narrow box can stack each row.
+ */
+.list {
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-md);
+  list-style: none;
+  container: shortcut-list / inline-size;
+}
+
+.list > li + li {
+  border-top: 1px solid var(--ui-border);
+}
+
+.row {
+  display: flex;
+  flex-direction: column;
+  padding: 3px 6px 3px 12px;
+}
+
+/* The label, a note or Reset, the shortcuts, then the control at the end. */
+.line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 28px;
+}
+
+.label {
+  flex: 1;
+  overflow: hidden;
+  min-width: 0;
+  color: var(--ui-ink);
+  font-size: var(--ui-text-md);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fixed {
+  flex-shrink: 0;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+}
+
+.keys {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 2px;
+}
+
+/* A shortcut that records new keys in its place when pressed. */
+.key,
+.still {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px;
+  border: 0;
+  border-radius: var(--ui-radius-md);
+  background: none;
+  font: inherit;
+  text-decoration: none;
+}
+
+.key {
+  cursor: pointer;
+}
+
+.key:hover {
+  background: var(--ui-soft);
+}
+
+/* The end keeps the width of a button, so the shortcuts line up. */
+.end {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  min-width: var(--ui-control-height);
+}
+
+/*
+ * The recorder waits for the keys in a field with a full outline in the
+ * accent colour, as a focused field has.
+ */
+.recorder {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  margin: 0 3px;
+  padding: 0 8px;
+  border: 1px solid var(--ui-primary);
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-primary-soft);
+  color: var(--ui-ink2);
+  font-size: var(--ui-text-sm);
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+/* A line under the shortcuts, such as the command that has the keys. */
+.message {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 0 0 5px;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  line-height: 20px;
+}
+
+/* The icon centres on the first line of the text. */
+.messageIcon {
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+
+.warning {
+  color: var(--ui-ink2);
+}
+
+.warning .messageIcon {
+  color: var(--ui-warning);
+}
+
+.danger {
+  color: var(--ui-rose);
+}
+
+/*
+ * A narrow box, on a phone or in a narrow window, puts the label of a row
+ * and its note on the first line, and the shortcuts and the control at the
+ * end on a second line, so that a long label and four shortcuts both show.
+ * The label wraps.
+ */
+@container shortcut-list (max-width: 480px) {
+  .line {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 2px 8px;
+  }
+
+  .label {
+    grid-row: 1;
+    grid-column: 1;
+    padding-top: 6px;
+    white-space: normal;
+  }
+
+  .keys {
+    flex-wrap: wrap;
+    grid-row: 2;
+    grid-column: 1;
+    margin-left: -3px;
+  }
+
+  .end {
+    grid-row: 2;
+    grid-column: 2;
+  }
+
+  .end:empty {
+    display: none;
+  }
+}

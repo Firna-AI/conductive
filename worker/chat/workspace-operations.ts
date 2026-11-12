@@ -9,6 +9,8 @@ import {
 import type { ChatStore } from './store'
 import type { ChatDependencies } from './types'
 import { stopDispatchedTurns } from './workspace-stop'
+import { manageToolSession } from './tool-session-management'
+import type { ToolSessionManagement } from '../tools/services'
 import type { ToolSessionAccess, ToolSessionWrite } from '../tools/services'
 import { acceptToolSessionWrite } from './tool-session-write'
 import { ChatOperation } from './operation'
@@ -45,6 +47,26 @@ export class WorkspaceOperations {
         user,
         env,
         dependencies,
+      )
+      await flushRunner()
+      return { ...result, workspace }
+    })
+  }
+
+  manageTool(
+    input: ToolSessionManagement,
+    origin: string,
+    authorize: () => Promise<ToolSessionAccess>,
+  ) {
+    const { store, bind, publish, dependencies, flushRunner } = this.options
+    bind(input.workspaceId)
+    return store.run(async () => {
+      const { workspace } = await authorize()
+      const result = await manageToolSession(
+        new ChatOperation(store, input.workspaceId, dependencies, publish),
+        input,
+        origin,
+        dependencies.randomId,
       )
       await flushRunner()
       return { ...result, workspace }

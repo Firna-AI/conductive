@@ -1,16 +1,22 @@
 import type {
-  AgentCreateSessionResponse,
-  AgentSendMessageResponse,
   AgentListSessionsResponse,
+  AgentSessionSummary,
+  AgentSessionResponse,
+  AgentStopSessionResponse,
+  AgentGetMessageResponse,
   AgentReadSessionResponse,
   AgentTranscriptPosition,
-  AgentWorkspaceSummary,
-  AgentSessionResume,
-} from '../src/shared/agent-tools.ts'
-import type { UserMessage } from '../src/shared/messages.ts'
-import type { Session } from '../src/shared/sessions.ts'
+} from '../src/shared/agent-sessions.ts'
 import { choice, record, text, ToolInputError } from './input.ts'
-import { messageSender, workspaceState } from './responses.ts'
+import {
+  array,
+  flag,
+  messageSender,
+  nullableText,
+  replyCounter,
+  timestamp,
+  workspaceSummary,
+} from './responses.ts'
 
 function invalid(): never {
   throw new ToolInputError('The session reply is not valid.')
@@ -18,62 +24,22 @@ function invalid(): never {
 function string(value: unknown): string {
   return typeof value === 'string' ? value : invalid()
 }
-function nullableText(value: unknown): string | null {
-  return value === null ? null : string(value)
-}
-function number(value: unknown): number {
-  return typeof value === 'number' && Number.isFinite(value) ? value : invalid()
-}
-function counter(value: unknown): number {
-  const result = number(value)
-  return Number.isSafeInteger(result) && result >= 0 ? result : invalid()
-}
-function flag(value: unknown): boolean {
-  return typeof value === 'boolean' ? value : invalid()
-}
-function array(value: unknown): unknown[] {
-  return Array.isArray(value) ? value : invalid()
-}
-
-function workspace(value: unknown): AgentWorkspaceSummary {
-  const fields = record(value)
-  return {
-    id: text(fields.id),
-    number: counter(fields.number),
-    link: text(fields.link),
-    name: nullableText(fields.name),
-    branch: text(fields.branch),
-    state: workspaceState(fields.state),
-  }
-}
-
 export function listedSessions(value: unknown): AgentListSessionsResponse {
   const fields = record(value)
   return {
-    workspace: workspace(fields.workspace),
-    sessions: array(fields.sessions).map((value) => {
-      const item = record(value)
-      const state = item.state
-      if (state !== 'running' && state !== 'failed' && state !== 'idle')
-        return invalid()
-      return {
-        id: text(item.id),
-        link: text(item.link),
-        title: nullableText(item.title),
-        choice: choice(item.choice),
-        startedBy:
-          item.startedBy === null ? null : messageSender(item.startedBy),
-        state,
-        closed: flag(item.closed),
-      }
-    }),
+    ...(fields.hasMore !== undefined && { hasMore: flag(fields.hasMore) }),
+    workspace: workspaceSummary(fields.workspace),
+    sessions: array(fields.sessions).map(sessionSummary),
   }
 }
 
 function position(value: unknown): AgentTranscriptPosition | null {
   if (value === null) return null
   const fields = record(value)
-  return { line: counter(fields.line), offset: counter(fields.offset) }
+  return {
+    line: replyCounter(fields.line),
+    offset: replyCounter(fields.offset),
+  }
 }
 
 export function readSession(value: unknown): AgentReadSessionResponse {
@@ -82,107 +48,72 @@ export function readSession(value: unknown): AgentReadSessionResponse {
   const detail = fields.detail
   if (detail !== 'concise' && detail !== 'full') return invalid()
   return {
-    workspace: workspace(fields.workspace),
+    workspace: workspaceSummary(fields.workspace),
     session: { id: text(session.id), link: text(session.link) },
     detail,
     markdown: string(fields.markdown),
-    startLine: counter(fields.startLine),
-    endLine: counter(fields.endLine),
-    totalLines: counter(fields.totalLines),
-    startOffset: counter(fields.startOffset),
-    endOffset: counter(fields.endOffset),
+    startLine: replyCounter(fields.startLine),
+    endLine: replyCounter(fields.endLine),
+    totalLines: replyCounter(fields.totalLines),
+    startOffset: replyCounter(fields.startOffset),
+    endOffset: replyCounter(fields.endOffset),
     next: position(fields.next),
   }
 }
 
-function session(value: unknown): Session & { link: string } {
-  const fields = record(value)
+function sessionSummary(value: unknown): AgentSessionSummary {
+  const item = record(value)
+  const state = item.state
+  if (state !== 'running' && state !== 'failed' && state !== 'idle')
+    return invalid()
   return {
-    id: text(fields.id),
-    workspaceId: text(fields.workspaceId),
-    link: text(fields.link),
-    title: nullableText(fields.title),
-    choice: choice(fields.choice),
-    createdAt: number(fields.createdAt),
-    closedAt: fields.closedAt === null ? null : number(fields.closedAt),
-    activeTurnId: nullableText(fields.activeTurnId),
-    activeTurnStartedAt:
-      fields.activeTurnStartedAt === null
-        ? null
-        : number(fields.activeTurnStartedAt),
-    retryMessageId: nullableText(fields.retryMessageId),
-    startedBy:
-      fields.startedBy === null ? null : messageSender(fields.startedBy),
-    sourceSessionId: nullableText(fields.sourceSessionId),
-    loginAvailable: flag(fields.loginAvailable),
-    loginShared: flag(fields.loginShared),
+    id: text(item.id),
+    link: text(item.link),
+    title: nullableText(item.title),
+    choice: choice(item.choice),
+    startedBy: item.startedBy === null ? null : messageSender(item.startedBy),
+    state,
+    closed: flag(item.closed),
   }
 }
 
-function message(value: unknown): UserMessage {
+export function sessionResponse(value: unknown): AgentSessionResponse {
+  const fields = record(value)
+  return {
+    workspace: workspaceSummary(fields.workspace),
+    session: sessionSummary(fields.session),
+  }
+}
+
+export function stoppedSession(value: unknown): AgentStopSessionResponse {
   const fields = record(value)
   const state = fields.state
+  if (state !== 'idle' && state !== 'stopped' && state !== 'stopping')
+    return invalid()
+  return {
+    ...sessionResponse(fields),
+    turnId: fields.turnId === null ? null : text(fields.turnId),
+    state,
+  }
+}
+
+export function gotMessage(value: unknown): AgentGetMessageResponse {
+  const fields = record(value)
+  const message = record(fields.message)
+  const session = record(fields.session)
+  const state = message.state
   if (state !== 'queued' && state !== 'sent') return invalid()
   return {
-    id: text(fields.id),
-    sessionId: text(fields.sessionId),
-    sender: messageSender(fields.sender),
-    text: string(fields.text),
-    choice: choice(fields.choice),
-    createdAt: number(fields.createdAt),
-    state,
-    attachments: array(fields.attachments).map((value) => {
-      const item = record(value)
-      const kind = item.kind
-      if (kind !== 'image' && kind !== 'file') return invalid()
-      return {
-        id: text(item.id),
-        name: string(item.name),
-        kind,
-        mediaType: text(item.mediaType),
-        sizeBytes: counter(item.sizeBytes),
-      }
-    }),
-  }
-}
-
-function resume(value: unknown): AgentSessionResume {
-  const fields = record(value)
-  const state = fields.state
-  if (state === 'failed') {
-    const error = record(fields.error)
-    return {
+    workspace: workspaceSummary(fields.workspace),
+    session: { id: text(session.id), link: text(session.link) },
+    message: {
+      id: text(message.id),
+      sessionId: text(message.sessionId),
+      sender: messageSender(message.sender),
+      text: string(message.text),
       state,
-      error: { code: text(error.code), message: string(error.message) },
-    }
+      createdAt: timestamp(message.createdAt),
+    },
+    turnId: fields.turnId === null ? null : text(fields.turnId),
   }
-  if (
-    (state === 'not_needed' || state === 'queued' || state === 'waiting') &&
-    fields.error === null
-  )
-    return { state, error: null }
-  return invalid()
-}
-
-export function createdSession(value: unknown): AgentCreateSessionResponse {
-  const fields = record(value)
-  const base = {
-    workspace: workspace(fields.workspace),
-    session: session(fields.session),
-    eventNumber: counter(fields.eventNumber),
-    resume: resume(fields.resume),
-  }
-  if (fields.message === null && fields.turnId === null)
-    return { ...base, message: null, turnId: null }
-  if (fields.message === null || fields.turnId === null) return invalid()
-  return {
-    ...base,
-    message: message(fields.message),
-    turnId: text(fields.turnId),
-  }
-}
-
-export function sentMessage(value: unknown): AgentSendMessageResponse {
-  const result = createdSession(value)
-  return result.message === null ? invalid() : result
 }

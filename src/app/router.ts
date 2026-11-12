@@ -13,7 +13,7 @@ export type SettingsTab = (typeof SETTINGS_TABS)[number]
 
 /** The tabs of a saved routine on a phone: its form, and its runs. */
 export type RoutineTab = 'routine' | 'runs'
-export const ACCOUNT_TABS = ['general', 'preferences'] as const
+export const ACCOUNT_TABS = ['general', 'preferences', 'shortcuts'] as const
 
 export type AccountTab = (typeof ACCOUNT_TABS)[number]
 

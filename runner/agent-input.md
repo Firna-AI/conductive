@@ -47,9 +47,14 @@ requirements.
 ## Messages and files
 
 Each message to an agent starts with a sender line, then an empty line:
-`Sender: <display name> (@<login>)`, or `Sender: @<login>` without a
-display name. No adapter maps a user message to an event, so the chat
-never shows the sender line.
+`Sender: <display name> (@<login>) [member ID: "<id>"]`, or
+`Sender: @<login> [member ID: "<id>"]` without a display name. The member
+ID is a JSON string. Each run of white space in the name and the login
+becomes one space, and their ends lose their white space. Each message
+gives its own sender, also a message during a turn.
+[Sender IDs](agent-tools.md#sender-ids) says how agents use the ID with
+the workspace tools. No adapter maps a user message to an event, so the
+chat never shows the sender line.
 
 - Each `turn` and `message` command of the current Worker carries the
   current branches in `branches`, also a message during a turn.

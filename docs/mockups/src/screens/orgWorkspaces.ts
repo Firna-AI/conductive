@@ -51,21 +51,41 @@ const sessionPages: Readonly<Record<string, string>> = {
 }
 
 /**
+ * The rows of the chats after the second session of Checkout address
+ * autocomplete reached the other workspace with a workspace tool. Its turn
+ * goes on, so from Saved carts the list shows Checkout address autocomplete
+ * at work: after it sent its message, and after it stopped the turns of its
+ * first session and of Saved carts. From Checkout address autocomplete, the
+ * list then shows Saved carts ready, and opens it at its stopped turn.
+ */
+const reachedWorkspaces: Partial<
+  Record<ConversationKey, readonly ChangedWorkspace[]>
+> = {
+  'sent-by-other': [
+    { workspace: checkoutAutocomplete, status: 'working', to: paths.sentBy },
+  ],
+  'stopped-from': [
+    { workspace: savedCarts, status: 'ready', to: paths.agentStopOther },
+  ],
+  'stopped-from-other': [
+    { workspace: checkoutAutocomplete, status: 'working', to: paths.agentStop },
+  ],
+}
+
+/**
  * The rows that differ from the list by the time of the state. In the
  * chats of the workspace links page, and with a message that links Saved
  * carts, the list shows Saved carts at the top of General, and a chip
  * finds it there. After the second session of Checkout address
- * autocomplete sent its messages, Saved carts opens on its message, and
- * from Saved carts the list shows Checkout address autocomplete at work.
+ * autocomplete sent its messages, Saved carts opens on its message. The
+ * chats after a workspace tool reached the other workspace show that
+ * workspace as `reachedWorkspaces` says.
  */
 export function changedWorkspaces(
   state: WorkspaceState,
 ): readonly ChangedWorkspace[] {
-  if (state.conversation === 'sent-by-other') {
-    return [
-      { workspace: checkoutAutocomplete, status: 'working', to: paths.sentBy },
-    ]
-  }
+  const reached = reachedWorkspaces[state.conversation]
+  if (reached) return reached
   if (isNew(state)) return []
   const later =
     state.composer === 'workspace-link' ||
