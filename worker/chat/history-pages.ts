@@ -44,7 +44,7 @@ export interface PageLimits {
  * in the serial chat queue. The byte limit bounds the reply, which still
  * holds one event.
  */
-export const BROWSER_PAGE_LIMITS: PageLimits = {
+const BROWSER_PAGE_LIMITS: PageLimits = {
   scan: 2_048,
   bytes: 4_194_304,
 }
