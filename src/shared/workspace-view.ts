@@ -9,10 +9,14 @@ export type WorkspaceTab =
   | { kind: 'file'; path: string; mode: 'preview' | 'source' }
   | { kind: 'diff'; path: string }
 
+export type TemporaryTab = { kind: 'file' | 'diff'; path: string }
+
 /** The server keeps view state. Only panel widths stay in the browser. */
 export interface WorkspaceView {
   tabs: readonly WorkspaceTab[]
   activeTab: WorkspaceTab | null
+  /** The temporary file or diff tab, in either display mode, or null. */
+  temporaryTab: TemporaryTab | null
   fileList: 'all' | 'changes' | 'checks'
   tool: 'terminal' | 'preview' | 'desktop'
 }

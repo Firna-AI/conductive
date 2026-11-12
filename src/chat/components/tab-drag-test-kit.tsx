@@ -71,7 +71,7 @@ export async function mountChat(options: {
 }) {
   holdAnimationFrames()
   const { server } = options
-  const view = { tabs: options.tabs, activeTab: first }
+  const view = { tabs: options.tabs, activeTab: first, temporaryTab: null }
   server.json('GET', viewPath, {
     view: { ...view, fileList: 'changes', tool: 'terminal' },
   })

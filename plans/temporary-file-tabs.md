@@ -505,16 +505,18 @@ State the temporary tab as requirements, with decisions 284 and 285.
 
 Depends on: 2
 
-- [ ] In `src/shared/workspace-view.ts`, give the saved view an optional
-      field that names the temporary tab by its kind and its path.
-- [ ] In `worker/app-api/workspace-view.ts`, read and store the field.
+- [x] In `src/shared/workspace-view.ts`, give the saved view a required
+      nullable field that names the temporary tab by its kind and its path.
+- [x] In `worker/app-api/workspace-view.ts`, read and store the field.
       Read a value that is not valid, or that names no open file or diff
       tab, as no temporary tab. Add no rejection.
-- [ ] Add Worker tests: the field stays through a save and a load, a view
+- [x] Add Worker tests: the field stays through a save and a load, a view
       without the field loads with no temporary tab, and a value that is
       not valid or names no open tab loads as no temporary tab.
-- [ ] Update `src/shared/README.md` where it describes the saved view.
-- [ ] Run the targeted Worker tests and `npm run typecheck`.
+- [x] Update `src/shared/README.md` where it describes the saved view.
+- [x] Run the targeted Worker tests and `npm run typecheck`.
+
+Check evidence: `.context/temporary-file-tabs/milestone-3-checks.md`.
 
 ## Milestone 4: Open, replace, and keep the temporary tab
 

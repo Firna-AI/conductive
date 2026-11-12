@@ -63,6 +63,7 @@ export function tabChat(
     tabs,
     activeTab: first,
     fileList: 'changes',
+    temporaryTab: null,
     tool: 'terminal',
   }
   chat.server.json('GET', viewPath, { view })

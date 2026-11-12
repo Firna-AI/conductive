@@ -30,6 +30,7 @@ describe('the chat tab order', () => {
     expect(await chat.savedView()).toEqual({
       tabs: [second, file, first],
       activeTab: second,
+      temporaryTab: null,
       fileList: 'changes',
       tool: 'terminal',
     })

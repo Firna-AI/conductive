@@ -32,6 +32,7 @@ it.each(['view', 'read mark'] as const)(
             view: {
               tabs: [],
               activeTab: null,
+              temporaryTab: null,
               fileList: 'all',
               tool: 'terminal',
             },

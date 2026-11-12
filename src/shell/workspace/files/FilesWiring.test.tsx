@@ -108,6 +108,7 @@ describe('the Files screens in the workspace', () => {
     expect(saved.at(-1)).toEqual({
       tabs: [...fixtures.view.view.tabs, fileTab],
       activeTab: { kind: 'session', sessionId: FAKE_IDS.session },
+      temporaryTab: null,
       fileList: 'all',
       tool: 'terminal',
     })
