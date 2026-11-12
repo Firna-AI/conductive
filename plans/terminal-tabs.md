@@ -1,6 +1,6 @@
 # Terminal tabs
 
-Status: Active. On branch `calummoore/multiple-terminal-windows`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
+Status: Active. [PR #280](https://github.com/Firna-AI/conductive/pull/280) is open. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
 Each workspace has one shell today. Every terminal connection attaches to
 the same tmux session, so all browser tabs, devices, and members see one
