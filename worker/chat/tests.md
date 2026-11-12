@@ -119,6 +119,10 @@ npm run typecheck
   each kind, and reads the requests and markers of the repair tests.
 - `late-events.test.ts` and `never-started.test.ts` cover replay after a
   workspace stop and the queued-turn eligibility rules.
+- `close-attribution.test.ts` checks that a browser close records the
+  authenticated member, not a member that the body names, before the
+  interrupt. It also checks that the first stopper stays, and that a turn
+  without `stopRequest` reads its first stopper from history.
 - `retry.test.ts`, `retry-queue.test.ts`, and `retry-crash.test.ts` cover
   the newest failed turn: stale tabs, refused ends, waiting work, rollback,
   and commit crashes. `retry.test-support.ts` sends retries and reads the

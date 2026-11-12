@@ -1,0 +1,81 @@
+# Long stop-source links exceed phone width
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-11, from implementation finding 1 of the review of branch `calummoore/untitled-v3`, which adds the stop line of a stop through the workspace tools.
+- **Location:** `docs/mockups/src/components/chat/StopLine.module.css:6`, `src/chat/links/LinkedText.tsx:66`, `src/chat/components/TranscriptItem.tsx:64`, and, for the recommended fix, `docs/mockups/src/components/chat/ChatPane.module.css:30`. The related open-message case is at `src/chat/components/MessageLine.tsx:188` and `docs/mockups/src/components/chat/ToolGroup.module.css:152`.
+- **Reason:** The fallback shows only while the org list lacks the source workspace, and the style fix costs the same after the merge.
+
+- **Source:** Implementation. **Category:** Product bug.
+- **Terms:**
+  - **Stop line:** the centred, muted line after a stopped turn in the chat. `StopLine` in `docs/mockups/src/components/chat/StopLine.tsx` draws it for the app and the mockups.
+  - **Stop source:** the workspace and session whose agent stopped a turn with a workspace tool. The workspace stores it with the stopped turn.
+  - **Org list:** the workspaces of the org that the chips of the chat search, in `src/chat/state/workspace-list.ts`. It is null until it loads.
+  - **Fallback:** the plain session link that the stop line shows when the org list lacks the source workspace.
+  - **Work fold:** the folded work of an ended turn. Each agent message in it is one line that opens to show the whole message.
+- **Background:**
+  - A stop through the workspace tools shows "Stopped from" and the session chip of the stopping session. The user chose this on 11 November 2026. [Stops by the workspace tools](../../docs/protocol/messages-and-attachments.md#stops-by-the-workspace-tools) states it.
+  - `src/chat/components/TranscriptItem.tsx:59-65` passes `SessionLinkText` as the source of the stop line. In `src/chat/links/LinkedText.tsx`, line 65 draws the chip when `sessionTarget` finds the source workspace in the org list. Lines 66-69 return the raw session link as text otherwise.
+  - `sessionTarget`, at `src/chat/links/workspace-links.ts:153-156`, finds nothing in an org list that has not loaded. So the fallback also shows before the list loads.
+  - The org list holds every workspace of the org, also the archived ones, with no state filter and no limit. See `worker/app-api/shell-data.ts:58-78` and `src/chat/state/workspace-list.ts:11-15`.
+  - A workspace row goes away only after a failed creation or an org purge. See `worker/lifecycle/workspace-data.ts:219-233` and `worker/members/purge-data.ts:15`. So normal use seldom meets the fallback.
+  - The Worker makes org IDs, workspace IDs, and most session IDs with `randomToken()`, as 43 base64url characters. See `worker/security/crypto.ts:20-22`, `worker/app-api/feature-org.ts:54`, `worker/lifecycle/create-request.ts:39-40`, and `worker/chat/dependencies.ts:50`.
+  - A session from a model change gets a browser UUID, at `src/chat/state/model-actions.ts:58`. That route accepts any nonempty ID, at `worker/chat/model-changes.ts:30` and `worker/chat/inputs.ts:17`.
+  - [Which links show as chips](../../docs/protocol/workspace-links.md#which-links-show-as-chips) keeps a link to an unknown or removed workspace as plain text.
+  - [Messages and answers](../../docs/protocol/workspace-links.md#messages-and-answers) says that a long word, such as a long link that stays plain text, breaks to fit the line. Its reason: a long link must not pass the edge of a phone screen.
+  - The cause: `docs/mockups/src/components/chat/StopLine.module.css:6-13` sets no `overflow-wrap` and no `word-break`. Its rules copy `docs/mockups/src/components/chat/LostLine.module.css`, which has neither.
+  - Other chat surfaces set the rule one at a time. Message bubbles and answers set `overflow-wrap: anywhere` at `docs/mockups/src/components/chat/ChatItemView.module.css:25` and `:36`. The linked line sets it at `docs/mockups/src/components/chat/LinkedLine.module.css:13`.
+  - Measured with development fixtures: a UUID workspace ID and a 120-character session ID gave a scroll width of 902 pixels in a client width of 358 pixels, at a 390-pixel viewport. The browser broke that link only after `-`, never after `/`.
+  - Only 1 base64url character in 64 is `-`. So a link with production IDs has few break points or none.
+  - Measured with fake IDs in the production format: a probe made three 43-character base64url IDs with no `-`. It built their 181-character session link on `https://conductive.build` with the app's `sessionLink`.
+  - The probe put that link in place of the rendered stop source in the app, at a 390-pixel viewport. It changed no source file and sent no request with those IDs.
+  - The stop line then had a scroll width of 1,250 pixels in a client width of 358 pixels. Its computed `overflow-wrap` was `normal`. The link ran past the right edge of the screen.
+  - In the same probe, `overflow-wrap: anywhere` on the app's shared transcript element made the line fit. The scroll width was 358 pixels in a client width of 358 pixels, and the computed value was `anywhere`. The link wrapped inside the line.
+  - An earlier run of that probe put the rule on the direct parent of the line. The recorded result puts it on the shared transcript element itself.
+  - Related case, not verified in a browser: an open agent message of a work fold changes to `white-space: normal`, at `docs/mockups/src/components/chat/ToolGroup.module.css:152-155`. That style holds the text at `src/chat/components/MessageLine.tsx:188`.
+  - No style in that chain breaks a long word. So a long plain link in an open message probably passes the column edge on a phone too. Nobody has measured this case.
+  - The fix is a style rule and a mockup state. It changes no stored format, API, or message.
+- **Problem:** The stop line has no rule that breaks a long word. So a fallback link passes the edge of a narrow line. Normal production IDs make the link long enough, as the measurement shows.
+- **Impact if no action:** While the org list lacks the source workspace, the source link passes the screen edge. The reader must scroll sideways to read it. A long plain link in an open work-fold message can probably do the same.
+- **Root question:** How can a stop source remain readable inside a narrow chat when its workspace is unknown?
+- **Shared assumptions:**
+  - A known source keeps its session chip, and only the fallback changes. Source: the user's choice of 11 November 2026, in `docs/protocol/messages-and-attachments.md:215-220`. Kept.
+  - A link to an unknown workspace stays plain text, not a chip. Source: `docs/protocol/workspace-links.md:76-78`. A chip shows only data that the app already shows the reader, at line 55. Kept.
+  - A long plain link breaks to fit the line. Source: `docs/protocol/workspace-links.md:137-138`. Kept.
+  - The fallback shows the whole session link. Source: the plain-text rule, and the design call of 11 November 2026 that the stop source reuses the session-chip target and fallbacks of a message link. Kept. C drops it.
+  - Session IDs stay opaque. Source: the code, at `worker/chat/model-changes.ts:30` and `worker/chat/inputs.ts:17`. This is an implementation fact. Option C does not depend on the visible ID length.
+  - An org list that has not loaded counts as a list without the source workspace. Source: the code, at `src/chat/links/workspace-links.ts:153-156`. This is not a requirement. Message links work the same way. F drops it.
+- **Options:**
+  - **A.** Add word breaking to the shared stop-line style. Add a fallback mockup and verify the narrow layout with the long link. This also protects other long text in this event line. Effort: Small.
+  - **B.** Give plain fallback text one shared wrapper in the app and the mockups. Use that wrapper for the session-link fallback, with word breaking. It adds a component and leaves other stop text alone. Effort: Small.
+  - **C.** Show a short fallback label, with the full link available to assistive technology and to the copy. Update the presentation requirement and the mockup. This changes visible fallback content, so it needs the user. Effort: Medium.
+  - **D.** Extract one shared event-line part and style for `StopLine`, `LostLine`, `LinkedLine`, `ContinuedLine`, and `EndReasonLine`.
+    - `ContinuedLine` and `EndReasonLine` already reuse the `.line` style of `docs/mockups/src/components/chat/LinkedLine.module.css`. The stop line and the lost line keep their own copies.
+    - The shared default includes `overflow-wrap: anywhere`.
+    - Move the link rules at `docs/mockups/src/components/chat/LinkedLine.module.css:28-43` into their own class, so that a chip in the stop line keeps its look and height.
+    - Add the unknown-source state to the mockup page `app/chat/agent-stops`. Check every event line on desktop and on a phone.
+    - This removes the copied rules that lost the word break. It changes four other components, and it does not cover chat items that are not event lines.
+    - Effort: Medium.
+  - **E.** Set `overflow-wrap: anywhere` on the shared `.transcript` in `docs/mockups/src/components/chat/ChatPane.module.css:30-39`.
+    - The app renders every chat item inside it, at `src/chat/components/ChatPane.tsx:32`, and the mockups share it. So each chat item of the app and the mockups inherits that default.
+    - Chips and tool targets keep `white-space: nowrap`. Answer tables keep their reset at `docs/mockups/src/components/chat/ChatItemView.module.css:81-83`.
+    - The probe in the background shows that this rule fixes the stop line.
+    - Add the unknown-source state to the mockup page `app/chat/agent-stops`.
+    - Check the chat mockup pages on desktop and on a phone, because `anywhere` also lowers the smallest width of flex items. Also check an open work-fold message with a long plain link.
+    - It changes one file outside the stop line.
+    - Effort: Medium, mostly for that visual check.
+  - **F.** Show a placeholder until the org list loads, then the chip or the raw fallback. This narrows the fallback to a failed list read or a removed workspace. It adds a loading state that no mockup and no requirement covers, so it needs the user. It does not fix the layout alone, so it still needs A, D, or E. Effort: Medium.
+- **Left out:**
+  - A rejection of long IDs fails the goal, because normal 43-character IDs already overflow. It also adds validation, which only the user can approve.
+  - Shorter Worker IDs change stored data. A link with an origin and three IDs still needs breaks on a phone.
+  - A scrollable stop line keeps the overflow and makes this status harder to read.
+  - An omitted source hides the stop attribution that the user chose.
+  - An ellipsis that cuts the fallback short, with the whole link as its title, breaks the long-link rule. It also hides the IDs that name the session.
+  - A stored source label and title in the stop record would show data that the app does not show the reader, for a removed workspace. `docs/protocol/workspace-links.md:55` forbids that.
+  - A style lint or a test for the class adds a gate or a test that only the user can approve. D and E prevent the class without one.
+  - An automated layout test cannot run here. The root package runs Vitest with happy-dom, which computes no layout, and the web app has no browser spec harness. So the fix uses a visual check.
+  - A choice to change nothing leaves the long-link rule broken.
+- **Wider fix:** E, in place of A. One inherited transcript default covers each chat surface, also the open work-fold message. D shares the default among the event lines only. A is a direct fix for this class. E is not blocked: it changes no requirement and adds no validation, gate, or loading state.
+- **Previous examples:** Three chat surfaces needed the same rule one at a time. Main commit `374260b8`, from PR #118, added `overflow-wrap: anywhere` to message bubbles and answers for a long link that stays plain text. Main commit `43d6d0ff`, from 7 November 2026, added it to the linked line for a title without spaces. The stop line arrived without it in branch `calummoore/untitled-v3`, in commits `0d1b5684` and `239f0a68`.
+- **Recommendation:** E. One inherited rule prevents another chat surface from missing word breaking. The first recommendation was A.
+- **Action:** fix after merge, apply E, because the fallback appears only while the org list lacks its workspace, and the style fix costs the same later.

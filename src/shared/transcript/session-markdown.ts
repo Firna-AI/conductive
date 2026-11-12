@@ -23,6 +23,7 @@ import { groupEntries, workSummary } from './transcript-entries'
 import { turnCopy, type ChatReaders } from './turn-words'
 
 export interface TranscriptDocument {
+  linkContext: { origin: string; orgId: string }
   session: Session
   eventNumber: number
   workspace: Pick<Workspace, 'number' | 'name' | 'link'>
@@ -127,7 +128,12 @@ export class SessionMarkdown {
         const { sender } = entry.item.message
         blocks.push(
           `## ${plainText(sender.displayName ?? sender.githubLogin)}`,
-          itemMarkdown(entry.item, transcript, readers),
+          itemMarkdown(
+            entry.item,
+            transcript,
+            readers,
+            this.document.linkContext,
+          ),
         )
         headed = undefined
         continue
@@ -137,7 +143,14 @@ export class SessionMarkdown {
         if (entry.item.kind !== 'continued') {
           heading(turnOf(transcript, entry.item))
         }
-        blocks.push(itemMarkdown(entry.item, transcript, readers))
+        blocks.push(
+          itemMarkdown(
+            entry.item,
+            transcript,
+            readers,
+            this.document.linkContext,
+          ),
+        )
       } else if (entry.kind === 'insert') {
         heading(entry.insert.content.turnId)
         blocks.push(commandMarkdown(entry.insert.content))
@@ -163,7 +176,12 @@ export class SessionMarkdown {
           blocks.push(
             ...entry.steps.map((step) =>
               step.kind === 'item'
-                ? itemMarkdown(step.item, transcript, readers)
+                ? itemMarkdown(
+                    step.item,
+                    transcript,
+                    readers,
+                    this.document.linkContext,
+                  )
                 : commandMarkdown(step.insert.content),
             ),
           )

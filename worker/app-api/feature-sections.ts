@@ -16,9 +16,9 @@ import { shellSections } from './shell-data'
 import { workspaceBinding } from './workspace-state'
 
 export async function featureSectionWrite(
-  request: Request,
+  request: Pick<Request, 'method'>,
   env: AppEnv,
-  context: RequestContext,
+  context: Pick<RequestContext, 'org' | 'user' | 'body'>,
   dependencies: AppDependencies,
   sectionId: string | null,
 ): Promise<Response> {

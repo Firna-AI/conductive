@@ -56,7 +56,7 @@ it.each(['claude', 'codex'] as const)(
       GIT_COMMITTER_NAME: 'Bob Example',
       GIT_COMMITTER_EMAIL: '2+bob@users.noreply.github.com',
     })
-    const text = `Sender: @bob\n${line}\n\nChange the file.`
+    const text = `Sender: @bob [member ID: "bob"]\n${line}\n\nChange the file.`
     expect(await provider.input()).toMatchObject(
       agent === 'claude'
         ? { role: 'user', content: text }
@@ -144,12 +144,12 @@ it.each(['claude', 'codex'] as const)(
     expect(provider.prompt()).toContain('Target branch: "main"')
     expect(await provider.input()).toMatchObject(
       agent === 'claude'
-        ? { content: 'Sender: @alice\n\nChange the file.' }
+        ? { content: 'Sender: @alice [member ID: "alice"]\n\nChange the file.' }
         : {
             input: [
               {
                 type: 'text',
-                text: 'Sender: @alice\n\nChange the file.',
+                text: 'Sender: @alice [member ID: "alice"]\n\nChange the file.',
                 text_elements: [],
               },
             ],
@@ -163,7 +163,7 @@ it.each(['claude', 'codex'] as const)(
     })
     await runner.idle()
     const text =
-      'Sender: @bob\nCurrent branches: workspace "owner/old"; target "trunk".\n\nChange the file.'
+      'Sender: @bob [member ID: "bob"]\nCurrent branches: workspace "owner/old"; target "trunk".\n\nChange the file.'
     expect(await provider.input(true)).toMatchObject(
       agent === 'claude'
         ? { content: text }
