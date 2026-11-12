@@ -37,6 +37,8 @@ Select **Resume** if the restored workspace is already open.
 On a computer, **Enter** sends the message.
 Use **Shift+Enter** to add a line.
 On a phone, **Enter** adds a line.
+Your message appears in the chat at once.
+If it cannot send, it goes back to the message box, and the chat shows the cause.
 
 You can send a message while the workspace's computer starts.
 The chat shows the steps of that start.
@@ -74,8 +76,8 @@ Attached files arrive in `.context/attachments/` in the workspace's repository f
 Each file keeps the same path when you retry its message.
 New workspaces from a new computer build also get a `.context/` folder for agent notes, screenshots, and files for other sessions.
 Git ignores the folder's files unless your repository already tracks them.
-Use **Terminal** to find the ignored files.
-**All files** and **Changes** do not list them.
+After a new computer build, **All files** lists them, so you can open them there.
+**Changes** does not list them.
 
 - [Read files and pictures](/docs/files-and-changes#read-a-file)
 
@@ -182,12 +184,13 @@ In the folded work of a turn, open a message line to read its table.
 
 ## Manage session tabs
 
-Use a tab's menu to rename or move it.
+Use a tab's menu to rename or move it, or to copy its link.
 Open the menu with a right click on a computer.
 You can also use **Shift+F10** while the tab has focus.
 On a phone, use a long press.
 
 - **Rename session** changes the tab's title.
+- **Copy link** copies a link that opens the workspace with that session shown.
 - **Move left** and **Move right** move it one place.
 - Drag a tab to place it elsewhere in the row.
 

@@ -73,10 +73,12 @@ sessions as tabs above the chat, and four tabs at the bottom.
   A move that the place of a tab rules out keeps its place, greyed.
   A read-only workspace leaves out each item that it does not allow,
   from decision 214.
-- The menu of a workspace row has Move to section, Reassign to, Rename, a
-  line, then Archive, as `app/workspace-menu` shows. It lists only the
-  actions that the person can use, from `workspaceMenu.ts` in
-  `src/components/workspaces/`, and a row with none has no menu. The app
+- The menu of a workspace row has Move to section, Reassign to, Rename,
+  Copy link, a line, then Archive, as `app/workspace-menu` shows. It lists
+  only the actions that the person can use, from `workspaceMenu.ts` in
+  `src/components/workspaces/`. Every row offers Copy link, so every row
+  has a menu. `linkCopy.ts` in `src/components/workspace/` gives the words
+  of Copy link and of its result. The app
   reads the same list, so `workspaceMenu.ts` imports no fixture. A right
   click opens the menu at the pointer, from `RowMenu.tsx` beside it.
   Shift+F10 and the Menu key on a focused row open it below the row. No

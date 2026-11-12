@@ -33,6 +33,9 @@ is relative to `src/chat/`, the folder of this guide.
 - `components/TranscriptCopy.tsx`: `useTranscriptCopy`, the copy of a
   transcript from the tab menu with the toast of its result, and
   `ChatToasts`, the toasts of the host, else the chat's own.
+  `components/session-link-copy.ts`: `useSessionLinkCopy`, Copy link of
+  the tab menu, which copies the link of a session with the origin of the
+  link of the workspace, and the toast of its result.
 - `components/row-scroll.ts`: the scroll of a full row, its fades, and the
   scroll of a drag near an end. `components/row-reveal.ts`: the place of a
   tab in the row, and the scroll that brings tabs into view.

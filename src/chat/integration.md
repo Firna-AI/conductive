@@ -104,6 +104,15 @@ mount the chat.
   is suspended. The app gives `WorkspaceContext.readOnly`. The chat then
   shows its history, as an archived workspace does, and the host's bar
   takes the place of the composer.
+- `composerFocus` asks the message field of the composer to take the focus
+  once, as `ComposerFocus` in `components/Composer.tsx` says. The app gives
+  it after a click on the workspace in the sidebar, from
+  `AppModel.composerFocus`. The request waits until the composer shows,
+  such as after the first load of the chat. The field then takes the focus
+  only while the focus is still on the element of the request, or on no
+  element. Either way the composer calls `done`, so the app drops the
+  request. A request that waits while the composer does not show, such as
+  in a read-only chat, stays until another request replaces it.
 - `copy` gives the clipboard, the clock, and the timers of a copy of a
   transcript from the tab menu. The app gives its `AppServices`, so a copy
   writes through `AppServices.copy`. It must be stable, because it keeps

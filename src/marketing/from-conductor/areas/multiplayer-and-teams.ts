@@ -56,7 +56,7 @@ export const multiplayerAndTeamsFeatures: readonly ParityFeature[] = [
     area: 'multiplayer-and-teams',
     name: 'Direct links',
     status: 'available',
-    note: 'Copy workspace links from their numbers. Links within the org show chat chips, with Copy link in workspace menus in progress.',
+    note: 'Copy a workspace link from its number, or with Copy link in the menu of its row. Links to workspaces in the same org show live chips in messages and drafts.',
   },
   {
     id: 'team-list-and-profiles',

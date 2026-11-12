@@ -150,8 +150,8 @@ export function HomeList(props: {
 /**
  * The list of a suspended org on desktop. The main area shows the notice
  * of the org in place of New workspace. A narrow window shows the list as
- * a page, with the notice at its top. Its rows have no menu. `focus` names
- * the row whose hover the view draws.
+ * a page, with the notice at its top. The menu of each row holds only Copy
+ * link. `focus` names the row whose menu or hover the view draws.
  */
 export function SuspendedList(props: {
   viewer: Membership

@@ -189,6 +189,7 @@ describe('a drag in the tab row', () => {
         sheet: true,
         menu: [
           { name: 'Rename session', off: false },
+          { name: 'Copy link', off: false },
           { name: 'Copy concise transcript', off: false },
           { name: 'Copy full transcript', off: false },
           { name: 'Move left', off: false },

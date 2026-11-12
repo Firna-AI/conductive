@@ -120,6 +120,12 @@ Use **+** for a new conversation on that same task.
 3. Paste the copied link into a message in the same org.
 
 **Link copied** confirms the copy.
+
+You can also copy the link from the workspace list.
+Right-click the workspace's row, or press **Shift+F10** while the row has focus.
+Then select **Copy link**.
+This works for archived workspaces too.
+
 The pasted link shows the workspace's number, name, and list mark in a small box.
 Its name and mark follow the workspace as they change.
 

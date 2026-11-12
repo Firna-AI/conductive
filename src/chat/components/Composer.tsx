@@ -1,6 +1,10 @@
-import { useRef, useState, type RefObject } from 'react'
+import { useEffect, useRef, useState, type RefObject } from 'react'
 import { Button } from '@firna/ui/button'
 import { ArrowUp, Paperclip, Square } from 'lucide-react'
+import {
+  focusStayed,
+  type ComposerFocusRequest,
+} from '../../app/composer-focus'
 import { filesWait } from '../../app/draft-files'
 import type { Agent, AgentChoice, AgentModel } from '../../shared/agents'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
@@ -22,6 +26,13 @@ import local from './chat.module.css'
 import { useComposerDrop } from './composer-drop'
 import { ModelPicker } from './ModelPicker'
 import { useSendKey } from './send-key'
+
+/** A request that the message field takes the focus once. */
+export interface ComposerFocus {
+  readonly request: ComposerFocusRequest
+  /** The composer took the request: it focused, or the focus had moved. */
+  readonly done: () => void
+}
 
 export interface ComposerProps {
   draft: Draft
@@ -65,6 +76,25 @@ export interface ComposerProps {
     folders?: readonly string[],
   ) => readonly string[]
   onChooseModel: (choice: AgentChoice) => void
+  /** The field takes the focus when it shows, as `ComposerFocus` says. */
+  focus?: ComposerFocus | null
+}
+
+/**
+ * Gives the focus to the field once for each request, when the composer
+ * shows it, unless the focus moved to another element since the request.
+ */
+function useRequestedFocus(
+  field: RefObject<FieldHandle | null>,
+  focus: ComposerFocus | null,
+) {
+  const request = focus?.request ?? null
+  const done = focus?.done
+  useEffect(() => {
+    if (request === null) return
+    if (focusStayed(request)) field.current?.focus()
+    done?.()
+  }, [field, request, done])
 }
 
 /**
@@ -101,7 +131,9 @@ function useComposerKeys(props: {
  * adds a line, so Enter never adds a line to a message that it sends. A
  * pasted workspace link shows as a chip, and the draft keeps the plain link.
  * In a chat with the files of its workspace, `@` opens the list of the files
- * and folders just above the box, and a pick shows as a file chip.
+ * and folders just above the box, and a pick shows as a file chip. A focus
+ * request, such as from a click on the workspace in the sidebar, puts the
+ * caret in the field when it shows.
  */
 export function Composer(props: ComposerProps) {
   const control = useControlSizes()
@@ -118,6 +150,7 @@ export function Composer(props: ComposerProps) {
   const off = empty || props.blocked || props.sending || filesWait(draft.files)
   const steers = props.running && props.startsSession !== true
   const sendKey = useSendKey(!off, props.onSend)
+  useRequestedFocus(field, props.focus ?? null)
   // The field takes changes while the composer shows, so the box takes a
   // drop also while Send is off.
   const drop = useComposerDrop({

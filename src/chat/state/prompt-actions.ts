@@ -16,7 +16,8 @@ export type PromptOutcome = 'sent' | 'failed' | 'blocked' | 'unavailable'
  * message of the member to the session of the chat: the session that the
  * member saw last, also while a file or another view shows. It follows each
  * rule of a send from the composer: the model and the effort of the session,
- * its login, its block, and a linked session that the reply names. A send
+ * its login, its block, and a linked session that the reply names. The
+ * prompt shows in the chat at once, while its send waits. A send
  * during a turn joins that turn. It reads and changes no draft, so the draft
  * keeps its text, files, identity, and send. A failure shows the notice of
  * the composer. A second try of the same prompt in the same session keeps
@@ -39,7 +40,7 @@ export async function sendPrompt(
     attachmentIds: [],
     choice: session.choice,
   }
-  const posted = await postMessage(context, session.id, request)
+  const posted = await postMessage(context, session.id, request, [])
   if ('error' in posted) {
     context.prompts.set(key, request.id)
     showNotice(context, session.id, sendFailedTitle, posted.error)

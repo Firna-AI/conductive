@@ -37,7 +37,9 @@ import { TurnEnd } from './TurnEnd'
  * message went out to the agent. The files that no chip shows stay under
  * the message.
  */
-export function UserBubble(props: { message: UserMessage }) {
+export function UserBubble(props: {
+  message: Pick<UserMessage, 'text' | 'attachments' | 'state'>
+}) {
   const { message } = props
   const parts = useChatParts(message.text, {
     mentions: true,

@@ -148,7 +148,7 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     area: 'agents-and-chat',
     name: 'Session links',
     status: 'available',
-    note: 'Session links open one chat and show as chips. Agent tools give these links, with Copy link in session tab menus in progress.',
+    note: 'Session links open one chat session and show as chips in chat. Copy link in the tab menu of a session copies its link, and agent tools give these links too.',
   },
   {
     id: 'copy-session-transcripts',

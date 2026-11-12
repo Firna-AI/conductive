@@ -1,14 +1,17 @@
-import { useMemo, type ReactNode } from 'react'
+import { useCallback, useMemo, type ReactNode } from 'react'
 import {
   replacesComposer,
   type SandboxNoticeState,
 } from '../../../docs/mockups/src/components/workspace/sandboxNoticeState'
 import { routes } from '../../app/router'
 import { useServices } from '../../app/services'
+import { useStore } from '../../app/store'
+import type { ComposerFocus } from '../../chat/components/Composer'
 import type { ChatHost } from '../../chat/components/SessionChat'
 import type { ChatController } from '../../chat/state/controller'
 import { WorkspaceChatView } from '../../chat/WorkspaceChat'
 import type { WorkspaceStart } from '../../shared/workspaces'
+import { useApp } from '../context'
 import { useGo } from '../ui/AppLink'
 import type { Action } from '../ui/useAction'
 import { useFeatures, type WorkspaceContext } from './features'
@@ -17,6 +20,29 @@ import { filesCenter } from './files/files-features'
 import { SandboxBar } from './SandboxNotice'
 import { StartingCard } from './StartingCard'
 import { ChatColumn } from './WorkspaceColumns'
+
+/**
+ * The focus request of the app for the composer of `workspaceId`, until the
+ * composer takes it. A phone opens no keyboard on its own.
+ */
+function useComposerFocus(
+  workspaceId: string,
+  phone: boolean,
+): ComposerFocus | null {
+  const store = useApp().composerFocus
+  const request = useStore(store)
+  const done = useCallback(
+    () => store.change((current) => (current === request ? null : current)),
+    [store, request],
+  )
+  return useMemo(
+    () =>
+      request && request.workspaceId === workspaceId && !phone
+        ? { request, done }
+        : null,
+    [request, done, workspaceId, phone],
+  )
+}
 
 /**
  * The kept chat of the workspace, with the parts that the shell draws, and
@@ -34,9 +60,12 @@ function KeptChat(props: {
   const go = useGo()
   const clock = useMemo(() => ({ now: services.now }), [services])
   const files = useChatFiles(context, props.content)
+  const phone = context.viewport === 'phone'
+  const focus = useComposerFocus(context.workspace.id, phone)
   return (
     <WorkspaceChatView
       clock={clock}
+      composerFocus={focus}
       content={props.content}
       controller={props.chat}
       copy={services}
@@ -47,7 +76,7 @@ function KeptChat(props: {
       onOpenPage={go}
       readOnly={context.readOnly}
       renderTab={files.renderTab}
-      viewport={context.viewport === 'phone' ? 'mobile' : 'desktop'}
+      viewport={phone ? 'mobile' : 'desktop'}
     />
   )
 }
