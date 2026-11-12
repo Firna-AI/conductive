@@ -1,6 +1,6 @@
 # Extend the 15 minutes of Allow all
 
-Status: Active. On branch `calummoore/porto-4ubu`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
+Status: Active. [PR #326](https://github.com/Firna-AI/conductive/pull/326) is open. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
 In the Mac app, the choice "Allow all commands for 15 minutes" lets every
 command from one workspace run on that Mac without asking (decision 62).
