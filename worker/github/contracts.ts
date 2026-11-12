@@ -15,6 +15,7 @@ export interface GitHubWorkspace {
   repositoryId: number
   fullName: string
   defaultBranch: string
+  baseBranch?: string | null
   installationId: number
 }
 
@@ -37,7 +38,10 @@ export interface GitHubRefresh {
   deliveryId?: string
   userId?: string
   pushBranch?: string
+  /** A check event that names no branch. Read only an open pull request. */
+  openPullRequestOnly?: true
   retryAttempt?: number
+  requireWritable?: true
 }
 
 export interface GitHubRefreshRequest {

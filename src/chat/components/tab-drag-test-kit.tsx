@@ -18,6 +18,7 @@ import { nameLabel } from '../../shared/name-label'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
 import { readView } from '../api/read-responses'
 import type { SubscribeToWorkspace } from '../stream/workspace-stream'
+import type { CopyServices } from '../transcript-copy'
 import { WorkspaceChat } from '../WorkspaceChat'
 import type { RenderTab } from './tab-row'
 
@@ -56,12 +57,17 @@ function labelOf(path: string): string {
   return path.replaceAll(secret, '[redacted]')
 }
 
-/** Mounts the chat of the fake workspace, whose saved view holds `tabs`. */
+/**
+ * Mounts the chat of the fake workspace, whose saved view holds `tabs`. A
+ * test of a copy gives the services of its clipboard as `copy`.
+ */
 export async function mountChat(options: {
   server: FakeApiServer
   tabs: readonly WorkspaceTab[]
   viewport: 'desktop' | 'mobile'
   renderTab?: RenderTab
+  copy?: CopyServices
+  readOnly?: boolean
 }) {
   holdAnimationFrames()
   const { server } = options
@@ -74,7 +80,9 @@ export async function mountChat(options: {
   await mount(
     <WorkspaceChat
       client={createApiClient(server.fetch)}
+      copy={options.copy}
       orgId={FAKE_IDS.org}
+      readOnly={options.readOnly}
       renderTab={options.renderTab}
       subscribe={subscribe}
       viewport={options.viewport}
@@ -110,6 +118,7 @@ export function fileTabs(navigation: FilesNavigation): RenderTab {
             tab={tab}
           />
         ),
+      show: () => navigation.navigate(tab),
     }
   }
 }

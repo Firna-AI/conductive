@@ -1,5 +1,6 @@
 import type { DeviceCommandRecord } from '../../src/shared/device'
 import type { Workspace, WorkspaceState } from '../../src/shared/workspaces'
+import { workspaceRestoreUntil } from '../../src/shared/workspaces'
 import type { WorkspaceChat } from '../chat/backend'
 import type { ChatStorage, ChatCallbackPublisher } from '../chat/types'
 import type { AppEnv } from '../env'
@@ -100,9 +101,11 @@ async function publishFallback(
     branch: row.branch,
     choice: session.choice,
     state: row.state,
+    github: row.github,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
     archivedAt: row.archivedAt,
+    restoreUntil: workspaceRestoreUntil(row.archivedAt, row.sandboxId),
   }
   await publish(
     {

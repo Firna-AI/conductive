@@ -12,9 +12,10 @@ import {
   archivedSections,
   suspendedSections,
   workspaceSections,
-  type OpenWorkspace,
+  type ChangedWorkspace,
 } from '../components/workspaces/sections'
 import { Sidebar } from '../components/workspaces/Sidebar'
+import { unpushedWork } from '../fixtures/barActions'
 import {
   creatingLog,
   firstSecondLog,
@@ -23,10 +24,11 @@ import {
 } from '../fixtures/starting'
 import { orgs } from '../fixtures/orgs'
 import type { Membership } from '../fixtures/members'
-import { freshSessionPrompt } from '../fixtures/terminal'
+import type { ShortcutChanges } from '../fixtures/shortcutChanges'
 import { terminalSets } from '../fixtures/terminals'
 import type { ActivityStatus, Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
+import { freshPromptFor, runStartingLog } from './workspaceRun'
 import { panelState } from './workspaceSandbox'
 import { isNew } from './workspaceTabs'
 import type { WorkspaceState } from './workspaceState'
@@ -44,9 +46,14 @@ export function openFile(state: WorkspaceState): FileTabView | undefined {
       return state.paths === 'masked' ? 'masked-diff' : 'diff'
     case 'unnamed-file':
       return 'unnamed'
+    case 'image':
+    case 'image-not-drawn':
+    case 'attachment':
+      return state.tab
     case 'session':
     case 'new-session':
     case 'linked-session':
+    case 'later-session':
       return undefined
   }
 }
@@ -62,6 +69,9 @@ function backFrom(open: FileTabView): BackLink {
       return { label: 'All files', to: paths.maskedPathsAllFiles }
     case 'code':
     case 'markdown':
+    case 'image':
+    case 'image-not-drawn':
+    case 'attachment':
       return { label: 'All files', to: paths.filesAll }
   }
 }
@@ -72,8 +82,19 @@ function backFrom(open: FileTabView): BackLink {
  */
 export function startingLogFor(state: WorkspaceState): StartingLog | undefined {
   if (state.sandbox !== 'starting') return undefined
+  const run = runStartingLog(state)
+  if (run) return run
   if (!isNew(state)) return resumingLog
   return state.name === 'untitled' ? firstSecondLog : creatingLog
+}
+
+/**
+ * The changed paths of the branch after Continue: the changed files that
+ * moved to the new branch, or none. Any other branch shows every change.
+ */
+function changedPaths(state: WorkspaceState): readonly string[] | undefined {
+  if (state.branch !== 'continued') return undefined
+  return state.localWork === 'changes' ? unpushedWork.files : []
 }
 
 /**
@@ -105,6 +126,8 @@ export function filesPlaceholder(
 export function FilesContent(props: {
   state: WorkspaceState
   viewport: Viewport
+  /** What a phone shows at the top of the Checks tab: the bar's actions. */
+  checksTop?: ReactNode
 }) {
   const { state } = props
   const phone = props.viewport === 'mobile'
@@ -122,7 +145,9 @@ export function FilesContent(props: {
   return (
     <FilesPanel
       banner={state.banner}
+      checksTop={props.checksTop}
       edited={!isNew(state)}
+      only={changedPaths(state)}
       open={open}
       paths={state.paths}
       placeholder={placeholder}
@@ -146,7 +171,7 @@ function TerminalContent(props: { state: WorkspaceState; viewport: Viewport }) {
     <TerminalTool
       disconnected={state.terminals === 'disconnected'}
       lines={fresh ? [] : set.lines}
-      prompt={fresh ? freshSessionPrompt : set.prompt}
+      prompt={fresh ? freshPromptFor(state) : set.prompt}
       tabs={
         state.terminals === 'older'
           ? null
@@ -185,34 +210,41 @@ export function ToolContent(props: {
  * The sidebar beside an open workspace, which shows its current status. An
  * archived workspace sits in the open Archived group. In a suspended org
  * every row shows stopped, and nothing in the sidebar changes the org.
- * `created` adds the workspaces that the create flow made by then.
  */
-export function workspaceSidebar(
-  workspace: Workspace,
-  status: ActivityStatus,
-  suspended: boolean,
-  viewer: Membership,
-  created: readonly OpenWorkspace[] = [],
-): ReactNode {
+export function workspaceSidebar(props: {
+  workspace: Workspace
+  status: ActivityStatus
+  suspended: boolean
+  viewer: Membership
+  /** The rows that differ from the list of when the app opens, by then. */
+  changed: readonly ChangedWorkspace[]
+  /** The last day of Restore of the archived workspace has not passed. */
+  restoreOpen: boolean
+  /** The person's changes to the shortcuts, for the key of the Search row. */
+  shortcuts?: ShortcutChanges
+}): ReactNode {
+  const { workspace, status, suspended, viewer, changed, shortcuts } = props
   if (status !== 'archived') {
     const sections = suspended
       ? suspendedSections(workspace)
-      : workspaceSections({ workspace, status }, undefined, created)
+      : workspaceSections({ workspace, status }, undefined, changed)
     return (
       <Sidebar
         org={orgs.acme}
         sections={sections}
+        shortcuts={shortcuts}
         suspended={suspended}
         viewer={viewer}
       />
     )
   }
-  const list = archivedSections(workspace, suspended)
+  const list = archivedSections(workspace, suspended, props.restoreOpen)
   return (
     <Sidebar
       archived={list.archived}
       org={orgs.acme}
       sections={list.sections}
+      shortcuts={shortcuts}
       suspended={suspended}
       viewer={viewer}
     />

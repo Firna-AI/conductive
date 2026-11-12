@@ -20,6 +20,7 @@ import type {
   WorkspaceMachinePhase,
   StartJobStorage,
 } from './start-types'
+import type { StartCall } from './start-guard'
 
 export async function advanceStartMachine(
   env: AppEnv,
@@ -29,10 +30,12 @@ export async function advanceStartMachine(
   row: WorkspaceRow,
   job: WorkspaceStartJob,
   storage: StartJobStorage,
+  call: StartCall,
 ): Promise<{
   phase: WorkspaceMachinePhase
   environmentCiphertext: string | null
 } | null> {
+  const sandboxId = row.sandboxId
   if (job.phase === 'machine') {
     await ensureWorkspaceToken(
       env,
@@ -40,22 +43,25 @@ export async function advanceStartMachine(
       dependencies.randomToken,
       dependencies.now(),
     )
-    const environment = await workspaceEnvironmentSettings(
-      env,
-      job.orgId,
-      job.environmentCiphertext,
-    )
-    const locations =
-      job.repositoryLocations ??
-      (await workspaceRepositoryLocations(env.DB, job.workspaceId))
-    job.repositoryLocations = locations
-    const runtimeEnv = await sandboxEnvironment(env, {
-      workspace: row,
-      environment,
-      locations,
-      defaultBranch: job.defaultBranch,
-      diskKeepalive: false,
+    const { runtimeEnv, locations } = await call(async () => {
+      const environment = await workspaceEnvironmentSettings(
+        env,
+        job.orgId,
+        job.environmentCiphertext,
+      )
+      const locations =
+        job.repositoryLocations ??
+        (await workspaceRepositoryLocations(env.DB, job.workspaceId))
+      const runtimeEnv = await sandboxEnvironment(env, {
+        workspace: row,
+        environment,
+        locations,
+        defaultBranch: job.baseBranch ?? job.defaultBranch,
+        diskKeepalive: false,
+      })
+      return { runtimeEnv, locations }
     })
+    job.repositoryLocations = locations
     await endpoint.lifecycleStep(
       job.kind === 'create' ? 'image' : 'disk',
       job.kind === 'create'
@@ -63,13 +69,15 @@ export async function advanceStartMachine(
         : 'Resuming with your files as you left them',
       'running',
     )
-    if (!row.sandboxId) {
-      await recordRunningEnvironment(
-        env.DB,
-        job.workspaceId,
-        job.environmentCiphertext,
-      )
-      await requireActiveStartUsers(env.DB, job)
+    if (!sandboxId) {
+      await call(async () => {
+        await recordRunningEnvironment(
+          env.DB,
+          job.workspaceId,
+          job.environmentCiphertext,
+        )
+        await requireActiveStartUsers(env.DB, job)
+      })
       const sandboxId = await allocateWorkspace(
         env,
         provider,
@@ -88,34 +96,39 @@ export async function advanceStartMachine(
             org: row.orgId,
           },
         }),
+        call,
       )
       if (!sandboxId) return null
     } else {
-      job.allocatedSandboxId = row.sandboxId
+      job.allocatedSandboxId = sandboxId
       job.providerAccount = row.providerAccount
       await storage.update(job)
-      const current = await provider.get(row.sandboxId)
+      const current = await call(() => provider.get(sandboxId))
       const status = providerState(current.state)
       if (status === 'error') throw new WorkspaceStartError(null)
       if (status === 'starting' || status === 'stopping') return null
       if (status === 'stopped') {
-        await recordRunningEnvironment(
-          env.DB,
-          job.workspaceId,
-          job.environmentCiphertext,
-        )
-        await requireActiveStartUsers(env.DB, job)
-        await provider.resume(row.sandboxId, runtimeEnv, 1_800)
+        await call(async () => {
+          await recordRunningEnvironment(
+            env.DB,
+            job.workspaceId,
+            job.environmentCiphertext,
+          )
+          await requireActiveStartUsers(env.DB, job)
+          await provider.resume(sandboxId, runtimeEnv, 1_800)
+        })
       }
     }
     return {
       phase: 'ready',
-      environmentCiphertext: await runningEnvironment(env.DB, job.workspaceId),
+      environmentCiphertext: await call(() =>
+        runningEnvironment(env.DB, job.workspaceId),
+      ),
     }
   }
-  if (!row.sandboxId) throw new WorkspaceStartError(null)
+  if (!sandboxId) throw new WorkspaceStartError(null)
   if (job.phase === 'ready') {
-    const machine = await provider.get(row.sandboxId)
+    const machine = await call(() => provider.get(sandboxId))
     const status = providerState(machine.state)
     if (status === 'stopped')
       return {
@@ -124,9 +137,11 @@ export async function advanceStartMachine(
       }
     if (status === 'error') throw new WorkspaceStartError(null)
     if (status !== 'ready') return null
-    await provider.setAutoStop(row.sandboxId, 1_800)
-    if (job.kind === 'create')
-      await releaseImageLease(env.DB, job.orgId, job.workspaceId)
+    await call(async () => {
+      await provider.setAutoStop(sandboxId, 1_800)
+      if (job.kind === 'create')
+        await releaseImageLease(env.DB, job.orgId, job.workspaceId)
+    })
     await endpoint.lifecycleStep(
       job.kind === 'create' ? 'image' : 'disk',
       job.kind === 'create'

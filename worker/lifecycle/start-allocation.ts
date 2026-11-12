@@ -3,7 +3,12 @@ import { isRecord } from '../http'
 import { ProviderError } from '../sandbox/errors'
 import type { SandboxProvider, SandboxStart } from '../sandbox/provider'
 import { encrypt, decrypt } from '../security/crypto'
-import { createResource } from './resource-intents'
+import { createSandboxResource } from './resource-intents'
+import {
+  StartSuperseded,
+  startCallInPlace,
+  type StartCall,
+} from './start-guard'
 import { assignSandbox } from './workspace-data'
 import type { StartJobStorage, WorkspaceStartJob } from './start-types'
 
@@ -69,6 +74,7 @@ export async function allocateWorkspace(
   storage: StartJobStorage,
   job: WorkspaceStartJob,
   input: () => Promise<SandboxStart>,
+  call: StartCall = startCallInPlace,
 ): Promise<string | null> {
   const mayHaveAllocated = Boolean(job.createPayloadCiphertext)
   let payload: SandboxStart
@@ -82,48 +88,59 @@ export async function allocateWorkspace(
       env.BOAT_KEY_ENCRYPTION_KEY,
     )
   }
-  await env.DB.prepare(
-    `UPDATE workspaces SET runner_protocol_version = COALESCE(
-      (SELECT runner_protocol_version FROM image_builds
-       WHERE org_id = ? AND snapshot_name = ? AND state = 'succeeded' LIMIT 1), 1)
-     WHERE org_id = ? AND id = ?`,
-  )
-    .bind(job.orgId, payload.snapshotName ?? null, job.orgId, job.workspaceId)
-    .run()
+  await storage.update(job)
   try {
-    if (!job.allocatedSandboxId) {
-      const sandbox = await createResource(env.DB, provider, {
-        kind: 'sandbox',
-        mayHaveAllocated,
-        ownership: {
-          orgId: job.orgId,
-          providerAccount: job.providerAccount,
-          ownerUserId: job.creation?.user.id ?? payload.labels?.user ?? null,
-          purpose: 'workspace',
-          purposeId: job.workspaceId,
-        },
-        input: payload,
-        persist: () => storage.update(job),
-      })
-      job.allocatedSandboxId = sandbox.id
+    const sandboxId = await call(async () => {
+      await env.DB.prepare(
+        `UPDATE workspaces SET runner_protocol_version = COALESCE(
+          (SELECT runner_protocol_version FROM image_builds
+           WHERE org_id = ? AND provider_account = ? AND snapshot_name = ? AND state = 'succeeded' LIMIT 1), 1)
+         WHERE org_id = ? AND id = ?`,
+      )
+        .bind(
+          job.orgId,
+          job.providerAccount,
+          payload.snapshotName ?? null,
+          job.orgId,
+          job.workspaceId,
+        )
+        .run()
+
+      if (!job.allocatedSandboxId) {
+        const sandbox = await createSandboxResource(env.DB, provider, {
+          kind: 'sandbox',
+          mayHaveAllocated,
+          ownership: {
+            orgId: job.orgId,
+            providerAccount: job.providerAccount,
+            ownerUserId: job.creation?.user.id ?? payload.labels?.user ?? null,
+            purpose: 'workspace',
+            purposeId: job.workspaceId,
+          },
+          input: payload,
+        })
+        job.allocatedSandboxId = sandbox.id
+        await assignSandbox(
+          env.DB,
+          job.orgId,
+          job.workspaceId,
+          sandbox.id,
+          job.providerAccount,
+        )
+      }
       await assignSandbox(
         env.DB,
         job.orgId,
         job.workspaceId,
-        sandbox.id,
+        job.allocatedSandboxId,
         job.providerAccount,
       )
-      await storage.update(job)
-    }
-    await assignSandbox(
-      env.DB,
-      job.orgId,
-      job.workspaceId,
-      job.allocatedSandboxId,
-      job.providerAccount,
-    )
-    return job.allocatedSandboxId
+      return job.allocatedSandboxId
+    })
+    await storage.update(job)
+    return sandboxId
   } catch (error) {
+    if (error instanceof StartSuperseded) throw error
     if (
       error instanceof ProviderError &&
       !['unavailable', 'invalid_response', 'conflict', 'rate_limited'].includes(

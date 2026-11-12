@@ -1,16 +1,15 @@
-import type {
-  AgentListSectionsResponse,
-  AgentWorkspaceSummary,
-} from '../../src/shared/agent-tools'
+import type { AgentListSectionsResponse } from '../../src/shared/agent-tools'
 import type { AgentChoice } from '../../src/shared/agents'
 import type { MessageSender } from '../../src/shared/messages'
 import { choice, record, text } from '../../tools/input'
-import { messageSender, workspaceState } from '../../tools/responses'
+import { messageSender } from '../../tools/responses'
 import { HttpError } from '../http'
 import { workspaceTokenAccessPredicate } from '../data/workspace-token-access'
 import { hash } from '../security/crypto'
-import { workspaceNameColumn } from '../data/workspace-name'
-import { workspaceLink } from '../data/workspace-link'
+import {
+  imageAdmissionError,
+  readImageRepositories,
+} from '../lifecycle/published-image-data'
 
 export interface CallingWorkspace {
   workspaceId: string
@@ -61,37 +60,6 @@ export async function orgSections(
     name: row.name,
     default: row.isDefault === 1,
   }))
-}
-
-export async function orgWorkspaces(
-  db: D1Database,
-  orgId: string,
-  origin: string,
-): Promise<AgentWorkspaceSummary[]> {
-  const { results } = await db
-    .prepare(
-      `SELECT id, number, ${workspaceNameColumn('workspaces')}, branch, state FROM workspaces
-       WHERE org_id = ? ORDER BY created_at, id`,
-    )
-    .bind(orgId)
-    .all<{
-      id: string
-      number: number
-      name: string | null
-      branch: string
-      state: string
-    }>()
-  return results.map((row) => {
-    const fields = record(row)
-    return {
-      id: text(fields.id),
-      number: row.number,
-      link: workspaceLink(origin, orgId, row.id),
-      name: row.name,
-      branch: text(fields.branch),
-      state: workspaceState(fields.state),
-    }
-  })
 }
 
 export async function memberSender(
@@ -154,15 +122,13 @@ export async function requireRepository(
   orgId: string,
   repositoryId: string,
 ): Promise<void> {
-  const repository = await db
-    .prepare('SELECT id FROM repositories WHERE org_id = ? AND id = ?')
-    .bind(orgId, repositoryId)
-    .first<unknown>()
-  if (repository === null) {
-    throw new HttpError(
-      404,
+  const repositories = await readImageRepositories(db, orgId)
+  if (!repositories.some((repository) => repository.id === repositoryId)) {
+    throw await imageAdmissionError(
+      db,
+      orgId,
       'repository_not_found',
-      'The repository is not available.',
+      repositoryId,
     )
   }
 }

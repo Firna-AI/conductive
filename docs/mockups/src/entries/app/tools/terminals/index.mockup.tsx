@@ -10,7 +10,7 @@ export const terminalTabs = defineScreen({
   description:
     'A workspace starts with one terminal, Terminal 1, here running the dev server. Its tab has no close button, because the Terminal tool always keeps a terminal. The + at the end of the row opens Terminal 2.',
   rationale:
-    'The user chose terminal tabs in the Terminal tool on 10 November 2026 (decision 248). The row shows also with one terminal, so the + to open another is always in the same place. To get a new shell in the last terminal, the user ends the shell with exit, and the next connection opens a new one.',
+    'The user chose terminal tabs in the Terminal tool on 10 November 2026, as decision 1 of the terminal tabs change. The row shows also with one terminal, so the + to open another is always in the same place. To get a new shell in the last terminal, the user ends the shell with exit, and the next connection opens a new one.',
   relatedDocs: [],
   propSchema: workspaceStateSchema,
   props: {
@@ -31,7 +31,7 @@ export const terminalTabs = defineScreen({
       description:
         'A workspace holds up to 10 terminals. At the tenth, the + is off, and a line under the row says how to open another. The row scrolls sideways and shows the new Terminal 10.',
       rationale:
-        'The user chose a limit of 10 terminals for each workspace on 10 November 2026 (decision 249). The line is text, not a hover tip, so a phone shows it too.',
+        'The user chose a limit of 10 terminals for each workspace on 10 November 2026, as decision 2 of the terminal tabs change. The line is text, not a hover tip, so a phone shows it too.',
       props: { terminals: 'limit' },
     },
     {

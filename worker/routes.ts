@@ -1,6 +1,8 @@
 import { API_PATHS } from '../src/shared/api'
 import type { SessionResponse } from '../src/shared/account'
 import { bootRoute } from './app-api/boot'
+import { codexDeviceRoute } from './app-api/codex-device'
+import type { CodexTaskOwner } from './codex-auth/tasks'
 import { chatLifecycleRoute } from './app-api/lifecycle'
 import { shellRoute } from './app-api/shell'
 import type { AppDependencies, AppEnv } from './env'
@@ -13,8 +15,12 @@ import { invitationsRoute } from './app-api/invitations'
 import { membersRoute } from './members/route'
 import { productionMembersHooks } from './members/composition'
 import { archiveRoute } from './app-api/archive'
+import { continueRoute } from './app-api/continue'
+import { routinesRoute } from './routines/route'
+import { routineRunsRoute } from './routines/run-route'
 import { hasAppAccess } from './waitlist/data'
 import { waitlistRoute } from './waitlist/route'
+import { feedbackRoute } from './app-api/feedback'
 
 export { routeDevice } from './devices/router'
 
@@ -23,8 +29,19 @@ export async function route(
   env: AppEnv,
   context: RequestContext,
   dependencies: AppDependencies,
+  codexTasks: CodexTaskOwner,
   execution?: Pick<ExecutionContext, 'waitUntil'>,
 ): Promise<Response> {
+  const codexDevice = await codexDeviceRoute(
+    request,
+    env,
+    context,
+    dependencies,
+    codexTasks,
+  )
+  if (codexDevice) return codexDevice
+  const feedback = await feedbackRoute(request, env, context, dependencies)
+  if (feedback) return feedback
   const waitlist = await waitlistRoute(request, env, context, dependencies)
   if (waitlist) return waitlist
   const operator = await handleOperatorRequest(
@@ -49,6 +66,10 @@ export async function route(
     productionMembersHooks(env, dependencies),
   )
   if (members) return members
+  const runs = await routineRunsRoute(request, env, context, dependencies)
+  if (runs) return runs
+  const routines = await routinesRoute(request, env, context, dependencies)
+  if (routines) return routines
   const featureShell = await featureShellRoute(
     request,
     env,
@@ -58,6 +79,8 @@ export async function route(
   if (featureShell) return featureShell
   const archive = await archiveRoute(request, env, context)
   if (archive) return archive
+  const continued = await continueRoute(request, env, context)
+  if (continued) return continued
   const boot = await bootRoute(request, env, context, dependencies)
   if (boot) return boot
   const shell = await shellRoute(request, env, context, dependencies)

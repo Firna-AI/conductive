@@ -1,20 +1,33 @@
 import { useCallback, useRef, useState } from 'react'
 import { Button } from '@firna/ui/button'
 import { ChevronDown } from 'lucide-react'
-import type { Agent, AgentChoice, AgentModel } from '../../shared/agents'
+import {
+  effortLabels,
+  modelLabel,
+  type Agent,
+  type AgentChoice,
+  type AgentModel,
+} from '../../shared/agents'
 import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
 import { pickerButtonStyle } from '../../../docs/mockups/src/components/chat/pickerButton'
 import styles from '../../../docs/mockups/src/components/chat/ModelPicker.module.css'
-import { effortLabels, modelLabel } from '../state/format'
+import { stepShortcutItem } from '../../app/shortcuts/navigation'
+import { useShortcutOffer } from '../../shell/shortcuts/shortcut-context'
+import {
+  ShortcutTip,
+  useAriaShortcut,
+  useShortcutHint,
+} from '../../shell/shortcuts/shortcut-hints'
 import { useDismiss } from '../ui/dismiss'
 import { Menu } from '../ui/Menu'
-import { modelMenu } from './model-menu'
+import { effortsOf, modelMenu } from './model-menu'
 
 /**
  * One picker for the model and the effort of the session, such as
  * "Opus 5.5 High", with the effort in a muted colour. `sessionAgent` is the
  * agent of a session with messages, whose other agent's models open a new
- * session.
+ * session. The key of Model picker opens the menu, and the key of Next
+ * effort level chooses the next effort of the menu, with a wrap at its end.
  */
 export function ModelPicker(props: {
   choice: AgentChoice
@@ -41,28 +54,45 @@ export function ModelPicker(props: {
       onChoose(next)
     }
   }
+  const nextEffort = stepShortcutItem(
+    effortsOf(props.models, choice),
+    choice.effort,
+    1,
+  )
+  useShortcutOffer('model-picker', props.disabled ? null : () => setOpen(true))
+  useShortcutOffer(
+    'next-effort',
+    props.disabled || nextEffort === undefined || nextEffort === choice.effort
+      ? null
+      : () => choose({ ...choice, effort: nextEffort }),
+  )
+  const hint = useShortcutHint('model-picker')
+  const keyRef = useAriaShortcut(hint)
   return (
     <span className={styles.anchor} ref={anchor}>
-      <Button
-        accessibilityLabel={`Model and effort: ${label}, ${effort}`}
-        content={
-          <span
-            className={styles.trigger}
-            style={{ fontSize: control.labelSize }}
-          >
-            <span className={styles.model}>{label}</span>
-            <span className={styles.effort}>{effort}</span>
-            <ChevronDown aria-hidden className={styles.chevron} size={12} />
-          </span>
-        }
-        disabled={props.disabled}
-        expanded={open}
-        hasPopup="menu"
-        onPress={() => setOpen((current) => !current)}
-        size="sm"
-        style={pickerButtonStyle(control.height)}
-        tone="plain"
-      />
+      <ShortcutTip hint={hint} label="Model and effort">
+        <Button
+          accessibilityLabel={`Model and effort: ${label}, ${effort}`}
+          buttonRef={keyRef}
+          content={
+            <span
+              className={styles.trigger}
+              style={{ fontSize: control.labelSize }}
+            >
+              <span className={styles.model}>{label}</span>
+              <span className={styles.effort}>{effort}</span>
+              <ChevronDown aria-hidden className={styles.chevron} size={12} />
+            </span>
+          }
+          disabled={props.disabled}
+          expanded={open}
+          hasPopup="menu"
+          onPress={() => setOpen((current) => !current)}
+          size="sm"
+          style={pickerButtonStyle(control.height)}
+          tone="plain"
+        />
+      </ShortcutTip>
       {open ? (
         <Menu
           entries={modelMenu(props.models, choice, props.sessionAgent, choose)}

@@ -2,6 +2,7 @@ import type { SchemaProps, Viewport } from '@mokly/mokly'
 import { AppFrame } from '../components/layout/AppFrame'
 import { NewWorkspaceDialog } from '../components/new-workspace/NewWorkspaceDialog'
 import { ChooseRepositoriesNotice } from '../components/new-workspace/notices'
+import { formWait } from '../components/new-workspace/waitingRepository'
 import { newOrg } from '../fixtures/repositories'
 import { defaultSection, sections } from '../fixtures/sections'
 import {
@@ -14,11 +15,13 @@ import { NewOrgEmpty } from './listParts'
 import { pageOrg, railOf, sidebarOf } from './newWorkspacePageParts'
 import {
   formNotices,
+  hasWords,
   newWorkspaceDraft,
   newWorkspaceFormProperties,
   taskPlaceholder,
   waits,
 } from './newWorkspaceParts'
+import { repositoryMenu, waitingNotice } from './newWorkspaceRepositories'
 import { WorkspaceScreen } from './WorkspaceScreen'
 import { readyWorkspace } from './workspaceState'
 
@@ -30,6 +33,8 @@ export const newWorkspaceDialogSchema = {
     'files',
     'login',
     'repositories',
+    'repositoryMenu',
+    'waitingBuild',
     'result',
     'org',
     'firstBuild',
@@ -59,6 +64,8 @@ export const emptyDialog: NewWorkspaceDialogState = {
   files: 'none',
   login: 'connected',
   repositories: 'chosen',
+  repositoryMenu: 'closed',
+  waitingBuild: 'building',
   result: 'form',
   org: 'active',
   firstBuild: 'succeeded',
@@ -83,10 +90,11 @@ export function NewWorkspaceDialogScreen(props: {
   if (props.viewport === 'mobile') {
     return <NewWorkspaceScreen state={pageState} viewport="mobile" />
   }
-  const chosen = state.repositories === 'chosen'
+  const chosen = state.repositories !== 'none'
+  const waiting = formWait(page) !== undefined
   const failed = state.result === 'error'
   const draft = newWorkspaceDraft(state)
-  const notices = formNotices(state, failed, !building)
+  const notices = formNotices(state, failed, !building && !waiting)
   if (state.org === 'new' && state.firstBuild !== 'succeeded') {
     notices.splice(
       failed ? 1 : 0,
@@ -98,6 +106,12 @@ export function NewWorkspaceDialogScreen(props: {
       />,
     )
   }
+  const repositoryWait = waitingNotice({
+    form: page,
+    wait: state.waitingBuild,
+    admin: state.viewer === 'admin',
+  })
+  if (repositoryWait) notices.splice(failed ? 1 : 0, 0, repositoryWait)
   if (!chosen) {
     notices.push(
       <ChooseRepositoriesNotice
@@ -107,18 +121,24 @@ export function NewWorkspaceDialogScreen(props: {
       />,
     )
   }
+  const ownDraft = (state.org === 'new' || waiting) && state.draft !== 'empty'
   const dialog = (
     <NewWorkspaceDialog
       attachments={draft.files}
+      caret={ownDraft ? undefined : draft.caret}
       choice={page.choice}
+      drop={state.files === 'drop-over'}
       notices={notices}
       place={`${org.name} · ${sections[defaultSection].name}`}
       placeholder={taskPlaceholder}
-      ready={draft.text !== '' && !waits(state) && !building}
-      repository={chosen ? page.repository : undefined}
-      text={
-        state.org === 'new' && state.draft !== 'empty' ? page.draft : draft.text
+      ready={hasWords(draft.text) && !waits(state) && !building && !waiting}
+      repository={chosen ? page.repository.name : undefined}
+      repositoryMenu={
+        chosen && state.repositoryMenu === 'open'
+          ? repositoryMenu(page, state.waitingBuild)
+          : undefined
       }
+      text={ownDraft ? page.draft : draft.text}
     />
   )
   if (state.org === 'new') {

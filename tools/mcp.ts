@@ -1,13 +1,8 @@
 import type { WorkspaceToolClient } from './client.ts'
 import { toolErrorMessage } from './cli.ts'
-import {
-  createWorkspaceInput,
-  isRecord,
-  record,
-  ToolInputError,
-} from './input.ts'
+import { isRecord, record, ToolInputError } from './input.ts'
+import { dispatchMcpTool } from './mcp-dispatch.ts'
 import { WORKSPACE_MCP_TOOLS } from './mcp-tools.ts'
-import { readDeviceCommandInput } from '../src/shared/device-read.ts'
 import { deviceCommandSucceeded } from '../src/shared/device.ts'
 
 /** A fixed supported revision is negotiated, rather than echoing any revision. */
@@ -105,28 +100,7 @@ export function createWorkspaceMcp(client: WorkspaceToolClient) {
       const args =
         params.arguments === undefined ? {} : record(params.arguments)
       try {
-        const run = () => {
-          switch (params.name) {
-            case 'run_mac_command':
-              return client.runMacCommand(
-                readDeviceCommandInput({
-                  ...args,
-                  requestId: args.requestId ?? crypto.randomUUID(),
-                }),
-              )
-            case 'create_workspace':
-              return client.create(createWorkspaceInput(args))
-            case 'list_repositories':
-              return client.listRepositories()
-            case 'list_sections':
-              return client.listSections()
-            case 'list_models':
-              return client.listModels()
-            default:
-              return client.list()
-          }
-        }
-        const result = await run()
+        const result = await dispatchMcpTool(client, params.name, args)
         return success({
           content: [{ type: 'text', text: JSON.stringify(result) }],
           structuredContent: result,

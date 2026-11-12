@@ -1,5 +1,9 @@
 # Preview relay
 
+This guide belongs to the [runner README](README.md#preview-relay). It
+gives the preview relay of the sandbox: what it does, how it starts, and
+how an image installs it.
+
 The preview relay connects preview requests to servers in the sandbox.
 It gives each server `Host: localhost:<port>`.
 It streams HTTP bodies and WebSocket traffic.

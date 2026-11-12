@@ -10,7 +10,7 @@ import type {
 import { readWorkspace } from './workspace-data'
 import type { WorkspaceLifecycleEndpoint } from './workspace-runtime'
 
-/** The coordinator holds its serial task until native admission is durable. */
+/** Admission commits in the caller's queue turn. */
 export async function enqueueWorkspaceStart(
   env: AppEnv,
   dependencies: AppDependencies,
@@ -20,8 +20,14 @@ export async function enqueueWorkspaceStart(
   intent: WorkspaceStartIntent,
 ): Promise<boolean> {
   const retry = intent.kind === 'retry-failed-create'
+  const retained = intent.kind === 'resume-retained-create'
   const completed = await storage.creationResult()
-  if (job.kind === 'create' && completed && (completed.ok || !retry))
+  if (
+    job.kind === 'create' &&
+    completed &&
+    !retained &&
+    (completed.ok || !retry)
+  )
     return false
   if (await storage.job()) return false
   await requireActiveStartUsers(env.DB, job)

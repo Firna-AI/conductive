@@ -165,9 +165,17 @@ it('runs the production Workspace across caller loss, a full runtime restart, an
     pendingFirstMessage: FIRST_MESSAGE,
   })
   // Finish the restore watch before checking the idle alarm.
-  await restored.tick()
+  const restoring = await restored.readLifecycle()
+  if (restoring?.restoreWatchAt !== undefined)
+    await restored.tick(restoring.restoreWatchAt)
   const ready = await restored.readLifecycle()
-  await restored.tick((ready?.lastActivityAt ?? 0) + IDLE_MS - 1)
+  const idleAt = (ready?.lastActivityAt ?? 0) + IDLE_MS
+  expect(await restored.lifecycleAlarmAt()).toBe(idleAt)
+  const accessAt = await restored.browserAlarmAt()
+  expect(accessAt).not.toBeNull()
+  expect(accessAt).toBeLessThan(idleAt)
+  expect(await restored.alarmAt()).toBe(accessAt)
+  await restored.passTime((ready?.lastActivityAt ?? 0) + IDLE_MS - 1)
   expect(await restored.alarmAt()).toBe((ready?.lastActivityAt ?? 0) + IDLE_MS)
   const completedBrowser = await fixture.openEvents(id)
   const before = await publicHistory(completedBrowser.inbox)

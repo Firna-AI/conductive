@@ -16,6 +16,7 @@ import { routes } from '../../app/router'
 import { useStore } from '../../app/store'
 import { ResizeHandle } from '../layout/ResizeHandle'
 import { usePanelLayout } from '../layout/panels'
+import { useShortcutOffer } from '../shortcuts/shortcut-context'
 import { IconButton } from '../ui/actions'
 import { AppLink } from '../ui/AppLink'
 import type { WorkspaceContext } from './features'
@@ -24,16 +25,18 @@ import workspace from './workspace.module.css'
 
 /**
  * The toggle at the end of the workspace header on desktop. It hides the
- * right column, and shows it again.
+ * right column, and shows it again. The key of the command does the same.
  */
 export function RightColumnToggle() {
   const panels = usePanelLayout()
   const shown = useStore(panels.rightShown)
+  useShortcutOffer('toggle-right-column', panels.toggleRight)
   return (
     <IconButton
       icon={PanelRight}
       label={shown ? 'Hide the right column' : 'Show the right column'}
       onPress={panels.toggleRight}
+      shortcut="toggle-right-column"
     />
   )
 }

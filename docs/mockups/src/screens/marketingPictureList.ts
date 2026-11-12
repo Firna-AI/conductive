@@ -102,7 +102,7 @@ const toolsLabel = 'The terminal of the cloud computer runs the dev server'
 const orgLabel =
   'The cloud computer of the org: its last build, Build computer, and the history of builds'
 const phoneLabel =
-  'The workspace list on a phone: each workspace shows whether its agent works, is done, or waits'
+  'The workspace list on a phone: each workspace shows the checks or the merge of its pull request, and whether its agent works'
 const macLabel =
   'The Mac app in its own window: an agent asks to run a command on this Mac, with Deny and Allow'
 

@@ -1,21 +1,32 @@
 import { archivedWorkspaceList } from '../../fixtures/archivedWorkspaces'
 import { orgs } from '../../fixtures/orgs'
-import { repositories, type RepositoryKey } from '../../fixtures/repositories'
+import type { RepositoryKey } from '../../fixtures/repositories'
+import type { ShortcutChanges } from '../../fixtures/shortcutChanges'
+import { helpGroupLabel } from '../feedback/feedbackCopy'
 import {
   workspaceSections,
   type OpenWorkspace,
   type WorkspaceRow,
 } from '../workspaces/sections'
 import {
-  accountSettings,
   appActions,
+  helpActions,
   orgActions,
-  orgSettings,
-  orgSettingsLabel,
   workspaceActions,
   type Command,
 } from './paletteCommands'
+import {
+  emptyLine,
+  emptyRepository,
+  filters,
+  type PaletteFilters,
+} from './paletteFilters'
 import { matchingRows } from './paletteSearch'
+import {
+  accountSettings,
+  orgSettings,
+  orgSettingsLabel,
+} from './paletteSettings'
 import {
   palettePlaceholders,
   paletteQueries,
@@ -34,14 +45,6 @@ export type PaletteRow =
   | { kind: 'command'; command: Command; detail?: string }
 
 type PaletteGroup = { label: string; rows: readonly PaletteRow[] }
-
-/** The two filters of the Workspaces tab. */
-export type PaletteFilters = {
-  repository: string
-  state: 'Active' | 'Archived'
-  /** The menu of the repository filter lies open. */
-  repositoryMenu: boolean
-}
 
 export type PaletteContent = {
   tab: PaletteTab
@@ -62,12 +65,22 @@ export type PaletteContent = {
 /**
  * Where the palette opens: over an open workspace, whose actions come
  * first, or over a page without one. Only the owner of the workspace and
- * the admins of the org can archive it.
+ * the admins of the org can archive it. Every member of an org that is
+ * not suspended can restore an archived workspace while the app keeps its
+ * cloud computer. The Mac app adds This Mac to the settings.
  */
 export type PaletteContext = {
   open?: OpenWorkspace
   archivable: boolean
+  restorable?: boolean
   rightColumn?: boolean
+  mac?: boolean
+  /**
+   * The person's changes to the shortcuts (decision 190). On desktop, each
+   * command row ends with the first key of its command that works where
+   * the palette opens.
+   */
+  shortcuts?: ShortcutChanges
 }
 
 /**
@@ -86,7 +99,12 @@ const recentKeys = [
 const recentLimit = 5
 
 const archivedRows: readonly WorkspaceRow[] = archivedWorkspaceList.map(
-  (workspace) => ({ workspace, status: 'archived', selected: false }),
+  (workspace) => ({
+    workspace,
+    status: 'archived',
+    github: workspace.github,
+    selected: false,
+  }),
 )
 
 function workspaceRows(rows: readonly WorkspaceRow[]): PaletteRow[] {
@@ -100,18 +118,30 @@ function commandRows(
   return commands.map((command) => ({ kind: 'command', command, detail }))
 }
 
+/** The actions of the open workspace, when the palette has one. */
+function openActions(context: PaletteContext): Command[] {
+  if (!context.open) return []
+  return workspaceActions({
+    archived: context.open.status === 'archived',
+    archivable: context.archivable,
+    restorable: context.restorable ?? false,
+    rightColumn: context.rightColumn ?? true,
+  })
+}
+
+/**
+ * The actions in their order: those of the open workspace, of the org, and
+ * of the orgs, then Send feedback, which comes last.
+ */
 function actionsOf(context: PaletteContext): Command[] {
-  const own = context.open
-    ? workspaceActions(context.archivable, context.rightColumn)
-    : []
-  return [...own, ...orgActions, ...appActions]
+  return [...openActions(context), ...orgActions, ...appActions, ...helpActions]
 }
 
 /** The settings, each with the page that holds it, for a mixed list. */
-function settingRows(): PaletteRow[] {
+function settingRows(context: PaletteContext): PaletteRow[] {
   return [
     ...commandRows(orgSettings, orgSettingsLabel),
-    ...commandRows(accountSettings, 'Account'),
+    ...commandRows(accountSettings(context), 'Account'),
   ]
 }
 
@@ -129,7 +159,7 @@ function searchGroups(
   const groups: PaletteGroup[] = [
     { label: 'Workspaces', rows: loaded ? workspaceRows(active) : [] },
     { label: 'Actions', rows: commandRows(actionsOf(context)) },
-    { label: 'Settings', rows: settingRows() },
+    { label: 'Settings', rows: settingRows(context) },
     { label: 'Archived', rows: loaded ? workspaceRows(archivedRows) : [] },
   ]
   return groups
@@ -140,20 +170,6 @@ function searchGroups(
     .filter((group) => group.rows.length > 0)
 }
 
-const allRepositories = 'All repositories'
-
-/** The repository that the empty Workspaces tab chooses. */
-const emptyRepository: RepositoryKey = 'marketing-site'
-
-function filters(view: OpenPaletteView): PaletteFilters {
-  const empty = view === 'workspaces-empty'
-  return {
-    repository: empty ? repositories[emptyRepository].name : allRepositories,
-    state: view === 'workspaces-archived' || empty ? 'Archived' : 'Active',
-    repositoryMenu: view === 'workspaces-repository',
-  }
-}
-
 /** The archived workspaces of one repository, or of all, in one group. */
 function archivedGroups(repository?: RepositoryKey): PaletteGroup[] {
   const rows = archivedRows.filter(
@@ -162,19 +178,6 @@ function archivedGroups(repository?: RepositoryKey): PaletteGroup[] {
   )
   if (rows.length === 0) return []
   return [{ label: 'Archived', rows: workspaceRows(rows) }]
-}
-
-/**
- * The line of the Workspaces tab when it has no workspace to show and the
- * field is empty. It says where the workspaces of the filters show: in the
- * chosen repository, or in the org.
- */
-function emptyLine(filters: PaletteFilters): string {
-  const place =
-    filters.repository === allRepositories ? orgs.acme.name : filters.repository
-  return filters.state === 'Archived'
-    ? `Archived workspaces of ${place} show here`
-    : `Workspaces of ${place} show here`
 }
 
 function groupsOf(
@@ -192,7 +195,7 @@ function groupsOf(
       return [
         { label: 'Recent workspaces', rows: workspaceRows(recent) },
         { label: 'Actions', rows: commandRows(actionsOf(context)) },
-        { label: 'Settings', rows: settingRows() },
+        { label: 'Settings', rows: settingRows(context) },
       ]
     }
     case 'workspaces':
@@ -213,9 +216,7 @@ function groupsOf(
         ? [
             {
               label: open.workspace.name,
-              rows: commandRows(
-                workspaceActions(context.archivable, context.rightColumn),
-              ),
+              rows: commandRows(openActions(context)),
             },
           ]
         : []
@@ -223,12 +224,13 @@ function groupsOf(
         ...own,
         { label: orgs.acme.name, rows: commandRows(orgActions) },
         { label: 'Orgs', rows: commandRows(appActions) },
+        { label: helpGroupLabel, rows: commandRows(helpActions) },
       ]
     }
     case 'settings':
       return [
         { label: orgSettingsLabel, rows: commandRows(orgSettings) },
-        { label: 'Account', rows: commandRows(accountSettings) },
+        { label: 'Account', rows: commandRows(accountSettings(context)) },
       ]
     case 'search':
     case 'number':
@@ -237,6 +239,7 @@ function groupsOf(
     case 'search-loading':
     case 'search-unavailable':
     case 'search-repositories-unavailable':
+    case 'search-feedback':
       return searchGroups(
         paletteQueries[view] ?? '',
         active,

@@ -12,11 +12,11 @@ Have these ready:
 - A GitHub account.
 - GitHub read access to the repository where you will create a workspace.
 - Permission to install a GitHub App if you will set up your own org.
-- A Claude subscription token, an Anthropic API key, or an OpenAI API key.
+- A Claude subscription token, an Anthropic API key, an OpenAI API key, or a ChatGPT plan.
 
 If you cannot install the GitHub App, ask a GitHub organization owner to help.
 If you join an existing org, its admin manages repository access.
-Your GitHub permissions still govern repository reads and pushes made with your account.
+Your GitHub permissions still govern repository reads, pushes, and merges made with your account.
 Conductive runs the agents and repositories on cloud computers.
 You can use the browser without a local copy of your repository.
 
@@ -28,14 +28,20 @@ You can use the browser without a local copy of your repository.
 4. Complete the authorization on GitHub.
 
 Your first sign-in creates your Conductive account.
-A new account waits for access before it can use **Get started**.
+When sign-ups are open to everyone, the account gets access at once.
+Otherwise, it waits for access before it can use **Get started**.
 
 - [Read the Terms](/terms)
 - [Read the Privacy notice](/privacy)
 
 ## Get access
 
-The waitlist screen shows your GitHub account and the available ways to get access.
+During open sign-up, you get access at sign-in without an invite or approval.
+If you already wait, return to the tab or window to open the app.
+You can continue with **Get started** without an approval email.
+You keep access if new accounts must wait later.
+
+If your account still waits, the waitlist screen shows your GitHub account and the available ways to get access.
 Use one of these ways:
 
 - **Approval:** Return to Conductive after your account is approved.
@@ -44,10 +50,11 @@ Use one of these ways:
 - **Invite code:** Enter the code in **Invite code**.
   Then select **Use code**.
   An invite link applies its code when you sign in or open the link.
+  During open sign-up, the link keeps its code unused.
 - **Org invitation:** Select **Accept invitation** beside the org you want to join.
   Use a GitHub account with the invitation's address as a verified email.
 
-After approval or a successful code, **Get started** opens for your account.
+Once you get access through open sign-up, approval, or a code, **Get started** opens for your account.
 It guides you through the GitHub App, your first org, and an agent login.
 
 An accepted org invitation opens that org instead.
@@ -60,6 +67,7 @@ Then try again.
 If a code no longer works or is used up, ask for another code.
 If **Sign-ups are paused** appears, try again later.
 The pause keeps your code unused and your org invitation available.
+The pause also stops open sign-up.
 
 - [Join or manage an org](/docs/orgs-and-members)
 
@@ -121,7 +129,8 @@ Choose the login you want to use:
 | --- | --- | --- |
 | Claude | Subscription token | Select **Subscription token**. Paste a token from `claude setup-token`. |
 | Claude | Anthropic API key | Select **API key**. Paste your Anthropic API key. |
-| Codex | OpenAI API key | Paste your OpenAI API key. |
+| Codex | OpenAI API key | Select **API key**. Paste your OpenAI API key. |
+| Codex | ChatGPT plan | Select **ChatGPT plan**. Select **Get a code**. Complete the ChatGPT sign-in. |
 
 For a subscription token, run this command on a computer where the `claude` command is installed:
 
@@ -138,12 +147,24 @@ Paste the key into its field.
 Select **Connect**.
 The agent row then shows **Connected**.
 
+For a ChatGPT plan, first turn on device code sign-in in your ChatGPT security settings.
+Ask your ChatGPT admin if you cannot change that setting.
+ChatGPT sign-in also works with Plus and Pro.
+Follow [Connect Codex](/docs/agent-logins#connect-codex) for the sign-in steps.
+
+- [Open ChatGPT settings](https://chatgpt.com/settings/security)
+
+Never share the code.
+Enter only a code that the Conductive page shows.
+The code expires in 15 minutes.
+
 One connected agent is enough to finish setup.
 You can connect the other later in **Account**.
 
 If your first agent request reports a login error, open **Account**.
 Remove that agent's login.
-Then connect the correct token or key.
+Then connect the correct account.
+If the Codex row shows **Signed out**, select **Sign in again** instead.
 
 - [Manage logins and sharing](/docs/agent-logins)
 
@@ -221,7 +242,7 @@ New workspaces use the changed setup after its build succeeds.
 A failed build keeps the last successful setup.
 Existing workspaces keep their files.
 
-Use **Startup script** for commands that must run at each workspace start and resume.
+Use **Startup script** for commands needed when you start or resume a workspace.
 It starts in the workspace's repository folder.
 Use **Environment variables** for values your application needs.
 Changed values apply at the next start of each workspace's cloud computer.

@@ -24,6 +24,8 @@ it('presents an old create admission with its saved fields and current number an
         }
         delete snapshot.number
         delete snapshot.link
+        delete snapshot.restoreUntil
+        delete snapshot.github
         return {
           ...result,
           created: { ...result.created, workspace: snapshot },
@@ -42,5 +44,7 @@ it('presents an old create admission with its saved fields and current number an
     link: `${runtime.env.APP_ORIGIN}${routes.workspace(org.id, created.workspace.id)}`,
     name: 'Saved admission',
     state: 'starting',
+    restoreUntil: null,
+    github: null,
   })
 })

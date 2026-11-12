@@ -7,9 +7,17 @@ import { toolKeys } from '../components/workspace/tools'
 import { conversationKeys } from '../fixtures/conversationKeys'
 import { pathStates } from '../fixtures/maskedFiles'
 import { bannerStates } from '../fixtures/pullRequests'
+import { runWorkspaceKeys } from '../fixtures/runWorkspaces'
 import { startErrorKeys } from '../fixtures/starting'
 import { terminalStates } from '../fixtures/terminals'
 import { openableWorkspaces } from '../fixtures/workspaces'
+import { barStateDefaults, barStateKeys, barStateProperties } from './barState'
+import { composerStates, tabStates } from './chatStates'
+import {
+  feedbackStateDefaults,
+  feedbackStateKeys,
+  feedbackStateProperties,
+} from './feedbackState'
 
 /**
  * The state of the workspace screen. Each catalogue entry of the screen is a
@@ -37,13 +45,15 @@ export const workspaceStateSchema = {
     'resize',
     'rightColumn',
     'overlay',
+    'archive',
     'viewer',
     'lostUpdate',
     'tree',
     'paths',
     'org',
     'palette',
-    'copyLink',
+    ...feedbackStateKeys,
+    ...barStateKeys,
   ],
   properties: {
     workspace: { enum: openableWorkspaces },
@@ -55,9 +65,10 @@ export const workspaceStateSchema = {
      */
     name: { enum: ['title', 'untitled'] },
     /**
-     * The cloud computer. An archived workspace has none. `refused` is a
-     * stopped cloud computer whose start the app refuses, such as while the
-     * owner of the workspace is suspended.
+     * The cloud computer. `archived` is a cloud computer that Archive
+     * stopped, as `archive` says, and the workspace shows none of it.
+     * `refused` is a stopped cloud computer whose start the app refuses,
+     * such as while the owner of the workspace is suspended.
      */
     sandbox: {
       enum: ['ready', 'starting', 'stopped', 'error', 'refused', 'archived'],
@@ -80,10 +91,10 @@ export const workspaceStateSchema = {
     /** The tool of the tools panel. */
     tool: { enum: toolKeys },
     /**
-     * The terminals of the Terminal tool, from decisions 248 and 249: the
-     * one terminal that a workspace starts with, three terminals, the limit
-     * of ten, three terminals whose shown connection ended, or the one
-     * terminal of older cloud computer software, which shows no tabs.
+     * The terminals of the Terminal tool, from decisions 1 and 2 of the
+     * terminal tabs change: the one terminal that a workspace starts with, three terminals,
+     * the limit of ten, three terminals whose shown connection ended, or the
+     * one terminal of older cloud computer software, which shows no tabs.
      */
     terminals: { enum: terminalStates },
     /**
@@ -97,24 +108,8 @@ export const workspaceStateSchema = {
     ports: { enum: previewStates },
     /** What a phone shows: the chat, the files, or the tool. */
     focus: { enum: ['chat', 'files', 'tool'] },
-    /**
-     * The tab of the centre column: the first session, a new session, the
-     * linked session that a member's message opened from the first session,
-     * or a file, a Markdown preview, a diff, or a file whose name the app
-     * does not know, such as a file that moved. A phone shows a file in
-     * Files.
-     */
-    tab: {
-      enum: [
-        'session',
-        'new-session',
-        'linked-session',
-        'code',
-        'markdown',
-        'diff',
-        'unnamed-file',
-      ],
-    },
+    /** The tab of the centre column, as `tabStates` says. */
+    tab: { enum: tabStates },
     /**
      * The tab row, from decisions 186 to 188: each tab where it opened, the
      * drag of a tab, the code file after its move between the two
@@ -125,47 +120,8 @@ export const workspaceStateSchema = {
      * sessions.
      */
     tabRow: { enum: ['opened', 'drag', 'moved', 'full', 'rename'] },
-    /**
-     * The composer: empty, with a message that is not sent yet, with
-     * attached files, with its picker open, or with a message for an agent
-     * that is not connected. Or with a message in a session whose starter's
-     * login is not available, or whose starter keeps that login for their
-     * own messages. With files, a file can still upload, its upload can fail,
-     * or a file over the size limit can stay out of the message.
-     * `workspace-link` holds a message with a pasted link to another
-     * workspace of the org, which shows as a chip.
-     *
-     * The `mention-` states open the list of `@`: with a query, without
-     * one, with no match, while the tree loads, and with no tree.
-     * `file-chips` holds a file chip and a folder chip. The `-pointer`
-     * states draw the pointer over the icon of the first chip or the first
-     * attached file, where a × takes the place of the icon. A phone has no
-     * pointer, so it shows the × at the end of each chip instead.
-     */
-    composer: {
-      enum: [
-        'empty',
-        'draft',
-        'attachments',
-        'uploading',
-        'upload-failed',
-        'too-large',
-        'picker',
-        'no-agent',
-        'no-starter-login',
-        'not-shared',
-        'workspace-link',
-        'mention-query',
-        'mention-start',
-        'mention-none',
-        'mention-loading',
-        'mention-unavailable',
-        'file-chips',
-        'file-chip-pointer',
-        'workspace-link-pointer',
-        'attachment-pointer',
-      ],
-    },
+    /** The composer, as `composerStates` says. */
+    composer: { enum: composerStates },
     /** The user drags the handle of the right column to widen it. */
     resize: { enum: ['none', 'right'] },
     /**
@@ -175,10 +131,10 @@ export const workspaceStateSchema = {
     rightColumn: { enum: ['shown', 'hidden'] },
     /**
      * What lies open over the workspace: the session history, the question
-     * before a running session closes, the owner of the workspace, the
-     * question of Archive, with work that is not pushed or with none, or
-     * the tab menu of the first session. Or the question before a terminal
-     * closes, or the toast of a terminal that did not open or close.
+     * before a running session closes, the owner of the workspace, the tab
+     * menu of the first session, or the question of Continue with work that
+     * is not pushed. Or the question before a terminal closes, or the toast
+     * of a terminal that did not open or close.
      */
     overlay: {
       enum: [
@@ -186,14 +142,21 @@ export const workspaceStateSchema = {
         'history',
         'close-session',
         'reassign',
-        'archive-unpushed',
-        'archive-pushed',
         'tab-menu',
+        'continue-unpushed',
         'close-terminal',
         'terminal-open-failed',
         'terminal-close-failed',
       ],
     },
+    /**
+     * The cloud computer of an archived workspace: kept, until the app
+     * deletes it 14 days after the Archive, kept past the last day of
+     * Restore while its delete tries again, or deleted. Until that last day,
+     * every member of an org that is not suspended may restore the
+     * workspace.
+     */
+    archive: { enum: ['kept', 'ended', 'deleted'] },
     /** The person signed in: an admin of the org, or a member who is not. */
     viewer: { enum: ['admin', 'member'] },
     /**
@@ -225,17 +188,24 @@ export const workspaceStateSchema = {
      */
     org: { enum: ['active', 'suspended'] },
     /**
+     * The run of a routine that made the workspace (decision 501): a run of
+     * a pull request, a run that Run now started, or a failed run that kept
+     * its workspace, whose first start or first turn failed. A run
+     * workspace is a normal workspace, whose header links to its routine,
+     * and for a pull request run to the pull request. It shows the chat of
+     * its run at the stage of `conversation`: `queued` while the sandbox
+     * starts or after a failed first start, or else its first turn. A
+     * workspace that a person created has none.
+     */
+    run: { enum: runWorkspaceKeys },
+    /**
      * The command palette, closed or open on one of its views. Over an
      * open workspace it offers the actions of the workspace first. A phone
      * opens it from the list, so a phone shows the palette of the list.
      */
     palette: { enum: paletteViews },
-    /**
-     * The label of the workspace number in the header, which copies the
-     * link of the workspace: as it is, or just after a press, while it
-     * shows for a moment that the copy worked or failed.
-     */
-    copyLink: { enum: ['none', 'copied', 'failed'] },
+    ...feedbackStateProperties,
+    ...barStateProperties,
   },
 } as const
 
@@ -261,13 +231,15 @@ export const readyWorkspace: WorkspaceState = {
   resize: 'none',
   rightColumn: 'shown',
   overlay: 'none',
+  archive: 'kept',
   viewer: 'admin',
   lostUpdate: 'none',
   tree: 'latest',
   paths: 'plain',
   org: 'active',
   palette: 'closed',
-  copyLink: 'none',
+  ...feedbackStateDefaults,
+  ...barStateDefaults,
 }
 
 /**

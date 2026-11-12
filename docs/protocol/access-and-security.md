@@ -27,8 +27,9 @@ These docs belong to this doc:
   app then gives both the identity and the repository access.
 - Cloudflare Access was rejected. Users sign in with GitHub, and Access
   cannot sign in inside a frame.
-- A new GitHub sign-in creates an account without app access, and the
-  person waits on the waitlist (decision 160).
+- Except during [open sign-up](sign-ups.md#open-sign-up), a new GitHub
+  sign-in creates an account without app access, and the person waits on
+  the waitlist (decisions 160 and 230).
   [Waitlist](waitlist.md) states what the person can reach and the ways in.
   A suspended account cannot sign in, as
   [Operator actions](operator-actions.md#sessions-and-sign-in) says.
@@ -143,6 +144,11 @@ A lint was rejected because a read through another name escapes it.
   own HTTP 413 answer comes first.
 - A higher limit, such as the 128 MB that Anthropic's API accepts, was
   rejected, because it needs a zone of the Business or Enterprise plan.
+- The limit of `POST /api/feedback` is 10 MB, or 10,000,000 bytes
+  (decision 271). Its JSON body carries the screenshots of the message in
+  base64, as [The routes](feedback.md#the-routes) says.
+- Reason: a larger JSON body holds more memory, and an isolate has 128 MB
+  for all of its requests.
 - The Worker counts the bytes that arrive. It does not rely on the
   `Content-Length` header for the limit.
 - The Worker stops reading a body as soon as the body passes its limit.

@@ -1,7 +1,7 @@
 /**
- * The terminals of the open workspace, from decisions 248 and 249: a row
- * of terminal tabs in the Terminal tool, with up to 10 terminals that the
- * members of the workspace share.
+ * The terminals of the open workspace, from decisions 1 and 2 of the
+ * terminal tabs change: a row of terminal tabs in the Terminal tool, with
+ * up to 10 terminals that the members of the workspace share.
  */
 
 import {

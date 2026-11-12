@@ -1,5 +1,6 @@
 import { createContext, useContext, useMemo, type ReactNode } from 'react'
 import type { SandboxPanelState } from '../../../docs/mockups/src/components/workspace/sandboxNoticeState'
+import type { ArchiveAction } from '../../app/archive-model'
 import type { WorkspaceStream } from '../../app/events'
 import type { ChatController } from '../../chat/state/controller'
 import type { User } from '../../shared/api'
@@ -22,6 +23,15 @@ export type SandboxState =
 export type SavedView = Pick<
   ChatController,
   'subscribe' | 'getSnapshot' | 'updateView'
+>
+
+/**
+ * The kept chat as the pull request bar uses it: its snapshot, the select of
+ * a session, and the send of a fixed prompt to the session of the chat.
+ */
+type ChatActions = Pick<
+  ChatController,
+  'subscribe' | 'getSnapshot' | 'select' | 'sendPrompt'
 >
 
 /** What a feature of the workspace gets from the shell. */
@@ -55,13 +65,23 @@ export interface WorkspaceContext {
   stream: WorkspaceStream
   /** The saved view of the workspace, which a feature reads and changes. */
   savedView: SavedView
+  /** The kept chat, through which the bar sends its fixed prompts. */
+  chat: ChatActions
   /**
    * The events that the tools read: the updates of the workspace and the
    * revokes of its previews, the stored revokes first.
    */
   toolEvents: SubscribeWorkspaceEvents
-  /** Opens the Archive question, or `null` when the viewer may not archive. */
+  /** Archives at once, or `null` when the viewer may not archive. */
   archive: (() => void) | null
+  /**
+   * Restores the archived workspace, or `null` when it offers no Restore:
+   * after its last day of Restore, without a kept cloud computer, or in a
+   * suspended org.
+   */
+  restore: (() => void) | null
+  /** The Archive or the Restore that runs, which its control shows busy. */
+  running: ArchiveAction | null
   /**
    * Takes the workspace of the API's answer after the owner picker assigns
    * another owner, so the header and the start state follow at once.

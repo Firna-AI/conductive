@@ -1,5 +1,9 @@
 import type { Org } from '../../fixtures/orgs'
 import type { Membership } from '../../fixtures/members'
+import {
+  paletteShortcut,
+  type ShortcutChanges,
+} from '../../fixtures/shortcutChanges'
 import { paths } from '../../paths'
 import { classes } from '../common/classes'
 import { LoadFailure } from '../common/LoadFailure'
@@ -11,22 +15,26 @@ import type {
   WorkspaceRow,
 } from './sections'
 import { SectionList } from './SectionList'
-import { NewWorkspaceLink, SearchLink, SettingsLink } from './SidebarLinks'
+import {
+  NewWorkspaceLink,
+  RoutinesLink,
+  SearchLink,
+  SettingsLink,
+} from './SidebarLinks'
 import styles from './Sidebar.module.css'
 
 /**
  * The desktop sidebar beside the org rail: the org name with its Settings
- * link, New workspace, Search, and the sections of the org. A suspended org
- * shows its sections without New workspace and without their menus,
- * because nothing in it can change. A list that did not load shows its
- * failure in place of the sections. An open menu of a row may pass the
- * edge of the sidebar.
+ * link, New workspace, Routines, Search, and the sections of the org.
+ * A suspended org keeps Routines and Search, with read-only sections.
+ * A list that did not load shows its failure in place of the sections.
+ * An open menu of a row may pass the edge of the sidebar.
  */
 export function Sidebar(props: {
   org: Org
   sections: readonly SidebarSection[]
   /** The page that the main area shows, when the sidebar links to it. */
-  current?: 'settings' | 'new-workspace'
+  current?: 'settings' | 'new-workspace' | 'routines'
   /** A build of the org's cloud computer failed. */
   settingsAlert?: boolean
   /** The New workspace page of the org, such as that of a new org. */
@@ -44,6 +52,8 @@ export function Sidebar(props: {
   /** The workspace list of the org did not load. */
   failed?: boolean
   viewer: Membership
+  /** The person's changes to the shortcuts, such as another palette key. */
+  shortcuts?: ShortcutChanges
 }) {
   const suspended = props.suspended ?? false
   const drawing = props.focus?.drawing.kind
@@ -72,7 +82,15 @@ export function Sidebar(props: {
               variant="sidebar"
             />
           )}
-          <SearchLink keys variant="sidebar" />
+          <RoutinesLink
+            current={props.current === 'routines'}
+            to={suspended ? paths.suspendedRoutines : undefined}
+            variant="sidebar"
+          />
+          <SearchLink
+            shortcut={paletteShortcut(props.shortcuts)}
+            variant="sidebar"
+          />
         </div>
         {props.failed ? (
           <LoadFailure title="The workspaces didn't load" />

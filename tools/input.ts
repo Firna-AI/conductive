@@ -1,4 +1,9 @@
-import type { AgentCreateWorkspaceRequest } from '../src/shared/agent-tools.ts'
+import type {
+  AgentCreateSessionRequest,
+  AgentSendMessageRequest,
+  AgentReadSessionRequest,
+} from '../src/shared/agent-sessions.ts'
+import type { AgentCreateWorkspaceRequest } from '../src/shared/agent-workspaces.ts'
 import type { Agent, AgentChoice, Effort } from '../src/shared/agents.ts'
 
 export const TOOL_AGENTS = [
@@ -67,7 +72,18 @@ export function createWorkspaceInput(
 ): AgentCreateWorkspaceRequest {
   const fields = record(value)
   const model = fields.model === undefined ? undefined : record(fields.model)
+  if (
+    fields.requestId !== undefined &&
+    (typeof fields.requestId !== 'string' || fields.requestId.length === 0)
+  )
+    throw new ToolInputError('Use a nonempty request ID.')
   return {
+    ...(typeof fields.requestId === 'string' && {
+      requestId: fields.requestId,
+    }),
+    ...(typeof fields.firstSessionTitle === 'string' && {
+      firstSessionTitle: fields.firstSessionTitle,
+    }),
     repositoryId: text(fields.repositoryId),
     firstMessage: text(fields.firstMessage),
     ...(typeof fields.name === 'string' && { name: fields.name }),
@@ -79,4 +95,66 @@ export function createWorkspaceInput(
       sectionId: text(fields.sectionId),
     }),
   }
+}
+
+export function sessionWorkspace(value: unknown): string | undefined {
+  return value === undefined ? undefined : text(value)
+}
+
+function counter(value: unknown): number {
+  if (typeof value === 'number' && Number.isSafeInteger(value) && value >= 0)
+    return value
+  throw new ToolInputError('Use a whole, nonnegative transcript position.')
+}
+
+export function readSessionInput(value: unknown): AgentReadSessionRequest {
+  const fields = record(value)
+  const detail = fields.detail
+  if (detail !== undefined && detail !== 'concise' && detail !== 'full')
+    throw new ToolInputError('Choose concise or full transcript detail.')
+  return {
+    ...(detail !== undefined && { detail }),
+    ...(fields.startLine !== undefined && {
+      startLine: counter(fields.startLine),
+    }),
+    ...(fields.startOffset !== undefined && {
+      startOffset: counter(fields.startOffset),
+    }),
+  }
+}
+
+function sessionChoice(
+  fields: Record<string, unknown>,
+): Pick<AgentCreateSessionRequest, 'model' | 'effort' | 'requestId'> {
+  const model = fields.model === undefined ? undefined : record(fields.model)
+  if (
+    fields.requestId !== undefined &&
+    (typeof fields.requestId !== 'string' || fields.requestId.length === 0)
+  )
+    throw new ToolInputError('Use a nonempty request ID.')
+  return {
+    ...(model && {
+      model: { agent: agent(model.agent), model: text(model.model) },
+    }),
+    ...(fields.effort !== undefined && { effort: effort(fields.effort) }),
+    ...(typeof fields.requestId === 'string' && {
+      requestId: fields.requestId,
+    }),
+  }
+}
+
+export function createSessionInput(value: unknown): AgentCreateSessionRequest {
+  const fields = record(value)
+  return {
+    ...sessionChoice(fields),
+    ...(typeof fields.title === 'string' && { title: fields.title }),
+    ...(fields.firstMessage !== undefined && {
+      firstMessage: text(fields.firstMessage),
+    }),
+  }
+}
+
+export function sendSessionInput(value: unknown): AgentSendMessageRequest {
+  const fields = record(value)
+  return { ...sessionChoice(fields), text: text(fields.text) }
 }

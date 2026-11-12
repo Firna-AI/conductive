@@ -7,6 +7,8 @@ Close, expiry, and lifecycle revocation publish `preview.revoked` in the common 
 A marker commits with each revocation event, so retries keep one stored event for each preview.
 The close response waits for that commit. Lifecycle callbacks use the queue-owned publisher.
 The browser uses the [shared preview contract](../../src/shared/previews.ts).
+The app API and the trusted agent preview calls share `PreviewActions` in [actions.ts](actions.ts).
+They use the same live private-port cache and proxy registry, as [the agent preview calls](../tools/sections-and-previews.md#previews) say.
 
 Create one `createPreviewHandler(env, dependencies)` for the route owner.
 Send app API requests to its `fetch(request)` method. They include the
@@ -184,10 +186,13 @@ Use a same-origin proxy in the previewed app's dev server to reach a separate AP
 
 The workspace lifecycle owner must call `revokeWorkspace(workspaceId)` on
 stop and archive. Call it before stopping the sandbox. The close API
-revokes one preview. Use `nextExpiry(workspaceId)` to schedule the workspace
-alarm after a preview opens. Call `expire()` from that alarm and schedule
-the next expiry. Keep the handler instance with its live connections so these
-hooks also cancel its fetches, HTTP streams, and sockets.
+revokes one preview. `revokePreview` reads whether that preview was
+active and revokes it in one D1 batch. The app close still answers 204,
+and the agent close returns that flag. Use `nextExpiry(workspaceId)` to
+schedule the workspace alarm after a preview opens. Call `expire()` from
+that alarm and schedule the next expiry. Keep the handler instance with its
+live connections so these hooks also cancel its fetches, HTTP streams, and
+sockets.
 The confirmed-stop chat transaction then sends `ports.updated` with a null
 list, even when the workspace had no preview to revoke.
 Each data batch waits for a D1 check that starts after the data arrives.
@@ -198,7 +203,12 @@ A denied viewer loses only the connections of that viewer session. Other
 viewers of the same preview keep theirs.
 The request and response streams read only when their consumer requests data.
 They read one chunk at a time. No cached authorization or time window permits data.
+A chunk of a byte stream, such as a fetch body, holds the data that waits, up to 256 KB.
+So one check covers it. The default reader of a Workers fetch body gives 4 KB at most.
 Completed HTTP connections release their registry entries.
+
+A preview socket uses `bridgeSocket` with an outbound socket to the sandbox.
+An open preview socket or HTTP stream keeps its workspace object active, as [Work that keeps the object active](../README.md#work-that-keeps-the-object-active) says.
 
 Set `dependencies.onActivity` to report each input to the input owner of the
 workspace, as [Input activity](../lifecycle/README.md#input-activity) says.
@@ -220,6 +230,14 @@ only when `stripHeaders` does not name `Sec-WebSocket-Protocol`.
 The upstream URL and each rewritten redirect lose each name in
 `stripQueryParameters`.
 The proxy follows no upstream redirect.
+`portResponseHeaders` sends `private` first, then the server's `Cache-Control` unchanged.
+It also sends `no-cache` first, unless the server gives a browser lifetime.
+A lifetime is an `Expires` header, or a `Cache-Control` without quotes that holds `no-store`, a bare `no-cache`, or `max-age` with digits.
+A quote can hide the directives after it from the browser, so the proxy's directives never follow the server's value.
+The reply keeps the server's `Expires`, `Date`, and `Age`.
+A 304 without `Cache-Control` gets none, so the browser keeps the rules of its stored reply.
+The outer Worker keeps these rules, because it answers the preview host with `previewResponse` from [http.ts](../http.ts).
+[Port previews](../../docs/protocol/terminal-previews-and-desktop.md#port-previews) states the requirement.
 
 An org suspension blocks preview creation and launch with 403 `org_suspended`.
 The message gives the abuse address. The org-wide write gate also blocks preview close.
@@ -229,6 +247,8 @@ The shared sandbox predicate refuses old grants, cookies, and each stream batch 
 
 - [revocation-events.ts](revocation-events.ts) stores each publication marker with its common-stream event.
 - [handler.ts](handler.ts) exports the API, launch, proxy, revocation, and expiry entry points.
+- [actions.ts](actions.ts) holds `PreviewActions`, the list, open, and close that the API handler and the agent calls share.
+- [access.ts](access.ts) reads the workspace target, checks a running computer, and holds `toolFailure`, the fixed reply of a provider failure.
 - [launch.ts](launch.ts) builds the launch replies and the authorizer page response, and handles both authorizer POST modes.
 - [launch-document.ts](launch-document.ts) builds the launch page markup and its CSP.
 - [browser-launch.ts](browser-launch.ts) builds the authorizer page for a browser launch.
@@ -243,6 +263,7 @@ The shared sandbox predicate refuses old grants, cookies, and each stream batch 
 - [relay.ts](relay.ts) checks the relay socket unit and refuses previews when it is missing or inactive.
 - [store.ts](store.ts) and [workspace-store.ts](workspace-store.ts) hold the D1 queries.
   `publicPreview` in `store.ts` builds `Preview.url`.
+  `revokePreview` returns whether the preview was active before its revocation.
   `savePreviewSandbox` records the sandbox for active previews after a relay resolution.
   `readWorkspaceTarget` returns a `WorkspaceAccessTarget` with the `ownerActive` and `sandboxAllowed` flags. It keeps the row of a suspended owner's workspace, so the metadata reads still work.
 - [sandbox-access.ts](../data/sandbox-access.ts) exports `sandboxAccessPredicate`, the shared rule of the preview, terminal, and desktop access.

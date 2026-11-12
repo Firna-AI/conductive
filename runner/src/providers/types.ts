@@ -1,11 +1,12 @@
 import type { AgentChoice } from '../../../src/shared/agents'
-import type { ToolCall } from '../../../src/shared/chat-events'
+import type { ToolCall, TurnEndReason } from '../../../src/shared/chat-events'
 import type { CommitAuthor } from '../../../src/shared/commit-author'
 import type {
   RunnerLogin,
   RunnerTurnCredential,
   RunnerMessageDuringTurnV2 as RunnerMessageDuringTurn,
   RunnerTurnV2 as RunnerTurn,
+  RunnerBranches,
 } from '../../../src/shared/runner'
 import type { ProviderLifetime } from './lifetime'
 import type { WorkspaceToolContext } from './workspace-tools'
@@ -22,10 +23,14 @@ export type ProviderEvent =
       userMessageIds: readonly string[]
     }
   | { type: 'tool'; tool: ToolCall }
+  | { type: 'background'; live: boolean; idle: boolean }
+  | { type: 'activity'; idle: boolean }
+  | { type: 'wake-up'; state: 'finished' | 'stopped' }
   | {
       type: 'result'
       state: 'finished' | 'stopped'
       userMessageIds: readonly string[]
+      endReason?: TurnEndReason
     }
   | { type: 'failed'; code: string; message: string }
 
@@ -51,11 +56,14 @@ export interface ProviderOptions {
   choice: AgentChoice
   conversationId: string | null
   instructions: string
+  instructionBranches?: RunnerBranches | null
   tools: WorkspaceToolContext
   event: (event: ProviderEvent) => void
   warn: (message: string) => void
   signal?: AbortSignal
   lifetime?: ProviderLifetime
+  /** Work already named by the Stop hook of this turn, across process handoffs. */
+  backgroundNoteIds?: Set<string>
 }
 
 export type ProviderFactory = (

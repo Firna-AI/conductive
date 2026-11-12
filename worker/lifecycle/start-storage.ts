@@ -5,16 +5,11 @@ import {
 } from './workspace-task-alarms'
 import type { AppEnv } from '../env'
 import { FIRST_MESSAGE_ADMISSION_KEY } from './workspace-runtime'
-import {
-  encryptedStartText,
-  releasedStartLog,
-  startLogContext,
-  type EncryptedStartLog,
-} from './start-logs'
-import type { MaskedStartLog } from './masked-start-log'
+import { encryptedStartText, startLogContext } from './start-logs'
 import { readStartJob, serializeStartJob } from './start-job-codec'
 import { START_ALLOCATION_CLEANUP_KEY } from './start-allocation-cleanup'
 import { startAlarmDeadline } from './start-provider-retry'
+import { readStartLog, START_LOG_PREFIX } from './start-log-storage'
 import type {
   StartJobStorage,
   WorkspaceStartResult,
@@ -27,7 +22,6 @@ export const START_RESULT_KEY = 'lifecycle:start-result'
 const RESULT = START_RESULT_KEY
 const CREATE_RESULT = 'lifecycle:create-result'
 const PUBLICATION = 'lifecycle:create-publication'
-export const START_LOG_PREFIX = 'lifecycle:start-log:'
 const LOG = START_LOG_PREFIX
 
 export async function hasPendingStartWork(
@@ -38,37 +32,6 @@ export async function hasPendingStartWork(
     storage.get('text', 'lifecycle:cleanup'),
   ])
   return pending.some(Boolean)
-}
-
-export async function readStartLog(
-  storage: WorkspaceStorage,
-  env: Pick<AppEnv, 'BOAT_KEY_ENCRYPTION_KEY'>,
-): Promise<MaskedStartLog> {
-  const log = await readEncryptedStartLog(storage)
-  return releasedStartLog(env, log.context, log.chunks, log.secretsCiphertext)
-}
-
-export async function readEncryptedStartLog(
-  storage: WorkspaceStorage,
-): Promise<EncryptedStartLog> {
-  const chunks: string[] = []
-  let after = LOG
-  while (true) {
-    const entries = await storage.list('text', {
-      prefix: LOG,
-      startAfter: after,
-      limit: 1_000,
-    })
-    chunks.push(...entries.values())
-    if (entries.size < 1_000)
-      return {
-        context:
-          (await storage.get('text', 'lifecycle:start-log-context')) ?? '',
-        chunks,
-        secretsCiphertext: await storage.get('text', 'lifecycle:start-secrets'),
-      }
-    after = [...entries.keys()].at(-1) ?? after
-  }
 }
 
 export function durableStartStorage(
@@ -116,12 +79,13 @@ export function durableStartStorage(
       return storage.transaction(async (transaction) => {
         if (
           ((await transaction.get('number', 'lifecycle:stop-epoch')) ?? 0) !==
-          epoch
+            epoch ||
+          (await transaction.get('job', JOB))
         )
           return false
         for (const key of old.keys()) await transaction.delete(key)
         await transaction.delete(RESULT)
-        if (intent?.kind === 'retry-failed-create') {
+        if (intent && intent.kind !== 'continue') {
           await transaction.delete(CREATE_RESULT)
           await transaction.delete(PUBLICATION)
           await taskWorkspaceTransaction(
@@ -195,10 +159,15 @@ export function durableStartStorage(
         ).deleteAlarm()
       })
     },
-    complete: async (result) => {
+    complete: async (attempt, result) => {
       await rawStorage.transaction(async (transaction) => {
         const current = await transaction.get('job', JOB)
-        if (!current || (current.cancelled && result.ok)) return
+        if (
+          !current ||
+          current.attempt !== attempt ||
+          (current.cancelled && result.ok)
+        )
+          return
         const stored = result.ok
           ? result
           : { ...result, error: { ...result.error, log: null } }

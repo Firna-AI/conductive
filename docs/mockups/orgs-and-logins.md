@@ -53,23 +53,38 @@ plan limits.
   see the name of that member, such as "Cal stopped the agent" in
   `app/reassign/member-stop`. When no member pressed Stop, such as when
   the cloud computer stopped during the turn, the chat says "The agent
-  stopped", as `app/shell/stopped/during-turn` shows.
+  stopped", as `app/shell/stopped/during-turn` shows. When the agent of a
+  session stopped the turn with a workspace tool, the chat names that
+  session, not a member, from decision 279. It says "Stopped from" and
+  shows the session chip of that session, as `app/chat/agent-stops` shows.
 - Each branch starts with the GitHub login of the owner of its workspace,
   such as `calummoore/lisbon-7k2q`, from decision 53.
-- Archive, from decision 16, deletes the cloud computer and keeps the chat
-  read-only in the Archived group at the end of the list. It checks first
-  for work that is not committed or not pushed. The pull request bar offers
-  it after a merge. Only the workspace's owner and the org's admins see
-  Archive, from decision 42. An archived workspace has no file lists and no
-  tools, so a phone shows only its chat.
+- Archive stops the cloud computer at once, with no check and no question,
+  and keeps the chat read-only in the Archived group at the end of the
+  list, from decision 1 of PR #138. The pull request bar offers it after a
+  merge. Only the workspace's owner and the org's admins see Archive, from
+  decision 42. An archived workspace has no file lists and no tools, so a
+  phone shows only its chat.
+- Restore puts an archived workspace back in its section, stopped, with its
+  files and sessions. The toast after Archive offers it, and the archived
+  bar and the row in the Archived group offer it until its last day, 14
+  days after the Archive. The bar gives that last day. Every member of an
+  org that is not suspended sees Restore, from decision 2 of PR #138, as
+  `app/command-palette/actions/archived` shows. After the last day, nothing
+  offers Restore. The bar gives the day when Restore ended while a failed
+  delete of the cloud computer tries again, as `app/archive/restore-ended`
+  shows. After the delete, the bar says that the cloud computer is deleted,
+  as `app/archive/deleted` shows.
 - The menu of a workspace row follows the same roles, as
   `app/workspace-menu/roles` shows. Every member moves and renames a
   workspace that is not archived. Only an admin sees Reassign to, and only
-  the owner and the admins see Archive. The archived row of an admin
-  offers only Reassign to. An archived row of a member and every row of a
-  suspended org have no menu.
-- No workspace shows as expiring. Near day 14 of a stop, the app starts the
-  cloud computer briefly and stops it again, from decision 43.
+  the owner and the admins see Archive, which archives at once. The
+  archived row of an admin offers only Reassign to. An archived row of a
+  member and every row of a suspended org have no menu. The menu has no
+  Restore: the row keeps it, for every member of an org that is not
+  suspended.
+- No stopped workspace shows as expiring. Near day 14 of a stop, the app
+  starts the cloud computer briefly and stops it again, from decision 43.
 - Any user creates orgs. Create org of the first run returns to Get started.
 - Create org needs at least one repository, from decision 151, because it
   starts the first build of the cloud computer. The hint under
@@ -83,9 +98,10 @@ plan limits.
 - The operator can suspend an org, from decision 129. Its members still
   open it and read its chats, and its notice gives the abuse address.
   Nothing in it can change, so its screens show no action that it refuses,
-  also for an admin. No notice promises its files. A deleted org that is
-  also suspended shows the notice above its page, keeps the date when
-  everything is deleted, and offers no Restore, as
+  also for an admin. No notice promises its files. An archived workspace
+  offers no Restore, as `app/orgs/suspended/workspace/archived` shows. A
+  deleted org that is also suspended shows the notice above its page, keeps
+  the date when everything is deleted, and offers no Restore, as
   `app/orgs/suspended/deleted` shows.
 - A person whom the last-admin rule of decision 123 lets leave sees Leave
   org on the General tab of a suspended org, as `app/orgs/suspended/leave`
@@ -102,15 +118,56 @@ plan limits.
   key for its cloud computers, and no screen asks for one or for another
   account.
 - The account connects Claude with a subscription token from
-  `claude setup-token` or an API key, and Codex with an OpenAI API key.
-  `AgentConnectForm` opens under the row of the agent. A connected login
-  shows its kind and Remove.
+  `claude setup-token` or an API key. It connects Codex with an OpenAI API
+  key or with a device code sign-in to the ChatGPT plan of the member,
+  from decision 175. `AgentConnectForm` opens under the row of the agent,
+  as `app/account/connect-claude` and `app/account/connect-codex` show. Its
+  switch chooses the kind of the login, and the first kind starts
+  selected: Subscription token, then API key, for Claude, and API key, then
+  ChatGPT plan, for Codex. For a token or a key, the words above the field
+  say what to paste and where to make it.
+- ChatGPT plan has no field. Its words say that Codex then runs on the
+  plan, and that device code sign-in must be on first in the ChatGPT
+  security settings, as `app/account/connect-codex/chatgpt` shows. They
+  quote no label of ChatGPT, so they stay true after a rename. The link
+  Open ChatGPT settings follows them, and opens those settings in a new
+  tab. Get a code shows a one-time code in large type, the link to
+  `auth.openai.com/codex/device`, the warning never to share the code and
+  to enter only a code that the page shows, and a line that the page waits
+  for the sign-in, as its `code` variant shows. A code works for 15
+  minutes. An expired code offers Get a new code, as its `expired` variant
+  shows. A refused sign-in gives its cause in the same place, as its
+  `refused` variant shows. Its button says Get a code until a code showed,
+  then Get a new code. A refusal because the setting is off has the same
+  link. `ChatGptSignIn` in `src/components/settings/` draws the steps.
+- The app renews a ChatGPT sign-in alone. When OpenAI does not renew it,
+  the app can no longer use the login. Its row then says Signed out in
+  place of Connected, gives the cause under the row, and offers Sign in
+  again, as `app/account/codex-token/not-usable` shows. The cause comes
+  from the field `unusableCause` of the login status. `LoginNotUsable.tsx`
+  in `src/components/settings/` draws it. Sign in again opens the ChatGPT
+  sign-in form in the place of the cause, as
+  `app/account/codex-token/sign-in-again` shows. The row keeps the login
+  with Remove, and the share switch stays, until a new sign-in replaces
+  the login.
+- `chatGptSignInCopy.ts` in `src/components/settings/` gives the words of
+  the ChatGPT sign-in, the address of the ChatGPT settings, the row of a
+  sign-in that stopped working, and the causes of the Worker. It imports no
+  fixture, so the app and the Worker can import the same words.
+- A connected login shows its kind and Remove. The name of the kind
+  depends on the agent: a Claude token is a "Subscription token", the
+  ChatGPT sign-in of Codex is "ChatGPT plan", and a key is an "API key".
+  `loginLabels` in `src/fixtures/logins.ts` holds the names. On a phone,
+  the state and the kind go on a second line under the name of the agent,
+  so that the kind shows in full.
 - Under each connected login, the switch "Let other members use this
   login" says whether the messages of other members in the sessions of the
   user run on it, from decision 116. The switch starts off for a Claude
-  subscription and on for an API key, as `app/account` shows. It saves at
-  once. A change that the app did not save shows its cause beside the
-  switch, as `app/account/share-not-saved` shows. The part lives in
+  subscription token and on for an API key, as `app/account` shows. A
+  ChatGPT plan of Codex starts off too, from decisions 171 and 175, as
+  `app/account/codex-token` shows. The switch saves at once. A
+  change that the app did not save shows its cause beside the switch, as
+  `app/account/share-not-saved` shows. The part lives in
   `src/components/settings/LoginShare.tsx`.
 - Get started has three steps: install the GitHub App, create an org, and
   connect Claude or Codex, from decision 33. The next step opens its form.
@@ -150,9 +207,12 @@ plan limits.
 
 ## The waitlist
 
-The waitlist comes from decisions 160 to 163. A new GitHub sign-in creates
-an account without app access. The approval of an operator, an invite
-code, an invite link, or an org invitation gives app access.
+The waitlist comes from decisions 160 to 163 and 230. Outside open sign-up,
+a new GitHub sign-in creates an account without app access. The approval
+of an operator, an invite code, an invite link, or an org invitation gives
+app access. While an
+operator has turned the waitlist off and sign-ups are not paused, each
+sign-in gives app access, from decision 230. This is open sign-up.
 
 - A person without app access sees only the waitlist screen, as
   `app/sign-in/waitlist` shows. It stands alone, as the sign-in does, and
@@ -189,11 +249,18 @@ code, an invite link, or an org invitation gives app access.
   During the pause, the link stays under a notice. A code that is used up
   or turned off shows no link, as `app/account/invites` shows. The page
   names nobody who used an invite.
+- During open sign-up, a person who waits gets app access at their next
+  request, and the app opens. So the waitlist screen needs no state of its
+  own. The invite code on the Account page says that anyone can sign up
+  now, and that the invites stay for later, as
+  `app/account/invites/open-sign-up` shows. The pause wins, so the notice
+  of the pause shows while both are on.
 - The words say "waitlist" as one word, "invite code" and "invite link"
-  for every code, and "Sign-ups are paused" for the pause. They never say
-  "referral". The mockups take them from `src/screens/waitlistCopy.ts`
+  for every code, "Sign-ups are paused" for the pause, and "Anyone can
+  sign up now" for open sign-up. They never say "referral", and they never
+  name the waitlist switch. The mockups take them from `src/screens/waitlistCopy.ts`
   and `src/components/settings/inviteCodeCopy.ts`.
 - The waitlist, the sign-in, and the sign-in of an invite link share one
   frame, as [the design](design.md) gives. The home page asks a visitor
-  to sign up, and the new account then waits on the waitlist, as
-  [the marketing site](marketing-site.md) gives.
+  to sign up, as [the marketing site](marketing-site.md) gives. Outside
+  open sign-up, the new account then waits on the waitlist.

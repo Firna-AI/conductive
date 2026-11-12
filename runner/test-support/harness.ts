@@ -58,8 +58,13 @@ export function duringTurn(command: RunnerTurn): RunnerMessageDuringTurnV2 {
   }
 }
 
-export async function runnerHarness() {
+export async function runnerHarness(
+  beforeStart?: (
+    repository: Awaited<ReturnType<typeof repositoryFixture>>,
+  ) => Promise<void>,
+) {
   const repository = await repositoryFixture()
+  await beforeStart?.(repository)
   const endpoint = new FakeDurableObjectEndpoint({
     workspaceId: 'workspace-1',
     workspaceToken: 'workspace-secret',
@@ -86,6 +91,7 @@ export async function runnerHarness() {
       warnings.push(message)
     },
     disconnected: () => {},
+    restoreMarker: join(repository.home, 'restore-ended'),
   }
   const runner = new Runner(options)
   let cutoff = false

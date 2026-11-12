@@ -1,3 +1,4 @@
+import { handleTranscript } from './dev-transcript'
 import { createApiClient } from '../../app/api/client'
 import type { AgentLoginStatus } from '../../shared/account'
 import { chatHistoryPath, type WorkspaceEvent } from '../../shared/events'
@@ -20,10 +21,10 @@ import { senderSnapshot } from '../../test-support/fixtures/workspaces'
 import { recordedChatEvents } from '../../test-support/recorded-chat'
 import { recordedFileEvents } from '../../test-support/recorded-files'
 import { createChatApi, type WorkspaceTarget } from '../api/client'
-import { endsTurn } from '../state/known-turns'
+import { endsTurn } from '../../shared/transcript/known-turns'
 import type { Clock } from '../ui/clock'
 import { DevAgent } from './dev-agent'
-import { devAnswers } from './dev-answers'
+import { devScripts, type DevScript } from './dev-answers'
 import {
   seedLinked,
   withReaderLogin,
@@ -80,7 +81,7 @@ export class DevBackend {
     open: Session[]
     closed: Session[]
     mac: DevMac
-    answer: readonly string[]
+    script: DevScript
   }) {
     this.target = parts.target
     this.viewer = parts.viewer
@@ -93,7 +94,7 @@ export class DevBackend {
     this.open = parts.open
     this.closed = parts.closed
     this.mac = parts.mac
-    this.agent = new DevAgent(parts.stream, parts.clock, parts.answer)
+    this.agent = new DevAgent(parts.stream, parts.clock, parts.script)
     this.agent.onTurn = (sessionId, turnId, at) =>
       setActiveTurn(this, sessionId, turnId, at)
   }
@@ -117,7 +118,7 @@ export class DevBackend {
       (login) => login.agent === 'claude' && login.connected,
     )
     const api = createChatApi(createApiClient(server.fetch), target)
-    const [detail, listed, view] = await Promise.all([
+    const [detail, listed, { view }] = await Promise.all([
       api.workspace(),
       api.sessions(),
       api.view(),
@@ -167,7 +168,7 @@ export class DevBackend {
         options.app === 'mac',
         options.change,
       ),
-      answer: devAnswers[options.answer],
+      script: devScripts[options.answer],
     })
     backend.note(recorded.map((envelope) => envelope.event))
     writeMacReplies(backend)
@@ -190,6 +191,7 @@ export class DevBackend {
         ? new Request(input, init)
         : new Request(new URL(String(input), FAKE_ORIGIN), init)
     const written =
+      (await handleTranscript(this, request)) ??
       (await handleMacWrite(this, request)) ??
       (await handleWrite(this, request))
     return written ?? this.server.fetch(request)

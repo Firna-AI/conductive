@@ -8,7 +8,8 @@ import type {
   StreamTarget,
   WorkspaceEventSource,
 } from './events'
-import type { AppServices, KeyPress, KeyValueStorage } from './services'
+import type { AppServices, KeyValueStorage } from './services'
+import { ManualKeys } from './shortcuts/manual-keys.test-support'
 import type { Readable } from './store'
 
 function requestKey(method: string, path: string): string {
@@ -103,6 +104,16 @@ export class ManualDelay {
     this.timers.clear()
     await Promise.all(due.map((timer) => timer.run()))
   }
+
+  /**
+   * Runs only the timers that wait `ms`, such as the reads of a pending
+   * job, and leaves the others, such as a slow backup read, waiting.
+   */
+  async run(ms: number): Promise<void> {
+    const due = [...this.timers].filter((timer) => timer.ms === ms)
+    for (const timer of due) this.timers.delete(timer)
+    await Promise.all(due.map((timer) => timer.run()))
+  }
 }
 
 /** The focus of the page, which comes back only when the test says so. */
@@ -144,23 +155,6 @@ export class ManualInput {
   /** The user types, presses a key or the pointer, or scrolls. */
   input(): void {
     for (const listener of [...this.listeners]) listener()
-  }
-}
-
-/** The key presses of the page, which come only when the test says so. */
-class ManualKeys {
-  private readonly listeners = new Set<(press: KeyPress) => void>()
-
-  readonly onKey = (listener: (press: KeyPress) => void): (() => void) => {
-    this.listeners.add(listener)
-    return () => {
-      this.listeners.delete(listener)
-    }
-  }
-
-  /** The person presses a key. */
-  press(press: KeyPress): void {
-    for (const listener of [...this.listeners]) listener(press)
   }
 }
 
@@ -237,6 +231,7 @@ export function testServices(
   overrides: Partial<AppServices> & { fetch?: FetchLike } = {},
 ): AppServices {
   let id = 0
+  const keys = new ManualKeys()
   const { fetch, ...rest } = overrides
   return {
     api: createApiClient(
@@ -249,13 +244,21 @@ export function testServices(
     storage: new MemoryStorage(),
     newId: () => `client-${++id}`,
     leave: () => undefined,
+    openInNewTab: () => undefined,
     appOrigin: FAKE_ORIGIN,
-    copy: async () => undefined,
+    copy: async (text) => {
+      await text
+    },
     delay: new ManualDelay().delay,
     onFocus: new ManualFocus().onFocus,
     onInput: new ManualInput().onInput,
-    onKey: new ManualKeys().onKey,
+    onKey: keys.onKey,
     platform: 'other',
+    host: {
+      kind: 'browser-tab',
+      browser: 'chrome',
+      system: overrides.platform === 'mac' ? 'mac' : 'windows',
+    },
     visible: new ManualVisibility(),
     ...rest,
   }

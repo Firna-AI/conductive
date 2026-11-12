@@ -1,4 +1,4 @@
-import { parseRoute } from '../../app/router'
+import { parseRoute, routes } from '../../app/router'
 import type { Workspace } from '../../shared/workspaces'
 
 /** A part of the text of a message field: plain text, or a link. */
@@ -27,6 +27,8 @@ export interface LinkTarget {
   workspace: Workspace
   /** The path, the query, and the hash of the page, as the router reads them. */
   to: string
+  /** The session of a session link, or null for another page of the workspace. */
+  sessionId: string | null
 }
 
 /** The target of a Markdown link: a web address, which can stand in angle brackets. */
@@ -82,7 +84,8 @@ export function textParts(text: string): TextPart[] {
   return parts
 }
 
-function originOf(link: string): string | null {
+/** The origin of a link, such as the link of a workspace, or null. */
+export function originOf(link: string): string | null {
   try {
     return new URL(link).origin
   } catch {
@@ -131,5 +134,29 @@ export function linkTarget(
     (item) => item.id === route.workspaceId,
   )
   if (!workspace || originOf(workspace.link) !== url.origin) return undefined
-  return { workspace, to: `${url.pathname}${url.search}${url.hash}` }
+  return {
+    workspace,
+    to: `${url.pathname}${url.search}${url.hash}`,
+    sessionId: route.session ?? null,
+  }
+}
+
+/**
+ * The target of a session that the chat names by its IDs, such as the
+ * session whose agent stopped a turn: the target of the link of that
+ * session. Only a workspace in the list matches, as for `linkTarget`.
+ */
+export function sessionTarget(
+  session: { workspaceId: string; sessionId: string },
+  links: WorkspaceLinks,
+): LinkTarget | undefined {
+  const workspace = links.workspaces?.find(
+    (item) => item.id === session.workspaceId,
+  )
+  if (!workspace) return undefined
+  return {
+    workspace,
+    to: routes.session(links.orgId, session.workspaceId, session.sessionId),
+    sessionId: session.sessionId,
+  }
 }

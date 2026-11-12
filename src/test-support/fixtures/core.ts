@@ -59,6 +59,7 @@ export function coreFixtures(role: OrgRole = 'admin') {
     user: role === 'member' ? fakeUsers[1] : fakeUser,
     defaultChoice,
     newWorkspaceView: 'page',
+    shortcuts: { mac: [], other: [] },
     agentLogins: [
       {
         agent: 'claude',
@@ -134,7 +135,6 @@ export function coreFixtures(role: OrgRole = 'admin') {
       startupScript,
       envVars,
       updatedAt: FAKE_TIME,
-      needsBuild: false,
     },
   }
   const build: BuildResponse = {
@@ -159,6 +159,11 @@ export function coreFixtures(role: OrgRole = 'admin') {
   const builds: BuildsResponse = {
     builds: [build.build],
     currentImageBuildId: build.build.id,
+    changes: {
+      installScript: false,
+      addedRepositories: [],
+      removedRepositories: [],
+    },
   }
   const githubInstallations: GitHubInstallationsResponse = {
     installations: installations.map((installation, index) => ({

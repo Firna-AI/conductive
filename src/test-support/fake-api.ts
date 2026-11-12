@@ -2,7 +2,11 @@ import type { PathState } from '../../docs/mockups/src/fixtures/maskedFiles'
 import type { SessionResponse } from '../shared/account'
 import { API_PATHS, type OrgRole, type User } from '../shared/api'
 import { chatHistoryPath } from '../shared/events'
-import type { BannerState } from '../shared/github'
+import {
+  githubSummary,
+  type BannerState,
+  type GitHubSummary,
+} from '../shared/github'
 import type { WorkspaceState } from '../shared/workspaces'
 import type { FakeMethod, FakeRouteWriter } from './fake-api-routes'
 import { fakeCoreRoutes } from './fake-core-routes'
@@ -16,6 +20,7 @@ import {
   maskedChangedFiles,
   withMaskedTurnFiles,
 } from './fixtures/masked-paths'
+import { toolFixtures } from './fixtures/tools'
 import { workspaceFixtures } from './fixtures/workspaces'
 import { recordedChatEvents, type RecordedChatScenario } from './recorded-chat'
 import { recordedFileEvents } from './recorded-files'
@@ -25,6 +30,12 @@ export interface FakeApiOptions {
   workspaceState?: WorkspaceState
   conversation?: RecordedChatScenario
   banner?: BannerState
+  /**
+   * The GitHub state of the record of the fake workspace. Without it, the
+   * record has the GitHub state of `banner`, so that its list mark and its
+   * bar agree. `null` gives a record without one, whatever the bar shows.
+   */
+  github?: GitHubSummary | null
   /** The Mac commands of the fake workspace. */
   macCommands?: FakeMacScenario
   /** The window is the Mac app on the Mac of the fake user. */
@@ -34,6 +45,19 @@ export interface FakeApiOptions {
    * the labels of the mockups, to the file lists and to each finished turn.
    */
   paths?: PathState
+}
+
+/**
+ * The GitHub state of the record of the fake workspace: `github` when the
+ * options give it, also `null`, or else the state of the bar of `banner` and
+ * its checks, as the Worker copies it.
+ */
+export function fakeGitHubSummary(
+  options: Pick<FakeApiOptions, 'banner' | 'github'>,
+): GitHubSummary | null {
+  if (options.github !== undefined) return options.github
+  const { banner, checks } = toolFixtures(options.banner)
+  return githubSummary(banner.banner, checks.checks)
 }
 
 function routeKey(method: string, path: string): string {
@@ -53,7 +77,7 @@ function routeKey(method: string, path: string): string {
 export class FakeApiServer implements FakeRouteWriter {
   readonly requests: Request[] = []
   readonly events: FakeWorkspaceEvents
-  private readonly replies = new Map<string, Response>()
+  private readonly replies = new Map<string, Response | Promise<Response>>()
 
   constructor(options: FakeApiOptions = {}) {
     const conversation = options.conversation ?? 'history'
@@ -73,6 +97,7 @@ export class FakeApiServer implements FakeRouteWriter {
       options.workspaceState ?? 'ready',
       conversation,
       paths,
+      fakeGitHubSummary(options),
     )
     fakeToolRoutes(this, options.banner ?? 'ready-to-merge', paths)
     const { workspaces, created } = workspaceFixtures(options.workspaceState)
@@ -96,6 +121,13 @@ export class FakeApiServer implements FakeRouteWriter {
   }
 
   json(method: FakeMethod, path: string, body: unknown, status = 200): void {
+    if (body instanceof Promise) {
+      this.replies.set(
+        routeKey(method, path),
+        body.then((value: unknown) => Response.json(value, { status })),
+      )
+      return
+    }
     this.response(method, path, Response.json(body, { status }))
   }
 
@@ -118,7 +150,7 @@ export class FakeApiServer implements FakeRouteWriter {
     this.requests.push(request.clone())
     const url = new URL(request.url)
     const key = routeKey(request.method, request.url)
-    const response = this.replies.get(key) ?? this.uploadReply(request)
+    const response = await (this.replies.get(key) ?? this.uploadReply(request))
     if (response) return response.clone()
     const historyPath = new URL(
       chatHistoryPath(FAKE_IDS.org, FAKE_IDS.workspace, FAKE_IDS.session),
@@ -141,7 +173,9 @@ export class FakeApiServer implements FakeRouteWriter {
   }
 
   /** The reply for the path of a raw file upload, whatever file it names. */
-  private uploadReply(request: Request): Response | undefined {
+  private uploadReply(
+    request: Request,
+  ): Response | Promise<Response> | undefined {
     if (request.headers.get('Content-Type') !== 'application/octet-stream') {
       return undefined
     }

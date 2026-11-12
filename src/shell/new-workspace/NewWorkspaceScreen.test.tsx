@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest'
+import { pickWorkspaceFiles } from '../../app/draft-files.test-support'
 import { HeldRequests } from '../../app/test-kit'
 import type { OrgRole } from '../../shared/api'
 import { attachmentUploadPath } from '../../shared/messages'
@@ -43,6 +44,11 @@ async function screenText(role: OrgRole, builtAt?: number): Promise<string> {
         },
       ],
       currentImageBuildId: 'image',
+      changes: {
+        installScript: false,
+        addedRepositories: [],
+        removedRepositories: [],
+      },
     })
   }
   const app = await startedApp(server)
@@ -187,7 +193,8 @@ describe('NewWorkspaceScreen', () => {
       messageId: draft.draft.get().messageId,
     })
     held.hold('POST', uploadPath)
-    const uploading = draft.attach([
+    // The pick puts the chip of the file into the text, as the field does.
+    const uploading = pickWorkspaceFiles(draft, [
       new File(['Cart notes'], 'notes.txt', { type: 'text/plain' }),
     ])
     const whileUploading = buttons('Send', 'Try again')

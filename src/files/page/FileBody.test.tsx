@@ -4,6 +4,7 @@ import { parseMarkdown } from '../markdown/markdown-document'
 import { fileText } from '../model/file-text'
 import { ReadError } from '../ui/FileStates'
 import { FileContent } from './FileBody'
+import { fileView } from './file-view'
 
 const noop = () => {}
 
@@ -54,19 +55,21 @@ it('offers Try again when a read fails', () => {
 })
 
 it('shows a file that is not text as a download', () => {
-  const png = {
-    path: 'public/hero.png',
-    mediaType: 'image/png',
+  // The first bytes of a WOFF2 font, which hold a NUL character.
+  const font = {
+    path: 'public/fonts/brand.woff2',
+    mediaType: 'application/octet-stream',
     sizeBytes: 8,
     encoding: 'base64',
-    content: 'iVBORw0KGgo=',
+    content: 'd09GMgABAAA=',
   } as const
   const html = renderToStaticMarkup(
     <FileContent
       mode="preview"
+      name="brand.woff2"
       onDownload={noop}
-      path={png.path}
-      text={fileText(png)}
+      path={font.path}
+      view={fileView(font.path, font)}
     />,
   )
   expect(text(html)).toBe(
@@ -94,14 +97,20 @@ it('starts Markdown rendered and shows its source as text with line numbers', ()
     <FileContent
       markdownParser={parseMarkdown}
       mode="preview"
+      name="README.md"
       path="README.md"
-      text={decoded}
+      view={decoded}
     />,
   )
   expect(preview).toContain('<h1>Café</h1>')
   expect(preview).toContain('<em>shop</em>')
   const source = renderToStaticMarkup(
-    <FileContent mode="source" path="README.md" text={decoded} />,
+    <FileContent
+      mode="source"
+      name="README.md"
+      path="README.md"
+      view={decoded}
+    />,
   )
   expect(source).not.toContain('<h1>')
   expect(text(source)).toBe('1 # Café 2 3 The *shop*.')

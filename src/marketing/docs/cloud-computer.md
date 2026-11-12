@@ -7,7 +7,7 @@ order: 10
 
 ## Understand the shared setup
 
-Your org has a prepared setup with its chosen repositories and installed software.
+A build prepares your org's setup with its chosen repositories and installed software.
 Each new workspace starts its own cloud computer from that setup.
 Workspaces then have their own files and branches.
 
@@ -43,13 +43,19 @@ After the first successful build, use these steps to change its repositories:
 1. Open the org's **Settings**.
 2. Select **Repositories**.
 3. Add or remove the repositories you want in its setup.
-4. Open **Cloud computer**.
-5. Select **Build computer** to include the changed selection.
 
 The repository list has **Manage access** for the GitHub App's access on GitHub.
 Your account and the app must both be able to reach a repository to select it.
 
+Adding a repository starts a build automatically.
+If a build or refresh is running, one more build usually starts after it succeeds.
+When the repository notice offers **Try again**, the last build failed, and the repository waits for it.
+Select **Try again** to build it.
 A newly added repository becomes usable after a successful build includes it.
+Until then, **New workspace** shows it as unavailable, with a note that says when it will be ready.
+
+A removed repository stays in the setup until the next build.
+To apply a removal, select **Build computer** under **Cloud computer**.
 Existing workspaces keep the repositories and folders from the setup they started with.
 
 ## Install software
@@ -82,7 +88,7 @@ Use startup commands for work that needs those values.
 
 ## Run commands at startup
 
-Use **Startup script** for commands needed at each workspace start and resume.
+Use **Startup script** for commands needed when you start or resume a workspace.
 Bash runs it in the workspace's selected repository folder.
 
 1. Enter the commands under **Startup script**.
@@ -90,6 +96,7 @@ Bash runs it in the workspace's selected repository folder.
 
 The changed script applies when a workspace next starts or resumes.
 It does not rerun just because you saved it while a computer was running.
+Archive and Restore do not run this script.
 
 ## Set environment variables
 
@@ -107,9 +114,15 @@ Values and marks apply at the next start of each workspace's computer.
 Every workspace receives the org's environment values, except values with a name that Conductive sets itself.
 Agents and members with terminal access can read the values that the computer receives.
 
-Conductive sets `GIT_AUTHOR_NAME`, `GIT_AUTHOR_EMAIL`, `GIT_COMMITTER_NAME`, and `GIT_COMMITTER_EMAIL` for commit authors and committers.
+In an agent turn, Conductive sets `GIT_AUTHOR_NAME`, `GIT_AUTHOR_EMAIL`, `GIT_COMMITTER_NAME`, and `GIT_COMMITTER_EMAIL` for the agent's commands.
+These values name the person whose message started the turn.
+They take priority over every Git setting.
 An org variable with one of these names has no effect.
-These values also take priority over an author that a script or an agent writes into Git settings.
+Outside an agent turn, Git takes the workspace owner's author from the computer's system Git settings.
+Conductive writes these settings at each start.
+The owner's author takes priority over a `user.name` or `user.email` setting.
+An `author` or `committer` setting in the repository or in the global Git settings takes priority over the owner's author.
+In a workspace with older cloud computer software, agent commits name the workspace owner.
 A Git command can still set its own author, for example with `--author`.
 The author of a commit does not prove who made it.
 
@@ -122,12 +135,23 @@ A successful build updates the starting setup for new workspaces.
 A failed build keeps the last successful setup.
 Existing workspaces keep their files.
 
-A build also installs the newest Conductive cloud computer software.
-An existing workspace keeps the software of the setup that it started from, also after a resume.
-To get newer software, start a new workspace after an admin runs **Build computer**.
-This also gives the new workspace the server list in **Preview**.
+Adding a repository starts a build automatically.
+A build includes the current Conductive cloud computer software.
+An existing workspace keeps its software after a resume.
+**Continue** keeps that same computer and software for the workspace's next task.
+A new build does not replace the existing computer.
+Installing updated agent software in an older computer does not change its protection for saved agent logins.
 
-After the first successful build, saved repository and install-script changes need **Build computer**.
+Ask an admin to run **Build computer**.
+After it succeeds, create a new workspace for newer software and the new protection.
+This also gives the new workspace the server list in **Preview**.
+The same steps give it the current workspace tools for managing workspaces, sessions, sections, and private previews across the org.
+The tools also read chats and messages there.
+Resuming an existing workspace does not update its installed tools.
+
+- [Understand agent login protection](/docs/security#protect-agent-and-github-logins)
+
+After the first successful build, removed repositories and saved install-script changes need **Build computer**.
 New workspaces can keep using the last successful setup while a later build runs.
 
 Changes during the first successful build get one extra build automatically.

@@ -4,6 +4,8 @@ import type { UserMessage } from '../src/shared/messages'
 import type { ChatWorkspaceSummary } from './chat/workspace-summary'
 import type { StartStep, WorkspaceStart } from '../src/shared/workspaces'
 import { WorkspaceChat } from './chat/backend'
+import { runWorkspaceLifecycle } from './chat/lifecycle-queue'
+import type { QueueTurn } from './chat/queue-turn'
 import type { DeviceOperationResult } from './devices/internal'
 import {
   createWorkspaceIntegration,
@@ -11,6 +13,7 @@ import {
   type WorkspaceChatResolvers,
 } from './chat/workspace-integration'
 import { DeviceRuntime } from './devices/runtime'
+import { activeStoredTurn } from './devices/access'
 import { credentialSender } from './lifecycle/credential-sender'
 import type { DurableLifecycleState } from './lifecycle/durable-types'
 import type { ImageCoordinatorState } from './lifecycle/image-timers'
@@ -24,7 +27,7 @@ import {
   type StoredWorkspaceStartJob,
 } from './lifecycle/start-job-codec'
 import { nativeWorkspaceStorage } from './lifecycle/platform-storage'
-import { readEncryptedStartLog } from './lifecycle/start-storage'
+import { readEncryptedStartLog } from './lifecycle/start-log-storage'
 import {
   startResultForTransport,
   type WorkspaceLifecycleTransport,
@@ -65,25 +68,43 @@ export class WorkspaceLifecycle
     this.chat = integration.chat
     this.devices = integration.devices
     this.controller = integration.controller
+    context.blockConcurrencyWhile(() => integration.sockets.restore())
     this.activity = createWorkspaceInputActivity(
       context,
       env,
       { ...lifecycleDependencies(), now },
       integration,
       (operation) =>
-        this.chat.runLifecycle(() => integration.withGeneration(operation)),
+        this.chat.runLifecycle((turn) =>
+          integration.withGeneration(turn, operation),
+        ),
       activitySchedule,
     )
   }
 
-  protected run<T>(operation: () => Promise<T>): Promise<T> {
-    return this.chat.runLifecycle(() =>
-      this.integration.withGeneration(async () => {
-        const result = await operation()
-        await this.chat.flushRunner()
-        return result
-      }),
-    )
+  protected run<T>(operation: (turn: QueueTurn) => Promise<T>): Promise<T> {
+    return runWorkspaceLifecycle(this.integration, operation)
+  }
+
+  async callingToolTurn(workspaceId: string, turnId: string) {
+    if (!this.env.WORKSPACES.idFromName(workspaceId).equals(this.ctx.id))
+      return null
+    return this.chat.runLifecycle(async () => {
+      const turn = await activeStoredTurn(this.chat, workspaceId, turnId)
+      return turn ? { workspaceId, turnId, senderUserId: turn.senderId } : null
+    })
+  }
+
+  webSocketMessage(socket: WebSocket, message: string | ArrayBuffer) {
+    return this.integration.sockets.message(socket, message)
+  }
+
+  webSocketClose(socket: WebSocket) {
+    return this.integration.sockets.close(socket)
+  }
+
+  webSocketError(socket: WebSocket) {
+    return this.integration.sockets.close(socket)
   }
 
   queueComputerStops(
@@ -171,8 +192,8 @@ export class WorkspaceLifecycle
 
   async lifecycleActivity() {
     const at = this.activityNow()
-    return this.chat.runLifecycle(() =>
-      this.integration.withGeneration(async () => {
+    return this.chat.runLifecycle((turn) =>
+      this.integration.withGeneration(turn, async () => {
         const state = await this.controller.readLifecycle()
         const result = await this.controller.lifecycleActivity(true)
         if (result.ok && state) this.activity.record(state.workspaceId, at)
@@ -225,10 +246,13 @@ export class WorkspaceLifecycle
     return credentialSender(this.chat, this.controller, turnId)
   }
 
-  async checkTurnToken(token: string): Promise<TurnTokenCheck> {
+  async checkTurnToken(
+    token: string,
+    claimCodexRecovery?: true | 'complete',
+  ): Promise<TurnTokenCheck> {
     const workspaceId = await this.chat.store.workspaceId()
     return workspaceId
-      ? this.chat.turnTokens.check(workspaceId, token)
+      ? this.chat.turnTokens.check(workspaceId, token, claimCodexRecovery)
       : { ok: false, reason: 'turn_not_active' }
   }
 
@@ -253,7 +277,7 @@ export class WorkspaceLifecycle
   }
 
   protected async alarmLifecycle(): Promise<void> {
-    await this.run(() => this.controller.alarm())
+    await this.run((turn) => this.controller.alarm(turn))
   }
 
   deviceOperation(

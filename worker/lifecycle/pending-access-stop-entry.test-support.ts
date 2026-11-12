@@ -31,6 +31,7 @@ export class Workspace extends FeatureWorkspace {
                 fire: async () => {
                   dispatched = true
                   await this.alarm()
+                  await this.settledAlarms()
                 },
               },
             ],

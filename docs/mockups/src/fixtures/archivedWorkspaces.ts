@@ -14,15 +14,16 @@ export const postcodeLookup = workspace(
     repository: 'storefront',
     section: 'checkout',
     status: 'archived',
+    github: null,
     updated: '3w',
   },
 )
 
 /**
- * The archived workspaces of Acme, the last archived first. Their cloud
- * computers are deleted, and their chats stay read-only. The list keeps
- * them in its Archived group, which stays closed until the user opens it,
- * and a chip still finds each of them, with the archived state.
+ * The archived workspaces of Acme, the last archived first. Their chats
+ * stay read-only. The list keeps them in its Archived group, which stays
+ * closed until the user opens it, and a chip still finds each of them,
+ * with the archived state.
  */
 export const archivedWorkspaceList: readonly Workspace[] = [
   workspace('checkout-redesign', 'Checkout page redesign', {
@@ -31,6 +32,7 @@ export const archivedWorkspaceList: readonly Workspace[] = [
     repository: 'storefront',
     section: 'checkout',
     status: 'archived',
+    github: 'merged',
     updated: '4d',
   }),
   workspace('black-friday-banner', 'Black Friday banner', {
@@ -39,6 +41,7 @@ export const archivedWorkspaceList: readonly Workspace[] = [
     repository: 'storefront',
     section: 'general',
     status: 'archived',
+    github: 'merged',
     updated: '9d',
     owner: 'priya',
   }),
@@ -51,6 +54,7 @@ export const archivedWorkspaceList: readonly Workspace[] = [
       repository: 'billing-service',
       section: 'infra',
       status: 'archived',
+      github: 'checks-failed',
       updated: '16d',
       owner: 'jonas',
     },
@@ -58,3 +62,13 @@ export const archivedWorkspaceList: readonly Workspace[] = [
   ),
   postcodeLookup,
 ]
+
+/**
+ * The archived workspaces whose cloud computers the app still keeps: each
+ * was archived less than 14 days ago, so Restore brings it back. The app
+ * deleted the cloud computers of the older ones.
+ */
+export const keptArchives: ReadonlySet<string> = new Set([
+  'checkout-redesign',
+  'black-friday-banner',
+])

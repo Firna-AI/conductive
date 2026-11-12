@@ -173,9 +173,9 @@ it('starts a table directly after a line of a paragraph or a list, and ends it a
       '| checkout | 182 KB |',
       'The places proxy runs on the server.',
       '- Then the tests:',
-      '  | Test | Time |',
-      '  | --- | --- |',
-      '  | unit | 41s |',
+      '| Test | Time |',
+      '| --- | --- |',
+      '| unit | 41s |',
     ].join('\n'),
   )
   expect(blocks(page)).toEqual([
@@ -243,5 +243,49 @@ it('spans at most 1,000 columns, and leaves the columns after the span empty', (
   expect({ columns: header?.length, row }).toEqual({
     columns: 1_002,
     row: ['total (span 1000)'],
+  })
+})
+
+it('draws each heading at the level that the agent wrote, with its code, strong text, and workspace chip, and draws no empty heading', () => {
+  const linked = workspaceFixtures().workspaces.workspaces[0] as Workspace
+  const page = document.createElement('div')
+  page.innerHTML = renderToStaticMarkup(
+    <LinksProvider
+      value={{ links: { orgId: FAKE_IDS.org, workspaces: [linked] } }}
+    >
+      <AgentText
+        text={[
+          '# Review of #482',
+          '## Needs your answer',
+          '### 1. Wait in `useAddressAutocomplete`',
+          '#### How **I** checked',
+          '##### Unit tests',
+          `###### Compare ${linked.link}`,
+          '## ',
+        ].join('\n')}
+      />
+    </LinksProvider>,
+  )
+  const chip = `W-${linked.number} ${linked.name}, Starting`
+  expect({
+    headings: Array.from(
+      page.querySelectorAll('h1, h2, h3, h4, h5, h6'),
+      (heading) => `${heading.tagName} ${accessibleName(heading)}`,
+    ),
+    code: page.querySelector('h3 > code')?.textContent,
+    strong: page.querySelector('h4 > strong')?.textContent,
+    chip: page.querySelector('h6 > a')?.getAttribute('href'),
+  }).toEqual({
+    headings: [
+      'H1 Review of #482',
+      'H2 Needs your answer',
+      'H3 1. Wait in useAddressAutocomplete',
+      'H4 How I checked',
+      'H5 Unit tests',
+      `H6 Compare ${chip}`,
+    ],
+    code: 'useAddressAutocomplete',
+    strong: 'I',
+    chip: routes.workspace(FAKE_IDS.org, linked.id),
   })
 })

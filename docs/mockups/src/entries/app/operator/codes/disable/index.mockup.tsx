@@ -12,7 +12,7 @@ export const operatorCodesDisable = defineScreen({
     'Disable is final, so that a wrong click cannot bring back a code that leaked. A use that the code already gave stays.',
   relatedDocs: [],
   propSchema: operatorCodesSchema,
-  props: { list: 'newest', dialog: 'disable', signUps: 'open' },
+  props: { list: 'newest', dialog: 'disable', signUps: 'open', waitlist: 'on' },
   render: (props, context) => (
     <OperatorCodesScreen state={props} viewport={context.viewport} />
   ),

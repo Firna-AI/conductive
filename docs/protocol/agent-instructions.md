@@ -2,10 +2,11 @@
 
 This doc holds the requirements and the decisions in force for the
 instructions that the app gives each agent session. It covers the facts
-and the guidance in them, the sender line of each message, and the base
-prompt of Claude agents. [Agents and sessions](agents-and-sessions.md#agents)
-states the agents and their sessions. [Agent tools](agent-tools.md)
-states the tools of the agents. The other terms are those of the
+and the guidance in them, and the sender line and the branch line of each
+message. [Base prompts](base-prompts.md) states the base prompt of Claude
+agents. [Agents and sessions](agents-and-sessions.md#agents) states the
+agents and their sessions. [Agent tools](agent-tools.md) states the tools
+of the agents. The other terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
 says.
@@ -20,36 +21,69 @@ says.
 - **Sender line:** one line at the start of each message to the agent. It
   names the member who sent that message.
 - **Workspace branch:** the branch that the Worker's record of the
-  workspace names. The app tracks this branch.
-- **Target branch:** the default branch of the workspace's repository. The
-  workspace branch starts from it, and the Changes list compares with it.
+  workspace names. The app tracks this branch. Continue changes it after a
+  merge.
+- **Target branch:** the base branch of the workspace, as
+  [The base branch of a workspace](base-branches.md#the-base-branch-of-a-workspace)
+  says. For a workspace that a member creates, it is the default branch of
+  the repository.
+- **Branch line:** one line after the sender line of a message. It names
+  the current workspace branch and the current target branch.
 - **Base prompt:** the general rules for work that a Claude agent gets
   before the agent instructions.
 
 ## What the instructions hold
 
 - The agent instructions hold these facts:
-  - The agent works in a workspace of Conductive. A workspace is one task
-    with its own branch and its own cloud computer.
+  - The agent works in a workspace of Conductive. A workspace has its own
+    cloud computer and one branch at a time. It can hold one task after
+    another.
   - The folder of the workspace's repository, and the folder of each other
     repository in the cloud computer, as
     [Repository folders](repository-folders.md) says.
+  - The absolute path of the context folder (decision 243). Git ignores
+    this folder, and attached files arrive in its attachments folder, as
+    [The context folder](repository-folders.md#the-context-folder) says.
   - The workspace branch and the target branch.
 - The instructions also give this guidance:
+  - The agent keeps notes, screenshots, and files for other sessions of the
+    workspace in the context folder.
   - The agent keeps the name of the workspace branch, unless a member asks
     for a rename.
   - The target branch is the base of the diffs and the pull requests of
     the workspace.
   - The computer tools do browser work on the desktop of the cloud
     computer, when the agent has them.
+  - No person uses that desktop. So the agent may bring a window to the
+    front and use foreground input without asking.
+  - Other sessions of the workspace share that desktop.
   - A member opens a port preview in the app by its port number.
-  - The workspace tools create and list the workspaces of the org. They
-    also ask to run a command on the Mac of the sender of the turn.
+  - The workspace tools create, list, get, rename, move, and archive the
+    workspaces of the org. In each workspace of the org, they also start,
+    list, get, rename, close, and stop sessions, send and get messages,
+    read a chat, and list, open, and close previews. They also create and
+    delete the sections of the org, and ask to run a command on the Mac of
+    the sender of the turn.
+  - A message that ends with a `Sent by:` line comes from an agent of the
+    session that the line links to, through the workspace tools.
   - Several members can write in one session. The sender line of each
-    message names its sender.
+    message names its sender, with the member ID of that member.
+  - The agent gives the member ID of a sender to the owner filter of the
+    workspace list, for the workspaces of that member. Member IDs are for
+    the arguments of the tools. An answer to a member names a member by
+    name, not by member ID.
+- Reason for the desktop guidance: the computer tools follow the rules of
+  a person's own computer, and these rules ask the user before foreground
+  input. No member watches this desktop, because the app hides Desktop.
+  Agents that decide from each refusal of a tool were rejected, because
+  they spend calls on background input or ask a member. A guide that names
+  each computer tool was rejected, because the provider can change them.
 - The instructions never tell the agent to send a member to a tool that
   the app hides, such as Desktop. [Desktop](workspace-tools.md#desktop)
   says why the app hides it.
+- The instructions do not ask the agent to show a screenshot in a reply.
+  Reason: the chat shows the Markdown of an image as text, as
+  [Chat Markdown](chat-markdown.md#formatting) says.
 - The instructions hold no secret, such as the workspace token or an agent
   login.
 - The instructions follow the naming rules of user-facing text, as
@@ -76,27 +110,41 @@ says.
   reason for the rule that keeps the branch name.
 - A Git guard that refuses a rename of the branch was rejected. It covers
   one fact only, and it adds a refusal that no user asked for.
+- After a merge, [Continue](continue.md) moves the workspace to a new
+  branch. The Worker's record then names the new branch, and the pull
+  request bar follows it. Continue is a branch change of the app, not a
+  rename by the agent.
 
 ## The sender line
 
 - Each message that reaches the agent starts with a sender line. This
   holds also for each message during a turn, and for each message of the
   starter.
-- The sender line gives the display name and the GitHub login of the
-  member who sent the message. For a member without a display name, it
-  gives only the GitHub login.
+- The sender line gives the display name, the GitHub login, and the
+  member ID of the member who sent the message (decision 283). For a
+  member without a display name, it gives only the GitHub login and the
+  member ID.
 - Reason: several members can write in one session while the starter
   shares the login (decision 116). So the agent needs to know who sent
   each message.
+- A message that joins a running turn gives its own sender, who can
+  differ from the sender of the turn.
+- Reason for the member ID: the owner filter of the
+  [workspace list](workspace-calls.md#list-the-workspaces) takes a member
+  ID, and a GitHub login can name two members after a GitHub rename.
+- The sender line of a message from the workspace tools names the sender
+  of the turn that made the call, as
+  [The sender](session-calls.md#the-sender) says.
 - The sender line exists only in the text that reaches the agent. The
-  stored message, the chat, and the titles from messages use only the
-  text that the member wrote.
+  stored message, the chat, and the titles from messages never hold it.
 - The chat never shows the sender line or the agent instructions. Reason:
   they are for the agent.
 
 ### Access
 
-- The sender line informs the agent only. No access depends on it.
+- The sender line informs the agent only. No access depends on it, also
+  not on its member ID. The same holds for a `Sent by:` line, as
+  [The `Sent by:` line](session-calls.md#the-sent-by-line) says.
 - A Mac command of a turn goes to the Mac of the sender of the turn, the
   member whose message started the turn. The GitHub token of the turn also
   belongs to that member, as
@@ -104,13 +152,41 @@ says.
   member too, as [Commit author](github-tokens.md#commit-author) says.
 - A message that another member sends during the turn changes none of
   them.
-- Reason: the Worker takes the sender of a Mac command or a Git operation
-  from its own record of the turn.
+- Each write of the workspace tools acts for the sender of the turn too,
+  also while the agent answers a message of another member, as
+  [The sender](agent-tool-access.md#the-sender) says.
+- Reason: the Worker takes the sender of a Mac command, a Git operation,
+  or a write of the tools from its own record of the turn.
   [The workspace token](tokens-and-secrets.md#the-workspace-token) states
   this rule. Agent code runs in the sandbox, so a sender that the sandbox
   names can be false.
-- Risk: a member can type a false sender line in a message. The agent can
-  then name the wrong member, but no access changes.
+- Risk: a member can type a false sender line in a message, also with a
+  false member ID. The agent can then name the wrong member, or list the
+  workspaces of another member. No access changes, because each write
+  keeps the rights of the sender of the turn.
+
+## The branch line
+
+- The Worker sends the current workspace branch and the current target
+  branch with each message (decision 227).
+- When the agent instructions of a session name an earlier workspace
+  branch or an earlier target branch, each message to the agent gets a
+  branch line after its sender line. The line names the current branches.
+- A session whose instructions name the current branches gets no branch
+  line. A new session gets the current branches in its instructions.
+- The branch line exists only in the text that reaches the agent, as the
+  sender line does. The chat never shows it.
+- Reason: after Continue, each session keeps its context and its
+  instructions. The line reaches every session in each message, also after
+  a summary and in a session that starts later, and the instructions keep
+  their text and their prompt cache.
+- These ways were rejected (decision 227):
+  - One line only in the next message of each session. A later summary can
+    drop it.
+  - New instructions for each session at Continue. They rewrite the prompt
+    cache, and each agent must restart to read them.
+  - Only the note of Continue in the chat. The instructions then keep the
+    earlier branch.
 
 ## The same text for the life of a session
 
@@ -124,14 +200,16 @@ says.
 - A new session gets the instructions with the current facts and wording.
 - A session that started without agent instructions can get them once, at
   a later turn. It then keeps that text.
-- The instructions hold no fact that changes during the work, such as the
-  date, the Git state, or the pull request state. The agent reads such
-  facts with its tools.
+- Apart from the branches, the instructions hold no fact that changes
+  during the work, such as the date, the Git state, or the pull request
+  state. The agent reads such facts with its tools.
 - Reason: a change of the text rewrites the prompt cache of the
   conversation. An agent can also keep the first instructions of a session
   until it summarizes the conversation.
-- Risk: after a change of the default branch, an older session still names
-  the earlier target branch.
+- The workspace branch and the target branch can change, by Continue or
+  by a new default branch. The instructions keep the branches of the start
+  of the session, and [the branch line](#the-branch-line) names the
+  current branches.
 - A tool that returns facts that change, such as the pull request state,
   was rejected. It widens what the workspace token allows, and agents still
   need instructions to call it.
@@ -161,8 +239,9 @@ says.
   - Hooks that add the text at the start of a session and after a summary.
     The agent gives such text the weight of a user message, and each hook
     must skip the resume at each turn.
-  - Text that the Worker builds and sends with each turn. It adds a field
-    to each turn for facts that only later features need.
+  - Instructions that the Worker builds and sends with each turn. The text
+    of a session would then change with each fact. Each message carries
+    only the current branches, for the branch line.
   - Text that a model gateway adds to each model request. No such gateway
     exists yet.
   - Text for Claude only. It leaves out Codex, which also takes system
@@ -174,42 +253,6 @@ says.
 
 ## Base prompts
 
-- A Claude agent gets a short base prompt of the app, then the agent
-  instructions, as one text of system instructions.
-- The base prompt holds seven rules. They tell the agent to:
-  - complete the task that the user authorized, and read the relevant code
-    and docs before it changes files
-  - keep each change focused: prefer the existing files, and add no
-    unrelated feature, clean-up, or abstraction
-  - write secure code, and fix each security problem that its change adds
-  - protect the work of the user: ask before a destructive action or a
-    change to a shared system, unless the user authorized it
-  - use the tools efficiently: prefer the dedicated file and search tools,
-    and run independent tool calls together
-  - check the results: test a change of an interface in a browser, and
-    report each check that failed or could not run
-  - write short and accurate replies: keep checked facts apart from
-    assumptions, and give the file path and the line of each code
-    reference
-- The base prompt names tools by their purpose, because the tools of an
-  agent can vary.
-- The base prompt holds no fact that changes, such as the date or the Git
-  state.
-- The base prompt does not copy the default system prompt of the agent
-  SDK. It does not promise each rule or behaviour of that prompt.
-- Reason: the app keeps a short, fixed text of its own. That text changes
-  only when the app changes it.
-- These base prompts were rejected:
-  - No base prompt. The agent instructions are then the whole prompt, with
-    no base guidance below them.
-  - The default system prompt of the agent SDK, with the agent
-    instructions after it. It changes with each SDK update, and parts of
-    it name another product. It also holds sections that change, such as
-    the Git state, so each turn can rewrite the prompt cache.
-  - A setting for each org that chooses between these two. It needs a
-    setting, a mockup, storage, and a runner field, for a choice that no
-    user asked for.
-- A Codex agent keeps the default base instructions of Codex. It gets the
-  agent instructions in addition to them.
-- Reason: Codex gives its agents base instructions of its own. The Claude
-  agent SDK gives none by default.
+[Base prompts](base-prompts.md) states the short base prompt of the app
+that a Claude agent gets before the agent instructions, and the base
+instructions of a Codex agent.

@@ -8,9 +8,14 @@ import type {
   AccountSummary,
   MemberSummary,
   OrgSummary,
+  RunRoutine,
 } from '../api/read-responses'
 import { initialDevices, type DeviceSnapshot } from '../device/device-snapshot'
-import { emptyTranscript, type Transcript } from './transcript'
+import {
+  emptyTranscript,
+  type Transcript,
+} from '../../shared/transcript/transcript'
+import { startedTurn } from '../../shared/transcript/turn-records'
 
 /**
  * The message that a user writes in a session. Its identity stays when the
@@ -21,12 +26,16 @@ export interface Draft {
   id: string
   text: string
   /**
-   * The files, in the order of the picks, each with its upload. Send waits
+   * The files, in the order of their first marks, each with its upload. Send waits
    * while one uploads or failed, and takes only ready ones.
    */
   files: readonly DraftFile[]
+  /** Files without chips, kept for undo until this draft ends. */
+  detached: readonly DraftFile[]
   /** The names of the files of the last pick that are over the size limit. */
   refused: readonly string[]
+  /** Folder names from the last intake, kept apart from oversized files. */
+  refusedFolders: readonly string[]
   /** The client ID of a send that failed, so that a resend is one message. */
   sendId: string | null
   /** A send of this draft waits for its answer. */
@@ -66,6 +75,8 @@ type LoadState =
 
 export interface ChatSnapshot {
   load: LoadState
+  /** The fresh start that owns each local draft identity. */
+  draftEpoch: number
   workspace: Workspace | null
   start: WorkspaceStart | null
   /**
@@ -89,6 +100,11 @@ export interface ChatSnapshot {
    */
   archiveTabs: readonly string[] | null
   view: WorkspaceView | null
+  /**
+   * The routine whose run made the workspace, from the read of the view.
+   * Null for a workspace that a person created, and until the view reads.
+   */
+  routine: RunRoutine | null
   activeSessionId: string | null
   sessionStates: Readonly<Record<string, SessionState>>
   overlay: Overlay
@@ -104,7 +120,9 @@ export function blankDraft(id: string): Draft {
     id,
     text: '',
     files: [],
+    detached: [],
     refused: [],
+    refusedFolders: [],
     sendId: null,
     sending: false,
   }
@@ -121,6 +139,7 @@ const initialSession: Omit<SessionState, 'draft'> = {
 
 export const initialSnapshot: ChatSnapshot = {
   load: { state: 'loading' },
+  draftEpoch: 0,
   workspace: null,
   start: null,
   savedError: null,
@@ -132,6 +151,7 @@ export const initialSnapshot: ChatSnapshot = {
   history: [],
   archiveTabs: null,
   view: null,
+  routine: null,
   activeSessionId: null,
   sessionStates: {},
   overlay: { kind: 'none' },
@@ -142,7 +162,7 @@ export const initialSnapshot: ChatSnapshot = {
 
 /**
  * The state of one session, with its defaults before anything loads. The
- * first draft of a session takes its identity from the session.
+ * first draft takes its identity from the fresh start and the session.
  */
 export function sessionState(
   snapshot: ChatSnapshot,
@@ -151,7 +171,7 @@ export function sessionState(
   return (
     snapshot.sessionStates[sessionId] ?? {
       ...initialSession,
-      draft: blankDraft(`draft:${sessionId}`),
+      draft: blankDraft(`draft:session:${snapshot.draftEpoch}:${sessionId}`),
     }
   )
 }
@@ -177,6 +197,20 @@ export function withSession(
  */
 export function isRunning(snapshot: ChatSnapshot, sessionId: string): boolean {
   return sessionState(snapshot, sessionId).transcript.turn !== null
+}
+
+/**
+ * A turn runs or stops in a session of the workspace, open or closed, as
+ * its record or its transcript says. A record names a started turn as
+ * `startedTurn` says, so a message that waits for dispatch runs no turn.
+ * The transcript also shows a turn that started before a record names it.
+ */
+export function anyTurnRuns(snapshot: ChatSnapshot): boolean {
+  const records = [...snapshot.sessions, ...snapshot.history]
+  return (
+    records.some((session) => startedTurn(session) !== null) ||
+    snapshot.sessions.some((session) => isRunning(snapshot, session.id))
+  )
 }
 
 /** Holds the snapshot, and tells React when it changes. */

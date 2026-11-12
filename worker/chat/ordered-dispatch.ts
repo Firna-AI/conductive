@@ -29,7 +29,7 @@ export async function commandDispatchState(
   if (!session) return 'skip'
   if ('turnId' in command) {
     const turn = await view.turn(command.turnId)
-    // Only a running copy failure saves an interrupt after its turn ends.
+    // Copy and runner-compatibility failures can stop a process after ending its turn.
     if (
       command.type === 'interrupt' &&
       turn?.state === 'failed' &&

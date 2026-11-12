@@ -108,16 +108,19 @@ each resume, together with the org's env vars:
 | `WORKSPACE_TOKEN` | The workspace token. |
 | `CONDUCTIVE_WORKSPACE_ID` | The workspace ID. |
 | `CONDUCTIVE_MACHINE_ORIGIN` | The origin of the machine hostname. |
-| `CONDUCTIVE_DEFAULT_BRANCH` | The default branch of the workspace's repository. |
+| `CONDUCTIVE_DEFAULT_BRANCH` | The workspace base branch, with the repository default as a fallback. |
 | `CONDUCTIVE_WORKSPACE_BRANCH` | The workspace branch that the app tracks, from the Worker's record of the workspace. |
 | `CONDUCTIVE_REPOSITORY_DIR` | The folder of the workspace's repository, from the folder map that the workspace captured. |
 | `CONDUCTIVE_REPOSITORY_<FOLDER>_DIR` | The folder of each repository of the image, with one variable for each repository. |
-| `CONDUCTIVE_TURN_ID` | Empty. The runner sets it for each agent process. |
 | `CONDUCTIVE_DISK_KEEPALIVE` | `1` in a disk retention restart, and `0` otherwise. |
-| `GIT_AUTHOR_NAME` | The workspace owner's commit author name. The runner replaces it with the turn sender's name for each agent turn. |
-| `GIT_AUTHOR_EMAIL` | The workspace owner's GitHub no-reply address. The runner replaces it with the turn sender's address for each agent turn. |
-| `GIT_COMMITTER_NAME` | The workspace owner's commit author name. The runner replaces it with the turn sender's name for each agent turn. |
-| `GIT_COMMITTER_EMAIL` | The workspace owner's GitHub no-reply address. The runner replaces it with the turn sender's address for each agent turn. |
+
+The sandbox variables hold no value of an agent turn. The runner gives each
+agent process the turn ID, `CONDUCTIVE_TURN_ID`, and the commit author of
+the turn sender. A shell can load the sandbox variables again, as a login
+shell does, and it then keeps these values. The Worker leaves out an org
+env var with the name of one of these values. The
+[commit author](github.md#commit-author) section says where Git gets the
+owner's author outside a turn.
 
 [Repository folders](../docs/protocol/repository-folders.md) gives the
 folder names and the variable names. The
@@ -131,18 +134,23 @@ get them either. So the install command of a build loads the same file,
 with automatic export, before Bash runs the org's install script. The
 install script then gets the folder variables.
 
-At a create, the Worker first fetches the default branch and creates the
-workspace branch. When the GitHub repository has no refs, the fetch step
+At a create, the Worker fetches the workspace base branch into its remote-tracking ref.
+It creates the workspace branch at the event commit of an opened or pushed pull request run.
+A missing event commit uses the fetched head.
+Other creates start at the fetched head.
+The branch's `gh-merge-base` Git setting names the workspace base. When the GitHub repository has no refs, the fetch step
 first pushes an empty first commit to the default branch. That push gets
 its token from the [git credential helper](#git-credentials), as every
 other git operation does. At each create and each resume, the Worker then
 runs the command of `workspaceStartupCommand`:
 
-1. It writes the org's startup script to `/run/conductive/startup.sh`, with
+1. It writes the workspace owner's commit author to the Git system
+   settings, as [Commit author](github.md#commit-author) says.
+2. It writes the org's startup script to `/run/conductive/startup.sh`, with
    mode 600.
-2. It runs the script with Bash in the repository folder, with the
+3. It runs the script with Bash in the repository folder, with the
    variables.
-3. When the script succeeds, it writes the marker
+4. When the script succeeds, it writes the marker
    `/run/conductive/workspace-ready`, and restarts the runner service.
 
 After that command succeeds, the Worker calls the terminal backend's start
@@ -162,8 +170,8 @@ terminal backend needs its own marker under `/run`, which only its
 workspace start hook creates. Builds and disk retention restarts do not
 call that hook, so they start no terminal and no terminal shell. A disk
 retention restart runs `workspaceStartupCommand` in its `retention` mode.
-That mode runs the startup script, but it writes no ready marker and does
-not restart the runner service.
+That mode writes the owner's commit author and runs the startup script,
+but it writes no ready marker and does not restart the runner service.
 
 Otherwise, `runner-start.sh` runs `runner/main.mjs` with the private
 Node, in the repository folder. The runner unit restarts its service after
@@ -224,8 +232,9 @@ GitHub CLI wrapper, their token rules, and their tests.
   mode 600. The terminal backend checks that it has 64 lowercase
   hexadecimal characters.
   The readiness command writes no password to output or command history.
-- The helper never writes a token or the Worker's response to its error
-  output.
+- The helper never writes a token to its error output. From a Worker
+  response, it writes only a safe error message, as
+  [GitHub access](github.md#git-credential-helper) says.
 
 ## Development
 

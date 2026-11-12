@@ -13,9 +13,12 @@ import { DeletedOrg, OrgHome } from './list/OrgHome'
 import { HomeList, ListHeader } from './list/HomeList'
 import { Sidebar, type ListCurrent } from './list/Sidebar'
 import { NewWorkspaceScreen } from './new-workspace/NewWorkspaceScreen'
+import { RoutineScreen } from './routines/RoutineScreen'
+import { RoutinesScreen } from './routines/RoutinesScreen'
 import { OrgSettingsScreen } from './settings/OrgSettingsScreen'
+import { useShortcutOffer } from './shortcuts/shortcut-context'
 import { ActionButton } from './ui/actions'
-import { useGo } from './ui/AppLink'
+import { useGo, useOpenPage } from './ui/AppLink'
 import { useViewport } from './ui/viewport'
 import { WorkspaceScreen } from './workspace/WorkspaceScreen'
 import { inFirstRun } from '../app/get-started'
@@ -87,6 +90,7 @@ function screenOf(route: OrgRoute, org: OrgSummary, user: User): ReactNode {
         <WorkspaceScreen
           key={`${org.id}:${route.workspaceId}`}
           org={org}
+          session={route.session}
           view={route.view}
           viewer={user}
           workspaceId={route.workspaceId}
@@ -94,6 +98,28 @@ function screenOf(route: OrgRoute, org: OrgSummary, user: User): ReactNode {
       )
     case 'settings':
       return <OrgSettingsScreen org={org} tab={route.tab} user={user} />
+    case 'routines':
+      return <RoutinesScreen org={org} />
+    case 'new-routine':
+      return (
+        <RoutineScreen
+          key={`${org.id}:new-routine`}
+          org={org}
+          routineId={null}
+          tab="routine"
+          user={user}
+        />
+      )
+    case 'routine':
+      return (
+        <RoutineScreen
+          key={`${org.id}:${route.routineId}`}
+          org={org}
+          routineId={route.routineId}
+          tab={route.tab}
+          user={user}
+        />
+      )
   }
 }
 
@@ -107,15 +133,29 @@ function listCurrent(route: OrgRoute): ListCurrent {
       return { screen: 'workspace', workspaceId: route.workspaceId }
     case 'settings':
       return { screen: 'settings' }
+    case 'routines':
+    case 'new-routine':
+    case 'routine':
+      return { screen: 'routines' }
   }
 }
 
-/** The screens of one org, in the desktop frame or the phone frame. */
+/**
+ * The screens of one org, in the desktop frame or the phone frame. Each
+ * page of an org that is not deleted takes the key of Workspace list,
+ * which opens the list page of the org, as its tile in the rail does.
+ */
 export function OrgRoutes(props: { route: OrgRoute; user: User }) {
   const app = useApp()
   const phone = useViewport() === 'phone'
+  const open = useOpenPage()
   const org = useStore(app.orgs).find((item) => item.id === props.route.orgId)
   const current: RailCurrent = { org: props.route.orgId }
+  const listOrg = org && !org.deletion ? org.id : null
+  useShortcutOffer(
+    'workspace-list',
+    listOrg === null ? null : () => open(routes.org(listOrg)),
+  )
   // A page without an org, such as the Account page, works on the last org.
   useEffect(() => {
     app.openOrg(props.route.orgId)

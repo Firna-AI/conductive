@@ -139,7 +139,9 @@ hooks that report runner events to the lifecycle.
 runner stop at a stopped or error state, and the workspace summary. It
 also gives the kept chat and queued messages of a failed admitted create.
 
-## Milestone 9: files
+<a id="milestone-9-files"></a>
+
+## Files
 
 - The Durable Object joins file parts with `RunnerFileReports` on
   `ChatTransaction.files`. It stores each complete report before the confirm.
@@ -149,6 +151,7 @@ also gives the kept chat and queued messages of a failed admitted create.
   `false` result means that no runner got the request.
 - `runnerAttached(workspaceId, connectionId, send)` attaches the file broker when a physical runner is ready.
   The callback keeps the physical identity across commands. `runnerDetached(connectionId)` removes that connection.
+  A ready runner that the object restores after a wake attaches again with the same connection ID.
 - `receiveFileResult(value, connectionId)` gets each `file.read.result` and
   `file.diff.result` message from that physical connection without payload checks. Validate the message in the
   hook. File results never enter the history.
@@ -171,6 +174,8 @@ also gives the kept chat and queued messages of a failed admitted create.
 - [The GitHub server integration](../../github/README.md#server-integration)
   gives the routes, the scheduled reads, and the refresh operation.
 
+<a id="milestone-7r-the-agent-runner"></a>
+
 ## The agent runner
 
 [Agent runner integration](runner/README.md#the-agent-runner) gives the
@@ -191,3 +196,7 @@ two login paths of `SessionLogins`, and the linked sessions.
 [Chat backend tests](../tests.md) names the test support files and what
 each group of tests covers. [Outer Worker tests](outer-worker-tests.md)
 gives the tests through the production Worker entry.
+
+The browser harness saves a GitHub token with no expiry for its seeded
+owner, so that a routine's Run now reaches its workspace in a manual smoke
+test. The shared outer-runtime seed keeps its existing credentials.

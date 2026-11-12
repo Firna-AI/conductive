@@ -2,6 +2,7 @@ import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
 import { routes } from '../../src/app/router'
 import { MACHINE_PATHS } from '../../src/shared/agent-tools'
+import { sessionLink } from '../../src/shared/session-link'
 import { TOOL_ENV, TOOL_TURN_HEADER } from '../../tools/context'
 import { runToolProcess } from '../../tools/main'
 import {
@@ -100,6 +101,7 @@ it('runs CLI create and list through workspace auth and forwards the calling tur
   expect(JSON.parse(output.stdout[1])).toEqual({
     workspaces: [
       {
+        owner: { id: 'owner', githubLogin: 'owner-login', displayName: null },
         id: 'calling-workspace',
         number: 1,
         link: `${TEST_ORIGIN}${routes.workspace('org-a', 'calling-workspace')}`,
@@ -108,6 +110,11 @@ it('runs CLI create and list through workspace auth and forwards the calling tur
         state: 'working',
       },
       {
+        owner: {
+          id: 'teammate',
+          githubLogin: 'teammate-login',
+          displayName: null,
+        },
         id: 'teammate-workspace',
         number: 2,
         link: `${TEST_ORIGIN}${routes.workspace('org-a', 'teammate-workspace')}`,
@@ -116,6 +123,7 @@ it('runs CLI create and list through workspace auth and forwards the calling tur
         state: 'ready',
       },
       {
+        owner: { id: 'owner', githubLogin: 'owner-login', displayName: null },
         id: 'archived-workspace',
         number: 3,
         link: `${TEST_ORIGIN}${routes.workspace('org-a', 'archived-workspace')}`,
@@ -169,7 +177,7 @@ it('runs CLI create and list through workspace auth and forwards the calling tur
   }
   expect(fixture.services.createWorkspace).toHaveBeenCalledWith(
     expect.objectContaining({
-      firstMessage: '  Build this.\nKeep spacing.  ',
+      firstMessage: `  Build this.\nKeep spacing.  \n\n---\nSent by: ${sessionLink(harness.env.APP_ORIGIN, 'org-a', 'calling-workspace', 'calling-session')}`,
       name: 'CLI workspace',
       sender: expect.objectContaining({ id: 'teammate' }),
     }),
@@ -177,6 +185,19 @@ it('runs CLI create and list through workspace auth and forwards the calling tur
 })
 
 it('rejects incomplete CLI choices and missing runtime login before any request', async () => {
+  const help = toolOutput()
+  expect(
+    await runToolProcess(
+      ['sessions', 'send', '--help'],
+      {},
+      inputLines(),
+      help.output,
+      fixture.send,
+    ),
+  ).toBe(0)
+  expect(help.stderr).toEqual([])
+  expect(help.stdout[0]).toContain('conductive sessions send')
+  expect(fixture.requests).toEqual([])
   const invalid = toolOutput()
   const status = await runToolProcess(
     [

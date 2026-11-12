@@ -45,6 +45,10 @@ const HTTP_CODES = [
   'runner_hello_mismatch',
   'runner_hello_required',
   'runner_stream_mismatch',
+  'workspace_token_refused',
+  'current_turn_required',
+  'github_reconnect_required',
+  'github_refresh_failed',
 ] as const
 
 export type WarningCode = (typeof HTTP_CODES)[number] | 'unknown'

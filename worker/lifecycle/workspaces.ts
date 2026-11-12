@@ -13,6 +13,7 @@ import {
 import { markCreationFailed } from './creation-attempt-data'
 import {
   prepareCreationRequest,
+  type WorkspaceCreationBase,
   type WorkspaceCreationInput,
 } from './create-request'
 import { workspaceStartFailure } from './workspace-start'
@@ -30,6 +31,7 @@ export async function createWorkspace(
   input: WorkspaceCreationInput,
   sender: User = user,
   providerAccount = DEFAULT_PROVIDER_ACCOUNT,
+  base?: WorkspaceCreationBase,
 ): Promise<ProvisionedWorkspace> {
   await requireActiveOrg(runtime.env.DB, orgId)
   await requireOrgMember(runtime.env.DB, orgId, user.id)
@@ -47,7 +49,8 @@ export async function createWorkspace(
       .workspace(existing.id)
       .readCreationLifecycleResult()
     if (result?.ok) return provisionedResponse(runtime, orgId, existing.id)
-    if (result) await markCreationFailed(runtime.env.DB, existing.id)
+    if (result)
+      await markCreationFailed(runtime.env.DB, existing.id, result.error)
     else
       return joinCreation(
         runtime,
@@ -57,6 +60,7 @@ export async function createWorkspace(
         sender,
         input,
         providerAccount,
+        base,
       )
   }
   const candidate = await prepareCreationRequest(
@@ -67,11 +71,40 @@ export async function createWorkspace(
     input,
     undefined,
     providerAccount,
+    base,
   )
   const claim = await claimCreation(runtime.env.DB, key, candidate)
   if (claim.state === 'succeeded')
     return provisionedResponse(runtime, orgId, claim.id)
-  return joinCreation(runtime, key, claim, user, sender, input, providerAccount)
+  return joinCreation(
+    runtime,
+    key,
+    claim,
+    user,
+    sender,
+    input,
+    providerAccount,
+    base,
+  )
+}
+
+export async function replayCreation(
+  runtime: WorkspaceRuntime,
+  key: CreationKey,
+): Promise<ProvisionedWorkspace | null> {
+  await requireActiveOrg(runtime.env.DB, key.orgId)
+  await requireOrgMember(runtime.env.DB, key.orgId, key.senderUserId)
+  const existing = await existingCreation(runtime.env.DB, key)
+  if (!existing) return null
+  if (existing.state === 'succeeded')
+    return provisionedResponse(runtime, key.orgId, existing.id)
+  const job = await recordedCreationJob(runtime.env.DB, key, existing.id, '')
+  if (!job) return null
+  const endpoint = runtime.workspace(existing.id)
+  await endpoint.queueLifecycleStart(job)
+  const result = await endpoint.waitCreationAdmission()
+  if (!result.ok) throw workspaceStartFailure(result.error)
+  return presentProvisionedWorkspace(runtime, result.created)
 }
 
 async function joinCreation(
@@ -82,6 +115,7 @@ async function joinCreation(
   sender: User,
   input: WorkspaceCreationInput,
   providerAccount: string,
+  base?: WorkspaceCreationBase,
 ): Promise<ProvisionedWorkspace> {
   let job = await recordedCreationJob(
     runtime.env.DB,
@@ -100,6 +134,7 @@ async function joinCreation(
         input,
         claim.id,
         providerAccount,
+        base,
       ),
     )
     job = await recordedCreationJob(

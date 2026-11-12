@@ -3,26 +3,33 @@ import {
   type AgentListModelsResponse,
   type AgentListRepositoriesResponse,
   type AgentListSectionsResponse,
-  type AgentListWorkspacesResponse,
 } from '../../src/shared/agent-tools'
+import type { AgentListWorkspacesResponse } from '../../src/shared/agent-workspaces'
+import { sectionToolMethods } from './section-routes'
+import { previewToolMethods } from './preview-routes'
+import { listToolWorkspaces } from './workspace-data'
+import { workspaceToolMethods } from './workspace-routes'
+import { workspaceListInput } from './workspace-input'
 import type { AgentChoice } from '../../src/shared/agents'
 import { HttpError } from '../http'
 import { readImageRepositories } from '../lifecycle/published-image-data'
 import type { AgentToolServices } from './services'
-import {
-  type CallingWorkspace,
-  orgSections,
-  orgWorkspaces,
-  ownerPreference,
-} from './store'
+import { isAgentSessionPath } from './session-routes'
+import { type CallingWorkspace, orgSections, ownerPreference } from './store'
 
 export function isAgentToolPath(path: string): boolean {
-  return [
-    MACHINE_PATHS.workspaces,
-    MACHINE_PATHS.repositories,
-    MACHINE_PATHS.sections,
-    MACHINE_PATHS.models,
-  ].some((toolPath) => toolPath === path)
+  return (
+    sectionToolMethods(path) !== null ||
+    previewToolMethods(path) !== null ||
+    workspaceToolMethods(path) !== null ||
+    isAgentSessionPath(path) ||
+    [
+      MACHINE_PATHS.workspaces,
+      MACHINE_PATHS.repositories,
+      MACHINE_PATHS.sections,
+      MACHINE_PATHS.models,
+    ].some((toolPath) => toolPath === path)
+  )
 }
 
 function compareText(a: string, b: string): number {
@@ -49,7 +56,7 @@ async function defaultChoice(
 }
 
 export async function listFromTool(
-  path: string,
+  url: URL,
   db: D1Database,
   caller: CallingWorkspace,
   services: AgentToolServices,
@@ -60,7 +67,7 @@ export async function listFromTool(
   | AgentListSectionsResponse
   | AgentListModelsResponse
 > {
-  switch (path) {
+  switch (url.pathname) {
     case MACHINE_PATHS.repositories: {
       const repositories = await readImageRepositories(db, caller.orgId)
       repositories.sort(
@@ -86,6 +93,11 @@ export async function listFromTool(
         defaultChoice: await defaultChoice(db, caller, services),
       }
     default:
-      return { workspaces: await orgWorkspaces(db, caller.orgId, origin) }
+      return listToolWorkspaces(
+        db,
+        caller.orgId,
+        origin,
+        workspaceListInput(url.searchParams),
+      )
   }
 }

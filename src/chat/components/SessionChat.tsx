@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react'
-import type { Agent } from '../../shared/agents'
+import { useMemo, type ReactNode } from 'react'
+import { modelLabel, type Agent } from '../../shared/agents'
 import type { WorkspaceState } from '../../shared/workspaces'
 import { PendingCommands } from '../device/PendingCommands'
 import { DeviceLoadNotice, sessionCommands } from '../device/session-commands'
@@ -8,7 +8,6 @@ import { sendBlock } from '../state/blockers'
 import { sessionState, type ChatSnapshot } from '../state/chat-snapshot'
 import type { ChatController } from '../state/controller'
 import { failedFirstStart } from '../../app/first-start'
-import { modelLabel } from '../state/format'
 import { loginLabelOf, sessionLoginOf } from '../state/session-login'
 import { ChatPane } from './ChatPane'
 import { ActionNotice, BlockNotice, LinkedSessionNotice } from './ChatNotices'
@@ -96,6 +95,16 @@ function sandboxParts(props: SessionChatProps): ChatHost {
 }
 
 /**
+ * The attached files of a draft, which the chips of its field show: one
+ * source for each identity of the draft. A draft that moves to another
+ * session keeps its identity, so its field keeps the source, and the source
+ * finds the files of the draft also during the move.
+ */
+function useDraftFiles(controller: ChatController, draftId: string) {
+  return useMemo(() => controller.draftFiles(draftId), [controller, draftId])
+}
+
+/**
  * The chat of the open session: its history, with the start steps while the
  * sandbox starts, and under it the notices and the composer, or the bar that
  * takes the composer's place while the sandbox does not run. After a failed
@@ -114,6 +123,7 @@ export function SessionChat(props: SessionChatProps) {
   const id = snapshot.activeSessionId
   const session = tabSessions(snapshot).find((item) => item.id === id) ?? null
   const state = sessionState(snapshot, id ?? '')
+  const files = useDraftFiles(controller, state.draft.id)
   const { starting, sandboxBar, keepsComposer } = sandboxParts(props)
   const readOnly = (props.readOnly ?? false) || workspace?.state === 'archived'
   // A bar or a read-only workspace takes the place of the composer. The bar
@@ -184,15 +194,16 @@ export function SessionChat(props: SessionChatProps) {
           blocked={block !== null}
           choice={session.choice}
           draft={state.draft}
+          files={files}
           login={loginLabelOf(login)}
           models={snapshot.models}
-          onAttach={(files) => void controller.attachFiles(session.id, files)}
+          onAttach={(picked, folders) =>
+            controller.attachFiles(session.id, picked, folders)
+          }
           onChangeText={(text) => controller.setDraft(session.id, text)}
           onChooseModel={(choice) =>
             void controller.chooseModel(session.id, choice)
           }
-          onRemoveFile={(file) => controller.removeFile(session.id, file)}
-          onRetryFile={(file) => void controller.retryFile(session.id, file)}
           onSend={() => void controller.send(session.id)}
           onStop={() => void controller.interrupt(session.id)}
           running={state.transcript.turn !== null}

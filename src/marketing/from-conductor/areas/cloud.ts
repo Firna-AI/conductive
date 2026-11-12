@@ -34,7 +34,7 @@ export const cloudFeatures: readonly ParityFeature[] = [
     area: 'cloud',
     name: 'Computer builds and rollback',
     status: 'available',
-    note: 'Builds show live logs and history. A failed build keeps the last good image. Selecting an older image is under consideration.',
+    note: 'Builds show live logs and history, and failures keep the last good image. More detailed progress and selecting older images are under consideration.',
   },
   {
     id: 'configure-with-an-agent',
@@ -69,7 +69,7 @@ export const cloudFeatures: readonly ParityFeature[] = [
     area: 'cloud',
     name: 'Managed Git identity',
     status: 'available',
-    note: 'Git and the GitHub CLI use the message sender’s GitHub account, and commits name that person. The terminal uses the workspace owner’s account. Workspaces with older cloud computer software name the owner in commits.',
+    note: 'Git and the GitHub CLI use the message sender’s GitHub account, and commits name that person. The terminal uses the workspace owner’s account. Updating older workspaces, which name the owner in commits, is in progress.',
   },
   {
     id: 'organization-environment-and-secrets',
@@ -83,7 +83,7 @@ export const cloudFeatures: readonly ParityFeature[] = [
     area: 'cloud',
     name: 'Cloud agent credentials',
     status: 'available',
-    note: 'Each member connects Claude or Codex and can share a login with teammates. Shared admin keys have no delivery plan.',
+    note: 'Members connect and share agent logins. Using a shared agent setup on the cloud computer, including environment variables, is planned.',
   },
   {
     id: 'workspace-details',
@@ -135,14 +135,14 @@ export const cloudFeatures: readonly ParityFeature[] = [
     area: 'cloud',
     name: 'Shared preview URL',
     status: 'available',
-    note: 'Members who can open a workspace can open its private port previews.',
+    note: 'Members who can open a workspace can open its private port previews. A toggle to share previews without sign-in is under consideration.',
   },
   {
     id: 'sleep-and-wake',
     area: 'cloud',
     name: 'Sleep and wake',
     status: 'different',
-    note: 'Cloud computers stop after 30 idle minutes. Files and sessions stay. Opening a stopped workspace resumes it.',
+    note: 'Idle computers stop after 30 minutes, keep files and sessions, and resume when opened. Agent wake-ups that can keep computers running are planned.',
   },
   {
     id: 'cloud-desktop',

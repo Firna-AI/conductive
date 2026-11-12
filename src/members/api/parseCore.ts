@@ -1,5 +1,6 @@
 import type { Agent, AgentChoice, Effort } from '../../shared/agents'
 import type { OrgRole, User } from '../../shared/api'
+import { readGitHubSummary } from '../../shared/github-read'
 import type {
   MembersResponse,
   OrgInvite,
@@ -132,9 +133,11 @@ export function parseWorkspace(value: unknown): Workspace {
     branch: text(source, 'branch'),
     choice: agentChoice(nested(source, 'choice')),
     state: oneOf(source, 'state', workspaceStates),
+    github: readGitHubSummary(source.github),
     createdAt: count(source, 'createdAt'),
     updatedAt: count(source, 'updatedAt'),
     archivedAt: countOrNull(source, 'archivedAt'),
+    restoreUntil: countOrNull(source, 'restoreUntil'),
   }
 }
 

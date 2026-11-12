@@ -3,6 +3,8 @@
 // their text. The finders skip what is not shown and aria-hidden content.
 
 const implicitRoles: Readonly<Record<string, string>> = {
+  A: 'link',
+  ASIDE: 'complementary',
   BUTTON: 'button',
   DIALOG: 'dialog',
   INPUT: 'textbox',
@@ -186,4 +188,22 @@ export function byDialog(
     throw new Error(`The dialog "${name}" is not a <dialog> element`)
   }
   return element
+}
+
+/** The toasts of the app that show, in their order. */
+export function shownToasts(): HTMLElement[] {
+  return Array.from(
+    document.querySelectorAll<HTMLElement>(
+      '[role="region"][aria-label="Notifications"] :is([role="alert"], [role="status"])',
+    ),
+  )
+}
+
+/** The one toast whose text starts with the title. None or more than one fails. */
+export function byToast(title: string): HTMLElement {
+  const found = shownToasts().filter((toast) =>
+    (toast.textContent ?? '').startsWith(title),
+  )
+  const what = `is a toast with the title "${title}"`
+  return present(single(found, what), what)
 }

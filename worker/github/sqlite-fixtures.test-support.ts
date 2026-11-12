@@ -17,7 +17,6 @@ export function sqliteSnapshot(large = false): GitHubSnapshot {
       baseBranch: 'main',
       updatedAt: 1,
       pullRequest: null,
-      createPullRequestUrl: null,
     },
     checks: large
       ? {
@@ -34,5 +33,41 @@ export function sqliteSnapshot(large = false): GitHubSnapshot {
         }
       : { state: 'waiting-for-pull-request', checks: [] },
     headSha: null,
+  }
+}
+
+export function sqlitePullSnapshot(): GitHubSnapshot {
+  return {
+    banner: {
+      state: 'ready-to-merge',
+      branch: 'owner/workspace',
+      baseBranch: 'main',
+      updatedAt: 1,
+      pullRequest: {
+        number: 1,
+        title: 'Summary copy',
+        url: 'https://github.com/owner/repo/pull/1',
+        headSha: 'pull-head',
+      },
+      review: 'approved',
+      changesRequestedBy: [],
+      mergedAt: null,
+      closedAt: null,
+    },
+    checks: {
+      state: 'available',
+      checks: [
+        {
+          id: 'build',
+          name: 'Build',
+          state: 'passed',
+          url: null,
+          startedAt: null,
+          completedAt: null,
+          durationMs: null,
+        },
+      ],
+    },
+    headSha: 'pull-head',
   }
 }

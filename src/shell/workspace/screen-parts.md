@@ -37,8 +37,9 @@ says.
   Files tab.
 - The chat gets the kept files of the workspace as `mentions`, for the
   list of `@` and the file chips, as
-  [File mentions](../../../docs/protocol/file-mentions.md) says. It keeps
-  them connected while it shows. A file chip opens the file tab, as a
+  [File mentions](../../../docs/protocol/file-mentions.md) says. It reads
+  them from the one connection of the screen, also on a phone before a
+  visit to Files. A file chip opens the file tab, as a
   press in All files does. A folder chip opens the folder in All files and
   shows the right column on desktop, or the Files tab on a phone.
 - An archived workspace shows no file tabs and no file page, and its chat
@@ -64,6 +65,12 @@ takes its place. The address after the workspace names what shows:
 Each folder of a path is a part of the address. Another address under
 `files` shows the list of the saved view.
 
+- The workspace screen connects the kept files of the workspace once,
+  through `KeptFilesConnection`, on desktop and on each tab of a phone. So
+  the pull request bar knows the local work, also while a phone shows the
+  chat. The Files part, the file page of the centre, the labels of the file
+  tabs, the list of `@` and the file chips, and the bar only read the same
+  store. An archived workspace leaves the store stopped.
 - The kept chat loads and saves the workspace view. The shell reads the
   tabs and the list from the chat, and changes them only through the
   chat's `updateView`, so the view has one writer. A read-only workspace
@@ -104,8 +111,15 @@ Each folder of a path is a part of the address. Another address under
 - A switch between the preview and the source keeps the tab, so it starts
   nothing. The address of the screen at its first show starts nothing
   there either, because the open of the workspace resumes the sandbox.
+- A Restore moves no address, so it starts nothing, also while the address
+  names a file or diff tab. The next visit that opens a tab resumes the
+  sandbox.
 - The kept files, Copy, and Download use the services of the org, as
   [the Files screens](../../files/README.md#integration) say.
+- The tabs of All files, Changes, and Checks name the keys of Go to All
+  files, Go to Changes, and Go to Checks in their tooltips and in
+  `aria-keyshortcuts`, as the palette's Go to rows run them. The shell
+  gives the keys to `FilesPanel` as plain props.
 
 ## The tools part
 
@@ -148,11 +162,14 @@ tools.
   event source, so the Mac app reaches its own Worker.
 - The mount of the Desktop tool stays for its return. It mounts at each
   show, so it reads a new desktop URL.
-- The tools part marks the element of the terminal for the command
-  palette. So Ctrl+K in the terminal goes to its shell on Windows and
-  Linux, as the
-  [command palette protocol](../../../docs/protocol/command-palette.md#where-the-key-goes)
-  says.
+- The tools part marks the xterm.js screen of the terminal for the
+  [shortcut layer](../shortcuts/README.md), through the `screenRef` of
+  `TerminalTool`. So the screen keeps the keys that its shell reads, such
+  as Ctrl+K on Windows and Linux, as
+  [Where a key goes](../../../docs/protocol/keyboard-shortcuts.md#where-a-key-goes)
+  says. The buttons of the tool, such as Reconnect, keep no key.
+- The tabs of the tools panel name the keys of Go to Terminal and Go to
+  Preview in their tooltips, as the palette's Go to rows run them.
 - Each tool reads its routes with the `fetch` of the org's `ApiClient`,
   and the events of the kept `ToolEvents`.
 
@@ -164,13 +181,39 @@ row and the Checks tab of the Files part. It reads with the `fetch` of
 the org, waits with the timer of the app, and takes the GitHub events of
 the ordered stream of the workspace.
 
-- On desktop, the bar tops the right column. After a merge, its Archive
-  opens the Archive question of the screen. It shows only when
-  `WorkspaceContext.archive` offers Archive, so a suspended org shows none.
-- On a phone, the row sits under the header on every tab. A pull request
-  opens the Checks tab at its address.
-- An archived workspace keeps the bar on desktop. On a phone it shows only
-  its chat, so the screen reads no GitHub state there.
+- The screen keeps one action state for the bar on desktop and the top of
+  the Checks tab on a phone, as
+  [The actions of the bar](../../github/actions.md) says. It reads the
+  member's own GitHub access, the local work of the kept files, and the
+  turns of each session of the kept chat. A new branch of the workspace
+  makes a new action state.
+- A GitHub state of another branch than the workspace's, such as the merged
+  state just after Continue, shows as loading. The store then reads the
+  state of the branch once.
+- On desktop, the bar tops the right column, with its main action and the
+  line of a refusal or a stop under it. The number of a pull request links
+  to it on GitHub. After a merge, its Archive archives
+  the workspace at once, with one request, and stays busy while that
+  request runs. It shows only when `WorkspaceContext.archive` offers
+  Archive, so a suspended org shows none.
+- The tooltip and `aria-keyshortcuts` of each button that takes a click,
+  and of each link to the pull request, name the key of its command. The
+  keys of the bar run while the right column shows the bar, and on a
+  phone while the top of the Checks tab shows its actions, as
+  [The actions of the bar](../../github/actions.md#keys) says.
+- An agent action sends its prompt through `WorkspaceContext.chat`. A prompt
+  that did not go out shows the chat of its session, where the composer
+  names the cause: the chat in place of a file on desktop, and the chat tab
+  on a phone.
+- `ContinueDialog` asks the question of Continue, after its check found
+  local work. `LocalWorkList` of the mockups lists that work, as in the
+  mockup of the question.
+- On a phone, the row sits under the header on every tab. It is one link to
+  the Checks tab, whose top holds the actions, the line under the bar, and
+  the links to GitHub. A branch without a pull request opens that tab when
+  the bar has an action or a link.
+- An archived workspace keeps the bar on desktop, with its links only. On a
+  phone it shows only its chat, so the screen reads no GitHub state there.
 
 ## The Mac bar and the owner
 

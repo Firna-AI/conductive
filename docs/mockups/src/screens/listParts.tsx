@@ -26,11 +26,13 @@ import {
 import { Sidebar } from '../components/workspaces/Sidebar'
 import {
   NewWorkspaceLink,
+  RoutinesLink,
   SearchLink,
   SettingsLink,
 } from '../components/workspaces/SidebarLinks'
 import { deletedOrg, orgs, suspendedOrg, type Org } from '../fixtures/orgs'
 import type { Membership } from '../fixtures/members'
+import { paletteShortcut } from '../fixtures/shortcutChanges'
 import { paths } from '../paths'
 import styles from './WorkspaceListScreen.module.css'
 
@@ -75,9 +77,10 @@ export function ListHeader(props: {
 /**
  * The workspace list as a page: on a phone, and in a narrow window. A
  * suspended org shows its notice first, and no New workspace and no
- * section menus, because nothing in it can change. Search opens the
- * command palette. Its key shows only in a desktop window. A list that did
- * not load shows its failure in place of the sections.
+ * section menus, because nothing in it can change. Its Routines link
+ * stays. Search opens the command palette. Its key shows only in a
+ * desktop window. A list that did not load shows its failure in place of
+ * the sections.
  * `newWorkspaceTo` is the New workspace page of the org, such as that
  * of a new org. `focus` names the row whose menu, field, or hover the view
  * draws.
@@ -114,7 +117,14 @@ export function HomeList(props: {
           {suspended ? null : (
             <NewWorkspaceLink to={props.newWorkspaceTo} variant="page" />
           )}
-          <SearchLink keys={props.keys ?? false} variant="page" />
+          <RoutinesLink
+            to={suspended ? paths.suspendedRoutines : undefined}
+            variant="page"
+          />
+          <SearchLink
+            shortcut={props.keys ? paletteShortcut() : undefined}
+            variant="page"
+          />
         </div>
         {props.failed ? (
           <LoadFailure title="The workspaces didn't load" />

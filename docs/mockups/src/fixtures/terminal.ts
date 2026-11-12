@@ -74,18 +74,48 @@ function error(text: string): TerminalLine {
   return [{ text, tone: 'error' }]
 }
 
+/** The start of the install script of a build of Acme, after its clones. */
+const acmeInstallStart: readonly TerminalLine[] = [
+  muted('Running the install script'),
+  prompt('build', 'sudo apt-get install -y postgresql-client-16 redis-server'),
+  plain('Setting up redis-server (5:7.0.15-1build2) ...'),
+]
+
 /** A build of the cloud computer while it runs: the newest lines. */
 export const buildLog: readonly TerminalLine[] = [
   muted('Cloning 3 repositories into ~/code'),
   success(' ✓ acme/storefront at 4f2c9a1'),
   success(' ✓ acme/billing-service at b81d0e4'),
   success(' ✓ acme/marketing-site at 07ac5f2'),
-  muted('Running the install script'),
-  prompt('build', 'sudo apt-get install -y postgresql-client-16 redis-server'),
-  plain('Setting up redis-server (5:7.0.15-1build2) ...'),
+  ...acmeInstallStart,
   prompt('build', 'cd ~/code/storefront && npm ci && npx prisma generate'),
   plain('added 1184 packages in 41s'),
 ]
+
+/** The repositories of Acme, with the commit that a build clones. */
+const acmeCommits = [
+  ['acme/storefront', '4f2c9a1'],
+  ['acme/billing-service', 'b81d0e4'],
+  ['acme/marketing-site', '07ac5f2'],
+  ['acme/admin-dashboard', '5d19e3b'],
+] as const
+
+/**
+ * The log of a build of Acme that clones the chosen repositories, such as
+ * the build that an added repository starts, at the start of its install
+ * script. The log box shows the first lines of a log, so this log is no
+ * longer than the log of other builds.
+ */
+export function acmeBuildLog(
+  chosen: readonly string[],
+): readonly TerminalLine[] {
+  const cloned = acmeCommits.filter(([name]) => chosen.includes(name))
+  return [
+    muted(`Cloning ${cloned.length} repositories into ~/code`),
+    ...cloned.map(([name, commit]) => success(` ✓ ${name} at ${commit}`)),
+    ...acmeInstallStart,
+  ]
+}
 
 /** The end of a failed build. */
 export const failedBuildLog: readonly TerminalLine[] = [

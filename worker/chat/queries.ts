@@ -1,6 +1,8 @@
 import type { Agent } from '../../src/shared/agents'
 import type { RunnerLogin } from '../../src/shared/runner'
 import type { AppEnv } from '../env'
+import { CODEX_RECONNECT_CAUSE, parseCodexTokens } from '../codex-auth/tokens'
+import { failCodexRefresh } from '../codex-auth/token-store'
 import {
   workspaceTokenAccessPredicate,
   workspaceTokenResourcePredicate,
@@ -51,7 +53,7 @@ export async function updateWorkspaceTitle(
 ): Promise<void> {
   await db
     .prepare(
-      `UPDATE workspaces SET name = ?, updated_at = ?
+      `UPDATE workspaces SET name = ?, updated_at = MAX(updated_at, ?)
     WHERE id = ? AND name = '' AND ${automaticTitleWorkspacePredicate}`,
     )
     .bind(name, now, workspaceId)
@@ -91,7 +93,7 @@ export async function readAgentLogin(
   agent: Agent,
 ): Promise<RunnerLogin | null> {
   const row = await env.DB.prepare(
-    'SELECT kind, ciphertext FROM agent_logins WHERE user_id = ? AND agent = ?',
+    'SELECT kind, ciphertext FROM agent_logins WHERE user_id = ? AND agent = ? AND failure_cause IS NULL',
   )
     .bind(userId, agent)
     .first<{ kind: string; ciphertext: string }>()
@@ -102,7 +104,27 @@ export async function readAgentLogin(
     agentLoginContext(userId, agent),
     env.BOAT_KEY_ENCRYPTION_KEY,
   )
-  return { ...loginKind, secret: loginSecret(secret) }
+  if (
+    agent === 'codex' &&
+    loginKind.kind === 'token' &&
+    !parseCodexTokens(secret)
+  ) {
+    await failCodexRefresh(
+      env.DB,
+      userId,
+      row.ciphertext,
+      null,
+      CODEX_RECONNECT_CAUSE,
+    )
+    return null
+  }
+  return {
+    ...loginKind,
+    secret:
+      agent === 'codex' && loginKind.kind === 'token'
+        ? secret
+        : loginSecret(secret),
+  }
 }
 
 export async function senderLoginAccess(
@@ -155,4 +177,17 @@ export async function senderLoginAccess(
     runnerAllowed: row?.workspaceAllowed === 1 && row.runnerAllowed === 1,
     reuseAllowed: row?.reuseDenied !== 1,
   }
+}
+
+/** The transcript keeps the workspace name captured with its session. */
+export function transcriptWorkspaceName(
+  db: D1Database,
+  workspaceId: string,
+): Promise<{ name: string | null } | null> {
+  return db
+    .prepare(
+      `SELECT ${workspaceNameColumn('workspaces')} FROM workspaces WHERE id = ?`,
+    )
+    .bind(workspaceId)
+    .first<{ name: string | null }>()
 }

@@ -1,9 +1,7 @@
 import type { SchemaProps, Viewport } from '@mokly/mokly'
+import { SearchField } from '../components/common/SearchField'
 import { ApproveDialog } from '../components/operator/ApproveDialog'
-import {
-  DirectorySearch,
-  DirectoryTable,
-} from '../components/operator/directory'
+import { DirectoryTable } from '../components/operator/directory'
 import { OperatorPage } from '../components/operator/OperatorPage'
 import {
   EmptyWaitlist,
@@ -23,7 +21,7 @@ import { paths } from '../paths'
 export const operatorWaitlistSchema = {
   type: 'object',
   additionalProperties: false,
-  required: ['list', 'dialog', 'signUps'],
+  required: ['list', 'dialog', 'signUps', 'waitlist'],
   properties: {
     /**
      * The people who wait, oldest first, a search, the list after two
@@ -34,6 +32,8 @@ export const operatorWaitlistSchema = {
     dialog: { enum: ['none', 'approve'] },
     /** Sign-ups are open, or an operator paused them. */
     signUps: { enum: ['open', 'paused'] },
+    /** The waitlist is on, or an operator turned it off. */
+    waitlist: { enum: ['on', 'off'] },
   },
 } as const
 
@@ -74,7 +74,7 @@ function WaitlistBody(props: {
   const found = results(props.list)
   return (
     <>
-      <DirectorySearch
+      <SearchField
         label="Search the waitlist"
         placeholder="GitHub login, name, or GitHub ID"
         query={found.query}
@@ -104,7 +104,7 @@ export function OperatorWaitlistScreen(props: {
   state: OperatorWaitlistState
   viewport: Viewport
 }) {
-  const { list, dialog, signUps } = props.state
+  const { list, dialog, signUps, waitlist } = props.state
   return (
     <OperatorPage
       dialog={
@@ -121,6 +121,7 @@ export function OperatorWaitlistScreen(props: {
       tab="waitlist"
       title="Operator"
       viewport={props.viewport}
+      waitlist={waitlist}
     >
       {list === 'empty' ? (
         <EmptyWaitlist />

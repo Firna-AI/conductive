@@ -12,6 +12,23 @@ beforeEach(() => {
   read = harness.read
 })
 
+it('reads an open pull request with one GraphQL query', async () => {
+  api.pulls[2].potentialMergeCommit = { oid: 'merge-commit' }
+  api.checks.set('merge-commit', [{ ...passedRun, id: 'merge-run' }])
+  api.pulls[2].reviewDecision = 'CHANGES_REQUESTED'
+  api.pulls[2].reviews = [
+    { state: 'CHANGES_REQUESTED', author: { login: 'bob' } },
+  ]
+  const snapshot = await read()
+  expect(snapshot.banner).toMatchObject({
+    state: 'changes-requested',
+    changesRequestedBy: ['bob'],
+    pullRequest: { number: 2, headSha: HEAD_SHA },
+  })
+  expect(snapshot.checks.checks).toMatchObject([{ id: 'merge-run' }])
+  expect(api.requests).toHaveLength(1)
+})
+
 it('maps pull request blockers and terminal states into the shared banner', async () => {
   const original = structuredClone(api.pulls[2])
   const cases = [
@@ -53,6 +70,7 @@ it('maps pull request blockers and terminal states into the shared banner', asyn
     },
   ]
   for (const sample of cases) {
+    const requests = api.requests.length
     api.pulls[2] = { ...original, mergeStateStatus: 'BLOCKED', ...sample.patch }
     api.checks.set(HEAD_SHA, sample.checks)
     const snapshot = await read()
@@ -61,21 +79,22 @@ it('maps pull request blockers and terminal states into the shared banner', asyn
       baseBranch: 'main',
       state: sample.state,
       updatedAt: TEST_TIME,
+      pullRequest: { headSha: HEAD_SHA },
     })
     expect(snapshot.checks.state).toBe('available')
     expect(snapshot.headSha).toBe(HEAD_SHA)
+    expect(api.requests).toHaveLength(
+      requests +
+        (sample.state === 'merged' || sample.state === 'closed' ? 2 : 1),
+    )
   }
 })
 
-it('offers the create link only for branch commits and waits for a pull request', async () => {
+it('tells a branch with commits from one without, and waits for a pull request', async () => {
   api.pulls = {}
   for (const sample of [
-    { ahead: 0, state: 'no-commits', url: null },
-    {
-      ahead: 3,
-      state: 'none',
-      url: 'https://github.com/Codertocat/Hello-World/compare/main...changes?expand=1',
-    },
+    { ahead: 0, state: 'no-commits' },
+    { ahead: 3, state: 'none' },
   ]) {
     api.comparisons.set('refs/heads/main', new Map([[HEAD_SHA, sample.ahead]]))
     expect(await read()).toEqual({
@@ -85,7 +104,6 @@ it('offers the create link only for branch commits and waits for a pull request'
         baseBranch: 'main',
         updatedAt: TEST_TIME,
         pullRequest: null,
-        createPullRequestUrl: sample.url,
       },
       checks: { state: 'waiting-for-pull-request', checks: [] },
       headSha: HEAD_SHA,
@@ -96,10 +114,7 @@ it('offers the create link only for branch commits and waits for a pull request'
   }
   api.branches.delete('refs/heads/changes')
   api.requests = []
-  expect((await read()).banner).toMatchObject({
-    state: 'no-commits',
-    createPullRequestUrl: null,
-  })
+  expect((await read()).banner).toMatchObject({ state: 'no-commits' })
   expect(api.requests.every((request) => request.method === 'POST')).toBe(true)
 })
 
@@ -168,6 +183,7 @@ it('paginates lookup, checks, and reviews while preserving GitHub order and dura
       durationMs: null,
     },
   ])
+  expect(api.requests).toHaveLength(5)
 })
 
 it('uses merge checks when present and otherwise uses head checks for both outputs', async () => {
@@ -249,6 +265,8 @@ it('refuses mismatched repositories, changed heads, and malformed upstream repli
     code: 'github_unavailable',
   })
   api.repositoryId = 186853002
+  api.pageSize = 1
+  api.checks.set(HEAD_SHA, [passedRun, { ...passedRun, id: 'second-head' }])
   api.onRequest = async (operation) => {
     if (operation === 'BannerChecks') api.pulls[2].headRefOid = 'new-head'
   }

@@ -1,31 +1,22 @@
-import { generateKeyPairSync } from 'node:crypto'
-
 import { afterEach, expect, it, vi } from 'vitest'
 
 import { StreamedBody } from '../../github/streamed-body'
 import { installationToken, revokeInstallationToken } from './github-app'
-
-const keys = generateKeyPairSync('rsa', { modulusLength: 2048 })
-const privateKey = keys.privateKey
-  .export({ type: 'pkcs8', format: 'pem' })
-  .toString()
-const repository = {
-  id: 'source',
-  orgId: 'org',
-  fullName: 'example/source',
-  defaultBranch: 'main',
-  githubRepositoryId: 101,
-  installationId: 701,
-}
-const accessFailure = new Error('Installation access is not available')
-const now = () => 1_800_000_000_000
+import {
+  accessFailure,
+  keys,
+  now,
+  privateKey,
+  repository,
+} from './github-app.test-support'
 
 afterEach(() => {
   vi.restoreAllMocks()
+  vi.useRealTimers()
 })
 
 it('uses the supplied clock and bounded shared request policy for image credentials', async () => {
-  const timeouts = vi.spyOn(AbortSignal, 'timeout')
+  vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
   const requests: Request[] = []
   await expect(
     installationToken(
@@ -39,7 +30,6 @@ it('uses the supplied clock and bounded shared request policy for image credenti
       now,
     ),
   ).resolves.toBe('image-read-token')
-  expect(timeouts.mock.calls).toEqual([[30_000]])
   expect(requests).toHaveLength(1)
   const request = requests[0]
   expect([request.method, request.url, request.redirect]).toEqual([
@@ -74,6 +64,8 @@ it('uses the supplied clock and bounded shared request policy for image credenti
       Buffer.from(`${header}.${claims}`),
     ),
   ).toBe(true)
+  await vi.advanceTimersByTimeAsync(30_000)
+  expect(request.signal.aborted).toBe(false)
 })
 
 it('cancels oversized image token replies and returns the safe image credential error', async () => {
@@ -107,7 +99,7 @@ it('cancels oversized image token replies and returns the safe image credential 
 })
 
 it('bounds token revocation and requires a 204 or 401 reply as inactivity proof', async () => {
-  const timeouts = vi.spyOn(AbortSignal, 'timeout')
+  vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
   const requests: Request[] = []
   for (const status of [204, 401])
     await expect(
@@ -123,13 +115,6 @@ it('bounds token revocation and requires a 204 or 401 reply as inactivity proof'
         return new Response('private-upstream-body', { status })
       }, 'private-installation-token'),
     ).rejects.toEqual(new Error('Installation access could not be revoked'))
-  expect(timeouts.mock.calls).toEqual([
-    [30_000],
-    [30_000],
-    [30_000],
-    [30_000],
-    [30_000],
-  ])
   expect(
     requests.map((request) => [request.method, request.url, request.redirect]),
   ).toEqual(
@@ -139,4 +124,12 @@ it('bounds token revocation and requires a 204 or 401 reply as inactivity proof'
       'manual',
     ]),
   )
+  await vi.advanceTimersByTimeAsync(30_000)
+  expect(requests.map((request) => request.signal.aborted)).toEqual([
+    false,
+    false,
+    false,
+    false,
+    false,
+  ])
 })

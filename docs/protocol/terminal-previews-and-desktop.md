@@ -97,7 +97,7 @@ decision number names a dated record, as
   states the full rules.
 - A revoked or an unknown hostname gets no answer from any sandbox.
 - The preview relay is the app's own service in the sandbox, as
-  [Sandbox software](../architecture.md#sandbox-software) says. Each preview
+  [Sandbox software](../architecture/components.md#sandbox-software) says. Each preview
   request goes through it to the previewed server, the server on the port
   of the preview.
 - An answer that does not come from the preview relay never reaches the browser.
@@ -134,6 +134,16 @@ decision number names a dated record, as
   the preview.
 - Each response on the preview domain carries `Referrer-Policy:
   no-referrer`. Reason: other sites have no need for the preview address.
+- A reply of the previewed server keeps its cache rules, and only the
+  viewer's browser may keep it. A reply that gives the browser no
+  lifetime must be checked again before each reuse.
+- Reason: dev servers mark their package files as unchanging, so a reload
+  skips them. A page load still passes the access check, because dev
+  servers mark their pages for a check before each use. A ban on all
+  browser caching was rejected, because each reload then fetched every
+  file again through the access checks.
+- Risk: a revoked viewer's browser keeps the files that it already
+  received.
 - These approaches were rejected:
   - previews behind Cloudflare Access, because Access cannot sign in
     inside a frame

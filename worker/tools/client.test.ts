@@ -16,6 +16,7 @@ it('drops unknown response fields and rejects malformed workspace data', async (
       secret: TOOL_TEST_TOKEN,
       workspaces: [
         {
+          owner: { id: 'owner', githubLogin: 'owner-login', displayName: null },
           id: 'one',
           number: 1,
           link: `${TEST_ORIGIN}${routes.workspace('org-a', 'one')}`,
@@ -30,6 +31,7 @@ it('drops unknown response fields and rejects malformed workspace data', async (
   await expect(client.list()).resolves.toEqual({
     workspaces: [
       {
+        owner: { id: 'owner', githubLogin: 'owner-login', displayName: null },
         id: 'one',
         number: 1,
         link: `${TEST_ORIGIN}${routes.workspace('org-a', 'one')}`,
@@ -43,6 +45,7 @@ it('drops unknown response fields and rejects malformed workspace data', async (
     Response.json({
       workspaces: [
         {
+          owner: { id: 'owner', githubLogin: 'owner-login', displayName: null },
           id: 'one',
           number: 1,
           link: `${TEST_ORIGIN}${routes.workspace('org-a', 'one')}`,
@@ -72,5 +75,60 @@ it('keeps transport details and server error bodies out of tool failures', async
       /^The workspace (request failed\.|reply is not valid\.)/,
     )
     await expect(client.list()).rejects.not.toThrow(TOOL_TEST_TOKEN)
+  }
+})
+
+it('preserves Worker refusal codes and messages for every call without credentials', async () => {
+  const client = createWorkspaceToolClient(
+    { ...configuration, turnId: 'active-turn' },
+    async () =>
+      Response.json(
+        {
+          error: {
+            code: 'membership_required',
+            message: `Access ended for ${TOOL_TEST_TOKEN}.`,
+            details: { private: TOOL_TEST_TOKEN },
+          },
+        },
+        { status: 403 },
+      ),
+  )
+  const calls = [
+    () => client.list(),
+    () => client.listRepositories(),
+    () => client.listSections(),
+    () => client.listModels(),
+    () => client.create({ repositoryId: 'repository', firstMessage: 'Work' }),
+    () => client.listSessions(),
+    () => client.readSession('session'),
+    () => client.createSession(),
+    () => client.sendMessage('session', { text: 'Work' }),
+    () => client.getWorkspace(),
+    () => client.renameWorkspace({ name: 'Work' }),
+    () => client.moveWorkspace({ sectionId: 'section' }),
+    () => client.archiveWorkspace(),
+    () => client.getSession('session'),
+    () => client.renameSession('session', { title: 'Work' }),
+    () => client.closeSession('session'),
+    () => client.stopSession('session'),
+    () => client.getMessage('session', 'message'),
+    () => client.createSection({ name: 'Work' }),
+    () => client.deleteSection('section'),
+    () => client.listPreviews(),
+    () => client.openPreview({ port: 4321 }),
+    () => client.closePreview('preview'),
+    () =>
+      client.runMacCommand({
+        command: 'pwd',
+        folder: '/tmp',
+        reason: 'Check folder',
+      }),
+  ]
+  for (const call of calls) {
+    await expect(call()).rejects.toMatchObject({
+      status: 403,
+      code: 'membership_required',
+      message: 'Access ended for [redacted].',
+    })
   }
 })

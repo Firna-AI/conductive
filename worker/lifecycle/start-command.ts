@@ -1,3 +1,4 @@
+import type { CommitAuthor } from '../../src/shared/commit-author'
 import { shellQuote } from './commands'
 import { defaultBranchCommand } from './default-branch-command'
 import { repositoryLocation } from './repository-locations'
@@ -9,8 +10,10 @@ import type { WorkspaceStartJob } from './start-types'
 export function workspacePhaseCommand(
   row: WorkspaceRow,
   job: WorkspaceStartJob,
+  owner: CommitAuthor | null,
 ): string {
-  if (job.phase === 'startup') return workspaceStartupCommand(job.startupScript)
+  if (job.phase === 'startup')
+    return workspaceStartupCommand(job.startupScript, owner)
   const directory = repositoryLocation(
     job.repositoryLocations,
     row.repositoryId,
@@ -19,17 +22,22 @@ export function workspacePhaseCommand(
     if (!job.creation) throw new Error('Missing trusted creation sender')
     return defaultBranchCommand({
       directory,
-      defaultBranch: job.defaultBranch,
+      defaultBranch: job.baseBranch ?? job.defaultBranch,
       turnId: job.turnId,
       sender: job.creation.sender,
     })
   }
+  const start = job.startSha
+    ? `conductive_start=$(git rev-parse --verify --end-of-options ${shellQuote(`${job.startSha}^{commit}`)} 2>/dev/null) || conductive_start=FETCH_HEAD`
+    : 'conductive_start=FETCH_HEAD'
   return `set -eu
 export CONDUCTIVE_TURN_ID=${shellQuote(job.turnId)}
 cd ${shellQuote(directory)}
+${start}
 if git show-ref --verify --quiet ${shellQuote(`refs/heads/${row.branch}`)}; then
   git checkout ${shellQuote(row.branch)}
 else
-  git checkout -b ${shellQuote(row.branch)} FETCH_HEAD
-fi`
+  git checkout -b ${shellQuote(row.branch)} "$conductive_start"
+fi
+git config ${shellQuote(`branch.${row.branch}.gh-merge-base`)} ${shellQuote(job.baseBranch ?? job.defaultBranch)}`
 }

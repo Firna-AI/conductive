@@ -1,10 +1,10 @@
 # Workspace screen
 
 The workspace screen shows one open workspace: its header, the start
-steps, the states of its cloud computer, the Archive question, and its
-chat. On desktop the chat column sits beside the right column. A phone
-shows one view at a time, with a tab bar. The chat fills the centre by
-default, as [The chat of the workspace](#the-chat-of-the-workspace) says.
+steps, the states of its cloud computer, and its chat. On desktop the chat
+column sits beside the right column. A phone shows one view at a time,
+with a tab bar. The chat fills the centre by default, as
+[The chat of the workspace](#the-chat-of-the-workspace) says.
 The shell gives its own parts: the Files screens, the tools, the pull
 request bar, and the owner picker, as [The Files part](#the-files-part),
 [The tools part](#the-tools-part), and [The GitHub part](#the-github-part)
@@ -15,9 +15,15 @@ states of the cloud computer are in `app/shell`, and the notices are in
 `app/chat/lost-updates`.
 
 The workspace list offers Archive over the time of each permitted row on
-hover only. Selection and keyboard focus alone keep the time visible.
-The header has no Archive button. The list uses the same Archive question
-as the command palette and the pull request bar.
+hover only, and Restore over the time of each row of the Archived group
+until its last day. Selection and keyboard focus alone keep the time
+visible. The header has no Archive button. The shortcut and the menu of a
+row, the command palette, and the pull request bar archive in the same
+way, at once and with one request, as
+[Archive](../../../docs/protocol/workspace-life.md#archive) says. A toast
+then offers Restore. The archived bar, the row of the Archived group, and
+the palette offer Restore to each member until the last day, as
+[Restore](../../../docs/protocol/workspace-life.md#restore) says.
 
 ## The kept workspace
 
@@ -102,10 +108,11 @@ A new `create` makes a new view, so keep `app` and `viewer` stable.
   calls `chat.hide()`. A connect starts nothing for a workspace that the
   tab no longer keeps.
 
-The context of the features gives the kept chat as `savedView`, and the
-tool events as `toolEvents`. The Files part takes the kept files of the tab
-through `useWorkspaceStore`, as
-[the Files screens](../../files/README.md#integration) show.
+The context of the features gives the kept chat as `savedView` and as
+`chat`, and the tool events as `toolEvents`. `KeptFilesConnection`
+connects the kept files of the tab through `useWorkspaceStore`, as
+[the Files screens](../../files/README.md#integration) show, and the parts
+that show files read the same store.
 
 Place `<HeaderNoticeBars notices={notices} />` directly after the
 header. It draws `notices.shown` with the CSS module of the
@@ -123,7 +130,7 @@ refusal of a suspended org, and the context that each part gets.
 [Development page](development-page.md) says how to run the page over the
 fake API, with its address options, its controls, and the test command.
 
-## Key code
+### Key Code
 
 - `WorkspaceScreen.tsx`: the screen of one open workspace. It takes a view
   of the kept workspace through `useWorkspaceStore`, and places the header,
@@ -142,11 +149,16 @@ fake API, with its address options, its controls, and the test command.
 - `ChatArea.tsx`: the chat of the centre, with the start steps and the
   sandbox bar of the shell, the open file tabs, and the file page in place
   of the chat of the session, or the shell's own column for the chat slots.
-- `files/files-features.tsx`: the Files part, which connects the kept
-  files, and the file or diff page of the centre.
+- `files/files-features.tsx`: the Files part, which reads the kept files
+  that the screen connects, and the file or diff page of the centre.
 - `files/tab-open-resume.tsx`: `ResumeOnTabOpen`, which resumes a stopped
   sandbox at each visit that opens a file or diff tab, also a second click
   on the tab that shows. The screen draws it in each layout.
+- `session-address.tsx`: `OpenSessionAddress`, which shows the session of a
+  session address once the chat loads, then replaces the address with the
+  workspace address. A move to another address stops its lookup. The
+  screen draws it beside `ResumeOnTabOpen`. `SessionAddress.test.tsx` and
+  `SessionChips.test.tsx` mount the whole app for the address and the chips.
 - `files/chat-files.tsx`: the file tabs of the kept chat, named by the
   labels of the kept files, at their places in the tab row with the props
   that the row gives each tab, the diff links, and the way back to the chat
@@ -178,8 +190,9 @@ fake API, with its address options, its controls, and the test command.
   draws its own tools panel when the host gives no `tools` part.
 - `WorkspaceOwner.tsx` and `WorkspaceMacBar.tsx`: the owner picker of the
   members UI, and the bar of the 15 minutes in the Mac app.
-- `saved-view.ts`: the saved view of the kept chat, and `saveView`, which
-  writes a change only once the chat read the view.
+- `saved-view.ts`: the saved view of the kept chat, `saveView`, which
+  writes a change only once the chat read the view, and `useRunRoutine`,
+  the routine of a run workspace, which the chat reads with the view.
 - `tools/ToolsPart.tsx`, `tools/tool-navigation.ts`, and
   `tools/tool-address.ts`: the tools panel and its `placeholder`, which
   takes the place of the tools inside the tabs, the tool and preview of the
@@ -188,20 +201,37 @@ fake API, with its address options, its controls, and the test command.
 - `WorkspacePaletteActions.tsx`: the actions that the screen offers to the
   command palette, as `workspaceActionIds` chooses them. Each one runs the
   control of the screen: +, the clock of the history, a tab of the right
-  column, or Archive.
+  column, Archive, or Restore.
 - `tools/tool-events.ts`: `ToolEvents`, the events of the tools from the
   ordered stream. It keeps the revokes of previews, the latest report of the
   listening ports, and the first failed repair of that report since it. A
   tool that shows later gets them first, in event order.
 - `github/WorkspaceGitHub.tsx` and `github/github-events.ts`: the one
   GitHub store of the screen, the bar or the row, and the GitHub events of
-  the ordered stream.
+  the ordered stream. `github/bar-controls.ts` gives the one action state of
+  the bar and its controls, and `github/bar-feed.ts` shows a GitHub state of
+  another branch as loading. `github/bar-keys.tsx`: `BarKeys`, the keys of
+  the bar, beside the bar of the right column and beside the actions at
+  the top of the Checks tab of a phone.
+- `files/kept-files.tsx`: `KeptFilesConnection`, the one connection of the
+  kept files for the whole screen.
+- `ContinueDialog.tsx`: the question of Continue with the local work, which
+  `LocalWorkList` of the mockups lists.
+- `github/BarMerge.test.tsx`, `github/BarAgent.test.tsx`,
+  `github/BarContinue.test.tsx`, and `files/KeptFiles.test.tsx`: mount the
+  whole app over the fake API. They check Merge and its refusals, the
+  phone Checks top, the prompts from a file and a phone, a prompt that did
+  not send, Continue with its question, a stop, the wait for a turn, the
+  new branch and its note, and the local work of a phone on the chat tab.
+  They also press the keys of the bar where it shows a button that takes a
+  click, and where it does not.
 - `tools/ToolsWiring.test.tsx` and `github/GitHubWiring.test.tsx`: mount
   the whole app over the fake API. They check the terminal socket across
   tool switches, the saved tool, the tabs and the state of a stopped
   sandbox with no tool mounted, a revoke before the Preview tool shows, a
   preview address on a phone, one GitHub read for the bar and Checks with a
-  live event, the Checks row of a phone, and an archived phone.
+  live event, the Checks row of a phone, an archived phone, and the key of
+  Open PR on GitHub.
   `wiring-test-kit.tsx` holds their helpers.
 - `header-notices.ts`: `HeaderNotices`, the failed repairs of the name and
   the start steps. `follow` reads a stream, `dismiss` hides a notice in
@@ -221,6 +251,8 @@ fake API, with its address options, its controls, and the test command.
   columns, the toggle of the right column, and the tab bar of a phone.
   `RightColumnToggle.test.tsx` mounts the whole app over the fake API. It
   hides the right column, opens the workspace again, and shows the column.
+  `WorkspaceKeys.test.tsx` runs the keys of the tab row, of the
+  composer, and the copy keys of the shown session in the whole app.
 - `CopyLink.tsx`: the label of the number, such as `W-395`, as the Copy
   link button of the header, as
   [Copy link](../../../docs/protocol/workspace-links.md#copy-link) says.
@@ -229,20 +261,28 @@ fake API, with its address options, its controls, and the test command.
   `AppServices.delay`. A failed copy asks to try again until the next
   press, as the file page does. On desktop the button follows the name,
   and the repository fills the `.metas` group. On a phone
-  it leads the line under the name. `CopyLink.test.tsx` mounts the whole
-  app and presses the button for a copy and for a failed copy.
-- `SandboxNotice.tsx`, `StartingCard.tsx`, and `ArchiveDialog.tsx`: the
-  states of the cloud computer, the start steps, and the Archive question.
-  The screen draws its Archive question in each of its states, also during
-  the first read, with the name from the list. So Archive from the row of
-  the open workspace, by its shortcut or its menu, shows one question. The
-  list draws the question of another row, for the shortcut and the menu
-  alike.
+  it leads the line under the name. The key of Copy link does what a press
+  does while the button shows, and on desktop the tooltip names the key.
+  `CopyLink.test.tsx` mounts the whole app and presses the button for a
+  copy and for a failed copy, and the key.
+- `RunLine.tsx`: the line under the header of a run workspace, which links to its routine and the pull request of a pull request run. `RunLine.test.tsx` checks the line and its links.
+- `SandboxNotice.tsx`, `notice-copy.ts`, and `StartingCard.tsx`: the
+  states of the cloud computer, their words, and the start steps. The bar
+  of an archived workspace offers Restore until its last day, then says
+  when Restore ended. `useArchiveActions.ts` runs Archive and Restore for
+  each control, with their toasts. Archive from the row of the open
+  workspace, by its shortcut or its menu, acts once, also during the first
+  read, as [Archive](../../../docs/protocol/workspace-menu.md#archive)
+  says. An Archive and a Restore during the first read resume nothing.
   `refusedStart` in `SandboxNotice.tsx` turns a refused start error into
   the refused notice. `sandbox-view.ts` chooses the bar and the panels,
-  also for a suspended org and for the saved message of a failed start.
+  also for a suspended org, for the saved message of a failed start, and
+  for the end of Restore. `ArchivedRestore.test.tsx` mounts the whole app
+  for Restore by a member and for its end at the last day.
 - `dev/`: the development page, with its options in `dev-options.ts` and
   its controls in `DevControls.tsx`.
+  `dev/main.tsx` supplies the real window host, keyboard, and key events
+  through `AppServices`.
 
 ## Related docs
 
@@ -250,6 +290,8 @@ fake API, with its address options, its controls, and the test command.
   the repair, and the notice of a failed repair.
 - [Start steps](../../../docs/protocol/workspace-life.md#start-steps)
   and [Workspace states](../../../docs/protocol/workspace-life.md#workspace-states).
+- [Archive](../../../docs/protocol/workspace-life.md#archive) and
+  [Restore](../../../docs/protocol/workspace-life.md#restore).
 - [Workspace numbers and links](../../../docs/protocol/workspaces-and-sandboxes.md#workspace-numbers-and-links)
   and [Workspace links](../../../docs/protocol/workspace-links.md): the
   number, the link, and Copy link.

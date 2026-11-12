@@ -36,7 +36,7 @@ export async function readLoginMetadata(
      JOIN users login_owner ON login_owner.id = org_members.user_id
        AND login_owner.suspended_at IS NULL
      JOIN agent_logins ON agent_logins.user_id = requested.userId
-       AND agent_logins.agent = requested.agent`,
+       AND agent_logins.agent = requested.agent AND agent_logins.failure_cause IS NULL`,
     )
     .bind(JSON.stringify(targets), workspaceId)
     .all<{ sessionId: string; agent: Agent; kind: string; noReuse: number }>()

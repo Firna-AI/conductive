@@ -1,4 +1,5 @@
 import type { Agent } from '../shared/agents'
+import { sessionAddressPath } from '../shared/session-link'
 import { INVITE_CODE_ERROR_PARAMETER } from '../shared/waitlist'
 
 export const SETTINGS_TABS = [
@@ -10,7 +11,9 @@ export const SETTINGS_TABS = [
 
 export type SettingsTab = (typeof SETTINGS_TABS)[number]
 
-export const ACCOUNT_TABS = ['general', 'preferences'] as const
+/** The tabs of a saved routine on a phone: its form, and its runs. */
+export type RoutineTab = 'routine' | 'runs'
+export const ACCOUNT_TABS = ['general', 'preferences', 'shortcuts'] as const
 
 export type AccountTab = (typeof ACCOUNT_TABS)[number]
 
@@ -42,14 +45,27 @@ export type Route =
   | { screen: 'create-org'; first: boolean }
   | { screen: 'org'; orgId: string }
   | { screen: 'new-workspace'; orgId: string; sectionId: string | null }
-  /** `view` holds the path after the workspace, such as `files`, for its tabs. */
+  /**
+   * `view` holds the path after the workspace, such as `files`, for its
+   * tabs. A session address names its session in `session`, with no view.
+   */
   | {
       screen: 'workspace'
       orgId: string
       workspaceId: string
       view: readonly string[]
+      session?: string
     }
   | { screen: 'settings'; orgId: string; tab: SettingsTab }
+  | { screen: 'routines'; orgId: string }
+  | { screen: 'new-routine'; orgId: string }
+  /** A phone shows the form of a saved routine and its runs in two tabs. */
+  | {
+      screen: 'routine'
+      orgId: string
+      routineId: string
+      tab: RoutineTab
+    }
   /** The operator section. The shell shows it only to an operator. */
   | { screen: 'operator'; view: OperatorView }
   /**
@@ -87,10 +103,18 @@ export const routes = {
     [`/orgs/${encode(orgId)}/workspaces/${encode(workspaceId)}`]
       .concat(view.map(encode))
       .join('/'),
+  /** The address of a session, which the Worker builds the same way. */
+  session: sessionAddressPath,
   settings: (orgId: string, tab: SettingsTab = 'general') =>
     tab === 'general'
       ? `/orgs/${encode(orgId)}/settings`
       : `/orgs/${encode(orgId)}/settings/${tab}`,
+  routines: (orgId: string) => `/orgs/${encode(orgId)}/routines`,
+  newRoutine: (orgId: string) => `/orgs/${encode(orgId)}/routines/new`,
+  routine: (orgId: string, routineId: string, tab: RoutineTab = 'routine') =>
+    tab === 'routine'
+      ? `/orgs/${encode(orgId)}/routines/${encode(routineId)}`
+      : `/orgs/${encode(orgId)}/routines/${encode(routineId)}/runs`,
   operator: () => '/operator',
   operatorOrgs: (search = '') => operatorList('orgs', search),
   operatorUsers: (search = '') => operatorList('users', search),
@@ -199,11 +223,28 @@ export function parseRoute(pathname: string, search: string): Route {
     return { screen: 'new-workspace', orgId, sectionId: query.get('section') }
   }
   if (area === 'workspaces' && id !== undefined) {
+    // Only `sessions` and an ID, with nothing after them, name a session.
+    const [sessions, session, ...more] = rest
+    if (sessions === 'sessions' && session !== undefined && more.length === 0) {
+      return { screen: 'workspace', orgId, workspaceId: id, view: [], session }
+    }
     return { screen: 'workspace', orgId, workspaceId: id, view: rest }
   }
   if (area === 'settings' && rest.length === 0) {
     const tab = tabOf(SETTINGS_TABS, id)
     if (tab) return { screen: 'settings', orgId, tab }
+  }
+  if (area === 'routines') {
+    if (id === undefined) return { screen: 'routines', orgId }
+    if (id === 'new' && rest.length === 0) {
+      return { screen: 'new-routine', orgId }
+    }
+    if (id !== 'new' && rest.length === 0) {
+      return { screen: 'routine', orgId, routineId: id, tab: 'routine' }
+    }
+    if (id !== 'new' && rest.length === 1 && rest[0] === 'runs') {
+      return { screen: 'routine', orgId, routineId: id, tab: 'runs' }
+    }
   }
   return { screen: 'not-found' }
 }

@@ -5,12 +5,14 @@ how the lifecycle code builds and refreshes the org image. The org image is
 the saved snapshot that every new sandbox of an org starts from. It also
 gives the provider retry policy that builds, refreshes, and workspace
 starts share. [Build sandboxes](#build-sandboxes) describes their starting
-image and the clone token of each copy.
+image and the clone token of each copy. [Key code](#key-code) names the
+files of the image code.
 
 ## Build sandboxes
 
-- A build sandbox starts from the current org image, or as a new default
-  sandbox for the first build. Its env holds only the folder variables.
+- A build sandbox starts from the current org image. A first build uses a
+  matching ready software image, or a new default sandbox without one.
+  Its env holds only the folder variables.
 - Risk: a program with root access that an earlier install left in that
   image can read the clone token of a later copy. That token can only read
   its own repository, which the image already holds. The Worker revokes it
@@ -52,15 +54,33 @@ that has not allocated a sandbox ends without cleanup. An allocation
 already in progress keeps its cleanup ownership. A failed reschedule of
 an existing running build keeps that build running.
 
+`changeShellRepository` in
+[`feature-repositories.ts`](../app-api/feature-repositories.ts) starts a
+build after a save adds a repository. It uses the admin who added it,
+also after a failed build. A repeated save and a removal start no build.
+A failed start keeps the saved choice and writes one fixed warning.
+
 `publishBuild` in [`build-admission-data.ts`](build-admission-data.ts)
 records whether the first good build needs an added build for changed
-settings. Its `cleanup-build` phase keeps that work through coordinator
+settings. A successful build or refresh also gets an added build when its
+repositories lack a chosen repository and the newest build succeeded.
+Its `cleanup-build` phase keeps that work through coordinator
 reconstruction. `cleanupBuild` in [`build-execution.ts`](build-execution.ts)
 finishes resource cleanup before `startAddedImageBuild` in
 [`first-image-build.ts`](first-image-build.ts) starts the added build.
 The added build uses the first admin who is not suspended. A failed start
-keeps the first good image and writes one fixed warning. A failed first
-build starts no added build.
+keeps the published image and writes one fixed warning. A failed build
+starts no added build. A refresh after a failed build gets none either.
+
+`readBuildHistory` in [`build-data.ts`](build-data.ts) returns
+`BuildsResponse.changes` with the build history. `readBuildChanges` in
+[`build-changes-data.ts`](build-changes-data.ts) compares the raw saved
+install script with the newest successful build's script in the requested
+provider account. Before that account's first image, it uses the newest
+build in the same account, in any state. A refresh never becomes this
+script reference. The added and removed repository lists compare the
+chosen repositories with that account's published image. Both lists stay
+empty before the first image.
 
 D1 keeps at most 4 MiB of each build log: the first and the last output.
 A write that passes that budget removes whole rows from the middle.
@@ -114,7 +134,7 @@ transient. Other errors keep their existing handling.
   step still uses the first window.
 - The window does not limit a whole job or a healthy command.
 - The whole-job deadline takes precedence over a retry wait. The limits
-  are in [Workspaces and sandboxes](../../docs/protocol/workspace-life.md).
+  are in [Time limits of builds and starts](../../docs/protocol/workspace-life.md#time-limits-of-builds-and-starts).
 - Cancellation and terminal cleanup do not wait for a pending retry.
 - A source command start never retries. It fails closed, as the source
   loader says.
@@ -177,3 +197,39 @@ without such an admin gets neither refresh. Its push uses no part of the
 coordinator sets no new alarm.
 [Operator actions](../../docs/protocol/operator-actions.md#starts-stops-and-builds)
 states the rule.
+
+## Key code
+
+- [`build-admission-data.ts`](build-admission-data.ts): guarded image build admission and publication, with the installed runner version.
+- [`build-changes-data.ts`](build-changes-data.ts): `readBuildChanges`, the
+  saved install script change and the added and removed repositories in
+  `BuildsResponse.changes`. It reads the script reference and the published
+  image's repositories for one provider account. The repository read uses
+  the same source as creation admission.
+- [`image-builds.ts`](image-builds.ts): `startImageBuild` and
+  `advanceImageBuild`, which removes the command journals before a snapshot.
+- [`first-image-build.ts`](first-image-build.ts): `startAddedImageBuild`,
+  which starts changed settings after the first good build finishes cleanup.
+  It also builds waiting repositories after a successful build or refresh,
+  when the newest build succeeded.
+- [`image-build-failure.ts`](image-build-failure.ts): image failure classification, retry, warning, and allocation cleanup.
+- [`build-execution.ts`](build-execution.ts): build commands and cleanup of every live ledger computer for the exact org and build.
+- [`image-allocation.ts`](image-allocation.ts): `recoverImageBuildAllocation`
+  replays a saved allocation request and saves the recovered sandbox ID.
+  Failed image jobs retain their unresolved allocation phase until cleanup
+  recovers and deletes the sandbox.
+- [`build-log-statements.ts`](build-log-statements.ts): `buildLogStatements`,
+  which splits output into rows and adds the budget statements of
+  [`build-log-retention.ts`](build-log-retention.ts) to the same D1 batch.
+- [`build-log-reader.ts`](build-log-reader.ts): `readBuildSnapshot`, which
+  reads the build state and its log in one D1 batch.
+- [`image-timers.ts`](image-timers.ts): `refreshImagesForPush` and
+  `runImageAlarm`.
+- [`image-coordinator.ts`](image-coordinator.ts): `ImageCoordinator`.
+- [Software images](../software-image/README.md): the shared software builds and their cleanup.
+- [`image-software.ts`](image-software.ts): the runner archive check and
+  install/start commands.
+- [`image-runtime.ts`](image-runtime.ts): `IMAGE_NODE_RUNTIME`, the pinned
+  private Node of the org image, and its paths. The
+  [runtime guide](../../image/runtime.md#update-the-node-release) says how to
+  update it.

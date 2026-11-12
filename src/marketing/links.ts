@@ -1,6 +1,11 @@
-import { macDmgNames, type MacChip } from '../../docs/mockups/src/brand'
+import {
+  macDmgNames,
+  sourceRepository,
+  type MacChip,
+} from '../../docs/mockups/src/brand'
 
-export const sourceRepositoryHref = 'https://github.com/Firna-AI/remote-code'
+/** The GitHub page of the source repository, which holds the releases. */
+export const sourceRepositoryHref = `https://github.com/${sourceRepository.owner}/${sourceRepository.name}`
 
 /**
  * The address of the newest DMG of the Mac app for a chip: the file with its
@@ -17,11 +22,12 @@ export function macDownloadHref(chip: MacChip): string {
 export const docsPath = '/docs'
 
 /** A section of the site that the header marks as the current one. */
-export type SiteSection = 'docs'
+export type SiteSection = 'docs' | 'pricing'
 
 /** The paths of the pages of the site, on the root domain of the product. */
 export const sitePaths = {
   home: '/',
+  pricing: '/pricing',
   terms: '/terms',
   privacy: '/privacy',
   fromConductor: '/from-conductor',
@@ -37,6 +43,7 @@ export function pageHrefs(
   const href = (path: string) => (origin ? new URL(path, origin).href : path)
   return {
     home: href(sitePaths.home),
+    pricing: href(sitePaths.pricing),
     terms: href(sitePaths.terms),
     privacy: href(sitePaths.privacy),
     fromConductor: href(sitePaths.fromConductor),

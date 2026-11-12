@@ -36,6 +36,7 @@ npm --prefix desktop start
 
 `CONDUCTIVE_APP_ORIGIN` selects the API origin at build time.
 It defaults to `https://app.conductive.build`.
+Each build also stamps the renderer with the app version, from the shared [build-version.ts](../build-version.ts), as the web build does.
 Local development can use an HTTP localhost origin.
 `CONDUCTIVE_FRAME_SOURCES` lists space-separated HTTPS frame origins.
 Set the same frame sources in the web policy.
@@ -171,6 +172,10 @@ The space of the window buttons has `data-desktop-window-space`.
 The bar, the strip, and the top bars of the main area move the window.
 Their buttons, links, fields, and other controls do not.
 A top bar of the main area gets its drag region from `useMacBar()`.
+macOS takes each press on a drag region to move the window, and the page never hears that press.
+So while a menu is open, the drag regions stop, and a press on a top bar closes the menu.
+`useMenuDragStop` in [menu-drag.ts](../src/shell/mac/menu-drag.ts) marks the root element while the open layers of the shell hold a menu.
+The drag styles in [mac.module.css](../src/shell/mac/mac.module.css) read that mark.
 
 [The window](../docs/protocol/desktop-app.md#the-window) states the requirements.
 The [Mac app mockups](../docs/mockups/README.md#the-mac-app) draw the layout.
@@ -200,9 +205,13 @@ At each step, it also checks the bar and the place of the sidebar toggle.
 Other hosts skip this test.
 
 The [window controls test](tests/window-controls.spec.ts) checks the bar, the left panel, and the drag regions in a workspace.
+The [menu drag test](tests/menu-drag.spec.ts) checks that the owner menu stops the drag regions while it is open, and that a press on the top bar closes it.
 It also checks the sidebar toggle, the toggle of the right column, Back and Forward, and the layout after a sidebar resize and a window resize.
 The [browser window test](tests/browser-window.spec.ts) opens a fresh web build in a plain Electron window.
 There, the workspace shows no window controls.
+The [phone feedback test](tests/feedback-phone.spec.ts) opens the same build in a 375 × 667 page.
+A long feedback draft fails to send, and a wheel over the sheet brings Cancel and Send into view before Send tries again.
+[browser-entry.ts](tests/browser-entry.ts) builds the web entry and opens its window for both tests.
 
 The `test:logic` command uses the repository's Vitest runner with the desktop configuration.
 It runs the unit tests under `src/` and `renderer/`.
@@ -260,11 +269,12 @@ The package includes only `dist/app/` and `dist/bundle/`.
 
 [RELEASES.md](RELEASES.md) gives the signed release packages and their secrets, the release steps, and the updater.
 
-### Key code
+### Key Code
 
 - [Main process](src/main.ts) composes the protocol, window, session, and updater.
 - [Renderer entry](renderer/main.tsx) gives the shared App its desktop services and browser navigation inside `MacApp`.
 - [Renderer services](renderer/services.ts) routes credentialed API calls, file uploads, and event sockets to the configured Worker.
+  It supplies the Mac keyboard and the fixed Mac app host for shortcuts.
 - [Window](src/window.ts) owns native controls and saved bounds.
 - [Sign-in](src/sign-in.ts) owns the verifier and session exchange.
 - [Device composition](src/device/main.ts) connects cookie, power, notification, and app-exit hooks.

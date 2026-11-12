@@ -7,9 +7,23 @@ import type {
   InterruptResponse,
   SessionResponse,
   SessionsResponse,
+  SessionTranscriptResponse,
 } from '../../shared/sessions'
-import type { WorkspaceTab, WorkspaceView } from '../../shared/workspace-view'
-import { count, flag, list, nullable, oneOf, record, text } from './json'
+import type {
+  WorkspaceTab,
+  WorkspaceView,
+  WorkspaceViewResponse,
+} from '../../shared/workspace-view'
+import {
+  count,
+  flag,
+  list,
+  nullable,
+  oneOf,
+  optional,
+  record,
+  text,
+} from './json'
 import {
   readAgent,
   readChoice,
@@ -19,8 +33,13 @@ import {
   readUserMessage,
 } from './read-chat'
 
-/** What the composer needs to know about the agent logins of the user. */
-type AgentLogin = Pick<AgentLoginStatus, 'agent' | 'connected'>
+/**
+ * What the composer needs to know about an agent login of the user: its
+ * agent, whether it is connected, and why the app can no longer use it.
+ */
+type AgentLogin = Pick<AgentLoginStatus, 'agent' | 'connected'> & {
+  unusableCause?: string
+}
 
 export interface AccountSummary {
   /** The signed-in user, who reads the chat. */
@@ -101,7 +120,12 @@ export function readAccount(value: unknown): AccountSummary {
     defaultChoice: readChoice(source.defaultChoice),
     agentLogins: list((item): AgentLogin => {
       const login = record(item, 'agent login')
-      return { agent: readAgent(login.agent), connected: flag(login.connected) }
+      const read = {
+        agent: readAgent(login.agent),
+        connected: flag(login.connected),
+      }
+      if (login.unusableCause === undefined) return read
+      return { ...read, unusableCause: text(login.unusableCause) }
     })(source.agentLogins),
   }
 }
@@ -146,4 +170,45 @@ export function readView(value: unknown): WorkspaceView {
     fileList: oneOf({ all: true, changes: true, checks: true })(view.fileList),
     tool: oneOf({ terminal: true, preview: true, desktop: true })(view.tool),
   }
+}
+
+/**
+ * The routine whose run made the workspace, with the pull request of a
+ * pull request run, or null for a run of a schedule or of Run now.
+ */
+export type RunRoutine = Required<NonNullable<WorkspaceViewResponse['routine']>>
+
+/** The saved view, and the routine of a run workspace. */
+export interface ViewReply {
+  view: WorkspaceView
+  /** Null for a workspace that a person created. */
+  routine: RunRoutine | null
+}
+
+function readPullRequest(value: unknown): RunRoutine['pullRequest'] {
+  const pullRequest = record(value, 'pull request')
+  return { number: count(pullRequest.number), url: text(pullRequest.url) }
+}
+
+function readRunRoutine(value: unknown): RunRoutine {
+  const routine = record(value, 'routine')
+  const pullRequest = optional(nullable(readPullRequest))(routine.pullRequest)
+  return {
+    id: text(routine.id),
+    name: text(routine.name),
+    pullRequest: pullRequest ?? null,
+  }
+}
+
+export function readViewReply(value: unknown): ViewReply {
+  const routine = record(value, 'view response').routine
+  return {
+    view: readView(value),
+    routine: optional(nullable(readRunRoutine))(routine) ?? null,
+  }
+}
+
+/** The Markdown of a session, for its pending clipboard write. */
+export function readTranscript(value: unknown): SessionTranscriptResponse {
+  return { markdown: text(record(value, 'session transcript').markdown) }
 }

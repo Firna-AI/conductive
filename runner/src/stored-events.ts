@@ -170,6 +170,12 @@ export function parseEvent(value: unknown): RunnerEvent {
         partNumber: integer(update.partNumber),
         partCount: integer(update.partCount),
         baseBranch: string(update.baseBranch),
+        ...(update.unpushedCommits === undefined
+          ? {}
+          : { unpushedCommits: integer(update.unpushedCommits) }),
+        ...(update.uncommittedFileCount === undefined
+          ? {}
+          : { uncommittedFileCount: integer(update.uncommittedFileCount) }),
         ...(typeof update.displayBaseBranch === 'string'
           ? { displayBaseBranch: update.displayBaseBranch }
           : {}),
@@ -222,6 +228,9 @@ export function parseEvent(value: unknown): RunnerEvent {
       ...context,
       state: oneOf(input.state, ['finished', 'stopped']),
       durationMs: integer(input.durationMs),
+      ...(input.endReason === 'background_work_limit'
+        ? { endReason: input.endReason }
+        : {}),
       files: array(input.files, changed),
       ...(input.filesUnavailable === true ? { filesUnavailable: true } : {}),
       omittedFileCount: integer(input.omittedFileCount),

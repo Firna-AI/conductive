@@ -1,16 +1,30 @@
-import {
-  MACHINE_PATHS,
-  type AgentCreateWorkspaceRequest,
-} from '../../src/shared/agent-tools'
+import { MACHINE_PATHS } from '../../src/shared/agent-tools'
+import type { AgentCreateWorkspaceRequest } from '../../src/shared/agent-workspaces'
 import { TOOL_TURN_HEADER } from '../../tools/context'
 import { createWorkspaceInput, ToolInputError } from '../../tools/input'
 import { createdWorkspace } from '../../tools/responses'
 import { errorResponse, HttpError, privateResponse } from '../http'
 import { readJsonObject } from '../http/json-body'
+import {
+  workspaceToolMethods,
+  readWorkspaceFromTool,
+  writeWorkspaceFromTool,
+} from './workspace-routes'
+import { sectionToolMethods, writeSectionFromTool } from './section-routes'
+import {
+  previewToolMethods,
+  readPreviewsFromTool,
+  writePreviewFromTool,
+} from './preview-routes'
 import { createFromTool } from './create'
 import { isAgentToolPath, listFromTool } from './lists'
 import type { AgentToolServices } from './services'
 import { callingWorkspace } from './store'
+import {
+  readSessionsFromTool,
+  sessionToolMethods,
+  writeSessionsFromTool,
+} from './session-routes'
 
 export interface AgentToolsEnvironment {
   DB: D1Database
@@ -30,7 +44,11 @@ export function createAgentToolsHandler(
         throw new HttpError(404, 'not_found', 'The page is not available.')
       }
       const methods =
-        url.pathname === MACHINE_PATHS.workspaces ? ['GET', 'POST'] : ['GET']
+        sectionToolMethods(url.pathname) ??
+        previewToolMethods(url.pathname) ??
+        workspaceToolMethods(url.pathname) ??
+        sessionToolMethods(url.pathname) ??
+        (url.pathname === MACHINE_PATHS.workspaces ? ['GET', 'POST'] : ['GET'])
       const allow = methods.join(', ')
       if (!methods.includes(request.method) || request.headers.has('Upgrade')) {
         return privateResponse(
@@ -38,7 +56,7 @@ export function createAgentToolsHandler(
             {
               error: {
                 code: 'method_not_allowed',
-                message: methods.length === 1 ? 'Use GET.' : 'Use GET or POST.',
+                message: `Use ${methods.join(' or ')}.`,
               },
             },
             { status: 405, headers: { Allow: allow } },
@@ -56,18 +74,69 @@ export function createAgentToolsHandler(
         )
       }
       if (request.method === 'GET') {
+        const previews = await readPreviewsFromTool(
+          url,
+          env.DB,
+          caller,
+          services,
+          env.APP_ORIGIN,
+        )
+        if (previews !== null) return privateResponse(Response.json(previews))
+        const workspace = await readWorkspaceFromTool(
+          url,
+          env.DB,
+          caller,
+          env.APP_ORIGIN,
+        )
+        if (workspace) return privateResponse(Response.json(workspace))
+        const sessions = await readSessionsFromTool(
+          url,
+          env.DB,
+          caller,
+          env.APP_ORIGIN,
+          services,
+        )
+        if (sessions !== null) return privateResponse(Response.json(sessions))
         return privateResponse(
           Response.json(
-            await listFromTool(
-              url.pathname,
-              env.DB,
-              caller,
-              services,
-              env.APP_ORIGIN,
-            ),
+            await listFromTool(url, env.DB, caller, services, env.APP_ORIGIN),
           ),
         )
       }
+      const section = await writeSectionFromTool(
+        request,
+        url,
+        env.DB,
+        caller,
+        services,
+      )
+      if (section) return privateResponse(section)
+      const preview = await writePreviewFromTool(
+        request,
+        url,
+        env.DB,
+        caller,
+        services,
+        env.APP_ORIGIN,
+      )
+      if (preview) return privateResponse(preview)
+      const workspace = await writeWorkspaceFromTool(
+        request,
+        url,
+        env.DB,
+        caller,
+        services,
+        env.APP_ORIGIN,
+      )
+      if (workspace) return privateResponse(workspace)
+      const written = await writeSessionsFromTool(
+        request,
+        url,
+        env.DB,
+        caller,
+        services,
+      )
+      if (written) return privateResponse(written)
       let input: AgentCreateWorkspaceRequest
       try {
         input = createWorkspaceInput(await readJsonObject(request))
@@ -88,6 +157,7 @@ export function createAgentToolsHandler(
         request.headers.get(TOOL_TURN_HEADER),
         input,
         services,
+        env.APP_ORIGIN,
       )
       return privateResponse(
         Response.json(createdWorkspace(result), { status: 201 }),

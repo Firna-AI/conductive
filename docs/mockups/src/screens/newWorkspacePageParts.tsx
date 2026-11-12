@@ -1,11 +1,9 @@
 import type { ReactNode } from 'react'
-import { ChevronDown, FolderGit2, Sparkles } from 'lucide-react'
-import { ActionButton } from '../components/common/actions'
 import { acmeRail, type RailState } from '../components/layout/OrgRail'
 import {
-  ChooseRepositoriesButton,
-  chooseRepositoriesFirst,
-} from '../components/new-workspace/notices'
+  type FormRepositories,
+  formWait,
+} from '../components/new-workspace/waitingRepository'
 import {
   newOrgSections,
   suspendedSections,
@@ -17,18 +15,26 @@ import { firstGoodBuild, lastBuild } from '../fixtures/computer'
 import { savedCartsMessage } from '../fixtures/newWorkspaceConversations'
 import { memberViewer, people, viewerMembership } from '../fixtures/members'
 import { type Org, orgList, orgs, suspendedOrg } from '../fixtures/orgs'
-import { newOrg, newOrgDraft, repositories } from '../fixtures/repositories'
-import { savedCarts } from '../fixtures/workspaces'
+import {
+  addedRepositoryDraft,
+  newOrg,
+  newOrgDraft,
+} from '../fixtures/repositories'
+import type { ShortcutChanges } from '../fixtures/shortcutChanges'
 import { paths } from '../paths'
 import type { NewWorkspaceState } from './NewWorkspaceScreen'
 import { newWorkspaceChoice } from './newWorkspaceParts'
-import styles from './NewWorkspaceScreen.module.css'
+import {
+  acmeFormRepositories,
+  namedRepository,
+} from './newWorkspaceRepositories'
 
-/** The org of the New workspace page, and the draft of its first message. */
-export type PageOrg = {
+/**
+ * The org of the New workspace page, its chosen repositories with the one
+ * of the form, and the draft of its first message.
+ */
+export type PageOrg = FormRepositories & {
   org: Org
-  /** The repository of the new workspace. */
-  repository: string
   draft: string
   choice: AgentChoice
   /** When the build that new workspaces start from ended, if there is one. */
@@ -37,31 +43,44 @@ export type PageOrg = {
   list: string
 }
 
-/** Acme, whose new workspaces start from the build of 8 hours ago. */
-const acmePage: PageOrg = {
-  org: orgs.acme,
-  repository: repositories[savedCarts.repository].name,
-  draft: savedCartsMessage,
-  choice: newWorkspaceChoice,
-  built: lastBuild.when,
-  list: paths.shell,
+/**
+ * Acme, whose new workspaces start from the build of 8 hours ago. A kept
+ * draft in a waiting repository holds a task for that repository.
+ */
+function acmePage(state: NewWorkspaceState): PageOrg {
+  const form = acmeFormRepositories(state.repositories)
+  return {
+    ...form,
+    org: orgs.acme,
+    draft: formWait(form) ? addedRepositoryDraft : savedCartsMessage,
+    choice: newWorkspaceChoice,
+    built: lastBuild.when,
+    list: paths.shell,
+  }
 }
+
+/** The repositories that Firna chose, which its first build clones. */
+const firnaReady = newOrg.repositories
+  .filter((repository) => repository.used)
+  .map((repository) => namedRepository(repository.name))
 
 /**
  * The org of the page: Acme in use or suspended, or Firna, the new org of
  * the sign-up. Firna has a build to start from only after its first build
- * succeeded.
+ * succeeded, and its repositories never wait.
  */
 export function pageOrg(state: NewWorkspaceState): PageOrg {
   switch (state.org) {
     case 'active':
-      return acmePage
+      return acmePage(state)
     case 'suspended':
-      return { ...acmePage, list: paths.suspendedOrg }
+      return { ...acmePage(state), list: paths.suspendedOrg }
     case 'new':
       return {
         org: orgs.firna,
-        repository: newOrg.repositories[0].name,
+        ready: firnaReady,
+        waiting: [],
+        repository: namedRepository(newOrg.repositories[0].name),
         draft: newOrgDraft,
         choice: defaultChoice,
         built:
@@ -69,52 +88,6 @@ export function pageOrg(state: NewWorkspaceState): PageOrg {
         list: paths.newOrg,
       }
   }
-}
-
-/**
- * The start of an empty chat, with the repository of the new workspace.
- * The note names the build that the workspace starts from. Before the
- * first good build there is none, and the notice over the composer says
- * why.
- */
-export function Start(props: {
-  page: PageOrg
-  chosen: boolean
-  admin: boolean
-}) {
-  return (
-    <div className={styles.start}>
-      <Sparkles aria-hidden className={styles.icon} size={26} />
-      <h2 className={styles.title}>Start a workspace</h2>
-      <p className={styles.body}>
-        {props.chosen
-          ? 'Your first message creates it, on a new branch of the repository.'
-          : props.admin
-            ? `${chooseRepositoriesFirst(props.page.org.name)}.`
-            : `An admin of ${props.page.org.name} chooses its repositories first.`}
-      </p>
-      {props.chosen ? (
-        <ActionButton
-          accessibilityLabel={`Repository: ${props.page.repository}`}
-          icon={FolderGit2}
-          menu
-          trailing={
-            <ChevronDown aria-hidden className={styles.chevron} size={13} />
-          }
-        >
-          {props.page.repository}
-        </ActionButton>
-      ) : props.admin ? (
-        <ChooseRepositoriesButton />
-      ) : null}
-      {props.chosen && props.page.built ? (
-        <p className={styles.note}>
-          Starts from the cloud computer of {props.page.org.name}, built{' '}
-          {props.page.built}.
-        </p>
-      ) : null}
-    </div>
-  )
 }
 
 /** The rail of the page, with the person signed in. */
@@ -128,12 +101,25 @@ export function railOf(state: NewWorkspaceState): RailState {
 }
 
 /**
+ * Whether the newest build of Acme failed, which the page draws while a
+ * repository waits. The Settings link then shows a dot, as after every
+ * failed build.
+ */
+function acmeBuildFailed(state: NewWorkspaceState): boolean {
+  const { waiting } = acmeFormRepositories(state.repositories)
+  return state.waitingBuild === 'failed' && waiting.length > 0
+}
+
+/**
  * The sidebar of the org, with New workspace selected. `needsInput` is a
  * workspace whose agent waits for the user, which only the Mac app draws.
+ * `shortcuts` holds the person's changes to the shortcuts, so the Search
+ * row shows the person's key of the palette.
  */
 export function sidebarOf(
   state: NewWorkspaceState,
   needsInput?: string,
+  shortcuts?: ShortcutChanges,
 ): ReactNode {
   const viewer = viewerMembership(state.viewer)
   switch (state.org) {
@@ -143,6 +129,7 @@ export function sidebarOf(
         <Sidebar
           org={orgs.acme}
           sections={suspendedSections()}
+          shortcuts={shortcuts}
           suspended
           viewer={viewer}
         />
@@ -155,6 +142,7 @@ export function sidebarOf(
           org={orgs.firna}
           sections={newOrgSections()}
           settingsAlert={state.firstBuild === 'failed'}
+          shortcuts={shortcuts}
           viewer={viewer}
         />
       )
@@ -164,6 +152,8 @@ export function sidebarOf(
           current="new-workspace"
           org={orgs.acme}
           sections={workspaceSections(undefined, needsInput)}
+          settingsAlert={acmeBuildFailed(state)}
+          shortcuts={shortcuts}
           viewer={viewer}
         />
       )

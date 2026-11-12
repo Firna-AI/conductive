@@ -23,11 +23,14 @@ peer range of `@firna/ui`.
 | `npm run mockups:typecheck`  | Type-check the catalogue sources                                |
 | `npm run mockups:check`      | Run the type check, then the strict build                       |
 | `npm run marketing:pictures` | Capture the pictures of the marketing site again                |
+| `npm run marketing:preview` | Capture only the public share card                              |
 | `npm run lint`               | Run ESLint                                                      |
 | `npm run format:check`       | Check the formatting with Prettier                              |
 
 A change to a screen that a picture of the marketing site shows needs a
 new capture with `npm run marketing:pictures`.
+That command also rebuilds the [share card](../../src/marketing/link-previews.md)
+from the current workspace screen and the approved blue design.
 [Pictures](../../src/marketing/README.md#pictures) gives the steps.
 
 Git ignores the build output, `mokly-static/` and
@@ -38,36 +41,66 @@ The catalogue shows the desktop view beside the phone, in a frame narrower
 than a laptop screen. The desktop layout narrows with its app frame, which
 fills the window: below 1280 px the sidebar and the right column get
 narrower, and below 900 px the sidebar hides. The org rail stays, and the current org opens its list as its
-own page. A narrow right column hides the detail of the pull request bar and
-the label of its GitHub link. Use the expand control of the frame to see the
-full desktop layout.
+own page. The number of a pull request in the bar opens it on GitHub, with
+an arrow. A narrow right column hides the detail of the pull request bar.
+When the bar shows an action, a column narrower than 520 px does the same.
+Use the expand control of the frame to see the full desktop layout.
 
 ## The design
 
 [The design](design.md) gives the style of the app, the layouts of the
 desktop and the phone, the design tokens, and the parts that the screens
-share. Its linked pages give the parts of [the chat](design-chat.md) and
-of [the operator section](design-operator.md).
+share. Its linked pages give the parts of
+[the workspace](design-workspace.md), of [the chat](design-chat.md),
+of [the operator section](design-operator.md), and of
+[the pull request bar](design-bar.md). They also give [the marks](design-marks.md).
 
 ## The catalogue
 
 [The catalogue](catalogue.md) lists each path of the catalogue and what it
 shows. It also gives the rules of the folder pages and the entries that
-moved. It gives the child pages of `marketing/docs`, `app/account`,
-`app/banner`, `app/chat`, `app/workspace-menu`, `app/workspace-links`, and `app/tools`,
-and the New workspace dialog. Its linked page,
+moved. It gives the child pages of `marketing/docs`, `app/account`, and
+`app/workspace-menu`, the New workspace dialog, and the repositories that
+wait for a build. Its linked page,
 [the waitlist, suspensions, and the operator](catalogue-operator.md), gives
 the pages of the waitlist, the child pages of `app/orgs/suspended`, and the
-operator section.
-The [workspace links, file mentions, and tools](catalogue-workspace-tools.md)
-page gives their child pages and flows.
+operator section. Its linked page
+[the pull request bar](catalogue-bar.md) gives `app/banner` and its child
+pages. The [chat and routines](catalogue-chat-and-routines.md) page gives
+the child pages and flows of `app/chat` and `app/routines`. The
+[workspace links, file mentions, and tools](catalogue-workspace-tools.md)
+page gives the child pages and flows of `app/workspace-links`,
+`app/file-mentions`, and `app/tools`.
+The [command palette and feedback](catalogue-palette.md) page gives the child
+pages of `app/command-palette` and `app/feedback`, the Feedback dialog,
+and the flow that sends feedback.
+The [attachments and files](catalogue-attachments-and-files.md) page
+gives the child pages of `app/attachments` and `app/files`, and the flow
+`user-flows/drop-a-file`.
 
-`app/attachments` shows uploads, failed uploads with Try again, files over
-25 MB, sent files, and the files of a queued first message. Its shared
-words live in [attachmentCopy.ts](src/components/chat/attachmentCopy.ts).
-`app/new-workspace/files` shows the same chips on the first message of a new
-workspace, before the workspace exists, and `app/new-workspace/dialog/files`
+`app/attachments` shows each attached file as a chip at its place in the
+text of the message box. `app/attachments/drop` shows a drop of files into
+the text, and a dropped folder that the box does not attach.
+`app/attachments/open` shows the file tab that a press on a sent chip
+opens, with the picture of the screenshot. The other child pages show a
+failed upload, a file over 25 MB, the sent message, and the files of a
+queued first message. `app/files/image` shows the picture of an image file
+in its tab, and an image that the browser cannot draw. The flow
+`user-flows/drop-a-file` goes from the drop of a screenshot, through Send,
+to its file tab.
+
+`app/new-workspace/files` shows the same chips in the first message of a
+new workspace, before the workspace exists. `app/new-workspace/dialog/files`
 shows them in the New workspace dialog.
+
+`DraftFileChip` in `src/components/chat/` draws the chip of an attached
+file in the text of a message box, in each state of its upload.
+`SentFileChip` beside it draws the chip of an attached file at its place in
+a sent message. `ImageView` in `src/components/files/` draws the picture of
+an image file in its tab. These three parts take no fixtures, so the app
+can draw them too. [attachmentCopy.ts](src/components/chat/attachmentCopy.ts)
+holds the words of the chips, and of the notices for a file over 25 MB and
+a dropped folder. [The chat](design-chat.md) gives the design of each part.
 
 ## Folder layout
 
@@ -76,12 +109,12 @@ shows them in the New workspace dialog.
 | `src/entries/`            | The Mokly root: entry modules, folder records, the flows, and Markdown documents, which Mokly shows as pages of notes |
 | `src/screens/`            | One React component for each app screen, for both viewports         |
 | `src/components/`         | Layout and parts that the screens share, where `@firna/ui` has none |
-| `src/fixtures/`           | The sample orgs, members, workspaces, agents, chats, and files      |
+| `src/fixtures/`           | The sample orgs, members, workspaces, agents, chats, and files, and the drawn screenshots of the image files |
 | `src/design/`             | The design tokens: colours, type, density, sizes, radii, and fonts  |
 | `src/render.tsx`          | The renderer: the Firna theme and the tokens of the colour scheme   |
 | `src/theme.ts`            | The Firna theme of each scheme, and the tokens as CSS variables     |
 | `src/paths.ts`            | The catalogue paths that screens link to                            |
-| `src/brand.ts`            | The product name "Conductive", its domains, and the Mac DMG names   |
+| `src/brand.ts`            | The name "Conductive", its domains, its repository, and DMG names   |
 | `src/fonts/`              | Inter, which the Firna theme names first, with its licence          |
 | `../../mokly.config.json` | The Mokly configuration: the root, the renderer, and the schemes    |
 
@@ -92,7 +125,12 @@ shows them in the New workspace dialog.
 - An entry module in `src/entries/` exports one `defineScreen` with a named
   export. Its props and saved states (`variants`) choose the state. The
   workspace screen declares its states in `src/screens/workspaceState.ts`, so
-  `mockups:serve` offers a control for each part of the state.
+  `mockups:serve` offers a control for each part of the state. The routine
+  screen declares its states in `src/screens/routineState.ts` in the same
+  way. The tab and composer states of the workspace screen live in
+  `src/screens/chatStates.ts`. `tabStates` covers the session, file, and
+  image tabs of the centre column. `composerStates` covers the composer,
+  with its links, mentions, attached files, and drops.
 - A flow (`defineUseCase`) lists the paths of existing screens. Each screen
   that a flow uses names the flow in `useCasePaths`.
 - Screens link to each other with `ScreenLink` from
@@ -109,8 +147,8 @@ shows them in the New workspace dialog.
 
 [Orgs and members](orgs-and-logins.md#orgs-and-members) gives what the
 screens show of orgs and members: the roles, the logins of the sessions,
-the owners of the workspaces, the menu of a workspace row, Archive, and
-Delete org.
+the owners of the workspaces, the menu of a workspace row, Archive and
+Restore, and Delete org.
 
 No screen shows the value of an env var. Each env var of an org has a
 Secret mark: an admin switches it in the row, and a new variable starts
@@ -136,8 +174,8 @@ connected.
 ## The waitlist
 
 [The waitlist](orgs-and-logins.md#the-waitlist) gives the screen of a
-person without app access, the invite codes and invite links, and the
-invite code on the Account page.
+person without app access, the invite codes and invite links, the invite
+code on the Account page, and open sign-up.
 
 ## The Mac app
 
@@ -147,7 +185,8 @@ waitlist, the commands that an agent runs on the Mac, and This Mac.
 ## The marketing site
 
 [The marketing site](marketing-site.md) gives the home page and its
-pictures, the header and the footer, and [the docs pages](marketing-site.md#the-docs).
+pictures, the header and the footer, [the docs pages](marketing-site.md#the-docs),
+and [the pricing page](marketing-site.md#the-pricing-page).
 It also gives the Terms, Privacy, and not-found pages, the comparison page,
 and the page before GitHub. The comparison page is the chosen design at
 `marketing/from-conductor/one-table`.
@@ -156,7 +195,9 @@ states its requirements. It draws the real rows: its rows, statuses, dates,
 and words come from `src/marketing/from-conductor/`, the modules that the
 site also reads, as
 [the marketing site README](../../src/marketing/README.md#the-comparison-page)
-says. The pictures are captures of real screens, such as the workspace
+says. The pricing page reads its plans, its prices, and its words from
+`src/marketing/pricing.ts` in the same way. The pictures are captures of
+real screens, such as the workspace
 screen with its chat and composer. A change to a screen or a shared part
 that a picture shows needs a new capture, with the
 [capture steps](../../src/marketing/README.md#pictures).

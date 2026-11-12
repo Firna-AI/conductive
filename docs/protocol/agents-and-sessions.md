@@ -2,8 +2,8 @@
 
 This doc holds the requirements and the decisions in force for the agents
 and the sessions of a workspace. It covers the agents and their logins,
-the names of the agents in the product, the sessions, and the names of
-workspaces and sessions. It belongs to
+the names of the agents in the product, the sessions and their links, and
+the names of workspaces and sessions. It belongs to
 [Chat and events](chat-and-events.md). The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
@@ -32,6 +32,11 @@ says.
   - with the first message of a new workspace
   - with a message that starts a new session, as
     [Messages](messages-and-attachments.md#messages) says
+  - through a call of the agent tools in a turn that the member sent, as
+    [The sender](session-calls.md#the-sender) says
+- A routine run starts the first session of its workspace in the name of
+  the routine owner, as
+  [A run acts as its owner](routine-runs.md#a-run-acts-as-its-owner) says.
 - The session record names its starter in `startedBy`. A session without a
   known starter has no login that can be used.
 - While the starter shares the login, the messages of the other members
@@ -44,6 +49,16 @@ says.
 - [Access and security](isolation.md#agent-logins-in-a-sandbox)
   states how a login reaches the sandbox, its share setting, and its risk.
 - A session keeps its memory across a stop and a resume of the sandbox.
+- A Codex session keeps its conversation when its starter changes between
+  an OpenAI API key and a ChatGPT sign-in.
+- When Codex refuses to resume because the saved model provider differs
+  from the current provider or is no longer configured, the session
+  continues in a fork.
+- The fork keeps the earlier messages. The session keeps the same chat.
+- The session saves the fork's conversation ID. Later turns use that ID,
+  also after a restart of the runner.
+- A refused resume for another cause, or a refused fork, fails the turn
+  with that cause.
 
 ## Names in the product
 
@@ -65,6 +80,8 @@ says.
 - A new session has no title, and its tab shows "Untitled".
   [Workspace and session names](#workspace-and-session-names) says when
   the app gives it a title.
+- A `create_session` call of the agent tools can give a new session a
+  title, as [Start a session](session-calls.md#start-a-session) says.
 - When the workspace takes a title as its name, as
   [Messages](messages-and-attachments.md#messages) says, the first session takes the
   title too (decision 181).
@@ -72,7 +89,12 @@ says.
   the workspace accepts in that session (decision 181). The title is the
   first line with text of that message.
 - A message with no text, such as a message with only a screenshot, gives
-  no title.
+  no title. A message whose text holds only the mentions of its own
+  attached files counts as a message with no text.
+- In a title from a message, each mention of one of its attached files
+  becomes the name of the file (decision 262 D). Reason: a path makes a
+  poor title. A title with the copy path of each file was rejected for
+  that reason.
 - In a title from a message, each run of spaces becomes one space. The app
   removes one final full stop, but it keeps an ellipsis.
 - A title from a message holds at most 60 characters. The limit counts
@@ -140,9 +162,13 @@ says.
   menu. This holds on every system.
 - On a phone, a long press that ends without a move opens the tab menu as
   a sheet.
-- The tab menu of a session tab holds Rename session, then Move left and
-  Move right. The tab menu of a file or diff tab holds Move left and Move
-  right.
+- The tab menu of a session tab holds three groups, with a line between
+  them: Rename session, then Copy concise transcript and Copy full
+  transcript, then Move left and Move right. The tab menu of a file or diff
+  tab holds Move left and Move right.
+- Reason: the tab menu groups its items by kind (decision 188).
+- [Session transcripts](session-transcripts.md) states what each copy item
+  copies (decisions 213 and 215).
 - Move left and Move right move the tab one place in the row. On the first
   tab, Move left is off. On the last tab, Move right is off.
 - After a move from the tab menu, a screen reader user hears the name of
@@ -150,14 +176,54 @@ says.
   2 of 4". The focus then goes back to the tab.
 - Rename session opens a field for the title in that tab. The shown tab
   does not change.
-- The tab menu is the one way to rename a session. A Rename button on the
-  shown session tab was rejected, because the tab menu already holds
-  Rename session.
+- In the app, the tab menu is the one way to rename a session. A Rename
+  button on the shown session tab was rejected, because the tab menu
+  already holds Rename session. An agent can also rename a session, as
+  [Rename a session](session-management.md#rename-a-session) says.
 - Keys that move a tab were rejected, because the user chose the menu. Alt
   with Left or Right also goes Back and Forward in browsers on Windows and
   Linux.
 - A read-only workspace, such as an archived workspace or a workspace of a
-  suspended org, moves no tab and opens no tab menu.
+  suspended org, moves no tab.
+- The tab menu of a read-only workspace leaves out each item that changes
+  the workspace, and keeps each item that changes nothing (decision 214).
+  So the tab menu of a session tab there holds only Copy concise transcript
+  and Copy full transcript. A file or diff tab there opens no tab menu.
+- Reason: a read-only workspace accepts no change, but a member can still
+  copy there, as
+  [Read-only workspaces](session-transcripts.md#read-only-workspaces)
+  says. The rule also covers each item that the menu gets later.
+- The tab menu opens there in the same ways as in other workspaces. A long
+  press on a phone opens it, but lifts no tab.
+- An item that the place of a tab rules out, such as Move left on the
+  first tab, still shows, but off. An item that a read-only workspace
+  leaves out does not show.
+- The usual tab menu with Rename session, Move left, and Move right off was
+  rejected for a read-only workspace, because these rows never turn on
+  there.
+
+### Session links
+
+- Each session has a link: the address of the session at the app origin,
+  such as
+  `https://app.conductive.build/orgs/<org ID>/workspaces/<workspace ID>/sessions/<session ID>`.
+- The link names the org, the workspace, and the session by their IDs, as
+  the link of a workspace does. Reason: the file tabs already have
+  addresses under their workspace.
+- A session link opens its workspace and shows that session. The address
+  then becomes the link of the workspace. Reason: the session tabs keep
+  their behaviour, and the address does not follow the shown tab.
+- A link to a closed or an unknown session opens the page of its
+  workspace, as a workspace link does. When that workspace already shows,
+  its shown tab stays. The link reopens no session.
+- Reason: the members share the sessions of a workspace, so a reopen would
+  show the tab again to every member.
+- A session link in chat text shows as a session chip, as
+  [Session chips](workspace-links.md#session-chips) says.
+- The agent tools give the link of each session that they name, as
+  [The calls](session-calls.md#the-calls) says.
+- For now, Copy link copies only the link of the workspace. No item copies
+  a session link.
 
 ## Workspace and session names
 
@@ -186,3 +252,9 @@ says.
   the branch was rejected. A member can type the same text and then lose
   that name.
 - Reason: an archived workspace shows its chat read-only (decision 16).
+
+### The title of a new workspace
+
+- [Messages](messages-and-attachments.md#messages) holds how a small model
+  of Workers AI names a new workspace from its first message
+  (decision 184).

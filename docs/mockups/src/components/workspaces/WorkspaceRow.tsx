@@ -1,4 +1,5 @@
-import { Archive } from 'lucide-react'
+import type { ReactNode } from 'react'
+import { Archive, ArchiveRestore } from 'lucide-react'
 import { paths } from '../../paths'
 import { ScreenLink } from '../common/ScreenLink'
 import { IconButton } from '../common/actions'
@@ -6,8 +7,8 @@ import a11y from '../common/a11y.module.css'
 import { classes } from '../common/classes'
 import { RowPointMenu, type RowControls } from './RowMenu'
 import type { WorkspaceRow } from './sections'
-import { activityPresentation } from './status'
-import { StatusGlyph } from './StatusGlyph'
+import { activityPresentation, listMarkLabel } from './status'
+import { WorkspaceMark } from './WorkspaceMark'
 import rowMenu from './RowMenu.module.css'
 import styles from './WorkspaceRow.module.css'
 
@@ -36,7 +37,7 @@ function RenameRow(props: {
         row.selected && styles.selected,
       )}
     >
-      <StatusGlyph status={row.status} />
+      <WorkspaceMark github={row.github} status={row.status} />
       <span
         aria-label="Workspace name"
         className={classes(rowMenu.field, page && rowMenu.fieldPage)}
@@ -53,17 +54,45 @@ function RenameRow(props: {
 }
 
 /**
- * One workspace on one line: its state as a small square on the left, its
- * name, and the time since its last activity. Archive covers the time on
- * hover only. A drag lifts the row and leaves a faint copy behind.
- * `controls` draws the menu that a right click opened, the field of
- * Rename, or a hover, because a view runs no script.
+ * The one action of a row: Archive for a workspace in a section, which
+ * archives it at once, or Restore for an archived one, which puts it back
+ * in its section.
+ */
+function rowAction(
+  row: WorkspaceRow,
+  archivable: boolean,
+  restorable: boolean,
+): ReactNode {
+  if (row.status === 'archived') {
+    return restorable ? (
+      <ScreenLink asChild to={paths.restored}>
+        <IconButton icon={ArchiveRestore} label="Restore workspace" quiet />
+      </ScreenLink>
+    ) : null
+  }
+  return archivable ? (
+    <ScreenLink asChild to={paths.justArchived}>
+      <IconButton icon={Archive} label="Archive workspace" quiet />
+    </ScreenLink>
+  ) : null
+}
+
+/**
+ * One workspace on one line: its list mark on the left, its name, and the
+ * time since its last activity. The mark shows the GitHub state of its
+ * pull request in colour, and whether its agent works. The action of the
+ * row, Archive or Restore, covers the time on hover only. A drag lifts the
+ * row and leaves a faint copy behind. `controls` draws the menu that a
+ * right click opened, the field of Rename, or a hover, because a view runs
+ * no script.
  */
 export function WorkspaceRowView(props: {
   row: WorkspaceRow
   variant: Variant
   drag?: RowDrag
   archivable?: boolean
+  /** An archived row offers Restore. */
+  restorable?: boolean
   controls?: RowControls
 }) {
   const { row } = props
@@ -83,14 +112,20 @@ export function WorkspaceRowView(props: {
   )
   const content = (
     <>
-      <StatusGlyph status={row.status} />
+      <WorkspaceMark github={row.github} status={row.status} />
       <span className={styles.name}>{row.workspace.name}</span>
       <span className={styles.time}>{row.workspace.updated}</span>
-      <span className={a11y.hidden}>, {status.label}</span>
+      <span className={a11y.hidden}>
+        , {listMarkLabel(row.github, row.status)}
+      </span>
     </>
   )
   if (props.drag) return <div className={className}>{content}</div>
-  const archivable = props.archivable === true && row.status !== 'archived'
+  const action = rowAction(
+    row,
+    props.archivable === true,
+    props.restorable === true,
+  )
   // The pointer of a right click lies over the row of its menu. A sheet
   // keeps its row marked, without a hover.
   const hovered = controls?.open?.at === 'pointer' || controls?.hovered
@@ -99,7 +134,7 @@ export function WorkspaceRowView(props: {
     <span
       className={classes(
         styles.container,
-        archivable && styles.archivable,
+        action !== null && styles.archivable,
         hovered && styles.hovered,
         held && styles.held,
       )}
@@ -115,13 +150,9 @@ export function WorkspaceRowView(props: {
       ) : (
         <div className={className}>{content}</div>
       )}
-      {archivable ? (
-        <span className={styles.archive}>
-          <ScreenLink asChild to={paths.archive}>
-            <IconButton icon={Archive} label="Archive workspace" quiet />
-          </ScreenLink>
-        </span>
-      ) : null}
+      {action === null ? null : (
+        <span className={styles.archive}>{action}</span>
+      )}
       {controls ? <RowPointMenu controls={controls} /> : null}
     </span>
   )

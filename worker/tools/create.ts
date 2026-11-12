@@ -1,7 +1,11 @@
-import type { AgentCreateWorkspaceRequest } from '../../src/shared/agent-tools'
+import type { AgentCreateWorkspaceRequest } from '../../src/shared/agent-workspaces'
 import { sessionTitleFrom } from '../../src/shared/session-title'
 import { choice } from '../../tools/input'
+import { hash } from '../security/crypto'
 import { HttpError } from '../http'
+import { sessionLink } from '../../src/shared/session-link'
+import { requireCallingToolTurn } from './calling-turn'
+import { agentToolMessage } from './message-text'
 import type { AgentToolServices } from './services'
 import {
   type CallingWorkspace,
@@ -17,22 +21,30 @@ export async function createFromTool(
   turnId: string | null,
   input: AgentCreateWorkspaceRequest,
   services: AgentToolServices,
+  origin: string,
 ) {
-  const turn = turnId
-    ? await services.callingTurn(caller.workspaceId, turnId)
-    : null
-  if (
-    !turn ||
-    turn.workspaceId !== caller.workspaceId ||
-    turn.turnId !== turnId
-  ) {
-    throw new HttpError(
-      403,
-      'calling_turn_required',
-      'Start this request from an active agent turn.',
-    )
-  }
-  const sender = await memberSender(db, caller.orgId, turn.senderUserId)
+  const { turn, sender } = await requireCallingToolTurn(
+    db,
+    caller,
+    turnId,
+    services,
+  )
+  const firstMessageId = await hash(
+    JSON.stringify([
+      'create_workspace',
+      caller.workspaceId,
+      turn.sessionId,
+      sender.id,
+      input.requestId ?? crypto.randomUUID(),
+    ]),
+  )
+  const previous = await services.replayWorkspaceCreation({
+    orgId: caller.orgId,
+    senderUserId: sender.id,
+    firstMessageId,
+    createdByWorkspaceId: caller.workspaceId,
+  })
+  if (previous) return previous
   const owner = await memberSender(db, caller.orgId, caller.ownerUserId)
   if (!sender || !owner) {
     throw new HttpError(
@@ -64,7 +76,14 @@ export async function createFromTool(
     repositoryId: input.repositoryId,
     sectionId,
     choice: choice({ ...model, effort }),
-    firstMessage: input.firstMessage,
+    firstMessageId,
+    ...(input.firstSessionTitle !== undefined && {
+      firstSessionTitle: input.firstSessionTitle,
+    }),
+    firstMessage: agentToolMessage(
+      input.firstMessage,
+      sessionLink(origin, caller.orgId, caller.workspaceId, turn.sessionId),
+    ),
     ...(name !== null && { name }),
     sender,
     createdByWorkspaceId: caller.workspaceId,

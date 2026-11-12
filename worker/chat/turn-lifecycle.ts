@@ -1,3 +1,5 @@
+import type { TurnStopRequester } from '../../src/shared/session-stop'
+import { recordStopRequest } from './stop-request'
 import type { AgentChatEvent } from '../../src/shared/chat-events'
 import type { Session } from '../../src/shared/sessions'
 import { HttpError } from '../http'
@@ -90,6 +92,14 @@ export class TurnLifecycle {
         : {
             state: 'failed',
             ...(event ? { retryMessageId: event.retryMessageId } : {}),
+            error:
+              event?.type === 'turn.failed'
+                ? event.error
+                : {
+                    code: 'runner_event_refused',
+                    message:
+                      'The agent could not finish. Try again in the workspace.',
+                  },
           },
       occurredAt,
     )
@@ -104,6 +114,7 @@ export class TurnLifecycle {
     turnId: string,
     cause: string,
     randomId: () => string,
+    completion: 'after-runner' | 'immediate' = 'after-runner',
   ): Promise<void> {
     const turn = await this.transaction.turn(turnId)
     if (
@@ -114,15 +125,25 @@ export class TurnLifecycle {
       return
     turn.loginFailure ??= cause
     await this.transaction.saveTurn(turn)
-    if (turn.state === 'queued') await this.finish(turn, { state: 'failed' })
-    else await this.stop(turn.id, randomId())
+    if (turn.state === 'queued' || completion === 'immediate') {
+      const running = turn.state !== 'queued'
+      await this.finish(turn, { state: 'failed' })
+      if (running)
+        await this.transaction.saveCommand({
+          type: 'interrupt',
+          commandId: randomId(),
+          sessionId: this.session.id,
+          turnId,
+        })
+    } else await this.stop(turn.id, randomId())
   }
 
-  async stop(turnId: string, commandId: string) {
+  async stop(turnId: string, commandId: string, requester?: TurnStopRequester) {
     const turn = await this.transaction.turn(turnId)
     if (!turn || turn.sessionId !== this.session.id) {
       throw new HttpError(404, 'turn_not_found', 'The turn is not available.')
     }
+    if (requester) await recordStopRequest(this.transaction, turn, requester)
     if (
       turn.state === 'finished' ||
       turn.state === 'failed' ||
@@ -147,7 +168,11 @@ export class TurnLifecycle {
     return { turnId, state: 'stopping' as const }
   }
 
-  async close(stopRunning: boolean, commandId: string): Promise<Session> {
+  async close(
+    stopRunning: boolean,
+    commandId: string,
+    requester?: TurnStopRequester,
+  ): Promise<Session> {
     const turn = this.session.activeTurnId
       ? await this.transaction.turn(this.session.activeTurnId)
       : undefined
@@ -161,7 +186,7 @@ export class TurnLifecycle {
       }
       turn.closeAfterStop = true
       await this.transaction.saveTurn(turn)
-      await this.stop(turn.id, commandId)
+      await this.stop(turn.id, commandId, requester)
     } else if (this.session.closedAt === null) {
       this.session.closedAt = this.transaction.now
       await new TurnCompletion(this.transaction, this.session).saveSession()

@@ -1,18 +1,23 @@
 import type { GitHubRepository } from '../../src/shared/account'
 import type { Repository } from '../../src/shared/org-settings'
+import { runnerSoftware } from '../configuration'
 import type { AppDependencies, AppEnv } from '../env'
 import { HttpError } from '../http'
+import { startImageBuild } from '../lifecycle/image-builds'
+import { imageRuntime } from '../lifecycle/runtime'
 import {
   assertCanChangeSharedSettings,
   requireOrgMember,
 } from '../members/permissions'
 import { readGitHubConnection } from '../security/github-connection-store'
+import { warnWorker } from '../warnings'
 import { shellGitHubAccess } from './feature-github'
 import {
   saveShellRepository,
   shellRepositoryId,
 } from './feature-repositories-data'
 import { shellRepositories } from './shell-data'
+import { workspaceBinding } from './workspace-state'
 
 function mergeRepositories(
   orgId: string,
@@ -76,16 +81,28 @@ export async function changeShellRepository(
     }
   }
   if (!repository) throw repositoryNotFound()
-  if (
-    !(await saveShellRepository(env.DB, {
-      repository,
-      userId,
-      selected,
-      now: dependencies.now(),
-    }))
-  ) {
+  const saved = await saveShellRepository(env.DB, {
+    repository,
+    userId,
+    selected,
+    now: dependencies.now(),
+  })
+  if (!saved.saved) {
     await assertCanChangeSharedSettings(env.DB, orgId, userId)
     throw repositoryNotFound()
+  }
+  if (saved.added) {
+    try {
+      await startImageBuild(
+        imageRuntime(
+          { ...env, WORKSPACES: workspaceBinding(env) },
+          dependencies,
+        ),
+        { orgId, userId, kind: 'build', software: runnerSoftware(env) },
+      )
+    } catch {
+      warnWorker({ kind: 'repository_image_build_start_failed' })
+    }
   }
   return Response.json({
     repositories: await shellRepositoryChoices(

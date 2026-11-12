@@ -47,6 +47,7 @@ const deletedAcme: OrgSummary = {
   },
 }
 const workspace: Workspace = {
+  github: null,
   id: 'checkout',
   number: 1,
   link: new URL(routes.workspace('acme', 'checkout'), FAKE_ORIGIN).href,
@@ -61,6 +62,7 @@ const workspace: Workspace = {
   createdAt: 0,
   updatedAt: 0,
   archivedAt: null,
+  restoreUntil: null,
 }
 
 function list(props: Partial<MemberListProps>): ReactElement {

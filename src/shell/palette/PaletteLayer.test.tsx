@@ -16,13 +16,18 @@ import {
   holdAnimationFrames,
   MOUNTED_TEST_TIMEOUT,
 } from '../../test-support/mount'
+import { serverWith } from '../new-workspace/dialog-test-kit'
+import {
+  keysHeardBy,
+  OfferedCommand,
+  pressCommand,
+} from '../shortcuts/shortcut-test-kit'
 import { click, press, settle, typeText } from '../test-mount'
 import { socketsOf } from '../workspace/wiring-test-kit'
 import {
   groupLabels,
   openPaletteTab,
   palette,
-  pressPaletteKey,
   searchField,
 } from './palette-test-kit'
 
@@ -43,7 +48,7 @@ describe('the command palette', () => {
     const search = byRole('button', 'Search', byLabel('Workspaces', view))
     const hint = search.querySelector('kbd')?.textContent
     search.focus()
-    const opening = pressPaletteKey('other')
+    const opening = pressCommand('command-palette', 'other')
     const opened = {
       prevented: opening.defaultPrevented,
       focus: document.activeElement === searchField(),
@@ -55,20 +60,20 @@ describe('the command palette', () => {
     const pressInside = document.activeElement === searchField()
     typeText(searchField(), 'retry')
     click(byRole('tab', 'Workspaces'))
-    const closing = pressPaletteKey('other', searchField())
+    const closing = pressCommand('command-palette', 'other', searchField())
     const afterKey = {
       open: palette() !== null,
       prevented: closing.defaultPrevented,
       focus: document.activeElement === search,
     }
-    pressPaletteKey('other')
+    pressCommand('command-palette', 'other')
     const reopened = { tab: selectedTab(), text: searchField().value }
     press(searchField(), 'Escape')
     const afterEscape = {
       open: palette() !== null,
       focus: document.activeElement === search,
     }
-    pressPaletteKey('other')
+    pressCommand('command-palette', 'other')
     act(() => {
       document.body.dispatchEvent(
         new PointerEvent('pointerdown', { bubbles: true }),
@@ -98,20 +103,21 @@ describe('the command palette', () => {
     })
   })
 
+  // Switch to org 1 has ⌃1 on a Mac and Alt+1 on Windows and Linux. The
+  // terminal keeps both, because neither has ⌘.
   test.each([
     {
       platform: 'mac',
       outcome:
-        '⌘K opens it also from the terminal, and Ctrl+K stays with the page',
+        'the terminal keeps the keys without ⌘, a key with ⌘ runs from it and never reaches it, and Ctrl+K stays with the page',
       hint: '⌘K',
-      expected: { otherKey: false, terminal: true },
+      expected: { otherKey: false, runs: 0, palette: true, heard: ['1'] },
     },
     {
       platform: 'other',
-      outcome:
-        'Ctrl+K in the terminal goes to the terminal, and ⌘K stays with the page',
+      outcome: 'the terminal keeps every key, and ⌘K stays with the page',
       hint: 'Ctrl K',
-      expected: { otherKey: false, terminal: false },
+      expected: { otherKey: false, runs: 0, palette: false, heard: ['1', 'k'] },
     },
   ] satisfies {
     platform: Platform
@@ -121,10 +127,12 @@ describe('the command palette', () => {
   }[])('on $platform, $outcome', async ({ platform, hint, expected }) => {
     holdAnimationFrames()
     const server = new FakeApiServer()
+    let runs = 0
     const { view } = await openPaletteTab(routes.workspace(org, workspace), {
       platform,
       server,
       events: socketsOf(server).events,
+      beside: <OfferedCommand command="org-1" run={() => (runs += 1)} />,
     })
     await settle()
     const search = byRole('button', 'Search', byLabel('Workspaces', view))
@@ -134,21 +142,29 @@ describe('the command palette', () => {
       platform === 'mac' ? { ctrl: true } : { meta: true },
     )
     const otherKey = palette() !== null
-    pressPaletteKey(platform, byLabel('Terminal input', view))
+    const terminal = byLabel('Terminal input', view)
+    const heard = keysHeardBy(terminal)
+    pressCommand('org-1', platform, terminal)
+    pressCommand('command-palette', platform, terminal)
     expect({
       hint: search.querySelector('kbd')?.textContent,
       otherKey,
-      terminal: palette() !== null,
+      runs,
+      palette: palette() !== null,
+      heard,
     }).toEqual({ hint, ...expected })
   })
 
   test('the key closes an open menu and opens the palette, and does nothing while a dialog is open', async () => {
     holdAnimationFrames()
-    const { view, navigation } = await openPaletteTab(routes.org(org))
+    // New workspace opens as a dialog for this account.
+    const { view, navigation } = await openPaletteTab(routes.org(org), {
+      server: serverWith('dialog'),
+    })
     const sidebar = byLabel('Workspaces', view)
     click(byRole('button', 'More for General', sidebar))
     const menuBefore = queryByRole('menu', 'General') !== null
-    pressPaletteKey('other')
+    pressCommand('command-palette', 'other')
     const withMenu = {
       menu: queryByRole('menu', 'General') !== null,
       open: palette() !== null,
@@ -156,49 +172,46 @@ describe('the command palette', () => {
     press(searchField(), 'Escape')
     act(() => navigation.push(routes.workspace(org, workspace)))
     await settle()
-    const row = byLabel('Workspaces', view)
-      .querySelector(`a[href="${routes.workspace(org, workspace)}"]`)
-      ?.closest('li')
-    if (!row) throw new Error('The workspace has no list row.')
-    click(byRole('button', 'Archive workspace', row))
+    const list = byLabel('Workspaces', view)
+    click(byRole('button', 'More for General', list))
+    click(byRole('menuitem', 'New workspace', list))
     await settle()
-    const question = 'Archive with work that is not pushed?'
-    const key = pressPaletteKey('other')
+    const key = pressCommand('command-palette', 'other')
     expect({
       menuBefore,
       withMenu,
       dialog: {
         open: palette() !== null,
-        question: queryByRole('dialog', question) !== null,
+        dialog: queryByRole('dialog', 'New workspace') !== null,
         prevented: key.defaultPrevented,
       },
     }).toEqual({
       menuBefore: true,
       withMenu: { menu: false, open: true },
-      dialog: { open: false, question: true, prevented: false },
+      dialog: { open: false, dialog: true, prevented: false },
     })
   })
 
-  test('in the Mac app, the Window group hides the sidebar, then offers to show it again', async () => {
+  test('in the Mac app, the Window group hides the sidebar, then offers to show it again, and Help follows it', async () => {
     const { view } = await openPaletteTab(routes.org(org), {
       mac: true,
       platform: 'mac',
     })
     const sidebar = () => queryByLabel('Workspaces', view)
-    pressPaletteKey('mac', document.body)
+    pressCommand('command-palette', 'mac', document.body)
     click(byRole('tab', 'Actions'))
     const before = { groups: groupLabels(), shown: sidebar() !== null }
     click(byRole('option', 'Hide the sidebar'))
     await settle()
     const hidden = { open: palette() !== null, shown: sidebar() !== null }
-    pressPaletteKey('mac', document.body)
+    pressCommand('command-palette', 'mac', document.body)
     click(byRole('tab', 'Actions'))
     expect({
       before,
       hidden,
       offered: queryByRole('option', 'Show the sidebar') !== null,
     }).toEqual({
-      before: { groups: ['Acme', 'Orgs', 'Window'], shown: true },
+      before: { groups: ['Acme', 'Orgs', 'Window', 'Help'], shown: true },
       hidden: { open: false, shown: false },
       offered: true,
     })

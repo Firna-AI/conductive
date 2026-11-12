@@ -7,6 +7,10 @@ import { createTerminalHandler } from '../terminal/handler'
 import { createPreviewHandler } from '../previews/handler'
 import { workspaceRepositoryLocations } from '../lifecycle/repository-location-data'
 import { repositoryLocation } from '../lifecycle/repository-locations'
+import { toolSessionWorkspace } from '../tools/session-access'
+import { toolUser } from '../tools/composition-data'
+import type { ToolPreviewCall } from '../tools/services'
+import { toolFailure, workspaceTarget } from '../previews/access'
 import { HttpError } from '../http'
 import { featureWorkspaceId } from './paths'
 import { revokedWorkspacePreviews } from './preview-data'
@@ -83,8 +87,60 @@ export class WorkspaceFeatures {
       )
       return response
     }
-    if (/\/github(?:\/checks)?$/.test(path)) return null
+    if (/\/github(?:\/.*)?$/.test(path)) return null
     return this.files(request, this.env)
+  }
+
+  async agentPreviews(input: ToolPreviewCall, origin: string) {
+    if (!this.matches(input.workspaceId))
+      throw new HttpError(
+        404,
+        'workspace_not_found',
+        'The workspace is not available.',
+      )
+    const workspace = await toolSessionWorkspace(
+      this.env.DB,
+      input.orgId,
+      input.workspaceId,
+      origin,
+    )
+    if (input.kind !== 'list')
+      await toolUser(this.env.DB, input.orgId, input.senderUserId)
+    const target = await workspaceTarget(
+      this.env,
+      input.orgId,
+      input.workspaceId,
+      input.kind === 'list' ? undefined : input.senderUserId,
+    )
+    try {
+      const result =
+        input.kind === 'list'
+          ? { previews: await this.previews.actions.list(target, origin) }
+          : input.kind === 'open'
+            ? {
+                preview: await this.previews.actions.open(
+                  target,
+                  input.senderUserId,
+                  input.port,
+                  origin,
+                ),
+              }
+            : {
+                closed: await this.previews.actions.close(
+                  target,
+                  input.previewId,
+                ),
+              }
+      await this.publishRevocations(input.workspaceId)
+      return { workspace, ...result }
+    } catch (error) {
+      throw toolFailure(error)
+    } finally {
+      await this.schedulePreview(
+        input.workspaceId,
+        await this.previews.nextExpiry(input.workspaceId),
+      )
+    }
   }
 
   async publishRevocations(

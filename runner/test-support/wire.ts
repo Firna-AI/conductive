@@ -12,6 +12,7 @@ import {
   type FakeDurableObjectOptions,
 } from '../../worker/test-support/fake-durable-object'
 import * as checkpoints from '../src/checkpoint'
+import * as contextFolder from '../src/context-folder'
 import { Repository, type RepositorySnapshot } from '../src/repository'
 import { Runner } from '../src/runner'
 import { DiskStorage, EventStore } from '../src/state'
@@ -27,6 +28,8 @@ export function emptySnapshot(): RepositorySnapshot {
     baseCommit: 'base-commit',
     changes: {
       baseBranch: 'main',
+      unpushedCommits: 0,
+      uncommittedFileCount: 0,
       files: [],
       summary: { files: 0, added: 0, removed: 0 },
     },
@@ -51,6 +54,7 @@ export async function wireFixture(
   })
   let current = snapshot
   let turnFiles: ChangedFile[] = []
+  vi.spyOn(contextFolder, 'prepareContextFolder').mockResolvedValue()
   vi.spyOn(Repository.prototype, 'snapshot').mockImplementation(async () =>
     structuredClone(current),
   )

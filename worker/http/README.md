@@ -26,9 +26,13 @@ It returns `GITHUB_WEBHOOK_BODY_BYTES`, 27,262,976 bytes, only for a `POST` to `
 It returns 100,000,000 bytes for a `POST` under either model gateway base on the machine origin.
 The gateway bases come from `MACHINE_PATHS.claudeGateway` and `MACHINE_PATHS.codexGateway`.
 A route that a later change adds gets the default without code of its own.
-A route that needs a higher limit declares it in `requestBodyBudget`.
+A machine route that needs a higher limit declares it in `requestBodyBudget`.
 A raw upload route declares its limit in the [raw upload registry](#raw-upload-routes) instead (decision 144).
 For a `POST` to such a route on the app host, the entry uses that `maxBytes`, 25,000,000 bytes, and its overflow error is 413 `attachment_too_large` (decision 144).
+Beside that raw upload selection, `requestBodyEntry` selects `FEEDBACK_BODY_MAX_BYTES`, 10,000,000 bytes, for a `POST` to `FEEDBACK_PATH`, which is `/api/feedback`, on the app host.
+Both names come from [`src/shared/feedback.ts`](../../src/shared/feedback.ts).
+That JSON body keeps the 413 `body_too_large` error of the default.
+Another method on that path, or that path on another host, takes its budget from `requestBodyBudget`.
 
 `withRequestBodyLimit` passes `handle` a new request with one bounded body stream:
 
@@ -155,7 +159,7 @@ Overflow remains `BodyBudgetExceeded`.
 Malformed JSON remains `SyntaxError`.
 Callers keep their budgets, content type checks, object validation, access checks, and error mappings.
 
-The [sandbox transport](../sandbox/README.md#response-byte-limits) uses this function for every Boat response.
+The [sandbox transport](../sandbox/response-limits.md#response-byte-limits) uses this function for every Boat response.
 It owns the response budgets and provider error mapping.
 The successful file content route keeps its dynamic base64 budget and size fallback.
 
@@ -184,6 +188,7 @@ Run `npm run test -- worker/security/gate-body.test.ts` to check the request bod
 Run `npm run test -- worker/security/gate.test.ts` to check the JSON request type and object policy.
 Run `npm run test -- worker/http/raw-upload-body.test.ts worker/security/raw-upload.test.ts` to check the raw upload routes (decision 144).
 Run `npm run test -- worker/security/desktop-exchange.test.ts` to check the limit on the public sign-in exchange.
+Run `npm run test -- worker/app-api/feedback-body.test.ts` to check the feedback JSON budget through the production entry.
 Run `npm run test -- worker/files worker/sandbox worker/http/bounded-body.test.ts` for the current integration.
 
 ### Key Code
@@ -195,6 +200,7 @@ Run `npm run test -- worker/files worker/sandbox worker/http/bounded-body.test.t
 - [raw-upload-routes.ts](raw-upload-routes.ts) holds the registry of raw upload routes and exports `rawUploadRoute` and `rawUploadLength` (decision 144).
 - [fixed-upload-body.ts](fixed-upload-body.ts) exports `fixedUploadBody`, which gives R2 a stream of the declared length (decision 144).
 - [raw-upload-body.test.ts](raw-upload-body.test.ts) checks the exact raw file limit at the entry, and the JSON limit of the other routes (decision 144).
+- [../app-api/feedback-body.test.ts](../app-api/feedback-body.test.ts) checks the exact feedback budget, with and without `Content-Length`.
 - [json-body.ts](json-body.ts) exports `readJsonObject` and owns the JSON request policy.
 - [bounded-body.ts](bounded-body.ts) exposes `readBoundedBody`, `readBoundedJson`, and `BodyBudgetExceeded`.
 - [bounded-body.test.ts](bounded-body.test.ts) checks the exact byte boundary and early cancellation.
@@ -203,4 +209,5 @@ Run `npm run test -- worker/files worker/sandbox worker/http/bounded-body.test.t
 
 - [Access and security: Request bodies](../../docs/protocol/access-and-security.md#request-bodies)
 - [Access and security: Attachment uploads](../../docs/protocol/access-and-security.md#attachment-uploads)
+- [Feedback: The routes](../../docs/protocol/feedback.md#the-routes)
 - [Worker backend](../README.md)

@@ -15,13 +15,13 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
 
 - A React app, built with Vite, that uses the `@firna/ui` components.
 - It lives on `app.conductive.build`, behind the GitHub sign-in.
-- It shows the orgs, the workspaces, the chat, the files, the tools, and
+- It shows the orgs, the workspaces, the routines, the chat, the files, the tools, and
   the org settings. It follows the phone and the desktop layouts of the
   [mockups](../mockups/README.md) (decision 15).
 - For an operator, it also shows the operator section at `/operator`. The
   section gives counts across every org. It finds any org or user, and it
   suspends or lifts it. It also approves people who wait, makes and
-  disables codes, and pauses sign-ups.
+  disables codes, pauses sign-ups, and turns the waitlist off and on.
   [Operator section](../protocol/operator-section.md) states its rules.
 - Tabs are links, so each tool and each file view has its own address.
 - The browser stores only the panel widths. All other state comes from
@@ -54,13 +54,25 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
 - It runs one gate for each hostname before every route and every
   WebSocket upgrade. [Access and security](../protocol/access-and-security.md)
   states the gates.
+- It writes to GitHub only as a member. A merge from the pull request bar
+  uses the GitHub token of the member who clicks, as
+  [Merge as the member](../protocol/github-tokens.md#merge-as-the-member)
+  says.
+
+- Two Cron Triggers run the timed work. One runs every 15 minutes for
+  deleted orgs, lifecycle repairs, and pending approval emails. One runs
+  every minute for due routine runs and runs that stayed queued.
 
 ## D1
 
 - D1 holds the records of the app: users, orgs, members, sections,
-  repositories, workspaces, settings, the active preview hostnames, and the
+  repositories, workspaces, routines and their runs, settings, the active preview hostnames, and the
   records of attached files. D1 also holds app access, codes and their uses,
-  the sign-up pause, and the state of approval emails.
+  the sign-up pause, the waitlist switch, and the state of approval emails.
+- The record of each workspace holds a copy of its
+  [GitHub state](../protocol/github-banner.md#the-github-state).
+  A list read takes this copy from D1. The GitHub summary adds no Durable
+  Object read or GitHub call.
 - Boat labels alone cannot hold these records, because a label is fixed
   after a create or a fork.
 
@@ -73,7 +85,15 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
 - It gives each turn its turn token. For each model request, it tells the
   model gateway whether the token still works and which login the turn
   uses.
-- It also holds the start steps, the stop timer, and the banner state.
+- It also holds the start steps, the stop timer, the delete timer of an
+  archived workspace, and the banner state.
+- After each GitHub refresh, it copies the GitHub state from its banner
+  state into the workspace record in D1. It copies in the order of its
+  refreshes, from the banner state that it holds at that moment. So a
+  replay of an older GitHub delivery cannot write an older state.
+- A failed copy fails the refresh, so that a retry copies it again.
+- It runs the trusted jobs of its sandbox: the fetch of a create, and the
+  branch change of Continue.
 - For each start, it keeps the provider account with the org image and the
   sandbox. So the start continues after a restart.
 - Its storage keeps the chat history, so a stopped or archived workspace
@@ -121,7 +141,10 @@ Every org image holds the app's own sandbox software:
 - the agent runner, a Node program that runs as an always-on service
 - the terminal service, on a private port
 - the preview relay, on a private port
-- the agent tools: an MCP server and a CLI that create and list workspaces
+- the agent tools: an MCP server and a CLI that create, list, and change
+  the workspaces of the org, start, read, message, close, and stop its
+  sessions, change its sections, open port previews, and ask for Mac
+  commands
 - a git credential helper that gets a fresh GitHub token for each git
   operation
 
@@ -176,4 +199,11 @@ the rules.
   workspace that has no name, from its first message. Its use bills to the
   Cloudflare account of the app (decision 184).
 - **Boat:** the app's Boat account pays for every sandbox and every saved
-  snapshot. The app is free, with no limits (decision 81).
+  snapshot. Use of the app is free until billing starts, as
+  [Pricing](../protocol/pricing.md) says.
+- **Resend:** the email service sends every email of the app, from
+  `mail.conductive.build`. These are the org invitations, the approval
+  emails, and the feedback emails. The Worker sends each feedback email,
+  with its screenshots, to the team inbox. The email provider of the
+  operator hosts that inbox. The app keeps no copy of feedback, as
+  [Feedback](../protocol/feedback.md) says.

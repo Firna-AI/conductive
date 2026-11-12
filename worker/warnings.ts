@@ -24,6 +24,14 @@ export function warnWorker(warning: WorkerWarning): void {
 
 function warningFields(warning: WorkerWarning) {
   switch (warning.kind) {
+    case 'workspace_archive_failed':
+      return {
+        kind: warning.kind,
+        message: 'Workspace archive maintenance will retry.',
+        workspaceId: warning.workspaceId.text,
+        phase: warning.phase,
+        error: errorFields(warning.error),
+      }
     case 'workspace_title_request_failed':
       return {
         kind: warning.kind,
@@ -58,6 +66,14 @@ function warningFields(warning: WorkerWarning) {
         kind: warning.kind,
         message: 'A workspace could not admit its first message.',
         workspaceId: warning.workspaceId.text,
+        error: errorFields(warning.error),
+      }
+    case 'git_credential_failed':
+      return {
+        kind: warning.kind,
+        message: 'A Git credential request failed.',
+        workspaceId: warning.workspaceId?.text ?? null,
+        turn: warning.turn,
         error: errorFields(warning.error),
       }
     case 'terminal_start_failed':

@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { Plus } from 'lucide-react'
+import { Plus, Repeat, type LucideIcon } from 'lucide-react'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import styles from '../../../docs/mockups/src/components/workspaces/Sidebar.module.css'
 import links from '../../../docs/mockups/src/components/workspaces/SidebarLinks.module.css'
@@ -12,6 +12,7 @@ import { useOrgAccess, useOrgModel } from '../context'
 import { useSidebarShown } from '../mac/mac-app'
 import { useNewWorkspace } from '../new-workspace/NewWorkspaceHost'
 import { SearchRow } from '../palette/SearchRow'
+import { shortcutTip, useShortcutHint } from '../shortcuts/shortcut-hints'
 import { AppLink } from '../ui/AppLink'
 import ui from '../ui/ui.module.css'
 import { OrgList } from './OrgList'
@@ -21,6 +22,7 @@ import type { RowVariant } from './WorkspaceRow'
 export type ListCurrent =
   | { screen: 'settings' }
   | { screen: 'new-workspace' }
+  | { screen: 'routines' }
   | { screen: 'workspace'; workspaceId: string }
   | null
 
@@ -46,11 +48,36 @@ export function SettingsLink(props: { orgId: string; current: boolean }) {
   )
 }
 
+/** A row at the top of the workspace list that opens a page of the org. */
+function OrgPageLink(props: {
+  to: string
+  icon: LucideIcon
+  label: string
+  current: boolean
+  variant: RowVariant
+}) {
+  const Icon = props.icon
+  return (
+    <AppLink
+      aria-current={props.current ? 'page' : undefined}
+      className={classes(
+        links.row,
+        props.variant === 'page' && links.page,
+        props.current && links.selected,
+      )}
+      to={props.to}
+    >
+      <Icon aria-hidden className={links.icon} size={14} />
+      {props.label}
+    </AppLink>
+  )
+}
+
 /**
  * The row at the top of the list that starts a new workspace in General. It
  * links to the page. A plain click opens the dialog in its place when the
  * user chose the dialog, and a click with a modifier key opens the page in
- * a new tab.
+ * a new tab. Its tooltip names the key of New workspace.
  */
 export function NewWorkspaceLink(props: {
   orgId: string
@@ -58,28 +85,51 @@ export function NewWorkspaceLink(props: {
   variant: RowVariant
 }) {
   const newWorkspace = useNewWorkspace()
+  const hint = useShortcutHint('new-workspace')
   return (
     <AppLink
       aria-current={props.current ? 'page' : undefined}
+      aria-keyshortcuts={hint?.aria}
       className={classes(
-        links.newWorkspace,
+        links.row,
         props.variant === 'page' && links.page,
         props.current && links.selected,
       )}
       onClick={(event) =>
         newWorkspace.click(event, { orgId: props.orgId, sectionId: null })
       }
+      title={shortcutTip('New workspace', hint)}
       to={routes.newWorkspace(props.orgId)}
     >
-      <Plus aria-hidden className={links.plus} size={14} />
+      <Plus aria-hidden className={links.icon} size={14} />
       New workspace
     </AppLink>
   )
 }
 
 /**
+ * The row below New workspace that opens the routines of the org. A
+ * suspended org keeps it, because a suspension takes away no read.
+ */
+export function RoutinesLink(props: {
+  orgId: string
+  current: boolean
+  variant: RowVariant
+}) {
+  return (
+    <OrgPageLink
+      current={props.current}
+      icon={Repeat}
+      label="Routines"
+      to={routes.routines(props.orgId)}
+      variant={props.variant}
+    />
+  )
+}
+
+/**
  * The desktop sidebar beside the org rail: the org name with its Settings
- * link, New workspace, Search, and the sections of the org. A suspended
+ * link, New workspace, Routines, Search, and the sections of the org. A suspended
  * org shows its sections read-only, without New workspace. While the
  * sidebar shows, its list offers New section to the command palette.
  */
@@ -106,6 +156,11 @@ export function Sidebar(props: {
               variant="sidebar"
             />
           )}
+          <RoutinesLink
+            current={current?.screen === 'routines'}
+            orgId={org.id}
+            variant="sidebar"
+          />
           <SearchRow variant="sidebar" />
         </div>
         <OrgList

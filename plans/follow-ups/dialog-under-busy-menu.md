@@ -9,7 +9,7 @@
 - **Terms:**
   - **Owner menu:** the menu of the workspace header where an admin reassigns the workspace to another member.
   - **Busy menu:** a members menu while its change runs. It stays open, and Escape, a press outside, and Tab do nothing, as `src/members/README.md` says.
-- **Background:** The owner menu opens in the browser's top layer, above every box of the page. While its change runs, it stays open, so the person sees how the change ends. A shell dialog, such as the Archive question of `src/shell/ui/Dialog.tsx`, opens in the overlay of the frame and makes the rest of the frame take no input.
+- **Background:** The owner menu opens in the browser's top layer, above every box of the page. While its change runs, it stays open, so the person sees how the change ends. A shell dialog drawn with `src/shell/ui/Dialog.tsx` opens in the overlay of the frame and makes the rest of the frame take no input.
 - **Problem:** When a person opens a shell dialog while the owner change runs, the dialog draws under the busy owner menu. The menu sits in the frame, so it also takes no input. The person then sees two layers, and neither works fully.
 - **Impact if no action:** In this rare case the person can not finish or read the owner change until the dialog closes.
 - **Root question:** What happens to the page while a busy menu shows the end of its change?

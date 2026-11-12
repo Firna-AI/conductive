@@ -15,6 +15,8 @@ interface WorkspaceStartData {
   startupScript: SavedScript
   environmentCiphertext: string | null
   defaultBranch: string
+  baseBranch?: string
+  startSha?: string
   repositoryLocations?: readonly RepositoryLocation[]
   turnId: string
   attempt: string
@@ -42,7 +44,9 @@ interface WorkspaceStartData {
 
 /** Admission intent is transient. Saved starts always continue their progress. */
 export type WorkspaceStartIntent =
-  { kind: 'continue' } | { kind: 'retry-failed-create' }
+  | { kind: 'continue' }
+  | { kind: 'retry-failed-create' }
+  | { kind: 'resume-retained-create' }
 
 export type WorkspaceMachinePhase =
   | 'machine'
@@ -79,6 +83,7 @@ interface WorkspaceCreation {
   sectionId?: string
   city: string
   name?: string
+  firstSessionTitle?: string
   branch: string
   sessionId: string
   request: SendMessageRequest
@@ -124,7 +129,7 @@ export interface StartJobStorage {
   firstMessage(): Promise<FirstWorkspaceMessage | undefined>
   publication(): Promise<CreationPublication | undefined>
   clearPublication(): Promise<void>
-  complete(result: WorkspaceStartResult): Promise<void>
+  complete(attempt: string, result: WorkspaceStartResult): Promise<void>
   secrets(values: readonly string[]): Promise<void>
   capture(
     job: WorkspaceStartJob,

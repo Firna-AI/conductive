@@ -70,9 +70,9 @@ interface Press<T, P> {
 /** A mouse or a pen moves this far before a drag starts. */
 const dragDistance = 4
 /** A finger that moves this far before its long press scrolls instead. */
-const touchSlop = 8
+export const touchSlop = 8
 /** A finger holds this long to lift the item. */
-const longPress = 450
+export const longPress = 450
 
 /** The presses that a control inside a bound element keeps for itself. */
 const ownPresses = new WeakSet<Event>()
@@ -85,6 +85,11 @@ export const ownPress: Pick<HTMLAttributes<HTMLElement>, 'onPointerDown'> = {
   onPointerDown: (event) => {
     ownPresses.add(event.nativeEvent)
   },
+}
+
+/** A control with `ownPress` keeps this press, so it starts nothing else. */
+export function isOwnPress(event: Event): boolean {
+  return ownPresses.has(event)
 }
 
 /**
@@ -238,7 +243,7 @@ export function usePointerDrag<T, P>(options: PointerDragOptions<T, P>) {
   const bind = (item: T, from: P): PointerDragProps => ({
     onPointerDown: (event) => {
       if (event.button !== 0 || press.current) return
-      if (ownPresses.has(event.nativeEvent)) return
+      if (isOwnPress(event.nativeEvent)) return
       const box = event.currentTarget.getBoundingClientRect()
       start.current({
         item,

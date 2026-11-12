@@ -1,4 +1,5 @@
 import type { Attachment } from '../../src/shared/messages'
+import { attachmentPath } from '../../src/shared/attachment-paths'
 import type { AppEnv } from '../env'
 import { HttpError } from '../http'
 import { hash } from '../security/crypto'
@@ -51,10 +52,13 @@ export function attachmentBucket(env: AppEnv): R2Bucket {
   return env.CHAT_ATTACHMENTS
 }
 
-export function publicAttachment(record: AttachmentRecord): Attachment {
+export async function publicAttachment(
+  record: AttachmentRecord,
+): Promise<Attachment & { path: string }> {
   return {
     id: record.id,
     name: record.name,
+    path: await attachmentPath(record),
     kind: record.kind,
     mediaType: record.mediaType,
     sizeBytes: record.sizeBytes,
@@ -66,13 +70,4 @@ export function attachmentCopyKey(
   sandboxId: string | null,
 ): Promise<string> {
   return hash(JSON.stringify([messageId, sandboxId]))
-}
-
-export async function attachmentPath(
-  record: AttachmentRecord,
-  messageId: string,
-): Promise<string> {
-  const safe = await hash(JSON.stringify([messageId, record.id]))
-  const extension = record.name.match(/\.([A-Za-z0-9]{1,10})$/)?.[1]
-  return `/home/user/.conductive-attachment-${safe}${extension ? `.${extension.toLowerCase()}` : ''}`
 }

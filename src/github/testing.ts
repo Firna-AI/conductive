@@ -1,8 +1,10 @@
 import type { ReactNode } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
+import type { BarAction } from '../../docs/mockups/src/components/workspace/barModel'
 import type { BannerState } from '../shared/github'
 import { toolFixtures } from '../test-support/fixtures/tools'
 import type { PullRequestBanner } from './bannerStatus'
+import { barViewOf, type BarControls, type BarInput } from './barView'
 import type { GitHubSnapshot } from './githubClient'
 import type { GitHubFeed, GitHubState } from './githubStore'
 
@@ -72,10 +74,7 @@ export function readyFeed(snapshot: GitHubSnapshot): GitHubFeed {
 }
 
 /** A banner and checks for a branch without a pull request. */
-export function branchFeed(
-  state: 'none' | 'no-commits',
-  createPullRequestUrl: string | null,
-): GitHubFeed {
+export function branchFeed(state: 'none' | 'no-commits'): GitHubFeed {
   return readyFeed({
     banner: {
       branch: 'calummoore/checkout-autocomplete',
@@ -83,10 +82,39 @@ export function branchFeed(
       updatedAt: 1_800_000_000_000,
       state,
       pullRequest: null,
-      createPullRequestUrl,
     },
     checks: { state: 'waiting-for-pull-request', checks: [] },
   })
+}
+
+/**
+ * The bar actions of a ready feed, from the real rules: by default a member
+ * with write access and the squash method, a sandbox without local work, no
+ * turn, and Archive for the viewer. `onAction` records each press. Null for
+ * a feed that shows no state.
+ */
+export function controlsOf(
+  github: GitHubFeed,
+  input: Partial<Omit<BarInput, 'snapshot'>> = {},
+  onAction: (action: BarAction) => void = () => undefined,
+): BarControls | null {
+  const { state } = github
+  if (state.status !== 'ready') return null
+  const view = barViewOf({
+    snapshot: state.snapshot,
+    capabilities: {
+      status: 'ready',
+      capabilities: { canWrite: true, mergeMethod: 'squash' },
+    },
+    localWork: 'no',
+    outcome: null,
+    turnRuns: false,
+    readOnly: false,
+    archivable: true,
+    archiving: false,
+    ...input,
+  })
+  return { view, onAction }
 }
 
 /** The fake's banner of a state that has a pull request. */

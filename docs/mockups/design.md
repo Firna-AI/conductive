@@ -4,20 +4,23 @@ The [mockups README](README.md) gives the commands, the folder layout,
 how a screen is built, and links to the other pages.
 
 The design is Graphite: dark-first, with near-black surfaces, cool greys, and
-one bright sky accent for what is active, such as the selected rail item, a
-working agent, and the main action. It is dense, with small radii, and its
-labels (tabs, section names, times) use the monospace font in capitals. The
-light scheme uses the same cool greys and a darker accent.
+one bright sky accent for what is active, such as the selected rail item,
+the mark of a working agent in the header, and the main action. It is
+dense, with small radii, and its labels (tabs, section names, times) use
+the monospace font in capitals. The light scheme uses the same cool greys
+and a darker accent.
 
 The desktop layout has four columns. The org rail holds the mark, the orgs
 as squares with their initials, Create org, and the account at the bottom.
-The sidebar shows the org name with its Settings link, New workspace, and
+The sidebar shows the org name with its Settings link, New workspace, Routines, Search, and
 the sections that the user made. Each workspace is one line: a dot-matrix
-status mark, the name, and the time, and it moves to another section by
-drag and drop. Archive covers the time on hover only, without moving the
-row content. Selection and keyboard focus alone keep the time visible.
-A right click on a row opens the menu of the workspace. The centre column
-has a slim header that names the
+mark in the colour of its GitHub state, the name, and the time, and it
+moves to another section by drag and drop. Archive covers the time on
+hover only, without moving the row content, and Restore does so in the
+Archived group. Selection and
+keyboard focus alone keep the time visible. A right click on a row opens
+the menu of the workspace. The centre column has a slim header that names
+the
 workspace and its number, such as `W-395`, the repository, and
 the owner of the workspace, and ends with the toggle of the
 right column. The toggle hides the right column, so the centre column
@@ -26,7 +29,8 @@ session and each open file or diff, in the order that the user gives them
 by drag, + for a new session, and a clock that opens the session history.
 The right column has the pull request bar on top, the All files, Changes,
 and Checks lists below it, and the Terminal and Preview tabs at the bottom.
-It shows no file content. A phone shows an org switcher at the top of the list, and the
+It shows no file content. A phone shows an org switcher at the top of the list,
+then New workspace, Routines, and Search. It shows the
 workspace with its number under its name, a compact pull request row, the
 sessions as tabs above the chat, and four tabs at the bottom.
 
@@ -48,29 +52,27 @@ sessions as tabs above the chat, and four tabs at the bottom.
   `--ui-touch-min` variable, which is 0 on desktop.
 - One `ModelPicker` in `src/components/chat/` sets the model and the effort
   in every composer, such as "Opus 5.5 High". It names no agent brand. In a
-  session with messages, each model of the other agent says "New session",
-  because it opens a new session with the draft, from decision 51.
+  session with messages, each model of the other agent ends with the
+  external link icon, because it opens a new session with the draft, from
+  decision 51. A screen reader says "New session" for the icon.
 - A workspace or a session that has no name yet shows "Untitled", in the
   style of a name, from decisions 182 and 185. The list, the header, the
   session tabs, and the session history show it, as
   `app/new-workspace/creating/first-second` and `app/sessions` show.
   "New session" names only the action that opens a session. The label of
-  +, the heading of the empty chat that + opens, and each model of the
-  other agent say it.
-- While a sandbox starts, also for the first time, Send queues each
-  message in the workspace, as `app/new-workspace/waiting` shows. A queued
-  message has no label of its own, because the start steps under the chat
-  already show the wait. After a failed first start, the bar of the error
-  sits above the composer, so members can still queue messages, as
-  `app/new-workspace/error` shows. Every other bar of the sandbox takes
-  the place of the composer.
+  +, the heading of the empty chat that + opens, and the spoken name of
+  the icon on each model of the other agent say it.
 - A view runs no script, so a screen draws an open menu in place: `Menu` in
   `src/components/common/` beside its button or its tab, at the pointer of
   a right click, or in a `Sheet` on a phone. Firna's own menu rows are
   taller than the dense design. A row can lead with a mark, such as an
   avatar, and end with a muted detail and an icon. An item that is off
-  keeps its place, greyed. An item with choices ends with an arrow, and
+  keeps its place, greyed, and its detail keeps the muted colour, so that
+  the reason stays readable. An item with choices ends with an arrow, and
   its submenu opens beside the menu, level with the item.
+  A move that the place of a tab rules out keeps its place, greyed.
+  A read-only workspace leaves out each item that it does not allow,
+  from decision 214.
 - The menu of a workspace row has Move to section, Reassign to, Rename, a
   line, then Archive, as `app/workspace-menu` shows. It lists only the
   actions that the person can use, from `workspaceMenu.ts` in
@@ -80,41 +82,19 @@ sessions as tabs above the chat, and four tabs at the bottom.
   Shift+F10 and the Menu key on a focused row open it below the row. No
   row has a button for the menu. The row under the pointer keeps its
   hover, with Archive over the time when the person can archive the
-  workspace. A phone layout opens the menu and its choices in a sheet. A
+  workspace, and with Restore over the time of an archived row until its
+  last day of Restore. The menu has no Restore. A phone layout opens the
+  menu and its choices in a sheet. A
   long press on a phone still lifts the row for a drag, and opens no menu.
   Rename puts a field in place of the name and the time, with the name
   selected. `RowMenu.module.css` styles the field and the menu at the
   pointer.
 - `FailureToast` in `src/components/common/` draws the toast that names a
-  change of the list that failed, with the message of the server, at the
-  bottom right of a desktop and at the bottom of a phone, as
-  `app/workspace-menu/rename/failed` shows.
-- `WorkspaceTabs` in `src/components/workspace/` draws the tab row of the
-  centre column, from decisions 186 to 188, as `app/tabs` shows. Any tab
-  moves to any place in the row by drag, or by a long press on a phone, and
-  a new tab opens at the end of the row. A drag looks like the drag of a
-  workspace row: the tab lifts as a raised card, a faint copy stays at its
-  place, and a line in the accent colour marks where it lands. The line
-  stands between two tabs and takes no space. When the tabs do not fit at
-  their minimum width, the row scrolls sideways with no scrollbar, keeps the
-  shown tab in view, and fades each end that clips tabs. A right click on a
-  tab opens its menu at the pointer: Rename session, a line, then Move left
-  and Move right. A file or diff tab has only the moves. The menu is the one
-  way to rename a session, so no tab shows a rename button. Rename session
-  opens a field in place of the title of that tab, also when the tab does
-  not show. The field marks that tab, which takes no fill, so only the shown
-  tab is filled. On a phone, a long press that ends without a move opens the
-  menu as a sheet. `WorkspaceTabs.module.css` styles the row and its tabs.
-  `TabScroll.module.css` styles a full row, `TabDrag.module.css` a drag, and
-  `TabRename.module.css` the rename field. The app shares these modules.
-- `TerminalTabs` in `src/components/tools/` draws the terminals of a
-  workspace as a row of tabs above the shown terminal, with + at its end,
-  from decisions 248 to 250, as `app/tools` shows. Its tabs are the tabs of
-  the centre column. The titles differ only in their number, so each tab
-  keeps its whole title, and a row that does not fit scrolls. The last
-  terminal has no close button. At the limit of 10 the + is off, and a line
-  under the row says how to open another. `TerminalTool` beside it adds the
-  shown terminal and the Disconnected bar.
+  change of the list that failed, with the message of the server, in the
+  `ToastLayer` beside it, as `app/workspace-menu/rename/failed` shows.
+  Transcript copy uses the same layer. A copy that worked shows the
+  success mark. A copy that failed shows the error mark with the words
+  "Try again", as `app/transcripts` shows.
 - `SignInFrame` in `src/screens/signInFrame.tsx` draws the pages before the
   app opens: the wordmark, one card in the middle, and the legal links. The
   sign-in, the sign-in of an invite link, and the waitlist share it, without
@@ -131,15 +111,41 @@ sessions as tabs above the chat, and four tabs at the bottom.
   place of the workspace groups: a spinner, or `LoadFailure`. The list and
   the workspace screens own it as their `palette` state. The Search row
   under New workspace opens it, and on desktop that row shows ⌘K.
-  `paletteSearch.ts` beside it holds the rule of a search. A search also
-  finds a workspace by the label of its number, such as `W-395` or `39`.
-  A workspace row then shows the label before the name, as a chip does.
+  `paletteSearch.ts` beside it holds the rule of a search, which the
+  Keyboard shortcuts tab also uses. `PaletteEmpty.tsx` holds the empty
+  state, which also answers a search of that tab without a match. A search
+  also finds a workspace by the label of its number, such as `W-395` or
+  `39`. A workspace row then shows the label before the name, as a chip
+  does. On desktop, each command row ends with the first key of its
+  command that works where the palette opens. The Mac app gives the page
+  every key, so New workspace shows ⌘N there. A browser page draws a
+  normal Chrome tab on a Mac, which keeps ⌘N, so New workspace shows ⌥⌘N.
+  A workspace row shows no key, and a phone shows no keys. In the Mac app
+  the Search row shows the person's key of the palette, such as ⇧⌘P.
+- `KeyChips` in `src/components/common/` draws a shortcut as small key
+  chips, one for each key: ⌘ then K on a Mac, and Ctrl then K on Windows,
+  whose modifiers show as words. The chips use the sans font, which draws
+  ⌘, ⌥, ⇧, ⌃, ⌫, and ⌦ on every system. A dimmed shortcut, which does not
+  work where the page runs, has an outline with dashes, no fill, and muted
+  text. The Search row keeps its text hint in the label font.
+- `SearchField` in `src/components/common/` draws the search field at the
+  top of a list that it narrows: the repositories of an org, the tabs of
+  the operator, and Keyboard shortcuts.
 - `LoadFailure` in `src/components/common/` draws data that did not load,
   as the lists of the app show it: what failed, the message of the server,
   and Try again.
 - `ConfirmDialog` in `src/components/common/` asks before an action that a
   user cannot simply undo: a dialog over the dimmed app on desktop, and a
   sheet on a phone. The desktop dialog lies in the `overlay` of `AppFrame`.
+- `ToastLayer` in `src/components/common/` draws a toast of Firna open
+  where the app shows its toasts: at the bottom right of a desktop, and
+  across the bottom of a phone. An action that a user can undo, such as
+  Archive, asks no question and offers the undo in its toast.
+  `ArchivedToast` in `src/components/workspace/` gives the toast after
+  Archive, over the workspace and over the list.
+- [The pull request bar](design-bar.md) gives its one main action in each
+  state, the line under the bar, the actions on top of the Checks tab of a
+  phone, and the question and the note of Continue.
 - `NewWorkspaceDialog` in `src/components/new-workspace/` draws New
   workspace as a wide, compact dialog over the dimmed app, for a user who
   chose the dialog in Preferences. It lies in the layer and over the scrim
@@ -150,110 +156,98 @@ sessions as tabs above the chat, and four tabs at the bottom.
   and the attach button and Create, with the hint of the Enter key, at the
   bottom right. A phone always opens the page, so the dialog has no phone
   layout.
-- The account has two tabs, General and Preferences, as links, as the org
-  settings have. Preferences holds the New workspaces section, whose rows
-  put each label beside its control in two columns. A segmented control
-  chooses how New workspace opens, with a helper line under it, and a
-  narrow section puts it under its label. A failed save shows its error
-  under the control.
-- `AgentMark` in `src/components/chat/` marks the agent of a session with two
-  letters on a small tile, CL or CX, because the app draws no brand logo.
-- Each workspace has a number in its org, and `workspaceLabel` in
-  `src/components/workspaces/label.ts` shows it as `W-395`. The number
-  shows in the header, in chips, and in a row of the command palette
-  whose search matches it. The rows of the list keep their layout.
-  - `CopyLinkButton` in `src/components/workspace/` is the label in the
-    header, after the name. The label shows alone, without an icon, as a
-    plain Firna button: a pointer over it shows the hover fill, and the
-    keyboard focus shows the focus ring. A press copies the link of the
-    workspace, and a note under it says "Link copied" for a moment, over
-    the content, so nothing moves. When the copy fails, the note says
-    "The link didn't copy. Try again." in the danger colour. The note is
-    a status, so screen readers hear it. The name of the button is "Copy
-    link to W-395".
-  - On desktop, the repository takes only the room that the other parts
-    leave. The name is cut short only when the repository has no room left.
-  - On a phone the label leads the line under the name, before the
-    repository, so the name keeps its room. The button
-    keeps the height of that line, and its touch area of 44 px reaches up
-    over the name and down to the bottom edge of the header.
-- `WorkspaceChip` in `src/components/chat/` draws a link to a workspace of
-  the org as a chip in a line of text: a small rounded pill with the
-  `StatusGlyph` of the workspace, its label in a muted colour, and its
-  current name. Its height is the height of the line less 2 px, so a line
-  with a chip keeps its height. A chip is never wider than its line or
-  than 22 times the size of its font, and a long name is cut short. It
-  takes no fixtures, so the app can use it too.
-  - `MessageText` shows the chips in sent messages and in answers, as
-    links to the screens of the workspaces. A Markdown link to a
-    workspace shows as the chip alone, and a link in code stays code. A
-    link to another org, or to a workspace that the list does not hold,
-    stays plain text, and a long link breaks to fit the line.
-  - The chat finds each workspace in the list of the org, with the
-    archived ones and with the states of the list, through
-    `ChatWorkspaces`. A phone finds the same workspaces with no list on
-    the screen. An archived workspace keeps its chip, with the archived
-    mark.
-  - A pasted link becomes a chip in the message box at once: in the chat,
-    and in New workspace as a page or a dialog. `MessageField` gives each
-    box its field. A draft with a workspace link or a file mention shows
-    in `ChipTextField`: plain text with each chip as one unit, with the
-    sizes and the line limits of the plain text field. The draft keeps the
-    plain link.
-  - `InlineChip.module.css` beside it holds the pill of every chip in a
-    line of text, so a workspace chip and a file chip have the same size.
-  - In a message box each chip starts with the cell of its icon, from
-    `ChipIconCell` in `ChipRemove.tsx`. While a pointer is over the cell, a
-    × takes the place of the icon, and a press removes the chip. Where no
-    pointer hovers, as on a phone, the icon stays, and `ChipEndRemove`
-    puts a × at the end of the chip. Attached files follow the same rule,
-    and on a phone they keep their × button of touch size.
-- `FileChip` in `src/components/chat/` draws a file or a folder of the
-  workspace as a chip of the same size: the icon that All files gives it,
-  and its name. Its title is the whole path. `EntryIcon` in
-  `src/components/files/` gives the icon to All files, the chips, and the
-  list. It is the one icon map of the mockups and the app: a folder, a
-  Markdown file, a code file, or another file. A file is code when the
-  code view of the app gives it syntax colours, as `fileKind` in
-  `src/files/code/file-kind.ts` of the app says, so one list of languages
-  sets both. The user chose this on 10 November 2026. A sent message shows
-  each file chip as a link to the tab of the
-  file, and an answer shows none. It takes no fixtures, so the app can use
-  it too.
-- `FileMentionList` in `src/components/chat/` draws the list of `@` above
-  the message box: the icon, the name, and the folder of each entry that
-  matches the query, with the first row highlighted. One line takes the
-  place of the rows while the tree loads, when no tree is available, and
-  when nothing matches. `fileMentions.ts` beside it reads the mentions of
-  a text and orders the rows.
-- `StatusGlyph` in `src/components/workspaces/` draws the state of a
-  workspace as a 3 × 3 dot-matrix square. Each state has its own shape, and
-  working and starting move with CSS. A finished turn is a full bright green
-  square, and ready is one bright cell on a faint green grid. A workspace
-  whose agent waits for the user, such as for the approval of a command,
-  shows Needs input: a middle column in the accent colour that pulses.
-- `SandboxNotice` in `src/components/workspace/` draws the states of the
-  cloud computer: stopped, error, archived, and refused. A refused start
-  shows "The sandbox can't start" with the words of its cause and no
-  action. The notice takes any refusal reason. `sandboxNoticeState.ts`
-  beside it owns the types of the bar and the panels, which the app
-  imports too.
-  - For a suspended workspace owner, the history, the tabs, the header, and
-    the owner picker stay, as `app/shell/refused` and its `reassign`
-    variant show.
-  - For a suspended org, the words name the org and the abuse address, as
-    `app/orgs/suspended/workspace` shows. The New workspace page of such an
-    org shows the same bar in place of the composer.
-  - A phone shows the bar only on the Chat tab. So the panels of its Files,
-    Terminal, and Preview tabs show the words of the refusal in
-    place of the line on the chat history, as the `files` variants of
-    `app/shell/refused` and `app/orgs/suspended/workspace` show. A desktop
-    keeps its short panels beside the bar.
+- The account has three tabs, General, Preferences, and Keyboard
+  shortcuts, as links, as the org settings have. On a phone, a tab that
+  does not fit moves to a second line. Preferences holds the New
+  workspaces section, whose rows put each label beside its control in two
+  columns. A segmented control chooses how New workspace opens, with a
+  helper line under it, and a narrow section puts it under its label. A
+  failed save shows its error under the control.
+- `ShortcutsSections` in `src/components/settings/` draws the Keyboard
+  shortcuts tab, in the Mac app and in each browser. It shows the keys of
+  a host: the Mac app, a normal tab of Chrome or Firefox, or the installed
+  app of Chrome, with a Mac keyboard or the keyboard of Windows and
+  Linux. `src/fixtures/shortcutHosts.ts` holds the keyboard of each host,
+  `browserTabKeys.ts` beside it holds the keys that each normal browser
+  tab keeps, and `windowsShortcuts.ts` holds the keys of Windows and
+  Linux. A search field at the top keeps each row whose label or search
+  words hold every word of the query, by the rule of the palette, from
+  `shortcutSearch.ts`.
+  Fixed rows match too. A group without a matching row hides, and a search
+  without a match says so, as the palette does. The lines under the field,
+  from `ShortcutIntro.tsx`, say how to change a shortcut and which keys
+  the terminal keeps on the keyboard of the page. In a normal browser tab,
+  a key that the browser keeps, or that decisions 192 and 196 leave to it,
+  is dimmed, and one more line says where the dimmed keys work. A dimmed key
+  stays a button that records new keys. A browser leaves out the commands
+  and the groups that only the Mac app has. Each group of commands is a
+  section with its rows in one box. A row ends with its shortcuts. Each
+  shortcut is a button that records new keys, + adds one, and a row
+  without a shortcut shows Add shortcut. The commands that a person can
+  change come first, and the fixed shortcuts follow them with no control.
+  A fixed row among other commands shows Fixed shortcut. The General group
+  ends with Esc and with Enter and Space, which press a focused button. The
+  Navigation group ends with the keys that open the menu of a focused tab,
+  and the Workspace group with the fixed keys of a focused workspace row and
+  of a focused divider. Each of their labels names the control that has the
+  focus. The Chat group ends with the keys of the message field, and its
+  Send row shows Enter with ⌘ or Ctrl, so the tab shows that Enter with a
+  modifier is fixed too. A group of fixed shortcuts says it once, under its
+  title. The Text group lists the text keys of the keyboard, with the keys
+  that move or delete by word or by line in one row each, and its line
+  says that the other text keys are fixed too. A narrow box, on a phone or
+  in a narrow window, puts the label of a row on its first line, and the
+  shortcuts and the control at the end on a second line. The recorder is a
+  field with a full outline in the accent colour. While it replaces a
+  shortcut, Remove stands beside Cancel. A recorder that adds a shortcut
+  shows only Cancel. A line under the row names a fixed shortcut that the
+  recorder did not take, the command that has the recorded shortcut, or a
+  failed save. The line of a fixed shortcut names its fixed row. When
+  several rows hold the shortcut, or no row lists it, the line says only
+  that the shortcut is fixed. A row that names the command of a recorded
+  shortcut shows only Replace and Cancel. A changed row shows Reset. When
+  another command holds a default shortcut of the row, Reset shows that
+  shortcut in the field of the recorder, the line that names the command,
+  and Replace and Cancel. Reset all asks first with `ConfirmDialog`,
+  because nothing brings the changes back. The error of a failed Reset all
+  stands under the lines and Reset all, across the width of the tab.
+- [The marks](design-marks.md) give the list mark, the mark
+  of the header, and the marks of routine runs. They also give the mark of
+  an agent.
+- [Workspace, session, and file chips](design-chat.md#workspace-session-and-file-chips)
+  gives the workspace links, the session links, file mentions, the list of
+  `@`, and chip removal.
+- The parts of routines live in `src/components/routines/`. The routine
+  page puts its form beside the Runs column on desktop. A phone shows a
+  saved routine in two tabs, Routine and Runs. The Runs list holds the
+  newest 50 runs, and Show older runs ends it when older runs exist. A
+  phone opens the Add trigger menu and the author filter of a pull request
+  trigger in a sheet. A suspended org keeps its Routines link, and shows
+  its routines read-only under its notice. `RunLinks` in
+  `src/components/workspace/` draws the line under the header of a run
+  workspace, which links to its routine and to its pull request. The pull
+  request bar names the base branch of a workspace: the default branch, or
+  for a pull request run the head branch of its pull request. A long base
+  branch ends in an ellipsis at half of the line. The
+  bubble of a message keeps its line breaks, as in the app, so the first
+  message of a run shows the facts of its trigger on their own lines.
+  - `runCopy.ts` gives the words of a failed run from its stored cause, and
+    from the agent and the owner of the run itself, not of its routine. So
+    a later change of the agent, or a move of the routine to another owner,
+    changes no past row. A failed start and a failed first turn keep their
+    workspace, and their rows open it, as `app/routines/runs/failed` shows.
+  - When the routine page cannot show its routine, the page keeps Routine
+    as its name and shows no tabs, no Runs list, and no actions. A routine
+    that the org no longer has shows the empty state "This routine is not
+    available" with Open Routines. A read that failed shows `LoadFailure`.
+    `app/routines/routine/unavailable` and `not-loaded` show them.
 - `SuspendedOrgNotice` in `src/components/orgs/` draws the notice of a
   suspended org, with the mark of a refused start. It names the org and
   the abuse address, and it offers no action. It is a box at the top of
-  the list and of each settings tab, and above the bar of an archived
-  workspace. `SuspendedOrgPanel` shows the same words in the main area of
+  the list, of each settings tab, and of each view of a routine page, and
+  above the bar of an archived workspace. A phone shows it above either
+  tab of a routine page, as the `runs` variant of
+  `app/orgs/suspended/routines/routine` shows. `SuspendedOrgPanel` shows the same words in the main area of
   a wide desktop list. `SuspendedOrgAbove` puts the box above the page of
   a deleted org, at the width of a settings page. A suspended org shows no
   action that it refuses.
@@ -271,6 +265,21 @@ sessions as tabs above the chat, and four tabs at the bottom.
   `app/new-workspace/first-build` shows. A notice of work that runs, such
   as that build, shows a spinner in place of its icon: `Notice` in
   `src/components/common/` takes `busy`.
+- A chosen repository that the cloud computer does not hold yet waits for
+  its build, from decisions 240 and 241. The repository menu of New
+  workspace keeps it in place, off, with the note of when it is ready as
+  the muted detail of its row. A form whose repository waits keeps Send
+  off under a notice. `WaitingRepositoryNotice` in
+  `src/components/new-workspace/waitingRepository.tsx` draws that notice,
+  and `formWait` beside it says what the form waits for. The app shares
+  that module. `RepositoryNotice` in `src/components/settings/`
+  draws the notice of the Repositories and Cloud computer tabs, with a
+  spinner while the build of an added repository runs. An admin gets its
+  Try again or Build computer on the Repositories tab only, because the
+  build card of the Cloud computer tab has the same action.
+  `repositoryChangeCopy.ts` beside it holds the words of both, which the
+  app shares, as `app/new-workspace/waiting-repository` and
+  `app/org-settings/repositories` show.
 - On desktop the sidebar and the right column resize from `ResizeHandle` in
   `src/components/layout/`, a hairline on their inner edge. On hover and
   during a drag a short grip in the accent colour shows in its middle, so no
@@ -281,17 +290,21 @@ sessions as tabs above the chat, and four tabs at the bottom.
   The mockups, chat, and composer of a new workspace share it.
   The attachment fixtures hold byte counts.
   The formatter shows sizes such as "12 KB" and "1.2 MB".
+- [The workspace](design-workspace.md) gives the messages that wait for
+  the sandbox, the tab row, and the number with Copy link. It also gives
+  the bars of the cloud computer.
 - [The chat](design-chat.md) gives the chips of attached files, the
-  Markdown tables of a reply and of a file preview, and the fold of the work
-  of a turn. It also gives the data that the chat does not have, and the
-  files that the cloud computer could not read.
+  Markdown tables and headings of a reply and of a file preview, and the
+  fold of the work of a turn. It also gives the data that the chat does
+  not have, and the files that the cloud computer could not read.
 - The app frame is a size container (`app-frame`), so the layout follows the
   width of the frame, not of the window. In the app the two are the same. A
   screen is as high as `--ui-screen-height`, which is the window, or the
   frame of a picture on the marketing site.
 - [The operator section](design-operator.md) gives its tabs, its tables,
   the Waitlist tab, the codes, and the approval email. It also gives
-  Suspend, Lift, and Approve, the daily chart, and the notice of a pause.
+  Suspend, Lift, and Approve, the daily chart, the notice of a pause, and
+  the waitlist switch.
 - On a phone the org settings put their four tabs in three columns, so every
   tab shows. The session tabs all shrink, and the current one keeps the start
   of its title beside its close button. When the session tabs still do not

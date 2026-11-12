@@ -23,12 +23,13 @@ import {
   LiftedFileTab,
 } from '../../../files/tabs/FileTabItem'
 import type { WorkspaceTab } from '../../../shared/workspace-view'
+import { useShortcutOffer } from '../../shortcuts/shortcut-context'
 import type { WorkspaceContext } from '../features'
 import { useSavedView } from '../saved-view'
 import { filesPlace, tabOf } from './files-address'
 import { useFilesNavigation, useLeaveForSession } from './files-navigation'
 import { filesTabsOf, sameFilesTab, withoutTab } from './view-tabs'
-import { useConnectedFilesWhile, useKeptFilesWhile } from './workspace-files'
+import { useKeptFilesWhile } from './workspace-files'
 
 /** The subscription while the row shows no file tabs: to nothing. */
 function followNothing(): () => void {
@@ -60,7 +61,8 @@ function useTabLabels(
  * A file or diff tab of the saved view, at the place in the tab row that
  * the chat gives it, with the label of its path. Close of the shown tab
  * shows the next file tab, else the one before, else the chat with its
- * session.
+ * session. While the tab shows, the key of Close tab closes it, as its
+ * Close does.
  */
 function FileTab(props: {
   context: WorkspaceContext
@@ -95,6 +97,7 @@ function FileTab(props: {
         : routes.workspace(context.org.id, context.workspace.id),
     )
   }
+  useShortcutOffer('close-tab', isShown(tab) ? close : null)
   return (
     <FileTabItem
       label={props.label}
@@ -158,8 +161,9 @@ function useMentions(
  * its path from the kept files, for its title and its drawing, so each name
  * of the tab hides each secret value. When the chat makes a session active
  * while `content` shows a file, the address goes back to the chat. The
- * chat keeps the files connected, for the list of `@` and the file chips.
- * An archived workspace has no files.
+ * chat reads the kept files for the list of `@` and the file chips, also
+ * on a phone before a visit to Files: `KeptFilesConnection` of the screen
+ * keeps them connected. An archived workspace has no files.
  */
 export function useChatFiles(
   context: WorkspaceContext,
@@ -171,7 +175,7 @@ export function useChatFiles(
   const archived = context.sandbox === 'archived'
   const tabs = !archived && context.viewport !== 'phone'
   const labelOf = useTabLabels(context, tabs)
-  const files = useConnectedFilesWhile(context, !archived)
+  const files = useKeptFilesWhile(context, !archived)
   const mentions = useMentions(context, files, navigation)
   if (archived) return {}
   const renderTab: RenderTab = (tab) => {
@@ -191,6 +195,7 @@ export function useChatFiles(
             tab={tab}
           />
         ),
+      show: () => navigation.navigate(tab),
     }
   }
   return {

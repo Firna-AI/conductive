@@ -2,7 +2,10 @@ import process from 'node:process'
 import { createInterface } from 'node:readline'
 import { pathToFileURL } from 'node:url'
 
-import { CLI_HELP, runWorkspaceCli, toolErrorMessage } from './cli.ts'
+import { runWorkspaceCli, toolErrorMessage } from './cli.ts'
+import { CLI_HELP } from './cli-help.ts'
+import { toolHelpRequested } from './cli-options.ts'
+import { nativeMessageInput, type MessageInput } from './message-input.ts'
 import { createWorkspaceToolClient } from './client.ts'
 import { createWorkspaceMcp } from './mcp.ts'
 import { runtimeConfiguration } from './runtime.ts'
@@ -13,8 +16,9 @@ export async function runToolProcess(
   input: AsyncIterable<string>,
   output: { stdout(text: string): void; stderr(text: string): void },
   send?: (request: Request) => Promise<Response>,
+  messageInput?: MessageInput,
 ): Promise<number> {
-  if (args.length === 0 || args.includes('--help')) {
+  if (toolHelpRequested(args)) {
     output.stdout(CLI_HELP)
     return 0
   }
@@ -24,7 +28,7 @@ export async function runToolProcess(
       send,
     )
     if (args.length !== 1 || args[0] !== 'mcp') {
-      return runWorkspaceCli(args, client, output)
+      return runWorkspaceCli(args, client, output, messageInput)
     }
     const server = createWorkspaceMcp(client)
     const pending = new Set<Promise<void>>()
@@ -67,12 +71,19 @@ if (
   process.argv[1] &&
   import.meta.url === pathToFileURL(process.argv[1]).href
 ) {
-  const lines = createInterface({ input: process.stdin, crlfDelay: Infinity })
+  const args = process.argv.slice(2)
+  const lines =
+    args.length === 1 && args[0] === 'mcp'
+      ? createInterface({ input: process.stdin, crlfDelay: Infinity })
+      : null
+  async function* noLines() {
+    yield* []
+  }
   try {
     process.exitCode = await runToolProcess(
-      process.argv.slice(2),
+      args,
       process.env,
-      lines,
+      lines ?? noLines(),
       {
         stdout: (text) => {
           process.stdout.write(text)
@@ -81,8 +92,10 @@ if (
           process.stderr.write(text)
         },
       },
+      undefined,
+      nativeMessageInput,
     )
   } finally {
-    lines.close()
+    lines?.close()
   }
 }

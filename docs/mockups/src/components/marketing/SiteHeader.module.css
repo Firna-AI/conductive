@@ -25,10 +25,7 @@
   margin-left: auto;
 }
 
-/*
- * A label never wraps. In the narrowest desktop window, the links reach a
- * little into the padding of the header.
- */
+/* A label never wraps. */
 .link {
   display: inline-flex;
   align-items: center;
@@ -61,6 +58,21 @@
 
 .nav > :last-child {
   margin-left: 8px;
+}
+
+/*
+ * Below 900 px a desktop header tightens the space around its links, so
+ * that Pricing fits too. From 760 px, the links then stay inside the
+ * padding of the header. A phone keeps its own spacing below.
+ */
+@media (max-width: 899.98px) {
+  .nav {
+    gap: 0;
+  }
+
+  .link {
+    padding: 6px 8px;
+  }
 }
 
 .mobile .inner {

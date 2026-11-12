@@ -1,0 +1,18 @@
+/*
+ * Centred and muted, as the other event lines of the chat. A narrow chat
+ * wraps the text into balanced lines, and the icon leads the first one. A
+ * chip in the line keeps the height of the line, as in a message.
+ */
+.line {
+  margin: 0;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  line-height: 1.45;
+  text-align: center;
+  text-wrap: balance;
+}
+
+.icon {
+  margin-right: 6px;
+  vertical-align: -2px;
+}

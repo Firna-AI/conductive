@@ -3,9 +3,14 @@ import { randomUUID } from 'node:crypto'
 import { query } from '@anthropic-ai/claude-agent-sdk'
 
 import { WORKSPACE_TOOLS_MCP } from '../../../src/shared/agent-tools'
-import { attachmentDescription } from './attachment-description'
+import {
+  attachmentDescription,
+  attachmentReadInstruction,
+} from './attachment-description'
 import { claudeBinary } from './binaries'
 import { ClaudeEvents } from './claude-events'
+import { ClaudeBackground } from './claude-background'
+import { ClaudeBackgroundNote } from './claude-background-note'
 import { ClaudeInputWindow } from './claude-input-window'
 import { spawnClaudeProcess } from './claude-process'
 import { writeClaudeProfile } from './claude-profile'
@@ -73,6 +78,12 @@ export function createClaudeFactory(
       env.ANTHROPIC_PROFILE = credentials.name
     } else env.ANTHROPIC_BASE_URL = options.endpoint
     const input = new ClaudeInputWindow()
+    const background = new ClaudeBackground(options.event)
+    const note = new ClaudeBackgroundNote(
+      (id) => background.isAmbient(id),
+      options.backgroundNoteIds,
+    )
+    env.CLAUDE_CODE_EMIT_SESSION_STATE_EVENTS = '1'
     let resultReceived = false
     const mapper = new ClaudeEvents(
       input.ids,
@@ -81,6 +92,7 @@ export function createClaudeFactory(
         options.event(event)
       },
       (uuid) => input.hasOutstanding(uuid),
+      background,
     )
     let closed = false
     let stream: ClaudeQuery
@@ -92,6 +104,32 @@ export function createClaudeFactory(
           cwd: options.cwd,
           systemPrompt: options.instructions,
           env,
+          hooks: {
+            Stop: [
+              {
+                hooks: [
+                  async (hook) => {
+                    if (
+                      !closed &&
+                      hook.hook_event_name === 'Stop' &&
+                      !hook.agent_id
+                    ) {
+                      background.stop(hook.session_crons ?? [])
+                      const context = note.context(hook)
+                      if (context !== undefined)
+                        return {
+                          hookSpecificOutput: {
+                            hookEventName: 'Stop',
+                            additionalContext: context,
+                          },
+                        }
+                    }
+                    return {}
+                  },
+                ],
+              },
+            ],
+          },
           pathToClaudeCodeExecutable: binary(),
           model: options.choice.model,
           ...(options.choice.effort === 'none'
@@ -133,7 +171,10 @@ export function createClaudeFactory(
           if (closed) continue
           resultReceived = false
           mapper.accept(message)
-          if (resultReceived) input.complete(message)
+          if (resultReceived) {
+            input.complete(message)
+            background.result(!input.pending)
+          }
         }
         if (!closed)
           options.event({
@@ -168,10 +209,13 @@ export function createClaudeFactory(
     if (options.signal?.aborted) abort()
     return {
       send: async (command) => {
+        background.input()
         const uuid = randomUUID()
-        const attached = command.attachments
-          .map((item) => `\n${attachmentDescription(command, item)}`)
-          .join('')
+        const attached = command.attachments.length
+          ? `\n${attachmentReadInstruction}\n${command.attachments
+              .map((item) => attachmentDescription(command, item))
+              .join('\n')}`
+          : ''
         input.push(command.message.id, {
           type: 'user',
           uuid,
@@ -179,7 +223,12 @@ export function createClaudeFactory(
           parent_tool_use_id: null,
           message: {
             role: 'user',
-            content: providerMessage(command.message) + attached,
+            content:
+              providerMessage(
+                command.message,
+                command.branches,
+                options.instructionBranches,
+              ) + attached,
           },
           priority: 'next',
         })

@@ -1,4 +1,5 @@
 import type { Session } from '../../src/shared/sessions'
+import type { Attachment } from '../../src/shared/messages'
 import { sessionTitleFrom } from '../../src/shared/session-title'
 import type { ChatTransaction } from './store'
 import type { ChatDependencies } from './types'
@@ -18,11 +19,12 @@ export async function applyMessageSessionTitle(
   transaction: ChatTransaction,
   session: Session,
   text: string,
+  attachments: readonly Attachment[],
   readWorkspace: ChatDependencies['readAutomaticTitleWorkspace'],
 ): Promise<void> {
   await fillSessionTitle(
     session,
-    sessionTitleFrom(text),
+    sessionTitleFrom(text, attachments),
     async () =>
       (await transaction.firstSession())?.id !== session.id &&
       (await readWorkspace(transaction.workspaceId)) !== null,

@@ -20,7 +20,7 @@ export const modelsAndProvidersFeatures: readonly ParityFeature[] = [
     area: 'models-and-providers',
     name: 'Codex',
     status: 'available',
-    note: 'Codex works with an OpenAI API key. Access token support is in progress. ChatGPT sign-in has no committed delivery plan.',
+    note: 'Connect Codex with an OpenAI API key or a device code sign-in to your ChatGPT plan, including Plus and Pro.',
   },
   {
     id: 'cursor',
@@ -83,8 +83,9 @@ export const modelsAndProvidersFeatures: readonly ParityFeature[] = [
     id: 'fast-mode',
     area: 'models-and-providers',
     name: 'Fast mode',
-    status: 'considering',
-    note: 'A fast mode for supported models is under consideration.',
+    status: 'planned',
+    note: 'A Fast switch in the model menu is planned for supported models.',
+    due: null,
   },
   {
     id: 'default-models',

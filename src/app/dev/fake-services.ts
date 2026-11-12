@@ -1,3 +1,4 @@
+import { copyText } from '../clipboard'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_TIME } from '../../test-support/fixtures/core'
 import { API_PATHS } from '../../shared/api'
@@ -5,8 +6,10 @@ import { createApiClient } from '../api/client'
 import { browserDelay, type WorkspaceEventSource } from '../events'
 import {
   windowFocus,
+  windowHost,
   windowInput,
   windowKeys,
+  windowNewTab,
   windowPlatform,
   windowStorage,
   windowVisibility,
@@ -14,18 +17,24 @@ import {
 } from '../services'
 import { accountRoutes } from './account-routes'
 import { attachmentRoutes } from './attachment-routes'
+import { attachmentFileRoutes } from './attachment-files'
+import { attachmentMessageFetch } from './attachment-message-routes'
 import { createBackend, guardScope } from './backend'
 import { buildRoutes } from './build-routes'
 import { createRoutes } from './create-routes'
+import { feedbackRoutes } from './feedback-routes'
+import { APP_VERSION } from '../version'
 import { operatorRoutes } from './operator-routes'
 import { readDevOptions } from './options'
 import { orgRoutes } from './org-routes'
+import { routineRoutes } from './routine-routes'
 import { devFileTransport } from './progress-fixture'
 import { routeFetch, RouteError, type Route } from './router'
+import { runRoutes } from './run-routes'
 import { sectionRoutes } from './section-routes'
 import { seedState } from './seed'
 import { settingsRoutes } from './settings-routes'
-import { waitlistRoutes } from './waitlist-routes'
+import { admitOpenSignup, waitlistRoutes } from './waitlist-routes'
 import { workspaceRoutes } from './workspace-routes'
 
 /**
@@ -57,20 +66,27 @@ export function createFakeServices(search: string): AppServices {
   const routes = [
     ...signedOut,
     ...waitlistRoutes(backend),
+    ...feedbackRoutes(backend, options),
     ...accountRoutes(backend),
     ...orgRoutes(backend),
     ...sectionRoutes(backend),
     ...workspaceRoutes(backend),
     ...createRoutes(backend),
     ...attachmentRoutes(backend, options.upload),
+    ...attachmentFileRoutes(backend),
     ...settingsRoutes(backend),
     ...buildRoutes(backend),
+    ...routineRoutes(backend),
+    ...runRoutes(backend),
     ...operatorRoutes(backend),
   ]
   const fetch = routeFetch(
     routes,
-    (path, method) => guardScope(backend.state, path, method),
-    server.fetch,
+    (path, method) => {
+      admitOpenSignup(backend)
+      guardScope(backend.state, path, method)
+    },
+    attachmentMessageFetch(backend, server.fetch),
   )
   const events: WorkspaceEventSource = {
     open: (target, handlers) =>
@@ -85,11 +101,14 @@ export function createFakeServices(search: string): AppServices {
     onInput: windowInput(window),
     onKey: windowKeys(window),
     platform: windowPlatform(window),
+    host: windowHost(window),
     visible: windowVisibility(window),
     storage: windowStorage(window),
     newId,
     leave: (url) => window.location.assign(url),
+    openInNewTab: windowNewTab(window),
     appOrigin: window.location.origin,
-    copy: (text) => navigator.clipboard.writeText(text),
+    appVersion: APP_VERSION,
+    copy: (text) => copyText(window, text),
   }
 }

@@ -1,7 +1,7 @@
 {
   "name": "remote-code",
   "private": true,
-  "version": "0.5.0",
+  "version": "0.12.0",
   "type": "module",
   "scripts": {
     "dev": "npm run site:build && vite",
@@ -19,6 +19,7 @@
     "mockups:typecheck": "tsc -p docs/mockups/tsconfig.json",
     "mockups:check": "npm run mockups:typecheck && npm run mockups:build",
     "marketing:pictures": "node tools/marketing-pictures/run.ts",
+    "marketing:preview": "node tools/marketing-pictures/run.ts --preview-only",
     "site:dev": "astro dev",
     "site:build": "astro build",
     "lint": "eslint .",
@@ -35,6 +36,7 @@
     "@lexical/react": "0.53.0",
     "@xterm/addon-fit": "^0.11.0",
     "@xterm/xterm": "^6.0.0",
+    "croner": "^11.0.0",
     "lexical": "0.53.0",
     "lucide-react": "^0.577.0",
     "react": "^19.3.1",

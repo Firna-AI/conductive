@@ -35,12 +35,15 @@ export function FilesLink(props: {
   title?: string
   'aria-current'?: AriaAttributes['aria-current']
   'aria-label'?: string
+  /** The key of the command that the link runs, for a screen reader. */
+  'aria-keyshortcuts'?: string
   children: ReactNode
 }) {
   const { to, navigation, ref } = props
   return (
     <a
       aria-current={props['aria-current']}
+      aria-keyshortcuts={props['aria-keyshortcuts']}
       aria-label={props['aria-label']}
       className={classes(props.className, focusClass)}
       href={navigation.href(to)}

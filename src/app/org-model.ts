@@ -6,14 +6,12 @@ import {
   type OrgSettings,
   type Repository,
 } from '../shared/org-settings'
+import { routinesPath } from '../shared/routines'
 import { sectionsPath, type Section } from '../shared/sections'
-import {
-  workspacesPath,
-  type Workspace,
-  type WorkspaceState,
-} from '../shared/workspaces'
+import { workspacesPath, type Workspace } from '../shared/workspaces'
 import { items, record } from './api/parse'
 import { readSection } from './api/read-core'
+import { readRoutines, type ListedRoutine } from './api/read-routines'
 import { readWorkspaces } from './api/read-workspaces'
 import {
   readBuildResponse,
@@ -25,7 +23,8 @@ import {
 import { Creations } from './creations'
 import { workspaceUpdated, type ListData } from './list-changes'
 import { NewWorkspaceModel } from './new-workspace-model'
-import { Refresher, type RefreshWait, type Refreshing } from './refresh'
+import { buildsWait, listWait, onEntry, routinesWait } from './org-waits'
+import { Refresher, type Refreshing } from './refresh'
 import { Resource } from './resource'
 import type { AppServices } from './services'
 import { ready, Store, valueOf, type Loadable, type Readable } from './store'
@@ -36,42 +35,8 @@ import {
   type OrgSuspension,
 } from './suspension'
 
-export type OrgPart = 'list' | 'repositories' | 'builds' | 'members'
-
-/**
- * How soon a shown part reads again. These are choices of the app, not
- * product limits: soon while a workspace or a build is active, and slowly
- * otherwise, so that changes from other tabs and people show.
- */
-const activeWait = 5_000
-const idleWait = 30_000
-const activeStates: ReadonlySet<WorkspaceState> = new Set([
-  'working',
-  'input',
-  'starting',
-])
-
-/**
- * The wait of a shown workspace list: short while one of its workspaces is
- * active. A chat that reads the list itself uses it too.
- */
-export const workspacesWait: RefreshWait<readonly Workspace[]> = (
-  workspaces,
-) =>
-  workspaces?.some((workspace) => activeStates.has(workspace.state))
-    ? activeWait
-    : idleWait
-
-const listWait: RefreshWait<ListData> = (list) =>
-  workspacesWait(list?.workspaces)
-
-const buildsWait: RefreshWait<BuildsResponse> = (builds) =>
-  builds?.builds.some((build) => build.state === 'running')
-    ? activeWait
-    : idleWait
-
-/** Repositories and members read at entry and focus only. */
-const onEntry: RefreshWait<unknown> = () => null
+export type OrgPart =
+  'list' | 'repositories' | 'builds' | 'members' | 'routines'
 
 /** One part of a loaded value, which changes only when that part changes. */
 function partOf<T, P>(
@@ -95,8 +60,8 @@ function partOf<T, P>(
 
 /**
  * The data of one org: its list of sections and workspaces, its
- * repositories, the builds and settings of its cloud computer, and its
- * members. A part reads while a screen shows it, as
+ * repositories, the builds and settings of its cloud computer, its
+ * members, and its routines. A part reads while a screen shows it, as
  * `watch` says. The Cloud computer tab reads the settings itself. Each
  * request of the org that the API refuses with `org_suspended` goes to
  * `suspension`, so a page with an old org list learns of the suspension.
@@ -110,6 +75,7 @@ export class OrgModel {
     readonly repositories: Resource<readonly Repository[]>
     readonly builds: Resource<BuildsResponse>
     readonly members: Resource<MembersResponse>
+    readonly routines: Resource<readonly ListedRoutine[]>
     /**
      * The settings of the cloud computer. Every opening of the Cloud
      * computer tab shares them, so a save from a closed tab still shows.
@@ -121,6 +87,7 @@ export class OrgModel {
   readonly repositories: Readable<Loadable<readonly Repository[]>>
   readonly builds: Readable<Loadable<BuildsResponse>>
   readonly members: Readable<Loadable<MembersResponse>>
+  readonly routines: Readable<Loadable<readonly ListedRoutine[]>>
   /** The create requests of this tab, which a sign-out ends. */
   readonly creations = new Creations()
   readonly workspaceActions: WorkspaceActions
@@ -155,22 +122,27 @@ export class OrgModel {
       members: new Resource<MembersResponse>(() =>
         api.get(membersPath(orgId), readMembers),
       ),
+      routines: new Resource<readonly ListedRoutine[]>(() =>
+        api.get(routinesPath(orgId), readRoutines),
+      ),
       settings: new Resource<OrgSettings>(() =>
         api.get(orgSettingsPaths.settings(orgId), readSettings),
       ),
     }
-    const { list, repositories, builds, members } = this.resources
+    const { list, repositories, builds, members, routines } = this.resources
     this.workspaceActions = new WorkspaceActions(this)
     this.sections = partOf(list.store, (value) => value.sections)
     this.workspaces = partOf(list.store, (value) => value.workspaces)
     this.repositories = repositories.store
     this.builds = builds.store
     this.members = members.store
+    this.routines = routines.store
     this.parts = {
       list: new Refresher(list, listWait, this.services),
       repositories: new Refresher(repositories, onEntry, this.services),
       builds: new Refresher(builds, buildsWait, this.services),
       members: new Refresher(members, onEntry, this.services),
+      routines: new Refresher(routines, routinesWait, this.services),
     }
   }
 

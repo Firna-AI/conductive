@@ -2,7 +2,7 @@ import type { GitHubWorkspace } from './contracts'
 
 const WORKSPACES = `SELECT w.id, w.org_id AS orgId, w.branch,
   r.github_repository_id AS repositoryId, r.full_name AS fullName,
-  r.default_branch AS defaultBranch, r.installation_id AS installationId
+  r.default_branch AS defaultBranch, w.base_branch AS baseBranch, r.installation_id AS installationId
   FROM workspaces w
   JOIN repositories r ON r.id = w.repository_id AND r.org_id = w.org_id
   JOIN orgs o ON o.id = w.org_id
@@ -26,6 +26,7 @@ export function activeWorkspace(
   ).first<GitHubWorkspace>()
 }
 
+/** Webhook candidates. An archived workspace reads only when a tab asks. */
 export async function repositoryWorkspaces(
   db: D1Database,
   repositoryId: number,
@@ -33,7 +34,8 @@ export async function repositoryWorkspaces(
 ): Promise<GitHubWorkspace[]> {
   const { results } = await db
     .prepare(
-      `${WORKSPACES} AND r.github_repository_id = ? AND r.installation_id = ?`,
+      `${WORKSPACES} AND r.github_repository_id = ? AND r.installation_id = ?
+       AND w.archived_at IS NULL AND w.state != 'archived'`,
     )
     .bind(repositoryId, installationId)
     .all<GitHubWorkspace>()

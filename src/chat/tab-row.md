@@ -16,6 +16,16 @@ the requirements.
   At the load, missing places go at the end, in the order of creation.
   These changes send no write of their own. The next view save carries
   them, and a read-only workspace keeps them in the browser only.
+- The keys of the row follow the row order, as `useTabKeys` in
+  `components/tab-keys.ts` gives them. Previous tab and Next tab show the
+  tab before or after the shown tab, with a wrap at each end, also a file
+  or diff tab, through its `show`. Close tab closes the shown session tab
+  as its Close does, and the host closes a shown file or diff tab. Reopen
+  closed session runs the first row of the session history. Copy concise
+  transcript and Copy full transcript copy the shown session tab as the
+  items of its tab menu do, with the same toast, also in a read-only
+  workspace. A key that would do nothing, such as Next tab with one tab or
+  a copy key while a file shows, goes on to the page.
 - `moveTab(tab, place)` puts a tab before or after its neighbour in the
   row. It saves through the shared view writer, then sorts the open
   sessions for Close. A new or reopened session opens at the end. A
@@ -44,17 +54,33 @@ the requirements.
   handler of the tab opens it on every system and stops the key, so the
   browser opens no menu of its own. On a phone, a long press that ends with
   no move opens it as a sheet. A session tab has Rename session, a line,
-  Move left, and Move right. A file or diff tab has Move left and Move
-  right. A move that the place of the tab rules out is off: it keeps its
-  place at half opacity, and the arrow keys skip it. Escape or a press
-  outside closes the menu.
+  Copy concise transcript and Copy full transcript, a line, then Move left
+  and Move right, with the icons of the mockups. A file or diff tab has
+  Move left and Move right. A move that the place of the tab rules out is
+  off: it keeps its place at half opacity, and the arrow keys skip it.
+  Escape or a press outside closes the menu.
+- Each item that changes the workspace carries a mark: Rename session and
+  the moves. A read-only chat leaves out the marked items, and a group
+  with no item left loses its line. So a session tab there has only its two
+  copy items, and a file or diff tab has no item, so it opens no menu and
+  the browser shows its own. A read-only chat binds no drag, so a finger
+  opens the menu with `useLongPress` of the web app: a hold of 450 ms that
+  ends within 8 px. It lifts no tab, sends no write, and selects no tab,
+  because the click after it reaches nothing. A finger that moves first
+  scrolls the row, and the tab takes the touch CSS of a drag.
 - Move left and Move right call `moveTab` with the neighbour of the tab.
   The focus goes back to the link of the tab, and the status of the row
   says the new place, such as "app.ts moves to place 2 of 3". Rename
   session opens the rename field in that tab, also when the tab does not
   show, and the shown tab does not change. The tab with the field has no
-  fill of its own unless it is the shown tab. A read-only chat and a tab
-  with its rename field open no tab menu, so the browser shows its own.
+  fill of its own unless it is the shown tab. A tab with its rename field
+  opens no tab menu, so the browser shows its own.
+- A copy item calls `copyTranscript` of the controller during its press,
+  so the clipboard write starts before the reply comes, as
+  [Session transcripts](../../docs/protocol/session-transcripts.md#the-copy-items)
+  says. The menu closes, and a toast says "Transcript copied", or "The
+  transcript didn't copy. Try again." It selects no tab, loads no history,
+  and saves no view, also for a tab that never showed.
 - A row whose tabs do not fit at their minimum width scrolls sideways, with
   no scrollbar. It keeps the tab with the rename field, else the shown tab,
   whole in view: at the mount, when that tab changes, when the row gets

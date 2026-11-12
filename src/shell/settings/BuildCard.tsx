@@ -1,9 +1,9 @@
-import { RotateCw } from 'lucide-react'
 import { StatusText } from '../../../docs/mockups/src/components/common/StatusText'
 import { SectionText } from '../../../docs/mockups/src/components/settings/Section'
 import styles from '../../../docs/mockups/src/components/settings/BuildSection.module.css'
 import type { ComputerModel } from '../../app/computer-model'
 import { currentBuild, latestBuild } from '../../app/org-model'
+import { changeWaits } from '../../app/repository-changes'
 import { useStore } from '../../app/store'
 import { formatElapsed } from '../../app/time'
 import type {
@@ -11,10 +11,14 @@ import type {
   BuildsResponse,
   ImageBuild,
 } from '../../shared/org-settings'
-import { ActionButton } from '../ui/actions'
 import type { Action } from '../ui/useAction'
 import { BuildLog } from './BuildLog'
-import { BuildButton, BuildHistory, BuildResult } from './BuildParts'
+import {
+  BuildButton,
+  BuildHistory,
+  BuildResult,
+  TryAgainButton,
+} from './BuildParts'
 import { LoadFailure } from '../ui/LoadFailure'
 import { inSentence, useWhen } from './when'
 
@@ -41,23 +45,14 @@ function Head(props: { latest: ImageBuild; now: number; when: string }) {
 
 /** The action of an admin: Try again after a failed build, else Build computer. */
 function HeadAction(props: { latest: ImageBuild; build: Action<[]> }) {
-  if (props.latest.state !== 'failed') {
-    return (
-      <BuildButton
-        action={props.build}
-        running={props.latest.state === 'running'}
-      />
-    )
+  if (props.latest.state === 'failed') {
+    return <TryAgainButton action={props.build} />
   }
   return (
-    <ActionButton
-      busy={props.build.pending}
-      icon={RotateCw}
-      onPress={() => props.build.run()}
-      tone="primary"
-    >
-      Try again
-    </ActionButton>
+    <BuildButton
+      action={props.build}
+      running={props.latest.state === 'running'}
+    />
   )
 }
 
@@ -98,14 +93,14 @@ function FirstBuild(props: { build: Action<[]> }) {
  * that runs or failed, and the history. The computer model chooses and
  * follows the log, so the card only shows it. A failed build shows the
  * message that the Worker saved for it, such as its time limit, above its
- * log. A failed build leaves the last good build in use.
+ * log. A failed build leaves the last good build in use. The history stays
+ * closed while a saved change of the install script or of the repositories
+ * waits for a build.
  */
 export function BuildCard(props: {
   builds: BuildsResponse
   build: Action<[]>
   computer: ComputerModel
-  /** A changed install script waits for a build, so the history stays closed. */
-  needsBuild: boolean
 }) {
   const latest = latestBuild(props.builds)
   const current = currentBuild(props.builds)
@@ -146,7 +141,7 @@ export function BuildCard(props: {
       )}
       <BuildHistory
         builds={history}
-        open={latest.state === 'succeeded' && !props.needsBuild}
+        open={latest.state === 'succeeded' && !changeWaits(props.builds)}
         when={when}
       />
     </section>

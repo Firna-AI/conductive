@@ -32,7 +32,11 @@ export interface AppEnv {
   SANDBOX_PROVIDER_ACCOUNTS?: ProviderAccountConfigurations
   BOAT_KEY_ENCRYPTION_KEY: string
   RESEND_API_KEY?: string
+  FEEDBACK_EMAIL?: string
   OPERATOR_GITHUB_IDS?: string
+  /** Optional proxy outside Cloudflare for chatgpt.com requests. */
+  CHATGPT_EGRESS_URL?: string
+  CHATGPT_EGRESS_SECRET?: string
 }
 
 export type HttpFetch = (request: Request) => Promise<Response>

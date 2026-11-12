@@ -44,4 +44,4 @@ no Markdown. Each file starts with the whole count, so its cells stay in
 proportion to its size.
 [Files and changes](../../docs/protocol/workspace-tools.md#files-and-changes)
 states this budget. Agent messages add no empty cells to a short row, as
-[Chat Markdown](../../docs/protocol/chat-markdown.md#short-rows) says.
+[Chat tables](../../docs/protocol/chat-tables.md#short-rows) says.

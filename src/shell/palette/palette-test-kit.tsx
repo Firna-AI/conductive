@@ -3,15 +3,16 @@ import type { FetchLike } from '../../app/api/client'
 import { memoryNavigation } from '../../app/navigation'
 import { windowKeys, type AppServices, type Platform } from '../../app/services'
 import { Store } from '../../app/store'
+import type { ShortcutSystem } from '../../shared/shortcut-key'
 import {
   accessibleName,
   byRole,
   queryByRole,
 } from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
-import { MacApp, type MacWindowState } from '../mac/mac-app'
+import { MacApp, type MacWindow, type MacWindowState } from '../mac/mac-app'
 import { Shell } from '../Shell'
-import { mountScreen, press, settle } from '../test-mount'
+import { mountScreen, settle } from '../test-mount'
 import { startedApp } from '../test-render'
 import type { Viewport } from '../ui/viewport'
 import { recordingSocket } from '../workspace/kept-test-kit'
@@ -30,34 +31,55 @@ const macWindow = {
 }
 
 /**
- * The whole app in a tab at `href`, over the fake API, or in the Mac app
- * with `mac`. The app hears the keys of the window, as the browser gives
- * them. `beside` mounts a part of a test beside the app, inside its
- * providers.
+ * The whole app in a Chrome tab at `href`, over the fake API, or in the Mac
+ * app with `mac`, in the window `macWindow` of the test. The tab runs on a
+ * Mac with the Mac keyboard, and on Windows with the other keyboard, unless
+ * `system` names another system, such as Linux. The app hears the keys of
+ * the window, as the browser gives them. `beside` mounts a part of a test
+ * beside the app, inside its providers.
  */
 export async function openPaletteTab(
   href: string,
   options: {
     platform?: Platform
+    system?: ShortcutSystem
     viewport?: Viewport
     server?: FakeApiServer
     events?: AppServices['events']
     /** The fetch of the app, such as one of `HeldRequests`. */
     fetch?: FetchLike
     mac?: boolean
+    macWindow?: MacWindow
     beside?: ReactNode
+    /** The clock and the timers of the app, such as those of a test. */
+    clock?: Pick<AppServices, 'now' | 'delay'>
+    /** The clipboard of the app, such as one that keeps each copied text. */
+    copy?: AppServices['copy']
+    /** Opens a page in a new tab, such as a fake that keeps each address. */
+    openInNewTab?: AppServices['openInNewTab']
   } = {},
 ) {
   const server = options.server ?? new FakeApiServer()
   const app = await startedApp(server, {
     onKey: windowKeys(window),
     platform: options.platform ?? 'other',
+    host: options.mac
+      ? { kind: 'mac-app', system: 'mac' }
+      : {
+          kind: 'browser-tab',
+          browser: 'chrome',
+          system:
+            options.system ?? (options.platform === 'mac' ? 'mac' : 'windows'),
+        },
     events: options.events ?? recordingSocket(server).source,
     fetch: options.fetch,
+    ...options.clock,
+    ...(options.copy ? { copy: options.copy } : {}),
+    ...(options.openInNewTab ? { openInNewTab: options.openInNewTab } : {}),
   })
   const navigation = memoryNavigation(href)
   const shell = options.mac ? (
-    <MacApp window={macWindow}>
+    <MacApp window={options.macWindow ?? macWindow}>
       <Shell />
     </MacApp>
   ) : (
@@ -90,18 +112,6 @@ export function searchField(): HTMLInputElement {
     throw new Error('The search field is not a text field.')
   }
   return field
-}
-
-/** Presses the palette key of the platform, by default on the focused element. */
-export function pressPaletteKey(
-  platform: Platform,
-  target: EventTarget = document.activeElement ?? document.body,
-): KeyboardEvent {
-  return press(
-    target,
-    'k',
-    platform === 'mac' ? { meta: true } : { ctrl: true },
-  )
 }
 
 /** The options of the results, in their order. */

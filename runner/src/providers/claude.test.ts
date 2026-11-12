@@ -198,6 +198,7 @@ it('maps SDK partial text, thinking, tools, message UUIDs, and stopped output', 
       agent: 'claude',
       providerSessionId: 'sdk-session',
       instructions: sdkOptions?.systemPrompt,
+      instructionBranches: null,
     },
   ])
   h.endpoint.send(turn('3'))

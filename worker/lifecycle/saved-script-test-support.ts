@@ -37,6 +37,7 @@ export async function localSavedScriptFixture(
   const runtime = join(directory, 'runtime')
   const environment = join(directory, 'env.sh')
   const runnerCalls = join(directory, 'runner-calls')
+  const systemGitConfig = join(directory, 'system-gitconfig')
   const install = join(directory, 'install.sh')
   const mappedPaths = new Map([
     [legacyRepositoryDirectory(repositoryId), repository],
@@ -103,6 +104,10 @@ export async function localSavedScriptFixture(
         .replaceAll(
           'sudo -n systemctl restart conductive-runner.service',
           `printf "%s\\n" runner-restarted >> "${runnerCalls}"`,
+        )
+        .replaceAll(
+          'sudo -n git config --system ',
+          `git config --file ${shellQuote(systemGitConfig)} `,
         )
       for (const [source, target] of mappedPaths)
         mapped = mapped.replaceAll(source, target)
@@ -186,6 +191,18 @@ export async function localSavedScriptFixture(
     },
     ready: () => readOptional(join(runtime, 'workspace-ready')),
     runnerCalls: () => readOptional(runnerCalls),
+    /** The Git system settings that the scripts wrote, as `git config --list` gives them. */
+    systemGitSettings: async () =>
+      (await readOptional(systemGitConfig)) === null
+        ? null
+        : new Promise<string>((resolve, reject) => {
+            execFile(
+              'git',
+              ['config', '--file', systemGitConfig, '--list'],
+              { env: isolatedProcessEnvironment({ PATH: '/usr/bin:/bin' }) },
+              (error, stdout) => (error ? reject(error) : resolve(stdout)),
+            )
+          }),
     dispose: () => rm(directory, { recursive: true, force: true }),
   }
 }

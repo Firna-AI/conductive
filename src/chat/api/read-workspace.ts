@@ -1,5 +1,6 @@
 import type { ChatEvent } from '../../shared/chat-events'
 import type { WorkspaceEvent } from '../../shared/events'
+import { readGitHubSummary } from '../../shared/github-read'
 import type {
   OrderedWorkspaceResponse,
   StartStep,
@@ -14,7 +15,7 @@ import { readChatEvent, readChoice, readSender } from './read-chat'
  * The workspace events that the chat reads. The stream also carries file,
  * GitHub, and preview events. Those only move the stream cursor on.
  */
-export type ChatStreamEvent =
+type ChatStreamEvent =
   | ChatEvent
   | Extract<
       WorkspaceEvent,
@@ -72,9 +73,11 @@ function readWorkspace(value: unknown): Workspace {
     branch: text(source.branch),
     choice: readChoice(source.choice),
     state: readState(source.state),
+    github: readGitHubSummary(source.github),
     createdAt: count(source.createdAt),
     updatedAt: count(source.updatedAt),
     archivedAt: nullable(count)(source.archivedAt),
+    restoreUntil: nullable(count)(source.restoreUntil),
   }
 }
 
