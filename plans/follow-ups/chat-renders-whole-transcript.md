@@ -15,8 +15,16 @@
   - `AgentText` parses the whole text of an answer into blocks at each render, through `textBlocks`.
   - Neither keeps an earlier result. So each change of the transcript groups every item and parses every answer again.
   - The chat passes the time of a running turn as `now`, so the transcript draws again each second while a turn runs.
-- **Problem:** The work of each render grows with the length of the session, and it runs each second during a turn. A one-time measurement on 11 November 2026, in headless Chrome on the fake API, drew 4,200 items in one synchronous commit of 3.16 s. The newest page alone drew in 0.33 s.
-- **Impact if no action:** A long session freezes the tab for seconds each time its whole history draws, and it keeps the main thread busy each second while a turn runs, also after the fold becomes fast.
+  - The agent runner sends a streamed part of an answer every 40 ms, up to 25 parts each second. Each part changes the transcript, and `useSyncExternalStore` in `src/chat/WorkspaceChat.tsx` renders the chat again for each change.
+  - React then runs the render code of every row. The browser changes only the parts of the page that differ.
+- **Problem:**
+  - The work of each render grows with the length of the session, and it runs for each streamed part and each second of a running turn.
+  - A one-time measurement on 12 November 2026 used the production build of React in headless Chrome, on the fake API, on a cloud sandbox.
+  - One render after a streamed part took 32 ms at 1,048 items, 59 ms at 2,100 items, and 103 ms at 4,200 items. One render for the clock took 31 ms, 57 ms, and 118 ms.
+  - The first draw of the whole history took 235 ms at 1,048 items and 397 ms at 4,200 items.
+  - At 25 parts each second, 4,200 items need about 2.5 s of render work for each second of streaming, so the tab falls behind.
+  - An earlier figure of 3.16 s for 4,200 items came from the development build of React, which is about eight times slower here.
+- **Impact if no action:** While an agent writes in a long session, the chat stutters, and typing in the composer lags, because each streamed part redoes the work of every row. This stays after the fold becomes fast.
 - **Root question:** How does the chat draw a long transcript without doing work for the items that did not change?
 - **Options:**
   - **A.** Change nothing. Effort: Small.
