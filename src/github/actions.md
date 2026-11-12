@@ -2,7 +2,7 @@
 
 This guide belongs to [the GitHub banner UI](README.md). It gives the one
 action state of the pull request bar: the member's access, Merge, the fixed
-prompts of the agent, and Continue. [GitHub banner](../../docs/protocol/github-banner.md)
+prompts of the agent, Continue, and their keys. [GitHub banner](../../docs/protocol/github-banner.md)
 and [Continue](../../docs/protocol/continue.md) state the requirements, and
 the mockups under `app/banner` draw them.
 
@@ -101,6 +101,24 @@ reply.
 - `continueOutcome` keeps the Worker's safe words for each stop. A refusal
   because a turn runs shows the wait.
 
+## Keys
+
+`barCommands` in [barKeys.ts](barKeys.ts) gives the commands that the
+keys run while the bar shows, as
+[Where a command runs](../../docs/protocol/keyboard-shortcuts.md#where-a-command-runs)
+says.
+
+- Each button that takes a click has the command of its click, such as
+  Create PR or Merge PR, and its key calls `onAction` as the click does.
+  So Merge PR merges at once.
+- A busy button, such as Merge while it merges, and a disabled one, such
+  as Continue while a turn runs, take no click. Their keys do nothing, and
+  their tooltips name no key.
+- Open PR on GitHub opens the link of the bar to the pull request in a new
+  tab, while the bar shows that link.
+- The palette of the app runs Archive workspace, so the app offers no
+  key for the Archive button of the bar.
+
 ## Key code
 
 - `barActions.ts`: `BarActions`, the store of the access, the runs, the
@@ -113,5 +131,7 @@ reply.
 - `useBarControls.ts`: `useBarActions` and `useBarControls`.
 - `BarButtons.tsx`: the buttons, the line under the bar, and
   `ChecksActions`, the top of the phone Checks tab.
+- `barKeys.ts`: `barCommands`, the commands that the keys of the bar run,
+  and `buttonKey`, the key that the tooltip of a button names.
 - `barActions.test.ts`, `barView.test.ts`, and `barPrompts.test.ts`: the
   runs over the fake API with a manual timer, the rules, and the prompts.

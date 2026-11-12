@@ -1,4 +1,4 @@
-import { Plus, RotateCw, X } from 'lucide-react'
+import { Plus, RotateCw } from 'lucide-react'
 import {
   detectedServers,
   openPort,
@@ -10,9 +10,9 @@ import { paths } from '../../paths'
 import { LostUpdateRow } from '../chat/LostUpdate'
 import { IconButton } from '../common/actions'
 import { ExternalLink } from '../common/ExternalLink'
-import { LinkTabs } from '../common/LinkTabs'
 import { ScreenLink } from '../common/ScreenLink'
 import { PortMessage, ServerList } from './PortForm'
+import { PreviewTabs } from './PreviewTabs'
 import { portFormCopy, previewTabLabel, serverDescription } from './previewCopy'
 import { StorefrontPage } from './StorefrontPage'
 import styles from './PortPreview.module.css'
@@ -53,7 +53,8 @@ function previewTabs(adding: boolean) {
 
 /**
  * The open previews of the sandbox. A preview shows in a frame, with a link
- * to a new tab. After "+", no tab is current, and the port form lists the
+ * to a new tab. Each tab closes its preview with the Close button beside
+ * its label. After "+", no tab is current, and the port form lists the
  * servers that have no preview yet.
  */
 function PortPreview(props: { adding: boolean }) {
@@ -65,11 +66,7 @@ function PortPreview(props: { adding: boolean }) {
     <div className={styles.preview}>
       <div className={styles.toolbar}>
         {/* Beside the actions of the frame, two named tabs do not fit. */}
-        <LinkTabs
-          fadeEnd={!adding}
-          label="Previews"
-          tabs={previewTabs(adding)}
-        />
+        <PreviewTabs fadeEnd={!adding} tabs={previewTabs(adding)} />
         {adding ? (
           <IconButton icon={Plus} label="Preview another port" pressed />
         ) : (
@@ -86,7 +83,6 @@ function PortPreview(props: { adding: boolean }) {
                 Open
               </ExternalLink>
             </span>
-            <IconButton icon={X} label="Close preview" />
           </>
         )}
       </div>

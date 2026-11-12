@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
+import { pickChatFiles } from './draft-files.test-support'
 import type { AgentChoice } from '../../shared/agents'
 import { filePaths } from '../../shared/files'
 import { retryMessagePath, sessionPaths } from '../../shared/sessions'
@@ -202,7 +203,7 @@ describe('ChatController actions', () => {
     })
     await chat.controller.start()
     chat.controller.setDraft(id, 'The suggestions cover the postcode.')
-    const uploading = chat.controller.attachFiles(id, [
+    const uploading = pickChatFiles(chat, id, [
       new File(['png'], 'overlap.png', { type: 'image/png' }),
     ])
     await vi.waitFor(() => expect(chat.held).toHaveLength(1), {

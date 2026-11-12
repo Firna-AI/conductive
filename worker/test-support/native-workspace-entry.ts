@@ -1,4 +1,5 @@
 import { Workspace } from '../workspace'
+import type { QueueTurn } from '../chat/queue-turn'
 import type { LifecycleEnvironment } from '../lifecycle/runtime'
 import { advanceScheduledAlarms } from '../lifecycle/scheduled-alarms.test-support'
 import {
@@ -106,7 +107,9 @@ export class NativeWorkspace extends Workspace {
     let onPublication: NativeWorkspaceOptions['onPublication']
     let onQueued: NativeWorkspaceOptions['onQueued']
     const run = this.chat.store.run.bind(this.chat.store)
-    this.chat.store.run = <T>(work: () => Promise<T>): Promise<T> => {
+    this.chat.store.run = <T>(
+      work: (turn: QueueTurn) => Promise<T>,
+    ): Promise<T> => {
       const result = run(work)
       if (onQueued) context.waitUntil(onQueued())
       return result

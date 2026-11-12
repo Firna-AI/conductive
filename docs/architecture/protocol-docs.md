@@ -29,10 +29,11 @@ This page lists each protocol doc and what it covers.
   - [Messages and attachments](../protocol/messages-and-attachments.md)
     - [Message attachments](../protocol/message-attachments.md): the size
       limit, the upload, the storage, the copy into the cloud computer, and
-      the deletion of the files of a message.
+      the deletion of the files of a message, and their chips and their
+      drop in the message field.
   - [File mentions](../protocol/file-mentions.md): the list of `@` in the
-    composer, the chips of files and folders, and the removal of each chip
-    of the composer.
+    composer, the chips of files and folders, the sent chips of attached
+    files, and the removal of each chip of the composer.
   - [Agent runner](../protocol/agent-runner.md): the connection of the runner,
     its events and their limits, its turns, the background work of Claude
     turns with its note and its time limit, its port reports, and the repair
@@ -90,6 +91,13 @@ This page lists each protocol doc and what it covers.
 - [Feedback](../protocol/feedback.md): the Feedback dialog that Send
   feedback opens, its screenshots and context, the reply address, the
   routes, and the email to the team inbox.
+- [Keyboard shortcuts](../protocol/keyboard-shortcuts.md): the commands that
+  keys run, where a key goes, and where the changes of a person live.
+  - [Keyboard shortcuts: the keys](../protocol/keyboard-shortcuts-keys.md)
+  - [Keyboard shortcuts: fixed keys and text keys](../protocol/keyboard-shortcuts-fixed-keys.md)
+  - [Keyboard shortcuts: the hosts](../protocol/keyboard-shortcuts-hosts.md)
+  - [Keyboard shortcuts: matching a press](../protocol/keyboard-shortcuts-matching.md)
+  - [Keyboard shortcuts: the settings tab](../protocol/keyboard-shortcuts-tab.md)
 - [Org image](../protocol/org-image.md): the org image, its builds and its
   refreshes, and the first build of a new org.
 - [Agents and sessions](../protocol/agents-and-sessions.md): the agents and

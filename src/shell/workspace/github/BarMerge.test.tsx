@@ -19,7 +19,7 @@ import {
   serveMerge,
   serveWork,
 } from '../../../test-support/fake-bar'
-import { FAKE_IDS } from '../../../test-support/fixtures/core'
+import { FAKE_IDS, FAKE_TIME } from '../../../test-support/fixtures/core'
 import {
   FAKE_GITHUB_HEAD_SHA,
   toolFixtures,
@@ -28,10 +28,12 @@ import {
   holdAnimationFrames,
   MOUNTED_TEST_TIMEOUT,
 } from '../../../test-support/mount'
+import { openPaletteTab } from '../../palette/palette-test-kit'
+import { pressHintKey } from '../../shortcuts/shortcut-test-kit'
 import { click, settle } from '../../test-mount'
 import { filesHref } from '../files/files-address'
-import { emit } from '../kept-test-kit'
-import { linksTo, openTab } from '../wiring-test-kit'
+import { bodiesOf, emit } from '../kept-test-kit'
+import { linksTo, openTab, socketsOf } from '../wiring-test-kit'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
@@ -91,6 +93,41 @@ describe('Merge in the pull request bar', () => {
       merged: true,
       continues: true,
       reads: 1,
+    })
+  })
+
+  test('the key of Merge PR merges at once as a click does, and does nothing while Merging shows, with no key in its tooltip', async () => {
+    holdAnimationFrames()
+    const server = new FakeApiServer()
+    serveWork(server, 'none')
+    serveMerge(server, 'merged')
+    const delay = new ManualDelay()
+    const { app, view } = await openPaletteTab(routes.workspace(org, id), {
+      server,
+      events: socketsOf(server).events,
+      clock: { now: () => FAKE_TIME, delay: delay.delay },
+    })
+    const column = byLabel('Files and tools', view)
+
+    const first = pressHintKey(app, 'merge-pull-request', document.body)
+    await settle()
+    const merging = queryByRole('button', 'Merging', column)
+    const again = pressHintKey(app, 'merge-pull-request', document.body)
+    await settle()
+
+    expect({
+      first: first.defaultPrevented,
+      again: again.defaultPrevented,
+      busy: merging && {
+        tooltip: merging.closest('[title]')?.getAttribute('title') ?? null,
+        name: merging.getAttribute('aria-keyshortcuts'),
+      },
+      starts: await bodiesOf(server, 'POST', githubPaths.merge(org, id), 0),
+    }).toEqual({
+      first: true,
+      again: false,
+      busy: { tooltip: null, name: null },
+      starts: [{ headSha: FAKE_GITHUB_HEAD_SHA, method: 'squash' }],
     })
   })
 

@@ -64,6 +64,9 @@ npm run typecheck
   It checks the stored event and cursor together, then checks replay after eviction.
 - `events.test.ts` holds one native history-page list while a concurrent write enters the chat queue.
   It releases the page after the queue signal and checks history before live events.
+- `queue-turn.test.ts` holds an `outside` call of `ChatQueue` and records the order of the queue tasks.
+  It checks the return to the back of the queue, the error after the return, and the waits of `idle()` and `settled()`.
+- `queue-generation.test.ts` checks that a queue task in an `outside` call lends its receiver generation to no other task.
 - Send and Retry can commit a login observation before acceptance.
   An acceptance crash test first makes `loginAvailable` current, then injects its commit fault.
 - `createRunnerLimitsFixture` in `runner-limits.test-support.ts` uses the same production object and native runner channel.

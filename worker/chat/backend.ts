@@ -29,6 +29,7 @@ import type { ChatWorkspaceSummary } from './workspace-summary'
 import { ChatOperation } from './operation'
 import { RunnerChannel } from './runner-channel'
 import type { ChatStore, ChatTransaction } from './store'
+import type { QueueTurn } from './queue-turn'
 import { createWorkspaceChatStore } from './workspace-store'
 import {
   runWorkspaceOperation,
@@ -59,7 +60,7 @@ export class WorkspaceChat {
     return this.operations.summary(workspaceId)
   }
 
-  runLifecycle<T>(operation: () => Promise<T>): Promise<T> {
+  runLifecycle<T>(operation: (turn: QueueTurn) => Promise<T>): Promise<T> {
     return this.store.run(operation)
   }
 

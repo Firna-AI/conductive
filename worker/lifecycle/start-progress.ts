@@ -13,6 +13,7 @@ import type { WorkspaceRow } from './workspace-data'
 import type { WorkspaceLifecycleEndpoint } from './workspace-runtime'
 import { JobTimeLimit } from './job-time-limit'
 import { startTimeLimitReached } from './start-provider-retry'
+import type { StartCall } from './start-guard'
 
 export async function advanceStartSteps(
   env: AppEnv,
@@ -22,19 +23,20 @@ export async function advanceStartSteps(
   provider: SandboxProvider,
   row: WorkspaceRow,
   job: WorkspaceStartJob,
+  call: StartCall,
 ): Promise<boolean> {
   if (job.phase === 'records') throw new WorkspaceStartError(null)
   if (startTimeLimitReached(job, dependencies.now()))
     throw new JobTimeLimit('start')
   if (job.phase === 'terminal-password') {
-    await prepareStartTerminal(env, dependencies, job)
+    await call(() => prepareStartTerminal(env, dependencies, job))
     await endpoint.lifecycleStep('startup', stepLabel('startup'), 'completed')
     await nextStartCommand(storage, job, 'runner')
     return true
   }
   const label =
     job.phase === 'fetch' && job.baseBranch
-      ? await creationFetchLabel(env.DB, job)
+      ? await call(() => creationFetchLabel(env.DB, job))
       : stepLabel(job.phase)
   if (
     !(await advanceStartCommand(
@@ -45,6 +47,7 @@ export async function advanceStartSteps(
       row,
       job,
       label,
+      call,
     ))
   )
     return false

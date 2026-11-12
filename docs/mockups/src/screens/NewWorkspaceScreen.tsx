@@ -9,11 +9,13 @@ import { formWait } from '../components/new-workspace/waitingRepository'
 import { orgSuspendedReason } from '../components/orgs/suspension'
 import { firstBuildStates } from '../fixtures/computer'
 import { memberViewer, you } from '../fixtures/members'
+import type { ShortcutChanges } from '../fixtures/shortcutChanges'
 import { paths } from '../paths'
 import { FirstBuildNotice } from './firstBuildNotice'
 import { pageOrg, railOf, sidebarOf } from './newWorkspacePageParts'
 import {
   formNotices,
+  hasWords,
   newWorkspaceDraft,
   newWorkspaceFormProperties,
   taskPlaceholder,
@@ -121,12 +123,15 @@ function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
             ? paths.newWorkspaceFiles
             : undefined,
         blocked: building || waiting || waits(state),
+        caret: text === draft.text ? draft.caret : undefined,
         choice: page.choice,
         draft: text,
+        // A phone shows a pick at the caret in place of the drag.
+        drop: state.files === 'drop-over' && props.viewport === 'desktop',
         placeholder: taskPlaceholder,
         running: false,
         sendTo:
-          failed || linked || waiting || state.org === 'new' || text === ''
+          failed || linked || waiting || state.org === 'new' || !hasWords(text)
             ? undefined
             : created,
       }}
@@ -157,10 +162,15 @@ function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
   )
 }
 
-/** A New workspace page with the repositories and the composer of its org. */
+/**
+ * A New workspace page with the repositories and the composer of its org.
+ * `shortcuts` holds the person's changes to the shortcuts, so the Search
+ * row shows the person's key of the palette.
+ */
 export function NewWorkspaceScreen(props: {
   state: NewWorkspaceState
   viewport: Viewport
+  shortcuts?: ShortcutChanges
 }) {
   const mac = useMacApp()
   const { state } = props
@@ -198,7 +208,10 @@ export function NewWorkspaceScreen(props: {
     )
   }
   return (
-    <AppFrame rail={railOf(state)} sidebar={sidebarOf(state, mac?.needsInput)}>
+    <AppFrame
+      rail={railOf(state)}
+      sidebar={sidebarOf(state, mac?.needsInput, props.shortcuts)}
+    >
       {page}
     </AppFrame>
   )

@@ -24,7 +24,9 @@ first.
 - `first-message.ts`: the checks and the admission of the first message of
   a create.
 - `session-titles.ts`: the empty-name rule for the first session's workspace
-  title and each later session's first message with text.
+  title and each later session's first message with text. A text with only
+  the mentions of its own attached files counts as no text. In a title, each
+  such mention becomes the original name of its file.
 - `workspace-titles.ts`, `title-model.ts`, and `workspace-title.ts`: the
   background model request and the shared title storage and D1 projection.
   The shared writer checks the empty name and workspace access before it
@@ -55,6 +57,15 @@ first.
 - `store.ts` and `history-storage.ts`: `ChatStore` and `ChatTransaction`,
   the records, the event numbers, the GitHub view of a transaction, and the
   chunks of large file reports and tree deltas.
+- `queue-turn.ts`: `ChatQueue`, the serial queue of `ChatStore.run`, and
+  `QueueTurn`, the handle whose `outside(call)` runs one call outside the
+  queue. `hasOutsideTurns` tells Archive that a queue task is outside.
+- `queue-generation.ts`: `QueueGenerations`, which keeps the member
+  receiver generation of each queue task for the guarded storage, the Boat
+  fetch check, and the start guard.
+- `lifecycle-queue.ts`: `runWorkspaceLifecycle`, which runs one lifecycle
+  change in a queue task with its receiver generation, then calls
+  `flushRunner`.
 - `history-pages.ts`: `HistoryPages`, the pages of the stored history and
   the index of replaced answers and tool states. A page reads one storage
   list of 32 events. The session history route of the browser passes
@@ -119,6 +130,10 @@ first.
   command whose login cannot run, after the runner or at once.
 - `attachment-paths.ts`: the captured repository folder lookup and the
   absolute attachment paths of each runner send.
+- [`src/shared/attachment-paths.ts`](../../src/shared/attachment-paths.ts):
+  `attachmentPath`, the relative copy path of a file from its ID and its
+  name. The upload reply, admission, the copy, and the proof check use it.
+  The development fakes share it.
 - `ordered-dispatch.ts`: `dispatchInOrder` and `commandDispatchState`, the
   send, wait, or skip check of each pending command in stored order.
 - `report-repairs.ts`, `repair-refusal.ts`, and `repair-delivery.ts`: the
@@ -150,8 +165,9 @@ first.
 - `turn-end-reports.ts`: `TurnEndReports` keeps the recorded ends of each
   committed transaction. `ChatStore.reportTurnEnds` gives each end to the
   `turnEnded` hook. It runs after the runner confirm, before each dispatch,
-  and at the end of each queued task. So the workspace lifecycle gets each
-  end by its turn ID, from one path, whatever ended the turn.
+  before a task steps outside the queue, and at the end of each queue task.
+  So the workspace lifecycle gets each end by its turn ID, from one path,
+  whatever ended the turn.
 - `sockets.ts`: the WebSocket upgrades of tabs and the runner.
 - `browser-connections.ts` and `browser-registration.ts`:
   `BrowserConnections`, the native acceptance, restore, and close of tab

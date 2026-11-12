@@ -1,5 +1,54 @@
 # Changelog
 
+## [0.12.0](https://github.com/Firna-AI/conductive/compare/v0.11.0...v0.12.0) (2026-11-11)
+
+
+### Features
+
+* **chat:** drop files into the composer as chips in the text ([#266](https://github.com/Firna-AI/conductive/issues/266)) ([ece84da](https://github.com/Firna-AI/conductive/commit/ece84da697ad840368e21f0bf5e3bd80e1f8215b))
+
+
+### Bug Fixes
+
+* **mac:** close menus on a press on a top bar ([#268](https://github.com/Firna-AI/conductive/issues/268)) ([7700c8f](https://github.com/Firna-AI/conductive/commit/7700c8f6301ead7bf18c136f3186bd17875a0b31))
+
+
+### Performance Improvements
+
+* **lifecycle:** run start D1 and Boat calls outside the chat queue ([#261](https://github.com/Firna-AI/conductive/issues/261)) ([a822367](https://github.com/Firna-AI/conductive/commit/a82236777bb99ff7fecf6bd89d1d95baca4975dc))
+
+## [0.11.0](https://github.com/Firna-AI/conductive/compare/v0.10.0...v0.11.0) (2026-11-11)
+
+
+### Features
+
+* **shortcuts:** add keyboard shortcuts and their settings tab ([#216](https://github.com/Firna-AI/conductive/issues/216)) ([0ad6a1c](https://github.com/Firna-AI/conductive/commit/0ad6a1c6f47a1de4c070cc1348869feaa8992676))
+
+## [0.10.0](https://github.com/Firna-AI/conductive/compare/v0.9.1...v0.10.0) (2026-11-11)
+
+
+### Features
+
+* **chat:** draw Markdown headings in agent messages ([#244](https://github.com/Firna-AI/conductive/issues/244)) ([4374132](https://github.com/Firna-AI/conductive/commit/43741329ba2817835dbfec17e602895485301267))
+* **workspaces:** show GitHub state in workspace marks ([#208](https://github.com/Firna-AI/conductive/issues/208)) ([eb34094](https://github.com/Firna-AI/conductive/commit/eb340941118ea2b35e4987808f186472a961ded0))
+
+
+### Bug Fixes
+
+* **ci:** keep the ChatGPT host helper private ([#262](https://github.com/Firna-AI/conductive/issues/262)) ([9125746](https://github.com/Firna-AI/conductive/commit/91257465c22f54287ee0bd6a69168350e45a964f))
+* **files:** keep a lazy list line from becoming a heading underline ([4374132](https://github.com/Firna-AI/conductive/commit/43741329ba2817835dbfec17e602895485301267))
+* **github:** read GitHub only for workspaces that a webhook can change ([#251](https://github.com/Firna-AI/conductive/issues/251)) ([c53e7fd](https://github.com/Firna-AI/conductive/commit/c53e7fd0ed1d53c80eb2d9352a95c349aa001423))
+* **github:** skip archived workspaces when a webhook arrives ([#249](https://github.com/Firna-AI/conductive/issues/249)) ([dae46ac](https://github.com/Firna-AI/conductive/commit/dae46acdcdaf822b294001399fef9669c5ea6b93))
+* **marketing:** update agent controls and changelog statuses ([#248](https://github.com/Firna-AI/conductive/issues/248)) ([f51097b](https://github.com/Firna-AI/conductive/commit/f51097b8b602d1a3cebe93e7f36b3bc0c2dd63b9))
+* **model-gateway:** send chatgpt.com requests through an egress proxy ([#259](https://github.com/Firna-AI/conductive/issues/259)) ([dfd2ebf](https://github.com/Firna-AI/conductive/commit/dfd2ebf15c861b9e2f2b2ebde711e702f08fa870))
+* **runner:** keep turns open for background work ([#245](https://github.com/Firna-AI/conductive/issues/245)) ([6b21ea3](https://github.com/Firna-AI/conductive/commit/6b21ea3412e045710a630fb13a16d6c0f3acc389))
+* **runner:** name MCP tools in chat and let agents use the desktop ([#247](https://github.com/Firna-AI/conductive/issues/247)) ([1b2579d](https://github.com/Firna-AI/conductive/commit/1b2579df1e054e4d1b336231b45dc1d2074709b9))
+
+
+### Performance Improvements
+
+* **github:** read pull request banners in one GraphQL query ([#254](https://github.com/Firna-AI/conductive/issues/254)) ([8576421](https://github.com/Firna-AI/conductive/commit/8576421df2fbebf1a74af8cb936b273563911193))
+
 ## [0.9.1](https://github.com/Firna-AI/conductive/compare/v0.9.0...v0.9.1) (2026-11-11)
 
 

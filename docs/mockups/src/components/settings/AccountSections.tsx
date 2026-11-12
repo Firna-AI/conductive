@@ -9,11 +9,12 @@ import {
   type LoginKind,
 } from '../../fixtures/logins'
 import { account, installations } from '../../fixtures/orgs'
+import type { ShortcutHost } from '../../fixtures/shortcutHosts'
 import { noop } from '../../noop'
 import { paths } from '../../paths'
 import { ActionButton } from '../common/actions'
 import { classes } from '../common/classes'
-import { LinkTabs } from '../common/LinkTabs'
+import { LinkTabs, type LinkTab } from '../common/LinkTabs'
 import { AccountAvatar } from '../orgs/OrgTile'
 import { StatusText } from '../common/StatusText'
 import { AgentConnectForm } from './AgentConnectForm'
@@ -25,6 +26,7 @@ import {
 } from './LoginNotUsable'
 import { LoginShare } from './LoginShare'
 import { Section } from './Section'
+import { shortcutPages } from './shortcutPages'
 import styles from './AccountSections.module.css'
 
 const connected = <StatusText label="Connected" tone="success" />
@@ -218,29 +220,37 @@ export function AgentsSection(props: {
   )
 }
 
-/** The two pages of the account. */
-export type AccountTab = 'general' | 'preferences'
+/** The pages of the account. */
+export type AccountTab = 'general' | 'preferences' | 'shortcuts'
 
 /**
  * The pages of the account, as tabs that link to each one: General, with
- * the sign-in and the connections, and Preferences.
+ * the sign-in and the connections, Preferences, and Keyboard shortcuts.
+ * The Mac app's General tab links to its own page, which has This Mac, and
+ * Keyboard shortcuts links to the tab of the host. `flow` moves a tab that
+ * does not fit to a second line, for a phone.
  */
-export function AccountTabs(props: { tab: AccountTab }) {
-  return (
-    <LinkTabs
-      label="Account"
-      tabs={[
-        {
-          label: 'General',
-          to: paths.account,
-          selected: props.tab === 'general',
-        },
-        {
-          label: 'Preferences',
-          to: paths.accountPreferences,
-          selected: props.tab === 'preferences',
-        },
-      ]}
-    />
-  )
+export function AccountTabs(props: {
+  tab: AccountTab
+  host: ShortcutHost
+  flow?: boolean
+}) {
+  const tabs: LinkTab[] = [
+    {
+      label: 'General',
+      to: props.host === 'mac-app' ? paths.thisMac : paths.account,
+      selected: props.tab === 'general',
+    },
+    {
+      label: 'Preferences',
+      to: paths.accountPreferences,
+      selected: props.tab === 'preferences',
+    },
+    {
+      label: 'Keyboard shortcuts',
+      to: shortcutPages[props.host].tab,
+      selected: props.tab === 'shortcuts',
+    },
+  ]
+  return <LinkTabs flow={props.flow} label="Account" tabs={tabs} />
 }

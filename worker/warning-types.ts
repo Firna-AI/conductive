@@ -38,6 +38,9 @@ export const SIMPLE_WARNINGS = {
   activity_update_failed: 'Workspace activity update failed.',
   workspace_title_unconfigured:
     'The workspace title request was skipped: Workers AI is not configured.',
+  shortcut_keys_skipped:
+    'Some stored shortcut keys are no longer valid and were skipped.',
+  shortcut_change_skipped: 'An unreadable stored shortcut change was skipped.',
 } as const
 
 /** Each kind permits only its fixed text and the safe values that it needs. */

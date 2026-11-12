@@ -13,8 +13,11 @@ import { startAlarmDeadline } from './start-provider-retry'
 import type { WorkspaceAccessStop } from './workspace-suspension'
 import type { WorkspaceArchive } from './archive-state'
 import type { ComputerStopTask } from './computer-stop-task'
+import type { QueueTurn } from '../chat/queue-turn'
+import { StartSuperseded } from './start-guard'
 
 export async function runWorkspaceAlarm(input: {
+  turn?: QueueTurn
   storage: WorkspaceStorage
   startStorage: WorkspaceStorage
   startJobs: StartJobStorage
@@ -98,7 +101,7 @@ export async function runWorkspaceAlarm(input: {
     if (await input.starts.pending()) {
       if (terminal || startRequested) {
         try {
-          if (await input.starts.advance()) {
+          if (await input.starts.advance(input.turn)) {
             if (!(await input.starts.pending())) {
               await input.startStorage.deleteAlarm()
               await lifecycle.schedule()
@@ -120,8 +123,11 @@ export async function runWorkspaceAlarm(input: {
                   ),
             )
           }
-        } catch {
-          await input.startStorage.setAlarm(dependencies.now() + 30_000)
+        } catch (error) {
+          await input.startStorage.setAlarm(
+            dependencies.now() +
+              (error instanceof StartSuperseded ? 1_000 : 30_000),
+          )
         }
       }
       if (await input.starts.pending()) {

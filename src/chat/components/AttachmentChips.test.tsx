@@ -1,14 +1,13 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
-import { ApiError } from '../../app/api/client'
-import { uploadingFile, type DraftFile } from '../../app/draft-files'
 import type { Attachment } from '../../shared/messages'
-import { DraftFiles, OversizeNotice, SentFiles } from './AttachmentChips'
+import { OversizeNotice, SentFiles } from './AttachmentChips'
 import { textOf } from './render-kit'
 
 const screenshot: Attachment = {
   id: 'attachment-1',
   name: 'overlap.png',
+  path: null,
   kind: 'image',
   mediaType: 'image/png',
   sizeBytes: 290_816,
@@ -22,56 +21,6 @@ function buttonNames(html: string): string[] {
 }
 
 describe('the attached files', () => {
-  it('shows each upload state of a draft file: the measured percent, Uploading before a measurement, and Try again only on a failed one', () => {
-    const files: DraftFile[] = [
-      {
-        state: 'uploading',
-        id: 'file-0',
-        file: new File(['png'], 'sketch.png'),
-        sentBytes: 2,
-      },
-      uploadingFile('file-1', new File(['notes'], 'notes.txt')),
-      {
-        state: 'ready',
-        id: 'file-2',
-        file: new File(['png'], 'overlap.png'),
-        attachment: screenshot,
-      },
-      {
-        state: 'failed',
-        id: 'file-3',
-        file: new File(['log'], 'console.log'),
-        error: new ApiError(502, 'upload_failed', 'The upload failed.'),
-      },
-    ]
-    const html = renderToStaticMarkup(
-      <DraftFiles files={files} onRemove={() => {}} onRetry={() => {}} />,
-    )
-    expect({
-      text: textOf(html).trim(),
-      buttons: buttonNames(html),
-      progress: [...html.matchAll(/<[^>]*role="progressbar"[^>]*>/g)].map(
-        ([tag]) => ({
-          value: tag.match(/aria-valuenow="([^"]*)"/)?.[1] ?? null,
-          busy: tag.match(/aria-busy="([^"]*)"/)?.[1] ?? null,
-        }),
-      ),
-    }).toEqual({
-      text: 'sketch.png 66% notes.txt Uploading overlap.png 284 KB console.log Failed Try again',
-      buttons: [
-        'Remove sketch.png',
-        'Remove notes.txt',
-        'Remove overlap.png',
-        'Remove console.log',
-        'Upload console.log again',
-      ],
-      progress: [
-        { value: '67', busy: null },
-        { value: null, busy: 'true' },
-      ],
-    })
-  })
-
   it('names one refused file or the count, and the limit, but no size of the file', () => {
     const notice = (refused: readonly string[]) =>
       textOf(

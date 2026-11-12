@@ -141,16 +141,19 @@ it("shows that the download didn't start when the route refuses the file, and sa
   expect(saves.freed).toEqual(['blob:saved/1'])
 })
 
-it('offers no Download on a file page or a diff page over the read limit', async () => {
+it('offers no Download on a file page or a diff page over the read limit, also for a picture', async () => {
   const server = new FakeApiServer()
   const path = 'public/catalog.json'
+  const picture = 'screenshots/whole-screen.png'
   server.json('GET', filePaths.content(org, id, path), tooLarge, 413)
+  server.json('GET', filePaths.content(org, id, picture), tooLarge, 413)
   server.json('GET', filePaths.diff(org, id, path), tooLarge, 413)
   const held = heldFetch(server)
   const files = await startedFiles(server, held)
   const navigation = testNavigation()
   const pages = [
     [
+      path,
       <FilePage
         files={files}
         layout="desktop"
@@ -160,6 +163,17 @@ it('offers no Download on a file page or a diff page over the read limit', async
       'Open this file in the terminal',
     ],
     [
+      picture,
+      <FilePage
+        files={files}
+        layout="desktop"
+        navigation={navigation}
+        tab={{ kind: 'file', path: picture, mode: 'preview' }}
+      />,
+      'Open this file in the terminal',
+    ],
+    [
+      `diff of ${path}`,
       <DiffPage
         files={files}
         layout="desktop"
@@ -169,14 +183,14 @@ it('offers no Download on a file page or a diff page over the read limit', async
       'See this diff in the terminal',
     ],
   ] as const
-  for (const [page, title] of pages) {
+  for (const [shown, page, title] of pages) {
     const view = mountRoot()
     view.render(page)
     await act(async () => {
       await held.release()
     })
-    expect(titles(view.container), title).toEqual([title])
-    expect(downloadControls(view.container), title).toEqual([])
+    expect(titles(view.container), shown).toEqual([title])
+    expect(downloadControls(view.container), shown).toEqual([])
     view.unmount()
   }
 })

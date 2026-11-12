@@ -1,55 +1,10 @@
-# Screens: the command palette and Feedback
+# Screens: Feedback
 
 This guide belongs to [Screens](screens.md). It gives the rules of the
-command palette of the app shell, and of the Feedback dialog that its Help
-row opens. The
-[command palette protocol](../../docs/protocol/command-palette.md) states
-what the palette does, and [Feedback](../../docs/protocol/feedback.md)
-states the rules of the dialog.
-
-## The command palette
-
-- The command palette is a layer of each frame: `PaletteLayer` sits in
-  the `OverlayHost` of the frame, and the open palette holds the frame
-  inert, as a sheet or a dialog does. Its search field takes the focus,
-  and `trapTab` keeps Tab inside. When a control that has the focus goes
-  away, such as a filter after a change of the tab, the field takes the
-  lost focus back. When the palette closes, the frame is active again
-  before the focus goes back.
-- Escape closes the palette from its own element, in the capture phase
-  of React. An open menu of a filter hears Escape first, on the document,
-  and stops it, so Escape closes only that menu. A press outside closes
-  the desktop dialog, and Cancel closes the phone page. A change of the
-  address and a sign-out close the palette too.
-- The palette key comes from `AppServices.onKey`, which hears each key in
-  the capture phase and not as a passive listener, so the palette can
-  stop the browser's own action. Every UI kit of the app notes its open
-  menus and modal layers through `useMenuLayer` and `useModalLayer` of
-  `../shell/ui/layers.ts`: the shell, the chat, and the members UI. A
-  menu says whether it closed, and a menu whose change runs refuses. A
-  modal layer has an owner: the dialog of the palette has the palette.
-  The owner of the terminal marks its element with `usePaletteTerminal`,
-  where Ctrl+K stays with the terminal.
-- `PaletteController.show` is the one way to open the palette, for the
-  key and for the Search row. It opens only when no dialog or sheet of
-  another owner holds the input, and when every open menu closed. The
-  key closes an open palette, and does nothing while a dialog or a sheet
-  of another owner is open over it, such as the sheet of a filter.
-- A part of the page offers its actions to the palette while it shows,
-  through `usePaletteOffer`: the workspace screen, the workspace list
-  that the page shows, and the sidebar toggle of the Mac app. A row
-  closes the palette first. Its action runs once the palette has left
-  the page, so a field that the action opens can take the focus, and a
-  question shows alone.
-- The palette reads the list and the repositories of its org through
-  `OrgModel.watch` while it is open, and shares those reads with the list
-  of the page. So the list and the palette show the same failure, and Try
-  again in either one reads the list again. The palette has no copy of
-  its own. Its Try again reads again each part that failed, through
-  `OrgModel.reload`.
-- `AppModel.lastOrg` keeps the org that the tab opened last, in memory
-  only. The Account sidebar of the Mac app and the palette on a page
-  without an org read it through `keptOrg`.
+Feedback dialog that the Help row of the command palette opens.
+[Command palette and keys](palette-and-keys.md) gives the rules of the
+palette itself. [Feedback](../../docs/protocol/feedback.md) states the
+rules of the dialog.
 
 ## Feedback
 
@@ -61,10 +16,10 @@ The mockups `app/feedback`, its child pages, and
   `palette/palette-rows.ts` gives it no link, because the dialog has no
   address. `palette-groups.ts` puts Help after Window, so the row also
   ends the actions of the All tab.
-- The row closes the palette first, as every row does. Then `PalettePanel`
-  calls `app.feedback.open` with the org of the palette, the open
-  workspace, and the Mac app flag of the source. The flag never comes from
-  `AppServices.platform`.
+- The row closes the palette first, as every row does. Then `useRowAction`
+  in `../shell/palette/row-action.ts` calls `app.feedback.open` with the
+  org of the palette, the open workspace, and the Mac app flag of the
+  source. The flag never comes from `AppServices.platform`.
 - `FeedbackLayer` sits beside `PaletteLayer` in every desktop frame and in
   the phone frame. It draws `FeedbackDialog` while the model is open and
   the person is signed in. The dialog is the wide `Dialog`, which shows as

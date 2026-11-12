@@ -68,6 +68,7 @@ feature that is not complete yet says so.
   workspace.
 - A command palette, on ⌘K or Ctrl+K, finds the workspaces of the org,
   runs the actions of the page, and opens the settings.
+- Keyboard shortcuts, which each person can change on the Account page.
 - Send feedback from the command palette, with screenshots. The team gets
   each message by email, and replies to the primary verified GitHub email.
 - The web app works on phones and on desktops.
