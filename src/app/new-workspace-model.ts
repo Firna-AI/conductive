@@ -36,6 +36,11 @@ export interface Draft {
    */
   repository: { id: string; picked: boolean } | null
   choice: AgentChoice | null
+  /**
+   * The section that the user picked, or `null` for the section of the
+   * form. A send ends the pick.
+   */
+  sectionId: string | null
   /** The files, each with its upload. Only ready ones go with the message. */
   files: readonly DraftFile[]
   /** Files without chips, kept for undo until this draft ends. */
@@ -99,7 +104,10 @@ export function firstReadyRepository(
 export class NewWorkspaceModel {
   readonly draft: Store<Draft>
   readonly create: Store<CreateState>
-  /** `null` puts the workspace in General, the default section. */
+  /**
+   * The section of the form, where the draft lives. `null` puts the
+   * workspace in General, the default section. A pick of the draft wins.
+   */
   readonly sectionId: string | null
   private readonly org: OrgModel
   private readonly uploads: DraftUploads
@@ -138,6 +146,7 @@ export class NewWorkspaceModel {
       text: '',
       repository: keep?.repository?.picked ? keep.repository : null,
       choice: keep?.choice ?? null,
+      sectionId: null,
       files: [],
       detached: [],
       refused: [],
@@ -186,6 +195,10 @@ export class NewWorkspaceModel {
     this.draft.change((draft) => ({ ...draft, choice }))
   }
 
+  setSection(sectionId: string): void {
+    this.draft.change((draft) => ({ ...draft, sectionId }))
+  }
+
   /**
    * Attaches one pick and returns its new file IDs immediately.
    * While the create runs, it uploads nothing, because the create already
@@ -224,9 +237,10 @@ export class NewWorkspaceModel {
     if (!draftReady(draft) || this.create.get().state === 'sending') {
       return null
     }
+    const sectionId = draft.sectionId ?? this.sectionId
     const request: CreateWorkspaceRequest = {
       repositoryId: draft.repository?.id ?? defaults.repositoryId,
-      ...(this.sectionId ? { sectionId: this.sectionId } : {}),
+      ...(sectionId ? { sectionId } : {}),
       firstMessage: {
         id: draft.messageId,
         text: messageText(draft.text, draft.files),

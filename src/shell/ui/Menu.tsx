@@ -4,6 +4,7 @@ import type { MenuPlacement } from '../../../docs/mockups/src/components/common/
 import { useMenuLayer } from './layers'
 import { MenuList } from './MenuList'
 import { useDismiss } from './Overlay'
+import { PopoverSurface } from './PopoverSurface'
 import { Sheet } from './Sheet'
 import { useViewport } from './viewport'
 import ui from './ui.module.css'
@@ -52,8 +53,20 @@ export interface MenuTriggerState {
 }
 
 /**
- * A trigger and its menu. Desktop opens the menu beside the trigger, and a
- * phone opens it as a sheet. A press outside or Escape closes it.
+ * The menu keeps its own width and its own height limit, `max-height: 70dvh`
+ * in its CSS. The surface then limits it only to the room beside its
+ * trigger, and does not widen it to the width of the trigger.
+ */
+const SURFACE_OPTIONS = {
+  anchorWidthAsMinimum: false,
+  maxHeight: Number.POSITIVE_INFINITY,
+}
+
+/**
+ * A trigger and its menu. Desktop opens the menu beside the trigger, in the
+ * top layer, so no box clips it. It opens on the side of its placement when
+ * it fits there, otherwise on the side with more room. A phone opens it as a
+ * sheet. A press outside or Escape closes it.
  */
 export function MenuButton(props: {
   label: string
@@ -70,6 +83,7 @@ export function MenuButton(props: {
   const anchor = useRef<HTMLSpanElement>(null)
   const close = () => setOpen(false)
   const phone = viewport === 'phone'
+  const placement = props.placement ?? 'below-end'
   useDismiss(open && !phone, anchor, close)
   // The palette key closes a desktop menu, which always closes. A phone
   // sheet holds the key.
@@ -81,13 +95,21 @@ export function MenuButton(props: {
     <span className={props.className ?? ui.anchor} ref={anchor}>
       {props.trigger({ open, toggle: () => setOpen((value) => !value) })}
       {open && !phone ? (
-        <MenuList
-          close={close}
-          entries={props.entries}
-          label={props.label}
-          placement={props.placement ?? 'below-end'}
-          wide={props.wide}
-        />
+        <PopoverSurface
+          align={placement.endsWith('end') ? 'end' : 'start'}
+          anchor={anchor}
+          className={ui.menuLayer}
+          options={SURFACE_OPTIONS}
+          side={placement.startsWith('above') ? 'above' : 'below'}
+        >
+          <MenuList
+            close={close}
+            entries={props.entries}
+            label={props.label}
+            placement="anchored"
+            wide={props.wide}
+          />
+        </PopoverSurface>
       ) : null}
       {open && phone ? (
         <Sheet close={close} title={props.sheetTitle ?? props.label}>

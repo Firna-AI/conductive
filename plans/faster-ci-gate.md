@@ -1,6 +1,6 @@
 # Faster CI gate
 
-Status: Active. On branch `calummoore/lima-4mfe`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
+Status: Active. [PR #327](https://github.com/Firna-AI/conductive/pull/327) is open. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
 The CI job "Complete gate" runs `npm run check` in one job. Since PR #302
 moved it from `ubuntu-latest` (4 CPUs for a public repository) to
@@ -103,6 +103,11 @@ assertion.
 - **`deviceFixture` takes its entry file.** `device-cleanup.test.ts`
   swapped the entry through a Vite mock, which a cached bundle would skip.
   It now passes the entry, and each assertion stays.
+- **The jobs follow the runner of `main`.** PR #310 moved the Linux CI
+  jobs to the GitHub-hosted `ubuntu-24.04` runner on 12 November 2026,
+  while this branch was open. The parallel jobs run there too. PR #311 put
+  the 300-line limit into the main ESLint pass and removed
+  `file-length:check`, so this branch takes that version.
 - **Every shard runs to the end** (`fail-fast: false`), so one run reports
   every failed test.
 - **The last job fails unless every needed job succeeded.** GitHub counts

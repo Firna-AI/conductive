@@ -29,6 +29,11 @@ export default defineConfig([
     },
   },
   astro.configs.recommended,
-  // Count comments and blank lines too, so a file cannot pass by compaction.
-  { rules: { 'max-lines': ['error', 300] } },
+  {
+    // Keep each JavaScript, TypeScript, and Astro file short. Blank lines
+    // and comments count.
+    rules: {
+      'max-lines': ['error', 300],
+    },
+  },
 ])

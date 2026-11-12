@@ -12,7 +12,6 @@
     "typecheck": "npm run types && tsc -b tsconfig.json tsconfig.worker-tests.json && CI=true astro check --tsconfig tsconfig.site.json",
     "test": "vitest run",
     "db:migrate": "wrangler d1 migrations apply DB --local",
-    "file-length:check": "eslint . --rule 'max-lines: [error, 300]'",
     "exports:check": "knip",
     "check": "npm run check:static && npm run test",
     "check:static": "npm run typecheck && npm run desktop:typecheck && npm run runner:typecheck && npm run lint && npm run desktop:lint && npm run format:check && npm run desktop:format:check && npm run exports:check && npm run runner:test && npm run build:bundle && npm run mockups:check",

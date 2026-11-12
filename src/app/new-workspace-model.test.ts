@@ -113,6 +113,19 @@ describe('NewWorkspaceModel', () => {
     expect(draft.draft.get().messageId).not.toBe('client-1')
   })
 
+  test('a picked section wins over the section of the draft until the send', async () => {
+    const server = new FakeApiServer()
+    const draft = (await loaded(server)).newWorkspace(null)
+    draft.setSection('checkout')
+    draft.setText('Fix the flaky cart test.')
+    await draft.send(defaults)
+    const [sent] = server.requests.slice(-1)
+    expect({
+      sent: (await sent.json()).sectionId,
+      after: draft.draft.get().sectionId,
+    }).toEqual({ sent: 'checkout', after: null })
+  })
+
   test('a failed create keeps the draft, and Try again sends the same message', async () => {
     const server = new FakeApiServer()
     server.json(
