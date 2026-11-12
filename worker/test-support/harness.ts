@@ -123,6 +123,10 @@ export async function createHarness(
       await native.reset()
       await db.batch(
         [
+          'e2b_traffic_tokens',
+          'e2b_snapshot_mappings',
+          'e2b_create_operations',
+          'provider_assignment_events',
           'chat_attachments',
           'github_webhook_deliveries',
           'github_connections',
@@ -161,6 +165,12 @@ export async function createHarness(
           'oauth_states',
         ].map((table) => db.prepare(`DELETE FROM ${table}`)),
       )
+      await db
+        .prepare(
+          `UPDATE provider_assignment_settings SET weights_json = '{"boat":100}',
+           updated_at = NULL, updated_by_user_id = NULL WHERE id = 1`,
+        )
+        .run()
       await db
         .prepare(
           `UPDATE signup_settings SET paused = 0, updated_at = NULL, updated_by_user_id = NULL,

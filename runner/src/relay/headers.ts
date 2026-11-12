@@ -1,4 +1,8 @@
 import type { IncomingMessage } from 'node:http'
+import {
+  E2B_PRIVATE_HEADERS,
+  type PreviewIngressIdentity,
+} from '../../../src/shared/preview-ingress'
 
 import {
   PREVIEW_RELAY_PORT,
@@ -7,6 +11,7 @@ import {
 } from '../../../src/shared/previews'
 
 const portHeader = PREVIEW_RELAY_PORT_HEADER.toLowerCase()
+const privateHeaders = new Set<string>(E2B_PRIVATE_HEADERS)
 const hopHeaders = [
   'connection',
   'keep-alive',
@@ -22,13 +27,21 @@ const hopHeaders = [
 export function requestTarget(
   request: IncomingMessage,
   relayPort: number,
+  ingress?: PreviewIngressIdentity | null,
 ): { port: number } | { status: 400 | 403 } {
-  if (
-    !new RegExp(`^[a-z0-9-]+-${relayPort}\\.on\\.boat\\.dev$`).test(
-      request.headers.host ?? '',
-    )
-  )
-    return { status: 403 }
+  const host = request.headers.host ?? ''
+  const alias = ingress?.aliases[String(relayPort)]
+  const validHost =
+    ingress === undefined
+      ? new RegExp(`^[a-z0-9-]+-${relayPort}\\.on\\.boat\\.dev$`).test(host)
+      : ingress !== null &&
+        alias !== undefined &&
+        Number.isInteger(alias) &&
+        alias >= 1 &&
+        alias <= 65535 &&
+        request.headersDistinct.host?.length === 1 &&
+        host === `${alias}-${ingress.sandboxId}.${ingress.domain}`
+  if (!validHost) return { status: 403 }
   const values = request.headersDistinct[portHeader]
   if (values?.length !== 1 || !/^[0-9]+$/.test(values[0]))
     return { status: 400 }
@@ -38,6 +51,7 @@ export function requestTarget(
     port < 1 ||
     port > 65535 ||
     port === relayPort ||
+    (ingress !== undefined && ingress !== null && port === alias) ||
     port === PREVIEW_RELAY_PORT
   )
     return { status: 400 }
@@ -81,6 +95,7 @@ export function requestHeaders(
       lower === 'host' ||
       lower === portHeader ||
       lower === 'forwarded' ||
+      privateHeaders.has(lower) ||
       lower.startsWith('x-forwarded-')
     )
       continue

@@ -7,8 +7,9 @@ installs them.
 - `package-runner.mjs` packages the runner archive.
 - `live-check.mjs` checks the chat path in a real sandbox. Then it times
   the first agent start after a resume.
+- `e2b/build-template.mjs` builds the E2B base template from public inputs.
 
-Run each command from the repository root, with Node 24. Both scripts use
+Run each command from the repository root, with Node 24. These scripts use
 the packages of the [agent runner](../runner/README.md). So run
 `npm ci --prefix runner` first.
 
@@ -40,7 +41,7 @@ The [deploy workflow](../docs/automatic-deploys.md) runs the packager with
 `--base-url https://runner.conductive.build/`.
 
 The script builds the runner bundles. The archive then holds only a
-`runner/` folder: `main.mjs`, `measure.mjs`, `compare.mjs`, the runner
+`runner/` folder: `main.mjs`, `relay.mjs`, `measure.mjs`, `compare.mjs`, the runner
 manifest and lockfile, and the production packages from
 `runner/node_modules`, for Linux x64. It holds no Node. Each image installs
 its own private Node, as [the private Node runtime](runtime.md) says.
@@ -64,6 +65,11 @@ Then supply the archive, as
 `.context/chat-live-check/cli.mjs`, with the esbuild of the runner
 packages. Then it runs that file.
 
+The default mode uses Boat. The
+[E2B image/runtime mode](e2b/live-check.md) uses `--provider=e2b` and its own
+inputs. It checks clean disposable images and both preview relay layers.
+It does not run the Boat chat or placement measurements.
+
 ```sh
 npm --prefix runner run build
 node image/live-check.mjs --help
@@ -71,7 +77,7 @@ node image/live-check.mjs --prepare
 node image/live-check.mjs
 ```
 
-- `--help` lists the variables.
+- `--help` lists the variables of the selected provider mode.
 - `--prepare` checks that esbuild can bundle the check, and that the runner
   bundles are in `dist/runner/`. It uses no app, no sandbox, and no agent.
 - Without an option, the script runs the real check. It reads its inputs
@@ -194,13 +200,25 @@ More facts:
   real login, unlike a sandbox with a version pin of 2 or later. Clean up
   each sandbox that `cleanupNeeded` lists at once.
 
+## E2B template builder
+
+Run `node image/e2b/build-template.mjs --help` for its inputs.
+Run it with `--prepare` to stage only the public image files, without a
+provider request or a CLI install. A real build reads `E2B_API_KEY` and the
+selected EU `E2B_DOMAIN` from the process environment. It uses the pinned
+official CLI through `npm exec` and prints the actual template ID.
+[E2B base template](e2b/README.md) gives its software, output, private
+loopback relay, and required live checks.
+
 ## Development
 
 - `npm run typecheck` does not check these TypeScript files. Check them
   with `npx tsc -p image/tsconfig.json`.
 - The lint, format, and file-length checks of `npm run check` include these
   files.
-- No test runs these scripts.
+- The [relay integration tests](e2b/README.md#checks-and-live-prerequisites)
+  run the real E2B relay with local TCP peers. The developer entry points
+  use their help and prepare commands for checks without credentials.
 
 ## Key code
 
@@ -216,3 +234,5 @@ More facts:
   `LIVE_BOAT_ORG`.
 - [`live-measure.ts`](live-measure.ts): the forks, the timed resumes, and
   the comparison.
+- [`e2b/live-main.ts`](e2b/live-main.ts): the E2B image chain, probes,
+  persistent local provider state, and cleanup.

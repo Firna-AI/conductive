@@ -21,7 +21,7 @@ import { completeBuildPhase } from './build-phase-data'
 import { installWorkspaceTools } from '../tools/image'
 import { WORKSPACE_TOOL_SOURCES } from '../tools/image-assets'
 import { privilegedCommand } from '../terminal/privileged'
-import { recoverImageBuildAllocation } from './image-allocation'
+import { recoverImageBuildForCleanup } from './image-allocation'
 import { liveBuildComputers } from './computer-ledger'
 import { startAddedImageBuild } from './first-image-build'
 import { imageIsPublished } from './org-image-data'
@@ -98,7 +98,16 @@ export async function cleanupBuild(
       ...job,
       sandboxId:
         job.sandboxId ??
-        (await recoverImageBuildAllocation(runtime.env.DB, provider, job)),
+        (await recoverImageBuildForCleanup(
+          runtime.env.DB,
+          providerForAccount(
+            runtime.env,
+            runtime.dependencies.fetch,
+            job.providerAccount,
+            'cleanup',
+          ),
+          job,
+        )),
     }
     await updateBuildJob(runtime.env.DB, job.buildId, 'cleanup')
   }
@@ -172,12 +181,7 @@ export async function cleanupBuild(
   }
   await updateBuildJob(runtime.env.DB, job.buildId, 'done')
   await startAddedImageBuild(runtime, job)
-  await scheduleIdleImage(
-    runtime,
-    job.orgId,
-    jobSoftware(job),
-    job.providerAccount,
-  )
+  await scheduleIdleImage(runtime, job.orgId, jobSoftware(job))
   return true
 }
 

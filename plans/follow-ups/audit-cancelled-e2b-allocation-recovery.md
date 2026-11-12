@@ -1,0 +1,106 @@
+# Recovery can allocate after cancellation or suspension
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-12, as an investigation, from the merge of `origin/main` at `b504e8b8` into branch `calummoore/e2b-backup-sandbox-provider`, draft pull request #193. Updated on 2026-11-12 from finding 4 of review round 3 of that branch, at commit `17c8e05b`.
+- **Location:** `worker/lifecycle/start-failure.ts:130`, `worker/lifecycle/image-builds.ts:207`, `worker/lifecycle/image-build-steps.ts:38`, `worker/sandbox/e2b/allocation.ts:83`, `worker/sandbox/e2b/client.ts:56`, and `worker/sandbox/client.ts:19` and `:51`.
+- **Reason:** The case is rare. Cleanup still deletes the computer. The wider fix reaches existing lifecycle recovery paths.
+
+- **Terms:**
+  - **Allocation:** a request to create one cloud computer on a provider.
+  - **Create claim:** the saved E2B operation record in D1 for one provider account and request key. The state `retryable` marks a certified refusal that permits a fresh attempt.
+  - **Allocation mode:** the last argument of `providerForAccount` and `orgProviderForAccount` in `worker/sandbox/client.ts`, `'active'` or `'cleanup'`. Both default to `'active'`.
+  - **Identity recovery:** a lookup that finds the computer of an earlier request, or proves that none exists. It creates, connects, and runs nothing. The E2B cleanup mode does it.
+  - **Certified absence:** a provider result that proves that a request made no computer. The E2B cleanup client throws `ProviderAllocationAbsent` for it.
+- **Background:**
+  - Saved inputs:
+    - Workspace starts save the request body encrypted in the start job, at `worker/lifecycle/start-allocation.ts:85`.
+    - Org image builds save no request body. `buildSandboxIntent` reconstructs it from plain D1 columns, at `worker/lifecycle/resource-intents.ts:138`.
+    - Global software image builds reconstruct the request from the image ID, at `worker/software-image/resources.ts:8`.
+    - The lifecycle uses these inputs to repeat the request after a lost reply.
+  - The shared cause:
+    - The branch adds E2B as a second provider, and identity recovery for unfinished allocations.
+    - E2B marks a create refusal `retryable` when its reply has the header `Should-Retry: true`, at `worker/sandbox/e2b/errors.ts:80`. `rejectCreate` saves that state at `worker/sandbox/e2b/allocation.ts:131`.
+    - In the active mode, `createSandbox` sends a new create for a `retryable` claim, at `worker/sandbox/e2b/allocation.ts:83`. It also sends one for a key without a claim.
+    - For a ready sandbox without a saved traffic token, `recoverCreate` calls the E2B `connect` route, at `worker/sandbox/e2b/allocation.ts:66`.
+    - After a ready create, the active `E2bClient.create` writes the guest environment through envd helpers, at `worker/sandbox/e2b/client.ts:56-58`.
+    - In the cleanup mode, `E2bClient.create` calls `cleanupAllocation` in `worker/sandbox/e2b/allocation-cleanup.ts`. It reads the claim and the sandbox list by metadata. It gives an ID, a certified absence, or a pending result.
+    - Three cleanup owners use the cleanup mode: `retryAllocationCleanup` at `worker/lifecycle/start-allocation-cleanup.ts:32`, `recoverArchivedAllocation` at `worker/lifecycle/archive-allocation.ts:20`, and `cleanupBuild` at `worker/lifecycle/build-execution.ts:107`.
+    - Two recovery owners keep the active default: the failure path of a workspace start, and the allocation step of an image build.
+  - The workspace start path:
+    - A capacity refusal leaves a `retryable` claim. `allocateWorkspace` keeps the encrypted request and returns null for a `rate_limited` error, at `worker/lifecycle/start-allocation.ts:144-151`.
+    - An operator suspension calls `WorkspaceLifecycle.suspendLifecycle` at `worker/workspace-lifecycle.ts:209`. It reaches `cancelPending` at `worker/lifecycle/workspace-suspension.ts:39`, which cancels the start and sets an alarm.
+    - `runWorkspaceAlarm` advances a terminal pending start before its access-stop check, at `worker/lifecycle/workspace-alarm.ts:102`.
+    - `WorkspaceStartCoordinator` calls `finishFailedStart` for a cancelled start at `worker/lifecycle/start-coordinator.ts:176`. An org suspension makes `requireActiveOrg` throw at line 174, and the catch calls the same function at line 216.
+    - `finishFailedStart` in `worker/lifecycle/start-failure.ts` takes the sandbox ID from `job.allocatedSandboxId`, or else from the `sandbox_id` of the workspace row.
+    - Line 123 handles a start with no sandbox ID and a saved request: `if (!sandboxId && job.createPayloadCiphertext)`.
+    - Lines 124 and 125 define `canDefer = () => job.failure?.timeLimit || startTimeLimitReached(job, dependencies.now())`. So `canDefer()` is false before a time-limit failure or the end of the 20-minute start limit.
+    - When `canDefer()` is false, line 127 returns null without a `provider` argument. Otherwise line 128 calls `allocateWorkspace` with an input that throws `Missing pinned allocation payload`.
+    - Line 130 builds that provider with `providerForAccount(env, dependencies.fetch, job.providerAccount)`, so with the active default.
+    - `allocateWorkspace`, at `worker/lifecycle/start-allocation.ts:71`, reads the saved request and writes the runner version of the workspace row. Without `job.allocatedSandboxId`, it calls `createSandboxResource` with `mayHaveAllocated: true`.
+    - With an ID, the failure path records a cleanup, revokes access, detaches the computer, and deletes it in the same advance.
+    - Without an ID, lines 138 to 141 hand the job to `retryAllocationCleanup` when `canDefer()` is now true. Otherwise the function returns null, and the failure waits.
+    - The lifecycle code of this path is the same on main. The branch changed the provider that it reaches.
+  - The image build path:
+    - After the refusal, the build stays running in the phase `allocating`, with no saved computer ID.
+    - `advanceImageBuild` then sets `activeWork` to false, at `worker/lifecycle/image-builds.ts:204-207`.
+    - So it skips the org and starter checks at lines 220-224 and 253. `advanceBuildStep` skips them at `worker/lifecycle/image-build-steps.ts:33` and `:38-39`.
+    - `suspendOrg` and `suspendUser` only wake the build alarm, at `worker/operator/suspend-org.ts:35-48` and `worker/operator/suspend-user.ts:35-48`. They change no build state.
+    - At the retry time, `allocateImageBuild` uses the active client of `orgProviderForAccount`, from `worker/lifecycle/image-builds.ts:244-250`. A `retryable` claim then gives a new computer and an environment write.
+    - The next advance reaches the phase `sources`, and its access check fails. `cleanupBuild` then deletes the computer.
+  - Work in the new computer:
+    - No agent turn, runner session, or Worker startup step runs. A cancelled or failed start never reaches the start steps.
+    - `image/runner-start.sh:13` exits without the ready marker. Only the startup step writes that marker.
+    - The Worker refuses the workspace token of a suspended owner or org.
+    - The only guest work of the Worker is the environment write. It includes the org's own env values for a workspace. During suspension, the workspace token cannot access the app.
+    - The computer boots the org image. Org installs run with root rights, as `image/install.md:16-18` and `:37` say. So boot services that earlier installs enabled can run until the delete.
+    - A failing environment write keeps the computer until a later attempt or the end of the start limit.
+    - A second trigger exists: a saved request that was never sent. It needs a crash or a D1 error before the send, so it is rarer.
+    - The production fetch wrapper checks member lifecycle fences. An operator suspension installs no such fence, so the wrapper does not stop these calls.
+  - Boat:
+    - Main already calls Boat create during allocation recovery at these callers.
+    - Main's tests require an identical Boat create replay after a lost reply, at `worker/operator/org-native.test.ts:198-199` and `worker/operator/build-suspension.test.ts:94-95`.
+    - Boat ignores the allocation mode. The Boat route list in `worker/sandbox/routes.ts` has no lookup, so Boat recovery stays a create replay in every option.
+    - This item makes no claim about Boat after a refused first request.
+  - Requirements in force:
+    - `docs/protocol/suspension-workspaces.md:31-32`: a start that waits or runs stops before its next step.
+    - `docs/protocol/suspension-workspaces.md:41-42` and `docs/protocol/operator-org-suspension.md:39-40`: each unfinished build stops and fails, and the app removes its build sandbox.
+    - The E2B design of 10 November 2026 gives allocation cleanup an identity-only E2B client. It never creates, connects, or bootstraps a sandbox. `plans/e2b-backup-provider.md:317-319` holds that rule while the plan exists.
+    - Allowed starts and builds keep active retries after a certified refusal, as `worker/sandbox/e2b/README.md:49-51` says. A capacity refusal is temporary.
+    - Boat keeps its existing create replay, as `worker/sandbox/README.md:73` says.
+  - Evidence and limits:
+    - Two independent static traces of commit `17c8e05b` confirmed both paths, the scope, the severity, and the likelihood.
+    - No reproduction command, test, or provider request ran.
+    - `worker/sandbox/e2b/recovery-callers.test.ts` calls `retryAllocationCleanup` directly. No test runs `finishFailedStart`, or a suspended running build, with a `retryable` claim.
+    - The Boat suspension tests cover a lost reply to an existing computer. They do not cover this E2B case.
+    - No live run measured how long the computer lives. Nothing shows that any org image has such a boot service.
+    - A local reproduction needs only the fake E2B server. A check against real E2B also needs an E2B key.
+- **Problem:** Two recovery owners keep the active mode after their start or build ended or lost access. With a `retryable` claim, or a request that was never sent, active E2B create makes a new computer. It writes the guest environment before cleanup deletes that computer.
+- **Impact if no action:** Each case uses another temporary start and provider capacity. Boot services that earlier org installs enabled can run until the delete. No agent turn or Worker startup step runs in the traced paths. During suspension, the workspace token cannot access the app. No exposure of another org's data was shown.
+- **Root question:** When a start or a build ends or loses access, how does the app remove its possible computer without creating or preparing another?
+- **Options:**
+  - **A.** Use the existing cleanup client and recovery helper when a workspace start has ended. Check suspension before active image-allocation recovery. Route suspended builds through their existing cleanup owner. Keep active retries for allowed starts and Boat's existing replay. Add regression cases for these two E2B callers. It reaches `worker/lifecycle/start-failure.ts` and `worker/lifecycle/image-build-steps.ts`, which the branch does not change. Effort: Small.
+  - **B.** Separate active allocation from identity recovery in the provider interface. Give recovery callers an operation that returns identity, certified absence, or a pending result. Give that operation no guest environment step. Its Boat version replays the saved create request unchanged. Apply A's access handling and regression cases. This makes the distinction explicit for every provider and cleanup owner. Effort: Medium.
+  - **C.** Store a terminal recovery mode on each durable provider operation. Make later calls honor that mode, also calls from older active clients. Add its state transition, migration, lifecycle writers, and race coverage. This adds durable coordination beside the lifecycle job state. Effort: Large.
+  - **D.** Make the allocation mode a required argument of both provider factories. State the mode at about 31 production calls and 14 test calls. Apply A's caller changes and regression cases. A missed choice then fails the typecheck. Boat and a later provider can still ignore the mode. Effort: Medium.
+  - **E.** Hand the saved request of each ended start to `retryAllocationCleanup` before the deadline too. Apply A's build changes and regression cases. It overrides main's in-place recovery, and it delays Boat's delete to the cleanup alarm, 5 seconds or more later. So it is blocked without the user. Effort: Medium.
+- **Left out:**
+  - Change nothing, because it fails the goal and breaks the suspension requirement.
+  - Remove retries from healthy starts, because it breaks the retry rule for allowed starts.
+  - A lint, because D is better on every point. The typecheck enforces the choice at each call, with no new gate.
+  - A test for the class, because it cannot find a future recovery owner, so it equals A's regression cases. It is also a blocked option.
+  - A new E2B key for each certified refusal, because B is better on every point. It needs new job state, and a request that was never sent can still create.
+  - A patch that skips only `retryable` claims in `finishFailedStart`, because A is better on every point. A also covers a request that was never sent, and keeps E2B states out of the lifecycle.
+  - A Boat lookup route, because it widens the fixed route list, and the Boat case is main's behavior, outside this item.
+  - A durable marker in the computer ledger, because it is C in another table, and Boat gains nothing.
+- **Wider fix:** B. A separate recovery operation removes active allocation and guest setup from every recovery caller. It still holds when a recovery owner reuses an active client, which D does not. C also covers stale callers, but it needs a writer at each job end.
+- **Previous examples:** `retryAllocationCleanup`, `recoverArchivedAllocation`, and `cleanupBuild` with `recoverImageBuildForCleanup` already use the cleanup mode. `worker/sandbox/e2b/recovery-callers.test.ts` tests the first owner with a `retryable` claim.
+- **Related:** `plans/follow-ups/unresolved-computer-request-ownership.md` covers the same owners: who keeps an unresolved create request until its delete. This item covers how those owners recover it without a new E2B computer. A shared owner must preserve identity-only E2B recovery. If B follows the ownership change, it must also migrate that owner. Neither item waits for the other.
+- **Recommendation:** B. An explicit recovery operation best protects the codebase, and it keeps active retries for allowed starts. Apply it with these details:
+  - Boat's recovery sends the saved create request unchanged, so main's two replay tests stay green. Boat can certify no absence, so it returns identity or pending only.
+  - Derive the purpose from the ended job in `allocateWorkspace` and `allocateImageBuild`, or require it in the shared intent. Then a reused active client cannot select allocation.
+  - Include `worker/software-image/cleanup.ts:22`. It takes the active default, but it runs only on the `boat` account today.
+  - Include `image/e2b/live-provider.ts:19`. Its cleanup client uses the mode that B replaces.
+  - Update `worker/sandbox/README.md` and `worker/sandbox/e2b/README.md`. When `plans/e2b-backup-provider.md` still exists, update its cleanup-client rule too.
+  - First reproduce both paths with the fake E2B server in `worker/test-support/fake-e2b.ts`. Record the provider calls for pending, ready, `retryable`, and never-sent requests. Keep one regression case for each affected caller. Use the existing recovery tests for the other claim states.
+- **Action:** fix after merge, apply B, because the bug is Rare, its harm is a temporary resource, and the fix reaches main's existing lifecycle recovery paths.

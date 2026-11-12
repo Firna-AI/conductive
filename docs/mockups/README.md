@@ -74,6 +74,9 @@ page gives the child pages and flows of `app/workspace-links`,
 The [command palette and feedback](catalogue-palette.md) page gives the child
 pages of `app/command-palette` and `app/feedback`, the Feedback dialog,
 and the flow that sends feedback.
+The [keyboard shortcuts](catalogue-shortcuts.md) page gives the Keyboard
+shortcuts tab in a browser and in the Mac app, and the palette of the Mac
+app with its keys.
 The [attachments and files](catalogue-attachments-and-files.md) page
 gives the child pages of `app/attachments` and `app/files`, and the flow
 `user-flows/drop-a-file`.

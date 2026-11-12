@@ -64,9 +64,10 @@ export const termsDocument: LegalDocument = {
             install its GitHub App and have access. It reads your repository
             rights and merge method from GitHub. It shows Merge only when
             your GitHub rights let you merge.`,
-          text`${productName} runs the cloud computers of every org in its
-            own account with its cloud computer provider. You need no
-            account or key of your own for them.`,
+          text`${productName} runs each org's cloud computers in one of its
+            own accounts with a cloud computer provider. The org keeps
+            that account for its life. You need no account or key of your
+            own for them.`,
           text`The agents run on the Claude or OpenAI login that you connect.
             The model use of each message bills to the account of the member
             who started its session, under the terms of Anthropic or OpenAI.

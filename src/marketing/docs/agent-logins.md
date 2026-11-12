@@ -163,25 +163,30 @@ A newer cloud computer starts from a shared setup that requires Conductive to ke
 Its model requests and answers pass through Conductive on Cloudflare.
 Conductive adds the session starter's login before sending each request to Anthropic or OpenAI.
 Each turn there gets a temporary credential called a turn token.
-Code and members with terminal access can read or copy that credential.
+Through Conductive, it can use the login of the member who started the session.
 
-They can use it only through Conductive on the session starter's login while the turn runs.
-A copied token also works from outside the computer during that turn.
+Programs and members with terminal access can read or copy that token.
+A copy can spend the login while the turn runs, including from outside the computer.
 A copied token cannot start a new model request after the turn ends.
+A program that keeps running can read tokens of later turns, including turns in other members' sessions.
 Your ChatGPT sign-in never enters a cloud computer.
 An older cloud computer cannot run Codex with ChatGPT.
-The share switch does not hide credentials available on the computer.
 
 An older cloud computer starts from an earlier setup that still permits software to receive the session starter's agent login itself.
-Code and members with terminal access can read or copy that login during a turn.
+Programs and members with terminal access can read or copy that login during a turn.
 A copied login can remain usable after the turn ends.
-Installing newer software on that computer does not remove this risk.
-A new build gives the protection to new cloud computers created from its setup.
-Ask an admin to run **Build computer**.
-After it succeeds, create a new workspace to get the newer protection.
+If a login is exposed, revoke it with its provider.
+Removing it from Conductive does not revoke a copy held elsewhere.
 
-The share switch does not hide either kind of credential from code or members with terminal access.
+Ask an org admin to select **Build computer** in **Settings**, under **Cloud computer**.
+After the build succeeds, create a new workspace to get the current protection.
+Stopping or resuming an older computer does not remove its login exposure risk.
+Installing newer software in that computer does not remove that risk either.
+A new workspace does not revoke logins already copied from an older computer.
+
+The share switch does not hide either kind of credential from programs or members with terminal access.
 Work in an org with people you trust with your agent and GitHub logins.
 
 - [Understand sessions and chat](/docs/sessions-and-chat)
 - [Read the security guide](/docs/security)
+- [Build the current computer setup](/docs/cloud-computer#apply-setup-changes)

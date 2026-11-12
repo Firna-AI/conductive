@@ -20,9 +20,9 @@ how a screen is built, and links to the other pages.
 | `app/workspace-menu` | The menu of a workspace row from a right click: its section and owner choices, Rename, Archive from the list with its toast and Restore, and the menus of each role |
 | `app/command-palette` | The command palette over the list, with the keys of a browser tab: the All tab, then the other tabs with the Help group, searches and their states, and a search by number |
 | `app/feedback`      | The Feedback dialog that Send feedback opens over the list, then its states, the toast after a send, and the files that it does not add |
-| `app/orgs`          | The org switcher of a phone, Create org, the first org, new orgs, deleted, suspended |
+| `app/orgs`          | The org switcher of a phone, Create org with the account choice of an operator, the first org, new orgs, deleted, suspended |
 | `app/account`       | General with the GitHub sign-in, the GitHub App, the agent logins, and the invite code, then Preferences with the model and how New workspace opens, Keyboard shortcuts in a browser, the first run, the Connect forms with the ChatGPT sign-in of Codex, Codex on a ChatGPT plan and its sign-in that stopped working, and a share not saved |
-| `app/operator`      | The operator's Overview, Orgs, Users, Waitlist, and Invite codes tabs, the page of an org and of a user with Suspend, Lift, and Approve, the pause of sign-ups, the waitlist switch, and where an operator opens the section |
+| `app/operator`      | The operator's Overview, Orgs, Users, Waitlist, Invite codes, and Providers tabs, the page of an org and of a user with Suspend, Lift, and Approve, the pause of sign-ups, the waitlist switch, and where an operator opens the section |
 | `app/banner`        | The pull request bar and Checks: no pull request, its other states, Merge, local work, the agent actions in the chat, and Continue |
 | `app/new-workspace` | An empty chat, the first build of a new org, a repository that waits for its build, its error, files on the first message, the dialog, a pasted workspace link, the start, a queued second message, the first turn, a failed start, Try again |
 | `app/routines` | The routines of the org, a routine, its triggers, its runs, and a run workspace |
@@ -47,9 +47,9 @@ how a screen is built, and links to the other pages.
 A folder page shows at most five screens, saved states included. A folder
 with child folders shows only its canonical screen, as `marketing`, `marketing/docs`, `app`,
 `app/sign-in`, `app/sign-in/get-started`, `app/sign-in/waitlist`, `app/sign-in/join`, `app/shell`, `app/workspace-menu`, `app/command-palette`, `app/command-palette/search`, `app/feedback`, `app/orgs`,
-`app/orgs/suspended`, `app/account`, `app/account/connect-codex`, `app/new-workspace`,
+`app/orgs/new`, `app/orgs/suspended`, `app/account`, `app/account/connect-codex`, `app/new-workspace`,
 `app/new-workspace/dialog`, `app/org-settings`,
-`app/org-settings/cloud-computer`, `app/operator`, `app/operator/user`, `app/operator/user/access`, `app/operator/codes`, `app/banner`, `app/chat`, `app/archive`, `app/workspace-links`, `app/routines`, `app/routines/routine`,
+`app/org-settings/cloud-computer`, `app/operator`, `app/operator/user`, `app/operator/user/access`, `app/operator/codes`, `app/operator/providers`, `app/banner`, `app/chat`, `app/archive`, `app/workspace-links`, `app/routines`, `app/routines/routine`,
 `app/routines/triggers`, `app/orgs/suspended/routines`, `app/file-mentions`, `app/attachments`, `app/files`, `app/tools`, `app/account/shortcuts`, and `mac-app/shortcuts` do. `marketing/pictures` has no screen of its own. Each picture's capture
 page is its own entry at `marketing/pictures/<picture>`, so each page shows
 one screen. `marketing/from-conductor` has no screen of its own either. Its
@@ -73,8 +73,20 @@ step opens `app/orgs/new/first`, whose Create org and Cancel return to Get
 started. The entries
 of `app/orgs/new`, `app/orgs/empty`, and `app/orgs/deleted` moved into their
 own folders and kept their paths, so `app/orgs` shows only its canonical
-screen. `app/orgs/empty/another` moved from `app/orgs/empty/team` when the
+screen. The saved states `first`, `no-repository`, and `no-access` of
+`app/orgs/new` moved into their own folders and kept their paths, so that
+`app/orgs/new` shows only its canonical screen beside its child page
+`operator`. `app/orgs/empty/another` moved from `app/orgs/empty/team` when the
 paid plan went away, and declares `movedFrom`.
+
+`app/orgs/new/operator` has Create org of an operator, from e2b decision 222.
+An e2b decision is a decision of the change that adds E2B as the second sandbox provider.
+Provider account under the repositories offers By weights, the default,
+`boat`, and `e2b`, and its hint says that only operators see it. Its `e2b`
+variant has `e2b` chosen for Acme Labs, a test org, and its `first`
+variant has the first org of an operator in Get started. Create org in the
+rail and in the org switcher of an operator opens it. `app/orgs/new` and
+its other child pages show no choice, because nobody else sees it.
 
 `marketing/docs` shows the overview of the public docs, at `/docs`. Its
 child page `marketing/docs/get-started` shows the Get started guide, with
@@ -89,9 +101,9 @@ Create org starts it, and Create org needs at least one repository, from
 decision 151. The mockups draw it for Firna, the first org of the sign-up:
 
 - `app/orgs/new` draws the rule on Create org. The hint under Repositories
-  says to add at least one, in each state. Its `no-repository` variant has
-  the first org with a name and no repository chosen, and Create org is
-  off. Its `no-access` variant has a GitHub App that reaches no
+  says to add at least one, in each state. Its child page `no-repository`
+  has the first org with a name and no repository chosen, and Create org
+  is off. Its child page `no-access` has a GitHub App that reaches no
   repository: the list asks for access with Manage access, and Create org
   is off.
 - Get started shows it in the org step. `app/sign-in/get-started/org-created`
@@ -186,7 +198,7 @@ the tabs of the org settings are. Its child pages:
   [The waitlist, suspensions, and the operator](catalogue-operator.md)
   gives its variants.
 - `app/account/shortcuts` shows the Keyboard shortcuts tab in a browser, as
-  the keyboard shortcuts section below gives.
+  [the keyboard shortcuts page](catalogue-shortcuts.md) gives.
 
 `app/new-workspace/dialog` draws New workspace as a dialog over the ready
 workspace of `app`, for a user who chose the dialog. Its states are child
@@ -237,77 +249,10 @@ chose these four actions on 9 November 2026. Its child pages:
 child pages of `app/command-palette` and of `app/feedback`, and the flow
 that sends feedback.
 
-The catalogue draws the Keyboard shortcuts tab in the Mac app and in a
-browser, from decisions 190 to 196. The pages of
-`app/account` and `mac-app/this-mac` show it as the third tab of the
-account.
-
-- `app/account/shortcuts` shows the tab in a normal Chrome tab on a Mac.
-  The search field of decision 195 stands at the top. The lines under it
-  say which keys the terminal keeps, and where the dimmed keys work. A
-  key that the tab keeps, or that decisions 192 and 196 leave to the
-  browser, is dimmed. Its child pages:
-  - `app/account/shortcuts/windows` has a normal Chrome tab on Windows,
-    with the keys of decision 194 and the terminal line of Windows.
-  - `app/account/shortcuts/linux` has a normal Chrome tab on Linux, with
-    the keys of Windows and Linux. From decision 196, the app leaves
-    Ctrl+1 to Ctrl+9, Alt+1 to Alt+9, and Ctrl+L to Chrome, so Switch to
-    org 1 to 9 show only dimmed keys. Its `firefox` variant has a normal
-    Firefox tab on Linux, where the app leaves only Alt+1 to Alt+9 and
-    Ctrl+L to Firefox, so Ctrl+1 to Ctrl+9 are not dimmed.
-  - `app/account/shortcuts/firefox` has a normal Firefox tab on a Mac,
-    which keeps ⌥⌘↑, ⌥⌘↓, and ⇧⌘P and lets the page take ⇧⌘T.
-  - `app/account/shortcuts/installed` has the installed app of Chrome on
-    a Mac, where no key is dimmed.
-  - `app/account/shortcuts/search` has a search for "tab", with dimmed
-    keys in its rows. Its `no-match` variant has a search without a
-    match.
-  - `app/account/shortcuts/recording` has a row that records new keys,
-    with Remove beside Cancel. Its `adding` variant has the recorder of +,
-    which adds a shortcut and shows only Cancel. Its `fixed-key` variant
-    has ⌘Z, a text key that the recorder did not take. Its `enter-key`
-    variant has ⇧⌘Enter, a fixed key that no row lists, so the line says
-    only that it is fixed. Its `conflict` variant has a recorded shortcut
-    of another command, with Replace and Cancel.
-  - `app/account/shortcuts/changes` has changed rows with Reset, and Reset
-    all. Its `reset-conflict` variant has a search for "model" and the
-    Reset of Model picker, whose default shortcut Keyboard shortcuts now
-    holds, with Replace and Cancel. Its `reset-all` variant has the
-    question before Reset all, a sheet on a phone. Its `reset-all-failed`
-    variant has a Reset all that failed. Its `not-saved` variant has a
-    save that failed.
-
-  The phone views of these pages put the shortcuts of each row on a line
-  under its label.
-- `mac-app/shortcuts` shows the Keyboard shortcuts tab of the account in
-  the Mac app, which gives the page every key. The search field of
-  decision 195 stands at the top, and the line under it says which keys
-  the terminal keeps. Its child pages:
-  - `mac-app/shortcuts/search` has a search for "tab". It finds commands
-    by their labels and by their search words, and fixed rows. Its
-    `fixed-keys` variant has a search for "move". It finds the fixed keys
-    of decision 193, those of a focused workspace row and of a focused
-    divider, and the text keys that move by word or by line. Its
-    `no-match` variant has a search without a match.
-  - `mac-app/shortcuts/recording` has a row that records new keys, with
-    Remove beside Cancel. Its `adding` variant has the recorder of +, which
-    adds a shortcut and shows only Cancel. Its `fixed-key` variant has a
-    fixed shortcut that the recorder did not take. Its `space-key` variant
-    has Space, which presses a focused button, so the line names that row.
-    Its `conflict` variant has a recorded shortcut of another command, with
-    Replace and Cancel.
-  - `mac-app/shortcuts/changes` has changed rows with Reset, and Reset
-    all. Its `reset-conflict` variant has a search for "model" and the
-    Reset of Model picker, whose default shortcut Keyboard shortcuts now
-    holds, with Replace and Cancel. Its `reset-all` variant has the
-    question before Reset all. Its `reset-all-failed` variant has a Reset
-    all that failed. Its `not-saved` variant has a save that failed.
-- `mac-app/command-palette` shows the All tab of the palette over a
-  workspace in the Mac app, with the key of each command row. The Search
-  row of each Mac app page opens it. Its `actions` and `settings` variants
-  have those tabs. The Settings tab adds This Mac to the Account group,
-  which ends with Keyboard shortcuts. Its `changed-key` variant has the
-  Search row with ⇧⌘P, the person's key of the palette.
+[Keyboard shortcuts](catalogue-shortcuts.md) gives the Keyboard shortcuts
+tab of the account in a browser, `app/account/shortcuts`, and in the Mac
+app, `mac-app/shortcuts`, with their child pages. It also gives the
+palette of the Mac app, `mac-app/command-palette`.
 
 [The pull request bar](catalogue-bar.md) gives `app/banner`, the bar of a
 workspace with its actions, its child pages, and the flow

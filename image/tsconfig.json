@@ -5,5 +5,10 @@
     "lib": ["ES2023", "DOM"],
     "paths": { "ws": ["../runner/node_modules/@types/ws/index.d.ts"] }
   },
-  "include": ["*.ts"]
+  "include": [
+    "*.ts",
+    "e2b/*.ts",
+    "../.wrangler/worker-configuration.d.ts",
+    "../worker/lifecycle/raw-assets.d.ts"
+  ]
 }

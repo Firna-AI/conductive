@@ -1,20 +1,26 @@
 # Org image
 
-This doc holds the requirements and the decisions in force for the org
-image that every sandbox of an org starts from. It covers the builds and
-the refreshes of the org image, the first build of a new org, the
-software image that a first build starts from, and the builds and the
-notices of a change of the repositories. It
-belongs to [Workspaces and sandboxes](workspaces-and-sandboxes.md). The
-terms are those of the [architecture doc](../architecture.md#terms). A
-decision number names a dated record, as
-[Decision numbers](../architecture.md#decision-numbers) says.
+This doc holds the requirements and the decisions in force for the org image
+that every sandbox of an org starts from. It covers the builds and the
+refreshes of the org image, the first build of a new org, the software
+image that a first build starts from, and the builds and the notices of a
+change of the repositories. It belongs to
+[Workspaces and sandboxes](workspaces-and-sandboxes.md). The terms are those
+of the [architecture doc](../architecture.md#terms). A decision number names
+a dated record, as [Decision numbers](../architecture.md#decision-numbers)
+says. An e2b decision number names a decision of the change that adds E2B as
+the second [sandbox provider](workspaces-and-sandboxes.md#the-provider), as
+that doc says.
 
 ## The org image
 
 - Each org has one org image (decision 13). The image holds a prepared
   copy of each repository that the org chose when the build of the image
   began.
+- The org image lives in the provider account of the org, as
+  [The account of an org](workspaces-and-sandboxes.md#the-account-of-an-org)
+  says. Every build and every refresh of the org runs in that account
+  (e2b decision 222).
 - One image for each repository was rejected, because each image costs
   its own saved snapshot and starts.
 - The Repositories tab of the org settings chooses the repositories
@@ -26,6 +32,9 @@ decision number names a dated record, as
 - Bash runs the install script.
 - The Cloud computer tab lists the operating system and software that the
   base image includes before the install script runs.
+- The base image holds the same operating system and software on each
+  provider. Reason: the Cloud computer tab lists one base image for every
+  org.
 - "Build computer" starts a build. A build runs the install script on a
   copy of the image, with every chosen repository cloned (decision 12).
 - An add of a repository also starts a build, as
@@ -84,10 +93,10 @@ decision number names a dated record, as
 - The first build is a normal build. The person who creates the org, its
   first admin, is the starter of that build. Its log and its result show
   on the Cloud computer tab, as for every build.
-- A build of an org without an org image starts from the software image.
-  It copies the repositories and runs the install script, with no install
-  of the app's own software, as [The software image](#the-software-image)
-  says.
+- A build of an org without an org image starts from the software image
+  of its account, when that account has a ready one. It copies the
+  repositories and runs the install script, with no install of the app's
+  own software, as [The software image](#the-software-image) says.
 - When the first build cannot start, Create org still creates the org. An
   admin can then start a build on the Cloud computer tab, with Build
   computer or Try again. Reason: the org is valid without a build.
@@ -131,6 +140,11 @@ decision number names a dated record, as
 - It holds no org data and no secret, because every org uses it.
 - One software image belongs to each version of the app's own software. A
   change of any install step of that software makes a new version.
+- The software image lives in the `boat` account. An org on another
+  account, such as `e2b`, has none. Its first build starts from the base
+  image of its own account, as for a missing software image below
+  (e2b decision 222). Reason: a saved snapshot starts sandboxes only in its
+  own provider account.
 - A build of an org without an org image starts from the ready software
   image of the current version. It copies the repositories, then runs the
   install script. A later build and a refresh start from the last org

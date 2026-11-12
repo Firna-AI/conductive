@@ -29,7 +29,7 @@ says.
   - Continue in a new workspace from the latest default branch. Its
     sandbox starts cold, and its agents start without the earlier context.
   - Continue in a new workspace that forks the sandbox. Its sessions start
-    new, and it needs one more start on the app's Boat account.
+    new, and it needs one more start on the provider account of its org.
   - Archive only. After each merge, the member then waits for a new
     sandbox, and the new agent starts without the earlier context.
   - More work on the merged branch. After a squash merge, a new pull

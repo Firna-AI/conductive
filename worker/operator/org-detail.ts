@@ -9,6 +9,7 @@ import { workspaceStateCounts } from './workspace-counts'
 
 interface OrgHeader extends SuspensionRow {
   id: string
+  providerAccount: string
   name: string
   initials: string | null
   createdAt: number
@@ -30,7 +31,7 @@ export async function readOperatorOrg(
   >([
     db
       .prepare(
-        `SELECT o.id, o.name, o.initials, o.created_at AS createdAt,
+        `SELECT o.id, o.provider_account AS providerAccount, o.name, o.initials, o.created_at AS createdAt,
            (SELECT COUNT(*) FROM repositories r WHERE r.org_id = o.id AND r.selected = 1) AS repositories,
            (SELECT COUNT(*) FROM image_builds b JOIN image_build_jobs j ON j.build_id = b.id
              WHERE b.org_id = o.id AND j.phase != 'done') AS builds,
@@ -63,6 +64,7 @@ export async function readOperatorOrg(
     throw new Error('Invalid operator workspace counts')
   return {
     id: org.id,
+    providerAccount: org.providerAccount,
     name: org.name,
     initials: org.initials,
     createdAt: org.createdAt,

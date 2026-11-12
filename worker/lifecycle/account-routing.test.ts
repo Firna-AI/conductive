@@ -24,15 +24,20 @@ const fixtureForTest = setupBackendTests()
 
 function configureSecondary(fixture: ReturnType<typeof fixtureForTest>) {
   fixture.boat.server.addAccount({ orgId: 'second-org', apiKey: 'boat-second' })
-  fixture.runtime.env.SANDBOX_PROVIDER_ACCOUNTS = {
+  fixture.runtime.env.SANDBOX_PROVIDER_ACCOUNTS = JSON.stringify({
     'boat-second': { kind: 'boat', orgId: 'second-org', apiKey: 'boat-second' },
-  }
+  })
 }
 
 it('replays a lost allocation and resumes its disk through the stored secondary account', async () => {
   const fixture = fixtureForTest()
   const { runtime, org, user, repositoryId, boat } = fixture
   configureSecondary(fixture)
+  await runtime.env.DB.prepare(
+    'UPDATE orgs SET provider_account = ? WHERE id = ?',
+  )
+    .bind('boat-second', org.id)
+    .run()
   await seedPublishedImage(runtime.env.DB, {
     orgId: org.id,
     buildId: 'secondary-image-build',
@@ -57,7 +62,6 @@ it('replays a lost allocation and resumes its disk through the stored secondary 
       user,
       { repositoryId, firstMessage: FIRST_MESSAGE },
       user,
-      'boat-second',
       { branch: 'feature/review', startSha: 'a'.repeat(40) },
     ),
   )

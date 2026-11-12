@@ -64,11 +64,13 @@ export const privacyDocument: LegalDocument = {
             processing terms apply the European Commission's standard
             contractual clauses with the UK International Data Transfer
             Addendum to restricted UK transfers.`,
-          text`The cloud computer provider is based in the United States.
-            It reports that its cloud computers and saved snapshots run in
-            Germany, Finland, and France. UK adequacy regulations approve
-            transfers to countries in the European Economic Area. Other
-            provider operations can involve processing outside that area.`,
+          text`The cloud computer providers are companies registered in the
+            United States. ${productName} uses their European Union regions
+            for cloud computers and saved snapshots. These locations include
+            Belgium, Germany, Finland, and France. UK adequacy regulations
+            approve transfers to countries in the European Economic Area.
+            Other provider operations can involve processing outside that
+            area.`,
           text`Anthropic and OpenAI process agent requests under the
             agreement for the connected account that the session uses.
             Their published privacy and data processing terms describe
@@ -121,7 +123,7 @@ export const privacyDocument: LegalDocument = {
         list(
           text`${productName} stores each env var value and agent login
             encrypted.`,
-          text`It does not send the key of its cloud computer provider to
+          text`It does not send the keys of its cloud computer providers to
             your browser or into a cloud computer.`,
           text`The settings never return a stored env var value or agent login
             to your browser.`,

@@ -5,9 +5,19 @@ import { LiveApp } from './live-app'
 import { LiveBoat } from './live-boat'
 import { CheckError, liveConfiguration, requiredInputs } from './live-input'
 import { measurePlacements } from './live-measure'
+import { e2bLiveMain } from './e2b/live-main'
 
 async function main() {
   const root = resolve(process.cwd())
+  const providerIndex = process.argv.indexOf('--provider')
+  const provider =
+    process.argv
+      .find((argument) => argument.startsWith('--provider='))
+      ?.slice('--provider='.length) ??
+    (providerIndex >= 0 ? process.argv[providerIndex + 1] : 'boat')
+  if (provider === 'e2b') return e2bLiveMain(root, process.argv.slice(2))
+  if (provider !== 'boat')
+    throw new CheckError('Choose boat or e2b as the live-check provider.')
   if (process.argv.includes('--help')) {
     process.stdout.write(
       `Usage: node image/live-check.mjs [--prepare]\nRequired environment: ${requiredInputs.join(', ')}\nOptional: LIVE_AGENT_LOGIN_KIND, LIVE_RUNS, LIVE_OUTPUT, LIVE_SOFTWARE_DIR, LIVE_BOAT_API.\nThe app must already hold this account's agent login and a successful org image.\nThe script creates one app workspace and two temporary measurement sandboxes.\nIt stops the app workspace and deletes its measurement sandboxes.\nCredentials stay in memory and sandbox runtime settings.\n`,
@@ -15,7 +25,7 @@ async function main() {
     return
   }
   await Promise.all(
-    ['runner', 'measure', 'compare'].map((name) =>
+    ['runner', 'relay', 'measure', 'compare'].map((name) =>
       access(join(root, 'dist/runner', `${name}.mjs`)),
     ),
   )

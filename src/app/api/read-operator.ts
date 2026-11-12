@@ -107,6 +107,7 @@ function readOrgSummary(value: unknown): OperatorOrgSummary {
   const match = org.match
   return {
     id: text(org, 'id'),
+    providerAccount: text(org, 'providerAccount'),
     name: text(org, 'name'),
     initials: maybeText(org, 'initials'),
     createdAt: count(org, 'createdAt'),

@@ -80,6 +80,12 @@ async function setup() {
 
 it('starts a build for the admin on an add, but not on a repeated save or a removal', async () => {
   const { env, user, repositoryId, dependencies, save } = await setup()
+  env.SANDBOX_PROVIDER_ACCOUNTS = JSON.stringify({
+    secondary: { kind: 'boat', apiKey: 'second-key', orgId: 'second-org' },
+  })
+  await env.DB.prepare('UPDATE orgs SET provider_account = ? WHERE id = ?')
+    .bind('secondary', OUTER_ORG)
+    .run()
   const before = (await readBuildHistory(env.DB, OUTER_ORG)).builds.length
   const response = await save(true)
   expect(response.status).toBe(200)
@@ -90,7 +96,11 @@ it('starts a build for the admin on an add, but not on a repeated save or a remo
   expect(id).not.toBe(null)
   if (id === null) throw new Error('Missing repository build')
   const job = await readBuildJob(env.DB, OUTER_ORG, id)
-  expect(job).toMatchObject({ kind: 'build', startedByUserId: user.id })
+  expect(job).toMatchObject({
+    kind: 'build',
+    startedByUserId: user.id,
+    providerAccount: 'secondary',
+  })
   expect(JSON.parse(job.repositoriesJson)).toContainEqual({
     id: repositoryId,
     orgId: OUTER_ORG,

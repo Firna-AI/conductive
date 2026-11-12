@@ -163,6 +163,20 @@ The ledger migration runs after `202611092100_provider_accounts.sql` and
 the table. This order puts the ledger triggers on the rebuilt tables, so
 they stay.
 
+`202611101100_org_provider_assignment.sql` adds the fixed provider account
+of each org. Existing rows receive `boat`. New production writes name the
+selected account explicitly. The migration also creates the singleton
+assignment weights setting, with `boat` at 100%, and its change events.
+Each setting change can retain its operator and time. Operator references
+become null after account deletion. Existing org, resource, and computer
+ledger records and triggers stay in place.
+
+`202611101110_e2b_provider_state.sql` adds E2B create claims, encrypted traffic tokens,
+and the mapping from app snapshot names to provider snapshot IDs.
+Claims precede provider mutations. They survive ambiguous replies and org removal.
+Completed deletions retain tombstones so old requests cannot allocate again.
+The [E2B client](../worker/sandbox/e2b/README.md) gives the recovery behavior.
+
 `202611101200_software_images.sql` adds `software_images`, which owns each
 software image attempt and its provider account, version, artifact, phase,
 resources, output, and deploy token digest. A partial unique index allows

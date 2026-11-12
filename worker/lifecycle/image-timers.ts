@@ -33,15 +33,11 @@ export async function refreshImagesForPush(
     ref: string
     software: ImageSoftwareArtifact
   },
-  providerAccount = DEFAULT_PROVIDER_ACCOUNT,
 ): Promise<readonly string[]> {
-  const repositories = await pushedImageRepositories(
-    runtime.env.DB,
-    input,
-    providerAccount,
-  )
+  const repositories = await pushedImageRepositories(runtime.env.DB, input)
   const builds: string[] = []
   for (const repository of repositories) {
+    const providerAccount = repository.providerAccount
     if (input.ref !== `refs/heads/${repository.defaultBranch}`) continue
     const admin = await firstActiveOrgAdmin(runtime.env.DB, repository.orgId)
     if (!admin) continue
@@ -73,16 +69,12 @@ export async function refreshImagesForPush(
     )
     if (!claimed) continue
     builds.push(
-      await startImageBuild(
-        runtime,
-        {
-          orgId: repository.orgId,
-          userId: admin.userId,
-          kind: 'refresh',
-          software: input.software,
-        },
-        providerAccount,
-      ),
+      await startImageBuild(runtime, {
+        orgId: repository.orgId,
+        userId: admin.userId,
+        kind: 'refresh',
+        software: input.software,
+      }),
     )
   }
   return builds
@@ -156,15 +148,11 @@ export async function runImageAlarm(
       runtime.dependencies.now(),
     )
   }
-  await startImageBuild(
-    runtime,
-    {
-      orgId: state.orgId,
-      userId: admin.userId,
-      kind: 'refresh',
-      software: state.software,
-      dailyRefresh: next.dailyAt <= runtime.dependencies.now(),
-    },
-    providerAccount,
-  )
+  await startImageBuild(runtime, {
+    orgId: state.orgId,
+    userId: admin.userId,
+    kind: 'refresh',
+    software: state.software,
+    dailyRefresh: next.dailyAt <= runtime.dependencies.now(),
+  })
 }

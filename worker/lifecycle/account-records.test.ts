@@ -23,6 +23,10 @@ const fixtureForTest = setupBackendTests()
 it('keeps the image account through a creation claim, workspace, and stored start', async () => {
   const { runtime, org, user, repositoryId } = fixtureForTest()
   const db = runtime.env.DB
+  await db
+    .prepare('UPDATE orgs SET provider_account = ? WHERE id = ?')
+    .bind('boat-secondary', org.id)
+    .run()
   await seedPublishedImage(db, {
     orgId: org.id,
     buildId: 'secondary-image-build',
@@ -46,7 +50,6 @@ it('keeps the image account through a creation claim, workspace, and stored star
     user,
     { repositoryId, firstMessage: FIRST_MESSAGE },
     undefined,
-    'boat-secondary',
     { branch: 'feature/review', startSha: 'a'.repeat(40) },
   )
   expect(job).toMatchObject({

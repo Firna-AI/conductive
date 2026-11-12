@@ -227,8 +227,8 @@ at `app/workspace-links/sent-by`.
   on the tool messages of a workspace in an hour was rejected too. Each
   adds a stored count and a refusal.
 - Risk: two agents that answer each other spend the agent logins of their
-  starters until a member stops one. They also spend the starts that all
-  orgs share.
+  starters until a member stops one. They also spend the starts that the
+  orgs of their provider account share.
 
 ## Tool descriptions
 

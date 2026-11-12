@@ -1,7 +1,7 @@
 # Agent runner
 
 The agent runner is the program of Conductive in each cloud computer, a
-Boat sandbox. It runs the agents powered by Claude and Codex for one
+sandbox on Boat or E2B. It runs the agents powered by Claude and Codex for one
 workspace. It also reports the files and the changes of the workspace
 repository and the listening ports.
 
@@ -37,9 +37,10 @@ These facts belong to this implementation, not to the protocol docs.
   gives the resume and fork sequence after a login kind change.
 - Both agents request no approvals and the service user's rights. ChatGPT
   workspace rules can replace these Codex settings on a ChatGPT turn.
-- The runner configures the sandbox's `computer` and `conductive` MCP
-  servers for both agents. The [agent tools guide](agent-tools.md) gives
-  their settings, runtime context, and process lifetime.
+- The runner configures the `conductive` MCP server for both agents, and
+  the sandbox's `computer` MCP server when it exists. The
+  [agent tools guide](agent-tools.md) gives their settings, runtime
+  context, and process lifetime.
 - No command carries an agent login or a GitHub token. Each `turn` command
   carries a turn token for the model gateway, as [Agent logins](agent-logins.md)
   says. [GitHub tokens](../docs/protocol/github-tokens.md)
@@ -149,14 +150,16 @@ These facts belong to this implementation, not to the protocol docs.
   reads and diffs.
 - Before it connects, the runner reads the `claude` program file once, so
   that the disk loads it early. It uses no credential and starts no agent.
-- After a start from a saved snapshot, the sandbox provider restores the
+- After a start from a saved snapshot on Boat, the provider restores the
   disk in the background. When the restore ends, a running program keeps
   an old view of the disk at another path, such as
   `/var/lib/ascii-lazy/retired/home/code/<name>`. A repository watch made
   before that end then misses every later edit, so the file lists stop.
   The runner checks once a second for the
   [terminal's restore marker](../worker/terminal/README.md), which the
-  Worker writes when the provider reports the end of the restore. When the
+  Worker writes when the provider reports the end of the restore. E2B
+  reports no background restore, so the Worker writes the marker as soon as
+  the sandbox reports ready. When the
   marker appears, the runner watches the live folder again and scans the
   repository once. A marker that exists when the watch starts changes
   nothing, because that watch already sees the live folder. Each Git
@@ -184,31 +187,14 @@ receipts, and the listening-port scan and scheduling boundaries.
 
 The [preview relay guide](preview-relay.md) gives what the relay does, its
 entry points, how it listens, its build, and its separate service with
-socket activation.
+socket activation. It also gives the private ingress checks, the HTTP and
+WebSocket forwarding, and the tests.
+The relay preserves `Host: localhost:<port>` for the previewed app.
 
 ## Commands
 
-Run these commands from the repository root, with Node 24 from `.nvmrc`.
-
-| Command                                  | What it does                                                 |
-| ---------------------------------------- | ------------------------------------------------------------ |
-| `npm ci --prefix runner`                  | Install the runner packages into `runner/node_modules`        |
-| `npm --prefix runner run build`           | Bundle the runner, relay, and two measurement tools           |
-| `npm --prefix runner run typecheck`       | Check the runner, its fakes, and the shared contracts it uses  |
-| `npm --prefix runner test`                | Run the runner tests with Vitest                             |
-| `npm --prefix runner test -- src/relay`    | Run the relay tests against local servers                     |
-| `npm --prefix runner start`               | Run the runner bundle with the variables of the current shell |
-| `node dist/runner/relay.mjs`               | Run the relay bundle                                         |
-
-The build writes `runner.mjs`, `relay.mjs`, `measure.mjs`, and `compare.mjs`
-into `dist/runner/`. The runner and measurement bundles load npm packages
-at run time. The build links `dist/runner/node_modules` to
-`runner/node_modules`, so that the bundles find them.
-
-The complete gate, the root `npm run check`, runs the runner typecheck and
-the runner tests. Run `npm ci --prefix runner` once before the gate, as CI
-does. The root lint, format, and file-length checks also cover the runner
-files.
+Run the commands in [Runner development](development.md#commands) from the
+repository root with Node 24 from `.nvmrc`.
 
 ## Service
 

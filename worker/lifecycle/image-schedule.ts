@@ -1,6 +1,6 @@
 import { requireActiveOrg } from '../data/user-access'
 import { HttpError } from '../http'
-import { DEFAULT_PROVIDER_ACCOUNT } from '../sandbox/account-identity'
+import { readOrgProviderAccount } from '../data/org-provider-account'
 import { runningBuild } from './build-data'
 import type { ImageRuntime } from './image-builds'
 import { pendingImageCleanup } from './image-maintenance-data'
@@ -28,7 +28,7 @@ export async function readImageSchedule(
   orgId: string,
   now: number,
   requested: { buildId: string | null; nextAt: number },
-  providerAccount = DEFAULT_PROVIDER_ACCOUNT,
+  providerAccount: string,
 ): Promise<ImageSchedule> {
   const active =
     (await runningBuild(db, orgId)) ?? (await pendingImageCleanup(db, orgId))
@@ -66,8 +66,8 @@ export async function scheduleIdleImage(
   runtime: ImageRuntime,
   orgId: string,
   software: ImageSoftwareArtifact,
-  providerAccount = DEFAULT_PROVIDER_ACCOUNT,
 ): Promise<void> {
+  const providerAccount = await readOrgProviderAccount(runtime.env.DB, orgId)
   const now = runtime.dependencies.now()
   const next = await readImageSchedule(
     runtime.env.DB,

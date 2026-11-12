@@ -150,7 +150,7 @@ export async function publishBuild(
           OR (EXISTS (SELECT 1 FROM repositories r WHERE r.org_id = ? AND r.selected = 1
             AND NOT EXISTS (SELECT 1 FROM json_each(image_build_jobs.repositories_json) repository
               WHERE json_extract(repository.value, '$.id') = r.id))
-            AND (SELECT state FROM image_builds WHERE org_id = ? AND kind = 'build'
+            AND (SELECT state FROM image_builds WHERE org_id = ? AND provider_account = ? AND kind = 'build'
               ORDER BY started_at DESC, id DESC LIMIT 1) = 'succeeded')
           THEN 'cleanup-build' ELSE 'cleanup' END,
           process_id = NULL WHERE build_id = ? AND EXISTS
@@ -163,6 +163,7 @@ export async function publishBuild(
         job.settingsRevision,
         job.orgId,
         job.orgId,
+        job.providerAccount,
         job.buildId,
       ),
   ])

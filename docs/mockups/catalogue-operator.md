@@ -71,14 +71,20 @@ the app for everyone, from decision 142. It holds live counts across every
 org, as decision 144 chose for now. A line under the users counts the
 people on the waitlist, from decision 160. The Orgs and Users tabs come from
 decision 147, and they find a suspended org or user. The Waitlist and
-Invite codes tabs come from decision 160. Its child pages:
+Invite codes tabs come from decision 160. The Providers tab and the
+account of each org come from e2b decision 222, and operator screens name
+each account by its ID, from e2b decision 221. An e2b decision is a decision of the change that adds E2B as the second sandbox provider. Its child
+pages:
 
 - `app/operator/menu` has Operator in the rail, above the account, and in
   the org switcher of a phone, under Account. Only an operator sees it.
-- `app/operator/orgs` has the Orgs tab: the newest orgs, a search by name,
-  a search by preview address, and a search with no match.
-- `app/operator/org` has the page of an org, with the names of its
-  members, and Suspend org. Its child pages have the question before the
+  Create org there opens `app/orgs/new/operator`, with the account choice.
+- `app/operator/orgs` has the Orgs tab: the newest orgs with the account
+  of each, a search by name, a search by preview address, and a search
+  with no match. Acme Labs, the newest org, is the test org that the
+  operator created on `e2b`.
+- `app/operator/org` has the page of an org, with its account, the names
+  of its members, and Suspend org. Its child pages have the question before the
   suspension, the suspended org with Lift, the question before the lift,
   from decision 145, and a deleted org. The child page of the deleted org
   has its question before a suspension, the deleted org that is also
@@ -98,6 +104,16 @@ Invite codes tabs come from decision 160. Its child pages:
   and the invite codes with their uses and states.
   Each code has Copy, and a code that works also has Copy join link. Its
   child pages are below.
+- `app/operator/providers` has the Providers tab: the slider of the
+  weights of new orgs between `boat` and `e2b`, at the default of 100%
+  `boat`, and Orgs by account, with Acme Labs on `e2b`. Its child pages
+  were its saved states and kept their paths: `moved` has the weights
+  moved and not saved, `saved` has them after Save weights with the time
+  and the operator, `not-saved` has a save that failed, and `one-account`
+  has the `boat` account only, with no slider. Its child page
+  `three-accounts` has a third account, `e2b-us`, with a field for each
+  account and the total under them. Its `uneven` variant has a total of
+  110%, so Save weights stays off.
 - `app/operator/error` has the numbers that could not load, with Try
   again. Its `loading` variant has the page while it reads the numbers.
 

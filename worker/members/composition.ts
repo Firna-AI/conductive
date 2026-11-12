@@ -1,4 +1,6 @@
 import type { AppDependencies, AppEnv } from '../env'
+import { readOrgProviderAccount } from '../data/org-provider-account'
+import { configuredProviderAccount } from '../sandbox/accounts'
 import {
   workspaceBinding,
   workspaceForViewer,
@@ -98,15 +100,20 @@ export function productionMembersHooks(
       }
     },
     async restoreOrgMaintenance(input) {
-      const next = await readImageSchedule(env.DB, input.orgId, input.now, {
-        buildId: null,
-        nextAt: input.now + IMAGE_DAY_MS,
-      })
+      const providerAccount = await readOrgProviderAccount(env.DB, input.orgId)
+      const next = await readImageSchedule(
+        env.DB,
+        input.orgId,
+        input.now,
+        { buildId: null, nextAt: input.now + IMAGE_DAY_MS },
+        providerAccount,
+      )
       const image =
         next.buildId === null && !next.imageName
           ? null
           : {
               orgId: input.orgId,
+              providerAccount,
               software: runnerSoftware(env),
               buildId: next.buildId,
               nextAt: next.nextAt,
@@ -124,10 +131,16 @@ export function productionMembersHooks(
         ...(await orgLifecycleReceivers(env.DB, input.orgId)),
       ])
       for (const id of ids) {
+        const disk = input.workspaces.find((disk) => disk.workspaceId === id)
+        const restoredDisk =
+          disk &&
+          configuredProviderAccount(env, disk.providerAccount).kind !== 'boat'
+            ? { ...disk, nextKeepaliveAt: null }
+            : (disk ?? null)
         await apply(
           receiver(id).restoreMemberLifecycle(
             fence(input.ownership),
-            input.workspaces.find((disk) => disk.workspaceId === id) ?? null,
+            restoredDisk,
             null,
           ),
         )

@@ -15,7 +15,7 @@ Today the repository holds:
   requirements
 - the [mockup catalogue](docs/mockups/README.md), which draws every screen
   at phone and desktop sizes
-- the app package, with tests against fake GitHub and Boat servers and
+- the app package, with tests against fake GitHub, Boat, and E2B servers and
   local D1 storage, and the complete gate, which GitHub Actions runs
 - the Mac app in `desktop/`, with signed packages and update support, as
   [Mac app](#mac-app) says
@@ -37,8 +37,9 @@ feature that is not complete yet says so.
   invite code, a referral code, or an org invitation lets the person in.
   An operator can turn the waitlist off. Each new person then gets in at
   once, unless sign-ups are paused.
-- Every cloud computer runs in the app's own Boat account, so users need no
-  Boat account.
+- Every cloud computer runs in an account of the app with a sandbox
+  provider, Boat or E2B, so users need no provider account. Each org keeps
+  one provider account for its whole life.
 - A new workspace starts as an empty chat. The first message creates it,
   with its own cloud computer and branch.
 - Chat with agents powered by Claude and Codex. A workspace holds several
@@ -101,88 +102,12 @@ how the app runs in development and in the production build.
    `{"status":"ok"}`.
 6. Run `npm run check` before you submit a change.
 
-Local development needs no Cloudflare account. Wrangler provides local D1,
-R2, and Durable Object storage under `.wrangler/`. The D1 ID and the R2
-bucket name in `wrangler.jsonc` name the production database and bucket.
-Local commands, such as `npm run db:migrate` and `npm run dev`, use only
-the local storage.
-
-This local setup creates no Cloudflare resources and deploys nothing. The
-`Deploy` workflow in GitHub Actions deploys each push to `main`, as
-[Automatic deploys](docs/automatic-deploys.md) says. Put local secrets in
-`.dev.vars`, which Git ignores.
-
-The app origin is the scheme, host, and port of the web app. A deployed
-Worker reads it from `APP_ORIGIN`, which `wrangler.jsonc` does not set.
-`npm run dev` and `npm run preview` do not need `APP_ORIGIN`. An HTTP
-request to `localhost`, `127.0.0.1`, or `[::1]` uses its own origin as the
-app origin. An `APP_ORIGIN` value in `.dev.vars` does not change this. So
-the app origin is `http://127.0.0.1:5173` in `npm run dev`, and
-`http://127.0.0.1:5174` in `npm run preview`.
-
-Host routing, the `Origin` check, the content policy, and GitHub sign-in use
-the app origin of each request. The development page has the same content
-policy as the built app. That policy allows no inline script. So, in
-`npm run dev` only, a plugin in `vite.config.ts` moves each inline script of
-the page into an external script file.
-
-GitHub sign-in needs these values in `.dev.vars`:
-
-| Name | Value |
-| --- | --- |
-| `GITHUB_CLIENT_ID` | The GitHub App's client ID |
-| `GITHUB_CLIENT_SECRET` | The GitHub App's client secret |
-| `SESSION_SIGNING_KEY` | 32 random bytes, encoded as Base64 |
-| `BOAT_KEY_ENCRYPTION_KEY` | A separate 32 random bytes, encoded as Base64. It encrypts the stored secrets, such as the agent logins and the workspace tokens. |
-
-In a deployment, the client secret and both keys are Worker secrets, as
-[Deployment inputs](docs/deployment.md#secrets) says. Open `/api/auth/github` to start sign-in. GitHub then returns to
-`/api/auth/github/callback` on the same app origin. The GitHub App must
-accept that callback address, for example
-`http://127.0.0.1:5174/api/auth/github/callback` for `npm run preview`. The
-GitHub App is "Conductive Build", with the slug `conductive-build`, in the
-Firna-AI organization. It sends its webhooks to the address in
-[The GitHub App](docs/protocol/github-banner.md#the-github-app).
-[The GitHub App](docs/deployment.md#the-github-app) in the deployment guide
-gives each setting of the GitHub App, with the address where GitHub returns
-the user after an install.
-Automated tests use fakes and need no credentials.
-
-Every cloud computer of every org runs in the app's own Boat organization.
-That organization holds only the app's sandboxes and saved snapshots, and
-no other Boat work. The Worker needs two values to start cloud computers:
-
-| Name | Value |
-| --- | --- |
-| `BOAT_API_KEY` | An API key for the app's Boat organization, and the only Boat credential. It is a secret. |
-| `BOAT_ORG_ID` | The ID of the app's Boat organization. It is not a secret. The Worker names it on every Boat call. |
-
-[The app's Boat account](worker/sandbox/README.md#the-apps-boat-account)
-says how to make the key. Put both values in `.dev.vars` to start real cloud
-computers in local development. In a deployment, `BOAT_API_KEY` is a
-Worker secret, and `BOAT_ORG_ID` is a variable in the settings of the
-Worker, as [Deployment inputs](docs/deployment.md#how-to-set-the-inputs)
-says.
-[Access and security](docs/protocol/isolation.md#the-apps-boat-key)
-states how the Worker keeps them away from the browser and the sandboxes.
-
-`wrangler.jsonc` also sets the production values: `MACHINE_ORIGIN` is
-`https://api.conductive.build`, and `PREVIEW_DOMAIN` is `conductive.page`.
-It sets `CONDUCTIVE_TITLE_MODEL` for automatic workspace names, as
-[The title model](docs/deployment.md#the-title-model) says.
-It also holds the model list and the app default in `CONDUCTIVE_MODELS`
-and `CONDUCTIVE_DEFAULT_CHOICE`. Edit these values in the repository.
-The next deploy publishes them, as [Models](docs/deployment.md#models) says.
-A value in `.dev.vars` replaces the corresponding production value locally.
-When `.dev.vars` sets `MACHINE_ORIGIN` or `MARKETING_ORIGIN` to a local address,
-requests to that address keep that role. The
-[marketing README](src/marketing/README.md#development) uses this to preview
-the built site through the Worker. For `npm run preview`, set
-`MARKETING_ORIGIN=http://localhost:5174` and
-`APP_ORIGIN=http://127.0.0.1:5174` in `.dev.vars`. Run `npm run build`
-before `npm run preview`. Open `http://localhost:5174` for the site and
-`http://127.0.0.1:5174` for the app. The Worker fills sign-in links from
-`APP_ORIGIN` and serves Astro's built pages with their security headers.
+Local development needs no Cloudflare account and no E2B account, and it
+deploys nothing. Put local secrets in `.dev.vars`, which Git ignores.
+[Local development](docs/local-development.md) gives the local storage,
+the app origin, the values of GitHub sign-in and of the cloud computers,
+and the production values of `wrangler.jsonc`. Automated tests use fakes
+and need no credentials.
 
 Worker types come from `wrangler.jsonc`. The type check generates them
 under `.wrangler/`, which Git also ignores.
@@ -262,8 +187,9 @@ features:
   app.
 - `worker/data/`: D1 queries for users, orgs, and sessions.
 - `worker/sandbox/`: the provider accounts, the lookup of the client of each
-  account, and the typed Boat adapter. Production has one account, which
-  uses the app's one Boat key.
+  account, and the typed client of each provider kind. The `boat` account
+  uses the app's Boat key. Each other account, such as `e2b`, comes from
+  `SANDBOX_PROVIDER_ACCOUNTS`.
 - `src/app/`: the data of the web app, such as the typed API client, the
   models that the screens read, the router, and the event stream. Its
   [README](src/app/README.md) gives the rules and the key code of the
@@ -274,7 +200,7 @@ features:
   key code.
 - `src/shared/`: the browser API contracts, route paths, and runner message types.
 - `src/test-support/`: the fake API, recorded chat and file events, and terminal fake.
-- `worker/test-support/`: local D1, fake GitHub and Boat servers, and runner fakes.
+- `worker/test-support/`: local D1, fake GitHub, Boat, and E2B servers, and runner fakes.
 - `migrations/`: the D1 schema migrations.
 - `desktop/`: the Mac app, an Electron package of its own. Its
   [README](desktop/README.md) gives its key code.

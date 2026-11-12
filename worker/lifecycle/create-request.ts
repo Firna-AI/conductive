@@ -1,6 +1,6 @@
 import type { User } from '../../src/shared/api'
 import type { CreateWorkspaceRequest } from '../../src/shared/workspaces'
-import { DEFAULT_PROVIDER_ACCOUNT } from '../sandbox/account-identity'
+import { readOrgProviderAccount } from '../data/org-provider-account'
 import { workspaceBranch } from './workspace-branch'
 import { requireOrgMember } from './access'
 import { readCreationImage } from './published-image-data'
@@ -24,11 +24,11 @@ export async function prepareCreationRequest(
   sender: User,
   input: WorkspaceCreationInput,
   reservedId?: string,
-  providerAccount = DEFAULT_PROVIDER_ACCOUNT,
   base?: WorkspaceCreationBase,
 ): Promise<WorkspaceStartJob> {
   const { env, dependencies } = runtime
   await requireOrgMember(env.DB, orgId, user.id)
+  const providerAccount = await readOrgProviderAccount(env.DB, orgId)
   const image = await readCreationImage(
     env.DB,
     orgId,

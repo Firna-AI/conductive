@@ -1,16 +1,20 @@
 # Operator section
 
-This doc holds the requirements and the decisions in force for the
-operator section. In this part of the web app, an operator sees the whole
-app and acts on one org or one user (decision 142). The operator also runs
-the waitlist there (decision 160).
-[Operator actions](operator-actions.md) states who is an operator, and
-what a suspension and a lift do. [Waitlist](waitlist.md) states the
-waitlist and the codes. [Sign-ups](sign-ups.md) states the pause, the
-waitlist switch, and their controls in the section. The terms are those
-of the [architecture doc](../architecture.md#terms). A decision number
-names a dated record, as
-[Decision numbers](../architecture.md#decision-numbers) says.
+This doc holds the requirements and the decisions in force for the operator
+section. In this part of the web app, an operator sees the whole app and
+acts on one org or one user (decision 142). The operator also runs the
+waitlist there (decision 160), and sets the weights of new orgs
+(e2b decision 222). [Waitlist tabs](operator-waitlist-tabs.md) holds the
+Waitlist tab, Approve, the Invite codes tab, and the pause.
+[Operator actions](operator-actions.md) states who is an operator, and what
+a suspension and a lift do. [Waitlist](waitlist.md) states the waitlist and
+the codes. [Sign-ups](sign-ups.md) states the pause, the waitlist switch,
+and their controls in the section. The terms are those of the
+[architecture doc](../architecture.md#terms). A decision number names a
+dated record, as [Decision numbers](../architecture.md#decision-numbers)
+says. An e2b decision number names a decision of the change that adds E2B as
+the second [sandbox provider](workspaces-and-sandboxes.md#the-provider), as
+that doc says.
 
 ## Access
 
@@ -37,21 +41,21 @@ names a dated record, as
   gets `access_required`, as
   [What a person who waits can reach](waitlist.md#what-a-person-who-waits-can-reach)
   says.
-- The section changes three settings of the app: the codes, the pause,
-  and the waitlist switch (decisions 160 and 230). It makes and disables
-  invite codes, disables referral codes, turns the pause on and off, and
-  turns the waitlist off and on. It changes no other setting
-  (decision 143).
+- The section changes four settings of the app: the codes, the pause, and
+  the waitlist switch (decisions 160 and 230), and the weights of new orgs
+  (e2b decision 222). It makes and disables invite codes, disables referral
+  codes, turns the pause on and off, turns the waitlist off and on, and
+  saves the weights. It changes no other setting (decision 143).
 - The section cannot change who is an operator. Reason: a stolen session
   of an operator then cannot add an operator.
 
 ## What the section shows
 
-- The section has the tabs Overview, Orgs, Users, Waitlist, and Invite
-  codes (decisions 147 and 160).
-- The section shows only counts, names, IDs, dates, roles, states, and
-  codes. It shows no chat, file, env value, agent login, or email address.
-  Reason: the section then holds the least personal data.
+- The section has the tabs Overview, Orgs, Users, Waitlist, Invite codes,
+  and Providers (decisions 147 and 160, and e2b decision 222).
+- The section shows only counts, names, IDs, dates, roles, states, codes,
+  and weights. It shows no chat, file, env value, agent login, or email
+  address. Reason: the section then holds the least personal data.
 - While the pause is on or the waitlist is off, each tab starts with a
   notice, as [The notices](sign-ups.md#the-notices) says.
 
@@ -110,12 +114,14 @@ names a dated record, as
 - With no search, the Orgs and Users tabs list the newest first, 20 at a
   time, with Show more (decision 147). A search lists its matches in the
   same way.
+- Each org in the Orgs tab shows its provider account by its ID
+  (e2b decision 221).
 - Each org and each user has a page in the section.
-- The page of an org gives its ID, its creation day, and the number of
-  its repositories. It also gives its workspaces by state and its cloud
-  computers that run now, as the Overview counts them. It lists the
-  members, each with their name on GitHub and their role
-  (decisions 147 and 149).
+- The page of an org gives its ID, its provider account, its creation
+  day, and the number of its repositories. It also gives its workspaces
+  by state and its cloud computers that run now, as the Overview counts
+  them. It lists the members, each with their name on GitHub and their
+  role (decisions 147 and 149, and e2b decision 221).
 - The page of a user gives the GitHub login, the name on GitHub, the GitHub
   ID, and the join day. It gives the number of workspaces that the user
   owns, and how many of them run now. It lists the orgs of the user, each
@@ -149,69 +155,44 @@ names a dated record, as
 
 ## The Waitlist tab
 
-- The Waitlist tab lists the people who wait, oldest first, 20 at a time,
-  with Show more (decision 160). It leaves out suspended people.
-- Each row gives the GitHub login, the name on GitHub, the age of the
-  GitHub account, and the join day, with an initials disc. It shows no
-  picture and no email address.
-- The login opens the GitHub profile of the person. Reason: the operator
-  judges a person from their GitHub account.
-- The search finds a person who waits by GitHub login, name on GitHub, or
-  numeric GitHub ID, as on the Users tab.
-- Each row has Approve.
-- After an approval, the row stays in the list until the list loads again.
-  It shows that the person is approved, and the state of the email.
-  Reason: the operator sees the result in place.
+[The Waitlist tab](operator-waitlist-tabs.md#the-waitlist-tab) holds these
+requirements.
 
 ## Approve
 
-- Approve gives app access to one person who waits (decision 160). It is
-  on each row of the Waitlist tab, and on the page of a person who waits.
-- Approve works only for a person who waits, one person at a time. For
-  anyone else, the operator makes an invite code with one use. Reason: the
-  user asked to approve specific users.
-- Approve asks first. The question names the person, and says that an
-  approval is final.
-- When the person has a verified email, the question also says that an
-  email tells them at once. Otherwise, it says that the person sees the
-  app access at their next visit.
-- Reason: an approval cannot be undone, and its email goes at once.
-- The approval of a suspended person gets HTTP 409 with the code
-  `user_suspended`, and nothing changes. The operator lifts the suspension
-  first, as [Suspend and Lift on a page](#suspend-and-lift-on-a-page)
-  says.
-- A repeat approval, or the approval of a user who already has app
-  access, gets HTTP 200, changes nothing, and sends no email.
-- Approve also works during the pause, as
-  [The pause](sign-ups.md#the-pause) says.
-- [The approval email](waitlist.md#the-approval-email) states the email
-  and its retries.
+[Approve](operator-waitlist-tabs.md#approve) holds these requirements.
 
 ## The Invite codes tab
 
-- The Invite codes tab lists the invite codes, newest first
-  (decision 160).
-- Each row gives the label, the operator who made the code, the day, the
-  code with Copy, the state, and the uses out of the use limit. The states
-  are Active, Used up, and Disabled.
-- A code that still lets people in also has Copy join link and Disable.
-- New code asks for a label and a use limit. The app then makes the code,
-  as [Codes](waitlist-codes.md#codes) says.
-- Disable asks first. The question names the code. It says that the people
-  who used it keep their app access, and that Disable is final.
-- The search finds any code by its text, also a referral code. It also
-  finds an invite code by its label, and a referral code by the GitHub
-  login of its owner.
-- A referral code in the results opens the page of its owner.
-- Reason: a report of misuse often names only a code. An operator
-  remembers an invite code by its label more often than by its text.
+[The Invite codes tab](operator-waitlist-tabs.md#the-invite-codes-tab)
+holds these requirements.
 
 ## The pause
 
-- The section holds the controls of sign-ups: Pause sign-ups and the
-  waitlist switch. [The Sign-ups box](sign-ups.md#the-sign-ups-box),
-  [The questions](sign-ups.md#the-questions), and
-  [The notices](sign-ups.md#the-notices) state them.
+[The pause](operator-waitlist-tabs.md#the-pause) holds these requirements.
+
+## The Providers tab
+
+- The Providers tab holds the weights of new orgs, as
+  [The account of an org](workspaces-and-sandboxes.md#the-account-of-an-org)
+  says (e2b decision 222). It names each account by its ID, such as `boat`
+  or `e2b` (e2b decision 221).
+- Its New orgs box shows the weights as one slider between `boat` and
+  `e2b`. Each end gives the share of its account, and the two shares add
+  up to 100%.
+- Save weights stays off until the slider moves. It acts at once, with no
+  question. Reason: a change applies only to the orgs that are created
+  after it, and it moves no org.
+- When a save fails, the slider keeps the moved weights, and the box says
+  that the weights weren't saved. New orgs keep the saved weights.
+- The app records each change of the weights, with its time and its
+  operator, as it records each suspension. The box names the operator of
+  the last change, and when. Weights that no operator changed have no
+  such line.
+- When the Worker has only one configured account, the box says that this
+  account gets every new org. It shows no slider then.
+- Orgs by account counts the orgs on each configured account. As the
+  Overview does, it counts a deleted org while its records exist.
 
 ## Suspend and Lift on a page
 
@@ -221,12 +202,13 @@ names a dated record, as
   who waits also has Approve. While that person is suspended, the page
   shows Lift and no Approve (decision 160).
 - [Suspend a user](operator-actions.md#suspend-a-user),
-  [Suspend an org](operator-actions.md#suspend-an-org), and
+  [Suspend an org](operator-org-suspension.md#suspend-an-org), and
   [Lift a suspension](operator-actions.md#lift-a-suspension) state what
   each action does.
 - Each action asks first. The question before a suspension says what stops
-  and what the members keep. It also says that a stopped workspace then
-  gets no restart near day 14, so that its files can be deleted.
+  and what the members keep. It also says that a stopped workspace on the
+  `boat` account then gets no restart near day 14, so that its files can
+  be deleted.
 - The question before the suspension of a user also offers to disable the
   referral code of the user, while the code still lets people in. The
   offer is on by default (decision 160). Reason: the code of an abuser
@@ -234,13 +216,14 @@ names a dated record, as
 - An automatic disable at each suspension was left out, because no
   decision chose that refusal.
 - The question before a lift says what comes back. It also says that a
-  workspace that stopped 14 days ago or more may have lost its files.
+  workspace on the `boat` account that stopped 14 days ago or more may
+  have lost its files.
 - On the page of the operator's own account, the question before a
   suspension warns that the operator is then signed out. It also warns
   that another operator must lift the suspension. The page still allows
   it, because a warning is enough.
 - The page of a deleted org still has Suspend, as
-  [Suspend an org](operator-actions.md#suspend-an-org) allows.
+  [Suspend an org](operator-org-suspension.md#suspend-an-org) allows.
 - After a suspension, the page shows the suspension and the number of
   cloud computers that are still stopping. The reply of the suspension
   names them, as [Suspend a user](operator-actions.md#suspend-a-user)

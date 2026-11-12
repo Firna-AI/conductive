@@ -3,8 +3,8 @@
 This guide belongs to the [sandbox provider](README.md). It gives the
 byte budget of each response of the fixed Boat routes, and the errors
 of a response that passes its budget.
-[File reads](README.md#file-reads) gives the file content budget and the
-metadata fallback.
+[File reads](boat-transport.md#file-reads) gives the file content budget and
+the metadata fallback.
 
 ## Response byte limits
 
@@ -62,7 +62,7 @@ Their message is "The cloud computer response is too large."
 These messages describe a response body that exceeds the Worker budget.
 They contain no provider text.
 
-A successful file content overflow instead keeps the metadata fallback that [File reads](README.md#file-reads) describes.
+A successful file content overflow instead keeps the metadata fallback that [File reads](boat-transport.md#file-reads) describes.
 An oversized file error reply gets the generic response error and does not start that fallback.
 An oversized metadata reply also gets the generic response error.
 

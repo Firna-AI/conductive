@@ -34,12 +34,11 @@
   - **G.** During the launch, stop idle sandboxes sooner, for example after 10 minutes. This frees running slots, and Boat does not count a resume that takes back a machine that it still holds. It changes the 30-minute idle stop of "Stop and resume" in `docs/protocol/workspaces-and-sandboxes.md`. Effort: Small.
 - **Left out:**
   - Several workspaces in one sandbox, because it breaks the rule of one sandbox for each workspace, and it cannot be ready for the launch.
-  - E2B for overflow, because E2B Pro ran only 100 sandboxes at once on 9 November 2026.
-- **Wider fix:** None here. The structural fix is a second provider, which `plans/follow-ups/choose-second-sandbox-provider.md` chooses after the launch.
+  - E2B for overflow, because E2B Pro ran only 100 sandboxes at once on 9 November 2026. Add-ons raise that to 1,100, at $500 a month for each 500.
+- **Wider fix:** None here. The structural fix is a second provider. On 10 November 2026, the user chose E2B, with one provider account for each org and operator weights for new orgs (decision 218 G). The weights can send new orgs to E2B when Boat nears its limits.
 - **Previous examples:** On 5 November 2026, a check of the Boat limits found the limits of the $20 plan. An early choice set limits for each user, and a later choice removed them. On 8 November 2026, the user kept the shared organization for the first deployment.
 - **Related:**
   - `plans/follow-ups/separate-boat-organization.md`: option E of this item is its option B. That item asks for the organization for isolation, and this item asks for it with a plan that fits the launch.
   - `plans/follow-ups/capacity-failure-reason.md`: what users see when a start reaches the limit.
-  - `plans/follow-ups/choose-second-sandbox-provider.md`: the structural capacity fix after the launch.
 - **Recommendation:** E, as recorded on 9 November 2026. It is A in an organization of the app's own: the app gets the whole plan, the key reaches only the app's sandboxes, and the move costs least before real users arrive. The first recommendation was A, and the check of the options recommended A. The runtime and the docs now require the app's own organization, so E becomes A once the deployment uses it. Before any action, check the current Boat plans, limits, and prices again, and size the plan from a fresh peak estimate.
 - **Action:** ask the user, because only the user can change the Boat plan and its spend, and E changes the choice of 8 November 2026 to keep the shared organization.

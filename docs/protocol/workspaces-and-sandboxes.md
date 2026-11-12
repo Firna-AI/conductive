@@ -5,7 +5,11 @@ and their sandboxes, and for the org image that every sandbox starts from.
 [Workspace tools](workspace-tools.md) covers the tools of a workspace. The
 terms are those of the [architecture doc](../architecture.md#terms). A
 decision number names a dated record, as
-[Decision numbers](../architecture.md#decision-numbers) says.
+[Decision numbers](../architecture.md#decision-numbers) says. An e2b decision
+number, such as e2b decision 222, names the dated record of one decision of
+the change that adds E2B as the second sandbox provider. Its plan keeps
+these records while the change is open. Its pull request keeps them after
+the merge.
 
 These docs belong to this doc:
 
@@ -27,26 +31,58 @@ These docs belong to this doc:
 
 ## The provider
 
-- Boat runs every sandbox (decision 2).
-- Every sandbox and every org image of every org runs in the app's own
-  Boat account (decision 80). That account pays for all use.
-- No user needs a Boat account or a Boat key.
+- Two providers run the sandboxes: Boat and E2B (decision 2, and e2b decision 222).
+- Every sandbox and every org image of every org runs in a provider
+  account of the app (decision 80). The app pays for all use. Its account
+  with Boat has the ID `boat`, and its account with E2B has the ID `e2b`.
+- No user needs a provider account or a provider key.
 - A Boat key for each org was rejected. Users then needed their own Boat
   account, and the app had to name Boat to them.
-- All orgs share the plan limits of the app's Boat account, such as the
-  number of sandboxes at once and of starts in a day.
-- [Access and security](isolation.md#the-apps-boat-key) states
-  how the Worker keeps the app's Boat key.
-- User-facing text never names Boat (decision 80). It says "cloud
+- The orgs of one provider account share the plan limits of that account,
+  such as the number of sandboxes at once and of starts in a day.
+- [The app's Boat key](isolation.md#the-apps-boat-key) and
+  [the app's E2B key](isolation.md#the-apps-e2b-key) state how the Worker
+  keeps each key.
+- User-facing text never names a provider (decision 80). It says "cloud
   computer" or "sandbox". This holds in the app, the Mac app, the
   marketing site, Get started, and the legal pages.
 - Reason: the user asked that the provider stays hidden, so that the app
   can move to another provider later.
+- Operator screens are the one exception. They name each provider account
+  by its ID, such as `boat` or `e2b` (e2b decision 221). Labels from the
+  settings and neutral numbers were rejected, because an operator must
+  know which account runs on Boat in an outage.
 - Each workspace has its own sandbox with its own clone of its repository
   (decision 4). One worktree for each workspace in a shared sandbox was
   rejected, because each workspace gets its own sandbox.
-- Every sandbox has one machine size for now: Boat's default size, with
-  4 vCPU and 8 GB.
+- Every sandbox has one machine size for now, on each provider: Boat's
+  default size, with 4 vCPU and 8 GB.
+
+### The account of an org
+
+- Each org runs on one provider account for its whole life
+  (e2b decision 222). Each workspace, build, and refresh of the org uses that
+  account.
+- An org from before the second provider runs on `boat`.
+- No org and no workspace moves to another account. A move by an operator
+  was dropped for now (e2b decision 222). The choice of an operator at create
+  puts a test org on each provider instead.
+- A standby on E2B for all orgs, with a switch, an automatic failover, or
+  an overflow by capacity, was rejected (e2b decision 222). Reason: one
+  account for each org needs one org image and one build at a time, with
+  no second copy on the other provider.
+- An org gets its account once, when it is created, before its first
+  build starts.
+- When an operator creates an org, the operator can choose its account,
+  as [Orgs](orgs-and-members.md#orgs) says. Otherwise, the app draws the
+  account from the weights.
+- The weights give the chance, in percent, that a new org gets each
+  account. They add up to 100%, and they start at 100% for `boat`.
+- Only a configured account can have a weight. A configured account is an
+  account whose credentials the Worker holds.
+- An operator sets the weights on the
+  [Providers tab](operator-section.md#the-providers-tab) of the operator
+  section. A change of the weights moves no org.
 
 ## The org image
 
@@ -85,7 +121,7 @@ These docs belong to this doc:
 - Builds and refreshes get none of the env vars, and no saved snapshot
   holds them. Reason: a saved snapshot keeps every file.
 - The app gives each sandbox its values itself, because every sandbox
-  starts with no secrets of a Boat environment.
+  starts with no secrets of its provider account.
 - [Access and security](tokens-and-secrets.md#secrets-that-users-enter)
   says how the app keeps the values.
 

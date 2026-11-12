@@ -47,9 +47,9 @@ it('pins equal-named images to their own account versions for legacy and gateway
   const fixture = fixtureForTest()
   const { runtime, org, user, repositoryId, boat } = fixture
   boat.server.addAccount({ orgId: 'second-org', apiKey: 'boat-second' })
-  runtime.env.SANDBOX_PROVIDER_ACCOUNTS = {
+  runtime.env.SANDBOX_PROVIDER_ACCOUNTS = JSON.stringify({
     'boat-second': { kind: 'boat', orgId: 'second-org', apiKey: 'boat-second' },
-  }
+  })
   const images = [
     { account: 'boat', version: 1, buildId: 'legacy-shared-image' },
     { account: 'boat-second', version: 2, buildId: 'gateway-shared-image' },
@@ -73,6 +73,11 @@ it('pins equal-named images to their own account versions for legacy and gateway
       now: runtime.dependencies.now(),
     })
   for (const image of images) {
+    await runtime.env.DB.prepare(
+      'UPDATE orgs SET provider_account = ? WHERE id = ?',
+    )
+      .bind(image.account, org.id)
+      .run()
     const created = await fixture.run(() =>
       createWorkspace(
         runtime,
@@ -83,7 +88,6 @@ it('pins equal-named images to their own account versions for legacy and gateway
           firstMessage: { ...FIRST_MESSAGE, id: image.buildId },
         },
         user,
-        image.account,
       ),
     )
     const start = fixture.starts.get(created.workspace.id)

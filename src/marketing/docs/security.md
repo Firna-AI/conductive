@@ -136,19 +136,20 @@ The normal chat history and Mac command records still stay on the service.
 
 An older cloud computer starts from an earlier setup that still permits software to receive the session starter's agent login itself.
 A program or member with terminal access can read or copy that login during a turn.
+A copied login can remain usable after the turn ends.
+If a login is exposed, revoke it with its provider.
+Removing a login from Account does not revoke a copy held elsewhere.
 
 Your ChatGPT sign-in stays outside the cloud computer.
 Conductive renews that sign-in for you.
 Your ChatGPT email, account ID, and plan can reach the cloud computer.
 An older cloud computer cannot run Codex with ChatGPT, so your ChatGPT sign-in never reaches it.
-A copied login can remain usable after the turn ends.
-Agent settings in the repository can also send that login to another address.
-Removing a login from Account does not revoke a copy held elsewhere.
 
-Installing newer software on that computer does not remove this risk.
-A new build gives the protection to new cloud computers created from its setup.
-Ask an admin to run **Build computer**.
-Then create a new workspace from that build for the new protection.
+Ask an org admin to select **Build computer** in **Settings**, under **Cloud computer**.
+After the build succeeds, create a new workspace to get the current protection.
+Stopping or resuming an older computer does not remove its login exposure risk.
+Installing newer software in that computer does not remove that risk either.
+A new workspace does not revoke logins already copied from an older computer.
 
 Agent settings in the repository can send an older computer's model requests and agent login to another address.
 
@@ -159,18 +160,24 @@ Code or members with terminal access can read that token during the fetch.
 
 Removing a member ends their ordinary access to the org.
 It does not guarantee that credentials they copied stop working.
-The computer also uses a credential for its connection to Conductive.
-A copy of that credential can still expose later turn credentials in another member's workspace.
+The computer also uses its workspace token for its connection to Conductive.
+Programs and members with terminal access can read or copy it.
+A copy can still expose later turn credentials and GitHub tokens in another member's workspace.
+This remains possible after removal or suspension.
 
 If you suspect exposure, stop the agent's turn.
 Use the provider's controls to revoke exposed logins or tokens.
 Archive stops its cloud computer and ends that workspace's connection access.
 It also revokes that workspace's token, including copies used to read other chats.
-Conductive keeps its files for 14 days.
+Conductive keeps the computer and its files for 14 days.
 Those files can still hold copied credentials during that window.
+Restore leaves the computer stopped.
+Its next resume gives it a new workspace token.
+Archive and Restore do not revoke logins or GitHub tokens already copied elsewhere.
 
 - [Replace an agent login](/docs/agent-logins#replace-or-remove-a-login)
 - [Archive a workspace](/docs/workspaces#archive-a-workspace)
+- [Build the current computer setup](/docs/cloud-computer#apply-setup-changes)
 
 ## Understand environment values
 

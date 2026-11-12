@@ -72,7 +72,7 @@ screen of this doc, on desktop and on a phone.
 - The switch has no end time and no cap on the number of open sign-ups
   (decision 230). An end time or a cap can come later with no rework.
 - Risk: during open sign-up, anyone with a GitHub account gets app access,
-  and the app's Boat account pays for their cloud computers. The pause
+  and the app's provider accounts pay for their cloud computers. The pause
   stops open sign-up at once.
 
 ## Open sign-up

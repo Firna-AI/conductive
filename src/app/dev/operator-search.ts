@@ -1,4 +1,5 @@
 import type {
+  OperatorOrgDetail,
   OperatorOrgMatch,
   OperatorOrgsResponse,
   OperatorUsersResponse,
@@ -13,7 +14,6 @@ import {
 } from '../../test-support/fixtures/operator-access'
 import {
   orgRow,
-  sampleOrgDetail,
   sampleUserDetail,
   userRow,
   type OperatorRecords,
@@ -21,7 +21,6 @@ import {
 import {
   sampleOrgs,
   sampleUsers,
-  type SampleOrg,
 } from '../../test-support/fixtures/operator-samples'
 
 /** The rows of one page, as the Worker gives them. */
@@ -39,13 +38,16 @@ function hostnameOf(search: string): string | null {
 
 /**
  * What an org search found that is not a name, as the Worker says: the
- * org ID, a cloud computer ID, or a preview address.
+ * org ID, a cloud computer ID, or a preview address. Only the samples have
+ * cloud computer IDs and preview addresses.
  */
-function matchOf(org: SampleOrg, search: string): OperatorOrgMatch | null {
-  if (org.id === search) return 'org-id'
-  if (org.computers.includes(search)) return 'cloud-computer-id'
+function matchOf(orgId: string, search: string): OperatorOrgMatch | null {
+  if (orgId === search) return 'org-id'
+  const sample = sampleOrgs.find((item) => item.id === orgId)
+  if (!sample) return null
+  if (sample.computers.includes(search)) return 'cloud-computer-id'
   const hostname = hostnameOf(search)
-  if (hostname && org.previews.includes(hostname)) return 'preview-address'
+  if (hostname && sample.previews.includes(hostname)) return 'preview-address'
   return null
 }
 
@@ -64,19 +66,18 @@ function pageOf<Row>(rows: readonly Row[], cursor: string | null) {
   }
 }
 
-/** The search of the Orgs tab over the sample orgs, newest first. */
+/** The search of the Orgs tab over the orgs of the operator, newest first. */
 export function searchOrgs(
-  records: OperatorRecords,
-  base: number,
+  orgs: readonly OperatorOrgDetail[],
   query: URLSearchParams,
 ): OperatorOrgsResponse {
   const search = query.get('q')?.trim() ?? ''
-  const found = sampleOrgs.flatMap((org) => {
-    const match = search === '' ? null : matchOf(org, search)
+  const found = orgs.flatMap((org) => {
+    const match = search === '' ? null : matchOf(org.id, search)
     if (search !== '' && match === null && !contains(org.name, search)) {
       return []
     }
-    return [orgRow(sampleOrgDetail(org, records, base), match)]
+    return [orgRow(org, match)]
   })
   const { rows, total, nextCursor } = pageOf(found, query.get('cursor'))
   return { orgs: rows, total, nextCursor }

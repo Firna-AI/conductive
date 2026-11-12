@@ -1,4 +1,5 @@
 import { request, type IncomingMessage, type ServerResponse } from 'node:http'
+import type { PreviewIngressIdentity } from '../../../src/shared/preview-ingress'
 
 import { PREVIEW_RELAY_MARK_HEADER } from '../../../src/shared/previews'
 import { connectTarget } from './connect'
@@ -27,8 +28,9 @@ export async function relayRequest(
   outgoing: ServerResponse,
   relayPort: number,
   addresses: readonly string[],
+  ingress?: PreviewIngressIdentity | null,
 ) {
-  const target = requestTarget(incoming, relayPort)
+  const target = requestTarget(incoming, relayPort, ingress)
   if ('status' in target) {
     fail(outgoing, target.status)
     return

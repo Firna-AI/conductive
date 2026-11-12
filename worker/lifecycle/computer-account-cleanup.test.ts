@@ -19,9 +19,9 @@ const fixtureForTest = setupBackendTests()
 
 function configureSecondary(fixture: ReturnType<typeof fixtureForTest>) {
   fixture.boat.server.addAccount({ orgId: 'second-org', apiKey: 'boat-second' })
-  fixture.runtime.env.SANDBOX_PROVIDER_ACCOUNTS = {
+  fixture.runtime.env.SANDBOX_PROVIDER_ACCOUNTS = JSON.stringify({
     'boat-second': { kind: 'boat', orgId: 'second-org', apiKey: 'boat-second' },
-  }
+  })
 }
 
 it('deletes only its cleanup account and keeps an unknown equal ID pending', async () => {

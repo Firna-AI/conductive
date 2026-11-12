@@ -221,7 +221,7 @@ create and resume. The workspace object runs that start:
   initialization, also for a second Archive. Then `finishStop` reports no
   stop, so Restore leaves a pending stop to the lifecycle. So no Archive
   or Restore step reads or changes the sandbox while a cancelled start
-  call can still reach Boat.
+  call can still reach the provider.
 - The first lifecycle prepare of each create and resume also starts the
   restore watch. After a start from a saved snapshot, Boat downloads the
   file content in the background. The
@@ -229,8 +229,8 @@ create and resume. The workspace object runs that start:
   that restore ends. The alarm reads the sandbox with
   `checkWorkspaceRestore` 5 seconds after the prepare, and then every
   5 seconds. `restoreWatchAt` in the lifecycle state keeps the time of the
-  next read. When the watch is due, its read takes the place of the Boat
-  state read of that alarm.
+  next read. When the watch is due, its read takes the place of the
+  provider state read of that alarm.
   - A reply with `hydrated: false` keeps the watch.
   - A reply with `hydrated: true`, or without `hydrated`, ends the watch.
     The watch then writes the restore marker with
@@ -238,7 +238,7 @@ create and resume. The workspace object runs that start:
     Boat's schema makes the field optional, and Boat says that a sandbox
     that restored nothing is hydrated from the start.
   - A stopped or error state ends the watch, and the alarm applies that
-    state as the Boat state read does. A stopping state, such as
+    state as the provider state read does. A stopping state, such as
     `archiving`, also ends the watch. Neither writes the marker.
   - A Boat error or a failed marker command keeps the watch. The alarm
     error handling tries again in 30 seconds.

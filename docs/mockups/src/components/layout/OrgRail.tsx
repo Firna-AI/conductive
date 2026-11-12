@@ -163,10 +163,20 @@ function OperatorItem(props: { current: boolean; hint: boolean }) {
 }
 
 /**
+ * The page that Create org opens: Get started on the first run, the form
+ * with the account choice for an operator, and the form for anyone else.
+ */
+function createOrgLink(rail: RailState): string {
+  if (rail.firstRun) return paths.getStarted
+  return rail.operator ? paths.createOrgOperator : paths.createOrg
+}
+
+/**
  * The narrow rail beside the sidebar: the logo, the orgs of the user, a
  * way to create another, and the account at the bottom. An operator also
- * gets Operator above the account. The hint of an org shows the key of its
- * place, counted from the top, on the keyboard of the page.
+ * gets Operator above the account, and the account choice on Create org.
+ * The hint of an org shows the key of its place, counted from the top, on
+ * the keyboard of the page.
  */
 export function OrgRail(props: RailState) {
   const host = pageHost(useMacApp() !== undefined)
@@ -190,7 +200,7 @@ export function OrgRail(props: RailState) {
           <RailLink
             current={props.current === 'create'}
             label="Create org"
-            to={props.firstRun ? paths.getStarted : paths.createOrg}
+            to={createOrgLink(props)}
           >
             <span className={styles.create}>
               <Plus size={15} />

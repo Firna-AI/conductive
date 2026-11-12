@@ -157,19 +157,8 @@ See [chat attachments](../chat/attachments.md) for the storage boundary and expi
 A cleanup lease separates Restore from cleanup calls.
 An expired lease permits a later attempt after a worker stops.
 
-The maintenance capability accepts only workspace IDs from its callback.
-It checks the current lease before every operation.
-The disk lists of maintenance, retention, and Restore leave out each workspace whose owner the [operator suspended](../operator/README.md).
-The capability also refuses to restart such a workspace, so retention starts no cloud computer of a suspended user.
-A restart must be due at its stored keepalive date.
-Each stop, keepalive date, and restart write matches its sandbox by the sandbox ID and the provider account together.
-It resumes with `noEnv` and empty env vars, then stops the sandbox.
-It supplies no workspace token, agent login, or org secret.
-Keep runner, preview, user startup, and agent access suspended in retention mode.
-Before the resume, Members journals a pending stop for crash recovery.
-Only an acknowledged resume followed by a stop creates a new real stop date.
-A failed or uncertain resume keeps the older conservative date.
-The capability expires when its callback ends or its lease expires.
+The [disk retention guide](retention.md) describes the maintenance capability,
+provider kinds, and Restore timers.
 
 [Invitations](invitations.md) gives the email of an invitation, the match
 of verified emails at each sign-in, and the explicit acceptance.

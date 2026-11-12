@@ -64,6 +64,8 @@ page.
 - [Restore marker](restore-marker.ts) names the file that the Worker writes at the end of the disk restore. The terminal and the agent runner read it.
 - [Commit author](commit-author.ts) builds a GitHub user's commit author and its four Git variables.
 - [Org contracts](orgs.ts) carry custom initials and GitHub repository choices for org creation.
+  `CreateOrgRequest.providerAccount` carries an operator's account choice.
+  Omission means By weights. The Worker ignores the field from other users.
 - [Member contracts](members.ts) name each invitation by its email. Each member keeps the `User` with their GitHub login. `PendingOrgInvite` adds the org ID and name, for the invitations that the signed-in user can accept.
 - [Account contracts](account.ts) include the repository list available before an org exists. Stored login statuses keep `token` and `api-key` for both agents. A Codex save request accepts only `api-key`; ChatGPT uses the device flow. `AgentLoginStatus.noReuse` of a connected login is true when other members cannot use it. `defaultAgentLoginNoReuse` gives the typed default for each stored agent and kind. The Worker and the dev backend use it. `UpdateAgentLoginRequest` changes only that value, without the secret.
 - [Waitlist contracts](waitlist.ts) define the state read, code use, and join paths. Their state gives app access, the pause, the required `waitlistOn` flag of the waitlist switch, the approval email, and the personal referral code's totals. `SessionResponse` in [account.ts](account.ts) adds app access to the sign-in session reply.

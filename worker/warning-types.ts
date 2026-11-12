@@ -5,6 +5,12 @@ import type { WorkspaceArchiveState } from './lifecycle/archive-types'
 import type { ErrorSummary, WarningCode, WarningId } from './warning-values'
 
 export const SIMPLE_WARNINGS = {
+  provider_accounts_invalid:
+    'Some sandbox provider accounts are not configured correctly.',
+  provider_assignment_weights_recovered:
+    'Sandbox provider assignment uses the configured account weights.',
+  provider_assignment_choice_ignored:
+    'The selected sandbox provider account is unavailable. Assignment uses the account weights.',
   workspace_alarm_failed:
     'Workspace alarm work failed. Its durable deadline will retry.',
   routine_schedule_failed:

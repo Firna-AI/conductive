@@ -226,4 +226,5 @@ The designs of those changes answer these questions:
 - The registration of Firna for the EU OSS scheme.
 - A larger Boat plan, when paying orgs need more starts or more machines
   at once. Paid plans have no limit at once. So the shared capacity of the
-  app's Boat plan is their only cap, as it is for every org today.
+  provider account of each org is its only cap, as it is for every org
+  today.

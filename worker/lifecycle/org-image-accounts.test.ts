@@ -37,14 +37,19 @@ it('publishes one account image without replacing another and admits only one bu
   const db = runtime.env.DB
   await seedSecondaryOrgImage(fixture)
   await db
+    .prepare('UPDATE orgs SET provider_account = ? WHERE id = ?')
+    .bind(SECONDARY_IMAGE_ACCOUNT, org.id)
+    .run()
+  await db
     .prepare('UPDATE repositories SET default_branch = ? WHERE id = ?')
     .bind('secondary-next', repositoryId)
     .run()
-  const id = await startImageBuild(
-    images,
-    { orgId: org.id, userId: user.id, kind: 'build', software: SOFTWARE },
-    SECONDARY_IMAGE_ACCOUNT,
-  )
+  const id = await startImageBuild(images, {
+    orgId: org.id,
+    userId: user.id,
+    kind: 'build',
+    software: SOFTWARE,
+  })
   expect(await readBuildJob(db, org.id, id)).toMatchObject({
     providerAccount: SECONDARY_IMAGE_ACCOUNT,
     previousProviderAccount: SECONDARY_IMAGE_ACCOUNT,
@@ -70,7 +75,7 @@ it('publishes one account image without replacing another and admits only one bu
     SECONDARY_IMAGE_ACCOUNT,
   )
   await publishBuild(db, await readBuildJob(db, org.id, id), TEST_TIME)
-  expect(await readOrgImage(db, org.id)).toMatchObject({
+  expect(await readOrgImage(db, org.id, 'boat')).toMatchObject({
     providerAccount: 'boat',
     imageName: 'last-good-image',
     imageBuildId: 'published-image',
@@ -86,7 +91,7 @@ it('publishes one account image without replacing another and admits only one bu
     },
   )
   await expect(
-    readCreationImage(db, org.id, repositoryId),
+    readCreationImage(db, org.id, repositoryId, 'boat'),
   ).resolves.toMatchObject({
     imageName: 'last-good-image',
     providerAccount: 'boat',
@@ -100,7 +105,7 @@ it('publishes one account image without replacing another and admits only one bu
     repository: { defaultBranch: 'secondary-next' },
   })
   expect(
-    (await readImageRepositories(db, org.id)).map(
+    (await readImageRepositories(db, org.id, 'boat')).map(
       (entry) => entry.defaultBranch,
     ),
   ).toEqual(['main'])
@@ -109,9 +114,7 @@ it('publishes one account image without replacing another and admits only one bu
       (entry) => entry.defaultBranch,
     ),
   ).toEqual(['secondary-next'])
-  expect((await readBuildHistory(db, org.id)).currentImageBuildId).toBe(
-    'published-image',
-  )
+  expect((await readBuildHistory(db, org.id)).currentImageBuildId).toBe(id)
 })
 
 it('retains another account current image while it finishes an older saved cleanup', async () => {
@@ -180,6 +183,10 @@ it('keeps push admission and daily refresh times separate for each account', asy
   const { runtime, images, org } = fixture
   const db = runtime.env.DB
   await seedSecondaryOrgImage(fixture)
+  await db
+    .prepare('UPDATE orgs SET provider_account = ? WHERE id = ?')
+    .bind(SECONDARY_IMAGE_ACCOUNT, org.id)
+    .run()
   await db.batch([
     db
       .prepare(
@@ -209,15 +216,11 @@ it('keeps push admission and daily refresh times separate for each account', asy
         SECONDARY_IMAGE_ACCOUNT,
       ),
   ])
-  const refreshed = await refreshImagesForPush(
-    images,
-    {
-      githubRepositoryId: 1,
-      ref: 'refs/heads/secondary-main',
-      software: SOFTWARE,
-    },
-    SECONDARY_IMAGE_ACCOUNT,
-  )
+  const refreshed = await refreshImagesForPush(images, {
+    githubRepositoryId: 1,
+    ref: 'refs/heads/secondary-main',
+    software: SOFTWARE,
+  })
   expect(refreshed).toHaveLength(1)
   const [pushId] = refreshed
   expect(await readBuildJob(db, org.id, pushId)).toMatchObject({
@@ -265,7 +268,7 @@ it('keeps push admission and daily refresh times separate for each account', asy
       nextImageRefreshAt: TEST_TIME + 86_401_000,
     },
   )
-  expect(await readOrgImage(db, org.id)).toMatchObject({
+  expect(await readOrgImage(db, org.id, 'boat')).toMatchObject({
     imageName: 'last-good-image',
     imageBuildId: 'published-image',
     lastRefreshAt: TEST_TIME - 100,

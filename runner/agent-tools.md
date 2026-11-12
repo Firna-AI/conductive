@@ -10,10 +10,11 @@ the org's sandbox, as [Codex logins](codex-logins.md#chatgpt-sign-in) says.
 
 ## Computer tools
 
-Both agents get the `computer` MCP server of the sandbox. Boat writes its
-`mcpServers.computer` entry to `/home/user/.claude.json` at each sandbox
-start. The entry names a local stdio server that talks over a Unix
-socket, with no URL and no credential.
+Both agents get the `computer` MCP server of the sandbox when it has one.
+On Boat, Boat writes its `mcpServers.computer` entry to
+`/home/user/.claude.json` at each sandbox start. The entry names a local
+stdio server that talks over a Unix socket, with no URL and no credential.
+A sandbox on E2B has no such entry for now.
 
 The runner reads that entry again at each agent start. Claude gets it as
 it is, and Codex gets its command and arguments as a stdio server.

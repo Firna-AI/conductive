@@ -2,13 +2,12 @@ import type { ArchiveContext } from './archive-context'
 import { finishArchiveRestore } from './archive-restore-state'
 import { WORKSPACE_RESTORE_MS } from '../../src/shared/workspaces'
 import { providerForAccount } from '../sandbox/client'
+import { configuredProviderAccount } from '../sandbox/accounts'
 import { warnWorker } from '../warnings'
 import { errorSummary, WarningId } from '../warning-values'
 import { beginWorkspaceArchive } from './archive-begin'
 import { prepareArchivedLifecycle } from './archive-start'
-import { readStartJob } from './start-job-codec'
-import { readWorkspaceAllocation } from './start-allocation'
-import { createResource } from './resource-intents'
+import { recoverArchivedAllocation } from './archive-allocation'
 import { recordSandboxCleanup, retrySandboxCleanup } from './cleanup'
 import { readWorkspace, workspaceRecord } from './workspace-data'
 import {
@@ -155,34 +154,9 @@ export class WorkspaceArchive {
         return
       }
       if (state.phase === 'resolve' && state.allocation) {
-        const job = readStartJob(state.allocation)
-        const provider = providerForAccount(
-          env,
-          dependencies.fetch,
-          job.providerAccount,
+        state = await recoverArchivedAllocation(this.context, state, (next) =>
+          this.save(next),
         )
-        const allocation = state
-        const input = await readWorkspaceAllocation(env, job)
-        const sandbox = await createResource(env.DB, provider, {
-          kind: 'sandbox',
-          mayHaveAllocated: true,
-          ownership: {
-            orgId: job.orgId,
-            providerAccount: job.providerAccount,
-            ownerUserId: job.creation?.user.id ?? input.labels?.user ?? null,
-            purpose: 'workspace',
-            purposeId: job.workspaceId,
-          },
-          input,
-          persist: () => this.save(allocation),
-        })
-        state = {
-          ...state,
-          sandboxId: sandbox.id,
-          providerAccount: job.providerAccount,
-          phase: 'stop',
-        }
-        await this.save(state)
       }
       await writeArchiveDisk(env.DB, row, state.sandboxId, state.stoppedAt)
       if (state.sandboxId && state.allocation) {
@@ -221,6 +195,7 @@ export class WorkspaceArchive {
           dependencies.now,
           (next) => this.save(next),
           () => readArchiveResource(env.DB, state.workspaceId),
+          configuredProviderAccount(env, state.providerAccount).kind === 'boat',
         )
         await this.save(state)
         await writeArchiveDisk(env.DB, row, state.sandboxId, state.stoppedAt)
@@ -240,7 +215,12 @@ export class WorkspaceArchive {
       }
       if (!state.sandboxId) await storage.deleteAlarm()
       else {
-        const at = archiveMaintenanceDue(state, row, dependencies.now())
+        const at = archiveMaintenanceDue(
+          state,
+          row,
+          dependencies.now(),
+          configuredProviderAccount(env, state.providerAccount).kind === 'boat',
+        )
         await scheduleArchiveRepair(env.DB, row, at)
         await storage.setAlarm(at)
       }

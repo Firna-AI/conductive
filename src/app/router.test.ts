@@ -159,6 +159,10 @@ describe('routes', () => {
         { screen: 'operator', view: { page: 'codes', search: 'K7QHM-3XP2R' } },
       ],
       [
+        routes.operatorProviders(),
+        { screen: 'operator', view: { page: 'providers' } },
+      ],
+      [
         routes.operatorOrg('org/h3x w4v'),
         { screen: 'operator', view: { page: 'org', id: 'org/h3x w4v' } },
       ],
@@ -181,6 +185,7 @@ describe('routes', () => {
       '/operator/orgs/acme/members',
       '/operator/waitlist/58201734',
       '/operator/codes/K7QHM-3XP2R',
+      '/operator/providers/boat',
     ]) {
       expect(parse(path), path).toEqual({ screen: 'not-found' })
     }

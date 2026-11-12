@@ -28,10 +28,11 @@ type OperatorList = (typeof OPERATOR_LISTS)[number]
 /**
  * A page of the operator section: a tab, or the page of one org or one
  * user. A tab of a list keeps its search, which is empty for the whole
- * list.
+ * list. The Providers tab has no search.
  */
 export type OperatorView =
   | { page: 'overview' }
+  | { page: 'providers' }
   | { page: OperatorList; search: string }
   | { page: 'org'; id: string }
   | { page: 'user'; githubId: number }
@@ -120,6 +121,7 @@ export const routes = {
   operatorUsers: (search = '') => operatorList('users', search),
   operatorWaitlist: (search = '') => operatorList('waitlist', search),
   operatorCodes: (search = '') => operatorList('codes', search),
+  operatorProviders: () => '/operator/providers',
   operatorOrg: (orgId: string) => `/operator/orgs/${encode(orgId)}`,
   operatorUser: (githubId: number) => `/operator/users/${githubId}`,
 } as const
@@ -155,6 +157,9 @@ function operatorView(
   const [first, id, ...rest] = parts
   const search = query.get('q')?.trim() ?? ''
   if (first === undefined) return { page: 'overview' }
+  if (first === 'providers') {
+    return id === undefined ? { page: 'providers' } : null
+  }
   const list = OPERATOR_LISTS.find((item) => item === first)
   if (list === undefined || rest.length > 0) return null
   if (id === undefined) return { page: list, search }

@@ -68,7 +68,7 @@ The dispatch stores a queued run before the webhook reply.
 The minute scan recovers it if the background task did not start it.
 Opened and pushed runs pass the head branch and event commit to the internal create.
 Merged runs pass the pull request base branch.
-Both use the published org image of the default provider account, through the shared create path.
+Both use the published org image of the org's fixed provider account, through the shared create path.
 
 Failed checks, starts, and first turns update the run and the consecutive failure count in one D1 batch.
 Each terminal outcome counts once.

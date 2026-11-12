@@ -85,9 +85,9 @@ export function SuspendDialog(props: {
 
 /**
  * The operator confirms a lift. The question says what comes back, and that a
- * workspace that stopped 14 days ago or more may have lost its files. A
- * deleted org stays deleted, so its question promises no access. A failed
- * lift shows its error, and the question stays open.
+ * workspace on the `boat` account that stopped 14 days ago or more may have
+ * lost its files. A deleted org stays deleted, so its question promises no
+ * access. A failed lift shows its error, and the question stays open.
  */
 export function LiftDialog(props: {
   target: QuestionTarget

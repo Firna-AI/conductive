@@ -82,6 +82,7 @@ it('pages all org states newest first with an ID tie and counts archived workspa
   ])
   expect(first.orgs[1]).toEqual({
     id: 'org-00',
+    providerAccount: 'boat',
     name: 'Page org',
     initials: 'PO',
     createdAt: TEST_TIME,

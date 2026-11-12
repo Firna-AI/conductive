@@ -162,8 +162,8 @@ The image build installs the relay. An existing workspace keeps its image's soft
 systemd holds the relay port in the socket unit while the service restarts.
 The Worker checks the socket state, so a service restart does not trigger the software refusal.
 
-Boat hosts only the relay port for previews, in localhost mode.
-Each HTTP request and WebSocket upgrade goes to that port's Boat address.
+The provider of the sandbox hosts only the relay port for previews, in localhost mode.
+Each HTTP request and WebSocket upgrade goes to the private address of that port.
 The path and query stay, except for reserved port credentials.
 The Worker sets `X-Conductive-Preview-Port` to the previewed port.
 The header allowlist drops any value that the browser sends for this header.
@@ -176,7 +176,7 @@ When fetch metadata is absent, only the preview's own Origin is mapped.
 Foreign Origins and a missing Origin keep their meaning. The shared origin
 helper also maps local `http` and `https` redirects to the preview origin.
 The local hostname is `localhost`, `127.0.0.1`, or `[::1]`, with the previewed port.
-Relative redirects stay on the preview hostname. Redirects to Boat addresses keep their destination.
+Relative redirects stay on the preview hostname. Redirects to provider addresses, such as Boat's, keep their destination.
 The origin helper also owns the terminal's private port Origin.
 The application owns the CORS policy of requests that carry a valid preview cookie.
 

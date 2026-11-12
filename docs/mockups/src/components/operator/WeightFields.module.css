@@ -1,0 +1,61 @@
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* One row for each account, in a box with a full outline. */
+.list {
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-md);
+  list-style: none;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--ui-touch-min);
+  padding: 6px 12px;
+  box-sizing: border-box;
+}
+
+.row + .row {
+  border-top: 1px solid var(--ui-border);
+}
+
+/* An account shows by its ID, in the monospace font. */
+.account {
+  flex: 1;
+  min-width: 0;
+  color: var(--ui-ink);
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-text-sm);
+  overflow-wrap: anywhere;
+}
+
+/* A whole percent needs three digits, so the field stays narrow. */
+.input {
+  flex-shrink: 0;
+  width: 72px;
+}
+
+.unit {
+  color: var(--ui-muted);
+  font-size: var(--ui-text-md);
+}
+
+.total {
+  margin: 0;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.45;
+}
+
+/* A total other than 100% keeps Save weights off, so the line says why. */
+.short {
+  color: var(--ui-amber-deep);
+}

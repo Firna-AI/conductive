@@ -5,8 +5,9 @@ feature. The [architecture doc](../architecture.md) describes the components
 that meet them, and gives the terms and the meaning of a decision number.
 This page lists each protocol doc and what it covers.
 
-- [Workspaces and sandboxes](../protocol/workspaces-and-sandboxes.md): the org
-  image and the life of a workspace.
+- [Workspaces and sandboxes](../protocol/workspaces-and-sandboxes.md): the
+  providers, the account of each org, the org image, and the life of a
+  workspace.
   - [Create a workspace](../protocol/create-a-workspace.md): New workspace as a
     page or as a dialog, the create, the branch, and a failed first start.
   - [Repository folders](../protocol/repository-folders.md): the folder and the
@@ -52,6 +53,8 @@ This page lists each protocol doc and what it covers.
 - [Access and security](../protocol/access-and-security.md): sign-in, the
   gates, the secrets, and the isolation of sandboxes and previews.
   - [Isolation of orgs and sandboxes](../protocol/isolation.md)
+    - [The app's provider keys](../protocol/provider-keys.md): the Boat key
+      and the E2B key.
     - [Version pins](../protocol/version-pins.md): the login rules and the
       risks of each version pin.
   - [Tokens and secrets](../protocol/tokens-and-secrets.md)
@@ -91,8 +94,13 @@ This page lists each protocol doc and what it covers.
 - [Operator actions](../protocol/operator-actions.md): the operator, the
   suspension of a user or an org, the lift of a suspension, and abuse
   reports.
+  - [Org suspension](../protocol/operator-org-suspension.md): the
+    suspension of an org, and what its members keep.
 - [Operator section](../protocol/operator-section.md): the pages of the
-  operator in the web app, their counts, and their searches.
+  operator in the web app, their counts, their searches, and the weights
+  of new orgs.
+  - [Waitlist tabs of the operator section](../protocol/operator-waitlist-tabs.md):
+    the Waitlist tab, Approve, the Invite codes tab, and the pause.
 - [Command palette](../protocol/command-palette.md): the key and the search
   that finds the workspaces, the actions, and the settings.
 - [Command palette: empty and unavailable states](../protocol/command-palette-states.md):

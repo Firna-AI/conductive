@@ -17,6 +17,7 @@ export interface OrgResponse {
 export interface CreateOrgRequest {
   name: string
   initials?: string
+  providerAccount?: string
   /** GitHub repository IDs from the account list, not app Repository.id values. */
   repositoryIds?: readonly number[]
 }

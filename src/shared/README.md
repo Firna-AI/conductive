@@ -163,7 +163,10 @@ It can differ from the session of the request.
 `acceptedTermsSignInPath(inviteCode?)` gives the sign-in path that carries that revision and an optional join code.
 [Terms consent](../../worker/security/README.md#terms-consent) gives the rules of sign-in.
 `operator.ts` defines the operator overview, directories, and user and org
-suspensions. Its user records include `OperatorUserAccess` from
+suspensions. Operator org rows and pages include `providerAccount`.
+`operator-providers.ts` defines the operator-only account list, integer
+weights, org counts, last operator change, and the GET and PUT path.
+The user records in `operator.ts` include `OperatorUserAccess` from
 `operator-waitlist.ts`. That module also defines waitlist, approval, code,
 pause, and waitlist switch paths and replies. `operatorWaitlistSwitchPath`
 names the switch. `OperatorWaitlistSwitch` gives `waitlistOn`,
@@ -197,6 +200,10 @@ Each open of a port preview gets a new preview ID, and the API never gives out
 a revoked ID again. The Preview tool hides revoked previews by their ID.
 The git credential payload is not defined yet.
 [GitHub tokens](../../docs/protocol/tokens-and-secrets.md#github-tokens) states its rule.
+
+`preview-ingress.ts` owns the private relay metadata path and identity.
+This file transport stays on sandbox tmpfs between the Worker and runner.
+It carries the exact per-target outer alias and no credential.
 
 ### Key Code
 

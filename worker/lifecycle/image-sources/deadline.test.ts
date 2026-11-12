@@ -135,7 +135,7 @@ it('keeps the last good image and deletes the builder after native source failur
     expect(boat.commands).toEqual([])
     expect(boat.deletedIds).toEqual(['builder-one'])
     expect(
-      (await readOrgImage(fixture.env.DB, fixture.org.id))?.imageName,
+      (await readOrgImage(fixture.env.DB, fixture.org.id, 'boat'))?.imageName,
     ).toBe('last-good-image')
     expect(
       (await readBuild(fixture.env.DB, fixture.org.id, fixture.input.buildId))

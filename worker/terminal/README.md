@@ -101,6 +101,9 @@ without the marker. The agent runner reads the same marker to watch the
 live repository folder again, as the [runner guide](../../runner/README.md)
 says. The path lives in
 [`src/shared/restore-marker.ts`](../../src/shared/restore-marker.ts).
+E2B boots from the saved disk and omits the optional `hydrated` field.
+The common restore check then writes this marker as soon as the sandbox reports ready.
+It needs no delayed repair of a retired disk view.
 
 Bash runs the prompt hook before each prompt. Its folder check waits until
 the restore marker exists. At the first prompt after that, it checks the
@@ -153,9 +156,10 @@ runtime folder, with the password and the tmux socket, when a unit stops
 or restarts. The setup command writes no password to its output or to the
 command history.
 
-The provider's file API reads only under `/home/user` or `/tmp`, and both
-are on disk. So the setup command binds the memory folder
+Boat's file API reads only under `/home/user` or `/tmp`, and both
+are on disk. So the shared setup command binds the memory folder
 `/run/conductive-terminal` at `/home/user/.conductive-terminal`.
+E2B can read `/run` directly. It keeps the same bind mount through the shared setup hook.
 
 After the setup command exits with code 0, the lifecycle calls
 `startWorkspaceTerminal(env, orgId, workspaceId, dependencies)`. This

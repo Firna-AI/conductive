@@ -13,9 +13,11 @@ export async function advanceArchiveMaintenance(
   now: () => number,
   save: (state: WorkspaceArchiveState) => Promise<void>,
   readCurrent: () => Promise<ArchiveResource | null>,
+  requiresDiskRestart: boolean,
 ): Promise<WorkspaceArchiveState> {
   const expiresAt = state.archivedAt + WORKSPACE_RESTORE_MS
   if (state.phase === 'retained') {
+    if (!requiresDiskRestart) return state
     const needsRestart =
       state.stoppedAt === null ||
       expiresAt > state.stoppedAt + WORKSPACE_RESTORE_MS
@@ -42,6 +44,8 @@ export async function advanceArchiveMaintenance(
     return state
   if (!state.sandboxId) return { ...state, phase: 'retained' }
   const sandboxId = state.sandboxId
+  if (!requiresDiskRestart && state.phase === 'resume')
+    state = { ...state, phase: 'stop' }
   let status = providerState((await provider.get(sandboxId)).state)
   if (state.phase === 'resume') {
     const current = await readCurrent()
@@ -90,9 +94,11 @@ export function archiveMaintenanceDue(
   state: WorkspaceArchiveState,
   row: ArchiveResource,
   now: number,
+  requiresDiskRestart: boolean,
 ) {
   const expiresAt = state.archivedAt + WORKSPACE_RESTORE_MS
   if (state.phase !== 'retained') return Math.min(now + 5_000, expiresAt)
+  if (!requiresDiskRestart) return expiresAt
   if (row.ownerSuspended !== null || row.orgSuspended !== null) return expiresAt
   return state.stoppedAt === null ||
     expiresAt > state.stoppedAt + WORKSPACE_RESTORE_MS

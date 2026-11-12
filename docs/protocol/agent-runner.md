@@ -188,7 +188,8 @@ the change that keeps a turn open for background work.
   need. Then it asks the agent to end its reply.
 - The note follows the naming rules of the
   [agent instructions](agent-instructions.md#what-the-instructions-hold).
-  So it never names Boat, and it never uses "Claude Code" as a name.
+  So it never names a sandbox provider, such as Boat or E2B, and it never
+  uses "Claude Code" as a name.
   Reason: the agent can repeat the note in the chat.
 - The chat never shows the note. Reason: the note is for the agent.
 - A wake-up that repeats is live work too. Reason: one rule for all

@@ -56,9 +56,9 @@ it('keeps paired Stop tasks across restarts and retains an unknown account', asy
   const fixture = fixtureForTest()
   const { runtime, org, user, harness, boat } = fixture
   boat.server.addAccount({ orgId: 'second-org', apiKey: 'boat-second' })
-  runtime.env.SANDBOX_PROVIDER_ACCOUNTS = {
+  runtime.env.SANDBOX_PROVIDER_ACCOUNTS = JSON.stringify({
     'boat-second': { kind: 'boat', orgId: 'second-org', apiKey: 'boat-second' },
-  }
+  })
   const computers = ['boat', 'boat-second', 'unknown'].map(
     (providerAccount) => ({ sandboxId: 'shared-computer', providerAccount }),
   )

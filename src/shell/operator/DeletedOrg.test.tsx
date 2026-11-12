@@ -36,7 +36,7 @@ async function openPinecrest(suspended: boolean) {
 }
 
 /** The tabs of the section, which come before the notices of a page. */
-const tabs = 'Overview Orgs Users Waitlist Invite codes'
+const tabs = 'Overview Orgs Users Waitlist Invite codes Providers'
 
 /** The text of the notices at the top of the page, before its details. */
 function notices(text: string): string {
@@ -72,7 +72,7 @@ describe('the questions and the notices of a deleted org', () => {
       notices:
         'Suspended on 15 Jan at 07:35 by @calummoore Deleted on 12 Jan Everything of Pinecrest is deleted on 19 Jan. No admin can restore it before a lift.',
       question:
-        'Lift the suspension of Pinecrest? Pinecrest stays deleted. An admin can restore it until everything of it is deleted on 19 Jan. A workspace that stopped 14 days ago or more may have lost its files. Cancel Lift suspension',
+        'Lift the suspension of Pinecrest? Pinecrest stays deleted. An admin can restore it until everything of it is deleted on 19 Jan. A workspace on the boat account that stopped 14 days ago or more may have lost its files. Cancel Lift suspension',
     })
   })
 })

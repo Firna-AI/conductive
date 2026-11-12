@@ -6,7 +6,7 @@ import {
   recordSandboxCleanup,
 } from './cleanup'
 import type { WorkspaceStorage } from './platform-storage'
-import { createResource } from './resource-intents'
+import { recoverResourceForCleanup } from './allocation-recovery'
 import { firstOrgAdmin } from './settings-data'
 import { readWorkspaceAllocation } from './start-allocation'
 import { readStartJob, serializeStartJob } from './start-job-codec'
@@ -29,10 +29,11 @@ export async function retryAllocationCleanup(
     job.orgId,
     dependencies.fetch,
     job.providerAccount,
+    'cleanup',
   )
   if (!job.allocatedSandboxId) {
     const input = await readWorkspaceAllocation(env, job)
-    const sandbox = await createResource(env.DB, provider, {
+    const sandbox = await recoverResourceForCleanup(env.DB, provider, {
       kind: 'sandbox',
       mayHaveAllocated: true,
       ownership: {
@@ -50,6 +51,10 @@ export async function retryAllocationCleanup(
           serializeStartJob(job),
         ),
     })
+    if (sandbox === null) {
+      await storage.delete(START_ALLOCATION_CLEANUP_KEY)
+      return true
+    }
     job.allocatedSandboxId = sandbox.id
     await storage.put(
       'job',

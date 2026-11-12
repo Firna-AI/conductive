@@ -23,7 +23,8 @@ it('keeps a leased image until its workspace starts across a replacement publica
       software: SOFTWARE,
     })
     await finish(fixture, initial)
-    const imageA = (await readOrgImage(runtime.env.DB, org.id))?.imageName
+    const imageA = (await readOrgImage(runtime.env.DB, org.id, 'boat'))
+      ?.imageName
     fixture.pauseStarts()
     const queued = fixture.nextQueued()
     void createWorkspace(runtime, org.id, user, {

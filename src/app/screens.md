@@ -82,6 +82,12 @@ the Help row of the command palette opens.
   `AccountModel.repositories`, before the org exists. The create sends the
   GitHub IDs of the chosen ones. Create org stays off until the person
   chooses at least one, also while the list is empty or did not load.
+- Create org of an operator also offers the provider account of the org:
+  By weights, the default, or a configured account by its ID, from the
+  operator's providers reply. Only a chosen account goes into the create.
+  The create does not wait for that reply. Nobody else sees the choice or
+  sends its read, as [Provider accounts](../shell/operator/README.md#provider-accounts)
+  says.
 - The rail, the org switcher, and General show the saved initials of an
   org. An org without them shows the initials of its name.
 - A suspended org shows its notice, and no action that it refuses, as

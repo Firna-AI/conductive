@@ -33,9 +33,9 @@ beforeAll(async () => {
 beforeEach(async () => {
   await harness.reset()
   harness.boat.addAccount({ orgId: 'second-org', apiKey: 'boat-second' })
-  harness.env.SANDBOX_PROVIDER_ACCOUNTS = {
+  harness.env.SANDBOX_PROVIDER_ACCOUNTS = JSON.stringify({
     'boat-second': { kind: 'boat', orgId: 'second-org', apiKey: 'boat-second' },
-  }
+  })
 })
 afterEach(() => vi.restoreAllMocks())
 afterAll(async () => {
@@ -196,7 +196,7 @@ it('finishes a pending Org Restore handoff when an expired Archive account is mi
     if (input.mode === 'retention') throw new Error('Retention interrupted')
     await production.maintainDeletedOrg(input)
   }
-  harness.env.SANDBOX_PROVIDER_ACCOUNTS = {}
+  harness.env.SANDBOX_PROVIDER_ACCOUNTS = JSON.stringify({})
   const retryAt = TEST_TIME + 2 * DAY_MS
   await fixture.setTime(retryAt)
   harness.boat.requests = []

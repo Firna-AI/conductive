@@ -98,7 +98,6 @@ export async function startRoutineRun(
         },
       },
       admission.owner,
-      undefined,
       run.trigger.kind === 'pull-request'
         ? {
             branch:

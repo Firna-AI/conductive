@@ -77,8 +77,8 @@ first.
   `QueueTurn`, the handle whose `outside(call)` runs one call outside the
   queue. `hasOutsideTurns` tells Archive that a queue task is outside.
 - `queue-generation.ts`: `QueueGenerations`, which keeps the member
-  receiver generation of each queue task for the guarded storage, the Boat
-  fetch check, and the start guard.
+  receiver generation of each queue task for the guarded storage, the
+  provider fetch check, and the start guard.
 - `lifecycle-queue.ts`: `runWorkspaceLifecycle`, which runs one lifecycle
   change in a queue task with its receiver generation, then calls
   `flushRunner`.

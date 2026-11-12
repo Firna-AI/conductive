@@ -31,7 +31,7 @@ export async function readOperatorOrgs(
     db.prepare(`SELECT COUNT(*) AS total ${matches}`).bind(...values),
     db
       .prepare(
-        `SELECT o.id, o.name, o.initials, o.created_at AS createdAt,
+        `SELECT o.id, o.provider_account AS providerAccount, o.name, o.initials, o.created_at AS createdAt,
            (SELECT COUNT(*) FROM org_members m WHERE m.org_id = o.id) AS members,
            (SELECT COUNT(*) FROM workspaces w WHERE w.org_id = o.id) AS workspaces,
            (SELECT COUNT(*) FROM workspaces w WHERE w.org_id = o.id

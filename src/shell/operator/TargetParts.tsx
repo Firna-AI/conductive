@@ -104,6 +104,14 @@ export function NameCell(props: {
 }
 
 /**
+ * The provider account of an org by its ID, in the monospace font, in a
+ * cell or in the line under a name. Only operator screens name an account.
+ */
+export function AccountId(props: { id: string }) {
+  return <span className={directory.account}>{props.id}</span>
+}
+
+/**
  * The login of a person as a link to their profile on GitHub, which opens
  * in a new tab. The operator judges a person who waits from it.
  */

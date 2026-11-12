@@ -1,6 +1,5 @@
 import { requireActiveOrg } from '../data/user-access'
 import type { User } from '../../src/shared/api'
-import { DEFAULT_PROVIDER_ACCOUNT } from '../sandbox/account-identity'
 import { requireOrgMember } from './access'
 import {
   existingCreation,
@@ -30,7 +29,6 @@ export async function createWorkspace(
   user: User,
   input: WorkspaceCreationInput,
   sender: User = user,
-  providerAccount = DEFAULT_PROVIDER_ACCOUNT,
   base?: WorkspaceCreationBase,
 ): Promise<ProvisionedWorkspace> {
   await requireActiveOrg(runtime.env.DB, orgId)
@@ -51,17 +49,7 @@ export async function createWorkspace(
     if (result?.ok) return provisionedResponse(runtime, orgId, existing.id)
     if (result)
       await markCreationFailed(runtime.env.DB, existing.id, result.error)
-    else
-      return joinCreation(
-        runtime,
-        key,
-        existing,
-        user,
-        sender,
-        input,
-        providerAccount,
-        base,
-      )
+    else return joinCreation(runtime, key, existing, user, sender, input, base)
   }
   const candidate = await prepareCreationRequest(
     runtime,
@@ -70,22 +58,12 @@ export async function createWorkspace(
     sender,
     input,
     undefined,
-    providerAccount,
     base,
   )
   const claim = await claimCreation(runtime.env.DB, key, candidate)
   if (claim.state === 'succeeded')
     return provisionedResponse(runtime, orgId, claim.id)
-  return joinCreation(
-    runtime,
-    key,
-    claim,
-    user,
-    sender,
-    input,
-    providerAccount,
-    base,
-  )
+  return joinCreation(runtime, key, claim, user, sender, input, base)
 }
 
 export async function replayCreation(
@@ -114,7 +92,6 @@ async function joinCreation(
   user: User,
   sender: User,
   input: WorkspaceCreationInput,
-  providerAccount: string,
   base?: WorkspaceCreationBase,
 ): Promise<ProvisionedWorkspace> {
   let job = await recordedCreationJob(
@@ -133,7 +110,6 @@ async function joinCreation(
         sender,
         input,
         claim.id,
-        providerAccount,
         base,
       ),
     )

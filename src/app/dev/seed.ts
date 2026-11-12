@@ -27,6 +27,7 @@ import { AGENTS } from '../api/read-core'
 import { getStartedOrder } from '../get-started'
 import { addReferralCode, referralCodeOf } from './access-codes'
 import type { DevOptions } from './options'
+import { seedProviders } from './provider-routes'
 import {
   freshOrg,
   type DevState,
@@ -286,6 +287,7 @@ export function seedState(options: DevOptions): DevState {
     stopAfterMs: options.stopAfterMs,
     operator: operatorRecords(options, user),
     shareSaveFails: options.shareSaveFails,
+    providers: seedProviders(options),
     waitlist: {
       appAccess: !waits,
       approvalEmail:

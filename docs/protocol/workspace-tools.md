@@ -109,7 +109,7 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the tools at
 - A browser file event and a browser file response contain complete reports.
   They never expose a runner part as a full tree or changes list.
 - The runner reads one file or one diff on request. When the runner is not
-  connected, a file read falls back to Boat's file read.
+  connected, a file read falls back to the file read of the provider.
 - The Durable Object keeps the last tree and the last changes, so both tabs
   still show them while the sandbox sleeps.
 - Reason: Boat's API can run `git` and read files only while the sandbox

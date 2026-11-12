@@ -1,5 +1,6 @@
 import { request, type IncomingMessage } from 'node:http'
 import type { Duplex } from 'node:stream'
+import type { PreviewIngressIdentity } from '../../../src/shared/preview-ingress'
 
 import { PREVIEW_RELAY_MARK_HEADER } from '../../../src/shared/previews'
 import { connectTarget } from './connect'
@@ -44,11 +45,12 @@ export async function relayUpgrade(
   head: Buffer,
   relayPort: number,
   addresses: readonly string[],
+  ingress?: PreviewIngressIdentity | null,
 ) {
   const controller = new AbortController()
   client.once('error', () => controller.abort())
   client.once('close', () => controller.abort())
-  const target = requestTarget(incoming, relayPort)
+  const target = requestTarget(incoming, relayPort, ingress)
   if ('status' in target) {
     fail(client, target.status)
     return

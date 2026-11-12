@@ -253,11 +253,13 @@ development fakes. `dev/attachment-test-kit.ts` gives them a stub
 
 [Key code](key-code.md) names the files, the types, and the functions to
 open first. It covers the dev fake, the API client, the clipboard, the
-models, the waitlist and its codes, the routines, and the workspace list.
-It also covers the event streams, the drag, and the operator section.
+models, the waitlist and its codes, and the workspace list. It also covers
+the event streams, the drag, and the operator section.
 [Key code: drafts and attached files](key-code-drafts.md) covers the draft
 text, the attached files, and their uploads, which the chat and New
 workspace share.
+[Key code: routines](key-code-routines.md) covers the readers, the models,
+the drafts, and the pages of the routines.
 [Key code: the palette, the layers, and the dialogs](key-code-layers.md)
 covers the command palette, the layers, the frames, New workspace as a
 dialog, and feedback with its screenshots.

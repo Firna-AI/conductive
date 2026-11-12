@@ -8,9 +8,9 @@ points of each part.
   git credential route, and the input activity owner, with its durable
   input time and its D1 and provider update.
 - [`workspaces.ts`](workspaces.ts): `createWorkspace`, which records a
-  workspace and queues its start. `replayCreation` finds a saved create by
-  its first-message ID and joins its claim, plan, and admission without the
-  current defaults. The
+  workspace on its fixed org account and queues its start. `replayCreation`
+  finds a saved create by its first-message ID and joins its claim, plan,
+  and admission without the current defaults. The
   [agent workspace tools](../tools/workspaces.md#creation-replay-and-first-title)
   use it for a repeated create.
 - [`creation-attempt-data.ts`](creation-attempt-data.ts) keeps the public failure code and message after a failed create.
@@ -38,10 +38,14 @@ points of each part.
   Cleanup keeps the org counter. A read after the insert gets the assigned number.
 - [`archive-workspace.ts`](archive-workspace.ts): the guarded Archive without a Git check.
 - [`archive-state.ts`](archive-state.ts): `WorkspaceArchive`, the durable owner of interrupted starts, stop confirmation, retention, deletion, and publication.
-  Its allocation recovery calls `createResource` with the saved account and request, the workspace purpose, and the creator or labelled user as owner.
-  While the recovery fails, it keeps the saved request and its retry alarm, also after the Restore window.
-  It writes a recovered ID to the workspace row before it clears the request and releases the image lease.
+  Its `resolve` phase recovers the saved allocation of an Archive with `recoverArchivedAllocation` of [`archive-allocation.ts`](archive-allocation.ts).
+  That helper reads the saved account and request, and uses the cleanup provider mode of that account.
+  It calls `recoverResourceForCleanup` with the workspace purpose and the creator or labelled user as owner.
+  A certified absence gives retained state without an allocation. An unknown result stays pending:
+  the phase keeps the saved request and its retry alarm, also after the Restore window.
+  `WorkspaceArchive` writes a recovered ID to the workspace row before it clears the request and releases the image lease.
   [`archive-maintenance.ts`](archive-maintenance.ts) resumes archived disks with no env values or startup command.
+  It takes `requiresDiskRestart` for each advance and due time. An account of the kind `boat` keeps the disk restart. An `e2b` account gets only the expiry schedule.
   [`archive-data.ts`](archive-data.ts) fences disk writes and Restore by archive identity and provider account.
   [`archive-missing.ts`](archive-missing.ts) detaches a confirmed missing disk and keeps other provider failures pending.
 - [`archive-begin.ts`](archive-begin.ts): `beginWorkspaceArchive` writes the first Archive state and tells `WorkspaceArchive.begin` to run only the initialization while a start job exists or a queue task is outside the chat queue.
@@ -129,7 +133,7 @@ points of each part.
   lifecycle step of the alarm. It advances stop cleanup before normal
   lifecycle work. It runs the turn repair before its deadline and idle
   decisions. When the restore watch is due, it runs the restore check in
-  place of the Boat state read.
+  place of the provider state read.
 - [`create-workspace-lifecycle.ts`](create-workspace-lifecycle.ts):
   `createWorkspaceLifecycle`, the lifecycle with its hooks and the shared
   state writer. Its `lastTurnEndedAt` and `recoverTurns` hooks read the
@@ -146,20 +150,7 @@ points of each part.
   marker of the [terminal backend](../terminal/README.md) when the restore
   ends, as the [restore watch](workspace-object.md#creates-and-resumes)
   says.
-- [`resource-intents.ts`](resource-intents.ts): `createResource` and
-  `createSandboxResource`, the only paths to a Boat call that creates a
-  sandbox or a snapshot. `createResource` stores the request first, so the
-  lifecycle finds the resource after a lost reply. `createSandboxResource`
-  records a computer allocation before create and attaches the returned ID.
-  `allocateWorkspace` calls it directly, after it saves the request in the
-  start job.
-- [`computer-ledger.ts`](computer-ledger.ts): allocation records, returned IDs,
-  confirmed deletions, and the live computers that still need cleanup.
-- [`computer-stop-task.ts`](computer-stop-task.ts): persistent org Stop tasks.
-  The task saves the account and ID of each computer, and its alarm, before the first provider request.
-  Its native RPC and alarm share the lifecycle queue.
-- [`cleanup.ts`](cleanup.ts): retries every failed computer of a workspace.
-  `deleteSandboxIfPresent` marks the ledger after Delete succeeds or returns not found.
+- [Provider resource entries](provider-accounts.md#resource-entry-points): allocation, ledger, persistent Stop tasks, and cleanup.
 - [`disk-retention.ts`](disk-retention.ts): `keepWorkspaceDisk`, the
   maintenance resume, startup, and stop phases. Its D1 progress retains a
   failure while stop cleanup retries.
@@ -192,9 +183,10 @@ points of each part.
   `WorkspaceAlarms` of [`alarms.ts`](../features/alarms.ts), as
   [The object alarm scheduler](alarm-scheduler.md) says.
 - [`durable-journal.ts`](durable-journal.ts): `WorkspaceEventJournal`.
-- [Image builds](image-builds.md#key-code): the entries of the image
-  builds, the refreshes, the build logs and timers, the image coordinator,
-  the image software and runtime, and the shared software images.
+- [Image builds](image-builds.md#key-code): the entries of build admission,
+  build jobs, failures and allocation recovery, refreshes, build logs and
+  timers, the image coordinator, the image software and runtime, and the
+  shared software images.
 - [`saved-script.ts`](saved-script.ts): `SavedScript`, which hides the text
   of a saved install or startup script. Only `savedScriptCommand` turns it
   into a Bash command. [`lifecycleCommand`](command-intents.ts) runs each step once.

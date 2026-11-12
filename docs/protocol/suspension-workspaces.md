@@ -14,9 +14,12 @@ and workspace owners. The terms come from the
   whoever owns it, and the stop runs again every 30 seconds until it is
   confirmed. Only a start that waits keeps it running, because that
   start gives the workspace a new token.
-- After such a stop, a workspace keeps its restart near day 14 while
-  neither its owner nor its org is suspended. Each owner change makes the
-  workspace check its stop and its restart at once.
+- The restart near day 14 of a stop exists only on Boat, as
+  [Stop and resume](workspace-life.md#stop-and-resume) says. So each rule
+  on that restart covers only a workspace on Boat.
+- After such a stop, a workspace on Boat keeps its restart near day 14
+  while neither its owner nor its org is suspended. Each owner change
+  makes the workspace check its stop and its restart at once.
 - No member can start a workspace whose owner is suspended. This covers a
   create and a resume.
 - The refusal of a resume has the code `user_suspended`. It says that
@@ -27,10 +30,10 @@ and workspace owners. The terms come from the
   the workspace gets another owner.
 - A start of such a workspace that waits or runs stops before its next
   step.
-- A stopped workspace whose owner is suspended gets no restart near day 14
-  of its stop (decision 125). So Boat can delete its disk, with any
-  unpushed work of the members. An admin can assign the workspace to
-  another member, as the refusal above says.
+- A stopped workspace on Boat whose owner is suspended gets no restart
+  near day 14 of its stop (decision 125). So Boat can delete its disk,
+  with any unpushed work of the members. An admin can assign the
+  workspace to another member, as the refusal above says.
 - A suspended user can create no workspace and start no build.
 - The routines of a suspended user start no runs, as
   [Suspensions and deleted orgs](routines.md#suspensions-and-deleted-orgs)
@@ -47,8 +50,8 @@ These rules hold for each member, for each workspace whose owner or org
 is suspended.
 
 - No member can open a new preview, launch a preview, open a terminal, or
-  get a desktop address. The Worker refuses each before any call to Boat,
-  with the same reply as the refusal of a resume.
+  get a desktop address. The Worker refuses each before any call to the
+  provider, with the same reply as the refusal of a resume.
 - Each request to a preview of the workspace gets the answer of an unknown
   preview, and the data of an open preview stops.
 - An open terminal socket closes within 30 seconds.

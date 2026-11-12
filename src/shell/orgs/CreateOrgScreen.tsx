@@ -13,6 +13,7 @@ import { ActionButton } from '../ui/actions'
 import { useGo } from '../ui/AppLink'
 import { useAction } from '../ui/useAction'
 import { useViewport } from '../ui/viewport'
+import { AccountField } from './AccountField'
 import {
   orgNameFields,
   OrgNameFields,
@@ -24,8 +25,10 @@ import {
  * workspaces use. Before the org exists, the list holds the repositories
  * that the person and the shared GitHub App both reach. Create org stays
  * off until the person chooses at least one, also when the list is empty.
- * The first org of Get started goes back to Get started, and another org
- * opens. On a phone the actions sit in the footer.
+ * An operator also chooses the provider account of the org, By weights by
+ * default. Only an operator who chose an account sends it. Nobody else
+ * sees the choice. The first org of Get started goes back to Get started,
+ * and another org opens. On a phone the actions sit in the footer.
  */
 export function CreateOrgScreen(props: { first: boolean }) {
   const app = useApp()
@@ -33,8 +36,11 @@ export function CreateOrgScreen(props: { first: boolean }) {
   const { toast } = useToast()
   const phone = useViewport() === 'phone'
   const catalogue = useStore(app.account.repositories)
+  const operator = useStore(app.account.account)?.operator === true
   const [draft, setDraft] = useState<OrgNameDraft>({ name: '', initials: '' })
   const [chosen, setChosen] = useState<readonly number[]>([])
+  // The account of an operator's choice, or null for By weights.
+  const [account, setAccount] = useState<string | null>(null)
   useEffect(() => {
     void app.account.loadRepositories()
   }, [app])
@@ -43,6 +49,7 @@ export function CreateOrgScreen(props: { first: boolean }) {
     const org = await app.createOrg({
       ...orgNameFields(draft),
       repositoryIds: chosen,
+      ...(operator && account !== null ? { providerAccount: account } : {}),
     })
     if (!props.first) {
       go(routes.org(org.id))
@@ -128,6 +135,13 @@ export function CreateOrgScreen(props: { first: boolean }) {
             )}
           </Loaded>
         </div>
+        {operator ? (
+          <AccountField
+            change={setAccount}
+            disabled={create.pending}
+            value={account}
+          />
+        ) : null}
         {create.error ? (
           <Notice
             body={create.error.message}

@@ -11,8 +11,8 @@ the [model gateway](model-gateway.md), as that doc says.
 These docs belong to this doc:
 
 - [Isolation of orgs and sandboxes](isolation.md): the checks that keep
-  the orgs apart, the app's Boat key, what a sandbox holds, and the agent
-  logins and the turn tokens in a sandbox.
+  the orgs apart, the app's Boat and E2B keys, what a sandbox holds, and
+  the agent logins and the turn tokens in a sandbox.
 - [Tokens and secrets](tokens-and-secrets.md): the workspace token, the
   GitHub tokens, the secrets that users enter, and the agent logins that
   users connect.
@@ -35,10 +35,11 @@ These docs belong to this doc:
   [Operator actions](operator-actions.md#sessions-and-sign-in) says.
 - The sign-up check on the age and the email of a GitHub account was
   dropped (decision 48).
-- Risk: all users share the app's Boat account (decision 80). Misuse by
-  one user can get that account suspended, and that stops the sandboxes
-  of every user. [Operator actions](operator-actions.md) states the
-  suspension of a user and the address for abuse reports (decision 28).
+- Risk: all orgs on one provider account share that account
+  (decision 80). Misuse by one user can get that account suspended, and
+  that stops the sandboxes of every org on it.
+  [Operator actions](operator-actions.md) states the suspension of a user
+  and the address for abuse reports (decision 28).
 - Each sign-in starts after an agreement to the current revision of the
   Terms (decision 28). A sign-in that starts without it shows a page with
   the agreement before GitHub.

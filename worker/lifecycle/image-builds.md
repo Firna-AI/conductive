@@ -88,8 +88,10 @@ The line `[N output bytes omitted]` takes their place in the event order.
 
 - A build loads the chosen repositories, installs the image software, runs
   the install script with Bash, and saves a snapshot. A first build that
-  pins a matching ready software image starts from it and skips the
-  software step. Admission records the pin in the job insert. The pin stays
+  pins a matching ready software image of its own account starts from it
+  and skips the software step. A first build in an account with no such
+  image, such as `e2b`, installs the software on the provider base of that
+  account. Admission records the pin in the job insert. The pin stays
   until the job reaches `done`, including its cleanup. The
   [software image backend](../software-image/README.md) owns these images.
   A refresh only loads
@@ -166,11 +168,19 @@ job fails.
 
 A failed image job keeps the `allocating` phase when a dispatched request
 has no confirmed sandbox ID. The existing build row owns that cleanup.
-[`cleanupBuild`](build-execution.ts) replays the saved request through
-[`recoverImageBuildAllocation`](image-allocation.ts), then saves the ID
-before it deletes the sandbox. Only finished cleanup writes `done`.
-A definite refusal of the first dispatch needs no allocation recovery.
-A refused replay after an uncertain dispatch keeps the saved ownership.
+[`cleanupBuild`](build-execution.ts) recovers the saved request with
+[`recoverImageBuildForCleanup`](image-allocation.ts), through a client of
+the job's provider account in the `'cleanup'` mode. The helper saves a
+recovered ID with that account before cleanup deletes the sandbox. Only
+finished cleanup writes `done`.
+
+A Boat client ignores the mode and replays the saved request unchanged. An
+E2B client only finds the identity of the earlier request, with no create,
+connect, or guest setup. A certified absence saves no ID, and the computer
+ledger marks the allocation rejected. An unknown E2B result stays pending
+for a later cleanup attempt. A definite refusal of the first dispatch needs
+no allocation recovery. A refused replay after an uncertain dispatch keeps
+the saved ownership.
 
 An old start without a saved deadline uses its saved creation time or
 lifecycle start time. The start coordinator saves the restored deadline
@@ -214,10 +224,14 @@ states the rule.
   when the newest build succeeded.
 - [`image-build-failure.ts`](image-build-failure.ts): image failure classification, retry, warning, and allocation cleanup.
 - [`build-execution.ts`](build-execution.ts): build commands and cleanup of every live ledger computer for the exact org and build.
-- [`image-allocation.ts`](image-allocation.ts): `recoverImageBuildAllocation`
-  replays a saved allocation request and saves the recovered sandbox ID.
-  Failed image jobs retain their unresolved allocation phase until cleanup
-  recovers and deletes the sandbox.
+- [`image-allocation.ts`](image-allocation.ts): `allocateImageBuild` creates
+  or replays the allocation of a running build with the provider of its
+  caller, saves the sandbox ID, and completes the allocation phase.
+  `recoverImageBuildForCleanup` recovers a saved allocation for
+  `cleanupBuild`, which passes a cleanup-mode client. It saves a recovered
+  sandbox ID, or returns null after a certified absence. Failed image jobs
+  retain their unresolved allocation phase until cleanup recovers and
+  deletes the sandbox.
 - [`build-log-statements.ts`](build-log-statements.ts): `buildLogStatements`,
   which splits output into rows and adds the budget statements of
   [`build-log-retention.ts`](build-log-retention.ts) to the same D1 batch.

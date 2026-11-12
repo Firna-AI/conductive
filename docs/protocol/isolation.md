@@ -2,21 +2,24 @@
 
 This doc holds the requirements and the decisions in force for the isolation
 of orgs and sandboxes. It covers the checks that keep the orgs apart, the
-app's Boat key, what a sandbox holds, what its workspace tools reach, and
-the agent logins and the turn tokens in a sandbox. It belongs to
+app's Boat and E2B keys, what a sandbox holds, what its workspace tools
+reach, and the agent logins and the turn tokens in a sandbox. It belongs to
 [Access and security](access-and-security.md), which covers sign-in, the
 gates of the Worker, the request bodies, and the content security policy.
 The terms are those of the [architecture doc](../architecture.md#terms). A
 decision number names a dated record, as
 [Decision numbers](../architecture.md#decision-numbers) says. A gateway
 decision number names a decision of the change that adds the
-[model gateway](model-gateway.md), as that doc says.
+[model gateway](model-gateway.md), as that doc says. An e2b decision number
+names a decision of the change that adds E2B as the second
+[sandbox provider](workspaces-and-sandboxes.md#the-provider), as that doc
+says.
 
 ## Orgs and workspaces
 
-- One Boat key reaches the sandboxes and the saved snapshots of all orgs
-  (decision 80). So the key does not keep the orgs apart. The checks in
-  this section do.
+- The key of each provider account reaches the sandboxes and the saved
+  snapshots of all orgs on that account (decision 80). So no key keeps the
+  orgs apart. The checks in this section do.
 - A request reaches an org, its workspaces, and their sandboxes only for a
   member of that org.
 - The workspace token of a sandbox reaches the workspaces of its own org
@@ -26,7 +29,8 @@ decision number names a decision of the change that adds the
   user or org, as [Operator actions](operator-actions.md) says. In the
   [operator section](operator-section.md#what-the-section-shows), an
   operator also reads counts, names, IDs, dates, roles, states, and codes
-  across every org (decisions 142, 144, 147, and 160).
+  across every org (decisions 142, 144, 147, and 160). An operator also
+  reads the provider account of each org (e2b decision 221).
 - The operator section shows no chat, file, env value, agent login, or
   email address. Its org search takes the ID of a cloud computer or a
   preview address only to find its org.
@@ -55,41 +59,36 @@ decision number names a decision of the change that adds the
   file gets the same refusal.
 - Before each sandbox call, the Worker checks in its records that the
   sandbox belongs to a workspace or a build of that org.
-- The Worker calls only a fixed list of Boat routes. It has no general
-  pass-through to Boat.
-- To copy an attachment, the Worker also sends the file to the upload
-  address that Boat returns for that sandbox (decision 132). It sends the
-  file only to that exact address.
-- Lifecycle, saved snapshot, file metadata, and error replies from Boat
-  can contain at most 1 MiB, or 1,048,576 bytes (decision 84).
-- A successful command reply from Boat can contain at most 18 MiB, or
-  18,874,368 bytes. The limit includes the whole JSON body.
-- A reply above these budgets gets HTTP 502, even when Boat permits it.
-  For a command reply, the error says "The command output is too large."
+- The Worker calls only a fixed list of routes of each provider. It has
+  no general pass-through to a provider.
+- To copy an attachment to a sandbox on Boat, the Worker also sends the
+  file to the upload address that Boat returns for that sandbox
+  (decision 132). It sends the file only to that exact address. On E2B,
+  the Worker sends the file through a fixed file route of the sandbox.
+- Lifecycle, saved snapshot, file metadata, and error replies from a
+  provider can contain at most 1 MiB, or 1,048,576 bytes (decision 84).
+- A successful command reply from a provider can contain at most 18 MiB,
+  or 18,874,368 bytes. The limit includes the whole body of the reply.
+- A reply above these budgets gets HTTP 502, even when the provider
+  permits it. For a command reply, the error says "The command output is
+  too large."
 - [Orgs and members](orgs-and-members.md#members-and-roles) states the
   rules of each role.
 
 ## The app's Boat key
 
-- One Boat key, the app's own, runs every sandbox and every org image
-  (decision 80). The Worker holds it as a Worker secret.
-- The key never goes to the browser, into a sandbox, into a log, or into
-  a saved snapshot. Reason: the key reaches the sandboxes of every org.
-- The key is limited to one Boat environment and to the actions that the
-  app uses.
-- The app's Boat account is a Boat organization of its own. It holds no
-  other Boat work of the operator (decisions 5 and 80).
-- Every Boat call names that organization. A Boat user can reach several
-  organizations, so a change of the active one in Boat moves no work of
-  the app.
-- The deploy run never gets the key. It asks the Worker to build the
-  [software image](org-image.md#the-software-image) with a token of its
-  own.
+[The app's Boat key](provider-keys.md#the-apps-boat-key) holds these
+requirements.
+
+## The app's E2B key
+
+[The app's E2B key](provider-keys.md#the-apps-e2b-key) holds these
+requirements.
 
 ## What a sandbox holds
 
-- Every sandbox starts with Boat's `noEnv` setting, so it gets none of the
-  secrets of the app's Boat account.
+- A sandbox gets none of the secrets of the app's provider accounts. On
+  Boat, every sandbox starts with Boat's `noEnv` setting for that reason.
 - At a start, a sandbox gets only two secrets: its workspace token and the
   env vars of its org.
 - The sandbox gets them at create and at each resume. A changed secret
@@ -98,6 +97,9 @@ decision number names a decision of the change that adds the
   [Stop and resume](workspace-life.md#stop-and-resume) says.
 - No saved snapshot holds these secrets. Builds and refreshes get none of
   them.
+- A saved snapshot on E2B keeps only the disk of its sandbox, never its
+  memory. Reason: the memory of a build can hold a secret, such as the
+  token of a repository copy.
 - The software image holds no org data and no secret, because every org
   uses it. Its build sandbox starts with no env var, no token, and no
   repository.
@@ -132,7 +134,7 @@ decision number names a decision of the change that adds the
   runs on the login of the starter of its session.
 - Risk: such a message also starts the cloud computer of a workspace that
   does not run, as an open does. Each start counts toward the starts that
-  all orgs share.
+  the orgs of its provider account share.
 - Risk: while a turn of its workspace runs, such a process can also
   rename, move, and archive workspaces, close and stop sessions, change the
   sections, and open and close previews in the whole org. It acts with the

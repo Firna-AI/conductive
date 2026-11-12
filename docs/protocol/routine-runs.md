@@ -23,7 +23,7 @@ number names a dated record, as
   and 43).
 - A new cloud computer in place of the restart of a clean workspace was
   rejected. It loses the ignored files and the memory of the agent.
-- So the restarts of kept run workspaces stay a cost, as
+- So on Boat, the restarts of kept run workspaces stay a cost, as
   [Limits](routines.md#limits) says.
 - A line under the header of a run workspace says "Run of" and the name of
   the routine, with a link to the routine.
