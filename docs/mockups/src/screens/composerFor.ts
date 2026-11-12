@@ -1,6 +1,7 @@
 import type { Viewport } from '@mokly/mokly'
 import type { ComposerState } from '../components/chat/Composer'
 import type { MentionTree } from '../components/chat/FileMentionList'
+import { noFastChoice, type AgentChoice } from '../fixtures/agents'
 import {
   afterDropCaret,
   attachmentDraft,
@@ -108,6 +109,18 @@ function chipDraft(composer: ComposerKey): string | undefined {
   return link ? workspaceLinkDraft : undefined
 }
 
+/** The model, the effort, and the speed of the next message of a state. */
+function choiceOf(state: WorkspaceState, workspace: Workspace): AgentChoice {
+  switch (state.modelChoice) {
+    case 'workspace':
+      return workspace.choice
+    case 'fast':
+      return { ...workspace.choice, fast: true }
+    case 'no-fast':
+      return noFastChoice
+  }
+}
+
 /** An agent turn runs on a ready sandbox. */
 export function isRunning(state: WorkspaceState): boolean {
   return (
@@ -173,7 +186,7 @@ export function composerFor(
   const choice =
     state.conversation === 'model-not-served'
       ? unlistedChoice
-      : workspace.choice
+      : choiceOf(state, workspace)
   let draft = ''
   if (!fresh && state.conversation === 'steer') draft = steerDraft
   else if (drop) draft = drop.draft

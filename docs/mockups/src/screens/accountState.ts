@@ -26,6 +26,7 @@ export const accountSchema = {
     'shortcutSearch',
     'shortcuts',
     'host',
+    'modelMenu',
   ],
   properties: {
     /**
@@ -119,6 +120,11 @@ export const accountSchema = {
      * app of Chrome on a Mac. The Mac app draws its own pages.
      */
     host: { enum: browserHosts },
+    /**
+     * The Model and effort picker of Preferences: closed, or open with
+     * fast mode on.
+     */
+    modelMenu: { enum: ['closed', 'open-fast'] },
   },
 } as const
 
@@ -142,6 +148,7 @@ export const accountGeneral: AccountState = {
   shortcutSearch: 'none',
   shortcuts: 'default',
   host: 'chrome-mac',
+  modelMenu: 'closed',
 }
 
 /** The Keyboard shortcuts tab in a normal Chrome tab on a Mac. */

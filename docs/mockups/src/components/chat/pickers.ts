@@ -4,6 +4,7 @@ import {
   agentKeys,
   agents,
   effortsFor,
+  offersFast,
   type AgentChoice,
   type AgentKey,
 } from '../../fixtures/agents'
@@ -13,8 +14,9 @@ const divider: MenuEntry = { kind: 'divider' }
 
 /**
  * The menu of the model picker: the models of each agent as a group, with
- * no brand name, then the effort levels of the chosen model. The menu marks
- * the current model and the current effort. In a session with messages,
+ * no brand name, then the effort levels of the chosen model, then the Fast
+ * switch of a model that offers fast mode. The menu marks the current model
+ * and the current effort. In a session with messages,
  * each model of the other agent opens a new session, and the draft moves
  * there (decision 51). The external link icon marks each of those models,
  * and a screen reader says "New session" for it. A model of the session's
@@ -42,6 +44,9 @@ export function pickerMenu(
       })),
     ]
   })
+  const fast: MenuEntry[] = offersFast(choice)
+    ? [divider, { kind: 'switch', label: 'Fast', on: choice.fast === true }]
+    : []
   return [
     ...models,
     divider,
@@ -51,5 +56,6 @@ export function pickerMenu(
       label: effortLabels[effort],
       checked: effort === choice.effort,
     })),
+    ...fast,
   ]
 }
