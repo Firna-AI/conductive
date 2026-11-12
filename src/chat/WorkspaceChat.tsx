@@ -9,6 +9,7 @@ import type { WorkspaceView } from '../shared/workspace-view'
 import type { Workspace } from '../shared/workspaces'
 import { TouchScreen } from '../../docs/mockups/src/components/common/touch'
 import { ChatOverlays, historyEntries } from './components/ChatOverlays'
+import type { ComposerFocus } from './components/Composer'
 import { SessionChat, type ChatHost } from './components/SessionChat'
 import { useSessionLinkCopy } from './components/session-link-copy'
 import { SessionTabs } from './components/SessionTabs'
@@ -85,6 +86,11 @@ export interface ChatViewProps {
    * without it.
    */
   readOnly?: boolean
+  /**
+   * The composer takes the focus when it shows, as after a click on the
+   * workspace in the sidebar. `ComposerFocus` gives the rules.
+   */
+  composerFocus?: ComposerFocus | null
 }
 
 export interface WorkspaceChatProps extends ChatConnection, ChatViewProps {}
@@ -172,6 +178,7 @@ function ChatBody(
       />
       {content ?? (
         <SessionChat
+          composerFocus={props.composerFocus}
           controller={controller}
           host={props.host}
           mobile={mobile}
