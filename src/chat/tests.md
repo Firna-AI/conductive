@@ -61,6 +61,8 @@ the same reply from the saved history.
 `components/ReadingPlace.dom.test.tsx` lays the chat out as a browser lays
 out its reversed scroll box. It ends a long turn while the reader reads
 higher up, and checks the read row and the newest message at the bottom.
+While the reader reads higher up, a message of another member keeps the
+read row in place, and a message that the user sends goes to the bottom.
 `components/TabDrag.dom.test.tsx` mounts the chat with the real
 `FileTabItem` of the Files screens and drags tabs with pointer events over
 boxes that `components/tab-drag-test-kit.tsx` gives them. The file tab of

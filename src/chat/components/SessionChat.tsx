@@ -141,6 +141,12 @@ export function SessionChat(props: SessionChatProps) {
     notice && (notice.sessionId === null || notice.sessionId === id)
       ? notice
       : null
+  // Only this chat's own sends wait as pending messages, so each new one
+  // shows the bottom of the chat.
+  const sent = useMemo(
+    () => state.pending.map((message) => message.id),
+    [state.pending],
+  )
   const hasMessages =
     state.pending.length > 0 ||
     state.transcript.items.some((item) => item.kind === 'user')
@@ -237,6 +243,7 @@ export function SessionChat(props: SessionChatProps) {
       })}
       footer={footer}
       mobile={props.mobile}
+      sent={sent}
     >
       {content && status === 'loading' ? <EarlierLoading /> : null}
       <TranscriptView
