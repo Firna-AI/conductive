@@ -1,0 +1,238 @@
+# ChatGPT egress through a Cloudflare Container
+
+Status: Active. On branch `calummoore/untitled-v6`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
+
+OpenAI blocks requests that a Cloudflare Worker sends to `chatgpt.com`.
+Since PR #259, the model gateway sends each `chatgpt.com` request to the
+address in `CHATGPT_EGRESS_URL`. Today that address is a named Cloudflare
+Tunnel to a proxy on Cal's Mac. ChatGPT-plan Codex turns therefore fail
+when the Mac sleeps, restarts, or goes offline. This change moves the
+proxy into a Cloudflare Container that the app's Cloudflare account owns.
+The gateway reaches it through a service binding, so the container has no
+public address. The change does not touch Claude turns, OpenAI API key
+turns, or the ChatGPT sign-in flow on `auth.openai.com`.
+
+## Decisions
+
+- **User decision, 11 November 2026:** host the proxy in a Cloudflare
+  Container. Alternatives: keep the Mac proxy, a dedicated Boat sandbox,
+  or Google Cloud Run. Reason: the product already runs on Cloudflare. The
+  tests of the same day support it:
+  - OpenAI accepted requests from a Cloudflare Container, Boat, AWS,
+    Google Cloud Run, and the Mac. It blocked a plain Worker.
+  - Through a container, streams stopped after 1 to 12 minutes while the
+    container kept running. With the relay below, one 16-minute and two
+    12-minute streams finished in full.
+  - A redeploy did not update a Durable Object whose container was
+    running.
+  - The evidence is in `.context/egress-probe/results.md`.
+- **My call, 11 November 2026:** a separate Worker,
+  `conductive-chatgpt-egress`, owns the container. The main Worker calls it
+  through a service binding. Reason: a deploy of the main Worker then needs
+  no Docker build and no Containers permission. It also does not replace
+  the container, which would cut the answers that stream at that moment.
+- **My call, 11 November 2026:** the Durable Object in front of the
+  container reads each chunk of the answer and writes it to its own
+  stream. Reason: the tests above. Passing the body through unchanged let
+  the streams stop.
+- **My call, 11 November 2026:** the container proxy checks no shared
+  secret. Only its Durable Object can reach the container port, and the
+  egress Worker has no route and no `workers.dev` address. The proxy keeps
+  its allow list of `https` ChatGPT origins and drops the Cloudflare
+  headers.
+- **My call, 11 November 2026:** the gateway uses the service binding
+  when it exists. Otherwise it uses `CHATGPT_EGRESS_URL`, and otherwise it
+  calls `chatgpt.com` directly. Reason: the address path stays available
+  for another host, for example when OpenAI blocks container addresses.
+  Decision 4, option D, would reverse this order.
+- **My call, 11 November 2026:** one named container instance serves all
+  requests. It sleeps after one hour without a request. Reason: a lite
+  instance costs a few dollars a month, and a cold start took about one
+  second in the tests. Decision 3, option C, would name the instance after
+  the deployed version.
+
+### 3. How the egress Worker deploys
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Design.
+- **Category:** Process.
+- **Location:** `.github/workflows/deploy.yml`.
+- **Background:** The deploy run deploys the main Worker on each push to
+  `main`. A container image needs a Docker build, and its upload needs the
+  Containers permission on the deploy token. In the tests, a redeploy did
+  not reach a running Durable Object, and a container rollout cut a
+  stream.
+- **Problem:** The egress Worker needs a deploy path that also reaches the
+  running object.
+- **Impact if no action:** The egress Worker on Cloudflare can drift from
+  the code on `main`, or keep old code after a deploy.
+- **Root question:** How does each change to the egress code on `main`
+  start to serve ChatGPT requests, without cutting the answers that stream
+  at that moment?
+- **Options:**
+  - **A.** An operator deploys it by hand with Wrangler and Docker, as its
+    README says. No CI change. A change on `main` can wait for a manual
+    deploy, and old code stays on the running object. Effort: Small.
+  - **B.** The deploy run also deploys it, before the main Worker. The
+    deploy token needs the Containers permission. A CI image build is not
+    reproducible, so each push can start a rollout that cuts streams.
+    Effort: Medium.
+  - **C.** A, and each request goes to an instance named after the
+    deployed version of the egress Worker. A deploy then reaches new
+    requests at once, and old streams finish on the old instance, which
+    sleeps after one hour. It needs room for two instances. An image
+    change still replaces the old container, so deploy it at a quiet time.
+    Effort: Small.
+  - **D.** A separate workflow deploys the egress Worker when its files
+    change, and on a manual run, with a token of its own. The list of
+    watched paths must name each input. Effort: Medium.
+  - **E.** The deploy run hashes the built egress bundle and the image
+    inputs, and deploys only when the hash changed. A change to the bundle
+    only deploys without a container rollout. Requests go to version
+    instances, as in C. The production token needs the Containers
+    permission. Effort: Medium.
+  - **F.** The deploy run deploys the egress Worker on each push without a
+    container rollout, and requests go to version instances. An operator
+    deploys each image change by hand. Each push starts a new instance,
+    which idles for one hour. Effort: Medium.
+- **Left out:** Cloudflare Workers Builds with watched paths: its builds
+  have no Docker today.
+- **Wider fix:** E. It deploys only when the built output changes, so no
+  push starts a needless rollout.
+- **Previous examples:** None found.
+- **Recommendation:** C. It needs no CI change and no new permission, and
+  each deploy reaches new requests at once. The first recommendation was
+  A. E prevents drift best.
+- **Action:** ask the user, because the options have real trade-offs, and
+  B, D, E, and F need a credential change.
+
+### 4. What happens to the Mac proxy
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Design.
+- **Category:** Security.
+- **Location:** None.
+- **Background:** After the switch, the gateway no longer uses the Mac
+  proxy, because the binding comes first. The Worker still holds
+  `CHATGPT_EGRESS_URL` and `CHATGPT_EGRESS_SECRET`. The Mac still runs the
+  proxy and the tunnel.
+- **Problem:** A laptop stays ready to receive ChatGPT logins in transit.
+- **Impact if no action:** A laptop stays part of production.
+- **Root question:** What fallback, on which host, does ChatGPT egress
+  keep once the container serves it?
+- **Options:**
+  - **A.** Keep the Mac proxy running as a standby. The legal pages and
+    the security guide then stay wrong for a fallback. Effort: Small.
+  - **B.** Retire it after one day of good container traffic. Delete the
+    two Worker secrets, stop the two Mac services, and delete the tunnel
+    and its DNS name. Keep the address path in the code. A fallback then
+    needs a host, the two secrets, and a pull request that removes the
+    binding. Effort: Small.
+  - **C.** Retire it and delete the address path from the code. The next
+    fallback then needs new code. Effort: Small.
+  - **D.** B, and the address path wins over the binding when both
+    secrets are set, with a warning in the log. A fallback is then a host
+    and two secrets, with no pull request. A forgotten setting sends logins
+    past the container. Effort: Small.
+  - **E.** B, and a new requirement in `docs/architecture/data-and-trust.md`:
+    a host that sees agent logins in transit runs in an account of the
+    app, never on a personal computer. Effort: Small.
+  - **F.** B, and a standby proxy on Google Cloud Run in a project of the
+    app. The Privacy page must then name Google. Effort: Medium.
+  - **G.** F, and the gateway switches to the standby by itself when a
+    probe sees the block page through the container. Effort: Large.
+- **Left out:** A Boat sandbox standby: its hosted port answered 502, so
+  it is not known to stream.
+- **Wider fix:** E. A rule covers each such host, whatever its shape.
+- **Previous examples:** PR #259, commit `dfd2ebf1`, put a laptop in the
+  path of ChatGPT logins.
+- **Recommendation:** B. The Mac then holds no part of production, and
+  stray egress secrets do nothing while the binding exists. D gives the
+  fastest fallback. E best protects the codebase.
+- **Action:** ask the user, because the options change production
+  settings and your Mac.
+
+Contract owners:
+
+- [Model gateway](../docs/protocol/model-gateway.md).
+- [Components](../docs/architecture/components.md) and
+  [Data and trust](../docs/architecture/data-and-trust.md).
+- The [model gateway README](../worker/model-gateway/README.md).
+
+## Milestone 1: Documentation and protocol
+
+Depends on: none
+
+The docs state where ChatGPT requests leave Cloudflare, and that the
+container sees the login only in transit.
+
+- [ ] `docs/protocol/model-gateway.md`: requests to `chatgpt.com` leave
+      from a container that the app's Cloudflare account owns, with no
+      public address. Record the decision, the rejected hosts, and why a
+      plain Worker cannot send them.
+- [ ] `docs/architecture/components.md`: add the egress Worker and its
+      container.
+- [ ] `docs/architecture/data-and-trust.md`: the container sees a ChatGPT
+      login only in transit and stores nothing.
+- [ ] Read the Terms page, the Privacy page, and each public guide in
+      full. Update each sentence that restates where model requests go.
+
+## Milestone 2: Egress Worker
+
+Depends on: 1
+
+- [ ] Add `@cloudflare/containers` with `npm install`.
+- [ ] `tools/chatgpt-egress/proxy.ts`: a listen address setting, and a
+      private network setting that skips the secret check. Log an OpenAI
+      error reply only after the bearer token and the account ID of the
+      request are removed from it.
+- [ ] `tools/chatgpt-egress/Dockerfile`: Node 24, the proxy, the private
+      network setting, port 8080.
+- [ ] `worker/chatgpt-egress/`: the Worker, the Container class with the
+      relay, its Wrangler config, and its README with the deploy steps.
+- [ ] A unit test of the relay: bytes pass in order, and a closed client
+      cancels the container read.
+- [ ] Typecheck, lint, format, file length, and the targeted tests.
+
+## Milestone 3: Gateway binding
+
+Depends on: 2
+
+- [ ] `wrangler.jsonc`: the `CHATGPT_EGRESS` service binding.
+- [ ] `worker/env.ts` and `worker/model-gateway/egress.ts`: the binding
+      path, before the address path.
+- [ ] Add the binding case to `worker/model-gateway/egress.test.ts`.
+- [ ] Update the model gateway README.
+- [ ] `docs/deployment.md`: list the `CHATGPT_EGRESS` binding, and the
+      `CHATGPT_EGRESS_URL` and `CHATGPT_EGRESS_SECRET` settings of PR #259.
+
+## Milestone 4: Deploy and verify
+
+Depends on: 2, 3
+
+- [ ] Deploy the egress Worker from a machine with Docker.
+- [ ] Through a temporary Worker with the binding, check that a request
+      with a fake token gets OpenAI's 401 JSON reply.
+- [ ] After the merge and the deploy, check a real Codex turn on a ChatGPT
+      plan in the Workers logs of the egress Worker.
+
+## Milestone 5: Verification, commit, review, and pull request
+
+Depends on: every other milestone
+
+- [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
+- [ ] Commit with Conventional Commits and push the branch.
+- [ ] Review the complete local diff against `origin/main` with the
+      `implementation-review` skill after the push. Report the findings,
+      then apply the fix rule: fix the `fix now` findings, record
+      follow-up items under `plans/follow-ups/` for the rest, re-review
+      once, and report.
+- [ ] Delete this plan when the `plans` skill says, under "Deleting the
+      plan".
+- [ ] Open the pull request. Its description gives the decisions and the
+      design calls of this plan with their dates, a permalink to this plan,
+      and the follow-up items that the change adds.
+
+## Post-merge follow-up (non-blocking)
+
+- [ ] Apply the answer to decision 4 after one day of container traffic.
