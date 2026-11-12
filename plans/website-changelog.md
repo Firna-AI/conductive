@@ -158,14 +158,22 @@ Contract owners:
   to three sections, in this order: `## New`, `## Improved`, and
   `## Fixed`. Each section is a list with one change on each line.
 - **Reader.** `src/marketing/changelog-posts.ts` reads the collection,
-  as `docs-guides.ts` reads the guides. A field that is missing or not
+  as `docs-guides.ts` reads the guides. It turns each post into the
+  `ChangelogPost` type of `src/marketing/changelog-model.ts`: the lead,
+  then the lines under each known section. A field that is missing or not
   valid takes a default and logs a warning. A post without a valid date
-  takes the date of its file name. The posts sort newest first.
+  takes the date of its file name. An unknown section, or text outside a
+  list, gives a warning and stays off the page. Versions keep their order,
+  oldest first. The posts sort newest first.
 - **Page.** `src/marketing/pages/changelog.astro` on `SiteLayout`, with
   `styles/changelog.css`. A heading and a lead at the top. Then each post:
   its day as a `time` element, its title, its versions, its lead, and
-  its sections. Each post has an anchor with its day, such as
-  `#2026-11-12`. The lead links the GitHub releases for the complete list
+  its sections. The page draws the section names as `h3` headings from
+  `changelog-copy.ts`, under each `h2` post title. A desktop shows the day
+  in its own column, and the day stays in view while its post scrolls. A
+  phone shows the day above the title. Each post has an anchor with its
+  day, such as `#2026-11-12`, and the day links to it. The versions show
+  in full, such as "Versions 0.13.0, 0.14.0, and 0.15.0". The lead links the GitHub releases for the complete list
   of changes. The page has its own title and description for link
   previews.
 - **Routine.** A routine of the Conductive org runs daily. It follows
@@ -175,8 +183,9 @@ Contract owners:
   post of their day, or creates that post. It opens a pull request and
   stops. When every version has its post, it does nothing.
 - **Mockup.** `marketing/changelog`, drawn by `ChangelogScreen`, with
-  sample posts. A shared module holds the words of the page, so the site
-  and the mockup show the same words.
+  sample posts. `src/marketing/changelog-copy.ts` holds the words of the
+  page, and `src/marketing/changelog-model.ts` the shape of a post, so the
+  site and the mockup show the same words and the same shape.
 
 ### Design calls
 
@@ -191,13 +200,14 @@ These are my calls, made on 12 November 2026.
 | Notable changes to the website, such as the pricing page, go in a post. | A visitor can see them. |
 | A post uses product words. It follows the naming rules of `AGENTS.md` and the copy rules of the `product-ui` skill. | The page is user-facing text. |
 | The sections are New, Improved, and Fixed, in that order. A section without changes is left out. | Conductor, Linear, and Cursor use the same kind of groups. A reader scans for what is new first. |
+| The reader turns each post body into the shared model, and the page sets the section headings and their order. | Found by the mockup on 12 November 2026. A body rendered as written would give each section an `h2`, at the level of the post titles. The type cannot hold a wrong order or an unknown section. |
 | One page holds every post. No page for each post, and no pages of posts. | The site has four days of posts. Anchors let a link point to one day. A later change can split the page. |
 | A post commit uses the type `docs(changelog)`. | release-please hides `docs` commits, so a post never shows in the release notes and never raises the version. |
 | The routine runs once a day and drafts. A person reviews and merges its pull request. | Agent merges are off in `AGENTS.md`. The review catches a wrong claim of the model. |
 | The routine uses the `external docs implementor` action of the `models` skill. | The `models` skill lists release notes under that action. |
 | Cal creates the routine in the app after the merge. | Routines live in the app, not in the repository. The routine reads the guide from `main`. |
 | A field that is missing or not valid gives a default and a warning, not a build error. | The always-on rules prefer a warning. A new build error needs the user's approval. The guides use the same rule. |
-| The footer Product column links the page. The header keeps its links. | The header has no free width on a phone. The comparison page made the same call. |
+| The footer Product column links the page, as its last link. The header keeps its links. | The header has no free width on a phone. The comparison page made the same call. |
 | The web app and the Mac app get no link to the page. | Decision 3 is open. |
 | The row `product-changelog` changes to Available in Milestone 4. | `AGENTS.md` asks the change that ships a listed feature to update its row. |
 | The new protocol doc is `docs/protocol/website-changelog.md`. | It sits beside `website-docs.md`. |
@@ -212,30 +222,31 @@ Depends on: none
 The `ui implementor` draws the changelog page and adds the footer link to
 every page of the site.
 
-- [ ] Add `src/marketing/changelog-copy.ts` with the words of the page:
+- [x] Add `src/marketing/changelog-copy.ts` with the words of the page:
       its label, title, lead, description, footer link, the section
       names, and the empty state. Follow the copy rules of the
       `product-ui` skill and the naming rules of `AGENTS.md`.
-- [ ] Add `ChangelogScreen` in `docs/mockups/src/screens/` and the entry
+- [x] Add `ChangelogScreen` in `docs/mockups/src/screens/` and the entry
       `marketing/changelog`, for desktop and phone. Draw it on `SitePage`.
-  - [ ] Use three sample posts: one with all three sections and a lead,
+  - [x] Use three sample posts: one with all three sections and a lead,
         one with Fixed only, and one with many versions.
-  - [ ] Add the empty state as a second state of the entry.
-- [ ] Add the page key `changelog` to `sitePaths` and `pageHrefs` in
+  - [x] Add the empty state as a second state of the entry.
+- [x] Add the page key `changelog` to `sitePaths` and `pageHrefs` in
       `src/marketing/links.ts`, to `src/marketing/request-values.ts`, and
       to `docs/mockups/src/paths.ts`. Update every other map of the site
       pages, such as `SiteHeader.tsx`, `SitePage.tsx`, and
       `CatalogueText.tsx`.
-- [ ] Add the Changelog link to the Product column of the mockup footer.
-- [ ] Describe the page in `docs/mockups/marketing-site.md`,
+- [x] Add the Changelog link to the Product column of the mockup footer.
+- [x] Describe the page in `docs/mockups/marketing-site.md`,
       `docs/mockups/catalogue.md`, and the marketing part of
       `docs/mockups/README.md`.
-- [ ] Run `npm run mockups:check` and the early checks of `AGENTS.md`.
+- [x] Run `npm run mockups:check` and the early checks of `AGENTS.md`.
       Smoke-test the new page and a changed footer on both layouts and in
       both colour schemes.
-- [ ] Update the design and the TODOs of this plan for each problem that
-      the mockups show.
-- [ ] Commit the milestone with the `git-commit` skill.
+- [x] Update the design and the TODOs of this plan for each problem that
+      the mockups show. Report:
+      `.context/website-changelog/milestone-1-report.md`.
+- [x] Commit the milestone with the `git-commit` skill.
 
 ## Milestone 2: Documentation and protocol
 
@@ -299,13 +310,16 @@ Depends on: 3
       `src/marketing/changelog-posts.ts` with its tests.
 - [ ] The `ui implementor` adds `src/marketing/pages/changelog.astro` and
       `styles/changelog.css`, in the cascade of `layouts/Document.astro`.
-      Use the shared copy. Add no script, inline style, or accent edge.
+      Use the shared copy, `CopyText.astro` for the lead, and `dayWords`
+      for the day. Add no script, inline style, or accent edge.
 - [ ] Add the Changelog link to the Product column of `SiteFooter.astro`.
 - [ ] Set the row `product-changelog` in
       `src/marketing/from-conductor/areas/apps-and-devices.ts` to
       Available, with a note under the claim rules of the comparison
       protocol.
-- [ ] Run the marketing tests. Run the new case 10 times, without retries
+- [ ] Run the marketing tests. In this sandbox, set `TMPDIR` to a folder
+      inside `.context/`, because `/tmp` is on another mount. Run the new
+      case 10 times, without retries
       or longer time limits.
 - [ ] Run the mockup check and the early checks. Add no new gate.
 - [ ] Smoke-test the built page through the Worker with `npm run build`

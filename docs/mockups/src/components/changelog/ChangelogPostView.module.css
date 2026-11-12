@@ -1,0 +1,149 @@
+/*
+ * A post. A computer shows the day in a column of its own, beside the title,
+ * so the days of the posts line up under each other. A neutral hairline
+ * divides the posts. A post is not a box and has no coloured edge.
+ */
+.post {
+  display: grid;
+  grid-template-columns: 160px minmax(0, 720px);
+  align-items: baseline;
+  gap: 0 48px;
+  padding: 40px 0 48px;
+  border-top: 1px solid var(--ui-border);
+  scroll-margin-top: 16px;
+}
+
+.post:last-child {
+  padding-bottom: 0;
+}
+
+/* The day stays in view while the rest of its post scrolls past. */
+.side {
+  position: sticky;
+  top: 24px;
+}
+
+/* The day links to the address of its post. */
+.day {
+  color: var(--ui-ink2);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.5;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.day:hover {
+  color: var(--ui-ink);
+  text-decoration: underline;
+  text-decoration-color: var(--ui-border2);
+  text-underline-offset: 3px;
+}
+
+.day:focus-visible {
+  border-radius: var(--ui-radius-sm);
+  outline: 2px solid var(--ui-primary);
+  outline-offset: 2px;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-width: 0;
+}
+
+/* The title, with the versions of the day under it. */
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.title {
+  margin: 0;
+  color: var(--ui-ink);
+  font-size: 24px;
+  font-weight: var(--ui-weight-heading);
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  text-wrap: balance;
+}
+
+.versions {
+  margin: 0;
+  color: var(--ui-muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.lead {
+  margin: 0;
+  color: var(--ui-ink2);
+  font-size: 16px;
+  line-height: 1.65;
+  text-wrap: pretty;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* The name of a section uses the label type of the site. */
+.sectionName {
+  margin: 0;
+  color: var(--ui-muted);
+  font-family: var(--ui-font-label);
+  font-size: var(--ui-text-xs);
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  line-height: 1.5;
+  text-transform: var(--ui-label-case);
+}
+
+.changes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding-left: 20px;
+  color: var(--ui-ink2);
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.changes li::marker {
+  color: var(--ui-muted);
+}
+
+/* A phone shows the day on a line of its own, above the title. */
+.mobile {
+  grid-template-columns: minmax(0, 1fr);
+  padding: 20px 0 36px;
+}
+
+.mobile .side {
+  position: static;
+}
+
+/* On a phone, the link of the day is a touch target of 44px. */
+.mobile .day {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--ui-touch-min);
+  font-size: 13px;
+}
+
+.mobile .body {
+  gap: 20px;
+}
+
+.mobile .title {
+  font-size: 21px;
+}
+
+.mobile .lead {
+  font-size: 15px;
+}

@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
 import { siteActionCopy } from '../../../../../src/marketing/access-copy'
+import { changelogLinkText } from '../../../../../src/marketing/changelog-copy'
 import { parityLinkCopy } from '../../../../../src/marketing/from-conductor/copy'
 import { abuseAddress } from '../../../../../src/marketing/legal-text'
 import { pricingLinkText } from '../../../../../src/marketing/pricing'
@@ -24,8 +25,9 @@ function Column(props: { title: string; children: ReactNode }) {
 
 /**
  * The foot of the site: the wordmark, the sections with the pricing page,
- * the docs, and the page for people who move from Conductor, the sign-in,
- * the address for abuse reports, and the legal pages beside the copyright.
+ * the docs, the page for people who move from Conductor, and the changelog,
+ * the sign-in, the address for abuse reports, and the legal pages beside the
+ * copyright.
  */
 export function SiteFooter(props: {
   links: SiteLinks
@@ -73,6 +75,11 @@ export function SiteFooter(props: {
           <li>
             <ScreenLink className={styles.link} to={props.links.fromConductor}>
               {parityLinkCopy.footer}
+            </ScreenLink>
+          </li>
+          <li>
+            <ScreenLink className={styles.link} to={props.links.changelog}>
+              {changelogLinkText}
             </ScreenLink>
           </li>
         </Column>

@@ -1,0 +1,40 @@
+/*
+ * One column centred on the page, at the width of the site header, so the
+ * days of the posts line up with the wordmark.
+ */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 56px;
+  width: 100%;
+  max-width: 1184px;
+  margin: 0 auto;
+  padding: 72px 32px 112px;
+  box-sizing: border-box;
+}
+
+/* The posts, newest first. Each one starts with a hairline. */
+.posts {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Without posts, one line under a hairline takes their place. */
+.empty {
+  margin: 0;
+  padding-top: 40px;
+  border-top: 1px solid var(--ui-border);
+  color: var(--ui-ink2);
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.mobile {
+  gap: 40px;
+  padding: 40px 20px 72px;
+}
+
+.mobile .empty {
+  padding-top: 28px;
+  font-size: 15px;
+}

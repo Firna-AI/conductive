@@ -186,7 +186,8 @@ waitlist, the commands that an agent runs on the Mac, and This Mac.
 
 [The marketing site](marketing-site.md) gives the home page and its
 pictures, the header and the footer, [the docs pages](marketing-site.md#the-docs),
-and [the pricing page](marketing-site.md#the-pricing-page).
+[the pricing page](marketing-site.md#the-pricing-page), and
+[the changelog page](marketing-site.md#the-changelog-page).
 It also gives the Terms, Privacy, and not-found pages, the comparison page,
 and the page before GitHub. The comparison page is the chosen design at
 `marketing/from-conductor/one-table`.
@@ -196,7 +197,10 @@ and words come from `src/marketing/from-conductor/`, the modules that the
 site also reads, as
 [the marketing site README](../../src/marketing/README.md#the-comparison-page)
 says. The pricing page reads its plans, its prices, and its words from
-`src/marketing/pricing.ts` in the same way. The pictures are captures of
+`src/marketing/pricing.ts` in the same way. The changelog page reads its
+words from `src/marketing/changelog-copy.ts`, which holds the words of the
+page for the site and the mockup. It draws sample posts in the shape of
+`src/marketing/changelog-model.ts`. The pictures are captures of
 real screens, such as the workspace
 screen with its chat and composer. A change to a screen or a shared part
 that a picture shows needs a new capture, with the

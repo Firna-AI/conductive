@@ -12,6 +12,7 @@ how a screen is built, and links to the other pages.
 | `marketing/privacy` | The Privacy notice, with the operator details and legal contact address       |
 | `marketing/not-found` | The page of the site for an address that it does not have                   |
 | `marketing/from-conductor` | The page for people who move from Conductor, with no scope note: one table of Conductor features, local and cloud, with a merged cell for each area |
+| `marketing/changelog` | The changelog page: one post for each day with a release, newest first, with its day, versions, and sections, then the page without posts |
 | `marketing/pictures` | One capture page for each picture of the home page, without a frame         |
 | `app`               | A ready workspace: two sessions and a file tab, and a pull request to merge   |
 | `app/sign-in`       | GitHub sign-in with the agreement to the Terms, the page before GitHub, the waitlist, the sign-in of an invite link, and the invitations that wait after it. Get started, the only first run, in three steps, with the first build of the new org. The return page after a GitHub App install in the Mac app. |
@@ -83,6 +84,13 @@ each part of a guide: lists, two guide actions, a table, and code. Its
 variant has "On this page" open. A desktop always shows the guides and
 the contents, so its view of each variant is the guide.
 [The docs](marketing-site.md#the-docs) gives the layout and its parts.
+
+`marketing/changelog` shows the changelog page, at `/changelog`, with
+three sample posts: a day with a lead and all three sections, a day with
+six versions, and a day with fixes only. Its `empty` variant shows the
+page without posts.
+[The changelog page](marketing-site.md#the-changelog-page) gives the
+layout and its parts.
 
 The first build of a new org shows in three places, from decision 150.
 Create org starts it, and Create org needs at least one repository, from

@@ -36,4 +36,5 @@ export const siteOriginHrefs: Readonly<Record<SitePage, string>> = {
   terms: `${requestValues.siteOrigin}${sitePaths.terms}`,
   privacy: `${requestValues.siteOrigin}${sitePaths.privacy}`,
   fromConductor: `${requestValues.siteOrigin}${sitePaths.fromConductor}`,
+  changelog: `${requestValues.siteOrigin}${sitePaths.changelog}`,
 }

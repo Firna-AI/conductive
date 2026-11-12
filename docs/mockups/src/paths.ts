@@ -8,6 +8,7 @@ export const paths = {
   privacy: 'marketing/privacy',
   notFound: 'marketing/not-found',
   fromConductor: 'marketing/from-conductor/one-table',
+  changelog: 'marketing/changelog',
   signIn: 'app/sign-in',
   signInTerms: 'app/sign-in/terms',
   waitlist: 'app/sign-in/waitlist',

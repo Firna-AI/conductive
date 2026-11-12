@@ -47,7 +47,9 @@ The phone header is 56 px high, and the desktop header 64 px. The gap
 after the wordmark is 16 px, and the footer keeps half the lockup height,
 12.5 px, under it. The Product column of the footer lists Pricing and
 Docs after Features, and it has Mac app. Features and Mac app lead to the same
-sections as in the header. The Account column of the footer has Sign up
+sections as in the header. The column ends with From Conductor and
+Changelog, which lead to the comparison page and to
+[the changelog page](#the-changelog-page). The Account column of the footer has Sign up
 and Sign in. The Docs links of the header and the footer lead to the docs
 overview, `marketing/docs`. [The docs](#the-docs) gives its layout.
 
@@ -80,7 +82,8 @@ Changes to those screens require recapture with the [capture steps](../../src/ma
   one scale.
 - Each claim on the page is one that the plan decides. The page shows no
   customer logos, testimonials, user counts, certifications, native mobile
-  app, API, other agents, or changelog.
+  app, API, other agents, or changelog posts. Its footer links the
+  changelog page.
 - The Mac app section shows [the Mac app](mac-app.md) of decision 62: a
   real screen of `mac-app/commands`, with the window buttons, the sidebar,
   and a command that waits for Allow. The Mac app has no phone layout, so
@@ -244,3 +247,46 @@ the page.
   extra hours.
 - The last call to action has the sentence and the two actions of the
   home page, through `ClosingCall`.
+
+## The changelog page
+
+`marketing/changelog` draws the changelog page, at `/changelog` on the
+product domain. Its words come from
+[`changelog-copy.ts`](../../src/marketing/changelog-copy.ts), which holds
+the words of the page for the site and the mockup. Each post has the shape
+of [`changelog-model.ts`](../../src/marketing/changelog-model.ts). The
+posts of the mockup are samples, not the posts of the site. The Product
+column of the footer links the page. The header keeps its links, because a
+phone header has no free width.
+
+- `ChangelogScreen` in `src/screens/ChangelogScreen.tsx` draws the page in
+  `SitePage`. The header marks no section. The parts live in
+  `src/components/changelog/`, and the sample posts live in
+  `src/fixtures/changelogPosts.ts`.
+- The top has the label, the title, and one sentence. The sentence links
+  the releases on GitHub, which give the complete list of changes.
+- One post follows for each day with a release, newest first. A post shows
+  its day, its title, its versions, its lead when it has one, and its
+  sections.
+- The day is a `time` element. Its words have the long form of the days
+  of the comparison page, such as "12 November 2026".
+- The versions show in full, such as "Versions 0.13.0, 0.14.0, and
+  0.15.0", so the find of the browser finds an installed version. One
+  version reads "Version 0.7.0". `versionsText` in the copy module gives
+  these words.
+- The sections come in the order New, Improved, and Fixed. Each section
+  has its name in the label type of the site, and a list with one change
+  on each line. A post leaves out a section without changes.
+- Each post has its day as its id, such as `changelog#2026-11-12`. The day
+  is a link to that address, so a visitor can copy the link of one day
+  without a script. The post that the address opens stops 16 px under the
+  top of the window.
+- A desktop shows the day in a column of its own, on the line of the
+  title. The day stays in view while the rest of its post scrolls past. A
+  phone shows the day above the title, and its link is a 44 px target.
+- A neutral hairline divides the posts. A post is not a box, and it has no
+  coloured edge.
+- Without posts, one line under a hairline says that the first post comes
+  with the next release. `marketing/changelog/empty` shows it.
+- One page holds every post, with no pages of posts. The page runs no
+  script, so it has no filter. It has no feed and no last call to action.

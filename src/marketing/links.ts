@@ -8,11 +8,17 @@ import {
 export const sourceRepositoryHref = `https://github.com/${sourceRepository.owner}/${sourceRepository.name}`
 
 /**
+ * The releases of the source repository on GitHub. They give the complete
+ * list of changes, which the changelog page links, and the Mac app files.
+ */
+export const releasesHref = `${sourceRepositoryHref}/releases`
+
+/**
  * The address of the newest DMG of the Mac app for a chip: the file with its
  * fixed name in the latest release of the source repository.
  */
 export function macDownloadHref(chip: MacChip): string {
-  return `${sourceRepositoryHref}/releases/latest/download/${macDmgNames[chip]}`
+  return `${releasesHref}/latest/download/${macDmgNames[chip]}`
 }
 
 /**
@@ -31,6 +37,7 @@ export const sitePaths = {
   terms: '/terms',
   privacy: '/privacy',
   fromConductor: '/from-conductor',
+  changelog: '/changelog',
 } as const
 
 /**
@@ -47,5 +54,6 @@ export function pageHrefs(
     terms: href(sitePaths.terms),
     privacy: href(sitePaths.privacy),
     fromConductor: href(sitePaths.fromConductor),
+    changelog: href(sitePaths.changelog),
   }
 }

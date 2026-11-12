@@ -1,0 +1,71 @@
+/* The top of the page uses the type of the text pages of the site. */
+.intro {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 720px;
+}
+
+.label {
+  color: var(--ui-muted);
+  font-family: var(--ui-font-label);
+  font-size: var(--ui-text-xs);
+  letter-spacing: 0.08em;
+  text-transform: var(--ui-label-case);
+}
+
+.title {
+  margin: 0;
+  color: var(--ui-ink);
+  font-size: 40px;
+  font-weight: var(--ui-weight-heading);
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  text-wrap: balance;
+}
+
+.lead {
+  margin: 0;
+  color: var(--ui-ink2);
+  font-size: 17px;
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+
+/* The link to the releases on GitHub, underlined as a link of text. */
+.link {
+  position: relative;
+  color: var(--ui-ink);
+  text-decoration: underline;
+  text-decoration-color: var(--ui-border2);
+  text-underline-offset: 3px;
+}
+
+/* Extend the touch area without moving the text or its line. */
+.link::after {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  left: 0;
+  height: max(100%, var(--ui-touch-min));
+  transform: translateY(-50%);
+  content: '';
+}
+
+.link:hover {
+  text-decoration-color: currentColor;
+}
+
+.link:focus-visible {
+  border-radius: var(--ui-radius-sm);
+  outline: 2px solid var(--ui-primary);
+  outline-offset: 2px;
+}
+
+.mobile .title {
+  font-size: 30px;
+}
+
+.mobile .lead {
+  font-size: 16px;
+}
