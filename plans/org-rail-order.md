@@ -21,7 +21,10 @@ orgs. The brainstorm notes are in
 
 Contract owners:
 
-- [Orgs and members](../docs/protocol/orgs-and-members.md).
+- [Org rail order](../docs/protocol/org-rail-order.md), which belongs to
+  [Orgs and members](../docs/protocol/orgs-and-members.md).
+- [Operator actions](../docs/protocol/operator-actions.md), for the
+  exception of decision 516 A.
 - [Command palette actions](../docs/protocol/command-palette-actions.md),
   which already lists the org rows in the order of the org rail.
 - The [members backend README](../worker/members/README.md).
@@ -311,25 +314,29 @@ Depends on: 1
 State the requirements of the rail order in the protocol docs and the
 public guide.
 
-- [ ] Add an "Org rail order" section to
+- [x] Add an "Org rail order" section to
       `docs/protocol/orgs-and-members.md`: an order for each person, saved
       on the server, drag, the tile menu, the phone long press, a new org
       at the end, a suspended or deleted org that moves too, and the keys
       Alt and Up or Down. Cite decisions 515, 516, and 517.
-- [ ] Add the exception of decision 516 A to
+- [x] Add the exception of decision 516 A to
       `docs/protocol/operator-actions.md`: the person's own rail order is
       not a change in a suspended org.
-- [ ] Check that `docs/protocol/command-palette.md` and
+- [x] Check that `docs/protocol/command-palette.md` and
       `docs/protocol/command-palette-actions.md` still state the right
       order. Change them only when they are wrong.
-- [ ] Update the public guide `src/marketing/docs/orgs-and-members.md` with
+- [x] Update the public guide `src/marketing/docs/orgs-and-members.md` with
       how to reorder the orgs. Follow
       [Website docs](../docs/protocol/website-docs.md).
-- [ ] Read the Terms page in `src/marketing/terms.ts` and the Privacy page
+- [x] Read the Terms page in `src/marketing/terms.ts` and the Privacy page
       in `src/marketing/privacy.ts` in full. Update each sentence that
       restates a changed fact.
-- [ ] Read each other public guide in `src/marketing/docs/` in full.
+- [x] Read each other public guide in `src/marketing/docs/` in full.
       Update each sentence that restates a changed fact.
+- [x] Move the rail order rules to their own page,
+      `docs/protocol/org-rail-order.md`, so that `orgs-and-members.md`
+      stays near 250 lines, and list it in
+      `docs/architecture/protocol-docs.md`.
 
 ## Milestone 3: Backend
 
