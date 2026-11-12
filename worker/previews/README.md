@@ -237,6 +237,16 @@ A quote can hide the directives after it from the browser, so the proxy's direct
 The reply keeps the server's `Expires`, `Date`, and `Age`.
 A 304 without `Cache-Control` gets none, so the browser keeps the rules of its stored reply.
 The outer Worker keeps these rules, because it answers the preview host with `previewResponse` from [http.ts](../http.ts).
+
+`PreviewTiming` in [timing.ts](timing.ts) records the steps of each proxied request.
+A reply that passes every check gets `Server-Timing` with `access`, `relay`, `check`,
+`upstream`, and `check-after`. The outer route in [router.ts](../features/router.ts)
+puts `lookup` and `workspace` first, only when the reply already has the header.
+So a refused request gets no timings. `workspace` holds the whole trip to the
+workspace object, so it includes the later steps. The body checks come after
+the headers, so the header leaves them out. The allowlist drops the previewed
+server's own `Server-Timing`.
+[Port previews](../../docs/protocol/terminal-previews-and-desktop.md#port-previews) states the requirement.
 [Port previews](../../docs/protocol/terminal-previews-and-desktop.md#port-previews) states the requirement.
 
 An org suspension blocks preview creation and launch with 403 `org_suspended`.
@@ -255,6 +265,7 @@ The shared sandbox predicate refuses old grants, cookies, and each stream batch 
 - [preview-launch-path.ts](../security/preview-launch-path.ts) matches the exact launch path for the gate and the Mac app.
 - [credentials.ts](credentials.ts) issues grants with `launchGrant`, redeems each grant once with `redeemLaunchGrant`, and checks the credential cookies. Each one seals a `PreviewViewer`.
 - [proxy.ts](proxy.ts) routes the authorizer page and POST, checks the credential cookie, and owns the request flow.
+- [timing.ts](timing.ts) records the duration of each step for the `Server-Timing` header.
 - [registry.ts](registry.ts) scopes HTTP and socket cancellation by workspace, preview, and viewer session.
 - [viewer-access.ts](viewer-access.ts) exports `readPreviewAccess`, the one D1 read of a preview and its viewer.
 - [connection.ts](connection.ts) wraps both HTTP directions with authorization and backpressure.

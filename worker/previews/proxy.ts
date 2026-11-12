@@ -13,6 +13,7 @@ import {
 } from './launch'
 import { PrivatePorts } from './ports'
 import { PreviewRegistry } from './registry'
+import { PreviewTiming, SERVER_TIMING_HEADER } from './timing'
 import { bridgeSocket } from './socket'
 import { readPreviewAccess } from './viewer-access'
 import type { ToolDependencies } from './types'
@@ -47,6 +48,7 @@ export class PreviewProxy {
 
   async fetch(request: Request): Promise<Response> {
     let connection: PreviewConnection | null = null
+    const timing = new PreviewTiming()
     try {
       const url = new URL(request.url)
       const suffix = this.env.PREVIEW_DOMAIN
@@ -87,7 +89,9 @@ export class PreviewProxy {
         this.dependencies.now(),
       )
       const row = identity
-        ? await readPreviewAccess(this.env, identity, this.dependencies.now())
+        ? await timing.step('access', () =>
+            readPreviewAccess(this.env, identity, this.dependencies.now()),
+          )
         : null
       if (!identity || !row)
         throw new HttpError(
@@ -97,16 +101,18 @@ export class PreviewProxy {
         )
       const scope = this.registry.get(row, identity)
       connection = scope.connect()
-      const port = await this.ports.get(row)
+      const port = await timing.step('relay', () => this.ports.get(row))
       recordActivity(this.dependencies, row.workspaceId)
-      await scope.authorize()
+      await timing.step('check', scope.authorize)
       let upstream: Response
       try {
         const outgoing = portRequest(request, port, row.port, {
           body: connection.wrap(request.body),
           signal: connection.signal,
         })
-        upstream = await this.dependencies.fetch(outgoing)
+        upstream = await timing.step('upstream', () =>
+          this.dependencies.fetch(outgoing),
+        )
       } catch {
         this.ports.invalidate(row)
         throw new ProviderError('unavailable', 503)
@@ -117,8 +123,10 @@ export class PreviewProxy {
         upstream.webSocket?.close(1008, 'Connection closed.')
         throw new ProviderError('unavailable', 503)
       }
-      await scope.authorize()
+      await timing.step('check-after', scope.authorize)
       const headers = portResponseHeaders(upstream, request, port, row.port)
+      // Only a reply that passed every check gets timings, so no refusal shows its reason.
+      headers.set(SERVER_TIMING_HEADER, timing.header())
       if (request.headers.get('Upgrade')?.toLowerCase() === 'websocket') {
         const protocol = upstream.headers.get('Sec-WebSocket-Protocol')
         if (

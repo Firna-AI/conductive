@@ -134,6 +134,22 @@ decision number names a dated record, as
   the preview.
 - Each response on the preview domain carries `Referrer-Policy:
   no-referrer`. Reason: other sites have no need for the preview address.
+- Each preview reply that passes every check carries a `Server-Timing`
+  header (preview timing decision 1). It gives the duration of each step of
+  the Worker: the hostname lookup, the trip to the workspace object, the
+  access read, the relay lookup, the access check before the call, the call
+  to the sandbox, and the access check after it. Preview timing decisions
+  are the decisions of the change that added this rule.
+- Reason: a preview of a large dev server took 10 seconds or more, and
+  only these durations show where a request waits.
+- The header holds fixed step names and whole milliseconds, and no ID,
+  address, or secret. A refused request gets no such header, so a refusal
+  does not show which check failed.
+- Risk: the previewed page can read the durations of its own requests.
+- The access checks of the body come after the headers, so the header
+  cannot give them.
+- The header of the previewed server never reaches the browser, as the
+  response header allowlist drops it.
 - A reply of the previewed server keeps its cache rules, and only the
   viewer's browser may keep it. A reply that gives the browser no
   lifetime must be checked again before each reuse.
