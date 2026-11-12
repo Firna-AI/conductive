@@ -206,10 +206,9 @@ export function WorkspaceListScreen(props: {
     )
   }
   if (list === 'deleted' || list === 'deleted-suspended') {
+    // The rail leaves out a deleted org, so no tile is current.
     const rail: RailState = {
-      orgs: orgList,
-      current: deletedOrg.org,
-      deleted: deletedOrg.org,
+      orgs: orgList.filter((org) => org.key !== deletedOrg.org),
     }
     return (
       <AppFrame rail={rail}>

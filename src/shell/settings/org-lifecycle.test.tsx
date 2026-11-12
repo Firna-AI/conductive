@@ -34,7 +34,7 @@ function railOrgs(view: HTMLElement): string[] {
 }
 
 describe('the end of an org in the app', () => {
-  test('Delete org opens the restore page of the faded org, and Restore shows the org again', async () => {
+  test('Delete org takes the org out of the rail and opens the next org, and Restore on the Account page brings it back', async () => {
     holdAnimationFrames()
     const server = new FakeApiServer()
     const app = await startedApp(server)
@@ -54,22 +54,25 @@ describe('the end of an org in the app', () => {
     const dialog = byDialog('Delete Acme?')
     await typeText(byRole('textbox', 'Type Acme to confirm', dialog), 'Acme')
     await press(byRole('button', 'Delete org', dialog))
-    const restore = await waitFor(
-      () => queryByRole('button', 'Restore Acme', view),
-      'the restore page of Acme',
-    )
-    const deleted = {
-      address: navigation.href(),
-      title: view.querySelector('main h2, main h1')?.textContent,
-      rail: railOrgs(view),
-    }
-    await press(restore)
     await waitFor(
-      () => queryByRole('button', 'Restore Acme', view) === null,
+      () => navigation.href() === routes.org('futex'),
+      'the next org that is not deleted',
+    )
+    const deleted = { address: navigation.href(), rail: railOrgs(view) }
+    await press(byRole('link', 'Account', view))
+    const section = await waitFor(
+      () => view.querySelector('ul[aria-label="Deleted orgs"]'),
+      'the Deleted orgs section of the Account page',
+    )
+    const row = section.textContent
+    await press(byRole('button', 'Restore Acme', view))
+    await waitFor(
+      () => view.querySelector('ul[aria-label="Deleted orgs"]') === null,
       'Acme as an active org',
     )
     expect({
       deleted,
+      row,
       restored: {
         address: navigation.href(),
         rail: railOrgs(view),
@@ -80,12 +83,12 @@ describe('the end of an org in the app', () => {
         .filter((line) => !line.startsWith('GET ')),
     }).toEqual({
       deleted: {
-        address: routes.org(org),
-        title: 'Acme is deleted on 22 January',
-        rail: ['Acme, deleted', 'Futex', 'Firna', 'Create org', 'Account'],
+        address: routes.org('futex'),
+        rail: ['Futex', 'Firna', 'Create org', 'Account'],
       },
+      row: 'ACAcmeEverything is deleted on 22 JanuaryRestore',
       restored: {
-        address: routes.org(org),
+        address: routes.account(),
         rail: ['Acme', 'Futex', 'Firna', 'Create org', 'Account'],
         org: { id: org, name: 'Acme', initials: 'AC', role: 'admin' },
       },

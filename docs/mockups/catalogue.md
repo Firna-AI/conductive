@@ -185,6 +185,10 @@ the tabs of the org settings are. Its child pages:
 - `app/account/invites` has the invite code while sign-ups are paused.
   [The waitlist, suspensions, and the operator](catalogue-operator.md)
   gives its variants.
+- `app/account/deleted-orgs` has the Deleted orgs section at the end of
+  General, with Acme Labs and Restore. Its `suspended` variant
+  has the org after a suspension, without Restore. Its `failed` variant
+  has a Restore that failed, with the error under the row.
 - `app/account/shortcuts` shows the Keyboard shortcuts tab in a browser, as
   the keyboard shortcuts section below gives.
 

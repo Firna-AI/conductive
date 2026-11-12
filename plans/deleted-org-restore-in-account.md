@@ -37,9 +37,12 @@ Each call below is my call, made on 12 November 2026. The user said
   spans all orgs, and a section that shows only when it has content adds
   nothing for most users. A new Account tab was left out, because a tab
   that is empty on most days is noise in the tab row.
-- **Row:** each row shows the org tile, the name, "Deleted on <day>.
-  Everything is deleted on <day>.", and the button "Restore <name>". An
-  error shows under its row, as the deleted org page shows it now.
+- **Row:** each row shows the faded org tile, the name, "Everything is
+  deleted on <day>", and the button Restore. The name of the button for a
+  screen reader is "Restore <name>". An error shows under its row, as the
+  deleted org page shows it now. The mockups showed that "Restore <name>"
+  squeezed the name and the day on a phone, so the visible label is
+  short.
 - **After Restore:** the org goes back to the rail at its old place, and
   the row leaves the section. The page stays on Account. Reason: the user
   can restore more than one org, and the tile in the rail is the way back.
@@ -85,35 +88,35 @@ Depends on: none
 The rail, the phone org sheet, the Account page, and the Delete org dialog
 change. The deleted org page stays.
 
-- [ ] Add the Account page state with the Deleted orgs section: one org
+- [x] Add the Account page state with the Deleted orgs section: one org
       with Restore, and one suspended org without Restore. Draw desktop
       and phone.
-- [ ] Add the state of a failed Restore, with the error under its row.
-- [ ] Take the faded tile out of the rail and the phone org sheet in each
+- [x] Add the state of a failed Restore, with the error under its row.
+- [x] Take the faded tile out of the rail and the phone org sheet in each
       mockup that shows a deleted org.
-- [ ] Update the `app/orgs/deleted` and `app/orgs/suspended/deleted`
+- [x] Update the `app/orgs/deleted` and `app/orgs/suspended/deleted`
       mockups: the page is reachable only by its address. Update their
       descriptions and rationales with the decision of this plan.
-- [ ] Update the text of the Delete org dialog mockup.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Update the text of the Delete org dialog mockup.
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages.
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
 
 ## Milestone 2: Documentation and protocol
 
 Depends on: 1
 
-- [ ] Update [Delete org](../docs/protocol/orgs-and-members.md#delete-org):
+- [x] Update [Delete org](../docs/protocol/orgs-and-members.md#delete-org):
       a deleted org leaves the rail, and Account › General lists it with
       Restore for its admins.
-- [ ] Update Switch to org 1 to 9 and the palette docs where they count a
+- [x] Update Switch to org 1 to 9 and the palette docs where they count a
       deleted org.
-- [ ] Update the public guide: "Open the faded org" becomes the Deleted
+- [x] Update the public guide: "Open the faded org" becomes the Deleted
       orgs section of Account settings.
-- [ ] Read the Terms and the Privacy page in full. Update each sentence
+- [x] Read the Terms and the Privacy page in full. Update each sentence
       that restates the faded org or the place of Restore.
-- [ ] Read each public guide in full for the same facts.
-- [ ] Update the READMEs that the contract owners list.
+- [x] Read each public guide in full for the same facts.
+- [x] Update the READMEs that the contract owners list.
 
 ## Milestone 3: Rail and app opening
 
@@ -121,13 +124,13 @@ Tags: ui
 
 Depends on: 2
 
-- [ ] Leave deleted orgs out of `OrgRail`, the phone org sheet in
+- [x] Leave deleted orgs out of `OrgRail`, the phone org sheet in
       `HomeList.tsx`, and the keys of Switch to org 1 to 9.
-- [ ] Make `setupOrg` give no deleted org. Check `OpenApp` and the Get
+- [x] Make `setupOrg` give no deleted org. Check `OpenApp` and the Get
       started steps.
-- [ ] After Delete org, open the next org that is not deleted, else Get
+- [x] After Delete org, open the next org that is not deleted, else Get
       started. Update the dialog text.
-- [ ] Update the tests of each changed part.
+- [x] Update the tests of each changed part.
 
 ## Milestone 4: Deleted orgs section
 
@@ -135,11 +138,11 @@ Tags: ui
 
 Depends on: 3
 
-- [ ] Add the Deleted orgs section to Account › General. Reuse the
+- [x] Add the Deleted orgs section to Account › General. Reuse the
       restore call and the error notice of `DeletedOrgPage`.
-- [ ] Put the restored org back into the org list, as the deleted org
+- [x] Put the restored org back into the org list, as the deleted org
       page does now.
-- [ ] Add DOM tests: the section hides without a deleted org, Restore
+- [x] Add DOM tests: the section hides without a deleted org, Restore
       works, a failed Restore shows its error, and a suspended org shows
       no Restore.
 - [ ] Check the section in a browser, desktop and phone.

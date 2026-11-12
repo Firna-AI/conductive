@@ -148,10 +148,16 @@ Only an admin can delete the org.
 5. Select **Delete org**.
 
 Conductive stops its cloud computers and hides the org from members at once.
+The org leaves the org list, and Conductive opens your next org.
 Admins can restore it for seven days before deletion completes.
 
-Open the faded org in the org list to find its restore action.
-The action says **Restore** followed by the org name.
+To restore a deleted org:
+
+1. Open your **Account** settings.
+2. Find the org under **Deleted orgs** on the **General** tab.
+3. Select **Restore** beside the org.
+
+The org returns to the org list.
 Restoring brings back its workspaces, chats, and settings.
 Archived workspaces stay archived after the org returns.
 Their existing Restore deadlines continue to apply.

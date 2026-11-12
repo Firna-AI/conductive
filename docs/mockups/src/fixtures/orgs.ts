@@ -86,6 +86,15 @@ export const deletedOrg = {
 } as const satisfies { org: OrgKey; deletes: string }
 
 /**
+ * The deleted org that the Account page lists for its admin: Acme Labs,
+ * which the rail no longer shows.
+ */
+export const accountDeletedOrg = {
+  org: 'labs',
+  deletes: '12 November',
+} as const satisfies { org: OrgKey; deletes: string }
+
+/**
  * An org that the operator suspended: its cloud computers stop, and its
  * members can open it and read everything in it, without changes.
  */

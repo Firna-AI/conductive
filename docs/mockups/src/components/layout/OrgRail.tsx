@@ -25,8 +25,6 @@ export type RailState = {
    * also shows the key that opens it.
    */
   hint?: OrgKey | 'operator'
-  /** An org that an admin deleted, which waits for its restore. */
-  deleted?: OrgKey
   /**
    * An org that the operator suspended. Its tile looks as before, because
    * its members still open it, and the org's pages show the notice.
@@ -68,29 +66,11 @@ function RailLink(props: {
   )
 }
 
-/** An org of the rail that an admin deleted or the operator suspended. */
-type OrgState = 'deleted' | 'suspended'
-
-/** Whether an org of the rail is deleted or suspended. */
-function orgState(rail: RailState, key: OrgKey): OrgState | undefined {
-  if (rail.deleted === key) return 'deleted'
-  if (rail.suspended === key) return 'suspended'
-  return undefined
-}
-
 /** The page that an org of the rail opens, and the name of its link. */
-function orgLink(
-  org: Org,
-  state: OrgState | undefined,
-): { to?: string; label: string } {
-  switch (state) {
-    case 'deleted':
-      return { to: paths.deletedOrg, label: `${org.name}, deleted` }
-    case 'suspended':
-      return { to: paths.suspendedOrg, label: `${org.name}, suspended` }
-    case undefined:
-      return { to: orgLinks[org.key], label: org.name }
-  }
+function orgLink(org: Org, suspended: boolean): { to?: string; label: string } {
+  return suspended
+    ? { to: paths.suspendedOrg, label: `${org.name}, suspended` }
+    : { to: orgLinks[org.key], label: org.name }
 }
 
 /**
@@ -109,17 +89,11 @@ function OrgItem(props: {
   hint: boolean
   /** The key that opens the org, which its hint shows. */
   shortcut?: Shortcut
-  state?: OrgState
+  suspended: boolean
 }) {
   const { org } = props
-  const { to, label } = orgLink(org, props.state)
-  const avatar = <OrgTile current={props.current} org={org} size={26} />
-  const tile =
-    props.state === 'deleted' ? (
-      <span className={styles.deleted}>{avatar}</span>
-    ) : (
-      avatar
-    )
+  const { to, label } = orgLink(org, props.suspended)
+  const tile = <OrgTile current={props.current} org={org} size={26} />
   return (
     <li className={styles.item}>
       {to ? (
@@ -164,7 +138,8 @@ function OperatorItem(props: { current: boolean; hint: boolean }) {
 
 /**
  * The narrow rail beside the sidebar: the logo, the orgs of the user, a
- * way to create another, and the account at the bottom. An operator also
+ * way to create another, and the account at the bottom. A deleted org
+ * is not in the rail: the Account page lists it with Restore. An operator also
  * gets Operator above the account. The hint of an org shows the key of its
  * place, counted from the top, on the keyboard of the page.
  */
@@ -183,7 +158,7 @@ export function OrgRail(props: RailState) {
             key={org.key}
             org={org}
             shortcut={orgShortcut(index, host)}
-            state={orgState(props, org.key)}
+            suspended={props.suspended === org.key}
           />
         ))}
         <li className={styles.item}>

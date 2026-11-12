@@ -95,9 +95,10 @@ plan limits.
   one is added, as `app/orgs/new/no-repository` shows. When the GitHub App
   reaches no repository, the list asks the person to give it access, with
   Manage access, as `app/orgs/new/no-access` shows.
-- Delete org asks for the org name. The deleted org stays faded in the rail
-  of its admins until the date when everything is deleted, and its page
-  offers Restore.
+- Delete org asks for the org name. The deleted org leaves the rail. Until
+  the date when everything is deleted, the General tab of the Account page
+  lists it for its admins with Restore, as `app/account/deleted-orgs`
+  shows. Its page still offers Restore at its address.
 - The operator can suspend an org, from decision 129. Its members still
   open it and read its chats, and its notice gives the abuse address.
   Nothing in it can change, so its screens show no action that it refuses,

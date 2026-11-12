@@ -19,7 +19,8 @@ says.
   (decision 80). No org has a Boat key.
 - Orgs that mirror GitHub accounts were rejected, because a new org would
   then need the GitHub App on another GitHub account.
-- The org rail lists the orgs of the user, and the user can create orgs.
+- The org rail lists the orgs of the user that are not deleted, and the
+  user can create orgs.
 - Create org accepts a name, custom initials, and chosen repositories.
 - Create org requires at least one repository (decision 151 of PR #92). The create
   screen says so, and Create org stays off until the person chooses one.
@@ -245,8 +246,24 @@ says.
   unpushed work of a member.
 - The delete also removes the saved snapshots of the org, with the org
   image.
-- For 7 days, the deleted org stays faded in the rail of its admins, and
-  its page offers Restore. Its other members cannot open it.
+- A deleted org leaves the org rail at once. Its other members cannot
+  open it.
+- For 7 days, the General tab of the Account page lists the deleted org
+  for its admins, with Restore. The section shows only while the user has
+  a deleted org.
+- The address of a deleted org still opens its page, and that page also
+  offers Restore. So an old link to the org is not a dead end.
+- Reason: the faded tiles of deleted orgs stayed in the way after a
+  delete, as the user said on 12 November 2026. A faded tile in the rail
+  was the earlier rule. A new tab of the Account page was rejected,
+  because it is empty on most days.
+- Delete org then opens the next org that is not deleted, else Get
+  started. Its question says that an admin restores the org from Account
+  settings.
+- A person whose orgs are all deleted counts as a person without an org.
+  So the app opens Get started, as for a new person.
+- A suspended deleted org offers no Restore, in the Account page or on
+  its page, because a suspended org refuses a restore.
 - Restore brings the org back as it was. Its workspaces start again when
   they open. A workspace whose owner is suspended does not start, as
   [Operator actions](operator-actions.md#starts-stops-and-builds) says.

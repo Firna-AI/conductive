@@ -84,7 +84,9 @@ with the message of the API.
   no sentence that only an admin changes the value. The shell gives the
   read-only tabs to every person of a suspended org.
 - `onDeleted` gets the org with `deletion.deletesAt`. The shell keeps the
-  org faded in the rail of its admins and opens `DeletedOrgPage`.
+  org in its list, leaves it out of the rail, and opens the next org that
+  is not deleted, else Get started. The Account page lists the org with
+  Restore, and its address still opens `DeletedOrgPage`.
 - `onRestored` gets the active org of the API's answer, with its `initials`
   when the answer has them. The shell shows it as an active org again. Its
   workspaces start only when they open.

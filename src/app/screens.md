@@ -16,8 +16,8 @@ the Help row of the command palette opens.
 - Get started has three steps: the GitHub App, an org, and Claude or
   Codex. A reply of the API names only these steps.
 - Only the GitHub App step comes from that reply. The org step and the org
-  of Get started follow the org list, also a deleted org, as the address
-  `/` does. The agent step follows the logins of the account. So a leave of
+  of Get started follow the orgs that are not deleted, as the address `/`
+  does. A person whose orgs are all deleted gets Create org again. The agent step follows the logins of the account. So a leave of
   the last org offers Create org again, and a connect on Account completes
   its step at once. `setupSteps` in `setup-steps.ts` derives them, and each
   screen reads them through `AppModel.getStarted`.

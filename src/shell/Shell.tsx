@@ -27,8 +27,7 @@ import { Waiting } from './waitlist/Waiting'
 
 /**
  * The app opens as usual: Get started, or the org of Get started. That is
- * the first org that is not deleted, else a deleted one, whose page offers
- * Restore.
+ * the first org that is not deleted.
  */
 function OpenApp() {
   const app = useApp()

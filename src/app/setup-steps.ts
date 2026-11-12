@@ -14,11 +14,11 @@ export interface SetupSources {
 
 /**
  * The org of Get started and of the address `/`: the first org that is not
- * deleted, else a deleted org, whose page offers Restore. Null without an
- * org.
+ * deleted. Null without one, so a person whose orgs are all deleted gets
+ * Create org again. The Account page lists the deleted orgs, with Restore.
  */
 export function setupOrg(orgs: readonly OrgSummary[]): OrgSummary | null {
-  return orgs.find((org) => !org.deletion) ?? orgs[0] ?? null
+  return orgs.find((org) => !org.deletion) ?? null
 }
 
 /** The steps from the reply of the API, the org list, and the account. */

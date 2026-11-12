@@ -72,7 +72,6 @@ function OrgItem(props: {
 }) {
   const { org } = props
   const hint = useShortcutHint(props.command ?? undefined)
-  const tile = <OrgTile current={props.current} org={org} size={26} />
   return (
     <li className={classes(styles.item, layout.railItem)}>
       <RailLink
@@ -81,7 +80,7 @@ function OrgItem(props: {
         label={props.label}
         to={routes.org(org.id)}
       >
-        {org.deletion ? <span className={styles.deleted}>{tile}</span> : tile}
+        <OrgTile current={props.current} org={org} size={26} />
       </RailLink>
       <span aria-hidden className={classes(styles.hint, layout.railHint)}>
         {org.name}
@@ -98,7 +97,7 @@ function OrgItem(props: {
 /**
  * Offers the keys of Switch to org 1 to 9 while the rail shows. Each key
  * opens the org at its place, counted from the top, as the tile does, also
- * a deleted org and the org of the page.
+ * the org of the page.
  */
 function useOrgKeys(orgs: readonly OrgSummary[]): void {
   const open = useOpenPage()
@@ -127,9 +126,9 @@ function OperatorItem(props: { current: boolean }) {
 
 /**
  * The narrow rail beside the sidebar: the logo, the orgs of the user, Create
- * org, and the account at the bottom. A deleted org stays faded for its
- * admins until the day when everything is deleted. A suspended org looks
- * the same, and the name of its link says that it is suspended. An
+ * org, and the account at the bottom. `orgs` holds no deleted org: the
+ * Account page lists those, with Restore. A suspended org looks as usual,
+ * and the name of its link says that it is suspended. An
  * operator also gets Operator above the account. Nobody else sees it.
  * While the rail shows, the keys of Switch to org 1 to 9 open its orgs.
  */
@@ -163,11 +162,7 @@ export function OrgRail(props: {
             current={org.id === currentOrg}
             key={org.id}
             label={
-              org.deletion
-                ? `${org.name}, deleted`
-                : isSuspended(org, refused)
-                  ? `${org.name}, suspended`
-                  : org.name
+              isSuspended(org, refused) ? `${org.name}, suspended` : org.name
             }
             org={org}
           />

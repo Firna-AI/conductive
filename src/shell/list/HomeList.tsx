@@ -3,6 +3,7 @@ import { Check, ChevronDown, Gauge, Plus } from 'lucide-react'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import { SuspendedOrgNotice } from '../../../docs/mockups/src/components/orgs/SuspendedOrgNotice'
 import styles from '../../../docs/mockups/src/screens/WorkspaceListScreen.module.css'
+import { activeOrgs } from '../../app/kept-org'
 import { routes } from '../../app/router'
 import { useStore } from '../../app/store'
 import type { User } from '../../shared/api'
@@ -18,8 +19,8 @@ import { NewWorkspaceLink, RoutinesLink, SettingsLink } from './Sidebar'
 import { OrgList } from './OrgList'
 
 /**
- * The org switcher of a phone, which has no rail: every org, Create org,
- * and the account. An operator also gets Operator under the account.
+ * The org switcher of a phone, which has no rail: every org that is not
+ * deleted, Create org, and the account. An operator also gets Operator under the account.
  */
 function OrgSwitcherSheet(props: {
   current: string
@@ -27,7 +28,7 @@ function OrgSwitcherSheet(props: {
   close: () => void
 }) {
   const app = useApp()
-  const orgs = useStore(app.orgs)
+  const orgs = activeOrgs(useStore(app.orgs))
   const operator = useStore(app.account.account)?.operator === true
   return (
     <Sheet close={props.close} title="Orgs">
@@ -46,9 +47,7 @@ function OrgSwitcherSheet(props: {
                   org={org}
                   size={26}
                 />
-                <span className={styles.sheetLabel}>
-                  {org.deletion ? `${org.name}, deleted` : org.name}
-                </span>
+                <span className={styles.sheetLabel}>{org.name}</span>
                 {org.id === props.current ? (
                   <Check aria-hidden className={styles.check} size={15} />
                 ) : null}
