@@ -1,0 +1,23 @@
+[package]
+name = "cnd-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+description = "Conductive cloud computer commands"
+publish = false
+
+[[bin]]
+name = "conductive"
+path = "src/main.rs"
+
+[dependencies]
+cli-updater = { workspace = true }
+cli-release-interface = { workspace = true }
+internal-error = { workspace = true }
+clap = { version = "4.6.7", features = ["derive"] }
+thiserror = "2.0.21"
+
+[lints]
+workspace = true
