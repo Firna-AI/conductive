@@ -46,6 +46,10 @@ describe('CommandChoices', () => {
         name: 'Allow all commands for 15 minutes',
         scope: 'Every command from this workspace, on this Mac',
       },
+      {
+        name: 'Allow all commands until I stop',
+        scope: 'Every command from this workspace, on this Mac, until you stop',
+      },
     ])
     expect(document.activeElement).toBe(byRole('menuitem', 'Always allow'))
     await pressKey('ArrowDown')
@@ -53,13 +57,18 @@ describe('CommandChoices', () => {
       byRole('menuitem', 'Allow all commands for 15 minutes'),
     )
 
-    await press(byRole('menuitem', 'Allow all commands for 15 minutes'))
-    expect(answers).toEqual(['allow-workspace-15-minutes'])
+    await pressKey('ArrowDown')
+    expect(document.activeElement).toBe(
+      byRole('menuitem', 'Allow all commands until I stop'),
+    )
+
+    await press(byRole('menuitem', 'Allow all commands until I stop'))
+    expect(answers).toEqual(['allow-workspace-until-stop'])
     expect(queryByRole('menu', 'More ways to allow')).toBeNull()
 
     await view.rerender(
       <CommandChoices
-        answering="allow-workspace-15-minutes"
+        answering="allow-workspace-until-stop"
         onAnswer={answer}
       />,
     )

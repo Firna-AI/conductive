@@ -95,7 +95,7 @@ describe('the bar of the 15 minutes of the Mac app', () => {
     await settle()
     expect({ shown, reads: settingsReads(server) - before }).toEqual({
       shown:
-        'Every command from this workspace runs on this Mac without asking. 14:32 left Stop',
+        'Every command from this workspace runs on this Mac without asking. 14:32 left Keep until I stop Stop',
       reads: 1,
     })
   })

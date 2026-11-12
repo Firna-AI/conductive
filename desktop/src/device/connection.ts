@@ -33,6 +33,8 @@ interface ConnectionDependencies {
     send: (message: DeviceToWorker) => boolean,
     invalid: () => void,
   ): DeviceSession
+  /** The sign-in of the app is gone, expired, or rejected. */
+  signedOut(): void
   warn(): void
 }
 
@@ -81,16 +83,17 @@ export function createDeviceConnection(dependencies: ConnectionDependencies) {
     }
     try {
       const credential = await dependencies.readCredential()
-      if (
-        !live() ||
-        !credential ||
-        credential.expiresAt <= dependencies.clock.now()
-      )
+      if (!live()) return
+      if (!credential || credential.expiresAt <= dependencies.clock.now()) {
+        dependencies.signedOut()
         return
+      }
       cancelExpiry = dependencies.clock.after(
         credential.expiresAt - dependencies.clock.now(),
         () => {
-          if (live()) clear()
+          if (!live()) return
+          clear()
+          dependencies.signedOut()
         },
       )
       const authentication = new AbortController()
@@ -103,6 +106,7 @@ export function createDeviceConnection(dependencies: ConnectionDependencies) {
       if (!live()) return
       cancelBeat?.()
       if (!account) {
+        dependencies.signedOut()
         ended(true)
         return
       }

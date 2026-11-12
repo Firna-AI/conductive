@@ -14,9 +14,10 @@ the workspace and in This Mac ends it, as Stop ends the 15 minutes today.
 
 The change does not replace the 15 minutes, does not change Always allow,
 and does not add a grant for all workspaces or for all Macs.
-Decisions 1 and 2 wait for the user: when the new grant ends if the user
-never presses Stop, and how the user gets more time while the 15 minutes
-run.
+On 2026-11-12 the user answered both decisions: 1 = A and 2 = B. The
+grant until Stop lives only in the memory of the Mac app, so Stop, a quit,
+or a sign-out ends it. The bar of the 15 minutes gets "Keep until I stop",
+which turns the running 15 minutes into a grant until Stop.
 
 This plan names its decisions after the change, as Mac until-stop
 decision 1, as [Decision numbers](../docs/architecture.md#decision-numbers)
@@ -56,6 +57,7 @@ Contract owners:
 - **Previous examples:** Decision 62 chose the 15 minutes and saved them on the Mac. `plans/` holds no earlier work on a grant without an end time.
 - **Recommendation:** A. It does what the user asked: the grant lasts until the user stops it, also across several messages to the agent, and a restart or a sign-out still ends it. The options check recommended D, because D ends a forgotten grant with the work that needed it. D is the safest option, but it asks again at each new message, which the words "until I stop" do not suggest. F is a stricter form of A.
 - **Action:** ask the user, because the options differ in security and convenience, and no requirement chooses between them.
+- **Answer:** A, chosen by the user on 2026-11-12.
 
 ### 2. More time while the 15 minutes run
 
@@ -76,14 +78,11 @@ Contract owners:
 - **Previous examples:** None found.
 - **Recommendation:** B. It puts the choice where the user looks when the time runs out, with one press.
 - **Action:** ask the user, because B adds a new control and a new action between the page and the Mac, and no requirement covers it.
+- **Answer:** B, chosen by the user on 2026-11-12.
 
 ## Design
 
-The mechanics below assume the recommended option A of decision 1. With
-B, the grant goes into the permission file in a new format. With C or E,
-the new choice is a second timed choice, and the bar keeps the time left.
-With D, the grant also holds the turn ID, and `permits` compares it.
-The milestones get the TODOs of decision 2 when the user answers.
+The mechanics below apply decision 1 A and decision 2 B.
 
 ### Terms
 
@@ -107,9 +106,18 @@ The milestones get the TODOs of decision 2 when the user answers.
   `permits` allows a command when the grant of its workspace has no end
   time or an end time in the future. `settings` reports both kinds.
 - `allowWorkspace` takes the kind of grant. A grant that runs is kept, as
-  today. Stop removes either kind. Stop saves the file only when the file
-  held the grant, so a Stop of a grant until Stop reports done, never
-  done but not saved.
+  today. Stop removes either kind.
+- The store knows which workspaces the permission file holds, from the
+  last read or save. Stop saves the file only when the file holds the
+  workspace, so a Stop of a grant until Stop reports done, never done but
+  not saved.
+- The settings action `keep-workspace` (decision 2 B) turns the running
+  15 minutes of a workspace into a grant until Stop. The Worker accepts it
+  in `settingsAction` and relays it. The Mac app removes the timer and
+  tries to save the file without the timed grant. A failed save does not
+  change the outcome: the file then keeps only the rest of the original
+  15 minutes, which the user already gave. Keep reports done, or failed
+  when no 15 minutes run.
 - The page, `src/chat/device/settings-results.ts`, `AllowAllBar.tsx`,
   and `SavedChoices.tsx` filter grants with `expiresAt > now`. Each of
   them treats `null` as a grant that runs.
@@ -126,7 +134,10 @@ The milestones get the TODOs of decision 2 when the user answers.
     sign-in session.
   - The Worker names another account than the one before.
 - The page shows the new choice in `CommandChoices`, the bar in
-  `AllowAllBar`, and the row in `SavedChoices`. The dev backend in
+  `AllowAllBar`, and the row in `SavedChoices`. Keep and Stop of one
+  workspace share one control in `settings-results.ts`, so only one of
+  them waits at a time. A Keep that failed shows "Not kept" in the bar
+  with its cause. Try again in the bar repeats only a Stop. The dev backend in
   `src/chat/dev/dev-mac.ts` and `dev-mac-settings.ts` accepts the new
   action.
 
@@ -162,26 +173,29 @@ Depends on: none
 The Mac app mockups show the new choice, the bar of a grant until Stop,
 and This Mac with both kinds of grant.
 
-- [ ] Add "Allow all commands until I stop" to the choices of
+- [x] Add "Allow all commands until I stop" to the choices of
       `docs/mockups/src/components/mac/CommandActions.tsx`, with its
       scope line and a link to its result.
-- [ ] Add the state of a grant until Stop to
+- [x] Add the state of a grant until Stop to
       `docs/mockups/src/components/mac/AllowAllBar.tsx`, with "Until you
       stop" in place of the time left.
-- [ ] Add a result state "All commands until Stop" to
+- [x] Add a result state "All commands until Stop" to
       `docs/mockups/src/entries/mac-app/commands/index.mockup.tsx`, and
       update its notes that name the menu choices. Cite Mac until-stop
       decisions 0 and 1.
-- [ ] Update the This Mac mockup in
+- [x] Update the This Mac mockup in
       `docs/mockups/src/entries/mac-app/this-mac/` with the renamed list
       and one row of each kind.
-- [ ] Update the stop mockup notes in
+- [x] Update the stop mockup notes in
       `docs/mockups/src/entries/mac-app/stop/index.mockup.tsx` so that
       they name both kinds of grant.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages with
+- [x] Add "Keep until I stop" to the bar of the 15 minutes, and a state
+      where Keep failed (decision 2 B).
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages with
       `npm run mockups:serve`.
-- [ ] Update the design and the TODOs of this plan for each problem that
-      the mockups show.
+- [x] Update the design and the TODOs of this plan for each problem that
+      the mockups show. The This Mac mockup had no list of grants, so
+      Milestone 1 added it, as the app shows it.
 
 ## Milestone 2: Documentation and protocol
 
@@ -190,21 +204,21 @@ Depends on: 1
 The protocol doc, the legal page, and the public guides state the new
 choice and how long it lasts.
 
-- [ ] Update [Permissions and Mac commands](../docs/protocol/desktop-commands.md):
+- [x] Update [Permissions and Mac commands](../docs/protocol/desktop-commands.md):
       the menu choices, the new choice and its scope, the bar, Saved
       choices, and the reason line with five choices. Cite Mac until-stop
       decisions 0 and 1, and name the short name of the change.
-- [ ] Read the Terms page in `src/marketing/terms.ts` and the Privacy
+- [x] Read the Terms page in `src/marketing/terms.ts` and the Privacy
       page in `src/marketing/privacy.ts` in full. Update each sentence
       that restates the choices or Stop.
-- [ ] Read each public guide in `src/marketing/docs/` in full. Update
+- [x] Read each public guide in `src/marketing/docs/` in full. Update
       the choice table and This Mac in `mac-app.md`, and the timed
       permission sentence in `security.md`, and every other sentence
       that restates the choices.
-- [ ] Update the [device README](../src/chat/device/README.md) and the
+- [x] Update the [device README](../src/chat/device/README.md) and the
       [Mac app README](../desktop/README.md) where they name the 15
       minutes as the only grant.
-- [ ] Check each relative link of each changed Markdown file.
+- [x] Check each relative link of each changed Markdown file.
 
 ## Milestone 3: The grant until Stop on the Mac and in the Worker
 
@@ -213,22 +227,24 @@ Depends on: 2
 The shared types, the Worker, the Mac app, and the dev backend accept and
 apply the new action.
 
-- [ ] Add `allow-workspace-until-stop` to `DeviceApprovalAction`, and
+- [x] Add `allow-workspace-until-stop` to `DeviceApprovalAction`, and
       make `DeviceWorkspaceWindow.expiresAt` `number | null`.
-- [ ] Accept the action in `worker/devices/broker-routes.ts`, and
+- [x] Accept the action in `worker/devices/broker-routes.ts`, and
       `null` in `src/shared/device-read.ts`. Add Worker tests.
-- [ ] Accept the action in `desktop/src/device/messages.ts`, and apply
+- [x] Accept the action in `desktop/src/device/messages.ts`, and apply
       it in `desktop/src/device/session.ts`.
-- [ ] Keep the grant until Stop in memory in
+- [x] Keep the grant until Stop in memory in
       `desktop/src/device/permissions.ts`, as the design says. Add tests:
       it permits, Stop ends it, it never reaches the permission file, a
       new store does not have it, and a running grant is kept.
-- [ ] Drop the grants until Stop after a sign-out or a change of
+- [x] Drop the grants until Stop after a sign-out or a change of
       account, in `desktop/src/device/connection.ts` and
       `session-factory.ts`. Add tests: a reconnect and a wake keep the
       grant, and a sign-out ends it.
-- [ ] Accept the action in the dev backend in `src/chat/dev/`.
-- [ ] Run the targeted tests of the Worker and the Mac app.
+- [x] Add the settings action `keep-workspace` to the shared types,
+      the Worker, and the Mac app, as the design says. Add tests.
+- [x] Accept both actions in the dev backend in `src/chat/dev/`.
+- [x] Run the targeted tests of the Worker and the Mac app.
 
 ## Milestone 4: The choice, the bar, and This Mac in the page
 
@@ -238,18 +254,20 @@ Depends on: 1, 3
 
 The page offers the new choice and shows a grant until Stop.
 
-- [ ] Add the choice to `src/chat/device/CommandChoices.tsx`, as the
+- [x] Add the choice to `src/chat/device/CommandChoices.tsx`, as the
       mockup shows. Update its DOM test.
-- [ ] Show "Until you stop" in `src/chat/device/AllowAllBar.tsx` for a
+- [x] Show "Until you stop" in `src/chat/device/AllowAllBar.tsx` for a
       grant without an end time. Update its DOM test.
-- [ ] Treat a grant without an end time as running in
+- [x] Treat a grant without an end time as running in
       `src/chat/device/settings-results.ts`. Update its test.
-- [ ] Apply the answer of decision 2 to the bar. The milestones get
-      their TODOs when the user answers.
-- [ ] Rename the list and show both kinds of row in
+- [x] Add "Keep until I stop" to the bar of the 15 minutes, with the
+      result of a Keep that failed (decision 2 B). Update its DOM test.
+- [x] Rename the list and show both kinds of row in
       `src/chat/device/SavedChoices.tsx`. Update its tests.
-- [ ] Update the fixtures in `src/test-support/fixtures/devices.ts`.
-- [ ] Check the choice, the bar, Stop, and This Mac in the browser with
+- [x] Update the fixtures in `src/test-support/fixtures/devices.ts`.
+      No change was needed: the tests build grants until Stop from
+      `fakeMacSettings`.
+- [x] Check the choice, the bar, Stop, and This Mac in the browser with
       the dev Mac backend.
 
 ## Milestone 5: Verification, commit, review, and pull request

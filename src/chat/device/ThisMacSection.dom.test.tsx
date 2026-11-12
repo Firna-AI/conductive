@@ -89,9 +89,7 @@ describe('ThisMacSection', () => {
     await press(byRole('button', 'Stop Checkout address autocomplete'))
     await waitFor(
       () =>
-        queryByText(
-          'Allow all commands for 15 minutes in a request adds its workspace here.',
-        ),
+        queryByText('Allow all commands in a request adds its workspace here.'),
       'the list without the stopped 15 minutes',
     )
     expect(await changes(server)).toEqual([

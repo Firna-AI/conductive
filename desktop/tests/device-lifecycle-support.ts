@@ -95,6 +95,7 @@ export function deviceLifecycleFixture() {
         invalid()
         reject()
       }),
+    signedOut: sessions.signedOut,
     warn,
   })
   const receive = (message: WorkerToDevice) =>

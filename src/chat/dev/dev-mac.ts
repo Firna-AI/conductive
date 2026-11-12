@@ -26,6 +26,7 @@ const readAction = oneOf<DeviceApprovalAction>({
   allow: true,
   'always-allow': true,
   'allow-workspace-15-minutes': true,
+  'allow-workspace-until-stop': true,
 })
 
 /**
@@ -166,11 +167,17 @@ function answer(
       alwaysAllowedCommands: [...commands, request.command],
     }
   }
-  if (action === 'allow-workspace-15-minutes') {
+  if (
+    action === 'allow-workspace-15-minutes' ||
+    action === 'allow-workspace-until-stop'
+  ) {
     const others = mac.settings.workspaceWindows.filter(
       (grant) => grant.workspaceId !== request.workspaceId,
     )
-    const expiresAt = backend.clock.now() + 15 * 60_000
+    const expiresAt =
+      action === 'allow-workspace-until-stop'
+        ? null
+        : backend.clock.now() + 15 * 60_000
     mac.settings = {
       ...mac.settings,
       workspaceWindows: [

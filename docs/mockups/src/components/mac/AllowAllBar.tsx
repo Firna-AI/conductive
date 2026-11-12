@@ -9,6 +9,7 @@ import {
   allowAllLeft,
   failedMessage,
   notSavedMessage,
+  untilStop,
 } from '../../fixtures/mac'
 import { checkoutAutocomplete } from '../../fixtures/workspaces'
 import { ActionButton } from '../common/actions'
@@ -16,8 +17,8 @@ import { classes } from '../common/classes'
 import { useMacApp } from './MacApp'
 import styles from './AllowAllBar.module.css'
 
-/** The result of Stop, in each state that shows one. */
-const stops = {
+/** The result of Stop or Keep, in each state that shows one. */
+const results = {
   'stop-failed': {
     icon: CircleAlert,
     tone: styles.failed,
@@ -39,25 +40,37 @@ const stops = {
     detail: notSavedMessage,
     running: false,
   },
+  'keep-failed': {
+    icon: CircleAlert,
+    tone: styles.failed,
+    title: 'Not kept',
+    detail: failedMessage,
+    running: true,
+  },
 } as const
 
 /**
  * The bar of the Mac app while every command of one workspace runs on this
- * Mac without asking: the time left of the 15 minutes, and Stop. After a
- * Stop, the bar names its result until the next Stop of the workspace,
- * also when the Stop ended the 15 minutes. A Stop that failed keeps the
- * time left and Stop, so the user can stop again. A Stop that the Mac made
- * but did not save offers Try again, which saves it.
+ * Mac without asking: the time left of the 15 minutes, Keep until I stop,
+ * and Stop. A grant until the user stops it (Mac until-stop decision 0)
+ * shows Until you stop in place of the time left, and no Keep. Keep turns
+ * the running 15 minutes into a grant until Stop (Mac until-stop decision
+ * 2). After a Stop or a Keep, the bar names its result until the next
+ * change of the grant, also when the Stop ended it. A change that failed
+ * keeps the grant and its controls, so the user can act again. A Stop
+ * that the Mac made but did not save offers Try again, which saves it.
  */
-export function AllowAllBar() {
+export function AllowAllBar(props: { untilStop?: boolean }) {
   const change = useMacApp()?.change
   const stop =
     change === 'stop-failed' ||
     change === 'stopped' ||
-    change === 'stop-not-saved'
-      ? stops[change]
+    change === 'stop-not-saved' ||
+    change === 'keep-failed'
+      ? results[change]
       : null
   const running = stop === null || stop.running
+  const timed = props.untilStop !== true
   const Icon = stop?.icon ?? Timer
   return (
     <div
@@ -80,7 +93,16 @@ export function AllowAllBar() {
       </span>
       {running ? (
         <>
-          <span className={styles.left}>{allowAllLeft} left</span>
+          {timed ? (
+            <>
+              <span className={styles.left}>{allowAllLeft} left</span>
+              <ActionButton>Keep until I stop</ActionButton>
+            </>
+          ) : (
+            <span className={classes(styles.left, styles.open)}>
+              {untilStop}
+            </span>
+          )}
           <ActionButton icon={Square}>Stop</ActionButton>
         </>
       ) : null}
