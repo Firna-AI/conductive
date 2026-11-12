@@ -9,9 +9,12 @@ import {
 } from 'react'
 import { Archive, ArchiveRestore } from 'lucide-react'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
-import { StatusGlyph } from '../../../docs/mockups/src/components/workspaces/StatusGlyph'
+import { WorkspaceMark } from '../../../docs/mockups/src/components/workspaces/WorkspaceMark'
 import styles from '../../../docs/mockups/src/components/workspaces/WorkspaceRow.module.css'
-import { activityPresentation } from '../../../docs/mockups/src/components/workspaces/status'
+import {
+  activityPresentation,
+  listMarkLabel,
+} from '../../../docs/mockups/src/components/workspaces/status'
 import { routes } from '../../app/router'
 import { ownPress } from '../../app/pointer-drag'
 import { formatAgo } from '../../app/time'
@@ -34,13 +37,13 @@ function RowContent(props: { workspace: Workspace; now: number }) {
   const { workspace } = props
   return (
     <>
-      <StatusGlyph status={workspace.state} />
+      <WorkspaceMark github={workspace.github} status={workspace.state} />
       <span className={styles.name}>{nameLabel(workspace.name)}</span>
       <span className={styles.time}>
         {formatAgo(props.now, workspace.updatedAt)}
       </span>
       <span className={ui.hidden}>
-        , {activityPresentation[workspace.state].label}
+        , {listMarkLabel(workspace.github, workspace.state)}
       </span>
     </>
   )
@@ -53,14 +56,15 @@ function setRef<T>(ref: Ref<T> | undefined, value: T | null): void {
 }
 
 /**
- * One workspace on one line: its state as a dot-matrix square, its name,
- * or Untitled before it has one, and the time since its last activity. Bold
- * marks unread output. Its shortcut, Archive or Restore on an archived row,
- * covers the time on hover only, and stays while it runs. A drag
- * lifts the row, and a faint copy stays where it was. With `menu`, a right
- * click or the menu keys open the menu of the row, which keeps the fill of
- * a hover while it is open. The row has no button for the menu. The field
- * of Rename takes the place of the name and the time.
+ * One workspace on one line: its list mark, its name, or Untitled before it
+ * has one, and the time since its last activity. The mark shows the GitHub
+ * state of its pull request in colour, and whether its agent works. Bold
+ * alone marks unread output. Its shortcut, Archive or Restore on an
+ * archived row, covers the time on hover only, and stays while it runs. A
+ * drag lifts the row, and a faint copy stays where it was. With `menu`, a
+ * right click or the menu keys open the menu of the row, which keeps the
+ * fill of a hover while it is open. The row has no button for the menu. The
+ * field of Rename takes the place of the name and the time.
  */
 export function WorkspaceRow({
   rowRef,
@@ -134,7 +138,7 @@ export function WorkspaceRow({
           props.selected && styles.selected,
         )}
       >
-        <StatusGlyph status={workspace.state} />
+        <WorkspaceMark github={workspace.github} status={workspace.state} />
         <WorkspaceNameField
           name={workspace.name}
           page={page}

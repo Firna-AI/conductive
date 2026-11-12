@@ -83,6 +83,7 @@ interface WorkspaceCreation {
   sectionId?: string
   city: string
   name?: string
+  firstSessionTitle?: string
   branch: string
   sessionId: string
   request: SendMessageRequest
@@ -128,7 +129,7 @@ export interface StartJobStorage {
   firstMessage(): Promise<FirstWorkspaceMessage | undefined>
   publication(): Promise<CreationPublication | undefined>
   clearPublication(): Promise<void>
-  complete(result: WorkspaceStartResult): Promise<void>
+  complete(attempt: string, result: WorkspaceStartResult): Promise<void>
   secrets(values: readonly string[]): Promise<void>
   capture(
     job: WorkspaceStartJob,

@@ -1,0 +1,38 @@
+# The file preview shows bare addresses as text
+
+- **Severity:** Low. **Likelihood:** Common. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-10, from the plan `plans/pressable-chat-links.md` on branch `calummoore/chat-link-handling`.
+- **Location:** `src/files/markdown/markdown-inline.ts:181`, the `autolink` method, and the safety rules of `src/files/README.md`.
+- **Reason:** The change that makes chat links pressable covers the links that the file preview already draws, and leaves the preview's Markdown reading as it is.
+
+- **Terms:**
+  - **File preview:** the Files view that shows a Markdown file of the branch as formatted text. Its parser lives in `src/files/markdown/` and runs in a worker.
+  - **Bare address:** a web address with no Markdown around it, such as `https://github.com/Firna-AI/home/pull/2`.
+  - **Autolink:** an address that a Markdown reader turns into a link with no link syntax.
+- **Background:**
+  - The file preview follows CommonMark, with GitHub's tables and strikethrough.
+  - It makes a link of an address only in angle brackets, such as `<https://example.com>`, or in a Markdown link.
+  - GitHub also links each bare address, each address that starts with `www.`, and each bare email address, by its autolink extension.
+  - From 10 November 2026, the chat links each bare `http` and `https` address of an agent answer, with the shared reader in `src/markdown/web-links.ts`.
+  - Each link of the file preview then goes through the shared link part of the chat, with the same checks.
+- **Problem:** A bare address in a Markdown file shows as text in the file preview, where GitHub shows a link.
+- **Impact if no action:** A member copies each such address of a README into a browser by hand.
+- **Root question:** How does a member open a bare address of a Markdown file in the file preview?
+- **Options:**
+  - **A.** Add the autolink extension of GitHub to the inline parser of the file preview: bare `http` and `https` addresses and `www.` addresses, with GitHub's end rule. Each such link goes through the same link checks as a Markdown link. Effort: Medium.
+  - **B.** Read bare addresses with the shared reader of chat text, `src/markdown/web-links.ts`, in the worker parse of the file preview. Effort: Medium.
+  - **C.** Keep bare addresses as text. Cost: the preview stays apart from GitHub. Effort: Small.
+  - **D.** Find bare addresses in the worker parse with a link library, such as `linkify-it`, which reads `http`, `https`, `www.`, and email forms. Cost: a new dependency that needs a safety review, and the chat keeps its own reader, so the two views can still differ. Effort: Medium.
+  - **E.** Do B, and teach the shared reader `www.` addresses for both views. Cost: chat text then links `www.` addresses too, where today it links only `http` and `https` addresses. Effort: Medium.
+- **Left out:**
+  - One parser for both views: `docs/protocol/chat-markdown.md` rejects it, and on 10 November 2026 the user kept the file preview's full parser out of the chat.
+  - A pass over the text while the preview draws it: an address that holds a pair of `*` is already split into emphasis by then.
+- **Wider fix:** B. One reader then finds bare addresses in the chat and in the file preview.
+- **Previous examples:** None found.
+- **Related:**
+  - `plans/follow-ups/one-markdown-reader-for-chat-and-preview.md`: the chat and the file preview read Markdown blocks with different readers.
+  - `plans/follow-ups/chat-code-not-read-as-markdown.md`: the chat reads inline code with its own grammar.
+  - A bare local address that B links, such as `http://localhost:3000`, follows the rule for local addresses of the file preview in `docs/protocol/workspace-tools.md`.
+- **Recommendation:** B. The chat and the file preview then link the same bare addresses. E closes the gap of `www.` addresses if output that matches GitHub matters more.
+- **Action:** ask the user, because B adds links that the file preview does not draw today, and no requirement covers them.

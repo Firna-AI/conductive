@@ -6,13 +6,9 @@ import {
   type OrgSettings,
   type Repository,
 } from '../shared/org-settings'
-import { routinesPath, type RoutineRun } from '../shared/routines'
+import { routinesPath } from '../shared/routines'
 import { sectionsPath, type Section } from '../shared/sections'
-import {
-  workspacesPath,
-  type Workspace,
-  type WorkspaceState,
-} from '../shared/workspaces'
+import { workspacesPath, type Workspace } from '../shared/workspaces'
 import { items, record } from './api/parse'
 import { readSection } from './api/read-core'
 import { readRoutines, type ListedRoutine } from './api/read-routines'
@@ -27,7 +23,8 @@ import {
 import { Creations } from './creations'
 import { workspaceUpdated, type ListData } from './list-changes'
 import { NewWorkspaceModel } from './new-workspace-model'
-import { Refresher, type RefreshWait, type Refreshing } from './refresh'
+import { buildsWait, listWait, onEntry, routinesWait } from './org-waits'
+import { Refresher, type Refreshing } from './refresh'
 import { Resource } from './resource'
 import type { AppServices } from './services'
 import { ready, Store, valueOf, type Loadable, type Readable } from './store'
@@ -40,54 +37,6 @@ import {
 
 export type OrgPart =
   'list' | 'repositories' | 'builds' | 'members' | 'routines'
-
-/**
- * How soon a shown part reads again. These are choices of the app, not
- * product limits: soon while a workspace, a routine run, or a build is
- * active, and slowly otherwise, so that changes from other tabs and people
- * show.
- */
-const activeWait = 5_000
-const idleWait = 30_000
-const activeStates: ReadonlySet<WorkspaceState> = new Set([
-  'working',
-  'input',
-  'starting',
-])
-
-/**
- * The wait of a shown workspace list: short while one of its workspaces is
- * active. A chat that reads the list itself uses it too.
- */
-export const workspacesWait: RefreshWait<readonly Workspace[]> = (
-  workspaces,
-) =>
-  workspaces?.some((workspace) => activeStates.has(workspace.state))
-    ? activeWait
-    : idleWait
-
-/** A run that waits for its workspace counts as active, as a start does. */
-const activeRunStates: ReadonlySet<RoutineRun['state']> = new Set([
-  'queued',
-  ...activeStates,
-])
-
-const routinesWait: RefreshWait<readonly ListedRoutine[]> = (routines) =>
-  routines?.some(
-    (routine) => routine.lastRun && activeRunStates.has(routine.lastRun.state),
-  )
-    ? activeWait
-    : idleWait
-const listWait: RefreshWait<ListData> = (list) =>
-  workspacesWait(list?.workspaces)
-
-const buildsWait: RefreshWait<BuildsResponse> = (builds) =>
-  builds?.builds.some((build) => build.state === 'running')
-    ? activeWait
-    : idleWait
-
-/** Repositories and members read at entry and focus only. */
-const onEntry: RefreshWait<unknown> = () => null
 
 /** One part of a loaded value, which changes only when that part changes. */
 function partOf<T, P>(

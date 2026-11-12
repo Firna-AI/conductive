@@ -1,14 +1,21 @@
 import type { ReactNode } from 'react'
 import { repositories } from '../../fixtures/repositories'
+import {
+  shownShortcut,
+  type ShortcutChanges,
+} from '../../fixtures/shortcutChanges'
+import type { ShortcutHost } from '../../fixtures/shortcutHosts'
 import { GitHubMark } from '../common/GitHubMark'
+import { KeyChips, type Shortcut } from '../common/KeyChips'
 import { ScreenLink } from '../common/ScreenLink'
 import a11y from '../common/a11y.module.css'
 import { classes } from '../common/classes'
 import { OrgTile } from '../orgs/OrgTile'
-import { activityPresentation } from '../workspaces/status'
-import { StatusGlyph } from '../workspaces/StatusGlyph'
+import { activityPresentation, listMarkLabel } from '../workspaces/status'
+import { WorkspaceMark } from '../workspaces/WorkspaceMark'
 import type { CommandLead } from './paletteCommands'
 import type { PaletteContent, PaletteRow } from './paletteContent'
+import { EmptyTab, NoResults } from './PaletteEmpty'
 import { PaletteStatusPart } from './PaletteStatus'
 import styles from './CommandPalette.module.css'
 
@@ -41,16 +48,37 @@ function RowLink(props: {
 }
 
 /**
- * One result. A workspace shows its state mark, its name, its repository,
+ * The keys that the rows show: those of the person, with their changes,
+ * on the host where the palette opens.
+ */
+export type PaletteKeys = { changes: ShortcutChanges; host: ShortcutHost }
+
+/**
+ * The key of the command of a row, when the palette shows keys: the first
+ * key of the command that works on the host.
+ */
+function shortcutOf(row: PaletteRow, keys?: PaletteKeys): Shortcut | undefined {
+  if (row.kind !== 'command' || !keys || !row.command.shortcut) {
+    return undefined
+  }
+  return shownShortcut(row.command.shortcut, keys.changes, keys.host)
+}
+
+/**
+ * One result. A workspace shows its list mark, its name, its repository,
  * and the age of its last activity, as the list does. When the query
  * matches the label of its number, the label leads the name, as in a chip.
- * A command shows its icon, its label, and the page of a setting in a
- * mixed list.
+ * A command shows its icon, its label, the page of a setting in a mixed
+ * list, and its key.
  */
-function Row(props: { row: PaletteRow; highlighted: boolean }) {
+function Row(props: {
+  row: PaletteRow
+  highlighted: boolean
+  shortcut?: Shortcut
+}) {
   const { row, highlighted } = props
   if (row.kind === 'workspace') {
-    const { workspace, status, to } = row.row
+    const { workspace, status, github, to } = row.row
     const presentation = activityPresentation[status]
     return (
       <RowLink
@@ -62,7 +90,7 @@ function Row(props: { row: PaletteRow; highlighted: boolean }) {
         to={to}
       >
         <span className={styles.lead}>
-          <StatusGlyph status={status} />
+          <WorkspaceMark github={github} status={status} />
         </span>
         {row.number ? (
           <span className={styles.number}>{row.number}</span>
@@ -72,7 +100,7 @@ function Row(props: { row: PaletteRow; highlighted: boolean }) {
           {repositories[workspace.repository].name}
         </span>
         <span className={styles.end}>{workspace.updated}</span>
-        <span className={a11y.hidden}>, {presentation.label}</span>
+        <span className={a11y.hidden}>, {listMarkLabel(github, status)}</span>
       </RowLink>
     )
   }
@@ -87,28 +115,12 @@ function Row(props: { row: PaletteRow; highlighted: boolean }) {
       </span>
       <span className={styles.label}>{command.label}</span>
       {detail ? <span className={styles.detail}>{detail}</span> : null}
+      {props.shortcut ? (
+        <span className={styles.keys}>
+          <KeyChips shortcut={props.shortcut} />
+        </span>
+      ) : null}
     </RowLink>
-  )
-}
-
-/** The answer to a query that matches nothing. */
-function NoResults(props: { query: string }) {
-  return (
-    <div className={styles.empty} role="status">
-      <p className={styles.emptyTitle}>Nothing matches “{props.query}”</p>
-      <p className={styles.emptyBody}>
-        Try a workspace name, a branch, or a repository.
-      </p>
-    </div>
-  )
-}
-
-/** The line of a tab that has no row to show while the field is empty. */
-function EmptyTab(props: { line: string }) {
-  return (
-    <div className={styles.empty} role="status">
-      <p className={styles.emptyBody}>{props.line}</p>
-    </div>
   )
 }
 
@@ -117,12 +129,23 @@ function EmptyTab(props: { line: string }) {
  * it. The list scrolls under the search field and the tabs. The status
  * part of data that did not load stands first, and alone when the tab has
  * no row. A tab without rows and without a status part shows its empty
- * line while the field is empty, and "Nothing matches" for a query.
+ * line while the field is empty, and "Nothing matches" for a query. With
+ * `keys`, each command row ends with its key. A phone shows no keys.
  */
-export function PaletteResults(props: { content: PaletteContent }) {
+export function PaletteResults(props: {
+  content: PaletteContent
+  keys?: PaletteKeys
+}) {
   const { groups, query, empty, status } = props.content
   if (groups.length === 0 && !status) {
-    return empty ? <EmptyTab line={empty} /> : <NoResults query={query} />
+    return empty ? (
+      <EmptyTab line={empty} />
+    ) : (
+      <NoResults
+        hint="Try a workspace name, a branch, or a repository."
+        query={query}
+      />
+    )
   }
   const first = groups[0]?.rows[0]
   return (
@@ -144,7 +167,11 @@ export function PaletteResults(props: { content: PaletteContent }) {
                     : row.command.label
                 }
               >
-                <Row highlighted={row === first} row={row} />
+                <Row
+                  highlighted={row === first}
+                  row={row}
+                  shortcut={shortcutOf(row, props.keys)}
+                />
               </li>
             ))}
           </ul>

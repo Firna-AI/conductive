@@ -1,9 +1,14 @@
+import type { Attachment } from '../../fixtures/attachments'
 import type { ChatRow, ChatSession } from './chatWorkspaces'
-import { mentionParts, type MentionPart } from './fileMentions'
+import {
+  mentionParts,
+  type AttachedPart,
+  type MentionPart,
+} from './fileMentions'
 
 /**
- * A part of a text: plain text, code in backticks, a link, or a mention of
- * a file or a folder.
+ * A part of a text: plain text, code in backticks, a link, a mention of a
+ * file or a folder, or a mention of an attached file of the message.
  */
 export type TextPart =
   | { kind: 'text'; text: string }
@@ -15,6 +20,7 @@ export type TextPart =
       source: string
     }
   | MentionPart
+  | AttachedPart
 
 /**
  * A Markdown link to a web address, or a bare web address. A bare address
@@ -38,9 +44,13 @@ function linkParts(text: string): TextPart[] {
 }
 
 /** Plain text with its links, and with its mentions when `mentions` asks. */
-function plainParts(text: string, mentions: boolean): TextPart[] {
+function plainParts(
+  text: string,
+  mentions: boolean,
+  files: readonly Attachment[],
+): TextPart[] {
   if (!mentions) return linkParts(text)
-  return mentionParts(text).flatMap((part): TextPart[] =>
+  return mentionParts(text, files).flatMap((part): TextPart[] =>
     part.kind === 'text' ? linkParts(part.text) : [part],
   )
 }
@@ -51,19 +61,22 @@ function plainParts(text: string, mentions: boolean): TextPart[] {
  * and a link or a mention in it stays code. A message box keeps plain
  * text, so it reads no code. Only the text of a member, in a message box
  * or a sent message, reads mentions, so `mentions` is false in an answer.
+ * A mention of the copy path of one of the `files` of a sent message is
+ * the mention of that file.
  */
 export function textParts(
   text: string,
   code: boolean,
   mentions = false,
+  files: readonly Attachment[] = [],
 ): TextPart[] {
-  if (!code) return plainParts(text, mentions)
+  if (!code) return plainParts(text, mentions, files)
   return text
     .split('`')
     .flatMap((part, index): TextPart[] =>
       index % 2 === 1
         ? [{ kind: 'code', text: part }]
-        : plainParts(part, mentions),
+        : plainParts(part, mentions, files),
     )
 }
 

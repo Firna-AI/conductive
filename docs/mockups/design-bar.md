@@ -29,6 +29,11 @@ the actions on top of the Checks tab of a phone, and Continue.
     message of the member who clicked. Merge names its method, such as
     "Squash and merge", and a spinner shows while the merge or Continue
     runs.
+  - On desktop, the tooltip of each button that takes a click, and of each
+    link to the pull request, gives its label and the key of its command,
+    such as "Create PR (⇧⌘P)" or "Open pull request #482 on GitHub (⇧⌘G)",
+    from decision 199. A busy or disabled button and a phone show no key.
+    `ShortcutTip` in `src/components/common/` gives the tooltip.
   - The number of a pull request opens it on GitHub, with an arrow after a
     divider. `PullRequestNumber` in `barParts.tsx` draws it, so the bar of a
     pull request has no other link to it. The row of a phone is one link to

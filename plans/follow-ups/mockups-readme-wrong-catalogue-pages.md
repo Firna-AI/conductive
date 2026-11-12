@@ -1,0 +1,39 @@
+# Mockups README names wrong page for four areas
+
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-11, from branch `calummoore/composer-file-drag-and-drop`, item 1 of the report of its mockup README update.
+- **Location:** `docs/mockups/README.md:56-59`.
+- **Reason:** The list went wrong in earlier changes, and the composer file drops branch keeps its README change to the attachment parts.
+
+- **Source:** Implementation. **Category:** Docs or spec.
+- **Terms:**
+  - **Catalogue page:** a Markdown page under `docs/mockups/` that says what each path of the mockup catalogue shows. `catalogue.md` is the main page, and other catalogue pages give the child pages of some areas.
+  - **Child page:** a page of the mockup catalogue under another page, such as `app/chat/turns` under `app/chat`.
+- **Background:**
+  - The section "The catalogue" of `docs/mockups/README.md` says which catalogue page gives which child pages.
+  - Its sentence at lines 56-59 names the areas whose child pages `catalogue.md` gives. It names `marketing/docs`, `app/account`, `app/banner`, `app/chat`, `app/routines`, `app/workspace-menu`, `app/workspace-links`, and `app/tools`. It also names the New workspace dialog and the repositories that wait for a build.
+  - `docs/mockups/catalogue.md` names `app/chat`, `app/routines`, `app/workspace-links`, and `app/tools` only in its table of paths and in its list of folder pages.
+  - `docs/mockups/catalogue-chat-and-routines.md` gives the child pages of `app/chat` from line 6, and of `app/routines` from line 41.
+  - `docs/mockups/catalogue-workspace-tools.md` gives the child pages of `app/workspace-links` from line 5, and of `app/tools` from line 25.
+  - The README names both of these pages in its next sentences, at lines 64-65 and 69-70.
+  - The other items of the list are right. `catalogue.md` gives these child pages:
+    - `marketing/docs` at line 79
+    - the repositories that wait for a build from line 119
+    - `app/account` at line 154
+    - the New workspace dialog at line 165
+    - `app/workspace-menu` at line 182
+    - `app/banner` at line 213
+- **Problem:** The sentence sends a reader to `catalogue.md` for four areas whose child pages are on two other pages.
+- **Impact if no action:** A reader looks in `catalogue.md` for these child pages and does not find them. The next sentences of the README name the right pages, so the cost is small.
+- **Root question:** How does the README tell a reader which catalogue page gives the child pages of an area?
+- **Options:**
+  - **A.** Remove `app/chat`, `app/routines`, `app/workspace-links`, and `app/tools` from the sentence. The sentences about the linked pages already name their areas. Effort: Small.
+  - **B.** Replace the list with a rule, such as "the child pages of each area that no linked page gives". The sentence then cannot drift, but it is less concrete for a reader. Effort: Small.
+- **Left out:**
+  - Change nothing: it fails the goal, because a doc must not send a reader to the wrong page.
+  - A table of each area and its catalogue page: B gives the same result with fewer words.
+- **Wider fix:** None. The `documentation` skill already asks that docs agree with each other. B is another wording of the same sentence, not a fix for the class.
+- **Previous examples:** Two changes added a path to this list together with the new catalogue page that took its child pages. Commit `27f888f4` added `app/tools` with `catalogue-workspace-tools.md`. Commit `d39e64eb` added `app/routines` with `catalogue-chat-and-routines.md`.
+- **Recommendation:** A. It is the smallest exact fix, and it keeps a concrete list that a reader can scan. B best protects the sentence against the next split of the catalogue.
+- **Action:** fix after merge, apply A, because the list went wrong before the composer file drops change, which keeps its README change to attachments.

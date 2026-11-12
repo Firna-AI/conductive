@@ -80,11 +80,7 @@ export async function installWorkspaceTools(
 }
 
 function write(path: string, contents: string, mode: string): string {
-  const bytes = new TextEncoder().encode(contents)
-  const encoded = btoa(
-    Array.from(bytes, (byte) => String.fromCharCode(byte)).join(''),
-  )
-  return `printf %s '${encoded}' | base64 -d > ${quote(path)}\nchmod ${mode} ${quote(path)}`
+  return `printf %s ${quote(contents)} > ${quote(path)}\nchmod ${mode} ${quote(path)}`
 }
 
 function quote(value: string): string {

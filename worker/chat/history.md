@@ -7,6 +7,22 @@ streams, and the order of the runner commands.
 - `ChatStore.run` is one serial queue. Each request, each runner message,
   each command send, and each trusted read, change, or replay runs in it,
   one at a time.
+- `ChatStore.run` gives each queue task a `QueueTurn` handle from
+  [`queue-turn.ts`](queue-turn.ts). With `outside(call)` of the handle, a
+  task runs one call outside the queue. In production code, only the start
+  guard of a sandbox start calls `outside`, as
+  [Creates and resumes](../lifecycle/workspace-object.md#creates-and-resumes)
+  says.
+- `outside` first gives the committed turn ends to the
+  [`turnEnded`](integration/workspace-lifecycle.md#hooks-and-events) hook.
+  Then the task gives the queue up and runs the call. When the call ends,
+  the task joins the back of the queue. It gets the result or the error of
+  the call only after it holds the queue again.
+- `ChatStore.settled()` waits until no queue task remains.
+  `ChatStore.idle()` waits only for the tasks that exist at the time of the
+  call. Both also wait for a task that is in an `outside` call. The drains
+  of the [member receiver](../members/README.md#lifecycle-ownership) wait
+  for `idle()`.
 - `ChatStore.change` commits the new events, the runner cursor, and the
   changed records in one storage transaction. The tabs get the events
   only after the commit.
@@ -72,9 +88,11 @@ streams, and the order of the runner commands.
 - A `workspace.continued` note names its session, so the history of that
   session holds it, also after the session closes and reopens.
 - The internal `StoredTurn.started` marker keeps dispatch evidence after an end.
-- The interrupt route stores and pushes `turn.stop-requested` with the
-  authenticated member's ID before it interrupts the runner. Runner events
-  cannot set that member.
+- Stop, a close that stops a turn, and a tool stop or close store and push
+  `turn.stop-requested` before they interrupt the runner. The event names
+  the authenticated member, or the calling workspace and session of a tool
+  call. Runner events cannot set either. [Stop requests](README.md#stop-requests)
+  gives the rule of the first request.
 - A message accepted while the active turn stops waits in another stored
   turn. Its commands go out only after that turn becomes active.
 - After a finished turn, its unanswered messages run before later waiting

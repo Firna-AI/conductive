@@ -23,6 +23,7 @@ and the separate preview domain.
 | Env var values and agent logins                                              | The Worker's storage, encrypted          |
 | The Boat key and the other keys of the Worker                                | Worker secrets                           |
 | Chat history and banner state                                                | The workspace Durable Object             |
+| A copy of the [GitHub state](../protocol/github-banner.md#the-github-state) of each workspace, for the lists | D1 |
 | Files attached to chat messages | The attachment storage, an R2 bucket |
 | The records of attached files | D1 |
 | The repository, the files, and the agent sessions                            | The home folder of the sandbox           |
@@ -52,7 +53,9 @@ and the separate preview domain.
   says. During a turn, such a sandbox holds a turn token, not an agent
   login. The token spends the login of the starter of its session only
   through the gateway, and only while the turn runs. The agent logins stay
-  in the Worker.
+  in the Worker. A ChatGPT login passes through the egress container of
+  the [ChatGPT egress Worker](components.md#chatgpt-egress-worker) in
+  transit, and the container keeps no copy.
 - During a turn, a sandbox with a runner of protocol version 1 holds the
   agent login of the starter itself. A workspace with a version pin of 1
   accepts such a runner, also after a runner of version 2 or later

@@ -1,5 +1,5 @@
 import type { Attachment, SendMessageRequest } from '../../shared/messages'
-import { withSession } from './chat-snapshot'
+import { withSession, type PendingMessage } from './chat-snapshot'
 import type { ChatContext } from './context'
 import { takeReply } from './linked-replies'
 
@@ -29,6 +29,7 @@ export async function postMessage(
     id: request.id,
     text: request.text,
     attachments,
+    state: 'queued',
   })
   try {
     const target = takeReply(
@@ -46,7 +47,7 @@ export async function postMessage(
 function showWaiting(
   context: ChatContext,
   sessionId: string,
-  message: { id: string; text: string; attachments: readonly Attachment[] },
+  message: PendingMessage,
 ): void {
   if (!context.live()) return
   context.store.update((snapshot) =>

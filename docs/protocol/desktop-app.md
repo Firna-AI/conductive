@@ -68,6 +68,11 @@ These docs belong to this doc:
   draw them. Back and Forward move through the pages of the window.
 - The top bars of the app move the window when the user drags them. Their
   buttons and other controls do not move the window.
+- While a menu is open, the top bars do not move the window. A press on a
+  top bar closes the menu, as a press anywhere else outside the menu does.
+- Reason: macOS gives each press on a top bar that moves the window to the
+  window, and the page never hears it. So a menu stayed open after a press
+  on a top bar.
 - In a window, the page keeps the space of the window buttons free. In full
   screen, macOS hides the window buttons, and the page gives their space
   back.

@@ -25,6 +25,7 @@ it('stores exact binary and empty file bytes with private owned records', async 
   expect(attachment).toEqual({
     id: attachment.id,
     name: 'binary.dat',
+    path: '.context/attachments/c3e4b3dbbe634274e657a474e2a0c9a3/binary.dat',
     kind: 'file',
     mediaType: 'application/octet-stream',
     sizeBytes: 6,

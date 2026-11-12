@@ -48,7 +48,9 @@ the cloud computer.
     the content, so nothing moves. When the copy fails, the note says
     "The link didn't copy. Try again." in the danger colour. The note is
     a status, so screen readers hear it. The name of the button is "Copy
-    link to W-395".
+    link to W-395". On desktop, `ShortcutTip` in `src/components/common/`
+    gives it the tooltip "Copy link to W-395 (⇧⌘C)", with the first key
+    of Copy link that works where the page runs. A phone shows no key.
   - On desktop, the repository takes only the room that the other parts
     leave. The name is cut short only when the repository has no room left.
   - On a phone the label leads the line under the name, before the

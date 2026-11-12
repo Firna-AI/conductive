@@ -1,4 +1,5 @@
 import type { DraftFile } from '../../app/draft-files'
+import { withoutFileMarks } from '../../app/draft-file-state'
 import type { MessageDraft, SendMessageRequest } from '../../shared/messages'
 import {
   blankDraft,
@@ -52,15 +53,19 @@ export function changeDraft(
 
 /**
  * The draft at the start of its send: the message leaves the composer at
- * once, and shows in the chat while its send waits, as `message-send.ts`
- * says. Send waits for ready files, so all files go with the message.
+ * once, with its file chips, and shows in the chat while its send waits, as
+ * `message-send.ts` says. Send waits for ready files, so all marked files go
+ * with the message. The files kept for undo end, because the field starts a
+ * new undo history for the empty draft.
  */
 export function startSend(draft: Draft, request: SendMessageRequest): Draft {
   return {
     ...draft,
     text: '',
     files: [],
+    detached: [],
     refused: [],
+    refusedFolders: [],
     sendId: request.id,
     sending: true,
   }
@@ -73,26 +78,47 @@ export function afterSend(draft: Draft): Draft {
 
 /** A message whose send failed, which goes back to its draft. */
 export interface FailedSend {
-  request: SendMessageRequest
-  files: readonly DraftFile[]
+  /** The draft as it was at Send, with the marks of its file chips. */
+  sent: Draft
+  sendId: string
   /** The draft is still in the session of the request. */
   sameSession: boolean
 }
 
 /**
- * The draft after a failed send: the message comes back, before the text
- * and the files that the user added during the send. The client ID stays
- * only when the draft is the same message as before, in the same session,
- * so Send again is the same message. A changed message is a new one.
+ * The draft after a failed send: the message comes back with its chips,
+ * before the text and the files that the user added during the send. The
+ * client ID stays only when the draft is the same message as before, in the
+ * same session, so Send again is the same message. A changed message is a
+ * new one.
  */
 export function failSend(draft: Draft, failed: FailedSend): Draft {
+  const { sent } = failed
   const untouched = draft.text === '' && draft.files.length === 0
-  const text = [failed.request.text, draft.text].filter((part) => part !== '')
+  const text = [sent.text, draft.text].filter((part) => part !== '')
   return {
     ...draft,
     text: text.join('\n'),
-    files: [...failed.files, ...draft.files],
-    sendId: untouched && failed.sameSession ? failed.request.id : null,
+    files: [...sent.files, ...draft.files],
+    detached: [...sent.detached, ...draft.detached],
+    sendId: untouched && failed.sameSession ? failed.sendId : null,
+    sending: false,
+  }
+}
+
+/** A stopped chat ends its files and removes their marks in the same snapshot. */
+export function endDraftFiles(draft: Draft): Draft {
+  return {
+    ...draft,
+    text: withoutFileMarks(
+      draft.text,
+      [...draft.files, ...draft.detached].map(({ id }) => id),
+    ),
+    files: [],
+    detached: [],
+    refused: [],
+    refusedFolders: [],
+    sendId: null,
     sending: false,
   }
 }
@@ -142,6 +168,19 @@ export function keepFiles(
     (id) => !kept.attachmentIds.includes(id),
   )
   const files = withoutFiles(draft.files, dropped)
-  if (files.length === draft.files.length) return draft
-  return { ...draft, files, sendId: null }
+  const detached = withoutFiles(draft.detached, dropped)
+  const gone = [...draft.files, ...draft.detached].filter(
+    (item) => !files.includes(item) && !detached.includes(item),
+  )
+  if (gone.length === 0) return draft
+  return {
+    ...draft,
+    files,
+    detached,
+    text: withoutFileMarks(
+      draft.text,
+      gone.map(({ id }) => id),
+    ),
+    sendId: null,
+  }
 }

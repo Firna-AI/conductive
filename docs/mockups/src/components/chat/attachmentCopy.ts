@@ -1,9 +1,12 @@
 /**
  * The words of the attached files: the state of an upload in the composer,
- * and the notice for a file over the size limit. The app stores each file
- * until the turn of its message starts, so an upload needs no cloud
- * computer, also in a new workspace.
+ * and the notices for a file over the size limit and for a dropped folder.
+ * The app stores each file until the turn of its message starts, so an
+ * upload needs no cloud computer, also in a new workspace.
  */
+
+/** The words that screen readers hear before the name of an attached file. */
+export const attachedFileWords = 'Attached file'
 
 /**
  * The label of a file whose upload runs, in place of its size, until the
@@ -45,3 +48,12 @@ export const tooLargeBody = 'Each file can be up to 25 MB.'
 
 /** The action of that notice, which opens the file picker again. */
 export const smallerFileLabel = 'Attach a smaller file'
+
+/**
+ * The body of the notice for a dropped folder, which the composer does not
+ * attach. The title names the folder, as for a file over the size limit.
+ */
+export const folderBody = 'Attach the files in the folder instead.'
+
+/** The action of that notice, which opens the file picker. */
+export const attachFilesLabel = 'Attach files'

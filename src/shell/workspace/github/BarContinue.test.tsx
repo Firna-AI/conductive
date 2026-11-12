@@ -33,6 +33,11 @@ import {
   holdAnimationFrames,
   MOUNTED_TEST_TIMEOUT,
 } from '../../../test-support/mount'
+import { openPaletteTab } from '../../palette/palette-test-kit'
+import {
+  pressHintKey,
+  serveShortcutChanges,
+} from '../../shortcuts/shortcut-test-kit'
 import { click, settle, typeText } from '../../test-mount'
 import {
   bodiesOf,
@@ -42,7 +47,7 @@ import {
   lastEvent,
   messageField,
 } from '../kept-test-kit'
-import { openTab } from '../wiring-test-kit'
+import { socketsOf } from '../wiring-test-kit'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
@@ -51,21 +56,40 @@ const branch = 'calummoore/checkout-autocomplete'
 const question = 'Continue with work that is not pushed?'
 const priya = fakeUsers[1]
 
+/**
+ * The server, with a key that the admin recorded for Continue after merge,
+ * which has no default key.
+ */
+function withContinueKey(server: FakeApiServer): FakeApiServer {
+  serveShortcutChanges(server, 'other', [
+    { command: 'continue-after-merge', keys: ['Alt+Shift+K'] },
+  ])
+  return server
+}
+
+/** The merged bar in a Chrome tab on Windows, whose keys run. */
 async function mergedTab(server: FakeApiServer, delay = new ManualDelay()) {
   serveWork(server, 'none')
-  const tab = await openTab(server, routes.workspace(org, id), {
-    delay: delay.delay,
+  const tab = await openPaletteTab(routes.workspace(org, id), {
+    server,
+    events: socketsOf(server).events,
+    clock: { now: () => FAKE_TIME, delay: delay.delay },
   })
   const column = byLabel('Files and tools', tab.view)
   const press = async (name: string, root: HTMLElement = column) => {
     click(byRole('button', name, root))
     await settle()
   }
+  const pressKey = async () => {
+    const key = pressHintKey(tab.app, 'continue-after-merge', document.body)
+    await settle()
+    return key.defaultPrevented
+  }
   const runTimers = async () => {
     await act(() => delay.run(pendingJobWait))
     await settle()
   }
-  return { ...tab, column, press, runTimers }
+  return { ...tab, column, press, pressKey, runTimers }
 }
 
 /** Whether the bar says that Continue waits, and whether Continue is off. */
@@ -106,7 +130,11 @@ describe('Continue in the pull request bar', () => {
       [...sessions.sessions, ...sessions.history],
       senderSnapshot(priya),
     )
-    const moved = { ...detail.workspace, branch: CONTINUED_BRANCH }
+    const moved = {
+      ...detail.workspace,
+      branch: CONTINUED_BRANCH,
+      github: null,
+    }
     continuedReply(server, moved, lastEvent(server) + events.length)
     await tab.press('Continue anyway', byLabel(question, tab.view))
     for (const event of events.slice(0, -1)) emit(server, event)
@@ -195,14 +223,17 @@ describe('Continue in the pull request bar', () => {
     })
   })
 
-  test('Continue waits while a turn runs, not while a sent message waits for its agent, and a stop names its cause and keeps Continue', async () => {
+  test('Continue and its key wait while a turn runs, not while a sent message waits for its agent, and a stop names its cause and keeps Continue for a click and its key', async () => {
     holdAnimationFrames()
     const running = await mergedTab(
-      new FakeApiServer({ banner: 'merged', conversation: 'running' }),
+      withContinueKey(
+        new FakeApiServer({ banner: 'merged', conversation: 'running' }),
+      ),
     )
     const waits = {
       line: running.column.querySelector('[role="status"]')?.textContent,
       off: isOff(byRole('button', 'Continue', running.column)),
+      key: await running.pressKey(),
     }
     const queuedServer = new FakeApiServer({
       banner: 'merged',
@@ -230,25 +261,36 @@ describe('Continue in the pull request bar', () => {
     })
     await settle()
     const afterStart = continueWaits(queued.column)
-    const server = new FakeApiServer({ banner: 'merged' })
+    const server = withContinueKey(new FakeApiServer({ banner: 'merged' }))
     serveContinue(server, 'clash')
     const stopped = await mergedTab(server)
     await stopped.press('Continue')
     await stopped.runTimers()
+    const stop = stopped.column.querySelector('[role="alert"]')?.textContent
+    const again = isOff(byRole('button', 'Continue', stopped.column))
+    // The other tabs wait for their turns, so only this tab runs the key.
+    const key = await stopped.pressKey()
+    const continues = workspacePaths.continue(org, id)
 
     expect({
       waits,
       queued: { beforeStart, afterStart },
-      stop: stopped.column.querySelector('[role="alert"]')?.textContent,
-      again: isOff(byRole('button', 'Continue', stopped.column)),
+      stop,
+      again: { off: again, key },
+      starts: await bodiesOf(server, 'POST', continues, 0),
     }).toEqual({
-      waits: { line: 'Continue waits for the agent to finish.', off: true },
+      waits: {
+        line: 'Continue waits for the agent to finish.',
+        off: true,
+        key: false,
+      },
       queued: {
         beforeStart: { line: false, off: false },
         afterStart: { line: true, off: true },
       },
       stop: `Continue stopped: the changed files clash with the latest main. The workspace stays on ${branch}.`,
-      again: false,
+      again: { off: false, key: true },
+      starts: [{ expectedBranch: branch }, { expectedBranch: branch }],
     })
   })
 })

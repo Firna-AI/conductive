@@ -47,6 +47,7 @@ const deletedAcme: OrgSummary = {
   },
 }
 const workspace: Workspace = {
+  github: null,
   id: 'checkout',
   number: 1,
   link: new URL(routes.workspace('acme', 'checkout'), FAKE_ORIGIN).href,

@@ -89,7 +89,12 @@ says.
   the workspace accepts in that session (decision 181). The title is the
   first line with text of that message.
 - A message with no text, such as a message with only a screenshot, gives
-  no title.
+  no title. A message whose text holds only the mentions of its own
+  attached files counts as a message with no text.
+- In a title from a message, each mention of one of its attached files
+  becomes the name of the file (decision 262 D). Reason: a path makes a
+  poor title. A title with the copy path of each file was rejected for
+  that reason.
 - In a title from a message, each run of spaces becomes one space. The app
   removes one final full stop, but it keeps an ellipsis.
 - A title from a message holds at most 60 characters. The limit counts
@@ -171,9 +176,10 @@ says.
   2 of 4". The focus then goes back to the tab.
 - Rename session opens a field for the title in that tab. The shown tab
   does not change.
-- The tab menu is the one way to rename a session. A Rename button on the
-  shown session tab was rejected, because the tab menu already holds
-  Rename session.
+- In the app, the tab menu is the one way to rename a session. A Rename
+  button on the shown session tab was rejected, because the tab menu
+  already holds Rename session. An agent can also rename a session, as
+  [Rename a session](session-management.md#rename-a-session) says.
 - Keys that move a tab were rejected, because the user chose the menu. Alt
   with Left or Right also goes Back and Forward in browsers on Windows and
   Linux.

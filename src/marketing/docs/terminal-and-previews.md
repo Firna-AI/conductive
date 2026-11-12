@@ -113,7 +113,8 @@ The program name uses at most 10 characters, including **…** when shortened.
 Its tooltip and screen reader label give the full name and folder.
 Use **+**, named **Preview another port**, to choose another server or enter its port.
 Use **Reload** to load the selected preview again.
-Use **Close preview** to close it.
+Use the **×** after the name of a preview tab to close that preview.
+It shows on the selected tab, and on another tab when you point to it.
 
 A preview expires after 24 hours.
 Stopping the workspace's computer also closes its previews.
@@ -121,6 +122,11 @@ Open a new preview after the computer resumes.
 
 Preview access follows your sign-in and workspace access.
 A copied preview address grants no access by itself.
+
+Ask an agent to list, open, or close previews.
+To open a preview, give the agent your server's port.
+It can do this in any workspace of the same org.
+Previews that agents open need sign-in and workspace access.
 
 ## Recover from a connection error
 

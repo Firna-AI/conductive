@@ -20,7 +20,7 @@ export const automationAndApiFeatures: readonly ParityFeature[] = [
     area: 'automation-and-api',
     name: 'Workspace API token',
     status: 'available',
-    note: 'Workspace programs get a workspace token for the built in workspace tools.',
+    note: 'Workspace programs get a token for workspace tools. Reads need no running turn, while changes act for the sender of a running turn.',
   },
   {
     id: 'transcript-sql-search',
@@ -68,9 +68,8 @@ export const automationAndApiFeatures: readonly ParityFeature[] = [
     id: 'agent-workspace-controls',
     area: 'automation-and-api',
     name: 'Agent workspace controls',
-    status: 'planned',
-    note: 'Agent tools to rename, move, and archive workspaces, manage sessions and sections, and control private previews are planned.',
-    due: null,
+    status: 'available',
+    note: "Agents can rename, move, and archive workspaces, manage sessions and sections, and open or close private previews. Actions follow the turn sender's rights.",
   },
   {
     id: 'read-session-transcripts',

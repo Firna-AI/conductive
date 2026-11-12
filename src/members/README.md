@@ -101,6 +101,11 @@ with the message of the API.
   scroll. The heading, an error, and the note stay in view.
 - A desktop menu closes when the window loses focus, including a press
   inside a preview frame. The menu stays open while its change runs.
+- In the Mac app, an open menu stops the drag regions of the top bars, so
+  a press on a top bar also closes it. The shell does this for each menu
+  that it notes in the open layers, as
+  [the window integration](../../desktop/README.md#window-integration)
+  says.
 - The menus and the questions note themselves in the open layers of the
   app shell, from `../shell/ui/layers.ts`. So the key of the command
   palette asks an open desktop menu to close, as Escape does. While its

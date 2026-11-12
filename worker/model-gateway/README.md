@@ -25,6 +25,24 @@ The [model gateway protocol](../../docs/protocol/model-gateway.md) states the re
 | `/v1/model/codex`, ChatGPT sign-in only | `POST /backend-api/codex/responses` | The workspace's HTTPS backend origin, or `https://chatgpt.com` |
 
 The `/responses` suffix is for an OpenAI API key only.
+
+### ChatGPT egress
+
+OpenAI refuses the `chatgpt.com` requests that a Cloudflare Worker sends.
+It returns HTTP 403 and a block page, and Codex then stops with "workspace routing discovery failed".
+The gateway therefore sends each request for `chatgpt.com` or a `*.chatgpt.com` origin on another path.
+It keeps the path, the query, the method, the headers, and the streamed body.
+It adds `x-conductive-egress-origin` with the ChatGPT origin.
+Every other upstream keeps the direct path.
+
+1. With the `CHATGPT_EGRESS` service binding, the request goes to the [ChatGPT egress Worker](../chatgpt-egress/README.md) and its container.
+   This path needs no secret, because that Worker has no public address.
+2. Without the binding, and with both `CHATGPT_EGRESS_URL` and `CHATGPT_EGRESS_SECRET`, the request goes to that HTTPS proxy.
+   It also carries `x-conductive-egress-secret` with the shared secret.
+   [tools/chatgpt-egress/proxy.ts](../../tools/chatgpt-egress/proxy.ts) can serve this path behind a named Cloudflare Tunnel.
+   A quick tunnel does not work, because it does not stream server-sent events.
+3. Without either, or with an address that is not HTTPS, the gateway calls `chatgpt.com` directly.
+
 The gateway preserves the query and the request body.
 It refuses every other suffix and method locally, including the connection probe and model discovery.
 
@@ -176,6 +194,7 @@ The `request` helper of `gatewayHttp` in [http.test-support.ts](http.test-suppor
 - [codex-auth.ts](codex-auth.ts): fresh credentials, one 401 renewal, observation of concurrent rotation, and the redaction set for the request.
 - [../codex-auth/tasks.ts](../codex-auth/tasks.ts): the required credential task owner, built from the request execution context.
 - [codex-routing.ts](codex-routing.ts): account selection, backend validation, and the routing-free account reply.
+- [egress.ts](egress.ts): the egress path of `chatgpt.com` requests: the egress binding, then the fallback proxy.
 - [headers.ts](headers.ts): request and response header rules and authentication replacement.
   `hasClaudeMarkers` checks the markers of the `claude` program.
   For a Claude API key, `upstreamHeaders` removes the OAuth value of `anthropic-beta`.

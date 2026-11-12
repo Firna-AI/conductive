@@ -1,49 +1,104 @@
 # Chat Markdown
 
 This doc holds the requirements and the decisions in force for the
-Markdown of agent messages in the chat, with their lists and tables.
-[Chat and events](chat-and-events.md) holds the messages, the live text,
-and the work of a turn. The terms are those of the
+Markdown of agent messages in the chat, with their headings and lists.
+Its linked page [Chat tables](chat-tables.md) holds the rules of their
+tables. [Chat and events](chat-and-events.md) holds the messages, the live
+text, and the work of a turn. The terms are those of the
 [architecture doc](../architecture.md#terms). The
 [mockup catalogue](../mockups/catalogue.md) draws tables in agent messages
 at `app/chat/tables`, and in the open work of a turn at
 `app/chat/work/table`. It draws lists inside list items at
-`app/chat/lists`.
+`app/chat/lists`. It draws headings at `app/chat/headings`, and in the
+open work of a turn at `app/chat/headings/work`.
 
 ## Formatting
 
 - An agent message is one message of the agent in a turn. The chat formats
   the text of each agent message with this Markdown:
   - paragraphs, which a blank line ends
+  - headings at six levels, as [Headings](#headings) says
   - bulleted lists with `-`, `*`, or `+`, and numbered lists, such as `1.`
     or `1)`, with lists inside their items, as [Lists](#lists) says
   - code blocks between two lines that start with three backticks
   - inline code between backticks, and strong text between `**` marks
-  - tables, as [Tables](#tables) says
+  - tables, as [Chat tables](chat-tables.md) says
 - The lines of one paragraph show as one paragraph.
-- A heading shows as the text of a paragraph, without its `#` marks.
 - A workspace link outside code shows as a chip, as
   [Messages and answers](workspace-links.md#messages-and-answers) says.
 - Other Markdown shows as the text that the agent wrote, such as a link
   that is not a workspace link, a quote, or emphasis with one `*`.
-- Inline code, strong text, and workspace chips also show in list items
-  and table cells. A code block shows its text with no formatting.
+- Inline code, strong text, and workspace chips also show in headings,
+  list items, and table cells. A code block shows its text with no
+  formatting.
 - HTML in an agent message shows as text, also in a table.
 - Reason: sandbox code is untrusted, as
   [Trust boundaries](../architecture/data-and-trust.md#trust-boundaries) says, and it can
   shape the text of an agent message.
 - The chat keeps this small set of Markdown. The full Markdown of the file
-  preview was rejected for the chat, because it also changes the headings,
-  links, and quotes of every agent message.
+  preview was rejected for the chat, because it also changes the links and
+  the quotes of every agent message.
 - A Markdown library was rejected, because it adds a dependency that needs
   a review of its safety. One parser with a setting for each view was
   rejected, because it needs more compatibility work.
 
+## Headings
+
+- A heading line starts with one to six `#` marks, then a space or the end
+  of the line. The number of marks gives the level of the heading.
+- The `#` marks at the end of a heading line do not show when a space
+  comes before them, such as the last `##` of `## Title ##`.
+- A line that starts with seven or more `#` marks, or with `#` marks and
+  text directly after them, shows as text, such as `#482`.
+- Each heading is its own block. A heading line ends the paragraph above
+  it, and a line directly under a heading starts a new block.
+- A heading keeps the level that the agent wrote, so a screen reader reads
+  it as a heading of that level.
+- Reason: agents write headings often, such as a list of decisions under a
+  heading, and plain text hides the sections of a message. Strong text in
+  place of headings was rejected, because all levels then look the same,
+  and a screen reader cannot move between the sections.
+- A heading with no text shows nothing. It still ends the paragraph above
+  it.
+- Reason: a screen reader meets no empty heading, also while the agent
+  writes `## ` before the words.
+- Headings have the same size, weight, and colour in agent messages and in
+  the file preview. The [mockups](../mockups/design-chat.md) give the look.
+- Each level has its own size, from the largest at level 1 to the smallest
+  at level 6. Levels 1 to 4 are larger than the text around them. Level 5
+  has the size of that text, and level 6 is smaller. All levels have the
+  heading weight.
+- Reason: each level has its own size, so a reader sees how the sections
+  of a message nest.
+- Agent messages and the file preview read headings with the same rules,
+  the heading rules of CommonMark. Only an underline at the end of an
+  agent message differs, as [Underlines](#underlines) says.
+- Reason: as for lists and tables, headings cannot differ between the two
+  views. Heading rules for the chat alone were rejected for that reason.
+
+### Underlines
+
+- An underline is a line of `=` marks or a line of `-` marks. Directly
+  under a paragraph, it turns the paragraph into a heading: level 1 for
+  `=`, and level 2 for `-`.
+- A line whose indent does not reach the text of a list item is never an
+  underline for that item. This holds in both views, as CommonMark says.
+- In the chat, an underline counts only when a line break follows it. So
+  when an agent message ends on an underline, that line shows as text, as
+  a header row shows as text until its separator row arrives.
+- Reason: while the agent writes a list directly under a line of text, the
+  `-` of the list would show that line as a heading for one update.
+- In the chat, an underline turns only the text of a paragraph into a
+  heading. A quote line, or a line that CommonMark reads as indented code,
+  shows as text and never becomes a heading.
+- Reason: CommonMark and the file preview read `> Note` above `---` as a
+  quote and a rule.
+
 ## Lists
 
 - A list item holds the lines that the agent indents under it: a list,
-  more paragraphs, a code block, or a table. They show inside the item,
-  under its text.
+  more paragraphs, a heading, a code block, or a table. They show inside
+  the item, under its text.
 - Agent messages and the file preview read lists with the same rules, the
   list rules of CommonMark.
 - A line belongs to an item when its indent reaches the text of the item,
@@ -62,90 +117,6 @@ at `app/chat/tables`, and in the open work of a turn at
 - Reason: lists cannot differ between agent messages and the file
   preview, as for tables. List rules for the chat alone were rejected for
   that reason.
-
-## Tables
-
-- A screen reader reads each table as a table, by its rows and its
-  columns.
-- Tables look the same in agent messages and in the file preview. The
-  [mockups](../mockups/design-chat.md) give the look.
-
-### Table text
-
-- A table starts with a header row and a separator row directly under it.
-- The header row holds at least one pipe, `|`.
-- The separator row has as many cells as the header row. Each of its cells
-  holds one or more hyphens, `-`, with an optional colon, `:`, at each end.
-- A pipe splits a row into cells. A pipe at the start or at the end of a
-  row is optional.
-- Spaces at the start and at the end of a cell do not show.
-- A `\|` shows as a pipe inside its cell, and does not split the row.
-- Each line after the separator row is a body row, until a blank line, a
-  line without a pipe, or the end of the agent message.
-- A table can start directly after a line of a paragraph, with no blank
-  line between them.
-- Text in a code block stays code, also when it looks like a table.
-- Text that does not form a table shows as text, with its pipes. Examples
-  are a header row without a separator row, and a separator row with
-  another number of cells.
-
-### Columns and cells
-
-- The header row sets the columns of the table.
-- A colon at the start of a separator cell aligns its column to the left.
-  A colon at the end aligns it to the right. A colon at each end centres
-  it.
-- With no colon, the column keeps its text at the start.
-- The header cell of a column takes the alignment of its column too.
-- The text of a cell shows its inline code, its strong text, and its
-  workspace chips, as in a paragraph.
-- A row with more cells than the header row shows only the cells under
-  the columns. The other cells do not show.
-
-### Short rows
-
-- A short row is a body row with fewer cells than the header row.
-- A short row adds no empty cells. It shows only its own cells, and its
-  last cell spans the columns that the row misses.
-- A cell that spans keeps its text at its start, whatever the alignment of
-  the columns that it spans.
-- Reason: with the alignment of a right-aligned column, the text would
-  stand under a column that it does not belong to.
-- A cell spans at most 1,000 columns, the most that
-  [HTML allows](https://html.spec.whatwg.org/multipage/tables.html#attr-tdth-colspan).
-  In a row that misses more columns, the columns after the span stay
-  empty.
-- The chat adds no limit for tables. It shows every row of each table, and
-  it refuses no agent message for its tables.
-- Reason: empty cells let a short agent message build a very large table,
-  which can freeze each tab that shows it. A span adds no cells, and it
-  needs no new limit.
-- Empty cells up to a budget for each agent message were rejected. A limit
-  on the rows times the columns of each agent message was not chosen.
-  Each adds a limit, after which the rest of the agent message shows as
-  text.
-- A view that draws only the rows and the columns in sight was rejected,
-  because it needs much more scroll and focus work.
-
-### Tables and the file preview
-
-- Agent messages and the file preview split table rows into cells in the
-  same way. They read column alignment in the same way.
-- Short rows differ. The file preview fills a short row with empty cells,
-  up to a budget for each file, as
-  [Files and changes](workspace-tools.md#files-and-changes) says.
-- Reason: agent messages and the file preview share their table rules, so
-  escaped pipes and alignment cannot differ between them. Table rules for
-  the chat alone were rejected for that reason.
-
-### Wide tables
-
-- A table wider than the chat scrolls sideways inside its agent message,
-  also in a list item and in an open message line.
-- The text before and after the table keeps the width of the chat. The
-  chat and the workspace keep the width of the window.
-- Reason: the table keeps its columns as the agent wrote them, so a reader
-  can compare the rows.
 
 ## While the agent writes
 
@@ -167,16 +138,17 @@ at `app/chat/tables`, and in the open work of a turn at
 ## Saved history
 
 - The events and the saved history carry the text of each agent message.
-  They carry no table data.
+  They carry no heading data and no table data.
 - An agent message from the saved history shows the same formatting and
   the same tables as the same agent message after its last live update.
 - The text keeps the cells that a table does not show, such as the cells
   past the width of its header.
-- Reason: tables need no change to the events or to the saved history.
-  Table data in the events was rejected, because it changes the events and
-  the saved history, and the browser still lays out each table.
+- Reason: headings and tables need no change to the events or to the
+  saved history. Table data in the events was rejected, because it changes
+  the events and the saved history, and the browser still lays out each
+  table.
 
-## Tables in the work of a turn
+## Tables and headings in the work of a turn
 
 - An open work fold shows each agent message as one message line, as
   [The work of a turn](chat-and-events.md#the-work-of-a-turn) says.
@@ -192,3 +164,13 @@ at `app/chat/tables`, and in the open work of a turn at
 - Reason: the steps of the work stay close together, also when a message
   holds a table. A table needs the width of the chat to read, so it shows
   under the line.
+- In a message line, each heading shows as text of the line, in the
+  heading weight. A screen reader reads it as text too.
+- A closed message line shows the text of a heading in the line.
+- An open message line shows each heading on its own line, in the size of
+  the text of the line. Under the open line, a heading after the first
+  table shows as a heading of its level, in the same look.
+- Reason: the closed line stays one line, and the weight shows where a
+  heading ends, so the words after it read as new text. The work stays
+  quieter than the answer. The line is a button that opens and closes,
+  and a screen reader does not list a heading inside a button.

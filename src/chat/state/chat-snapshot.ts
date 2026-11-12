@@ -26,12 +26,16 @@ export interface Draft {
   id: string
   text: string
   /**
-   * The files, in the order of the picks, each with its upload. Send waits
+   * The files, in the order of their first marks, each with its upload. Send waits
    * while one uploads or failed, and takes only ready ones.
    */
   files: readonly DraftFile[]
+  /** Files without chips, kept for undo until this draft ends. */
+  detached: readonly DraftFile[]
   /** The names of the files of the last pick that are over the size limit. */
   refused: readonly string[]
+  /** Folder names from the last intake, kept apart from oversized files. */
+  refusedFolders: readonly string[]
   /** The client ID of a send that failed, so that a resend is one message. */
   sendId: string | null
   /** A send of this draft waits for its answer. */
@@ -41,9 +45,13 @@ export interface Draft {
 /**
  * A message that the chat shows below the transcript until the stream shows
  * it: a sent message from a reply, or a message whose send still waits for
- * its reply, as `message-send.ts` says.
+ * its reply, as `message-send.ts` says. A message whose send waits is
+ * `queued`, because it has not reached the agent.
  */
-export type PendingMessage = Pick<UserMessage, 'id' | 'text' | 'attachments'>
+export type PendingMessage = Pick<
+  UserMessage,
+  'id' | 'text' | 'attachments' | 'state'
+>
 
 export interface SessionState {
   transcript: Transcript
@@ -81,6 +89,8 @@ type LoadState =
 
 export interface ChatSnapshot {
   load: LoadState
+  /** The fresh start that owns each local draft identity. */
+  draftEpoch: number
   workspace: Workspace | null
   start: WorkspaceStart | null
   /**
@@ -124,7 +134,9 @@ export function blankDraft(id: string): Draft {
     id,
     text: '',
     files: [],
+    detached: [],
     refused: [],
+    refusedFolders: [],
     sendId: null,
     sending: false,
   }
@@ -141,6 +153,7 @@ const initialSession: Omit<SessionState, 'draft'> = {
 
 export const initialSnapshot: ChatSnapshot = {
   load: { state: 'loading' },
+  draftEpoch: 0,
   workspace: null,
   start: null,
   savedError: null,
@@ -163,7 +176,7 @@ export const initialSnapshot: ChatSnapshot = {
 
 /**
  * The state of one session, with its defaults before anything loads. The
- * first draft of a session takes its identity from the session.
+ * first draft takes its identity from the fresh start and the session.
  */
 export function sessionState(
   snapshot: ChatSnapshot,
@@ -172,7 +185,7 @@ export function sessionState(
   return (
     snapshot.sessionStates[sessionId] ?? {
       ...initialSession,
-      draft: blankDraft(`draft:${sessionId}`),
+      draft: blankDraft(`draft:session:${snapshot.draftEpoch}:${sessionId}`),
     }
   )
 }

@@ -1,4 +1,5 @@
 import type { UserMessage } from '../../shared/messages'
+import { attachmentFiles } from '../../app/dev/attachment-files'
 import type {
   OrderedWorkspaceResponse,
   StartStep,
@@ -96,6 +97,12 @@ export function makeReady(backend: DevBackend): void {
     }
     backend.queue = []
     for (const [sessionId, messages] of bySession) {
+      for (const message of messages)
+        attachmentFiles(backend).copy(
+          backend.target.orgId,
+          backend.target.workspaceId,
+          message.attachments,
+        )
       backend.agent.start(sessionId, messages)
     }
   })

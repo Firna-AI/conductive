@@ -1,0 +1,36 @@
+# The browser key tables miss keypad and address keys
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-11, from `calummoore/keyboard-shortcuts-settings`, review round 3, finding 11, with a new problem from its finding check.
+- **Location:** `src/app/shortcuts/browser-keys.ts` (`digitKeys`, `tabAndAddressKeys`, and the `own` lists of the Chromium and Firefox tables), `src/app/shortcuts/browser-own-keys.test.ts`, `src/app/shortcuts/README.md`, and the table "Keys that the app leaves to the browser" in `docs/protocol/keyboard-shortcuts-keys.md`
+- **Reason:** Only a key that a person records reaches the problem, no default key does, and the review round that found it came after the two fix rounds of the branch.
+
+- **Terms:**
+  - **Keypad digit:** a digit key of the numeric keypad. With Num Lock on, the app records it as a key of its own, such as `Alt+Numpad1`, and shows it as "Num 1".
+  - **Browser key table:** the lists in `src/app/shortcuts/browser-keys.ts` that say which keys each browser keeps or uses on each system. A key in the `own` list of a browser is one that the app leaves to that browser in a normal tab: the tab dims it, and no command runs on it there.
+- **Background:**
+  - Each person can record keys for the commands of the app on the Keyboard shortcuts tab.
+  - The user's answer to decision 196 (B with D, 2026-11-10) leaves to each browser, in a normal tab, the keys that it uses on its system to select a tab or to open its address bar. The protocol states this rule under "Hosts" in `docs/protocol/keyboard-shortcuts-hosts.md`.
+  - The user's answer to review item 10 (B, 2026-11-10) records a keypad key as the key that it types, except a keypad digit, which stays a key of the keypad. The protocol states it under "How a key matches" in `docs/protocol/keyboard-shortcuts-matching.md`.
+  - `digitKeys(modifier)` in `browser-keys.ts` builds only the top-row forms, such as `Alt+1` to `Alt+9`.
+- **Problem:**
+  - Chromium's `chrome/browser/ui/accelerator_table.cc` selects a tab also with the keypad digits: with Ctrl on Windows and Linux, and with Alt on Linux and Android. Chromium on a Mac selects a tab on ⌘ with keypad 1 to 9 (`global_keyboard_shortcuts_mac.mm`). Firefox defines its tab keys by the typed digit (`key="1"` in `browser-sets.inc.xhtml`), so the keypad digit selects a tab there too. These facts come from reading the browser sources. Nobody pressed the keys.
+  - So a person can record Alt+Num 1 for Command palette in a normal Chrome tab on Linux. The table holds only `Alt+1`, so the key counts as available. The tab shows it undimmed, and the listener runs the command and stops the browser from selecting its first tab.
+  - Chrome and Edge on Windows and Linux also open the address bar on Alt+D and F6, and Firefox on Alt+D. The tables leave only Ctrl+L to the browser, so a recorded Alt+D or F6 takes an address bar key in a normal tab.
+- **Impact if no action:** A recorded key takes a tab key or an address bar key that decision 196 leaves to the browser, and the tab shows that key as one that works there.
+- **Root question:** How does the app leave to each browser every key that the browser uses on its system to select a tab or open its address bar, also in the forms that the app records as keys of their own?
+- **Options:**
+  - **A.** Add the keypad forms and the address bar keys to the lists by hand: `Ctrl+Numpad1` and so on beside each digit list, and Alt+D and F6 in the Windows and Linux lists. Add the cases to `browser-own-keys.test.ts`. Later changes must keep both lists aligned. Effort: Small.
+  - **B.** Make `digitKeys` return both forms of each digit for its modifier, such as `Alt+1` and `Alt+Numpad1`, so that every digit tab key of Chrome, Edge, and Firefox covers the keypad on each system, also ⌘ in Chrome on a Mac. Add Alt+D and F6 to the Windows and Linux lists of Chrome and Edge, and Alt+D to those of Firefox. Add one line to the protocol table and one to the README. Add the cases to the existing test: Alt+Num 1 passes in a Chrome tab on Linux, and it runs its command in the installed app. Keep the hand-written ⌘1 to ⌘9 of Safari until a check shows its keypad behaviour. Effort: Small.
+  - **C.** Describe each key of the browser tables by the physical keys that the browser acts on, as the browser sources do, such as `Digit1` and `Numpad1` for tab 1 in Chrome. Build the key texts with `shortcutFromPress` of `src/app/shortcuts/keys.ts`. The tables then follow the matcher of the app, so a later change to how the app names a key cannot split a browser key from its table again. Add the same address bar keys, doc lines, and tests as B. Cost: a rewrite of the tables and their tests. Effort: Medium.
+- **Left out:**
+  - Recording a keypad digit as its top-row digit everywhere undoes the user's answer to review item 10.
+  - Refusing these keys in every host removes their use in the Mac app and the installed app, and it adds a rejection.
+  - A rule in the listener only leaves the dimmed chips and the hints wrong, because they read the tables through `shortcutKeyAvailability`.
+  - A recorder that refuses the key only in a normal tab is worse on every point than the dimmed chip of B: the account is shared, so a key saved in the Mac app still reaches the tab.
+  - Changing nothing fails decision 196.
+- **Wider fix:** C. It takes the key texts from the matcher of the app, so it holds when the split between key forms changes.
+- **Previous examples:** Two earlier review findings of the same branch, about the fixed keys and about the conflict check, missed the keypad twin of a key. The answer to review item 10 removed every other keypad twin, so the keypad digit is the last split.
+- **Recommendation:** B. `digitKeys` already builds every digit tab key of the Chromium and Firefox tables, so one change there covers each system. C best protects the codebase.
+- **Action:** fix after merge, apply B, because the bug needs a recorded key that no default uses, and the two fix rounds of the branch were used.

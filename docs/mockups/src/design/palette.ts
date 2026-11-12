@@ -17,6 +17,12 @@ type AppColors = {
   composer: string
   /** A selected row or tab. */
   selected: string
+  /**
+   * The row of a menu under the pointer or with the focus. It stands out
+   * from the `composer` fill of the menu, which `soft` does not in the dark
+   * scheme.
+   */
+  menuHover: string
   link: string
   success: string
   successSoft: string
@@ -25,6 +31,8 @@ type AppColors = {
   warning: string
   /** The outline of a mark on a warning fill, such as `amberSoft`. */
   warningBorder: string
+  /** A merged workspace list mark, in GitHub's purple. */
+  listMerged: string
   /**
    * The tint of a merged pull request: its words and icon, the fill of its
    * bar, and the outline of its number. The words keep a contrast of 4.5:1
@@ -100,6 +108,7 @@ export const darkPalette: Palette = {
   bubble: '#1a1d21',
   composer: '#121417',
   selected: '#1c2025',
+  menuHover: '#23272d',
   link: '#5cc8ff',
   success: '#4ade80',
   successSoft: '#0e2117',
@@ -107,6 +116,7 @@ export const darkPalette: Palette = {
   dangerBorder: '#4d1f22',
   warning: '#f2b84b',
   warningBorder: '#4d3a12',
+  listMerged: '#a371f7',
   merged: '#b794f6',
   mergedSoft: '#221836',
   mergedBorder: '#3f2d6b',
@@ -166,6 +176,7 @@ export const lightPalette: Palette = {
   bubble: '#edf0f4',
   composer: '#ffffff',
   selected: '#e3e8ee',
+  menuHover: '#eceff2',
   link: '#0a6fa8',
   success: '#1d7f45',
   successSoft: '#ecf7f0',
@@ -173,6 +184,7 @@ export const lightPalette: Palette = {
   dangerBorder: '#f2c9cb',
   warning: '#b7860b',
   warningBorder: '#ecd49a',
+  listMerged: '#8250df',
   merged: '#7345d1',
   mergedSoft: '#f3eefc',
   mergedBorder: '#dacdf5',

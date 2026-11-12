@@ -1,3 +1,4 @@
+import type { TurnStopRequester } from './session-stop'
 import type { AgentChoice } from './agents'
 import type { Timestamp } from './api'
 import type { ChangedFile } from './files'
@@ -24,6 +25,9 @@ export interface TurnEventContext {
   sessionId: string
   turnId: string
 }
+
+/** A cause other than the end of the agent's reply that finished a turn. */
+export type TurnEndReason = 'background_work_limit'
 
 export interface ToolCall {
   id: string
@@ -69,6 +73,7 @@ export type AgentChatEvent = TurnEventContext &
         type: 'turn.completed'
         state: 'finished' | 'stopped'
         durationMs: number
+        endReason?: TurnEndReason
         /**
          * Keep a prefix of the full unique-path list. Entries stay whole.
          * Apply both TURN_COMPLETED_MAX_FILES and TURN_COMPLETED_FILES_MAX_BYTES.
@@ -129,10 +134,9 @@ export type ChatEvent =
       turnId: string
     }
   | { type: 'session.updated'; session: Session }
-  | {
-      /** The workspace records it when a member presses Stop, never the runner. */
+  | ({
+      /** Only the workspace records a Stop request. */
       type: 'turn.stop-requested'
       sessionId: string
       turnId: string
-      requestedById: string
-    }
+    } & TurnStopRequester)

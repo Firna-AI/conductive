@@ -14,6 +14,7 @@ export const postcodeLookup = workspace(
     repository: 'storefront',
     section: 'checkout',
     status: 'archived',
+    github: null,
     updated: '3w',
   },
 )
@@ -31,6 +32,7 @@ export const archivedWorkspaceList: readonly Workspace[] = [
     repository: 'storefront',
     section: 'checkout',
     status: 'archived',
+    github: 'merged',
     updated: '4d',
   }),
   workspace('black-friday-banner', 'Black Friday banner', {
@@ -39,6 +41,7 @@ export const archivedWorkspaceList: readonly Workspace[] = [
     repository: 'storefront',
     section: 'general',
     status: 'archived',
+    github: 'merged',
     updated: '9d',
     owner: 'priya',
   }),
@@ -51,6 +54,7 @@ export const archivedWorkspaceList: readonly Workspace[] = [
       repository: 'billing-service',
       section: 'infra',
       status: 'archived',
+      github: 'checks-failed',
       updated: '16d',
       owner: 'jonas',
     },

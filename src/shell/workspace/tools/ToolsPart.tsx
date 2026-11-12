@@ -10,10 +10,12 @@ import { PreviewTool } from '../../../previews/PreviewTool'
 import type { ConnectTerminal } from '../../../terminal/TerminalScreen'
 import { TerminalTool } from '../../../terminal/TerminalTool'
 import type { ToolWorkspace } from '../../../terminal/tool-parts/workspace'
+import type { ShortcutCommandId } from '../../../shared/shortcut-commands'
 import { useOrgServices } from '../../context'
-import { usePaletteTerminal } from '../../palette/palette-context'
+import { useShortcutTerminal } from '../../shortcuts/shortcut-context'
+import { shortcutTip, useShortcutHint } from '../../shortcuts/shortcut-hints'
 import type { WorkspaceContext } from '../features'
-import { offeredToolTabs } from './tool-address'
+import { offeredToolTabs, type ToolKey } from './tool-address'
 import { useToolNavigation, type ToolNavigation } from './tool-navigation'
 import styles from './tools.module.css'
 
@@ -29,29 +31,55 @@ function isPlainClick(event: MouseEvent<HTMLAnchorElement>): boolean {
   )
 }
 
+/** The command of the keys of each tool tab, as the palette's Go to rows. */
+const toolCommands: Readonly<Record<ToolKey, ShortcutCommandId | undefined>> = {
+  terminal: 'go-to-terminal',
+  preview: 'go-to-preview',
+  desktop: undefined,
+}
+
+/**
+ * A tab of the tools panel: a link to its tool. Its tooltip names the key
+ * of its Go to command.
+ */
+function ToolTab(props: {
+  navigation: ToolNavigation
+  tool: ToolKey
+  label: string
+}) {
+  const { navigation, tool } = props
+  const selected = tool === navigation.tool
+  const hint = useShortcutHint(toolCommands[tool])
+  return (
+    <a
+      aria-current={selected ? 'page' : undefined}
+      aria-keyshortcuts={hint?.aria}
+      className={classes(tabs.tab, selected && tabs.selected)}
+      href={navigation.href(tool)}
+      onClick={(event) => {
+        if (!isPlainClick(event)) return
+        event.preventDefault()
+        navigation.select(tool)
+      }}
+      title={shortcutTip(props.label, hint)}
+    >
+      {props.label}
+    </a>
+  )
+}
+
 /** The tabs of the tools panel. Each tab is a link to its tool. */
 function ToolTabs(props: { navigation: ToolNavigation }) {
-  const { navigation } = props
   return (
     <nav aria-label="Tools" className={tabs.tabs}>
-      {offeredToolTabs.map((tab) => {
-        const selected = tab.tool === navigation.tool
-        return (
-          <a
-            aria-current={selected ? 'page' : undefined}
-            className={classes(tabs.tab, selected && tabs.selected)}
-            href={navigation.href(tab.tool)}
-            key={tab.tool}
-            onClick={(event) => {
-              if (!isPlainClick(event)) return
-              event.preventDefault()
-              navigation.select(tab.tool)
-            }}
-          >
-            {tab.label}
-          </a>
-        )
-      })}
+      {offeredToolTabs.map((tab) => (
+        <ToolTab
+          key={tab.tool}
+          label={tab.label}
+          navigation={props.navigation}
+          tool={tab.tool}
+        />
+      ))}
     </nav>
   )
 }
@@ -105,21 +133,19 @@ export function ToolsPart(props: {
     [org.id, workspace.id, services, toolEvents],
   )
   const touch = context.viewport === 'phone'
-  // Ctrl+K in the terminal goes to its shell, not to the command palette.
-  const terminal = usePaletteTerminal()
+  // The screen of the terminal keeps the keys that a program in it can
+  // read. Its buttons, such as Reconnect, keep none.
+  const terminal = useShortcutTerminal()
   const { tool } = navigation
   const [terminalShown, setTerminalShown] = useState(tool === 'terminal')
   if (tool === 'terminal' && !terminalShown) setTerminalShown(true)
   const body = props.placeholder ?? (
     <>
       {terminalShown ? (
-        <div
-          className={styles.tool}
-          hidden={tool !== 'terminal'}
-          ref={terminal}
-        >
+        <div className={styles.tool} hidden={tool !== 'terminal'}>
           <TerminalTool
             connect={connect}
+            screenRef={terminal}
             touch={touch}
             workspace={toolWorkspace}
           />

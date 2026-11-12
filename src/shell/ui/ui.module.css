@@ -45,7 +45,7 @@
 /* The menu item that has the keyboard focus looks as one under the pointer. */
 .menuItem:focus {
   outline: none;
-  background: var(--ui-soft);
+  background: var(--ui-menu-hover);
 }
 
 .plainButton:disabled {

@@ -17,7 +17,7 @@ examples.
 ## How to set the inputs
 
 - Declare the bindings in `wrangler.jsonc`. It already holds `DB`,
-  `ASSETS`, `WORKSPACES`, `CHAT_ATTACHMENTS`, and `AI`.
+  `ASSETS`, `WORKSPACES`, `CHAT_ATTACHMENTS`, `AI`, and `CHATGPT_EGRESS`.
 - Set each public variable in the `vars` of `wrangler.jsonc`, or in the
   settings of the Worker in the Cloudflare dashboard.
 - `wrangler.jsonc` sets `keep_vars`. So each deploy keeps the variables
@@ -64,6 +64,7 @@ examples.
 | `WORKSPACES` | Durable Object namespace | Chat, the events socket, the runner socket, Mac commands, the workspace routes, the workspace list, the read mark, the git credential route, and image builds | The `Workspace` class of `worker/workspace.ts`. |
 | `CHAT_ATTACHMENTS` | R2 bucket | Chat attachments: each upload, each message or create with files, the copy of the files when a turn starts, and their deletion | The bucket `conductive-chat-attachments`, as [The attachment bucket](#the-attachment-bucket) says. |
 | `AI` | Workers AI | The title of a workspace that has no name | Workers AI on the Cloudflare account of the Worker, as [The title model](deployment/models.md#the-title-model) says. |
+| `CHATGPT_EGRESS` | Service binding | The ChatGPT requests of the model gateway | The Worker `conductive-chatgpt-egress`, as the [ChatGPT egress README](../worker/chatgpt-egress/README.md) says. It must exist before the first deploy of the Worker. |
 | `CF_VERSION_METADATA` | Version metadata | The software image route of the deploy run | The ID, the tag, and the creation time of the running Worker version. `wrangler.jsonc` sets it. Without it, the route answers 404, as [The software image](deployment/runner-archive.md#the-software-image) says. |
 
 ## Public variables
@@ -106,6 +107,8 @@ examples.
 | `GITHUB_APP_PRIVATE_KEY` | The GitHub banner and Checks, the workspace refreshes of verified GitHub webhooks, and image builds and refreshes of an org that chose a repository | The private key of the GitHub App, as PEM. The PEM file from GitHub works as it is. A PKCS#8 PEM works too. |
 | `GITHUB_WEBHOOK_SECRET` | GitHub webhooks on the machine hostname | The webhook secret of the GitHub App. The Worker checks each delivery with it. Without it, each delivery gets `503 github_unavailable`. |
 | `RESEND_API_KEY` | The invitation emails of the member routes, the approval emails of the operator section, and the feedback emails of `POST /api/feedback` | An API key of Resend that can send from `mail.conductive.build`. The invitations come from `invites@mail.conductive.build`, so Resend must verify that domain. The approval emails come from the same sender. The feedback emails come from `feedback@mail.conductive.build`, on the same domain. A key with sending access only is enough. An `APP_ORIGIN` on `localhost`, `127.0.0.1`, or `[::1]` needs no key. The Worker then writes each invitation link and each feedback email to its log. Without the key, an invite gets `502 invite_email_failed`. The invitation stays pending. A feedback send gets HTTP 502 too. An approval still gives app access, and the app tries its email again for 24 hours, as [The approval email](protocol/waitlist.md#the-approval-email) says. |
+| `CHATGPT_EGRESS_URL` | The ChatGPT requests of the model gateway, only when the deployment has no `CHATGPT_EGRESS` binding | The HTTPS address of a fallback egress proxy, as the [model gateway README](../worker/model-gateway/README.md#chatgpt-egress) says. The gateway reads it only together with `CHATGPT_EGRESS_SECRET`. |
+| `CHATGPT_EGRESS_SECRET` | The same requests as `CHATGPT_EGRESS_URL` | The shared secret of that proxy, with at least 32 characters. |
 | `FEEDBACK_EMAIL` | The feedback emails of `POST /api/feedback` | The address of the team inbox, which gets each feedback email, as [The email](protocol/feedback.md#the-email) says. It is a secret, so that a personal address stays out of the repository. Without it, each send gets HTTP 503, also on a local `APP_ORIGIN`. With it, a local `APP_ORIGIN` writes each feedback email to the log of the Worker, and needs no `RESEND_API_KEY`. Elsewhere, the feedback emails also need `RESEND_API_KEY`. |
 
 - `BOAT_KEY_ENCRYPTION_KEY` encrypts the agent logins, the GitHub user

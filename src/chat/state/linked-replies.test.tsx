@@ -1,5 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'
+import { fileMark } from '../../app/draft-marks'
+import { pickChatFiles } from './draft-files.test-support'
 import { readyIds } from '../../app/draft-files'
 import type { AgentChoice } from '../../shared/agents'
 import { chatHistoryPath } from '../../shared/events'
@@ -197,7 +199,7 @@ function attachThatWaits(chat: Chat) {
     201,
   )
   const file = new File(['png'], 'late-file.png', { type: 'image/png' })
-  return chat.controller.attachFiles(first, [file])
+  return pickChatFiles(chat, first, [file])
 }
 
 describe('the draft when a reply opens a linked session', () => {
@@ -213,7 +215,9 @@ describe('the draft when a reply opens a linked session', () => {
     await reply()
     expect(snapshot(chat).activeSessionId).toBe(LINKED)
     expect(chat.draftOf(LINKED)?.id).toBe(draftId)
-    expect(chat.draftOf(LINKED)?.text).toBe('Also the error state.')
+    expect(chat.draftOf(LINKED)?.text).toBe(
+      `Also the error state. ${fileMark('file-1')} `,
+    )
     expect(chat.draftOf(LINKED)?.files.map((item) => item.state)).toEqual([
       'uploading',
     ])

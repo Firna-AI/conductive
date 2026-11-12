@@ -1,8 +1,13 @@
 import { describe, expect, it, vi } from 'vitest'
+import { fileMark } from '../../app/draft-marks'
+import { sessionPaths } from '../../shared/sessions'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
+import { record, text } from '../api/json'
+import { pickChatFiles } from './draft-files.test-support'
 import { chatFor } from './test-kit'
 
 const id = FAKE_IDS.session
+const messages = sessionPaths.messages(FAKE_IDS.org, FAKE_IDS.workspace, id)
 const shortly = { timeout: 10_000 }
 const file = () => new File(['png'], 'cart.png', { type: 'image/png' })
 const isSend = (request: Request) =>
@@ -35,36 +40,46 @@ describe('a message while its send waits', () => {
   it('leaves the composer and shows in the chat at once, with its files', async () => {
     const chat = await chatWithSends()
     chat.controller.setDraft(id, 'Keep a saved cart for 30 days.')
-    await chat.controller.attachFiles(id, [file()])
+    await pickChatFiles(chat, id, [file()])
     const sending = chat.controller.send(id)
     await vi.waitFor(() => expect(chat.held).toHaveLength(1), shortly)
-    expect(chat.draftOf(id)).toMatchObject({ text: '', files: [] })
-    expect(chat.draftOf(id)?.sending).toBe(true)
-    expect(stateOf(chat).pending).toMatchObject([
+    const sent = stateOf(chat).pending[0]?.text ?? ''
+    expect(sent).toMatch(/^Keep a saved cart for 30 days\. @\S+/)
+    expect(chat.draftOf(id)).toMatchObject({
+      text: '',
+      files: [],
+      detached: [],
+      sending: true,
+    })
+    expect(stateOf(chat).pending).toEqual([
       {
-        text: 'Keep a saved cart for 30 days.',
-        attachments: [{ id: 'attachment-1' }],
+        id: 'client-1',
+        text: sent,
+        attachments: [expect.objectContaining({ id: 'attachment-1' })],
+        state: 'queued',
       },
     ])
     chat.held.splice(0, 1)[0]()
     await sending
     expect(chat.draftOf(id)?.sending).toBe(false)
-    expect(stateOf(chat).pending.map((message) => message.text)).toEqual([
-      'Keep a saved cart for 30 days.',
-    ])
+    const [body] = await chat.bodies('POST', messages)
+    expect(text(record(body).text)).toBe(sent)
+    expect(stateOf(chat).pending.map((message) => message.text)).toEqual([sent])
   })
 
   it('goes back to the composer with its files and its ID when the Worker refuses it', async () => {
     const chat = await chatWithSends(() => refusal.clone())
     chat.controller.setDraft(id, 'Keep a saved cart for 30 days.')
-    await chat.controller.attachFiles(id, [file()])
+    await pickChatFiles(chat, id, [file()])
+    const before = chat.draftOf(id)?.text
+    expect(before).toBe(`Keep a saved cart for 30 days. ${fileMark('file-1')} `)
     const sending = chat.controller.send(id)
     await vi.waitFor(() => expect(chat.held).toHaveLength(1), shortly)
     chat.held.splice(0, 1)[0]()
     await sending
     expect(stateOf(chat).pending).toEqual([])
     expect(chat.draftOf(id)).toMatchObject({
-      text: 'Keep a saved cart for 30 days.',
+      text: before,
       files: [{ state: 'ready', attachment: { id: 'attachment-1' } }],
       sendId: 'client-1',
       sending: false,

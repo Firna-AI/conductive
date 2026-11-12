@@ -5,20 +5,23 @@ import { pullRequest } from '../../fixtures/pullRequests'
 import { baseBranchOf, type Workspace } from '../../fixtures/workspaces'
 import { GitHubMark } from '../common/GitHubMark'
 import { useOutsideHref } from '../common/ScreenLink'
+import { useShortcutTip } from '../common/ShortcutTip'
 import { useControlSizes } from '../common/touch'
 import { barLabels } from './barCopy'
 import type { PrStatus } from './prStatus'
 import styles from './PullRequestBar.module.css'
 
 /**
- * A link to GitHub. When the bar has no room for its words, such as beside
- * an action in a narrow column, the GitHub mark takes the place of the
- * words and the arrow, and the link keeps its name as a tooltip.
+ * A link to the pull request on GitHub. When the bar has no room for its
+ * words, such as beside an action in a narrow column, the GitHub mark takes
+ * the place of the words and the arrow, and the link keeps its name as a
+ * tooltip. On desktop, the tooltip also names the key of Open PR on GitHub.
  */
 export function GitHubLink(props: { href: string; label: string }) {
   const href = useOutsideHref(props.href)
   // The words take the size of the button labels: larger on a phone.
   const control = useControlSizes()
+  const tip = useShortcutTip(props.label, 'open-pull-request')
   return (
     <a
       aria-label={props.label}
@@ -27,7 +30,7 @@ export function GitHubLink(props: { href: string; label: string }) {
       rel="noreferrer"
       style={{ fontSize: control.labelSize }}
       target="_blank"
-      title={props.label}
+      title={tip ?? props.label}
     >
       <GitHubMark className={styles.mark} size={13} />
       <span className={styles.actionLabel}>{props.label}</span>
@@ -39,11 +42,12 @@ export function GitHubLink(props: { href: string; label: string }) {
 /**
  * The number of the pull request, which opens it on GitHub. An arrow after
  * the number marks the link, so the bar needs no other link to the pull
- * request.
+ * request. On desktop, its tooltip also names the key of Open PR on GitHub.
  */
 export function PullRequestNumber(props: { number: number; href: string }) {
   const href = useOutsideHref(props.href)
   const label = `Open pull request #${props.number} on GitHub`
+  const tip = useShortcutTip(label, 'open-pull-request')
   return (
     <a
       aria-label={label}
@@ -51,7 +55,7 @@ export function PullRequestNumber(props: { number: number; href: string }) {
       href={href}
       rel="noreferrer"
       target="_blank"
-      title={label}
+      title={tip ?? label}
     >
       <span className={styles.numberText}>#{props.number}</span>
       <span className={styles.numberArrow}>

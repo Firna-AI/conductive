@@ -19,6 +19,13 @@ export interface ChatLinks {
    * shows the chip of its workspace.
    */
   sessions?: SessionLinks
+  /**
+   * The origin of the links of the app, from the link of the chat's own
+   * workspace. A session that the chat names by its IDs, such as the
+   * session whose agent stopped a turn, shows its link with it when no
+   * workspace of the list matches.
+   */
+  origin?: string
 }
 
 const LinksContext = createContext<ChatLinks>({
@@ -42,11 +49,15 @@ export function useChatLinks(): ChatLinks {
   return useContext(LinksContext)
 }
 
-/** What a chip shows of its workspace now: the label, the name, and the state. */
+/**
+ * What a chip shows of its workspace now: the label, the name, the state,
+ * and the GitHub state of its pull request.
+ */
 export function chipOf(workspace: Workspace): ChipWorkspace {
   return {
     label: workspaceLabel(workspace.number),
     name: nameLabel(workspace.name),
     status: workspace.state,
+    github: workspace.github,
   }
 }

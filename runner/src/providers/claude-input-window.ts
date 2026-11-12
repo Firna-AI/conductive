@@ -14,6 +14,10 @@ export class ClaudeInputWindow implements AsyncIterable<SDKUserMessage> {
   private readonly outstanding = new Set<string>()
   private closed = false
 
+  get pending(): boolean {
+    return this.held.length > 0 || this.outstanding.size > 0
+  }
+
   push(id: string, value: UserMessage): void {
     if (this.closed) throw new Error('The agent input is closed.')
     this.held.push({ id, value })

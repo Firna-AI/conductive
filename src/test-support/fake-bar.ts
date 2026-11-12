@@ -237,7 +237,7 @@ export function continuedEvents(
   member: MessageSender,
   moved: readonly BranchChangedFile[] = [],
 ): WorkspaceEvent[] {
-  const record = { ...workspace, branch: CONTINUED_BRANCH }
+  const record = { ...workspace, branch: CONTINUED_BRANCH, github: null }
   return [
     { type: 'workspace.updated', workspace: record },
     ...sessions.map((session): WorkspaceEvent => ({

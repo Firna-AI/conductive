@@ -4,6 +4,7 @@ import type { ListData } from '../../app/list-changes'
 import { useRoute } from '../../app/navigation'
 import { paletteOrg } from '../../app/palette/palette-org'
 import type {
+  PaletteBase,
   PaletteRead,
   PaletteSource,
 } from '../../app/palette/palette-source'
@@ -41,15 +42,12 @@ function listOf(
 }
 
 /**
- * What the palette reads from the app: the org of the palette with its
- * list and its repositories, which it reads while it is open, the orgs of
- * the person, and what the parts of the page offer. `retry` reads the
- * given parts of the org again, such as the reads that failed.
+ * What the actions and the settings of the palette read from the app: the
+ * org of the palette, the orgs of the person, the open workspace, and what
+ * the parts of the page offer. The keys of their commands read it too,
+ * while the palette is closed, so it reads no part of the org.
  */
-export function usePaletteSource(): {
-  source: PaletteSource
-  retry: (reads: readonly PaletteRead[]) => Promise<void>
-} {
+export function usePaletteBase(): PaletteBase {
   const app = useApp()
   const route = useRoute()
   const orgs = useStore(app.orgs)
@@ -59,28 +57,44 @@ export function usePaletteSource(): {
   const offers = useStore(usePalette().offers)
   const mac = useMacApp() !== null
   const org = paletteOrg(route, orgs, lastOrg)
-  const model = org === null ? null : app.org(org.id)
-  const sections = useStore(model?.sections ?? nothing)
-  const workspaces = useStore(model?.workspaces ?? nothing)
-  const repositories = useStore(model?.repositories ?? nothing)
-  useEffect(() => model?.watch('list', 'repositories'), [model])
   const open =
     route.screen === 'workspace' && route.orgId === org?.id
       ? route.workspaceId
       : null
   return {
+    orgs,
+    org,
+    suspended: org !== null && isSuspended(org, refused),
+    openWorkspaceId: open,
+    createOrgHref: inFirstRun(getStarted)
+      ? routes.getStarted()
+      : routes.createOrg(),
+    offers,
+    mac,
+  }
+}
+
+/**
+ * What the open palette reads from the app: its base, and the list and the
+ * repositories of its org, which it reads while it is open. `retry` reads
+ * the given parts of the org again, such as the reads that failed.
+ */
+export function usePaletteSource(): {
+  source: PaletteSource
+  retry: (reads: readonly PaletteRead[]) => Promise<void>
+} {
+  const app = useApp()
+  const base = usePaletteBase()
+  const model = base.org === null ? null : app.org(base.org.id)
+  const sections = useStore(model?.sections ?? nothing)
+  const workspaces = useStore(model?.workspaces ?? nothing)
+  const repositories = useStore(model?.repositories ?? nothing)
+  useEffect(() => model?.watch('list', 'repositories'), [model])
+  return {
     source: {
-      orgs,
-      org,
-      suspended: org !== null && isSuspended(org, refused),
+      ...base,
       list: listOf(sections, workspaces),
       repositories,
-      openWorkspaceId: open,
-      createOrgHref: inFirstRun(getStarted)
-        ? routes.getStarted()
-        : routes.createOrg(),
-      offers,
-      mac,
     },
     retry: async (reads) => {
       if (model === null) return

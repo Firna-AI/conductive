@@ -20,6 +20,7 @@ import {
   newOrg,
   newOrgDraft,
 } from '../fixtures/repositories'
+import type { ShortcutChanges } from '../fixtures/shortcutChanges'
 import { paths } from '../paths'
 import type { NewWorkspaceState } from './NewWorkspaceScreen'
 import { newWorkspaceChoice } from './newWorkspaceParts'
@@ -112,10 +113,13 @@ function acmeBuildFailed(state: NewWorkspaceState): boolean {
 /**
  * The sidebar of the org, with New workspace selected. `needsInput` is a
  * workspace whose agent waits for the user, which only the Mac app draws.
+ * `shortcuts` holds the person's changes to the shortcuts, so the Search
+ * row shows the person's key of the palette.
  */
 export function sidebarOf(
   state: NewWorkspaceState,
   needsInput?: string,
+  shortcuts?: ShortcutChanges,
 ): ReactNode {
   const viewer = viewerMembership(state.viewer)
   switch (state.org) {
@@ -125,6 +129,7 @@ export function sidebarOf(
         <Sidebar
           org={orgs.acme}
           sections={suspendedSections()}
+          shortcuts={shortcuts}
           suspended
           viewer={viewer}
         />
@@ -137,6 +142,7 @@ export function sidebarOf(
           org={orgs.firna}
           sections={newOrgSections()}
           settingsAlert={state.firstBuild === 'failed'}
+          shortcuts={shortcuts}
           viewer={viewer}
         />
       )
@@ -147,6 +153,7 @@ export function sidebarOf(
           org={orgs.acme}
           sections={workspaceSections(undefined, needsInput)}
           settingsAlert={acmeBuildFailed(state)}
+          shortcuts={shortcuts}
           viewer={viewer}
         />
       )
