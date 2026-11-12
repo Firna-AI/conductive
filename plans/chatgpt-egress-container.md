@@ -14,6 +14,11 @@ turns, or the ChatGPT sign-in flow on `auth.openai.com`.
 
 ## Decisions
 
+- **User decision, 12 November 2026, on decision 3:** deploy the egress
+  Worker automatically, and let open streams finish when a container is
+  replaced. This is option G below. Alternatives: options A to F. Reason:
+  a manual deploy can drift from `main`, and a deploy must not cut
+  answers.
 - **User decision, 11 November 2026:** host the proxy in a Cloudflare
   Container. Alternatives: keep the Mac proxy, a dedicated Boat sandbox,
   or Google Cloud Run. Reason: the product already runs on Cloudflare. The
@@ -45,11 +50,17 @@ turns, or the ChatGPT sign-in flow on `auth.openai.com`.
   calls `chatgpt.com` directly. Reason: the address path stays available
   for another host, for example when OpenAI blocks container addresses.
   Decision 4, option D, would reverse this order.
-- **My call, 11 November 2026:** one named container instance serves all
-  requests. It sleeps after one hour without a request. Reason: a lite
-  instance costs a few dollars a month, and a cold start took about one
-  second in the tests. Decision 3, option C, would name the instance after
-  the deployed version.
+- **My call, 12 November 2026:** each request goes to the instance named
+  after the deployed version of the egress Worker. An instance sleeps
+  after 15 minutes without a request, and the config allows 5 instances.
+  Reason: a new version then serves new requests at once, while an old
+  instance finishes its streams and stops. A cold start took about one
+  second in the tests.
+- **My call, 12 November 2026:** the deploy run deploys the egress Worker
+  only when a hash of its inputs differs from the tag of the deployed
+  version. The inputs are the egress Worker code, the proxy, the
+  Dockerfile, and the lock file. Reason: a deploy with no change would
+  still start a new instance, and a CI image build can change its digest.
 
 ### 3. How the egress Worker deploys
 
@@ -95,16 +106,24 @@ turns, or the ChatGPT sign-in flow on `auth.openai.com`.
     container rollout, and requests go to version instances. An operator
     deploys each image change by hand. Each push starts a new instance,
     which idles for one hour. Effort: Medium.
+  - **G.** E, and the proxy drains on `SIGTERM`. Cloudflare sends
+    `SIGTERM` before it replaces a container, and waits up to 15 minutes
+    before it kills the process. The proxy then takes no new connection
+    and lets each open stream finish. Version instances keep new requests
+    off the draining container. An answer longer than 15 minutes is still
+    cut. Effort: Medium.
 - **Left out:** Cloudflare Workers Builds with watched paths: its builds
   have no Docker today.
-- **Wider fix:** E. It deploys only when the built output changes, so no
-  push starts a needless rollout.
+- **Wider fix:** G. It deploys only when the built output changes, and a
+  replacement waits for open streams.
 - **Previous examples:** None found.
 - **Recommendation:** C. It needs no CI change and no new permission, and
   each deploy reaches new requests at once. The first recommendation was
   A. E prevents drift best.
 - **Action:** ask the user, because the options have real trade-offs, and
   B, D, E, and F need a credential change.
+- **Outcome:** the user chose automatic deploy with drain on 12 November
+  2026. This plan applies G.
 
 ### 4. What happens to the Mac proxy
 
@@ -186,10 +205,13 @@ Depends on: 1
       private network setting that skips the secret check. Log an OpenAI
       error reply only after the bearer token and the account ID of the
       request are removed from it.
+- [ ] On `SIGTERM`, the proxy takes no new connection, lets each open
+      stream finish, and then exits. Test: an open stream finishes after
+      `SIGTERM`, and a new connection is refused.
 - [ ] `tools/chatgpt-egress/Dockerfile`: Node 24, the proxy, the private
       network setting, port 8080.
 - [ ] `worker/chatgpt-egress/`: the Worker, the Container class with the
-      relay, its Wrangler config, and its README with the deploy steps.
+      relay, version instances, its Wrangler config, and its README.
 - [ ] A unit test of the relay: bytes pass in order, and a closed client
       cancels the container read.
 - [ ] Typecheck, lint, format, file length, and the targeted tests.
@@ -206,17 +228,29 @@ Depends on: 2
 - [ ] `docs/deployment.md`: list the `CHATGPT_EGRESS` binding, and the
       `CHATGPT_EGRESS_URL` and `CHATGPT_EGRESS_SECRET` settings of PR #259.
 
-## Milestone 4: Deploy and verify
+## Milestone 4: Automatic deploy
 
-Depends on: 2, 3
+Depends on: 2
 
-- [ ] Deploy the egress Worker from a machine with Docker.
+- [ ] Cal: give the deploy token of the `production` environment the
+      Containers permission. This blocks the first automatic deploy.
+- [ ] `.github/workflows/deploy.yml`: before the main Worker, hash the
+      egress inputs, and deploy the egress Worker when the hash differs
+      from the tag of its deployed version.
+- [ ] Update `docs/automatic-deploys.md`.
+
+## Milestone 5: Deploy and verify
+
+Depends on: 2, 3, 4
+
+- [ ] Deploy the egress Worker once by hand, so that the service binding
+      of the main Worker has a target before the merge.
 - [ ] Through a temporary Worker with the binding, check that a request
       with a fake token gets OpenAI's 401 JSON reply.
 - [ ] After the merge and the deploy, check a real Codex turn on a ChatGPT
       plan in the Workers logs of the egress Worker.
 
-## Milestone 5: Verification, commit, review, and pull request
+## Milestone 6: Verification, commit, review, and pull request
 
 Depends on: every other milestone
 
