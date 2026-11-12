@@ -1,0 +1,487 @@
+# Attach files of up to 1 GB
+
+Status: Active. On branch `calummoore/lisbon-ogce`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
+
+Today each file of a message can hold at most 25 MB (decision 132). The
+browser sends each file to the Worker in one request (decision 144). The
+Worker stores the file in the `CHAT_ATTACHMENTS` R2 bucket. When the turn
+of the message starts, the workspace object streams the stored copy into
+the cloud computer through a signed upload URL of the provider. The app
+keeps the stored copy until it deletes the workspace.
+
+On 12 November 2026, Cal asked: "support larger uploads up to 1GB - we
+need to clear up the upload once its on the box". This change raises the
+limit of each file to 1 GB, or 1,000,000,000 bytes. The cloud computer
+downloads each file from a one-use route of the Worker. The app deletes
+its stored copy as soon as the file is in the cloud computer. A later
+message with the same file uses the copy that is already there.
+
+Two Cloudflare limits block a simple raise of the limit. The checks of
+12 November 2026 against the Cloudflare docs found them:
+
+- The zone is on the Free or Pro plan, so a request body can hold at most
+  100 MB. One request cannot carry a 1 GB file.
+- A request that a Durable Object sends with `fetch()` can carry at most
+  100 MiB, or 104,857,600 bytes. Streaming does not get past this limit.
+  The copy runs in the workspace object, so today it fails for each file
+  above 100 MiB. The copy request also stops after 65 seconds.
+
+This change does not cover a resumable upload after a reload, progress of
+the download in the chat, or a paste of a file. The brainstorm notes are in
+`.context/large-uploads/`.
+
+Contract owners:
+
+- [Message attachments](../docs/protocol/message-attachments.md).
+- [Access and security](../docs/protocol/access-and-security.md#attachment-uploads).
+- [Chat attachment storage and delivery](../worker/chat/attachments.md).
+- The [sandbox README](../worker/sandbox/README.md).
+- The [shared contracts README](../src/shared/README.md).
+- The [mockups README](../docs/mockups/README.md) and the
+  [attachments catalogue](../docs/mockups/catalogue-attachments-and-files.md).
+- The Terms page in `src/marketing/terms.ts`, the Privacy page in
+  `src/marketing/privacy.ts`, the guide
+  [Sessions and chat](../src/marketing/docs/sessions-and-chat.md), and the
+  comparison row in `src/marketing/from-conductor/areas/agents-and-chat.ts`.
+
+Replaced ways:
+
+- The streamed write of the Worker into the cloud computer →
+  a download by the cloud computer. Consumers:
+  `worker/chat/attachment-copy.ts`, its tests and test support,
+  `worker/chat/attachments.md`, and the "File writes" section of the
+  sandbox README. Moved in Milestone 3. `SandboxProvider.writeFile`,
+  `worker/sandbox/file-write.ts`, `worker/sandbox/file-write-body.ts`,
+  `BoatTransport.uploadFile`, the `uploadFileUrl` provider route, and their
+  tests have no other consumer. Deleted in Milestone 3.
+- One raw `POST` for each file → the transport of large-upload decision 1.
+  Consumers: `worker/http/raw-upload-routes.ts`,
+  `worker/chat/attachment-routes.ts`, `src/app/api/xhr-files.ts`,
+  `src/app/dev/attachment-routes.ts`, and their tests. Moved and deleted in
+  Milestones 5 and 6, after the user answers decision 1.
+
+## Decisions
+
+The decisions of this change carry the short name "large-upload". So
+"large-upload decision 2" names decision 2 below.
+
+### 1. How the browser uploads a 1 GB file
+
+Open. It waits for the user's answer. Milestones 5 and 6 wait for it.
+
+- **Severity:** High. **Effort:** Medium.
+- **Source:** Design. **Category:** Architecture.
+- **Location:** `worker/http/raw-upload-routes.ts`,
+  `worker/chat/attachment-byte-storage.ts`, `src/app/api/xhr-files.ts`.
+- **Background:** The two upload routes take one file in one request. The
+  Worker can already write an R2 multipart upload for internal callers,
+  and `chat_attachments.multipart_id` already stores its ID.
+- **Problem:** One request cannot carry more than 100 MB on the plan of
+  the zone.
+- **Impact if no action:** Files stay limited to about 100 MB.
+- **Root question:** How does a file of up to 1 GB get from the browser
+  into the app's storage?
+- **Options:**
+  - **A.** Upload in parts through the Worker. The browser starts an
+    upload, sends raw parts of about 64 MiB each, and then completes the
+    upload. The Worker streams each part into an R2 multipart upload and
+    checks the total size at the end. The chip adds the progress of all
+    parts. This changes decision 144, which rejected parts because they
+    need stored part state. Effort: Medium.
+  - **B.** Upload straight to R2 with a presigned URL, then call the
+    Worker, which checks the size. It needs a new R2 access key as a
+    secret, CORS rules on the bucket for the web and Mac origins, and a new
+    host in the content security policy. A presigned URL cannot cap the
+    size, so the Worker deletes a file that is too large after the upload.
+    This changes decision 144. Effort: Medium.
+  - **C.** Option A, with two additions. The start call declares the size
+    of the file, and each part route refuses a part number or a byte count
+    beyond that size. A failed part retries alone, and Try again sends only
+    the parts that the Worker did not confirm, while the tab keeps the
+    file. The browser keeps the list of confirmed parts. This changes
+    decision 144. Effort: Medium.
+  - **D.** Move the zone to the Enterprise plan, which accepts up to 5 GB
+    in one request. Each file keeps one raw request. It needs an Enterprise
+    contract, and one dropped connection restarts the whole file.
+    Effort: Large.
+- **Left out:**
+  - Change nothing: it fails the goal.
+  - The Business plan: it accepts at most 200 MB, so it fails the goal.
+  - Upload into the cloud computer: a message to a new or stopped
+    workspace cannot then carry files, which breaks decision 132.
+  - A resumable upload after a reload: a draft lives only in the memory of
+    its tab, so a reload leaves nothing to resume. A resume in the same
+    tab is part of option C.
+  - Chunks in Durable Object storage: option A is better on every point.
+  - One WebSocket that streams the file: option A is better on every
+    point, because it can retry one part and keeps the HTTP gate.
+- **Wider fix:** None, because this is a new transport.
+- **Previous examples:** Decision 144 in
+  `plans/boat-native-remote-workspaces.md`.
+- **Recommendation:** C. The first recommendation was A. The options check
+  of 12 November 2026 showed that A lets one member store about 670 GB of
+  parts until R2 aborts the upload, and that one dropped part restarts a
+  1 GB upload. C closes both gaps with the same routes.
+- **Action:** Ask the user, because both options change decision 144.
+
+### 2. How a 1 GB file reaches the cloud computer
+
+Chosen on 12 November 2026: C. Cal's answer: "2 = C".
+
+- **Severity:** High. **Effort:** Medium.
+- **Source:** Design. **Category:** Architecture.
+- **Location:** `worker/chat/attachment-copy.ts`,
+  `worker/sandbox/transport.ts:39`.
+- **Background:** The workspace object runs the copy, because it decides
+  when the agent gets each message. The provider gives a signed upload URL
+  for one path, with no size limit, for at most 1 hour.
+- **Problem:** A request from a Durable Object can carry at most 100 MiB,
+  and the copy request stops after 65 seconds.
+- **Root question:** How does a stored file of up to 1 GB get into the
+  cloud computer?
+- **Options:**
+  - **A.** Ask Cloudflare for a higher limit, and raise the timeout.
+    Effort: Small.
+  - **B.** Copy in pieces of about 64 MiB from the object, then join them
+    with one command. Effort: Medium.
+  - **C.** The cloud computer downloads the file from a short-lived URL.
+    It changes the rule that only the Worker reads the bucket.
+    Effort: Medium.
+  - **D.** The object asks plain Worker code to do the copy in one piece.
+    The Cloudflare docs name the 100 MiB limit only for Durable Objects and
+    containers, but no test on Cloudflare confirmed it. Effort: Medium.
+- **Left out:** Change nothing: it fails for files above 100 MiB.
+- **Recommendation:** B was recommended. The user chose C.
+
+### 3. When the app deletes its stored copy
+
+Chosen on 12 November 2026: A. Cal's answer: "also once the file has been
+transferred, it should be deleted". This plan reads that answer as option
+A, for every file.
+
+- **Severity:** High. **Effort:** Medium.
+- **Source:** Design. **Category:** Product.
+- **Background:** Today each message that uses a file copies it again, and
+  Try again copies again, so the agent always reads the original bytes.
+  The disk and the ID of a cloud computer survive a stop.
+- **Root question:** How does the app stop storing a file once the cloud
+  computer holds it, while each later message and Try again still gets
+  that file? The options check of 12 November 2026 gave this better
+  question.
+- **Options:**
+  - **A.** Delete it after the first successful transfer, for every file.
+    A later message or a Try again checks that the file is still in the
+    cloud computer with its size, and sends without a new transfer. When
+    the file is gone or its size changed, the turn fails and asks the
+    member to attach the file again. Effort: Medium.
+  - **B.** Option A, but keep the stored copy for 24 hours after the last
+    transfer. Effort: Medium.
+  - **C.** Option A only for files above 25 MB. Effort: Medium.
+  - **D.** Option A, but delete the stored copy only after the first start
+    of that cloud computer ends well. Effort: Medium.
+  - **E.** Option A, but the download records a SHA-256 digest of the
+    file, and a later message compares a new digest with it. Each later
+    message then reads up to 1 GB once more. Effort: Medium.
+  - **F.** Option A, and the download also keeps a read-only second copy
+    outside the repository folder. A later message copies it back first.
+    It doubles the disk use, and an agent can still delete the second
+    copy. Effort: Medium.
+  - **G.** Option A, and the download makes the copy read-only. A member
+    or an agent who edits the file in place then gets an error.
+    Effort: Small.
+- **Left out:** Change nothing: it fails the goal of the task message.
+- **Recommendation:** A was recommended and chosen. The options check
+  added D to G after the choice. This plan applies the timing of D inside
+  A as a design call of 12 November 2026, because the rule "No failure
+  loses an accepted message or its attachments" of
+  [A failed first start](../docs/protocol/create-a-workspace.md#a-failed-first-start)
+  stays. E, F, and G stay open to the user as additions to A.
+
+### 4. The read line for a very large file
+
+Open. It waits for the user's answer. Milestone 7 waits for it.
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Design. **Category:** Product.
+- **Location:** `runner/src/providers/attachment-description.ts`.
+- **Background:** Decision 244 adds one line after the text of a message:
+  "The sender attached these files. Read each file before you answer."
+  One line for each file then gives its path, name, media type, and size.
+- **Problem:** An agent that reads a 1 GB log fills its context and wastes
+  time.
+- **Impact if no action:** A turn with a large file is slow or fails.
+- **Root question:** How does the agent learn of each attached file
+  without loading more of it than its task needs? The options check of
+  12 November 2026 gave this better question, because Codex also gets
+  each image whole as image input.
+- **Options:**
+  - **A.** Keep the line. Effort: Small.
+  - **B.** For a file above 25 MB, the line says that the file is large,
+    and tells the agent to read only the parts that it needs.
+    Effort: Small.
+  - **C.** One read line for every file, with no size rule: "The sender
+    attached these files. Read each file, or the parts of a large file
+    that you need, before you answer." Effort: Small.
+  - **D.** Option C, and Codex gets an image as image input only when it
+    is 25 MB or less. A larger image gets only its file line. Reason: the
+    model gateway refuses a request body above 100,000,000 bytes.
+    Effort: Small.
+  - **E.** Option C, and the runner adds the first 2 KB of a large text
+    file after its file line. It reads each such file and adds tokens to
+    the message. Effort: Medium.
+- **Left out:**
+  - No read line for a large file: the agent can then miss the file, and
+    option B is better on every point.
+  - A rule in the agent instructions: decision 244 rejected it, because it
+    stands far from the files, and that reason holds.
+- **Wider fix:** D, with its size rule in the shared helper
+  `attachment-description.ts` that both adapters call.
+- **Previous examples:** Decision 244.
+- **Recommendation:** D. The first recommendation was B. D needs no size
+  rule for the read line, and its image limit keeps a large image from
+  failing a Codex turn.
+- **Action:** Ask the user, because it changes decision 244.
+
+### 5. Where the cloud computer downloads the file from
+
+Chosen on 12 November 2026: A. Cal's answer: "5 = A".
+
+- **Severity:** High. **Effort:** Medium.
+- **Source:** Design. **Category:** Architecture.
+- **Background:** Code in the cloud computer can see the URL of the
+  download command.
+- **Root question:** Which URL gives the cloud computer the bytes of one
+  stored file?
+- **Options:**
+  - **A.** A route of the Worker with a one-use token for one file and one
+    workspace, valid for about 10 minutes. The Worker keeps only the digest
+    of the token, and streams the file from R2. It reuses the pattern of
+    the build grant of decision 90. Effort: Medium.
+  - **B.** A presigned R2 URL. It needs a new R2 access key, and anyone who
+    sees the URL can read the file until it expires. Effort: Medium.
+  - **C.** A signed token with no stored record. The Worker signs the
+    file, the workspace, the sandbox, and an expiry. The token works again
+    until it expires. The options check of 12 November 2026 added it.
+    Effort: Medium.
+- **Left out:** A download by the runner with its workspace token: an older
+  runner fails, and the token reaches every file of the workspace.
+- **Recommendation:** A was recommended and chosen. A one-use claim makes
+  a token in the command history useless after the download starts, and
+  B and C cannot do that.
+
+## Design
+
+### The download
+
+- One transfer owner exists for each file and cloud computer. Its key is a
+  SHA-256 digest of the file ID and the sandbox ID. Each message that
+  needs the file waits for that owner. Reason: with large-upload decision
+  3, only the first transfer reads the bucket, so two messages must not
+  start two transfers of one file. Design call of 12 November 2026.
+- The owner makes a random token, stores its SHA-256 digest in a new D1
+  table with the file ID, the workspace ID, the sandbox ID, and an expiry
+  10 minutes later. Then it starts a background command in the cloud
+  computer with `SandboxProvider.startCommand`.
+- The command follows the rules of the build fetch command in
+  [repository-layout.md](../worker/lifecycle/repository-layout.md): an
+  empty environment, absolute paths, no `.curlrc`, HTTPS only, no
+  redirect, and time limits. Its `curl` uses a low-speed limit and a
+  total limit of 1 hour, not the 30 seconds of the build fetch. It writes
+  `.context/attachments/.gitignore`,
+  downloads into a temporary file beside the target, checks the byte
+  count, and moves the file into place. Reason: a failed download then
+  never leaves a part file at the path that the agent reads. Design call
+  of 12 November 2026.
+- The route is `POST /v1/internal/attachments/download` on
+  `api.conductive.build`. It takes the token as a bearer token. It refuses
+  a request with a cookie or an `Origin` header, as the build route does.
+  It claims the token once. Then it makes every check of today's copy in
+  `worker/chat/attachment-copy.ts`: the workspace still names that
+  sandbox, the workspace is not archived, the org is not deleted, the
+  owner is not suspended, the uploader is still a member, and the file is
+  still claimed by that workspace. Then it streams the R2 object. Each
+  attempt needs a new token. The scheduled cleanup deletes expired tokens.
+- The owner reads the state of the command with
+  `SandboxProvider.getCommandStatus` until the command ends. Reason: a 1 GB
+  download can take longer than the 600 seconds of a waiting command.
+  Design call of 12 November 2026.
+- After a restart of the workspace object, the owner is gone. The check
+  then starts a new owner, which downloads again into a new temporary
+  file. The command first removes the older temporary files of the same
+  file. The move into place is atomic, so two downloads cannot mix bytes.
+  Design call of 12 November 2026: a second download after a restart is
+  rare, so the owner keeps no process ID in storage.
+- The agent gets the message only after the transfer succeeds, as today.
+  The chat shows no progress for the transfer in this change.
+
+### The deletion of the stored copy
+
+- After the download succeeds, the Worker writes the sandbox ID into a
+  new `transferred_sandbox_id` column of the D1 record. Then it saves the
+  transfer proof in the chat queue. The `state` column keeps `claimed`.
+  Reason: claims and admission accept only `ready` and `claimed`, and
+  `deleteAttachment` removes the whole record, which a later message
+  needs. Design call of 12 November 2026.
+- The Worker deletes only the R2 object, and then sets a new
+  `bytes_deleted_at` column. The record keeps the name, the media type,
+  the size, and the path, so each sent message still shows its chips.
+- It deletes the R2 object only after the first start of that cloud
+  computer ended well. Until then, a failed first start can still replace
+  the cloud computer, and its Try again then transfers the file again from
+  R2. This keeps the rule that no failure loses an accepted attachment
+  (large-upload decision 3, timing of option D).
+- The scheduled cleanup also deletes the R2 object of each transferred
+  record whose bytes are still there, for example after a restart between
+  the proof and the deletion.
+- A later message, or a Try again, with a transferred file reads the file
+  info of its path with the provider's `fileInfo` route. When the size
+  matches, the message goes out with no transfer. Otherwise the turn fails
+  with a new error code, `attachment_missing`, that names the file and
+  asks the member to attach it again.
+- While the R2 object still exists, a message for another sandbox
+  transfers the file again. When the R2 object is gone and the workspace
+  names another sandbox, the turn fails with `attachment_missing`.
+- The failed turn says: "<name> is no longer in the cloud computer. Attach
+  it again in a new message." Try again stays, as for each failed turn, but
+  it fails again until the file is back at its path. Design call of
+  12 November 2026.
+- The 7-day expiry of an unsent file, and the deletion of the files of a
+  deleted workspace or org, stay as they are.
+
+### Risks
+
+- An agent edit that keeps the size of a file goes unnoticed. The next
+  message then reads the edited file.
+- A 1 GB upload over a 20 Mbit/s link takes about 7 minutes. A reload
+  of the page loses it.
+- Each cloud computer keeps its files for the life of the workspace, on a
+  disk of about 51 GB.
+- The token is visible to code in the cloud computer for up to 10 minutes.
+  It gives only one file that is on its way to that same computer.
+
+## Milestone 1: Mockups
+
+Tags: mockup
+
+Depends on: none
+
+The notice for a file that is too large names the new limit. A new state
+shows a turn that failed because a file is no longer in the cloud
+computer.
+
+- [ ] Change the limit in `docs/mockups/src/components/chat/attachmentCopy.ts`
+      and in the descriptions of `app/attachments/too-large` to 1 GB. Keep
+      the reason why the notice gives no file size.
+- [ ] Add `app/attachments/missing`: a failed turn whose message names a
+      file that is no longer in the cloud computer. Its text asks the member
+      to attach the file again in a new message.
+- [ ] Update the mockups README and the attachments catalogue.
+- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
+- [ ] Update the design and the TODOs of this plan for each problem that
+      the mockups show.
+
+## Milestone 2: Documentation and protocol
+
+Depends on: 1
+
+- [ ] Update `docs/protocol/message-attachments.md`: the 1 GB limit, the
+      download by the cloud computer, the deletion after the transfer, the
+      check of a later message and of Try again, and the new error.
+      Remove the rejection of a download by the cloud computer.
+- [ ] Update `docs/protocol/access-and-security.md` with the download
+      route and its token.
+- [ ] Update `docs/protocol/isolation.md`, which says that the Worker sends
+      each attachment to the provider's upload address.
+- [ ] Update `docs/protocol/create-a-workspace.md` only if its words about
+      attachments of a failed first start change.
+- [ ] Read the Terms page and the Privacy page in full. Update each
+      sentence about kept files, such as `src/marketing/terms.ts:206` and
+      `src/marketing/privacy.ts:97`.
+- [ ] Read each public guide in full. Update
+      `src/marketing/docs/sessions-and-chat.md:62` and each other sentence
+      that states the limit or the kept files.
+- [ ] Update the comparison row in
+      `src/marketing/from-conductor/areas/agents-and-chat.ts:30`.
+- [ ] Update `README.md:47`.
+
+## Milestone 3: The cloud computer downloads each file
+
+Depends on: 2
+
+- [ ] Add the D1 migration for the download tokens, and the migrations
+      README line.
+- [ ] Add the download route on the machine host, with its tests. Reuse the
+      access checks of today's copy.
+- [ ] Delete expired download tokens in the scheduled cleanup.
+- [ ] Replace the streamed write in `worker/chat/attachment-copy.ts` with
+      the download command and its status reads. Key the owner by file and
+      sandbox.
+- [ ] Delete `SandboxProvider.writeFile`, its Boat adapter, the
+      `uploadFileUrl` route, and their tests.
+- [ ] Update `worker/chat/attachments.md` and the sandbox README.
+- [ ] Run `npm run test -- worker/chat worker/sandbox`.
+
+## Milestone 4: Delete the stored copy after the transfer
+
+Depends on: 3
+
+- [ ] Add the `transferred_sandbox_id` and `bytes_deleted_at` columns to
+      `chat_attachments`, with a migration. Keep the `state` values.
+- [ ] Mark the file before the proof is saved. Delete only its R2 object
+      after the first start of that cloud computer ended well.
+- [ ] Delete the R2 object of each transferred record that still has
+      bytes in the scheduled cleanup.
+- [ ] Add `fileInfo` to `SandboxProvider`, its Boat adapter, and the
+      provider contract suite.
+- [ ] Check a transferred file with `fileInfo` before a later message or a
+      Try again. Fail the turn with `attachment_missing` when it is gone.
+- [ ] Add tests: the deletion, a later message, Try again, a changed size,
+      a failed first start before the deletion, and a new sandbox after
+      it.
+- [ ] Update `worker/chat/attachments.md`.
+
+## Milestone 5: Upload in parts
+
+Depends on: 2, and the answer to large-upload decision 1
+
+- [ ] Write the TODOs of the chosen option of decision 1.
+
+## Milestone 6: The composer accepts 1 GB
+
+Tags: ui
+
+Depends on: 1, 5
+
+- [ ] Set `ATTACHMENT_MAX_BYTES` to 1,000,000,000 and update every text
+      that names 25 MB, in the app, the Worker, and the tests.
+- [ ] Move the upload client to the transport of Milestone 5, with one
+      progress value for each file.
+- [ ] Update `src/shared/README.md`.
+
+## Milestone 7: The read line for large files
+
+Depends on: 2, and the answer to large-upload decision 4
+
+- [ ] Write the TODOs of the chosen option of decision 4.
+
+## Milestone 8: Verification, commit, review, and pull request
+
+Depends on: every other milestone
+
+- [ ] Run the targeted tests and `npm run check`.
+- [ ] Commit with Conventional Commits and push the branch.
+- [ ] Review the complete local diff against `origin/main` with the
+      `implementation-review` skill after the push. Report the findings,
+      then apply the fix rule: fix the `fix now` findings, record
+      follow-up items under `plans/follow-ups/` for the rest, re-review
+      once, and report.
+- [ ] Delete this plan when the `plans` skill says, under "Deleting the
+      plan".
+- [ ] Open the pull request. Its description gives the decisions and the
+      design calls of this plan with their dates, a permalink to this
+      plan, and the follow-up items that the change adds.
+
+## Post-merge follow-up (non-blocking)
+
+- [ ] On the test deployment, attach a file of about 1 GB, send it, and
+      check that the agent gets it, and that the R2 object is gone.
