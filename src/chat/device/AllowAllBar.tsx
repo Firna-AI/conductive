@@ -94,6 +94,7 @@ export function AllowAllBar(props: {
   const keep = { action: 'keep-workspace', workspaceId } as const
   const key = controlOf(stop)
   const result = shownResult(state, key, grant !== null)
+  // The pressed button spins and keeps the focus. The other one is off.
   const busy = state.busy.includes(key)
   const waits = Object.hasOwn(state.waiting, key) ? state.waiting[key] : null
   if (grant === null && result === null) return null
@@ -135,7 +136,7 @@ export function AllowAllBar(props: {
           </span>
           <ActionButton
             busy={waits === 'keep-workspace'}
-            disabled={busy}
+            disabled={busy && waits !== 'keep-workspace'}
             onPress={() => void controller.change(keep)}
           >
             Keep until I stop
@@ -145,7 +146,7 @@ export function AllowAllBar(props: {
       {grant ? (
         <ActionButton
           busy={waits === 'stop-workspace'}
-          disabled={busy}
+          disabled={busy && waits !== 'stop-workspace'}
           icon={Square}
           onPress={() => void controller.change(stop)}
         >

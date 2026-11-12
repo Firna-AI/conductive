@@ -32,7 +32,7 @@ export type MacSettingsView =
  * stay through every read, a Mac that goes away, and a new pairing.
  */
 export type MacSettingsState = MacSettingsView & {
-  /** The controls whose change waits for the Mac. */
+  /** The controls whose change waits for the Mac: the keys of `waiting`. */
   busy: readonly string[]
   /** The action of the change that waits, by control. */
   waiting: Readonly<Record<string, SettingsChange['action']>>
@@ -65,7 +65,6 @@ export class MacSettingsController {
   private readonly api: DeviceApi
   private readonly listeners = new Set<() => void>()
   private view: MacSettingsView = { kind: 'loading' }
-  private busy: readonly string[] = []
   private waiting: Readonly<Record<string, SettingsChange['action']>> = {}
   private results: Readonly<Record<string, ChangeResult>> = {}
   private state: MacSettingsState = {
@@ -91,7 +90,7 @@ export class MacSettingsController {
   private publish(): void {
     this.state = {
       ...this.view,
-      busy: this.busy,
+      busy: Object.keys(this.waiting),
       waiting: this.waiting,
       results: this.results,
     }
@@ -153,14 +152,13 @@ export class MacSettingsController {
   readonly change = (change: SettingsChange): Promise<void> => {
     const view = this.view
     const key = controlOf(change)
-    if (view.kind !== 'ready' || this.busy.includes(key)) {
+    if (view.kind !== 'ready' || Object.hasOwn(this.waiting, key)) {
       return Promise.resolve()
     }
     const last = Object.hasOwn(this.results, key)
       ? this.results[key]
       : undefined
     const subject = subjectOf(change, view.settings, last)
-    this.busy = [...this.busy, key]
     this.waiting = { ...this.waiting, [key]: change.action }
     this.results = Object.fromEntries(
       Object.entries(this.results).filter(([control]) => control !== key),
@@ -170,7 +168,6 @@ export class MacSettingsController {
   }
 
   private finish(key: string, result: ChangeResult): void {
-    this.busy = this.busy.filter((item) => item !== key)
     this.waiting = Object.fromEntries(
       Object.entries(this.waiting).filter(([control]) => control !== key),
     )

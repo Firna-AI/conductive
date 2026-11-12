@@ -174,21 +174,30 @@ function answer(
     const others = mac.settings.workspaceWindows.filter(
       (grant) => grant.workspaceId !== request.workspaceId,
     )
+    const current = mac.settings.workspaceWindows.find(
+      (grant) => grant.workspaceId === request.workspaceId,
+    )
+    // As on the Mac, the 15 minutes never shorten a grant until Stop.
+    const keeps =
+      action === 'allow-workspace-15-minutes' &&
+      current !== undefined &&
+      (current.expiresAt === null || current.expiresAt > backend.clock.now())
     const expiresAt =
       action === 'allow-workspace-until-stop'
         ? null
         : backend.clock.now() + 15 * 60_000
-    mac.settings = {
-      ...mac.settings,
-      workspaceWindows: [
-        ...others,
-        {
-          workspaceId: request.workspaceId,
-          workspaceName: request.workspaceName,
-          expiresAt,
-        },
-      ],
-    }
+    if (!keeps)
+      mac.settings = {
+        ...mac.settings,
+        workspaceWindows: [
+          ...others,
+          {
+            workspaceId: request.workspaceId,
+            workspaceName: request.workspaceName,
+            expiresAt,
+          },
+        ],
+      }
   }
   update(backend, request.requestId, {
     state: 'running',

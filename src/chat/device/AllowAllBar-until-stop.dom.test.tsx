@@ -118,3 +118,32 @@ describe('AllowAllBar until Stop', () => {
     )
   })
 })
+
+describe('AllowAllBar while a change waits', () => {
+  it('spins only the pressed button, keeps it focusable, and turns the other off', async () => {
+    holdAnimationFrames()
+    const server = new FakeApiServer({ onMac: true })
+    await mount(<Bar clock={{ now: () => FAKE_TIME }} fetch={server.fetch} />)
+    await waitFor(() => queryByText('14:32 left'), 'the time left')
+    let reply: (value: unknown) => void = () => undefined
+    server.json(
+      'POST',
+      DEVICE_SETTINGS_PATH,
+      new Promise((resolve) => {
+        reply = resolve
+      }),
+    )
+    const keep = byRole('button', 'Keep until I stop')
+    await press(keep)
+    await waitFor(
+      () => keep.getAttribute('aria-busy') === 'true',
+      'the spinning Keep',
+    )
+    const stop = byRole('button', 'Stop')
+    expect(keep.hasAttribute('disabled')).toBe(false)
+    expect(stop.getAttribute('aria-busy')).not.toBe('true')
+    expect(stop.hasAttribute('disabled')).toBe(true)
+    reply(fakeSettingsReply(untilStop()))
+    await waitFor(() => queryByText('Until you stop'), 'the grant until Stop')
+  })
+})
