@@ -1,11 +1,13 @@
 // @vitest-environment happy-dom
 
 import { act } from 'react'
-import { describe, expect, test } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
+import { routes } from '../../app/router'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { serveOperator } from '../../test-support/operator'
 import { PhoneFrame } from '../layout/frames'
-import { click, mountScreen, press } from '../test-mount'
+import { orgMoves, orgOrder } from '../layout/rail-test-kit'
+import { click, mountScreen, press, settle } from '../test-mount'
 import { startedApp } from '../test-render'
 import { ListHeader } from './HomeList'
 
@@ -28,6 +30,47 @@ async function openSwitcher(server: FakeApiServer): Promise<HTMLElement> {
   const sheet = document.querySelector<HTMLElement>('[role="dialog"]')
   if (!sheet) throw new Error('The switcher did not open.')
   return sheet
+}
+
+/** Sends a pointer event with the main button down, unless `init` says otherwise. */
+function pointer(target: EventTarget, type: string, init: PointerEventInit) {
+  act(() => {
+    target.dispatchEvent(
+      new PointerEvent(type, {
+        bubbles: true,
+        cancelable: true,
+        button: 0,
+        buttons: 1,
+        clientX: 100,
+        ...init,
+      }),
+    )
+  })
+}
+
+/** The link of the row of an org in the sheet. */
+function orgRow(sheet: HTMLElement, orgId: string): HTMLElement {
+  const link = sheet.querySelector<HTMLElement>(
+    `a[href="${routes.org(orgId)}"]`,
+  )
+  if (!link) throw new Error(`The switcher has no row for ${orgId}.`)
+  return link
+}
+
+/**
+ * Gives the list item of the row of each org a box 48 px high, from the top,
+ * in this order. So the middles of the rows are at 24, 72, and 120 px.
+ */
+function layOutRows(sheet: HTMLElement, orgIds: readonly string[]) {
+  orgIds.forEach((orgId, index) => {
+    const item = orgRow(sheet, orgId).closest('li')
+    if (!item) throw new Error(`The row of ${orgId} has no list item.`)
+    const box = new DOMRect(0, index * 48, 320, 48)
+    Object.defineProperty(item, 'getBoundingClientRect', {
+      configurable: true,
+      value: () => box,
+    })
+  })
 }
 
 describe('the org switcher of a phone', () => {
@@ -117,6 +160,79 @@ describe('the org switcher of a phone', () => {
       fromLast: 0,
       closed: { open: false, behind: false, trigger: true },
       pressedOutside: { open: false, pressKept: true, trigger: true },
+    })
+  })
+
+  test('a long press lifts an org and opens no menu, the finger drops it at a new place and the sheet stays, and Escape ends a drag and keeps the sheet', async () => {
+    const server = new FakeApiServer()
+    const sheet = await openSwitcher(server)
+    layOutRows(sheet, ['acme', 'futex', 'firna'])
+    const status = () =>
+      sheet.querySelector('nav > [role="status"]')?.textContent ?? ''
+    const shows = () => ({
+      open: document.querySelector('[role="dialog"]') !== null,
+      menus: document.querySelectorAll('[role="menu"]').length,
+    })
+    const firna = orgRow(sheet, 'firna')
+    const finger = { pointerType: 'touch', pointerId: 2 }
+    const hold = new MouseEvent('contextmenu', {
+      bubbles: true,
+      cancelable: true,
+    })
+    vi.useFakeTimers()
+    let lifted: { held: string; moving: string }
+    try {
+      pointer(firna, 'pointerdown', { ...finger, clientY: 120 })
+      act(() => vi.advanceTimersByTime(450))
+      const held = status()
+      act(() => {
+        firna.dispatchEvent(hold)
+      })
+      pointer(window, 'pointermove', { ...finger, clientY: 10 })
+      const moving = status()
+      pointer(window, 'pointerup', { ...finger, clientY: 10, buttons: 0 })
+      // A finger sends its click after it lets go.
+      act(() => firna.click())
+      lifted = { held, moving }
+    } finally {
+      vi.useRealTimers()
+    }
+    await settle()
+    const dropped = { order: orgOrder(sheet), ...shows() }
+
+    // A mouse lifts Acme, whose box stays at the top, and moves it down.
+    const acme = orgRow(sheet, 'acme')
+    pointer(acme, 'pointerdown', { pointerType: 'mouse', clientY: 24 })
+    pointer(window, 'pointermove', { pointerType: 'mouse', clientY: 30 })
+    pointer(window, 'pointermove', { pointerType: 'mouse', clientY: 130 })
+    const moving = status()
+    press(document.activeElement ?? document.body, 'Escape')
+    const escaped = { moving, status: status(), ...shows() }
+    pointer(window, 'pointerup', { pointerType: 'mouse', buttons: 0 })
+    await settle()
+
+    expect({
+      lifted,
+      holdMenuStopped: hold.defaultPrevented,
+      dropped,
+      escaped,
+      order: orgOrder(sheet),
+      moves: await orgMoves(server),
+    }).toEqual({
+      lifted: {
+        held: 'Moving Firna to place 3 of 3',
+        moving: 'Moving Firna to place 1 of 3',
+      },
+      holdMenuStopped: true,
+      dropped: { order: ['firna', 'acme', 'futex'], open: true, menus: 0 },
+      escaped: {
+        moving: 'Moving Acme to place 3 of 3',
+        status: '',
+        open: true,
+        menus: 0,
+      },
+      order: ['firna', 'acme', 'futex'],
+      moves: [{ orgId: 'firna', index: 0 }],
     })
   })
 })

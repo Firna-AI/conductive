@@ -221,6 +221,11 @@ The complete banner state and its events stay in Durable Object storage.
 The agent create tool stores the requested first session title there, so a repeated create keeps it.
 Existing plans keep `NULL`. A plan with `NULL` gives its first session no title at admission.
 
+`202611120000_org_rail_order.sql` adds the nullable integer `org_members.rail_position` column.
+It fills every existing membership by org creation time, then org ID, for each person.
+This keeps the current rail order at deployment. New memberships keep `NULL` and sort at the end.
+The [members backend](../worker/members/README.md) owns the reads and moves.
+
 ## Reserved ranges
 
 Each milestone owns the complete inclusive range below.
