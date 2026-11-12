@@ -105,16 +105,16 @@ export function recordActivity(
   dependencies.onActivity?.(workspaceId, dependencies.now())
 }
 
+export function toolFailure(error: unknown): unknown {
+  return error instanceof ProviderError
+    ? new HttpError(
+        502,
+        'sandbox_unavailable',
+        'The cloud computer did not answer. Try again.',
+      )
+    : error
+}
+
 export function toolError(error: unknown): Response {
-  return privateResponse(
-    errorResponse(
-      error instanceof ProviderError
-        ? new HttpError(
-            502,
-            'sandbox_unavailable',
-            'The cloud computer did not answer. Try again.',
-          )
-        : error,
-    ),
-  )
+  return privateResponse(errorResponse(toolFailure(error)))
 }

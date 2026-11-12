@@ -5,6 +5,7 @@ import type {
 } from './chat/workspace-integration'
 import { AgentSessionWorkspace } from './tools/workspace'
 import { lifecycleDependencies } from './lifecycle/runtime'
+import type { ToolPreviewCall } from './tools/services'
 import { WorkspaceFeatures } from './features/workspace'
 import { WorkspaceGitHub } from './features/github'
 import {
@@ -108,6 +109,10 @@ export class Workspace extends AgentSessionWorkspace {
       features: this.features,
       lifecycle: () => this.alarmLifecycle(),
     })
+  }
+
+  agentPreviewCall(input: ToolPreviewCall, origin: string) {
+    return featureResult(() => this.features.agentPreviews(input, origin))
   }
 
   refreshGitHub(workspace: GitHubWorkspace, signal: GitHubRefresh) {

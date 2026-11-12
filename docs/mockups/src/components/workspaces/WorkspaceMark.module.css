@@ -4,10 +4,12 @@
  * `--mark-off` is the opacity of a cell that is not lit, and `--mark-rest`
  * the opacity of a cell of the ring between two passes of the light. The
  * ring rests above the centre, so that a mark that moves keeps its colour.
+ * `--mark-head` is the colour of the light that runs around the ring.
  */
 .mark {
   --mark-off: 0.3;
   --mark-rest: 0.5;
+  --mark-head: currentColor;
 }
 
 .checksFailed {
@@ -28,11 +30,14 @@
 
 /*
  * Without a GitHub state, every cell is dim grey: clearly dimmer than a
- * mark in colour, and brighter than an archived mark.
+ * mark in colour, and brighter than an archived mark. A grey light at full
+ * opacity is too dim to see, so the light of a working agent runs in the
+ * colour of the text.
  */
 .none {
   --mark-off: 0.45;
   --mark-rest: 0.45;
+  --mark-head: var(--ui-ink);
   color: var(--ui-muted);
 }
 
@@ -50,15 +55,20 @@
   opacity: 1;
 }
 
-/* A bright head runs clockwise around the ring, with a fading tail. */
+/*
+ * A bright head runs clockwise around the ring, with a fading tail about
+ * four cells long.
+ */
 @keyframes chase {
   0% {
     opacity: 1;
+    background-color: var(--mark-head);
   }
 
-  45%,
+  60%,
   100% {
     opacity: var(--mark-rest);
+    background-color: currentColor;
   }
 }
 
@@ -84,11 +94,17 @@
 
 /*
  * Without motion, the lit cells keep the state: the ring of an agent that
- * works, and the middle column of an agent that needs input.
+ * works, and the middle column of an agent that needs input. While only
+ * the checks run, the centre lights too, so the still mark does not read
+ * as an agent that works.
  */
 @media (prefers-reduced-motion: reduce) {
   .chase,
   .pulse {
     animation: none;
+  }
+
+  .litWhenStill {
+    opacity: 1;
   }
 }

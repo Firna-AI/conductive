@@ -1,64 +1,25 @@
-import { TOOL_AGENTS, TOOL_EFFORTS } from './input.ts'
-
-const context =
-  'An omitted workspaceId names the calling workspace. A session link holds workspace and session IDs. Workspace and session links in an answer show as chips. A Sent by: line names the sending session. Do not reply only to confirm it.'
-const workspaceId = {
-  type: 'string',
-  minLength: 1,
-  description:
-    'A workspace ID from list_workspaces, or from a session link. Defaults to the calling workspace.',
-}
-const sessionId = {
-  type: 'string',
-  minLength: 1,
-  description: 'A session ID from list_sessions, or from a session link.',
-}
-const choice = {
-  model: {
-    type: 'object',
-    properties: {
-      agent: { type: 'string', enum: TOOL_AGENTS },
-      model: {
-        type: 'string',
-        minLength: 1,
-        description: 'A model from list_models.',
-      },
-    },
-    required: ['agent', 'model'],
-  },
-  effort: {
-    type: 'string',
-    enum: TOOL_EFFORTS,
-    description: 'An effort from list_models.',
-  },
-  requestId: {
-    type: 'string',
-    minLength: 1,
-    description:
-      'Keep this ID to retry without another session or message. Omission generates an ID.',
-  },
-}
-const readAnnotations = {
-  readOnlyHint: true,
-  destructiveHint: false,
-  idempotentHint: true,
-}
-const writeAnnotations = {
-  readOnlyHint: false,
-  destructiveHint: false,
-  idempotentHint: false,
-}
+import {
+  toolContext,
+  workspaceId,
+  sessionId,
+  modelChoice,
+  requestId,
+  paging,
+  readAnnotations,
+  writeAnnotations,
+  writeAccess,
+} from './mcp-schema.ts'
 
 export const SESSION_MCP_TOOLS = [
   {
     name: 'list_sessions',
-    description: `List all sessions of a workspace in this org, including closed sessions, their choice, starter, state, and link. Needs only the workspace token. ${context}`,
-    inputSchema: { type: 'object', properties: { workspaceId } },
+    description: `List sessions of a workspace in this org, including closed sessions, their choice, starter, state, and link. Needs only the workspace token. ${toolContext}`,
+    inputSchema: { type: 'object', properties: { workspaceId, ...paging } },
     annotations: readAnnotations,
   },
   {
     name: 'read_session',
-    description: `Read the Markdown transcript of an open or closed session, including an archived workspace. Needs only the workspace token. Defaults to concise and the newest text. For earlier text, set startLine and startOffset. Use next.line and next.offset for the following read. ${context}`,
+    description: `Read the Markdown transcript of an open or closed session, including an archived workspace. Needs only the workspace token. Defaults to concise and the newest text. For earlier text, set startLine and startOffset. Use next.line and next.offset for the following read. ${toolContext}`,
     inputSchema: {
       type: 'object',
       properties: {
@@ -87,12 +48,13 @@ export const SESSION_MCP_TOOLS = [
   },
   {
     name: 'create_session',
-    description: `Create a session in this org for the sender of the active calling turn. Needs an active turn. Omitted model or effort uses that sender's saved default, then the app default. Without firstMessage, creates an empty session. A first message can queue a workspace start. The reply keeps acceptance and reports resume status. ${context}`,
+    description: `Create a session in this org for the sender of the active calling turn. ${writeAccess} Omitted model or effort uses that sender's saved default, then the app default. Without firstMessage, creates an empty session. A first message can queue a workspace start. The reply keeps acceptance and reports resume status. ${toolContext}`,
     inputSchema: {
       type: 'object',
       properties: {
         workspaceId,
-        ...choice,
+        ...modelChoice,
+        requestId,
         title: {
           type: 'string',
           description:
@@ -105,17 +67,85 @@ export const SESSION_MCP_TOOLS = [
   },
   {
     name: 'send_message',
-    description: `Send text to a session in this org for the sender of the active calling turn. Needs an active turn. An omitted choice keeps the session's model and effort. The message joins a running turn, or opens a linked session when the sender cannot use its starter's login. The reply gives the actual receiving session, message, turn, and resume status. ${context}`,
+    description: `Send text to a session in this org for the sender of the active calling turn. ${writeAccess} An omitted choice keeps the session's model and effort. The message joins a running turn, or opens a linked session when the sender cannot use its starter's login. The reply gives the actual receiving session, message, turn, and resume status. ${toolContext}`,
     inputSchema: {
       type: 'object',
       properties: {
         workspaceId,
         sessionId,
         text: { type: 'string', minLength: 1 },
-        ...choice,
+        ...modelChoice,
+        requestId,
       },
       required: ['sessionId', 'text'],
     },
     annotations: writeAnnotations,
+  },
+  {
+    name: 'get_session',
+    description: `Get a session's choice, starter, title, closed mark, state, and link. Needs only the workspace token. ${toolContext}`,
+    inputSchema: {
+      type: 'object',
+      properties: { workspaceId, sessionId },
+      required: ['sessionId'],
+    },
+    annotations: readAnnotations,
+  },
+  {
+    name: 'rename_session',
+    description: `Rename a session. ${writeAccess} ${toolContext}`,
+    inputSchema: {
+      type: 'object',
+      properties: {
+        workspaceId,
+        sessionId,
+        title: {
+          type: 'string',
+          minLength: 1,
+          description:
+            'Use plain words separated by spaces. Avoid underscores unless the user tells you to add them.',
+        },
+      },
+      required: ['sessionId', 'title'],
+    },
+    annotations: writeAnnotations,
+  },
+  {
+    name: 'close_session',
+    description: `Close a session. A running turn refuses the close unless stopRunningTurn is true. Closing the calling session can end this turn. ${writeAccess} ${toolContext}`,
+    inputSchema: {
+      type: 'object',
+      properties: {
+        workspaceId,
+        sessionId,
+        stopRunningTurn: { type: 'boolean', default: false },
+      },
+      required: ['sessionId'],
+    },
+    annotations: writeAnnotations,
+  },
+  {
+    name: 'stop_session',
+    description: `Stop a session's running turn. Without a running turn, succeeds and reports idle. Stopping the calling session can end this turn. ${writeAccess} ${toolContext}`,
+    inputSchema: {
+      type: 'object',
+      properties: { workspaceId, sessionId },
+      required: ['sessionId'],
+    },
+    annotations: writeAnnotations,
+  },
+  {
+    name: 'get_message',
+    description: `Get one message's text, sender, state, turn, and time. Needs only the workspace token. ${toolContext}`,
+    inputSchema: {
+      type: 'object',
+      properties: {
+        workspaceId,
+        sessionId,
+        messageId: { type: 'string', minLength: 1 },
+      },
+      required: ['sessionId', 'messageId'],
+    },
+    annotations: readAnnotations,
   },
 ] as const

@@ -82,7 +82,7 @@
   color: var(--ui-ink);
   font-size: var(--ui-text-md);
   white-space: nowrap;
-  cursor: default;
+  cursor: pointer;
 }
 
 .sheet .item {
@@ -93,7 +93,7 @@
 
 .item:hover,
 .highlighted {
-  background: var(--ui-soft);
+  background: var(--ui-menu-hover);
 }
 
 .icon {
@@ -140,6 +140,7 @@
 .disabled,
 .disabled:hover {
   background: none;
+  cursor: default;
 }
 
 .disabled > :not(.detail) {
