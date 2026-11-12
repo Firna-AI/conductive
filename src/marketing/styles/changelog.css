@@ -1,0 +1,245 @@
+/*
+ * The changelog page: its column, its top, and its posts. The values follow
+ * the mockup marketing/changelog in docs/mockups/src/components/changelog/.
+ * A neutral hairline divides the posts. A post is not a box and has no
+ * coloured edge.
+ */
+
+/*
+ * One column centred on the page, at the width of the site header, so the
+ * days of the posts line up with the wordmark.
+ */
+.changelog-page {
+  display: flex;
+  flex-direction: column;
+  gap: 56px;
+  width: 100%;
+  max-width: 1184px;
+  margin: 0 auto;
+  padding: 72px 32px 112px;
+  box-sizing: border-box;
+}
+
+/* Each link of the page keeps the focus ring of the site, with round corners. */
+.changelog-page a:focus-visible {
+  border-radius: var(--ui-radius-sm);
+}
+
+/* The top of the page uses the type of the text pages of the site. */
+.changelog-intro {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 720px;
+}
+
+.changelog-label {
+  color: var(--ui-muted);
+  font-family: var(--ui-font-label);
+  font-size: var(--ui-text-xs);
+  letter-spacing: 0.08em;
+  text-transform: var(--ui-label-case);
+}
+
+.changelog-title {
+  margin: 0;
+  color: var(--ui-ink);
+  font-size: 40px;
+  font-weight: var(--ui-weight-heading);
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  text-wrap: balance;
+}
+
+.changelog-lead {
+  margin: 0;
+  color: var(--ui-ink2);
+  font-size: 17px;
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+
+/* The link to the releases on GitHub takes the colour of the title. */
+.changelog-lead .text-link {
+  color: var(--ui-ink);
+}
+
+/* The posts, newest first. Each one starts with a hairline. */
+.changelog-posts {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Without posts, one line under a hairline takes their place. */
+.changelog-empty {
+  margin: 0;
+  padding-top: 40px;
+  border-top: 1px solid var(--ui-border);
+  color: var(--ui-ink2);
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+/*
+ * A post. A computer shows the day in a column of its own, beside the
+ * title, so the days of the posts line up under each other. The address of
+ * a post opens it 16px under the top of the window.
+ */
+.changelog-post {
+  display: grid;
+  grid-template-columns: 160px minmax(0, 720px);
+  align-items: baseline;
+  gap: 0 48px;
+  padding: 40px 0 48px;
+  border-top: 1px solid var(--ui-border);
+  scroll-margin-top: 16px;
+}
+
+.changelog-post:last-child {
+  padding-bottom: 0;
+}
+
+/* The day stays in view while the rest of its post scrolls past. */
+.changelog-side {
+  position: sticky;
+  top: 24px;
+}
+
+/* The day links to the address of its post. */
+.changelog-day {
+  color: var(--ui-ink2);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.5;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.changelog-day:hover {
+  color: var(--ui-ink);
+  text-decoration: underline;
+  text-decoration-color: var(--ui-border2);
+  text-underline-offset: 3px;
+}
+
+.changelog-body {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-width: 0;
+}
+
+/* The title, with the versions of the day under it. */
+.changelog-head {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.changelog-post-title {
+  margin: 0;
+  color: var(--ui-ink);
+  font-size: 24px;
+  font-weight: var(--ui-weight-heading);
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  text-wrap: balance;
+}
+
+.changelog-versions {
+  margin: 0;
+  color: var(--ui-muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.changelog-post-lead {
+  margin: 0;
+  color: var(--ui-ink2);
+  font-size: 16px;
+  line-height: 1.65;
+  text-wrap: pretty;
+}
+
+.changelog-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* The name of a section uses the label type of the site. */
+.changelog-section-name {
+  margin: 0;
+  color: var(--ui-muted);
+  font-family: var(--ui-font-label);
+  font-size: var(--ui-text-xs);
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  line-height: 1.5;
+  text-transform: var(--ui-label-case);
+}
+
+.changelog-changes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding-left: 20px;
+  color: var(--ui-ink2);
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.changelog-changes li::marker {
+  color: var(--ui-muted);
+}
+
+@media (max-width: 759.98px) {
+  .changelog-page {
+    gap: 40px;
+    padding: 40px 20px 72px;
+  }
+
+  .changelog-title {
+    font-size: 30px;
+  }
+
+  .changelog-lead {
+    font-size: 16px;
+  }
+
+  .changelog-empty {
+    padding-top: 28px;
+    font-size: 15px;
+  }
+
+  /* A phone shows the day on a line of its own, above the title. */
+  .changelog-post {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 20px 0 36px;
+  }
+
+  .changelog-side {
+    position: static;
+  }
+
+  /* On a phone, the link of the day is a touch target of 44px. */
+  .changelog-day {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--ui-touch-min);
+    font-size: 13px;
+  }
+
+  .changelog-body {
+    gap: 20px;
+  }
+
+  .changelog-post-title {
+    font-size: 21px;
+  }
+
+  .changelog-post-lead {
+    font-size: 15px;
+  }
+}

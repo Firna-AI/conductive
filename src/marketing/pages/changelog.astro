@@ -1,0 +1,39 @@
+---
+import { getCollection } from 'astro:content'
+import { changelogPageCopy } from '../changelog-copy'
+import { changelogPosts } from '../changelog-posts'
+import ChangelogIntro from '../components/ChangelogIntro.astro'
+import ChangelogPostView from '../components/ChangelogPostView.astro'
+import SiteLayout from '../layouts/SiteLayout.astro'
+
+/*
+ * The changelog page: the top, with the link to the releases on GitHub,
+ * then one post for each day with a release, newest first, or one line in
+ * their place when the site has no post. Each post is one Markdown file of
+ * the `changelog` collection. changelog-posts.ts gives a field without a
+ * valid value its default and logs a warning in the build, so a post never
+ * stops the build. The header marks no section. The mockup
+ * marketing/changelog is its visual spec, and both read changelog-copy.ts.
+ */
+const copy = changelogPageCopy
+const posts = changelogPosts(await getCollection('changelog'), (message) =>
+  console.warn(message),
+)
+---
+
+<SiteLayout title={copy.documentTitle} description={copy.description}>
+  <main class="main">
+    <div class="changelog-page">
+      <ChangelogIntro />
+      {posts.length > 0 ? (
+        <div class="changelog-posts">
+          {posts.map((post) => (
+            <ChangelogPostView post={post} />
+          ))}
+        </div>
+      ) : (
+        <p class="changelog-empty">{copy.empty}</p>
+      )}
+    </div>
+  </main>
+</SiteLayout>

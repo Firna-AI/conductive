@@ -1,0 +1,49 @@
+---
+import { changelogPageCopy, versionsText } from '../changelog-copy'
+import { changelogSections, type ChangelogPost } from '../changelog-model'
+import { dayWords } from '../from-conductor/dates'
+
+/*
+ * One post of the changelog: its day, its title, its versions, its lead,
+ * and its sections in the order New, Improved, and Fixed. A section without
+ * changes is left out. The day is the id of the post, and the day links to
+ * that address, so a visitor can copy the link of one day without a script.
+ * A desktop shows the day in a column of its own, and a phone shows it
+ * above the title.
+ */
+type Props = { post: ChangelogPost }
+
+const { post } = Astro.props
+const versions = versionsText(post.versions)
+const sections = changelogSections.flatMap((section) => {
+  const changes = post.sections[section] ?? []
+  return changes.length > 0
+    ? [{ name: changelogPageCopy.sections[section], changes }]
+    : []
+})
+---
+
+<article class="changelog-post" id={post.date}>
+  <div class="changelog-side">
+    <a class="changelog-day" href={`#${post.date}`}>
+      <time datetime={post.date}>{dayWords(post.date, 'long')}</time>
+    </a>
+  </div>
+  <div class="changelog-body">
+    <header class="changelog-head">
+      <h2 class="changelog-post-title">{post.title}</h2>
+      {versions ? <p class="changelog-versions">{versions}</p> : null}
+    </header>
+    {post.lead ? <p class="changelog-post-lead">{post.lead}</p> : null}
+    {sections.map(({ name, changes }) => (
+      <section class="changelog-section">
+        <h3 class="changelog-section-name">{name}</h3>
+        <ul class="changelog-changes">
+          {changes.map((change) => (
+            <li>{change}</li>
+          ))}
+        </ul>
+      </section>
+    ))}
+  </div>
+</article>

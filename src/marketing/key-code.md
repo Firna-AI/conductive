@@ -18,8 +18,11 @@ Each path is relative to `src/marketing/` unless the link names another folder.
 - [`worker/marketing/assets.ts`](../../worker/marketing/assets.ts): site
   asset reads and the app host's handling of other site paths.
 - `pages/`, `layouts/`, `components/`: the pages, documents, and parts.
-- `content.config.ts`: the `docs` content collection, which reads each
-  guide in `docs/` without a schema and takes its ID from its file name.
+- `content.config.ts`: the `docs` and `changelog` content collections,
+  which read each guide in `docs/` and each post in `changelog/` without a
+  schema and take the ID of each from its file name.
+- `front-matter.ts`: the readers of one field of the front matter and of
+  text that is not empty, which the guides and the posts share.
 - `docs-guides.ts`: the front-matter defaults, the order of the menu, the
   address of each guide, and its previous and next guides.
 - `pages/docs/[...guide].astro`: the page of each guide, with its
@@ -38,6 +41,23 @@ Each path is relative to `src/marketing/` unless the link names another folder.
 - `styles/docs-nav.css`, `docs-contents.css`, `docs-prose.css`, and
   `docs-code.css`: the guide lists, the contents and cards, the body, and
   the code colours.
+- `changelog-posts.ts`: the folder of the posts, and the reader that turns
+  each file of the `changelog` collection into a post. It gives each field
+  its default, takes the day from the front matter or the file name, keeps
+  one post for each day, sorts the posts newest first, and logs a build
+  warning for each problem.
+- `changelog-body.ts` and `changelog-text.ts`: the lead and the changes of
+  each section of the body of a post, and a line of Markdown as plain text,
+  with only the words of its links and marks.
+- `changelog-copy.ts` and `changelog-model.ts`: the words of the changelog
+  page, of its footer link, and of the versions of a post, and the shape of
+  a post, which the page and its mockup share.
+- `pages/changelog.astro`, `components/ChangelogIntro.astro`, and
+  `ChangelogPostView.astro`: the changelog page, its top, and one post with
+  the link of its day.
+- `styles/changelog.css`: the changelog page, in the cascade that
+  `layouts/Document.astro` keeps, with the day column that stays in view on
+  a desktop and the 760 px phone layout.
 - `pages/from-conductor.astro`, `from-conductor/`, `styles/comparison.css`,
   and `styles/comparison-table.css`: the comparison page, the one source of
   its rows, and its styles. [Its key code](comparison.md#key-code) names
@@ -94,5 +114,5 @@ Each path is relative to `src/marketing/` unless the link names another folder.
 - `picture-page.test.ts`: the animation reset before each capture.
 - [`worker/marketing/built-site.test.ts`](../../worker/marketing/built-site.test.ts):
   real builds served through the Worker, including their policy, their
-  files, the public guides, and the comparison page with its two entry
-  links.
+  files, the public guides, the comparison page with its two entry links,
+  and the changelog page with its footer link.

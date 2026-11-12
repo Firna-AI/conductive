@@ -7,6 +7,7 @@ import { GITHUB_SETUP_PATH } from '../../src/shared/github-setup'
 import { SITE_FOLDER, SITE_ICONS } from '../../src/shared/site-build'
 import { githubSetupResponse } from '../github-setup'
 import type { SiteBinding } from '../test-support/site-binding'
+import { checkChangelogPage } from './built-changelog.test-support'
 import { checkBuiltComparison } from './built-comparison.test-support'
 import { checkGuideRoutes, checkScrollRegions } from './built-docs.test-support'
 import { checkPricingPage } from './built-pricing.test-support'
@@ -102,6 +103,7 @@ it('allows exactly each page inline style hash and serves every file it names', 
     `${docsPath}/get-started`,
     sitePaths.fromConductor,
     sitePaths.pricing,
+    sitePaths.changelog,
     '/missing',
   ]) {
     const response = await get(path)
@@ -138,6 +140,10 @@ it('renders class-coloured code and named keyboard scroll regions', async () => 
 
 it('serves public pricing from the header and footer with the site actions', async () => {
   await checkPricingPage(get, APP_ORIGIN)
+})
+
+it('opens the changelog from the footer with its newest post first or its empty line', async () => {
+  await checkChangelogPage(get)
 })
 
 it('serves the complete Conductor comparison with its public entry links', async () => {

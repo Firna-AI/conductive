@@ -1,6 +1,7 @@
 ---
 import { productName } from '../../../docs/mockups/src/brand'
 import { siteActionCopy } from '../access-copy'
+import { changelogLinkText } from '../changelog-copy'
 import { productSummary } from '../features'
 import { parityLinkCopy } from '../from-conductor/copy'
 import { abuseAddress } from '../legal-text'
@@ -17,8 +18,9 @@ import Wordmark from './Wordmark.astro'
 
 /*
  * The foot of each page: the lockup, the sections with the pricing page,
- * the docs, and the page for people who move from Conductor, the sign-in,
- * the address for abuse reports, and the legal pages beside the copyright.
+ * the docs, the page for people who move from Conductor, and the
+ * changelog, the sign-in, the address for abuse reports, and the legal
+ * pages beside the copyright.
  */
 ---
 
@@ -52,6 +54,11 @@ import Wordmark from './Wordmark.astro'
       <li>
         <a class="footer-link" href={sitePaths.fromConductor}>
           {parityLinkCopy.footer}
+        </a>
+      </li>
+      <li>
+        <a class="footer-link" href={sitePaths.changelog}>
+          {changelogLinkText}
         </a>
       </li>
     </FooterColumn>

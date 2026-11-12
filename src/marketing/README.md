@@ -205,6 +205,13 @@ is public at once. [Writing the changelog posts](changelog-authoring.md)
 gives the file format, the rules for the words, and the steps and the
 prompt of the daily routine that drafts the posts.
 
+Astro reads the files as the `changelog` content collection, without a
+schema, and only the file name gives the ID of a post. The page shows the
+lead and each change as plain text, and it sets the order of the sections.
+Each missing or invalid field takes its default. Each problem of a post
+logs a warning that names its file in the build log, so a post never stops
+the build. Without posts, the page shows its empty line.
+
 ## Development
 
 The pages are in `pages/`, with layouts in `layouts/` and parts in

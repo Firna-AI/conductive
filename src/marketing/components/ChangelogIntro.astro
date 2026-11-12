@@ -1,0 +1,18 @@
+---
+import { changelogPageCopy } from '../changelog-copy'
+import CopyText from './CopyText.astro'
+
+/*
+ * The top of the changelog page: the label, the title, and one sentence
+ * that links the releases on GitHub for the complete list of changes.
+ */
+const copy = changelogPageCopy
+---
+
+<header class="changelog-intro">
+  <span class="changelog-label">{copy.label}</span>
+  <h1 class="changelog-title">{copy.title}</h1>
+  <p class="changelog-lead">
+    <CopyText text={copy.lead} />
+  </p>
+</header>

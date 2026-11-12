@@ -287,10 +287,10 @@ release, from 0.1.0 to the newest release on `main`. It follows
 `src/marketing/changelog-authoring.md`. It reads each pull request of
 each version, not only its commit subject.
 
-- [ ] Write the posts in `src/marketing/changelog/`, one for each day.
-- [ ] Check that each released version is in exactly one post.
-- [ ] Check the words against the naming rules of `AGENTS.md`.
-- [ ] Commit with the type `docs(changelog)`.
+- [x] Write the posts in `src/marketing/changelog/`, one for each day.
+- [x] Check that each released version is in exactly one post.
+- [x] Check the words against the naming rules of `AGENTS.md`.
+- [x] Commit with the type `docs(changelog)`.
 
 ## Milestone 4: Public page
 
@@ -299,38 +299,38 @@ Tags: ui
 Depends on: 2. It runs beside Milestone 3, because it changes other
 files. The built-site case runs after both.
 
-- [ ] Before the page exists, the `non-ui implementor` extends
+- [x] Before the page exists, the `non-ui implementor` extends
       `worker/marketing/built-site.test.ts` with one focused case.
-  - [ ] Follow the footer link from the home page to `/changelog`. Check
+  - [x] Follow the footer link from the home page to `/changelog`. Check
         status 200, the title, and the newest post.
-  - [ ] Add the path to the existing script, style-hash, asset, and link
+  - [x] Add the path to the existing script, style-hash, asset, and link
         preview checks.
-  - [ ] See the case fail on its expected 404.
-- [ ] The `non-ui implementor` adds the collection `changelog` to
+  - [x] See the case fail on its expected 404.
+- [x] The `non-ui implementor` adds the collection `changelog` to
       `src/marketing/content.config.ts` and writes
       `src/marketing/changelog-posts.ts` with its tests.
-- [ ] The `ui implementor` adds `src/marketing/pages/changelog.astro` and
+- [x] The `ui implementor` adds `src/marketing/pages/changelog.astro` and
       `styles/changelog.css`, in the cascade of `layouts/Document.astro`.
       Use the shared copy, `CopyText.astro` for the lead, and `dayWords`
       for the day. Add no script, inline style, or accent edge.
-- [ ] Add the Changelog link to the Product column of `SiteFooter.astro`.
-- [ ] Set the row `product-changelog` in
+- [x] Add the Changelog link to the Product column of `SiteFooter.astro`.
+- [x] Set the row `product-changelog` in
       `src/marketing/from-conductor/areas/apps-and-devices.ts` to
       Available, with a note under the claim rules of the comparison
       protocol.
-- [ ] Run the marketing tests. In this sandbox, set `TMPDIR` to a folder
+- [x] Run the marketing tests. In this sandbox, set `TMPDIR` to a folder
       inside `.context/`, because `/tmp` is on another mount. Run the new
       case 10 times, without retries
       or longer time limits.
-- [ ] Run the mockup check and the early checks. Add no new gate.
-- [ ] Smoke-test the built page through the Worker with `npm run build`
+- [x] Run the mockup check and the early checks. Add no new gate.
+- [x] Smoke-test the built page through the Worker with `npm run build`
       and `npm run preview`. Compare it with the mockup in both colour
       schemes at 320, 390, 760, and 1440 px. Check the links and the
       keyboard order.
-- [ ] Add the new files to `src/marketing/key-code.md`.
-- [ ] Add `/changelog` and its footer link to the task of
+- [x] Add the new files to `src/marketing/key-code.md`.
+- [x] Add `/changelog` and its footer link to the task of
       `plans/follow-ups/marketing-site-deployed-smoke-test.md`.
-- [ ] Commit.
+- [x] Commit.
 
 ## Milestone 5: Verification, commit, review, and pull request
 

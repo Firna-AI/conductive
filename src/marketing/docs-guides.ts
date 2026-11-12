@@ -1,3 +1,4 @@
+import { field, text } from './front-matter'
 import { docsPath } from './links'
 
 /** The groups of the guides, in the order of the docs menu. */
@@ -45,19 +46,6 @@ export type GuidePage<Entry> = {
   readonly groups: readonly MenuGroup[]
   readonly previous?: Guide
   readonly next?: Guide
-}
-
-/** The value of one field of the front matter, which can hold anything. */
-function field(data: unknown, name: string): unknown {
-  if (typeof data !== 'object' || data === null) return undefined
-  return Object.getOwnPropertyDescriptor(data, name)?.value
-}
-
-/** Text that is not empty, without the spaces at its ends. */
-function text(value: unknown): string | undefined {
-  if (typeof value !== 'string') return undefined
-  const words = value.trim()
-  return words === '' ? undefined : words
 }
 
 function group(value: unknown): GuideGroup {

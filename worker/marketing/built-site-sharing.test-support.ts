@@ -23,7 +23,7 @@ export async function checkSharePreview(
   assets: SiteAssets,
 ): Promise<void> {
   const imageAddresses = new Set<string>()
-  for (const path of ['/', '/docs/get-started', '/privacy']) {
+  for (const path of ['/', '/docs/get-started', '/privacy', '/changelog']) {
     const response = await get(path)
     expect(response.status, path).toBe(200)
     const page = await response.text()
