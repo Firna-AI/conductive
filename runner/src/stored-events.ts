@@ -1,4 +1,4 @@
-import type { ToolCall } from '../../src/shared/chat-events'
+import { readToolSkills, type ToolCall } from '../../src/shared/chat-events'
 import type {
   ChangedFile,
   FileEntry,
@@ -78,6 +78,7 @@ function delta(value: unknown): FileTreeChange {
 
 function tool(value: unknown): ToolCall {
   const input = object(value)
+  const skills = readToolSkills(input.skills)
   return {
     id: string(input.id),
     kind: oneOf(input.kind, [
@@ -89,6 +90,7 @@ function tool(value: unknown): ToolCall {
       'computer',
       'other',
     ]),
+    ...(skills === undefined ? {} : { skills }),
     target: string(input.target),
     detail: nullable(input.detail),
     omittedDetailBytes: integer(input.omittedDetailBytes),

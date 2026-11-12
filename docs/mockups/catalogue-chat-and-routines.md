@@ -6,17 +6,20 @@ pages of the chat and of routines.
 `app/chat` shows a finished turn, whose work folds into one line. Its child
 pages: `app/chat/turns` has the running turn, steer, interrupt, and a
 failure, which moved from `app/chat/running`, `steer`, `interrupted`, and
-`failed` and declare `movedFrom`. `app/chat/agent-stops` draws a turn that
-the agent of another session stopped with a workspace tool, from decision
-279. Its line says "Stopped from" and shows the session chip of that
-session, for a session of the same workspace and, in `other-workspace`, of
-another workspace. `app/chat/work` draws the work of ended
-turns, from decisions 150 and 151: the open work of the finished turn with
-one message open, a turn with a message that the user sent during it, whose
+`failed` and declare `movedFrom`. From decision 277, its running turn has a
+skill line in its open run, and an earlier run whose fold line names its
+skill. `app/chat/agent-stops` draws a turn that the agent of another session
+stopped with a workspace tool, from decision 279. Its line says "Stopped
+from" and shows the session chip of that session, for a session of the same
+workspace and, in `other-workspace`, of another workspace.
+`app/chat/work` draws the work of ended turns, from decisions 150,
+151, and 277: the open work of the finished turn with one message open and
+two skill lines, a turn with a message that the user sent during it, whose
 two parts each fold their own work, a turn whose open work holds a Mac
-command card and a lost line at their place, and a turn whose open work
-holds two messages with tables, one closed and one open. The `fold` state
-opens the folds. `app/chat/tables` draws tables in replies: the resources
+command card and a lost line at their place, a turn whose open work holds
+two messages with tables, one closed and one open, and the open work of a
+Codex session whose fold line names five skills. The `fold` state opens the
+folds. `app/chat/tables` draws tables in replies: the resources
 of the cloud computer, a short row whose last cell spans the missing
 columns, a wide table that scrolls sideways inside the reply, and the
 reply while the agent writes it, before its separator row arrives and

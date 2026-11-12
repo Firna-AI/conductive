@@ -32,6 +32,11 @@ export type TurnEndReason = 'background_work_limit'
 export interface ToolCall {
   id: string
   kind: 'read' | 'search' | 'create' | 'edit' | 'run' | 'computer' | 'other'
+  /**
+   * Names of loaded skills, as the agent gives them, in order with no repeats.
+   * Absent for other calls. A skill call keeps its kind.
+   */
+  skills?: readonly string[]
   target: string
   /**
    * Keep the longest source prefix that fits TOOL_DETAIL_MAX_BYTES.
@@ -47,6 +52,15 @@ export interface ToolCall {
    */
   omittedDetailBytes: number
   state: 'running' | 'done' | 'stopped' | 'failed'
+}
+
+/** Display metadata never makes an event invalid or unreadable. */
+export function readToolSkills(value: unknown): readonly string[] | undefined {
+  if (!Array.isArray(value)) return undefined
+  const skills = value.filter(
+    (entry): entry is string => typeof entry === 'string' && entry !== '',
+  )
+  return skills.length > 0 ? skills : undefined
 }
 
 /** Provider-neutral events. SDK messages and credentials never enter this union. */

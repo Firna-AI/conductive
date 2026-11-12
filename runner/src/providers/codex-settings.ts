@@ -42,8 +42,10 @@ export async function checkCodexGateway(
   rpc: JsonRpc,
   endpoint: string,
 ): Promise<void> {
-  await rpc.request('account/read', {})
-  const response = object(await rpc.request('configRequirements/read', {}))
+  await rpc.request('account/read', {}, 'close-connection')
+  const response = object(
+    await rpc.request('configRequirements/read', {}, 'close-connection'),
+  )
   const required = response.requirements
     ? object(response.requirements).chatgptBaseUrl
     : null

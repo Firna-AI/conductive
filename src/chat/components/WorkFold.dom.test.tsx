@@ -5,17 +5,11 @@ import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
 import type { chatFor } from '../state/test-kit'
 import { ended, refused, said, turn, update } from './event-kit'
+import { folds, pageOf } from './fold-markup-kit'
 import { renderChat, textOf } from './render-kit'
 
 const { message } = workspaceFixtures()
 const asked = message.text
-
-/** The rendered chat as a page that the test can read. */
-function pageOf(markup: string): HTMLElement {
-  const page = document.createElement('div')
-  page.innerHTML = markup
-  return page
-}
 
 /** The text that a person sees: a closed fold shows only its line. */
 function seen(markup: string): string {
@@ -26,19 +20,6 @@ function seen(markup: string): string {
     }
   }
   return textOf(page.innerHTML)
-}
-
-const textIn = (element: Element | null) =>
-  textOf(element?.innerHTML ?? '').trim()
-
-/** Each fold of the chat: the words of its line, and the text of each step. */
-function folds(markup: string) {
-  return Array.from(pageOf(markup).querySelectorAll('details'))
-    .filter((fold) => fold.parentElement?.closest('details') === null)
-    .map((fold) => ({
-      line: textIn(fold.querySelector(':scope > summary')),
-      steps: Array.from(fold.querySelectorAll(':scope > ul > li'), textIn),
-    }))
 }
 
 /** Sends an event that the workspace took 10 seconds after the turn began. */

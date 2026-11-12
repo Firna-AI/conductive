@@ -8,6 +8,7 @@ import {
 import { codexBinary } from './binaries'
 import { writeCodexCredentials } from './codex-credentials'
 import { codexNotification } from './codex-events'
+import { CodexSkills } from './codex-skills'
 import { checkCodexGateway, codexSettings } from './codex-settings'
 import { openCodexThread } from './codex-thread'
 import { readComputerServer } from './computer-mcp'
@@ -112,6 +113,7 @@ export function createCodexFactory(
     let choice = options.choice
     let activeChoice = choice
     let closed = false
+    const skills = new CodexSkills(options.cwd, options.warn)
     let rpc: JsonRpc
     try {
       const args = [
@@ -134,7 +136,8 @@ export function createCodexFactory(
         (method, params) => {
           if (method === 'turn/started')
             activeTurn = string(object(object(params).turn).id)
-          codexNotification(method, params, userIds, options.event)
+          if (method === 'skills/changed') skills.reload(rpc)
+          codexNotification(method, params, userIds, options.event, skills)
           if (method === 'turn/completed') activeTurn = null
         },
         () => {
@@ -170,24 +173,33 @@ export function createCodexFactory(
     options.signal?.addEventListener('abort', abort, { once: true })
     if (options.signal?.aborted) abort()
     try {
-      await rpc.request('initialize', {
-        clientInfo: {
-          name: 'conductive',
-          title: 'Conductive',
-          version: '0.1.0',
+      await rpc.request(
+        'initialize',
+        {
+          clientInfo: {
+            name: 'conductive',
+            title: 'Conductive',
+            version: '0.1.0',
+          },
+          capabilities: { experimentalApi: true },
         },
-        capabilities: { experimentalApi: true },
-      })
+        'close-connection',
+      )
       rpc.notify('initialized')
       if (settings.tokenMode) await checkCodexGateway(rpc, options.endpoint)
       else
-        await rpc.request('account/login/start', {
-          type: 'apiKey',
-          apiKey:
-            options.credential.type === 'gateway'
-              ? options.credential.token
-              : options.credential.login.secret,
-        })
+        await rpc.request(
+          'account/login/start',
+          {
+            type: 'apiKey',
+            apiKey:
+              options.credential.type === 'gateway'
+                ? options.credential.token
+                : options.credential.login.secret,
+          },
+          'close-connection',
+        )
+      skills.reload(rpc)
       const threadId = await openCodexThread(
         rpc,
         options,
@@ -200,27 +212,36 @@ export function createCodexFactory(
             const before = [...userIds]
             userIds.push(command.message.id)
             try {
-              await rpc.request('turn/steer', {
-                threadId,
-                expectedTurnId: activeTurn,
-                clientUserMessageId: command.message.id,
-                input: input(command, options.instructionBranches),
-              })
+              await rpc.request(
+                'turn/steer',
+                {
+                  threadId,
+                  expectedTurnId: activeTurn,
+                  clientUserMessageId: command.message.id,
+                  input: input(command, options.instructionBranches),
+                },
+                'close-connection',
+              )
             } catch (error) {
               userIds = before
               throw error
             }
           } else {
+            skills.beginTurn()
             userIds = [command.message.id]
             activeChoice = choice
             const result = object(
-              await rpc.request('turn/start', {
-                threadId,
-                input: input(command, options.instructionBranches),
-                clientUserMessageId: command.message.id,
-                model: choice.model,
-                effort: choice.effort === 'none' ? 'none' : choice.effort,
-              }),
+              await rpc.request(
+                'turn/start',
+                {
+                  threadId,
+                  input: input(command, options.instructionBranches),
+                  clientUserMessageId: command.message.id,
+                  model: choice.model,
+                  effort: choice.effort === 'none' ? 'none' : choice.effort,
+                },
+                'close-connection',
+              ),
             )
             activeTurn = string(object(result.turn).id)
           }
@@ -235,10 +256,14 @@ export function createCodexFactory(
         },
         interrupt: async () => {
           if (activeTurn)
-            await rpc.request('turn/interrupt', {
-              threadId,
-              turnId: activeTurn,
-            })
+            await rpc.request(
+              'turn/interrupt',
+              {
+                threadId,
+                turnId: activeTurn,
+              },
+              'close-connection',
+            )
         },
         stop: close,
         close,

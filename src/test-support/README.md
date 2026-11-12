@@ -32,6 +32,11 @@ The marker can have no turn context when the event is invalid.
 The `sent-by` conversation ends with a message from an agent tool.
 It links a closed session with a long title, and its `Sent by:` line links a session of another workspace.
 The dev app shows it with `?conversation=sent-by`, because the fake answers a send with its recorded message.
+The `skills` conversation in `recorded-skills.ts` is a Claude session whose agent uses skills.
+Its first turn finished, and used `brainstorming` with the arguments `high` and `testing` with none.
+Its second turn still runs: a folded run used `brainstorming`, and the call of `plans` runs.
+Its session records name no active turn, because they hold the state before the events.
+A record that named the second turn would put that turn before the first one.
 The `stopped-from` conversation is the `interrupted` conversation, but the agent of session `debounce` stopped its turn through a workspace tool.
 Its stop request names that session of `checkout-autocomplete` by its IDs, so the chat of each workspace of the fake names the same session.
 The dev app shows it with `?conversation=stopped-from`, also in another workspace such as `fix-cart-flake`.

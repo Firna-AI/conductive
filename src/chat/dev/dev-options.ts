@@ -55,6 +55,7 @@ export const choices = {
     'failed',
     'queued',
     'first-turn',
+    'skills',
     'loss',
   ],
   workspace: ['existing', 'new'],

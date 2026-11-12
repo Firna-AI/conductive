@@ -86,6 +86,23 @@
   white-space: nowrap;
 }
 
+/*
+ * The skill names and the detail of a skill line form one text. Its
+ * ellipsis cuts the end of that text, so a long detail, such as a command,
+ * gives way before the names.
+ */
+.skillText {
+  overflow: hidden;
+  min-width: 0;
+  font-size: var(--ui-text-xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.skillText .detail {
+  margin-left: 7px;
+}
+
 /* A narrow chat moves the left-out output of a folded run under its count. */
 .wraps {
   flex-wrap: wrap;
@@ -103,6 +120,44 @@
 
 .summary .leftOut {
   margin-left: 4px;
+}
+
+/*
+ * A fold line that names skills. Its counts, its skill names, its icons,
+ * and its left-out output flow as one text, which wraps on a narrow chat.
+ * The chevron stays beside the first line, and a line that fits keeps the
+ * height of the other fold lines.
+ */
+.named {
+  display: inline-grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-content: center;
+  align-items: start;
+}
+
+.named .chevron {
+  margin-top: calc((1lh - 14px) / 2);
+}
+
+.words .kinds,
+.words .leftOut {
+  margin-left: 10px;
+  vertical-align: middle;
+}
+
+/* The last skill name keeps the icons and the left-out output on its line. */
+.lastSkill {
+  white-space: nowrap;
+}
+
+/*
+ * A skill name and its comma form one box, which moves to the next line as a
+ * whole. It breaks only when it is longer than the whole line.
+ */
+.skillName {
+  display: inline-block;
+  overflow-wrap: anywhere;
+  white-space: normal;
 }
 
 /*

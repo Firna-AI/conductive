@@ -5,9 +5,9 @@ layouts, the design tokens, and the shared parts. This page gives workspace,
 session, and file chips with the list of `@`, and attached files with their
 drops. It gives the picture of an image file, the Markdown tables and
 headings of a reply and of a file preview, the work fold of a turn, and the
-line of a stopped turn. It also gives the data that the chat does not
-have, the files that the cloud computer could not read, and the end of a turn at the time limit of
-background work.
+line of a stopped turn. It also gives the skill lines, the data that the
+chat does not have, the files that the cloud computer could not read, and
+the end of a turn at the time limit of background work.
 
 - `DraftFileChip` in `src/components/chat/` draws each attached file of a
   draft as a chip at its place in the text of the message box. It is one
@@ -161,6 +161,8 @@ background work.
   - The `fold` state of the workspace opens the folds, and `open-message`
     also opens the last message line of each. A view runs no script, so a
     chat with open folds starts at its top.
+- [Skill lines](design-chat-skills.md) gives the lines of skill calls and
+  the skill names on each fold line.
 - Data that the chat does not have shows in plain words, from decision 76.
   `lostCopy.ts` in `src/components/chat/` holds the words. A tool call whose
   output the runner shortened shows the size that it left out, such as "1.2 MB left out", and

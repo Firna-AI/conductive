@@ -2,6 +2,7 @@ import { expect, it } from 'vitest'
 
 import { ClaudeEvents } from './claude-events'
 import { codexNotification } from './codex-events'
+import { CodexSkills } from './codex-skills'
 import type { ProviderEvent } from './types'
 
 const windowRead = { window_id: 7, query: 'menu' }
@@ -46,6 +47,7 @@ function codexCall(): ProviderEvent[] {
     },
     [],
     (event) => events.push(event),
+    new CodexSkills('/repo', () => {}),
   )
   return events
 }

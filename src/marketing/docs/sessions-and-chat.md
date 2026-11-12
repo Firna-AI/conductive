@@ -169,7 +169,12 @@ A stop through an agent's tools shows **Stopped from** and a link to the sending
 The link uses the same small box as the **Sent by:** line.
 A close through the tools that stops a turn uses the same stop line.
 
-The agent's earlier work folds into a line when a turn ends.
+A skill is a folder with a `SKILL.md` file of instructions for an agent.
+When an agent loads a skill, the chat shows **Using skill**, then **Used skill**, with its name among the tool calls.
+Each folded group of tool calls names its skills after the count, such as **4 tool calls · Skill: brainstorming**.
+
+When a turn ends, the agent's earlier work folds into a line with its skill names after the counts.
+For example, **8 tool calls, 7 messages · Skills: brainstorming, plans**.
 Select that line to inspect its messages and tool calls.
 The answer stays visible beside it.
 
@@ -220,6 +225,7 @@ Copy a session's whole conversation as Markdown for another agent or a document.
 While the agent works, its newest run of tool calls stays open.
 After a turn ends, a run outside its folded work stays open if one of its calls stopped or failed.
 **Copy full transcript** includes the messages and work inside every fold.
+Both copies keep the skill names and words of the chat.
 The copy uses each attached file's name where its chip appears.
 
 Agents can read the same transcript text through their workspace tools.

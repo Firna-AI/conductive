@@ -180,7 +180,9 @@ is relative to `src/chat/`, the folder of this guide.
   heading style that the file preview shares, and `AgentBlocks`, which the
   message line shares. Their text draws through `LinkedText` of `links/`.
 - `components/ToolGroup.tsx`: a run of tool calls, with `FoldLine` and
-  `CallLine`, which the work fold shares.
+  `CallLine`, which the work fold shares. `CallLine` draws a call that
+  loads skills as a skill line, and `FoldLine` names the skills of its
+  calls, as the [transcript rules](transcript.md) say.
 - `components/reading-place.ts`: the keeper of the reader's place, which
   `ChatPane` gives through `ChatKeeper`. While the reader is scrolled up, it
   keeps the top row in view in place for every change of size of the

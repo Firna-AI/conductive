@@ -164,6 +164,9 @@ export function filterOutput(
         ...event.tool,
         target: text(event.tool.target),
         detail: event.tool.detail === null ? null : text(event.tool.detail),
+        ...(event.tool.skills === undefined
+          ? {}
+          : { skills: event.tool.skills.map(text) }),
       },
     }
   if (event.type === 'turn.completed')

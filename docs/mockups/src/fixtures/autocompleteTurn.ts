@@ -62,7 +62,7 @@ export const autocompletePullRequest: readonly ChatItem[] = [
   tool('pr', 'run', 'gh pr create --fill', '#482'),
 ]
 
-const autocompleteEnd: readonly ChatItem[] = [
+export const autocompleteEnd: readonly ChatItem[] = [
   ...autocompletePullRequest,
   {
     kind: 'agent',

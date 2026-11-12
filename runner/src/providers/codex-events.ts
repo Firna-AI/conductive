@@ -2,6 +2,7 @@ import { object, oneOf, string } from '../parse'
 import { synthetic } from './claude-events'
 import { mapTool } from './tool'
 import { failureCause } from './failure'
+import type { CodexSkills } from './codex-skills'
 import type { ProviderEvent } from './types'
 
 export function codexNotification(
@@ -9,6 +10,7 @@ export function codexNotification(
   value: unknown,
   userMessageIds: readonly string[],
   emit: (event: ProviderEvent) => void,
+  skills: CodexSkills,
 ): void {
   const input = object(value)
   if (method === 'item/agentMessage/delta') {
@@ -49,16 +51,17 @@ export function codexNotification(
               : 'done'
       const mcp = type === 'mcpToolCall'
       const server = typeof item.server === 'string' ? item.server : ''
-      const tool = typeof item.tool === 'string' ? item.tool : ''
+      const toolName = typeof item.tool === 'string' ? item.tool : ''
+      const tool = mapTool(
+        string(item.id),
+        mcp ? `${server}:${toolName}` : type,
+        mcp ? item.arguments : item,
+        state,
+        mcp && toolName ? toolName : null,
+      )
       emit({
         type: 'tool',
-        tool: mapTool(
-          string(item.id),
-          mcp ? `${server}:${tool}` : type,
-          mcp ? item.arguments : item,
-          state,
-          mcp && tool ? tool : null,
-        ),
+        tool: type === 'commandExecution' ? skills.tool(item, tool) : tool,
       })
     }
   }

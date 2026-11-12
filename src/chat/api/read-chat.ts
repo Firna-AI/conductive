@@ -1,9 +1,5 @@
 import type { Agent, AgentChoice, Effort } from '../../shared/agents'
-import type {
-  ChatEvent,
-  RunnerEventRefused,
-  ToolCall,
-} from '../../shared/chat-events'
+import type { ChatEvent, RunnerEventRefused } from '../../shared/chat-events'
 import type {
   Attachment,
   MessageDraft,
@@ -14,6 +10,7 @@ import type { Session } from '../../shared/sessions'
 import { readStopRequester } from './read-stop'
 import { readChangedFile } from './read-changed-file'
 import { readContinued } from './read-continued'
+import { readTool, safeCount } from './read-tool'
 import {
   count,
   flag,
@@ -34,21 +31,6 @@ export const readEffort = oneOf<Effort>({
   xhigh: true,
   max: true,
 })
-const readToolKind = oneOf<ToolCall['kind']>({
-  read: true,
-  search: true,
-  create: true,
-  edit: true,
-  run: true,
-  computer: true,
-  other: true,
-})
-const readToolState = oneOf<ToolCall['state']>({
-  running: true,
-  done: true,
-  stopped: true,
-  failed: true,
-})
 const readRunnerEventType = oneOf<RunnerEventRefused['runnerEventType']>({
   'turn.started': true,
   'turn.thinking': true,
@@ -67,14 +49,6 @@ const readRunnerEventType = oneOf<RunnerEventRefused['runnerEventType']>({
   'workspace.title': true,
   unknown: true,
 })
-
-/** The new count fields require whole, non-negative, safe integer values. */
-function safeCount(value: unknown): number {
-  const result = count(value)
-  if (!Number.isSafeInteger(result) || result < 0)
-    throw new UnreadableResponse('count')
-  return result
-}
 
 export function readChoice(value: unknown): AgentChoice {
   const source = record(value, 'choice')
@@ -147,18 +121,6 @@ export function readSession(value: unknown): Session {
     sourceSessionId: nullable(text)(source.sourceSessionId),
     loginAvailable: flag(source.loginAvailable),
     loginShared: flag(source.loginShared),
-  }
-}
-
-function readTool(value: unknown): ToolCall {
-  const source = record(value, 'tool')
-  return {
-    id: text(source.id),
-    kind: readToolKind(source.kind),
-    target: text(source.target),
-    detail: nullable(text)(source.detail),
-    omittedDetailBytes: safeCount(source.omittedDetailBytes),
-    state: readToolState(source.state),
   }
 }
 

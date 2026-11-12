@@ -35,7 +35,9 @@ it('keeps JSON-RPC error data and the existing error message', async () => {
     () => {},
   )
   try {
-    await expect(rpc.request('thread/resume', {})).rejects.toMatchObject({
+    await expect(
+      rpc.request('thread/resume', {}, 'close-connection'),
+    ).rejects.toMatchObject({
       message: 'The saved provider is unavailable.',
       data: { type: 'modelProviderNotConfigured', modelProvider: 'conductive' },
     })

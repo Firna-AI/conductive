@@ -1,0 +1,32 @@
+# Codex subagent work may show in the chat
+
+- **Severity:** High. **Likelihood:** Rare. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-11, from the options check of the plan `plans/skill-use-in-chat.md`, branch `calummoore/skill-usage-indicator`.
+- **Location:** `runner/src/providers/codex.ts:106`, the notification callback of the Codex App Server, and `runner/src/providers/codex-events.ts:7`, `codexNotification`.
+- **Reason:** the problem is in the Codex adapter for every tool call and message. The change that found it adds only skill lines.
+
+- **Source:** Review. **Category:** Product bug.
+- **Terms:**
+  - **Codex App Server:** the `codex app-server` program that the agent runner starts for a Codex session. It sends JSON-RPC notifications, such as `item/started` and `turn/completed`.
+  - **Thread:** one Codex conversation. Each item and turn notification of the App Server names its thread in `threadId`.
+  - **Subagent:** a second agent that the agent of a session starts for part of its work. Codex calls this feature `multi_agent`.
+- **Background:**
+  - The agent runner in each cloud computer maps the notifications of the Codex App Server to chat events in `runner/src/providers/codex-events.ts`.
+  - The callback in `runner/src/providers/codex.ts:106` passes each notification to `codexNotification`. Neither checks `threadId`.
+  - `codexNotification` maps `item/completed` of an `agentMessage` to an answer, and `turn/completed` to the end of the turn.
+  - The Claude adapter drops each SDK message that has `parent_tool_use_id`, in `runner/src/providers/claude-events.ts:49`. So the chat shows no work of a Claude subagent.
+  - On 11 November 2026, `codex features list` of `@openai/codex` 0.167.0 gave `multi_agent stable true`. So Codex can start subagents by default.
+  - No run has shown yet whether the App Server sends the notifications of a subagent thread on the connection of the session. A real run needs a model login.
+- **Problem:** The App Server can send the notifications of a subagent thread on the connection of the session. The runner then shows them as the work of the agent of the session. A `turn/completed` of a subagent thread can also end the turn of the session while its agent still works.
+- **Impact if no action:** A Codex session can show the tool calls and the messages of a subagent as answers. It can show a turn as finished too early, so the later events of that turn show as late events.
+- **Root question:** Which Codex work does the chat of a session show, when the agent of the session starts subagents?
+- **Options:**
+  - **A.** Drop each item and turn notification whose `threadId` is not the thread of the session, as the Claude adapter drops subagent messages. Add a test in `runner/src/providers/codex.test.ts` where the fake App Server in `runner/test-support/app-server.ts` sends an `item/completed` and a `turn/completed` of another thread. Effort: Small.
+  - **B.** First run a real Codex session that starts a subagent, and record which notifications reach the connection. Then apply A when the run shows the problem. It needs a model login for Codex. Effort: Medium.
+  - **C.** Show the work of a subagent in the chat, marked as the work of a subagent. It needs a mockup, a protocol requirement, and new chat event fields, and Claude subagent work then needs the same display. Effort: Large.
+- **Left out:** Turn off `multi_agent` in the configuration that the runner gives Codex: it removes a feature that the agent can use. It only hides a display problem.
+- **Wider fix:** A. One thread check covers every kind of notification.
+- **Previous examples:** The Claude adapter already drops the messages of a subagent, in `runner/src/providers/claude-events.ts:49`.
+- **Recommendation:** A. It costs little, it matches what the chat shows for Claude, and it is correct also when the App Server never sends such notifications.
+- **Action:** ask the user, because no requirement says whether the chat shows the work of a subagent, and A adds that rule at the boundary.

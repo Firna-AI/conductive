@@ -104,15 +104,14 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     area: 'agents-and-chat',
     name: 'Skills',
     status: 'available',
-    note: 'Agents powered by Claude load repository skills. Personal Mac skills are not copied.',
+    note: 'Agents powered by Claude load repository skills from .claude/skills/, and Codex from .agents/skills/. Personal Mac skills are not copied.',
   },
   {
     id: 'skill-use-indicators',
     area: 'agents-and-chat',
     name: 'Skill use indicators',
-    status: 'in-progress',
-    note: 'Showing skill names in chat and on folded tool groups is in progress for agents powered by Claude and Codex.',
-    due: null,
+    status: 'available',
+    note: 'The chat names each skill that an agent powered by Claude or Codex loads, on its tool line and on folded tool groups.',
   },
   {
     id: 'context-meter-and-compaction',

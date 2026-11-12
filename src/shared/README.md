@@ -140,6 +140,12 @@ Its UTF-8 byte count works in the Worker and Node.
 The workspace's [port report owner](../../worker/chat/port-reports.ts)
 shortens port labels only after its final filter.
 
+`ToolCall.skills` in `chat-events.ts` carries the optional names of loaded skills.
+It keeps each name as the agent gives it, in order with no repeats.
+Calls without skills omit the field. Each call keeps its current kind.
+`readToolSkills` keeps non-empty string entries for the Worker and browser readers.
+Malformed values with no valid name count as absent.
+The output filter masks each skill name along with the target and detail.
 `chat-events.ts` caps serialized tool detail at 64 KiB.
 Its omission count measures normalized source UTF-8 bytes before JSON escaping.
 Turn summaries keep at most 200 files and 256 KiB of serialized file-list data.

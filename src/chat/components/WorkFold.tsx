@@ -40,14 +40,15 @@ function Step(props: { step: WorkStep<ReactNode> }) {
 
 /**
  * The work of an ended turn before an answer, folded into one line, such as
- * "8 tool calls, 7 messages". The line has the icons of the tool kinds and
- * the left-out output, as the line of a run of tool calls has. A Mac
- * command card and a lost line fold with the work at their place, and add
- * no count and no mark, as "The work of a turn" in
- * `docs/protocol/chat-and-events.md` says. The fold starts closed. Once
- * the user opens it, it lists the steps in order: a tool call as its call
- * line, a message as its first words, a card as the card, and a lost line
- * at the left edge. It keeps that choice, and its line keeps its place.
+ * "8 tool calls, 7 messages". The line has the icons of the tool kinds, the
+ * names of the skills that its calls loaded, and the left-out output, as
+ * the line of a run of tool calls has. A Mac command card and a lost line
+ * fold with the work at their place, and add no count and no mark, as "The
+ * work of a turn" in `docs/protocol/chat-and-events.md` says. The fold
+ * starts closed. Once the user opens it, it lists the steps in order: a
+ * tool call as its call line, also a skill line, a message as its first
+ * words, a card as the card, and a lost line at the left edge. It keeps
+ * that choice, and its line keeps its place.
  */
 export function WorkFold(props: { steps: readonly WorkStep<ReactNode>[] }) {
   const { steps } = props

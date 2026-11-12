@@ -191,6 +191,7 @@ export class ClaudeEvents {
     const name = string(block.name)
     const tool = mapTool(id, name, block.input, 'running', mcpTool(name))
     this.tools.set(id, tool)
+    if (block.name === 'Skill' && !tool.skills?.length) return
     this.emit({ type: 'tool', tool })
   }
 }

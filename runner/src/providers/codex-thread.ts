@@ -21,10 +21,11 @@ export async function openCodexThread(
     response = await rpc.request(
       options.conversationId ? 'thread/resume' : 'thread/start',
       params,
+      'close-connection',
     )
   } catch (error) {
     if (!options.conversationId || !providerChanged(error)) throw error
-    response = await rpc.request('thread/fork', params)
+    response = await rpc.request('thread/fork', params, 'close-connection')
   }
   return string(object(object(response).thread).id)
 }

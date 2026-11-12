@@ -20,6 +20,9 @@ at `app/tabs` and `app/transcripts`.
   such as "8 tool calls, 7 messages" or "3 tool calls".
   [The work of a turn](chat-and-events.md#the-work-of-a-turn) says when
   the chat folds the work.
+- **Skill line:** the line of the chat that shows one skill use of the
+  agent, such as "Used skill brainstorming".
+  [Skill lines](chat-and-events.md#skill-lines) says when the chat shows it.
 - **Read-only workspace:** an archived workspace, or a workspace of a
   suspended org. Its chat shows, but nothing in it can change.
 - **Session history:** the list of the closed sessions of a workspace, as
@@ -105,6 +108,9 @@ at `app/tabs` and `app/transcripts`.
 - Their lines use the words of the chat, such as the fold lines, the tool
   verbs, and the lines of turn ends, end reasons, stops, failures, and lost
   data.
+- Each fold line of the concise copy names its skills, as
+  [Skill lines](chat-and-events.md#skill-lines) says for the chat
+  (decision 277).
 - A turn end with an end reason gives the line of that reason before its
   duration and its files, in the order of the chat. An example is
   "Background work stopped at the time limit", as
@@ -184,6 +190,8 @@ at `app/tabs` and `app/transcripts`.
   is still working.
 - In the full copy, each tool call is one line of a list. The line gives
   the verb of the chat, the target as code, and the detail of the call.
+- A skill line in a copy gives the words of the chat, such as "Used
+  skill", then the skill names as code, then the detail (decision 279).
 - Each Mac command in a copy gives its command, its Mac, its state, and
   its output in a code block.
 - Each piece of inline code and each code block takes a fence of backticks

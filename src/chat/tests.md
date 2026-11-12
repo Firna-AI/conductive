@@ -37,8 +37,14 @@ the file. `components/WorkFold.dom.test.tsx` reads the folds of ended
 turns from the rendered chat. It also checks that only the newest run of
 tool calls of a running turn stays open: between two calls, after a
 message, and while a message waits. A newer run folds it, and so does the
-end of the turn.
-`components/OpenFold.dom.test.tsx` opens a
+end of the turn. `components/SkillLines.dom.test.tsx` reads
+the skill lines and the fold lines that name skills from the rendered chat:
+a skill line while its call runs, the line of an open and of a folded run,
+and the line and the steps of the work fold of an ended turn, with a failed
+skill line. It checks the icons, the no-break space before the dot, each
+name with its comma in its box, and the icons in the box of the last name.
+`components/fold-markup-kit.ts` holds the readers of the folds that both
+files use. `components/OpenFold.dom.test.tsx` opens a
 fold and a message line, and checks that each line keeps its place. It
 also presses a workspace chip in a message line, with and without a
 modifier key. It also opens a message line with a table: the closed line

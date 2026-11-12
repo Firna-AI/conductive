@@ -29,12 +29,33 @@ These facts belong to this implementation, not to the protocol docs.
   that program. The runner turns off its automatic updates. It starts the
   program through the SDK option `spawnClaudeCodeProcess`, so the runner
   owns the child process.
+- A Claude `Skill` call keeps kind `other` and carries its skill name in
+  `skills` and the target. Its detail holds non-empty string arguments,
+  or `null`. The runner sends no running event until the input names the
+  skill. Its tool result ends the call with its done or failed state.
+  A call with no usable name ends as a plain tool call. The runner ignores
+  SDK frames from subagents.
 - Codex uses the pinned Codex App Server, through `@openai/codex-sdk`.
   API keys use its private login request. ChatGPT sign-ins use a temporary
   login file with a turn token and public account identity.
   [Agent logins](agent-logins.md#codex) gives both routes through the gateway.
   [Conversation continuation](codex-logins.md#conversation-continuation)
   gives the resume and fork sequence after a login kind change.
+- The Codex adapter requests `skills/list` for the working folder beside
+  `thread/start` or `thread/resume`. It refreshes the list after
+  `skills/changed`. The request does not delay the thread or the turn.
+  A failed or unreadable list gives one local warning and keeps reads
+  as plain commands.
+- Each App Server request selects its timeout mode. A skill-list timeout
+  rejects only that request. Other request timeouts close the agent
+  connection. Each timeout stays at 60 seconds. The adapter gives no
+  skill-list warning after the connection closes.
+- A Codex command keeps kind `run`. Its parsed `read` actions name enabled
+  skills from the list when their real paths match. The target holds the
+  names in read order, with no repeats. The detail holds the command.
+  Each item keeps the names of its first event. A successful read marks
+  its skills as loaded for the turn. Later reads are plain commands.
+  A failed read leaves its skills available for a later skill line.
 - Both agents request no approvals and the service user's rights. ChatGPT
   workspace rules can replace these Codex settings on a ChatGPT turn.
 - The runner configures the sandbox's `computer` and `conductive` MCP

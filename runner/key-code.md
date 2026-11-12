@@ -49,7 +49,9 @@ part.
   the tool of an MCP call for it.
   `message.ts` puts the sender line before the text of each message.
   `codex-thread.ts` resumes saved Codex conversations and forks after a
-  saved provider refusal. `rpc.ts` keeps structured JSON-RPC error data.
+  saved provider refusal. `rpc.ts` keeps structured JSON-RPC error data,
+  and each request names its timeout mode. `codex-skills.ts` keeps the
+  Codex skill list and names the skills that a command reads.
   `lifetime.ts` owns each agent process until it exits, with its kill delay.
   `attachment-description.ts` describes each attached file to both agents.
   The [tool entry points](agent-tools.md#key-code) cover both MCP servers,

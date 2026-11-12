@@ -140,7 +140,8 @@ holds how an agent action of the pull request bar sends its fixed prompt.
 - The line of the fold counts the tool calls and the messages, such as
   "8 tool calls, 7 messages". It leaves out a zero count.
 - As on the line of a run of tool calls, the line of the fold shows the kinds
-  of tool. It also shows the total size of the output that the runner left
+  of tool. It names the skills of its calls, as [Skill lines](#skill-lines)
+  says. It also shows the total size of the output that the runner left
   out. Command results and lines of refused events add no count and no mark.
 - The fold starts closed. A click opens or closes it, and the fold keeps
   that choice while the chat shows it.
@@ -158,6 +159,89 @@ holds how an agent action of the pull request bar sends its fixed prompt.
   and a full name, such as `mcp__computer__get_window_state`, is hard to
   read. Words of the app for each computer tool were rejected, because
   they need a list of tool names that the provider can change.
+
+### Skill lines
+
+- A skill is a folder with a `SKILL.md` file of instructions. An agent
+  loads a skill when a task needs it.
+- Each skill use of the agent of a session shows as a skill line, at its
+  place among the tool calls of the turn (decision 277).
+  [What counts as a skill use](#what-counts-as-a-skill-use) gives the rule
+  for each agent.
+- Reason: a member can check that the agent loaded the skills that the
+  task needs. A skill row of its own, as in Conductor, was rejected.
+  While the turn runs, such a row splits a run of tool calls in two. After
+  the turn ends, it splits the one fold of the work of the turn.
+- A toast or a status that goes away was rejected, because the chat
+  history and the transcript copy do not keep it.
+- A skill line shows a skill icon, then "Using skill" while its call runs,
+  or "Used skill" after it. Then it shows the skill names, as the agent
+  gives them, and the detail of the call (decision 279).
+- A line with two or more names says "Using skills" or "Used skills".
+- A failed or stopped skill line ends as every other call line ends.
+- The detail of a Claude skill line holds the arguments of the call. The
+  detail of a Codex skill line holds its command.
+- Reason: the line starts with its verb, as every call line does. "Using
+  skill" also stays true for a Claude skill that does its work in a
+  separate agent. "Loading skill" and "Loaded skill" were rejected,
+  because they are not true for such a skill.
+- The words of Conductor, such as "brainstorming · Skill activated", were
+  rejected, because they break the shape of the other call lines.
+- A skill name in title case, as Conductor shows it, was rejected. A
+  changed name can hide the real name of a plugin skill, such as
+  `conductor:conductor`.
+- A fold line is the line of a run of tool calls, or the line of the work
+  of an ended turn. [The work of a turn](#the-work-of-a-turn) states both.
+- Each fold line names the skills of the skill lines that it folds, after
+  its counts (decision 277). Examples are
+  "4 tool calls · Skill: brainstorming" and
+  "8 tool calls, 7 messages · Skills: brainstorming, plans".
+- The fold line names each skill once, in the order of first use. It names
+  no skill of a failed or stopped skill line, because such a call loaded
+  no skill.
+- Among the icons of the kinds of tool, the fold line shows the skill icon
+  for its skill lines.
+- Reason: the names stay in view in every state, also while a run or the
+  work of a turn is folded. A skill icon on the fold line with no name was
+  rejected, because a closed fold then hides the name. The names on the
+  end line of each turn were rejected, because a folded run hides them
+  while the turn runs.
+- The [mockup catalogue](../mockups/catalogue.md) draws skill lines at
+  `app/chat/turns`, `app/chat/work`, and `app/chat/work/five-skills`.
+  [The design of the chat](../mockups/design-chat.md) gives the layout of
+  a fold line that wraps.
+
+### What counts as a skill use
+
+- A Claude skill use is a call of the skill tool of Claude (decision 277).
+- A read of the `SKILL.md` file of a skill by Claude was rejected as a
+  skill use. Claude seldom reads a skill file directly, and a repository
+  that edits its skills would show false uses.
+- Codex gives a list of the skills that it loaded. A Codex skill use is a
+  command that Codex parses as a read of the `SKILL.md` file of a listed
+  skill (decision 278). The skill name comes from that list.
+- Reason: the chat names only the skills that Codex loads, by their Codex
+  names. A skill use for each read of a file named `SKILL.md` was
+  rejected. Such a rule also names templates, fixtures, and other files
+  that Codex does not load. A folder name can also differ from the skill
+  name.
+- An instruction that asks Codex to name each skill that it loads was
+  rejected. The line would then depend on the text of the model.
+- Risk: when the agent reads a listed skill only to edit it, the read
+  shows as a skill use too.
+- The match compares the real paths of the files, after each link
+  resolves. Reason: Codex lists a linked skill folder by the path of its
+  target, but the agent reads the skill through the path of the link.
+- A command whose read Codex cannot parse names no skill.
+- A later read of a skill shows as a plain command when an earlier read
+  of the turn loaded it. A failed read loads no skill. Reason: Codex reads
+  a long `SKILL.md` file in parts, and one load gives one skill line. Each
+  Claude skill call shows, because each call is a separate load.
+- Until Codex gives its list, or when it gives none, each read of a skill
+  file shows as a plain command. A missing list does not stop or fail the
+  turn.
+- Reason: a skill line only helps a member follow the work. So its failure
+  must not stop the work.
 
 ## Session transcripts
 

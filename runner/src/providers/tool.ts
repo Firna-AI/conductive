@@ -28,6 +28,22 @@ export function mapTool(
   let description: string | null = null
   if (input !== null && typeof input === 'object') {
     const args = object(input)
+    if (
+      name === 'Skill' &&
+      typeof args.skill === 'string' &&
+      args.skill !== ''
+    ) {
+      return {
+        id,
+        kind: 'other',
+        skills: [args.skill],
+        target: args.skill,
+        detail:
+          typeof args.args === 'string' && args.args !== '' ? args.args : null,
+        omittedDetailBytes: 0,
+        state,
+      }
+    }
     const key = SUBJECT_KEYS.find((item) => typeof args[item] === 'string')
     if (key) subject = string(args[key])
     if (typeof args.description === 'string') description = args.description

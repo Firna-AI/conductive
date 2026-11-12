@@ -33,7 +33,7 @@ The address chooses the state. The first value of each option is the default:
 
 | Option | Values |
 | --- | --- |
-| `scenario` | `history`, `running`, `steer`, `interrupted`, `failed`, `queued`, `first-turn`, `loss` (left-out output and files, lost events, and a lost turn end) |
+| `scenario` | `history`, `running`, `steer`, `interrupted`, `failed`, `queued`, `first-turn`, `skills` (a Claude session whose agent uses skills: the work fold of a finished turn names them, and a running turn has a folded run that names one and the running skill line of another), `loss` (left-out output and files, lost events, and a lost turn end) |
 | `workspace` | `existing`, `new` (Untitled until its title comes, and it starts) |
 | `state` | `ready`, `working`, `input` (needs input), `unread`, `starting`, `stopped`, `error`, `archived` |
 | `role` | `admin`, `member` |

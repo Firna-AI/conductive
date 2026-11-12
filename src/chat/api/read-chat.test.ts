@@ -65,6 +65,29 @@ it('reads exact positive omission counts from browser event envelopes', () => {
   }
 })
 
+it('keeps skill names in their given order in browser event envelopes', () => {
+  const event = {
+    ...tool,
+    tool: { ...tool.tool, skills: ['conductor:conductor', 'plans'] },
+  }
+  expect(readEnvelope(envelope(event)).event).toEqual({
+    ...tool,
+    tool: { ...tool.tool, skills: ['conductor:conductor', 'plans'] },
+  })
+})
+
+it('ignores malformed skill values without making a browser event unreadable', () => {
+  const read = (skills: unknown) =>
+    readEnvelope(envelope({ ...tool, tool: { ...tool.tool, skills } })).event
+  expect(read(['', 7, ' plans ', null, 'brainstorming'])).toEqual({
+    ...tool,
+    tool: { ...tool.tool, skills: [' plans ', 'brainstorming'] },
+  })
+  for (const skills of ['plans', null, {}, [], ['', 7, null], undefined]) {
+    expect(read(skills)).toEqual(tool)
+  }
+})
+
 it('keeps a known optional end reason and reads older or unknown reasons without it', () => {
   const event = { ...completed, state: 'finished' }
   const ended = { ...event, endReason: 'background_work_limit' }
