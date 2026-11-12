@@ -101,7 +101,13 @@ says "The link didn't copy. Try again."
 `../shared/transcript/session-markdown.test.ts` builds the concise and the
 full text of a copy. In a member's message, it checks the name of each
 attached file in place of its mention. It also checks that the attachments
-line lists only the other files.
+line lists only the other files. `../shared/transcript/turn-speed.test.ts`
+copies the standard speed of a fast turn after its duration and in a stop
+line, and nothing for a fast turn at fast speed.
+`components/TurnSpeed.test.tsx` renders the end of fast turns: standard
+speed with each known cause, "Standard speed" alone for another cause or
+none, the words at the end of a stop line, and nothing for a fast turn at
+fast speed or a turn without fast mode.
 `components/TabRow.dom.test.tsx` turns the wheel over a full row and reads
 its fades. It also scrolls a full row over the browser layout of
 `components/row-layout-test-kit.ts`, which gives the row and its tabs

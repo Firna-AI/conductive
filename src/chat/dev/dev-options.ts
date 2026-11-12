@@ -39,6 +39,13 @@ export interface DevOptions {
    */
   files: 'listed' | 'unread'
   /**
+   * The speed of each end of a turn: no fast mode, a fast turn at fast
+   * speed, or a fast turn at standard speed with the cause of the fast
+   * limit, of older cloud computer software, or a cause that the app does
+   * not name.
+   */
+  speed: 'none' | 'fast' | 'limit' | 'older' | 'other'
+  /**
    * The answer of each scripted turn: a line of text, three tables that
    * arrive one line at a time, or a review under headings, with a plan
    * under a heading.
@@ -95,6 +102,7 @@ export const choices = {
   change: ['done', 'done-not-saved', 'failed'],
   page: ['chat', 'this-mac'],
   files: ['listed', 'unread'],
+  speed: ['none', 'fast', 'limit', 'older', 'other'],
   answer: ['text', 'tables', 'headings'],
 } as const satisfies Record<keyof DevOptions, readonly string[]>
 
@@ -115,6 +123,7 @@ export const optionNames = [
   'change',
   'page',
   'files',
+  'speed',
   'answer',
 ] as const satisfies readonly (keyof DevOptions)[]
 
@@ -144,6 +153,7 @@ export function readOptions(search: string): DevOptions {
     change: pick(choices.change, get('change')),
     page: pick(choices.page, get('page')),
     files: pick(choices.files, get('files')),
+    speed: pick(choices.speed, get('speed')),
     answer: pick(choices.answer, get('answer')),
   }
 }

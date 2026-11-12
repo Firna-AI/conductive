@@ -1,8 +1,9 @@
 import type { Agent, AgentChoice, Effort } from '../../shared/agents'
-import type {
-  ChatEvent,
-  RunnerEventRefused,
-  ToolCall,
+import {
+  readTurnSpeed,
+  type ChatEvent,
+  type RunnerEventRefused,
+  type ToolCall,
 } from '../../shared/chat-events'
 import type {
   Attachment,
@@ -236,7 +237,9 @@ export function readChatEvent(source: Record<string, unknown>): ChatEvent {
       }
     case 'tool.updated':
       return { ...turn, type: source.type, tool: readTool(source.tool) }
-    case 'turn.completed':
+    case 'turn.completed': {
+      // An end with no speed, or with a speed that it cannot read, has none.
+      const speed = readTurnSpeed(source.speed)
       return {
         ...turn,
         type: source.type,
@@ -245,12 +248,14 @@ export function readChatEvent(source: Record<string, unknown>): ChatEvent {
         ...(source.endReason === 'background_work_limit'
           ? { endReason: source.endReason }
           : {}),
+        ...(speed === undefined ? {} : { speed }),
         files: list(readChangedFile)(source.files),
         // Only the value true marks files that the runner could not read.
         ...(source.filesUnavailable === true ? { filesUnavailable: true } : {}),
         omittedFileCount: safeCount(source.omittedFileCount),
         userMessageIds: list(text)(source.userMessageIds),
       }
+    }
     case 'turn.failed':
       return {
         ...turn,

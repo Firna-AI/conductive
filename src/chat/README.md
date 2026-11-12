@@ -62,7 +62,8 @@ chips.
 - [Transcript rules](transcript.md) give the rules of the stream cursor,
   the session logs, the transcript items and their counts, the changed
   files that the cloud computer could not read, the end reason of a
-  finished turn, the lost lines, the turns, the open run of tool calls of
+  finished turn, the standard speed of a fast turn, the lost lines, the
+  turns, the open run of tool calls of
   a running turn, the work fold of each ended turn, and Try again.
 - [The work of a turn](../../docs/protocol/chat-and-events.md#the-work-of-a-turn)
   says what folds when a turn ends. It also says that the line of each fold

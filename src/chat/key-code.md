@@ -165,7 +165,9 @@ is relative to `src/chat/`, the folder of this guide.
   without one, or "Stopped from" and the chip of the stopping session,
   then the notes of the turn. `components/TurnEnd.tsx` draws the
   end of a finished turn: the line of its end reason, from the mockups'
-  `EndReasonLine.tsx`, above its duration and its files. `UserBubble` reads
+  `EndReasonLine.tsx`, above its duration and its files, and the note of a
+  fast turn at standard speed, from the mockups' `StandardSpeedNote.tsx`,
+  beside its duration. `UserBubble` reads
   the parts of a sent message once, with `useChatParts`. It draws them with
   `ChatText`, and it lists under the message only the files that no part
   shows as a chip. It sets `opens` only when the message state is `sent`.
@@ -201,7 +203,8 @@ is relative to `src/chat/`, the folder of this guide.
 - `api/client.ts` and `api/read-*.ts`: the chat routes, through the shared
   route builders and the app's `ApiClient`, and the readers of their
   responses. `api/read-chat.ts` copies a known `endReason` of a turn end,
-  and drops an unknown value. `api/read-changed-file.ts` reads the changed
+  and drops an unknown value. It keeps a speed that `readTurnSpeed` reads,
+  and drops any other value. `api/read-changed-file.ts` reads the changed
   files of a turn end, with their real paths and display labels.
 - `components/`: the tabs, the chat, the composer, the model picker, and the
   overlays. `ui/`: interactive buttons, menus, sheets, and dialogs.

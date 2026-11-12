@@ -511,6 +511,27 @@ My calls, on 2026-11-12, as the ui implementor of Milestones 5 and 8:
   as Copy concise transcript has. Reason: the code has no scope for a
   session tab, and the offer of the composer limits where the key runs.
 
+My calls, on 2026-11-12, as the ui implementor of Milestone 7:
+
+- The browser reader keeps a speed that `readTurnSpeed` reads, and drops
+  any other value, with no refusal of the event. Reason: the reader does
+  the same for an unknown end reason, and the turn still ended.
+- The mockup words and note take an optional cause. Without a cause that
+  the app knows, they say "Standard speed" alone. Reason: the protocol
+  gives those words, and the app reuses the parts of the mockups.
+- A stopped turn whose late end added a file row shows the note in that
+  row, beside its duration, and its stop line does not repeat it. Reason:
+  the file notes of such a turn work the same way, and the turn then shows
+  its speed once.
+- The copied transcript gives the same words after the duration of a
+  finished turn, and in a stop line. Reason: both copies hold the items of
+  the chat, and their lines use the words of the chat, also for the ends
+  of turns and the stops, as the copy already does for "Changed files
+  unavailable".
+- The chat development page has a `speed` option: `none`, `fast`, `limit`,
+  `older`, and `other`, as it has `files=unread`. Reason: a fast turn at
+  standard speed can then show in a browser.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -714,13 +735,16 @@ Depends on: 4, 5, and 6
 - [x] The Worker stores and replays the new field of `turn.completed`, as
       it does `filesUnavailable`. A fast turn with no speed from its runner
       counts as standard, with the cause "older runner".
-- [ ] The end line of a slow fast turn shows "Standard speed" and the
-      cause, as the mockup shows.
-- [ ] Test each cause in the runner, the event shape in the Worker, and the
+- [x] The end line of a slow fast turn shows "Standard speed" and the
+      cause, as the mockup shows. A stop line ends with the same words, and
+      the copied transcript gives them too, because its lines use the words
+      of the chat.
+- [x] Test each cause in the runner, the event shape in the Worker, and the
       end line in the app. See each new test fail first.
 
-Runner and Worker evidence: `.context/fast-mode/non-ui/`. The app end line
-and its tests stay with the UI work.
+Runner and Worker evidence: `.context/fast-mode/non-ui/`. App evidence:
+`.context/fast-mode/m7/`, with the `speed` option of the chat development
+page.
 
 ## Milestone 8: The key of the Fast switch (fast mode decision 258)
 

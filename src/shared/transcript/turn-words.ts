@@ -11,6 +11,11 @@ import {
   turnFilesUnavailable,
   unlistedFiles,
 } from '../../../docs/mockups/src/components/chat/lostCopy'
+import {
+  knownSpeedCause,
+  standardSpeedText,
+  type StandardSpeedCause,
+} from '../../../docs/mockups/src/components/chat/speedCopy'
 import type { Transcript } from './transcript'
 
 export const turnCopy = {
@@ -82,6 +87,31 @@ export function turnEndReason(
   return completionOf(transcript, turnId)?.endReason
 }
 
+/**
+ * The standard speed of a fast turn that ran at standard speed, with the
+ * cause that its line can name. A turn at fast speed, and a turn without
+ * fast mode, have none. An unknown cause gives a speed without a cause, so
+ * the line says "Standard speed" alone.
+ */
+export function standardSpeedOf(
+  transcript: Transcript,
+  turnId: string,
+): { cause?: StandardSpeedCause } | undefined {
+  const speed = completionOf(transcript, turnId)?.speed
+  if (speed?.state !== 'standard') return undefined
+  const cause = knownSpeedCause(speed.cause)
+  return cause === undefined ? {} : { cause }
+}
+
+/** The words of the standard speed of a turn, if it has one. */
+export function standardSpeedLine(
+  transcript: Transcript,
+  turnId: string,
+): string | undefined {
+  const speed = standardSpeedOf(transcript, turnId)
+  return speed && standardSpeedText(speed.cause)
+}
+
 /** Whether a turn has a file row, such as one from a late end. */
 function hasFileRow(transcript: Transcript, turnId: string): boolean {
   return transcript.items.some(
@@ -105,15 +135,19 @@ export function stoppedAttribution(
     : { kind: 'text', text: stoppedLine(by, readers) }
 }
 
+/**
+ * The notes of the line of a stopped turn: its standard speed, then its
+ * files that the line does not list. A file row of the turn, such as one
+ * from a late end, shows these instead, beside its duration.
+ */
 export function stoppedNotes(transcript: Transcript, turnId: string): string[] {
-  const files = hasFileRow(transcript, turnId)
-    ? 0
-    : omittedFiles(transcript, turnId)
-  const unread =
-    !hasFileRow(transcript, turnId) && filesUnread(transcript, turnId)
+  if (hasFileRow(transcript, turnId)) return []
+  const speed = standardSpeedLine(transcript, turnId)
+  const files = omittedFiles(transcript, turnId)
   return [
+    ...(speed === undefined ? [] : [speed]),
     ...(files > 0 ? [unlistedFiles(files)] : []),
-    ...(unread ? [turnFilesUnavailable] : []),
+    ...(filesUnread(transcript, turnId) ? [turnFilesUnavailable] : []),
   ]
 }
 

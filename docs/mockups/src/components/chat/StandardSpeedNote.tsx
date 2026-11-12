@@ -5,10 +5,11 @@ import styles from './TurnEnd.module.css'
 /**
  * The note of a fast turn that ran at standard speed, in the end line of the
  * turn: muted text with a gauge icon, such as "Standard speed · Fast limit
- * reached". A narrow chat wraps it, and the icon stays on its first line. It
- * takes no fixtures, so the app can use it too.
+ * reached", or "Standard speed" alone without a cause that the app knows. A
+ * narrow chat wraps it, and the icon stays on its first line. It takes no
+ * fixtures, so the app can use it too.
  */
-export function StandardSpeedNote(props: { cause: StandardSpeedCause }) {
+export function StandardSpeedNote(props: { cause?: StandardSpeedCause }) {
   return (
     <span className={styles.speed}>
       <Gauge aria-hidden className={styles.icon} size={12} />

@@ -8,6 +8,8 @@ import {
   moreFiles,
   turnFilesUnavailable,
 } from '../../../docs/mockups/src/components/chat/lostCopy'
+import type { StandardSpeedCause } from '../../../docs/mockups/src/components/chat/speedCopy'
+import { StandardSpeedNote } from '../../../docs/mockups/src/components/chat/StandardSpeedNote'
 import styles from '../../../docs/mockups/src/components/chat/TurnEnd.module.css'
 import { formatDuration } from '../../shared/transcript/duration'
 import { turnCopy } from '../../shared/transcript/turn-words'
@@ -57,7 +59,9 @@ function FileChip(props: {
  * not read the changed files, in place of the list. The turn still finished.
  * `endReason` names a cause other than the end of the reply, such as the
  * time limit of background work. Its line sits above the row, as in the
- * mockups.
+ * mockups. `standardSpeed` marks a fast turn that ran at standard speed,
+ * with the cause that the note can name: the note stands beside the
+ * duration, which it explains, and the files go under it.
  */
 export function TurnEnd(props: {
   durationMs: number
@@ -65,14 +69,12 @@ export function TurnEnd(props: {
   omittedFiles: number
   filesUnavailable: boolean
   endReason?: TurnEndReason
+  standardSpeed?: { cause?: StandardSpeedCause }
   onOpenDiff?: (path: string) => void
 }) {
   const more = props.omittedFiles
-  const row = (
-    <div className={styles.end}>
-      <span className={styles.duration}>
-        {formatDuration(props.durationMs)}
-      </span>
+  const files = (
+    <>
       {props.filesUnavailable ? (
         <span className={styles.unavailable}>
           <CircleSlash aria-hidden className={styles.icon} size={12} />
@@ -89,6 +91,21 @@ export function TurnEnd(props: {
           {more > 0 ? <li className={styles.more}>{moreFiles(more)}</li> : null}
         </ul>
       ) : null}
+    </>
+  )
+  const row = (
+    <div className={styles.end}>
+      <span className={styles.duration}>
+        {formatDuration(props.durationMs)}
+      </span>
+      {props.standardSpeed === undefined ? (
+        files
+      ) : (
+        <div className={styles.facts}>
+          <StandardSpeedNote cause={props.standardSpeed.cause} />
+          {files}
+        </div>
+      )}
     </div>
   )
   if (props.endReason === undefined) return row
