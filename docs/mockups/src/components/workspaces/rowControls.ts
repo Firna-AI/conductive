@@ -4,7 +4,7 @@ import type { MenuEntry } from '../common/Menu'
 import { reassignMenu } from '../workspace/OwnerPicker'
 import type { OpenSubmenu, RowControls } from './RowMenu'
 import type { WorkspaceRow } from './sections'
-import { workspaceMenuOf, type Submenu } from './workspaceMenu'
+import { renames, workspaceMenuOf, type Submenu } from './workspaceMenu'
 
 /**
  * What a view draws on one row: the menu that a right click or the menu
@@ -24,7 +24,7 @@ export type RowContext = {
   viewer: Membership
   /** The sections of the list, which Move to section offers. */
   sections: readonly SectionKey[]
-  /** The org is suspended, so no row has a menu. */
+  /** The org is suspended, so each menu holds only Copy link. */
   readOnly: boolean
   /** The list opens a menu as a sheet, as on a phone, and has no hover. */
   sheet: boolean
@@ -80,9 +80,9 @@ function submenuOf(
 
 /**
  * The drawn state of one row: the menu that a right click or the menu keys
- * opened, at the pointer or in a sheet, the field of Rename, or a hover. A
- * row whose person has no action draws no menu and no field, so a right
- * click opens the browser's own menu.
+ * opened, at the pointer or in a sheet, the field of Rename, or a hover.
+ * Every row has a menu, because each menu holds Copy link. A row whose
+ * person may not rename it draws no field.
  */
 export function rowControls(
   row: WorkspaceRow,
@@ -97,19 +97,17 @@ export function rowControls(
     return context.sheet ? undefined : { hovered: true }
   }
   const submenu = drawing.kind === 'menu' ? drawing.submenu : undefined
-  const entries = context.readOnly
-    ? []
-    : workspaceMenuOf(
-        {
-          admin: context.viewer.role === 'admin',
-          owner: workspace.owner === context.viewer.person,
-          archived: row.status === 'archived',
-          otherSection: context.sections.length > 1,
-        },
-        submenu,
-      )
-  if (entries.length === 0) return undefined
+  const access = {
+    admin: context.viewer.role === 'admin',
+    owner: workspace.owner === context.viewer.person,
+    archived: row.status === 'archived',
+    otherSection: context.sections.length > 1,
+    readOnly: context.readOnly,
+  }
+  const entries = workspaceMenuOf(access, submenu)
   if (drawing.kind === 'rename') {
+    // A row whose person may not rename it draws no field.
+    if (!renames(access)) return undefined
     return { rename: { value: drawing.value, selected: drawing.selected } }
   }
   return {

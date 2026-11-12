@@ -182,12 +182,13 @@ In the folded work of a turn, open a message line to read its table.
 
 ## Manage session tabs
 
-Use a tab's menu to rename or move it.
+Use a tab's menu to rename or move it, or to copy its link.
 Open the menu with a right click on a computer.
 You can also use **Shift+F10** while the tab has focus.
 On a phone, use a long press.
 
 - **Rename session** changes the tab's title.
+- **Copy link** copies a link that opens the workspace with that session shown.
 - **Move left** and **Move right** move it one place.
 - Drag a tab to place it elsewhere in the row.
 

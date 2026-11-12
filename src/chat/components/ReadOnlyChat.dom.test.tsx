@@ -131,6 +131,7 @@ describe('a read-only chat', () => {
         keyReachesBrowser: false,
         menus: 1,
         items: [
+          { name: 'Copy link', off: false },
           { name: 'Copy concise transcript', off: false },
           { name: 'Copy full transcript', off: false },
         ],

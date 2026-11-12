@@ -82,7 +82,8 @@ function useLocalCollapse(actions: SectionActions) {
  * The workspaces of an org in their sections, as the sidebar and the list
  * page show them, with the field of a new section at the end. Each row has
  * the menu of the actions that `viewer` can use. `readOnly` shows them
- * without changes or menus, for a suspended org. `offerActions` says that
+ * without changes, for a suspended org, and each menu then holds only Copy
+ * link. `offerActions` says that
  * the page shows this list, so it offers New section to the command
  * palette, and its rows take the keys of the workspaces.
  */

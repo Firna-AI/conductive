@@ -10,6 +10,7 @@ import type { Workspace } from '../shared/workspaces'
 import { TouchScreen } from '../../docs/mockups/src/components/common/touch'
 import { ChatOverlays, historyEntries } from './components/ChatOverlays'
 import { SessionChat, type ChatHost } from './components/SessionChat'
+import { useSessionLinkCopy } from './components/session-link-copy'
 import { SessionTabs } from './components/SessionTabs'
 import { useTabKeys } from './components/tab-keys'
 import { rowOf, shownTab, type RenderTab } from './components/tab-row'
@@ -122,7 +123,13 @@ function ChatBody(
     overlay.kind === 'history'
   const now = useNow(props.clock ?? systemClock, ticking)
   const links = useChatLinksOf(controller, snapshot, props.onOpenPage)
-  const copy = useTranscriptCopy(controller, props.copy ?? browserCopy)
+  const copyServices = props.copy ?? browserCopy
+  const copy = useTranscriptCopy(controller, copyServices)
+  const copyLink = useSessionLinkCopy(
+    controller.target,
+    links.origin,
+    copyServices,
+  )
   useMentionCopy()
   useReport(snapshot.workspace, props.onWorkspaceChange)
   useReport(snapshot.view, props.onViewChange)
@@ -152,6 +159,7 @@ function ChatBody(
         onCancelRename={controller.dismissOverlay}
         onClose={controller.requestClose}
         onCopy={copy}
+        onCopyLink={copyLink}
         onMove={controller.moveTab}
         onNew={() => void controller.newSession()}
         onRename={(id, title) => void controller.rename(id, title)}

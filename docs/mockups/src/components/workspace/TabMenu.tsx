@@ -2,6 +2,7 @@ import type { LucideIcon } from 'lucide-react'
 import { ArrowLeft, ArrowRight, Copy, CopyPlus, Pencil } from 'lucide-react'
 import { Menu, type MenuEntry } from '../common/Menu'
 import { Sheet } from '../common/Sheet'
+import { linkItem } from './linkCopy'
 import type { WorkspaceTab } from './TabItem'
 import { transcriptItems } from './transcriptCopy'
 
@@ -36,9 +37,9 @@ function joined(groups: readonly (readonly TabMenuItem[])[]): MenuEntry[] {
 /**
  * The menu of a tab: a right click opens it, and on a phone a long press
  * that ends without a move. A session tab leads with Rename session, the
- * one way to rename a session. Its two copy items follow: the concise copy,
- * with each fold of the chat closed, and the full copy, with every fold
- * open. Every tab moves one place left or right. A move that the place of
+ * one way to rename a session. Its copy items follow: Copy link, which
+ * copies the link of the session, the concise copy, with each fold of the
+ * chat closed, and the full copy, with every fold open. Every tab moves one place left or right. A move that the place of
  * the tab rules out keeps its place, off. A read-only workspace leaves out
  * each item that changes the workspace, so a session tab keeps only its
  * copy items, and a file or diff tab has no menu.
@@ -70,6 +71,7 @@ export function tabMenuOf(
       ? [
           [{ label: 'Rename session', icon: Pencil, changes: true }],
           [
+            { ...linkItem, changes: false },
             { label: transcriptItems.concise, icon: Copy, changes: false },
             { label: transcriptItems.full, icon: CopyPlus, changes: false },
           ],
