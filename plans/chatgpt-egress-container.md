@@ -267,8 +267,6 @@ Depends on: 2
 
 Depends on: 2
 
-- [ ] Cal: give the deploy token of the `production` environment the
-      Containers permission. This blocks the first automatic deploy.
 - [x] `.github/workflows/deploy.yml`: before the main Worker, hash the
       egress inputs, and deploy the egress Worker when the hash differs
       from the tag of its deployed version.
@@ -278,19 +276,17 @@ Depends on: 2
 
 Depends on: 2, 3, 4
 
-- [ ] Deploy the egress Worker once by hand, so that the service binding
+- [x] Deploy the egress Worker once by hand, so that the service binding
       of the main Worker has a target before the merge.
-- [ ] Through a temporary Worker with the binding, check that a request
+- [x] Through a temporary Worker with the binding, check that a request
       with a fake token gets OpenAI's 401 JSON reply.
-- [ ] After the merge and the deploy, check a real Codex turn on a ChatGPT
-      plan in the Workers logs of the egress Worker.
 
 ## Milestone 6: Verification, commit, review, and pull request
 
 Depends on: every other milestone
 
-- [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
-- [ ] Commit with Conventional Commits and push the branch.
+- [x] Run the targeted tests and the complete gate named in `AGENTS.md`.
+- [x] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
@@ -304,7 +300,13 @@ Depends on: every other milestone
 
 ## Post-merge follow-up (non-blocking)
 
+- [ ] Cal: give the deploy token of the `production` environment the
+      Containers Edit permission. Follow-up item:
+      `plans/follow-ups/egress-deploy-token-containers.md`.
+- [ ] After the merge and the deploy, check a real Codex turn on a ChatGPT
+      plan through the egress Worker. Follow-up item:
+      `plans/follow-ups/egress-container-live-check.md`.
+
 - [ ] After one day of good container traffic, retire the Mac proxy, as
-      egress decision 4 says: delete `CHATGPT_EGRESS_URL` and
-      `CHATGPT_EGRESS_SECRET` from the Worker, stop the two Mac services,
-      and delete the tunnel and its DNS name.
+      egress decision 4 says. Follow-up item:
+      `plans/follow-ups/retire-mac-egress-proxy.md`.
