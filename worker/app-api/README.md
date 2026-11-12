@@ -44,6 +44,12 @@ View writes cannot change this branch.
   `CONDUCTIVE_DEFAULT_CHOICE`, as
   [Deployment inputs](../../docs/deployment.md#models) says. A missing or
   invalid value gives a 503 on its own route only.
+- Each model of the list can carry the `fast` mark.
+  `PUT /api/account/default-model` saves fast mode with the model and the
+  effort. It stores fast mode as off for a model without the mark, and a
+  saved default without fast mode reads as off.
+  [Fast mode](../../docs/protocol/fast-mode.md#the-models-with-fast-mode)
+  states the rules.
 - An account reply reads `user_preferences`, `user_shortcuts`, and the records of the agent
   logins. It also gives the page of the GitHub App from `GITHUB_APP_SLUG`,
   so a screen links to that page without a GitHub read. A login write

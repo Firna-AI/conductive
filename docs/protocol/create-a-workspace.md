@@ -34,6 +34,10 @@ decision number names a dated record, as
 - Reason: all the settings of new workspaces then sit together. The
   section on General, with only the new choice on Preferences, was
   rejected, because the user then looks in two places.
+- Model and effort also saves fast mode, with the Fast switch of its menu.
+  New workspace starts from the saved choice with its fast mode, as
+  [Fast mode](fast-mode.md#saved-defaults-new-workspaces-and-routines)
+  says.
 - The choice offers the page and the dialog. Each change saves at once, as
   a change of Model and effort does.
 - When a save fails, the choice keeps the saved value, and an error shows

@@ -343,7 +343,9 @@ My calls, on 2026-11-10, under fast mode decision 255:
   choice in Preferences.
 - The Worker keeps fast only for a model that the model list marks.
   Otherwise it stores fast as off. Reason: a tool call can name any model,
-  and Codex sends its Fast tier also for a model without one.
+  and the stored choice then tells the truth. Changed on 2026-11-12: the
+  second check found that Codex sends no tier for a model without one, so
+  this is not a cost guard.
 - The agent tools list `fast` for each model. A create call runs fast only
   when it names `fast: true`. The saved default gives no fast to a tool
   call. Reason: the default belongs to the owner of the calling workspace,
@@ -402,6 +404,26 @@ programs. `.context/fast-mode/brainstorm-report.md` holds the evidence.
 - Fable 5.2 gets no fast mark. Reason: the pinned Claude program sends the
   speed field only for model IDs with `opus-4-8` or `opus-5`.
 
+My calls, on 2026-11-12, as the docs implementor of Milestone 2:
+
+- The requirements live on a new page, `docs/protocol/fast-mode.md`, under
+  Messages and attachments. The Fast mode section under Messages and the
+  end line in Chat and events link to it. Reason: the messages doc already
+  has 264 lines, and links from code docs keep its other parts in place.
+- `create_session` runs fast only when it names fast, also with the saved
+  default. `send_message` without fast keeps the fast mode of the session.
+  `list_models` gives a default choice with fast off. Reason: an agent
+  spends a login at the fast price only when its call asks for it.
+- The CLI takes `--fast true|false`, as `--archived` does. Reason:
+  `send_message` needs on, off, and no change.
+- The default choice of the app has fast off. Reason: fast mode decision
+  255 rejected fast mode that the operator sets.
+- A new routine takes the fast mode of its owner's saved default, as New
+  workspace does. Reason: the routine form uses the same picker.
+- A fast turn has standard speed only when the agent reports a request at
+  standard speed. Without a known cause, the end shows "Standard speed"
+  alone. Reason: a missing speed then means an older runner.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -447,40 +469,40 @@ Depends on: 1
 The protocol docs state the requirements of the switch, the saved default,
 the agent tools, and the model list.
 
-- [ ] Add a Fast mode section under Messages in
+- [x] Add a Fast mode section under Messages in
       `docs/protocol/messages-and-attachments.md`: the switch, the models
       that show it, the change rules, and the standard speed when the agent
       cannot run fast. State that any member who may send in a session may
       turn fast on or off, as for the model and the effort (fast mode decision 256).
-- [ ] Update "Names in the product" in
+- [x] Update "Names in the product" in
       `docs/protocol/agents-and-sessions.md`: the trigger names the model, the
       effort, and Fast when it is on.
-- [ ] Update `docs/protocol/create-a-workspace.md`: Model and effort also
+- [x] Update `docs/protocol/create-a-workspace.md`: Model and effort also
       saves fast.
-- [ ] Update the models and the create call in `docs/protocol/agent-tools.md`.
-- [ ] Update `docs/protocol/agent-runner.md`: a change of fast goes to the
+- [x] Update the models and the create call in `docs/protocol/agent-tools.md`.
+- [x] Update `docs/protocol/agent-runner.md`: a change of fast goes to the
       runner, as a change of the model does.
-- [ ] Update the model list fields in `docs/deployment.md`.
-- [ ] Update `worker/app-api/README.md` and `tools/README.md`.
-- [ ] Read each public guide in `src/marketing/docs/` in full. Update each
+- [x] Update the model list fields in `docs/deployment.md`.
+- [x] Update `worker/app-api/README.md` and `tools/README.md`.
+- [x] Read each public guide in `src/marketing/docs/` in full. Update each
       sentence on the model menu.
-- [ ] Read the Terms page in `src/marketing/terms.ts` and the Privacy page in
+- [x] Read the Terms page in `src/marketing/terms.ts` and the Privacy page in
       `src/marketing/privacy.ts` in full. Update each sentence that restates
       a changed fact.
-- [ ] Set the comparison row `fast-mode` in
+- [x] Set the comparison row `fast-mode` in
       `src/marketing/from-conductor/areas/models-and-providers.ts` to
       Available, with a note in the words of the claim rules.
-- [ ] Add fast to the background of
+- [x] Add fast to the background of
       `plans/follow-ups/unoffered-model-choice.md`.
-- [ ] State the speed of a turn (fast mode decision 257) in
+- [x] State the speed of a turn (fast mode decision 257) in
       `docs/protocol/chat-and-events.md` and the end line in
       `docs/protocol/messages-and-attachments.md`.
-- [ ] Add the command "Fast mode" (fast mode decision 258) to the table of
+- [x] Add the command "Fast mode" (fast mode decision 258) to the table of
       `docs/protocol/keyboard-shortcuts-keys.md`, with ⇧⌘E and Ctrl+Shift+E,
       and to each other shortcuts doc that lists the commands.
-- [ ] State that a routine saves fast in its choice, in
+- [x] State that a routine saves fast in its choice, in
       `docs/protocol/routines.md` and `docs/protocol/routine-runs.md`.
-- [ ] Check each relative link of the changed Markdown files.
+- [x] Check each relative link of the changed Markdown files.
 
 ## Milestone 3: Choice contract and Worker routes
 

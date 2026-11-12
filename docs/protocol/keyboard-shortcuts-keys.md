@@ -5,7 +5,9 @@ the keyboard shortcuts: the default keys, the keys of Windows and Linux,
 the keys that each browser keeps, and the keys that the app leaves to each
 browser. It belongs to [Keyboard shortcuts](keyboard-shortcuts.md), which
 gives the rules and the terms. A decision number names a dated record, as
-[Decision numbers](../architecture.md#decision-numbers) says.
+[Decision numbers](../architecture.md#decision-numbers) says. A fast mode
+decision number names a decision of the change that adds
+[fast mode](fast-mode.md), as that doc says.
 
 ## The default keys
 
@@ -79,10 +81,15 @@ gives the rules and the terms. A decision number names a dated record, as
 | Chat | Attach files | ⌘U | Ctrl+U | Workspace |
 | Chat | Model picker | ⌘/ | Alt+Shift+M | Workspace |
 | Chat | Next effort level | ⌃⌘/ | Ctrl+Shift+/ | Workspace |
+| Chat | Fast mode | ⇧⌘E | Ctrl+Shift+E | Session tab |
 | Chat | Stop the agent | ⌃⌘⌫ | Alt+Shift+S | Workspace |
 | Chat | Copy concise transcript | ⌥⌘C | Alt+Shift+C | Session tab |
 | Chat | Copy full transcript | – | – | Session tab |
 
+- Fast mode has ⇧⌘E, the key of the Fast row of Conductor, and its twin
+  Ctrl+Shift+E (fast mode decision 258). Reason: members who move from
+  Conductor press that key. No key, a row of the palette, and a key that
+  opens the model menu were rejected for that reason.
 - No two commands share a default key on the same keyboard.
 - No default key is a text key of its system, except Ctrl+U on Linux, as
   [Keys chosen by hand](#keys-chosen-by-hand) says.

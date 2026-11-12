@@ -23,8 +23,14 @@ for local development.
   - `label`: the name that the app shows, as a non-empty string.
   - `efforts`: a non-empty array. Each effort is `none`, `low`, `medium`,
     `high`, `xhigh`, or `max`.
+  - `fast`: optional, `true` when the model has fast mode. A missing field
+    means `false`. The model menu shows the Fast switch only for a marked
+    model, as [Fast mode](../protocol/fast-mode.md#the-models-with-fast-mode)
+    says. Mark a model only when the pinned agent program can run it in
+    fast mode.
 - `CONDUCTIVE_DEFAULT_CHOICE` is one JSON object with `agent`, `model`, and
-  `effort`. The saved default of a user comes before it.
+  `effort`. The saved default of a user comes before it. The default choice
+  of the app has fast mode off.
 - An own endpoint login uses the same list. The owner's pickers hide each
   model of the list that the endpoint does not name in its own model
   list, as
@@ -54,7 +60,7 @@ for local development.
 The shape of the two values, with placeholders in place of real values:
 
 ```json
-[{ "agent": "claude", "model": "<model ID>", "label": "<label>", "efforts": ["low", "medium", "high"] }]
+[{ "agent": "claude", "model": "<model ID>", "label": "<label>", "efforts": ["low", "medium", "high"], "fast": true }]
 ```
 
 ```json
