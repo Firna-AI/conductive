@@ -1,6 +1,6 @@
 # Fast mode switch in the model menu
 
-Status: Active. On branch `calummoore/model-menu-fast-option`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
+Status: Active. On branch `calummoore/bern-mapm`, no pull request yet. The plan started on `calummoore/model-menu-fast-option`, which this branch merged on 2026-11-12. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
 Members cannot ask the agents for faster output today. Both agents offer a
 fast mode: faster output at a higher price. Conductor shows a Fast switch in
@@ -19,7 +19,7 @@ Claude program, because the Claude Code docs need version 2.1.321 and the
 runner pins 2.1.318. A check of each choice against the model list stays
 with the follow-up item
 [A choice can name a model that the app does not offer](follow-ups/unoffered-model-choice.md).
-Decision 258 asks whether the switch gets a key.
+Fast mode decision 258 gives the switch a key of the keyboard shortcuts.
 
 Contract owners:
 
@@ -35,6 +35,18 @@ Contract owners:
 
 ## Evidence
 
+The files of 2026-11-10 and 2026-11-11 are on the machine of the first
+workspace. The files of 2026-11-12 are in `.context/fast-mode/` of the
+workspace of `calummoore/bern-mapm`:
+
+- `research.md` and `brainstorm-report.md` hold the second check of the
+  pinned agent programs, with corrections to this plan.
+- `probe/` holds local runs of both agent programs against a capture
+  server, with the runner's environment. No run made a real model call.
+- `codex-ts/` holds the generated types of the Codex app server.
+
+The earlier files:
+
 - `.context/fast-mode/notes.md` holds what the pinned SDKs offer, and the
   facts of the repository.
 - `.context/fast-mode/spike.md` holds a local run of both agent programs
@@ -42,11 +54,15 @@ Contract owners:
 - `.context/fast-mode/options-check.md` holds the options check of the
   decisions below, and the sources that it read.
 - `.context/fast-mode/257/` holds the mockup pictures of the options of
-  decision 257, and the scratch patch that drew them.
+  fast mode decision 257, and the scratch patch that drew them.
 
 ## Decisions
 
-### Decision 255: Fast mode is a switch in the choice
+The decisions of this change carry the short name "fast mode decision",
+as [Decision numbers](../docs/architecture.md#decision-numbers) says.
+Main uses the plain numbers 255 to 258 for other decisions.
+
+### Fast mode decision 255: Fast mode is a switch in the choice
 
 - **Date:** 2026-11-10. **Status:** Decided by the user.
 - **Root question:** How does a member ask for faster output, at a higher
@@ -84,7 +100,7 @@ Contract owners:
   - Fast for Claude only. Codex needs one more request field, so it saves
     little.
 
-### Decision 256: Who may turn on fast mode
+### Fast mode decision 256: Who may turn on fast mode
 
 - **Answer:** The user chose A on 2026-11-10. Any member who may send in a
   session may turn fast on or off, as for the model and the effort. On
@@ -141,7 +157,7 @@ Contract owners:
     because each fast message would wait for another person.
   - An org setting that the admins control. It fails the goal, because an
     admin does not own the starter's login.
-  - One Fast value for each member. Decision 255 rejected it for its cache
+  - One Fast value for each member. Fast mode decision 255 rejected it for its cache
     cost.
 - **Wider fix:** None. The same gap holds for the model and the effort
   today. The follow-up item
@@ -150,7 +166,7 @@ Contract owners:
 - **Previous examples:** Decision 116 lets other members spend a shared
   login. The share switch starts off for a subscription token and on for an
   API key.
-- **Related:** Decision 255. The rule applies to its switch. The design call
+- **Related:** Fast mode decision 255. The rule applies to its switch. The design call
   on the agent tools keeps a saved default from turning on fast for another
   member's login.
 - **Recommendation:** B. The model route lets any member set the speed of
@@ -160,10 +176,13 @@ Contract owners:
 - **Action:** ask the user, because B adds a new restriction, and A is
   simpler.
 
-### Decision 257: How a member learns that a turn ran at standard speed
+### Fast mode decision 257: How a member learns that a turn ran at standard speed
 
-- **Status:** Open. On 2026-11-10 the user asked to see what each option
-  looks like before the choice.
+- **Answer:** The user chose D on 2026-11-12. The runner reports the speed
+  of each fast turn, and the end line of a slow fast turn shows "Standard
+  speed" and the cause. On 2026-11-10 the user had asked to see each option
+  first. The pictures of `.context/fast-mode/257/` were not on the machine
+  of the answer, so Milestone 6 draws the chosen option.
 - **Severity:** Low. **Effort:** Medium.
 - **Source:** Design.
 - **Category:** Docs or spec.
@@ -220,7 +239,7 @@ Contract owners:
 - **Previous examples:** Decision 109: `turn.completed` carries
   `filesUnavailable`, and the end of the turn shows "Changed files
   unavailable".
-- **Related:** Decision 255. The state belongs to its switch.
+- **Related:** Fast mode decision 255. The state belongs to its switch.
 - **Recommendation:** D. It shows the cause beside the slow turn, on an end
   event that every turn already has. C needs the same report from the
   runner, and a session field too. The options check changed the
@@ -228,7 +247,17 @@ Contract owners:
 - **Action:** ask the user, because D adds a field to a chat event that no
   requirement covers, and B and C each keep a real advantage.
 
-### Decision 258: A key for the Fast switch
+### Fast mode decision 258: A key for the Fast switch
+
+- **Answer:** The user chose C on 2026-11-12: ⇧⌘E on a Mac and
+  Ctrl+Shift+E on Windows and Linux, shown at the end of the Fast row.
+- **Since the question:** main gained the keyboard shortcuts of
+  [Keyboard shortcuts](../docs/protocol/keyboard-shortcuts.md). The rule
+  that only the palette has a key is gone. So the key is the default of a
+  new command of the Chat group, beside Next effort level. A person can
+  change it on the Keyboard shortcuts tab. Ctrl+Shift+E follows decision
+  194: Ctrl takes the place of ⌘, and Shift stays. The background below is
+  the background of 2026-11-10.
 
 - **Severity:** Low. **Effort:** Small.
 - **Source:** Design.
@@ -243,7 +272,7 @@ Contract owners:
     the Fast row, and Space changes it.
   - The page has no bridge to the Mac app, so a menu item of the Mac app
     cannot change the switch.
-- **Problem:** The screenshot of decision 255 shows a key, but the answer
+- **Problem:** The screenshot of fast mode decision 255 shows a key, but the answer
   asked only for the switch.
 - **Impact if no action:** Members who move from Conductor press ⌘⇧E, and
   nothing happens.
@@ -267,7 +296,7 @@ Contract owners:
 - **Wider fix:** None. This is a choice of the product.
 - **Previous examples:** The palette key of decision 145, and the rejected
   keys that move a tab, in `docs/protocol/agents-and-sessions.md`.
-- **Related:** Decision 255. The key changes its switch.
+- **Related:** Fast mode decision 255. The key changes its switch.
 - **Recommendation:** A. It keeps the rule that only the palette has a key,
   and fast changes seldom, because it stays on. C matches Conductor best.
 - **Action:** ask the user, because the screenshot shows a key, and C and D
@@ -275,7 +304,7 @@ Contract owners:
 
 ## Design calls
 
-My calls, on 2026-11-10, under decision 255:
+My calls, on 2026-11-10, under fast mode decision 255:
 
 - The choice gets `fast: boolean`. A stored record without the field reads
   as `false`. Reason: the switch has two states. A later speed level can
@@ -283,6 +312,8 @@ My calls, on 2026-11-10, under decision 255:
   production.
 - Each model list entry gets an optional `fast` boolean, `false` when
   absent. The list marks Opus 5.5, GPT-6.1 Sol, GPT-6 Astra, and GPT-6 Luna.
+  Changed on 2026-11-12: the list also marks GPT-6.1 Terra, as the calls of
+  that date say.
   Reason: the local run shows that the pinned Claude program sends its speed
   field only for Opus 5.5 of the current Claude models. The Codex catalogue
   lists the Fast tier for those three Codex models, and not for GPT-6.1
@@ -318,12 +349,12 @@ My calls, on 2026-11-10, under decision 255:
   call. Reason: the default belongs to the owner of the calling workspace,
   but the first message runs on the login of the sender of the calling
   turn.
-- With fast on, the runner starts Claude with the flag setting
+- Replaced on 2026-11-12, as the calls of that date say. With fast on, the runner starts Claude with the flag setting
   `fastMode: true`, and changes it with `applyFlagSettings`. It sends
   `serviceTier: "priority"` to Codex on the thread and on each turn. With
   fast off, Claude gets no setting, and Codex gets `serviceTier: "default"`.
   Reason: the local run shows these requests.
-- The runner always sets `CLAUDE_CODE_SKIP_FAST_MODE_ORG_CHECK=1` for
+- Replaced on 2026-11-12, as the calls of that date say. The runner always sets `CLAUDE_CODE_SKIP_FAST_MODE_ORG_CHECK=1` for
   Claude. Reason: the gateway refuses the account check of Claude. The
   Claude Code docs say that the API still refuses a fast request that the
   account may not make, and that Claude then retries at standard speed. The
@@ -332,6 +363,44 @@ My calls, on 2026-11-10, under decision 255:
 - The model gateway needs no change. Reason: it passes each body unchanged.
 - The comparison row "Fast mode" becomes "Available" in this branch. Reason:
   the merge ships the feature.
+
+My calls, on 2026-11-12, after a second check of the pinned agent
+programs. `.context/fast-mode/brainstorm-report.md` holds the evidence.
+
+- The model list also marks GPT-6.1 Terra. Reason: `model/list` of the
+  pinned Codex gives the Fast tier `priority` for GPT-6.1 Sol, GPT-6 Astra,
+  GPT-6.1 Terra, and GPT-6 Luna. The call of 2026-11-10 missed Terra.
+- With fast on, the runner starts Claude with the flag setting
+  `fastMode: true`, and changes it with `applyFlagSettings`. With fast off,
+  it sets `fastMode: false`. Reason: a local run with the runner's profile
+  shows `speed: "fast"` on each Opus 5.5 request with the setting, and none
+  without it.
+- The runner sends `serviceTierForTurn: "priority"` on each fast Codex turn,
+  and `serviceTierForTurn: "default"` on each other turn. It does not set
+  `serviceTier` on the thread. Reason: `serviceTierForTurn` sets one turn
+  only, so a resumed thread cannot keep an old tier. A local run shows
+  `service_tier: "priority"` in the request with it, and no tier with
+  `"default"`.
+- The runner sets no `CLAUDE_CODE_SKIP_FAST_MODE_ORG_CHECK`. Reason: the
+  runner sets `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1`, so Claude never
+  sends its account check of fast mode, and the local run turns fast mode
+  on without the variable. The check also goes to Claude's own sign-in
+  address, not to the gateway. The runner README gets a rule to check this
+  after each update of the Claude Agent SDK.
+- An own endpoint login gets the fast fields as every other login does.
+  A proxy that refuses them fails the turn with its cause. Reason: the
+  gateway passes each body unchanged, a model that the proxy does not serve
+  already fails the turn with its cause (own endpoint decision 5), and the
+  app already accepts that a proxy can refuse the 1-hour cache (own
+  endpoint decision 12).
+- Routines carry fast in their choice, as messages do. Reason: fast mode
+  decision 255 puts fast in each choice, and a routine saves a choice.
+- The runner protocol version stays. A runner without fast support runs
+  the turn at standard speed and reports no speed, so the end line shows
+  "Standard speed" with the cause "older runner". Reason: an older runner
+  already drops unknown choice fields, as it does for `promptCacheTtl`.
+- Fable 5.2 gets no fast mark. Reason: the pinned Claude program sends the
+  speed field only for model IDs with `opus-4-8` or `opus-5`.
 
 ## Milestone 1: Mockups
 
@@ -362,13 +431,13 @@ variant. Screenshots of the smoke test are in `.context/fast-mode/m1/`.
       `app/composer`.
 - [x] Show the switch in one state of `app/new-workspace` and of
       `app/account/preferences`.
-- [x] Add the states that the answer to decision 256 needs. Its answer A
+- [x] Add the states that the answer to fast mode decision 256 needs. Its answer A
       adds no state, because the menu has no note.
 - [x] Update `docs/mockups/catalogue.md` for the new page.
 - [x] Run `npm run mockups:check`. Smoke-test the changed pages with
       `npm run mockups:serve`, with screenshots under `.context/fast-mode/`.
 - [x] Update the design and the TODOs of this plan for each problem that the
-      mockups show. The state of decision 257 moved to Milestone 6, because
+      mockups show. The state of fast mode decision 257 moved to Milestone 6, because
       it waits for its answer.
 
 ## Milestone 2: Documentation and protocol
@@ -382,7 +451,7 @@ the agent tools, and the model list.
       `docs/protocol/messages-and-attachments.md`: the switch, the models
       that show it, the change rules, and the standard speed when the agent
       cannot run fast. State that any member who may send in a session may
-      turn fast on or off, as for the model and the effort (decision 256).
+      turn fast on or off, as for the model and the effort (fast mode decision 256).
 - [ ] Update "Names in the product" in
       `docs/protocol/agents-and-sessions.md`: the trigger names the model, the
       effort, and Fast when it is on.
@@ -392,10 +461,7 @@ the agent tools, and the model list.
 - [ ] Update `docs/protocol/agent-runner.md`: a change of fast goes to the
       runner, as a change of the model does.
 - [ ] Update the model list fields in `docs/deployment.md`.
-- [ ] Update `worker/app-api/README.md`, `runner/README.md`, and
-      `tools/README.md`. Add a rule to `runner/README.md`: after an update of
-      the Claude Agent SDK, check which Claude models send the fast speed
-      field, and update the fast marks of the model list.
+- [ ] Update `worker/app-api/README.md` and `tools/README.md`.
 - [ ] Read each public guide in `src/marketing/docs/` in full. Update each
       sentence on the model menu.
 - [ ] Read the Terms page in `src/marketing/terms.ts` and the Privacy page in
@@ -406,6 +472,14 @@ the agent tools, and the model list.
       Available, with a note in the words of the claim rules.
 - [ ] Add fast to the background of
       `plans/follow-ups/unoffered-model-choice.md`.
+- [ ] State the speed of a turn (fast mode decision 257) in
+      `docs/protocol/chat-and-events.md` and the end line in
+      `docs/protocol/messages-and-attachments.md`.
+- [ ] Add the command "Fast mode" (fast mode decision 258) to the table of
+      `docs/protocol/keyboard-shortcuts-keys.md`, with ⇧⌘E and Ctrl+Shift+E,
+      and to each other shortcuts doc that lists the commands.
+- [ ] State that a routine saves fast in its choice, in
+      `docs/protocol/routines.md` and `docs/protocol/routine-runs.md`.
 - [ ] Check each relative link of the changed Markdown files.
 
 ## Milestone 3: Choice contract and Worker routes
@@ -425,13 +499,16 @@ tools, and the browser readers.
       `worker/chat/model-changes.ts`, and `worker/chat/first-message.ts`.
       Queue a model command when only fast changes.
 - [ ] Read the `databases` skill. Add a migration with a fast column, default
-      0, to `workspace_runtime`, `workspace_creation_plans`, and
-      `user_preferences`. Read and write it in `worker/lifecycle/` and
+      0, to `workspace_runtime`, `workspace_creation_plans`,
+      `user_preferences`, and each table that stores the choice of a
+      routine or a session. Read and write it in `worker/lifecycle/` and
       `worker/app-api/`.
 - [ ] Add `fast` to the agent tools: `src/shared/agent-tools.ts`,
       `tools/input.ts`, `tools/mcp-tools.ts`, `tools/cli.ts`,
       `worker/tools/create.ts`, and `worker/tools/lists.ts`. A create call
       without `fast: true` runs at standard speed.
+- [ ] Carry `fast` in the choice of a routine, in `worker/routines/` and its
+      migration column.
 - [ ] Read `fast` in the runner commands in `runner/src/commands.ts`.
 - [ ] Update the app test fixtures in `src/test-support/fixtures/` that
       reuse the mockup choices, and keep the comment on `fast` in
@@ -448,14 +525,16 @@ Depends on: 3
 
 The runner asks each agent for its fast mode.
 
-- [ ] Start Claude with the flag setting `fastMode: true` when fast is on.
-      Change it with `applyFlagSettings` in the model change of
+- [ ] Start Claude with the flag setting `fastMode` from the choice. Change
+      it with `applyFlagSettings` in the model change of
       `runner/src/providers/claude.ts`.
-- [ ] Set `CLAUDE_CODE_SKIP_FAST_MODE_ORG_CHECK=1` in the Claude
-      environment.
-- [ ] Send `serviceTier` on `thread/start`, `thread/resume`, and
-      `turn/start` in `runner/src/providers/codex.ts`. Defer a change of
-      fast during a running Codex turn, as for a change of the model.
+- [ ] Send `serviceTierForTurn` on each `turn/start` in
+      `runner/src/providers/codex.ts`: `"priority"` with fast on, and
+      `"default"` with fast off. A change of fast during a running Codex
+      turn applies at the next turn, as for a change of the model.
+- [ ] Add the rule to `runner/README.md`: after an update of an agent
+      SDK, check which models send the fast fields, and check that Claude
+      still turns fast mode on without its account check.
 - [ ] Test the start options and the change requests with the fake query and
       the fake process. See each new test fail first.
 
@@ -477,34 +556,62 @@ The model menus show the switch, and the triggers show Fast.
 - [ ] In `src/chat/components/ModelPicker.tsx`, keep the menu open for a
       change of the switch, and send a change that differs only in fast.
 - [ ] Show Fast in both triggers, also in their accessible names.
-- [ ] Carry fast in the choice of the session composer, New workspace, and
-      Preferences.
+- [ ] Carry fast in the choice of the session composer, New workspace,
+      Preferences, and the prompt box of a routine.
 - [ ] Test the row for a model with and without fast, a change of the
       switch, a change to a model without fast, and the trigger text. See
       each new test fail first.
 
-## Milestone 6: Mockup of the state of decision 257
+## Milestone 6: Mockups of fast mode decisions 257 and 258
 
 Tags: mockup
 
-Depends on: 1, and the answer to decision 257
+Depends on: 1
 
-- [ ] Add the state that the answer to decision 257 needs. The scratch
-      pictures and patch in `.context/fast-mode/257/` show each option.
-- [ ] Run `npm run mockups:check`, and smoke-test the changed pages.
+- [ ] Fast mode decision 257: add a chat state in which the end line of a
+      fast turn shows "Standard speed" and the cause. Draw one Claude
+      cause, such as the fast rate limit, and the cause of an older
+      runner. A fast turn at fast speed and a turn without fast show
+      nothing new.
+- [ ] Fast mode decision 258: show ⇧⌘E at the end of the Fast row in the
+      states of `app/fast-mode`, as the rows of a menu show their keys.
+      Add the command to the Chat group of the Keyboard shortcuts tab,
+      after Next effort level.
+- [ ] Update `docs/mockups/catalogue.md`.
+- [ ] Run `npm run mockups:check`, and smoke-test the changed pages with
+      screenshots under `.context/fast-mode/m6/`.
 
-## Milestone 7: The state of decision 257
+## Milestone 7: The speed of a turn (fast mode decision 257)
 
 Depends on: 4, 5, and 6
 
-- [ ] Apply the chosen option in the runner, the Worker, and the app. Update
-      the protocol docs in the same milestone.
+- [ ] The Claude provider of the runner reads the fast state of each
+      result, the system notice that a fast request ran at standard
+      speed, and the rate-limit event with its reason. On a fast turn, it
+      adds the speed and the cause to `turn.completed`.
+- [ ] The Codex provider reports a fast turn as fast. Reason: the Codex
+      app server does not pass on the tier of the answer.
+- [ ] The Worker stores and replays the new field of `turn.completed`, as
+      it does `filesUnavailable`. A fast turn with no speed from its runner
+      counts as standard, with the cause "older runner".
+- [ ] The end line of a slow fast turn shows "Standard speed" and the
+      cause, as the mockup shows.
+- [ ] Test each cause in the runner, the event shape in the Worker, and the
+      end line in the app. See each new test fail first.
 
-## Milestone 8: The key of decision 258
+## Milestone 8: The key of the Fast switch (fast mode decision 258)
 
-Depends on: 5, and the answer to decision 258
+Depends on: 5 and 6
 
-- [ ] Apply the chosen option. Option A needs no work.
+- [ ] Add the command "Fast mode" to the Chat group of the keyboard
+      shortcuts, after Next effort level, in `src/shared/shortcut-commands.ts`,
+      `src/app/shortcuts/commands.ts`, and `src/app/shortcuts/defaults.ts`:
+      ⇧⌘E on a Mac, Ctrl+Shift+E on Windows and Linux. It runs where a
+      session tab is shown, and turns fast on or off for the shown
+      composer, for a model with fast.
+- [ ] Show the key of the person at the end of the Fast row.
+- [ ] Test the default keys, the run of the command, and a model without
+      fast. See each new test fail first.
 
 ## Milestone 9: Verification, commit, review, and pull request
 
