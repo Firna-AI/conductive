@@ -20,7 +20,7 @@ import { InvitationsModel } from './invitations-model'
 import { OrgList } from './org-list'
 import { OrgModel } from './org-model'
 import { patchOrg, postOrg } from './org-writes'
-import { isSuspended } from './permissions'
+import { suspendedOrg } from './permissions'
 import type { AppServices } from './services'
 import { setupSteps } from './setup-steps'
 import { Store, type Readable } from './store'
@@ -182,34 +182,12 @@ export class AppModel {
     let model = this.orgModels.get(orgId)
     if (!model) {
       model = new OrgModel(this.services, orgId, {
-        suspended: this.suspended(orgId),
+        suspended: suspendedOrg(orgId, this.orgs, this.refusedOrgs),
         note: () => this.noteSuspended(orgId),
       })
       this.orgModels.set(orgId, model)
     }
     return model
-  }
-
-  /**
-   * Whether an org is suspended, from its summary or from a refusal of the
-   * API, as a value to follow.
-   */
-  private suspended(orgId: string): Readable<boolean> {
-    return {
-      get: () => {
-        const org = this.orgs.get().find((item) => item.id === orgId)
-        return org !== undefined && isSuspended(org, this.refusedOrgs.get())
-      },
-      subscribe: (listener) => {
-        const stops = [
-          this.orgs.subscribe(listener),
-          this.refusedOrgs.subscribe(listener),
-        ]
-        return () => {
-          for (const stop of stops) stop()
-        }
-      },
-    }
   }
 
   /** The person opens a page of an org. */

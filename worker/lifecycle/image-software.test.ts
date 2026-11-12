@@ -33,6 +33,14 @@ it('installs the runner and relay and starts both with the private runtime', asy
       '[Socket]\nListenStream=127.0.0.1:7682\n\n' +
       '[Install]\nWantedBy=sockets.target\n',
   )
+  // The disk rule takes effect at the next boot. Installation runs no udev command.
+  expect(
+    (await fixture.diskCacheRule())
+      .split('\n')
+      .filter((line) => line && !line.startsWith('#')),
+  ).toEqual([
+    'ACTION=="add|change", SUBSYSTEM=="block", ENV{DEVTYPE}=="disk", KERNEL=="vd*", ATTR{queue/write_cache}="write through"',
+  ])
   const relay = await fixture.relayStart()
   expect(relay.exitCode, relay.stderr).toBe(0)
   expect(JSON.parse(relay.stdout)).toEqual({

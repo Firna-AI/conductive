@@ -81,7 +81,9 @@ export function AllowAllBar() {
       {running ? (
         <>
           <span className={styles.left}>{allowAllLeft} left</span>
-          <ActionButton icon={Square}>Stop</ActionButton>
+          <ActionButton icon={Square} tone="outline">
+            Stop
+          </ActionButton>
         </>
       ) : null}
       {change === 'stop-not-saved' ? (
