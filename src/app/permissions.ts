@@ -1,6 +1,7 @@
 import type { OrgRole, User } from '../shared/api'
 import type { OrgSummary } from '../shared/orgs'
 import type { Workspace } from '../shared/workspaces'
+import type { Readable } from './store'
 
 /**
  * Whether the operator suspended an org: its summary says so, or the API
@@ -12,6 +13,29 @@ export function isSuspended(
   refused: ReadonlySet<string>,
 ): boolean {
   return org.suspension !== undefined || refused.has(org.id)
+}
+
+/**
+ * Whether an org is suspended, from its summary in `orgs` or from a
+ * refusal of the API in `refused`, as a value to follow.
+ */
+export function suspendedOrg(
+  orgId: string,
+  orgs: Readable<readonly OrgSummary[]>,
+  refused: Readable<ReadonlySet<string>>,
+): Readable<boolean> {
+  return {
+    get: () => {
+      const org = orgs.get().find((item) => item.id === orgId)
+      return org !== undefined && isSuspended(org, refused.get())
+    },
+    subscribe: (listener) => {
+      const stops = [orgs.subscribe(listener), refused.subscribe(listener)]
+      return () => {
+        for (const stop of stops) stop()
+      }
+    },
+  }
 }
 
 /**
