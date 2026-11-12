@@ -1,6 +1,6 @@
 # Temporary file tabs
 
-Status: Active. On branch `calummoore/file-preview-tabs-brainstorm`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
+Status: Active. On branch `calummoore/oslo-k1ce`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
 The tab row above the centre column of a workspace holds the session tabs
 and the file and diff tabs in one order. A press on a file in All files, on
@@ -10,13 +10,18 @@ user closes it. When the user clicks through files to find one, each glance
 leaves a tab.
 
 This change adds one temporary tab, as VS Code, Zed, and JetBrains have
-(decision 277). A press opens a file or a diff in the temporary tab, which
+(decision 284). A press opens a file or a diff in the temporary tab, which
 shows its title in italics. The next press replaces its file in the same
 place. A double-click on the file row or on the tab keeps the tab as a
-normal tab, and nothing else shows on the tab (decision 278). Decision 279
-asks how a keyboard user keeps a temporary tab. The plan of the tab moves,
-in PR #103, left the alignment of a drag with temporary tabs to the change
-that merges second. Decision 280 asks that question.
+normal tab, and nothing else shows on the tab (decision 285). Keep open
+in the tab menu of the temporary tab also keeps it, for a keyboard user
+(decision 286). A move of the temporary tab to another place keeps it too
+(decision 287).
+
+The decisions of this plan had the numbers 277 to 280 when the plan was
+written on branch `calummoore/file-preview-tabs-brainstorm`. On 12
+November 2026, `main` already used those numbers for other changes, so
+the plan moved to this branch with the numbers 284 to 287.
 
 The change does not cover a setting that turns temporary tabs off, keys
 that keep a tab, bulk close actions, or temporary session tabs.
@@ -46,7 +51,7 @@ Contract owners:
 - **Tab menu:** the menu that a right click on a tab opens, and Shift+F10
   or the Menu key on a focused tab (decision 188).
 
-## Decision 277: How the tab row treats a glanced file
+## Decision 284: How the tab row treats a glanced file
 
 Added on 8 November 2026 from the brainstorm of this change.
 
@@ -133,7 +138,7 @@ Added on 8 November 2026 from the brainstorm of this change.
   choice of B stands. The report is in
   `.context/temporary-file-tabs/options-check.md`.
 
-## Decision 278: How a person who does not double-click keeps a temporary tab
+## Decision 285: How a person who does not double-click keeps a temporary tab
 
 Added on 8 November 2026 from the second round of the brainstorm.
 
@@ -141,7 +146,7 @@ Added on 8 November 2026 from the second round of the brainstorm.
 - **Source:** Design. **Category:** Docs or spec.
 - **Location:** `src/files/tabs/FileTabItem.tsx:85`, the Close button of a
   file tab.
-- **Background:** In option B of decision 277, a double-click on the file
+- **Background:** In option B of decision 284, a double-click on the file
   or on the tab keeps a temporary tab. Each tab already has a Close button
   that shows on the shown tab, on hover, and with keyboard focus.
 - **Problem:** A keyboard user or a screen-reader user cannot double-click.
@@ -172,7 +177,7 @@ Added on 8 November 2026 from the second round of the brainstorm.
   - A shortcut such as Cmd+K Enter of VS Code, because users cannot find
     it without a hint, and Ctrl+K is a browser shortcut on Windows and
     Linux.
-- **Wider fix:** D of decision 279, as the options check found: a keep is
+- **Wider fix:** D of decision 286, as the options check found: a keep is
   an action that only a pointer gesture does on a tab.
 - **Previous examples:** VS Code keeps a preview tab with its Keep Open
   command, ⌘K Enter, as its
@@ -183,22 +188,22 @@ Added on 8 November 2026 from the second round of the brainstorm.
 - **Chosen:** A, by the user on 11 November 2026. No button shows on the
   tab. The brainstorm read an older `main`, where no tab had a menu. On the
   current `main`, the tab menu of decision 188 exists, so D no longer
-  needs a new menu. Decision 279 asks about that menu.
+  needs a new menu. Decision 286 asks about that menu.
 - **Options check, 11 November 2026:** the check added no option here. A
   second press and a menu on the file row show nothing new on the tab, so
   the choice of A does not rule them out. They are options C and E of
-  decision 279, which holds the open part of this question.
+  decision 286, which holds the open part of this question.
 
-## Decision 279: Keeping a temporary tab from the keyboard
+## Decision 286: Keeping a temporary tab from the keyboard
 
 Added on 11 November 2026, when this plan was written on the current
-`main`. Open.
+`main`. Chosen on 12 November 2026.
 
 - **Severity:** Medium. **Effort:** Small.
 - **Source:** Design. **Category:** Docs or spec.
 - **Location:** `src/chat/components/useTabMenu.ts:50`, the items of the
   tab menu.
-- **Background:** Decision 278 chose the double-click as the only way to
+- **Background:** Decision 285 chose the double-click as the only way to
   keep a temporary tab, with nothing new on the tab. Its options assumed
   that no tab had a menu. The current `main` has the tab menu of decision
   188, where a file or diff tab holds Move left and Move right. A read-only
@@ -211,7 +216,7 @@ Added on 11 November 2026, when this plan was written on the current
 - **Root question:** How can a person who does not double-click keep a
   temporary tab, with nothing new on the tab?
 - **Options:**
-  - **A.** Keep decision 278 as it is: the double-click is the only way to
+  - **A.** Keep decision 285 as it is: the double-click is the only way to
     keep a tab. Effort: Small.
   - **B.** Add Keep open to the tab menu of the temporary tab, as VS Code
     has it. Nothing new shows on the tab. A read-only workspace leaves the
@@ -233,26 +238,31 @@ Added on 11 November 2026, when this plan was written on the current
     item opens the file as a kept tab, so a keyboard user keeps a file in
     one step from the list. It is a new menu, with new mockups. Effort:
     Medium.
+  - **F.** Added on 12 November 2026, after the keyboard shortcuts of PR
+    #216 merged: B, and a Keep tab open command with a default key on the
+    Keyboard shortcuts tab. A key runs only a control that the app already
+    has, so F needs the menu item of B. The key must be one that no
+    browser keeps. Effort: Medium.
 - **Left out:**
   - A button on the tab or in the header, because the user chose A over
-    both in decision 278.
-  - A key that keeps the tab, because no hint shows the key, and Ctrl+K is
-    a browser shortcut on Windows and Linux.
+    both in decision 285.
+  - A key alone, with no menu item, because a key runs only a control that
+    the app already has (decision 144). F holds the key together with B.
   - Enter on a file row opens a kept tab, as in the VS Code Explorer,
     because a screen reader in browse mode sends Enter as a click. Each
     glance from the keyboard would also leave a kept tab.
   - A tab that becomes kept after a time, or when the user comes back to
     it, because each long glance would then leave a kept tab. That is the
-    problem of decision 277.
+    problem of decision 284.
   - The command palette, because it offers only the actions that the page
     offers.
 - **Shared assumptions:**
-  - Nothing new shows on the tab. Source: decision 278. Kept.
+  - Nothing new shows on the tab. Source: decision 285. Kept.
   - The tab menu opens with a right click, Shift+F10, or the Menu key.
     Source: decision 188. Kept.
   - Each press opens the temporary tab, also Enter, so a keep always comes
     after the open. Source: a design call of this plan, from the text of
-    decision 277. The left-out "Enter on a file row" approach drops it.
+    decision 284. The left-out "Enter on a file row" approach drops it.
 - **Wider fix:** D. Decision 188 closed the same gap for a drag with Move
   left and Move right.
 - **Previous examples:** The tab menu of VS Code holds Keep Open for a
@@ -260,22 +270,23 @@ Added on 11 November 2026, when this plan was written on the current
   [editor contributions](https://github.com/microsoft/vscode/blob/main/src/vs/workbench/browser/parts/editor/editor.contribution.ts)
   and [this guide](https://dev.to/brijeshshah13/prevent-opening-of-files-over-existing-tabs-in-vs-code-568l)
   show. Decision 188 gave the drag its items in the tab menu.
-- **Related:** Decision 280. When a move keeps the tab, Move left and Move
+- **Related:** Decision 287. When a move keeps the tab, Move left and Move
   right also keep it, but only as a side effect of a move.
 - **Recommendation:** B. It puts a named action in the menu where keyboard
   and screen-reader users look, and C stays hidden. D best protects the
   codebase, because each later pointer-only gesture on a tab then gets a
   menu item.
-- **Action:** ask the user, because B adds a menu item that decision 278
-  did not include.
+- **Chosen:** B, by the user on 12 November 2026. The user also
+  confirmed that a double-click on the row of the file in the Files panel,
+  or on the tab, keeps the tab, as decision 285 says.
 - **Options check, 11 November 2026:** the check wrote the root question
   in the words of the goal, added C, D, and E, corrected the reasons of
   Left out, and kept B.
 
-## Decision 280: A move of a temporary tab
+## Decision 287: A move of a temporary tab
 
-Added on 11 November 2026. Open. The plan of the tab moves left this
-question to the change that merges second.
+Added on 11 November 2026. The plan of the tab moves left this question
+to the change that merges second. Chosen on 12 November 2026.
 
 - **Severity:** Medium. **Effort:** Small.
 - **Source:** Design. **Category:** Docs or spec.
@@ -283,7 +294,7 @@ question to the change that merges second.
   saved order.
 - **Background:** Decision 186 lets the user drag any tab to any place in
   the row. Decision 188 adds Move left and Move right to the tab menu.
-  Decision 277 replaces the file of the temporary tab in its place at the
+  Decision 284 replaces the file of the temporary tab in its place at the
   next press.
 - **Problem:** The user can move the temporary tab to a chosen place. The
   next press on a file then replaces it there, and the moved file leaves
@@ -321,11 +332,10 @@ question to the change that merges second.
   expected the tab to stay a preview tab, so some users expect A.
   [Zed](https://zed.dev/docs/reference/all-settings) keeps a preview tab
   that the user drags to another pane.
-- **Related:** Decision 279.
+- **Related:** Decision 286.
 - **Recommendation:** B. A move shows that the user wants the file at that
   place, and VS Code works this way.
-- **Action:** ask the user, because B adds a second way to keep a tab,
-  beyond the double-click that decision 278 chose.
+- **Chosen:** B, by the user on 12 November 2026.
 - **Options check, 11 November 2026:** the check kept B, added one
   left-out approach, and named the wider fix that is already in force. It
   corrected the use of issue 238980, whose reporter expected A.
@@ -337,7 +347,7 @@ decision test.
 
 - The title of the temporary tab shows in italics. Nothing else on the tab
   changes. Reason: the user suggested italics, three editors use them, and
-  decision 278 adds nothing else.
+  decision 285 adds nothing else.
 - A screen reader hears that the tab is temporary. The names that the tab
   menu and the move messages use stay the same. Reason: italics carry the
   state only for the eye.
@@ -358,8 +368,8 @@ decision test.
   user named the file and the tab, and a chip in the message field takes
   double-clicks for its text.
 - The switch between Preview and Source keeps the state of the tab. Copy,
-  Download, and a scroll do not keep the tab. Reason: decision 278 keeps a
-  tab only on a double-click, and decisions 279 and 280 decide the menu
+  Download, and a scroll do not keep the tab. Reason: decision 285 keeps a
+  tab only on a double-click, and decisions 286 and 287 decide the menu
   and the moves.
 - A new temporary tab opens at the end of the row, as each new tab does. A
   replaced temporary tab keeps its place. A keep does not move the tab.
@@ -391,7 +401,29 @@ decision test.
   uses the same rules in its browser copy of the view, and a double-click
   keeps a tab there too. Reason: a keep there changes only the browser
   copy, as an open does. Its tab menu follows decision 214, which decision
-  279 B keeps.
+  286 B keeps.
+
+These design calls were made on 12 November 2026, after the answers to
+decisions 286 and 287.
+
+- The tab menu of the temporary tab holds Keep open, then a line, then
+  Move left and Move right. A kept tab has no Keep open. Reason: the tab
+  menu groups its items by kind (decision 188), and Keep open changes
+  only a temporary tab.
+- After Keep open, the focus goes back to the tab, and a screen reader
+  user hears the name of the tab and that it stays open, such as
+  "README.md stays open". Reason: Move left and Move right give the same
+  kind of message after a move.
+- A read-only workspace leaves out Keep open, so a file or diff tab there
+  still opens no tab menu. Reason: decision 214.
+- A move keeps the temporary tab only when its place changes. A drag that
+  Escape cancels, or that ends in the same place, keeps it temporary.
+  Reason: the text of option B of decision 287.
+- The public guide `src/marketing/docs/files-and-changes.md` and the File
+  tabs and editor row of the Conductor comparison page describe the
+  temporary tab. Reason: the repository rules say that a change updates
+  each guide that it makes wrong, and the status of each listed feature
+  that it ships.
 
 ## Milestone 1: Mockups
 
@@ -414,9 +446,8 @@ file tabs, so the phone variants change only where a page shows the row.
       it in its place, and a double-click keeps it while the next press
       opens a new temporary tab at the end. Make the page reachable from
       `app/files` and `app/tabs`.
-- [ ] After the answer to decision 279, draw it on the new page when it
-      shows on screen: Keep open in the tab menu for B or D, or a menu on
-      the file rows for E.
+- [ ] On the new page, draw the tab menu of the temporary tab with Keep
+      open, a line, then Move left and Move right (decision 286 B).
 - [ ] Update `docs/mockups/design.md` and `docs/mockups/catalogue.md`.
 - [ ] Run `npm run mockups:check`. Smoke-test the changed pages on
       desktop and on a phone.
@@ -427,16 +458,28 @@ file tabs, so the phone variants change only where a page shows the row.
 
 Depends on: 1
 
-State the temporary tab as requirements, with decisions 277 and 278.
+State the temporary tab as requirements, with decisions 284 and 285.
 
 - [ ] In `docs/protocol/workspace-tools.md`, under Files and changes, state
       the temporary tab: what opens it, the italics, the replace in place,
       the double-click that keeps it, the address rule, and that each
-      press on a phone replaces the last glance. Give decision 277 with
-      its rejected alternatives, and decision 278.
+      press on a phone replaces the last glance. Give decision 284 with
+      its rejected alternatives, and decision 285.
 - [ ] In `docs/protocol/agents-and-sessions.md`, under The tab row, state
-      where a new and a replaced temporary tab go. Add the rules of
-      decisions 279 and 280 after the user answers them.
+      where a new and a replaced temporary tab go. State Keep open in the
+      tab menu of the temporary tab (decision 286 B), and that a move to
+      another place keeps the tab (decision 287 B).
+- [ ] Read the Terms page and the Privacy page in full, and update each
+      sentence that restates a changed fact.
+- [ ] Read each public guide in `src/marketing/docs/` in full. In
+      `files-and-changes.md`, describe the temporary tab, the
+      double-click, and Keep open, as
+      [Website docs](../docs/protocol/website-docs.md) says.
+- [ ] In `src/marketing/from-conductor/areas/files.ts`, change the note
+      of the File tabs and editor row: temporary tabs ship with this
+      change, as
+      [Conductor comparison](../docs/protocol/conductor-comparison.md#statuses)
+      says.
 - [ ] Check that `docs/protocol/file-mentions.md` still reads right: a
       press on a chip opens the file as a press in All files does.
 - [ ] Check each relative link of the changed Markdown files.
@@ -494,15 +537,20 @@ Depends on: 1, 3
 
 Tags: ui
 
-Depends on: 4, and the answers to decisions 279 and 280
+Depends on: 4
 
-- [ ] Apply decision 280 to a drag and to Move left and Move right of a
-      temporary tab.
-- [ ] Apply decision 279: the tab menu, the second press, or the menu of
-      the file rows, as the chosen option says. Under option D, also add
-      its rule to The tab row.
-- [ ] Add tests for each applied option.
-- [ ] Update the READMEs for the applied options.
+- [ ] In `moveTab` of `src/chat/state/tab-order.ts`, or in its caller,
+      keep the temporary tab when a drag, Move left, or Move right changes
+      its place (decision 287 B).
+- [ ] In `src/chat/components/useTabMenu.ts`, add Keep open to the tab
+      menu of the temporary tab, before Move left and Move right, with a
+      line between them. Leave it out in a read-only workspace. After
+      Keep open, give the focus back to the tab and tell a screen reader
+      that the tab stays open (decision 286 B).
+- [ ] Add tests: a move that keeps the tab, a cancelled drag and a drop
+      in the same place that do not, Keep open in the menu, no Keep open
+      on a kept tab or in a read-only workspace, and the message.
+- [ ] Update `src/chat/README.md` and `src/files/README.md`.
 
 ## Milestone 6: Verification, commit, review, and pull request
 
