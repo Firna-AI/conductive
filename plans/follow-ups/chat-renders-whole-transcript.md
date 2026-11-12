@@ -1,0 +1,42 @@
+# The chat redoes every row at each change
+
+- **Severity:** Medium. **Likelihood:** Common. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-11, from the options check of the plan on branch `calummoore/chat-history-loading-3c`, as item 3. The plan changes the history load, not the render of the transcript. On 12 November 2026 the user asked to keep it as a follow-up item.
+- **Location:** `TranscriptView` in `src/chat/components/TranscriptView.tsx:60`, `AgentText` in `src/chat/components/AgentText.tsx:86`, and the store binding in `src/chat/WorkspaceChat.tsx:235`.
+- **Reason:** The fix is in the render code of the chat, outside the files of the history load, and the load does not depend on it.
+
+- **Source:** Review. **Category:** Performance.
+- **Terms:**
+  - **Transcript:** the list of items that the chat shows for one session: messages, tool calls, and turn ends. `src/shared/transcript/transcript.ts` defines it.
+  - **Running turn:** a turn of the agent that has not ended. The chat shows its time and updates it each second.
+  - **Row:** one thing that the chat draws, such as a message, an answer, a fold of work, or a run of tool calls.
+  - **Streamed part:** a piece of an answer that the agent runner sends while the agent writes, every 40 ms, so up to 25 each second.
+- **Background:**
+  - `TranscriptView` groups every item of the transcript into rows at each render, through `groupEntries`.
+  - `AgentText` parses the whole text of an answer into blocks at each render, through `textBlocks`.
+  - Neither keeps an earlier result. So each change of the transcript groups every item and parses every answer again.
+  - The chat passes the time of a running turn as `now`, so the transcript draws again each second while a turn runs.
+  - The agent runner sends a streamed part of an answer every 40 ms, up to 25 parts each second. Each part changes the transcript, and `useSyncExternalStore` in `src/chat/WorkspaceChat.tsx` renders the chat again for each change.
+  - React then runs the render code of every row. The browser changes only the parts of the page that differ.
+- **Problem:**
+  - The work of each render grows with the length of the session, and it runs for each streamed part and each second of a running turn.
+  - A one-time measurement on 12 November 2026 used the production build of React in headless Chrome, on the fake API, on a cloud sandbox.
+  - One render after a streamed part took 32 ms at 1,048 items, 59 ms at 2,100 items, and 103 ms at 4,200 items. One render for the clock took 31 ms, 57 ms, and 118 ms.
+  - The first draw of the whole history took 235 ms at 1,048 items and 397 ms at 4,200 items.
+  - The measurement did not split the render time between grouping, parsing, and React itself.
+  - At 25 parts each second, 4,200 items need about 2.5 s of render work for each second of streaming, so the tab falls behind.
+  - An earlier figure of 3.16 s for 4,200 items came from the development build of React, which is about eight times slower here.
+- **Impact if no action:** While an agent writes in a long session, the chat stutters, and typing in the composer lags, because each streamed part redoes the work of every row. This stays after the fold becomes fast.
+- **Root question:** How does the chat draw a long transcript without redoing the work of rows that did not change?
+- **Options:**
+  - **A.** Change nothing. Effort: Small.
+  - **B.** Keep the parsed blocks of each answer while its text stays the same. Draw each row as a component that skips its render when its data did not change, and give it stable inputs. Then a streamed part redraws only its own row. Effort: Medium.
+  - **C.** Draw only the rows near the view, and leave the others out of the page until the reader scrolls to them. The chat keeps its place rules for rows that are out of the page. Effort: Large.
+  - **D.** Render at most every 100 ms while parts stream. It cuts the renders from 25 to 10 each second, but each part shows up to 100 ms later, and each render still costs the same. Effort: Small.
+- **Left out:** None.
+- **Wider fix:** B. Each row then costs work only when its own data changes.
+- **Previous examples:** None found.
+- **Related:** `plans/follow-ups/chat-fold-slows-long-sessions.md` has the same symptom, a busy main thread in a long session. Each item needs its own fix: a faster fold does not make the render cheaper.
+- **Recommendation:** B. It removes the repeated work instead of only spacing it out. D is a cheap stopgap when relief must come first.
+- **Action:** fix after merge, apply B, because the fix is in the render code, outside the files of the history load.

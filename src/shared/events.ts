@@ -21,13 +21,12 @@ export function chatHistoryPath(
   orgId: string,
   workspaceId: string,
   sessionId: string,
-  afterEventNumber = 0,
+  beforeEventNumber?: number,
   throughEventNumber?: number,
 ): string {
-  const query = new URLSearchParams({
-    sessionId,
-    after: String(afterEventNumber),
-  })
+  const query = new URLSearchParams({ sessionId })
+  if (beforeEventNumber !== undefined)
+    query.set('before', String(beforeEventNumber))
   if (throughEventNumber !== undefined)
     query.set('through', String(throughEventNumber))
   return `${workspacePath(orgId, workspaceId)}/history?${query}`
@@ -74,6 +73,13 @@ export type ChatHistoryResponse = ChatHistoryPage &
   (
     | { hasMore: true; nextAfterEventNumber: number }
     | { hasMore?: never; nextAfterEventNumber?: never }
+  )
+
+export type NewestChatHistoryResponse = ChatHistoryPage & {
+  nextAfterEventNumber?: never
+} & (
+    | { hasMore: true; nextBeforeEventNumber: number }
+    | { hasMore?: never; nextBeforeEventNumber?: never }
   )
 
 export type WorkspaceSocketMessage =
