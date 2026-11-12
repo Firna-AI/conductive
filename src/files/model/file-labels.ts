@@ -23,7 +23,7 @@ export const unknownFileName = 'File'
  * neither list names it. A diff looks in Changes first, and a file looks in
  * All files first.
  */
-export function listLabel(
+function listLabel(
   snapshot: FilesSnapshot,
   path: string,
   kind: 'file' | 'diff',
