@@ -27,7 +27,7 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     area: 'agents-and-chat',
     name: 'Attachments',
     status: 'available',
-    note: 'Attach files of up to 25 MB each for the agent to read. If a file is too large, attach a smaller file.',
+    note: 'Attach files up to 25 MB each, or attach a smaller file. A 1 GB limit is planned.',
   },
   {
     id: 'drag-and-drop-attachments',
