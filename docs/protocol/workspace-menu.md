@@ -151,6 +151,14 @@ number names a dated record, as
 
 - Rename puts a field in the row, in place of the name and the time. The
   field holds the name, and the name is selected.
+- A double click on a row of the sidebar also opens this field, when the
+  menu of the row offers Rename. A double click with a modifier key does
+  not. The user asked for it on 12 November 2026.
+- The first click of the double click opens the workspace, as a click
+  does. The second click does not open it again, so the history gets one
+  entry. The field then opens in the row.
+- On the list page, the first click replaces the list with the
+  workspace. So a double click there opens the workspace and no field.
 - For a workspace without a name, the field is empty.
 - Enter saves the name. A move of the focus out of the field saves it too.
   Escape closes the field and keeps the old name.
