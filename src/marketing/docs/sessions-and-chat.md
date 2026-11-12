@@ -178,6 +178,9 @@ The answer stays visible beside it.
 Agent replies can contain headings, paragraphs, lists, code, and tables.
 A wide table scrolls sideways inside the message.
 The text around it keeps the width of the chat.
+To copy a code block, select **Copy code** in its top corner.
+With a mouse, the button shows when you point at the block.
+**Code copied** confirms the copy.
 
 While a reply arrives, the chat shows its headings, text, and table rows as they arrive.
 In the folded work of a turn, open a message line to read its table.

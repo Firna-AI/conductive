@@ -11,6 +11,7 @@ import { TouchScreen } from '../../docs/mockups/src/components/common/touch'
 import { ChatOverlays, historyEntries } from './components/ChatOverlays'
 import type { ComposerFocus } from './components/Composer'
 import { SessionChat, type ChatHost } from './components/SessionChat'
+import { CodeCopyProvider, useCodeCopyAction } from './components/code-copy'
 import { useSessionLinkCopy } from './components/session-link-copy'
 import { SessionTabs } from './components/SessionTabs'
 import { useTabKeys } from './components/tab-keys'
@@ -136,6 +137,7 @@ function ChatBody(
     links.origin,
     copyServices,
   )
+  const copyCode = useCodeCopyAction(copyServices)
   useMentionCopy()
   useReport(snapshot.workspace, props.onWorkspaceChange)
   useReport(snapshot.view, props.onViewChange)
@@ -177,17 +179,19 @@ function ChatBody(
         tabs={tabs}
       />
       {content ?? (
-        <SessionChat
-          composerFocus={props.composerFocus}
-          controller={controller}
-          host={props.host}
-          mobile={mobile}
-          now={now}
-          onConnectAgent={props.onConnectAgent}
-          onOpenDiff={props.onOpenDiff}
-          readOnly={readOnly}
-          snapshot={snapshot}
-        />
+        <CodeCopyProvider value={copyCode}>
+          <SessionChat
+            composerFocus={props.composerFocus}
+            controller={controller}
+            host={props.host}
+            mobile={mobile}
+            now={now}
+            onConnectAgent={props.onConnectAgent}
+            onOpenDiff={props.onOpenDiff}
+            readOnly={readOnly}
+            snapshot={snapshot}
+          />
+        </CodeCopyProvider>
       )}
       <ChatOverlays
         history={history}
