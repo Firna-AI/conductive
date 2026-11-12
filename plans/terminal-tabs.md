@@ -9,10 +9,10 @@ know tmux keys. This change adds terminal tabs to the Terminal tool. Each
 tab is its own shell in the cloud computer. The members of the workspace
 share the tabs, and a workspace holds at most 10 of them.
 
-The user chose the approach in a brainstorm on 10 November 2026: decision
-248 B and decision 249 B. The user chose decision 250 B, a New terminal
-action in the command palette, on the same day. The brainstorm notes are
-in `.context/multiple-terminals/brainstorm.md`.
+The user chose the approach in a brainstorm on 10 November 2026: terminal
+tabs decisions 1 B and 2 B. The user chose terminal tabs decision 3 B, a
+New terminal action in the command palette, on the same day. The
+brainstorm notes are in `.context/multiple-terminals/brainstorm.md`.
 
 This change does not cover terminals in the centre tab row, a terminal in
 its own window, split panes, a rename of a terminal, a drag of a terminal
@@ -30,7 +30,12 @@ Contract owners:
 
 ## Decisions
 
-### 248. Several terminals in one workspace
+This plan names its decisions after the change, as terminal tabs decision
+1, as [Decision numbers](../docs/architecture.md#decision-numbers) says.
+They were decisions 248 to 250 until 12 November 2026, when main adopted
+that rule.
+
+### 1. Several terminals in one workspace
 
 - **Severity:** Medium. **Effort:** Large.
 - **Source:** Design.
@@ -67,7 +72,7 @@ Contract owners:
 - **Recommendation:** B. It gives separate shells with the fewest changes, because the new parts stay in the Terminal tool and its backend. C and D can come later on the same backend. E costs more and hides shells that still hold ports.
 - **Chosen:** B, by the user on 10 November 2026. The text of B says that every member and device sees the same terminals. The options check added E after that choice and kept B as its recommendation.
 
-### 249. The number of terminals in a workspace
+### 2. The number of terminals in a workspace
 
 - **Severity:** Low. **Effort:** Small.
 - **Source:** Design.
@@ -90,7 +95,7 @@ Contract owners:
 - **Recommendation:** B. A fixed limit keeps the list and the memory small, and 10 is more tabs than the panel shows at once.
 - **Chosen:** B, by the user on 10 November 2026.
 
-### 250. A palette action for a new terminal
+### 3. A palette action for a new terminal
 
 - **Severity:** Low. **Effort:** Small.
 - **Source:** Design.
@@ -98,7 +103,7 @@ Contract owners:
 - **Location:** `docs/protocol/command-palette.md:177`, `src/shell/workspace/WorkspacePaletteActions.tsx`, `src/app/palette/palette-keys.ts:49`.
 - **Background:**
   - The command palette runs the actions of the current page. Its protocol lists the actions of an open workspace: New session, Session history, a Go to row for each tab of the right column, and Archive workspace.
-  - Each palette action does what the same control does in the app. The palette offers only the actions that the page offers, so it has no turned-off rows. Decision 248 B adds a new control, the + of the terminal tabs.
+  - Each palette action does what the same control does in the app. The palette offers only the actions that the page offers, so it has no turned-off rows. Terminal tabs decision 1 B adds a new control, the + of the terminal tabs.
   - Only the palette has a key: ⌘K on a Mac, and Ctrl+K on Windows and Linux. The user chose this for the first version on 8 November 2026 (decision 145 A), and plans more keys in another workspace.
   - On Windows and Linux, Ctrl+K in the terminal goes to the shell. xterm.js also keeps Tab in the terminal.
   - The palette protocol has 259 lines. The follow-up item `plans/follow-ups/protocol-docs-split.md` counts it as at the target, so a new row needs no split.
@@ -119,6 +124,7 @@ Contract owners:
 - **Related:** `plans/follow-ups/terminal-keyboard-trap.md` holds the older problem that D fixes. C and D both start the key work that decision 145 A put off.
 - **Recommendation:** B. The palette already mirrors each control of an open workspace, and New session sets the pattern. C or D also covers a Windows or Linux user whose focus is in a terminal, and D is the wider fix.
 - **Chosen:** B, by the user on 10 November 2026.
+- **Later:** Main added keyboard shortcuts on 11 November 2026, in PR #216. Each palette action is now also a command of the Keyboard shortcuts tab. On Windows and Linux the terminal still keeps every key, so the trap of `plans/follow-ups/terminal-keyboard-trap.md` stays.
 
 ## Design
 
@@ -202,7 +208,7 @@ All design calls are of 10 November 2026, by the agent.
   today.
 - The tabs keep the order of their numbers, with no drag. A new terminal
   takes the lowest free number. Reason: the names then stay from Terminal
-  1 to Terminal 10, as the limit of decision 249.
+  1 to Terminal 10, as the limit of terminal tabs decision 2.
 - This change adds no rename. Reason: the numbers name each terminal, and
   a rename can come later through a tab menu.
 - Terminal 1 of each workspace is today's shell, and its socket passes no
@@ -268,6 +274,12 @@ All design calls are of 10 November 2026, by the agent.
 - New terminal opens a terminal and shows it in the Terminal tool, also
   when another tool showed. Reason: the action does what the + does, and
   the user then sees the new shell.
+- New terminal is also a command of the Keyboard shortcuts tab, with no
+  default key, as Restore workspace is. Its palette row shows the key that
+  a person gives it. Reason: since PR #216, each palette action is a
+  command. Conductor's key for a new terminal tab, ⌘T while the terminal
+  has the focus, runs New session in this app. On Windows and Linux the
+  terminal keeps every key. This call is of 12 November 2026.
 
 ### Related follow-up items
 
@@ -279,9 +291,6 @@ All design calls are of 10 November 2026, by the agent.
 - `plans/follow-ups/hidden-terminal-line-spacing.md`: each hidden terminal
   tab can meet the same defect. Its fix covers every terminal, so this
   change does not take it.
-- `plans/follow-ups/decision-numbers-across-plans.md`: before the pull
-  request, renumber decisions 248 to 250 when `origin/main` uses those
-  numbers.
 - `plans/follow-ups/terminal-keyboard-trap.md`: on Windows and Linux, a
   keyboard user cannot move the focus out of a terminal. The options check
   found it. It is older than this change, so this change does not take it.
@@ -337,7 +346,7 @@ Depends on: 1
 The requirements and decisions for several terminals.
 
 - [ ] Update "Terminal" in `docs/protocol/workspace-tools.md`:
-  - [ ] A workspace has up to 10 terminals (decision 249). Its members
+  - [ ] A workspace has up to 10 terminals (terminal tabs decision 2). Its members
         share them. Each opens in the repository folder.
   - [ ] The + opens a terminal. A close ends its shell for every member,
         after a confirmation. The last terminal has no close.
@@ -346,8 +355,9 @@ The requirements and decisions for several terminals.
   - [ ] The names, from Terminal 1 to Terminal 10.
   - [ ] A workspace whose cloud computer software is older shows one
         terminal.
-  - [ ] Cite decision 248, with the rejected options C, D, and E and
-        their reasons.
+  - [ ] Cite terminal tabs decision 1, with the rejected options C, D,
+        and E and their reasons. Say which change the name "terminal tabs"
+        names, as the architecture doc asks.
   - [ ] When the doc passes about 250 lines, move "Terminal" to its own
         linked page.
 - [ ] Update "Terminal" in `docs/protocol/terminal-previews-and-desktop.md`:
@@ -357,9 +367,11 @@ The requirements and decisions for several terminals.
 - [ ] Update `docs/protocol/github-tokens.md` where it says that the
       terminal is shared, so that it names the shared terminals.
 - [ ] Add "New terminal" after the Go to rows in the actions of
-      `docs/protocol/command-palette.md`, with when it shows (decision 250
-      B). The follow-up item `plans/follow-ups/protocol-docs-split.md`
-      counts that doc as at the target, so it needs no split.
+      `docs/protocol/command-palette.md`, with when it shows (terminal tabs
+      decision 3 B).
+- [ ] Add New terminal to the commands of `docs/protocol/keyboard-shortcuts.md`
+      and `docs/protocol/keyboard-shortcuts-keys.md`, with no default key
+      and the reason that the design call gives.
 - [ ] Read `docs/architecture.md`. Change it only when a component or a
       boundary changes.
 - [ ] Read both legal pages in full, `src/marketing/terms.ts` and
@@ -474,6 +486,10 @@ Depends on: 6
 - [ ] Add "New terminal" after the Go to rows. Run the + of the terminal
       tabs, and show the new terminal in the Terminal tool.
 - [ ] Offer the row only while the Terminal tool offers its + button.
+- [ ] Make New terminal a command of the Keyboard shortcuts tab with no
+      default key, as Restore workspace is. The list of commands is
+      `docs/mockups/src/fixtures/shortcutCommands.ts`, which the app reads,
+      so the command and its runner land together.
 - [ ] Test the row in the palette tests: its place, a run, and no row at
       the limit or while the cloud computer does not run.
 - [ ] Update `src/app/key-code.md` and `src/shell/workspace/README.md`,
