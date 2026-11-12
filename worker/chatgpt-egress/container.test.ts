@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { PROXY_IMAGE, PROXY_PORT, proxyStarter } from './container'
+import { PROXY_IMAGE, PROXY_PORT, proxyFetch, proxyStarter } from './container'
 
 const image = 'registry.cloudflare.com/account/egress@sha256:abc'
 
@@ -27,10 +27,13 @@ function fakeContainer(refusals: number) {
       })
     },
     getTcpPort(port: number) {
+      // The runtime gives a port only to a started container.
+      if (!container.running)
+        throw new Error('The container has not been started')
       ports.push(port)
       return {
-        fetch(input: RequestInfo | URL) {
-          probes.push(String(input))
+        fetch(input: RequestInfo | URL, init?: RequestInit) {
+          probes.push(`${init?.method ?? 'GET'} ${String(input)}`)
           if (probes.length <= refusals)
             return Promise.reject(new Error('connection refused'))
           return Promise.resolve(new Response('destination not allowed'))
@@ -93,5 +96,19 @@ describe('proxyStarter', () => {
     ])
     expect(fake.starts).toHaveLength(2)
     expect(fake.probes).toHaveLength(2)
+  })
+
+  it('sends a request through the port only after the start', async () => {
+    const fake = fakeContainer(0)
+    const send = proxyFetch(fake.container)
+    const answer = await send(
+      'http://proxy/backend-api/codex/models',
+      new Request('http://proxy/backend-api/codex/models', { method: 'POST' }),
+    )
+    expect(await answer.text()).toBe('destination not allowed')
+    expect(fake.probes).toEqual([
+      'GET http://proxy/ready',
+      'POST http://proxy/backend-api/codex/models',
+    ])
   })
 })

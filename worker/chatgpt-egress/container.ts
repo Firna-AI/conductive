@@ -83,3 +83,18 @@ export function proxyStarter(
     return starting
   }
 }
+
+/**
+ * Returns a function that sends one request to the proxy. The runtime gives
+ * a port only after the start, so the port comes after the wait.
+ */
+export function proxyFetch(
+  container: ProxyContainer,
+  options: ProxyStarterOptions = {},
+): (url: string, request: Request) => Promise<Response> {
+  const ready = proxyStarter(container, options)
+  return async (url, request) => {
+    await ready()
+    return container.getTcpPort(PROXY_PORT).fetch(url, request)
+  }
+}
