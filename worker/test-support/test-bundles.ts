@@ -11,11 +11,13 @@ declare module 'vitest' {
 const built = new Map<string, Promise<string>>()
 
 /**
- * Builds a test Worker bundle once per run. The first test process that
- * needs `key` builds it and saves it in the folder of the global setup.
- * Other processes read that file. Without the folder, it builds on demand.
+ * Saves a test Worker bundle for the rest of the run. A process that needs
+ * `key` reads the saved file in the folder of the global setup. When the
+ * file is missing, the process builds the bundle and saves it, so processes
+ * that start at the same time can each build it once. Without the folder,
+ * it builds on demand.
  */
-export function cachedTestBundle(
+function cachedTestBundle(
   key: string,
   build: () => Promise<string>,
 ): Promise<string> {

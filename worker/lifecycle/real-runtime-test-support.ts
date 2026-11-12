@@ -12,34 +12,15 @@ import { seedAppAccess } from '../test-support/app-access'
 import { encrypt, sign } from '../security/crypto'
 import { agentLoginContext } from '../chat/queries'
 import { migratedStorage, TEST_D1_ID } from '../test-support/migrated-storage'
-import { cachedTestBundle } from '../test-support/test-bundles'
+import { workerLibraryBundle } from '../test-support/test-bundles'
 import { seedPublishedImage } from './published-image-test-support'
 import { readWorkspaceToken } from './tokens'
 import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 
 export function runtimeBundle(): Promise<string> {
-  return cachedTestBundle('lifecycle-runtime', buildRuntimeBundle)
-}
-
-async function buildRuntimeBundle(): Promise<string> {
-  const { build } = await import('vite')
-  const output = await build({
-    configFile: false,
-    logLevel: 'silent',
-    build: {
-      ssr: `${import.meta.dirname}/workspace-runtime-test-worker.ts`,
-      write: false,
-      rollupOptions: {
-        external: ['cloudflare:workers'],
-        output: { format: 'es' },
-      },
-    },
-  })
-  const result = Array.isArray(output) ? output[0] : output
-  if (!('output' in result)) throw new Error('No Worker bundle')
-  const chunk = result.output.find((entry) => entry.type === 'chunk')
-  if (!chunk) throw new Error('No Worker entry chunk')
-  return chunk.code
+  return workerLibraryBundle(
+    `${import.meta.dirname}/workspace-runtime-test-worker.ts`,
+  )
 }
 
 interface RuntimeBindings {

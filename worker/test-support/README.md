@@ -29,8 +29,8 @@ The same setup prepares one folder for each run and watch rerun, and deletes it 
   Every runtime names its database `TEST_D1_ID`, because Miniflare names the database file after that id.
   A runtime with `migrationsBefore` and the migration tests still apply the migrations themselves.
 - It holds the other test Worker bundles.
-  `cachedTestBundle` in [test-bundles.ts](test-bundles.ts) builds each bundle once in the first process that needs it.
-  The other processes read the saved file.
+  `workerLibraryBundle` in [test-bundles.ts](test-bundles.ts) saves each bundle in that folder.
+  A process that needs a bundle before its file exists builds it. Later processes read the file.
 
 Without the global setup, `migratedStorage` builds one template for its process, and each bundle helper builds its bundle itself.
 
@@ -202,7 +202,7 @@ A callback counts as complete only after the `waitUntil` work that it starts end
 - `native-attachment-controls.ts` runs streaming attachment storage and reads real R2 byte samples inside the runtime.
 - `migrations.ts` splits the migrations and applies them for a harness without the template.
 - [migrated-storage.ts](migrated-storage.ts) builds the migrated template database and copies it into the storage folder of a new runtime.
-- [test-bundles.ts](test-bundles.ts) caches the test Worker bundles for the run. Its `buildWorkerLibrary` also builds the native bundle.
+- [test-bundles.ts](test-bundles.ts) builds every test Worker bundle with one Vite configuration and saves it for the run. Its `buildWorkerLibrary` also builds the native bundle.
 - `fake-boat.ts` supplies provider replies, fresh streaming response factories, and added organizations with their own keys.
 - `fake-github.ts` supplies sign-in replies and an empty installation list for an account without the GitHub App.
 - Its `accounts` map supplies GitHub user lookups for routine author filters, with 404 for an unknown login.
