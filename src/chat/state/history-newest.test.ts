@@ -113,8 +113,9 @@ it('stops earlier reads and ignores their late replies when the chat stops', asy
   expect(shown(chat.controller, session)).toEqual(['user: Newest message'])
   await vi.waitFor(() => expect(chat.held).toHaveLength(1), shortly)
   const complete = chat.controller.loadHistory(session)
-  const before = chat.controller.getSnapshot()
+  // Stop ends the uploads of the drafts, so the snapshot after it is the base.
   chat.controller.stop()
+  const before = chat.controller.getSnapshot()
   chat.held.splice(0, 1)[0]()
   expect(await complete).toBeNull()
   expect(chat.controller.getSnapshot()).toBe(before)

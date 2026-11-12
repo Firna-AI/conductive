@@ -44,6 +44,6 @@
   - Fold in the Durable Object and send the transcript. It fails the goal, because it moves the same fold onto the one thread of the workspace.
 - **Wider fix:** C. It removes the cost for each history load, each reply, each session that opens later, and each fold of the Durable Object.
 - **Previous examples:** None found.
-- **Related:** The newest-first load applies A, and its plan is `plans/chat-history-newest-first.md` while that change is open. C changes only `src/shared/transcript/` and its callers, so it can start at once on its own branch.
+- **Related:** The newest-first load applies A: `readPages` in `src/chat/state/history.ts` holds the earlier pages and merges them once. `plans/follow-ups/chat-renders-whole-transcript.md` has the same symptom in the render. C changes only `src/shared/transcript/` and its callers, so it can start at once on its own branch.
 - **Recommendation:** F. A makes the load faster than today at once, and C then removes every freeze of this class without holding up the load.
 - **Action:** fix now, apply A, and fix after merge, apply C, because C is a Large change to the shared fold outside the files of the newest-first load, and it also serves the transcript copy and the replies.
