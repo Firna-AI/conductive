@@ -160,11 +160,13 @@ The same rule prevents Mac commands and their later approvals and results.
 ## Image installer
 
 `workspaceToolsCommands` builds the install commands from source assets.
-It splits the install into ordered commands under `WORKSPACE_TOOLS_COMMAND_BYTES`, 96 KiB.
+It splits the install into ordered commands under `WORKSPACE_TOOLS_COMMAND_BYTES`, 64 KiB.
 It measures each command with its `sudo` wrapper, which escapes each quote again.
-Linux refuses one program argument over 128 KiB, and the sandbox runs each command as one shell argument.
+Linux refuses one program argument of 128 KiB or more, and the sandbox runs each command as one shell argument.
 A command over that size never starts.
 `installWorkspaceTools` runs those commands in order with an authorized image callback.
+It stops at the first failed command.
+The launcher is written in the last command.
 The software image version hashes those same commands with their privilege wrapper.
 The [asset module](image-assets.ts) exports `WORKSPACE_TOOL_SOURCES`.
 Static Vite `?raw` imports embed the allowed sources in the Worker bundle.
