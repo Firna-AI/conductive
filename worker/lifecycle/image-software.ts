@@ -8,6 +8,7 @@ import runnerStart from '../../image/runner-start.sh?raw'
 import previewRelayService from '../../image/conductive-preview-relay.service?raw'
 import previewRelaySocket from '../../image/conductive-preview-relay.socket?raw'
 import previewRelayStart from '../../image/preview-relay-start.sh?raw'
+import diskCacheRule from '../../image/60-conductive-disk-cache.rules?raw'
 import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 import type { CommitAuthor } from '../../src/shared/commit-author'
 import { HttpError, isRecord } from '../http'
@@ -75,6 +76,7 @@ export function installImageSoftware(artifact: ImageSoftwareArtifact): string {
     'preview-relay-start.sh': previewRelayStart,
     'conductive-preview-relay.service': previewRelayService,
     'conductive-preview-relay.socket': previewRelaySocket,
+    '60-conductive-disk-cache.rules': diskCacheRule,
   }
   return [
     'set -eu',

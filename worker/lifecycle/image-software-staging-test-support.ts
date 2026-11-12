@@ -12,6 +12,7 @@ const softwareRoots = [
   '/usr/local/bin',
   '/usr/bin',
   '/etc/systemd/system',
+  '/etc/udev/rules.d',
   '/run/conductive',
 ]
 const nodeMarker = '__CONDUCTIVE_STAGED_PRIVATE_NODE__'

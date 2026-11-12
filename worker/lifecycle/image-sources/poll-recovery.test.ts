@@ -16,6 +16,7 @@ import { nativeImageRuntime } from './image-runtime-test-support'
 import { localSourceFixture } from './local-source-test-support'
 import { INSTALLATION_TOKEN } from './native-github-test-support'
 import { readSourceJob } from './source-data'
+import { TOOLS_COMMAND_COUNT } from '../../tools/image-commands.test-support'
 
 const privateKey = generateKeyPairSync('rsa', { modulusLength: 2048 })
   .privateKey.export({ type: 'pkcs1', format: 'pem' })
@@ -126,7 +127,12 @@ it('keeps a native source fetch after a temporary status error and resumes witho
         ['mint', 'claim', 'revoke', 'finalize'].includes(event),
       ),
     ).toEqual(['mint', 'claim', 'revoke', 'finalize'])
-    expect(order).toEqual(['tools', 'software', 'install', 'cleanup'])
+    expect(order).toEqual([
+      ...Array<string>(TOOLS_COMMAND_COUNT).fill('tools'),
+      'software',
+      'install',
+      'cleanup',
+    ])
   } finally {
     claim.release()
     await fixture.dispose()

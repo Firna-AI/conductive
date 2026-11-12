@@ -59,6 +59,11 @@ export type GitHubRefreshWorkspace = (
   signal: GitHubRefresh,
 ) => Promise<GitHubSnapshot | null>
 
+/** Run inside the workspace DO. It reads storage only, never GitHub. */
+export type GitHubStoredState = (
+  workspace: GitHubWorkspace,
+) => Promise<GitHubSnapshot | undefined>
+
 export interface GitHubReadDependencies {
   fetch: HttpFetch
   token: GitHubTokenProvider

@@ -11,6 +11,28 @@ export interface OrgSummary extends Org {
 export interface OrgsResponse {
   orgs: readonly OrgSummary[]
 }
+export interface MoveOrgRequest {
+  orgId: string
+  /** Zero-based index among the other visible orgs. */
+  index: number
+}
+
+export function readMoveOrgRequest(value: unknown): MoveOrgRequest | null {
+  if (typeof value !== 'object' || value === null || Array.isArray(value))
+    return null
+  if (
+    !('orgId' in value) ||
+    typeof value.orgId !== 'string' ||
+    !value.orgId.trim() ||
+    !('index' in value) ||
+    typeof value.index !== 'number' ||
+    !Number.isInteger(value.index) ||
+    value.index < 0
+  )
+    return null
+  return { orgId: value.orgId.trim(), index: value.index }
+}
+
 export interface OrgResponse {
   org: OrgSummary
 }

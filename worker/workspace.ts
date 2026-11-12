@@ -204,10 +204,11 @@ export class Workspace extends AgentSessionWorkspace {
       return this.features.previews.proxy(request)
     const feature = await this.features.fetch(request)
     if (feature) return feature
-    if (/\/github(?:\/checks)?$/.test(new URL(request.url).pathname))
+    if (/\/github(?:\/checks|\/stored)?$/.test(new URL(request.url).pathname))
       return handleGitHubRead(request, this.env, {
         now: this.now,
         refresh: (workspace, signal) => this.github.refresh(workspace, signal),
+        stored: (workspace) => this.github.stored(workspace),
       })
     if (/\/github\/.*$/.test(new URL(request.url).pathname))
       return this.github.fetch(request)

@@ -62,7 +62,7 @@ const dividerWords = [
 export const focusedKeys: readonly FixedSpec[] = [
   {
     ...fixed(
-      'Move a focused workspace up or down',
+      'Move a focused workspace or org up or down',
       ['⌥↑', '⌥↓'],
       ['Alt+↑', 'Alt+↓'],
     ),
