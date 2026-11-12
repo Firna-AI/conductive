@@ -8,7 +8,7 @@ import tabRow from '../workspace/WorkspaceTabs.module.css'
 import styles from './TerminalTabs.module.css'
 
 /** The words under the row at the limit of 10 terminals. */
-export const terminalLimitHint =
+const terminalLimitHint =
   'A workspace holds up to 10 terminals. Close one to open another.'
 
 /**

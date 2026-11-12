@@ -47,7 +47,7 @@ export type TerminalSet = {
 const three = [1, 2, 3] as const
 
 /** The terminals at the limit: Terminal 1 to Terminal 10. */
-export const terminalLimit = 10
+const terminalLimit = 10
 
 export const terminalSets: Readonly<Record<TerminalState, TerminalSet>> = {
   one: { numbers: [1], shown: 1, lines: workspaceSession },
