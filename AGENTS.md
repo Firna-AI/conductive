@@ -105,6 +105,13 @@ and restricts deletion of `main`.
 deployment at `conductive.build`. It does not wait for CI, as
 [Automatic deploys](docs/automatic-deploys.md) says.
 
+All the workflow jobs run on [Blacksmith](https://docs.blacksmith.sh/blacksmith-runners/overview)
+runners, not on GitHub's machines. The Linux jobs use
+`blacksmith-2vcpu-ubuntu-2404`. The only exception is the Intel Mac check,
+which uses the GitHub-hosted `macos-15-intel` runner, because Blacksmith
+has no Intel Macs. Keep the jobs on Blacksmith. Do not switch a failing
+job back to `ubuntu-latest` to make it pass.
+
 - Agent merges: off
 
 ## Repository rules
