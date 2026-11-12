@@ -1,6 +1,7 @@
 import type { LucideIcon } from 'lucide-react'
 import { Button } from '@firna/ui/button'
 import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
+import { actionStyle } from '../../../docs/mockups/src/components/common/outlineTone'
 import styles from '../../../docs/mockups/src/components/common/actions.module.css'
 import type { ShortcutCommandId } from '../../shared/shortcut-commands'
 import {
@@ -9,7 +10,12 @@ import {
   useShortcutHint,
 } from '../../shell/shortcuts/shortcut-hints'
 
-export type ActionTone = 'primary' | 'secondary' | 'plain' | 'danger'
+/**
+ * The tone of an action button. `outline` is the border and the label of
+ * `secondary` without its fill, for a button on a tinted bar.
+ */
+export type ActionTone =
+  'primary' | 'secondary' | 'outline' | 'plain' | 'danger'
 
 /**
  * A compact labelled button: a Firna button in the dense control size, with
@@ -29,6 +35,7 @@ export function ActionButton(props: {
   shortcut?: ShortcutCommandId
 }) {
   const control = useControlSizes()
+  const tone = props.tone ?? 'secondary'
   const hint = useShortcutHint(props.shortcut)
   const keyRef = useAriaShortcut(hint)
   const button = (
@@ -46,8 +53,8 @@ export function ActionButton(props: {
       numberOfLines={1}
       onPress={props.onPress}
       size="sm"
-      style={{ height: control.height, paddingHorizontal: 10 }}
-      tone={props.tone ?? 'secondary'}
+      style={actionStyle(control.height, tone === 'outline')}
+      tone={tone === 'outline' ? 'secondary' : tone}
     >
       {props.children}
     </Button>
