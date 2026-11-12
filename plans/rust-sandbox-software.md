@@ -10,7 +10,7 @@ sandbox. This change moves the sandbox software into one Rust program,
 with the `cli-updater` crate of `futex-ai/cli-release`. A small Node
 helper keeps running only the Claude Agent SDK and the Codex SDK, because
 those SDKs exist only in TypeScript and Python. The change does not cover
-the version pin of existing workspaces, which item 2 defers, and it does
+the removal of runner protocol version 1, which ships as its own change, and it does
 not move the Worker to Rust.
 
 ## Decisions
@@ -27,10 +27,15 @@ are in `.context/rust-sandbox-software/notes.md`.
   `plans/boat-native-remote-workspaces.md` and the rule of
   `docs/protocol/port-previews.md` that only a build installs the
   software of a sandbox.
-- **2. Raise the version pin at each start.** Deferred by the user on 12
-  November 2026, to decide before release. The open item stays in
-  `plans/follow-ups/runner-update-at-start.md`. Until then, an updated
-  runner does not end the version 1 login risk of an older workspace.
+- **2. Older runners of protocol version 1.** First deferred by the user
+  on 12 November 2026. Then answered by the user on 12 November 2026:
+  remove runner protocol version 1 now, because no one uses it. This is
+  option B of `plans/follow-ups/runner-update-at-start.md` without its
+  one-time move of workspaces. It reverses gateway decision 2 and the
+  user's choice of 9 November 2026 that a runner of version 1 keeps
+  getting the real login. The Rust runner and the Rust CLI then need only
+  the version 2 messages. Item 9 of the brainstorm asks where the removal
+  ships.
 - **3. Which parts move to Rust.** Chosen by the user on 12 November
   2026: D. The runner core, the workspace CLI and MCP server, and the
   installer move to Rust now. A Node helper runs only the two SDKs. This
@@ -147,7 +152,7 @@ each one.
   - **A.** Write the Rust types by hand. Shared JSON fixtures, which the TypeScript tests write, prove that both sides read the same messages. Cost: two copies of each type, and a fixture test for each message. Effort: Large.
   - **B.** Rust owns the runner, helper, and workspace tool messages, in a `cnd-runner-interface` crate. `ts-rs` writes their TypeScript into `src/shared/generated/`, and the Worker and the web app import it. Cost: the chat event types and each type that they use move to Rust now. About 520 files outside `runner/` and `tools/` import those types. `ts-rs` writes `T | null` for an omitted field and `bigint` for a 64-bit number, and it writes no constants. Effort: Large.
   - **C.** TypeScript stays the source. A tool writes a JSON Schema from the TypeScript types, and a Rust generator writes the Rust types from it. Cost: two new generators, and complex TypeScript types can lose detail in the schema. Effort: Large.
-  - **D.** Choose the source for each boundary. Added by the options check. The Rust interface crate owns the new helper protocol, and `ts-rs` writes its TypeScript into the helper package. The runner protocol and the tool routes keep `src/shared/` as their source until the backend switch. Rust copies by hand only the types that it uses, of protocol version 2 only. One committed set of JSON examples holds one example for each message variant, and cases for the byte limits, the output filter, lone surrogates, and number forms. The TypeScript tests read each example through the Worker's real readers, and the Rust tests read and write each example with serde. Cost: about 110 Rust types stay copies until the switch, and each new variant needs an example. Effort: Large.
+  - **D.** Choose the source for each boundary. Added by the options check. The Rust interface crate owns the new helper protocol, and `ts-rs` writes its TypeScript into the helper package. The runner protocol and the tool routes keep `src/shared/` as their source until the backend switch. Rust copies by hand only the types that it uses. After the removal of protocol version 1, these are the version 2 forms only. One committed set of JSON examples holds one example for each message variant, and cases for the byte limits, the output filter, lone surrogates, and number forms. The TypeScript tests read each example through the Worker's real readers, and the Rust tests read and write each example with serde. Cost: about 110 Rust types stay copies until the switch, and each new variant needs an example. Effort: Large.
   - **E.** Rust owns all three boundaries now, and the TypeScript importers move one type at a time. Added by the options check. `ts-rs` writes into `src/shared/generated/`, and the hand-written types stay. One typecheck file asserts that each hand-written type equals its generated type. Cost: the check needs helpers for `readonly` and literal fields, and it does not check the Worker's readers or the limits. Effort: Large.
   - **F.** Runtime schemas in TypeScript, for example with zod, become the source. Added by the options check. They give the TypeScript types, the Worker's readers, and a JSON Schema for a Rust generator. Cost: a new Worker dependency, a rewrite of the Worker's readers, and work that the backend move throws away. Effort: Large.
 - **Left out:** A neutral schema file, such as JSON Schema or TypeSpec, with one generator for each language, because B is as good or better on each point. A custom TypeScript-to-Rust generator, because it is C with another tool.
@@ -187,7 +192,7 @@ mockup milestone.
 - [ ] Update `docs/protocol/port-previews.md`: remove the rule that only a build installs the software of a sandbox. Record that decision 1 of this plan reverses it.
 - [ ] Update `docs/protocol/workspaces-and-sandboxes.md` and `docs/architecture/components.md#sandbox-software`: one Rust program, the Node SDK helper, the release files in R2, and the check, download, and restart rules of decision 5.
 - [ ] Update `docs/architecture.md` where it restates the software install rule.
-- [ ] Read the Terms page in `src/marketing/terms.ts` and the Privacy page in `src/marketing/privacy.ts` in full. Update each sentence that restates the install rule, such as the image build sentences near `terms.ts:79-97`. Keep each sentence about the version 1 login risk, because decision 2 is deferred.
+- [ ] Read the Terms page in `src/marketing/terms.ts` and the Privacy page in `src/marketing/privacy.ts` in full. Update each sentence that restates the install rule, such as the image build sentences near `terms.ts:79-97`. The removal of protocol version 1 changes the sentences about the version 1 login risk, not this change.
 - [ ] Read each public guide in `src/marketing/docs/` in full. Update each sentence that restates the install rule, for example `cloud-computer.md:138-148` and `agent-logins.md:238-245`. Follow `docs/protocol/website-docs.md`, and do not name Boat.
 - [ ] Check the Conductor comparison rows in `src/marketing/from-conductor/`. Change a row only when this change ships, starts, or drops its feature.
 - [ ] Add the Rust commands and the Rust CI job to `AGENTS.md`, `CLAUDE.md`, and `README.md`.
@@ -305,4 +310,3 @@ Depends on: every other milestone
 ## Post-merge follow-up (non-blocking)
 
 - [ ] After the first deploy, check that an existing workspace updates at its next restart, with no manual step.
-- [ ] Decide item 2 before release, as the user said.
