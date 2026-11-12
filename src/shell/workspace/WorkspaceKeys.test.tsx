@@ -2,8 +2,9 @@
 
 import { act } from 'react'
 import { describe, expect, test, vi } from 'vitest'
+import type { AppModel } from '../../app/app-model'
 import { routes } from '../../app/router'
-import type { AppServices } from '../../app/services'
+import type { AppServices, Platform } from '../../app/services'
 import { requestLines } from '../../app/test-kit'
 import {
   sessionPaths,
@@ -16,6 +17,7 @@ import type { ShortcutCommandId } from '../../shared/shortcut-commands'
 import {
   accessibleName,
   byLabel,
+  byRole,
   queryByRole,
   shownToasts,
 } from '../../test-support/dom-queries'
@@ -32,7 +34,7 @@ import {
   pressHintKey,
   serveShortcutChanges,
 } from '../shortcuts/shortcut-test-kit'
-import { settle } from '../test-mount'
+import { click, press as pressKey, settle } from '../test-mount'
 import { filesHref } from './files/files-address'
 import { bodiesOf, lastEvent, messageField } from './kept-test-kit'
 import { socketsOf } from './wiring-test-kit'
@@ -49,18 +51,19 @@ const fileTab: FilesTab = {
 const fileName = 'AddressForm.tsx'
 
 /**
- * The open workspace in a Chrome tab on Windows, over `server`, with the
- * clipboard `copy` of the test, if any.
+ * The open workspace in a Chrome tab on Windows, or on a Mac with
+ * `platform`, over `server`, with the clipboard `copy` of the test, if any.
  */
 async function openWorkspace(
   server: FakeApiServer,
-  copy?: AppServices['copy'],
+  options: { copy?: AppServices['copy']; platform?: Platform } = {},
 ) {
   holdAnimationFrames()
   const opened = await openPaletteTab(routes.workspace(org, id), {
     server,
     events: socketsOf(server).events,
-    copy,
+    copy: options.copy,
+    platform: options.platform,
   })
   await settle()
   const press = async (command: ShortcutCommandId) => {
@@ -68,6 +71,13 @@ async function openWorkspace(
     await settle()
   }
   return { ...opened, press }
+}
+
+/** Presses the key of Fast mode on the page, and says whether it ran a command. */
+async function pressFast(app: AppModel): Promise<boolean> {
+  const key = pressHintKey(app, 'fast-mode', document.body)
+  await settle()
+  return key.defaultPrevented
 }
 
 describe('the keys of the workspace', () => {
@@ -185,8 +195,10 @@ describe('the keys of the workspace', () => {
       server.json('GET', path, { markdown: markdown[detail] })
     }
     const copied: string[] = []
-    const { app, navigation } = await openWorkspace(server, async (text) => {
-      copied.push(await text)
+    const { app, navigation } = await openWorkspace(server, {
+      copy: async (text) => {
+        copied.push(await text)
+      },
     })
     const press = async (command: ShortcutCommandId) => {
       const key = pressHintKey(app, command, document.body)
@@ -208,5 +220,56 @@ describe('the keys of the workspace', () => {
       copied: [markdown.concise, markdown.full],
       toasts: ['Transcript copied'],
     })
+  })
+
+  test('the key of Fast mode shows at the end of the Fast row of the session, and turns fast mode on for the shown session', async () => {
+    const server = new FakeApiServer()
+    const { app, view } = await openWorkspace(server, { platform: 'mac' })
+    click(byRole('button', 'Model and effort: Opus 5.5, High', view))
+    const row = byRole('menuitemcheckbox', 'Fast')
+    const shown = {
+      keys: row.querySelector('kbd')?.textContent,
+      name: row.getAttribute('aria-keyshortcuts'),
+    }
+    pressKey(row, 'Escape')
+    const ran = await pressFast(app)
+    const model = sessionPaths.model(org, id, session)
+    expect({
+      shown,
+      ran,
+      changes: await bodiesOf(server, 'PUT', model, 0),
+    }).toEqual({
+      shown: { keys: '⇧⌘E', name: 'Shift+Meta+E' },
+      ran: true,
+      changes: [
+        expect.objectContaining({
+          choice: {
+            agent: 'claude',
+            model: 'Opus 5.5',
+            effort: 'high',
+            fast: true,
+          },
+        }),
+      ],
+    })
+  })
+
+  test('the key of Fast mode does nothing for a model without fast mode, and goes on to the page', async () => {
+    const server = new FakeApiServer()
+    // The shown session runs Sonnet 5.5, which has no fast mode.
+    const onSonnet: Session = {
+      ...autocomplete,
+      choice: { ...autocomplete.choice, model: 'Sonnet 5.5' },
+    }
+    server.json('GET', sessionsPath(org, id), {
+      ...workspaceFixtures().sessions,
+      sessions: [onSonnet, debounce],
+    })
+    const { app } = await openWorkspace(server, { platform: 'mac' })
+    const model = sessionPaths.model(org, id, session)
+    expect({
+      ran: await pressFast(app),
+      changes: await bodiesOf(server, 'PUT', model, 0),
+    }).toEqual({ ran: false, changes: [] })
   })
 })

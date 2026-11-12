@@ -86,6 +86,7 @@ export function coreFixtures(role: OrgRole = 'admin') {
         model: model.name,
         label: model.name,
         efforts: model.efforts,
+        ...(model.fast === undefined ? {} : { fast: model.fast }),
       })),
     ),
   }

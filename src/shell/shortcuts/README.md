@@ -97,7 +97,7 @@ useShortcutOffer('command-palette', ready ? toggle : null, controller)
 | Previous tab, Next tab, Close tab, Reopen closed session | `useTabKeys` of the tab row of the chat. A shown file tab offers its own Close tab. |
 | Copy concise transcript, Copy full transcript | `useTabKeys` of the tab row of the chat, while a session tab shows, with the copy of its tab menu |
 | Focus the message field, Attach files, Stop the agent | The composer of the chat |
-| Model picker, Next effort level | The model picker of the composer |
+| Model picker, Next effort level, Fast mode | The model picker of the composer of a session. It offers Fast mode only for a model that the model list marks as fast. |
 | Copy link | `CopyLink.tsx` of the workspace header, while the label of the number shows |
 | Create PR, Fix checks, Resolve conflicts, Address review, Commit and push, Merge PR, Continue after merge, Open PR on GitHub | `BarKeys` in `workspace/github/bar-keys.tsx`, beside the bar of the right column while the column shows, and beside the actions at the top of the Checks tab of a phone. Each button that takes a click offers its command, and Open PR on GitHub runs while the bar links the pull request. |
 
@@ -133,6 +133,10 @@ return <TerminalTool screenRef={terminal} {...props} />
   tiles show no key. An installed app on Linux keeps Alt+digit.
 - A row of the palette ends with the key of its command, in the key chips
   of the mockups. Its option names the key in `aria-keyshortcuts`.
+- The Fast row of the model menu of a session shows the key of Fast mode
+  between its label and its switch, in the same key chips, and names it in
+  `aria-keyshortcuts`. The menus of New workspace, Preferences, and a
+  routine show no key, because the key runs only where a session tab shows.
 - The Search row shows the palette key, as ⌘K or Ctrl K.
 - A control that runs a command shows the key in its tooltip, such as
   "New session (⌥⌘T)", and names it in `aria-keyshortcuts`. The icon and
@@ -177,7 +181,10 @@ from a test. `serveShortcutChanges` gives the account of the fake API the
 keys that a person recorded, such as for a command without a default key.
 `PageKeys.test.tsx` and `../workspace/WorkspaceKeys.test.tsx` run a
 command of each owner from its key, also the org keys of the rail and the
-copy keys of the chat. The tests of the pull request bar under
+copy keys of the chat. `../workspace/WorkspaceKeys.test.tsx` also checks
+the key at the end of the Fast row of the model menu of a session, the run
+of Fast mode from its key, and a model without fast mode, where the key
+goes on to the page. The tests of the pull request bar under
 `../workspace/github/` and `../workspace/CopyLink.test.tsx` run the keys
 of the bar and of Copy link, also where their controls do not show or
 cannot take a click. `KeyHints.test.tsx` checks the hints in a browser tab

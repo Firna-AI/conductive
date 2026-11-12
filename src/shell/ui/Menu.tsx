@@ -39,9 +39,22 @@ export type MenuSubmenu = {
   icon?: LucideIcon
 }
 
+/**
+ * A setting that is on or off, with a switch at the end of its row, such as
+ * Fast in the model menu. A change keeps the menu open, so the switch shows
+ * its new state in place.
+ */
+export type MenuSwitch = {
+  kind: 'switch'
+  label: string
+  on: boolean
+  onToggle: () => void
+}
+
 export type MenuEntry =
   | MenuAction
   | MenuSubmenu
+  | MenuSwitch
   | { kind: 'label'; label: string }
   | { kind: 'note'; text: string }
   | { kind: 'divider' }

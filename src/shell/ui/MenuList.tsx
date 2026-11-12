@@ -8,7 +8,8 @@ import { Check, ChevronRight } from 'lucide-react'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import type { MenuPlacement } from '../../../docs/mockups/src/components/common/Menu'
 import menu from '../../../docs/mockups/src/components/common/Menu.module.css'
-import type { MenuAction, MenuEntry, MenuSubmenu } from './Menu'
+import { SwitchPicture } from '../../../docs/mockups/src/components/common/SwitchPicture'
+import type { MenuAction, MenuEntry, MenuSubmenu, MenuSwitch } from './Menu'
 import { useLayerFocus } from './Overlay'
 import ui from './ui.module.css'
 
@@ -92,6 +93,27 @@ function Item(props: { entry: MenuAction; close: () => void }) {
       {entry.checked ? (
         <Check aria-hidden className={menu.check} size={14} />
       ) : null}
+    </button>
+  )
+}
+
+/**
+ * The row of a switch: its label and the switch, as the mockup draws it. A
+ * press changes it, and the menu stays open.
+ */
+function SwitchItem(props: { entry: MenuSwitch }) {
+  const { entry } = props
+  return (
+    <button
+      aria-checked={entry.on}
+      className={classes(menu.item, ui.plainButton, ui.menuItem)}
+      onClick={entry.onToggle}
+      role="menuitemcheckbox"
+      tabIndex={-1}
+      type="button"
+    >
+      <span className={menu.label}>{entry.label}</span>
+      <SwitchPicture on={entry.on} />
     </button>
   )
 }
@@ -202,6 +224,8 @@ export function MenuList(props: {
             return (
               <SubmenuItem entry={entry} key={entry.id} submenus={submenus} />
             )
+          case 'switch':
+            return <SwitchItem entry={entry} key={entry.label} />
           case 'label':
             return (
               <div className={menu.group} key={entry.label} role="none">

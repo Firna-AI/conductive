@@ -4,6 +4,8 @@ Use these modules only in development and tests.
 The production Worker does not import them.
 They use the same contracts as the real API.
 The fixtures reuse the mockup data and keep all dates deterministic.
+The model list copies the fast mark of each mockup model, so the menus of
+Opus 5.5, GPT-6.1 Sol, and GPT-6 Astra show the Fast switch.
 Workspace records include their number and canonical link on `FAKE_ORIGIN`.
 Each record also gives the GitHub summary of its mockup workspace.
 The default workspace takes the summary of the chosen banner instead, `ready-to-merge` by default, so its list mark and its bar agree.

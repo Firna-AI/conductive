@@ -172,7 +172,8 @@ Each path is relative to `src/app/`, the folder of this page.
   [Workspace menu](../../docs/protocol/workspace-menu.md) states the menu
   of a workspace row.
 - `../shell/ui/Menu.tsx`: `MenuButton`, the menu of the shell, a sheet on
-  a phone. `MenuList.tsx` draws the items, also an item that shows
+  a phone. `MenuList.tsx` draws the items, also a switch row, such as
+  Fast in the model menu, which keeps the menu open, and an item that shows
   choices. `PointMenu.tsx` draws a menu at a point above the page, with its
   choices beside it, and `menu-place.ts` keeps both inside the window.
   `menu-keys.ts`: `opensMenu`, the menu keys of a row and of a tab.
