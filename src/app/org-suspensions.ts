@@ -1,5 +1,5 @@
 import type { OrgSummary } from '../shared/orgs'
-import { isSuspended } from './permissions'
+import { suspendedOrg } from './permissions'
 import { Store, type Readable } from './store'
 
 type Orgs = readonly OrgSummary[]
@@ -25,24 +25,10 @@ export class OrgSuspensions {
 
   /**
    * Whether an org is suspended, from its summary or from a refusal of the
-   * API, as a value to follow.
+   * API, as a value to follow, as `suspendedOrg` says.
    */
   suspended(orgId: string): Readable<boolean> {
-    return {
-      get: () => {
-        const org = this.orgs.get().find((item) => item.id === orgId)
-        return org !== undefined && isSuspended(org, this.refused.get())
-      },
-      subscribe: (listener) => {
-        const stops = [
-          this.orgs.subscribe(listener),
-          this.refused.subscribe(listener),
-        ]
-        return () => {
-          for (const stop of stops) stop()
-        }
-      },
-    }
+    return suspendedOrg(orgId, this.orgs, this.refused)
   }
 
   /**
