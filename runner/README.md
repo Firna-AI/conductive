@@ -211,8 +211,8 @@ at run time. The build links `dist/runner/node_modules` to
 
 The complete gate, the root `npm run check`, runs the runner typecheck and
 the runner tests. Run `npm ci --prefix runner` once before the gate, as CI
-does. The root lint, format, and file-length checks also cover the runner
-files.
+does. The root lint and format checks also cover the runner files. Lint
+includes the file-length limit.
 
 ## Service
 

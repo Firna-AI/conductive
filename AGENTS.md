@@ -72,10 +72,9 @@ Run each command from the repository root, with Node 24 from `.nvmrc`.
   Then `astro check` checks the `.astro` files of the marketing site, with
   `tsconfig.site.json`.
   Use `npm run mockups:typecheck` for the mockups.
-- Early check: `npm run format:check`, `npm run lint`, and
-  `npm run file-length:check`. The last command rejects JavaScript,
-  TypeScript, and Astro files over 300 lines, including comments and blank
-  lines.
+- Early check: `npm run format:check` and `npm run lint`. Lint also
+  rejects JavaScript, TypeScript, and Astro files over 300 lines, including
+  comments and blank lines.
 - Complete gate: `npm run check`. It checks types, lint, format, file
   length, tests, the app build, and the mockups. It also runs the typecheck
   and the tests of the [agent runner](runner/README.md). It stops at its
