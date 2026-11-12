@@ -95,6 +95,7 @@ export function AllowAllBar(props: {
   const key = controlOf(stop)
   const result = shownResult(state, key, grant !== null)
   const busy = state.busy.includes(key)
+  const waits = Object.hasOwn(state.waiting, key) ? state.waiting[key] : null
   if (grant === null && result === null) return null
   const look = result ? looks[result.outcome.status] : null
   const Icon = look?.icon ?? Timer
@@ -133,6 +134,7 @@ export function AllowAllBar(props: {
             {timeLeft(grant.expiresAt, now)} left
           </span>
           <ActionButton
+            busy={waits === 'keep-workspace'}
             disabled={busy}
             onPress={() => void controller.change(keep)}
           >
@@ -142,7 +144,8 @@ export function AllowAllBar(props: {
       ) : null}
       {grant ? (
         <ActionButton
-          busy={busy}
+          busy={waits === 'stop-workspace'}
+          disabled={busy}
           icon={Square}
           onPress={() => void controller.change(stop)}
         >

@@ -54,21 +54,20 @@ it('stops a grant until Stop without a save, so a disk error cannot fail it', ()
   expect(store.permits('anything', 'one')).toBe(false)
 })
 
-it('keeps a running grant when the user chooses the other kind', () => {
+it('turns running 15 minutes into a grant until Stop, and keeps a grant until Stop against the 15 minutes', () => {
   const test = setup()
   const store = test.open()
-  store.allowWorkspace('one', null)
-  store.allowWorkspaceUntilStop('one', null)
+  store.allowWorkspace('one', 'First workspace')
+  store.allowWorkspaceUntilStop('one', 'First workspace')
   expect(store.settings().workspaceWindows).toEqual([
-    { workspaceId: 'one', workspaceName: null, expiresAt: 1_800_000_900_000 },
+    { workspaceId: 'one', workspaceName: 'First workspace', expiresAt: null },
   ])
-  store.allowWorkspaceUntilStop('two', null)
-  store.allowWorkspace('two', null)
-  expect(store.settings().workspaceWindows[1]).toEqual({
-    workspaceId: 'two',
-    workspaceName: null,
-    expiresAt: null,
-  })
+  expect(test.timers.size).toBe(0)
+  expect(savedWindows(test.contents)).toEqual([])
+  test.advance(900_000)
+  expect(store.permits('anything', 'one')).toBe(true)
+  store.allowWorkspace('one', 'First workspace')
+  expect(store.settings().workspaceWindows[0]?.expiresAt).toBeNull()
 })
 
 it('keeps the running 15 minutes until Stop, drops them from the file, and stops them', () => {

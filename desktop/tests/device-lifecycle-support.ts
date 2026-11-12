@@ -45,6 +45,7 @@ export function deviceLifecycleFixture() {
     dispose: ReturnType<typeof vi.fn>
   }[] = []
   let userId = 'user-one'
+  let signedIn = true
   const sessions = createDeviceSessionFactory({
     files,
     clock: time.clock,
@@ -66,10 +67,13 @@ export function deviceLifecycleFixture() {
   const connection = createDeviceConnection({
     deviceId: 'local-device',
     clock: time.clock,
-    readCredential: async () => ({
-      value: 'fixture.signature',
-      expiresAt: time.clock.now() + 1_000_000,
-    }),
+    readCredential: async () =>
+      signedIn
+        ? {
+            value: 'fixture.signature',
+            expiresAt: time.clock.now() + 1_000_000,
+          }
+        : undefined,
     authenticate: async () => ({ userId, appAccess: true }),
     connect: (credential, events) => {
       const wire = new Wire()
@@ -134,8 +138,14 @@ export function deviceLifecycleFixture() {
       await connection.start()
       pair()
     },
+    /** Removes the sign-in cookie, as a sign-out does. */
+    async signOut() {
+      signedIn = false
+      await connection.cookieChanged()
+    },
     async signIn(nextUserId: string) {
       userId = nextUserId
+      signedIn = true
       await connection.cookieChanged()
       pair()
     },

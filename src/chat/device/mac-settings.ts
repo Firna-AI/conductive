@@ -34,6 +34,8 @@ export type MacSettingsView =
 export type MacSettingsState = MacSettingsView & {
   /** The controls whose change waits for the Mac. */
   busy: readonly string[]
+  /** The action of the change that waits, by control. */
+  waiting: Readonly<Record<string, SettingsChange['action']>>
   /** The result of the last change of each control, by control. */
   results: Readonly<Record<string, ChangeResult>>
 }
@@ -64,8 +66,14 @@ export class MacSettingsController {
   private readonly listeners = new Set<() => void>()
   private view: MacSettingsView = { kind: 'loading' }
   private busy: readonly string[] = []
+  private waiting: Readonly<Record<string, SettingsChange['action']>> = {}
   private results: Readonly<Record<string, ChangeResult>> = {}
-  private state: MacSettingsState = { ...this.view, busy: [], results: {} }
+  private state: MacSettingsState = {
+    ...this.view,
+    busy: [],
+    waiting: {},
+    results: {},
+  }
   private queue: Promise<void> = Promise.resolve()
   private alive = false
 
@@ -81,7 +89,12 @@ export class MacSettingsController {
   }
 
   private publish(): void {
-    this.state = { ...this.view, busy: this.busy, results: this.results }
+    this.state = {
+      ...this.view,
+      busy: this.busy,
+      waiting: this.waiting,
+      results: this.results,
+    }
     for (const listener of this.listeners) listener()
   }
 
@@ -148,6 +161,7 @@ export class MacSettingsController {
       : undefined
     const subject = subjectOf(change, view.settings, last)
     this.busy = [...this.busy, key]
+    this.waiting = { ...this.waiting, [key]: change.action }
     this.results = Object.fromEntries(
       Object.entries(this.results).filter(([control]) => control !== key),
     )
@@ -157,6 +171,9 @@ export class MacSettingsController {
 
   private finish(key: string, result: ChangeResult): void {
     this.busy = this.busy.filter((item) => item !== key)
+    this.waiting = Object.fromEntries(
+      Object.entries(this.waiting).filter(([control]) => control !== key),
+    )
     this.results = { ...this.results, [key]: result }
     this.publish()
   }

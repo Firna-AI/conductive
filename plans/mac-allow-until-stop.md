@@ -105,8 +105,9 @@ The mechanics below apply decision 1 A and decision 2 B.
   timer. `save` writes only the timed grants to the permission file.
   `permits` allows a command when the grant of its workspace has no end
   time or an end time in the future. `settings` reports both kinds.
-- `allowWorkspace` takes the kind of grant. A grant that runs is kept, as
-  today. Stop removes either kind.
+- `allowWorkspace` gives the 15 minutes and keeps a grant that runs, as
+  today. `allowWorkspaceUntilStop` replaces running 15 minutes. Stop
+  removes either kind.
 - The store knows which workspaces the permission file holds, from the
   last read or save. Stop saves the file only when the file holds the
   workspace, so a Stop of a grant until Stop reports done, never done but
@@ -153,9 +154,10 @@ The mechanics below apply decision 1 A and decision 2 B.
 - 2026-11-12, my call: This Mac renames the list "Allowed for 15 minutes"
   to "All commands allowed". Each row shows the time left or "Until you
   stop", with Stop. Reason: one list holds both kinds of grant.
-- 2026-11-12, my call: the menu choice does not replace a grant that
-  runs, as today. Decision 2 asks how the user gives more time while the
-  15 minutes run.
+- 2026-11-12, my call, changed by review finding 1: the menu choice
+  until Stop replaces running 15 minutes of the workspace, as Keep does.
+  Both use one store helper. The 15-minute choice never shortens a grant
+  until Stop. Reason: the user chose the longer grant.
 - 2026-11-12, my call: no version check between the page and the Mac
   app. An older Mac app treats the new action as an invalid message. It
   closes its device connection, ends its running commands, and connects
@@ -275,7 +277,7 @@ The page offers the new choice and shows a grant until Stop.
 Depends on: every other milestone
 
 - [ ] Run the targeted tests and `npm run check`.
-- [ ] Commit with Conventional Commits and push the branch.
+- [x] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record

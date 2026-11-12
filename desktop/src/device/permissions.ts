@@ -96,6 +96,24 @@ export function createPermissionStore(dependencies: PermissionDependencies) {
       }),
     )
   }
+  /**
+   * Makes the grant of a workspace last until Stop, in memory. When the
+   * file holds 15 minutes of the workspace, the store saves the file
+   * without them. A failed save keeps only the rest of those 15 minutes in
+   * the file, which the user already gave.
+   */
+  const untilStop = (workspaceId: string, workspaceName: string | null) => {
+    cancelTimer(workspaceId)
+    const next = new Map(windows)
+    next.set(workspaceId, { workspaceId, workspaceName, expiresAt: null })
+    windows = next
+    if (!filed.has(workspaceId)) return
+    try {
+      save(commands, next)
+    } catch {
+      dependencies.warn()
+    }
+  }
   const retryRead = () => {
     if (readState !== 'pending') return
     try {
@@ -153,22 +171,20 @@ export function createPermissionStore(dependencies: PermissionDependencies) {
       cancelTimer(workspaceId)
       schedule(window)
     },
-    /** Gives a grant until Stop, only in memory. A grant that runs stays. */
+    /**
+     * Gives a grant until Stop, only in memory. It replaces running 15
+     * minutes of the workspace, because the user chose the longer grant.
+     */
     allowWorkspaceUntilStop(
       workspaceId: string,
       workspaceName: string | null,
     ): void {
-      if (runs(windows.get(workspaceId))) return
-      cancelTimer(workspaceId)
-      windows = new Map([
-        ...windows,
-        [workspaceId, { workspaceId, workspaceName, expiresAt: null }],
-      ])
+      if (windows.get(workspaceId)?.expiresAt === null) return
+      untilStop(workspaceId, workspaceName)
     },
     /**
-     * Turns the running 15 minutes of a workspace into a grant until Stop.
-     * The file then drops the 15 minutes. A failed save keeps only the
-     * rest of the 15 minutes in the file, which the user already gave.
+     * Turns the running 15 minutes of a workspace into a grant until Stop,
+     * as Keep until I stop in the bar asks.
      */
     keepWorkspace(workspaceId: string): DeviceSettingsOutcome {
       const window = windows.get(workspaceId)
@@ -178,16 +194,8 @@ export function createPermissionStore(dependencies: PermissionDependencies) {
           message:
             'These 15 minutes already ended. The next command asks first.',
         }
-      if (window.expiresAt === null) return { status: 'done' }
-      cancelTimer(workspaceId)
-      const next = new Map(windows)
-      next.set(workspaceId, { ...window, expiresAt: null })
-      windows = next
-      try {
-        save(commands, next)
-      } catch {
-        dependencies.warn()
-      }
+      if (window.expiresAt !== null)
+        untilStop(workspaceId, window.workspaceName)
       return { status: 'done' }
     },
     stopWorkspace,

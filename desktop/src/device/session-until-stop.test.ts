@@ -41,7 +41,8 @@ it('keeps a grant until Stop across a reconnect, and a sign-out or another accou
 
   request(test, 'again', true)
   expect(test.processes).toHaveLength(3)
-  test.sessions.signedOut()
+  await test.signOut()
+  await test.signIn('user-one')
   request(test, 'after-sign-out')
   expect(test.processes).toHaveLength(3)
 })
