@@ -1,6 +1,6 @@
 # Org rail order
 
-Status: Active. On branch `calummoore/riga-188n`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
+Status: Active. [PR #293](https://github.com/Firna-AI/conductive/pull/293) is open. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
 The org rail is the narrow column of org tiles at the far left of the app.
 Today it shows the orgs of a person in the order the orgs were created
