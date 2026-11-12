@@ -138,7 +138,9 @@ the Help row of the palette opens.
 - The open of a workspace and the settings reads of the Cloud computer
   tab count a generation. An answer that arrives after their screen
   closed or the user cancelled starts no stream, writes no older state,
-  and schedules no request.
+  and schedules no request. `WorkspaceModel.opened` says when the open
+  of the current visit ended, with the Resume that it sent. It is false
+  before the first open, during each open, and after a close.
 - Archive and Restore raise `updatedAt` of the workspace, also at the same
   clock. So a record from the other side of an Archive or a Restore shows
   only when its `updatedAt` is newer, whatever its source: a read, a

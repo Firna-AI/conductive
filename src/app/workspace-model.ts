@@ -20,6 +20,14 @@ import { WorkspaceActivity } from './workspace-activity'
 export class WorkspaceModel {
   readonly detail: Store<Loadable<WorkspaceResponse>>
   readonly startError = new Store<ApiError | null>(null)
+  /**
+   * The open of this visit ended: its read, and the Resume that it sends for
+   * a stopped sandbox, or for one whose later start failed. It is false
+   * before the first open, during each open, and after `close`. The screen
+   * shows the composer in place of the bar of such a sandbox until then,
+   * because the open resumes it.
+   */
+  readonly opened = new Store<boolean>(false)
   readonly archive: ArchiveModel
   readonly stream: WorkspaceStream
   readonly workspaceId: string
@@ -82,6 +90,16 @@ export class WorkspaceModel {
    */
   async open(): Promise<void> {
     const run = ++this.generation
+    this.opened.set(false)
+    try {
+      await this.openVisit(run)
+    } finally {
+      if (run === this.generation) this.opened.set(true)
+    }
+  }
+
+  /** The read of an open, and its Resume, until `opened`. */
+  private async openVisit(run: number): Promise<void> {
     this.order.followList()
     const visit = this.order.lifecycleChanges
     const path = workspacePath(this.org.orgId, this.workspaceId)
@@ -123,6 +141,7 @@ export class WorkspaceModel {
   /** Stops the stream. An open that still runs can no longer start it. */
   close(): void {
     this.generation += 1
+    this.opened.set(false)
     this.following = false
     this.order.stopFollow()
     this.order.forgetWaits()
