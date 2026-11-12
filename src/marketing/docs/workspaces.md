@@ -63,8 +63,10 @@ The setting saves at once.
 The dialog uses **Create** for its send button.
 A phone always opens the page.
 
+The dialog shows the org and section at the top right.
+Select it to put the new workspace in another section.
 The page and dialog share the draft for the same org and section.
-Closing the dialog keeps that draft.
+Closing the dialog keeps that draft and its section.
 
 ## Follow the task
 
@@ -137,6 +139,7 @@ Typing `W-12` alone leaves plain text in the message.
 
 Use a section's menu to create a workspace in that section.
 The **New workspace** action at the top of the list uses **General**.
+In the **New workspace** dialog, you can select another section.
 
 The section menu also offers **Rename section**, **New section**, and **Delete section**.
 Deleting a section moves its workspaces to **General**.

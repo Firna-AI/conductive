@@ -166,6 +166,10 @@ the Help row of the command palette opens.
   with no section, as the row does, so General keeps one draft. A create that the server accepts opens the new workspace, also
   when the dialog closed while the create ran. A failed create request
   keeps the dialog open with Try again.
+- The section of a draft is its key, and a pick of the Section menu of
+  the dialog (`NewWorkspaceModel.setSection`) wins over it. The pick stays
+  in the draft of the key, so the page of that key names the picked
+  section too. A send ends the pick.
 - The message field of the dialog takes the focus as the dialog opens.
   When the dialog closes and the address stays, the focus goes back to
   the control that opened it. When the address changes, such as after

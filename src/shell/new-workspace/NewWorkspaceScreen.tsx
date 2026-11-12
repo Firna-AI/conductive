@@ -113,7 +113,9 @@ export function NewWorkspaceScreen(props: {
   const phone = useViewport() === 'phone'
   const { suspended } = useOrgAccess(org)
   useShownForm()
-  const section = sections?.find((item) => item.id === props.sectionId)
+  // The page shares its draft with the dialog, which can pick a section.
+  const sectionId = form.draft.sectionId ?? props.sectionId
+  const section = sections?.find((item) => item.id === sectionId)
   return (
     <Page
       back={{ label: 'Workspaces', to: routes.org(org.id) }}
