@@ -29,4 +29,6 @@ export default defineConfig([
     },
   },
   astro.configs.recommended,
+  // Count comments and blank lines too, so a file cannot pass by compaction.
+  { rules: { 'max-lines': ['error', 300] } },
 ])
