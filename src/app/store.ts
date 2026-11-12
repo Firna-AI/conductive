@@ -37,6 +37,26 @@ export class Store<T> implements Readable<T> {
   }
 }
 
+/** One part of a loaded value, which changes only when that part changes. */
+export function partOf<T, P>(
+  source: Readable<Loadable<T>>,
+  pick: (value: T) => P,
+): Readable<Loadable<P>> {
+  const select = (value: Loadable<T>): Loadable<P> =>
+    value.state === 'ready' ? ready(pick(value.value)) : value
+  const target = new Store(select(source.get()))
+  source.subscribe(() => {
+    const next = source.get()
+    const current = target.get()
+    const kept =
+      next.state === 'ready' &&
+      current.state === 'ready' &&
+      pick(next.value) === current.value
+    if (!kept) target.set(select(next))
+  })
+  return target
+}
+
 /**
  * A value that `combine` makes from two stores. It follows both, and it
  * keeps its last value while neither changes, so a screen draws again only

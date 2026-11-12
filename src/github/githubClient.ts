@@ -7,6 +7,7 @@ import {
   readBannerResponse,
   readChecksResponse,
   readErrorMessage,
+  readStoredResponse,
 } from './githubParse'
 
 /** The browser's fetch, or a fake with the same shape in development. */
@@ -55,10 +56,11 @@ async function readJson<T>(
 
 /**
  * Reads the banner and the checks of a workspace from the API, with two
- * requests. Both must load before either view shows them. The contract does
- * not promise that the two replies come from one moment. A GitHub change
- * between the two reads can give a banner and checks of two moments, and the
- * next GitHub event corrects that.
+ * requests. Both must load before either view shows them. The Worker
+ * answers two requests that come together from one GitHub read, but the
+ * contract does not promise that the two replies come from one moment. A
+ * GitHub change between two reads can give a banner and checks of two
+ * moments, and the next GitHub event corrects that.
  */
 export async function loadGitHubSnapshot(
   fetch: FetchLike,
@@ -81,4 +83,25 @@ export async function loadGitHubSnapshot(
     ),
   ])
   return { banner: banner.banner, checks }
+}
+
+/**
+ * Reads the last GitHub state that the Worker stored for the workspace
+ * branch, without a GitHub read, so it answers fast. Null when none is
+ * stored yet. A fresh read from GitHub must follow, because the stored
+ * state can be old.
+ */
+export async function loadStoredSnapshot(
+  fetch: FetchLike,
+  target: WorkspaceTarget,
+  signal: AbortSignal,
+): Promise<GitHubSnapshot | null> {
+  const { orgId, workspaceId } = target
+  const reply = await readJson(
+    fetch,
+    githubPaths.stored(orgId, workspaceId),
+    signal,
+    readStoredResponse,
+  )
+  return reply.state
 }

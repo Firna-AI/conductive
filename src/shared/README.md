@@ -26,6 +26,11 @@ keeps the stored mark inside each compare-and-swap attempt. A missing or
 deleted name starts secret. An explicit mark changes it with the value.
 Its `classify` change carries only a name and a mark, so it keeps the value.
 `api.ts` keeps the existing sign-in and org paths and common records.
+`API_PATHS.orgOrder` names `PUT /api/org-order`, outside the paths of one org.
+`MoveOrgRequest` in `orgs.ts` carries `orgId` and the zero-based `index` among the other visible orgs.
+`readMoveOrgRequest` validates its fields. A move returns 204 without a body.
+The org list uses each person's saved order. A new membership goes at the end.
+[Org rail order](../../docs/protocol/org-rail-order.md) states the requirements.
 Its `ApiErrorBody` carries the error code and message.
 The optional `error.details` identifies an unknown routine author login.
 It carries `login`, `triggerIndex`, and `list`.

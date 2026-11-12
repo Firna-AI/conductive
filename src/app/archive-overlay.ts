@@ -20,10 +20,7 @@ export interface RunningWrite {
  * it was, because only the running write puts this record over it. An
  * archived record stays as it is.
  */
-export function archivingWorkspace(
-  workspace: Workspace,
-  at: number,
-): Workspace {
+function archivingWorkspace(workspace: Workspace, at: number): Workspace {
   if (workspace.state === 'archived') return workspace
   return {
     ...workspace,

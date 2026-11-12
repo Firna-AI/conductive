@@ -20,7 +20,7 @@ how a screen is built, and links to the other pages.
 | `app/workspace-menu` | The menu of a workspace row from a right click: its section and owner choices, Rename, Copy link, Archive from the list with its toast and Restore, and the menus of each role |
 | `app/command-palette` | The command palette over the list, with the keys of a browser tab: the All tab, then the other tabs with the Help group, searches and their states, and a search by number |
 | `app/feedback`      | The Feedback dialog that Send feedback opens over the list, then its states, the toast after a send, and the files that it does not add |
-| `app/orgs`          | The org switcher of a phone, Create org, the first org, new orgs, deleted, suspended |
+| `app/orgs`          | The org switcher of a phone, Create org, the first org, new orgs, deleted, suspended, and the order of the orgs |
 | `app/account`       | General with the GitHub sign-in, the GitHub App, the agent logins with own endpoints, and the invite code, then Preferences with the model and how New workspace opens, Keyboard shortcuts in a browser, the first run, the Connect forms with the ChatGPT sign-in of Codex, Codex on a ChatGPT plan and its sign-in that stopped working, and a share not saved |
 | `app/operator`      | The operator's Overview, Orgs, Users, Waitlist, and Invite codes tabs, the page of an org and of a user with Suspend, Lift, and Approve, the pause of sign-ups, the waitlist switch, and where an operator opens the section |
 | `app/banner`        | The pull request bar and Checks: no pull request, its other states, Merge, local work, the agent actions in the chat, and Continue |
@@ -215,6 +215,25 @@ pasted workspace link as a chip. The dialog uses the file chips of
 view shows the New workspace page in the same state.
 `user-flows/create-workspace-dialog` goes from Preferences through the
 dialog to the new workspace.
+
+`app/orgs/reorder` draws the order of the orgs that each person keeps,
+from decisions 515 C, 516 A, and 517 B of 11 November 2026. Its canonical
+screen has Firna dragged from the bottom of the rail to the top, and on a
+phone the same drag in the org switcher after a long press. Its variants:
+
+- `moved` has the rail and the org switcher after the move: Firna, Acme,
+  then Futex.
+- `menu` has the menu of Firna, the first tile, at the pointer of a right
+  click: Move up, which is off, and Move down. A phone has no tile menu,
+  so its view is the org switcher.
+- `long-press` has a long press that lifts Futex in the org switcher of a
+  phone, with the line at its place. Its desktop view has the start of a
+  drag of Futex on the rail.
+- `suspended` has the menu of Acme after the operator suspended it, with
+  both items on, and on a phone the drag of Acme in the org switcher.
+
+The state comes from the `orgOrder` control of the workspace list, which
+`src/screens/orgOrderStates.ts` describes.
 
 [The waitlist, suspensions, and the operator](catalogue-operator.md)
 gives the pages of the waitlist and the child pages of

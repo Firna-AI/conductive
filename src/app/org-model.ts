@@ -1,3 +1,4 @@
+import type { GitHubCapabilities } from '../shared/github'
 import { membersPath, type MembersResponse } from '../shared/members'
 import {
   orgSettingsPaths,
@@ -28,14 +29,7 @@ import { buildsWait, listWait, onEntry, routinesWait } from './org-waits'
 import { Refresher, type Refreshing } from './refresh'
 import { Resource } from './resource'
 import type { AppServices } from './services'
-import {
-  derived,
-  ready,
-  Store,
-  valueOf,
-  type Loadable,
-  type Readable,
-} from './store'
+import { derived, partOf, valueOf, type Loadable, type Readable } from './store'
 import { WorkspaceActions } from './workspace-actions'
 import {
   neverSuspended,
@@ -45,26 +39,6 @@ import {
 
 export type OrgPart =
   'list' | 'repositories' | 'builds' | 'members' | 'routines'
-
-/** One part of a loaded value, which changes only when that part changes. */
-function partOf<T, P>(
-  source: Readable<Loadable<T>>,
-  pick: (value: T) => P,
-): Readable<Loadable<P>> {
-  const select = (value: Loadable<T>): Loadable<P> =>
-    value.state === 'ready' ? ready(pick(value.value)) : value
-  const target = new Store(select(source.get()))
-  source.subscribe(() => {
-    const next = source.get()
-    const current = target.get()
-    const kept =
-      next.state === 'ready' &&
-      current.state === 'ready' &&
-      pick(next.value) === current.value
-    if (!kept) target.set(select(next))
-  })
-  return target
-}
 
 /**
  * The data of one org: its list of sections and workspaces, its
@@ -108,6 +82,8 @@ export class OrgModel {
   readonly routines: Readable<Loadable<readonly ListedRoutine[]>>
   /** The create requests of this tab, which a sign-out ends. */
   readonly creations = new Creations()
+  /** The GitHub access of the signed-in member, by repository ID. */
+  private readonly githubAccess = new Map<string, GitHubCapabilities>()
   readonly workspaceActions: WorkspaceActions
   private readonly parts: Readonly<Record<OrgPart, Refreshing>>
   private readonly drafts = new Map<string, NewWorkspaceModel>()
@@ -255,6 +231,30 @@ export class OrgModel {
       }),
       `build ${build.id}`,
     )
+  }
+
+  /** Forgets the GitHub access of the person who signed out. */
+  forgetGitHubAccess(): void {
+    this.githubAccess.clear()
+  }
+
+  /**
+   * The last GitHub access of the signed-in member to one repository of
+   * the org, as the pull request bar read it. The bar of another workspace
+   * of the repository shows it at once, while it reads the access again.
+   * A sign-out or another person forgets it, as `forgetGitHubAccess` says.
+   */
+  githubAccessOf(repositoryId: string): {
+    get: () => GitHubCapabilities | undefined
+    set: (access: GitHubCapabilities | undefined) => void
+  } {
+    return {
+      get: () => this.githubAccess.get(repositoryId),
+      set: (access) => {
+        if (access) this.githubAccess.set(repositoryId, access)
+        else this.githubAccess.delete(repositoryId)
+      },
+    }
   }
 }
 

@@ -40,9 +40,8 @@ export const navigationAndAppearanceFeatures: readonly ParityFeature[] = [
     id: 'vertical-panel-resizing',
     area: 'navigation-and-appearance',
     name: 'Vertical panel resizing',
-    status: 'in-progress',
-    note: 'Resizing the split between Files and the Terminal or Preview panel is in progress.',
-    due: null,
+    status: 'available',
+    note: 'Drag the divider between Files and the Terminal or Preview panel, or move it with the keyboard. The app remembers the split.',
   },
   {
     id: 'tab-order',

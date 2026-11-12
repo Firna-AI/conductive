@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.15.0](https://github.com/Firna-AI/conductive/compare/v0.14.0...v0.15.0) (2026-11-12)
+
+
+### Features
+
+* **chat:** load the newest chat history first ([#281](https://github.com/Firna-AI/conductive/issues/281)) ([f13c083](https://github.com/Firna-AI/conductive/commit/f13c083005b1bde6d6ebee12cccdf8214e38355d))
+* **files:** list context folder files in All files ([#288](https://github.com/Firna-AI/conductive/issues/288)) ([ad6e2ba](https://github.com/Firna-AI/conductive/commit/ad6e2bad5352b4b1437e25c59b8dd1edb439c3da))
+* **menus:** add Copy link to the workspace and session tab menus ([#292](https://github.com/Firna-AI/conductive/issues/292)) ([5bd05b4](https://github.com/Firna-AI/conductive/commit/5bd05b46c05312164ea67862b625f5286ef32196))
+* **sidebar:** focus the message box after a click on a workspace ([#279](https://github.com/Firna-AI/conductive/issues/279)) ([2d0e217](https://github.com/Firna-AI/conductive/commit/2d0e2174d5687ba8c94e2dba20444621cef4b958))
+
+
+### Bug Fixes
+
+* **files:** name a file tab from its read when no list holds the file ([#289](https://github.com/Firna-AI/conductive/issues/289)) ([c710a30](https://github.com/Firna-AI/conductive/commit/c710a306c10ac331e23d89d9f4efde44b71e4130))
+* **marketing:** refresh merged and pending comparison features ([#296](https://github.com/Firna-AI/conductive/issues/296)) ([82951d4](https://github.com/Firna-AI/conductive/commit/82951d42cc6c66cc8d6c017fb10f7a4a9876e30f))
+* **workspace:** show Starting, not a Resume bar, while an open resumes ([#290](https://github.com/Firna-AI/conductive/issues/290)) ([8c49081](https://github.com/Firna-AI/conductive/commit/8c49081e304c1070a6e2e09a89c49e3a7e93cc97))
+
+
+### Performance Improvements
+
+* **chat:** show a sent message at once and clear the composer ([#285](https://github.com/Firna-AI/conductive/issues/285)) ([9457304](https://github.com/Firna-AI/conductive/commit/9457304f6c5b22379a1ccf53222596476cd2b925))
+
 ## [0.14.0](https://github.com/Firna-AI/conductive/compare/v0.13.0...v0.14.0) (2026-11-12)
 
 
