@@ -197,7 +197,9 @@ A, for every file.
   A as a design call of 12 November 2026, because the rule "No failure
   loses an accepted message or its attachments" of
   [A failed first start](../docs/protocol/create-a-workspace.md#a-failed-first-start)
-  stays. E, F, and G stay open to the user as additions to A.
+  stays. On 12 November 2026, Cal chose none of E, F, and G: "I agree,
+  none". Reason: the edge case of an agent edit is rare, and A ends it
+  with a clear message.
 
 ### 4. The read line for a very large file
 
