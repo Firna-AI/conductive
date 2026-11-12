@@ -5,6 +5,7 @@ use clap::Parser;
 use crate::command::Command;
 use crate::error::{Error, Result};
 use crate::release;
+use crate::update_command;
 
 /// Arguments for the Conductive program.
 #[derive(Debug, Parser)]
@@ -19,9 +20,12 @@ pub(crate) struct Cli {
 }
 
 impl Cli {
-    /// Return an explicit error for commands that are not available yet.
-    pub(crate) fn execute(self) -> Result<()> {
+    /// Run supported commands and report unavailable command families.
+    pub(crate) async fn execute(self) -> Result<()> {
         let _parts = release::parts()?;
+        if let Command::Update(arguments) = self.command {
+            return update_command::execute(arguments).await;
+        }
         Err(Error::NotAvailable {
             command: self.command,
         })

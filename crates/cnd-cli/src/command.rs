@@ -5,6 +5,8 @@ use std::fmt;
 
 use clap::{Args, Subcommand};
 
+use crate::update_command::UpdateArgs;
+
 /// Command families served by the Conductive program.
 #[derive(Debug, Subcommand)]
 pub(crate) enum Command {
@@ -16,8 +18,8 @@ pub(crate) enum Command {
     Mcp(PendingArgs),
     /// Supply Git credentials. Not available yet.
     GitCredential(PendingArgs),
-    /// Download a software update. Not available yet.
-    Update(PendingArgs),
+    /// Stage or apply a sandbox software update.
+    Update(UpdateArgs),
     /// Manage workspaces. Not available yet.
     Workspaces(PendingArgs),
     /// Manage sessions. Not available yet.

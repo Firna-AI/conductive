@@ -23,6 +23,11 @@ keys. Each archive holds one executable named `conductive`. The archive
 headers have fixed timestamps and permissions. The program archive and
 the parts filename hold the SHA-256 digest of their bytes.
 
+The deploy also runs `bash image/package-system.sh OUTPUT`. That command
+writes the digest-named system archive and prints its digest. The system
+part carries the sandbox scripts, units, GitHub CLI wrapper, and udev rule.
+The updater reads the parts embedded in the checked new executable.
+
 The `parts` command writes an input file for the program build. Repeat
 `--part NAME URL SHA256` for each part. The `package` command writes the
 release files. Build its program with the same version and parts file.
@@ -31,12 +36,13 @@ command. These commands upload nothing.
 
 ## Quick Start
 
-Run from the repository root. Supply the real runner and Node URLs and digests:
+Run from the repository root. Supply the real runner, Node, and system URLs and digests:
 
 ```sh
 cargo run -p cnd-release -- parts \
   --part runner "$RUNNER_URL" "$RUNNER_SHA256" \
   --part node "$NODE_URL" "$NODE_SHA256" \
+  --part system "$SYSTEM_URL" "$SYSTEM_SHA256" \
   --output "$PWD/.context/release-input/parts.json"
 CONDUCTIVE_RELEASE_VERSION=0.0.42 \
 CONDUCTIVE_PARTS_FILE="$PWD/.context/release-input/parts.json" \

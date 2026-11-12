@@ -6,8 +6,8 @@ use crate::cli::Cli;
 use crate::command::Command;
 use crate::error::Error;
 
-#[test]
-fn workspace_command_with_arguments_reports_unavailable() -> Result<(), clap::Error> {
+#[tokio::test]
+async fn workspace_command_with_arguments_reports_unavailable() -> Result<(), clap::Error> {
     let cli = Cli::try_parse_from([
         "conductive",
         "workspaces",
@@ -18,7 +18,7 @@ fn workspace_command_with_arguments_reports_unavailable() -> Result<(), clap::Er
         "20",
     ])?;
 
-    let error = cli.execute().err();
+    let error = cli.execute().await.err();
     assert!(matches!(
         error,
         Some(Error::NotAvailable {

@@ -89,7 +89,7 @@ two variables.
 
 Each deploy from `main` also publishes a static `conductive` program and a
 versioned parts file. The program embeds its release version and parts
-list. The list holds the runner archive and the private Node archive,
+list. The list holds the runner archive, the private Node archive, and the system archive,
 with each part's URL and SHA-256 digest. Node stays at `nodejs.org`.
 
 The program archive and the parts file have digest-named paths. The
@@ -98,12 +98,38 @@ newest-version JSON at
 holds the absolute program archive URL and its digest. Its cache time is
 60 seconds. The deploy replaces it only for a higher version, after the
 release files pass their public size checks. The release version is
-`0.0.<commit count of main>`. These files do not change the installed
-software yet. Image builds still use the runner archive variables.
+`0.0.<commit count of main>`. The updater can stage and apply these releases. The current Worker image
+installer still uses the runner archive variables. It does not install
+the updater or its units.
 
 [The archive in each deploy](../docs/deployment/runner-archive.md#the-archive-in-each-deploy)
 gives the exact keys and publication order. The
 [release crate](../crates/cnd-release/README.md) gives local packaging commands.
+
+## Release updates
+
+[Release installation](install.md#release-installation) gives the command
+sequence and the version layout. `conductive update check` stages a newer
+release. `conductive update apply` activates a complete release locally.
+The runner remains the Node program from the runner part.
+
+`package-system.sh` builds a reproducible archive with the release units
+from `release/`. It renders the start scripts with paths under
+`/opt/conductive/current`. It generates terminal scripts from the existing
+terminal module. The legacy units in this folder still serve the current
+Worker installer.
+
+The root oneshot `conductive-update-apply.service` runs before the runner
+and relay. Its workspace-ready condition prevents a boot without workspace
+settings from consuming a pending update. The runner requests a background
+check after each start. `conductive-update-check.timer` also checks after
+30 seconds of boot and every hour. The root check service runs the program
+and then exits. No separate updater process remains resident.
+
+`conductive-update-confirm.service` runs after the runner start. It checks
+that systemd reports the runner active before it calls `update started`.
+A runner that exits before that check leaves pending for fallback.
+This check confirms the local service start, not its Worker connection.
 
 ## The private Node runtime
 
@@ -116,9 +142,10 @@ paths, and its update steps.
 build: the staged scripts, the private Node, and the steps of `install.sh`.
 A refresh and a first build from a software image skip that step.
 The [software image backend](../worker/software-image/README.md) builds the shared image.
-A workspace gets the relay only from a new image build.
-An existing workspace keeps the software of its image, also after a resume.
-Start a new workspace from the new image to get the relay.
+The legacy installer gives a workspace the relay through an image build.
+A workspace without the updater keeps its image software after a resume.
+A workspace with the release layout downloads updates in the background.
+It applies them before the next runner start.
 
 ## Start in a workspace
 
@@ -276,10 +303,11 @@ build, a disk retention restart, and an unfinished start start no runner.
   file that the sandbox needs, also add it to `installImageSoftware`.
   Add it to `install.sh` too when a sandbox uses it after the build. The
   developer scripts stay out of the sandbox.
-- Start Node in a script only as `@CONDUCTIVE_NODE@`.
+- Start Node in shared templates as `@CONDUCTIVE_NODE@`. The release
+  packager renders this path under the version folder.
 - `runner-start.sh` holds the placeholder `@RUNNER_PATH@`.
   `installImageSoftware` replaces it with `MACHINE_PATHS.runner` when it
-  stages the script, so the runner path has one source. Run only the staged
+  stages the script, so the runner path has one source. Run only the rendered
   copy.
 - Keep each start script safe to run in a build sandbox. Of the variables
   in the table, a build sandbox has only the folder variables.
@@ -289,6 +317,9 @@ build, a disk retention restart, and an unfinished start start no runner.
 
 ### Key Code
 
+- [`package-system.sh`](package-system.sh): packages the scripts and release units as a digest-named archive.
+- [`install-system.sh`](install-system.sh): installs the active release system files without starting a unit.
+- [Update engine](../crates/cnd-cli/README.md): stages downloads and applies or restores releases.
 - [`install-runtime.sh`](install-runtime.sh): installs the private Node.
   Its arguments are the download URL, the digest, and the version folder.
 - [`install.sh`](install.sh): installs the runner archive, its service,

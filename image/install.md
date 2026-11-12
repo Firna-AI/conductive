@@ -1,7 +1,7 @@
 # Install in a build
 
 This guide belongs to the [sandbox software](README.md). It describes the
-software step of each image build.
+legacy software step of each image build and the release installer interface.
 
 Before this step, Git in the build sandbox copies each chosen repository
 into its folder, as the
@@ -64,12 +64,11 @@ The service stays enabled, so the relay starts without waiting for a preview req
 The relay uses the private Node.
 Its start script reads no workspace variable or workspace marker.
 
-A refresh and a first build from a software image skip this step, and the
-terminal installer with it. So a change
-in this folder or in the terminal software reaches the new workspaces of an
-org only after its next build. A workspace that exists keeps its software.
-A workspace gets the relay only from a new image build.
-Start a new workspace from that image to get the relay.
+A refresh and a first build from a software image skip this legacy step
+and the terminal installer with it. A workspace without the updater keeps
+its installed software. Changes then reach later workspaces through a new
+image build. A workspace with the release layout can download new parts
+and apply them at its next runner start. See [Release installation](#release-installation).
 
 ## Disk flushes
 
@@ -78,8 +77,93 @@ the requirement. The udev rule `60-conductive-disk-cache.rules` sets
 `queue/write_cache` to `write through` on each whole virtio disk, at each
 boot. The kernel then sends no flush to the host, and `fsync` returns once
 the host has the data. Installation changes no disk setting, so the build
-sandbox keeps its flushes. A workspace gets the rule only from a new image
-build, as it gets the relay.
+sandbox keeps its flushes. A workspace without the updater gets the rule
+through an image build.
+The updater installs the rule from the system part.
 
 To check a sandbox, read `/sys/block/vda/queue/write_cache`. It reads
 `write through` with the rule and `write back` without it.
+
+## Release installation
+
+The release installer is available in `conductive`. The current Worker
+installer above does not call it yet. A caller that installs a first
+release runs these commands as root with a verified bootstrap executable:
+
+```sh
+/path/to/bootstrap/conductive update check --bootstrap
+/path/to/bootstrap/conductive update apply
+/opt/conductive/current/conductive update started
+```
+
+The check command logs a warning and returns failure after a failed
+download. A concurrent check also returns a busy error. A build must stop
+when any command fails. A build must verify that `current/conductive` and
+`current/complete` exist after apply. A build confirms the initial
+installation with `update started`, because it starts no runner.
+The image build still installs `gh`, `ttyd`, and `tmux` through apt.
+
+The program uses this layout under `/opt/conductive`:
+
+```text
+current -> versions/<active-version>
+previous -> versions/<previous-version>
+pending                         # JSON start journal, absent after confirmation
+update.lock                     # exclusive background-check lock
+update-apply.lock               # exclusive apply/confirmation lock
+versions/<version>/conductive
+versions/<version>/parts.json
+versions/<version>/runner -> /opt/conductive/parts/<runner-sha256>
+versions/<version>/node -> /opt/conductive/parts/<node-sha256>
+versions/<version>/system -> /opt/conductive/parts/<system-sha256>
+versions/<version>/complete
+versions/<failed-version>/rejected
+parts/<sha256>/complete
+parts/<runner-sha256>/runner/main.mjs
+parts/<runner-sha256>/runner/relay.mjs
+parts/<node-sha256>/bin/node
+parts/<system-sha256>/install-system.sh
+parts/<system-sha256>/*          # scripts, units, wrapper, and udev rule
+```
+
+The links use absolute targets under the configured root. The Node part
+removes the archive's top folder. The runner part keeps its `runner/`
+folder. The complete marker is written last. An interrupted check can
+leave incomplete version folders and `.partial` part folders. Those
+folders never qualify for apply. A later check replaces them.
+
+Apply calls `current/system/install-system.sh`. That script installs all
+release units into `/etc/systemd/system`, copies the udev rule, sets the
+system Git credential helper, and links the `gh` wrapper. It also links
+`/usr/local/bin/conductive` to the active program. It runs
+`systemctl daemon-reload` and enables the runner, relay, terminal, and
+check timer. It starts no service and changes no package.
+
+The release units are:
+
+- `conductive-update-apply.service`: root activation before runner and relay.
+- `conductive-update-check.service`: root background download.
+- `conductive-update-check.timer`: boot and hourly checks.
+- `conductive-update-confirm.service`: root confirmation after a local runner start.
+- `conductive-runner.service`: Node runner as `user`.
+- `conductive-preview-relay.service` and `.socket`: Node relay as `user`.
+- `conductive-terminal.service` and `conductive-terminal-sessions.service`: terminal services as `user`.
+
+The runner, relay, and terminal entry points use `current/system/`.
+Each runner or relay start resolves `current` once and uses that version's
+private Node and runner part. The next apply restores `previous` when a
+new release still has its pending marker. Collection after confirmation
+retains current and previous and removes other versions and unused parts.
+A running download defers collection without delaying the runner.
+
+For a separate install root or a local release server, use:
+
+```sh
+conductive update check --bootstrap --root /tmp/conductive --server http://127.0.0.1:8080
+conductive update apply --root /tmp/conductive
+conductive update started --root /tmp/conductive
+```
+
+`--root` changes the release store. The production system installer still
+writes fixed sandbox paths. Local integration tests use a system archive
+whose installer writes only inside their temporary folder.
