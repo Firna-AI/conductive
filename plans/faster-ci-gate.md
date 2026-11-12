@@ -190,16 +190,18 @@ Depends on: 2
 - [x] Add the job "Complete gate". It needs both jobs, runs with
       `if: always()`, and fails unless each needed job succeeded.
 - [x] Keep the triggers, the permissions, and the concurrency group.
-- [ ] Check on the pull request that the four shards ran every test file
-      once, and that a failed shard fails "Complete gate".
+- [x] Check on the pull request that the four shards ran every test file
+      once, and that a failed shard fails "Complete gate". The shards ran
+      261, 260, 260, and 260 of 1,041 files. A probe test that failed on
+      purpose failed shard 1 and "Complete gate", and was reverted.
 
 ## Milestone 6: Verification, commit, review, and pull request
 
 Depends on: every other milestone
 
-- [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Run the targeted tests and the complete gate named in `AGENTS.md`.
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
@@ -213,4 +215,5 @@ Depends on: every other milestone
 ## Post-merge follow-up (non-blocking)
 
 - [ ] After 5 runs on `main`, compare the gate time with the 29 to 76
-      minutes of today, and choose the shard count again.
+      minutes of today, and choose the shard count again. Follow-up item:
+      `plans/follow-ups/ci-shard-count.md`.
