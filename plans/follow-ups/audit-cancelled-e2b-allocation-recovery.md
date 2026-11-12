@@ -7,12 +7,17 @@
 - **Reason:** The case is rare. Cleanup still deletes the computer. The wider fix reaches existing lifecycle recovery paths.
 
 - **Terms:**
-  - **Allocation:** a request that creates one cloud computer on a provider. A start job or a build job saves it encrypted, so that the lifecycle can recover it after a lost reply.
+  - **Allocation:** a request to create one cloud computer on a provider.
   - **Create claim:** the saved E2B operation record in D1 for one provider account and request key. The state `retryable` marks a certified refusal that permits a fresh attempt.
   - **Allocation mode:** the last argument of `providerForAccount` and `orgProviderForAccount` in `worker/sandbox/client.ts`, `'active'` or `'cleanup'`. Both default to `'active'`.
   - **Identity recovery:** a lookup that finds the computer of an earlier request, or proves that none exists. It creates, connects, and runs nothing. The E2B cleanup mode does it.
   - **Certified absence:** a provider result that proves that a request made no computer. The E2B cleanup client throws `ProviderAllocationAbsent` for it.
 - **Background:**
+  - Saved inputs:
+    - Workspace starts save the request body encrypted in the start job, at `worker/lifecycle/start-allocation.ts:85`.
+    - Org image builds save no request body. `buildSandboxIntent` reconstructs it from plain D1 columns, at `worker/lifecycle/resource-intents.ts:138`.
+    - Global software image builds reconstruct the request from the image ID, at `worker/software-image/resources.ts:8`.
+    - The lifecycle uses these inputs to repeat the request after a lost reply.
   - The shared cause:
     - The branch adds E2B as a second provider, and identity recovery for unfinished allocations.
     - E2B marks a create refusal `retryable` when its reply has the header `Should-Retry: true`, at `worker/sandbox/e2b/errors.ts:80`. `rejectCreate` saves that state at `worker/sandbox/e2b/allocation.ts:131`.
