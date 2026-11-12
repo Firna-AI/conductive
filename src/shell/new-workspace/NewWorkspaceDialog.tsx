@@ -118,7 +118,7 @@ function DialogCard(props: {
     field: message,
     // A suspended org shows no composer, so its card takes no drop.
     editable: !sending && !suspended,
-    attach: (files, folders) => model.attach(files, folders),
+    attach: (files, refusals) => model.attach(files, refusals),
   })
   const unchosen = form.repositories?.length === 0
   const oversize = form.draft.refused.length > 0

@@ -48,7 +48,8 @@ is relative to `src/chat/`, the folder of this guide.
   states. It gives its field the `files` of the draft, and it holds the
   handle of the field. So a pick puts the chips of its files at the caret.
   Its whole box takes a drop of files. `components/SessionChat.tsx` gives
-  the folder names of a drop to `controller.attachFiles`, and keeps one
+  the zips and the refused folders of a drop to `controller.attachFiles`,
+  and keeps one
   source for each `Draft.id`, in `useDraftFiles`.
 - `components/composer-drop.ts`: `useComposerDrop`, the drop of files on a
   message box, which the chat and both New workspace composers share.
@@ -136,8 +137,8 @@ is relative to `src/chat/`, the folder of this guide.
 - `components/AttachmentChips.tsx`: `SentFiles`, `OversizeNotice`, and
   `FolderNotice`. `SentFiles` lists under a sent message the files without
   a chip in its text. `OversizeNotice` is the notice of the files of a pick
-  or a drop over the size limit. `FolderNotice` is the notice of the one
-  folder that `noticedFolder` gives. Both use the words of the mockups'
+  or a drop over the size limit, also a zip of a folder. `FolderNotice` is
+  the notice of the one unreadable folder that `noticedFolder` gives. Both use the words of the mockups'
   `attachmentCopy.ts`. A file of a draft is a chip in the message field,
   which `components/chip-field/attached-file-chip.tsx` draws.
 - `state/archive-view.ts`: the tabs and the session history of a

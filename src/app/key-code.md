@@ -268,9 +268,12 @@ Each path is relative to `src/app/`, the folder of this page.
   scroll of the row. A sideways swipe and a turn with Ctrl stay with the
   browser, and so does a turn past an end of the row. The tab row of the
   chat uses it, and any row that scrolls sideways can.
-- `file-drags.ts`: `carriesFiles`, whether a drag carries files, and
-  `droppedItems`, the files and the folder names of a drop, by the entry
-  of each item. `useFileDropGuard` cancels each drag of files that no part
+- `file-drags.ts`: `carriesFiles`, whether a drag carries files,
+  `droppedItems`, the files and the folders of a drop in their order, by
+  the entry of each item, and `intakeOf`, which turns each folder into its
+  zip. `folder-zip.ts`: `zipFolder`, the zip of one dropped folder in the
+  browser, with `fflate`, which stops at the size limit of an attachment.
+  `folder-entries.ts`: the parts of a dropped entry that the zip reads. `useFileDropGuard` cancels each drag of files that no part
   took, so the browser opens no file in place of the page. `App` and the
   chat development page mount it. The composer drop and the
   `useScreenshotDrop` of Feedback share `carriesFiles`.

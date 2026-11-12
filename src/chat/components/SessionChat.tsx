@@ -209,8 +209,8 @@ export function SessionChat(props: SessionChatProps) {
             snapshot.account?.agentLogins ?? [],
             session.choice,
           )}
-          onAttach={(picked, folders) =>
-            controller.attachFiles(session.id, picked, folders)
+          onAttach={(picked, refusals) =>
+            controller.attachFiles(session.id, picked, refusals)
           }
           onChangeText={(text) => controller.setDraft(session.id, text)}
           onChooseModel={(choice) =>
