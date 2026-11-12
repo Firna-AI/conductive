@@ -1,6 +1,6 @@
 import { activeOrgPredicate } from '../data/org-access'
 import type { Org } from '../../src/shared/api'
-import type { OrgSummary } from '../../src/shared/orgs'
+import type { MoveOrgRequest, OrgSummary } from '../../src/shared/orgs'
 import { activeAdminMemberPredicate } from '../data/active-admin'
 
 interface OrgRow extends Org {
@@ -46,11 +46,49 @@ export async function visibleOrgs(
       `SELECT o.id, o.name, o.initials, m.role, o.deleted_at AS deletedAt, o.purge_after AS deletesAt, o.suspended_at AS suspendedAt
      FROM orgs o JOIN org_members m ON m.org_id = o.id
      WHERE m.user_id = ? AND (o.deleted_at IS NULL OR m.role = 'admin')
-     ORDER BY o.created_at, o.id`,
+     ORDER BY m.rail_position IS NULL, m.rail_position, m.joined_at, o.id`,
     )
     .bind(userId)
     .all<OrgRow>()
   return results.map(summary)
+}
+
+export async function moveOrg(
+  db: D1Database,
+  userId: string,
+  { orgId, index }: MoveOrgRequest,
+): Promise<boolean> {
+  const result = await db
+    .prepare(
+      `WITH visible AS MATERIALIZED (
+         SELECT o.id, m.rail_position, m.joined_at
+         FROM org_members m JOIN orgs o ON o.id = m.org_id
+         WHERE m.user_id = ? AND (o.deleted_at IS NULL OR m.role = 'admin')
+       ), siblings AS MATERIALIZED (
+         SELECT id, ROW_NUMBER() OVER (
+           ORDER BY rail_position IS NULL, rail_position, joined_at, id
+         ) - 1 AS rank FROM visible WHERE id != ?
+       ), destination AS MATERIALIZED (
+         SELECT MIN(?, COUNT(*)) AS position FROM siblings
+       ), ranks AS MATERIALIZED (
+         SELECT siblings.id, rank + CASE WHEN rank >= destination.position THEN 1 ELSE 0 END AS position
+         FROM siblings CROSS JOIN destination
+         UNION ALL SELECT ?, position FROM destination
+       ) UPDATE org_members SET rail_position = (
+         SELECT ranks.position FROM ranks WHERE ranks.id = org_members.org_id
+       ) WHERE user_id = ? AND org_id IN (SELECT id FROM ranks)
+         AND EXISTS (SELECT 1 FROM visible WHERE id = ?)`,
+    )
+    .bind(
+      userId,
+      orgId,
+      Math.min(index, Number.MAX_SAFE_INTEGER),
+      orgId,
+      userId,
+      orgId,
+    )
+    .run()
+  return result.meta.changes > 0
 }
 
 export async function renameOrg(

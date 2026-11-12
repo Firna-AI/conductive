@@ -98,10 +98,22 @@ plan limits.
 - Delete org asks for the org name. The deleted org stays faded in the rail
   of its admins until the date when everything is deleted, and its page
   offers Restore.
+- Each person keeps their own order of their orgs, from decision 515 C of
+  11 November 2026, as `app/orgs/reorder` shows. The server saves it with
+  their memberships, so the rail, the org switcher of a phone, and the org
+  rows of the command palette show it on every device. A drag on the rail,
+  or Move up and Move down in the menu of a tile, change it. Alt and Up or
+  Down move a focused tile, from decision 517 B. On a phone, a long press
+  lifts an org in the org switcher and opens no menu. A new org goes at the
+  end of the rail. Create org, Operator, and the account stay where they
+  are.
 - The operator can suspend an org, from decision 129. Its members still
   open it and read its chats, and its notice gives the abuse address.
   Nothing in it can change, so its screens show no action that it refuses,
-  also for an admin. No notice promises its files. An archived workspace
+  also for an admin. Its tile in the rail still moves, also the faded tile
+  of a deleted org, because the order of the rail belongs to the person,
+  from decision 516 A, as `app/orgs/reorder/suspended` shows. No notice
+  promises its files. An archived workspace
   offers no Restore, as `app/orgs/suspended/workspace/archived` shows. A
   deleted org that is also suspended shows the notice above its page, keeps
   the date when everything is deleted, and offers no Restore, as

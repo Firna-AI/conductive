@@ -81,6 +81,11 @@ it('shares chat history with GitHub reads, retries pending reads, and refreshes 
   expect(
     string(record(record(await sessionResponse.json()).session).id),
   ).not.toBe('')
+  const empty = await active.request(
+    githubPaths.stored(OUTER_ORG, OUTER_WORKSPACE),
+  )
+  expect(empty.status).toBe(200)
+  expect(await empty.json()).toEqual({ state: null })
   const pending = await active.request(
     githubPaths.banner(OUTER_ORG, OUTER_WORKSPACE),
   )
@@ -110,6 +115,16 @@ it('shares chat history with GitHub reads, retries pending reads, and refreshes 
   expect(await checks.json()).toMatchObject({
     state: 'available',
     checks: [{ state: 'passed' }],
+  })
+  const stored = await active.request(
+    githubPaths.stored(OUTER_ORG, OUTER_WORKSPACE),
+  )
+  expect(stored.status).toBe(200)
+  expect(await stored.json()).toMatchObject({
+    state: {
+      banner: { state: 'ready-to-merge', branch: 'changes' },
+      checks: { state: 'available', checks: [{ state: 'passed' }] },
+    },
   })
   const stream = await active.request(
     workspaceEventsPath(OUTER_ORG, OUTER_WORKSPACE),

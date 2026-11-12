@@ -121,6 +121,7 @@ export function AllowAllBar(props: {
           <ActionButton
             busy={state.busy.includes(key)}
             icon={Square}
+            tone="outline"
             onPress={() => void controller.change(stop)}
           >
             Stop

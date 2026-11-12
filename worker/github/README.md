@@ -24,6 +24,9 @@ The [shared contracts](../../src/shared/github.ts) define the response bodies.
 - [handleGitHubRead](app-handler.ts) accepts GET and HEAD for the banner and checks routes of `githubPaths`.
   It runs the existing app gate and checks the workspace's org before a read.
   It returns the shared banner or checks response, with private response headers.
+  Its stored route returns the last committed snapshot of the current branch, or null, without a GitHub read.
+  It returns only the banner and the checks of that snapshot, and null for a snapshot of an earlier branch.
+  The app shows it while the fresh read runs, as [State of a branch](../../docs/protocol/github-banner.md#state-of-a-branch) says.
 - [handleGitHubMerge](merge-handler.ts) serves the member capability, merge start, and merge result routes of `githubPaths`.
   It uses the existing app gate and keeps member capabilities out of workspace events.
   [GitHubMerge](merge.ts) derives the repository and pull request from the authorized workspace.
@@ -37,6 +40,10 @@ The [shared contracts](../../src/shared/github.ts) define the response bodies.
   The port checks access once more inside the chat queue, before each commit or replay.
   It gives `WorkspaceGitHubState.refresh` the copy callback, which writes through [saveWorkspaceGitHubSummary](summary-data.ts).
 - [WorkspaceGitHubState](workspace-state.ts) serializes reads and commits within one workspace.
+  A tab read joins an equal tab read of the same member and branch that has not ended, through `share`.
+  So the banner and the checks routes of one load cost one GitHub read.
+  The queue commits no other state while the shared read runs, so a joined reply is as new as each state that committed before the join.
+  A webhook read, a retry, and a merge read never join.
   Its port stores the snapshot, a common workspace stream event, and a delivery receipt in one transaction.
   The port publishes that event to every open tab after the commit.
   The receipt of a changed delivery keeps the snapshot and only the workspace ID, event number, and time of its event.

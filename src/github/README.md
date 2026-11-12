@@ -35,8 +35,9 @@ const controls = useBarControls({ github, actions, localWork, turnRuns, readOnly
 <ChecksList github={github} />
 ```
 
-- `fetch` is the browser's `fetch`. The parts read the banner and the checks
-  routes of `githubPaths`, with the session cookie of the app.
+- `fetch` is the browser's `fetch`. The parts read the banner, the checks,
+  and the stored routes of `githubPaths`, with the session cookie of the
+  app.
 - `subscribe(afterEventNumber, listener)` opens the event stream of the
   workspace after `afterEventNumber`, and returns a function that closes it.
   The stream sends the stored history first, in one or more `history` pages,
@@ -133,6 +134,13 @@ The store applies them in this way:
   It receives unfinished pages again, so no held GitHub state gets lost.
 - `GitHubStore.connect()` starts the first read and the event subscription.
   The first read starts even when the history never comes.
+- While the views load, `connect()` also reads the stored route. It
+  returns the last state that the Worker stored for the branch, without a
+  GitHub read, so it answers before the fresh read. Its state shows only
+  while nothing else shows. A fresh reply, a history, or a live event is at
+  least as new, so a stored reply after one of them is dropped. A failed
+  stored read changes nothing. A connect with a state that shows reads no
+  stored state.
   `useGitHubState` connects the store and subscribes the views through
   `useWorkspaceStore` in `src/app/workspace-store.ts`.
 - A live GitHub event shows at once, and it cancels a read that runs.
@@ -173,7 +181,9 @@ mounts it, and the production build leaves it out.
 - The address keeps the options, such as
   `?state=checks-failed&scheme=light&viewer=member&github=error`.
 - `state` is one of the eleven banner states. `viewer` is `owner`, `admin`, or
-  `member`. `github` is `normal`, `slow`, or `error`.
+  `member`. `github` is `normal`, `slow`, `stored`, or `error`. `stored`
+  answers the stored route at once with the state of the sample, and the
+  GitHub reads after two seconds, so the bar shows the stored state first.
 - The actions run their real state over the fake API: the action clients, a
   chat that sends the prompts, and the files store of the local work.
   `access` is `write`, `read`, or `unknown`, and `method` is a merge method
@@ -204,6 +214,11 @@ mounts it, and the production build leaves it out.
   API in happy-dom. It checks the first read, live events, workspace switches,
   and retry after a failed first read through an unbound callback. After a
   switch, it also checks that only the new workspace gets a backup read.
+- `storedState.test.ts`: holds the stored reply and the fresh replies
+  apart, in Node. It checks that the stored state shows before the fresh
+  reply, and that a late stored reply never replaces a newer state.
+- `githubSource.ts`: the source of a store: its fetch, the stream
+  subscription, the timer, and the wait between backup reads.
 - `freshReads.test.ts`: drives the store with `ManualDelay` on the fake API,
   in Node. It checks that a backup read shows a new state without a GitHub
   event. It checks that a failed backup read keeps the shown state or error.
@@ -215,8 +230,9 @@ mounts it, and the production build leaves it out.
 - [The actions of the bar](actions.md): the action state, its rules, and
   its key code.
 - [Shared state comparison](../shared/github-state.ts) compares two GitHub states, without the banner time.
-- `githubClient.ts` and `githubParse.ts`: read the two API replies, and check
-  them against the contract, with the head commit of the pull request.
+- `githubClient.ts` and `githubParse.ts`: read the API replies of the
+  banner, the checks, and the stored state, and check them against the
+  contract, with the head commit of the pull request.
 - `githubActions.ts` and `githubActionParse.ts`: the action client and the
   checks of its replies. `githubActions.test.ts` checks the requests, the
   replies, the refusal codes, and replies outside the contract.
