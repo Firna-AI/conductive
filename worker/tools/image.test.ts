@@ -8,10 +8,13 @@ import { expect, it } from 'vitest'
 import { TOOL_ENV } from '../../tools/context'
 import { MCP_PROTOCOL_VERSION } from '../../tools/mcp'
 import { imageNodeExecutable } from '../lifecycle/image-runtime'
+import { privilegedCommand } from '../terminal/privileged'
 import {
   installWorkspaceTools,
   WORKSPACE_TOOLS_COMMAND,
+  WORKSPACE_TOOLS_COMMAND_BYTES,
   WORKSPACE_TOOLS_SECRETS_FILE,
+  workspaceToolsCommands,
 } from './image'
 import { WORKSPACE_TOOL_SOURCES } from './image-assets'
 import { imageTestProcess } from './image-test-process'
@@ -21,6 +24,25 @@ import {
   mcpRepliesById,
   mcpRequest,
 } from './mcp-test-support'
+
+// Linux refuses one exec argument over 128 KiB. A command over that size
+// never starts in the sandbox, as the deploys after #267 showed.
+it('keeps each privileged install command under the Linux argument limit', () => {
+  expect(WORKSPACE_TOOLS_COMMAND_BYTES).toBeLessThan(128 * 1024)
+  const large = WORKSPACE_TOOL_SOURCES.map((source) => ({
+    ...source,
+    contents: source.contents.repeat(3),
+  }))
+  for (const sources of [WORKSPACE_TOOL_SOURCES, large]) {
+    const commands = workspaceToolsCommands(sources)
+    for (const command of commands) {
+      const bytes = new TextEncoder().encode(privilegedCommand(command))
+      expect(bytes.length).toBeLessThanOrEqual(WORKSPACE_TOOLS_COMMAND_BYTES)
+      expect(command.startsWith('set -eu\n')).toBe(true)
+    }
+    if (sources === large) expect(commands.length).toBeGreaterThan(2)
+  }
+})
 
 it('reports failed or incomplete image installation instead of accepting it', async () => {
   const sources = WORKSPACE_TOOL_SOURCES

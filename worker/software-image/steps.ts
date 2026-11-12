@@ -13,7 +13,7 @@ import {
 } from '../lifecycle/job-time-limit'
 import type { SandboxProvider } from '../sandbox/provider'
 import { privilegedCommand } from '../terminal/privileged'
-import { workspaceToolsCommand } from '../tools/image'
+import { workspaceToolsCommands } from '../tools/image'
 import { WORKSPACE_TOOL_SOURCES } from '../tools/image-assets'
 import { readSoftwareImage, saveSoftwareImage } from './data'
 import { keptOutput } from './output'
@@ -51,12 +51,17 @@ export async function advanceSoftwareImageStep(
   if (runtime.dependencies.now() >= image.startedAt + IMAGE_BUILD_TIME_LIMIT_MS)
     throw new JobTimeLimit('build')
   if (image.phase === 'tools') {
-    const status = await provider.runCommand(
-      image.sandboxId,
-      privilegedCommand(workspaceToolsCommand(WORKSPACE_TOOL_SOURCES)),
-    )
-    const output = status.stdout + status.stderr
-    const failed = status.exitCode !== 0 || status.timedOut
+    let output = ''
+    let failed = false
+    for (const command of workspaceToolsCommands(WORKSPACE_TOOL_SOURCES)) {
+      const status = await provider.runCommand(
+        image.sandboxId,
+        privilegedCommand(command),
+      )
+      output += status.stdout + status.stderr
+      failed = status.exitCode !== 0 || status.timedOut
+      if (failed) break
+    }
     if (
       !(await saveSoftwareImage(db, image, {
         output: keptOutput(image.output + output),
