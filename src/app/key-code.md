@@ -4,6 +4,14 @@ This page is part of the [web app guide](README.md). It names the files,
 the types, and the functions of the web app that a reader opens first.
 Each path is relative to `src/app/`, the folder of this page.
 
+- [Shortcuts](shortcuts/README.md): the pure command registry, keyboard
+  defaults, browser keys, account keymap, conflicts, and press decision.
+  The [shortcut layer](../shell/shortcuts/README.md) calls it for each key
+  of the page.
+- `services.ts`: `windowHost` detects the web host, and `windowNewTab`
+  opens a page of another site in a new tab, as a link with
+  `target="_blank"` and `rel="noreferrer"` does. `live-services.ts` and
+  `dev/fake-services.ts` supply them with the keyboard and key events.
 - `dev/org-routes.ts` creates orgs and starts their first simulated build.
   `dev/build-routes.ts` runs builds and the added build after the first image.
   `dev/settings-routes.ts` saves settings and repository choices.
@@ -12,16 +20,32 @@ Each path is relative to `src/app/`, the folder of this page.
   request. `dev/signup-routes.ts`: the pause and the waitlist switch of
   the operator section. `dev/seed.ts` turns the waitlist off for
   `?waitlist=off`.
+- `dev/attachment-routes.ts`: the upload routes of both composers, which
+  keep the bytes of each upload. `dev/attachment-files.ts`:
+  `attachmentFiles`, the private store of those bytes and of their copies,
+  and `attachmentFileRoutes`, the content and download routes of the
+  copies. Its `readCopiedFile` gives the same reads to the development
+  page of the chat. `dev/attachment-message-routes.ts`:
+  `attachmentMessageFetch`, the reply of a send of uploaded files.
+  `dev/attachment-files.test.ts` drives them through `createFakeServices`,
+  the chat API, and the file client.
 - `api/client.ts`: the JSON client and `ApiError`. The client also gives
   its `fetch`, for a feature client that reads its own replies, so the web
   app and the Mac app keep their transport. Its `sendFile` sends a raw file
   through the file transport of the services: `api/xhr-files.ts` in the
   browser and in the Mac app. `api/read-*.ts`: the readers.
-- `attachment-upload.ts`: `uploadAttachment`, the one upload of a file for
-  both composers. `draft-files.ts`: `DraftFile`, the upload state of each
-  file of a draft, and `runFileJob`. `new-workspace-files.ts`:
-  `DraftUploads`, the uploads of a first message before its workspace
-  exists, which a change of person ends.
+  [api/read-core.ts](api/read-core.ts) reads both shortcut keyboards and
+  the reply of a shortcut save with the shared reply readers. A malformed
+  account structure remains an `invalid_response` error from the API
+  client.
+- `clipboard.ts`: `copyText`, the clipboard write for plain or pending text.
+  It starts a pending `ClipboardItem` write during the user press when the
+  browser supports it. The fallback waits for the text and calls `writeText`.
+  Both paths propagate failures. `AppServices.copy` accepts a string or a
+  promise of a string. Live services and development hosts use this owner.
+- [Key code: drafts and attached files](key-code-drafts.md) names the
+  entry points of the draft text, the attached files, and their uploads,
+  which the chat and New workspace share.
 - `replay-socket.ts`: `replaySubscribe`, the raw event stream of a feature
   store over the event source of the app, with the reconnect rules of
   [Data lifecycle](data-lifecycle.md).
@@ -53,7 +77,8 @@ Each path is relative to `src/app/`, the folder of this page.
 - [getStartedCopy.ts](../../docs/mockups/src/screens/getStartedCopy.ts): the
   setup text that the app and mockups share.
 - `org-model.ts`: the sections, workspaces, repositories, builds, members,
-  routines, and computer settings of one org, with `watch` and the wait of each part.
+  routines, and computer settings of one org, with `watch`. `org-waits.ts`
+  gives the wait of each part, such as `workspacesWait`.
   `OrgModel.startBuild` sends Build computer and Try again for each screen
   that offers them.
 - `first-build.ts`: `firstBuildOf` and `useFirstBuild`, the state of the
@@ -86,8 +111,10 @@ Each path is relative to `src/app/`, the folder of this page.
   `../shell/settings/RepositoryChangeNotice.tsx` draws the notice of an
   admin, and `../members/RepositoryNotice.tsx` the notice of a member.
 - `account-model.ts`: the agent logins with their share setting, the
-  default model, the New workspace view, the GitHub App installations,
-  and the repositories that Create org offers. A screen watches the
+  default model, the New workspace view, the shortcut changes of each
+  keyboard, the GitHub App installations, and the repositories that
+  Create org offers. `saveShortcuts` saves one batch of changes for one
+  keyboard and keeps the confirmed changes of the reply. A screen watches the
   installations: they read at once, and again with the steps of Get started
   each time that the user comes back to the page. It also reads the
   waitlist state for the invite code of the account.
@@ -121,7 +148,8 @@ Each path is relative to `src/app/`, the folder of this page.
   the timers of `AppServices`.
 - `../shell/list/`: the workspace list. `WorkspaceRow.tsx` draws a row,
   with its Archive shortcut over the time on hover, and the Rename field
-  of `WorkspaceNameField.tsx`. A right click or the menu keys open the menu
+  of `WorkspaceNameField.tsx`. Its list mark is the mockups' `WorkspaceMark`,
+  with the words of `listMarkLabel`. A right click or the menu keys open the menu
   of a row. `useRowMenus.tsx` gives each row the actions that the person
   can use, from `workspaceMenuItems` of the mockups, and draws the open
   `RowMenu.tsx`. The Archive shortcut and Archive in the menu share one
@@ -158,7 +186,19 @@ Each path is relative to `src/app/`, the folder of this page.
   kept workspace model, with its shown and confirmed numbers. They stop
   while the workspace is archived, and go again after a Restore.
 - `new-workspace-model.ts`: the first message that creates a workspace.
-  `creations.ts`: `Creations`, the life of the create requests of an org in
+  `NewWorkspaceModel.filesSource` is the `FieldFiles` of its draft.
+  `attach` gives the IDs of a pick at once, `setText` takes each new text
+  of the field, and `retryFile` is Try again. `attach` also keeps the
+  names that it refuses, as
+  [Refused files and folders](../chat/draft-files.md#refused-files-and-folders)
+  says.
+- `new-workspace-marks.test.ts` checks the IDs at once, the words outside
+  the chips, and the mentions in the order of the chips. It also checks
+  undo of a ready file, stopped and queued uploads, a sign-out, and the
+  text that a create took. `new-workspace-refusals.test.ts` checks folder
+  names with no files, an empty pick, a file with no bytes, a sign-out,
+  and a failed create.
+- `creations.ts`: `Creations`, the life of the create requests of an org in
   this tab, which a sign-out ends. `first-start.ts`: `failedFirstStart`,
   which tells a failed first start, and `resumesAtOpen`.
 - `computer-model.ts`: the scripts, the env vars with their Secret marks,
@@ -210,6 +250,12 @@ Each path is relative to `src/app/`, the folder of this page.
   scroll of the row. A sideways swipe and a turn with Ctrl stay with the
   browser, and so does a turn past an end of the row. The tab row of the
   chat uses it, and any row that scrolls sideways can.
+- `file-drags.ts`: `carriesFiles`, whether a drag carries files, and
+  `droppedItems`, the files and the folder names of a drop, by the entry
+  of each item. `useFileDropGuard` cancels each drag of files that no part
+  took, so the browser opens no file in place of the page. `App` and the
+  chat development page mount it. The composer drop and the
+  `useScreenshotDrop` of Feedback share `carriesFiles`.
 - `operator-read.ts`, `operator-directory.ts`, and `operator-target.ts`:
   the Overview and the pages of the operator section, its searches, and
   Suspend and Lift. `operator-pause.ts`, `operator-switch.ts`, and

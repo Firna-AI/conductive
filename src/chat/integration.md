@@ -58,6 +58,9 @@ mount the chat.
   the row. The ref of the link gives the tab the focus back after a move
   from the tab menu. For `lifted`, it draws the copy that a drag lifts
   above the page: the icon and the whole title, with no link and no Close.
+  Its `show()` shows the tab, as a plain click on its link does, for the
+  keys of Previous tab and Next tab. The host gives the key of Close tab
+  to its shown tab itself, as the shell does in `FileTab`.
   Without `renderTab`, the row shows only the session tabs, as on a phone.
   `components/tab-row.ts` holds these types.
 - `onOpenDiff` gets the real path of a changed file of a finished turn. The
@@ -70,13 +73,16 @@ mount the chat.
   tree: the `WorkspaceFiles` of the Files screens fits it. `openFile`
   opens a file as a press in All files does, `showFolder` shows All files
   with a folder open, and `href` gives the address of the page of a chip.
-  Without `mentions`, the composer has no list, and a message shows each
-  mention as text, as
-  [File mentions](../../docs/protocol/file-mentions.md) says.
+  Without `mentions`, the composer has no list. A message then shows each
+  mention of a file or a folder of the workspace as text, as
+  [Chips of files and folders](../../docs/protocol/file-mentions.md#chips-of-files-and-folders)
+  says. The chip of each attached file of the message still shows, but it
+  opens nothing.
 - `onOpenPage` gets the page of a workspace chip or a session chip in a
-  sent message or an answer, such as `/orgs/acme/workspaces/<id>/files`,
-  after a plain click. The app opens it in the same window. A click with a
-  modifier key stays with the browser, as for each link of the app.
+  sent message, an answer, or a stop line, such as
+  `/orgs/acme/workspaces/<id>/files`, after a plain click. The app opens it
+  in the same window. A click with a modifier key stays with the browser,
+  as for each link of the app.
   Without `onOpenPage`, a chip is a plain link. The app then shows the
   session of a session address with `ChatController.showAddress`.
 - `content` takes a page that the app shows in place of the chat of the
@@ -127,6 +133,10 @@ mount the chat.
   the open layers of the app shell, from `../shell/ui/layers.ts`. So the
   key of the command palette closes an open menu, and does nothing while
   a dialog or a sheet is open. Outside the app, nothing notes them.
+- The tab row and the composer offer their commands to the keys of the
+  app through the [shortcut layer](../shell/shortcuts/README.md) of the
+  shell, and their controls show the keys in their tooltips. Outside the
+  app, nothing offers them, and the controls show no key.
 - The Mac app shows two more parts of Mac commands outside the chat:
   `ThisMacSection` and `AllowAllBar`. [The Mac commands](device/README.md)
   say how to mount them.

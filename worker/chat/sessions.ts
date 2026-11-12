@@ -1,3 +1,4 @@
+import type { TurnStopRequester } from '../../src/shared/session-stop'
 import type { AgentChoice } from '../../src/shared/agents'
 import type { MessageSender } from '../../src/shared/messages'
 import type { Session } from '../../src/shared/sessions'
@@ -77,8 +78,13 @@ export function stopTurn(
   session: Session,
   turnId: string,
   commandId: string,
+  requester?: TurnStopRequester,
 ) {
-  return new TurnLifecycle(transaction, session).stop(turnId, commandId)
+  return new TurnLifecycle(transaction, session).stop(
+    turnId,
+    commandId,
+    requester,
+  )
 }
 
 export function closeSession(
@@ -86,6 +92,11 @@ export function closeSession(
   session: Session,
   stopRunning: boolean,
   commandId: string,
+  requester?: TurnStopRequester,
 ): Promise<Session> {
-  return new TurnLifecycle(transaction, session).close(stopRunning, commandId)
+  return new TurnLifecycle(transaction, session).close(
+    stopRunning,
+    commandId,
+    requester,
+  )
 }

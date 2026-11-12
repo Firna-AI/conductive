@@ -4,18 +4,20 @@ The [mockups README](README.md) gives the commands, the folder layout,
 how a screen is built, and links to the other pages.
 
 The design is Graphite: dark-first, with near-black surfaces, cool greys, and
-one bright sky accent for what is active, such as the selected rail item, a
-working agent, and the main action. It is dense, with small radii, and its
-labels (tabs, section names, times) use the monospace font in capitals. The
-light scheme uses the same cool greys and a darker accent.
+one bright sky accent for what is active, such as the selected rail item,
+the mark of a working agent in the header, and the main action. It is
+dense, with small radii, and its labels (tabs, section names, times) use
+the monospace font in capitals. The light scheme uses the same cool greys
+and a darker accent.
 
 The desktop layout has four columns. The org rail holds the mark, the orgs
 as squares with their initials, Create org, and the account at the bottom.
 The sidebar shows the org name with its Settings link, New workspace, Routines, Search, and
 the sections that the user made. Each workspace is one line: a dot-matrix
-status mark, the name, and the time, and it moves to another section by
-drag and drop. Archive covers the time on hover only, without moving the
-row content, and Restore does so in the Archived group. Selection and
+mark in the colour of its GitHub state, the name, and the time, and it
+moves to another section by drag and drop. Archive covers the time on
+hover only, without moving the row content, and Restore does so in the
+Archived group. Selection and
 keyboard focus alone keep the time visible. A right click on a row opens
 the menu of the workspace. The centre column has a slim header that names
 the
@@ -109,9 +111,26 @@ sessions as tabs above the chat, and four tabs at the bottom.
   place of the workspace groups: a spinner, or `LoadFailure`. The list and
   the workspace screens own it as their `palette` state. The Search row
   under New workspace opens it, and on desktop that row shows ⌘K.
-  `paletteSearch.ts` beside it holds the rule of a search. A search also
-  finds a workspace by the label of its number, such as `W-395` or `39`.
-  A workspace row then shows the label before the name, as a chip does.
+  `paletteSearch.ts` beside it holds the rule of a search, which the
+  Keyboard shortcuts tab also uses. `PaletteEmpty.tsx` holds the empty
+  state, which also answers a search of that tab without a match. A search
+  also finds a workspace by the label of its number, such as `W-395` or
+  `39`. A workspace row then shows the label before the name, as a chip
+  does. On desktop, each command row ends with the first key of its
+  command that works where the palette opens. The Mac app gives the page
+  every key, so New workspace shows ⌘N there. A browser page draws a
+  normal Chrome tab on a Mac, which keeps ⌘N, so New workspace shows ⌥⌘N.
+  A workspace row shows no key, and a phone shows no keys. In the Mac app
+  the Search row shows the person's key of the palette, such as ⇧⌘P.
+- `KeyChips` in `src/components/common/` draws a shortcut as small key
+  chips, one for each key: ⌘ then K on a Mac, and Ctrl then K on Windows,
+  whose modifiers show as words. The chips use the sans font, which draws
+  ⌘, ⌥, ⇧, ⌃, ⌫, and ⌦ on every system. A dimmed shortcut, which does not
+  work where the page runs, has an outline with dashes, no fill, and muted
+  text. The Search row keeps its text hint in the label font.
+- `SearchField` in `src/components/common/` draws the search field at the
+  top of a list that it narrows: the repositories of an org, the tabs of
+  the operator, and Keyboard shortcuts.
 - `LoadFailure` in `src/components/common/` draws data that did not load,
   as the lists of the app show it: what failed, the message of the server,
   and Try again.
@@ -137,32 +156,67 @@ sessions as tabs above the chat, and four tabs at the bottom.
   and the attach button and Create, with the hint of the Enter key, at the
   bottom right. A phone always opens the page, so the dialog has no phone
   layout.
-- The account has two tabs, General and Preferences, as links, as the org
-  settings have. Preferences holds the New workspaces section, whose rows
-  put each label beside its control in two columns. A segmented control
-  chooses how New workspace opens, with a helper line under it, and a
-  narrow section puts it under its label. A failed save shows its error
-  under the control.
-- `AgentMark` in `src/components/chat/` marks the agent of a session with two
-  letters on a small tile, CL or CX, because the app draws no brand logo.
+- The account has three tabs, General, Preferences, and Keyboard
+  shortcuts, as links, as the org settings have. On a phone, a tab that
+  does not fit moves to a second line. Preferences holds the New
+  workspaces section, whose rows put each label beside its control in two
+  columns. A segmented control chooses how New workspace opens, with a
+  helper line under it, and a narrow section puts it under its label. A
+  failed save shows its error under the control.
+- `ShortcutsSections` in `src/components/settings/` draws the Keyboard
+  shortcuts tab, in the Mac app and in each browser. It shows the keys of
+  a host: the Mac app, a normal tab of Chrome or Firefox, or the installed
+  app of Chrome, with a Mac keyboard or the keyboard of Windows and
+  Linux. `src/fixtures/shortcutHosts.ts` holds the keyboard of each host,
+  `browserTabKeys.ts` beside it holds the keys that each normal browser
+  tab keeps, and `windowsShortcuts.ts` holds the keys of Windows and
+  Linux. A search field at the top keeps each row whose label or search
+  words hold every word of the query, by the rule of the palette, from
+  `shortcutSearch.ts`.
+  Fixed rows match too. A group without a matching row hides, and a search
+  without a match says so, as the palette does. The lines under the field,
+  from `ShortcutIntro.tsx`, say how to change a shortcut and which keys
+  the terminal keeps on the keyboard of the page. In a normal browser tab,
+  a key that the browser keeps, or that decisions 192 and 196 leave to it,
+  is dimmed, and one more line says where the dimmed keys work. A dimmed key
+  stays a button that records new keys. A browser leaves out the commands
+  and the groups that only the Mac app has. Each group of commands is a
+  section with its rows in one box. A row ends with its shortcuts. Each
+  shortcut is a button that records new keys, + adds one, and a row
+  without a shortcut shows Add shortcut. The commands that a person can
+  change come first, and the fixed shortcuts follow them with no control.
+  A fixed row among other commands shows Fixed shortcut. The General group
+  ends with Esc and with Enter and Space, which press a focused button. The
+  Navigation group ends with the keys that open the menu of a focused tab,
+  and the Workspace group with the fixed keys of a focused workspace row and
+  of a focused divider. Each of their labels names the control that has the
+  focus. The Chat group ends with the keys of the message field, and its
+  Send row shows Enter with ⌘ or Ctrl, so the tab shows that Enter with a
+  modifier is fixed too. A group of fixed shortcuts says it once, under its
+  title. The Text group lists the text keys of the keyboard, with the keys
+  that move or delete by word or by line in one row each, and its line
+  says that the other text keys are fixed too. A narrow box, on a phone or
+  in a narrow window, puts the label of a row on its first line, and the
+  shortcuts and the control at the end on a second line. The recorder is a
+  field with a full outline in the accent colour. While it replaces a
+  shortcut, Remove stands beside Cancel. A recorder that adds a shortcut
+  shows only Cancel. A line under the row names a fixed shortcut that the
+  recorder did not take, the command that has the recorded shortcut, or a
+  failed save. The line of a fixed shortcut names its fixed row. When
+  several rows hold the shortcut, or no row lists it, the line says only
+  that the shortcut is fixed. A row that names the command of a recorded
+  shortcut shows only Replace and Cancel. A changed row shows Reset. When
+  another command holds a default shortcut of the row, Reset shows that
+  shortcut in the field of the recorder, the line that names the command,
+  and Replace and Cancel. Reset all asks first with `ConfirmDialog`,
+  because nothing brings the changes back. The error of a failed Reset all
+  stands under the lines and Reset all, across the width of the tab.
+- [The marks](design-marks.md) give the list mark, the mark
+  of the header, and the marks of routine runs. They also give the mark of
+  an agent.
 - [Workspace, session, and file chips](design-chat.md#workspace-session-and-file-chips)
   gives the workspace links, the session links, file mentions, the list of
   `@`, and chip removal.
-- `StatusGlyph` in `src/components/workspaces/` draws the state of a
-  workspace as a 3 × 3 dot-matrix square. Each state has its own shape, and
-  working and starting move with CSS. A finished turn is a full bright green
-  square, and ready is one bright cell on a faint green grid. A workspace
-  whose agent waits for the user, such as for the approval of a command,
-  shows Needs input: a middle column in the accent colour that pulses.
-  A routine run takes the mark of its workspace. A run without a
-  workspace shows an hourglass while it waits for one, and a chevron when
-  a rule skipped it. A failed run shows the mark of its failure. It keeps
-  that mark after Try again, because the run keeps its failed outcome.
-  - A run whose first start failed shows the cross, as its workspace in
-    the error state does.
-  - A run that a check failed before it had a workspace, and a run whose
-    first turn failed, show a slash in rose. After a failed turn, the mark
-    of the workspace shows a finished turn, which would hide the failure.
 - The parts of routines live in `src/components/routines/`. The routine
   page puts its form beside the Runs column on desktop. A phone shows a
   saved routine in two tabs, Routine and Runs. The Runs list holds the
@@ -240,9 +294,9 @@ sessions as tabs above the chat, and four tabs at the bottom.
   the sandbox, the tab row, and the number with Copy link. It also gives
   the bars of the cloud computer.
 - [The chat](design-chat.md) gives the chips of attached files, the
-  Markdown tables of a reply and of a file preview, and the fold of the work
-  of a turn. It also gives the data that the chat does not have, and the
-  files that the cloud computer could not read.
+  Markdown tables and headings of a reply and of a file preview, and the
+  fold of the work of a turn. It also gives the data that the chat does
+  not have, and the files that the cloud computer could not read.
 - The app frame is a size container (`app-frame`), so the layout follows the
   width of the frame, not of the window. In the app the two are the same. A
   screen is as high as `--ui-screen-height`, which is the window, or the

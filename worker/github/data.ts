@@ -26,6 +26,7 @@ export function activeWorkspace(
   ).first<GitHubWorkspace>()
 }
 
+/** Webhook candidates. An archived workspace reads only when a tab asks. */
 export async function repositoryWorkspaces(
   db: D1Database,
   repositoryId: number,
@@ -33,7 +34,8 @@ export async function repositoryWorkspaces(
 ): Promise<GitHubWorkspace[]> {
   const { results } = await db
     .prepare(
-      `${WORKSPACES} AND r.github_repository_id = ? AND r.installation_id = ?`,
+      `${WORKSPACES} AND r.github_repository_id = ? AND r.installation_id = ?
+       AND w.archived_at IS NULL AND w.state != 'archived'`,
     )
     .bind(repositoryId, installationId)
     .all<GitHubWorkspace>()

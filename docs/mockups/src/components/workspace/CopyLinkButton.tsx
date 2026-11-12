@@ -1,3 +1,4 @@
+import type { RefCallback } from 'react'
 import { Button } from '@firna/ui/button'
 import { noop } from '../../noop'
 import a11y from '../common/a11y.module.css'
@@ -48,6 +49,11 @@ export function CopyLinkButton(props: {
    */
   inline?: boolean
   onPress?: () => void
+  /**
+   * The ref of the button, so that the app can name the key of Copy link
+   * on it for a screen reader, as `aria-keyshortcuts`.
+   */
+  buttonRef?: RefCallback<unknown>
 }) {
   const control = useControlSizes()
   const note = props.result
@@ -57,6 +63,7 @@ export function CopyLinkButton(props: {
     <span className={styles.anchor}>
       <Button
         accessibilityLabel={`Copy link to ${props.label}`}
+        buttonRef={props.buttonRef}
         content={<span className={styles.label}>{props.label}</span>}
         hitSlop={props.inline ? inLine.touchArea : undefined}
         inline={props.inline}

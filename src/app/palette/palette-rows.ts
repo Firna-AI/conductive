@@ -1,10 +1,12 @@
 import { workspaceLabel } from '../../../docs/mockups/src/components/workspaces/label'
 import type { OrgSummary } from '../../shared/orgs'
+import type { ShortcutCommandId } from '../../shared/shortcut-commands'
 import type { Workspace } from '../../shared/workspaces'
-import { routes, type SettingsTab } from '../router'
+import { routes, type AccountTab, type SettingsTab } from '../router'
 import {
   accountSettingIds,
   accountSettings,
+  actionCommands,
   actionTexts,
   orgSettings,
   type AccountSettingId,
@@ -51,6 +53,8 @@ export interface CommandRow {
   readonly detail?: string
   readonly href?: string
   readonly run?: () => void
+  /** The command of the keys that does what the row does, whose key it shows. */
+  readonly command?: ShortcutCommandId
 }
 
 export type PaletteRow = WorkspaceRow | CommandRow
@@ -108,6 +112,13 @@ export function workspaceRow(
   }
 }
 
+/** The command of a row, without the field when the row has none. */
+function commandOf(command: ShortcutCommandId | null): {
+  command?: ShortcutCommandId
+} {
+  return command === null ? {} : { command }
+}
+
 /** The row of an action that a part of the page offers. */
 export function offeredRow(action: OfferedAction): CommandRow {
   const text = actionTexts[action.id]
@@ -119,11 +130,15 @@ export function offeredRow(action: OfferedAction): CommandRow {
     words: text.words,
     href: action.href,
     run: action.run,
+    ...commandOf(actionCommands[action.id]),
   }
 }
 
 /** An action of the palette itself, which opens a page. */
-export function linkRow(id: OwnActionId, href: string): CommandRow {
+export function linkRow(
+  id: Exclude<OwnActionId, 'switch-org'>,
+  href: string,
+): CommandRow {
   const text = actionTexts[id]
   return {
     kind: 'command',
@@ -132,6 +147,7 @@ export function linkRow(id: OwnActionId, href: string): CommandRow {
     label: text.label,
     words: text.words,
     href,
+    ...commandOf(actionCommands[id]),
   }
 }
 
@@ -148,11 +164,18 @@ export function feedbackRow(): CommandRow {
     lead: { kind: 'action', id: 'send-feedback' },
     label: text.label,
     words: text.words,
+    ...commandOf(actionCommands['send-feedback']),
   }
 }
 
-/** Switch to another org of the person. It opens the list of the org. */
-export function switchRow(org: OrgSummary): CommandRow {
+/**
+ * Switch to another org of the person. It opens the list of the org.
+ * `command` is Switch to org 1 to 9 of the place of the org in the rail.
+ */
+export function switchRow(
+  org: OrgSummary,
+  command: ShortcutCommandId | null,
+): CommandRow {
   const text = actionTexts['switch-org']
   return {
     kind: 'command',
@@ -161,6 +184,7 @@ export function switchRow(org: OrgSummary): CommandRow {
     label: `${text.label} ${org.name}`,
     words: text.words,
     href: routes.org(org.id),
+    ...commandOf(command),
   }
 }
 
@@ -185,10 +209,24 @@ export function orgSettingRows(
     words: setting.words,
     detail: withDetail ? orgSettingsLabel(org) : undefined,
     href: routes.settings(org.id, setting.tab),
+    ...commandOf(
+      setting.tab === 'repositories' ? 'repositories-settings' : null,
+    ),
   }))
 }
 
-/** The sections of the Account page. Each row opens the tab that holds it. */
+/** The tab of the Account page that holds a section, or that a row is. */
+function accountTabOf(id: AccountSettingId): AccountTab {
+  if (id === 'new-workspaces') return 'preferences'
+  if (id === 'keyboard-shortcuts') return 'shortcuts'
+  return 'general'
+}
+
+/**
+ * The sections of the Account page, then its Keyboard shortcuts tab. Each
+ * row opens the tab that holds it. Keyboard shortcuts runs the command of
+ * the keys that opens the tab, whose key it shows.
+ */
 export function accountRows(mac: boolean, withDetail: boolean): CommandRow[] {
   return accountSettingIds
     .filter((id) => mac || id !== 'this-mac')
@@ -199,9 +237,7 @@ export function accountRows(mac: boolean, withDetail: boolean): CommandRow[] {
       label: accountSettings[id].label,
       words: accountSettings[id].words,
       detail: withDetail ? accountLabel : undefined,
-      href:
-        id === 'new-workspaces'
-          ? routes.accountTab('preferences')
-          : routes.account(),
+      href: routes.accountTab(accountTabOf(id)),
+      ...commandOf(id === 'keyboard-shortcuts' ? 'keyboard-shortcuts' : null),
     }))
 }

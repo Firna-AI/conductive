@@ -69,6 +69,10 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
   repositories, workspaces, routines and their runs, settings, the active preview hostnames, and the
   records of attached files. D1 also holds app access, codes and their uses,
   the sign-up pause, the waitlist switch, and the state of approval emails.
+- The record of each workspace holds a copy of its
+  [GitHub state](../protocol/github-banner.md#the-github-state).
+  A list read takes this copy from D1. The GitHub summary adds no Durable
+  Object read or GitHub call.
 - Boat labels alone cannot hold these records, because a label is fixed
   after a create or a fork.
 
@@ -83,6 +87,11 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
   uses.
 - It also holds the start steps, the stop timer, the delete timer of an
   archived workspace, and the banner state.
+- After each GitHub refresh, it copies the GitHub state from its banner
+  state into the workspace record in D1. It copies in the order of its
+  refreshes, from the banner state that it holds at that moment. So a
+  replay of an older GitHub delivery cannot write an older state.
+- A failed copy fails the refresh, so that a retry copies it again.
 - It runs the trusted jobs of its sandbox: the fetch of a create, and the
   branch change of Continue.
 - For each start, it keeps the provider account with the org image and the
@@ -132,8 +141,10 @@ Every org image holds the app's own sandbox software:
 - the agent runner, a Node program that runs as an always-on service
 - the terminal service, on a private port
 - the preview relay, on a private port
-- the agent tools: an MCP server and a CLI that create and list workspaces,
-  start, list, read, and message sessions, and ask for Mac commands
+- the agent tools: an MCP server and a CLI that create, list, and change
+  the workspaces of the org, start, read, message, close, and stop its
+  sessions, change its sections, open port previews, and ask for Mac
+  commands
 - a git credential helper that gets a fresh GitHub token for each git
   operation
 

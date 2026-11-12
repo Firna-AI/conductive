@@ -11,6 +11,7 @@ import { FAKE_IDS } from '../../../test-support/fixtures/core'
 import { AppModelContext } from '../../context'
 import { PanelContext } from '../../layout/panels'
 import { PaletteProvider } from '../../palette/PaletteProvider'
+import { ShortcutProvider } from '../../shortcuts/ShortcutProvider'
 import { Shell } from '../../Shell'
 import { ThemeRoot } from '../../ui/ThemeRoot'
 import { useViewport, ViewportProvider } from '../../ui/viewport'
@@ -106,9 +107,11 @@ export function DevPage(props: {
             <FeaturesContext.Provider value={features}>
               <ViewportProvider viewport={options.viewport ?? measured}>
                 <ThemeRoot scheme={options.scheme}>
-                  <PaletteProvider>
-                    <Shell key={mounts} />
-                  </PaletteProvider>
+                  <ShortcutProvider>
+                    <PaletteProvider>
+                      <Shell key={mounts} />
+                    </PaletteProvider>
+                  </ShortcutProvider>
                   {options.controls ? (
                     <DevControls
                       now={now}

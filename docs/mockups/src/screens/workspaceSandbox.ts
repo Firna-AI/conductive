@@ -15,10 +15,12 @@ import type { WorkspaceState } from './workspaceState'
 
 /**
  * The chats of a session whose turn ended while another session of the
- * workspace works: the second session after it sent a message to the first.
+ * workspace works: the second session after it sent a message to the first,
+ * and the first session after the agent of the second stopped its turn.
  */
 const otherSessionWorks: ReadonlySet<ConversationKey> = new Set([
   'session-links',
+  'stopped-from',
 ])
 
 /**

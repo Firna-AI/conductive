@@ -44,6 +44,7 @@ it('lists every workspace of the authenticated org, including other owners and a
   const expected = {
     workspaces: [
       {
+        owner: { id: 'owner', githubLogin: 'owner-login', displayName: null },
         id: 'calling-workspace',
         number: 1,
         link: `${TEST_ORIGIN}${routes.workspace('org-a', 'calling-workspace')}`,
@@ -52,6 +53,11 @@ it('lists every workspace of the authenticated org, including other owners and a
         state: 'working',
       },
       {
+        owner: {
+          id: 'teammate',
+          githubLogin: 'teammate-login',
+          displayName: null,
+        },
         id: 'teammate-workspace',
         number: 2,
         link: `${TEST_ORIGIN}${routes.workspace('org-a', 'teammate-workspace')}`,
@@ -60,6 +66,7 @@ it('lists every workspace of the authenticated org, including other owners and a
         state: 'input',
       },
       {
+        owner: { id: 'owner', githubLogin: 'owner-login', displayName: null },
         id: 'archived-workspace',
         number: 3,
         link: `${TEST_ORIGIN}${routes.workspace('org-a', 'archived-workspace')}`,
@@ -149,7 +156,9 @@ it('grants the workspace token no other host, route, method, or socket', async (
     const methods =
       path === MACHINE_PATHS.workspaces
         ? ['DELETE']
-        : ['POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD']
+        : path === MACHINE_PATHS.sections
+          ? ['PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD']
+          : ['POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD']
     for (const init of [
       ...methods.map((method) => ({ method })),
       { headers: { Upgrade: 'websocket' } },
@@ -157,7 +166,11 @@ it('grants the workspace token no other host, route, method, or socket', async (
       const response = await fixture.request(init, `${TOOL_TEST_ORIGIN}${path}`)
       expect(response.status, `${path}: ${JSON.stringify(init)}`).toBe(405)
       expect(response.headers.get('Allow')).toBe(
-        path === MACHINE_PATHS.workspaces ? 'GET, POST' : 'GET',
+        [MACHINE_PATHS.workspaces, MACHINE_PATHS.sections].some(
+          (entry) => entry === path,
+        )
+          ? 'GET, POST'
+          : 'GET',
       )
     }
   }

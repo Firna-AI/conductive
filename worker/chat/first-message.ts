@@ -1,6 +1,7 @@
 import type { User } from '../../src/shared/api'
 import type { UserMessage } from '../../src/shared/messages'
 import type { AppEnv } from '../env'
+import { sessionTitleFrom } from '../../src/shared/session-title'
 import { HttpError } from '../http'
 import type { FirstWorkspaceMessage } from '../lifecycle/workspace-runtime'
 import { acceptMessage, existingMessage } from './messages'
@@ -125,13 +126,22 @@ export async function admitFirstMessage(
     id: first.sessionId,
     messageId: first.request.id,
   })
-  await createSession(
+  const session = await createSession(
     transaction,
     first.request.choice,
     first.sessionId,
     sender,
     dependencies,
   )
+  const title =
+    first.firstSessionTitle === undefined
+      ? null
+      : sessionTitleFrom(first.firstSessionTitle)
+  if (title !== null) {
+    session.title = title
+    await transaction.saveSession(session)
+    await transaction.emit({ type: 'session.updated', session })
+  }
   let turnId = first.turnId
   const accepted = await acceptMessage(
     transaction,

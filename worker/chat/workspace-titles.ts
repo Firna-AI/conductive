@@ -1,4 +1,8 @@
 import type { WorkspaceEventEnvelope } from './workspace-events'
+import {
+  hasOwnWords,
+  textWithAttachmentNames,
+} from '../../src/shared/attachment-mentions'
 import type { AppEnv } from '../env'
 import { warnWorker } from '../warnings'
 import { errorSummary } from '../warning-values'
@@ -36,13 +40,19 @@ export class WorkspaceTitles {
     for (const { workspaceId, event } of events) {
       if (
         event.type !== 'message.accepted' ||
-        !event.message.text.trim() ||
+        !hasOwnWords(event.message.text, event.message.attachments) ||
         this.pending
       )
         continue
       this.pending = true
       this.dependencies.waitUntil(
-        this.request(workspaceId, event.message.text).finally(() => {
+        this.request(
+          workspaceId,
+          textWithAttachmentNames(
+            event.message.text,
+            event.message.attachments,
+          ),
+        ).finally(() => {
           this.pending = false
         }),
       )
@@ -64,7 +74,9 @@ export class WorkspaceTitles {
             return null
           const message = await view.message(first.messageId)
           if (!message) return null
-          return message.text.trim() ? message.text : text
+          return hasOwnWords(message.text, message.attachments)
+            ? textWithAttachmentNames(message.text, message.attachments)
+            : text
         }),
       )
       if (source === null) return

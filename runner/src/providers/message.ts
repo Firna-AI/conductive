@@ -15,5 +15,5 @@ export function providerMessage(
       current.targetBranch !== fixed?.targetBranch)
       ? `\nCurrent branches: workspace ${JSON.stringify(current.workspaceBranch)}; target ${JSON.stringify(current.targetBranch)}.`
       : ''
-  return `Sender: ${sender}${branchLine}\n\n${message.text}`
+  return `Sender: ${sender} [member ID: ${JSON.stringify(message.sender.id)}]${branchLine}\n\n${message.text}`
 }

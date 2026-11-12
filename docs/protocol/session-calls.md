@@ -3,19 +3,20 @@
 This doc holds the requirements and the decisions in force for the
 session calls of the workspace tools. With these calls, an agent starts a
 session, lists the sessions of a workspace, sends a message to a session,
-and reads a session. It belongs to
-[Agent tools](agent-tools.md), which covers the workspace tools, their
-other calls, and Mac commands. The terms are those of the
-[architecture doc](../architecture.md#terms). A decision number names a
-dated record, as [Decision numbers](../architecture.md#decision-numbers)
-says. The [mockup catalogue](../mockups/catalogue.md) draws a message of
-these calls at `app/workspace-links/sent-by`.
+and reads a session. [Session management](session-management.md) states
+the calls that get, rename, close, and stop a session, and get a message.
+This doc belongs to [Agent tools](agent-tools.md), which covers the
+workspace tools, their other calls, and Mac commands. The terms are those
+of the [architecture doc](../architecture.md#terms). A decision number
+names a dated record, as
+[Decision numbers](../architecture.md#decision-numbers) says. The
+[mockup catalogue](../mockups/catalogue.md) draws a message of these calls
+at `app/workspace-links/sent-by`.
 
 ## Terms
 
-- **Calling workspace:** the workspace whose sandbox makes a call.
-- **Calling turn:** the agent turn that makes a call. Its sender is the
-  member whose message started the turn.
+- The calling workspace, the calling turn, the sender, a read, and a write
+  are the terms of [Agent tool access](agent-tool-access.md#terms).
 - **Tool message:** a message that `send_message` sends, or the first
   message of a `create_session` call or of a `create_workspace` call.
 - **Live workspace:** a workspace that is not archived.
@@ -28,25 +29,33 @@ these calls at `app/workspace-links/sent-by`.
 | Read a session | `read_session` | `conductive sessions read` | `GET /v1/tools/workspaces/{workspaceId}/sessions/{sessionId}/transcript` | The workspace token |
 | Start a session | `create_session` | `conductive sessions create` | `POST /v1/tools/workspaces/{workspaceId}/sessions` | An active turn |
 | Send a message | `send_message` | `conductive sessions send` | `POST /v1/tools/workspaces/{workspaceId}/sessions/{sessionId}/messages` | An active turn |
+| Get a session | `get_session` | `conductive sessions get` | `GET /v1/tools/workspaces/{workspaceId}/sessions/{sessionId}` | The workspace token |
+| Get a message | `get_message` | `conductive messages get` | `GET /v1/tools/workspaces/{workspaceId}/sessions/{sessionId}/messages/{messageId}` | The workspace token |
+| Rename a session | `rename_session` | `conductive sessions rename` | `POST /v1/tools/workspaces/{workspaceId}/sessions/{sessionId}/rename` | An active turn |
+| Close a session | `close_session` | `conductive sessions close` | `POST /v1/tools/workspaces/{workspaceId}/sessions/{sessionId}/close` | An active turn |
+| Stop a session | `stop_session` | `conductive sessions stop` | `POST /v1/tools/workspaces/{workspaceId}/sessions/{sessionId}/stop` | An active turn |
 
-- Both workspace tools give the four calls. Their routes are on
+- Both workspace tools give the nine calls. Their routes are on
   `api.conductive.build`, as the routes of the other calls are.
 - Each call takes a workspace ID. A call without one names the calling
   workspace.
-- `read_session` and `send_message` also take a session ID. A
-  [session link](agents-and-sessions.md#session-links) holds both IDs.
+- Each call except `list_sessions` and `create_session` also takes a
+  session ID. A [session link](agents-and-sessions.md#session-links) holds
+  both IDs.
 - Reason: a `Sent by:` line gives a session link, and the lists give the
   IDs.
+- An unknown session, or a session of another workspace, gets HTTP 404
+  with the error code `session_not_found`.
 - Each reply gives the session link of each session that it names, as the
   workspace replies give workspace links. Reason: an agent can then point
   to a session that it started.
-- The two reads also reach an archived workspace, as a copy of a
-  transcript does. The two writes refuse an archived workspace with HTTP
-  409 and the error code `workspace_archived`. Reason: the chat of an
+- The reads also reach an archived workspace and a closed session, as a
+  copy of a transcript does. Each write refuses an archived workspace with
+  HTTP 409 and the error code `workspace_archived`. Reason: the chat of an
   archived workspace is read-only.
-- Each write takes an optional request ID. A repeat of a write with the
-  same request ID gives the result of the first write, as a repeated
-  message of the app does.
+- `create_session` and `send_message` take an optional request ID. A
+  repeat of such a write with the same request ID gives the result of the
+  first write, as a repeated message of the app does.
 - The accepted session, message, choice, and turn stay the same on a
   repeat. The workspace state and the start information describe the
   current request. Reason: a retry can then follow a start without adding
@@ -56,62 +65,30 @@ these calls at `app/workspace-links/sent-by`.
 
 ## Reach
 
-- Each call reaches each workspace of the org of the calling workspace
-  (decision 257). It reaches no workspace of another org.
-- The Worker takes the target workspace from its own records, and only
-  from that org. An unknown workspace, or a workspace of another org, gets
-  HTTP 404 with the error code `workspace_not_found`.
-- Reason: every member of the org can already read and send messages in
-  each of its workspaces. Conductor's CLI gives its agents the same reach.
-- Smaller reaches were rejected, such as the calling workspace alone, with
-  the workspaces that it created, or with the workspaces of one repository.
-  A follow-up would then fail for each workspace outside the reach.
-- A smaller reach for the turns of routine runs was rejected. Its limit
-  must pass to each workspace, session, and message that such a turn
-  makes. A routine could then not follow up on its own work.
-- An org setting that lets an admin make the reach smaller was rejected.
-  It needs a stored setting, a settings control, a mockup, and a protocol
-  section.
-- [What the session calls reach](isolation.md#what-the-session-calls-reach)
-  states the risks of this reach.
+- Each session call reaches each workspace of the org of the calling
+  workspace, and no workspace of another org (decision 257).
+  [Reach](agent-tool-access.md#reach) states this rule for every call of
+  the workspace tools, with the smaller reaches that were rejected.
 
 ## Tokens and turns
 
-- `list_sessions` and `read_session` need only the workspace token, as the
-  other list calls do (decision 257). They need no active turn.
-- Reason: these calls read data that every member of the org already
-  sees, and they start no work.
-- Reads that also need an active turn were rejected, so that the reads
-  keep the rule of the other list calls.
-- `create_session` and `send_message` need an active turn, as a create
-  call does. The request names its turn. The Worker accepts it only while
-  that turn runs in the calling workspace.
-- A write without such a turn gets HTTP 403 with the error code
-  `calling_turn_required`. Reason: the Worker takes the sender of a write
-  from its record of the calling turn.
+- The reads need only the workspace token. The writes need an active
+  turn, as a create call does (decision 257).
+  [Tokens and turns](agent-tool-access.md#tokens-and-turns) states the
+  rule and its error.
 
 ## The sender
 
 - A write acts for the sender of the calling turn. That member starts each
   new session and sends each tool message.
+  [The sender](agent-tool-access.md#the-sender) states how the Worker
+  finds and checks that member.
 - When a tool message starts a new turn, the GitHub token and the Mac
   requests of that turn belong to that member.
 - A tool message that joins a running turn keeps the stored sender of that
   turn. So it changes neither the GitHub token nor the Mac of that turn, as
   [Access](agent-instructions.md#access) says for each message that joins
   a turn.
-- The Worker takes the sender from its own record of the calling turn. It
-  never takes a sender from the call, and it never uses the workspace
-  owner in place of the sender.
-- At each write, the Worker checks that the sender is still a member of
-  the org and is not suspended. Otherwise the write gets HTTP 403 with the
-  error code `membership_required`.
-- Reason: a create call and a Mac command already follow that sender.
-  Agent code runs in the sandbox, so a sender that the sandbox names can
-  be false.
-- A tool identity as the sender was rejected. The GitHub token and the Mac
-  requests of a turn follow its sender, so they would then belong to no
-  member.
 - An approval of each tool message by a member was rejected, because the
   delegated work would then stop while no member answers.
 
@@ -138,12 +115,19 @@ these calls at `app/workspace-links/sent-by`.
 - A list whose entries also give the newest answer of each session was
   rejected (decision 258). Each list would read the history of each
   session, and the entries would get long.
+- The list gives the sessions in the order of their start, the oldest
+  first.
+- The list can take a limit of 1 to 100, and an offset, as
+  [List the workspaces](workspace-calls.md#list-the-workspaces) says for
+  the workspace list. A reply with a limit says whether more sessions
+  follow. Without a limit or an offset, the list gives every session.
+  Reason: existing callers keep working.
 
 ## Read a session
 
 - `read_session` gives the text of one session that a copy from its tab
   menu gives (decision 258).
-  [Reads by agents](session-transcripts.md#reads-by-agents) states the
+  [Reads by agents](transcript-routes.md#reads-by-agents) states the
   text, its two kinds, and the part of a long text that a read gives.
 - Reason: an agent that hands out work needs the answer to go on, and a
   copy already gives the chat of a session as text.
@@ -168,8 +152,8 @@ these calls at `app/workspace-links/sent-by`.
   also uses the own choice of the member.
 - The sender is the starter of the new session (decision 105).
 - The title follows the name rule of a create call, as
-  [Create and list calls](agent-tools.md#create-and-list-calls) says. A
-  title that is blank after the rule counts as no title.
+  [Names from the workspace tools](tool-names.md) says. A title that is
+  blank after the rule counts as no title.
 - A first message follows the rules of [Send a message](#send-a-message).
 - A call without a first message makes an empty session, as "+" does. It
   starts no turn and no cloud computer. Reason: an empty session carries
@@ -190,8 +174,7 @@ these calls at `app/workspace-links/sent-by`.
   [Messages](messages-and-attachments.md#messages), as a message of its
   sender does. So it joins a running turn. It opens a new session when the
   sender cannot use the login of the starter.
-- A closed session gets HTTP 409 with the error code `session_closed`. An
-  unknown session gets HTTP 404 with the error code `session_not_found`.
+- A closed session gets HTTP 409 with the error code `session_closed`.
 - The reply gives the message, its turn, and the session that took it,
   with the link of that session.
 - The reply comes at once. A tool message to a workspace that does not run
@@ -253,7 +236,7 @@ these calls at `app/workspace-links/sent-by`.
   things:
   - A session link holds the workspace ID and the session ID.
   - A call without a workspace ID names the calling workspace.
-  - `create_session` and `send_message` need an active turn.
+  - Each write needs an active turn.
   - A session link in an answer shows as a session chip.
   - A `Sent by:` line names the session that sent its message.
   - An agent does not answer a tool message only to confirm it (decision

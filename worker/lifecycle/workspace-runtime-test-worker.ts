@@ -25,6 +25,7 @@ import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 import { authenticateWorkspaceToken } from './tokens'
 import { advanceScheduledAlarms } from './scheduled-alarms.test-support'
 import { exerciseRepairBudget } from './repair-budget-native-test-support'
+import { fakeAttachments } from '../test-support/attachments'
 
 /** Test transport only. Every start and stop runs the actual Workspace implementation. */
 export class WorkspaceRuntimeFixture extends Workspace {
@@ -40,19 +41,16 @@ export class WorkspaceRuntimeFixture extends Workspace {
     super(context, env, clock.now, {
       randomId: () => chatIds.shift() ?? crypto.randomUUID(),
       scheduleBrowserCheck: clock.schedule,
-      resolveAttachments: async (_userId, _workspaceId, ids) => ({
-        attachments: ids.map((id) => ({
-          id,
-          name: `${id}.txt`,
-          kind: 'file',
-          mediaType: 'text/plain',
-          sizeBytes: 7,
-        })),
-        paths: ids.map((id) => ({
-          attachmentId: id,
-          relativePath: `.context/attachments/fixture/${id}.txt`,
-        })),
-      }),
+      resolveAttachments: async (_userId, _workspaceId, ids) => {
+        const attachments = await fakeAttachments(ids)
+        return {
+          attachments,
+          paths: attachments.map((file) => ({
+            attachmentId: file.id,
+            relativePath: file.path,
+          })),
+        }
+      },
       prepareAttachments: async () => null,
     })
     this.clock = clock

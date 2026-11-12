@@ -1,0 +1,4 @@
+/* The wrapper of a button with a tooltip has no box, so the button keeps its layout. */
+.contents {
+  display: contents;
+}

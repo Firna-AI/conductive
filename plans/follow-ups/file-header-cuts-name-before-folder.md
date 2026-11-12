@@ -1,0 +1,45 @@
+# File header cuts the name before the folder
+
+- **Severity:** Low. **Likelihood:** Common. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-11, from branch `calummoore/composer-file-drag-and-drop`. The report of its mockup milestone saw the cut on the phone file tab of an attached screenshot.
+- **Location:** `docs/mockups/src/components/files/FilePage.module.css:77-93`, `docs/mockups/src/components/files/FilePage.tsx:70-74`, `src/files/page/FilePage.module.css:77-93`, and `src/files/page/PageHeader.tsx:67-76`.
+- **Reason:** The rule came before the composer file drops change and reaches every long path, so its fix belongs on a separate branch.
+
+- **Source:** Implementation. **Category:** Product bug.
+- **Terms:**
+  - **File page:** the page of one file. It is a tab of the centre column on desktop, and a page of the Files tab on a phone.
+  - **Path chip:** the outlined label at the start of the header of a file page. It shows the folder of the file in a muted colour, then the file name.
+  - **Flex shrink:** the CSS rule that takes room from the items of a row that is too narrow. Each item gives up room in proportion to its shrink factor times its width.
+- **Background:**
+  - The header of a file page shows the path chip, Download, and Copy on one line.
+  - In the mockups, `FilePage` in `docs/mockups/src/components/files/FilePage.tsx` draws the header. In the app, `PageHeader` in `src/files/page/PageHeader.tsx` draws it.
+  - Both split the label at its last `/`. Both then draw two spans inside the chip: the folder with a trailing `/`, then the name.
+  - In the app, the label of an open file is the whole path from the read reply. `pageLabel` in `src/files/model/file-labels.ts` gives it, and `src/files/page/FilePage.tsx:64` passes it to the header.
+  - `docs/mockups/src/components/files/FilePage.module.css` and `src/files/page/FilePage.module.css` hold the same rules for the chip, the folder, and the name, at lines 55-93.
+  - The folder has `flex: 0 1000 auto` and `min-width: 16px`. The name has `flex: 0 1 auto` and `min-width: 0`.
+  - Both spans have `overflow: hidden` and `text-overflow: ellipsis`. The chip keeps its text on one line.
+  - The comment above these rules says: "The folder gives up its room first, then the name ends in an ellipsis."
+  - On a page 480 px wide or narrower, such as a phone, both files hide the file icon, the line count, and the back label. The path then keeps its room.
+  - Both CSS files were the same as on `main` on 11 November 2026. The rule came with commit `1c3e7b0b` of 5 November 2026 in the mockups, and commit `68a53b65` of 6 November 2026 in the app.
+  - The composer file drops change lets a press on a sent attached file open the file page of its copy. The user chose this on 10 November 2026. Each copy has a long folder under `.context/attachments/`, as the first page below shows.
+  - A measurement on 11 November 2026 showed the cut in the mockups. It used headless Chrome 157 and the built phone views of the catalogue, in a frame 390 px wide, with the Inter font loaded. The path chip had a content box of 220 px on both pages:
+    - `app/attachments/open` shows the copy path `.context/attachments/5f0c2b7e9a14d3c86b0e4f21a7d95c3e/postcode-overlap.png` in the cloud computer. The folder needs 347.953 px and keeps 92.266 px, which is 76 px more than its minimum. The name needs 127.828 px and gets 127.734 px. It shows "postcode-overlap.p…".
+    - `app/files/code` shows the sample path `src/app/checkout/useAddressAutocomplete.ts` of the mockups. The folder needs 104.25 px and keeps 57.75 px. The name needs 162.328 px and gets 162.25 px. It shows "useAddressAutocomplete…".
+    - The loss of the name matches the share that flex shrink gives it, rounded to the layout unit of Chrome, 1/64 px. For the first page: 255.781 px missing × 127.828 / (1000 × 347.953 + 127.828) = 0.094 px.
+  - Nobody measured the app header. It has the same element order, the same rules, and the whole path as its label. So it gives the same layout for the same chip width.
+- **Problem:** Flex shrink shares the missing room in proportion, not in order. So the name always gives up a small share while the folder shrinks. A share of a fraction of a pixel turns on its ellipsis, and the name loses its last characters while the folder still has room.
+- **Impact if no action:** On a phone, a long path hides the end of the file name, such as its extension, while part of the folder still shows. A member can misread which file is open. The app gives the whole path as the title of the chip, but a phone shows no title.
+- **Root question:** How does the header of a file page keep the whole file name in view while the folder can still give up room?
+- **Options:**
+  - **A.** Stop the name from shrinking until the folder is at its minimum of 16 px. For example, give the name `flex-shrink: 0` and a `max-width` of the chip less 16 px. Change both CSS files in the same way. The two copies of the rule stay. Effort: Small.
+  - **B.** On a page 480 px wide or narrower, show only the file name, without the folder. The folder then never takes room from the name. A member on a phone no longer sees the folder of the file. Effort: Small.
+  - **C.** As A, in one copy of the path chip that both headers use. This can be a shared part in `docs/mockups/src/components/files/`. It can also be one CSS module of chip rules that the app imports, as it imports other mockup styles. The rule then cannot drift between the mockups and the app. Effort: Medium.
+- **Left out:**
+  - Change nothing: it fails the goal, because the name loses its end while the folder still has room, against the rule that the comment states.
+  - An ellipsis at the start of the folder, so that the end of the folder shows: it does not fix the order of the cut. It changes only which part of the folder shows, and it can join A or C later.
+  - A middle cut of the path by a script: A gives the same order with CSS only, so A is better on every point.
+- **Wider fix:** C. The rule lives in two copied CSS files, so one copy removes the case where a fix reaches only one of them.
+- **Previous examples:** None found.
+- **Recommendation:** C. It keeps the whole name in view and holds the rule once for the mockups and the app. A is the smallest direct fix.
+- **Action:** fix after merge, apply C, because the rule came before the composer file drops change and reaches every long path.

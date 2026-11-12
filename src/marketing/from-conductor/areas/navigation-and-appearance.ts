@@ -6,7 +6,7 @@ export const navigationAndAppearanceFeatures: readonly ParityFeature[] = [
     area: 'navigation-and-appearance',
     name: 'Sidebar',
     status: 'available',
-    note: 'The sidebar groups workspaces into sections and shows their state. Branch names and pull request details are under consideration.',
+    note: 'The sidebar groups workspaces into sections and shows GitHub checks and merges. Branch names and pull request details are under consideration.',
   },
   {
     id: 'sidebar-sections',
@@ -26,9 +26,8 @@ export const navigationAndAppearanceFeatures: readonly ParityFeature[] = [
     id: 'keyboard-shortcuts',
     area: 'navigation-and-appearance',
     name: 'Keyboard shortcuts',
-    status: 'in-progress',
-    note: 'Custom keyboard shortcuts are in progress. The command palette shortcut works today.',
-    due: null,
+    status: 'available',
+    note: 'Shortcuts run the main actions of the app. Change them on the Keyboard shortcuts tab of your account.',
   },
   {
     id: 'layout-and-zen-mode',
@@ -63,7 +62,7 @@ export const navigationAndAppearanceFeatures: readonly ParityFeature[] = [
     area: 'navigation-and-appearance',
     name: 'Status indicators',
     status: 'available',
-    note: 'Workspace marks show activity, unread output, start progress, stopped computers, and errors. GitHub check and merge colours in the workspace list are in progress.',
+    note: 'List colours show GitHub checks and merges, with motion for work or needed input. Bold names mark unread output.',
   },
   {
     id: 'wrapped-and-passport',

@@ -3,6 +3,7 @@
 import { act } from 'react'
 import { describe, expect, test, vi } from 'vitest'
 import { routes } from '../../app/router'
+import { selectText } from '../../chat/components/chip-field/attached-field-events'
 import type { OrgRole } from '../../shared/api'
 import { orgSettingsPaths } from '../../shared/org-settings'
 import { workspacesPath, type Workspace } from '../../shared/workspaces'
@@ -14,6 +15,7 @@ import {
   queryByRole,
   queryByText,
 } from '../../test-support/dom-queries'
+import { pickFiles } from '../../test-support/file-picker'
 import { repositoryFixtures } from '../../test-support/fixtures/repositories'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
 import { messageText, pasteMessage } from '../../test-support/message-field'
@@ -26,6 +28,7 @@ import {
   dialogIn,
   focusIn,
   mainOf,
+  markOf,
   messageIn,
   newWorkspaceRow,
   openDialog,
@@ -77,7 +80,11 @@ describe('the New workspace dialog', () => {
     const file = new File(['png'], 'postcode-overlap.png', {
       type: 'image/png',
     })
-    await act(() => draft.attach([file]))
+    // The pick goes to the caret that the field kept while the attach button
+    // had the focus: after the first sentence.
+    selectText(message, task, task.length, task.length)
+    await pickFiles(openDialog(tab.view), [file])
+    await settle()
     press(message, 'Escape')
     await settle()
     const escaped = {
@@ -111,6 +118,7 @@ describe('the New workspace dialog', () => {
     click(byRole('menuitem', 'New workspace', sidebarOf(tab.view)))
     await settle()
     const fromMenu = openDialog(tab.view)
+    const withFile = `${task} ${markOf(draft, file.name)} Like ${linked.link}.`
     expect({
       focused,
       escaped,
@@ -125,15 +133,12 @@ describe('the New workspace dialog', () => {
       focused: true,
       escaped: { dialog: null, rowFocused: true },
       kept: {
-        text: `${task} Like ${linked.link}.`,
-        chips: [chipName],
+        text: withFile,
+        chips: ['Attached file postcode-overlap.png284 KB', chipName],
         file: true,
       },
       pressedOutside: { dialog: null, pressKept: true, rowFocused: true },
-      generalMenu: {
-        place: 'Acme · General',
-        text: `${task} Like ${linked.link}.`,
-      },
+      generalMenu: { place: 'Acme · General', text: withFile },
       address: here,
     })
   })

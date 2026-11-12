@@ -1,4 +1,4 @@
-import type { AgentSessionAccepted } from '../../src/shared/agent-tools'
+import type { AgentSessionAccepted } from '../../src/shared/agent-sessions'
 
 export interface ToolSessionRequest {
   fingerprint: string

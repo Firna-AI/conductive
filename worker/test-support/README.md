@@ -65,6 +65,7 @@ for a migration test.
 
 Each members test file creates one harness in `beforeAll` and disposes it in `afterAll`.
 Its `beforeEach` calls `reset` to delete all application rows in a fixed child-first order.
+The reset deletes account shortcut rows before users.
 The reset also restores the clock, token sequence, and fake services.
 It deletes code uses, approval emails, app access, and codes before users.
 It resets the sign-up pause and the waitlist switch, each with its change
@@ -194,6 +195,7 @@ A callback counts as complete only after the `waitUntil` work that it starts end
 - `fake-runner-files.ts` joins valid file report parts for the endpoint.
 - `runner-connection.ts` supplies the in-memory socket.
 - `process-environment.ts` builds an isolated environment for a Node child process in a test.
+- `attachments.ts`: `fakeAttachments(ids)`, the attachment metadata of the lifecycle fixtures. Each file gets the `path` of the shared builder in `src/shared/attachment-paths.ts`, as an upload reply and an admitted message give it.
 
 See [the browser fakes](../../src/test-support/README.md),
 [the shared contracts](../../src/shared/README.md), and

@@ -122,6 +122,10 @@ Each folder of a path is a part of the address. Another address under
   sandbox.
 - The kept files, Copy, and Download use the services of the org, as
   [the Files screens](../../files/README.md#integration) say.
+- The tabs of All files, Changes, and Checks name the keys of Go to All
+  files, Go to Changes, and Go to Checks in their tooltips and in
+  `aria-keyshortcuts`, as the palette's Go to rows run them. The shell
+  gives the keys to `FilesPanel` as plain props.
 
 ## The tools part
 
@@ -164,11 +168,14 @@ tools.
   event source, so the Mac app reaches its own Worker.
 - The mount of the Desktop tool stays for its return. It mounts at each
   show, so it reads a new desktop URL.
-- The tools part marks the element of the terminal for the command
-  palette. So Ctrl+K in the terminal goes to its shell on Windows and
-  Linux, as the
-  [command palette protocol](../../../docs/protocol/command-palette.md#where-the-key-goes)
-  says.
+- The tools part marks the xterm.js screen of the terminal for the
+  [shortcut layer](../shortcuts/README.md), through the `screenRef` of
+  `TerminalTool`. So the screen keeps the keys that its shell reads, such
+  as Ctrl+K on Windows and Linux, as
+  [Where a key goes](../../../docs/protocol/keyboard-shortcuts.md#where-a-key-goes)
+  says. The buttons of the tool, such as Reconnect, keep no key.
+- The tabs of the tools panel name the keys of Go to Terminal and Go to
+  Preview in their tooltips, as the palette's Go to rows run them.
 - Each tool reads its routes with the `fetch` of the org's `ApiClient`,
   and the events of the kept `ToolEvents`.
 
@@ -195,6 +202,11 @@ the ordered stream of the workspace.
   the workspace at once, with one request, and stays busy while that
   request runs. It shows only when `WorkspaceContext.archive` offers
   Archive, so a suspended org shows none.
+- The tooltip and `aria-keyshortcuts` of each button that takes a click,
+  and of each link to the pull request, name the key of its command. The
+  keys of the bar run while the right column shows the bar, and on a
+  phone while the top of the Checks tab shows its actions, as
+  [The actions of the bar](../../github/actions.md#keys) says.
 - An agent action sends its prompt through `WorkspaceContext.chat`. A prompt
   that did not go out shows the chat of its session, where the composer
   names the cause: the chat in place of a file on desktop, and the chat tab

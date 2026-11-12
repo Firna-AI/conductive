@@ -2,13 +2,13 @@ import { expect } from 'vitest'
 
 import { readAttachment as readPublicAttachment } from '../../../src/app/api/read-workspaces'
 import { attachmentUploadUrl } from '../../../src/shared/messages'
-import type { HttpFetch } from '../../env'
-import { readAttachment } from '../attachment-data'
 import {
-  attachmentBucket,
   attachmentPath,
   ATTACHMENTS_DIRECTORY,
-} from '../attachment-record'
+} from '../../../src/shared/attachment-paths'
+import type { HttpFetch } from '../../env'
+import { readAttachment } from '../attachment-data'
+import { attachmentBucket } from '../attachment-record'
 import { identifier, record } from '../inputs'
 import type { Workspace } from './journey-entry.test-support'
 import type { OuterRuntime } from './outer-runtime.test-support'
@@ -60,9 +60,8 @@ export async function expectFirstStartCopies(
 ) {
   const stored = await readAttachment(fixture.env.DB, attachmentId)
   if (!stored) throw new Error('The file record is missing.')
-  const messageId = identifier(record(command.message).id)
   const directory = REPAIRED_REPOSITORY_LOCATIONS[0].directory
-  const path = `${directory}/${await attachmentPath(stored, messageId)}`
+  const path = `${directory}/${await attachmentPath(stored)}`
   expect(transfer.copies).toEqual([
     new Uint8Array([42]),
     FIRST_START_FILE_BYTES,

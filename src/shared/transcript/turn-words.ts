@@ -1,4 +1,11 @@
+import {
+  memberStopped,
+  stoppedUnnamed,
+  stoppedFrom,
+} from '../../../docs/mockups/src/components/chat/stopCopy'
+import type { StopSessionReference } from '../session-stop'
 import type { User } from '../api'
+import type { TurnEndReason } from '../chat-events'
 import type { MessageSender } from '../messages'
 import {
   turnFilesUnavailable,
@@ -30,10 +37,10 @@ export interface ChatReaders {
  * that member's name to the others. An unnamed stop names nobody.
  */
 function stoppedLine(by: string | null, readers: ChatReaders): string {
-  if (by !== null && by === readers.viewerId) return 'You stopped the agent'
+  if (by !== null && by === readers.viewerId) return memberStopped('You')
   const member = readers.members.find((item) => item.id === by)
-  if (!member) return 'The agent stopped'
-  return `${member.displayName ?? member.githubLogin} stopped the agent`
+  if (!member) return stoppedUnnamed
+  return memberStopped(member.displayName ?? member.githubLogin)
 }
 
 /**
@@ -67,6 +74,14 @@ export function filesUnread(transcript: Transcript, turnId: string): boolean {
   return completionOf(transcript, turnId)?.filesUnavailable === true
 }
 
+/** The cause that finished a turn, when its end names one. */
+export function turnEndReason(
+  transcript: Transcript,
+  turnId: string,
+): TurnEndReason | undefined {
+  return completionOf(transcript, turnId)?.endReason
+}
+
 /** Whether a turn has a file row, such as one from a late end. */
 function hasFileRow(transcript: Transcript, turnId: string): boolean {
   return transcript.items.some(
@@ -74,21 +89,43 @@ function hasFileRow(transcript: Transcript, turnId: string): boolean {
   )
 }
 
-/** A stopped turn names unlisted files only when no file row lists them. */
-export function stoppedSummary(
+export function stoppedAttribution(
   transcript: Transcript,
   turnId: string,
   by: string | null,
   readers: ChatReaders,
-): string {
+):
+  | { kind: 'session'; text: string; reference: StopSessionReference }
+  | { kind: 'text'; text: string } {
+  const stopped = transcript.items.find(
+    (item) => item.kind === 'stopped' && item.turnId === turnId,
+  )
+  return stopped?.kind === 'stopped' && stopped.from
+    ? { kind: 'session', text: stoppedFrom, reference: stopped.from }
+    : { kind: 'text', text: stoppedLine(by, readers) }
+}
+
+export function stoppedNotes(transcript: Transcript, turnId: string): string[] {
   const files = hasFileRow(transcript, turnId)
     ? 0
     : omittedFiles(transcript, turnId)
   const unread =
     !hasFileRow(transcript, turnId) && filesUnread(transcript, turnId)
   return [
-    stoppedLine(by, readers),
     ...(files > 0 ? [unlistedFiles(files)] : []),
     ...(unread ? [turnFilesUnavailable] : []),
+  ]
+}
+
+export function stoppedSummary(
+  transcript: Transcript,
+  turnId: string,
+  by: string | null,
+  readers: ChatReaders,
+): string {
+  const source = stoppedAttribution(transcript, turnId, by, readers)
+  return [
+    source.kind === 'text' ? source.text : stoppedUnnamed,
+    ...stoppedNotes(transcript, turnId),
   ].join(' · ')
 }

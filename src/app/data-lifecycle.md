@@ -8,12 +8,26 @@ of the data that the screens read and write.
   reads when its first screen mounts, each time that the user comes back
   to the page, and on a timer while a screen shows it. The last screen
   that leaves stops the timer. Screens that show a part share its reads.
-- The timer is short while a row works, needs input, or starts, while the
-  last run of a routine waits, starts, works, or needs input, or while a
-  build runs. Otherwise it is slow, so that changes from other tabs and
-  other people show. Repositories and the members read at entry and at
-  focus only. The waits are choices of the app, not product
-  limits.
+- The timer is short while a row works, needs input, or starts, or while
+  the checks of its pull request run. It is short too while the last run
+  of a routine waits, starts, works, or needs input, or while a build
+  runs. Otherwise it is slow, so that changes from other tabs, other
+  people, and GitHub show. Repositories and the members read at entry and
+  at focus only. The waits are choices of the app, not product
+  limits. `org-waits.ts` holds them.
+- A row that the list already has takes its GitHub state only from list
+  reads while its branch stays the same. Each other record keeps that row's GitHub state: a read, a
+  Resume reply, a `workspace.updated` event, or a partial change of the
+  open workspace. So the open row shows a newer GitHub state at the
+  next list read, as every other row does.
+- A record for a new branch takes that branch's GitHub state. Continue clears it when it stores the branch, before its refresh.
+- A new row, such as a created workspace, takes the GitHub state of its
+  record. Titles and read marks still change the row at once. The shared
+  record readers still read and give `github`, so no API field goes away.
+  A `github.updated` event of an open workspace changes its pull request
+  bar, not its row.
+  [The list mark](../../docs/protocol/workspace-life.md#the-list-mark)
+  says what the row shows.
 - Each part is a `Resource`. A screen sees the answer of the newest read,
   then the changes that the server confirmed after that read started, such
   as events, then the waiting writes in the order that they went out. A

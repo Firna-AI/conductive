@@ -4,6 +4,8 @@ import type { UserMessage } from '../src/shared/messages'
 import type { ChatWorkspaceSummary } from './chat/workspace-summary'
 import type { StartStep, WorkspaceStart } from '../src/shared/workspaces'
 import { WorkspaceChat } from './chat/backend'
+import { runWorkspaceLifecycle } from './chat/lifecycle-queue'
+import type { QueueTurn } from './chat/queue-turn'
 import type { DeviceOperationResult } from './devices/internal'
 import {
   createWorkspaceIntegration,
@@ -25,7 +27,7 @@ import {
   type StoredWorkspaceStartJob,
 } from './lifecycle/start-job-codec'
 import { nativeWorkspaceStorage } from './lifecycle/platform-storage'
-import { readEncryptedStartLog } from './lifecycle/start-storage'
+import { readEncryptedStartLog } from './lifecycle/start-log-storage'
 import {
   startResultForTransport,
   type WorkspaceLifecycleTransport,
@@ -73,19 +75,15 @@ export class WorkspaceLifecycle
       { ...lifecycleDependencies(), now },
       integration,
       (operation) =>
-        this.chat.runLifecycle(() => integration.withGeneration(operation)),
+        this.chat.runLifecycle((turn) =>
+          integration.withGeneration(turn, operation),
+        ),
       activitySchedule,
     )
   }
 
-  protected run<T>(operation: () => Promise<T>): Promise<T> {
-    return this.chat.runLifecycle(() =>
-      this.integration.withGeneration(async () => {
-        const result = await operation()
-        await this.chat.flushRunner()
-        return result
-      }),
-    )
+  protected run<T>(operation: (turn: QueueTurn) => Promise<T>): Promise<T> {
+    return runWorkspaceLifecycle(this.integration, operation)
   }
 
   async callingToolTurn(workspaceId: string, turnId: string) {
@@ -194,8 +192,8 @@ export class WorkspaceLifecycle
 
   async lifecycleActivity() {
     const at = this.activityNow()
-    return this.chat.runLifecycle(() =>
-      this.integration.withGeneration(async () => {
+    return this.chat.runLifecycle((turn) =>
+      this.integration.withGeneration(turn, async () => {
         const state = await this.controller.readLifecycle()
         const result = await this.controller.lifecycleActivity(true)
         if (result.ok && state) this.activity.record(state.workspaceId, at)
@@ -279,7 +277,7 @@ export class WorkspaceLifecycle
   }
 
   protected async alarmLifecycle(): Promise<void> {
-    await this.run(() => this.controller.alarm())
+    await this.run((turn) => this.controller.alarm(turn))
   }
 
   deviceOperation(

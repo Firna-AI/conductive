@@ -3,7 +3,9 @@
  */
 
 import type { TableCells } from '../../../../src/markdown/table-rows'
+import type { TurnEndReason } from '../../../../src/shared/chat-events'
 import type { LostReason, LostWhat } from '../components/chat/lostCopy'
+import { agentStopConversations } from './agentStopConversations'
 import { attachmentConversations } from './attachmentConversations'
 import type { Attachment } from './attachments'
 import {
@@ -13,8 +15,13 @@ import {
   e2eRunning,
   history,
 } from './autocompleteTurn'
+import { backgroundConversations } from './backgroundConversations'
 import { barConversations, type ContinuedItem } from './barConversations'
 import type { ChangedFile } from './files'
+import {
+  headingConversations,
+  type MessageHeading,
+} from './headingConversations'
 import { linkedConversations } from './linkedConversations'
 import { listConversations, type MessageList } from './listConversations'
 import { lostConversations } from './lostConversations'
@@ -22,10 +29,7 @@ import type { MacCommandRequest, MacCommandState } from './mac'
 import { macConversations } from './macConversations'
 import type { PersonKey } from './members'
 import { linkedSession } from './sessions'
-import {
-  newWorkspaceConversations,
-  savedCartsMessage,
-} from './newWorkspaceConversations'
+import { newWorkspaceConversations } from './newWorkspaceConversations'
 import { tableConversations } from './tableConversations'
 import { unavailableConversations } from './unavailableConversations'
 import { workConversations } from './workConversations'
@@ -41,15 +45,18 @@ type ToolCallStatus = 'done' | 'running' | 'stopped'
 /** A table in a message of the agent. A short row keeps only its own cells. */
 export type MessageTable = { kind: 'table' } & TableCells<string>
 
-/** A block of a message of the agent: a paragraph, a table, or a list. */
-export type AgentBlock = string | MessageTable | MessageList
+/**
+ * A block of a message of the agent: a paragraph, a heading, a table, or a
+ * list.
+ */
+export type AgentBlock = string | MessageHeading | MessageTable | MessageList
 
 export type ChatItem =
   | {
       kind: 'user'
       id: string
       text: string
-      /** The files of the message, which show under it. */
+      /** The files of the message, shown in its text or under it. */
       attachments?: readonly Attachment[]
       /** Waits in the queue of the workspace until the sandbox is ready. */
       queued?: boolean
@@ -59,7 +66,7 @@ export type ChatItem =
   | {
       kind: 'agent'
       id: string
-      /** The paragraphs, the tables, and the lists of the message, in order. */
+      /** The blocks of the message, in order. */
       blocks: readonly AgentBlock[]
     }
   | {
@@ -88,6 +95,12 @@ export type ChatItem =
       kind: 'stopped'
       id: string
       by?: PersonKey
+      /**
+       * The session link of the session whose agent stopped the turn with a
+       * workspace tool, also through a close of the session. The line names
+       * that session in place of a member.
+       */
+      from?: string
       /** The changed files of the turn past the 200 that the runner lists. */
       omittedFiles?: number
       /** The cloud computer could not read the changed files. */
@@ -104,6 +117,8 @@ export type ChatItem =
       omittedFiles?: number
       /** The cloud computer could not read the changed files: none listed. */
       filesUnavailable?: true
+      /** A cause other than the end of the reply ended the turn. */
+      endReason?: TurnEndReason
     }
   | {
       /** A runner event that the workspace refused (decision 76). */
@@ -172,8 +187,10 @@ export const conversations: Readonly<
   ...macConversations(history),
   ...lostConversations(history),
   ...unavailableConversations({ history, cutOff: cutOffTurn }),
+  ...agentStopConversations(cutOffTurn),
+  ...backgroundConversations,
   ...linkedConversations,
-  ...attachmentConversations({ history, firstMessage: savedCartsMessage }),
+  ...attachmentConversations(history),
   ...workspaceLinkConversations(history),
   ...sessionLinkConversations(history),
   ...fileMentionConversations(history),
@@ -185,4 +202,5 @@ export const conversations: Readonly<
   ...tableConversations,
   ...barConversations({ history, cutOff: cutOffTurn }),
   ...listConversations,
+  ...headingConversations,
 }

@@ -59,6 +59,7 @@ const archivedRows: readonly WorkspaceRow[] = archivedWorkspaceList.map(
   (workspace) => ({
     workspace,
     status: 'archived',
+    github: workspace.github,
     selected: false,
     restoreOpen: keptArchives.has(workspace.key),
   }),

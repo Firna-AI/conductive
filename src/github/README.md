@@ -21,7 +21,7 @@ const actions = useBarActions({ orgId, workspaceId }, ports)
 const controls = useBarControls({ github, actions, localWork, turnRuns, readOnly, archive, archiving, showChat })
 
 // Desktop: the top of the right column, and the Checks tab.
-<PullRequestBar controls={controls} github={github} now={now} />
+<PullRequestBar controls={controls} github={github} keyOf={keyOf} now={now} />
 <ChecksList github={github} />
 
 // Phone: the row under the workspace header, and the Checks tab.
@@ -62,6 +62,16 @@ const controls = useBarControls({ github, actions, localWork, turnRuns, readOnly
   and the admins. `archive` runs the app's Archive, which archives at once
   with one request, and `archiving` makes the button busy while it runs.
   The bar itself archives nothing.
+- `keyOf` gives the key of the command of a control, for the label that
+  the control shows: its tooltip, such as "Create PR (⇧⌘P)", and a name
+  for `aria-keyshortcuts`, or none, such as in the phone layout. Each
+  button that takes a click and each link to the pull request show it. A
+  busy or disabled button shows no key.
+- `barCommands` in `barKeys.ts` gives the commands that the keys run while
+  the bar shows: the command of each button that takes a click, with the
+  run of its click, and Open PR on GitHub while the bar links the pull
+  request. `open` opens that link in a new tab. The app offers them beside
+  the bar.
 - `checksHref` is the app address of the Checks tab, because tabs are links.
   `onOpenChecks` lets the app's router open the tab in place. A branch
   without a pull request opens the tab too, when the bar has an action, so
@@ -218,6 +228,9 @@ mounts it, and the production build leaves it out.
 - `bannerParts.tsx`: the parts of the bar. `PullRequestNumber` links the
   number of a pull request to GitHub, so the desktop bar of a pull request
   shows no other link to it.
+- `barKeys.ts`: `CommandKeyOf`, the key of the command of a control for
+  its tooltip, and `barCommands`, the commands that the keys of the bar
+  run.
 - `dev/`: the development page.
 
 See [the shared contracts](../shared/README.md).

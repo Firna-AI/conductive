@@ -16,7 +16,9 @@ export type ListChange = Change<ListData>
  * Archive. A workspace that the list has keeps its place: its section and
  * its order change only through a read of the list or a move. The
  * record of a workspace can be older than a move, so its section does not
- * count. A new workspace goes to the top.
+ * count. A listed row also keeps its GitHub summary, which only a list
+ * read replaces on the same branch. A branch change takes the new branch's
+ * summary. A new workspace goes to the top with its initial summary.
  */
 export function workspaceUpdated(workspace: Workspace): ListChange {
   return (list) => {
@@ -27,7 +29,14 @@ export function workspaceUpdated(workspace: Workspace): ListChange {
       ...list,
       workspaces: list.workspaces.map((item) =>
         item.id === workspace.id
-          ? { ...workspace, sectionId: item.sectionId }
+          ? {
+              ...workspace,
+              sectionId: item.sectionId,
+              github:
+                item.branch === workspace.branch
+                  ? item.github
+                  : workspace.github,
+            }
           : item,
       ),
     }

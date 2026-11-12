@@ -164,6 +164,7 @@ export async function toolFixture(harness: TestHarness) {
       branch: `${input.owner.githubLogin}/berlin-ij90`,
       choice: input.choice,
       state: 'starting' as const,
+      github: null,
       createdAt: TEST_TIME,
       updatedAt: TEST_TIME,
       archivedAt: null,
@@ -178,10 +179,19 @@ export async function toolFixture(harness: TestHarness) {
     ),
   }))
   const services = {
+    writeSection: vi.fn<AgentToolServices['writeSection']>(),
+    previewCall: vi.fn<AgentToolServices['previewCall']>(),
+    replayWorkspaceCreation: vi
+      .fn<AgentToolServices['replayWorkspaceCreation']>()
+      .mockResolvedValue(null),
+    writeWorkspace: vi.fn<AgentToolServices['writeWorkspace']>(),
     callingTurn,
     ownerDefaultChoice,
     createWorkspace,
     models,
+    getSession: vi.fn<AgentToolServices['getSession']>(),
+    getMessage: vi.fn<AgentToolServices['getMessage']>(),
+    manageSession: vi.fn<AgentToolServices['manageSession']>(),
     listSessions: vi.fn<AgentToolServices['listSessions']>(),
     readSession: vi.fn<AgentToolServices['readSession']>(),
     writeSession: vi.fn<AgentToolServices['writeSession']>(),

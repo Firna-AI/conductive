@@ -13,6 +13,7 @@ import type { FakeApiServer } from '../test-support/fake-api'
 import { AppModelContext } from './context'
 import { PanelContext } from './layout/panels'
 import { PaletteProvider } from './palette/PaletteProvider'
+import { ShortcutProvider } from './shortcuts/ShortcutProvider'
 import { ThemeRoot } from './ui/ThemeRoot'
 import { ViewportProvider, type Viewport } from './ui/viewport'
 
@@ -50,7 +51,9 @@ export function AppProviders(
           <PanelContext.Provider value={new PanelLayout(app.services.storage)}>
             <ViewportProvider viewport={props.viewport ?? 'desktop'}>
               <ThemeRoot scheme="dark">
-                <PaletteProvider>{props.children}</PaletteProvider>
+                <ShortcutProvider>
+                  <PaletteProvider>{props.children}</PaletteProvider>
+                </ShortcutProvider>
               </ThemeRoot>
             </ViewportProvider>
           </PanelContext.Provider>

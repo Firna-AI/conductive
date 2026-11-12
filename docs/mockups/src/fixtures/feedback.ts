@@ -1,4 +1,12 @@
-import type { Attachment } from './attachments'
+/**
+ * A screenshot of a feedback draft: an image file with its name and its
+ * size. The dialog sends it with the message, so it has no upload state,
+ * no draft mark, and no copy path in a cloud computer.
+ */
+export type FeedbackScreenshot = {
+  name: string
+  sizeBytes: number
+}
 
 /**
  * The feedback that Cal sends from the command palette: a message about
@@ -8,9 +16,8 @@ export const feedbackMessage =
   'After I restart the dev server, the Preview tab stays blank until I reload the page.'
 
 /** The screenshot that Cal pasted, a capture of the screen of a Mac. */
-export const feedbackScreenshot: Attachment = {
+export const feedbackScreenshot: FeedbackScreenshot = {
   name: 'Screenshot 2026-11-10 at 14.32.05.png',
-  kind: 'image',
   sizeBytes: 1_887_436,
 }
 
@@ -52,16 +59,14 @@ export const longFeedbackMessage = [
 ].join('\n')
 
 /** The three captures of the long report, with the names that a Mac gives them. */
-export const longFeedbackScreenshots: readonly Attachment[] = [
+export const longFeedbackScreenshots: readonly FeedbackScreenshot[] = [
   {
     name: 'Screenshot 2026-11-10 at 14.31.08.png',
-    kind: 'image',
     sizeBytes: 412_337,
   },
   feedbackScreenshot,
   {
     name: 'Screenshot 2026-11-10 at 14.33.51.png',
-    kind: 'image',
     sizeBytes: 655_360,
   },
 ]

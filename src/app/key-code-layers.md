@@ -2,8 +2,9 @@
 
 This page is part of the [web app guide](README.md), beside
 [Key code](key-code.md). It names the entry points of the command
-palette, the layers of each frame, New workspace as a dialog, and
-feedback. Each path is relative to `src/app/`, the folder of this page.
+palette and the keyboard shortcuts, the layers of each frame, New
+workspace as a dialog, and feedback. Each path is relative to `src/app/`,
+the folder of this page.
 
 - `palette/`: the command palette without React. `palette-results.ts`
   gives the groups and the empty state of each tab for a query, from
@@ -14,23 +15,51 @@ feedback. Each path is relative to `src/app/`, the folder of this page.
   ranks the matches. `rowTexts` includes the workspace number label, such
   as `W-395`, in the search texts. `withNumberLabel` adds that label when
   a query word matches it. `../shell/palette/PaletteList.tsx` draws it
-  before the name. `commands.ts` holds the labels and the search words.
-  `page-actions.ts` gives the offers of the parts of the page and
-  `workspaceActionIds`. `palette-org.ts` chooses the org of the palette,
-  `palette-keys.ts` the palette key and what it does, and `controller.ts`
-  the open state and the offers of one tab, with `show`, the one way to
-  open the palette. `feedbackRow` in `palette-rows.ts` is the row of Send
+  between the list mark and the name. `commands.ts` holds the labels, the search words, and
+  `actionCommands`, the command of the keys of each action. Each command
+  row names its command in `CommandRow.command`. The Account group of the
+  Settings tab lists `accountSettingIds` in the order of the Account page
+  of `../shell/account/AccountScreen.tsx`, tab by tab, so This Mac follows
+  Sign-in in the Mac app. A section that the page adds or moves takes the
+  same place in that list. The group ends with Keyboard shortcuts, which
+  opens that tab. `feedbackRow` in `palette-rows.ts` is the row of Send
   feedback, with no link, and `palette-groups.ts` ends the Actions tab
   with its Help group.
+  `listed-commands.ts` gives `listedCommands`, the commands that the
+  palette lists now with their rows, which the keys of the palette run.
+  It leaves out Switch to org 1 to 9, which the org rail runs.
+  `page-actions.ts` gives the offers of the parts of the page and
+  `workspaceActionIds`. `palette-org.ts` chooses the org of the palette,
+  and gives `switchCommand`, the key of the Switch to row of an org by its
+  place in the rail. `controller.ts` gives the open state and the offers
+  of one tab, with `show`, the one way to open the palette.
 - `../shell/palette/`: the layer of the palette. `PaletteProvider.tsx`
-  hears the key and closes the palette, `PaletteLayer.tsx` draws it in a
-  frame, `palette-context.ts` gives `usePaletteOffer` and
-  `usePaletteTerminal`, and `SearchRow.tsx` is the Search row of the list.
-  `use-palette-source.ts` gives the list and the repositories of the org
-  with their load states, and `PaletteStatus.tsx` draws the status part.
+  offers the palette key to the shortcut layer and closes the palette,
+  `PaletteLayer.tsx` draws it in a frame, `palette-context.ts` gives
+  `usePaletteOffer`, and `SearchRow.tsx` is the Search row of the list,
+  with the palette key of the keymap. `PaletteKeys.tsx` offers the
+  commands that the palette lists to the keys, with `useRowAction` of
+  `row-action.ts`, the action of a row: its own run, its page, New
+  workspace as the page or the dialog, or the Feedback dialog of Send
+  feedback. `PaletteList.tsx` ends each command row with the key of its
+  command.
+  `use-palette-source.ts` gives `usePaletteBase`, what the actions and the
+  settings read, and the list and the repositories of the org with their
+  load states. `PaletteStatus.tsx` draws the status part.
+- `../shell/shortcuts/`: the shortcut layer: the one key listener on
+  `AppServices.onKey`, the keymap with the changes of the account, the
+  commands that the parts of the page offer, the terminals that keep
+  their keys, the recorder mark, the open layers, and the key hints. Its
+  [README](../shell/shortcuts/README.md) says how a key goes, and which
+  part of the page offers each command.
+- `../shell/account/shortcuts/`: the Keyboard shortcuts tab of the
+  account, with its recorder, Replace, Remove, Reset, Reset all, and
+  search. Its [README](../shell/account/shortcuts/README.md) gives its
+  rules.
 - `../shell/ui/layers.ts`: `OpenLayers`, the open menus of every UI kit,
   which say whether they closed, and the modal layers with their owners.
-  The palette reads them before it opens.
+  The shortcut listener reads them before a key runs a command, and the
+  palette reads them before it opens.
 - `../shell/layout/frames.tsx`: the frames: the desktop frame with the
   rail, a desktop page alone, such as Create org, and the phone frame.
   `../shell/layout/DesktopLayers.tsx`: `DesktopLayers`, the layers and the

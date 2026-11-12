@@ -10,6 +10,7 @@ import type { WorkspaceArchiveState } from './archive-types'
 import { CREATE_CHECKPOINT_KEY } from '../members/creation-checkpoint'
 import { clearRetention } from './retention-data'
 import { readArchiveResource } from './archive-data'
+import { startCallInPlace, type StartCall } from './start-guard'
 
 interface Waiter<T> {
   publish(value: T): void
@@ -19,8 +20,9 @@ export async function recoverArchivedStart(
   db: D1Database,
   workspaceId: string,
   archive: (id: string) => Promise<void>,
+  call: StartCall = startCallInPlace,
 ) {
-  const row = await readArchiveResource(db, workspaceId)
+  const row = await call(() => readArchiveResource(db, workspaceId))
   if (!row || row.archivedAt === null || row.orgDeleted !== null) return false
   await archive(workspaceId)
   return true
@@ -31,6 +33,7 @@ export async function finishArchivedStart(
   waiters: Waiter<WorkspaceStartResult>[],
   admission: Waiter<WorkspaceCreationAdmission>,
 ) {
+  const job = await storage.job()
   await storage.stop()
   const result = {
     ok: false,
@@ -40,7 +43,7 @@ export async function finishArchivedStart(
       log: null,
     },
   } as const
-  await storage.complete(result)
+  if (job) await storage.complete(job.attempt, result)
   for (const waiter of waiters) waiter.publish(result)
   admission.publish((await storage.admission()) ?? result)
 }

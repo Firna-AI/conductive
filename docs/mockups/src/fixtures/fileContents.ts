@@ -5,7 +5,7 @@
 import type { TableCells } from '../../../../src/markdown/table-rows'
 
 export type MarkdownBlock =
-  | { kind: 'h1' | 'h2' | 'p'; text: string }
+  | { kind: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'p'; text: string }
   | { kind: 'ol' | 'ul'; items: readonly string[] }
   | { kind: 'code'; text: string }
   | ({ kind: 'table' } & TableCells<string>)
@@ -39,7 +39,9 @@ export const readme: readonly MarkdownBlock[] = [
     text: 'Checkout suggests addresses as you type. Suggestions come from `/api/places`, which needs `PLACES_API_KEY`. Without the key, the form falls back to manual entry.',
   },
   { kind: 'h2', text: 'Tests' },
-  { kind: 'code', text: 'npm test\nnpx playwright test' },
+  { kind: 'code', text: 'npm test' },
+  { kind: 'h3', text: 'End-to-end tests' },
+  { kind: 'code', text: 'npx playwright test' },
 ]
 
 export const autocompleteHook = `import { useEffect, useState } from 'react'

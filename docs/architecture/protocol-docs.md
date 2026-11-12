@@ -15,6 +15,8 @@ This page lists each protocol doc and what it covers.
   - [Life of a workspace](../protocol/workspace-life.md): the start steps,
     the time limits, the states, the stop and resume, the archive, the
     restore, and Continue.
+    - [Workspace list marks](../protocol/workspace-marks.md): GitHub colours,
+      agent motion, unread output, and reduced motion.
   - [Continue](../protocol/continue.md): the next task of a workspace after a
     merge, on a new branch with the same sandbox and sessions.
   - [Workspace menu](../protocol/workspace-menu.md): the menu of a workspace
@@ -27,18 +29,26 @@ This page lists each protocol doc and what it covers.
   - [Messages and attachments](../protocol/messages-and-attachments.md)
     - [Message attachments](../protocol/message-attachments.md): the size
       limit, the upload, the storage, the copy into the cloud computer, and
-      the deletion of the files of a message.
+      the deletion of the files of a message, and their chips and their
+      drop in the message field.
   - [File mentions](../protocol/file-mentions.md): the list of `@` in the
-    composer, the chips of files and folders, and the removal of each chip
-    of the composer.
+    composer, the chips of files and folders, the sent chips of attached
+    files, and the removal of each chip of the composer.
   - [Agent runner](../protocol/agent-runner.md): the connection of the runner,
-    its events and their limits, its turns, its port reports, and the repair
+    its events and their limits, its turns, the background work of Claude
+    turns with its note and its time limit, its port reports, and the repair
     of lost workspace updates.
     - [Listening ports](../protocol/listening-ports.md): the scanner's
       eligibility, labels, limits, and full reports.
+    - [Lost workspace updates](../protocol/lost-workspace-updates.md): the
+      reports that belong to no session, the repair request after a refused
+      update, and the notice of a failed repair.
   - [Session transcripts](../protocol/session-transcripts.md): copying a
-    session as concise or full Markdown, its route, and the reads of
-    agents.
+    session as concise or full Markdown, and the text of a copy.
+    - [Transcript routes](../protocol/transcript-routes.md): the route of
+      a copy.
+    - [Transcript reads by agents](../protocol/transcript-reads.md): the
+      route of `read_session`, and the parts of a long text.
 - [Access and security](../protocol/access-and-security.md): sign-in, the
   gates, the secrets, and the isolation of sandboxes and previews.
   - [Isolation of orgs and sandboxes](../protocol/isolation.md)
@@ -50,10 +60,24 @@ This page lists each protocol doc and what it covers.
   Worker routes that add the agent login to each model request.
 - [GitHub banner](../protocol/github-banner.md): the pull request bar, its
   actions, Merge, and its events.
+  - [The GitHub state](../protocol/github-summary.md): the four summary
+    values for workspace list marks and their order.
 - [Agent tools](../protocol/agent-tools.md): the tools that agents use in a
-  sandbox.
+  sandbox, and Mac commands.
+  - [Agent tool access](../protocol/agent-tool-access.md): what each call
+    reaches, which calls need an active turn, and the rights of the sender.
+  - [Workspace calls](../protocol/workspace-calls.md): the calls that
+    create, list, get, rename, move, and archive workspaces, and the lists
+    that a create call takes.
   - [Session calls](../protocol/session-calls.md): the calls that start,
     list, message, and read the sessions of the org.
+    - [Session management](../protocol/session-management.md): the calls
+      that get, rename, close, and stop a session, and get a message.
+  - [Section and preview calls](../protocol/section-and-preview-calls.md):
+    the calls that create and delete sections, and list, open, and close
+    port previews.
+  - [Names from the workspace tools](../protocol/tool-names.md): the rule
+    for the names and titles that the calls give.
 - [Orgs and members](../protocol/orgs-and-members.md): orgs, sections,
   roles, the first run, and the end of an org.
 - [Pricing](../protocol/pricing.md): the plans and their cloud hours, the
@@ -80,6 +104,13 @@ This page lists each protocol doc and what it covers.
 - [Feedback](../protocol/feedback.md): the Feedback dialog that Send
   feedback opens, its screenshots and context, the reply address, the
   routes, and the email to the team inbox.
+- [Keyboard shortcuts](../protocol/keyboard-shortcuts.md): the commands that
+  keys run, where a key goes, and where the changes of a person live.
+  - [Keyboard shortcuts: the keys](../protocol/keyboard-shortcuts-keys.md)
+  - [Keyboard shortcuts: fixed keys and text keys](../protocol/keyboard-shortcuts-fixed-keys.md)
+  - [Keyboard shortcuts: the hosts](../protocol/keyboard-shortcuts-hosts.md)
+  - [Keyboard shortcuts: matching a press](../protocol/keyboard-shortcuts-matching.md)
+  - [Keyboard shortcuts: the settings tab](../protocol/keyboard-shortcuts-tab.md)
 - [Org image](../protocol/org-image.md): the org image, its builds and its
   refreshes, and the first build of a new org.
 - [Agents and sessions](../protocol/agents-and-sessions.md): the agents and
@@ -87,13 +118,19 @@ This page lists each protocol doc and what it covers.
 - [Workspace links](../protocol/workspace-links.md): Copy link, and the chips
   that show workspace links in chat.
 - [Chat Markdown](../protocol/chat-markdown.md): the formatting of agent
-  messages in the chat, with their tables.
+  messages in the chat, with their headings and lists, and their lines in
+  the work of a turn.
+  - [Chat tables](../protocol/chat-tables.md): the tables of agent
+    messages, their short rows and wide tables, and the table rules that
+    they share with the file preview.
 - [GitHub tokens](../protocol/github-tokens.md): the git and CLI account
   scope of a cloud computer, the author of each commit in a sandbox, and the
   GitHub actions of the Worker as a member.
 - [Agent instructions](../protocol/agent-instructions.md): the text that each
-  agent session gets, the sender line and the branch line of each message,
-  and the base prompt of Claude agents.
+  agent session gets, and the sender line and the branch line of each
+  message.
+  - [Base prompts](../protocol/base-prompts.md): the base prompt of Claude
+    agents and the base instructions of Codex agents.
 - [Waitlist](../protocol/waitlist.md): app access, the waitlist screen, the
   ways in, the approval email, and the record of app access.
 - [Invite and referral codes](../protocol/waitlist-codes.md): the codes of

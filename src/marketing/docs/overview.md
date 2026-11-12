@@ -41,8 +41,9 @@ Select **+** to start another session in the same workspace.
 The sessions share its files and branch.
 Use a separate workspace when a task needs its own files and branch.
 
-Agents can create sessions, send messages, and read results across the org's workspaces.
-Messages from agent tools link to the session that sent them.
+Agents can create and manage workspaces and sessions across the org.
+They can read results, manage sections, and open private previews.
+Messages and stops from agent tools link to the sending session.
 
 - [Connect and share agent logins](/docs/agent-logins)
 - [Use sessions and chat](/docs/sessions-and-chat)
@@ -94,7 +95,7 @@ Work in an org with people you trust with your agent and GitHub logins.
 Each workspace has a number, such as `W-12`.
 Select the number in its header to copy its link.
 Paste the link into a chat in the same org.
-The link shows the workspace's number, name, and state in a small box.
+The link shows the workspace's number and name with the same mark as the workspace list.
 
 - [Manage orgs and members](/docs/orgs-and-members)
 - [Understand access to credentials](/docs/security)

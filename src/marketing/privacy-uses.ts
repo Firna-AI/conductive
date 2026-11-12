@@ -15,7 +15,8 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         in, and they show who owns and who sends each piece of work. The
         operator sees the age of the account when you wait for app
         access. Your login and display name also tell the agents who sent
-        each message.`,
+        each message. Your ${productName} user ID goes with them, so that
+        agents can find your workspaces.`,
       text`Commit authors: by default, each commit in a cloud computer names
         the person whose GitHub token Git uses as author and committer. In a
         workspace with older cloud computer software, agent commits name the
@@ -106,7 +107,11 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         sent by pull request bar actions, and the answers of the agents as
         the chat history of each workspace.
         Messages from agent tools end with Sent by: and a link to the
-        sending session. The chat history keeps that link. It also records
+        sending session. The chat history keeps that link.
+        A stop through agent tools also records the sending session.
+        This includes a close that stops a running turn. The chat and
+        copied transcripts name that session with Stopped from and its link.
+        The chat history also records
         who used Continue, the new branch, and the branch it starts from. It keeps
         the last file list and the last summary of changes of each
         workspace. With the chat history, it keeps each list of the
