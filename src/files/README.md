@@ -229,6 +229,8 @@ screen tests keep their static markup checks in Node.
 - `model/files-store.ts`: `WorkspaceFiles`, the live tree and changes of a
   workspace with their failed repairs, and `versionOf`, which grows when an
   event may change the file or the diff of a path.
+- `model/files-snapshot.ts`: `FilesSnapshot`, what the screens read from
+  the store, with the label of each read in `readLabels`.
 - `model/files-sync.ts`: the merge rules of the routes and the stream.
 - `model/failed-repairs.ts`: `repairsAfter`, the failed repairs of the
   lists after one event of the stream.
@@ -248,7 +250,7 @@ screen tests keep their static markup checks in Node.
   envelope also keeps the failed repair of a file list.
 - `navigation.ts`: `FilesTarget`, `FilesNavigation`, and the tab types of
   the workspace view.
-- `model/file-labels.ts`: `pathLabel`, `listLabel`, and `pageLabel`, the
+- `model/file-labels.ts`: `pathLabel`, `pageLabel`, and `tabLabel`, the
   label that a screen shows for a real path.
 - `panel/FilesPanel.tsx`, `page/FilePage.tsx`, `page/DiffPage.tsx`, and
   `tabs/FileTabItem.tsx`: the screens.

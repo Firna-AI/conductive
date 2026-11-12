@@ -8,7 +8,7 @@ import { useNavigation } from '../../../app/navigation'
 import { routes } from '../../../app/router'
 import type { RenderTab, TabDraw } from '../../../chat/components/tab-row'
 import type { ChatMentions } from '../../../chat/mentions/MentionsContext'
-import { listLabel } from '../../../files/model/file-labels'
+import { tabLabel } from '../../../files/model/file-labels'
 import type { WorkspaceFiles } from '../../../files/model/files-store'
 import type {
   FilesNavigation,
@@ -54,7 +54,7 @@ function useTabLabels(
     read,
   )
   return (tab) =>
-    snapshot === null ? null : listLabel(snapshot, tab.path, tab.kind)
+    snapshot === null ? null : tabLabel(snapshot, tab.path, tab.kind)
 }
 
 /**
