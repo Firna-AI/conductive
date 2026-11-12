@@ -9,6 +9,7 @@ import { pathStates } from '../fixtures/maskedFiles'
 import { bannerStates } from '../fixtures/pullRequests'
 import { runWorkspaceKeys } from '../fixtures/runWorkspaces'
 import { startErrorKeys } from '../fixtures/starting'
+import { terminalStates } from '../fixtures/terminals'
 import { openableWorkspaces } from '../fixtures/workspaces'
 import { barStateDefaults, barStateKeys, barStateProperties } from './barState'
 import { composerStates, tabStates } from './chatStates'
@@ -35,6 +36,7 @@ export const workspaceStateSchema = {
     'banner',
     'files',
     'tool',
+    'terminals',
     'ports',
     'focus',
     'tab',
@@ -89,6 +91,13 @@ export const workspaceStateSchema = {
     /** The tool of the tools panel. */
     tool: { enum: toolKeys },
     /**
+     * The terminals of the Terminal tool, from decisions 1 and 2 of the
+     * terminal tabs change: the one terminal that a workspace starts with, three terminals,
+     * the limit of ten, three terminals whose shown connection ended, or the
+     * one terminal of older cloud computer software, which shows no tabs.
+     */
+    terminals: { enum: terminalStates },
+    /**
      * The Preview tool: a preview in its frame, or "+" beside the tabs of
      * the open previews. With no preview open, the port form lists the
      * detected servers, says that the runner reports none, or reads as
@@ -124,7 +133,8 @@ export const workspaceStateSchema = {
      * What lies open over the workspace: the session history, the question
      * before a running session closes, the owner of the workspace, the tab
      * menu of the first session, or the question of Continue with work that
-     * is not pushed.
+     * is not pushed. Or the question before a terminal closes, or the toast
+     * of a terminal that did not open or close.
      */
     overlay: {
       enum: [
@@ -134,6 +144,9 @@ export const workspaceStateSchema = {
         'reassign',
         'tab-menu',
         'continue-unpushed',
+        'close-terminal',
+        'terminal-open-failed',
+        'terminal-close-failed',
       ],
     },
     /**
@@ -209,6 +222,7 @@ export const readyWorkspace: WorkspaceState = {
   banner: 'ready-to-merge',
   files: 'changes',
   tool: 'terminal',
+  terminals: 'one',
   ports: 'open',
   focus: 'chat',
   tab: 'session',
