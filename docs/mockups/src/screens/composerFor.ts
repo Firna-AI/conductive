@@ -137,6 +137,8 @@ export function isRunning(state: WorkspaceState): boolean {
  * that the model list of the endpoint does not name. After a turn that the
  * endpoint did not serve, the session keeps the model of that turn.
  * A message for an agent that is not connected waits, and Send is off.
+ * The composer belongs to a session tab, where the key of Fast mode runs,
+ * so the Fast row of the picker shows that key.
  *
  * Send also waits while a file uploads, or while a failed upload waits for
  * Try again or Remove. A file over the size limit stays out, and Send takes
@@ -211,6 +213,7 @@ export function composerFor(
       files && state.composer === 'attachments' ? paths.attachments : undefined,
     picker: state.composer === 'picker' || unlistedPicker,
     sessionAgent: fresh ? undefined : choice.agent,
+    fastKey: true,
     // Only the pickers of the owner of the login follow its model list, and
     // a session keeps its current model.
     hiddenModels:

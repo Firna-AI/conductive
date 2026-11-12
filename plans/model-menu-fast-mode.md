@@ -424,6 +424,35 @@ My calls, on 2026-11-12, as the docs implementor of Milestone 2:
   standard speed. Without a known cause, the end shows "Standard speed"
   alone. Reason: a missing speed then means an older runner.
 
+My calls, on 2026-11-12, as the ui implementor of Milestone 6:
+
+- The end of fast mode decision 257 has its own page,
+  `app/chat/standard-speed`, beside `app/chat/unavailable-files`. Reason:
+  `app/fast-mode` already shows four screens, and the end belongs to the
+  chat, as the other notes of a turn end do.
+- The note stands beside the duration, and the files go under it. It is
+  muted text with a gauge icon. Reason: the speed explains the duration,
+  and "Changed files unavailable" also stands beside the duration.
+- The words are "Standard speed · Fast limit reached" and "Standard speed ·
+  Older cloud computer software". Reason: the dot joins the notes of a turn
+  end, "Fast limit reached" are the words of Claude, and the app already
+  names an older runner "older cloud computer software". The words name no
+  time until the reset, because the note stays after the reset.
+- A stopped fast turn ends its line with the same words, before the notes
+  of its files. Reason: the end of a stopped turn gives its speed too, and
+  decision 109 draws the stopped turn as well.
+- The Fast row shows ⇧⌘E between its label and its switch. Reason: the
+  switch keeps its place at the end, in the column of the check marks.
+- Only the model menu of a session shows the key, and only on desktop.
+  Reason: the command runs only where a session tab is shown, and the phone
+  layout shows no key hint.
+- Fast mode has no search words on the Keyboard shortcuts tab. Reason:
+  Model picker and Next effort level have none, and the label holds "Fast".
+- Firefox on Windows and Linux shows Ctrl+Shift+E as a normal key. Reason:
+  the table of the keys that a tab keeps does not list it.
+- No state draws a cause that the app does not know. Reason: the protocol
+  gives its words, "Standard speed" alone, and the note keeps its look.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -590,17 +619,21 @@ Tags: mockup
 
 Depends on: 1
 
-- [ ] Fast mode decision 257: add a chat state in which the end line of a
+The page `app/chat/standard-speed` draws the end of a fast turn at
+standard speed. The Fast row of a session and the Keyboard shortcuts tab
+show the key. Screenshots of the smoke test are in `.context/fast-mode/m6/`.
+
+- [x] Fast mode decision 257: add a chat state in which the end line of a
       fast turn shows "Standard speed" and the cause. Draw one Claude
       cause, such as the fast rate limit, and the cause of an older
       runner. A fast turn at fast speed and a turn without fast show
       nothing new.
-- [ ] Fast mode decision 258: show ⇧⌘E at the end of the Fast row in the
+- [x] Fast mode decision 258: show ⇧⌘E at the end of the Fast row in the
       states of `app/fast-mode`, as the rows of a menu show their keys.
       Add the command to the Chat group of the Keyboard shortcuts tab,
       after Next effort level.
-- [ ] Update `docs/mockups/catalogue.md`.
-- [ ] Run `npm run mockups:check`, and smoke-test the changed pages with
+- [x] Update `docs/mockups/catalogue.md`.
+- [x] Run `npm run mockups:check`, and smoke-test the changed pages with
       screenshots under `.context/fast-mode/m6/`.
 
 ## Milestone 7: The speed of a turn (fast mode decision 257)

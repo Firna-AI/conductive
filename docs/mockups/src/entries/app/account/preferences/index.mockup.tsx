@@ -29,9 +29,9 @@ export const preferences = defineScreen({
       slug: 'model-menu',
       title: 'Model menu',
       description:
-        'The menu of Model and effort is open, with Fast on. New workspaces then start with fast mode on, and the trigger reads "Opus 5.5 High Fast".',
+        'The menu of Model and effort is open, with Fast on. New workspaces then start with fast mode on, and the trigger reads "Opus 5.5 High Fast". The Fast row shows no key here.',
       rationale:
-        'The saved default is the choice of the same picker, so it carries fast mode too (decision 255).',
+        'The saved default is the choice of the same picker, so it carries fast mode too (fast mode decision 255). The key of Fast mode runs only where a session tab is shown (fast mode decision 258), so the row shows no key.',
       props: { modelMenu: 'open-fast' },
     },
   ],

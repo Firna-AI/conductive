@@ -6,6 +6,8 @@ import { DiffStat } from '../files/DiffStat'
 import { paths } from '../../paths'
 import { EndReasonLine } from './EndReasonLine'
 import { moreFiles, turnFilesUnavailable } from './lostCopy'
+import type { StandardSpeedCause } from './speedCopy'
+import { StandardSpeedNote } from './StandardSpeedNote'
 import styles from './TurnEnd.module.css'
 
 function FileChip(props: { file: ChangedFile }) {
@@ -33,6 +35,8 @@ function FileChip(props: { file: ChangedFile }) {
  * ends with its duration, and plain text takes the place of the chips.
  * `endReason` names a cause other than the end of the reply, such as the
  * time limit of background work: its line sits above the row.
+ * `standardSpeed` names why a fast turn ran at standard speed: its note
+ * stands beside the duration, which it explains, and the files go under it.
  */
 export function TurnEnd(props: {
   duration: string
@@ -40,11 +44,11 @@ export function TurnEnd(props: {
   omittedFiles?: number
   filesUnavailable?: boolean
   endReason?: TurnEndReason
+  standardSpeed?: StandardSpeedCause
 }) {
   const more = props.omittedFiles ?? 0
-  const row = (
-    <div className={styles.end}>
-      <span className={styles.duration}>{props.duration}</span>
+  const files = (
+    <>
       {props.filesUnavailable ? (
         <span className={styles.unavailable}>
           <CircleSlash aria-hidden className={styles.icon} size={12} />
@@ -61,6 +65,19 @@ export function TurnEnd(props: {
           {more > 0 ? <li className={styles.more}>{moreFiles(more)}</li> : null}
         </ul>
       ) : null}
+    </>
+  )
+  const row = (
+    <div className={styles.end}>
+      <span className={styles.duration}>{props.duration}</span>
+      {props.standardSpeed === undefined ? (
+        files
+      ) : (
+        <div className={styles.facts}>
+          <StandardSpeedNote cause={props.standardSpeed} />
+          {files}
+        </div>
+      )}
     </div>
   )
   if (props.endReason === undefined) return row

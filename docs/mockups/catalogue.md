@@ -27,13 +27,13 @@ how a screen is built, and links to the other pages.
 | `app/new-workspace` | An empty chat, the first build of a new org, a repository that waits for its build, its error, files on the first message, the model menu with Fast on, the dialog, a pasted workspace link, the start, a queued second message, the first turn, a failed start, Try again |
 | `app/routines` | The routines of the org, a routine, its triggers, its runs, and a run workspace |
 | `app/org-settings`  | General with Delete org, then Repositories and Cloud computer with the notice of a repository change, the first build of a new org, and Members |
-| `app/chat`          | A finished turn with its work folded, then running turns, turns that an agent stopped, open work, tables in replies, lists in replies, headings in replies, lost data, lost updates, unread files, and the time limit of background work |
+| `app/chat`          | A finished turn with its work folded, then running turns, turns that an agent stopped, open work, tables in replies, lists in replies, headings in replies, lost data, lost updates, unread files, the time limit of background work, and a fast turn at standard speed |
 | `app/mac-commands`  | A command that an agent runs on the Mac of the sender, in the chat            |
 | `app/sessions`      | A new session, the history, closing one while it works, and a linked session  |
 | `app/reassign`      | The owner of a workspace, its reassign menu, a member's view, a stopped turn  |
 | `app/archive`       | An archived workspace with Restore, the toast after Archive, the Archived group, the restored workspace, the end of Restore, and the bar after the delete |
 | `app/composer`      | Two uploaded files in a sentence, the picker, another member's login, and a missing agent |
-| `app/fast-mode`     | The Fast switch of the model menu on and off, the trigger with Fast, and a model without fast mode |
+| `app/fast-mode`     | The Fast switch of the model menu on and off, with its key, the trigger with Fast, and a model without fast mode |
 | `app/attachments`   | A file that uploads in the text, then a drop, a failed upload, a file over 25 MB, sent files, the file tab of a sent screenshot, and a first message with files |
 | `app/workspace-links` | Chips in a message and an answer, then Copy link and its failure, a pasted link, a link of another org, session chips, and messages that an agent sent |
 | `app/file-mentions` | The list of `@` with a query, then the list without one, its other states, and the file chips of the composer and of a sent message |
@@ -277,7 +277,10 @@ that sends feedback.
 The catalogue draws the Keyboard shortcuts tab in the Mac app and in a
 browser, from decisions 190 to 196. The pages of
 `app/account` and `mac-app/this-mac` show it as the third tab of the
-account.
+account. Fast mode decision 258 adds Fast mode to the Chat group, after
+Next effort level, with ⇧⌘E on a Mac and Ctrl+Shift+E on Windows and
+Linux. On desktop, the Fast row of the model menu of a session shows the
+same key before its switch, as `app/fast-mode` shows.
 
 - `app/account/shortcuts` shows the tab in a normal Chrome tab on a Mac.
   The search field of decision 195 stands at the top. The lines under it
