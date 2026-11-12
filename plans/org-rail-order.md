@@ -389,30 +389,60 @@ Depends on: 1, 3
 
 Let the person reorder the orgs on the rail and in the phone org sheet.
 
-- [ ] Give `AppModel.orgs` in `src/app/app-model.ts` a confirmed list and
+UI design calls of 12 November 2026:
+
+- `OrgList` in `src/app/org-list.ts` keeps its own confirmed list and
+  moves, not a `Resource`. Reason: a `Resource` needs a read of its own,
+  and the org list loads only with the first load of the app.
+- A saved move joins the confirmed list once each earlier move has its
+  answer. Reason: no later read confirms a move, and a new org must then
+  go after it, as on the server.
+- Escape during a drag in the org switcher ends only the drag, and the
+  sheet stays open. Reason: Escape closes only the newest open layer in
+  the app, and the drag is newer than the sheet.
+- The lifted copy hangs 6 px below the pointer and to its right, at the
+  offsets that the mockups give below the drop line. Reason: the initials
+  of the tiles that it passes then still show, and the tab drag also hangs
+  its copy below the pointer.
+- The menu keys open the tile menu 8 px right of the tile, level with its
+  top. Reason: the name of a focused tile shows 8 px right of the tile.
+- The rail also hides the name of Operator during a drag. Reason: that
+  name would name the item under the pointer, not the drop place.
+
+- [x] Give `AppModel.orgs` in `src/app/app-model.ts` a confirmed list and
       pending changes, as the workspace list has. Add the move: it shows
       at once, and a failure takes back only that move.
-- [ ] Add the drag to `src/shell/layout/OrgRail.tsx` with the shared
+- [x] Add the drag to `src/shell/layout/OrgRail.tsx` with the shared
       pointer drag. Keep the file under 300 lines. Split the drag and the
       menu into their own files.
-- [ ] Add the tile menu with Move up and Move down, the screen reader
+- [x] Add the tile menu with Move up and Move down, the screen reader
       message, and the focus return.
-- [ ] Add Alt and Up or Down on a focused tile (decision 517 B), with the
+- [x] Add Alt and Up or Down on a focused tile (decision 517 B), with the
       screen reader message.
-- [ ] Let the tile of a suspended or deleted org move like any tile
+- [x] Let the tile of a suspended or deleted org move like any tile
       (decision 516 A).
-- [ ] Add the long press drag to the org sheet in
+- [x] Add the long press drag to the org sheet in
       `src/shell/list/HomeList.tsx`.
-- [ ] Tests:
-  - [ ] A drag and a menu move call the move with the right index.
-  - [ ] Escape cancels a drag. A click without a move opens the org.
-  - [ ] Move up is off on the first tile, and Move down is off on the
+- [x] Tests:
+  - [x] A drag and a menu move call the move with the right index.
+  - [x] Escape cancels a drag. A click without a move opens the org.
+  - [x] Move up is off on the first tile, and Move down is off on the
         last tile.
-  - [ ] Alt and Up or Down move a focused tile, and the focus stays on it.
-  - [ ] A failed move takes back only that move.
-- [ ] Check the rail in a browser with `npm run dev`: drag, menu, Escape,
+  - [x] Alt and Up or Down move a focused tile, and the focus stays on it.
+  - [x] A failed move takes back only that move.
+- [x] Check the rail in a browser with `npm run dev`: drag, menu, Escape,
       reload, and the phone layout.
-- [ ] Update the README of each changed area.
+  - [x] Drag, menu, Escape, keys, and the phone layout.
+  - [x] Reload. The dev fake builds its state again at each page load, so a
+        reload in the browser shows the seed order. The Worker tests of
+        Milestone 3 prove that the server saves a move and that
+        `GET /api/orgs` returns the saved order. Agent's call of 12
+        November 2026: those tests stand for the reload check, because a
+        browser check against the real Worker needs GitHub sign-in values
+        that this machine does not have.
+- [x] Update the README of each changed area.
+
+The browser check evidence is in `.context/org-rail-order/m4-browser/`.
 
 ## Milestone 5: Verification, commit, review, and pull request
 

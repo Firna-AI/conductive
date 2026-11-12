@@ -74,6 +74,43 @@ describe('AppModel', () => {
     expect(app.account.account.get()?.newWorkspaceView).toBe('page')
   })
 
+  test('a failed org move takes back only that move, and keeps a later move and a new org', async () => {
+    const server = new FakeApiServer()
+    const held = new HeldRequests(server)
+    const app = new AppModel(testServices(server, { fetch: held.fetch }))
+    await app.start()
+    const order = () => app.orgs.get().map((org) => org.id)
+    held.hold('PUT', API_PATHS.orgOrder)
+    held.hold('PUT', API_PATHS.orgOrder)
+    // The rail starts as Acme, Futex, Firna.
+    const first = app.moveOrg('firna', 0)
+    const second = app.moveOrg('acme', 2)
+    app.putOrg({ id: 'labs', name: 'Acme Labs', role: 'admin' })
+    const shown = order()
+
+    server.json(
+      'PUT',
+      API_PATHS.orgOrder,
+      { error: { code: 'save_failed', message: 'Try again.' } },
+      503,
+    )
+    held.release('PUT', API_PATHS.orgOrder)
+    await expect(first).rejects.toMatchObject({
+      status: 503,
+      code: 'save_failed',
+    })
+    const afterFailure = order()
+    server.empty('PUT', API_PATHS.orgOrder)
+    held.release('PUT', API_PATHS.orgOrder)
+    await second
+
+    expect({ shown, afterFailure, saved: order() }).toEqual({
+      shown: ['firna', 'futex', 'acme', 'labs'],
+      afterFailure: ['futex', 'firna', 'acme', 'labs'],
+      saved: ['futex', 'firna', 'acme', 'labs'],
+    })
+  })
+
   test('a session that the Worker refuses shows the sign-in, not an error', async () => {
     const server = new FakeApiServer()
     server.json(

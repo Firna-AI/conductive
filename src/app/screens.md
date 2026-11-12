@@ -76,6 +76,13 @@ the command palette and of the Feedback dialog.
   chooses at least one, also while the list is empty or did not load.
 - The rail, the org switcher, and General show the saved initials of an
   org. An org without them shows the initials of its name.
+- The rail and the org switcher show the orgs in the person's own order.
+  The person moves an org tile by drag, by its tile menu with Move up and
+  Move down, or by Alt and Up or Down on a focused tile. On a phone, a
+  long press lifts an org in the org switcher. A move shows at once, and a
+  failed save takes back only that move, with a toast. A suspended or
+  deleted org moves like any other, as
+  [Org rail order](../../docs/protocol/org-rail-order.md) says.
 - A suspended org shows its notice, and no action that it refuses, as
   [A suspended org](suspended-org.md) says.
 - Only an operator gets the operator section, from the rail and the org
