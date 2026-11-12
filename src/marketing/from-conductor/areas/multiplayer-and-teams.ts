@@ -6,7 +6,7 @@ export const multiplayerAndTeamsFeatures: readonly ParityFeature[] = [
     area: 'multiplayer-and-teams',
     name: 'Organizations',
     status: 'available',
-    note: 'Create or switch orgs, and invite members by email to grant app access. Putting your orgs in your own order is in progress.',
+    note: 'Create or switch orgs, invite members by email to grant app access, and put your orgs in your own order.',
   },
   {
     id: 'shared-workspaces',
