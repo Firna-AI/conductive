@@ -19,7 +19,7 @@ const saved: Routine = {
   repositoryId: 'billing-service',
   sectionId: 'infra',
   prompt: 'Read the errors of the last hour.',
-  choice: { agent: 'claude', model: 'Opus 5.5', effort: 'high' },
+  choice: { agent: 'claude', model: 'Opus 5.5', effort: 'high', fast: false },
   active: false,
   inactiveReason: 'failed_runs',
   failedRunsInARow: 3,
@@ -49,7 +49,12 @@ describe('the draft of a routine', () => {
       repositoryId: 'billing-service',
       sectionId: 'infra',
       prompt: 'Read the errors of the last hour.',
-      choice: { agent: 'claude', model: 'Opus 5.5', effort: 'high' },
+      choice: {
+        agent: 'claude',
+        model: 'Opus 5.5',
+        effort: 'high',
+        fast: false,
+      },
       timeZone: 'Europe/London',
       triggers: [
         { kind: 'hourly', minute: 15 },
@@ -78,7 +83,12 @@ describe('the draft of a routine', () => {
       }),
       model: updateRequest(draft, {
         ...draft,
-        choice: { agent: 'codex', model: 'GPT-6.1 Sol', effort: 'medium' },
+        choice: {
+          agent: 'codex',
+          model: 'GPT-6.1 Sol',
+          effort: 'medium',
+          fast: false,
+        },
       }),
     }).toEqual({
       unchanged: {},
@@ -86,7 +96,12 @@ describe('the draft of a routine', () => {
       active: { active: true },
       trigger: { triggers: [{ kind: 'hourly', minute: 30 }] },
       model: {
-        choice: { agent: 'codex', model: 'GPT-6.1 Sol', effort: 'medium' },
+        choice: {
+          agent: 'codex',
+          model: 'GPT-6.1 Sol',
+          effort: 'medium',
+          fast: false,
+        },
       },
     })
   })

@@ -1,3 +1,4 @@
+import { modelChoice } from '../app-api/models'
 import type { AppEnv } from '../env'
 import type { RunnerProtocolVersion } from '../../src/shared/runner'
 import { commitAuthor } from '../../src/shared/commit-author'
@@ -34,6 +35,7 @@ export function chatDependencies(
   protocolVersion: () => RunnerProtocolVersion | null = () => null,
 ): ChatDependencies {
   return {
+    normalizeChoice: (choice) => modelChoice(env, choice),
     refreshEndpointModels: (userId, agent) =>
       refreshEndpointModels(
         env,

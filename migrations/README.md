@@ -278,3 +278,8 @@ UI and wiring milestones normally need no migration. Their ranges stay reserved.
   migration in filename order to a fresh local D1 database.
 - [Shared contracts](../src/shared/) define the browser and runner payloads.
 - Run `npm run db:migrate` to apply the migrations to local development storage.
+
+`202611121610_fast_choices.sql` adds fast mode to workspace runtime records,
+creation plans, account defaults, and routines. Each column starts at 0.
+Sessions and routine run choices keep fast mode in their existing JSON records.
+[Fast mode](../docs/protocol/fast-mode.md) gives the choice rules.

@@ -82,6 +82,7 @@ export function readChoice(value: unknown): AgentChoice {
     agent: readAgent(source.agent),
     model: text(source.model),
     effort: readEffort(source.effort),
+    fast: source.fast === true,
   }
 }
 

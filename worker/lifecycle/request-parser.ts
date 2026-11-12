@@ -45,7 +45,12 @@ export function createWorkspaceInput(value: unknown): CreateWorkspaceRequest {
       id: message.id,
       text: message.text,
       attachmentIds,
-      choice: { agent: choice.agent, model: choice.model, effort },
+      choice: {
+        agent: choice.agent,
+        model: choice.model,
+        effort,
+        fast: choice.fast === true,
+      },
     },
   }
 }

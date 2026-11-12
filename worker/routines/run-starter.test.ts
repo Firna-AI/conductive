@@ -50,6 +50,7 @@ it('creates a run workspace with the routine owner, repository, section, model, 
     model: 'run-model',
     effort: 'high',
     message: 'message-run-one',
+    fast: false,
   })
   expect(fixture.acceptFirstMessage).toHaveBeenCalledWith(
     expect.objectContaining({
@@ -58,7 +59,12 @@ it('creates a run workspace with the routine owner, repository, section, model, 
         id: 'message-run-one',
         text: 'Summarize the work.\n\n---\nRoutine: Morning summary\nTrigger: Run now',
         attachmentIds: [],
-        choice: { agent: 'codex', model: 'run-model', effort: 'high' },
+        choice: {
+          agent: 'codex',
+          model: 'run-model',
+          effort: 'high',
+          fast: false,
+        },
       },
     }),
   )

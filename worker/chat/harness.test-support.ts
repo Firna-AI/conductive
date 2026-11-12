@@ -34,11 +34,13 @@ export const CLAUDE: AgentChoice = {
   agent: 'claude',
   model: 'test-claude',
   effort: 'high',
+  fast: false,
 }
 export const CODEX: AgentChoice = {
   agent: 'codex',
   model: 'test-codex',
   effort: 'medium',
+  fast: false,
 }
 export const MACHINE_ORIGIN = 'https://machines.conductive.test'
 export const WORKSPACE_ID = 'workspace-chat'

@@ -49,7 +49,9 @@ Without a good image, it returns HTTP 409 `image_required`.
 The section list reads every section of that org in sidebar order.
 `default` marks the default section.
 The model list reads the configured models in their configured order.
-`defaultChoice` holds the owner's saved choice, else the app default, else `null`.
+Each model includes a boolean `fast` mark.
+`defaultChoice` holds the owner's saved model and effort, else the app default, else `null`.
+Its fast mode is always off.
 An unavailable model list returns HTTP 503 `models_unavailable`.
 All four lists need only the workspace token. They need no active turn.
 
@@ -91,7 +93,10 @@ Session create and send require an active stored calling turn and its current or
 The stored turn gives the sender and the sending session. Input supplies neither identity.
 The real object repeats the target org, active org, archived-workspace, member, and exact-object checks inside the chat queue.
 `create_session` uses the sender's saved model choice, then the configured app choice.
-Workspace creation keeps its owner's default choice.
+Workspace creation keeps its owner's default model and effort.
+Workspace and session creates run fast only with explicit `fast: true`, for a marked model.
+A session send without `fast` keeps the session's fast mode.
+[Fast mode](../../docs/protocol/fast-mode.md#agent-tools) gives the rules.
 Rename, close, and stop use the same stored turn and queue checks, without admission or resume, as [Queued management](sessions.md#queued-management) says.
 
 `ToolSessionWrite` carries the trusted caller and typed request to the object's `writeAgentSession` RPC.

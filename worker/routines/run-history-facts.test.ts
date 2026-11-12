@@ -131,7 +131,7 @@ it('uses one recorded agent choice when the routine changes between its login ch
     await h.runtime.env.DB.prepare(
       'SELECT agent, model, effort FROM workspace_runtime',
     ).first(),
-  ).toEqual({ agent: 'codex', model: 'run-model', effort: 'high' })
+  ).toEqual({ agent: 'codex', model: 'run-model', effort: 'high', fast: false })
   expect(
     await readRoutineRun(h.runtime.env.DB, h.org.id, 'run-one'),
   ).toMatchObject({ agent: 'codex', error: null })

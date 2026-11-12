@@ -152,6 +152,7 @@ export type ChatCallbackPublisher = (
 ) => Promise<void>
 
 export interface ChatDependencies {
+  normalizeChoice(choice: AgentChoice): AgentChoice
   refreshEndpointModels(userId: string, agent: Agent): Promise<void>
   readBranches(
     workspaceId: string,

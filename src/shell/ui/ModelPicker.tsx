@@ -41,6 +41,7 @@ function entries(
           change({
             agent: item.agent,
             model: item.model,
+            fast: choice.fast,
             effort: effortFor(item, choice.effort),
           }),
       })),

@@ -10,7 +10,12 @@ import { renderChat } from './render-kit'
 
 const org = FAKE_IDS.org
 const ws = FAKE_IDS.workspace
-const opus: AgentChoice = { agent: 'claude', model: 'Opus 5.5', effort: 'high' }
+const opus: AgentChoice = {
+  agent: 'claude',
+  model: 'Opus 5.5',
+  effort: 'high',
+  fast: false,
+}
 const history = chatHistoryPath(org, ws, 'debounce')
 const failure = {
   error: { code: 'internal_error', message: 'The server is busy.' },

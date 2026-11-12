@@ -41,7 +41,7 @@ describe('the model picker of a session with messages', () => {
   it('says New session for each model of the other agent only', async () => {
     await mount(
       <ModelPicker
-        choice={{ agent: 'claude', model: 'opus', effort: 'high' }}
+        choice={{ agent: 'claude', model: 'opus', effort: 'high', fast: false }}
         models={models}
         onChoose={() => undefined}
         sessionAgent="claude"

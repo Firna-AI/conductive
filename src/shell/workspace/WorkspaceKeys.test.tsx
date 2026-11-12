@@ -158,7 +158,12 @@ describe('the keys of the workspace', () => {
       menu: true,
       changes: [
         expect.objectContaining({
-          choice: { agent: 'claude', model: 'Opus 5.5', effort: 'low' },
+          choice: {
+            agent: 'claude',
+            model: 'Opus 5.5',
+            effort: 'low',
+            fast: false,
+          },
         }),
       ],
       stops: 1,

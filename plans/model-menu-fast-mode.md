@@ -453,6 +453,20 @@ My calls, on 2026-11-12, as the ui implementor of Milestone 6:
 - No state draws a cause that the app does not know. Reason: the protocol
   gives its words, "Standard speed" alone, and the note keeps its look.
 
+My calls, on 2026-11-12, as the non-UI implementor of Milestone 3:
+
+- One Worker helper normalizes a choice against the configured model list.
+  Standard choices need no model-list read. Reason: routes that already
+  accept standard choices must keep working without a new configuration
+  dependency.
+- D1 stores fast mode as 0 or 1 in workspace runtime records, creation
+  plans, account defaults, and routines. Sessions and routine runs use
+  their existing JSON choice records. Reason: sessions have no D1 table,
+  and a second run column would duplicate its recorded choice.
+- The picker choice builders carry the current fast mode for the compile
+  check. Reason: the orchestrator authorized this small exception on
+  2026-11-12. The switch and trigger text stay in Milestone 5.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -540,31 +554,33 @@ Depends on: 2
 The choice and the model list carry fast through the Worker, D1, the agent
 tools, and the browser readers.
 
-- [ ] Add `fast` to `AgentChoice` and `AgentModel` in `src/shared/agents.ts`.
-- [ ] Read `fast` in `worker/chat/inputs.ts` and `worker/app-api/models.ts`.
+Implementation and verification evidence: `.context/fast-mode/m3/report.md`.
+
+- [x] Add `fast` to `AgentChoice` and `AgentModel` in `src/shared/agents.ts`.
+- [x] Read `fast` in `worker/chat/inputs.ts` and `worker/app-api/models.ts`.
       A missing field reads as `false`.
-- [ ] Mark the fast models in `CONDUCTIVE_MODELS` in `wrangler.jsonc`.
-- [ ] Keep fast only for a marked model, at each Worker route that accepts a
+- [x] Mark the fast models in `CONDUCTIVE_MODELS` in `wrangler.jsonc`.
+- [x] Keep fast only for a marked model, at each Worker route that accepts a
       choice: a message, a model change, a create, and a saved default.
-- [ ] Compare fast in the repeat checks of `worker/chat/messages.ts`,
+- [x] Compare fast in the repeat checks of `worker/chat/messages.ts`,
       `worker/chat/model-changes.ts`, and `worker/chat/first-message.ts`.
       Queue a model command when only fast changes.
-- [ ] Read the `databases` skill. Add a migration with a fast column, default
+- [x] Read the `databases` skill. Add a migration with a fast column, default
       0, to `workspace_runtime`, `workspace_creation_plans`,
       `user_preferences`, and each table that stores the choice of a
       routine or a session. Read and write it in `worker/lifecycle/` and
       `worker/app-api/`.
-- [ ] Add `fast` to the agent tools: `src/shared/agent-tools.ts`,
+- [x] Add `fast` to the agent tools: `src/shared/agent-tools.ts`,
       `tools/input.ts`, `tools/mcp-tools.ts`, `tools/cli.ts`,
       `worker/tools/create.ts`, and `worker/tools/lists.ts`. A create call
       without `fast: true` runs at standard speed.
-- [ ] Carry `fast` in the choice of a routine, in `worker/routines/` and its
+- [x] Carry `fast` in the choice of a routine, in `worker/routines/` and its
       migration column.
-- [ ] Read `fast` in the runner commands in `runner/src/commands.ts`.
-- [ ] Update the app test fixtures in `src/test-support/fixtures/` that
+- [x] Read `fast` in the runner commands in `runner/src/commands.ts`.
+- [x] Update the app test fixtures in `src/test-support/fixtures/` that
       reuse the mockup choices, and keep the comment on `fast` in
       `docs/mockups/src/fixtures/agents.ts` true.
-- [ ] Read `fast` in the browser readers: `src/app/api/read-core.ts`,
+- [x] Read `fast` in the browser readers: `src/app/api/read-core.ts`,
       `src/chat/api/read-chat.ts`, `src/chat/api/read-responses.ts`,
       `src/members/api/parseCore.ts`, and `src/app/boot.ts`.
 - [ ] Test each route that carries fast, the rule for a model without fast,

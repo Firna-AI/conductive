@@ -60,6 +60,7 @@ export function modelMenu(
           choose({
             agent,
             model: model.model,
+            fast: choice.fast,
             effort: effortFor(model, choice.effort),
           }),
       })

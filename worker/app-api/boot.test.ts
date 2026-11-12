@@ -23,11 +23,13 @@ const choice: AgentChoice = {
   agent: 'claude',
   model: 'operator-claude',
   effort: 'high',
+  fast: false,
 }
 const otherChoice: AgentChoice = {
   agent: 'codex',
   model: 'operator-codex',
   effort: 'low',
+  fast: false,
 }
 let harness: TestHarness
 beforeAll(async () => {

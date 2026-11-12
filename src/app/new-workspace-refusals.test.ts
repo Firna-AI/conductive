@@ -10,7 +10,12 @@ import { testServices } from './test-kit'
 
 const defaults = {
   repositoryId: 'storefront',
-  choice: { agent: 'claude', model: 'Opus 5.5', effort: 'high' } as const,
+  choice: {
+    agent: 'claude',
+    model: 'Opus 5.5',
+    effort: 'high',
+    fast: false,
+  } as const,
 }
 const createPath = workspacesPath(FAKE_IDS.org)
 

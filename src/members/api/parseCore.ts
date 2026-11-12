@@ -116,6 +116,7 @@ function agentChoice(source: JsonObject): AgentChoice {
     agent: oneOf(source, 'agent', agents),
     model: text(source, 'model'),
     effort: oneOf(source, 'effort', efforts),
+    fast: source.fast === true,
   }
 }
 
