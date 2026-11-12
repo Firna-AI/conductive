@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useRef } from 'react'
+import { Store, type Readable } from '../../app/store'
 
 /**
  * What holds a modal layer, such as the command palette, which holds its
@@ -16,6 +17,10 @@ export type LayerOwner = object
 export class OpenLayers {
   private readonly menus = new Set<{ close: () => boolean }>()
   private readonly modals = new Set<{ owner: LayerOwner }>()
+  private readonly menuStore = new Store(false)
+
+  /** At least one menu is open, as a value that screens follow. */
+  readonly anyMenuOpen: Readable<boolean> = this.menuStore
 
   /** A menu is open. */
   menuOpen(): boolean {
@@ -29,8 +34,10 @@ export class OpenLayers {
   addMenu(close: () => boolean): () => void {
     const menu = { close }
     this.menus.add(menu)
+    this.menuStore.set(true)
     return () => {
       this.menus.delete(menu)
+      this.menuStore.set(this.menus.size > 0)
     }
   }
 

@@ -23,7 +23,8 @@ import {
   useMentionTree,
   type MentionTree,
 } from '../../mentions/MentionsContext'
-import type { FieldSources } from './field-content'
+import { useFieldFiles } from './attached-files'
+import type { FieldSources } from './field-nodes'
 import {
   $mentionQuery,
   $pickMention,
@@ -36,7 +37,8 @@ import {
 export function useFieldSources(): FieldSources {
   const { links } = useChatLinks()
   const tree = useMentionTree()
-  return useMemo(() => ({ links, tree }), [links, tree])
+  const files = useFieldFiles()
+  return useMemo(() => ({ links, tree, files }), [links, tree, files])
 }
 
 function focused(editor: LexicalEditor): boolean {

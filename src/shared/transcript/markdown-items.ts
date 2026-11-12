@@ -1,7 +1,14 @@
+import { sessionLink } from '../session-link'
 import type { ToolCall } from '../chat-events'
 import type { DeviceCommandRecord } from '../device'
 import type { ChangedFile } from '../files'
 import { endReasonText } from '../../../docs/mockups/src/components/chat/endReasonCopy'
+import {
+  attachmentForMention,
+  textWithAttachmentNames,
+} from '../attachment-mentions'
+import { mentionParts } from '../mention-text'
+import type { UserMessage } from '../messages'
 import {
   leftOutOfCall,
   leftOutOfRun,
@@ -29,6 +36,8 @@ import {
   filesUnread,
   omittedFiles,
   stoppedSummary,
+  stoppedAttribution,
+  stoppedNotes,
   turnCopy,
   turnEndReason,
   type ChatReaders,
@@ -64,23 +73,36 @@ function changedFile(file: ChangedFile): string {
     : `${inlineCode(file.previousDisplayPath ?? file.previousPath)} → ${current}`
 }
 
+function userMarkdown(message: UserMessage): string {
+  const mentioned = new Set(
+    mentionParts(message.text).flatMap((part) =>
+      part.kind === 'mention'
+        ? (attachmentForMention(part, message.attachments)?.id ?? [])
+        : [],
+    ),
+  )
+  const files = message.attachments.filter((file) => !mentioned.has(file.id))
+  return [
+    textWithAttachmentNames(message.text, message.attachments, plainText),
+    ...(files.length > 0
+      ? [
+          `${turnCopy.attachments}: ${files.map((file) => plainText(file.name)).join(', ')}`,
+        ]
+      : []),
+  ]
+    .filter((part) => part.length > 0)
+    .join('\n\n')
+}
+
 export function itemMarkdown(
   item: TranscriptItem,
   transcript: Transcript,
   readers: ChatReaders,
+  links: { origin: string; orgId: string },
 ): string {
   switch (item.kind) {
     case 'user':
-      return [
-        item.message.text,
-        ...(item.message.attachments.length > 0
-          ? [
-              `${turnCopy.attachments}: ${item.message.attachments.map((file) => plainText(file.name)).join(', ')}`,
-            ]
-          : []),
-      ]
-        .filter((part) => part.length > 0)
-        .join('\n\n')
+      return userMarkdown(item.message)
     case 'agent':
       return item.text
     case 'tool':
@@ -102,10 +124,24 @@ export function itemMarkdown(
         summary,
       ].join('\n\n')
     }
-    case 'stopped':
-      return note(
-        plainText(stoppedSummary(transcript, item.turnId, item.by, readers)),
+    case 'stopped': {
+      const source = stoppedAttribution(
+        transcript,
+        item.turnId,
+        item.by,
+        readers,
       )
+      return note(
+        source.kind === 'session'
+          ? [
+              `${source.text} <${sessionLink(links.origin, links.orgId, source.reference.workspaceId, source.reference.sessionId)}>`,
+              ...stoppedNotes(transcript, item.turnId).map(plainText),
+            ].join(' · ')
+          : plainText(
+              stoppedSummary(transcript, item.turnId, item.by, readers),
+            ),
+      )
+    }
     case 'failed':
       return note(`${turnCopy.failed}: ${plainText(item.error.message)}`)
     case 'lost':

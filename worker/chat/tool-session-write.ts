@@ -1,6 +1,6 @@
 import type { User } from '../../src/shared/api'
 import type { AgentChoice } from '../../src/shared/agents'
-import type { AgentSessionAccepted } from '../../src/shared/agent-tools'
+import type { AgentSessionAccepted } from '../../src/shared/agent-sessions'
 import type { SendMessageResponse } from '../../src/shared/messages'
 import { sessionLink } from '../../src/shared/session-link'
 import { sessionTitleFrom } from '../../src/shared/session-title'

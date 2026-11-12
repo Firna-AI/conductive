@@ -16,6 +16,7 @@ it('drops unknown response fields and rejects malformed workspace data', async (
       secret: TOOL_TEST_TOKEN,
       workspaces: [
         {
+          owner: { id: 'owner', githubLogin: 'owner-login', displayName: null },
           id: 'one',
           number: 1,
           link: `${TEST_ORIGIN}${routes.workspace('org-a', 'one')}`,
@@ -30,6 +31,7 @@ it('drops unknown response fields and rejects malformed workspace data', async (
   await expect(client.list()).resolves.toEqual({
     workspaces: [
       {
+        owner: { id: 'owner', githubLogin: 'owner-login', displayName: null },
         id: 'one',
         number: 1,
         link: `${TEST_ORIGIN}${routes.workspace('org-a', 'one')}`,
@@ -43,6 +45,7 @@ it('drops unknown response fields and rejects malformed workspace data', async (
     Response.json({
       workspaces: [
         {
+          owner: { id: 'owner', githubLogin: 'owner-login', displayName: null },
           id: 'one',
           number: 1,
           link: `${TEST_ORIGIN}${routes.workspace('org-a', 'one')}`,
@@ -100,6 +103,20 @@ it('preserves Worker refusal codes and messages for every call without credentia
     () => client.readSession('session'),
     () => client.createSession(),
     () => client.sendMessage('session', { text: 'Work' }),
+    () => client.getWorkspace(),
+    () => client.renameWorkspace({ name: 'Work' }),
+    () => client.moveWorkspace({ sectionId: 'section' }),
+    () => client.archiveWorkspace(),
+    () => client.getSession('session'),
+    () => client.renameSession('session', { title: 'Work' }),
+    () => client.closeSession('session'),
+    () => client.stopSession('session'),
+    () => client.getMessage('session', 'message'),
+    () => client.createSection({ name: 'Work' }),
+    () => client.deleteSection('section'),
+    () => client.listPreviews(),
+    () => client.openPreview({ port: 4321 }),
+    () => client.closePreview('preview'),
     () =>
       client.runMacCommand({
         command: 'pwd',

@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.12.0](https://github.com/Firna-AI/conductive/compare/v0.11.0...v0.12.0) (2026-11-11)
+
+
+### Features
+
+* **chat:** drop files into the composer as chips in the text ([#266](https://github.com/Firna-AI/conductive/issues/266)) ([ece84da](https://github.com/Firna-AI/conductive/commit/ece84da697ad840368e21f0bf5e3bd80e1f8215b))
+
+
+### Bug Fixes
+
+* **mac:** close menus on a press on a top bar ([#268](https://github.com/Firna-AI/conductive/issues/268)) ([7700c8f](https://github.com/Firna-AI/conductive/commit/7700c8f6301ead7bf18c136f3186bd17875a0b31))
+
+
+### Performance Improvements
+
+* **lifecycle:** run start D1 and Boat calls outside the chat queue ([#261](https://github.com/Firna-AI/conductive/issues/261)) ([a822367](https://github.com/Firna-AI/conductive/commit/a82236777bb99ff7fecf6bd89d1d95baca4975dc))
+
+## [0.11.0](https://github.com/Firna-AI/conductive/compare/v0.10.0...v0.11.0) (2026-11-11)
+
+
+### Features
+
+* **shortcuts:** add keyboard shortcuts and their settings tab ([#216](https://github.com/Firna-AI/conductive/issues/216)) ([0ad6a1c](https://github.com/Firna-AI/conductive/commit/0ad6a1c6f47a1de4c070cc1348869feaa8992676))
+
 ## [0.10.0](https://github.com/Firna-AI/conductive/compare/v0.9.1...v0.10.0) (2026-11-11)
 
 

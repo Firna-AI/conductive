@@ -46,7 +46,7 @@ export interface ChatContext {
   /** A new local identity for a file of a draft, in this tab. */
   readonly newFileId: () => string
   /**
-   * The uploads that run, by file ID. Remove aborts the upload of its file,
+   * The running and queued upload generations, by file ID. Detach aborts its file,
    * and a stop of the chat aborts each one.
    */
   readonly uploads: Map<string, AbortController>

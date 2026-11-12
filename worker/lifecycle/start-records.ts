@@ -8,6 +8,7 @@ import type { WorkspaceLifecycleEndpoint } from './workspace-runtime'
 import type { StartJobStorage, WorkspaceStartJob } from './start-types'
 import { creationAdmissionResponse } from './creation-admission-response'
 import { workspaceRepositoryLocations } from './repository-location-data'
+import type { StartCall } from './start-guard'
 
 export async function advanceStartRecords(
   env: AppEnv,
@@ -15,15 +16,23 @@ export async function advanceStartRecords(
   endpoint: WorkspaceLifecycleEndpoint,
   storage: StartJobStorage,
   job: Extract<WorkspaceStartJob, { phase: 'records' }>,
+  call: StartCall,
 ) {
   const imageName = await prepareWorkspaceRecords(
     env,
     dependencies,
     endpoint,
     job,
+    call,
   )
   if (imageName === null) return undefined
-  const admission = await creationAdmissionResponse(env, endpoint, job)
+  const admission = await creationAdmissionResponse(
+    env,
+    endpoint,
+    job,
+    undefined,
+    call,
+  )
   await storage.update({
     ...job,
     phase: 'machine',
@@ -42,6 +51,7 @@ async function prepareWorkspaceRecords(
   dependencies: AppDependencies,
   endpoint: WorkspaceLifecycleEndpoint,
   job: WorkspaceStartJob,
+  call: StartCall,
 ): Promise<string | null> {
   const creation = job.creation
   if (!creation || job.kind !== 'create')
@@ -50,40 +60,43 @@ async function prepareWorkspaceRecords(
       'workspace_start_failed',
       'The cloud computer could not start. Try again.',
     )
-  await requireOrgMember(env.DB, job.orgId, creation.user.id)
-  await requireOrgMember(env.DB, job.orgId, creation.sender.id)
-  const image = await leasedCreationImage(
-    env.DB,
-    job.orgId,
-    job.workspaceId,
-    creation.repositoryId,
-  )
+  const { image, locations } = await call(async () => {
+    await requireOrgMember(env.DB, job.orgId, creation.user.id)
+    await requireOrgMember(env.DB, job.orgId, creation.sender.id)
+    const image = await leasedCreationImage(
+      env.DB,
+      job.orgId,
+      job.workspaceId,
+      creation.repositoryId,
+    )
+    if (!(await workspaceExists(env.DB, job.orgId, job.workspaceId))) {
+      await insertWorkspace(env.DB, {
+        id: job.workspaceId,
+        orgId: job.orgId,
+        providerAccount: image.providerAccount,
+        repositoryId: creation.repositoryId,
+        sectionId: creation.sectionId,
+        user: creation.user,
+        senderUserId: creation.sender.id,
+        city: creation.city,
+        name: creation.name,
+        branch: creation.branch,
+        baseBranch: job.baseBranch,
+        sessionId: creation.sessionId,
+        turnId: job.turnId,
+        message: creation.request,
+        now: creation.createdAt,
+        repositoryLocations: job.repositoryLocations,
+      })
+    }
+    const locations =
+      job.repositoryLocations ??
+      (await workspaceRepositoryLocations(env.DB, job.workspaceId))
+    return { image, locations }
+  })
   job.defaultBranch = image.defaultBranch
   job.providerAccount = image.providerAccount
-  if (!(await workspaceExists(env.DB, job.orgId, job.workspaceId))) {
-    await insertWorkspace(env.DB, {
-      id: job.workspaceId,
-      orgId: job.orgId,
-      providerAccount: image.providerAccount,
-      repositoryId: creation.repositoryId,
-      sectionId: creation.sectionId,
-      user: creation.user,
-      senderUserId: creation.sender.id,
-      city: creation.city,
-      name: creation.name,
-      branch: creation.branch,
-      baseBranch: job.baseBranch,
-      sessionId: creation.sessionId,
-      turnId: job.turnId,
-      message: creation.request,
-      now: creation.createdAt,
-      repositoryLocations: job.repositoryLocations,
-    })
-  }
-  job.repositoryLocations ??= await workspaceRepositoryLocations(
-    env.DB,
-    job.workspaceId,
-  )
+  job.repositoryLocations = locations
   await ensureWorkspaceToken(
     env,
     job.workspaceId,
@@ -94,6 +107,7 @@ async function prepareWorkspaceRecords(
     workspaceId: job.workspaceId,
     orgId: job.orgId,
     firstMessage: creation.request,
+    firstSessionTitle: creation.firstSessionTitle,
     firstTurn: {
       turnId: job.turnId,
       sessionId: creation.sessionId,

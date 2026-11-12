@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest'
+import { fileMark } from '../../app/draft-marks'
+import { pickChatFiles } from './draft-files.test-support'
 import { sessionPaths } from '../../shared/sessions'
 import {
   workspacePath,
@@ -106,12 +108,12 @@ describe('messages while the sandbox of a workspace is not ready', () => {
     )
     await chat.controller.start()
     chat.controller.setDraft(first, 'Keep these newer cart changes.')
-    await chat.controller.attachFiles(first, [
+    await pickChatFiles(chat, first, [
       new File(['Cart notes'], 'notes.txt', { type: 'text/plain' }),
     ])
     const draft = chat.draftOf(first)
     expect(draft).toMatchObject({
-      text: 'Keep these newer cart changes.',
+      text: `Keep these newer cart changes. ${fileMark('file-1')} `,
       files: [{ state: 'ready', attachment: { id: 'attachment-1' } }],
     })
     const savedError = () => chat.controller.getSnapshot().savedError
@@ -160,12 +162,12 @@ describe('messages while the sandbox of a workspace is not ready', () => {
     })
     await chat.controller.start()
     chat.controller.setDraft(first, 'Keep a saved cart for 30 days.')
-    await chat.controller.attachFiles(first, [
+    await pickChatFiles(chat, first, [
       new File(['png'], 'cart.png', { type: 'image/png' }),
     ])
     await chat.controller.send(first)
     expect(chat.draftOf(first)).toMatchObject({
-      text: 'Keep a saved cart for 30 days.',
+      text: `Keep a saved cart for 30 days. ${fileMark('file-1')} `,
       files: [{ state: 'ready', attachment: { id: 'attachment-1' } }],
       sending: false,
     })

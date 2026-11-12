@@ -78,6 +78,7 @@ export async function acceptMessage(
     transaction,
     session,
     input.text,
+    attachments.attachments,
     readWorkspace,
   )
   const message: UserMessage = {

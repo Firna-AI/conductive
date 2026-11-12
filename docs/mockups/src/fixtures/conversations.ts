@@ -5,6 +5,7 @@
 import type { TableCells } from '../../../../src/markdown/table-rows'
 import type { TurnEndReason } from '../../../../src/shared/chat-events'
 import type { LostReason, LostWhat } from '../components/chat/lostCopy'
+import { agentStopConversations } from './agentStopConversations'
 import { attachmentConversations } from './attachmentConversations'
 import type { Attachment } from './attachments'
 import {
@@ -28,10 +29,7 @@ import type { MacCommandRequest, MacCommandState } from './mac'
 import { macConversations } from './macConversations'
 import type { PersonKey } from './members'
 import { linkedSession } from './sessions'
-import {
-  newWorkspaceConversations,
-  savedCartsMessage,
-} from './newWorkspaceConversations'
+import { newWorkspaceConversations } from './newWorkspaceConversations'
 import { tableConversations } from './tableConversations'
 import { unavailableConversations } from './unavailableConversations'
 import { workConversations } from './workConversations'
@@ -58,7 +56,7 @@ export type ChatItem =
       kind: 'user'
       id: string
       text: string
-      /** The files of the message, which show under it. */
+      /** The files of the message, shown in its text or under it. */
       attachments?: readonly Attachment[]
       /** Waits in the queue of the workspace until the sandbox is ready. */
       queued?: boolean
@@ -97,6 +95,12 @@ export type ChatItem =
       kind: 'stopped'
       id: string
       by?: PersonKey
+      /**
+       * The session link of the session whose agent stopped the turn with a
+       * workspace tool, also through a close of the session. The line names
+       * that session in place of a member.
+       */
+      from?: string
       /** The changed files of the turn past the 200 that the runner lists. */
       omittedFiles?: number
       /** The cloud computer could not read the changed files. */
@@ -183,9 +187,10 @@ export const conversations: Readonly<
   ...macConversations(history),
   ...lostConversations(history),
   ...unavailableConversations({ history, cutOff: cutOffTurn }),
+  ...agentStopConversations(cutOffTurn),
   ...backgroundConversations,
   ...linkedConversations,
-  ...attachmentConversations({ history, firstMessage: savedCartsMessage }),
+  ...attachmentConversations(history),
   ...workspaceLinkConversations(history),
   ...sessionLinkConversations(history),
   ...fileMentionConversations(history),

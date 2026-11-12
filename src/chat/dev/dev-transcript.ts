@@ -57,6 +57,7 @@ export async function handleTranscript(
     api.members(),
   ])
   const builder = new SessionMarkdown({
+    linkContext: { origin: url.origin, orgId },
     session,
     eventNumber: Math.max(stream.throughEventNumber, stored.throughEventNumber),
     workspace,

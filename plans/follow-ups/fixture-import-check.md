@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-09, from branch `calummoore/claude-login-notice-removal`, pull request #75, review round 3, the wider fix of finding 5.
-- **Location:** `src/chat/README.md:220-225` and `src/app/README.md:145-147`, which state the rule. The gate is the `check` script of `package.json`.
+- **Location:** `src/chat/README.md:80` and `src/app/README.md:264`, which state the rule. The gate is the `check` script of `package.json`.
 - **Reason:** The user deferred this check on 2026-11-09, and a new gate step still needs approval before work starts.
 
 - **Source:** Review.

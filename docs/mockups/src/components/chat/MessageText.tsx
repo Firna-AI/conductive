@@ -1,6 +1,8 @@
 import { Fragment, type ReactNode } from 'react'
 import { nameLabel } from '../../../../../src/shared/name-label'
+import type { Attachment } from '../../fixtures/attachments'
 import type { MentionEntry } from '../../fixtures/fileMentions'
+import { paths } from '../../paths'
 import inline from '../common/InlineText.module.css'
 import { ScreenLink } from '../common/ScreenLink'
 import { EntryIcon } from '../files/fileIcons'
@@ -8,9 +10,10 @@ import { previewPaths } from '../files/previewPaths'
 import { workspaceLabel } from '../workspaces/label'
 import type { WorkspaceRow } from '../workspaces/sections'
 import type { ChipRemoval } from './ChipRemove'
-import { useChatWorkspaces, type ChatRow } from './chatWorkspaces'
+import { useChatWorkspaces } from './chatWorkspaces'
 import { FileChip } from './FileChip'
 import { entryName } from './entryPaths'
+import { SentFileChip } from './SentFileChip'
 import { SessionChip, type ChipSession } from './SessionChip'
 import { strongRuns } from './strongText'
 import {
@@ -25,6 +28,7 @@ import {
   type ChipWorkspace,
 } from './WorkspaceChip'
 
+/** What the chip of a workspace shows of its row in the list of the org. */
 function chipOf(row: WorkspaceRow): ChipWorkspace {
   return {
     label: workspaceLabel(row.workspace.number),
@@ -35,7 +39,7 @@ function chipOf(row: WorkspaceRow): ChipWorkspace {
 }
 
 /** The icon of an entry, as the All files of the mockups draws it. */
-function iconOf(entry: MentionEntry) {
+export function iconOf(entry: MentionEntry) {
   return <EntryIcon folder={entry.folder} name={entryName(entry)} size={12} />
 }
 
@@ -47,6 +51,9 @@ function iconOf(entry: MentionEntry) {
 function filePage(entry: MentionEntry): string | undefined {
   return entry.preview ? previewPaths[entry.preview] : undefined
 }
+
+/** The file tab of the copy of an attached file, when the mockups draw it. */
+const attachedTabs = { picture: paths.attachmentOpen } as const
 
 /**
  * The page that a press on the chip of a link opens, when the mockups draw
@@ -65,7 +72,7 @@ function linkPage(target: LinkTarget): string | undefined {
  * `opener` makes the chip of a sent message or an answer open its page.
  * `removal` gives the chip of a message box the cell of its mark.
  */
-function LinkChip(props: {
+export function LinkChip(props: {
   target: LinkTarget
   opener?: (chip: ChipOpener) => ReactNode
   pointer?: boolean
@@ -100,12 +107,27 @@ function LinkChip(props: {
   )
 }
 
-/** One part of the text of a message: text, code, or a chip. */
-function Part(props: { part: TextPart; rows: readonly ChatRow[] }) {
+/**
+ * One part of the text of a message: text, code, or a chip. While its
+ * message `waits` for the cloud computer, the chip of an attached file opens
+ * nothing, because its copy does not exist yet.
+ */
+function Part(props: { part: TextPart; waits?: boolean }) {
   const { part } = props
   if (part.kind === 'text') return part.text
   if (part.kind === 'code') {
     return <code className={inline.code}>{part.text}</code>
+  }
+  if (part.kind === 'attached') {
+    const tab = props.waits === true ? undefined : part.file.tab
+    const to = tab ? attachedTabs[tab] : undefined
+    return (
+      <SentFileChip
+        file={part.file}
+        mention={part.source}
+        opener={to ? (chip) => <ScreenLink {...chip} to={to} /> : undefined}
+      />
+    )
   }
   if (part.kind === 'mention') {
     const to = filePage(part.entry)
@@ -118,8 +140,20 @@ function Part(props: { part: TextPart; rows: readonly ChatRow[] }) {
       />
     )
   }
-  const target = linkTarget(part.href, props.rows)
-  if (!target) return part.source
+  return <LinkText href={part.href} source={part.source} />
+}
+
+/**
+ * One link as the chat shows it: the chip of the workspace that the link
+ * names, or a session chip when the chat read the session. A press on the
+ * chip opens its page, when the mockups draw it. A link that the chat does
+ * not find stays text: `source`, the link as the text has it, else `href`.
+ * A message shows each of its links so, and the line of a stop from a
+ * session shows the link of that session so.
+ */
+export function LinkText(props: { href: string; source?: string }) {
+  const target = linkTarget(props.href, useChatWorkspaces())
+  if (!target) return props.source ?? props.href
   const to = linkPage(target)
   return (
     <LinkChip
@@ -138,18 +172,24 @@ function Part(props: { part: TextPart; rows: readonly ChatRow[] }) {
  * text, and so does a link in code. With `strong`, as in an answer, `**`
  * marks bold. In the text of a member, `mentions` makes each mention of a
  * file or a folder of the tree a chip that opens the file.
+ *
+ * `files` are the attached files of a sent message. A mention of the copy
+ * path of one of them shows as the chip of that file, which opens the file
+ * tab of the copy. While the message `waits` for the cloud computer, its
+ * copies do not exist yet, so the chip of a file opens nothing.
  */
 export function MessageText(props: {
   text: string
   mentions?: boolean
   strong?: boolean
+  files?: readonly Attachment[]
+  waits?: boolean
 }) {
-  const rows = useChatWorkspaces()
-  const parts = textParts(props.text, true, props.mentions)
+  const parts = textParts(props.text, true, props.mentions, props.files)
   const runs = props.strong ? strongRuns(parts) : [{ strong: false, parts }]
   return runs.map((run, index) => {
     const content = run.parts.map((part, inner) => (
-      <Part key={inner} part={part} rows={rows} />
+      <Part key={inner} part={part} waits={props.waits} />
     ))
     return run.strong ? (
       <strong key={index}>{content}</strong>
@@ -160,60 +200,18 @@ export function MessageText(props: {
 }
 
 /**
- * The draft holds a chip: a link to a workspace of the org or to one of its
- * sessions, or a mention of a file or a folder of the tree.
+ * The files of a sent message that its text does not show, such as the
+ * files of a message from before files had a place in the text. They show
+ * under the message.
  */
-export function holdsChips(draft: string, rows: readonly ChatRow[]): boolean {
-  return textParts(draft, false, true).some(
-    (part) =>
-      part.kind === 'mention' ||
-      (part.kind === 'link' && linkTarget(part.href, rows) !== undefined),
+export function filesWithoutPlace(
+  text: string,
+  files: readonly Attachment[],
+): Attachment[] {
+  const placed = new Set(
+    textParts(text, true, true, files).flatMap((part) =>
+      part.kind === 'attached' ? [part.file.id] : [],
+    ),
   )
-}
-
-/**
- * The draft of a message box as plain text, with each link to a workspace
- * of the org or to one of its sessions, and each mention of the tree, as a
- * chip. A chip is one unit of the text, which the caret steps over and
- * Backspace removes whole, so it is not editable inside the editable field.
- * Each chip starts with the cell of its icon, which a pointer turns into a
- * × that removes it. In the app a press on the name of a file chip opens
- * the file. A view has no pointer, so `pointer` draws it over the icon of
- * the first chip.
- */
-export function DraftText(props: { text: string; pointer?: boolean }) {
-  const rows = useChatWorkspaces()
-  const parts = textParts(props.text, false, true)
-  const firstChip = parts.findIndex(
-    (part) =>
-      part.kind === 'mention' ||
-      (part.kind === 'link' && linkTarget(part.href, rows) !== undefined),
-  )
-  return (
-    <>
-      {parts.map((part, index) => {
-        if (part.kind === 'text' || part.kind === 'code') return part.text
-        const pointer = props.pointer === true && index === firstChip
-        if (part.kind === 'mention') {
-          const name = entryName(part.entry)
-          return (
-            <span contentEditable={false} key={index}>
-              <FileChip
-                entry={part.entry}
-                icon={iconOf(part.entry)}
-                removal={{ name, pointer }}
-              />
-            </span>
-          )
-        }
-        const target = linkTarget(part.href, rows)
-        if (!target) return part.source
-        return (
-          <span contentEditable={false} key={index}>
-            <LinkChip pointer={pointer} target={target} />
-          </span>
-        )
-      })}
-    </>
-  )
+  return files.filter((file) => !placed.has(file.id))
 }

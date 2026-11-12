@@ -3,7 +3,9 @@ import { act } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { createApiClient } from '../../app/api/client'
 import { HeldRequests } from '../../app/test-kit'
+import { attachmentPath } from '../../shared/attachment-paths'
 import type { WorkspaceEvent } from '../../shared/events'
+import { mentionText } from '../../shared/mention-text'
 import { attachmentUploadPath } from '../../shared/messages'
 import { sessionPaths } from '../../shared/sessions'
 import {
@@ -18,6 +20,7 @@ import {
 } from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { fetchFiles } from '../../test-support/fake-files'
+import { pickFiles } from '../../test-support/file-picker'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
 import {
@@ -116,17 +119,9 @@ describe('the chat of a new workspace without a host', () => {
       workspaceId: ws,
     })
     held.holdAnswer('POST', uploadPath)
-    const picker =
-      view.container.querySelector<HTMLInputElement>('input[type="file"]')
-    if (!picker) throw new Error('The composer has no file picker.')
-    const chosen = new DataTransfer()
-    chosen.items.add(
+    await pickFiles(view.container, [
       new File(['png'], 'postcode-overlap.png', { type: 'image/png' }),
-    )
-    await act(async () => {
-      picker.files = chosen.files
-      picker.dispatchEvent(new Event('change', { bubbles: true }))
-    })
+    ])
     expect(blocked(byRole('button', 'Send'))).toBe(true)
     pressInField(box, 'Enter')
     expect(sends()).toHaveLength(0)
@@ -164,6 +159,10 @@ describe('the chat of a new workspace without a host', () => {
       'the saved cause of the failed resume',
     )
     expect(queryByRole('textbox', 'Message')).toBeNull()
+    const path = await attachmentPath({
+      id: 'attachment-1',
+      name: 'postcode-overlap.png',
+    })
     expect(
       await Promise.all(
         sends().map(async (request) => {
@@ -173,7 +172,7 @@ describe('the chat of a new workspace without a host', () => {
       ),
     ).toEqual([
       expect.objectContaining({
-        text: 'Keep a saved cart for 30 days.',
+        text: `Keep a saved cart for 30 days. ${mentionText(path, false)} `,
         attachmentIds: ['attachment-1'],
       }),
       expect.objectContaining({

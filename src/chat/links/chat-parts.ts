@@ -1,5 +1,7 @@
+import { attachmentForMention } from '../../shared/attachment-mentions'
 import type { FileEntry } from '../../shared/files'
-import { mentionAt, type Mention } from '../mentions/mention-text'
+import type { Attachment } from '../../shared/messages'
+import { mentionAt, type Mention } from '../../shared/mention-text'
 import {
   bareLinkAt,
   linkTarget,
@@ -14,6 +16,19 @@ export type ChatPart =
   | { kind: 'code'; text: string }
   | { kind: 'chip'; source: string; target: LinkTarget; strong: boolean }
   | { kind: 'file'; source: string; entry: FileEntry; strong: boolean }
+  | AttachmentPart
+
+/**
+ * The mention of a file of the message, which shows as the chip of the
+ * file. `path` is the copy path of the file that the mention names.
+ */
+export type AttachmentPart = {
+  kind: 'attachment'
+  source: string
+  path: string
+  attachment: Attachment
+  strong: boolean
+}
 
 /** A token of chat text, before the list of the org names its links. */
 type Token =
@@ -29,8 +44,11 @@ interface Reading {
   marks: boolean
   /** Links count. A Markdown link of no workspace reads again without them. */
   links: boolean
-  /** Mentions of files count, as in a message of a member. */
-  mentions: boolean
+  /**
+   * Whether a mention counts, as in a message of a member. The `@` of each
+   * other mention reads as plain text.
+   */
+  mentions: (mention: Mention) => boolean
 }
 
 /** Finds the entry of the file tree that a mention names. */
@@ -99,8 +117,8 @@ function tokens(text: string, reading: Reading): Token[] {
       index += add({ kind: 'mark' }, 2)
       continue
     }
-    const mention = reading.mentions ? mentionAt(text, index) : null
-    if (mention) {
+    const mention = mentionAt(text, index)
+    if (mention && reading.mentions(mention)) {
       index += add({ kind: 'mention', mention }, mention.source.length)
       continue
     }
@@ -132,19 +150,43 @@ function tokens(text: string, reading: Reading): Token[] {
  * as in an answer, `**` marks bold around text and chips. Bold ends at
  * code, as it did before. With `mentions`, as in a message of a member,
  * each mention of an entry of the file tree is a file chip, and each other
- * mention stays text.
+ * mention stays text. `attachments` are the files of a sent message: each
+ * mention of the copy path of one of them is the chip of that file, before
+ * an entry of the tree, also in a chat without a tree.
  */
 export function chatParts(
   text: string,
   links: WorkspaceLinks,
-  options: { strong: boolean; mentions?: MentionLookup },
+  options: {
+    strong: boolean
+    mentions?: MentionLookup
+    attachments?: readonly Attachment[]
+  },
 ): ChatPart[] {
   const parts: ChatPart[] = []
+  const files = options.attachments ?? []
+  // With a tree, each mention counts, and one that names nothing is text.
+  // Without a tree, only the mention of a file of the message counts. Each
+  // other `@` is plain text, so code or a link right after it keeps its part.
+  const counts = (mention: Mention) =>
+    options.mentions !== undefined ||
+    attachmentForMention(mention, files) !== undefined
   let strong = false
   const addText = (value: string) => {
     const last = parts.at(-1)
     if (last?.kind === 'text' && last.strong === strong) last.text += value
     else parts.push({ kind: 'text', text: value, strong })
+  }
+  const addMention = (mention: Mention) => {
+    const { source, path } = mention
+    const attachment = attachmentForMention(mention, files)
+    if (attachment) {
+      parts.push({ kind: 'attachment', source, path, attachment, strong })
+      return
+    }
+    const entry = options.mentions?.(mention)
+    if (entry) parts.push({ kind: 'file', source, entry, strong })
+    else addText(source)
   }
   const take = (list: readonly Token[]) => {
     for (const token of list) {
@@ -153,12 +195,8 @@ export function chatParts(
       else if (token.kind === 'code') {
         strong = false
         parts.push(token)
-      } else if (token.kind === 'mention') {
-        const { source } = token.mention
-        const entry = options.mentions?.(token.mention)
-        if (entry) parts.push({ kind: 'file', source, entry, strong })
-        else addText(source)
-      } else {
+      } else if (token.kind === 'mention') addMention(token.mention)
+      else {
         const target = linkTarget(token.href, links)
         if (target) {
           parts.push({ kind: 'chip', source: token.source, target, strong })
@@ -167,7 +205,7 @@ export function chatParts(
             tokens(token.source, {
               marks: options.strong,
               links: false,
-              mentions: false,
+              mentions: () => false,
             }),
           )
         } else addText(token.source)
@@ -178,8 +216,26 @@ export function chatParts(
     tokens(text, {
       marks: options.strong,
       links: true,
-      mentions: options.mentions !== undefined,
+      mentions: counts,
     }),
   )
   return parts
+}
+
+/**
+ * The files of a message that no part shows as a chip, in their order. A
+ * file whose mention stands only in code, or that the text does not
+ * mention, such as a file of a message from before files had a place in
+ * the text, shows under the message.
+ */
+export function filesWithoutChip(
+  parts: readonly ChatPart[],
+  attachments: readonly Attachment[],
+): Attachment[] {
+  const shown = new Set(
+    parts.flatMap((part) =>
+      part.kind === 'attachment' ? [part.attachment.id] : [],
+    ),
+  )
+  return attachments.filter((file) => !shown.has(file.id))
 }

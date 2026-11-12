@@ -2,7 +2,10 @@
 
 This guide belongs to [the chat](README.md). It gives the rules of the
 history loads, the read-only chats, the order of the records, the sends,
-the message field of each composer, and Stop.
+and Stop. [The message field](message-field.md) gives the rules of the
+message field of each composer.
+[Attached files of a draft](draft-files.md) gives the rules of the files
+of a draft.
 
 ## History loads
 
@@ -82,6 +85,19 @@ The session history stays open. The tab keeps its old name, and the sandbox bar 
 - A Stop request records the member who pressed Stop, and ends nothing. The
   turn ends when its end says stopped. A stop with no request names nobody:
   "The agent stopped".
+- A stop through the workspace tools names the session whose agent asked
+  for it, as
+  [Stops by the workspace tools](../../docs/protocol/messages-and-attachments.md#stops-by-the-workspace-tools)
+  says. The line shows "Stopped from" and the chip of that session, then
+  the notes of the turn. `components/TranscriptItem.tsx` draws each stop
+  line with the mockups' `StopLine`, and `SessionLinkText` of
+  `links/LinkedText.tsx` draws the chip.
+- That chip finds its session and opens its page as the chip of a session
+  link in a message does, as [Workspace chips](agent-text.md#workspace-chips)
+  says. This holds also for a session of another workspace, and for a
+  closed or unknown session. A workspace that the list of the org does not
+  hold leaves the session link as text, with the origin of the link of the
+  chat's workspace.
 - The composer reads Enter through `useSendKey` of
   `components/send-key.ts`, the one send key of every composer: the chat,
   and the page and the dialog of New workspace. On a computer, Enter sends
@@ -112,6 +128,9 @@ The session history stays open. The tab keeps its old name, and the sandbox bar 
 - A send that the Worker refuses keeps its text, its files, and its message
   ID. The notice "Your message didn't send" shows the Worker's plain
   message.
+- Send takes the files whose marks the draft text holds. It writes the
+  returned copy path of each file at its mark, as
+  [The send](draft-files.md#the-send) says.
 
 ## Fixed prompts
 
@@ -137,48 +156,3 @@ says. `sendPrompt` of the controller, in
 - A reply that names a linked session shows the prompt there. No draft
   moves, and the tab moves only as for a draft that cannot move.
 - A read-only workspace sends nothing.
-
-## The message field
-
-- The message field of every composer is the chip text field of
-  `components/chip-field/`, as
-  [The message field](../../docs/protocol/workspace-links.md#the-message-field)
-  says. It holds plain text and a chip for each workspace link. A paste and
-  a draft that comes back turn each workspace link into a chip, and typed
-  text stays text. A paste reads only the plain text of the paste event.
-  The draft is plain text with the exact link of each chip. A space goes
-  beside a chip only where the text beside it would join its link, also in
-  a copy. When the list of the org changes, a chip whose workspace left it
-  becomes ordinary text, and a pasted or restored link whose workspace the
-  list now holds becomes a chip, with no new step of undo. A new draft from
-  the owner, such as an empty one after a send, clears the undo history,
-  and the owner's echo of the field's own text changes nothing. The field
-  also takes an identity for its draft as `owner`: `Draft.id` in the chat,
-  and the model of each form in New workspace. A new owner replaces the
-  content, the selection, and the undo history, also when its text is
-  equal, so undo never takes the text of one draft into another. A draft
-  that moves to another session keeps its identity, so its undo moves with
-  it. The field stays mounted, so it keeps the focus. The field stays a
-  focusable textbox while it takes no change, such as during a create. Its
-  chips find their workspaces through `LinksProvider`. A known session link
-  shows as a session chip, which works as a workspace chip there. New
-  workspace, which loads no chat, reads the sessions of each linked
-  workspace once for each load of the form, in `OrgLinks`.
-- `components/chip-field/`: `ChipTextField`, the message field of every
-  composer, over Lexical. `chip-nodes.tsx` holds the chip node and the
-  node of a link that waits for its workspace. `file-mention-nodes.tsx`
-  holds the file chip node and the node of a mention that waits for its
-  entry. `field-content.ts` turns plain text into nodes and back, and
-  reconciles the chips with the list. `mention-content.ts` reconciles the
-  file chips with the tree, finds the query of `@`, puts a pick in its
-  place, and turns a waiting mention into text when typing continues it.
-  `mention-plugins.tsx` holds the list of `@` and the reconcile of the
-  file chips. `undo-plugin.tsx` holds the undo history, which starts from
-  the content at mount, so the first change is one step of undo.
-  `field-text.ts` joins the parts of the plain text with the separator
-  rule. `field-plugins.tsx` holds the value, paste, copy, Enter, editable,
-  and reconcile plugins. `focus-plugins.tsx` holds the handle that focuses
-  the field, and the plugin of the `caretAtEnd` option. At each focus
-  without a press of the pointer, such as from Tab, that plugin puts the
-  caret back where it was, or at the end of a kept draft. The New
-  workspace page and dialog use that option.

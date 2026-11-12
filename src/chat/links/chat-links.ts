@@ -3,13 +3,15 @@ import type { ChatSnapshot } from '../state/chat-snapshot'
 import type { ChatController } from '../state/controller'
 import type { ChatLinks } from './LinksContext'
 import { sessionLinks } from './session-links'
+import { originOf } from './workspace-links'
 
 /**
  * The workspaces that the chips of a chat find, as the list of the org has
- * them now, the sessions that its session chips find, and the way that a
- * chip opens its page. The sessions of the workspace of the chat are its
- * live sessions, open and closed. Each other workspace gets one read of its
- * sessions for each load of the chat.
+ * them now, the sessions that its session chips find, the way that a chip
+ * opens its page, and the origin of the link of the chat's workspace. The
+ * sessions of the workspace of the chat are its live sessions, open and
+ * closed. Each other workspace gets one read of its sessions for each load
+ * of the chat.
  */
 export function useChatLinksOf(
   controller: ChatController,
@@ -36,5 +38,10 @@ export function useChatLinksOf(
     [workspaceId, openSessions, history, reads, read],
   )
   const links = useMemo(() => ({ orgId, workspaces }), [orgId, workspaces])
-  return useMemo(() => ({ links, open, sessions }), [links, open, sessions])
+  const link = snapshot.workspace?.link
+  const origin = link === undefined ? undefined : (originOf(link) ?? undefined)
+  return useMemo(
+    () => ({ links, open, sessions, origin }),
+    [links, open, sessions, origin],
+  )
 }

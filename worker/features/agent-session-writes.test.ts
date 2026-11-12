@@ -3,7 +3,7 @@ import { afterEach, beforeAll, expect, it } from 'vitest'
 import {
   agentSessionsPath,
   agentSessionMessagesPath,
-} from '../../src/shared/agent-tools'
+} from '../../src/shared/agent-session-paths'
 import { sessionLink } from '../../src/shared/session-link'
 import {
   OUTER_ORG,

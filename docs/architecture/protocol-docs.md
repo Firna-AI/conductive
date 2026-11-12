@@ -29,10 +29,11 @@ This page lists each protocol doc and what it covers.
   - [Messages and attachments](../protocol/messages-and-attachments.md)
     - [Message attachments](../protocol/message-attachments.md): the size
       limit, the upload, the storage, the copy into the cloud computer, and
-      the deletion of the files of a message.
+      the deletion of the files of a message, and their chips and their
+      drop in the message field.
   - [File mentions](../protocol/file-mentions.md): the list of `@` in the
-    composer, the chips of files and folders, and the removal of each chip
-    of the composer.
+    composer, the chips of files and folders, the sent chips of attached
+    files, and the removal of each chip of the composer.
   - [Agent runner](../protocol/agent-runner.md): the connection of the runner,
     its events and their limits, its turns, the background work of Claude
     turns with its note and its time limit, its port reports, and the repair
@@ -43,8 +44,9 @@ This page lists each protocol doc and what it covers.
       reports that belong to no session, the repair request after a refused
       update, and the notice of a failed repair.
   - [Session transcripts](../protocol/session-transcripts.md): copying a
-    session as concise or full Markdown, its route, and the reads of
-    agents.
+    session as concise or full Markdown, and the text of a copy.
+    - [Transcript routes](../protocol/transcript-routes.md): the route of
+      a copy.
     - [Transcript reads by agents](../protocol/transcript-reads.md): the
       route of `read_session`, and the parts of a long text.
 - [Access and security](../protocol/access-and-security.md): sign-in, the
@@ -61,9 +63,21 @@ This page lists each protocol doc and what it covers.
   - [The GitHub state](../protocol/github-summary.md): the four summary
     values for workspace list marks and their order.
 - [Agent tools](../protocol/agent-tools.md): the tools that agents use in a
-  sandbox.
+  sandbox, and Mac commands.
+  - [Agent tool access](../protocol/agent-tool-access.md): what each call
+    reaches, which calls need an active turn, and the rights of the sender.
+  - [Workspace calls](../protocol/workspace-calls.md): the calls that
+    create, list, get, rename, move, and archive workspaces, and the lists
+    that a create call takes.
   - [Session calls](../protocol/session-calls.md): the calls that start,
     list, message, and read the sessions of the org.
+    - [Session management](../protocol/session-management.md): the calls
+      that get, rename, close, and stop a session, and get a message.
+  - [Section and preview calls](../protocol/section-and-preview-calls.md):
+    the calls that create and delete sections, and list, open, and close
+    port previews.
+  - [Names from the workspace tools](../protocol/tool-names.md): the rule
+    for the names and titles that the calls give.
 - [Orgs and members](../protocol/orgs-and-members.md): orgs, sections,
   roles, the first run, and the end of an org.
 - [Pricing](../protocol/pricing.md): the plans and their cloud hours, the

@@ -1,3 +1,4 @@
+import type { Attachment } from '../../fixtures/attachments'
 import { mentionEntries, type MentionEntry } from '../../fixtures/fileMentions'
 import { entryName } from './entryPaths'
 
@@ -6,6 +7,17 @@ export type MentionPart = {
   kind: 'mention'
   entry: MentionEntry
   /** The mention as the text has it, such as `@src/lib/`. */
+  source: string
+}
+
+/**
+ * A mention of an attached file of the message: `@` and the copy path of
+ * the file, which the message shows as the chip of the file.
+ */
+export type AttachedPart = {
+  kind: 'attached'
+  file: Attachment
+  /** The mention as the text has it, with the copy path. */
   source: string
 }
 
@@ -29,19 +41,36 @@ function mentionedEntry(path: string): MentionEntry | undefined {
   )
 }
 
-/** Splits a text into plain text and the mentions of entries of the tree. */
+/** A mention in a text: of an attached file, or of an entry of the tree. */
+function mentionOf(
+  path: string,
+  source: string,
+  files: readonly Attachment[],
+): MentionPart | AttachedPart | undefined {
+  const file = files.find((item) => item.path === path)
+  if (file) return { kind: 'attached', file, source }
+  const entry = mentionedEntry(path)
+  return entry ? { kind: 'mention', entry, source } : undefined
+}
+
+/**
+ * Splits a text into plain text and its mentions: of the files of the
+ * message, by their copy paths, and of the entries of the tree.
+ */
 export function mentionParts(
   text: string,
-): ({ kind: 'text'; text: string } | MentionPart)[] {
-  const parts: ({ kind: 'text'; text: string } | MentionPart)[] = []
+  files: readonly Attachment[] = [],
+): ({ kind: 'text'; text: string } | MentionPart | AttachedPart)[] {
+  const parts: ({ kind: 'text'; text: string } | MentionPart | AttachedPart)[] =
+    []
   let end = 0
   for (const match of text.matchAll(mentionPattern)) {
-    const entry = mentionedEntry(match[1] ?? match[2])
-    if (!entry) continue
+    const mention = mentionOf(match[1] ?? match[2], match[0], files)
+    if (!mention) continue
     if (match.index > end) {
       parts.push({ kind: 'text', text: text.slice(end, match.index) })
     }
-    parts.push({ kind: 'mention', entry, source: match[0] })
+    parts.push(mention)
     end = match.index + match[0].length
   }
   if (end < text.length) parts.push({ kind: 'text', text: text.slice(end) })
