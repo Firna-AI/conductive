@@ -4,7 +4,7 @@ import { join } from 'node:path'
 
 import type { TestProject } from 'vitest/node'
 
-import { buildMigrationTemplate } from './migration-template'
+import { buildMigrationTemplate } from './migrated-storage'
 import { readMigrationScripts } from './migrations'
 import { buildNativeWorkspaceBundle } from './native-bundle'
 

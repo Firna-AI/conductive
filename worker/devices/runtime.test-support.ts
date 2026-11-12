@@ -17,7 +17,6 @@ import {
   DESKTOP_SESSION_COOKIE,
 } from '../security/desktop-contract'
 import { encrypt, hash, sign } from '../security/crypto'
-import { applyMigrations } from '../test-support/migrations'
 import { migratedStorage, TEST_D1_ID } from '../test-support/migrated-storage'
 import { workerLibraryBundle } from '../test-support/test-bundles'
 import { seedAppAccess } from '../test-support/app-access'
@@ -34,7 +33,7 @@ export async function deviceFixture(options: { entry?: string } = {}) {
     enableDevRegistry: false,
     telemetry: { enabled: false },
     cf: false,
-    ...(storage && { resourcePersistencePath: storage.path }),
+    resourcePersistencePath: storage.path,
     workers: [
       {
         config: {
@@ -69,7 +68,6 @@ export async function deviceFixture(options: { entry?: string } = {}) {
     ],
   })
   const db = await runtime.getD1Database('DB')
-  if (!storage) await applyMigrations(db)
   await db.batch([
     db.prepare(
       "INSERT INTO users (id, github_id, github_login, created_at, updated_at) VALUES ('owner', 101, 'owner', 1, 1), ('sender', 102, 'sender', 1, 1), ('outsider', 103, 'outsider', 1, 1)",
@@ -254,7 +252,7 @@ export async function deviceFixture(options: { entry?: string } = {}) {
         closeSockets(...sockets.filter((socket) => !closed.has(socket))),
         runtime.dispose(),
       ])
-      await storage?.remove()
+      await storage.remove()
     },
   }
 }

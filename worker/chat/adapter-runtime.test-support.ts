@@ -2,7 +2,6 @@ import { Miniflare } from 'miniflare'
 import { encrypt, hash, sign } from '../security/crypto'
 import { SESSION_COOKIE } from '../security/cookies'
 import { TEST_ORIGIN } from '../test-support/harness'
-import { applyMigrations } from '../test-support/migrations'
 import { migratedStorage, TEST_D1_ID } from '../test-support/migrated-storage'
 import { workerLibraryBundle } from '../test-support/test-bundles'
 import { seedAppAccess } from '../test-support/app-access'
@@ -24,7 +23,7 @@ export async function createAdapterRuntime(
     enableDevRegistry: false,
     telemetry: { enabled: false },
     cf: false,
-    ...(storage && { resourcePersistencePath: storage.path }),
+    resourcePersistencePath: storage.path,
     workers: [
       {
         config: {
@@ -66,7 +65,6 @@ export async function createAdapterRuntime(
     ],
   })
   const db = await runtime.getD1Database('DB')
-  if (!storage) await applyMigrations(db)
   await db.batch([
     db
       .prepare(

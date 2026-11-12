@@ -32,7 +32,7 @@ The same setup prepares one folder for each run and watch rerun, and deletes it 
   `cachedTestBundle` in [test-bundles.ts](test-bundles.ts) builds each bundle once in the first process that needs it.
   The other processes read the saved file.
 
-Without the global setup, each helper falls back to the old path: it applies the migrations or builds the bundle itself.
+Without the global setup, `migratedStorage` builds one template for its process, and each bundle helper builds its bundle itself.
 
 `createChatFixture` in [`harness.test-support.ts`](../chat/harness.test-support.ts) connects its fake runner and browser tabs through `nativeChatTransport` in [`native-transport.test-support.ts`](../chat/native-transport.test-support.ts).
 Its `drain` waits for batched runner input, connection closes, queued chat work, and sends to the fake runner or a browser tab.
@@ -201,9 +201,8 @@ A callback counts as complete only after the `waitUntil` work that it starts end
 - `native-chat-record-controls.ts` reads history and file projections inside the native object and calls its real chat writer.
 - `native-attachment-controls.ts` runs streaming attachment storage and reads real R2 byte samples inside the runtime.
 - `migrations.ts` splits the migrations and applies them for a harness without the template.
-- [migration-template.ts](migration-template.ts) builds the migrated template database.
-- [migrated-storage.ts](migrated-storage.ts) copies that template into the storage folder of a new runtime.
-- [test-bundles.ts](test-bundles.ts) caches the test Worker bundles for the run.
+- [migrated-storage.ts](migrated-storage.ts) builds the migrated template database and copies it into the storage folder of a new runtime.
+- [test-bundles.ts](test-bundles.ts) caches the test Worker bundles for the run. Its `buildWorkerLibrary` also builds the native bundle.
 - `fake-boat.ts` supplies provider replies, fresh streaming response factories, and added organizations with their own keys.
 - `fake-github.ts` supplies sign-in replies and an empty installation list for an account without the GitHub App.
 - Its `accounts` map supplies GitHub user lookups for routine author filters, with 404 for an unknown login.

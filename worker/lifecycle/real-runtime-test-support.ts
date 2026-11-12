@@ -11,11 +11,7 @@ import { SESSION_COOKIE } from '../security/cookies'
 import { seedAppAccess } from '../test-support/app-access'
 import { encrypt, sign } from '../security/crypto'
 import { agentLoginContext } from '../chat/queries'
-import { applyMigrations } from '../test-support/migrations'
-import {
-  copyMigratedStorage,
-  TEST_D1_ID,
-} from '../test-support/migrated-storage'
+import { migratedStorage, TEST_D1_ID } from '../test-support/migrated-storage'
 import { cachedTestBundle } from '../test-support/test-bundles'
 import { seedPublishedImage } from './published-image-test-support'
 import { readWorkspaceToken } from './tokens'
@@ -55,7 +51,7 @@ export async function realRuntimeFixture(bundle: string) {
   const root = `${import.meta.dirname}/../../.context/boat-native-remote-workspaces/8i/completion/legacy-runtime`
   await mkdir(root, { recursive: true })
   const directory = await mkdtemp(`${root}/case-`)
-  const migrated = await copyMigratedStorage(directory)
+  await migratedStorage(directory)
   const boat = new LifecycleBoat()
   const sockets = new Set<WebSocket>()
   const requests: string[] = []
@@ -134,7 +130,6 @@ export async function realRuntimeFixture(bundle: string) {
   let runtime = create()
   let bindings = await runtime.getBindings<RuntimeBindings>()
   const database = bindings.DB
-  if (!migrated) await applyMigrations(database)
   const env: LifecycleEnvironment = {
     DB: database,
     WORKSPACES: bindings.WORKSPACES,

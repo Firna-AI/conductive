@@ -55,29 +55,34 @@ async function readOrBuild(
   return code
 }
 
-/** Builds a Worker entry into one ES module with Vite's library mode. */
+/** Builds a Worker entry once per run with `buildWorkerLibrary`. */
 export function workerLibraryBundle(entry: string): Promise<string> {
-  return cachedTestBundle(`library:${resolve(entry)}`, async () => {
-    const { build } = await import('vite')
-    const result = await build({
-      configFile: false,
-      logLevel: 'silent',
-      build: {
-        write: false,
-        minify: false,
-        target: 'es2022',
-        lib: { entry, formats: ['es'] },
-        rolldownOptions: { external: ['cloudflare:workers'] },
-      },
-    })
-    const outputs = (Array.isArray(result) ? result : [result]).flatMap(
-      (value) => ('output' in value ? value.output : []),
-    )
-    const chunk = outputs.find(
-      (output) => output.type === 'chunk' && output.isEntry,
-    )
-    if (chunk?.type !== 'chunk')
-      throw new Error(`The test bundle of ${entry} is missing.`)
-    return chunk.code
+  return cachedTestBundle(`library:${resolve(entry)}`, () =>
+    buildWorkerLibrary(entry),
+  )
+}
+
+/** Builds a Worker entry into one ES module with Vite's library mode. */
+export async function buildWorkerLibrary(entry: string): Promise<string> {
+  const { build } = await import('vite')
+  const result = await build({
+    configFile: false,
+    logLevel: 'silent',
+    build: {
+      write: false,
+      minify: false,
+      target: 'es2022',
+      lib: { entry, formats: ['es'] },
+      rolldownOptions: { external: ['cloudflare:workers'] },
+    },
   })
+  const outputs = (Array.isArray(result) ? result : [result]).flatMap(
+    (value) => ('output' in value ? value.output : []),
+  )
+  const chunk = outputs.find(
+    (output) => output.type === 'chunk' && output.isEntry,
+  )
+  if (chunk?.type !== 'chunk')
+    throw new Error(`The test bundle of ${entry} is missing.`)
+  return chunk.code
 }

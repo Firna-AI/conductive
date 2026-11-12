@@ -78,8 +78,8 @@ assertion.
   add `max-lines`. The `max-lines` rule moves into `eslint.config.js`, so
   `npm run lint` checks it. The root `eslint .` already covers `desktop/`,
   `runner/`, and `image/`, so no file gets a new rule. The gate drops the
-  separate `file-length:check` step. The command stays, because it is an
-  entry point that people use.
+  separate `file-length:check` step. PR #311 on `main` made the same
+  change and removed the command, so this branch takes that version.
 - **One typecheck in the gate.** The gate already runs `npm run typecheck`
   first. Its build step builds without a second typecheck. `npm run build`
   keeps its typecheck.
