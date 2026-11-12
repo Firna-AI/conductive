@@ -57,17 +57,22 @@ it('orders session reads and writes with the workspace event sequence', async ()
     'PUT',
   )
   expect(await model.json()).toMatchObject({ eventNumber: 3, created: false })
-  const linked = await fixture.fetch(
+  // The session has no message yet, so another agent stays in it.
+  const otherAgent = await fixture.fetch(
     sessionPaths.model(fixture.org.id, WORKSPACE_ID, sessionId),
     {
       choice: CODEX,
       draft: { text: 'Keep', attachmentIds: [] },
-      newSessionId: 'linked',
+      newSessionId: 'unused-agent',
     },
     undefined,
     'PUT',
   )
-  expect(await linked.json()).toMatchObject({ eventNumber: 4, created: true })
+  expect(await otherAgent.json()).toMatchObject({
+    eventNumber: 4,
+    created: false,
+    session: { id: sessionId, choice: CODEX },
+  })
   const closed = await fixture.fetch(
     sessionPaths.close(fixture.org.id, WORKSPACE_ID, sessionId),
     { stopRunningTurn: false },
@@ -84,7 +89,7 @@ it('orders session reads and writes with the workspace event sequence', async ()
     eventNumber: 6,
     session: { closedAt: null },
   })
-  const accepted = await fixture.send(sessionId)
+  const accepted = await fixture.send(sessionId, undefined, undefined, CODEX)
   expect(accepted.eventNumber).toBe(8)
   const stopped = await fixture.fetch(
     sessionPaths.interrupt(fixture.org.id, WORKSPACE_ID, sessionId),
@@ -95,12 +100,12 @@ it('orders session reads and writes with the workspace event sequence', async ()
     turnId: accepted.session.activeTurnId,
     state: 'stopped',
   })
-  const repeated = await fixture.send(sessionId)
+  const repeated = await fixture.send(sessionId, undefined, undefined, CODEX)
   expect(repeated.eventNumber).toBe(11)
   const read = await fixture.fetch(sessionsPath(fixture.org.id, WORKSPACE_ID))
   expect(await read.json()).toMatchObject({
     eventNumber: 11,
-    sessions: [{ id: sessionId }, { id: 'linked' }],
+    sessions: [{ id: sessionId }],
   })
   expect(tab.messages.at(-1)).toMatchObject({
     type: 'event',

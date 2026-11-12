@@ -34,7 +34,7 @@ which serves these routes. The path helpers live in
 | `POST` messages | `sessionPaths.messages` | Accepts a message. During a running turn, the message joins that turn. When the starter's login cannot be used, or the starter does not share it with the sender, a new linked session takes it, as [Session logins](integration/README.md#session-logins) says |
 | `POST` retry | `retryMessagePath` | Sends the message that `Session.retryMessageId` names again, also to a new linked session. Each other message gets `409 retry_not_available`, as [Retries](#retries) says |
 | `POST` interrupt | `sessionPaths.interrupt` | Stops a turn |
-| `PUT` model | `sessionPaths.model` | Changes the model. A model of the other agent creates a session that the requester starts |
+| `PUT` model | `sessionPaths.model` | Changes the model. A model of the other agent creates a session that the requester starts. A session with no turn yet keeps it and changes its agent |
 | `POST` close, reopen | `sessionPaths.close`, `sessionPaths.reopen` | Moves a session to the session history, and back |
 | `GET` transcript | `sessionTranscriptPath` | Copies one session as concise or full Markdown |
 | `GET` history | `chatHistoryPath` | Reads the stored events of one session |
@@ -66,8 +66,10 @@ gives their rules.
 [The workspace lifecycle](integration/README.md#the-workspace-lifecycle)
 says how the lifecycle and chat work together.
 
-A cross-agent model change uses the client's `newSessionId`. A repeated
-request gets the same session. An unrelated occupied ID is refused. A
+A cross-agent model change uses the client's `newSessionId`, unless the
+session has no turn yet. Such a session changes its agent in place, checks
+the login of its starter for the new agent again, and ignores the field. A
+repeated request gets the same session. An unrelated occupied ID is refused. A
 same-agent change ignores this field.
 
 ## Session transcripts

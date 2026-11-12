@@ -23,7 +23,7 @@ describe('workspace chat commands', () => {
   afterAll(async () => {
     await harness.dispose()
   })
-  it('keeps same-agent model changes and moves the unchanged draft to a new agent session', async () => {
+  it('keeps same-agent model changes and moves the unchanged draft from a session with a message to a new agent session', async () => {
     const ids = ['z-session', 'model-command']
     const fixture = await createChatFixture(harness, {
       ids,
@@ -60,6 +60,7 @@ describe('workspace chat commands', () => {
     runner.disconnect()
     await fixture.connect(runner)
     expect(runner.commands[1]).toEqual(changedModel)
+    await fixture.send(session.id, 'first-message')
     await fixture.clock.advance(1000)
     const changedResponse = await fixture.fetch(
       sessionPaths.model(fixture.org.id, WORKSPACE_ID, session.id),

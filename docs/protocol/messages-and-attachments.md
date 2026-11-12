@@ -18,6 +18,11 @@ says.
   (decision 51).
 - A model of the other agent opens a new session with that agent, and the
   draft moves there with its files, each at its place in the text.
+- A session with no message yet keeps a model of the other agent. The
+  session then changes its agent, and keeps its starter. The login check
+  runs again for the new agent. The user asked for this change, so that an
+  empty session opens no second tab. Reason: no agent conversation exists
+  before the first message, so no history stays behind.
 - Reason: neither SDK can switch agents inside one session. A hand-over of
   the transcript to the other agent was rejected. The user chose the way
   that Conductor works.

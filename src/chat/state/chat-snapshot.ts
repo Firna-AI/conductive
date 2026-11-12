@@ -176,6 +176,17 @@ export function sessionState(
   )
 }
 
+/**
+ * The session shows a message, sent or waiting for the stream. A model of
+ * the other agent stays in a session without one, as `chooseModel` says.
+ */
+export function hasMessages(state: SessionState): boolean {
+  return (
+    state.pending.length > 0 ||
+    state.transcript.items.some((item) => item.kind === 'user')
+  )
+}
+
 export function withSession(
   snapshot: ChatSnapshot,
   sessionId: string,
