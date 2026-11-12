@@ -11,15 +11,22 @@ export const sidebarWidth: PanelWidth = { value: 232, min: 200, max: 360 }
 export const rightColumnWidth: PanelWidth = { value: 440, min: 320, max: 640 }
 
 /**
- * The handle on the inner edge of a resizable panel. It is a hairline at
- * rest. On hover, on focus, and while the user drags, the hairline
+ * The split of the right column: the share of the file lists in the height
+ * of the file lists and the tools panel, in percent, and the range of a drag.
+ */
+export const filesShare: PanelWidth = { value: 55, min: 20, max: 80 }
+
+/**
+ * The handle on the inner edge of a resizable panel. The handle on the top
+ * edge of the tools panel moves the split of the right column. It is a
+ * hairline at rest. On hover, on focus, and while the user drags, the hairline
  * brightens and a grip in the accent colour shows in its middle. The app
  * remembers each width.
  */
 export function ResizeHandle(props: {
   label: string
   /** The edge of the panel that the handle sits on. */
-  edge: 'left' | 'right'
+  edge: 'left' | 'right' | 'top'
   width: PanelWidth
   /** The user drags the handle now. */
   active?: boolean
@@ -28,7 +35,7 @@ export function ResizeHandle(props: {
   return (
     <div
       aria-label={props.label}
-      aria-orientation="vertical"
+      aria-orientation={props.edge === 'top' ? 'horizontal' : 'vertical'}
       aria-valuemax={width.max}
       aria-valuemin={width.min}
       aria-valuenow={width.value}

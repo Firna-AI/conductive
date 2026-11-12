@@ -28,7 +28,7 @@ and the separate preview domain.
 | The records of attached files | D1 |
 | The repository, the files, and the agent sessions                            | The home folder of the sandbox           |
 | The prepared repositories and the installed software                         | The org image, in the app's Boat account |
-| Panel widths                                                                 | The browser, or the Mac app              |
+| Panel sizes                                                                  | The browser, or the Mac app              |
 
 ## Trust boundaries
 

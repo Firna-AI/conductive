@@ -217,7 +217,7 @@ app.
 - The changes of a person belong to the account (decision 190). So they
   apply in every browser and in the Mac app.
 - Reason: the keys then work the same everywhere, and the browser still
-  stores only the panel widths. Changes that stay on each device were
+  stores only the panel sizes. Changes that stay on each device were
   rejected, because a new browser, a private window, and the Mac app would
   each start from the default keys.
 - One set of keys for the whole org was rejected, because the keys are a

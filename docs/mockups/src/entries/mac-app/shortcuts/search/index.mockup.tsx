@@ -25,7 +25,7 @@ export const macShortcutsSearch = defineScreen({
       slug: 'fixed-keys',
       title: 'Fixed keys of a focused control',
       description:
-        'A search for “move” finds the fixed keys at the end of the Workspace group, Move up or down in Menus and palette, and the rows of the Text group that move by word or by line. ⌥↑ and ⌥↓ move a focused workspace in the list. ← and → move a focused divider, ⇧← and ⇧→ move it in bigger steps, and Home and End make its panel narrowest or widest. Each row shows Fixed shortcut, and its label names the control that has the focus.',
+        'A search for “move” finds the fixed keys at the end of the Workspace group, Move up or down in Menus and palette, and the rows of the Text group that move by word or by line. ⌥↑ and ⌥↓ move a focused workspace in the list. The arrows move a focused divider: ← and → a divider between columns, and ↑ and ↓ the divider between the file lists and the tools. With ⇧ they move it in bigger steps, and Home and End make its panel smallest or largest. Each row shows Fixed shortcut, and its label names the control that has the focus.',
       rationale:
         'The user chose option D of decision 193 on 10 November 2026. The row move takes ⌥ with ↑ or ↓ and no other modifier, and the divider takes ← and → alone or with ⇧. So ⌥⌘↑, ⌥⌘↓, and each recorded shortcut run their commands also from a focused row or divider. The tab lists these keys as fixed, so the recorder refuses them, as it refuses ⌘H.',
       props: { shortcutSearch: 'fixed' },

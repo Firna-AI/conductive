@@ -3,8 +3,12 @@ import {
   sidebarWidth,
   type PanelWidth,
 } from '../../docs/mockups/src/components/layout/ResizeHandle'
+import { ColumnSplit } from './column-split'
+import { panelDrag, type PanelDrag, type PanelMove } from './panel-drag'
 import type { KeyValueStorage } from './services'
 import { Store } from './store'
+
+export type { PanelDrag, PanelMove } from './panel-drag'
 
 export type Panel = 'sidebar' | 'right'
 
@@ -21,16 +25,6 @@ const storageKeys: Readonly<Record<Panel, string>> = {
 
 /** `null` means that the user has not chosen a width, so the layout's own applies. */
 export type PanelState = Readonly<Record<Panel, number | null>>
-
-/** A move of the edge of a panel: by some px, or to one end of its range. */
-export type PanelMove = { by: number } | { to: 'min' | 'max' }
-
-/** One drag of the edge of a panel. `by` is the change of the width. */
-export interface PanelDrag {
-  move(by: number): void
-  /** Ends the drag at its last move. A second call changes nothing. */
-  end(): void
-}
 
 function readWidth(storage: KeyValueStorage | null, panel: Panel) {
   let stored: string | null
@@ -49,11 +43,12 @@ function readWidth(storage: KeyValueStorage | null, panel: Panel) {
 
 /**
  * The layout of the panels that the user chooses: the widths of the
- * sidebar and the right column, and whether the right column shows. The
- * browser keeps the widths, as the only state that does not come from the
- * Worker. When the browser refuses its storage, the widths last until the
- * page closes. Whether the right column shows always lasts until the page
- * closes.
+ * sidebar and the right column, the split of the right column between the
+ * file lists and the tools, and whether the right column shows. The
+ * browser keeps the widths and the split, as the only state that does not
+ * come from the Worker. When the browser refuses its storage, they last
+ * until the page closes. Whether the right column shows always lasts until
+ * the page closes.
  */
 export class PanelLayout {
   readonly widths: Store<PanelState>
@@ -62,10 +57,13 @@ export class PanelLayout {
    * hides it and shows it again, for every workspace of the tab.
    */
   readonly rightShown = new Store(true)
+  /** The split of the right column between the file lists and the tools. */
+  readonly split: ColumnSplit
   private readonly storage: KeyValueStorage | null
 
   constructor(storage: KeyValueStorage | null) {
     this.storage = storage
+    this.split = new ColumnSplit(storage)
     this.widths = new Store<PanelState>({
       sidebar: readWidth(storage, 'sidebar'),
       right: readWidth(storage, 'right'),
@@ -111,23 +109,13 @@ export class PanelLayout {
    * width from before the drag, and stores nothing.
    */
   drag(panel: Panel, from: number): PanelDrag {
-    const before = this.widths.get()[panel]
-    let last: number | null = null
-    let ended = false
-    return {
-      move: (by) => {
-        if (ended) return
-        const width = this.next(panel, from, { by })
-        last = width === Math.round(from) ? null : width
-        this.put(panel, last ?? before)
-      },
-      end: () => {
-        if (ended) return
-        ended = true
-        if (last === null) this.put(panel, before)
-        else this.keep(panel, last)
-      },
-    }
+    return panelDrag({
+      start: Math.round(from),
+      before: this.widths.get()[panel],
+      next: (by) => this.next(panel, from, { by }),
+      put: (width) => this.put(panel, width),
+      keep: (width) => this.keep(panel, width),
+    })
   }
 
   private put(panel: Panel, width: number | null): void {
