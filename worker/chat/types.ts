@@ -1,3 +1,4 @@
+import type { TurnStopRequester } from '../../src/shared/session-stop'
 import type { Agent, AgentChoice } from '../../src/shared/agents'
 import type { CommitAuthor } from '../../src/shared/commit-author'
 import type { PendingTurn } from '../lifecycle/workspace-runtime'
@@ -70,6 +71,7 @@ export interface StoredTurn {
   started?: boolean
   startedAt?: number
   closeAfterStop: boolean
+  stopRequest?: TurnStopRequester
   /** Internal waiting work. Older records have no successor. */
   nextTurnId?: string | null
   gateway?: TurnTokenState

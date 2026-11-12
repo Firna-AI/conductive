@@ -11,7 +11,7 @@ import {
 } from '../../../src/shared/workspaces'
 import { TOOL_TURN_HEADER } from '../../../tools/context'
 import { deleteOrgPath } from '../../../src/shared/orgs'
-import { orgWorkspaces } from '../../tools/store'
+import { listToolWorkspaces } from '../../tools/workspace-data'
 import { closeSockets } from '../adapter-sockets.test-support'
 import { array } from '../agent-events'
 import { record } from '../inputs'
@@ -103,9 +103,14 @@ it('keeps current Mac input across lifecycle activity, heartbeat, retained retur
   await active.actor().advanceStartAlarm()
   expect(active.boat.deadlineIds.length).toBeGreaterThan(deadlines)
   expect(
-    (await orgWorkspaces(active.env.DB, OUTER_ORG, active.env.APP_ORIGIN)).find(
-      (workspace) => workspace.id === OUTER_WORKSPACE,
-    )?.state,
+    (
+      await listToolWorkspaces(
+        active.env.DB,
+        OUTER_ORG,
+        active.env.APP_ORIGIN,
+        {},
+      )
+    ).workspaces.find((workspace) => workspace.id === OUTER_WORKSPACE)?.state,
   ).toBe('input')
   const listed = await active.request(workspacesPath(OUTER_ORG))
   expect(listed.status).toBe(200)

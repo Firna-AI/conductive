@@ -43,6 +43,7 @@ it('inherits the org, owner, and owner defaults while the calling sender starts 
     TOOL_TEST_TURN,
   )
   expect(fixture.services.createWorkspace).toHaveBeenCalledExactlyOnceWith({
+    firstMessageId: expect.any(String),
     orgId: 'org-a',
     owner: {
       id: 'owner',

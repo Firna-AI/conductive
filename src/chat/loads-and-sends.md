@@ -70,6 +70,19 @@ The session history stays open. The tab keeps its old name, and the sandbox bar 
 - A Stop request records the member who pressed Stop, and ends nothing. The
   turn ends when its end says stopped. A stop with no request names nobody:
   "The agent stopped".
+- A stop through the workspace tools names the session whose agent asked
+  for it, as
+  [Stops by the workspace tools](../../docs/protocol/messages-and-attachments.md#stops-by-the-workspace-tools)
+  says. The line shows "Stopped from" and the chip of that session, then
+  the notes of the turn. `components/TranscriptItem.tsx` draws each stop
+  line with the mockups' `StopLine`, and `SessionLinkText` of
+  `links/LinkedText.tsx` draws the chip.
+- That chip finds its session and opens its page as the chip of a session
+  link in a message does, as [Workspace chips](agent-text.md#workspace-chips)
+  says. This holds also for a session of another workspace, and for a
+  closed or unknown session. A workspace that the list of the org does not
+  hold leaves the session link as text, with the origin of the link of the
+  chat's workspace.
 - The composer reads Enter through `useSendKey` of
   `components/send-key.ts`, the one send key of every composer: the chat,
   and the page and the dialog of New workspace. On a computer, Enter sends

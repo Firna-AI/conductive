@@ -26,24 +26,44 @@ function toneOf(github: GitHubSummary | null, status: ActivityStatus) {
 }
 
 /**
- * How one cell looks. While the agent works, a light runs around the ring
- * and the centre stays dim. While the agent needs input, the whole grid
- * pulses. Without motion, the ring or the middle column stays lit. Every
- * other state is still: lit in the colour of the GitHub state, or dim.
+ * Whether a light runs around the ring: while the agent works, and while
+ * the checks run, so that the mark waits on something and the user does
+ * not need to act. Needs input keeps its pulse, because the user must act.
+ * An archived mark stays still.
+ */
+function chases(github: GitHubSummary | null, status: ActivityStatus) {
+  if (status === 'working') return true
+  if (status === 'input' || status === 'archived') return false
+  return github === 'checks-running'
+}
+
+/**
+ * How one cell looks. While the agent works or the checks run, a light
+ * runs around the ring and the centre stays dim. While the agent needs
+ * input, the whole grid pulses. Without motion, the ring of a working
+ * agent or the middle column stays lit, and running checks light the whole
+ * grid. Every other state is still: lit in the colour of the GitHub state,
+ * or dim.
  */
 function cellOf(
   github: GitHubSummary | null,
   status: ActivityStatus,
   cell: number,
 ): MarkCell {
+  if (chases(github, status)) {
+    return ring.includes(cell)
+      ? {
+          className: classes(styles.cell, styles.lit, styles.chase),
+          style: ringDelay(cell),
+        }
+      : {
+          className: classes(
+            styles.cell,
+            status !== 'working' && styles.litWhenStill,
+          ),
+        }
+  }
   switch (status) {
-    case 'working':
-      return ring.includes(cell)
-        ? {
-            className: classes(styles.cell, styles.lit, styles.chase),
-            style: ringDelay(cell),
-          }
-        : { className: styles.cell }
     case 'input':
       return {
         className: classes(
@@ -58,6 +78,8 @@ function cellOf(
     case 'stopped':
     case 'error':
       return { className: classes(styles.cell, github !== null && styles.lit) }
+    // `chases` already took the working agent.
+    case 'working':
     case 'archived':
       return { className: styles.cell }
   }
@@ -68,9 +90,9 @@ function cellOf(
  * GitHub state of its pull request in one colour, on the grid of
  * `StatusGlyph`. Red is failed checks, amber running checks, green passed
  * checks, and purple a merge. A mark without a GitHub state is dim grey.
- * A still mark means that the agent does not work: a light runs around the
- * ring while it works, and the mark pulses while it needs input. It
- * imports no fixture value, so the app uses it too.
+ * A light runs around the ring while the agent works or the checks run,
+ * and the mark pulses while the agent needs input. Every other mark is
+ * still. It imports no fixture value, so the app uses it too.
  */
 export function WorkspaceMark(props: {
   github: GitHubSummary | null
