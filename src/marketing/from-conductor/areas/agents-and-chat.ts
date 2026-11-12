@@ -27,7 +27,7 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     area: 'agents-and-chat',
     name: 'Attachments',
     status: 'available',
-    note: 'Attach files up to 25 MB each, or attach a smaller file. A 1 GB limit is planned.',
+    note: 'Attach files up to 25 MB each. A 100 MB limit is in progress.',
   },
   {
     id: 'drag-and-drop-attachments',
@@ -35,6 +35,14 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     name: 'Drag and drop attachments',
     status: 'available',
     note: 'Drop files into chat or New workspace as inline chips at the pointer or caret. Sent chips open their copies in file tabs after delivery.',
+  },
+  {
+    id: 'folder-attachments',
+    area: 'agents-and-chat',
+    name: 'Folder attachments',
+    status: 'in-progress',
+    note: 'Attaching dropped folders as zip files is in progress. Zip a folder and attach the file today.',
+    due: null,
   },
   {
     id: 'large-text-pastes',

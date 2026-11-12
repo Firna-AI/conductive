@@ -13,7 +13,7 @@ export const navigationAndAppearanceFeatures: readonly ParityFeature[] = [
     area: 'navigation-and-appearance',
     name: 'Sidebar sections',
     status: 'available',
-    note: 'Create sections and drag workspaces between them. New workspaces can start in a chosen section, with a dialog picker in progress.',
+    note: 'Create sections and drag workspaces between them. Choose a section from the menu in the New workspace dialog.',
   },
   {
     id: 'command-palette',
