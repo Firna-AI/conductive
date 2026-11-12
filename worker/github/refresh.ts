@@ -18,8 +18,7 @@ const MERGE_STATE_RETRY_DELAY_MS = 1000
 
 /**
  * Decide from the stored state whether a webhook can change this workspace.
- * A push to another branch matters only to an open pull request into it. A
- * check event that names no branch matters only to an open pull request.
+ * A push to another branch matters only to an open pull request into it.
  * Without stored state of the current branch, the workspace reads GitHub.
  */
 async function needsRead(
@@ -29,7 +28,7 @@ async function needsRead(
 ): Promise<boolean> {
   const otherPush =
     signal.pushBranch !== undefined && signal.pushBranch !== workspace.branch
-  if (!otherPush && !signal.openPullRequestOnly) return true
+  if (!otherPush) return true
   const stored = await state.stored()
   if (stored?.banner.branch !== workspace.branch) return true
   const { banner } = stored
@@ -37,7 +36,6 @@ async function needsRead(
     banner.pullRequest !== null &&
     banner.state !== 'merged' &&
     banner.state !== 'closed'
-  if (!otherPush) return open
   return (
     open && signal.pushBranch === (workspace.baseBranch ?? banner.baseBranch)
   )

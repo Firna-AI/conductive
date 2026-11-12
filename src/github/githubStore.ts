@@ -33,10 +33,11 @@ export interface GitHubSource {
 }
 
 /**
- * The wait before the next fresh read of an open workspace, in ms. GitHub
- * events keep the state current, so these reads only catch a change that no
- * webhook names. Each read costs GitHub API calls in every open tab, so the
- * wait is long. It is a choice of the app, not a product limit.
+ * The wait before the next fresh read of an open workspace, in ms. Pull
+ * request, review, and push events keep most of the state current. Check and
+ * status events change nothing, so a check that starts or ends shows at one
+ * of these reads. Each read costs GitHub API calls in every open tab, so the
+ * wait is long. `docs/protocol/github-banner.md` states this wait.
  */
 const freshReadWait = 300_000
 

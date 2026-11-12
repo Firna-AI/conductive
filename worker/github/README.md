@@ -77,7 +77,9 @@ The [shared contracts](../../src/shared/github.ts) define the response bodies.
    No active installation means no read or webhook publication.
 3. Route `MACHINE_PATHS.githubWebhook`, which is `/v1/github/webhooks`, to `handleGitHubWebhook` before the machine stub.
    Set the webhook URL of the GitHub App to the address in [The GitHub App](../../docs/protocol/github-banner.md#the-github-app).
-   Subscribe to `push`, `pull_request`, `pull_request_review`, `pull_request_review_thread`, `check_run`, `check_suite`, and `status`.
+   Subscribe to `push`, `pull_request`, `pull_request_review`, and `pull_request_review_thread`.
+   The handler answers each other event with 204 and reads nothing for it, also `check_run`, `check_suite`, and `status`.
+   So an existing subscription to those three events does no harm.
    Keep the raw request body intact.
 4. Route both app read paths to `handleGitHubRead` before the existing general app gate dispatch.
    This handler already owns its gate.
@@ -150,7 +152,9 @@ JSON parsing and storage access follow successful verification.
 
 ## Refresh behavior
 
-Each webhook triggers a fresh read instead of applying old payload state.
+Each routed webhook triggers a fresh read instead of applying old payload state.
+Check and status events trigger no read, because a run of checks sends many of them.
+An open tab shows their changes at its timed fresh read, as the [banner protocol](../../docs/protocol/github-banner.md#state-of-a-branch) says.
 Resolving or unresolving a review thread refreshes its pull request branch.
 Repository and installation IDs must match active local records.
 A foreign fork's same-named branch cannot update a workspace in the base repository.
@@ -163,11 +167,6 @@ It refreshes only when the pushed branch is that head or base.
 An explicit workspace base takes precedence.
 Otherwise, the base comes from the pull request, or the repository default when no pull request exists.
 An unrelated push returns `null` and stores no snapshot or event.
-A check event that names a branch reaches only the workspaces of that branch.
-A check suite names `head_branch`, a check run names the branch of its suite, and a status names its `branches`.
-A check event that names no branch, such as a status of a test merge commit, reaches each workspace.
-That workspace reads only for an open pull request, or when it has no stored state of its branch.
-The routing never uses the payload's pull request list.
 A changed banner or check publishes one fresh event.
 A later identical read publishes none.
 Retrying an already committed delivery republishes its original event without another GitHub read.

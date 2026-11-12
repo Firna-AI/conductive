@@ -76,19 +76,15 @@ it('skips a merged pull request when its base moves', async () => {
   expect(await readers('push', main, 'main')).toEqual([])
 })
 
-it('sends a check event to its named branch, and an unnamed one to open pull requests', async () => {
-  const { workspace } = await seedTwo()
-  expect(await readers('check_suite', recordedCheckSuite, 'suite')).toEqual([
-    workspace.id,
-  ])
+it('ignores named and unnamed check events for stored workspaces', async () => {
+  await seedTwo()
+  expect(await readers('check_suite', recordedCheckSuite, 'suite')).toEqual([])
   const otherSuite = {
     ...recordedCheckSuite,
     check_suite: { ...recordedCheckSuite.check_suite, head_branch: 'main' },
   }
   expect(await readers('check_suite', otherSuite, 'main-suite')).toEqual([])
-  expect(await readers('status', recordedStatus, 'unnamed')).toEqual([
-    workspace.id,
-  ])
+  expect(await readers('status', recordedStatus, 'unnamed')).toEqual([])
   const named = { ...recordedStatus, branches: [{ name: 'other' }] }
-  expect(await readers('status', named, 'named')).toEqual(['workspace-2'])
+  expect(await readers('status', named, 'named')).toEqual([])
 })

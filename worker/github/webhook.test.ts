@@ -131,37 +131,22 @@ it('routes recorded branch events while workspaces need input and excludes forei
   expect(harness.memory(workspace.id).events).toHaveLength(1)
 })
 
-it('routes SHA-only events without pull request hints and publishes only changed display state', async () => {
-  const { workspace } = await harness.seed()
-  expect(
-    (await harness.webhook('pull_request', recordedPullRequest, 'initial'))
-      .status,
-  ).toBe(204)
-  harness.api.pulls[2].mergeStateStatus = 'BLOCKED'
-  expect(
-    (await harness.webhook('status', recordedStatus, 'old-status')).status,
-  ).toBe(204)
-  expect(harness.memory(workspace.id).events).toMatchObject([
-    { eventNumber: 1, event: { banner: { state: 'ready-to-merge' } } },
-    { eventNumber: 2, event: { banner: { state: 'blocked' } } },
-  ])
+it('ignores check and status events without reading GitHub or changing a workspace', async () => {
+  await harness.seed()
   for (const [index, sample] of [
     { event: 'check_run', body: recordedCheckRun },
     { event: 'check_suite', body: recordedCheckSuite },
     { event: 'status', body: { ...recordedStatus, sha: HEAD_SHA } },
   ].entries()) {
     expect(
-      (await harness.webhook(sample.event, sample.body, `sha-${index}`)).status,
+      (await harness.webhook(sample.event, sample.body, `check-${index}`))
+        .status,
+      sample.event,
     ).toBe(204)
   }
-  expect(
-    harness.memory(workspace.id).events.map((envelope) => envelope.eventNumber),
-  ).toEqual([1, 2])
-  expect(
-    harness
-      .memory(workspace.id)
-      .published.map((envelope) => envelope.event.type),
-  ).toEqual(['github.updated', 'github.updated'])
+  expect(harness.tokens).toEqual([])
+  expect(harness.api.requests).toEqual([])
+  expect([...harness.states.keys()]).toEqual([])
 })
 
 it('sends no event to an archived workspace on the same branch', async () => {

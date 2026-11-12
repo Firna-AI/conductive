@@ -4,7 +4,7 @@ import { TEST_TIME } from '../test-support/harness'
 import {
   recordedPullRequest,
   recordedPush,
-  recordedStatus,
+  recordedReview,
 } from './recorded-webhooks'
 import { createGitHubHarness, type GitHubTestHarness } from './test-harness'
 
@@ -75,7 +75,8 @@ it('schedules fresh reads while merge state is pending and stores the later know
   const memory = harness.memory(workspace.id)
   harness.api.pulls[2].mergeStateStatus = 'UNKNOWN'
   expect(
-    (await harness.webhook('status', recordedStatus, 'pending')).status,
+    (await harness.webhook('pull_request_review', recordedReview, 'pending'))
+      .status,
   ).toBe(503)
   expect(memory.scheduled).toHaveLength(1)
   await expect(harness.runScheduled(workspace.id)).rejects.toMatchObject({
@@ -104,7 +105,8 @@ it('stops scheduling after three deferred reads when merge state stays unknown',
   const { workspace } = await harness.seed()
   harness.api.pulls[2].mergeable = 'UNKNOWN'
   expect(
-    (await harness.webhook('status', recordedStatus, 'pending')).status,
+    (await harness.webhook('pull_request_review', recordedReview, 'pending'))
+      .status,
   ).toBe(503)
   const memory = harness.memory(workspace.id)
   for (const retryAttempt of [1, 2, 3]) {
