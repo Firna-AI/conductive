@@ -1,6 +1,6 @@
 # Restore of a deleted org in the Account page
 
-Status: Active. On branch `calummoore/porto-a8k1`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
+Status: Active. [PR #319](https://github.com/Firna-AI/conductive/pull/319) is open. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
 Delete org stops the cloud computers of an org and hides it from its
 members. For 7 days an admin can restore it. Until now, the deleted org
