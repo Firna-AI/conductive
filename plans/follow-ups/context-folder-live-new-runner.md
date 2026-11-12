@@ -28,7 +28,7 @@
   - After the words of the member, each message with files gets one read line, then one line for each file (decision 244). The user chose the read line "The sender attached these files. Read each file before you answer."
   - Each file line holds one JSON object with `name`, `mediaType`, `path`, and `sizeBytes`. The path is absolute. `runner/src/providers/instructions.test.ts` holds the exact text that the runner sends.
   - Codex also gets each image as image input. For a message with an image, its read line adds "Each image is also in this message."
-  - All files and Changes leave out each file that Git ignores. Members find such files in the Terminal.
+  - Changes leaves out each file that Git ignores. All files still lists each file of the context folder, also the ignored ones.
   - The Worker tests use fake upload servers that model no folders. So they do not prove that the real provider makes the missing digest folder, or that it can write into the folders of the runner.
   - The runner tests use a temporary repository, not a real cloud computer.
 - **Task:**
@@ -55,7 +55,7 @@
       - `sha256sum` and `stat -c %s` of the file give the SHA-256 and the size from step 6.
       - `git status --porcelain --untracked-files=all -- .context` prints nothing.
       - Record the owner of the digest folder and of the file with `stat -c '%U %n'`. The provider made them, and no rule names their owner.
-  11. In the app, open **Changes** and **All files**. Check that neither lists `.context` or a file in it.
+  11. In the app, open **Changes**. Check that it lists no file in `.context`. Open **All files**. Check that it lists the attached file in `.context/attachments/`.
   12. In the Claude session, send: "Save a short note for other sessions of this workspace in the context folder. Tell me its path." In the Terminal, check these results:
       - `stat -c '%U %n' <note path>` prints `user` and a path in `.context/`.
       - `git check-ignore -v <note path>` names the rule `/.context/` in `.git/info/exclude`.

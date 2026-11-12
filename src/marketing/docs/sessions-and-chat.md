@@ -76,8 +76,8 @@ Attached files arrive in `.context/attachments/` in the workspace's repository f
 Each file keeps the same path when you retry its message.
 New workspaces from a new computer build also get a `.context/` folder for agent notes, screenshots, and files for other sessions.
 Git ignores the folder's files unless your repository already tracks them.
-Use **Terminal** to find the ignored files.
-**All files** and **Changes** do not list them.
+After a new computer build, **All files** lists them, so you can open them there.
+**Changes** does not list them.
 
 - [Read files and pictures](/docs/files-and-changes#read-a-file)
 

@@ -26,7 +26,9 @@ number names a dated record, as
   [Labels of paths](tokens-and-secrets.md#secrets-that-users-enter) says.
 - The rows come from the file tree that the workspace keeps, which All
   files shows. It holds the tracked files, the untracked files that Git
-  does not ignore, and their folders, as
+  does not ignore, every file of the
+  [context folder](repository-folders.md#the-context-folder), and their
+  folders, as
   [Files and changes](workspace-tools.md#files-and-changes) says.
 - Reason: the list works while the cloud computer sleeps, and it needs no
   new route. A live search on the cloud computer with ignored files, and a

@@ -65,8 +65,14 @@ number names a dated record, as
   makes the context folder and the attachments folder, when they do not
   exist. Reason: the user that runs the agents then owns both folders.
 - The runner does both before it reports the files of the workspace. So
-  All files and Changes list no file of the folder that the repository
-  does not track. Members find such files in the terminal.
+  Changes lists no file of the folder that the repository does not track.
+- All files lists every file of the folder, also each file that Git
+  ignores, such as an attached file. It shows no change mark on such a
+  file. So `@` mentions can name these files too, as
+  [File mentions](file-mentions.md) says. Reason: agents leave notes and
+  screenshots there for the members, who then need no terminal to open
+  them. A separate list for the folder beside All files was rejected,
+  because it needs a second report and a second view for the same files.
 - The exclude file holds the rule once, also after many starts. The rule
   covers only the folder at the top of the repository. A `.context` folder
   deeper in the repository stays visible to Git.
@@ -84,7 +90,8 @@ number names a dated record, as
 - Each build of the org image installs the newest runner, as
   [The agent runner](agent-runner.md#the-agent-runner) says. A cloud
   computer with an older runner gets no rule and no folder at its start.
-  Its agents are not told about the folder.
+  Its agents are not told about the folder. Its All files lists no file
+  of the folder that Git ignores.
 - These ways were rejected:
   - A `.context/` line in the `.gitignore` of each repository. It adds a
     tracked change on every branch.
