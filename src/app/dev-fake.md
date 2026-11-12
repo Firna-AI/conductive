@@ -8,9 +8,12 @@ the dev wiring in `dev/`, and what its fake routes do.
 - The dev wiring in `dev/` keeps an in-memory state, so that an edit in the
   browser shows on the next read. Query options choose a preview state, for
   example `?role=member`, `?workspace=starting`, `?firstRun=org`,
-  `?login=none`, `?deleted=1`, `?suspended=1`, `?operator=1`,
+  `?login=none`, `?login=endpoint`, `?deleted=1`, `?suspended=1`, `?operator=1`,
   `?waiting=1`, `?paused=1`, `?waitlist=off`, or
-  `?paths=masked`. `dev/options.ts` lists them. `?banner=<state>`, such as
+  `?paths=masked`. `dev/options.ts` lists them. With `?login=endpoint`,
+  `?modelList=unlisted` gives the Claude own endpoint a last model list that
+  does not name the last Claude model, and `?modelList=none` a list that
+  names no Claude model. `?banner=<state>`, such as
   `?banner=checks-failed`, gives `checkout-autocomplete` that pull request
   bar, and its list mark shows the GitHub state of that bar. The other rows
   keep the GitHub states of the mockups. `dev/attachment-routes.ts`

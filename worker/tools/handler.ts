@@ -1,12 +1,21 @@
-import {
-  MACHINE_PATHS,
-  type AgentCreateWorkspaceRequest,
-} from '../../src/shared/agent-tools'
+import { MACHINE_PATHS } from '../../src/shared/agent-tools'
+import type { AgentCreateWorkspaceRequest } from '../../src/shared/agent-workspaces'
 import { TOOL_TURN_HEADER } from '../../tools/context'
 import { createWorkspaceInput, ToolInputError } from '../../tools/input'
 import { createdWorkspace } from '../../tools/responses'
 import { errorResponse, HttpError, privateResponse } from '../http'
 import { readJsonObject } from '../http/json-body'
+import {
+  workspaceToolMethods,
+  readWorkspaceFromTool,
+  writeWorkspaceFromTool,
+} from './workspace-routes'
+import { sectionToolMethods, writeSectionFromTool } from './section-routes'
+import {
+  previewToolMethods,
+  readPreviewsFromTool,
+  writePreviewFromTool,
+} from './preview-routes'
 import { createFromTool } from './create'
 import { isAgentToolPath, listFromTool } from './lists'
 import type { AgentToolServices } from './services'
@@ -35,6 +44,9 @@ export function createAgentToolsHandler(
         throw new HttpError(404, 'not_found', 'The page is not available.')
       }
       const methods =
+        sectionToolMethods(url.pathname) ??
+        previewToolMethods(url.pathname) ??
+        workspaceToolMethods(url.pathname) ??
         sessionToolMethods(url.pathname) ??
         (url.pathname === MACHINE_PATHS.workspaces ? ['GET', 'POST'] : ['GET'])
       const allow = methods.join(', ')
@@ -62,6 +74,21 @@ export function createAgentToolsHandler(
         )
       }
       if (request.method === 'GET') {
+        const previews = await readPreviewsFromTool(
+          url,
+          env.DB,
+          caller,
+          services,
+          env.APP_ORIGIN,
+        )
+        if (previews !== null) return privateResponse(Response.json(previews))
+        const workspace = await readWorkspaceFromTool(
+          url,
+          env.DB,
+          caller,
+          env.APP_ORIGIN,
+        )
+        if (workspace) return privateResponse(Response.json(workspace))
         const sessions = await readSessionsFromTool(
           url,
           env.DB,
@@ -72,16 +99,36 @@ export function createAgentToolsHandler(
         if (sessions !== null) return privateResponse(Response.json(sessions))
         return privateResponse(
           Response.json(
-            await listFromTool(
-              url.pathname,
-              env.DB,
-              caller,
-              services,
-              env.APP_ORIGIN,
-            ),
+            await listFromTool(url, env.DB, caller, services, env.APP_ORIGIN),
           ),
         )
       }
+      const section = await writeSectionFromTool(
+        request,
+        url,
+        env.DB,
+        caller,
+        services,
+      )
+      if (section) return privateResponse(section)
+      const preview = await writePreviewFromTool(
+        request,
+        url,
+        env.DB,
+        caller,
+        services,
+        env.APP_ORIGIN,
+      )
+      if (preview) return privateResponse(preview)
+      const workspace = await writeWorkspaceFromTool(
+        request,
+        url,
+        env.DB,
+        caller,
+        services,
+        env.APP_ORIGIN,
+      )
+      if (workspace) return privateResponse(workspace)
       const written = await writeSessionsFromTool(
         request,
         url,

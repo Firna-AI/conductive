@@ -23,12 +23,17 @@ const divider: MenuEntry = { kind: 'divider' }
 export function pickerMenu(
   choice: AgentChoice,
   sessionAgent?: AgentKey,
+  /** The labels of the models that the menu leaves out. */
+  hiddenModels: readonly string[] = [],
 ): MenuEntry[] {
   const models = agentKeys.flatMap((key, index): MenuEntry[] => {
     const opensSession = sessionAgent !== undefined && key !== sessionAgent
+    const shown = agents[key].models.filter(
+      (model) => !hiddenModels.includes(model.name),
+    )
     return [
       ...(index > 0 ? [divider] : []),
-      ...agents[key].models.map((model): MenuEntry => ({
+      ...shown.map((model): MenuEntry => ({
         kind: 'item',
         label: model.name,
         trailingIcon: opensSession ? ExternalLink : undefined,

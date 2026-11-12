@@ -51,18 +51,22 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
           ChatGPT workspace
           rules can run hooks and MCP commands in the org's cloud computer.
           Those commands can reach its files and available credentials.`,
-      text`Anthropic and OpenAI get your messages, your files, and your
-        code when an agent works on them. Each Mac command request and its
-        result also go to the agent and to Anthropic or OpenAI.
+      text`Anthropic, OpenAI, or the chosen endpoint gets the messages,
+        files, code, and command results of turns on the session's login.
+        This includes the messages of other members who use that login.
+        Each Mac command request and its result also go to the agent and
+        to that provider or endpoint.
         With each message, they also get
-        the GitHub login and the display name of its sender. They get the
+        the GitHub login, the display name, and the ${productName} user ID of
+        its sender. They get the
         names of the workspace branch and the branch that a pull request
         targets. Later messages give the current names when either branch
         changes. Each workspace branch starts with the GitHub login of the
         workspace owner when that branch is created. From a newer cloud
         computer, the agents send them through ${productName}, which adds
-        the agent login. With the older software in an older cloud
-        computer, the agents send them directly, with the agent login. In
+        the agent login. For a subscription token or provider API key,
+        older software in an older cloud computer sends them directly,
+        with the agent login. In
         both kinds of cloud computer, agent settings in the repository can
         send them to another address instead. Each session uses the
         login of the member who started it. Each run of a routine sends
@@ -71,7 +75,7 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         member's session use that member's login only when that member
         lets other members use it. When that member does not share the
         login, your message starts a new session on your own login. The
-        terms of that provider apply.`,
+        terms of that provider or endpoint apply.`,
       text`The members of your orgs see the workspaces of the org,
         their chats, and each Mac command request and result. They also see
         the routines of the org, with their prompts and their runs.
@@ -98,8 +102,9 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         seconds after the turn ends. If the member who started the session
         removes or changes the login, or loses access to the org, the turn
         ends at its next model request.`,
-      text`In an older cloud computer, a member with a terminal or a program
-        in it can read the agent login of a turn that runs there. A program
+      text`For a subscription token or provider API key, a member with a
+        terminal or a program in an older cloud computer can read the
+        agent login of a turn that runs there. A program
         that a tool of the agent starts, such as a dev server, can keep the
         agent login after the turn ends. A member with a terminal can read
         it there too. Agent settings in the repository can make the agent
@@ -109,19 +114,29 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
       text`The run of your routine for a pull request reads the comments,
         reviews, and descriptions of other GitHub accounts. Such text can
         steer the agent while the run uses your agent login and GitHub
-        token, and the env vars of the org. The agent can also read chats
-        and send work to sessions across the org under their login rules.`,
+        token, and the env vars of the org. Such text can also steer the
+        agent to read and change work across the org, with your workspace
+        tool rights. Messages follow the same session login rules.`,
       text`A workspace token is a credential for the workspace tools.
-        Any program with that token can list sessions and read
-        chats in every workspace of its org without a running turn.
+        Any program with that token can read workspace, session, and
+        message details, list sessions and previews, and read chats across
+        its org without a running turn.
         A copied token keeps this access after the person who copied it
         leaves the org. This access lasts while the token remains valid
         and the org remains active.`,
-      text`During a turn in the calling workspace, the tools can also create
-        sessions and send messages as that turn's sender. That sender
-        must still belong to the org. The session's login rules apply.
-        An agent can send chat text that it reads to Anthropic or OpenAI
-        as part of its work.`,
+      text`During a turn in the calling workspace, the tools can also
+        create, rename, move, and archive workspaces across the org.
+        They can create, rename, stop, and close sessions, and send
+        messages. They can create and delete sections, and open and close
+        private previews. The actions use that turn's sender, who must
+        still belong to the org. Each action follows that member's rights
+        in the app.`,
+      text`Only a workspace owner or org admin can archive it.
+        An agent can archive the workspace where it runs, which ends its
+        turn. Previews that agents open need sign-in and workspace access.
+        The session's login rules apply to messages.
+        An agent can send chat text that it reads to Anthropic, OpenAI,
+        or the chosen endpoint as part of its work.`,
       text`The members of your orgs also see who started each session,
         whose login it uses, and whether it can use that login. They also
         see whether its starter lets other members use that login.`,

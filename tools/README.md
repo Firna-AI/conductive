@@ -1,10 +1,14 @@
 # Workspace CLI and MCP server
 
-These tools create and list Conductive workspaces from a running workspace.
-They also create sessions, list sessions, send messages, and read chats across the org.
+These tools let an agent in a running Conductive workspace manage the work of its org.
+They create, list, get, rename, move, and archive workspaces.
+They create, list, read, get, rename, close, and stop sessions, and send and get messages.
+They list repositories and models, list, create, and delete sections, and list, open, and close port previews.
 They can also ask to run a command on the active turn sender's connected Mac.
-They call the machine route `/v1/tools/workspaces` from the [shared contract](../src/shared/agent-tools.ts).
-They also list repositories, sections, and models through that contract's machine routes.
+[Workspace tool calls](calls.md) gives each of the 24 calls with its options, rules, and replies.
+
+The tools call fixed machine routes under `/v1/tools/`.
+The routes and replies come from the shared contracts [agent-tools.ts](../src/shared/agent-tools.ts), [agent-workspaces.ts](../src/shared/agent-workspaces.ts), [agent-sessions.ts](../src/shared/agent-sessions.ts), [agent-session-paths.ts](../src/shared/agent-session-paths.ts), [agent-sections.ts](../src/shared/agent-sections.ts), and [agent-previews.ts](../src/shared/agent-previews.ts).
 Mac commands use `/v1/tools/mac-command` from [the device contract](../src/shared/device.ts).
 The [Worker handler](../worker/tools/README.md) verifies the workspace token and the calling turn.
 
@@ -14,51 +18,36 @@ They use its native TypeScript support and need no runtime npm packages.
 ## Use
 
 ```sh
-conductive workspaces list
+conductive --help
+conductive workspaces list --owner member-id --archived false --limit 20
 conductive repositories list
 conductive sections list
 conductive models list
 conductive workspaces create --repository repo-id --message 'Build this feature.'
-conductive workspaces create --repository repo-id --message 'Review the change.' \
-  --agent codex --model model-name --effort high --section section-id --name 'Review the change'
-conductive sessions list
+conductive workspaces create --repository repo-id --message-file task.md \
+  --agent codex --model model-name --effort high --section section-id \
+  --name 'Review the change' --first-session-title 'First review' --request-id review-1
+conductive workspaces archive --workspace workspace-id
+conductive sections create --name 'Reviews'
+conductive sessions list --workspace workspace-id --limit 10 --offset 10
 conductive sessions create --workspace workspace-id --title 'Review the change'
-conductive sessions send --workspace workspace-id --session session-id --message 'Check this change.' --request-id review-1
+printf 'Check this change.\n' | conductive sessions send --workspace workspace-id \
+  --session session-id --message-file - --request-id review-2
 conductive sessions read --workspace workspace-id --session session-id --detail full
+conductive sessions close --workspace workspace-id --session session-id --stop-running-turn
+conductive messages get --workspace workspace-id --session session-id --message-id message-id
+conductive previews open --port 3000
 conductive mcp
 conductive mac run --command 'pwd' --folder '/Users/me/project' --reason 'Check the local folder'
 ```
-
-Create inherits the calling workspace's org and owner.
-An omitted model or effort uses the owner's default.
-An omitted section uses the org's default section.
-The first message runs as the sender of the calling turn.
-`--name` gives an optional workspace name.
-Its help says: "Use plain words separated by spaces. Avoid underscores unless the user tells you to add them."
-The Worker keeps its first line with text, makes white space single, removes a final full stop, and cuts at 60 Unicode code points.
-It keeps whole words when possible and keeps an ellipsis.
-It keeps each underscore, as [Create and list calls](../docs/protocol/agent-tools.md#create-and-list-calls) says.
-A blank result counts as no name, and the app shows "Untitled".
-The name does not change the branch.
-The create answer holds the stored name, the first session ID, and its absolute `sessionLink`.
-`workspaces list` returns every workspace in the org, including archived workspaces.
-Each list item gives its number and canonical web link.
-Create gives both fields in the complete workspace record.
-That record also gives `github`, the GitHub summary of the workspace, or null.
-A workspace link in a message names that workspace.
-A workspace link in an answer shows as a chip.
-The number is a display label. Links keep the workspace ID.
-`repositories list` returns the repositories that a create accepts, with IDs and the current repository mark.
-`sections list` returns the org's sections in sidebar order, with IDs and the default section mark.
-`models list` returns the app's models, their agents and efforts, and the owner's default choice.
-The default choice falls back to the app default, then to `null`.
-The [agent-tool protocol](../docs/protocol/agent-tools.md#repository-section-and-model-lists) gives the list rules and errors.
 
 The CLI writes one JSON response to stdout.
 It writes a failure message to stderr and returns exit status 1.
 Both tools preserve the Worker's error code and message, such as `session_closed: Reopen the session to send a message.`
 They give a generic failure for malformed replies and network failures.
 Error text never includes the known workspace credential.
+A successful reply can report no change, such as `deleted: false` or `closed: false`.
+The CLI returns status 0 for it, and MCP returns `isError: false`.
 `conductive --help` works without runtime credentials.
 A session option's string value can start with a dash.
 For example, `--message '--help'` sends that exact text.
@@ -75,53 +64,22 @@ The tools send the token as a bearer credential.
 They send the turn ID in `X-Conductive-Turn-Id`.
 The turn ID selects context.
 It grants no access by itself.
-Workspace creation and session writes require valid active turn context.
-All lists and session transcript reads need only the workspace token.
-
-## Sessions
-
-The [session call contract](../docs/protocol/session-calls.md) gives the reach and message rules.
-Each session command accepts `--workspace ID`.
-Its omission names the calling workspace.
-Read and send require `--session ID`.
-A session link holds both IDs.
-A session link in an answer shows as a session chip.
-
-`sessions create` accepts an optional `--title`, `--message`, choice, and `--request-id`.
-The title follows the same Worker rule and underscore guidance as `--name`.
-Omitted model or effort uses the calling turn sender's saved default, then the app default.
-Without a message, creation returns an empty session with null `message` and `turnId`.
-`sessions send` requires nonblank `--message` text and keeps its exact spacing.
-An omitted choice keeps the session's model and effort.
-The reply gives the actual receiving session with its link, the accepted message, and its turn ID.
-A message can join a running turn or open a linked session on its sender's login.
-Each tool message ends with `---` and `Sent by:` followed by the sending session link.
-Do not answer such a message only to confirm it.
-
-Each write accepts `--request-id` for a stable retry. An omitted ID generates a new opaque ID.
-An accepted write also gives `resume`, with state `not_needed`, `queued`, `waiting`, or `failed`.
-A failed resume keeps the accepted message and gives its existing error code and message.
-Retry the same request ID to check current resume state or retry a refused start without another message.
-
-`sessions list` includes closed sessions and the workspace state.
-`sessions read` defaults to concise and the newest transcript text. `--detail full` reads the full kind.
-The JSON reply gives `markdown`, `startLine`, `endLine`, `totalLines`, `startOffset`, `endOffset`, and `next`.
-Use `--start-line` and `--start-offset` to read from an earlier position.
-Lines start at one. Offsets count UTF-16 code units within a line.
-Use `next.line` and `next.offset` for the following read until `next` is null.
-A long line can span several replies. Keep each fragment to recover all its text.
+Every write requires valid active turn context and acts for the member whose message started that turn.
+Every read needs only the workspace token.
+[Reach, turns, and rights](calls.md#reach-turns-and-rights) gives the rules of each call.
 
 ## MCP
 
-The stdio server exposes `create_workspace`, `list_workspaces`, `list_repositories`, `list_sections`, `list_models`, and `run_mac_command`.
-It also exposes `create_session`, `list_sessions`, `send_message`, and `read_session`.
-Their optional `workspaceId` defaults to the caller. Read and send require `sessionId`.
-Create accepts `firstMessage`, and send requires `text`.
-Transcript fields are `detail`, `startLine`, and `startOffset`.
-The ID fields of `create_workspace` name the list tools that supply their values.
-Its optional `name` uses the same Worker rule as CLI `--name`.
-Its description gives the same guidance as the `--name` help.
-It supports the `2025-11-25` MCP revision.
+The stdio server exposes the 24 calls of [the call table](calls.md#the-calls).
+Their fields take the values of the CLI options.
+Their optional `workspaceId` defaults to the caller.
+The ID fields name the calls or links that supply their values.
+The descriptions say which calls need only the token and which need an active turn.
+They also give the reach and the links of the replies.
+The workspace name and session title fields give the same guidance as the `--name` help.
+Reads have `readOnlyHint: true`.
+`archive_workspace`, `delete_section`, and `run_mac_command` have `destructiveHint: true`.
+The server supports the `2025-11-25` MCP revision.
 It returns this supported revision during initialization.
 It never copies an unknown offered revision into its reply.
 The client must finish initialization before it calls a tool.
@@ -129,6 +87,7 @@ Each stdout line contains one JSON-RPC message.
 Notifications produce no replies.
 Tool failures return `isError: true`.
 Malformed protocol requests return JSON-RPC errors.
+The MCP server reads no message file. Its message fields take the text.
 
 The runner must launch a new MCP process for each active turn.
 It must pass that turn's environment to the process.
@@ -174,6 +133,9 @@ The Mac command route is mounted in the real Worker.
 The [Worker asset module](../worker/tools/image-assets.ts) exports `WORKSPACE_TOOL_SOURCES`.
 Vite embeds the allowed sources as text through static `?raw` imports.
 The asset module uses the source contract in [image-manifest.ts](image-manifest.ts).
+The manifest lists 41 sources: 32 modules of this folder and 9 shared modules from `src/shared/`.
+The installer writes only the listed sources.
+It throws before any command runs when a listed source has no asset.
 A listed module can import types from any module, because Node removes type imports.
 Its runtime imports must name only listed modules.
 [The summary reader](../src/shared/github-read.ts) has no runtime import, so the tools can embed it.
@@ -181,6 +143,9 @@ It needs no filesystem at runtime and reads no environment values or secret file
 The image builder passes these assets to `installWorkspaceTools` from [the installer](../worker/tools/image.ts).
 
 The installer places the sources under `/opt/conductive/agent-tools`.
+It writes each source with `printf %s` and a shell-quoted copy of its text.
+So each installed file keeps the exact bytes of its source, and the command needs no decoder.
+The installer splits the writes into several commands, so that each stays under the Linux limit for one argument.
 It installs `/usr/local/bin/conductive` as an executable launcher.
 The launcher reads `/run/ascii-secrets/env.sh` at runtime when that file exists.
 It then removes `NODE_OPTIONS` from the environment.
@@ -193,6 +158,11 @@ The software step of each image build installs the private Node.
 The tools installer adds no Node runtime.
 No workspace token, agent login, or org environment value enters the image assets.
 
+A cloud computer keeps the tools of the org image that it starts from.
+A full build of the org image installs the current sources.
+A refresh of the image and a resume of the computer keep the old tools.
+Tools from an older image keep working with the Worker, and they offer only their own calls.
+
 [Production composition](../worker/tools/README.md#production-composition) gives the image build step that installs these tools.
 [Workspace tools](../runner/agent-tools.md#workspace-tools) gives their registration for each agent.
 
@@ -203,22 +173,43 @@ The tests import every module under `tools/`.
 The existing Worker TypeScript project therefore checks these modules with strict settings.
 No root test or TypeScript configuration change is needed.
 
+`worker/tools/adapters.test.ts` runs both adapters through `runToolProcess` against the real handler.
+It covers the 14 management calls, the list and create options, MCP discovery of the 24 calls, and reads without a turn.
+`worker/tools/message-file.test.ts` runs an installed CLI with message files and raw stdin, through an HTTP bridge to the handler.
+
 The Mac command tests of the CLI and MCP adapters live in `worker/devices/tools.test.ts`.
 They run against a local Worker runtime and cover Stop.
 Run them with `npm run test -- worker/devices/tools.test.ts`.
 
 ## Key code
 
-- [main.ts](main.ts) runs the process entry point for both tools.
-- [cli.ts](cli.ts) parses the CLI and writes its result.
-- [mcp.ts](mcp.ts) serves the stdio protocol.
-- [client.ts](client.ts) sends authenticated requests and parses responses.
-- [session-cli.ts](session-cli.ts) parses session commands and gives their help.
-- [session-mcp-tools.ts](session-mcp-tools.ts) describes session tools and their inputs.
-- [session-responses.ts](session-responses.ts) checks transcript windows and paired write replies.
+- [main.ts](main.ts) runs the process entry point for both tools. It reads stdin lines only for `conductive mcp`.
+- [cli.ts](cli.ts) sends each CLI command to its group and writes the result.
+- [cli-options.ts](cli-options.ts) parses the options of each command and finds a help request.
+- [cli-help.ts](cli-help.ts) holds the `--help` text.
+- [workspace-cli.ts](workspace-cli.ts), [session-cli.ts](session-cli.ts), and [resource-cli.ts](resource-cli.ts) run the workspace, session, and other commands.
+- [device-cli.ts](device-cli.ts) runs `mac run`.
+- [message-input.ts](message-input.ts) reads `--message-file` from a file or stdin, through a boundary that tests can replace.
+- [client.ts](client.ts) joins the typed domain clients into one client.
+- [transport.ts](transport.ts) sends authenticated requests, maps errors, and holds the configuration type.
+- [workspace-client.ts](workspace-client.ts), [session-client.ts](session-client.ts), and [resource-client.ts](resource-client.ts) make the calls.
 - [device-client.ts](device-client.ts) creates Mac commands and polls their returned URL keys.
+- [query.ts](query.ts) writes list and read options as query parameters, also `false` and `0`.
+- [list-input.ts](list-input.ts) checks the list filters and paging.
 - [input.ts](input.ts) parses workspace and session requests without changing message text.
+- [responses.ts](responses.ts) checks the workspace, repository, section, and model replies, and the details of one workspace.
+- [session-responses.ts](session-responses.ts) checks session lists, transcript windows, session entries, stops, and messages.
+- [session-write-responses.ts](session-write-responses.ts) checks the paired admission replies of session create and send.
+- [resource-responses.ts](resource-responses.ts) checks section and preview replies.
+- [mcp.ts](mcp.ts) serves the stdio protocol and its lifecycle.
+- [mcp-dispatch.ts](mcp-dispatch.ts) sends each MCP call to its client method.
+- [mcp-tools.ts](mcp-tools.ts) joins the tool descriptors into the list that `tools/list` returns.
+- [workspace-mcp-tools.ts](workspace-mcp-tools.ts), [session-mcp-tools.ts](session-mcp-tools.ts), and [resource-mcp-tools.ts](resource-mcp-tools.ts) describe each group of calls and its inputs.
+- [metadata-mcp-tools.ts](metadata-mcp-tools.ts) describes `run_mac_command` and the repository, section, and model lists.
+- [mcp-schema.ts](mcp-schema.ts) holds the shared description text and schema parts.
 - [runtime.ts](runtime.ts) reads runtime configuration without storing credentials.
+- [context.ts](context.ts) names the environment values and the turn header.
+- [image-manifest.ts](image-manifest.ts) lists the installed sources.
 
 The MCP implementation follows the official [lifecycle](https://modelcontextprotocol.io/specification/2025-11-25/basic/lifecycle),
 [stdio transport](https://modelcontextprotocol.io/specification/2025-11-25/basic/transports),

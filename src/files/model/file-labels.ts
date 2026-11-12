@@ -23,7 +23,7 @@ export const unknownFileName = 'File'
  * neither list names it. A diff looks in Changes first, and a file looks in
  * All files first.
  */
-export function listLabel(
+function listLabel(
   snapshot: FilesSnapshot,
   path: string,
   kind: 'file' | 'diff',
@@ -47,6 +47,22 @@ export function pageLabel(
 ): string | null {
   if (reply && reply.path === path) return pathLabel(reply)
   return listLabel(snapshot, path, kind)
+}
+
+/**
+ * The label of the path of a tab: from the lists, or else from the last
+ * read of the path, or null when neither names the file. A path that no
+ * list names, such as an ignored file, so shows its name after its page
+ * read it once.
+ */
+export function tabLabel(
+  snapshot: FilesSnapshot,
+  path: string,
+  kind: 'file' | 'diff',
+): string | null {
+  return (
+    listLabel(snapshot, path, kind) ?? snapshot.readLabels.get(path) ?? null
+  )
 }
 
 /** The file name of a label, or the word for a file that no record names. */

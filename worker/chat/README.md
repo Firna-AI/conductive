@@ -37,7 +37,7 @@ which serves these routes. The path helpers live in
 | `PUT` model | `sessionPaths.model` | Changes the model. A model of the other agent creates a session that the requester starts. A session with no turn yet keeps it and changes its agent |
 | `POST` close, reopen | `sessionPaths.close`, `sessionPaths.reopen` | Moves a session to the session history, and back |
 | `GET` transcript | `sessionTranscriptPath` | Copies one session as concise or full Markdown |
-| `GET` history | `chatHistoryPath` | Reads the stored events of one session |
+| `GET` history | `chatHistoryPath` | Reads the stored events of one session in newest-first pages, with `before` and `through` |
 | `GET` events socket | `workspaceEventsPath` | Sends the stored history, then each new event |
 | `GET` runner socket | `MACHINE_PATHS.runner` | Connects the agent runner on the machine hostname |
 
@@ -55,6 +55,8 @@ gives their rules.
 
 - `acceptLifecycleFirstMessage(first)` returns the stored first message of
   a create. A repeat returns the same message and adds no history.
+  Admission cleans an optional `firstSessionTitle` once and saves it before
+  the message, in the same transaction.
 - `readChatWorkspaceSummary()` returns the last event number, the last
   event number with visible output, and whether a dispatched turn runs.
 - `readChatWorkspaceResponse(orgId, workspaceId, appOrigin)` returns the reply of a
@@ -62,6 +64,9 @@ gives their rules.
   [Browser routes](../lifecycle/README.md#browser-routes) says.
 - `writeAgentSession(input)` accepts trusted tool requests after exact-object, org, archive, and current-sender checks inside the queue.
   The [tools README](../tools/README.md#session-writes) gives its machine routes and resume behavior.
+- `manageAgentSession(input, origin)` renames, closes, or stops a session for the stored sender of a tool call.
+  It runs the same checks inside the queue, and it uses no admission or resume.
+  [Queued management](../tools/sessions.md#queued-management) gives its routes and replies.
 
 [The workspace lifecycle](integration/README.md#the-workspace-lifecycle)
 says how the lifecycle and chat work together.
@@ -86,6 +91,8 @@ through that cutoff in a separate `ChatStore.run` task. Runner events and
 writes can proceed between pages. The captured session record stays fixed.
 The shared `SessionMarkdown` folds pages and renders both kinds of copy.
 It uses the same grouping, command placement, and words as browser chat.
+The route gives it the app origin and the org as `TranscriptDocument.linkContext`.
+So the copy of a tool stop writes "Stopped from" and the session link, in angle brackets.
 It puts the line of a turn's end reason before the duration and the changed
 files of that turn.
 The route keeps no generated transcript in storage.
@@ -102,8 +109,36 @@ The browser copy still returns the complete text with its existing detail query 
 [Workspace and session names](workspace-titles.md) gives the background
 model request, the shared title writer, the first session name, and the
 names of later sessions. It also gives the local development setup.
-New workspaces and sessions have null names. The shared `nameLabel` helper
+Workspaces and sessions without a provided name start with null names. The shared `nameLabel` helper
 in `src/shared/name-label.ts` gives their display label, "Untitled".
+
+## Stop requests
+
+Stop, a close that stops a turn, and a tool stop or close of an active turn
+all call `TurnLifecycle.stop` with a `TurnStopRequester` from
+`src/shared/session-stop.ts`.
+
+- A browser request names the authenticated member in `requestedById`.
+  A tool request names the calling workspace and session in
+  `requestedBySession`, from the stored calling turn. No request body
+  names the requester. The references hold IDs only, and no origin.
+- `recordStopRequest` in `stop-request.ts` emits `turn.stop-requested`
+  before the stop saves its interrupt. So the event commits before the
+  runner gets the interrupt.
+- `StoredTurn.stopRequest` keeps the first requester. A later request emits
+  its own event and leaves that field. The transcript fold keeps the first
+  request of each turn, so the chat and the copy name the first stopper.
+- An older turn record has no `stopRequest`. When such a turn is stopping
+  or has ended, the next request reads the session history for its first
+  request.
+- The browser rename and the tool rename share `renameSession` in
+  `session-management.ts`.
+- `readStopRequester` in `src/chat/api/read-stop.ts` reads both event forms
+  in the browser. `stoppedAttribution` in the shared turn words gives
+  "Stopped from" and the session of a tool stop. The chat line shows that
+  session as its session chip, as
+  [Sends and Stop](../../src/chat/loads-and-sends.md#sends-and-stop) says.
+  The copy gives its link instead.
 
 ## Message admission
 
@@ -198,6 +233,35 @@ tests through the production Worker entry.
 
 [Chat backend key code](key-code.md) names the files, the types, and the
 functions of the chat backend that a reader opens first.
+
+`sockets.ts` owns WebSocket upgrades and abstract browser connection setup.
+`queries.ts` decrypts native-provider and own endpoint logins inside the Worker.
+`login-kind.ts` owns the trusted `AgentLogin` union, separate from the native runner login types.
+`login-availability.ts` checks the plain `endpoint_origin` in its one metadata query.
+It selects no ciphertext and decrypts no login.
+The shared builder refuses every IPv4 and IPv6 address, the product domain, and the configured `PREVIEW_DOMAIN`.
+Dispatch still decrypts and checks the full saved address before it sends a turn.
+It also marks an endpoint unavailable while the connected runner uses protocol 1.
+`session-login.ts` treats a refused endpoint as an unusable login for linked-session admission and dispatch.
+Its failed-turn cause requires a public HTTPS endpoint with a host name, names the starter and agent, and points to the account page.
+Runner delivery maps a valid endpoint to an API-key turn-token credential for protocol 2.
+`runner-gateway-command.ts` adds `promptCacheTtl: '1h'` only for a Claude own endpoint turn.
+No endpoint address or key enters a runner command or chat record.
+`delivery-state.ts` schedules an own endpoint model-list read after dispatch.
+The read uses `waitUntil` and does not delay the runner command.
+The private turn record keeps its dispatched endpoint model ID.
+It follows model commands sent to Claude, which applies them during the turn.
+Codex can start a message on another model inside the same turn.
+For Codex `agent_model_unavailable` failures, `turn-events.ts` reads the model of the checked `retryMessageId`.
+Claude uses the dispatched endpoint model ID, which also supplies the fallback for Codex.
+The public cause names the missing model and no host.
+Native logins keep their existing cause text.
+`endpoint-models.test.ts` checks background dispatch, owner privacy, and both agents' failure text.
+`endpoint-logins.test.ts` checks queued turns, session metadata, and refused sends for invalid addresses and protocol 1.
+
+`runner-command-preparation.ts` owns the login and runner capability checks
+before dispatch. Own endpoints require protocol 2 and support for the
+agent's API-key mode. `runner-delivery.ts` owns the prepared command's send.
 
 ## Related docs
 

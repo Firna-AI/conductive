@@ -1,3 +1,4 @@
+import type { GitHubCapabilities } from '../shared/github'
 import { membersPath, type MembersResponse } from '../shared/members'
 import {
   orgSettingsPaths,
@@ -90,6 +91,8 @@ export class OrgModel {
   readonly routines: Readable<Loadable<readonly ListedRoutine[]>>
   /** The create requests of this tab, which a sign-out ends. */
   readonly creations = new Creations()
+  /** The GitHub access of the signed-in member, by repository ID. */
+  private readonly githubAccess = new Map<string, GitHubCapabilities>()
   readonly workspaceActions: WorkspaceActions
   private readonly parts: Readonly<Record<OrgPart, Refreshing>>
   private readonly drafts = new Map<string, NewWorkspaceModel>()
@@ -224,6 +227,30 @@ export class OrgModel {
       }),
       `build ${build.id}`,
     )
+  }
+
+  /** Forgets the GitHub access of the person who signed out. */
+  forgetGitHubAccess(): void {
+    this.githubAccess.clear()
+  }
+
+  /**
+   * The last GitHub access of the signed-in member to one repository of
+   * the org, as the pull request bar read it. The bar of another workspace
+   * of the repository shows it at once, while it reads the access again.
+   * A sign-out or another person forgets it, as `forgetGitHubAccess` says.
+   */
+  githubAccessOf(repositoryId: string): {
+    get: () => GitHubCapabilities | undefined
+    set: (access: GitHubCapabilities | undefined) => void
+  } {
+    return {
+      get: () => this.githubAccess.get(repositoryId),
+      set: (access) => {
+        if (access) this.githubAccess.set(repositoryId, access)
+        else this.githubAccess.delete(repositoryId)
+      },
+    }
   }
 }
 

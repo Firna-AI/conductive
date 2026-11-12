@@ -2,8 +2,10 @@
 
 This doc holds the requirements and the decisions in force for the copy of
 a session transcript. It covers the copy items of the tab menu, what each
-copy holds, the text of a copy, and the route that gives the text. A
-linked page covers the reads of the same text by agents. It belongs to
+copy holds, the text of a copy, and where the text comes from.
+[Transcript routes](transcript-routes.md) states the route that gives the
+text. [Transcript reads by agents](transcript-reads.md) states the reads
+of the same text by agents. It belongs to
 [Chat and events](chat-and-events.md), which covers the agents, the
 sessions, what the chat shows, and the events. The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
@@ -28,7 +30,7 @@ at `app/tabs` and `app/transcripts`.
 - The tab menu of each session tab holds two copy items: Copy concise
   transcript and Copy full transcript (decision 215).
   [The tab row](agents-and-sessions.md#the-tab-row) gives their place in
-  the menu.
+  the menu, after Copy link, which copies the link of the session.
 - Each item copies the transcript of the session of its tab (decision
   213). A member can then paste it into another agent, a document, or a
   pull request.
@@ -169,6 +171,15 @@ at `app/tabs` and `app/transcripts`.
 - A stop line names the member who pressed Stop, as the chat names another
   member, such as "Priya stopped the agent". A stop with no Stop request,
   or by a member who left the org, gives "The agent stopped".
+- A close that stops a turn names the member who closed the session, as a
+  Stop does.
+- A stop through the workspace tools gives "Stopped from" and the session
+  link of the sending session, where the chat shows its session chip
+  (decision 279).
+  [Stops by the workspace tools](messages-and-attachments.md#stops-by-the-workspace-tools)
+  states that stop.
+- That link stays whole when the text shows as Markdown, also when an ID
+  in it holds `_`.
 - A running turn copies as far as it got. A line then says that the agent
   is still working.
 - In the full copy, each tool call is one line of a list. The line gives
@@ -205,38 +216,9 @@ at `app/tabs` and `app/transcripts`.
   rejected. It adds work to each event of each session, for a copy that
   members make only now and then.
 
-## The route
+## The routes
 
-- `GET /api/orgs/{orgId}/workspaces/{workspaceId}/sessions/{sessionId}/transcript`
-  gives the text of one session.
-- Its query names the kind of copy: `detail=concise` or `detail=full`. A
-  request without one of these values gets HTTP 400 with the error code
-  `invalid_input`, as other chat inputs do.
-- The reply is JSON that holds the Markdown text. Reason: the API client
-  of the app and its error replies stay the same.
-- The route gives the text of each session of the workspace, also of a
-  closed session.
-- An unknown session, or a session of another workspace, gets HTTP 404
-  with the error code `session_not_found`, as on the other session routes.
-- The route has the access of the chat history. Only a member of the org
-  of the workspace gets the text, as
-  [Orgs and workspaces](isolation.md#orgs-and-workspaces) says. Each other
-  request gets the refusal of the other chat routes, such as HTTP 404 with
-  the error code `workspace_not_found`.
-- An archived workspace and a workspace of a suspended org give the text
-  too. Reason: a copy is a read, and such a workspace keeps its chat
-  readable, as
-  [What members of a suspended org keep](operator-actions.md#what-members-of-a-suspended-org-keep)
-  says.
-- The route is on `app.conductive.build`, behind its gate, as
-  [Hostnames and gates](access-and-security.md#hostnames-and-gates) says.
-  The workspace token of a sandbox gets the same text from the route of
-  [Transcript reads by agents](transcript-reads.md).
-- The text holds the session as it stood at one event of the workspace:
-  each event up to that event, and none after it. Reason: the copy then
-  shows one state of the chat, as a load of the history does.
-- A copy of a long session does not hold up the workspace. Messages, Stop,
-  and the events of the runner go on while the route reads the history.
+[Transcript routes](transcript-routes.md) states the route of a copy.
 
 ## Reads by agents
 

@@ -26,7 +26,9 @@ No person can give a fixed key to a command. The fixed keys are:
 - on a focused workspace row, Alt with Up or Down and no other modifier,
   which moves the workspace
 - on a focused panel divider, Left and Right with no modifier or with
-  Shift, and Home and End, which move the divider
+  Shift, and Home and End, which move the divider. The divider between
+  the file lists and the tools of the right column lies across the
+  column, so it moves on Up and Down in place of Left and Right.
 - the text keys of each system, as [Text keys](#text-keys) lists them
 - the keys of the menus of the Mac app: ⌘Q, ⌘H, ⌥⌘H, ⌘M, ⌘R, ⇧⌘R, ⌘0,
   ⌘+, ⌘-, ⌃⌘F, and ⌥⌘I

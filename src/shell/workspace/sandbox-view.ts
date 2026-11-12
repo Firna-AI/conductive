@@ -12,7 +12,11 @@ import { orgRefusal, refusedStart } from './SandboxNotice'
 export interface SandboxView {
   /** A refused start: the org is suspended, or the owner of the workspace. */
   refusal: SandboxNoticeState | null
-  /** The bar in place of the composer, or null for the composer. */
+  /**
+   * The bar in place of the composer, or null for the composer. The open of
+   * the workspace resumes a stopped sandbox, and one whose later start
+   * failed, so their bar waits until that open ends.
+   */
   bar: SandboxNoticeState | null
   /**
    * What the files and the tools show in place of their content, if
@@ -20,8 +24,25 @@ export interface SandboxView {
    * wait of a start.
    */
   panel: SandboxPanelState | null
+  /**
+   * The open of the workspace resumes its sandbox and has not ended, so the
+   * header shows Starting, the composer takes the place of the bar, and the
+   * tools wait for the start, as `contentState` says.
+   */
+  resumingAtOpen: boolean
   /** The notice of a suspended org shows above the bar of an archived workspace. */
   orgNotice: boolean
+}
+
+/**
+ * What a part shows in place of its content: the wait of a start while the
+ * open resumes the sandbox, so that no Resume shows then, or else the panel.
+ */
+export function contentState(
+  panel: SandboxPanelState | null,
+  resumingAtOpen: boolean,
+): SandboxPanelState | null {
+  return resumingAtOpen ? { problem: 'starting' } : panel
 }
 
 /**
@@ -51,7 +72,10 @@ export function archivedRestore(
  * ends. An archived workspace keeps its bar in a suspended org too. A
  * failed start carries the message that the workspace saved for it. A
  * failed first start marks its bar, which keeps the composer under it, and
- * its panels, which show it in place of the lists.
+ * its panels, which show it in place of the lists. Until the open of the
+ * visit ends, the composer shows in place of the bar of a sandbox that the
+ * open resumes, and the header shows Starting. The panel keeps its notice
+ * meanwhile, so the lists keep their saved copy.
  */
 export function sandboxView(input: {
   sandbox: SandboxState
@@ -63,6 +87,8 @@ export function sandboxView(input: {
   firstStart: boolean
   /** What an archived workspace offers, as `archivedRestore` says. */
   restore?: ArchiveRestore
+  /** The open of this visit ended, as `WorkspaceModel.opened` says. */
+  opened: boolean
 }): SandboxView {
   const { sandbox, suspended } = input
   const refusal =
@@ -71,7 +97,7 @@ export function sandboxView(input: {
       : sandbox === 'stopped' || sandbox === 'error'
         ? refusedStart(input.startError)
         : null
-  const bar: SandboxNoticeState | null =
+  const notice: SandboxNoticeState | null =
     refusal ??
     (sandbox === 'error'
       ? {
@@ -84,10 +110,17 @@ export function sandboxView(input: {
         : sandbox === 'archived'
           ? { problem: 'archived', restore: input.restore }
           : { problem: sandbox })
+  // The cases of `resumesAtOpen`: a stopped sandbox, and a later start that
+  // failed. A refusal starts nothing, so it shows at once.
+  const resumingAtOpen =
+    !input.opened &&
+    refusal === null &&
+    (sandbox === 'stopped' || (sandbox === 'error' && !input.firstStart))
   return {
     refusal,
-    bar,
-    panel: bar ?? (sandbox === 'starting' ? { problem: 'starting' } : null),
+    bar: resumingAtOpen ? null : notice,
+    resumingAtOpen,
+    panel: notice ?? (sandbox === 'starting' ? { problem: 'starting' } : null),
     orgNotice: suspended && sandbox === 'archived',
   }
 }

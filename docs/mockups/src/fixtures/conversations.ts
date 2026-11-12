@@ -5,8 +5,10 @@
 import type { TableCells } from '../../../../src/markdown/table-rows'
 import type { TurnEndReason } from '../../../../src/shared/chat-events'
 import type { LostReason, LostWhat } from '../components/chat/lostCopy'
+import { agentStopConversations } from './agentStopConversations'
 import { attachmentConversations } from './attachmentConversations'
 import type { Attachment } from './attachments'
+import { endpointConversations } from './endpointModels'
 import {
   autocompleteStart,
   autocompleteTests,
@@ -94,6 +96,12 @@ export type ChatItem =
       kind: 'stopped'
       id: string
       by?: PersonKey
+      /**
+       * The session link of the session whose agent stopped the turn with a
+       * workspace tool, also through a close of the session. The line names
+       * that session in place of a member.
+       */
+      from?: string
       /** The changed files of the turn past the 200 that the runner lists. */
       omittedFiles?: number
       /** The cloud computer could not read the changed files. */
@@ -176,10 +184,12 @@ export const conversations: Readonly<
       text: 'Claude is overloaded right now.',
     },
   ],
+  ...endpointConversations({ history, followUp: followUpDraft }),
   ...newWorkspaceConversations,
   ...macConversations(history),
   ...lostConversations(history),
   ...unavailableConversations({ history, cutOff: cutOffTurn }),
+  ...agentStopConversations(cutOffTurn),
   ...backgroundConversations,
   ...linkedConversations,
   ...attachmentConversations(history),

@@ -20,6 +20,7 @@
 
 .tools {
   display: flex;
+  position: relative;
   flex: 1 1 45%;
   flex-direction: column;
   min-height: 0;

@@ -178,7 +178,9 @@ export async function finishCodexDevice(
       AND login_updated_at IS ${CURRENT_LOGIN_DATE}
       ON CONFLICT(user_id, agent) DO UPDATE SET kind = excluded.kind, ciphertext = excluded.ciphertext,
       no_reuse = CASE WHEN agent_logins.kind = excluded.kind THEN agent_logins.no_reuse ELSE excluded.no_reuse END,
-      updated_at = excluded.updated_at, refresh_claim = NULL, refresh_claim_until = NULL, failure_cause = NULL`,
+      updated_at = excluded.updated_at, refresh_claim = NULL, refresh_claim_until = NULL, failure_cause = NULL,
+      endpoint_origin = NULL, endpoint_model_ids = NULL, endpoint_models_read_at = NULL,
+      endpoint_models_attempted_at = NULL, endpoint_models_attempt_id = NULL`,
       )
       .bind(
         ciphertext,

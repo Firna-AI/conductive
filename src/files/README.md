@@ -5,7 +5,8 @@ tree of every file. Changes lists the files that the branch changes
 against the base branch, under the totals of the change. A file opens as a
 page with rendered Markdown or text with line numbers and syntax colours.
 An image file, which is a PNG, JPEG, GIF, or WebP file, opens as a
-picture. A changed file opens its unified diff. The requirements are in
+picture. A changed file opens its unified diff, with the same syntax
+colours. The requirements are in
 [Files and changes](../../docs/protocol/workspace-tools.md#files-and-changes).
 The visual spec is the `app/files` page of the
 [mockup catalogue](../../docs/mockups/README.md), and
@@ -228,6 +229,8 @@ screen tests keep their static markup checks in Node.
 - `model/files-store.ts`: `WorkspaceFiles`, the live tree and changes of a
   workspace with their failed repairs, and `versionOf`, which grows when an
   event may change the file or the diff of a path.
+- `model/files-snapshot.ts`: `FilesSnapshot`, what the screens read from
+  the store, with the label of each read in `readLabels`.
 - `model/files-sync.ts`: the merge rules of the routes and the stream.
 - `model/failed-repairs.ts`: `repairsAfter`, the failed repairs of the
   lists after one event of the stream.
@@ -247,7 +250,7 @@ screen tests keep their static markup checks in Node.
   envelope also keeps the failed repair of a file list.
 - `navigation.ts`: `FilesTarget`, `FilesNavigation`, and the tab types of
   the workspace view.
-- `model/file-labels.ts`: `pathLabel`, `listLabel`, and `pageLabel`, the
+- `model/file-labels.ts`: `pathLabel`, `pageLabel`, and `tabLabel`, the
   label that a screen shows for a real path.
 - `panel/FilesPanel.tsx`, `page/FilePage.tsx`, `page/DiffPage.tsx`, and
   `tabs/FileTabItem.tsx`: the screens.
@@ -296,7 +299,11 @@ screen tests keep their static markup checks in Node.
   `panel/file-icons.tsx` draws the icon of each kind through `EntryIcon` of
   the mockups, the one icon map of All files, the tabs, the list of `@`,
   and the file chips.
-- `diff/`: the unified diff parser and view.
+- `diff/`: the unified diff parser and view. `diff/highlight-diff.ts`
+  colours each diff line from the whole old or new file of the diff
+  reply, so a line inside a comment that opens above its hunk keeps its
+  colour. A line that does not match its file line takes its colours from
+  the diff text alone, side by side, and each hunk starts again in code.
 - `dev/`: the development page, its Vite config, its fixtures, its Copy
   and Download targets, `RepairControls`, the controls of the failed
   repairs and of a failed read, and `dev-unread.ts`, the stored state of

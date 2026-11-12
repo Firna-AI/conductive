@@ -17,17 +17,17 @@ how a screen is built, and links to the other pages.
 | `app/sign-in`       | GitHub sign-in with the agreement to the Terms, the page before GitHub, the waitlist, the sign-in of an invite link, and the invitations that wait after it. Get started, the only first run, in three steps, with the first build of the new org. The return page after a GitHub App install in the Mac app. |
 | `app/shell`         | The workspace list, and the sandbox starting, also with a diff tab open, stopped, with an error, and with a refused start |
 | `app/sections`      | The menu of a section, and a workspace dragged to another section             |
-| `app/workspace-menu` | The menu of a workspace row from a right click: its section and owner choices, Rename, Archive from the list with its toast and Restore, and the menus of each role |
+| `app/workspace-menu` | The menu of a workspace row from a right click: its section and owner choices, Rename, Copy link, Archive from the list with its toast and Restore, and the menus of each role |
 | `app/command-palette` | The command palette over the list, with the keys of a browser tab: the All tab, then the other tabs with the Help group, searches and their states, and a search by number |
 | `app/feedback`      | The Feedback dialog that Send feedback opens over the list, then its states, the toast after a send, and the files that it does not add |
-| `app/orgs`          | The org switcher of a phone, Create org, the first org, new orgs, deleted, suspended |
-| `app/account`       | General with the GitHub sign-in, the GitHub App, the agent logins, and the invite code, then Preferences with the model and how New workspace opens, Keyboard shortcuts in a browser, the first run, the Connect forms with the ChatGPT sign-in of Codex, Codex on a ChatGPT plan and its sign-in that stopped working, and a share not saved |
+| `app/orgs`          | The org switcher of a phone, Create org, the first org, new orgs, deleted, suspended, and the order of the orgs |
+| `app/account`       | General with the GitHub sign-in, the GitHub App, the agent logins with own endpoints, and the invite code, then Preferences with the model and how New workspace opens, Keyboard shortcuts in a browser, the first run, the Connect forms with the ChatGPT sign-in of Codex, Codex on a ChatGPT plan and its sign-in that stopped working, and a share not saved |
 | `app/operator`      | The operator's Overview, Orgs, Users, Waitlist, and Invite codes tabs, the page of an org and of a user with Suspend, Lift, and Approve, the pause of sign-ups, the waitlist switch, and where an operator opens the section |
 | `app/banner`        | The pull request bar and Checks: no pull request, its other states, Merge, local work, the agent actions in the chat, and Continue |
 | `app/new-workspace` | An empty chat, the first build of a new org, a repository that waits for its build, its error, files on the first message, the dialog, a pasted workspace link, the start, a queued second message, the first turn, a failed start, Try again |
 | `app/routines` | The routines of the org, a routine, its triggers, its runs, and a run workspace |
 | `app/org-settings`  | General with Delete org, then Repositories and Cloud computer with the notice of a repository change, the first build of a new org, and Members |
-| `app/chat`          | A finished turn with its work folded, then running turns, open work, tables in replies, lists in replies, headings in replies, lost data, lost updates, unread files, and the time limit of background work |
+| `app/chat`          | A finished turn with its work folded, then running turns, turns that an agent stopped, open work, tables in replies, lists in replies, headings in replies, lost data, lost updates, unread files, and the time limit of background work |
 | `app/mac-commands`  | A command that an agent runs on the Mac of the sender, in the chat            |
 | `app/sessions`      | A new session, the history, closing one while it works, and a linked session  |
 | `app/reassign`      | The owner of a workspace, its reassign menu, a member's view, a stopped turn  |
@@ -39,7 +39,7 @@ how a screen is built, and links to the other pages.
 | `app/files`         | All files, Changes with its summary, and a file, Markdown, diff, and image tab |
 | `app/tabs`          | A dragged tab, the moved row, a full row, the tab menu, and the rename field  |
 | `app/transcripts`   | Copy a transcript from the tab menu: the toast after a copy, a failed copy, and the menu of an archived workspace |
-| `app/tools`         | The terminal, then the Preview tool with its detected servers and its failed list repair, and the hidden Desktop, kept for its return |
+| `app/tools`         | The terminal tabs and their states, then the Preview tool with its detected servers and its failed list repair, and the hidden Desktop, kept for its return |
 | `app/panels`        | The right column, widened by the handle on its inner edge, and then hidden    |
 | `mac-app`           | The Mac app: its window, the waitlist, its device commands, This Mac, Keyboard shortcuts, and the palette with keys |
 | `user-flows`        | Sign up, sign up during open sign-up, join with an invite link, create a workspace, create one in the dialog, reopen it, open one from the palette, send feedback, archive one from its row, create an org, run a Mac command, create a routine, link a workspace, open a session link, merge and continue, mention a file, drop a file |
@@ -188,6 +188,21 @@ the tabs of the org settings are. Its child pages:
 - `app/account/shortcuts` shows the Keyboard shortcuts tab in a browser, as
   the keyboard shortcuts section below gives.
 
+`app/account/own-endpoint` shows the form of Claude on the own endpoint
+kind, while Codex runs on an own endpoint. Its `typed` variant has a
+typed address, and the hint names the address that the form saves from
+it. Its `codex` variant has the form of Codex on that kind. Its `refused`
+variant has an `http://localhost` address that the shared address rule
+refused. Its `connected` variant has both agents on an own endpoint, each
+with its host and its share switch on.
+`app/account/endpoint-models` shows option G of decision 10 of the own
+endpoint plan, which Cal chose on 10 November 2026: the pickers of the
+owner of a login hide each model that its endpoint does not list. Both
+agents run on Cal's proxy, whose model list does not name Fable 5.1. The
+Claude row says that Fable 5.1 is hidden from Cal's model pickers, and
+why, with the model ID, the time of the last read of the list, and
+Refresh.
+
 `app/new-workspace/dialog` draws New workspace as a dialog over the ready
 workspace of `app`, for a user who chose the dialog. Its states are child
 pages. `first-build` shows Firna before its first good build, with the
@@ -201,6 +216,25 @@ view shows the New workspace page in the same state.
 `user-flows/create-workspace-dialog` goes from Preferences through the
 dialog to the new workspace.
 
+`app/orgs/reorder` draws the order of the orgs that each person keeps,
+from decisions 515 C, 516 A, and 517 B of 11 November 2026. Its canonical
+screen has Firna dragged from the bottom of the rail to the top, and on a
+phone the same drag in the org switcher after a long press. Its variants:
+
+- `moved` has the rail and the org switcher after the move: Firna, Acme,
+  then Futex.
+- `menu` has the menu of Firna, the first tile, at the pointer of a right
+  click: Move up, which is off, and Move down. A phone has no tile menu,
+  so its view is the org switcher.
+- `long-press` has a long press that lifts Futex in the org switcher of a
+  phone, with the line at its place. Its desktop view has the start of a
+  drag of Futex on the rail.
+- `suspended` has the menu of Acme after the operator suspended it, with
+  both items on, and on a phone the drag of Acme in the org switcher.
+
+The state comes from the `orgOrder` control of the workspace list, which
+`src/screens/orgOrderStates.ts` describes.
+
 [The waitlist, suspensions, and the operator](catalogue-operator.md)
 gives the pages of the waitlist and the child pages of
 `app/orgs/suspended`. It also gives the operator section, `app/operator`,
@@ -208,16 +242,18 @@ with its child pages.
 
 `app/workspace-menu` shows the menu of Apple Pay button, a row of the list
 of Acme, at the pointer of a right click: Move to section, Reassign to,
-Rename, and Archive. Shift+F10 and the Menu key open it too, and a phone
-layout opens it as a sheet. No row has a button for the menu. The user
-chose these four actions on 9 November 2026. Its child pages:
+Rename, Copy link, and Archive. Shift+F10 and the Menu key open it too,
+and a phone layout opens it as a sheet. No row has a button for the menu.
+The user chose the four actions that change the workspace on 9 November
+2026, and added Copy link on 12 November 2026. Its child pages:
 
 - `app/workspace-menu/move` has the sections beside the menu, with the
   current one checked. Its `general-only` variant has Acme with General
   only, whose menu has no Move to section.
 - `app/workspace-menu/reassign` has the members beside the menu, with the
   owner checked. Its `archived` variant has the archived row of an admin,
-  whose menu has only Reassign to, while Restore stays on the row.
+  whose menu has only Reassign to and Copy link, while Restore stays on
+  the row.
 - `app/workspace-menu/rename` has the field of Rename in the row, with the
   name selected. Its `failed` variant keeps the draft in the field, under
   the toast of the list that names the failure.
@@ -229,9 +265,8 @@ chose these four actions on 9 November 2026. Its child pages:
   `user-flows/archive-from-list` goes from the list through the menu and
   the toast to that Restore.
 - `app/workspace-menu/roles` has the menu of a member who is not an
-  admin, then her own workspace, her archived row without a menu, which
-  still offers Restore on hover, and a suspended org, whose rows have no
-  menu.
+  admin, then her own workspace, her archived row, whose menu has only
+  Copy link, and a suspended org, whose menus have only Copy link.
 
 [The command palette and feedback](catalogue-palette.md) gives the
 child pages of `app/command-palette` and of `app/feedback`, and the flow

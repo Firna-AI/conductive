@@ -43,7 +43,15 @@ export function fixed(
 }
 
 /** More words that find the keys of a focused divider. */
-const dividerWords = ['move', 'resize', 'panel', 'sidebar', 'right column']
+const dividerWords = [
+  'move',
+  'resize',
+  'panel',
+  'sidebar',
+  'right column',
+  'split',
+  'tools',
+]
 
 /**
  * The keys of a focused workspace row and of a focused divider (decision
@@ -54,26 +62,26 @@ const dividerWords = ['move', 'resize', 'panel', 'sidebar', 'right column']
 export const focusedKeys: readonly FixedSpec[] = [
   {
     ...fixed(
-      'Move a focused workspace up or down',
+      'Move a focused workspace or org up or down',
       ['⌥↑', '⌥↓'],
       ['Alt+↑', 'Alt+↓'],
     ),
     words: ['reorder'],
   },
   {
-    ...fixed('Move a focused divider left or right', ['←', '→']),
+    ...fixed('Move a focused divider', ['←', '→', '↑', '↓']),
     words: dividerWords,
   },
   {
     ...fixed(
       'Move a focused divider in bigger steps',
-      ['⇧←', '⇧→'],
-      ['Shift+←', 'Shift+→'],
+      ['⇧←', '⇧→', '⇧↑', '⇧↓'],
+      ['Shift+←', 'Shift+→', 'Shift+↑', 'Shift+↓'],
     ),
     words: dividerWords,
   },
   {
-    ...fixed('Make the panel of a focused divider narrowest or widest', [
+    ...fixed('Make the panel of a focused divider smallest or largest', [
       'Home',
       'End',
     ]),

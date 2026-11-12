@@ -34,15 +34,19 @@ The message box lets you choose a model and its effort.
 Connect your own agent login before you start.
 Claude accepts a subscription token or an Anthropic API key.
 Codex accepts an OpenAI API key or a sign-in to your ChatGPT plan.
+Either agent can use an own endpoint: a gateway or proxy that you choose, with its address and key.
 Each session uses the agent login of the member who starts it.
-Model use goes to that member's connected account.
+A subscription token or provider API key bills model use to that member's connected account.
+An own endpoint bills model use where its owner runs it.
+That endpoint gets the messages, files, and command results of each turn on its login.
 
 Select **+** to start another session in the same workspace.
 The sessions share its files and branch.
 Use a separate workspace when a task needs its own files and branch.
 
-Agents can create sessions, send messages, and read results across the org's workspaces.
-Messages from agent tools link to the session that sent them.
+Agents can create and manage workspaces and sessions across the org.
+They can read results, manage sections, and open private previews.
+Messages and stops from agent tools link to the sending session.
 
 - [Connect and share agent logins](/docs/agent-logins)
 - [Use sessions and chat](/docs/sessions-and-chat)

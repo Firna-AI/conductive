@@ -56,6 +56,7 @@ describe('workspace states', () => {
             sandbox: sandboxState(workspace),
             readOnly: false,
             panel: null,
+            resumingAtOpen: false,
             // The header offers no Resume, so it never runs.
             resume: {
               run: () => undefined,

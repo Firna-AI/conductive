@@ -2,10 +2,10 @@
 
 This doc holds the requirements and the decisions in force for orgs, their
 sections, and their members. It also covers the first run and the end of
-an org. The terms are those of the
-[architecture doc](../architecture.md#terms). A decision number names a
-dated record, as [Decision numbers](../architecture.md#decision-numbers)
-says.
+an org. A linked page covers [the order of the org rail](org-rail-order.md).
+The terms are those of the [architecture doc](../architecture.md#terms). A
+decision number names a dated record, as
+[Decision numbers](../architecture.md#decision-numbers) says.
 
 ## Orgs
 
@@ -57,6 +57,12 @@ says.
 - A waitlist stands in front of the app (decision 160). Except during
   [open sign-up](sign-ups.md#open-sign-up), a new account waits for app
   access, as [Waitlist](waitlist.md) says (decision 230).
+
+## Org rail order
+
+- [Org rail order](org-rail-order.md) holds the requirements of the order
+  of the orgs in the rail that each person keeps: the drag, the tile menu,
+  the keys, and the long press on a phone.
 
 ## Get started
 
@@ -129,6 +135,13 @@ says.
 - A row of the Archived group offers Restore in the same way, to every
   member, until Restore of its workspace ends, as
   [Restore](workspace-life.md#restore) says.
+- A click on a workspace row in the sidebar opens the workspace with the
+  focus in its message box, so that the user can type at once. This holds
+  also for the row of the open workspace. The message box takes the focus
+  when it shows, unless the focus moved to another element before then.
+  Reason: the message box never takes the focus from a later choice of the
+  user. The list page of a phone opens a workspace without that focus, so
+  that no keyboard opens on its own.
 
 ## Members and roles
 

@@ -6,11 +6,13 @@ import type {
   FileEntry,
 } from '../../src/shared/files'
 import { checkpointFromIndex, type Checkpoint } from './checkpoint'
+import { contextFolderFiles } from './context-folder'
 import { readFileResponse } from './file-access'
 import { readGitDiff } from './git-diff'
 import { branchChanges, changesFromIndex } from './repository-changes'
 import { Git } from './git'
 import { withGitIndex } from './git-index'
+import type { GitPathState } from './git-paths'
 import { readIdentity } from './read-identity'
 import { comparisonBase } from './comparison-base'
 
@@ -44,8 +46,8 @@ export class Repository {
           changes.files.map((file) => [file.path, file.change]),
         )
         const entries = new Map<string, FileEntry>()
-        for (const [path, state] of index.states) {
-          if (state.kind === 'absent') continue
+        const addEntry = async (path: string, state: GitPathState) => {
+          if (state.kind === 'absent') return
           entries.set(path, {
             path,
             name: basename(path),
@@ -70,6 +72,13 @@ export class Repository {
             })
           }
         }
+        for (const [path, state] of index.states) await addEntry(path, state)
+        for (const path of await contextFolderFiles(
+          this.git,
+          index.classifier,
+          this.warn,
+        ))
+          await addEntry(path, await index.classifier.classify(path))
         const readIdentities = new Map<string, string>()
         for (const entry of entries.values()) {
           if (entry.kind === 'file')

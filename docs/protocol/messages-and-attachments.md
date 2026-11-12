@@ -8,6 +8,8 @@ sessions, what the chat shows, and the events.
 message carries. The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
+says. An own endpoint decision number names a decision of the change that
+adds the own endpoint logins, as [Tokens and secrets](tokens-and-secrets.md)
 says.
 
 ## Messages
@@ -61,6 +63,10 @@ says.
 - When a message runs on the login of another member, the composer names
   that member inside the message box, such as "Priya's login". A line under
   the box was rejected, because the box then moved between sessions.
+- The label names an own endpoint login in the same way, such as "Priya's
+  login". A label that names the host of the endpoint was rejected, because
+  the members of an org trust each other with their logins (own endpoint
+  decision 5).
 - The composer names no login when a message runs on the user's own login.
   A name for the own login was rejected, because it tells the user nothing
   new.
@@ -68,6 +74,12 @@ says.
   says.
 - [The send key](create-a-workspace.md#the-send-key) gives the key that
   sends a message from the composer (decision 143 of PR #73).
+- A message shows in the chat at once when the user sends it, and the
+  composer clears at once. A message that the Worker refuses leaves the
+  chat and goes back to the composer with its files, before any text that
+  the user typed during the send. A notice says that it did not send.
+  Reason: a message that stayed in the composer until the reply made each
+  send feel slow.
 - The composer shows a notice when the user has no login for the agent of
   the chosen model (decision 33). It shows no such notice when the message
   runs on the login of another member.
@@ -116,6 +128,13 @@ says.
   set it, because agent code runs on the same cloud computer.
 - A turn that stops with no Stop request, such as when the cloud
   computer stops, shows "The agent stopped".
+- A close of a session that stops its turn counts as a Stop of the member
+  who closed the session. So the chat names that member too. Reason: that
+  member confirmed the stop when the close asked first, as
+  [Sessions](agents-and-sessions.md#sessions) says.
+- When a turn gets more than one stop, its line names the first one.
+- [Stops by the workspace tools](#stops-by-the-workspace-tools) states the
+  line of a stop by an agent.
 - While the login of the starter can be used, the next message of the
   starter after a stop continues the same session. The next message of
   another member does the same while the starter shares the login.
@@ -213,6 +232,29 @@ says.
 - It follows each rule of a message from the composer, and the draft stays
   as it is. The chat shows it as a message of that member, with no mark of
   the action. Reason: an action is a message (decision 220).
+
+### Stops by the workspace tools
+
+- A stop through the workspace tools names no member (decision 279). This
+  holds for `stop_session`, and for each `close_session` that stops a
+  turn.
+- The chat shows "Stopped from" and the session chip of the sending
+  session, as [Session chips](workspace-links.md#session-chips) says. The
+  sending session is the session of the calling turn.
+- The workspace records the sending session when the stop request
+  arrives, as it records the member of a Stop. It takes that session from
+  its own record of the calling turn, never from the call.
+- Reason: the member whose message started the calling turn pressed
+  nothing. The same chip names the session of a tool message, as
+  [The `Sent by:` line](session-calls.md#the-sent-by-line) says.
+- A line that names that member, as if the member pressed Stop, was
+  rejected (decision 279). Members would then believe that a colleague
+  stopped their agent. A line that names both the member and the session
+  was rejected too, because the chip already tells the truth.
+- The line names the sending session also when an agent stops its own
+  session.
+- The [mockup catalogue](../mockups/catalogue.md) draws the line at
+  `app/chat/agent-stops`, with its words.
 
 ## Attachments
 

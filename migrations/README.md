@@ -190,6 +190,18 @@ Existing runs keep null because their original choice is not known.
 A null base branch uses the repository default branch.
 Existing rows keep that fallback.
 
+`202611101600_agent_login_endpoints.sql` rebuilds `agent_logins` to accept
+the `endpoint` kind for both agents. The nullable `endpoint_origin` column
+is required only for that kind. The full endpoint stays inside the
+ciphertext with its key. The rebuild copies every existing row, ciphertext,
+timestamp, and `no_reuse` choice. It also keeps Codex token rows and the
+refresh claim, claim expiry, and failure cause. Existing rows get a null origin.
+
+`202611110407_agent_login_models.sql` adds nullable endpoint model IDs,
+the last successful read time, the last attempt time, and an attempt ID to
+`agent_logins`. It alters the table without replacing or deleting rows.
+The attempt ID prevents a late response from overwriting a newer read.
+
 `202611101600_shortcuts.sql` adds `user_shortcuts`.
 Each row holds one account's changed command for one keyboard, with its
 ordered keys as JSON. An empty list keeps a command without keys.
@@ -204,6 +216,15 @@ The migration copies nothing, so each existing row keeps `NULL` until its next G
 The workspace object keeps the column as a copy of its committed banner state, as [The summary copy](../worker/github/README.md#the-summary-copy) says.
 The complete banner state and its events stay in Durable Object storage.
 [The GitHub state](../docs/protocol/github-banner.md#the-github-state) states the four values.
+
+`202611111230_workspace_first_session_title.sql` adds the nullable `workspace_creation_plans.first_session_title` column.
+The agent create tool stores the requested first session title there, so a repeated create keeps it.
+Existing plans keep `NULL`. A plan with `NULL` gives its first session no title at admission.
+
+`202611120000_org_rail_order.sql` adds the nullable integer `org_members.rail_position` column.
+It fills every existing membership by org creation time, then org ID, for each person.
+This keeps the current rail order at deployment. New memberships keep `NULL` and sort at the end.
+The [members backend](../worker/members/README.md) owns the reads and moves.
 
 ## Reserved ranges
 
@@ -249,6 +270,7 @@ UI and wiring milestones normally need no migration. Their ranges stay reserved.
 | Routines: runs and Run now | `202611101400`–`202611101459` |
 | Routines: pull request runs | `202611101500`–`202611101559` |
 | Keyboard shortcuts storage | `202611101600`–`202611101659` |
+| Agent workspace calls | `202611111200`–`202611111259` |
 
 ## Key code
 

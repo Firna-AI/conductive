@@ -1,1 +1,10 @@
-{ "order": ["preview", "preview-repair", "desktop"] }
+{
+  "order": [
+    "terminals",
+    "disconnected",
+    "older-software",
+    "preview",
+    "preview-repair",
+    "desktop"
+  ]
+}

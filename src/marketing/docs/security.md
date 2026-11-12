@@ -31,7 +31,7 @@ Its sender is the person whose message started that turn.
 
 | Action | Account or person it uses |
 | --- | --- |
-| Agent model use | The session starter's connected agent account |
+| Agent model use | The session starter's agent login, including a chosen endpoint |
 | Git and GitHub CLI in a turn | The turn sender's GitHub account |
 | GitHub commands in the shared Terminal | The workspace owner's GitHub account |
 | GitHub CLI outside a turn | The workspace owner's GitHub account |
@@ -42,11 +42,12 @@ Its sender is the person whose message started that turn.
 | A request to run a Mac command | The turn sender's connected Mac |
 | Session created through agent tools | The calling turn's sender, as the session starter |
 | Message sent through agent tools | The calling turn's sender, under the receiving session's login rules |
+| Other changes through workspace tools | The calling turn's sender, under that member's app rights |
 
 In a workspace with older cloud computer software, agent commits name the workspace owner.
 [Apply setup changes](/docs/cloud-computer#apply-setup-changes) says how to get newer software.
 
-Other members' messages can spend a session starter's account while that person shares the login.
+Other members' messages can spend a session starter's login while that person shares it.
 Without sharing, another member's message starts a new session on their own login.
 The agent can identify the member who sent each message.
 Another member's message during a turn does not change its GitHub account, commit author, or receiving Mac.
@@ -69,23 +70,36 @@ That action has no separate approval screen.
 Review the work and resulting workspaces as part of the task you give it.
 
 The workspace tools can list workspaces and usable repositories, sections, and models.
-They can also create and list sessions, send messages, and read transcripts in every workspace of the org.
+They can also list sessions and previews.
+They can read details of a workspace, session, or message, and read transcripts across the org.
 This includes workspaces that members created themselves.
 Agents can read archived workspaces and closed sessions, but cannot send messages to them.
 The tools reach only the org of the calling workspace.
 
 A workspace token is a credential that lets programs use these tools.
-Any program with that token can list sessions and read their chats without a running turn.
+Any program with that token can make these reads without a running turn.
 A copied token can keep that access after the person who copied it leaves the org.
 This access lasts while the token remains valid and the org remains active.
 
-Creating a session or sending a message also needs a running turn in the calling workspace.
+Changing work through these tools needs a running turn in the calling workspace.
 The action uses that turn's sender, who must still belong to the org.
+Each action follows that member's rights in the app.
+The tools can:
+
+- Create, rename, and move workspaces.
+- Archive workspaces that the sender owns, or any workspace when the sender is an org admin.
+- Create, rename, stop, and close sessions.
+- Send messages to sessions.
+- Create and delete sections.
+- Open and close private previews.
+
+An agent can archive the workspace where it runs, which ends its turn.
 Tool messages follow the receiving session's login-sharing rules.
-They need no separate approval screen.
+These workspace actions need no separate approval screen.
+Previews that agents open need sign-in and workspace access.
 
 A routine can start agent work from a pull request.
-Comments and reviews on that pull request can steer the agent into other chats and workspaces.
+Comments and reviews on that pull request can steer these reads and changes across the org, with the routine owner's rights.
 Conductive sets no limit on the number of sessions or messages that agents create.
 Agents that keep replying to each other can spend logins and keep computers running.
 Use **Stop** in each affected session to end its turn.
@@ -96,10 +110,18 @@ Use **Stop** in each affected session to end its turn.
 
 Conductive stores your connected agent login encrypted.
 Account shows its status and kind without returning the stored value.
+For an own endpoint, Conductive encrypts the address and key and keeps the host in plain text.
+Account shows the host, including any non-default port.
+Your browser gets neither the saved key nor the full saved address back.
 
 A newer cloud computer starts from a shared setup that requires Conductive to keep agent logins outside the computer.
 Its model requests and answers pass through Conductive on Cloudflare.
-Conductive adds the session starter's login before sending each request to Anthropic or OpenAI.
+Conductive adds the session starter's login before sending each request to Anthropic, OpenAI, or the chosen endpoint.
+
+A chosen endpoint gets the messages, files, and command results of each turn on its login, whoever sent the message.
+It processes them where its owner runs it.
+An own endpoint login starts with sharing on.
+Its owner can turn sharing off in **Account**.
 
 Each turn there gets a temporary credential called a turn token.
 It gives no copy of the stored login.
@@ -120,16 +142,20 @@ Conductive keeps no copy of a model request or answer as it passes them on.
 It writes no body or header value from those requests or answers to its logs.
 The normal chat history and Mac command records still stay on the service.
 
-An older cloud computer starts from an earlier setup that still permits software to receive the session starter's agent login itself.
+An own endpoint's address and key never reach a cloud computer, including an older computer.
+Its turn needs agent software that supports temporary credentials.
+If the software cannot use them, the turn cannot start.
+
+For subscription tokens and provider API keys, an older cloud computer still permits software to receive the session starter's agent login itself.
 A program or member with terminal access can read or copy that login during a turn.
+A copied login can remain usable after the turn ends.
+Agent settings in the repository can also send that login to another address.
+Removing a login from Account does not revoke a copy held elsewhere.
 
 Your ChatGPT sign-in stays outside the cloud computer.
 Conductive renews that sign-in for you.
 Your ChatGPT email, account ID, and plan can reach the cloud computer.
 An older cloud computer cannot run Codex with ChatGPT, so your ChatGPT sign-in never reaches it.
-A copied login can remain usable after the turn ends.
-Agent settings in the repository can also send that login to another address.
-Removing a login from Account does not revoke a copy held elsewhere.
 
 Installing newer software on that computer does not remove this risk.
 A new build gives the protection to new cloud computers created from its setup.

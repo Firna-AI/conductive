@@ -58,6 +58,7 @@ describe('the Connect notice of New workspace', () => {
       kinds: [
         { kind: 'API key', selected: false },
         { kind: 'ChatGPT plan', selected: true },
+        { kind: 'Own endpoint', selected: false },
       ],
       getCode: true,
     })

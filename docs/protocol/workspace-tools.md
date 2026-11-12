@@ -14,6 +14,10 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the tools at
 
 - All files shows every file of the branch as a tree. A small mark shows
   each added or changed file.
+- All files also shows the files of the context folder that Git ignores,
+  without a mark, as
+  [The context folder](repository-folders.md#the-context-folder) says.
+  Changes leaves them out.
 - A file opens as a tab in the centre column. Markdown shows rendered, with
   a switch to its source. Code shows with line numbers and syntax colours.
 - The header of a file tab can copy and download the file.
@@ -50,7 +54,8 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the tools at
   from the merge base of the two, as [Base branches](base-branches.md)
   says. Its summary gives the number of changed files and the lines that
   they add and remove.
-- A changed file opens its diff against the base branch as a tab.
+- A changed file opens its diff against the base branch as a tab. The
+  diff shows the syntax colours of the file, as code does.
 - Each new file or diff tab opens at the end of the tab row of the centre
   column, as [The tab row](agents-and-sessions.md#the-tab-row) says.
 - The agent runner watches the repository and reports both lists.

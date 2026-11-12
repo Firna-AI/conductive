@@ -9,10 +9,10 @@ import {
   sendMessage,
 } from './inputs'
 import { send, retryMessage } from './send-message'
-import { BROWSER_PAGE_LIMITS } from './history-pages'
 import { changeModel } from './model-changes'
 import type { ChatOperation } from './operation'
 import { sessionFor } from './session-record'
+import { renameSession } from './session-management'
 import { closeSession, createSession, stopTurn } from './sessions'
 import type { ChatDependencies } from './types'
 import type { WorkspaceLinkContext } from '../data/workspace-link'
@@ -44,11 +44,12 @@ export async function chatRoute(
     const sessionId = identifier(url.searchParams.get('sessionId'))
     await operation.read((view) => sessionFor(view, sessionId))
     const through = url.searchParams.get('through')
+    const before = url.searchParams.get('before')
     const history = await operation.read((view) =>
-      view.history(
-        afterNumber(url),
+      view.newestHistory(
+        sessionId,
+        before === null ? undefined : counter(Number(before)),
         through === null ? undefined : counter(Number(through)),
-        { sessionId, limits: BROWSER_PAGE_LIMITS },
       ),
     )
     return Response.json(presentWorkspaceHistory(history, presentation))
@@ -119,24 +120,21 @@ export async function chatRoute(
   const session = await operation.logins.metadata(sessionId)
   return operation.change(async (transaction) => {
     if (!action && request.method === 'PATCH') {
-      session.title = requiredString(context.body?.title)
-      await transaction.saveSession(session)
-      await transaction.emit({ type: 'session.updated', session })
+      await renameSession(
+        transaction,
+        session,
+        requiredString(context.body?.title),
+      )
       return Response.json({ session, eventNumber: transaction.eventNumber })
     }
     if (action === 'interrupt' && request.method === 'POST') {
       const turnId = identifier(context.body?.turnId)
-      await transaction.emit({
-        type: 'turn.stop-requested',
-        sessionId: session.id,
-        turnId,
-        requestedById: context.user.id,
-      })
       const stopped = await stopTurn(
         transaction,
         session,
         turnId,
         dependencies.randomId(),
+        { requestedById: context.user.id },
       )
       return Response.json({ ...stopped, eventNumber: transaction.eventNumber })
     }
@@ -149,6 +147,7 @@ export async function chatRoute(
           session,
           context.body.stopRunningTurn,
           dependencies.randomId(),
+          { requestedById: context.user.id },
         ),
         eventNumber: transaction.eventNumber,
       })

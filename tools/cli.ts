@@ -1,59 +1,25 @@
-import { parseArgs } from 'node:util'
-
-import { WorkspaceToolError, type WorkspaceToolClient } from './client.ts'
-import { createWorkspaceInput, ToolInputError } from './input.ts'
 import { DeviceContractError } from '../src/shared/device-read.ts'
+import type { WorkspaceToolClient } from './client.ts'
+import { CLI_HELP } from './cli-help.ts'
+import { toolHelpRequested } from './cli-options.ts'
 import { runMacCli } from './device-cli.ts'
-import {
-  SESSION_CLI_HELP,
-  runSessionCli,
-  sessionHelpRequested,
-} from './session-cli.ts'
-
-export const CLI_HELP = `Conductive workspace tools
-
-conductive workspaces list
-conductive repositories list
-conductive sections list
-conductive models list
-conductive workspaces create --repository ID --message TEXT
-  [--agent claude|codex --model NAME] [--effort LEVEL] [--section ID] [--name TEXT]
-${SESSION_CLI_HELP}
-conductive mcp
-conductive mac run --command TEXT --folder PATH --reason TEXT
-  [--timeout-seconds SECONDS] [--longer-timeout-reason TEXT] [--request-id ID]
-
-Create starts a workspace in the calling workspace's org, with its owner.
-Omitted options use the owner's model and effort, and the default section.
---name: Use plain words separated by spaces.
-Avoid underscores unless the user tells you to add them.
-The lists return the org's workspaces, repositories, sections, or the app's models.
-List returns every workspace in the org, with its number and web link.
-A workspace link in a message names that workspace.
-A workspace link in an answer shows as a chip.
-`
-
-const commandHelp =
-  'Use workspaces create, workspaces list, repositories list, sections list, or models list.'
+import { ToolInputError } from './input.ts'
+import type { MessageInput } from './message-input.ts'
+import { runResourceCli } from './resource-cli.ts'
+import { runSessionCli } from './session-cli.ts'
+import { WorkspaceToolError } from './transport.ts'
+import { runWorkspaceCommand } from './workspace-cli.ts'
 
 export interface ToolOutput {
   stdout(text: string): void
   stderr(text: string): void
 }
 
-export function toolHelpRequested(args: readonly string[]): boolean {
-  return (
-    args.length === 0 ||
-    (args[0] === 'sessions'
-      ? sessionHelpRequested(args)
-      : args.includes('--help'))
-  )
-}
-
 export async function runWorkspaceCli(
   args: readonly string[],
   client: WorkspaceToolClient,
   output: ToolOutput,
+  input?: MessageInput,
 ): Promise<number> {
   if (toolHelpRequested(args)) {
     output.stdout(CLI_HELP)
@@ -61,84 +27,17 @@ export async function runWorkspaceCli(
   }
   try {
     if (args[0] === 'mac') return await runMacCli(args, client, output)
-    if (args[0] === 'sessions') {
-      output.stdout(`${JSON.stringify(await runSessionCli(args, client))}\n`)
-      return 0
-    }
-    const { values, positionals } = parseArguments(args)
-    if (
-      positionals.length !== 2 ||
-      !['workspaces', 'repositories', 'sections', 'models'].includes(
-        positionals[0],
-      )
-    ) {
-      throw new ToolInputError(commandHelp)
-    }
-    let result: unknown
-    if (positionals[1] === 'list') {
-      if (Object.values(values).some((value) => value !== undefined)) {
-        throw new ToolInputError(`Use ${positionals[0]} list without options.`)
-      }
-      switch (positionals[0]) {
-        case 'workspaces':
-          result = await client.list()
-          break
-        case 'repositories':
-          result = await client.listRepositories()
-          break
-        case 'sections':
-          result = await client.listSections()
-          break
-        case 'models':
-          result = await client.listModels()
-          break
-        default:
-          throw new ToolInputError(commandHelp)
-      }
-    } else if (positionals[0] === 'workspaces' && positionals[1] === 'create') {
-      const hasModel = values.agent !== undefined || values.model !== undefined
-      result = await client.create(
-        createWorkspaceInput({
-          repositoryId: values.repository,
-          firstMessage: values.message,
-          name: values.name,
-          ...(hasModel && {
-            model: { agent: values.agent, model: values.model },
-          }),
-          effort: values.effort,
-          sectionId: values.section,
-        }),
-      )
-    } else {
-      throw new ToolInputError(commandHelp)
-    }
+    const result =
+      args[0] === 'workspaces'
+        ? await runWorkspaceCommand(args, client, input)
+        : args[0] === 'sessions'
+          ? await runSessionCli(args, client, input)
+          : await runResourceCli(args, client)
     output.stdout(`${JSON.stringify(result)}\n`)
     return 0
   } catch (error) {
     output.stderr(`${toolErrorMessage(error)}\n`)
     return 1
-  }
-}
-
-function parseArguments(args: readonly string[]) {
-  try {
-    return parseArgs({
-      args: [...args],
-      allowPositionals: true,
-      options: {
-        repository: { type: 'string' },
-        message: { type: 'string' },
-        agent: { type: 'string' },
-        model: { type: 'string' },
-        effort: { type: 'string' },
-        section: { type: 'string' },
-        name: { type: 'string' },
-      },
-    })
-  } catch {
-    throw new ToolInputError(
-      'Check the command options. Use --help for details.',
-    )
   }
 }
 

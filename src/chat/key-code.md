@@ -33,6 +33,9 @@ is relative to `src/chat/`, the folder of this guide.
 - `components/TranscriptCopy.tsx`: `useTranscriptCopy`, the copy of a
   transcript from the tab menu with the toast of its result, and
   `ChatToasts`, the toasts of the host, else the chat's own.
+  `components/session-link-copy.ts`: `useSessionLinkCopy`, Copy link of
+  the tab menu, which copies the link of a session with the origin of the
+  link of the workspace, and the toast of its result.
 - `components/row-scroll.ts`: the scroll of a full row, its fades, and the
   scroll of a drag near an end. `components/row-reveal.ts`: the place of a
   tab in the row, and the scroll that brings tabs into view.
@@ -61,16 +64,20 @@ is relative to `src/chat/`, the folder of this guide.
   counts, and a later choice of a tab or an abort stops the lookup.
 - `links/`: `workspace-links.ts`, the link syntax, the reader of the
   links of a message field, and `linkTarget`, with the session of a
-  session link. `chat-parts.ts` is the one tokenizer of sent messages and
-  answers. In it, each mention of a file of the message is an
+  session link. Its `sessionTarget` gives the same target for a session
+  that the chat names by its IDs. `chat-parts.ts` is the one tokenizer of
+  sent messages and answers. In it, each mention of a file of the message is an
   `AttachmentPart`, also when the tree holds that path, and also without a
   tree. Its `filesWithoutChip` gives the files of a message that no part
   shows as a chip. `LinksContext.tsx` gives the workspaces that chips find
-  and the open of a chip. `LinkedText.tsx` holds `useChatParts` and
+  the open of a chip, and the origin of the chat's workspace link.
+  `LinkedText.tsx` holds `useChatParts` and
   `ChatText`. `useChatParts` reads the parts of a text with the workspaces
   and the tree of the chat, and the files of a sent message. `ChatText`
   draws the parts with their workspace, session, and file chips, and each
   `AttachmentPart` as the mockups' `SentFileChip`.
+  `SessionLinkText` draws a session that the chat names by its IDs, such
+  as the session whose agent stopped a turn, with the same session chip.
   [Chips of attached files](../../docs/protocol/file-mentions.md#chips-of-attached-files)
   states the rules of that chip. The chip opens the file tab of its copy
   through `openFile` and `href` of `ChatMentions`. It opens nothing when
@@ -83,7 +90,8 @@ is relative to `src/chat/`, the folder of this guide.
 - `links/session-links.ts`: `useLinkedSession`, the session that a chip
   finds: a live session of the chat's workspace, or one of the one read of
   another workspace in `session-reads.ts`, made again for each load of a
-  chat or of New workspace. `chat-links.ts` gives a chat its links.
+  chat or of New workspace. `chat-links.ts` gives a chat its links, with
+  the origin of the link of its workspace.
 - `mentions/`: `mention-rows.ts` gives the entries that the list offers and
   their order. `MentionsContext.tsx` gives the files that the chat gets and
   the tree that the list and the chips find, with one value for each tree.
@@ -144,14 +152,18 @@ is relative to `src/chat/`, the folder of this guide.
 - `state/workspace-records.ts`: the order of the workspace record and its
   start steps and saved error by event number.
 - `state/session-login.ts`: whose login a message uses, from the session
-  record and the reader, and the login label in the composer.
+  record and the reader, the login label in the composer, and the models
+  that the picker of the composer offers.
 - `state/linked-replies.ts`: the message and the focus of a reply that names
   a linked session.
 - `components/SourceLine.tsx`: the line that links a linked session to its
   source.
 - `components/TranscriptItem.tsx` and `components/LostEventLine.tsx`: each
   part of the chat, with the left-out counts and the plain words of a lost
-  event from the mockups' `lostCopy.ts`. `components/TurnEnd.tsx` draws the
+  event from the mockups' `lostCopy.ts`. The line of a stopped turn uses
+  the mockups' `StopLine`: the words of a member's Stop or of a stop
+  without one, or "Stopped from" and the chip of the stopping session,
+  then the notes of the turn. `components/TurnEnd.tsx` draws the
   end of a finished turn: the line of its end reason, from the mockups'
   `EndReasonLine.tsx`, above its duration and its files. `UserBubble` reads
   the parts of a sent message once, with `useChatParts`. It draws them with

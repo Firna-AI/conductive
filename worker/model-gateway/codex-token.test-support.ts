@@ -73,6 +73,7 @@ export async function tokenGateway(kind: 'token' | 'api-key' = 'token') {
         },
       }),
       {
+        previewDomain: undefined,
         codexTasks: fakeCodexTasks().owner,
         dependencies: {
           now: clock.now,

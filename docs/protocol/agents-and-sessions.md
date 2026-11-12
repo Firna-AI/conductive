@@ -163,9 +163,12 @@ says.
 - On a phone, a long press that ends without a move opens the tab menu as
   a sheet.
 - The tab menu of a session tab holds three groups, with a line between
-  them: Rename session, then Copy concise transcript and Copy full
-  transcript, then Move left and Move right. The tab menu of a file or diff
-  tab holds Move left and Move right.
+  them: Rename session, then Copy link, Copy concise transcript, and Copy
+  full transcript, then Move left and Move right. The tab menu of a file or
+  diff tab holds Move left and Move right.
+- Copy link copies the link of the session of its tab, as
+  [Session links](#session-links) says. The user added it on 12 November
+  2026.
 - Reason: the tab menu groups its items by kind (decision 188).
 - [Session transcripts](session-transcripts.md) states what each copy item
   copies (decisions 213 and 215).
@@ -176,9 +179,10 @@ says.
   2 of 4". The focus then goes back to the tab.
 - Rename session opens a field for the title in that tab. The shown tab
   does not change.
-- The tab menu is the one way to rename a session. A Rename button on the
-  shown session tab was rejected, because the tab menu already holds
-  Rename session.
+- In the app, the tab menu is the one way to rename a session. A Rename
+  button on the shown session tab was rejected, because the tab menu
+  already holds Rename session. An agent can also rename a session, as
+  [Rename a session](session-management.md#rename-a-session) says.
 - Keys that move a tab were rejected, because the user chose the menu. Alt
   with Left or Right also goes Back and Forward in browsers on Windows and
   Linux.
@@ -186,8 +190,9 @@ says.
   suspended org, moves no tab.
 - The tab menu of a read-only workspace leaves out each item that changes
   the workspace, and keeps each item that changes nothing (decision 214).
-  So the tab menu of a session tab there holds only Copy concise transcript
-  and Copy full transcript. A file or diff tab there opens no tab menu.
+  So the tab menu of a session tab there holds only Copy link, Copy
+  concise transcript, and Copy full transcript. A file or diff tab there
+  opens no tab menu.
 - Reason: a read-only workspace accepts no change, but a member can still
   copy there, as
   [Read-only workspaces](session-transcripts.md#read-only-workspaces)
@@ -221,8 +226,17 @@ says.
   [Session chips](workspace-links.md#session-chips) says.
 - The agent tools give the link of each session that they name, as
   [The calls](session-calls.md#the-calls) says.
-- For now, Copy link copies only the link of the workspace. No item copies
-  a session link.
+- Copy link in the tab menu of a session tab copies the link of that
+  session, also in the Mac app and in a read-only workspace. The link has
+  the origin of the link of its workspace.
+- The menu closes at the press. After the copy, a toast says "Link
+  copied". When the copy fails, the toast says "The link didn't copy. Try
+  again." These are the words of
+  [Copy link](workspace-menu.md#copy-link) in the workspace menu.
+- Copy link does not change the shown tab, as a copy of a transcript does
+  not.
+- Copy link in the workspace header still copies the link of the
+  workspace, with no session. Reason: the header names the workspace.
 
 ## Workspace and session names
 

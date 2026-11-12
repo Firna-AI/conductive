@@ -180,7 +180,7 @@ describe('a drop of files on the chat composer', () => {
     })
   })
 
-  test('the box takes a drop while a send runs, and while a file of the draft uploads, which keeps Send off; a drop on the bar puts the chips at the caret', async () => {
+  test('the box takes a drop while a send runs, after the sent text left, and while a file of the draft uploads, which keeps Send off; a drop on the bar puts the chips at the caret', async () => {
     // The only POST through the fetch of this chat is the send, because the
     // uploads go through the transport of the test.
     const view = await mountComposer('desktop', (request) => {
@@ -218,7 +218,7 @@ describe('a drop of files on the chat composer', () => {
       sending: { sending: true, taken: true, files: ['late.png'] },
       uploads: { sending: false, sendOff: 'true' },
       dropped: {
-        draft: `Ship it ${view.markOf('late.png')} ${view.markOf('more.png')} `,
+        draft: `${view.markOf('late.png')} ${view.markOf('more.png')} `,
         chips: [
           'Attached file late.pngUploading',
           'Attached file more.pngUploading',

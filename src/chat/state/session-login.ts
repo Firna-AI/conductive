@@ -1,5 +1,7 @@
 import type { LinkedReason } from '../../../docs/mockups/src/components/chat/linkedCopy'
 import type { SessionLogin } from '../../../docs/mockups/src/components/chat/SessionLogin'
+import { offeredModels, type LoginModels } from '../../app/endpoint-models'
+import type { AgentChoice, AgentModel } from '../../shared/agents'
 import type { MessageSender } from '../../shared/messages'
 import type { Session } from '../../shared/sessions'
 
@@ -66,4 +68,22 @@ export function loginLabelOf(
 ): SessionLogin | undefined {
   if (view?.kind !== 'member') return undefined
   return { starter: view.name }
+}
+
+/**
+ * The models that the picker of the composer offers. A message on the
+ * reader's own login, also one that starts a linked session, runs on what
+ * the reader's own endpoint serves, so the picker follows the reader's
+ * model lists, as `offeredModels` says. A message on the login of another
+ * member offers every model, because the reader does not see that member's
+ * list. The picker keeps `choice`, the current model of the session.
+ */
+export function composerModels(
+  view: SessionLoginView | null,
+  models: readonly AgentModel[],
+  logins: readonly LoginModels[],
+  choice: AgentChoice,
+): readonly AgentModel[] {
+  if (view === null || view.kind === 'member') return models
+  return offeredModels(models, logins, choice)
 }

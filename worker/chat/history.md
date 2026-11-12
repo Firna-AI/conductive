@@ -88,9 +88,11 @@ streams, and the order of the runner commands.
 - A `workspace.continued` note names its session, so the history of that
   session holds it, also after the session closes and reopens.
 - The internal `StoredTurn.started` marker keeps dispatch evidence after an end.
-- The interrupt route stores and pushes `turn.stop-requested` with the
-  authenticated member's ID before it interrupts the runner. Runner events
-  cannot set that member.
+- Stop, a close that stops a turn, and a tool stop or close store and push
+  `turn.stop-requested` before they interrupt the runner. The event names
+  the authenticated member, or the calling workspace and session of a tool
+  call. Runner events cannot set either. [Stop requests](README.md#stop-requests)
+  gives the rule of the first request.
 - A message accepted while the active turn stops waits in another stored
   turn. Its commands go out only after that turn becomes active.
 - After a finished turn, its unanswered messages run before later waiting
@@ -104,5 +106,48 @@ streams, and the order of the runner commands.
   command. The first end of a turn removes each command of that turn. When
   a failed file copy ends a running turn, it then saves one `interrupt` for
   that turn, as [Chat attachments](attachments.md#dispatch) says.
+
 - A new `model` command replaces the pending `model` command of its
   session.
+
+## Session history pages
+
+The browser history route checks the requested session before it reads
+history. Every request reads the pages of that session backwards.
+[`chatHistoryPath`](../../src/shared/events.ts) takes the org, workspace,
+session, optional `beforeEventNumber`, and optional `throughEventNumber`.
+It builds the `sessionId`, `before`, and `through` query fields.
+
+The first reverse page includes the cutoff event. A later page takes
+`before`, an exclusive upper bound. Each page takes the same `through`
+cutoff. The response holds its events in ascending event order.
+`NewestChatHistoryResponse` names the next cursor as
+`nextBeforeEventNumber` while `hasMore` is true. It has no
+`nextAfterEventNumber`.
+
+`HistoryPages.readNewest` prepares the compaction index before it reads.
+[`history-newest-pages.ts`](history-newest-pages.ts) lists stored events
+with `reverse: true`. It counts skipped workspace and other-session events
+against the scan limit. It projects session events through the fixed
+cutoff before it counts their JSON bytes. Each page takes at least one
+stored step, also when that event exceeds its byte budget. The cursor
+names the last stored step, also when the page has no shown events.
+A one-row lookahead checks for an earlier stored event before the response
+sets `hasMore`. This check avoids an extra page when compaction removed
+the oldest storage keys. It projects no event.
+
+The route uses `BROWSER_PAGE_LIMITS`: 2,048 stored steps or 4 MiB of shown
+events. `ChatTransaction.newestHistory` takes the session ID, an optional
+`before` cursor, and an optional cutoff. It clamps that cutoff to the
+workspace's current event number.
+
+`ChatTransaction.history` and `HistoryPages.read` read forward after a
+numeric cursor. Each page reads one storage list of 32 events. The events
+socket, workspace summary, Continue, and transcript copy use that read.
+The transcript copy also uses its session filter. The browser's scan and
+byte limits apply only to the newest-first read.
+
+[`readNewestStoredEvents`](../../src/chat/api/read-workspace.ts) reads the
+reverse response. `ChatHistoryResponse` and `readStoredEvents` keep the
+forward response. The forward reader refuses a partial reverse page
+because that page has no forward cursor.

@@ -12,6 +12,7 @@ import {
   MessageSquareHeart,
   MessageSquarePlus,
   Plus,
+  SquarePlus,
   SquareTerminal,
 } from 'lucide-react'
 import { orgList, type Org } from '../../fixtures/orgs'
@@ -77,6 +78,12 @@ const rightColumnActions: readonly Command[] = [
     to: paths.preview,
     shortcut: 'go-to-preview',
   },
+  {
+    label: 'New terminal',
+    lead: icon(SquarePlus),
+    words: ['shell', 'tab'],
+    to: paths.terminal,
+  },
 ]
 
 /** What the open workspace offers to the person, for its actions. */
@@ -101,8 +108,10 @@ const sessionHistory: Command = {
 
 /**
  * The actions of the open workspace: a new session, the session history,
- * each tab of the right column, and Archive. An archived workspace keeps
- * its session history and offers Restore, a command without a default key.
+ * each tab of the right column, a new terminal, and Archive. New terminal
+ * shows where the Go to rows show, while the Terminal tool offers its +
+ * button. An archived workspace keeps its session history and offers
+ * Restore, a command without a default key.
  */
 export function workspaceActions(open: OpenActions): Command[] {
   if (open.archived) {

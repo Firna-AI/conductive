@@ -56,7 +56,7 @@ function openArchived(): void {
 }
 
 describe('the actions of a workspace menu', () => {
-  test('a member moves and renames each row, archives only their own, and keeps the menu of the browser on an archived row', async () => {
+  test('a member moves, renames, and copies the link of each row, archives only their own, and gets only Copy link on an archived row', async () => {
     const server = new FakeApiServer({ role: 'member' })
     serveList(server, (item) =>
       item.id === 'webhook-retries' ? archived(item) : item,
@@ -69,15 +69,16 @@ describe('the actions of a workspace menu', () => {
       browserMenu: rightClick(rowLink('webhook-retries')),
       menu: menuOf('Retry failed webhooks'),
     }
+    press(document.activeElement ?? document.body, 'Escape')
 
     expect({ own, others, archivedRow }).toEqual({
-      own: ['Move to section >', 'Rename', 'Archive'],
-      others: ['Move to section >', 'Rename'],
-      archivedRow: { browserMenu: true, menu: [] },
+      own: ['Move to section >', 'Rename', 'Copy link', 'Archive'],
+      others: ['Move to section >', 'Rename', 'Copy link'],
+      archivedRow: { browserMenu: false, menu: ['Copy link'] },
     })
   })
 
-  test('an admin reassigns an archived row only, and a change of the role, the sections, or the workspace drops the actions that it takes away while the menu shows', async () => {
+  test('an admin reassigns an archived row and copies its link, and a change of the role, the sections, or the workspace drops the actions that it takes away while the menu shows', async () => {
     const server = new FakeApiServer()
     serveList(server, (item) =>
       item.id === 'webhook-retries' ? archived(item) : item,
@@ -113,16 +114,16 @@ describe('the actions of a workspace menu', () => {
       owners,
       asMember,
       generalOnly,
-      gone: menuOf('Apple Pay button'),
+      archived: menuOf('Apple Pay button'),
     }).toEqual({
-      archivedRow: ['Reassign to >'],
+      archivedRow: ['Reassign to >', 'Copy link'],
       owners: ['Cal (checked)', 'Priya Raman', 'Jonas Weber'],
       asMember: {
-        items: ['Move to section >', 'Rename', 'Archive'],
+        items: ['Move to section >', 'Rename', 'Copy link', 'Archive'],
         owners: [],
       },
-      generalOnly: ['Rename', 'Archive'],
-      gone: [],
+      generalOnly: ['Rename', 'Copy link', 'Archive'],
+      archived: ['Copy link'],
     })
   })
 })

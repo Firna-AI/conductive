@@ -22,11 +22,12 @@ the cloud computer.
   stands between two tabs and takes no space. When the tabs do not fit at
   their minimum width, the row scrolls sideways with no scrollbar, keeps the
   shown tab in view, and fades each end that clips tabs. A right click on a
-  tab opens its menu at the pointer: Rename session, a line, Copy concise
-  transcript and Copy full transcript, a line, then Move left and Move
-  right, from decisions 188 and 215. A file or diff tab has only the moves.
-  In a read-only workspace, the menu of a session tab holds only the two
-  copy items, and a file or diff tab opens no menu. A copy keeps the shown
+  tab opens its menu at the pointer: Rename session, a line, Copy link,
+  Copy concise transcript, and Copy full transcript, a line, then Move left
+  and Move right, from decisions 188 and 215. Copy link copies the link of
+  the session. A file or diff tab has only the moves. In a read-only
+  workspace, the menu of a session tab holds only the three copy items,
+  and a file or diff tab opens no menu. A copy keeps the shown
   tab, and a toast gives its result, as `app/transcripts` shows. The menu
   is the one way to rename a session, so no tab shows a rename button.
   Rename session opens a field in place of the title of that tab, also when
@@ -36,6 +37,14 @@ the cloud computer.
   and its tabs. `TabScroll.module.css` styles a full row, `TabDrag.module.css`
   a drag, and `TabRename.module.css` the rename field. The app shares these
   modules.
+- `TerminalTabs` in `src/components/tools/` draws the terminals of a
+  workspace as a row of tabs above the shown terminal, with + at its end,
+  from decisions 1 to 3 of the terminal tabs change, as `app/tools` shows. Its tabs are
+  the tabs of the centre column. The titles differ only in their number, so
+  each tab keeps its whole title, and a row that does not fit scrolls. The
+  last terminal has no close button. At the limit of 10 the + is off, and a
+  line under the row says how to open another. `TerminalTool` beside it
+  adds the shown terminal and the Disconnected bar.
 - Each workspace has a number in its org, and `workspaceLabel` in
   `src/components/workspaces/label.ts` shows it as `W-395`. The number
   shows in the header, in chips, and in a row of the command palette

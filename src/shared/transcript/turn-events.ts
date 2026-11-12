@@ -74,13 +74,17 @@ function ending(transcript: Transcript, turnId: string): RunningTurn | null {
     : null
 }
 
-/** The member who first pressed Stop in a turn, or null. */
+/** The member or session of the first Stop request in a turn. */
 export function stopperOf(
   transcript: Transcript,
   turnId: string,
-): string | null {
-  const { stopRequests } = transcript
-  return Object.hasOwn(stopRequests, turnId) ? stopRequests[turnId] : null
+): Pick<Extract<TranscriptItem, { kind: 'stopped' }>, 'by' | 'from'> {
+  const source = Object.hasOwn(transcript.stopRequests, turnId)
+    ? transcript.stopRequests[turnId]
+    : undefined
+  return typeof source === 'string'
+    ? { by: source }
+    : { by: null, ...(source !== undefined && { from: source }) }
 }
 
 /** The Stop requests without the one of a turn that ended. */
@@ -201,7 +205,7 @@ export function foldTurn(
             kind: 'stopped' as const,
             id: stoppedKey(event.turnId),
             turnId: event.turnId,
-            by: stopperOf(transcript, event.turnId),
+            ...stopperOf(transcript, event.turnId),
           }
         : {
             kind: 'turn-end' as const,

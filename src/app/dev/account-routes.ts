@@ -1,146 +1,35 @@
 import {
   ACCOUNT_PATHS,
-  agentLoginPath,
   codexDevicePath,
-  defaultAgentLoginNoReuse,
   type AccountResponse,
-  type AgentLoginStatus,
   type GitHubInstallationsResponse,
-  type SaveAgentLoginResponse,
-  type SaveAgentLoginRequest,
   type StartCodexDeviceResponse,
   type PollCodexDeviceResponse,
   type SetDefaultModelResponse,
   type SetNewWorkspaceViewResponse,
-  type UpdateAgentLoginResponse,
 } from '../../shared/account'
 import { chatGptSignInCopy } from '../../../docs/mockups/src/components/settings/chatGptSignInCopy'
-import type { Agent } from '../../shared/agents'
 import {
   GET_STARTED_PATH,
   type GetStartedResponse,
 } from '../../shared/onboarding'
 import { coreFixtures } from '../../test-support/fixtures/core'
-import { choice, flag, nested, record } from '../api/parse'
+import { nested, record } from '../api/parse'
 import { AGENTS, readChoice, readNewWorkspaceView } from '../api/read-core'
 import type { DevBackend } from './backend'
-import { json, noContent, requiredText, RouteError, type Route } from './router'
+import { json, RouteError, type Route } from './router'
 import { shortcutRoutes } from './shortcut-routes'
 import { completeStep } from './state'
-
-/** The saved status of one agent login of the account. */
-function savedLogin(backend: DevBackend, agent: Agent): AgentLoginStatus {
-  return (
-    backend.state.account.agentLogins.find((item) => item.agent === agent) ?? {
-      agent,
-      connected: false,
-    }
-  )
-}
+import {
+  loginRoutes,
+  savedLogin,
+  putLogin,
+  noReuseOf,
+} from './agent-login-routes'
 
 function codexLoginDate(backend: DevBackend): number | null {
   const login = savedLogin(backend, 'codex')
   return login.connected ? login.updatedAt : null
-}
-
-/** Puts the status of one agent login in the account, in the order of `AGENTS`. */
-function putLogin(backend: DevBackend, login: AgentLoginStatus): void {
-  backend.state.account = {
-    ...backend.state.account,
-    agentLogins: AGENTS.map((agent): AgentLoginStatus =>
-      agent === login.agent ? login : savedLogin(backend, agent),
-    ),
-  }
-}
-
-/**
- * Whether a saved login keeps other members out of the sessions of its
- * owner, as the Worker decides. A new secret of the same kind keeps the
- * choice. A new login, or one of another kind, takes the default of its
- * kind, from the shared account contract.
- */
-function noReuseOf(
-  saved: AgentLoginStatus,
-  kind: SaveAgentLoginRequest['kind'],
-): boolean {
-  return saved.connected && saved.kind === kind
-    ? saved.noReuse
-    : defaultAgentLoginNoReuse(saved.agent, kind)
-}
-
-/**
- * Save an agent login. The secret goes nowhere, and the answer holds only
- * the kind of the login and its share choice. It completes the last step
- * of Get started.
- */
-function saveLogin(backend: DevBackend, agent: Agent, body: unknown): Response {
-  const fields = record(body)
-  choice(fields, 'agent', [agent])
-  requiredText(fields, 'secret')
-  const updatedAt = backend.now()
-  const saved = savedLogin(backend, agent)
-  const kind = choice(fields, 'kind', ['token', 'api-key'])
-  if (agent === 'codex' && kind === 'token') {
-    throw new RouteError(
-      400,
-      'invalid_input',
-      'Start the ChatGPT sign-in to connect Codex.',
-    )
-  }
-  const noReuse = noReuseOf(saved, kind)
-  const login: AgentLoginStatus = {
-    agent,
-    connected: true,
-    kind,
-    noReuse,
-    updatedAt,
-  }
-  putLogin(backend, login)
-  completeStep(backend.state, 'agent-login')
-  return json(login satisfies SaveAgentLoginResponse)
-}
-
-/**
- * Changes the share choice of a login, without its secret, and answers
- * with the saved status. A login that is gone answers as not connected.
- * With `shareSave=fail`, the change fails as a failed save of the Worker.
- */
-function updateLogin(
-  backend: DevBackend,
-  agent: Agent,
-  body: unknown,
-): Response {
-  const noReuse = flag(record(body), 'noReuse')
-  if (backend.state.shareSaveFails) throw new Error('The save failed.')
-  const saved = savedLogin(backend, agent)
-  const login: UpdateAgentLoginResponse = saved.connected
-    ? { ...saved, noReuse }
-    : saved
-  putLogin(backend, login)
-  return json(login)
-}
-
-function loginRoutes(backend: DevBackend, agent: Agent): Route[] {
-  return [
-    {
-      method: 'PUT',
-      path: agentLoginPath(agent),
-      answer: ({ body }) => saveLogin(backend, agent, body),
-    },
-    {
-      method: 'PATCH',
-      path: agentLoginPath(agent),
-      answer: ({ body }) => updateLogin(backend, agent, body),
-    },
-    {
-      method: 'DELETE',
-      path: agentLoginPath(agent),
-      answer: () => {
-        putLogin(backend, { agent, connected: false })
-        return noContent()
-      },
-    },
-  ]
 }
 
 /**

@@ -51,6 +51,23 @@ export async function prepareAgentEvent(
         'The message is not available.',
       )
     }
+    if (event.error.code === 'agent_model_unavailable' && turn.endpointModel) {
+      const message =
+        session.choice.agent === 'codex'
+          ? await transaction.message(event.retryMessageId)
+          : undefined
+      const model =
+        message?.sessionId === turn.sessionId
+          ? message.choice.model
+          : turn.endpointModel
+      event = {
+        ...event,
+        error: {
+          code: event.error.code,
+          message: `The endpoint of this login does not serve ${model}. Choose another model.`,
+        },
+      }
+    }
   }
   for (const messageId of acknowledged) {
     const message = turn.messageIds.includes(messageId)

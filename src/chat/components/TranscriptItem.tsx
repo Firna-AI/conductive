@@ -1,18 +1,23 @@
-import { CircleAlert, CircleStop } from 'lucide-react'
+import { CircleAlert } from 'lucide-react'
 import type { UserMessage } from '../../shared/messages'
 import { ContinuedLine } from '../../../docs/mockups/src/components/chat/ContinuedLine'
+import {
+  StopLine,
+  type StopSource,
+} from '../../../docs/mockups/src/components/chat/StopLine'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import { Notice } from '../../../docs/mockups/src/components/common/Notice'
 import styles from '../../../docs/mockups/src/components/chat/ChatItemView.module.css'
 import { filesWithoutChip } from '../links/chat-parts'
-import { ChatText, useChatParts } from '../links/LinkedText'
+import { ChatText, SessionLinkText, useChatParts } from '../links/LinkedText'
 import type { Transcript } from '../../shared/transcript/transcript'
 import type { SingleItem } from '../../shared/transcript/transcript-entries'
 import {
   continuedBy,
   filesUnread,
   omittedFiles,
-  stoppedSummary,
+  stoppedAttribution,
+  stoppedNotes,
   turnCopy,
   turnEndReason,
   type ChatReaders,
@@ -32,7 +37,9 @@ import { TurnEnd } from './TurnEnd'
  * message went out to the agent. The files that no chip shows stay under
  * the message.
  */
-export function UserBubble(props: { message: UserMessage }) {
+export function UserBubble(props: {
+  message: Pick<UserMessage, 'text' | 'attachments' | 'state'>
+}) {
   const { message } = props
   const parts = useChatParts(message.text, {
     mentions: true,
@@ -47,6 +54,25 @@ export function UserBubble(props: { message: UserMessage }) {
       {listed.length > 0 ? <SentFiles attachments={listed} /> : null}
     </div>
   )
+}
+
+/**
+ * Who stopped a turn, as its line names it: the chip of the session whose
+ * agent stopped the turn with a workspace tool, else the words of a Stop
+ * that a member pressed, or of a stop without one.
+ */
+function stopSource(
+  item: Extract<SingleItem, { kind: 'stopped' }>,
+  transcript: Transcript,
+  readers: ChatReaders,
+): StopSource {
+  const source = stoppedAttribution(transcript, item.turnId, item.by, readers)
+  if (source.kind === 'text') return { kind: 'words', text: source.text }
+  const { workspaceId, sessionId } = source.reference
+  return {
+    kind: 'session',
+    chip: <SessionLinkText sessionId={sessionId} workspaceId={workspaceId} />,
+  }
 }
 
 export interface ItemActions {
@@ -87,15 +113,10 @@ export function ItemView(props: {
       )
     case 'stopped':
       return (
-        <div className={styles.event}>
-          <CircleStop size={13} />
-          {stoppedSummary(
-            props.transcript,
-            item.turnId,
-            item.by,
-            props.readers,
-          )}
-        </div>
+        <StopLine
+          notes={stoppedNotes(props.transcript, item.turnId)}
+          source={stopSource(item, props.transcript, props.readers)}
+        />
       )
     case 'failed':
       return (

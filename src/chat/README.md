@@ -14,9 +14,11 @@ says. It builds against the fake API and the recorded chat events of
 
 The history button follows the available closed sessions, as
 [Sessions](../../docs/protocol/agents-and-sessions.md#sessions) says. The
-tab menu of a session copies its transcript as Markdown, also in a
-read-only workspace, as
-[Session transcripts](../../docs/protocol/session-transcripts.md) says.
+tab menu of a session copies its link, and its transcript as Markdown,
+also in a read-only workspace, as
+[Session transcripts](../../docs/protocol/session-transcripts.md) and
+[Session links](../../docs/protocol/agents-and-sessions.md#session-links)
+say.
 
 ## Use it in the app
 
@@ -75,7 +77,8 @@ chips.
   mockups.
 - [Loads, records, and sends](loads-and-sends.md) gives the rules of
   the history loads, the read-only chats, the order of the records, the
-  sends, the fixed prompts of the pull request bar, and Stop.
+  sends, the fixed prompts of the pull request bar, and Stop with the line
+  of each stop.
 - [The message field](message-field.md) gives the rules of the message
   field of each composer. They cover its chips, the chips of attached
   files, the copy, the paste, and the drag. They also cover the drop of

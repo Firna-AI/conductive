@@ -162,7 +162,7 @@ describe('a copy of a transcript', () => {
     })
   })
 
-  it('opens only the copy items of an archived workspace on a phone after a long press that lifts no tab, and copies the concise text with the shown tab kept', async () => {
+  it('opens only Copy link and the copy items of an archived workspace on a phone after a long press that lifts no tab, and copies the concise text with the shown tab kept', async () => {
     const server = new FakeApiServer({ workspaceState: 'archived' })
     const { copied, services } = clipboard(server)
     server.json('GET', transcriptPath('concise'), {
@@ -232,6 +232,7 @@ describe('a copy of a transcript', () => {
       release: { sheet: true, click: false },
       opened: {
         menu: [
+          { name: 'Copy link', off: false },
           { name: 'Copy concise transcript', off: false },
           { name: 'Copy full transcript', off: false },
         ],

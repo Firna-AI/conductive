@@ -100,6 +100,20 @@ keeps them after the merge.
 - Opening a stopped workspace resumes its sandbox. A workspace whose owner
   is suspended does not start, as
   [Operator actions](operator-actions.md#starts-stops-and-builds) says.
+- While the open of a workspace resumes its sandbox, the chat shows the
+  composer, not the stopped bar with Resume. The same holds for the error
+  bar with Try again when the open resumes after a later failed start. A
+  bar shows if that Resume fails.
+- The header of the workspace shows Starting from the open, before the
+  reply of that Resume.
+- Meanwhile the tools, and a file or diff tab without content, show that
+  they wait for the sandbox, with no Resume, also on a phone. The file
+  lists keep their saved copy.
+- Reason: the open already resumes the sandbox, so a bar that offers
+  Resume for a moment is noise, and so is a Stopped state. Cal asked for
+  these on 12 November 2026. Cal chose to keep the saved lists. A wait in
+  place of the lists was rejected, because the saved lists can still be
+  read.
 - When a sandbox stops while its workspace is open, the tab shows the
   stopped state with Resume (decision 11).
 - A resume at once when the tab shows again was rejected. Resume avoids a

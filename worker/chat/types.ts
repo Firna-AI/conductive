@@ -1,3 +1,4 @@
+import type { TurnStopRequester } from '../../src/shared/session-stop'
 import type { Agent, AgentChoice } from '../../src/shared/agents'
 import type { CommitAuthor } from '../../src/shared/commit-author'
 import type { PendingTurn } from '../lifecycle/workspace-runtime'
@@ -8,7 +9,6 @@ import type {
   RunnerChangeModel,
   RunnerCommandV1,
   RunnerInterrupt,
-  RunnerLogin,
   RunnerLoginKind,
   WorkspaceToRunnerV1,
   WorkspaceToRunnerV2,
@@ -30,6 +30,7 @@ import type { FilteredRunnerOutput } from './runner-output'
 import type { ChatTransaction } from './store'
 import type { TurnTokenState } from '../model-gateway/token'
 import type { TitleModelCall } from './title-model'
+import type { AgentLogin } from './login-kind'
 
 export interface ChatData {
   get<T>(key: string): Promise<T | undefined>
@@ -70,9 +71,12 @@ export interface StoredTurn {
   started?: boolean
   startedAt?: number
   closeAfterStop: boolean
+  stopRequest?: TurnStopRequester
   /** Internal waiting work. Older records have no successor. */
   nextTurnId?: string | null
   gateway?: TurnTokenState
+  /** The dispatched own endpoint model, without login metadata or secrets. */
+  endpointModel?: string
   loginFailure?: string
 }
 
@@ -92,7 +96,7 @@ export interface StoredAttachment {
 export type PreparedMessageCommand = (
   | Omit<Extract<RunnerCommandV1, { type: 'turn' }>, 'attachments' | 'login'>
   | Omit<Extract<RunnerCommandV1, { type: 'message' }>, 'attachments' | 'login'>
-) & { attachments: readonly StoredAttachment[]; login: RunnerLogin }
+) & { attachments: readonly StoredAttachment[]; login: AgentLogin }
 
 export type PreparedCommand =
   PreparedMessageCommand | RunnerInterrupt | RunnerChangeModel
@@ -148,6 +152,7 @@ export type ChatCallbackPublisher = (
 ) => Promise<void>
 
 export interface ChatDependencies {
+  refreshEndpointModels(userId: string, agent: Agent): Promise<void>
   readBranches(
     workspaceId: string,
   ): Promise<import('../../src/shared/runner').RunnerBranches | null>
@@ -205,15 +210,19 @@ export interface ChatDependencies {
   ) => Promise<readonly ConnectionGrant[]>
   randomId: () => string
   randomConnectionId: () => string
+  currentRunnerProtocolVersion: () => RunnerProtocolVersion | null
+  refusedEndpointDomains: () => readonly string[]
   readLoginMetadata: (
     targets: readonly SessionLoginTarget[],
+    protocolVersion?: RunnerProtocolVersion | null,
   ) => Promise<ReadonlyMap<string, SessionLoginMetadata>>
   resolveLogin: (
     userId: string | null,
     agent: Agent,
     runnerTokenHash?: string,
     senderId?: string,
-  ) => Promise<RunnerLogin | null>
+    protocolVersion?: RunnerProtocolVersion,
+  ) => Promise<AgentLogin | null>
   resolveAttachments: (
     userId: string,
     workspaceId: string,

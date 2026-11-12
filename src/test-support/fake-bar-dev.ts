@@ -114,6 +114,9 @@ export function scenarioFetch(
     if (event.type !== 'github.updated') return
     server.json('GET', githubPaths.banner(org, id), { banner: event.banner })
     server.json('GET', githubPaths.checks(org, id), event.checks)
+    server.json('GET', githubPaths.stored(org, id), {
+      state: { banner: event.banner, checks: event.checks },
+    })
   }
   const publishMerge = () => {
     const merged = toolFixtures('merged')

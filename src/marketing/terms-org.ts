@@ -17,17 +17,26 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
         not archived.
         After a pull request merges, every member can use Continue to start
         the next task in that workspace.`,
-      text`The workspace tools let agents create and list sessions, send
-        messages, and read chats in every workspace of the org.
+      text`The workspace tools let agents read workspace, session, and
+        message details, list sessions and previews, and read chats across
+        the org.
         A workspace token is a credential for those tools. Any program
-        with it can list sessions and read their chats without a running
-        turn. A copied token keeps that access after the person who copied
+        with it can make these reads without a running turn.
+        A copied token keeps that access after the person who copied
         it leaves the org. This access lasts while the token remains valid
         and the org remains active.`,
-      text`Creating a session or sending a message also needs a running turn
-        in the calling workspace. The action uses that turn's sender, who
-        must still belong to the org. These messages follow the session
-        login rules below.`,
+      text`During a running turn in the calling workspace, the tools can
+        also create, rename, move, and archive workspaces across the org.
+        They can create, rename, stop, and close sessions, and send
+        messages. They can create and delete sections, and open and close
+        private previews. These actions use that turn's sender, who must
+        still belong to the org. Each action follows that member's rights
+        in the app.`,
+      text`Only the workspace owner or an org admin can archive it.
+        An agent can archive the workspace where it runs, which ends its
+        turn. The actions ask no separate approval. Previews that agents
+        open need sign-in and workspace access. Tool messages follow the
+        session login rules below.`,
       text`Each session runs on the agent login of the member who started
         it. The messages of other members use that login only when its
         owner allows it. Otherwise, the message of another member starts a
@@ -44,10 +53,12 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
         repositories of the org.`,
       text`Each login that you connect has a setting that lets other
         members use it in the sessions that you start. For a Claude
-        subscription or a ChatGPT sign-in, the setting starts off. For
-        an API key, it starts on. When you replace a login with one of the
-        same kind, the setting stays. You can change it on your account page. Share a
-        login only when its provider's terms allow that use.`,
+        subscription or a ChatGPT sign-in, the setting starts off. For an API key or an own
+        endpoint, it starts on. An own endpoint can use personal
+        subscriptions. Other members can spend those subscriptions until
+        you turn sharing off. When you replace a login with one of the same
+        kind, the setting stays. You can change it on your account page.
+        Share a login only when its provider's terms allow that use.`,
       text`Codex can use your ChatGPT plan through device code sign-in.
         ${productName} stores and renews that sign-in. OpenAI sends hosted
         apps to its sign-in waitlist and can block this use. OpenAI's terms
@@ -62,8 +73,10 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
         while the fetch runs. A member with a terminal can also get the
         workspace owner's GitHub token without a running turn.`,
       text`In a newer cloud computer, each turn gets a credential in place
-        of the agent login. A member with a terminal or a program in that
-        cloud computer can read the credential of a turn that runs there.
+        of the agent login. A turn on an own endpoint gets this kind of
+        credential in any cloud computer. A member with a terminal or a
+        program in that cloud computer can read the credential of a turn
+        that runs there.
         Through ${productName}, that credential can use the agent login of
         the member who started the session. It works while the turn runs,
         also from outside the cloud computer. A program that keeps running,
@@ -77,10 +90,10 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
         ends within 30 seconds after the turn ends. If the member who
         started the session removes or changes the login, or loses access
         to the org, the turn ends at its next model request.`,
-      text`In an older cloud computer, the agent login itself can be in the
-        cloud computer while a turn runs. A member with a terminal or a
-        program in that cloud computer can read it. A program that a tool
-        of the agent starts, such as a dev server, can keep the agent login
+      text`For a subscription token or an API key, an older cloud computer
+        can hold the agent login itself while a turn runs. A member with a
+        terminal or a program in that cloud computer can read it. A program
+        that a tool of the agent starts, such as a dev server, can keep the agent login
         after the turn ends. A member with a terminal can read it there
         too. Agent settings in the repository can make the agent send that
         login to another address. A commit, the agent, or other code can
@@ -100,8 +113,9 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
         also the comments, reviews, and descriptions of other GitHub
         accounts. Such text can steer the agent while the run uses the
         owner's agent login and GitHub token, and the env vars of the org.
-        The agent can also read the chats of every workspace in the org
-        and send work to its sessions under the same login rules.`,
+        Such text can also steer the agent to read and change work across
+        the org, with that member's workspace tool rights.
+        Messages follow the same session login rules.`,
       text`A tool message can start a stopped workspace's cloud computer
         under the same checks as opening the workspace. ${productName}
         sets no limit on how many sessions or messages agents create.

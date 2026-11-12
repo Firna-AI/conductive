@@ -1,17 +1,52 @@
 import {
   type GitHubBannerResponse,
   type GitHubChecksResponse,
+  type GitHubStoredResponse,
 } from '../../src/shared/github'
 import type { AppEnv } from '../env'
 import { errorResponse, HttpError, privateResponse } from '../http'
 import { gate } from '../security/gate'
-import type { GitHubRefreshWorkspace } from './contracts'
+import type {
+  GitHubRefreshWorkspace,
+  GitHubSnapshot,
+  GitHubStoredState,
+  GitHubWorkspace,
+} from './contracts'
 import { activeWorkspace } from './data'
 import { githubFailure } from './parsers'
 
 export interface GitHubAppDependencies {
   now: () => number
   refresh: GitHubRefreshWorkspace
+  stored: GitHubStoredState
+}
+
+/**
+ * The stored state of the current branch, or null. A state of an earlier
+ * branch, such as the merged branch before Continue, does not apply.
+ */
+function storedBody(
+  workspace: GitHubWorkspace,
+  stored: GitHubSnapshot | undefined,
+): GitHubStoredResponse {
+  if (!stored || stored.banner.branch !== workspace.branch)
+    return { state: null }
+  return { state: { banner: stored.banner, checks: stored.checks } }
+}
+
+async function readBody(
+  workspace: GitHubWorkspace,
+  route: string | undefined,
+  userId: string,
+  dependencies: GitHubAppDependencies,
+) {
+  if (route === '/stored')
+    return storedBody(workspace, await dependencies.stored(workspace))
+  const snapshot = await dependencies.refresh(workspace, { userId })
+  if (snapshot === null) throw githubFailure()
+  return route === '/checks'
+    ? (snapshot.checks satisfies GitHubChecksResponse)
+    : ({ banner: snapshot.banner } satisfies GitHubBannerResponse)
 }
 
 /** App endpoint. This handler owns its gate. Do not gate the same request twice. */
@@ -24,7 +59,7 @@ export async function handleGitHubRead(
     const context = await gate(request, env, dependencies.now())
     const path = new URL(request.url).pathname
     const match = path.match(
-      /^\/api\/orgs\/[^/]+\/workspaces\/([^/]+)\/github(\/checks)?$/,
+      /^\/api\/orgs\/[^/]+\/workspaces\/([^/]+)\/github(\/checks|\/stored)?$/,
     )
     if (
       !context.org ||
@@ -56,14 +91,12 @@ export async function handleGitHubRead(
         'workspace_not_found',
         'The workspace is not available.',
       )
-    const snapshot = await dependencies.refresh(workspace, {
-      userId: context.user.id,
-    })
-    if (snapshot === null) throw githubFailure()
-    const checks = match[2] === '/checks'
-    const body = checks
-      ? (snapshot.checks satisfies GitHubChecksResponse)
-      : ({ banner: snapshot.banner } satisfies GitHubBannerResponse)
+    const body = await readBody(
+      workspace,
+      match[2],
+      context.user.id,
+      dependencies,
+    )
     return privateResponse(
       request.method === 'HEAD' ? new Response(null) : Response.json(body),
     )

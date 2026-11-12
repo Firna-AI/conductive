@@ -6,6 +6,9 @@ first.
 
 - `backend.ts`: `WorkspaceChat`, its gates, its trusted methods, the open
   tabs, and the one publisher of committed events.
+- `backend-fetch.ts`: `fetchWorkspaceChat`, the HTTP dispatch of
+  `WorkspaceChat.fetch`: the runner socket, the events socket, and the
+  queued browser requests.
 - `workspace-binding.ts`: `ChatWorkspaceBinding`, which binds chat to one workspace and checks the object identity.
 - [../model-gateway/workspace.ts](../model-gateway/workspace.ts): `WorkspaceTurnTokens`, available through `WorkspaceChat.turnTokens`.
   It derives a running turn's token and checks the starter's current login in the chat queue.
@@ -21,6 +24,8 @@ first.
   the lifecycle: the first message, the stop, the summary, and the
   lifecycle events. Its stop transaction clears the port report with
   `ports: null`, including when the workspace has no previews.
+  It also runs the trusted tool session writes and the tool session
+  management, each after its access callback.
 - `first-message.ts`: the checks and the admission of the first message of
   a create.
 - `session-titles.ts`: the empty-name rule for the first session's workspace
@@ -50,13 +55,26 @@ first.
   page loop through a fixed event cutoff.
 - [session-markdown.ts](../../src/shared/transcript/session-markdown.ts):
   `SessionMarkdown`, the pure shared builder of concise and full copies.
+  `TranscriptDocument.linkContext` gives it the app origin and the org for
+  session links.
 - `http-routes.ts`, `send-message.ts`, `messages.ts`, and `sessions.ts`: the
   routes, Send and Retry with linked sessions, the turns, and session state.
+  The Stop and close routes pass the authenticated member as the stopper.
+- `session-management.ts`: `renameSession`, which the browser route and the
+  tools share, and `stopManagedSession`, a tool stop with its idle reply.
+- `stop-request.ts`: `recordStopRequest`, which keeps the first requester in
+  `StoredTurn.stopRequest`, reads it from history for an older turn, and
+  emits `turn.stop-requested`.
+- `tool-session-management.ts`: `manageToolSession`, the tool rename, close,
+  and stop in one transaction, with the calling session as the stop source.
+  `WorkspaceChat.manageToolSession` runs it in the queue.
 - `model-changes.ts`: client session IDs, the creation records that repeated
   requests match, and ID conflicts.
 - `store.ts` and `history-storage.ts`: `ChatStore` and `ChatTransaction`,
   the records, the event numbers, the GitHub view of a transaction, and the
-  chunks of large file reports and tree deltas.
+  chunks of large file reports and tree deltas. `ChatTransaction.newestHistory`
+  serves the browser's session history. `history` keeps the forward read
+  for the events socket, workspace summary, Continue, and transcript copy.
 - `queue-turn.ts`: `ChatQueue`, the serial queue of `ChatStore.run`, and
   `QueueTurn`, the handle whose `outside(call)` runs one call outside the
   queue. `hasOutsideTurns` tells Archive that a queue task is outside.
@@ -67,10 +85,11 @@ first.
   change in a queue task with its receiver generation, then calls
   `flushRunner`.
 - `history-pages.ts`: `HistoryPages`, the pages of the stored history and
-  the index of replaced answers and tool states. A page reads one storage
-  list of 32 events. The session history route of the browser passes
-  `BROWSER_PAGE_LIMITS`, so its page reads on up to 2,048 stored events or
-  4 MiB of session events, and a long workspace costs few requests.
+  the index of replaced answers and tool states. `read` reads one forward
+  storage list of 32 events. `readNewest` uses `BROWSER_PAGE_LIMITS` for the
+  browser: up to 2,048 stored events or 4 MiB of session events.
+- `history-newest-pages.ts`: the reverse storage loop, its byte and scan
+  limits, and the exclusive cursor of the next earlier page.
 - `routine-run.ts`: reports a routine's stored first-turn result after a chat transaction commits.
 - `workspace-store.ts`: creates the chat store with lifecycle turn-end reports and routine outcome recovery after each change.
 - `runner-channel.ts`, `runner-receipt.ts`, and `runner-refusal.ts`: the
@@ -155,6 +174,8 @@ first.
   command, the retry message of a turn end, safe turn context, late data,
   terminal events, and unanswered messages.
   `TurnLifecycle.runnerEnded`, `workspaceStopped`, and `fail` handle each source of a turn end.
+  `TurnLifecycle.stop` takes an optional requester and records it before it
+  changes the turn state. `close` passes its requester to `stop`.
   `fail` ends a queued turn at once. Runner compatibility failures use its
   immediate mode for both queued and running turns. A running failure
   keeps an interrupt for the prior process after the turn ends.
@@ -190,3 +211,4 @@ first.
 - `session-record.ts`: `sessionFor`, the read of one session record.
 - `types.ts`: `ChatDependencies`, `ChatCallbackPublisher`, `ChatStorage`,
   `PreparedCommand`, `ResolvedCommand`, and the peer types.
+  `StoredTurn.stopRequest` is optional, because older records lack it.

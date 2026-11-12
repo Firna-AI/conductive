@@ -9,28 +9,36 @@ The terms are those of the [architecture doc](../architecture.md#terms). A
 decision number names a dated record, as
 [Decision numbers](../architecture.md#decision-numbers) says. A gateway
 decision number names a decision of the change that adds the
-[model gateway](model-gateway.md), as that doc says.
+[model gateway](model-gateway.md), as that doc says. An own endpoint
+decision number, such as own endpoint decision 9, names the dated record of
+one decision of the change that adds the
+[own endpoint logins](own-endpoint-logins.md). Its plan keeps these records
+while the change is open. Its pull request keeps them after the merge.
 
 ## The workspace token
 
 - Each workspace has its own workspace token.
-- With the token, the sandbox of the workspace can do seven things:
+- With the token, the sandbox of the workspace can do these things:
   - connect its agent runner to the Durable Object of its own workspace
   - get a GitHub token for its own workspace
-  - create and list workspaces through the agent tools
-  - list the repositories of its org image, the sections of its org, and
-    the models of the app, through the agent tools
-  - list the sessions of each workspace of its org, and read the chat of
-    each session, through the agent tools (decision 257)
-  - start sessions and send messages in the workspaces of its org that are
-    not archived, while a turn runs, through the agent tools
+  - make the reads of the agent tools in its org, at any time: list and get
+    the workspaces, list the repositories of its org image, the sections
+    of its org, and the models of the app, list, read, and get the
+    sessions, get the messages, and list the previews (decisions 257 and
+    277)
+  - make the writes of the agent tools in its org while a turn of its
+    workspace runs: create, rename, move, and archive workspaces, start,
+    rename, close, and stop sessions, send messages, create and delete
+    sections, and open and close previews (decision 277)
   - ask for a command on the Mac of the sender of a turn that runs now,
     through the agent tools
+- [Agent tool access](agent-tool-access.md) states the reach of these
+  calls and the rights that each write uses.
 - The token allows nothing else. It can never answer a request for a Mac
   command, and it can never choose the Mac that gets the request.
-- Some requests act for a sender: a create call, a new session, a message,
-  and a Mac command request. The Worker reads the sender of each such
-  request from its own record of the turn that runs now.
+- Each write of the agent tools and each Mac command request acts for a
+  sender. The Worker reads the sender of each such request from its own
+  record of the turn that runs now.
 - It never takes a sender from the sandbox, and it never uses the
   workspace owner in place of the sender.
 - Reason: agent code runs in the sandbox, so a sender that the sandbox
@@ -38,8 +46,8 @@ decision number names a decision of the change that adds the
 - At each such request, the Worker checks that the sender is still a
   member of the org of the workspace.
 - [Agent tools](agent-tools.md#mac-commands) states the Mac command
-  requests. [The sender](session-calls.md#the-sender) states the sender of
-  the session calls.
+  requests. [The sender](agent-tool-access.md#the-sender) states the
+  sender of each write of the agent tools.
 
 ## GitHub tokens
 
@@ -47,7 +55,9 @@ decision number names a decision of the change that adds the
 
 ## Secrets that users enter
 
-- The app stores the env var values and the agent logins encrypted.
+- The app stores the env var values and the agent logins encrypted. It
+  also keeps the host of an own endpoint in plain text, as
+  [Own endpoint logins](own-endpoint-logins.md) says.
 - The values of env vars are write-only. The settings never return a
   stored value to the browser, whatever the mark of the env var.
 - An admin marks each env var of the org as secret or not secret
@@ -99,6 +109,8 @@ decision number names a decision of the change that adds the
 
 - A user connects Claude with a subscription token from
   `claude setup-token`, or with an Anthropic API key (decisions 24 and 37).
+- A user can also connect each agent with an own endpoint, as
+  [Own endpoint logins](own-endpoint-logins.md) says.
 - A user connects Codex with a device code sign-in to their ChatGPT plan,
   or with an OpenAI API key (decision 175).
 - The account page starts the device code sign-in. It shows the code,
@@ -163,7 +175,14 @@ decision number names a decision of the change that adds the
   the disk of one workspace.
 - A user's agent logins serve all of that user's orgs (decision 21).
 - The app uses a user's agent login only for a turn of a session that the
-  user started. Only an older runner gets the login itself, as
+  user started. The one exception is that the Worker reads the model list
+  of an own endpoint with its key, at the times that
+  [Own endpoint logins](own-endpoint-logins.md) gives.
+  Only an older runner gets the login itself, as
   [Agent logins in a sandbox](isolation.md#agent-logins-in-a-sandbox)
   says. The GitHub token of a turn still belongs to its sender, as
   [GitHub tokens](#github-tokens) says.
+
+### Own endpoint logins
+
+[Own endpoint logins](own-endpoint-logins.md) holds these requirements.

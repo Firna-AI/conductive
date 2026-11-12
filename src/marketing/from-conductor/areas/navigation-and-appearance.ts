@@ -34,7 +34,14 @@ export const navigationAndAppearanceFeatures: readonly ParityFeature[] = [
     area: 'navigation-and-appearance',
     name: 'Layout and Zen mode',
     status: 'considering',
-    note: 'Resize panels and hide the right column. Zen mode and split views are under consideration.',
+    note: 'Resize panel widths and hide the right column. Zen mode and split views are under consideration.',
+  },
+  {
+    id: 'vertical-panel-resizing',
+    area: 'navigation-and-appearance',
+    name: 'Vertical panel resizing',
+    status: 'available',
+    note: 'Drag the divider between Files and the Terminal or Preview panel, or move it with the keyboard. The app remembers the split.',
   },
   {
     id: 'tab-order',

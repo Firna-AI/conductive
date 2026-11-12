@@ -1,10 +1,11 @@
+import { readEndpointAddress } from '../../src/shared/endpoint-address'
 import type { AppDependencies } from '../env'
 import { chatGptSignInCopy } from '../../docs/mockups/src/components/settings/chatGptSignInCopy'
 import { scheduleConnectionCheck } from '../security/connection-access'
 import type { CodexTokens } from '../codex-auth/tokens'
 import type { CodexRotation } from '../codex-auth/rotation'
 import type { CodexTaskOwner } from '../codex-auth/tasks'
-import { codexGatewayAuth } from './codex-auth'
+import { gatewayCodexAuth } from './codex-request-auth'
 import { codexTokenUpstream } from './codex-upstream'
 import {
   gatewayError,
@@ -21,6 +22,7 @@ import type { TurnTokenEndpoint } from './types'
 
 export interface GatewayRuntime {
   dependencies: AppDependencies
+  previewDomain: string | undefined
   codexTasks: CodexTaskOwner
   workspaceAllowed(id: string): Promise<boolean>
   workspace(id: string): TurnTokenEndpoint
@@ -72,8 +74,10 @@ export async function routeModelGateway(
       schedule:
         runtime.dependencies.scheduleGatewayCheck ?? scheduleConnectionCheck,
     })
-    let failure: 'model_gateway_unavailable' | 'model_upstream_unavailable' =
-      'model_gateway_unavailable'
+    let failure:
+      | 'model_gateway_unavailable'
+      | 'model_upstream_unavailable'
+      | 'model_endpoint_unreachable' = 'model_gateway_unavailable'
     let chatgpt = false
     try {
       const { login, loginOwnerId } = await lifetime.start()
@@ -90,7 +94,7 @@ export async function routeModelGateway(
         )
       if (
         token !==
-        (agent === 'claude' && login.kind === 'api-key'
+        (agent === 'claude' && login.kind !== 'token'
           ? apiKey || bearer
           : bearer)
       )
@@ -99,88 +103,34 @@ export async function routeModelGateway(
           'The turn token is not valid.',
         )
       failure = 'model_upstream_unavailable'
-      const auth =
-        agent === 'codex' && login.kind === 'token'
-          ? await lifetime.wait(
-              codexGatewayAuth(
-                async (failed) => {
-                  if (!runtime.codexLogin || !loginOwnerId)
-                    throw new GatewayRequestError(
-                      'agent_login_unavailable',
-                      chatGptSignInCopy.causes.notRenewed,
-                    )
-                  const fresh = await runtime.codexLogin(loginOwnerId, failed)
-                  const checked = await lifetime.wait(
-                    endpoint.checkTurnToken(token),
-                  )
-                  if (!checked.ok)
-                    throw new GatewayRequestError(
-                      checked.reason,
-                      'The turn ended.',
-                    )
-                  return fresh
-                },
-                async () => {
-                  const checked = await endpoint.checkTurnToken(token, true)
-                  if (!checked.ok)
-                    throw new GatewayRequestError(
-                      checked.reason,
-                      'The turn ended.',
-                    )
-                  return checked.codexRecoveryClaimed === true
-                },
-                async (failed) => {
-                  if (!runtime.codexLoginFailed || !loginOwnerId)
-                    throw new GatewayRequestError(
-                      'model_gateway_unavailable',
-                      'The login failure could not be saved.',
-                    )
-                  return runtime.codexLoginFailed(loginOwnerId, failed)
-                },
-                async (failed) => {
-                  if (!runtime.codexWaitForRotation || !loginOwnerId)
-                    throw new GatewayRequestError(
-                      'model_gateway_unavailable',
-                      'The login renewal could not be checked.',
-                    )
-                  const rotation = await lifetime.wait(
-                    runtime.codexWaitForRotation(
-                      loginOwnerId,
-                      failed,
-                      async () => {
-                        const checked = await lifetime.wait(
-                          endpoint.checkTurnToken(token, true),
-                        )
-                        if (!checked.ok)
-                          throw new GatewayRequestError(
-                            checked.reason,
-                            'The turn ended.',
-                          )
-                        return checked.codexRecoveryPending === true
-                      },
-                    ),
-                  )
-                  const checked = await lifetime.wait(
-                    endpoint.checkTurnToken(token),
-                  )
-                  if (!checked.ok)
-                    throw new GatewayRequestError(
-                      checked.reason,
-                      'The turn ended.',
-                    )
-                  return rotation
-                },
-                async () => {
-                  await endpoint.checkTurnToken(token, 'complete')
-                },
-                runtime.codexTasks,
-              ),
-            )
+      const address =
+        login.kind === 'endpoint'
+          ? readEndpointAddress(login.endpoint, agent, {
+              route: suffix,
+              search: url.search,
+              refusedDomains: runtime.previewDomain
+                ? [runtime.previewDomain]
+                : [],
+            })
           : null
-      const origin =
-        agent === 'claude'
-          ? 'https://api.anthropic.com'
-          : 'https://api.openai.com/v1'
+      if (login.kind === 'endpoint' && !address)
+        throw new GatewayRequestError(
+          'agent_login_unavailable',
+          'The endpoint address is not public HTTPS.',
+        )
+      if (address) failure = 'model_endpoint_unreachable'
+      const upstreamUrl =
+        address?.upstream ??
+        `${agent === 'claude' ? 'https://api.anthropic.com' : 'https://api.openai.com/v1'}${suffix}${url.search}`
+      const secrets =
+        login.kind === 'endpoint' && address
+          ? [login.secret, ...address.secretForms]
+          : [login.secret]
+      const auth = chatgpt
+        ? await lifetime.wait(
+            gatewayCodexAuth(runtime, endpoint, token, loginOwnerId, lifetime),
+          )
+        : null
       const init = {
         method: 'POST',
         headers: upstreamHeaders(request.headers, login),
@@ -189,39 +139,32 @@ export async function routeModelGateway(
         redirect: 'manual' as const,
         signal: lifetime.signal,
       }
-      const upstream = auth
-        ? await codexTokenUpstream(
-            request,
-            suffix,
-            login,
-            lifetime,
-            runtime.dependencies.fetch,
-            auth,
-          )
-        : await lifetime.wait(
-            runtime.dependencies
-              .fetch(new Request(`${origin}${suffix}${url.search}`, init))
-              .then((response) => lifetime.received(response)),
-          )
+      const upstream =
+        auth && login.agent === 'codex' && login.kind === 'token'
+          ? await codexTokenUpstream(
+              request,
+              suffix,
+              login,
+              lifetime,
+              runtime.dependencies.fetch,
+              auth,
+            )
+          : await lifetime.wait(
+              runtime.dependencies
+                .fetch(new Request(upstreamUrl, init))
+                .then((response) => lifetime.received(response)),
+            )
       await lifetime.wait(lifetime.upload.finish())
       lifetime.signal.throwIfAborted()
-      let headers = downstreamHeaders(
-        upstream.headers,
-        login.secret,
-        agent === 'codex' && login.kind === 'token',
-      )
-      for (const secret of auth?.secrets ?? [])
-        headers = downstreamHeaders(headers, secret, true)
+      const redactions = [...secrets, ...(auth?.secrets ?? [])]
+      const headers = downstreamHeaders(upstream.headers, redactions, chatgpt)
       if (!upstream.body) {
         lifetime.complete()
         return new Response(null, { status: upstream.status, headers })
       }
-      let body = upstream.ok
+      const body = upstream.ok
         ? upstream.body
-        : redactErrorBody(upstream.body, login.secret)
-      if (!upstream.ok)
-        for (const secret of auth?.secrets ?? [])
-          body = redactErrorBody(body, secret)
+        : redactErrorBody(upstream.body, ...redactions)
       return new Response(gatewayStream(body, lifetime), {
         status: upstream.status,
         headers,

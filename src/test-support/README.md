@@ -32,6 +32,9 @@ The marker can have no turn context when the event is invalid.
 The `sent-by` conversation ends with a message from an agent tool.
 It links a closed session with a long title, and its `Sent by:` line links a session of another workspace.
 The dev app shows it with `?conversation=sent-by`, because the fake answers a send with its recorded message.
+The `stopped-from` conversation is the `interrupted` conversation, but the agent of session `debounce` stopped its turn through a workspace tool.
+Its stop request names that session of `checkout-autocomplete` by its IDs, so the chat of each workspace of the fake names the same session.
+The dev app shows it with `?conversation=stopped-from`, also in another workspace such as `fix-cart-flake`.
 Each fake session record sets `retryMessageId`.
 In the `failed` conversation, each open session names the failed request `ask`, which the recorded failure names too.
 All other session records hold null.
@@ -64,7 +67,14 @@ paths hold a fake secret value, and their records carry the labels of the
 mockups as display paths, in the file lists, the reads of the seed script,
 and the end of each finished turn. `fixtures/masked-paths.ts` holds them.
 
-Writes return recorded replies. They do not change backend state.
+Writes return recorded replies, except org moves.
+`fake-org-order-routes.ts` serves `PUT /api/org-order` and saves its order for later org list reads.
+It validates the shared move request and returns 204, or the Worker's validation and visibility errors.
+The app's stateful dev routes supply their own org list.
+`dev-org-order-route.ts` supplies a move handler for that stateful list.
+The app's dev route table must register it before a move can change that list.
+
+Other writes return recorded replies without changing backend state.
 The account fixture includes empty shortcut changes for both keyboards.
 The recorded shortcut save answers for the Mac keyboard.
 Override that reply to test another keyboard or saved changes.
@@ -99,6 +109,9 @@ Without it, `fakeGitHubSummary` gives the summary of the banner and its checks, 
 The dev fake of `../app/dev/` uses `fakeGitHubSummary` too.
 Its seed makes `email-dark-mode` work without GitHub state, so its grey mark moves.
 Replace a reply to draw a missing login, a first run, or a deleted org.
+`endpointLoginFixtures(updatedAt)` in `fixtures/agent-logins.ts` supplies
+connected own endpoint metadata for both agents. The development seed uses
+it for `?login=endpoint`. The fixture holds no key or full address.
 The fake answers `GET /api/invites` with no invitations. A test sets its own list with `server.json`.
 `server.signIn(user)` serves the session of another person, with app access, as a sign-in of that person does.
 The session reply has app access, and `GET /api/waitlist` answers with `accessState` of `fixtures/waitlist.ts`: no pause, the waitlist on, and the invite code of the mockups with 2 of its 5 invites used.
@@ -201,6 +214,8 @@ Replies, timers, and `waitFor` go on.
 - `fake-tool-routes.ts` records file, terminal, preview, desktop, and GitHub replies, also the member action routes of GitHub.
   Its upload replies give each file the `path` that `attachmentPath` in `src/shared/attachment-paths.ts` builds, as the Worker does.
 - `fake-api-routes.ts` defines the reply registration interface.
+- `fake-org-order-routes.ts` registers org list reads and moves on the recorded fake server.
+- `dev-org-order-route.ts` exports `devOrgOrderRoute` for the app's stateful dev route table.
 - `fake-events.ts` supplies history and live event messages.
 - `fake-terminal.ts` supplies decoded terminal output and records input and resize calls.
 - `recorded-chat.ts` supplies partial text, tools, queued messages, steer, stop, failure, omission counts, and refusal markers.

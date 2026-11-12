@@ -42,14 +42,28 @@ export interface Draft {
   sending: boolean
 }
 
+/**
+ * A message that the chat shows below the transcript until the stream shows
+ * it: a sent message from a reply, or a message whose send still waits for
+ * its reply, as `message-send.ts` says. A message whose send waits is
+ * `queued`, because it has not reached the agent.
+ */
+export type PendingMessage = Pick<
+  UserMessage,
+  'id' | 'text' | 'attachments' | 'state'
+>
+
 export interface SessionState {
   transcript: Transcript
   /** The time of the first event of each transcript item, by its ID. */
   times: ReadonlyMap<string, number>
   hydration: 'idle' | 'loading' | 'ready' | 'failed'
   draft: Draft
-  /** Sent messages that the stream has not shown yet. */
-  pending: readonly UserMessage[]
+  /**
+   * Messages that the stream has not shown yet: sent ones, and ones whose
+   * send waits for its reply.
+   */
+  pending: readonly PendingMessage[]
   stopping: boolean
   retrying: boolean
 }

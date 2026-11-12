@@ -44,6 +44,12 @@ export interface StoredEvents {
   nextAfterEventNumber: number | null
 }
 
+export interface NewestStoredEvents {
+  envelopes: readonly StreamEnvelope[]
+  throughEventNumber: number
+  nextBeforeEventNumber: number | null
+}
+
 export type StreamMessage =
   | { type: 'history'; history: StoredEvents }
   | { type: 'event'; envelope: StreamEnvelope }
@@ -182,6 +188,16 @@ export function readStoredEvents(value: unknown): StoredEvents {
     throughEventNumber: count(source.throughEventNumber),
     nextAfterEventNumber:
       source.hasMore === true ? count(source.nextAfterEventNumber) : null,
+  }
+}
+
+export function readNewestStoredEvents(value: unknown): NewestStoredEvents {
+  const source = record(value, 'history')
+  return {
+    envelopes: list(readEnvelope)(source.events),
+    throughEventNumber: count(source.throughEventNumber),
+    nextBeforeEventNumber:
+      source.hasMore === true ? count(source.nextBeforeEventNumber) : null,
   }
 }
 

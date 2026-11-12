@@ -34,9 +34,10 @@ const firstRunRail: RailState = { orgs: [], current: 'account', firstRun: true }
 
 /**
  * The General tab: the GitHub sign-in, and what every org shares, the
- * GitHub App and the agents, then the invite code of the user, last, so
- * that a phone shows the form of an agent near the top. The Mac app adds
- * the This Mac section.
+ * GitHub App and the agents, with the share setting of each login and the
+ * host of an own endpoint, then the invite code of the user, last, so that
+ * a phone shows the form of an agent near the top. The Mac app adds the
+ * This Mac section.
  */
 function GeneralTab(props: { state: AccountState }) {
   const mac = useMacApp()

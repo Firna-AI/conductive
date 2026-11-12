@@ -8,10 +8,13 @@ import { expect, it } from 'vitest'
 import { TOOL_ENV } from '../../tools/context'
 import { MCP_PROTOCOL_VERSION } from '../../tools/mcp'
 import { imageNodeExecutable } from '../lifecycle/image-runtime'
+import { privilegedCommand } from '../terminal/privileged'
 import {
   installWorkspaceTools,
   WORKSPACE_TOOLS_COMMAND,
+  WORKSPACE_TOOLS_COMMAND_BYTES,
   WORKSPACE_TOOLS_SECRETS_FILE,
+  workspaceToolsCommands,
 } from './image'
 import { WORKSPACE_TOOL_SOURCES } from './image-assets'
 import { imageTestProcess } from './image-test-process'
@@ -21,6 +24,25 @@ import {
   mcpRepliesById,
   mcpRequest,
 } from './mcp-test-support'
+
+// Linux refuses one exec argument over 128 KiB. A command over that size
+// never starts in the sandbox, as the deploys after #267 showed.
+it('keeps each privileged install command under the Linux argument limit', () => {
+  expect(WORKSPACE_TOOLS_COMMAND_BYTES).toBeLessThan(128 * 1024)
+  const large = WORKSPACE_TOOL_SOURCES.map((source) => ({
+    ...source,
+    contents: source.contents.repeat(3),
+  }))
+  for (const sources of [WORKSPACE_TOOL_SOURCES, large]) {
+    const commands = workspaceToolsCommands(sources)
+    for (const command of commands) {
+      const bytes = new TextEncoder().encode(privilegedCommand(command))
+      expect(bytes.length).toBeLessThanOrEqual(WORKSPACE_TOOLS_COMMAND_BYTES)
+      expect(command.startsWith('set -eu\n')).toBe(true)
+    }
+    if (sources === large) expect(commands.length).toBeGreaterThan(2)
+  }
+})
 
 it('reports failed or incomplete image installation instead of accepting it', async () => {
   const sources = WORKSPACE_TOOL_SOURCES
@@ -124,6 +146,10 @@ it('installs working CLI and MCP tools under a root with spaces and apostrophes'
             { name: 'run_mac_command' },
             { name: 'create_workspace' },
             { name: 'list_workspaces' },
+            { name: 'get_workspace' },
+            { name: 'rename_workspace' },
+            { name: 'move_workspace' },
+            { name: 'archive_workspace' },
             { name: 'list_repositories' },
             { name: 'list_sections' },
             { name: 'list_models' },
@@ -131,6 +157,16 @@ it('installs working CLI and MCP tools under a root with spaces and apostrophes'
             { name: 'read_session' },
             { name: 'create_session' },
             { name: 'send_message' },
+            { name: 'get_session' },
+            { name: 'rename_session' },
+            { name: 'close_session' },
+            { name: 'stop_session' },
+            { name: 'get_message' },
+            { name: 'create_section' },
+            { name: 'delete_section' },
+            { name: 'list_previews' },
+            { name: 'open_preview' },
+            { name: 'close_preview' },
           ],
         },
       },
