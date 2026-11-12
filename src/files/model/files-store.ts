@@ -1,6 +1,4 @@
-import type { ChangesResponse } from '../../shared/files'
 import type { FilesClient } from '../api/files-client'
-import type { FilesError } from '../api/files-errors'
 import { parseStreamMessage, type StreamEnvelope } from '../api/parse-events'
 import {
   noFailedRepairs,
@@ -8,6 +6,7 @@ import {
   type FailedRepairs,
 } from './failed-repairs'
 import { FilesInvalidation } from './files-invalidation'
+import type { FilesSnapshot } from './files-snapshot'
 import {
   emptySync,
   syncEvent,
@@ -16,7 +15,8 @@ import {
   type FilesSync,
   type SyncStep,
 } from './files-sync'
-import type { FileTree } from './tree-model'
+
+export type { FilesSnapshot } from './files-snapshot'
 
 /**
  * The workspace event stream after `afterEventNumber`. It sends stored
@@ -28,35 +28,6 @@ export type FilesSubscribe = (
   afterEventNumber: number,
   listener: (message: unknown) => void,
 ) => () => void
-
-export interface FilesSnapshot {
-  tree: FileTree | null
-  /** Why the tree did not load, while no tree shows. */
-  treeError: FilesError | null
-  /**
-   * The cloud computer could not read the files. `tree` is the saved tree,
-   * or empty when none was saved. Only a full tree of the stream clears it.
-   */
-  treeUnavailable: boolean
-  changes: ChangesResponse | null
-  changesError: FilesError | null
-  /** The folders that the user opened or closed in this page session. */
-  folders: ReadonlyMap<string, boolean>
-  /** Grows when affected paths cannot be named, including tree replacement. */
-  epoch: number
-  /** Grows for each path whose content an event may have changed. */
-  versions: ReadonlyMap<string, number>
-  /**
-   * The file lists whose fresh full report was lost too. Only a newer full
-   * report of the same list in the stream clears one.
-   */
-  failedRepairs: FailedRepairs
-  /**
-   * The folder that a press on its chip showed last, so All files scrolls
-   * to it. `count` grows with each press, also on the same folder.
-   */
-  revealed: { path: string; count: number } | null
-}
 
 type Resource = 'tree' | 'changes'
 
@@ -82,6 +53,7 @@ export class WorkspaceFiles {
     versions: new Map(),
     failedRepairs: noFailedRepairs,
     revealed: null,
+    readLabels: new Map(),
   }
   private repairs: FailedRepairs = noFailedRepairs
   private readonly listeners = new Set<() => void>()
@@ -142,6 +114,13 @@ export class WorkspaceFiles {
     }
     const count = (this.snapshot.revealed?.count ?? 0) + 1
     this.publish({ folders, revealed: { path, count } })
+  }
+
+  /** Keeps the label that a file or diff read gave for its real path. */
+  noteReadLabel(path: string, label: string): void {
+    if (this.snapshot.readLabels.get(path) === label) return
+    const readLabels = new Map(this.snapshot.readLabels).set(path, label)
+    this.publish({ readLabels })
   }
 
   subscribe = (listener: () => void): (() => void) => {

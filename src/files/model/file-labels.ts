@@ -49,6 +49,22 @@ export function pageLabel(
   return listLabel(snapshot, path, kind)
 }
 
+/**
+ * The label of the path of a tab: from the lists, or else from the last
+ * read of the path, or null when neither names the file. A path that no
+ * list names, such as an ignored file, so shows its name after its page
+ * read it once.
+ */
+export function tabLabel(
+  snapshot: FilesSnapshot,
+  path: string,
+  kind: 'file' | 'diff',
+): string | null {
+  return (
+    listLabel(snapshot, path, kind) ?? snapshot.readLabels.get(path) ?? null
+  )
+}
+
 /** The file name of a label, or the word for a file that no record names. */
 export function labelName(label: string | null): string {
   return label === null ? unknownFileName : splitPath(label).name

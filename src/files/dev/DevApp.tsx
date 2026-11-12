@@ -8,7 +8,7 @@ import {
 } from '../../app/workspace-store'
 import type { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
-import { listLabel } from '../model/file-labels'
+import { tabLabel } from '../model/file-labels'
 import type { WorkspaceFiles } from '../model/files-store'
 import type { FilesNavigation, FilesTab, FilesTarget } from '../navigation'
 import { DiffPage } from '../page/DiffPage'
@@ -152,7 +152,7 @@ export function DevApp(props: {
                 {tabs.map((tab) => (
                   <FileTabItem
                     key={`${tab.kind}:${tab.path}`}
-                    label={listLabel(snapshot, tab.path, tab.kind)}
+                    label={tabLabel(snapshot, tab.path, tab.kind)}
                     navigation={navigation}
                     onClose={() => close(tab)}
                     selected={view.active !== null && sameTab(view.active, tab)}
