@@ -5,6 +5,7 @@ import { SOFTWARE } from '../lifecycle/backend-test-support'
 import { SAVED_IMAGE_NAME } from '../lifecycle/image-names'
 import { requestSoftwareImage } from './build'
 import { softwareImages } from './data'
+import { TOOLS_OUTPUT } from './test-support'
 
 const fixtureForTest = setupBackendTests()
 const digest = 'a'.repeat(64)
@@ -15,7 +16,7 @@ it('resumes commands with saved offsets, publishes once, and creates a secret-fr
   boat.commandOutput = 'first\n'
   const first = await requestSoftwareImage(images, SOFTWARE, digest)
   expect(first.state).toBe('building')
-  expect(first.output).toBe('done\nfirst\n')
+  expect(first.output).toBe(TOOLS_OUTPUT + 'first\n')
   expect(boat.starts).toHaveLength(1)
   expect(boat.starts[0]).toMatchObject({ noEnv: true, ttlSeconds: 1800 })
   expect(boat.starts[0].env).toEqual({})
@@ -27,7 +28,7 @@ it('resumes commands with saved offsets, publishes once, and creates a secret-fr
   expect(attempt).toMatchObject({
     phase: 'software',
     stdoutOffset: 6,
-    output: 'done\nfirst\n',
+    output: TOOLS_OUTPUT + 'first\n',
   })
   boat.commandOutput += 'last\n'
   boat.commandRunning = false

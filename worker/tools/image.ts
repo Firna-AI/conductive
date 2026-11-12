@@ -6,17 +6,23 @@ import type { CommandResult } from '../sandbox/provider'
 import { imageNodeExecutable } from '../lifecycle/image-runtime'
 import { WORKSPACE_TOOLS_MCP } from '../../src/shared/agent-tools'
 import { TOOL_ENV } from '../../tools/context'
+import { privilegedCommand } from '../terminal/privileged'
 
 /** @public Image installation checks identify the tools by this path. */
 export const WORKSPACE_TOOLS_DIRECTORY = '/opt/conductive/agent-tools'
 export const WORKSPACE_TOOLS_COMMAND = WORKSPACE_TOOLS_MCP.command
 export const WORKSPACE_TOOLS_SECRETS_FILE = '/run/ascii-secrets/env.sh'
+/**
+ * Linux rejects one command argument over 128 KiB, and the provider passes
+ * each command as one argument. Keep each privileged command far below it.
+ */
+export const WORKSPACE_TOOLS_COMMAND_BYTES = 64 * 1024
 
-/** Build the same install text for execution and software versioning. */
-export function workspaceToolsCommand(
+/** Build the same install commands for execution and software versioning. */
+export function workspaceToolsCommands(
   sources: readonly WorkspaceToolSource[],
   root = '/',
-): string {
+): string[] {
   const prefix = root.replace(/\/+$/, '')
   const directory = `${prefix}${WORKSPACE_TOOLS_DIRECTORY}`
   const executable = `${prefix}${WORKSPACE_TOOLS_COMMAND}`
@@ -58,13 +64,12 @@ exit 1
       throw new Error('The workspace tool sources are incomplete.')
     return write(`${directory}/${path}`, source, '0644')
   })
-  return [
-    'set -eu',
+  return packCommands([
     `install -d ${quote(`${directory}/tools`)} ${quote(`${directory}/src/shared`)} ${quote(`${prefix}/usr/local/bin`)}`,
     ...writes,
     write(`${directory}/package.json`, '{"type":"module"}\n', '0644'),
     write(executable, launcher, '0755'),
-  ].join('\n')
+  ])
 }
 
 /** Bind run to an authorized image-build sandbox before its snapshot is saved. */
@@ -73,10 +78,37 @@ export async function installWorkspaceTools(
   run: (command: string) => Promise<CommandResult>,
   root = '/',
 ): Promise<void> {
-  const result = await run(workspaceToolsCommand(sources, root))
-  if (result.exitCode !== 0 || result.timedOut) {
-    throw new Error('The workspace tools could not be installed.')
+  for (const command of workspaceToolsCommands(sources, root)) {
+    const result = await run(command)
+    if (result.exitCode !== 0 || result.timedOut) {
+      throw new Error('The workspace tools could not be installed.')
+    }
   }
+}
+
+/** Keep the step order. A step goes to the next command when it would pass the limit. */
+function packCommands(steps: readonly string[]): string[] {
+  const empty = privilegedBytes('set -eu')
+  const commands: string[][] = []
+  let current: string[] = []
+  let bytes = empty
+  for (const step of steps) {
+    // The privilege wrapper escapes each character on its own, so sizes add.
+    const added = privilegedBytes(`\n${step}`) - privilegedBytes('')
+    if (current.length > 0 && bytes + added > WORKSPACE_TOOLS_COMMAND_BYTES) {
+      commands.push(current)
+      current = []
+      bytes = empty
+    }
+    current.push(step)
+    bytes += added
+  }
+  if (current.length > 0) commands.push(current)
+  return commands.map((lines) => ['set -eu', ...lines].join('\n'))
+}
+
+function privilegedBytes(script: string): number {
+  return new TextEncoder().encode(privilegedCommand(script)).length
 }
 
 function write(path: string, contents: string, mode: string): string {

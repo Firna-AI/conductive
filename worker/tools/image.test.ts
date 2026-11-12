@@ -1,4 +1,12 @@
-import { chmod, mkdir, mkdtemp, rm, symlink, writeFile } from 'node:fs/promises'
+import {
+  chmod,
+  mkdir,
+  mkdtemp,
+  readFile,
+  rm,
+  symlink,
+  writeFile,
+} from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import process from 'node:process'
@@ -8,10 +16,14 @@ import { expect, it } from 'vitest'
 import { TOOL_ENV } from '../../tools/context'
 import { MCP_PROTOCOL_VERSION } from '../../tools/mcp'
 import { imageNodeExecutable } from '../lifecycle/image-runtime'
+import { privilegedCommand } from '../terminal/privileged'
 import {
   installWorkspaceTools,
   WORKSPACE_TOOLS_COMMAND,
+  WORKSPACE_TOOLS_COMMAND_BYTES,
+  WORKSPACE_TOOLS_DIRECTORY,
   WORKSPACE_TOOLS_SECRETS_FILE,
+  workspaceToolsCommands,
 } from './image'
 import { WORKSPACE_TOOL_SOURCES } from './image-assets'
 import { imageTestProcess } from './image-test-process'
@@ -36,6 +48,38 @@ it('reports failed or incomplete image installation instead of accepting it', as
     await expect(
       installWorkspaceTools(sources, async () => result),
     ).rejects.toThrow('The workspace tools could not be installed.')
+  }
+})
+
+it('splits the install into privileged commands that a shell accepts', async () => {
+  const commands = workspaceToolsCommands(WORKSPACE_TOOL_SOURCES)
+  expect(commands.length).toBeGreaterThan(1)
+  for (const command of commands)
+    expect(
+      new TextEncoder().encode(privilegedCommand(command)).length,
+    ).toBeLessThanOrEqual(WORKSPACE_TOOLS_COMMAND_BYTES)
+  const root = await mkdtemp(join(tmpdir(), "conductive wrapped's "))
+  try {
+    // Run the production wrapper without sudo, so each argument keeps its size.
+    await installWorkspaceTools(
+      WORKSPACE_TOOL_SOURCES,
+      async (command) => {
+        const wrapped = privilegedCommand(command).replace(/^sudo -n -- /, '')
+        const result = await imageTestProcess('/bin/sh', ['-c', wrapped])
+        expect(result.exitCode, result.stderr).toBe(0)
+        return result
+      },
+      root,
+    )
+    for (const source of WORKSPACE_TOOL_SOURCES)
+      expect(
+        await readFile(
+          join(root, WORKSPACE_TOOLS_DIRECTORY, source.path),
+          'utf8',
+        ),
+      ).toBe(source.contents)
+  } finally {
+    await rm(root, { recursive: true, force: true })
   }
 })
 
