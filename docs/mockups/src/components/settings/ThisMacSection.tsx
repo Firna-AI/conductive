@@ -1,6 +1,7 @@
 import {
   alwaysAllowed,
   failedMessage,
+  longAllowed,
   notSavedMessage,
   removedCommand,
   thisMac,
@@ -35,11 +36,13 @@ const removals: Partial<
 
 /**
  * The Mac that the Mac app registers as a device (decision 62): its name,
- * its state, and the commands that always run on it, each with Remove.
- * After a Remove, the result of the change shows under the list until the
- * next Remove of the same command. A command that the Mac removed, also
- * without saving, leaves the list, so a removal that the Mac did not save
- * offers Try again in its result. Only the Mac app shows the section.
+ * its state, and the commands that always run on it, each with Remove. A
+ * long command shows its first three lines, and its last line fades out,
+ * with Show all under it. After a Remove, the result of the change shows
+ * under the list until the next Remove of the same command. A command that
+ * the Mac removed, also without saving, leaves the list, so a removal that
+ * the Mac did not save offers Try again in its result. Only the Mac app
+ * shows the section.
  */
 export function ThisMacSection() {
   const change = useMacApp()?.change
@@ -59,7 +62,18 @@ export function ThisMacSection() {
       <ul aria-label="Always allowed commands" className={styles.list}>
         {commands.map((command) => (
           <li className={styles.row} key={command}>
-            <code className={styles.command}>{command}</code>
+            {command === longAllowed ? (
+              <div className={styles.allowed}>
+                <code className={`${styles.command} ${styles.cut}`}>
+                  {command}
+                </code>
+                <span className={styles.more}>
+                  <ActionButton tone="plain">Show all</ActionButton>
+                </span>
+              </div>
+            ) : (
+              <code className={styles.command}>{command}</code>
+            )}
             <ActionButton accessibilityLabel={`Remove ${command}`} tone="plain">
               Remove
             </ActionButton>

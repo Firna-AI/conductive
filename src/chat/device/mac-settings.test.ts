@@ -127,7 +127,11 @@ describe('MacSettingsController', () => {
     expect(controller.get()).toMatchObject({
       kind: 'ready',
       busy: [],
-      settings: { alwaysAllowedCommands: ['npm run lint'] },
+      settings: {
+        alwaysAllowedCommands: fakeMacSettings().alwaysAllowedCommands.filter(
+          (command) => command !== 'git status' && command !== 'sw_vers',
+        ),
+      },
     })
   })
 

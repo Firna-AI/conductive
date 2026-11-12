@@ -40,3 +40,32 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* A long command, with Show all under it. */
+.allowed {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 0;
+  padding: 6px 0 2px;
+}
+
+/*
+ * A long command wraps and shows its first three lines. Its last line fades
+ * out, so the list shows more commands at once.
+ */
+.cut {
+  width: 100%;
+  max-height: 4.5em;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  white-space: normal;
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 1.5em), transparent);
+}
+
+/* The label of Show all lines up with the command. */
+.more {
+  margin-left: -10px;
+}

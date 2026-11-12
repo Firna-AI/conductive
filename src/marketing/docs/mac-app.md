@@ -82,10 +82,11 @@ A browser or another Mac can show the request without those approval choices.
 
 ## Change saved permissions
 
-Open **Account** in the Mac app to find **This Mac**.
+Open **Account** in the Mac app, then the **This Mac** tab.
 It shows the Mac's name and **Available** or **Not available**.
 
 - Under **Always allowed**, use **Remove** to make that command ask again.
+  A long command shows its first lines. Use **Show all** to see all of it.
 - Under **Allowed for 15 minutes**, use **Stop** to end that workspace's permission.
 - While timed permission runs, the workspace also shows a bar with **Stop**.
 

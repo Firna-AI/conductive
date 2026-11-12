@@ -256,7 +256,7 @@ that sends feedback.
 The catalogue draws the Keyboard shortcuts tab in the Mac app and in a
 browser, from decisions 190 to 196. The pages of
 `app/account` and `mac-app/this-mac` show it as the third tab of the
-account.
+account. In the Mac app, the This Mac tab follows it.
 
 - `app/account/shortcuts` shows the tab in a normal Chrome tab on a Mac.
   The search field of decision 195 stands at the top. The lines under it
@@ -321,8 +321,8 @@ account.
 - `mac-app/command-palette` shows the All tab of the palette over a
   workspace in the Mac app, with the key of each command row. The Search
   row of each Mac app page opens it. Its `actions` and `settings` variants
-  have those tabs. The Settings tab adds This Mac to the Account group,
-  which ends with Keyboard shortcuts. Its `changed-key` variant has the
+  have those tabs. The Settings tab adds This Mac to the end of the
+  Account group, after Keyboard shortcuts. Its `changed-key` variant has the
   Search row with ⇧⌘P, the person's key of the palette.
 
 [The pull request bar](catalogue-bar.md) gives `app/banner`, the bar of a

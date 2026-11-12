@@ -124,6 +124,15 @@ export const accountSchema = {
 
 export type AccountState = SchemaProps<typeof accountSchema>
 
+/**
+ * A state of the account with any of its tabs. Only the Mac app has the
+ * This Mac tab, so the Mac app's pages choose it, and the schema of the
+ * browser's pages does not offer it.
+ */
+export type AccountView = Omit<AccountState, 'tab'> & {
+  tab: AccountState['tab'] | 'this-mac'
+}
+
 /** The General tab of a connected account, in Chrome on a Mac. */
 export const accountGeneral: AccountState = {
   tab: 'general',

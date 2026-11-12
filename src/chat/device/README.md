@@ -9,16 +9,17 @@ top of the workspace. See [the chat](../README.md) for the whole chat.
 ## Use it in the app
 
 `ThisMacSection` goes in the account, and `AllowAllBar` goes at the top of
-the workspace. Mount them only in the Mac app, because a browser has no
-Mac. The account of the Mac app mounts `ThisMacSection`, and
-`WorkspaceMacBar` in `src/shell/workspace/` mounts `AllowAllBar` at the top
-of the workspace. In a browser both draw nothing and send no request. Both
-read the Mac's settings through `useMacSettings(client)`. Give it a stable
-`ApiClient`, such as `AppServices.api`, because a new client makes a new
-settings controller. `WorkspaceMacBar` calls `refresh` after the
-`workspace.updated` events of the workspace stream, which follow each change
-of a Mac command, so the bar shows the 15 minutes that an answer started.
-One burst of events, such as the stored history, gives one read.
+the workspace. Mount them only in the Mac app, because a browser has no Mac.
+The This Mac tab of the account mounts `ThisMacSection`, and only the Mac
+app shows that tab. `WorkspaceMacBar` in `src/shell/workspace/` mounts
+`AllowAllBar` at the top of the workspace. In a browser both draw nothing
+and send no request. Both read the Mac's settings through
+`useMacSettings(client)`. Give it a stable `ApiClient`, such as
+`AppServices.api`, because a new client makes a new settings controller.
+`WorkspaceMacBar` calls `refresh` after the `workspace.updated` events of
+the workspace stream, which follow each change of a Mac command, so the bar
+shows the 15 minutes that an answer started. One burst of events, such as
+the stored history, gives one read.
 
 ```tsx
 <ThisMacSection client={services.api} viewport="desktop" />
@@ -65,6 +66,12 @@ const { controller, state } = useMacSettings(services.api)
   until the request changes or the pairing changes. A 202 reply only says
   that the Worker passed the answer to the Mac. A failed answer names its
   cause above the composer, except when the request no longer waits.
+- `ThisMacSection` lists each always-allowed command through
+  `AllowedCommand`. A long command shows its first three lines, and its
+  last shown line fades out. Show all shows the whole command, and Show
+  less makes it short again. A command that fits shows no button. The
+  whole text stays in the page, so a screen reader and a copy get all of
+  it. A change of the width measures the command again.
 - `ThisMacSection` and `AllowAllBar` show the settings that the Mac keeps.
   One read or change of the settings runs at a time, in the order of the
   user's actions, so the Mac gets them in that order and the last reply
@@ -111,6 +118,8 @@ menu of Allow over the region. Build the Mac app first, then run
 - `LiteralText.tsx`: each command and folder, exactly.
 - `mac-settings.ts`: the reads and the changes of the Mac's settings for
   `ThisMacSection.tsx`, `SavedChoices.tsx`, and `AllowAllBar.tsx`.
+- `AllowedCommand.tsx`: one always-allowed command, short with Show all
+  when it is long.
 - `settings-results.ts`: the result of each control, and its words.
 
 ### Related docs

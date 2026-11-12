@@ -24,7 +24,7 @@ import {
 import type { ShortcutHost } from '../fixtures/shortcutHosts'
 import { viewerMembership } from '../fixtures/members'
 import { paths } from '../paths'
-import type { AccountState } from './accountState'
+import type { AccountState, AccountView } from './accountState'
 import { agentsFor } from './accountAgents'
 
 const connectedRail: RailState = { orgs: orgList, current: 'account' }
@@ -36,15 +36,12 @@ const firstRunRail: RailState = { orgs: [], current: 'account', firstRun: true }
  * The General tab: the GitHub sign-in, and what every org shares, the
  * GitHub App and the agents, with the share setting of each login and the
  * host of an own endpoint, then the invite code of the user, last, so that
- * a phone shows the form of an agent near the top. The Mac app adds the
- * This Mac section.
+ * a phone shows the form of an agent near the top.
  */
 function GeneralTab(props: { state: AccountState }) {
-  const mac = useMacApp()
   return (
     <>
       <SignInSection />
-      {mac ? <ThisMacSection /> : null}
       <GitHubSection connected={props.state.connections === 'connected'} />
       <AgentsSection {...agentsFor(props.state)} />
       <InviteCodeSection
@@ -58,14 +55,14 @@ function GeneralTab(props: { state: AccountState }) {
 
 /** The content of the tab of a state, with the keys of its host. */
 function TabContent(props: {
-  state: AccountState
+  state: AccountView
   host: ShortcutHost
   changes: ShortcutChanges
 }) {
   const { state } = props
   switch (state.tab) {
     case 'general':
-      return <GeneralTab state={state} />
+      return <GeneralTab state={{ ...state, tab: 'general' }} />
     case 'preferences':
       return (
         <DefaultsSection
@@ -82,6 +79,8 @@ function TabContent(props: {
           search={state.shortcutSearch}
         />
       )
+    case 'this-mac':
+      return <ThisMacSection />
   }
 }
 
@@ -90,13 +89,14 @@ function TabContent(props: {
  * shares, and the invite code of the user. Preferences holds how new
  * workspaces start: their model, and how New workspace opens. Keyboard
  * shortcuts holds the keys of the host: the Mac app, or the browser and the
- * keyboard of `state.host`. The product is free, so the page shows no plan
- * and no billing, and the sandbox provider stays out of sight. With the
+ * keyboard of `state.host`. The Mac app adds This Mac, with the commands
+ * that always run on this Mac. The product is free, so the page shows no
+ * plan and no billing, and the sandbox provider stays out of sight. With the
  * person's changes to the shortcuts, the Search row of the Mac app's
  * sidebar shows the person's key of the palette.
  */
 export function AccountScreen(props: {
-  state: AccountState
+  state: AccountView
   viewport: Viewport
 }) {
   const { state } = props

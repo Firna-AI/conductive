@@ -34,7 +34,7 @@ export const macPalette = defineScreen({
       slug: 'settings',
       title: 'Settings tab',
       description:
-        'The Settings tab in the Mac app. The Account group adds This Mac after Sign-in, and Keyboard shortcuts at the end, with ⌥⌘/, which opens the tab. Repositories shows ⌥⌘A.',
+        'The Settings tab in the Mac app. The Account group ends with Keyboard shortcuts, with ⌥⌘/, which opens the tab, and then This Mac, which opens the This Mac tab. Repositories shows ⌥⌘A.',
       rationale:
         'Only the Mac app has This Mac, as the Settings tab of the browser says. A browser has the Keyboard shortcuts row too, which opens app/account/shortcuts.',
       props: { palette: 'settings' },

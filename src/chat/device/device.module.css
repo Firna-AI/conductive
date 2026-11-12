@@ -11,15 +11,44 @@
   display: contents;
 }
 
+/* An always-allowed command, with Show all under it when it is long. */
+.allowed {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 0;
+}
+
 /* An always-allowed command keeps its exact text, and a long one wraps. */
 .command {
-  flex: 1;
-  min-width: 0;
+  width: 100%;
   color: var(--ui-ink);
   font-family: var(--ui-font-mono);
   font-size: var(--ui-text-sm);
   line-height: 1.5;
   overflow-wrap: anywhere;
+}
+
+.literal {
+  font: inherit;
+}
+
+/* A short command shows at most its first three lines. */
+.short {
+  max-height: 4.5em;
+  overflow: hidden;
+}
+
+/* The label of Show all lines up with the command. */
+.more {
+  margin-left: -10px;
+}
+
+/* The last line of a cut command fades out, so the command shows more. */
+.faded {
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 1.5em), transparent);
 }
 
 /* The workspace of a running 15 minutes, its time left, and Stop. */

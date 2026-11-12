@@ -98,14 +98,14 @@ actions at `app/command-palette/actions`, and the settings at
   Sign-in, GitHub, Agents, and New workspaces. It also holds Keyboard
   shortcuts, the third tab of the Account page.
 - In the Mac app, the Account group also holds
-  [This Mac](desktop-commands.md#saved-choices), which only the Account
-  page of the Mac app has.
+  [This Mac](desktop-commands.md#saved-choices), the fourth tab, which only
+  the Account page of the Mac app has.
 - The Account group lists its rows in the order of the Account page
   (decision 198). It goes tab by tab, and in each tab in the order of its
-  sections. So in the Mac app, This Mac follows Sign-in, and Keyboard
-  shortcuts ends the group.
+  sections. So Keyboard shortcuts follows New workspaces, and in the Mac
+  app This Mac ends the group.
 - Reason: the person already knows the order of the page, and a later row
-  then has one clear place. This Mac after Agents or after New workspaces
-  was rejected, because the group then leaves the order of the page.
+  then has one clear place. A row in another place was rejected, because
+  the group then leaves the order of the page.
 - A row of the org settings opens its tab. A row of the Account group
   opens the tab of the Account page that holds its section.

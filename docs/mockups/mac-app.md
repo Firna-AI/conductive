@@ -22,7 +22,9 @@ screens live under `mac-app`, and their parts in `src/components/mac/`.
   the buttons are gone, and the toggle takes their space.
 - `MacApp` marks the screens inside it as the Mac app, so that `AppFrame`
   draws the window controls and a banner of the Mac app. The account of
-  the Mac app keeps the sidebar of the org and adds the This Mac section.
+  the Mac app keeps the sidebar of the org and adds the This Mac tab last.
+  A long always-allowed command there shows its first three lines, and its
+  last line fades out, with Show all under it.
   Its Keyboard shortcuts tab adds the commands and the menu keys that only
   the Mac app has.
 - A person without app access sees the waitlist in the window, as
