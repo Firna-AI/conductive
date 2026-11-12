@@ -84,6 +84,10 @@ workspace on a phone, a finger that moves first opens nothing, and a long
 press lifts no tab, keeps the menu of the browser shut, and opens a sheet
 with only the copy items. The late click of the finger selects nothing,
 and Copy concise transcript copies the concise text.
+`components/SessionLinkCopy.dom.test.tsx` presses Copy link in the menu
+of a tab that does not show. It copies the link of that session, says
+"Link copied", keeps the shown tab, and sends no request. A refused write
+says "The link didn't copy. Try again."
 `../shared/transcript/session-markdown.test.ts` builds the concise and the
 full text of a copy. In a member's message, it checks the name of each
 attached file in place of its mention. It also checks that the attachments

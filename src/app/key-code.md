@@ -152,15 +152,16 @@ Each path is relative to `src/app/`, the folder of this page.
   with the words of `listMarkLabel`. A right click or the menu keys open the menu
   of a row. `useRowMenus.tsx` gives each row the actions that the person
   can use, from `workspaceMenuItems` of the mockups, and draws the open
-  `RowMenu.tsx`. The Archive shortcut and Archive in the menu share one
+  `RowMenu.tsx`. Every row offers Copy link, which copies `workspace.link`
+  through `AppServices.copy` and gives its result in a toast. The Archive shortcut and Archive in the menu share one
   flow, `ShownWorkspaces.archive`, so a second press while it runs sends
   nothing. A row of the Archived group shows its Restore shortcut over the
   time on hover until the last day of Restore.
   `SectionHeader.tsx` draws a section header with its menu and Rename
   section. `useListActions.ts` runs the list changes, with a toast for a
   failure. `RowMenu.test.tsx`, `RowMenuAccess.test.tsx`,
-  `RowActions.test.tsx`, `RowArchive.test.tsx`, and `RowRename.test.tsx`
-  mount the whole app.
+  `RowActions.test.tsx`, `RowArchive.test.tsx`, `RowRename.test.tsx`, and
+  `RowCopyLink.test.tsx` mount the whole app.
   [Workspace menu](../../docs/protocol/workspace-menu.md) states the menu
   of a workspace row.
 - `../shell/ui/Menu.tsx`: `MenuButton`, the menu of the shell, a sheet on

@@ -78,9 +78,10 @@ plan limits.
 - The menu of a workspace row follows the same roles, as
   `app/workspace-menu/roles` shows. Every member moves and renames a
   workspace that is not archived. Only an admin sees Reassign to, and only
-  the owner and the admins see Archive, which archives at once. The
-  archived row of an admin offers only Reassign to. An archived row of a
-  member and every row of a suspended org have no menu. The menu has no
+  the owner and the admins see Archive, which archives at once. Every row
+  offers Copy link. The archived row of an admin offers only Reassign to
+  and Copy link. An archived row of a member and every row of a suspended
+  org offer only Copy link. The menu has no
   Restore: the row keeps it, for every member of an org that is not
   suspended.
 - No stopped workspace shows as expiring. Near day 14 of a stop, the app

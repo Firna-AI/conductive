@@ -5,15 +5,13 @@ import a11y from '../common/a11y.module.css'
 import { classes } from '../common/classes'
 import { useControlSizes } from '../common/touch'
 import styles from './CopyLinkButton.module.css'
+import { linkResults } from './linkCopy'
 
 /** The result of the last press, which the button shows for a moment. */
 export type CopyResult = 'copied' | 'failed'
 
 /** The words of the note under the button, for each result. */
-const copyNotes: Readonly<Record<CopyResult, string>> = {
-  copied: 'Link copied',
-  failed: "The link didn't copy. Try again.",
-}
+const copyNotes: Readonly<Record<CopyResult, string>> = linkResults
 
 /**
  * A button in the line under the name of a phone header. It draws 21 px
