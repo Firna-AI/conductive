@@ -27,6 +27,18 @@ export async function prepareAgentEvent(
     )
   }
   const { session, turn } = target
+  if (event.type === 'turn.completed' && !event.speed) {
+    for (const id of turn.messageIds) {
+      const message = await transaction.message(id)
+      if (message?.sessionId === turn.sessionId && message.choice.fast) {
+        event = {
+          ...event,
+          speed: { state: 'standard', cause: 'older_runner' },
+        }
+        break
+      }
+    }
+  }
   let acknowledged: readonly string[] = []
   if (event.type === 'turn.started') {
     sameAgent(session, event.choice)

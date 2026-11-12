@@ -35,6 +35,15 @@ These facts belong to this implementation, not to the protocol docs.
   [Agent logins](agent-logins.md#codex) gives both routes through the gateway.
   [Conversation continuation](codex-logins.md#conversation-continuation)
   gives the resume and fork sequence after a login kind change.
+- Claude takes `fastMode` in its start settings and in `applyFlagSettings`.
+  Codex takes `serviceTierForTurn` on each `turn/start`: `priority` for fast
+  and `default` for standard. No thread setting keeps a tier across turns.
+- After each update of an agent SDK, check which models send the fast
+  fields. Check that Claude still turns on fast mode without its account
+  check under `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1`. The runner sets
+  no `CLAUDE_CODE_SKIP_FAST_MODE_ORG_CHECK`. Use a local capture endpoint,
+  as [Fast mode](../docs/protocol/fast-mode.md#the-requests-of-the-agents)
+  describes the request requirements.
 - Both agents request no approvals and the service user's rights. ChatGPT
   workspace rules can replace these Codex settings on a ChatGPT turn.
 - The runner configures the sandbox's `computer` and `conductive` MCP

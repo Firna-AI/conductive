@@ -19,7 +19,7 @@ it('resets a wait from member receipt and keeps notification results separate fr
     type: 'model',
     commandId: 'model',
     sessionId: 'session-1',
-    choice: { agent: 'claude', model: 'next', effort: 'max' },
+    choice: { agent: 'claude', model: 'next', effort: 'max', fast: false },
   })
   await entered.promise
   const message = h.engine.command({

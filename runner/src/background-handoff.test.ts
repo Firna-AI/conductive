@@ -24,7 +24,12 @@ function waiting(provider: FakeProvider) {
 function message() {
   const input = duringTurn(turn('2'))
   input.turnId = 'turn-1'
-  input.message.choice = { agent: 'claude', model: 'next-model', effort: 'max' }
+  input.message.choice = {
+    agent: 'claude',
+    model: 'next-model',
+    effort: 'max',
+    fast: false,
+  }
   return input
 }
 

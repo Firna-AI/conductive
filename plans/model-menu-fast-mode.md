@@ -467,6 +467,50 @@ My calls, on 2026-11-12, as the non-UI implementor of Milestone 3:
   check. Reason: the orchestrator authorized this small exception on
   2026-11-12. The switch and trigger text stay in Milestone 5.
 
+My calls, on 2026-11-12, as the non-UI implementor of Milestones 4 and 7:
+
+- `turn.completed.speed` is optional. It holds `{ state: "fast" }` or
+  `{ state: "standard", cause?: string }`. Cause codes use lower-case
+  letters, numbers, and underscores, with at most 64 characters. The known
+  display codes are `fast_limit` and `older_runner`. Other Claude cause
+  codes, such as `out_of_credits`, stay machine codes. Reason: the UI can
+  name its known causes and show standard speed alone for unknown causes.
+- The runner keeps standard speed for the whole visible turn once Claude
+  reports a standard-speed request. The first reported cause code stays. A
+  later cause code can fill an absent cause. This covers stops, background
+  waits, and later agent segments. Reason: the protocol counts any
+  standard-speed request, not only the last result.
+- A Claude rate-limit reason explains a fallback notice. The reason alone
+  does not mark the turn as standard. Reason: a limit status can describe
+  account capacity without reporting a standard-speed request.
+- The Worker checks the stored messages of the named turn for fast mode
+  when its runner gives no speed. It does not use the current session
+  choice. Reason: a model change or a later turn can change that choice
+  before a late end arrives.
+
+My calls, on 2026-11-12, as the ui implementor of Milestones 5 and 8:
+
+- The Fast row is a button with the `menuitemcheckbox` role, as the other
+  rows are buttons. A click, Enter, or Space changes it, and the menu stays
+  open. Reason: the protocol keeps the menu open for a click and Space, and
+  Enter on the same button would otherwise act differently from a click.
+- The row names the key of Fast mode in `aria-keyshortcuts`, and hides its
+  key chips from a screen reader, as a row of the palette does. Reason:
+  the row keeps the name "Fast", and a screen reader hears the key once.
+- The picker shows fast mode as off for a model that the model list does
+  not mark, also when the stored choice holds fast. A later model change
+  starts from that shown state. Reason: the protocol says that the picker
+  shows fast mode as off for such a model, so a hidden fast mode must not
+  come back on a change of the model.
+- The model picker of the session composer offers the key of Fast mode,
+  only for a model that the model list marks. The key does not open the
+  menu. An open menu closes first, as for every key. Reason: the composer
+  already owns Model picker and Next effort level, and it shows only while
+  a session tab shows.
+- Fast mode has the scope `workspace` in `src/app/shortcuts/commands.ts`,
+  as Copy concise transcript has. Reason: the code has no scope for a
+  session tab, and the offer of the composer limits where the key runs.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -592,18 +636,20 @@ Depends on: 3
 
 The runner asks each agent for its fast mode.
 
-- [ ] Start Claude with the flag setting `fastMode` from the choice. Change
+- [x] Start Claude with the flag setting `fastMode` from the choice. Change
       it with `applyFlagSettings` in the model change of
       `runner/src/providers/claude.ts`.
-- [ ] Send `serviceTierForTurn` on each `turn/start` in
+- [x] Send `serviceTierForTurn` on each `turn/start` in
       `runner/src/providers/codex.ts`: `"priority"` with fast on, and
       `"default"` with fast off. A change of fast during a running Codex
       turn applies at the next turn, as for a change of the model.
-- [ ] Add the rule to `runner/README.md`: after an update of an agent
+- [x] Add the rule to `runner/README.md`: after an update of an agent
       SDK, check which models send the fast fields, and check that Claude
       still turns fast mode on without its account check.
-- [ ] Test the start options and the change requests with the fake query and
+- [x] Test the start options and the change requests with the fake query and
       the fake process. See each new test fail first.
+
+Evidence: `.context/fast-mode/non-ui/` holds the failure proofs and checks.
 
 ## Milestone 5: The Fast switch
 
@@ -613,21 +659,24 @@ Depends on: 1, 3
 
 The model menus show the switch, and the triggers show Fast.
 
-- [ ] Add a switch row to `src/chat/ui/Menu.tsx` and to
+- [x] Add a switch row to `src/chat/ui/Menu.tsx` and to
       `src/shell/ui/MenuList.tsx`, as the mockup shows. Draw its switch with
       `SwitchPicture` from `docs/mockups/src/components/common/`. Add
       `menuitemcheckbox` to the keyboard selector of `src/chat/ui/Menu.tsx`.
-- [ ] Add the Fast row to `src/chat/components/model-menu.ts`
+- [x] Add the Fast row to `src/chat/components/model-menu.ts`
       and to `src/shell/ui/ModelPicker.tsx`. Add `fastFor` beside
       `effortFor` in `src/chat/state/format.ts`.
-- [ ] In `src/chat/components/ModelPicker.tsx`, keep the menu open for a
+- [x] In `src/chat/components/ModelPicker.tsx`, keep the menu open for a
       change of the switch, and send a change that differs only in fast.
-- [ ] Show Fast in both triggers, also in their accessible names.
-- [ ] Carry fast in the choice of the session composer, New workspace,
-      Preferences, and the prompt box of a routine.
-- [ ] Test the row for a model with and without fast, a change of the
+- [x] Show Fast in both triggers, also in their accessible names.
+- [x] Carry fast in the choice of the session composer, New workspace,
+      Preferences, and the prompt box of a routine. The draft of a routine
+      in `src/app/routine-draft.ts` now compares fast, so a change of fast
+      alone turns Save on.
+- [x] Test the row for a model with and without fast, a change of the
       switch, a change to a model without fast, and the trigger text. See
-      each new test fail first.
+      each new test fail first. Screenshots of the browser check are in
+      `.context/fast-mode/m5/`.
 
 ## Milestone 6: Mockups of fast mode decisions 257 and 258
 
@@ -656,13 +705,13 @@ show the key. Screenshots of the smoke test are in `.context/fast-mode/m6/`.
 
 Depends on: 4, 5, and 6
 
-- [ ] The Claude provider of the runner reads the fast state of each
+- [x] The Claude provider of the runner reads the fast state of each
       result, the system notice that a fast request ran at standard
       speed, and the rate-limit event with its reason. On a fast turn, it
       adds the speed and the cause to `turn.completed`.
-- [ ] The Codex provider reports a fast turn as fast. Reason: the Codex
+- [x] The Codex provider reports a fast turn as fast. Reason: the Codex
       app server does not pass on the tier of the answer.
-- [ ] The Worker stores and replays the new field of `turn.completed`, as
+- [x] The Worker stores and replays the new field of `turn.completed`, as
       it does `filesUnavailable`. A fast turn with no speed from its runner
       counts as standard, with the cause "older runner".
 - [ ] The end line of a slow fast turn shows "Standard speed" and the
@@ -670,18 +719,21 @@ Depends on: 4, 5, and 6
 - [ ] Test each cause in the runner, the event shape in the Worker, and the
       end line in the app. See each new test fail first.
 
+Runner and Worker evidence: `.context/fast-mode/non-ui/`. The app end line
+and its tests stay with the UI work.
+
 ## Milestone 8: The key of the Fast switch (fast mode decision 258)
 
 Depends on: 5 and 6
 
-- [ ] Add the command "Fast mode" to the Chat group of the keyboard
+- [x] Add the command "Fast mode" to the Chat group of the keyboard
       shortcuts, after Next effort level, in `src/shared/shortcut-commands.ts`,
       `src/app/shortcuts/commands.ts`, and `src/app/shortcuts/defaults.ts`:
       ⇧⌘E on a Mac, Ctrl+Shift+E on Windows and Linux. It runs where a
       session tab is shown, and turns fast on or off for the shown
       composer, for a model with fast.
-- [ ] Show the key of the person at the end of the Fast row.
-- [ ] Test the default keys, the run of the command, and a model without
+- [x] Show the key of the person at the end of the Fast row.
+- [x] Test the default keys, the run of the command, and a model without
       fast. See each new test fail first.
 
 ## Milestone 9: Verification, commit, review, and pull request

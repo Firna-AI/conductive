@@ -27,6 +27,7 @@ export interface ClaudeQuery extends AsyncIterable<unknown> {
   setMaxThinkingTokens(tokens: number | null): Promise<void>
   applyFlagSettings(settings: {
     effortLevel: 'low' | 'medium' | 'high' | 'xhigh' | 'max' | null
+    fastMode: boolean
   }): Promise<void>
   close(): void
 }
@@ -95,6 +96,7 @@ export function createClaudeFactory(
       },
       (uuid) => input.hasOutstanding(uuid),
       background,
+      options.choice.fast,
     )
     let closed = false
     let stream: ClaudeQuery
@@ -134,6 +136,7 @@ export function createClaudeFactory(
           },
           pathToClaudeCodeExecutable: binary(),
           model: options.choice.model,
+          settings: { fastMode: options.choice.fast },
           ...(options.choice.effort === 'none'
             ? { thinking: { type: 'disabled' } }
             : { effort: options.choice.effort }),
@@ -239,7 +242,9 @@ export function createClaudeFactory(
         await stream.setModel(choice.model)
         await stream.applyFlagSettings({
           effortLevel: choice.effort === 'none' ? null : choice.effort,
+          fastMode: choice.fast,
         })
+        mapper.speed.mode(choice.fast)
         await stream.setMaxThinkingTokens(choice.effort === 'none' ? 0 : null)
         return 'applied'
       },
