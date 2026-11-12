@@ -65,6 +65,23 @@ turns, or the ChatGPT sign-in flow on `auth.openai.com`.
   Dockerfile, and the version of `@cloudflare/containers` in the lock
   file. Reason: a deploy with no change would still start a new instance,
   and a CI image build can change its digest.
+- **My call, 12 November 2026, after review round 1:** the container
+  application uses the `durable_object` scheduling policy, in public beta.
+  Each Durable Object starts the image of its own Worker version, which
+  `pinned-image.ts` gives to the container helper. Reason: under the
+  `default` policy, a request in the window between the Worker upload and
+  the image rollout started the new instance on the old image. The
+  rollout then drained it while new requests still reached it. Cloudflare
+  also marks the `default` policy as deprecated, and an application cannot
+  change its policy later. `code_update_strategy` defers the code update
+  of an old object for up to 900 seconds.
+- **My call, 12 November 2026, after review round 1:** a GitHub deployment
+  of the environment `chatgpt-egress` records each complete egress deploy,
+  with the version ID and the input hash. The deploy step skips only when
+  that record names the live version and the current hash. Reason:
+  Wrangler makes a tagged version live before its last step, so a tag
+  alone let a failed deploy look current. The input hash also holds the
+  digest of the base image, so a new base image deploys.
 - **My call, 12 November 2026:** a failed deploy of the egress Worker
   gives a warning, and the run goes on to deploy the main Worker. Reason:
   the last egress version keeps serving, and the repository rules prefer a

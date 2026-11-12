@@ -16,6 +16,14 @@ states the rules.
   A new version takes new requests at once. The instance of an old version
   finishes its open answers, then sleeps after 15 minutes without a
   request.
+- The container application uses the `durable_object` scheduling policy,
+  which is in public beta. Each Durable Object starts the image of its
+  own Worker version, so a deploy replaces no running container. The
+  container helper passes no image, so
+  [pinned-image.ts](pinned-image.ts) gives it one.
+- `code_update_strategy` lets the Durable Object of an old version keep
+  its code for up to 15 minutes after a deploy, so that its open answers
+  can finish.
 - The Durable Object in front of the container relays each chunk of an
   answer in its own code. In live tests, an answer that it passed on
   unchanged stopped after 1 to 12 minutes.
@@ -23,17 +31,18 @@ states the rules.
   with `CHATGPT_EGRESS_PRIVATE_NETWORK=1`, because only its Durable Object
   can reach its port. The proxy calls only an `https` origin on
   `chatgpt.com` or a subdomain, and it drops the Cloudflare headers.
-- When Cloudflare replaces the container, it sends `SIGTERM` and waits up
-  to 15 minutes. The proxy then takes no new connection and lets each open
+- When Cloudflare stops the container, it sends `SIGTERM` and waits up to
+  15 minutes. The proxy then takes no new connection and lets each open
   answer finish.
 - The proxy logs the method, the path, the status, and the duration of
   each request. It logs no body and no header value.
 
 ## Deploy
 
-Each push to `main` deploys this Worker before the main Worker, when the
-hash of its inputs changed, as
-[Automatic deploys](../../docs/automatic-deploys.md#steps-of-a-run) says.
+Each push to `main` deploys this Worker before the main Worker, unless the
+last complete egress deploy had the same inputs and its version is still
+live, as [Automatic deploys](../../docs/automatic-deploys.md#steps-of-a-run)
+says.
 The deploy builds the image with Docker, so the deploy token needs the
 Containers Edit permission.
 
@@ -45,6 +54,10 @@ npx wrangler deploy --config worker/chatgpt-egress/wrangler.jsonc
 
 The service binding of the main Worker needs this Worker to exist before
 the first deploy of the main Worker.
+
+The scheduling policy of a container application cannot change. To change
+it, delete the application with `npx wrangler containers delete <id>`
+before the deploy. That stops its running containers.
 
 ## Development
 
@@ -58,6 +71,7 @@ the first deploy of the main Worker.
 
 - [index.ts](index.ts): the Worker and the `ChatGptEgress` container class.
 - [relay.ts](relay.ts): the relay of each answer chunk.
+- [pinned-image.ts](pinned-image.ts): the image of each container start.
 - [wrangler.jsonc](wrangler.jsonc): the container, its image, and the
   version binding.
 - [egress-server.ts](../../tools/chatgpt-egress/egress-server.ts): the

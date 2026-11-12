@@ -314,11 +314,12 @@ record of one decision of the change that adds the egress container.
 - When the agent program closes its connection, the gateway cancels the
   request to the upstream.
 - A new version of the egress container takes each new ChatGPT request at
-  once. The container of the old version takes no new request. It stops
-  when its open answers end, or after 15 minutes (egress decision 3).
+  once. The container of the old version takes no new request. It keeps
+  its open answers for up to 15 minutes after the deploy (egress decision
+  3).
 - Reason: a deploy must not end the answers that stream through the
-  container. Cloudflare stops a replaced container 15 minutes after it
-  asks the container to stop.
+  container. A deploy replaces no running container, and the egress
+  Worker lets the code of an old version run for 15 minutes.
 - The gateway can replay a body-less ChatGPT metadata request once after
   renewal. It never copies or replays a model upload. Codex decides its resend.
 - The gateway adds no model filter, no rate limit, and no time or byte

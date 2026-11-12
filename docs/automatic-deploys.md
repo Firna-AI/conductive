@@ -45,6 +45,9 @@ its own secrets and variables.
 | `CLOUDFLARE_API_TOKEN` | Secret of the environment | The Cloudflare API token, as [The deploy token](#the-deploy-token) says. |
 | `CLOUDFLARE_ACCOUNT_ID` | Variable of the environment | The ID of the Cloudflare account of the Worker. It is not a secret. |
 
+- The deploy job has the GitHub token permission `deployments: write`,
+  so that it can record each complete egress deploy in the environment
+  `chatgpt-egress`. That environment holds no secret.
 - The deployment branch rule of `production` allows only `main`. So a
   workflow run on another branch cannot use the token.
 - Create the environment with that rule before the first run. GitHub
@@ -110,13 +113,18 @@ Each run takes these steps, in this order:
 5. It applies the D1 migrations with
    `npx wrangler d1 migrations apply DB --remote --config wrangler.jsonc`.
 6. It deploys the [ChatGPT egress Worker](../worker/chatgpt-egress/README.md)
-   with Docker, when its inputs changed. The inputs are the files of
-   `worker/chatgpt-egress` and `tools/chatgpt-egress` without the tests
-   and the README, and the version of `@cloudflare/containers`. The step
-   compares a hash of the inputs with the tag of the deployed version, and
-   tags the new version with that hash. A failure of this deploy gives a
-   warning and does not stop the run. The last egress version then keeps
-   serving.
+   with Docker, unless the last complete egress deploy had the same inputs
+   and its version is still live.
+   - The inputs are the files of `worker/chatgpt-egress` and
+     `tools/chatgpt-egress` without the tests and the README, the version
+     of `@cloudflare/containers`, and the current digest of the base image
+     of the Dockerfile. A new base image therefore deploys at the next run.
+   - The step tags the new version with a hash of the inputs.
+   - After a complete deploy, the step writes a GitHub deployment of the
+     environment `chatgpt-egress`. It holds the version ID and the tag. The
+     next run compares that record with the live version.
+   - A failure of this deploy gives a warning and does not stop the run.
+     The next run deploys the egress Worker again.
 7. It makes a new random deploy token, and deploys the Worker with
    `npx wrangler deploy`. Two `--var` options set the runner variables to
    the archive. A third sets the SHA-256 digest of the token. The deploy
@@ -157,9 +165,11 @@ An app build error stops the run before it changes anything live.
 A failed run does not roll back.
 
 - A failed deploy of the egress Worker warns, and the run goes on. The
-  last egress version keeps serving the ChatGPT requests. The next run
-  with a change to its inputs tries again. A missing Containers Edit
-  permission is the usual cause.
+  next run deploys it again, because no record of a complete deploy names
+  the live version. A failure before the upload leaves the last egress
+  version live. A failure after the upload leaves the new version live,
+  with the image of its own version. A missing Containers Edit permission
+  is the usual cause.
 
 - A run can fail after the new Worker is live, when its software image is
   not ready at the end of the wait. The Worker stays live. Builds of an

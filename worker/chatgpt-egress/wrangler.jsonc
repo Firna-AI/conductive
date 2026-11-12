@@ -15,14 +15,19 @@
   "containers": [
     {
       "class_name": "ChatGptEgress",
-      "image": "../../tools/chatgpt-egress/Dockerfile",
-      "instance_type": "lite",
-      // A new version starts its own instance while an old one drains.
-      "max_instances": 5,
+      // Each Durable Object starts the image of its own Worker version, with
+      // the lite size. A deploy then replaces no running container.
+      "scheduling_policy": "durable_object",
+      "images": {
+        "proxy": { "dockerfile": "../../tools/chatgpt-egress/Dockerfile" },
+      },
     },
   ],
   "durable_objects": {
     "bindings": [{ "name": "EGRESS", "class_name": "ChatGptEgress" }],
+    // The object of an old version keeps its code for up to 15 minutes, so
+    // that its open answers can finish.
+    "code_update_strategy": { "mode": "deferred", "max_delay": 900 },
   },
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["ChatGptEgress"] }],
 }
