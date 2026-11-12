@@ -147,6 +147,8 @@ Every org image holds the app's own sandbox software:
   commands
 - a git credential helper that gets a fresh GitHub token for each git
   operation
+- a udev rule that stops disk flushes at each boot, as
+  [Disk flushes](../protocol/workspaces-and-sandboxes.md#disk-flushes) says
 
 The Worker builds one software image for each version of this software,
 when the deploy run asks. The software image holds the base image and this
