@@ -206,9 +206,9 @@ mockup milestone.
 - [x] Update `docs/protocol/port-previews.md`: remove the rule that only a build installs the software of a sandbox. Record that decision 1 of this plan reverses it.
 - [x] Update `docs/protocol/workspaces-and-sandboxes.md` and `docs/architecture/components.md#sandbox-software`: one Rust program, the Node SDK helper, the release files in R2, and the check, download, and restart rules of decision 5.
 - [x] Update `docs/architecture.md` where it restates the software install rule.
-- [ ] Read the Terms page in `src/marketing/terms.ts` and the Privacy page in `src/marketing/privacy.ts` in full. Update each sentence that restates the install rule, such as the image build sentences near `terms.ts:79-97`. The removal of protocol version 1 changes the sentences about the version 1 login risk, not this change.
-- [ ] Read each public guide in `src/marketing/docs/` in full. Update each sentence that restates the install rule, for example `cloud-computer.md:138-148` and `agent-logins.md:238-245`. Follow `docs/protocol/website-docs.md`, and do not name Boat.
-- [ ] Check the Conductor comparison rows in `src/marketing/from-conductor/`. Change a row only when this change ships, starts, or drops its feature.
+- [x] Read the Terms page in `src/marketing/terms.ts` and the Privacy page in `src/marketing/privacy.ts` in full. Update each sentence that restates the install rule, such as the image build sentences near `terms.ts:79-97`. The removal of protocol version 1 changes the sentences about the version 1 login risk, not this change.
+- [x] Read each public guide in `src/marketing/docs/` in full. Update each sentence that restates the install rule, for example `cloud-computer.md:138-148` and `agent-logins.md:238-245`. Follow `docs/protocol/website-docs.md`, and do not name Boat.
+- [x] Check the Conductor comparison rows in `src/marketing/from-conductor/`. Change a row only when this change ships, starts, or drops its feature.
 - [x] Add the Rust commands and the Rust CI job to `AGENTS.md`, `CLAUDE.md`, and `README.md`.
 
 ## Milestone 2: Rust workspace, program skeleton, and CI job
