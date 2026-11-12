@@ -82,6 +82,21 @@ turns, or the ChatGPT sign-in flow on `auth.openai.com`.
   Wrangler makes a tagged version live before its last step, so a tag
   alone let a failed deploy look current. The input hash also holds the
   digest of the base image, so a new base image deploys.
+- **My call, 12 November 2026, after review round 2:** the egress Worker
+  uses the Durable Object Container API directly, with no
+  `@cloudflare/containers` helper. This replaces the image pin of the
+  round 1 call above. Reason: Cloudflare deprecated the helper and states
+  that it does not support the `durable_object` policy, and the pin
+  depended on a private field of the helper. Each start reaches the
+  Internet, sets an inactivity timeout of 15 minutes, and waits for the
+  port of the proxy.
+- **My call, 12 November 2026, after review round 2:** the proxy ends the
+  caller's connection when OpenAI ends an answer early, through
+  `stream.pipeline` on the answer path. The upload path keeps `pipe`,
+  because `pipeline` would destroy the incoming request and lose the 502
+  reply on a failed call. The close handler already cancels the call when
+  the caller leaves. The relay catches the rejected cancel of a failed
+  answer.
 - **My call, 12 November 2026:** a failed deploy of the egress Worker
   gives a warning, and the run goes on to deploy the main Worker. Reason:
   the last egress version keeps serving, and the repository rules prefer a

@@ -116,9 +116,10 @@ Each run takes these steps, in this order:
    with Docker, unless the last complete egress deploy had the same inputs
    and its version is still live.
    - The inputs are the files of `worker/chatgpt-egress` and
-     `tools/chatgpt-egress` without the tests and the README, the version
-     of `@cloudflare/containers`, and the current digest of the base image
-     of the Dockerfile. A new base image therefore deploys at the next run.
+     `tools/chatgpt-egress` without the tests and the README, and the
+     current digest of the base image of the Dockerfile. A new base image
+     therefore deploys at the next run. A failed read of an input stops
+     the step, except the digest, which then counts as changed.
    - The step tags the new version with a hash of the inputs.
    - After a complete deploy, the step writes a GitHub deployment of the
      environment `chatgpt-egress`. It holds the version ID and the tag. The

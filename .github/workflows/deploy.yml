@@ -234,14 +234,15 @@ jobs:
             npx wrangler deployments status --config "$EGRESS_CONFIG" --json |
               node -e 'let s="";process.stdin.on("data",(d)=>(s+=d)).on("end",()=>console.log(JSON.parse(s).versions[0].version_id))'
           }
+          # Each input is a plain assignment, so that set -e stops the step
+          # when one of them fails. Only the digest of the base image may be
+          # unknown, which then deploys again.
           base=$(awk '/^FROM /{print $2; exit}' tools/chatgpt-egress/Dockerfile)
+          [[ -n "$base" ]]
           base_digest=$(docker buildx imagetools inspect "$base" --format '{{json .Manifest.Digest}}' 2>/dev/null) || base_digest='unknown'
-          inputs=$({
-            git ls-files -s -- worker/chatgpt-egress tools/chatgpt-egress |
-              grep -vE '(\.test\.ts|README\.md)$'
-            node -p "require('./package-lock.json').packages['node_modules/@cloudflare/containers'].version"
-            printf '%s %s\n' "$base" "$base_digest"
-          } | sha256sum)
+          files=$(git ls-files -s -- worker/chatgpt-egress tools/chatgpt-egress)
+          files=$(grep -vE '(\.test\.ts|README\.md)$' <<< "$files")
+          inputs=$(printf '%s\n%s %s\n' "$files" "$base" "$base_digest" | sha256sum)
           tag="egress-${inputs:0:16}"
           live=$(live_version) || live=''
           recorded=$(gh api "$EGRESS_RECORDS?environment=chatgpt-egress&per_page=1" \

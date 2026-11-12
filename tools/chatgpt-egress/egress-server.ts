@@ -11,6 +11,7 @@ import {
   type ServerResponse,
 } from 'node:http'
 import { request as httpsRequest } from 'node:https'
+import { pipeline } from 'node:stream'
 
 export const SECRET_HEADER = 'x-conductive-egress-secret'
 export const ORIGIN_HEADER = 'x-conductive-egress-origin'
@@ -164,10 +165,13 @@ export function createEgressServer(options: EgressServerOptions): Server {
             headers[name] = value
         response.writeHead(reply.statusCode ?? 502, headers)
         response.flushHeaders()
-        reply.pipe(response)
-        reply.on('end', () => {
+        // An answer that OpenAI ends early also ends the caller's connection,
+        // so that the agent does not wait for a timeout.
+        pipeline(reply, response, (error) => {
           const seconds = ((Date.now() - started) / 1000).toFixed(1)
-          log(`${label} ${reply.statusCode} ${seconds}s`)
+          if (error)
+            log(`${label} ${reply.statusCode} ended early after ${seconds}s`)
+          else log(`${label} ${reply.statusCode} ${seconds}s`)
         })
       },
     )

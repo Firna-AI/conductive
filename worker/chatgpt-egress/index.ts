@@ -1,5 +1,5 @@
-import { Container, getContainer } from '@cloudflare/containers'
-import { pinProxyImage } from './pinned-image'
+import { DurableObject } from 'cloudflare:workers'
+import { PROXY_PORT, proxyStarter } from './container'
 import { relayAnswer } from './relay'
 
 interface EgressEnv {
@@ -8,33 +8,42 @@ interface EgressEnv {
 }
 
 /** Runs the egress proxy, which sends ChatGPT requests to OpenAI. */
-export class ChatGptEgress extends Container<EgressEnv> {
-  override defaultPort = 8080
-  override sleepAfter = '15m'
-  override enableInternet = true
+export class ChatGptEgress extends DurableObject<EgressEnv> {
+  private readonly port: Fetcher
+  private readonly ready: () => Promise<void>
 
-  constructor(...args: ConstructorParameters<typeof Container<EgressEnv>>) {
-    super(...args)
-    // Each object starts the image of its own Worker version, so a deploy
-    // replaces no running container.
-    pinProxyImage(this, args[0])
+  constructor(state: DurableObjectState, env: EgressEnv) {
+    super(state, env)
+    const container = state.container
+    if (!container)
+      throw new Error('The egress Durable Object has no container.')
+    this.port = container.getTcpPort(PROXY_PORT)
+    this.ready = proxyStarter(container)
   }
 
   override async fetch(request: Request): Promise<Response> {
-    const answer = await this.containerFetch(request, this.defaultPort)
-    return relayAnswer(
-      answer,
-      (work) => this.ctx.waitUntil(work),
-      () => this.renewActivityTimeout(),
+    try {
+      await this.ready()
+    } catch {
+      return new Response('The egress container did not start.', {
+        status: 503,
+      })
+    }
+    const url = new URL(request.url)
+    const answer = await this.port.fetch(
+      `http://proxy${url.pathname}${url.search}`,
+      request,
     )
+    return relayAnswer(answer, (work) => this.ctx.waitUntil(work))
   }
 }
 
 export default {
   fetch(request, env) {
-    // Each version has its own instance. A new version takes new requests at
-    // once, and the instance of the old version finishes its open answers.
+    // Each version has its own object and container. A new version takes new
+    // requests at once, and the object of the old version finishes its open
+    // answers.
     const name = `chatgpt-egress-${env.VERSION.id}`
-    return getContainer(env.EGRESS, name).fetch(request)
+    return env.EGRESS.getByName(name).fetch(request)
   },
 } satisfies ExportedHandler<EgressEnv>

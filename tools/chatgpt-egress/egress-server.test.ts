@@ -6,7 +6,7 @@ import {
   type Server,
   type ServerResponse,
 } from 'node:http'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   createEgressServer,
   drainEgressServer,
@@ -205,5 +205,33 @@ describe('the ChatGPT egress proxy', () => {
     }
     expect(rest).toBe('data: second\n\n')
     await drained
+  })
+
+  it('ends the caller connection when OpenAI ends an answer early', async () => {
+    const openAi = await fakeOpenAi((_, response) => {
+      response.writeHead(200, { 'content-type': 'text/event-stream' })
+      response.write('data: first\n\n')
+      // A clean close before the end of the chunked answer.
+      setImmediate(() => response.destroy())
+    })
+    const { url } = await startProxy(
+      { kind: 'private-network' },
+      openAi.upstream,
+    )
+    const answer = await fetch(`${url}/backend-api/codex/responses`, {
+      method: 'POST',
+      headers: chatgpt,
+      body: '{}',
+    })
+    if (!answer.body) throw new Error('The answer has no body.')
+    const reader = answer.body.getReader()
+    const first = await reader.read()
+    expect(new TextDecoder().decode(first.value)).toBe('data: first\n\n')
+    let outcome = 'pending'
+    reader.read().then(
+      () => (outcome = 'ended'),
+      () => (outcome = 'failed'),
+    )
+    await vi.waitFor(() => expect(outcome).toBe('failed'), { timeout: 10_000 })
   })
 })

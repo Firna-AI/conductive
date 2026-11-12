@@ -18,9 +18,13 @@ states the rules.
   request.
 - The container application uses the `durable_object` scheduling policy,
   which is in public beta. Each Durable Object starts the image of its
-  own Worker version, so a deploy replaces no running container. The
-  container helper passes no image, so
-  [pinned-image.ts](pinned-image.ts) gives it one.
+  own Worker version through the Durable Object Container API, so a
+  deploy replaces no running container. Cloudflare's deprecated
+  `@cloudflare/containers` helper does not support this policy, so the
+  Worker does not use it.
+- A start reaches the Internet and sets an inactivity timeout of 15
+  minutes, so the container keeps streaming while its object sleeps.
+  Requests that arrive during a start wait for the port of the proxy.
 - `code_update_strategy` lets the Durable Object of an old version keep
   its code for up to 15 minutes after a deploy, so that its open answers
   can finish.
@@ -62,7 +66,7 @@ before the deploy. That stops its running containers.
 ## Development
 
 - `npm run test -- worker/chatgpt-egress tools/chatgpt-egress` runs the
-  relay and proxy tests.
+  start, relay, and proxy tests.
 - `node tools/chatgpt-egress/proxy.ts` runs the proxy outside a container.
   It then needs `CHATGPT_EGRESS_SECRET` or `CHATGPT_EGRESS_SECRET_FILE`,
   with at least 32 characters.
@@ -71,7 +75,8 @@ before the deploy. That stops its running containers.
 
 - [index.ts](index.ts): the Worker and the `ChatGptEgress` container class.
 - [relay.ts](relay.ts): the relay of each answer chunk.
-- [pinned-image.ts](pinned-image.ts): the image of each container start.
+- [container.ts](container.ts): the start of the container and the wait
+  for its port.
 - [wrangler.jsonc](wrangler.jsonc): the container, its image, and the
   version binding.
 - [egress-server.ts](../../tools/chatgpt-egress/egress-server.ts): the

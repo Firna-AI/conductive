@@ -13,7 +13,6 @@ function answerOf(
 describe('relayAnswer', () => {
   it('relays each chunk in order with the status and the headers', async () => {
     const held: Promise<void>[] = []
-    let chunks = 0
     const answer = answerOf(
       {
         start(controller) {
@@ -24,16 +23,11 @@ describe('relayAnswer', () => {
       },
       { status: 201, headers: { 'content-type': 'text/event-stream' } },
     )
-    const relayed = relayAnswer(
-      answer,
-      (work) => held.push(work),
-      () => (chunks += 1),
-    )
+    const relayed = relayAnswer(answer, (work) => held.push(work))
     expect(await relayed.text()).toBe('data: a\n\ndata: b\n\ndata: c\n\n')
     await Promise.all(held)
     expect(relayed.status).toBe(201)
     expect(relayed.headers.get('content-type')).toBe('text/event-stream')
-    expect(chunks).toBe(3)
   })
 
   it('cancels the read from the container when the client stops reading', async () => {
@@ -46,11 +40,7 @@ describe('relayAnswer', () => {
         cancelled = reason
       },
     })
-    const relayed = relayAnswer(
-      answer,
-      () => undefined,
-      () => undefined,
-    )
+    const relayed = relayAnswer(answer, () => undefined)
     if (!relayed.body) throw new Error('The relayed answer has no body.')
     const reader = relayed.body.getReader()
     await reader.read()
@@ -59,5 +49,34 @@ describe('relayAnswer', () => {
     await vi.waitFor(() => expect(cancelled).toBe('client closed'), {
       timeout: 10_000,
     })
+  })
+
+  it('fails the client stream when the container answer fails, with no unhandled rejection', async () => {
+    const unhandled: unknown[] = []
+    const listener = (reason: unknown) => unhandled.push(reason)
+    process.on('unhandledRejection', listener)
+    try {
+      const held: Promise<void>[] = []
+      const answer = answerOf({
+        start(controller) {
+          controller.enqueue(encoder.encode('data: first\n\n'))
+        },
+        pull(controller) {
+          controller.error(new Error('upstream reset'))
+        },
+      })
+      const relayed = relayAnswer(answer, (work) => held.push(work))
+      if (!relayed.body) throw new Error('The relayed answer has no body.')
+      const reader = relayed.body.getReader()
+      const first = await reader.read()
+      expect(new TextDecoder().decode(first.value)).toBe('data: first\n\n')
+      await expect(reader.read()).rejects.toThrow('upstream reset')
+      await Promise.all(held)
+      // Node reports an unhandled rejection after the pending jobs run.
+      await new Promise((resolve) => setImmediate(resolve))
+      expect(unhandled).toEqual([])
+    } finally {
+      process.off('unhandledRejection', listener)
+    }
   })
 })
