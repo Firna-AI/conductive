@@ -1,9 +1,10 @@
 import { Miniflare } from 'miniflare'
-import { build } from 'vite'
 import { encrypt, hash, sign } from '../security/crypto'
 import { SESSION_COOKIE } from '../security/cookies'
 import { TEST_ORIGIN } from '../test-support/harness'
 import { applyMigrations } from '../test-support/migrations'
+import { migratedStorage, TEST_D1_ID } from '../test-support/migrated-storage'
+import { workerLibraryBundle } from '../test-support/test-bundles'
 import { seedAppAccess } from '../test-support/app-access'
 import {
   MACHINE_ORIGIN,
@@ -15,29 +16,15 @@ export async function createAdapterRuntime(
   entryPoint = 'worker/workspace.ts',
   workspaceId = WORKSPACE_ID,
 ) {
-  const bundle = await build({
-    configFile: false,
-    logLevel: 'silent',
-    build: {
-      write: false,
-      minify: false,
-      target: 'es2022',
-      lib: { entry: entryPoint, formats: ['es'] },
-      rolldownOptions: { external: ['cloudflare:workers'] },
-    },
-  })
-  const outputs = (Array.isArray(bundle) ? bundle : [bundle]).flatMap(
-    (result) => ('output' in result ? result.output : []),
-  )
-  const entry = outputs.find(
-    (output) => output.type === 'chunk' && output.isEntry,
-  )
-  const code = entry?.type === 'chunk' ? entry.code : undefined
-  if (!code) throw new Error('The adapter bundle is missing.')
+  const code = await workerLibraryBundle(entryPoint)
+  // The global teardown deletes this folder, because callers dispose only
+  // the runtime.
+  const storage = await migratedStorage()
   const runtime = new Miniflare({
     enableDevRegistry: false,
     telemetry: { enabled: false },
     cf: false,
+    ...(storage && { resourcePersistencePath: storage.path }),
     workers: [
       {
         config: {
@@ -46,7 +33,7 @@ export async function createAdapterRuntime(
           compatibilityFlags: ['global_fetch_strictly_public'],
           exports: { Workspace: { type: 'durable-object', storage: 'sqlite' } },
           env: {
-            DB: { type: 'd1', id: 'chat-db' },
+            DB: { type: 'd1', id: TEST_D1_ID },
             WORKSPACES: {
               type: 'durable-object',
               worker: 'chat-adapter-tests',
@@ -79,7 +66,7 @@ export async function createAdapterRuntime(
     ],
   })
   const db = await runtime.getD1Database('DB')
-  await applyMigrations(db)
+  if (!storage) await applyMigrations(db)
   await db.batch([
     db
       .prepare(

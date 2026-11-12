@@ -1,5 +1,4 @@
 import { Miniflare, type WebSocket } from 'miniflare'
-import { build } from 'vite'
 
 import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 import {
@@ -19,6 +18,8 @@ import {
 } from '../security/desktop-contract'
 import { encrypt, hash, sign } from '../security/crypto'
 import { applyMigrations } from '../test-support/migrations'
+import { migratedStorage, TEST_D1_ID } from '../test-support/migrated-storage'
+import { workerLibraryBundle } from '../test-support/test-bundles'
 import { seedAppAccess } from '../test-support/app-access'
 import { TOOL_TURN_HEADER } from '../../tools/context'
 
@@ -27,40 +28,13 @@ export const MACHINE = 'https://machine.conductive.test'
 export const WID = 'device-workspace'
 export const TOKEN = 'device-workspace-token'
 const KEY = btoa('s'.repeat(32))
-let bundle: string | undefined
-
-async function source() {
-  if (bundle) return bundle
-  const built = await build({
-    configFile: false,
-    logLevel: 'silent',
-    build: {
-      write: false,
-      minify: false,
-      target: 'es2022',
-      lib: {
-        entry: 'worker/devices/test-worker.test-support.ts',
-        formats: ['es'],
-      },
-      rolldownOptions: { external: ['cloudflare:workers'] },
-    },
-  })
-  const outputs = (Array.isArray(built) ? built : [built]).flatMap((value) =>
-    'output' in value ? value.output : [],
-  )
-  const entry = outputs.find(
-    (output) => output.type === 'chunk' && output.isEntry,
-  )
-  if (entry?.type !== 'chunk') throw new Error('Missing device test bundle.')
-  bundle = entry.code
-  return bundle
-}
-
-export async function deviceFixture() {
+export async function deviceFixture(options: { entry?: string } = {}) {
+  const storage = await migratedStorage()
   const runtime = new Miniflare({
     enableDevRegistry: false,
     telemetry: { enabled: false },
     cf: false,
+    ...(storage && { resourcePersistencePath: storage.path }),
     workers: [
       {
         config: {
@@ -68,7 +42,7 @@ export async function deviceFixture() {
           compatibilityDate: '2026-11-06',
           exports: { Workspace: { type: 'durable-object', storage: 'sqlite' } },
           env: {
-            DB: { type: 'd1', id: 'device-db' },
+            DB: { type: 'd1', id: TEST_D1_ID },
             WORKSPACES: {
               type: 'durable-object',
               worker: 'device-tests',
@@ -82,7 +56,12 @@ export async function deviceFixture() {
           manifest: {
             mainModule: 'index.js',
             modules: {
-              'index.js': { type: 'esm', contents: await source() },
+              'index.js': {
+                type: 'esm',
+                contents: await workerLibraryBundle(
+                  options.entry ?? 'worker/devices/test-worker.test-support.ts',
+                ),
+              },
             },
           },
         },
@@ -90,7 +69,7 @@ export async function deviceFixture() {
     ],
   })
   const db = await runtime.getD1Database('DB')
-  await applyMigrations(db)
+  if (!storage) await applyMigrations(db)
   await db.batch([
     db.prepare(
       "INSERT INTO users (id, github_id, github_login, created_at, updated_at) VALUES ('owner', 101, 'owner', 1, 1), ('sender', 102, 'sender', 1, 1), ('outsider', 103, 'outsider', 1, 1)",
@@ -275,6 +254,7 @@ export async function deviceFixture() {
         closeSockets(...sockets.filter((socket) => !closed.has(socket))),
         runtime.dispose(),
       ])
+      await storage?.remove()
     },
   }
 }

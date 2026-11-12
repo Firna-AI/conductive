@@ -1,9 +1,14 @@
 import { fileURLToPath } from 'node:url'
 
-import { build } from 'vite'
+import { cachedTestBundle } from '../../test-support/test-bundles'
 
 /** Build the real adapter with its imports, without root Vite config or disk output. */
-export async function storageWorkerBundle(): Promise<string> {
+export function storageWorkerBundle(): Promise<string> {
+  return cachedTestBundle('files-storage-worker', buildStorageWorkerBundle)
+}
+
+async function buildStorageWorkerBundle(): Promise<string> {
+  const { build } = await import('vite')
   const result = await build({
     configFile: false,
     envFile: false,

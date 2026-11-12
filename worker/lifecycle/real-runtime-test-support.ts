@@ -1,7 +1,6 @@
 import { mkdir, mkdtemp } from 'node:fs/promises'
 
 import { Miniflare, Response as RuntimeResponse, WebSocket } from 'miniflare'
-import { build } from 'vite'
 
 import { workspaceEventsPath } from '../../src/shared/events'
 import { closeSockets, SocketInbox } from '../chat/adapter-sockets.test-support'
@@ -13,11 +12,21 @@ import { seedAppAccess } from '../test-support/app-access'
 import { encrypt, sign } from '../security/crypto'
 import { agentLoginContext } from '../chat/queries'
 import { applyMigrations } from '../test-support/migrations'
+import {
+  copyMigratedStorage,
+  TEST_D1_ID,
+} from '../test-support/migrated-storage'
+import { cachedTestBundle } from '../test-support/test-bundles'
 import { seedPublishedImage } from './published-image-test-support'
 import { readWorkspaceToken } from './tokens'
 import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 
-export async function runtimeBundle(): Promise<string> {
+export function runtimeBundle(): Promise<string> {
+  return cachedTestBundle('lifecycle-runtime', buildRuntimeBundle)
+}
+
+async function buildRuntimeBundle(): Promise<string> {
+  const { build } = await import('vite')
   const output = await build({
     configFile: false,
     logLevel: 'silent',
@@ -46,6 +55,7 @@ export async function realRuntimeFixture(bundle: string) {
   const root = `${import.meta.dirname}/../../.context/boat-native-remote-workspaces/8i/completion/legacy-runtime`
   await mkdir(root, { recursive: true })
   const directory = await mkdtemp(`${root}/case-`)
+  const migrated = await copyMigratedStorage(directory)
   const boat = new LifecycleBoat()
   const sockets = new Set<WebSocket>()
   const requests: string[] = []
@@ -75,7 +85,7 @@ export async function realRuntimeFixture(bundle: string) {
                 worker: 'workspace-runtime-test',
                 exportName: 'WorkspaceRuntimeFixture',
               },
-              DB: { type: 'd1', id: 'workspace-runtime-db' },
+              DB: { type: 'd1', id: TEST_D1_ID },
               APP_ORIGIN: text('https://app.conductive.test'),
               MACHINE_ORIGIN: text('https://machine.conductive.test'),
               GITHUB_CLIENT_ID: text('runtime-client'),
@@ -124,7 +134,7 @@ export async function realRuntimeFixture(bundle: string) {
   let runtime = create()
   let bindings = await runtime.getBindings<RuntimeBindings>()
   const database = bindings.DB
-  await applyMigrations(database)
+  if (!migrated) await applyMigrations(database)
   const env: LifecycleEnvironment = {
     DB: database,
     WORKSPACES: bindings.WORKSPACES,

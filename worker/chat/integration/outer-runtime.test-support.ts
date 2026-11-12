@@ -3,13 +3,18 @@ import {
   Response as RuntimeResponse,
   type StructuredLogsHandler,
 } from 'miniflare'
-import { build } from 'vite'
 
 import type { AppEnv, HttpFetch } from '../../env'
 import { LifecycleBoat } from '../../lifecycle/lifecycle-boat-test-support'
 import { FakeGitHub } from '../../test-support/fake-github'
 import { TEST_ORIGIN } from '../../test-support/harness'
 import { applyMigrations } from '../../test-support/migrations'
+import {
+  copyMigratedStorage,
+  migratedStorage,
+  TEST_D1_ID,
+} from '../../test-support/migrated-storage'
+import { workerLibraryBundle } from '../../test-support/test-bundles'
 import { seedOuterRuntime } from './outer-seed.test-support'
 
 export const OUTER_MACHINE_ORIGIN = 'https://api.conductive.test'
@@ -27,29 +32,10 @@ type OuterConfiguration = Partial<
   >
 >
 
-export async function outerWorkerBundle(
+export function outerWorkerBundle(
   entryPath = 'worker/index.ts',
 ): Promise<string> {
-  const bundle = await build({
-    configFile: false,
-    logLevel: 'silent',
-    build: {
-      write: false,
-      minify: false,
-      target: 'es2022',
-      lib: { entry: entryPath, formats: ['es'] },
-      rolldownOptions: { external: ['cloudflare:workers'] },
-    },
-  })
-  const outputs = (Array.isArray(bundle) ? bundle : [bundle]).flatMap(
-    (result) => ('output' in result ? result.output : []),
-  )
-  const entry = outputs.find(
-    (output) => output.type === 'chunk' && output.isEntry,
-  )
-  if (entry?.type !== 'chunk')
-    throw new Error('The outer Worker bundle is missing.')
-  return entry.code
+  return workerLibraryBundle(entryPath)
 }
 
 export async function createOuterRuntime(
@@ -78,6 +64,13 @@ export async function createOuterRuntime(
   for (const [name, value] of Object.entries(options.configuration ?? {})) {
     if (typeof value === 'string') configuration[name] = text(value)
   }
+  // A caller's persistence folder starts empty, so it takes the template.
+  const storage = options.persistencePath ? null : await migratedStorage()
+  const persistencePath = options.persistencePath ?? storage?.path
+  const migrated =
+    storage !== null ||
+    (options.persistencePath !== undefined &&
+      (await copyMigratedStorage(options.persistencePath)))
   const createRuntime = () =>
     new Miniflare({
       host: '127.0.0.1',
@@ -87,7 +80,7 @@ export async function createOuterRuntime(
       telemetry: { enabled: false },
       cf: false,
       handleStructuredLogs: options.handleStructuredLogs,
-      resourcePersistencePath: options.persistencePath,
+      resourcePersistencePath: persistencePath,
       workers: [
         {
           config: {
@@ -98,7 +91,7 @@ export async function createOuterRuntime(
               Workspace: { type: 'durable-object', storage: 'sqlite' },
             },
             env: {
-              DB: { type: 'd1', id: 'outer-chat-db' },
+              DB: { type: 'd1', id: TEST_D1_ID },
               CHAT_ATTACHMENTS: { type: 'r2', name: 'outer-chat-attachments' },
               WORKSPACES: {
                 type: 'durable-object',
@@ -179,7 +172,7 @@ export async function createOuterRuntime(
   let runtime = createRuntime()
   try {
     const db = await runtime.getD1Database('DB')
-    await applyMigrations(db)
+    if (!migrated) await applyMigrations(db)
     const env: AppEnv = {
       DB: db,
       CHAT_ATTACHMENTS: (
@@ -235,10 +228,14 @@ export async function createOuterRuntime(
           await runtime.getBindings<{ CHAT_ATTACHMENTS: R2Bucket }>()
         ).CHAT_ATTACHMENTS
       },
-      dispose: () => runtime.dispose(),
+      dispose: async () => {
+        await runtime.dispose()
+        await storage?.remove()
+      },
     }
   } catch (error) {
     await runtime.dispose()
+    await storage?.remove()
     throw error
   }
 }

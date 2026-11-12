@@ -90,7 +90,21 @@ assertion.
 - **Fix the three 10-second waits** in `worker/devices/security.test.ts`.
   The close event of the test socket reaches the test 10 s after the server
   closes it. The fix waits on the event that the test means to check, and
-  keeps each assertion.
+  keeps each assertion. The cause: workerd ends the TCP connection of a
+  socket that the server closed only when it evicts the idle object. The
+  tests now evict the object after the alarm. An eviction keeps open sockets
+  open, so the test still fails when the server does not close the socket.
+- **One D1 id for every test runtime.** Miniflare names the database file
+  after the id, so one template fits every runtime only with one id. Each
+  runtime has its own storage folder, so the shared id shares no data.
+- **A run folder for test storage.** The adapter runtime gives its
+  Miniflare instance to tests that dispose it themselves. The global
+  teardown deletes one folder per run, so no storage copy is left behind.
+- **`deviceFixture` takes its entry file.** `device-cleanup.test.ts`
+  swapped the entry through a Vite mock, which a cached bundle would skip.
+  It now passes the entry, and each assertion stays.
+- **Every shard runs to the end** (`fail-fast: false`), so one run reports
+  every failed test.
 - **The last job fails unless every needed job succeeded.** GitHub counts
   a skipped required check as passed. So the "Complete gate" job runs with
   `if: always()` and fails on a failed, cancelled, or skipped result.
@@ -101,73 +115,76 @@ Depends on: none
 
 Update the docs that describe the gate, so that they state the new layout.
 
-- [ ] `AGENTS.md`: Commands names `check:static`, says that `npm run lint`
+- [x] `AGENTS.md`: Commands names `check:static`, says that `npm run lint`
       checks the 300-line limit, and says what `npm run check` runs. CI says
       that the workflow runs `check:static` and 4 Vitest shards as parallel
       jobs, and that the job "Complete gate" passes only when all of them
       pass.
-- [ ] `README.md`: the commands table and the CI paragraph say the same.
-- [ ] `runner/README.md` and `image/developer-scripts.md`: the sentences on
+- [x] `README.md`: the commands table and the CI paragraph say the same.
+- [x] `runner/README.md` and `image/developer-scripts.md`: the sentences on
       the complete gate and the file-length check stay true.
-- [ ] Check each relative link of each changed Markdown file.
+- [x] Check each relative link of each changed Markdown file.
 
 ## Milestone 2: Gate scripts
 
 Depends on: 1
 
-- [ ] Add `max-lines: [error, 300]` to `eslint.config.js` for every linted
+- [x] Add `max-lines: [error, 300]` to `eslint.config.js` for every linted
       file. Keep `file-length:check` as a command.
-- [ ] Add `build:bundle` (site build and Vite build, no typecheck). Keep
+- [x] Add `build:bundle` (site build and Vite build, no typecheck). Keep
       `npm run build` as typecheck, then `build:bundle`.
-- [ ] Add `check:static`: typecheck, desktop and runner typecheck, lint,
+- [x] Add `check:static`: typecheck, desktop and runner typecheck, lint,
       desktop lint, format, desktop format, exports check, runner tests,
       `build:bundle`, and the mockup check. Make `check` run
       `check:static`, then `npm run test`.
-- [ ] Run `npm run check:static`.
+- [x] Run `npm run check:static`.
 
 ## Milestone 3: Device socket waits
 
 Depends on: none
 
-- [ ] Find why the close event of the device socket arrives 10 s late in
+- [x] Find why the close event of the device socket arrives 10 s late in
       the three "fails work after the target desktop session becomes …"
       tests of `worker/devices/security.test.ts`.
-- [ ] Wait on the event that the test means to check. Keep each assertion
+- [x] Wait on the event that the test means to check. Keep each assertion
       and the 15 s hang guard.
-- [ ] Run the file 3 times. Each run passes, and each of the three tests
+- [x] Run the file 3 times. Each run passes, and each of the three tests
       takes under 2 s.
 
 ## Milestone 4: Cheap Worker test start
 
 Depends on: none
 
-- [ ] Build the SQL of the migrations once per run in the Vitest global
+- [x] Build the SQL of the migrations once per run in the Vitest global
       setup, and give it to the tests. Remove the `wrangler` import from
       test processes. Keep `before` and `from` for the migration tests.
-- [ ] Migrate one template database per run in the global setup. Each
+- [x] Migrate one template database per run in the global setup. Each
       harness that applies all migrations starts from a copy of it, and
       deletes its copy when it closes. A harness with `migrationsBefore`
       and the migration tests keep the real migration path.
-  - [ ] Measure first that a file-backed copy does not make the tests
+  - [x] Measure first that a file-backed copy does not make the tests
         slower than the in-memory database of today. If it does, apply the
         prepared SQL in one batch instead, and record the change here.
-- [ ] Build the shared Worker bundles once per run in the global setup, as
+        Miniflare already keeps D1 in files under its temp folder, so the
+        copy keeps the same kind of storage. 80 Worker files with one worker
+        took 203 s before and 118 s after. Evidence: `.context/m4/`.
+- [x] Build the shared Worker bundles once per run in the global setup, as
       the native bundle is built today.
-- [ ] Update `worker/test-support/README.md`.
-- [ ] Run the Worker tests and compare the time with
+- [x] Update `worker/test-support/README.md`.
+- [x] Run the Worker tests and compare the time with
       `.context/ci/local-w3.log`.
 
 ## Milestone 5: Parallel CI jobs
 
 Depends on: 2
 
-- [ ] In `.github/workflows/ci.yml`, add a job "Static checks" that runs
+- [x] In `.github/workflows/ci.yml`, add a job "Static checks" that runs
       `npm run check:static`, and a matrix job "Tests" that runs
       `npx vitest run --shard=<n>/4` for n from 1 to 4. Both keep the
       install steps of today and run on `blacksmith-2vcpu-ubuntu-2404`.
-- [ ] Add the job "Complete gate". It needs both jobs, runs with
+- [x] Add the job "Complete gate". It needs both jobs, runs with
       `if: always()`, and fails unless each needed job succeeded.
-- [ ] Keep the triggers, the permissions, and the concurrency group.
+- [x] Keep the triggers, the permissions, and the concurrency group.
 - [ ] Check on the pull request that the four shards ran every test file
       once, and that a failed shard fails "Complete gate".
 
