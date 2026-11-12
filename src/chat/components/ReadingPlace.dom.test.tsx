@@ -3,14 +3,26 @@ import { act } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createApiClient } from '../../app/api/client'
 import type { WorkspaceEvent } from '../../shared/events'
-import { byLabel, byText, queryByText } from '../../test-support/dom-queries'
+import {
+  byLabel,
+  byRole,
+  byText,
+  queryByRole,
+  queryByText,
+} from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
-import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
+import {
+  FAKE_IDS,
+  FAKE_TIME,
+  fakeUsers,
+} from '../../test-support/fixtures/core'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
+import { asMessageField, typeMessage } from '../../test-support/message-field'
 import {
   holdAnimationFrames,
   mount,
   MOUNTED_TEST_TIMEOUT,
+  press,
   waitFor,
 } from '../../test-support/mount'
 import type { SubscribeToWorkspace } from '../stream/workspace-stream'
@@ -219,5 +231,38 @@ describe('the place of the reader in the chat', () => {
     chat.layoutAgain()
     await resize()
     expect(chat.topOf(chat.rowOf(fold))).toBe(100)
+  })
+
+  it('shows the bottom when the user sends a message while reading higher up, and keeps the read row for a message of another member', async () => {
+    const { scroller, transcript, emit, resize } = await mountLongTurn()
+    const chat = layOut(scroller, transcript)
+    await resize()
+    chat.read(chat.rowOf(older), 100)
+
+    const teammate = {
+      ...message,
+      id: 'ask-4',
+      text: 'The teammate asks too.',
+      sender: fakeUsers[1],
+    }
+    await act(async () => emit({ type: 'message.accepted', message: teammate }))
+    await waitFor(() => queryByText(teammate.text), 'the teammate message')
+    chat.layoutAgain()
+    await resize()
+    expect(chat.topOf(chat.rowOf(older))).toBe(100)
+    expect(scroller.scrollTop).toBeLessThan(0)
+
+    const box = await waitFor(
+      () => queryByRole('textbox', 'Message'),
+      'the message box',
+    )
+    typeMessage(asMessageField(box), 'Ship it.')
+    await press(byRole('button', 'Send'))
+    await waitFor(() => queryByText('Ship it.'), 'the sent message')
+    chat.layoutAgain()
+    await resize()
+    // The Working row of the running turn shows under the sent message.
+    expect(scroller.scrollTop).toBe(0)
+    expect(chat.topOf(chat.rowOf('Ship it.'))).toBe(140)
   })
 })

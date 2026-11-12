@@ -32,6 +32,10 @@ export function fakeGitHub(
     : data.banner
   routes.json('GET', githubPaths.banner(FAKE_IDS.org, workspaceId), bar)
   routes.json('GET', githubPaths.checks(FAKE_IDS.org, workspaceId), data.checks)
+  // No state is stored before the first read, so the views load first.
+  routes.json('GET', githubPaths.stored(FAKE_IDS.org, workspaceId), {
+    state: null,
+  })
   routes.json('GET', githubPaths.capabilities(FAKE_IDS.org, workspaceId), {
     canWrite: true,
     mergeMethod: 'squash',

@@ -15,8 +15,10 @@ export type ArchiveAction = 'archive' | 'restore'
  * section, stopped, and starts nothing. Each sends one request, and
  * `changed` takes its reply. One write of the workspace runs at a time,
  * over every model of the org: a press while one runs sends nothing and
- * gives null. `WorkspaceActions.running` shows the write that runs. A
- * failed write throws to its caller, which names the failure.
+ * gives null. `WorkspaceActions.running` holds the write that runs, and
+ * the list and the open workspace show a running Archive as done. A
+ * failed write throws to its caller, which names the failure, and its end
+ * takes the shown Archive back.
  */
 export class ArchiveModel {
   private readonly org: OrgModel

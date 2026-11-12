@@ -187,7 +187,8 @@ is relative to `src/chat/`, the folder of this guide.
   `ChatPane` gives through `ChatKeeper`. While the reader is scrolled up, it
   keeps the top row in view in place for every change of size of the
   transcript. When that row folds away, the fold that took it keeps its
-  place.
+  place. A new message that the user sends from the chat, which shows as a
+  pending message of the session, takes the chat to its bottom.
 - `components/useFold.ts`: `useFold` opens and closes a fold on a click on
   its line, and gives the line to the keeper, also at the bottom of the
   chat, so the line keeps its place.

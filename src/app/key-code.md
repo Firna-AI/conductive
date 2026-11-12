@@ -172,7 +172,10 @@ Each path is relative to `src/app/`, the folder of this page.
   [Workspace menu](../../docs/protocol/workspace-menu.md) states the menu
   of a workspace row.
 - `../shell/ui/Menu.tsx`: `MenuButton`, the menu of the shell, a sheet on
-  a phone. `MenuList.tsx` draws the items, also a switch row, such as
+  a phone. On desktop it opens on `PopoverSurface.tsx`, in the top layer,
+  which places it beside its button with the dropdown placement of
+  `@firna/ui`, and flips it when it does not fit. The member menus use the
+  same surface. `MenuList.tsx` draws the items, also a switch row, such as
   Fast in the model menu, which keeps the menu open, and an item that shows
   choices. `PointMenu.tsx` draws a menu at a point above the page, with its
   choices beside it, and `menu-place.ts` keeps both inside the window.

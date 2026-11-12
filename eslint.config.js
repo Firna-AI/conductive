@@ -29,4 +29,11 @@ export default defineConfig([
     },
   },
   astro.configs.recommended,
+  {
+    // Keep each JavaScript, TypeScript, and Astro file short. Blank lines
+    // and comments count.
+    rules: {
+      'max-lines': ['error', 300],
+    },
+  },
 ])

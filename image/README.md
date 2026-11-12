@@ -20,6 +20,8 @@ archive packager and the live check.
 - Install the runner archive after a check of its SHA-256 digest.
 - Install and enable the systemd services of the agent runner and preview relay.
 - Install and enable the preview relay's socket unit.
+- Install the udev rule that stops disk flushes at each boot, as
+  [Disk flushes](install.md#disk-flushes) says.
 - Make the git credential helper the system credential helper of git.
 - Install the GitHub CLI and its wrapper, which gets a fresh token for each command.
 - Start no runner in a build sandbox. The service runs it only in a

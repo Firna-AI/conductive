@@ -72,10 +72,9 @@ Run each command from the repository root, with Node 24 from `.nvmrc`.
   Then `astro check` checks the `.astro` files of the marketing site, with
   `tsconfig.site.json`.
   Use `npm run mockups:typecheck` for the mockups.
-- Early check: `npm run format:check`, `npm run lint`, and
-  `npm run file-length:check`. The last command rejects JavaScript,
-  TypeScript, and Astro files over 300 lines, including comments and blank
-  lines.
+- Early check: `npm run format:check` and `npm run lint`. Lint also
+  rejects JavaScript, TypeScript, and Astro files over 300 lines, including
+  comments and blank lines.
 - Complete gate: `npm run check`. It checks types, lint, format, file
   length, tests, the app build, and the mockups. It also runs the typecheck
   and the tests of the [agent runner](runner/README.md). It stops at its
@@ -105,12 +104,12 @@ and restricts deletion of `main`.
 deployment at `conductive.build`. It does not wait for CI, as
 [Automatic deploys](docs/automatic-deploys.md) says.
 
-All the workflow jobs run on [Blacksmith](https://docs.blacksmith.sh/blacksmith-runners/overview)
-runners, not on GitHub's machines. The Linux jobs use
-`blacksmith-2vcpu-ubuntu-2404`. The only exception is the Intel Mac check,
-which uses the GitHub-hosted `macos-15-intel` runner, because Blacksmith
-has no Intel Macs. Keep the jobs on Blacksmith. Do not switch a failing
-job back to `ubuntu-latest` to make it pass.
+The Linux jobs run on the GitHub-hosted `ubuntu-24.04` runner. The Apple
+silicon Mac jobs, the Mac app checks and the signing job, run on the
+[Blacksmith](https://docs.blacksmith.sh/blacksmith-runners/overview) runner
+`blacksmith-6vcpu-macos-15`. The Intel Mac check uses the GitHub-hosted
+`macos-15-intel` runner, because Blacksmith has no Intel Macs. Keep the
+Apple silicon Mac jobs on Blacksmith.
 
 - Agent merges: off
 

@@ -181,4 +181,19 @@ describe('AppModel', () => {
     })
     expect(org.workspace('gift-cards')?.id).toBe('gift-cards')
   })
+
+  test('another person who signs in gets no GitHub access of the person before', async () => {
+    const server = new FakeApiServer()
+    const app = new AppModel(testServices(server))
+    await app.start()
+    const access = app.org(FAKE_IDS.org).githubAccessOf('storefront')
+    access.set({ canWrite: true, mergeMethod: 'squash' })
+    const kept = access.get()
+
+    server.signIn(fakeUsers[1])
+    await app.start()
+
+    expect(kept).toEqual({ canWrite: true, mergeMethod: 'squash' })
+    expect(access.get()).toBeUndefined()
+  })
 })

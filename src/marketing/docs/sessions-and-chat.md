@@ -38,6 +38,7 @@ On a computer, **Enter** sends the message.
 Use **Shift+Enter** to add a line.
 On a phone, **Enter** adds a line.
 Your message appears in the chat at once.
+The chat scrolls down to it, also when you read an earlier part of the chat.
 If it cannot send, it goes back to the message box, and the chat shows the cause.
 
 You can send a message while the workspace's computer starts.
