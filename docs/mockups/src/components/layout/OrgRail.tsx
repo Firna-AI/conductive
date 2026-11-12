@@ -1,14 +1,14 @@
-import type { ReactNode } from 'react'
+import { Fragment } from 'react'
 import { Gauge, Plus } from 'lucide-react'
 import type { Person } from '../../fixtures/members'
 import { account, orgList, type Org, type OrgKey } from '../../fixtures/orgs'
 import { paths } from '../../paths'
-import { ScreenLink } from '../common/ScreenLink'
-import a11y from '../common/a11y.module.css'
 import { classes } from '../common/classes'
 import { LogoTile } from '../brand/Logo'
-import { orgLinks } from '../orgs/orgLinks'
-import { OrgTile, PersonAvatar } from '../orgs/OrgTile'
+import { OrgDrop, placeAfterDrop, type OrgDrag } from '../orgs/OrgDrop'
+import { tileMenuOf } from '../orgs/orgTileMenu'
+import { PersonAvatar } from '../orgs/OrgTile'
+import { OrgItem, RailLink, RailTile, type OrgState } from './RailItems'
 import styles from './OrgRail.module.css'
 
 export type RailState = {
@@ -36,89 +36,27 @@ export type RailState = {
    * mockups.
    */
   person?: Person
+  /**
+   * An org that the person drags to another place, from decision 515 C.
+   * Its tile stays as a faint copy, a line marks where it lands, and a
+   * raised copy follows the pointer. The rail names no org during a drag.
+   */
+  drag?: OrgDrag
+  /**
+   * The org whose tile menu a right click opened, from decision 515 C. The
+   * menu opens at the pointer, and the tile keeps the fill of a hover.
+   */
+  menu?: OrgKey
 }
 
 /** The rail of the canonical views: every org, with Acme open. */
 export const acmeRail: RailState = { orgs: orgList, current: 'acme' }
-
-function RailLink(props: {
-  label: string
-  to: string
-  current: boolean
-  children: ReactNode
-}) {
-  return (
-    <ScreenLink
-      aria-current={props.current ? 'page' : undefined}
-      aria-label={props.label}
-      className={classes(styles.link, props.current && styles.current)}
-      title={props.label}
-      to={props.to}
-    >
-      {props.children}
-    </ScreenLink>
-  )
-}
-
-/** An org of the rail that an admin deleted or the operator suspended. */
-type OrgState = 'deleted' | 'suspended'
 
 /** Whether an org of the rail is deleted or suspended. */
 function orgState(rail: RailState, key: OrgKey): OrgState | undefined {
   if (rail.deleted === key) return 'deleted'
   if (rail.suspended === key) return 'suspended'
   return undefined
-}
-
-/** The page that an org of the rail opens, and the name of its link. */
-function orgLink(
-  org: Org,
-  state: OrgState | undefined,
-): { to?: string; label: string } {
-  switch (state) {
-    case 'deleted':
-      return { to: paths.deletedOrg, label: `${org.name}, deleted` }
-    case 'suspended':
-      return { to: paths.suspendedOrg, label: `${org.name}, suspended` }
-    case undefined:
-      return { to: orgLinks[org.key], label: org.name }
-  }
-}
-
-function OrgItem(props: {
-  org: Org
-  current: boolean
-  hint: boolean
-  state?: OrgState
-}) {
-  const { org } = props
-  const { to, label } = orgLink(org, props.state)
-  const avatar = <OrgTile current={props.current} org={org} size={26} />
-  const tile =
-    props.state === 'deleted' ? (
-      <span className={styles.deleted}>{avatar}</span>
-    ) : (
-      avatar
-    )
-  return (
-    <li className={styles.item}>
-      {to ? (
-        <RailLink current={props.current} label={label} to={to}>
-          {tile}
-        </RailLink>
-      ) : (
-        <span className={styles.link} title={org.name}>
-          {tile}
-          <span className={a11y.hidden}>{org.name}</span>
-        </span>
-      )}
-      {props.hint ? (
-        <span aria-hidden className={styles.hint}>
-          {org.name}
-        </span>
-      ) : null}
-    </li>
-  )
 }
 
 /** The link of an operator to the operator page, above the account. */
@@ -138,26 +76,54 @@ function OperatorItem(props: { current: boolean; hint: boolean }) {
 }
 
 /**
- * The narrow rail beside the sidebar: the logo, the orgs of the user, a
- * way to create another, and the account at the bottom. An operator also
- * gets Operator above the account.
+ * The narrow rail beside the sidebar: the logo, the orgs of the user in
+ * their own order, a way to create another, and the account at the bottom.
+ * An operator also gets Operator above the account. Each org tile moves by
+ * drag or by its menu. Create org, Operator, and the account stay.
  */
 export function OrgRail(props: RailState) {
+  const { orgs, drag } = props
+  const from = orgs.findIndex((org) => org.key === drag?.org)
+  const dragged = orgs[from]
+  const dropAt = (index: number) =>
+    dragged && drag?.index === index ? (
+      <OrgDrop
+        at="rail"
+        count={orgs.length}
+        name={dragged.name}
+        place={placeAfterDrop(from, index)}
+      >
+        <RailTile
+          current={props.current === dragged.key}
+          org={dragged}
+          state={orgState(props, dragged.key)}
+        />
+      </OrgDrop>
+    ) : null
   return (
     <nav aria-label="Orgs" className={styles.rail}>
       <span className={styles.mark}>
         <LogoTile size={24} />
       </span>
       <ul className={styles.orgs}>
-        {props.orgs.map((org) => (
-          <OrgItem
-            current={props.current === org.key}
-            hint={props.hint === org.key}
-            key={org.key}
-            org={org}
-            state={orgState(props, org.key)}
-          />
+        {orgs.map((org, index) => (
+          <Fragment key={org.key}>
+            {dropAt(index)}
+            <OrgItem
+              current={props.current === org.key}
+              hint={props.hint === org.key}
+              menu={
+                props.menu === org.key
+                  ? tileMenuOf(index, orgs.length)
+                  : undefined
+              }
+              org={org}
+              placeholder={org === dragged}
+              state={orgState(props, org.key)}
+            />
+          </Fragment>
         ))}
+        {dropAt(orgs.length)}
         <li className={styles.item}>
           <RailLink
             current={props.current === 'create'}

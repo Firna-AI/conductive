@@ -55,6 +55,28 @@ a.current:hover {
   color: var(--ui-primary);
 }
 
+/*
+ * The tile whose menu is open keeps the fill of a hover. The current tile
+ * keeps its own fill.
+ */
+.menuOpen:not(.current) {
+  background: var(--ui-soft);
+  color: var(--ui-ink);
+}
+
+/*
+ * A view runs no script, so it draws the tile menu of a right click at a
+ * pointer near the right edge of the tile. The top left corner of the menu
+ * takes the point. The app draws the menu above the page, at the pointer.
+ */
+.pointer {
+  position: absolute;
+  z-index: 20;
+  top: calc(50% + 6px);
+  left: calc(100% - 8px);
+  width: max-content;
+}
+
 .create {
   display: flex;
   align-items: center;

@@ -60,13 +60,15 @@ Contract owners:
   with the look of the tab drag and the row drag: a faint copy stays in
   place, a line that takes no space marks the drop place, and a lifted
   copy follows the pointer. Escape cancels the drag. A drag does not open
-  the org. A click without a move still opens the org.
+  the org. A click without a move still opens the org. The rail shows no
+  name of an org during a drag.
 - Tile menu. A right click on a tile, or Shift and F10, or the Menu key on
-  a focused tile, opens a menu with Move up and Move down. On the first
-  tile, Move up is off. On the last tile, Move down is off. After a move
-  from the menu, a screen reader hears the org name and its new place, and
-  the focus goes back to the tile. Create org, Operator, and the account
-  get no menu and do not move.
+  a focused tile, opens a menu with Move up and Move down. A right click
+  opens it at the pointer. The keys open it beside the tile, at its right.
+  On the first tile, Move up is off. On the last tile, Move down is off.
+  After a move from the menu, a screen reader hears the org name and its
+  new place, and the focus goes back to the tile. Create org, Operator, and
+  the account get no menu and do not move.
 - Keys. Alt and Up or Down, with no other modifier, move a focused tile one
   place, as on a workspace row (decision 517 B). A screen reader hears the
   org name and its new place, and the focus stays on the tile.
@@ -105,6 +107,22 @@ Each call is the agent's call of 11 November 2026, under the decision test.
 - The "Organizations" row of the comparison page does not change. Reason:
   it lists no order feature, so this change ships, starts, and drops no
   listed feature.
+- The rail shows no name of an org during a drag. Reason: the name of a
+  tile shows on hover and on focus. During a drag, it would name the tile
+  under the pointer, or the pressed tile, and not the drop place. The tab
+  drag and the row drag show no names either. The mockups of Milestone 1
+  showed this problem.
+- Shift and F10, or the Menu key, open the tile menu beside the tile, at
+  its right, where the name of a focused tile shows. Reason: the rail is a
+  narrow column at the left edge of the window. A menu below the tile, as
+  on a workspace row and a tab, would cover the tiles that a move passes.
+  The mockups of Milestone 1 showed this problem.
+- A drag in the phone org sheet does not scroll the sheet near its top or
+  bottom edge. Reason: a drag of a workspace row on a phone does not scroll
+  its list either, and that list is longer than a list of orgs. The
+  follow-up item `plans/follow-ups/phone-drag-edge-scroll.md` asks if
+  every vertical list should scroll during a drag. The mockups of
+  Milestone 1 showed this problem.
 
 ## Decisions
 
@@ -269,21 +287,21 @@ Depends on: none
 
 Draw the reorder on the rail and in the phone org sheet.
 
-- [ ] Add a mockup page under `docs/mockups/src/entries/app/orgs/` for the
+- [x] Add a mockup page under `docs/mockups/src/entries/app/orgs/` for the
       reorder. Draw these states on desktop and on a phone:
-  - [ ] A drag of a tile on the rail: the lifted tile, the faint copy, and
+  - [x] A drag of a tile on the rail: the lifted tile, the faint copy, and
         the drop line.
-  - [ ] The rail after the move.
-  - [ ] The tile menu with Move up and Move down, with Move up off on the
+  - [x] The rail after the move.
+  - [x] The tile menu with Move up and Move down, with Move up off on the
         first tile.
-  - [ ] A long press that lifts an org in the phone org sheet.
-  - [ ] The tile menu of a suspended or deleted org, which moves like any
+  - [x] A long press that lifts an org in the phone org sheet.
+  - [x] The tile menu of a suspended or deleted org, which moves like any
         tile (decision 516 A).
-- [ ] Give each state a description and a rationale that cite decision 515
+- [x] Give each state a description and a rationale that cite decision 515
       C and the design calls of this plan.
-- [ ] Run `npm run mockups:check`. Smoke-test the new pages with
+- [x] Run `npm run mockups:check`. Smoke-test the new pages with
       `npm run mockups:serve`.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
 
 ## Milestone 2: Documentation and protocol
