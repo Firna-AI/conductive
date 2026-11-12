@@ -11,29 +11,37 @@ that doc says.
 ## Workspace tools
 
 - Every sandbox has two workspace tools: an MCP server and a CLI.
-- Both tools let an agent make six calls:
+- Both tools let an agent make ten calls:
   - create a workspace
   - list the workspaces of the org
   - list the repositories that a create call accepts
   - list the sections of the org
   - list the models of the app
+  - start a session in a workspace of the org
+  - list the sessions of a workspace of the org
+  - send a message to a session
+  - read the chat of a session
   - ask to run a command on a Mac, as [Mac commands](#mac-commands) says
+- [Session calls](session-calls.md) states the four calls of sessions.
 - Both tools call the Worker with the workspace token of their sandbox.
-- With the workspace token, the tools can make only these six calls.
+- With the workspace token, the tools can make only these ten calls.
   [The workspace token](tokens-and-secrets.md#the-workspace-token) states
   what the token allows.
-- A call that reads the chat of another workspace, or sends it a message,
-  was left out. Reason: such a call lets sandbox code reach more of the
-  org.
+- For each refusal of the Worker, both tools give the agent its error code
+  and its message. Reason: an agent can act on a refusal, such as a closed
+  session.
 - The tools call `api.conductive.build`, the hostname for machines. Its
   gate checks the workspace token in place of a sign-in.
-- Create calls and workspace list calls use `/v1/tools/workspaces`.
+- Create calls and workspace list calls use `/v1/tools/workspaces`. The
+  session calls use addresses under it, as
+  [The calls](session-calls.md#the-calls) says.
   [Repository, section, and model lists](#repository-section-and-model-lists)
   gives the routes of the other three lists. Mac command requests use
   `/v1/tools/mac-command` and the addresses under it.
 - The app sets no limit of its own on the workspaces that agents create
   (decision 8). The plan limits of the provider account of the org apply,
   as [The provider](workspaces-and-sandboxes.md#the-provider) says.
+  [No limit](session-calls.md#no-limit) states the same for sessions.
 - A workspace that an agent creates starts with no approval step in the
   app.
 
@@ -48,6 +56,11 @@ that doc says.
 - Without a choice in the call, the new workspace gets the default section
   and the default model of its workspace owner.
 - The agent of the new workspace starts on the first message at once.
+- The sender of the calling turn sends the first message. So the GitHub
+  token of the first turn belongs to that member.
+- The first message ends with a `Sent by:` line, as
+  [The `Sent by:` line](session-calls.md#the-sent-by-line) says
+  (decision 259).
 - A create call can also give the new workspace a name. The Worker cleans
   the name with this rule:
   1. It keeps only the first line that has text.
@@ -67,6 +80,22 @@ that doc says.
   every member. A short name on one line keeps each list readable.
 - A refusal of a blank or long name was rejected, because the agent then
   gets an error for a name that the rule can clean.
+- For the name, the CLI help and the description of `create_workspace`
+  say: "Use plain words separated by spaces. Avoid underscores unless the
+  user tells you to add them."
+- The rule keeps each underscore of the name (decision 256). Reason: only
+  the agent knows whether the member asked for underscores.
+- A rule step that changes each underscore to a space was rejected, because
+  the agent could then not keep underscores that a member asked for. A
+  field that marks a name from the member was rejected, because no agent
+  name showed the risk, and the agent must still set the field.
+- A step that keeps only the underscores of words from the member's
+  messages was rejected, because a request in other words, such as "use
+  snake case", then loses its underscores. A rule that an agent names a
+  workspace only when a member names it was rejected, because agents then
+  name fewer workspaces.
+- Risk: an agent that ignores the text still adds underscores. A cloud
+  computer gets the new text only from a full build of its org image.
 - The reply to a create call gives the new workspace with its number and
   its link, as
   [Workspace numbers and links](workspaces-and-sandboxes.md#workspace-numbers-and-links)
@@ -152,6 +181,12 @@ turn (decision 62). The Mac app on that Mac asks that person first, as
   request still goes to the Mac of the sender of the turn. A request to the
   Mac of the workspace owner was rejected, because one member could then ask
   for commands on the Mac of another member.
+- The first turn of a workspace that a create call made has the sender of
+  the calling turn. So does each new turn that a message of the
+  [session calls](session-calls.md#the-sender) starts. The requests of
+  such a turn go to the Mac of that member.
+- A message of the session calls that joins a running turn keeps the
+  stored sender of that turn.
 - A request names its turn. The Worker accepts it only while that turn
   runs in the calling workspace.
 - [The workspace token](tokens-and-secrets.md#the-workspace-token) states

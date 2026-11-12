@@ -54,10 +54,15 @@ export class DeliveryState {
     )
   }
 
-  sent(workspaceId: string, command: PendingCommand): Promise<void> {
+  sent(
+    workspaceId: string,
+    command: PendingCommand,
+    connectionId: string,
+  ): Promise<void> {
     return this.store.change(
       workspaceId,
       async (transaction) => {
+        await transaction.saveCommandDelivery(command.commandId, connectionId)
         if (command.type === 'turn' || command.type === 'message') {
           const turn = await transaction.turn(command.turnId)
           if (turn) await markSent(transaction, turn, command.messageId)

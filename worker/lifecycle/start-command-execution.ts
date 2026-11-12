@@ -10,6 +10,7 @@ import { lifecycleCommand } from './command-intents'
 import { workspacePhaseCommand } from './start-command'
 import { workspaceEnvironmentSettings } from './settings-data'
 import { environmentSecrets } from './org-environment'
+import { ownerCommitAuthor } from './sandbox-environment'
 import { readWorkspaceToken } from './tokens'
 import type {
   StartJobStorage,
@@ -22,6 +23,7 @@ import type { WorkspaceLifecycleEndpoint } from './workspace-runtime'
 import { WorkspaceStartError } from './workspace-start'
 import { JobTimeLimit } from './job-time-limit'
 import { startTimeLimitReached } from './start-provider-retry'
+import type { StartCall } from './start-guard'
 
 export async function advanceStartCommand(
   env: AppEnv,
@@ -31,8 +33,10 @@ export async function advanceStartCommand(
   row: WorkspaceRow,
   job: WorkspaceStartJob,
   label: string,
+  call: StartCall,
 ): Promise<boolean> {
-  if (!row.sandboxId) throw new WorkspaceStartError(null)
+  const sandboxId = row.sandboxId
+  if (!sandboxId) throw new WorkspaceStartError(null)
   if (
     job.phase !== 'fetch' &&
     job.phase !== 'branch' &&
@@ -40,41 +44,56 @@ export async function advanceStartCommand(
     job.phase !== 'terminal'
   )
     throw new WorkspaceStartError(null)
-  await provider.setAutoStop(row.sandboxId, 1_800)
+  const phase = job.phase
+  await call(() => provider.setAutoStop(sandboxId, 1_800))
   if (job.processId === null) {
-    const values = await workspaceEnvironmentSettings(
-      env,
-      job.orgId,
-      job.environmentCiphertext,
-    )
-    await storage.secrets([
-      await readWorkspaceToken(env, job.workspaceId),
-      ...environmentSecrets(values),
-    ])
+    const secrets = await call(async () => {
+      const values = await workspaceEnvironmentSettings(
+        env,
+        job.orgId,
+        job.environmentCiphertext,
+      )
+      return [
+        await readWorkspaceToken(env, job.workspaceId),
+        ...environmentSecrets(values),
+      ]
+    })
+    await storage.secrets(secrets)
     if (job.phase !== 'terminal')
       await endpoint.lifecycleStep(job.phase, label, 'running')
-    const started = await provider.startCommand(
-      row.sandboxId,
-      lifecycleCommand(
-        {
-          kind: 'workspace',
-          id: job.workspaceId,
-          attempt: job.commandAttempt ?? job.attempt,
-        },
-        job.phase,
-        job.phase === 'terminal'
-          ? terminalStartCommand()
-          : workspacePhaseCommand(row, job),
+    const started = await call(async () =>
+      provider.startCommand(
+        sandboxId,
+        lifecycleCommand(
+          {
+            kind: 'workspace',
+            id: job.workspaceId,
+            attempt: job.commandAttempt ?? job.attempt,
+          },
+          phase,
+          job.phase === 'terminal'
+            ? terminalStartCommand()
+            : workspacePhaseCommand(
+                row,
+                job,
+                job.phase === 'startup'
+                  ? await ownerCommitAuthor(env.DB, row.ownerUserId)
+                  : null,
+              ),
+        ),
       ),
     )
     await storage.update({ ...job, processId: started.processId })
     await storage.retry(job.attempt, 'progress')
     return false
   }
-  const status = await provider.getCommandStatus(row.sandboxId, job.processId, {
-    stdoutOffset: job.stdoutOffset,
-    stderrOffset: job.stderrOffset,
-  })
+  const processId = job.processId
+  const status = await call(() =>
+    provider.getCommandStatus(sandboxId, processId, {
+      stdoutOffset: job.stdoutOffset,
+      stderrOffset: job.stderrOffset,
+    }),
+  )
   await storage.capture(job, status)
   await storage.retry(job.attempt, 'progress')
   if (status.more || status.running) return false

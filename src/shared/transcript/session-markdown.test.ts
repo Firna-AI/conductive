@@ -71,6 +71,51 @@ it('copies the concise chat with default folds and the historical model choices'
   )
 })
 
+it('keeps the newest run of a running turn open in a concise copy, and folds it when its turn ends', () => {
+  const { builder, document } = markdownFixture()
+  const context = { sessionId: document.session.id, turnId: 'live' }
+  builder.merge([
+    {
+      eventNumber: 101,
+      occurredAt: 101_000,
+      event: {
+        ...context,
+        type: 'tool.updated',
+        tool: {
+          id: 'lint',
+          kind: 'run',
+          target: 'npm run lint',
+          detail: null,
+          omittedDetailBytes: 0,
+          state: 'done',
+        },
+      },
+    },
+  ])
+  expect(builder.render('concise')).toContain(
+    'Partway.\n\n- Ran `npm run lint`\n\n_The agent is still working._\n',
+  )
+
+  builder.merge([
+    {
+      eventNumber: 102,
+      occurredAt: 102_000,
+      event: {
+        ...context,
+        type: 'turn.completed',
+        state: 'finished',
+        durationMs: 2_000,
+        files: [],
+        omittedFileCount: 0,
+        userMessageIds: ['live'],
+      },
+    },
+  ])
+  expect(builder.render('concise')).toContain(
+    'Partway.\n\n_1 tool call_\n\n_Finished in 2s_\n',
+  )
+})
+
 it('copies full work with command output, safe fences, loss, and masked file labels', () => {
   const { builder } = markdownFixture()
   expect(builder.render('full')).toBe(
@@ -183,4 +228,57 @@ it('keeps tool details on one plain list line and escapes title and stop-member 
       '',
     ].join('\n'),
   )
+})
+
+it('copies attached-file names in place and lists only files without a mention', () => {
+  const { document } = markdownFixture()
+  const builder = new SessionMarkdown({ ...document, commands: [] })
+  const path = '.context/attachments/image/Login-screen.png'
+  const file = {
+    id: 'image',
+    name: 'Login [screen].png',
+    path,
+    kind: 'image' as const,
+    mediaType: 'image/png',
+    sizeBytes: 25,
+  }
+  builder.merge([
+    {
+      eventNumber: 1,
+      occurredAt: 1,
+      event: {
+        type: 'message.accepted',
+        message: {
+          id: 'files',
+          sessionId: document.session.id,
+          sender: {
+            id: 'cal',
+            githubLogin: 'cal',
+            displayName: 'Cal',
+            avatarUrl: null,
+          },
+          text: `Compare @${path} with @src/login.ts`,
+          attachments: [
+            file,
+            {
+              ...file,
+              id: 'trace',
+              path: null,
+              name: 'trace.txt',
+              kind: 'file',
+            },
+          ],
+          choice: document.session.choice,
+          createdAt: 0,
+          state: 'queued',
+        },
+      },
+    },
+  ])
+  const result = builder.render('full')
+  expect(result).toContain(
+    'Compare Login \\[screen\\].png with @src/login.ts\n\nAttachments: trace.txt',
+  )
+  expect(result).not.toContain(`@${path}`)
+  expect(result).not.toContain('Attachments: Login')
 })

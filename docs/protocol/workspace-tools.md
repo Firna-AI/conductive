@@ -20,6 +20,29 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the tools at
 - Reading a file has a size limit of 5 MiB, or 5,242,880 bytes.
   Reason: Boat's file read stops at 5 MiB, so a file read that falls back
   to it cannot read more.
+- A PNG, JPEG, GIF, or WebP file up to the read limit shows as a picture
+  (decision 265 B). This holds for each image of the workspace, also one
+  that All files or the chip of a sent message opens.
+- The tab knows such a file by the extension of its name. Reason: the file
+  reads do not give the correct media type for each of these images.
+- The picture keeps its proportions, in the middle of the tab. It shows at
+  its own size, or smaller, so that it fits the width and the height of the
+  tab.
+- When the browser cannot draw the bytes, the tab shows "Download this file
+  to open it", with Download, as for each other binary file.
+- An image over the read limit shows "Open this file in the terminal", as
+  each other file over the limit does.
+- The header keeps Copy and Download. Copy is off for a picture, as for
+  each other binary file.
+- An SVG file stays text with line numbers. Reason: its source is what a
+  member edits.
+- Reason: a press on a screenshot then shows its picture in the file tab,
+  for each image of the workspace, with no new route. A tab with only
+  Download was rejected, because a member then downloads each screenshot
+  to see it.
+- A read of a larger attached image from the storage of the app, and a
+  picture of each attached image in its message, were not chosen. Each
+  needs a new read route with its access checks, or many large reads.
 - The Markdown preview fills short table rows only up to 65,536 empty
   cells in one file. Then it shows the rest of the file as text
   (decision 88).
@@ -32,6 +55,18 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the tools at
   column, as [The tab row](agents-and-sessions.md#the-tab-row) says.
 - The agent runner watches the repository and reports both lists.
   Branch changes count uncommitted and untracked work too.
+- The report of the branch changes also gives the number of commits of
+  the current branch that no remote branch holds. The pull request bar
+  counts them as local work, as [Actions](github-banner.md#actions) says.
+- After a start from a saved snapshot, the runner watches the live
+  repository folder again when the app sees the end of the restore, and it
+  scans the repository once. It uses the same signal as the terminal below.
+- Reason: a watch made before the restore ends stays on the old view of the
+  disk, so the lists stop updating. A file that the provider writes inside
+  the sandbox at the end of its restore was rejected, because the provider
+  does not document it and can change it. A timer that compares the
+  identity of the folder was rejected, because the app already has a
+  documented signal for the end of the restore.
 - Runner file reports hold at most 256 KiB, or 262,144 bytes, of compact UTF-8 JSON per event.
   This includes the event type, metadata, escapes, and delimiters. It excludes the runner envelope.
 - The complete runner envelope also meets the

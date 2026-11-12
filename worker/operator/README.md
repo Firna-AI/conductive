@@ -6,9 +6,10 @@ It reads app-wide numbers.
 It can suspend a user or an org after an abuse report. A user
 suspension signs the user out, stops every cloud computer that the user
 owns, and blocks each new start.
-It also lists and approves people who wait, manages invite codes, and
-pauses sign-ups. [Waitlist routes](#waitlist-codes-and-sign-ups) describes
-these entry points.
+It also lists and approves people who wait, manages invite codes, pauses
+sign-ups, and turns the waitlist off and on.
+[Waitlist routes](#waitlist-codes-and-sign-ups) describes these entry
+points.
 
 ## Overview
 
@@ -16,90 +17,8 @@ The [overview guide](overview.md) gives the route, access check, counts, and res
 
 ## Orgs and users
 
-These four reads use the same app gate and operator check as the overview.
-Another signed-in user gets 403 `operator_required` on each route.
-The path helpers and reply types live in
-[`src/shared/operator.ts`](../../src/shared/operator.ts).
-
-| Route | Path helper | Reply |
-| --- | --- | --- |
-| `GET /api/operator/orgs` | `operatorOrgsPath` | `OperatorOrgsResponse` |
-| `GET /api/operator/users` | `operatorUsersPath` | `OperatorUsersResponse` |
-| `GET /api/operator/orgs/<orgId>` | `operatorOrgPath` | `OperatorOrgDetail` |
-| `GET /api/operator/users/<githubId>` | `operatorUserPath` | `OperatorUserDetail` |
-
-Each list accepts optional `q` and `cursor` query parameters.
-It returns at most 20 entries, newest first.
-An org creation tie uses the org ID in ascending order.
-A user join tie uses the numeric GitHub ID in ascending order.
-
-`total` counts all matches before the cursor.
-`nextCursor` is null when no further page exists.
-Use the same `q` with the returned cursor to read the next page.
-Without `q`, the list includes every record, also suspended users and deleted orgs.
-
-Org search matches part of a name without case sensitivity.
-It also matches an exact org ID or a stored computer ID.
-Computer IDs include workspaces, builds, cleanup records, preview listeners, and terminal credentials.
-The computer ledger supplies those IDs, including deleted computers.
-Computer search keeps working after the original resource records are removed.
-A preview search accepts a full URL or a bare hostname.
-The URL path does not affect the search.
-Open and closed previews both count while their records exist.
-
-User search matches part of a GitHub login or name without case sensitivity.
-It also matches an exact numeric GitHub ID.
-Both searches treat `%`, `_`, and backslash as literal name text.
-Each D1 query binds its input values.
-
-Org entries give `id`, `providerAccount`, `name`, `initials`, `createdAt`, `members`, `workspaces`, `running`, `status`, and `match`.
-The workspace count includes archived workspaces.
-Running counts only workspaces, not builds.
-Status is `deleted`, `suspended`, or `active`, in that priority.
-Match is `org-id`, `cloud-computer-id`, or `preview-address` for a resource match.
-Match is null for a name match or no search.
-
-User entries give `githubId`, `login`, `name`, `joinedAt`, `orgs`, `workspaces`, and `status`.
-User status is `active` or `suspended`.
-Both user entries and user pages also include `OperatorUserAccess` from
-[`operator-waitlist.ts`](../../src/shared/operator-waitlist.ts).
-`appAccess` is a waiting record with `waitingSince`, or a granted record
-with `grantedAt` and its source. The source identifies the approving
-operator, invite label, referral owner, or org and inviting admin.
-It also represents operator and existing-account grants.
-`githubCreatedAt` gives the GitHub account creation time, or null.
-`hasVerifiedEmail` is a boolean. It reveals no address.
-`approvalEmail` gives `state` and `updatedAt`. Its states are `none`,
-`pending`, `sent`, and `failed`. An absent email record has no time.
-`referralCode` is null without a code. Otherwise it gives the code,
-counts, disabled state and actor, and recipients with their GitHub IDs,
-logins, names, and use times. A recipient without a GitHub name has the
-name null. The code count retains uses by deleted accounts.
-The recipient list includes only accounts that still exist.
-
-The org page gives its identity, creation time, and selected repository count.
-It gives `workspaceStates`, `running`, and members with their identities, names, roles, and suspension flags.
-It also gives `suspension` and `deletion`, each null when absent.
-The deletion gives `deletedAt` and `purgeAt`.
-The purge time is null when no time is stored.
-
-The state buckets match the overview.
-Running separates workspaces from unfinished builds and refreshes.
-
-The user page gives their identity, name, join time, and owned workspace counts.
-Its `workspaces` gives `total` and `running`.
-Its `orgs` gives each org's identity, initials, and the user's role.
-It also gives the suspension, or null.
-
-Each suspension gives `suspendedAt` and its operator's `githubId` and `login`.
-The operator is null when its account record is absent.
-
-Names and custom initials are null when absent.
-All times use Unix milliseconds.
-
-An unknown org gets 404 `org_not_found`.
-An unknown or non-numeric GitHub ID gets 404 `user_not_found`.
-These reads return no chat, file, env value, agent login, or email address.
+The [directory guide](directory.md) gives the four org and user reads,
+their search, their pages, and the fields of each reply.
 
 ## Provider weights
 
@@ -108,7 +27,8 @@ configured accounts, org counts, and atomic change records.
 
 ## Waitlist, codes, and sign-ups
 
-The [waitlist guide](waitlist.md) gives the routes, approval rules, codes, and sign-up pause.
+The [waitlist guide](waitlist.md) gives the routes, approval rules, codes,
+sign-up pause, and waitlist switch.
 
 ### Approval email delivery
 
@@ -240,12 +160,13 @@ The [operator test guide](tests.md) gives the commands and native provider setup
 - [`access.ts`](access.ts): `isOperator`, the shared operator reader for routes and account replies.
 - [`overview.ts`](overview.ts): `readOperatorOverview`, the app-wide counts in one D1 batch.
 - [`directory-route.ts`](directory-route.ts): the org and user read dispatch.
-- [`waitlist-route.ts`](waitlist-route.ts): the waitlist, approval, code, and pause dispatch.
-- [`waitlist-directory.ts`](waitlist-directory.ts): waiting account search and cursor pages.
+- [`waitlist-route.ts`](waitlist-route.ts): the waitlist, approval, code, pause, and switch dispatch.
+- [`waitlist-directory.ts`](waitlist-directory.ts): waiting account search and cursor pages, and `waitingUserPredicate`, which the switch count shares.
 - [`approval-data.ts`](approval-data.ts): the atomic approval batch and email state queries.
 - [`approval-email.ts`](approval-email.ts): the approval message, immediate send, and scheduled retries.
 - [`code-data.ts`](code-data.ts): code search, creation, disable, and public mapping.
 - [`signup-pause.ts`](signup-pause.ts): the pause read and conditional changes.
+- [`waitlist-switch.ts`](waitlist-switch.ts): the switch read with its waiting count, and conditional changes.
 - [`user-access-data.ts`](user-access-data.ts): user grant sources, email state, and referral recipients.
 - [`org-directory.ts`](org-directory.ts) and [`user-directory.ts`](user-directory.ts): list queries and cursors.
 - [`org-detail.ts`](org-detail.ts) and [`user-detail.ts`](user-detail.ts): page queries and reply mapping.
@@ -282,11 +203,14 @@ The [operator test guide](tests.md) gives the commands and native provider setup
   the columns of the suspension and of the terms consent.
 - [`202611090030_suspension_events.sql`](../../migrations/202611090030_suspension_events.sql):
   the event table and the current suspension records.
+- [`202611092050_waitlist_switch.sql`](../../migrations/202611092050_waitlist_switch.sql):
+  the switch columns of `signup_settings` and the `open_signup` access source.
 
 ### Related Docs
 
 - [Operator section](../../docs/protocol/operator-section.md): access, overview numbers, and directory pages.
 - [Waitlist](../../docs/protocol/waitlist.md) and [codes](../../docs/protocol/waitlist-codes.md): app access and email rules.
+- [Sign-ups](../../docs/protocol/sign-ups.md): the pause of sign-ups and the waitlist switch.
 - [Operator actions](../../docs/protocol/operator-actions.md): the
   requirements of the operator, the suspension, and abuse reports.
 - [Access and security](../../docs/protocol/access-and-security.md#sign-in)

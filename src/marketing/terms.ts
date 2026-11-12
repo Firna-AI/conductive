@@ -30,7 +30,7 @@ export const termsDocument: LegalDocument = {
   at ${appDomain}, and in the Mac app. You accept their current version
   each time that you continue with GitHub to sign in. ${productName} keeps
   the latest version that you accepted, and the time when you first
-  accepted it. Effective date: 10 November 2026.`,
+  accepted it. Effective date: 11 November 2026.`,
   sections: [
     {
       title: `Who runs ${productName}`,
@@ -48,8 +48,9 @@ export const termsDocument: LegalDocument = {
       title: 'The service',
       blocks: [
         paragraph`${productName} is a coding tool in the browser and in the
-          Mac app. Each workspace is one task with its own branch and its
-          own cloud computer, where agents powered by Claude and Codex work.`,
+          Mac app. Each workspace has its own cloud computer, where agents
+          powered by Claude and Codex work. A workspace can hold one task
+          after another, with one branch at a time.`,
         paragraph`${productName} is free until billing starts. Nobody pays
           until they choose a plan.`,
       ],
@@ -60,7 +61,9 @@ export const termsDocument: LegalDocument = {
         list(
           text`You sign in with GitHub, through the GitHub App of
             ${productName}. The app can reach each repository where you
-            install its GitHub App and have access.`,
+            install its GitHub App and have access. It reads your repository
+            rights and merge method from GitHub. It shows Merge only when
+            your GitHub rights let you merge.`,
           text`${productName} runs each org's cloud computers in one of its
             own accounts with a cloud computer provider. The org keeps
             that account for its life. You need no account or key of your
@@ -78,7 +81,8 @@ export const termsDocument: LegalDocument = {
             can hold your messages, files, and code. ${productName} adds the
             login, and sends each request on to Anthropic or OpenAI. An older
             cloud computer starts from an earlier org image. ${productName}
-            still permits older software there that receives the login itself.
+            still permits older software there that receives supported agent
+            logins themselves. A ChatGPT sign-in is never sent there.
             With that older software, the agents send their model requests to
             Anthropic or OpenAI from the cloud computer. Installing newer
             software in that cloud computer does not remove this risk. A new
@@ -195,11 +199,20 @@ export const termsDocument: LegalDocument = {
           passes on the model requests of a newer cloud computer, it keeps no
           copy of a request or of its answer. It writes no body or header
           value of them to its logs.`,
+        paragraph`Continue starts a new branch from the latest default branch
+          of the repository. It keeps the cloud computer and its sessions.
+          Changed files move to the new branch. Commits that are not pushed
+          stay on their local branches.`,
+        paragraph`The agent actions in the pull request bar send messages as
+          the member who clicks. The chat history keeps these messages and a
+          note that names who used Continue and the branches.`,
         paragraph`You keep any rights that you have in your repositories,
           files, messages, and other content. You give the operator
           permission to store, copy, process, and transmit that content as
           needed to provide the service, including through its providers.
           You must have permission to submit that content.`,
+        paragraph`If you send feedback, you give the operator permission to
+          use it to improve ${productName}, without any obligation to you.`,
         paragraph`The terms and licences of third-party code and services
           still apply. Check agent output before you use or publish it.`,
       ],

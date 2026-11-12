@@ -1,5 +1,5 @@
 import type { FileEntry } from '../../shared/files'
-import { canMention } from './mention-text'
+import { canMention } from '../../shared/mention-text'
 
 /** The most rows that the list shows. A longer query narrows it. */
 const MENTION_ROW_LIMIT = 100

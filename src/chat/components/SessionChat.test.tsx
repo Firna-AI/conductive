@@ -2,6 +2,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import { ApiError } from '../../app/api/client'
 import { uploadingFile, type DraftFile } from '../../app/draft-files'
+import { fileMark } from '../../app/draft-marks'
 import { ACCOUNT_PATHS } from '../../shared/account'
 import { sessionPaths } from '../../shared/sessions'
 import {
@@ -195,15 +196,18 @@ describe('session parts', () => {
           choice={{ agent: 'claude', model: 'Opus 5.5', effort: 'high' }}
           draft={{
             ...blankDraft('draft'),
-            text: 'See the screenshot.',
+            text: `See the screenshot. ${files.map(({ id }) => fileMark(id)).join(' ')}`,
             files,
           }}
+          files={{
+            files: () => files,
+            retry: () => undefined,
+            subscribe: () => () => undefined,
+          }}
           models={[]}
-          onAttach={() => {}}
+          onAttach={() => []}
           onChangeText={() => {}}
           onChooseModel={() => {}}
-          onRemoveFile={() => {}}
-          onRetryFile={() => {}}
           onSend={() => {}}
           onStop={() => {}}
           running={false}

@@ -7,6 +7,22 @@ streams, and the order of the runner commands.
 - `ChatStore.run` is one serial queue. Each request, each runner message,
   each command send, and each trusted read, change, or replay runs in it,
   one at a time.
+- `ChatStore.run` gives each queue task a `QueueTurn` handle from
+  [`queue-turn.ts`](queue-turn.ts). With `outside(call)` of the handle, a
+  task runs one call outside the queue. In production code, only the start
+  guard of a sandbox start calls `outside`, as
+  [Creates and resumes](../lifecycle/workspace-object.md#creates-and-resumes)
+  says.
+- `outside` first gives the committed turn ends to the
+  [`turnEnded`](integration/workspace-lifecycle.md#hooks-and-events) hook.
+  Then the task gives the queue up and runs the call. When the call ends,
+  the task joins the back of the queue. It gets the result or the error of
+  the call only after it holds the queue again.
+- `ChatStore.settled()` waits until no queue task remains.
+  `ChatStore.idle()` waits only for the tasks that exist at the time of the
+  call. Both also wait for a task that is in an `outside` call. The drains
+  of the [member receiver](../members/README.md#lifecycle-ownership) wait
+  for `idle()`.
 - `ChatStore.change` commits the new events, the runner cursor, and the
   changed records in one storage transaction. The tabs get the events
   only after the commit.
@@ -61,6 +77,16 @@ streams, and the order of the runner commands.
 - After the login checks, delivery commits the turn state before sending.
   If sending a newly dispatched turn throws, delivery restores its queued
   state. `message.sent` follows a successful send.
+- Each `turn` and `message` command carries the current workspace branch
+  and target branch in `branches`. Delivery reads them from D1 each time
+  that it builds the command, also for a retry, a queued send, and a resend
+  after a reconnect. No connection or pending command keeps an older pair.
+- While a Continue of the workspace runs, `turnDispatching` holds each turn
+  in the queue, and its commands wait. When Continue ends, the waiting
+  commands go out with the new branches, as
+  [Continue](../lifecycle/continue.md#the-reservation) says.
+- A `workspace.continued` note names its session, so the history of that
+  session holds it, also after the session closes and reopens.
 - The internal `StoredTurn.started` marker keeps dispatch evidence after an end.
 - The interrupt route stores and pushes `turn.stop-requested` with the
   authenticated member's ID before it interrupts the runner. Runner events
@@ -71,6 +97,9 @@ streams, and the order of the runner commands.
   work. Closing a session records its waiting turns as stopped in history.
 - A command stays pending until the Durable Object removes it. A new runner
   connection gets each pending command again, with the same command ID.
+- A sent pending command records the ID of its connection in `deliveredTo`.
+  A wake keeps that connection ID, so the command does not go out again.
+  Older records without the field stay readable.
 - An active agent event that lists a message ID removes that message's
   command. The first end of a turn removes each command of that turn. When
   a failed file copy ends a running turn, it then saves one `interrupt` for

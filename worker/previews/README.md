@@ -198,7 +198,12 @@ A denied viewer loses only the connections of that viewer session. Other
 viewers of the same preview keep theirs.
 The request and response streams read only when their consumer requests data.
 They read one chunk at a time. No cached authorization or time window permits data.
+A chunk of a byte stream, such as a fetch body, holds the data that waits, up to 256 KB.
+So one check covers it. The default reader of a Workers fetch body gives 4 KB at most.
 Completed HTTP connections release their registry entries.
+
+A preview socket uses `bridgeSocket` with an outbound socket to the sandbox.
+An open preview socket or HTTP stream keeps its workspace object active, as [Work that keeps the object active](../README.md#work-that-keeps-the-object-active) says.
 
 Set `dependencies.onActivity` to report each input to the input owner of the
 workspace, as [Input activity](../lifecycle/README.md#input-activity) says.
@@ -220,6 +225,14 @@ only when `stripHeaders` does not name `Sec-WebSocket-Protocol`.
 The upstream URL and each rewritten redirect lose each name in
 `stripQueryParameters`.
 The proxy follows no upstream redirect.
+`portResponseHeaders` sends `private` first, then the server's `Cache-Control` unchanged.
+It also sends `no-cache` first, unless the server gives a browser lifetime.
+A lifetime is an `Expires` header, or a `Cache-Control` without quotes that holds `no-store`, a bare `no-cache`, or `max-age` with digits.
+A quote can hide the directives after it from the browser, so the proxy's directives never follow the server's value.
+The reply keeps the server's `Expires`, `Date`, and `Age`.
+A 304 without `Cache-Control` gets none, so the browser keeps the rules of its stored reply.
+The outer Worker keeps these rules, because it answers the preview host with `previewResponse` from [http.ts](../http.ts).
+[Port previews](../../docs/protocol/terminal-previews-and-desktop.md#port-previews) states the requirement.
 
 An org suspension blocks preview creation and launch with 403 `org_suspended`.
 The message gives the abuse address. The org-wide write gate also blocks preview close.

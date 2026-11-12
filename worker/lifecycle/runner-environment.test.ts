@@ -1,6 +1,9 @@
 import { expect, it } from 'vitest'
 
+import { COMMIT_AUTHOR_VARIABLES } from '../../src/shared/commit-author'
+import { TOOL_ENV } from '../../tools/context'
 import type { WorkspaceValues } from './platform-storage'
+import { isRecord } from '../http'
 import { TEST_TIME } from '../test-support/harness'
 import { setupBackendTests } from './backend-test-hooks'
 import { SOFTWARE } from './backend-test-support'
@@ -12,6 +15,7 @@ import { seedPublishedImage } from './published-image-test-support'
 import { workspaceEnvironmentSettings } from './settings-data'
 import { runningEnvironment } from './start-environment'
 import { readWorkspace } from './workspace-data'
+import { localSavedScriptFixture } from './saved-script-test-support'
 import { resumeCompletedWorkspace as resumeWorkspace } from './completed-resume-test-support'
 import {
   saveEnvironment,
@@ -20,13 +24,25 @@ import {
 
 const backendFixture = setupBackendTests()
 
-it('captures the create branch and masks legacy encrypted settings in its streamed start log', async () => {
+/** The runner gives each agent process these values for its turn. */
+function turnValueNames(env: unknown): string[] {
+  if (!isRecord(env)) throw new Error('Missing sandbox variables')
+  return [TOOL_ENV.turnId, ...COMMIT_AUTHOR_VARIABLES].filter(
+    (name) => name in env,
+  )
+}
+
+function requestEnv(body: unknown): unknown {
+  return isRecord(body) ? body.env : null
+}
+
+it('captures the create branch, keeps turn values out of the sandbox variables, and masks legacy encrypted settings in its streamed start log', async () => {
   const fixture = await backendFixture()
   const { runtime, org, user, boat } = fixture
   const initialSecret = 'create-environment-secret'
-  await saveOwnerDisplayName(fixture, '  Octocat \t')
   await saveEnvironment(fixture, initialSecret, false, {
     GIT_AUTHOR_NAME: 'Org Author',
+    CONDUCTIVE_TURN_ID: 'org-turn',
   })
   await seedPublishedImage(runtime.env.DB, {
     orgId: org.id,
@@ -57,12 +73,9 @@ it('captures the create branch and masks legacy encrypted settings in its stream
       CONDUCTIVE_DEFAULT_BRANCH: 'release-main',
       CONDUCTIVE_WORKSPACE_BRANCH: created.workspace.branch,
       ORG_SECRET: initialSecret,
-      GIT_AUTHOR_NAME: 'Octocat',
-      GIT_AUTHOR_EMAIL: '7+octocat@users.noreply.github.com',
-      GIT_COMMITTER_NAME: 'Octocat',
-      GIT_COMMITTER_EMAIL: '7+octocat@users.noreply.github.com',
     },
   })
+  expect.soft(turnValueNames(boat.starts[0]?.env)).toEqual([])
   expect(JSON.stringify(created)).not.toContain(initialSecret)
   const actor = fixture.actors.get(id)?.endpoint()
   if (!actor) throw new Error('Missing workspace controller')
@@ -76,6 +89,7 @@ it('captures the create branch and masks legacy encrypted settings in its stream
   ).toEqual({
     ORG_SECRET: { value: initialSecret, secret: true },
     GIT_AUTHOR_NAME: { value: 'Org Author', secret: true },
+    CONDUCTIVE_TURN_ID: { value: 'org-turn', secret: true },
   })
 })
 
@@ -92,7 +106,6 @@ it('captures fresh resume settings, preserves the ready computer capture, and pi
   const { id, actor: platform } = await seededCompletedWorkspace(fixture, {
     environmentCiphertext,
   })
-  await saveOwnerDisplayName(fixture, '  Updated Owner  ')
   const workspace = await readWorkspace(runtime.env.DB, org.id, id)
   const actor = platform.endpoint()
   const resumes: Request[] = []
@@ -125,12 +138,9 @@ it('captures fresh resume settings, preserves the ready computer capture, and pi
       PUBLIC_FLAG: '1',
       SHORT_SECRET: 'a',
       CONDUCTIVE_DISK_KEEPALIVE: '0',
-      GIT_AUTHOR_NAME: 'Updated Owner',
-      GIT_AUTHOR_EMAIL: '7+octocat@users.noreply.github.com',
-      GIT_COMMITTER_NAME: 'Updated Owner',
-      GIT_COMMITTER_EMAIL: '7+octocat@users.noreply.github.com',
     },
   })
+  expect.soft(turnValueNames(requestEnv(request))).toEqual([])
   expect(JSON.stringify(resumed)).not.toContain(resumedSecret)
   expect((await actor.readLifecycleStartLog()).text).toBe(
     'settings [hidden] production 1 [hidden]\n'.repeat(2),
@@ -166,12 +176,9 @@ it('captures fresh resume settings, preserves the ready computer capture, and pi
       CONDUCTIVE_WORKSPACE_BRANCH: workspace.branch,
       ORG_SECRET: retentionSecret,
       CONDUCTIVE_DISK_KEEPALIVE: '1',
-      GIT_AUTHOR_NAME: 'Updated Owner',
-      GIT_AUTHOR_EMAIL: '7+octocat@users.noreply.github.com',
-      GIT_COMMITTER_NAME: 'Updated Owner',
-      GIT_COMMITTER_EMAIL: '7+octocat@users.noreply.github.com',
     },
   })
+  expect.soft(turnValueNames(requestEnv(retention))).toEqual([])
   await saveEnvironment(fixture, 'rotated-after-retention')
   expect(
     await workspaceEnvironmentSettings(
@@ -191,24 +198,31 @@ it.each([
   { kind: 'null', displayName: null },
   { kind: 'only disallowed characters', displayName: ' \t\u0001,:;<>"\\\'\n' },
 ])(
-  'uses the owner login when the display name is $kind',
+  'uses the owner login in the Git system settings when the display name is $kind',
   async ({ displayName }) => {
     const fixture = await backendFixture()
     const { runtime, org, user, boat } = fixture
-    await saveOwnerDisplayName(fixture, displayName)
-    await fixture.run(() =>
-      createCompletedWorkspace(runtime, org.id, user, {
-        repositoryId: fixture.repositoryId,
-        firstMessage: FIRST_MESSAGE,
-      }),
-    )
-    expect(boat.starts[0]).toMatchObject({
-      env: {
-        GIT_AUTHOR_NAME: 'octocat',
-        GIT_AUTHOR_EMAIL: '7+octocat@users.noreply.github.com',
-        GIT_COMMITTER_NAME: 'octocat',
-        GIT_COMMITTER_EMAIL: '7+octocat@users.noreply.github.com',
-      },
-    })
+    const local = await localSavedScriptFixture(fixture.repositoryId)
+    try {
+      await saveOwnerDisplayName(fixture, displayName)
+      const exitCodes: (number | null)[] = []
+      boat.beforeCommand = async (command) => {
+        if (local.contains(command, 'startup'))
+          exitCodes.push((await local.run(command)).exitCode)
+      }
+      await fixture.run(() =>
+        createCompletedWorkspace(runtime, org.id, user, {
+          repositoryId: fixture.repositoryId,
+          firstMessage: FIRST_MESSAGE,
+        }),
+      )
+      expect(exitCodes).toEqual([0])
+      expect(await local.systemGitSettings()).toBe(
+        'author.name=octocat\nauthor.email=7+octocat@users.noreply.github.com\n' +
+          'committer.name=octocat\ncommitter.email=7+octocat@users.noreply.github.com\n',
+      )
+    } finally {
+      await local.dispose()
+    }
   },
 )

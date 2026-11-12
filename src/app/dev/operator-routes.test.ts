@@ -12,9 +12,11 @@ import {
   operatorCodesPath,
   operatorSignupPausePath,
   operatorWaitlistPath,
+  operatorWaitlistSwitchPath,
 } from '../../shared/operator-waitlist'
 import { operatorProvidersPath } from '../../shared/operator-providers'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
+import { sampleOperator } from '../../test-support/fixtures/operator'
 import { SAMPLE_IDS } from '../../test-support/fixtures/operator-samples'
 import { readAccessCode, readWaitlistPage } from '../api/read-operator-waitlist'
 import { devFetch } from './dev-test-kit'
@@ -87,7 +89,7 @@ describe('the operator routes of the dev fake', () => {
     })
   })
 
-  test('approve a person who waits, who leaves the waitlist with a referral code, make and disable a code, and pause sign-ups, as the Worker does', async () => {
+  test('approve a person who waits, who leaves the waitlist with a referral code, make and disable a code, pause sign-ups, and turn the waitlist off and on, as the Worker does', async () => {
     const { send } = devFetch('?operator=1')
     const sam = SAMPLE_IDS.waitingUser
     const approved = await send('POST', operatorApprovalPath(sam))
@@ -111,6 +113,8 @@ describe('the operator routes of the dev fake', () => {
     const disabled = await send('POST', operatorCodeDisablePath(code))
     const paused = await send('POST', operatorSignupPausePath())
     const resumed = await send('DELETE', operatorSignupPausePath())
+    const off = await send('DELETE', operatorWaitlistSwitchPath())
+    const on = await send('POST', operatorWaitlistSwitchPath())
     expect({
       approved,
       repeat: repeat.body,
@@ -123,6 +127,8 @@ describe('the operator routes of the dev fake', () => {
       disabled: disabled.body,
       paused: paused.body,
       resumed: resumed.body,
+      off: off.body,
+      on: on.body,
     }).toMatchObject({
       approved: {
         status: 200,
@@ -166,6 +172,54 @@ describe('the operator routes of the dev fake', () => {
       disabled: { code, state: 'disabled', disabledAt: FAKE_TIME + 60_000 },
       paused: { paused: true, operator: { login: 'calummoore' } },
       resumed: { paused: false },
+      off: {
+        waitlistOn: false,
+        updatedAt: FAKE_TIME + 60_000,
+        operator: { login: 'calummoore' },
+        waiting: 9,
+      },
+      on: { waitlistOn: true },
+    })
+  })
+
+  test('waitlist=off shows the switch off by the operator of the samples, and Zed K, who came back, with the source open sign-up and a referral code', async () => {
+    const { send } = devFetch('?operator=1&waitlist=off')
+    const zed = SAMPLE_IDS.newestWaiting
+    const waitlistSwitch = await send('GET', operatorWaitlistSwitchPath())
+    const waitlist = await send('GET', operatorWaitlistPath())
+    const page = await send('GET', operatorUserPath(zed))
+    expect({
+      waitlistSwitch: waitlistSwitch.body,
+      waiting: readWaitlistPage(waitlist.body).rows.map((row) => row.login),
+      page: page.body,
+    }).toMatchObject({
+      waitlistSwitch: {
+        waitlistOn: false,
+        updatedAt: FAKE_TIME - 90 * 60_000,
+        operator: sampleOperator,
+        waiting: 9,
+      },
+      waiting: [
+        'sam-okafor',
+        'jules-m',
+        'pkwan',
+        'kenji-w',
+        'nadia-q',
+        'ovi-dev',
+        'lena-h',
+        'samir-h',
+        'bram-v',
+      ],
+      page: {
+        login: 'zed-k',
+        appAccess: {
+          state: 'granted',
+          grantedAt: FAKE_TIME - 60 * 60_000,
+          source: { kind: 'open_signup', operator: sampleOperator },
+        },
+        approvalEmail: { state: 'none' },
+        referralCode: { kind: 'referral', uses: 0, state: 'active' },
+      },
     })
   })
 })

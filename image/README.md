@@ -144,8 +144,9 @@ GitHub CLI wrapper, their token rules, and their tests.
   mode 600. The terminal backend checks that it has 64 lowercase
   hexadecimal characters.
   The readiness command writes no password to output or command history.
-- The helper never writes a token or the Worker's response to its error
-  output.
+- The helper never writes a token to its error output. From a Worker
+  response, it writes only a safe error message, as
+  [GitHub access](github.md#git-credential-helper) says.
 
 ## Development
 

@@ -48,12 +48,54 @@ const tables = [
 ]
 
 /**
- * The answer of each scripted turn, in the parts that the agent writes it.
- * The page sends each part as its own update, and the whole answer last.
+ * A review with two choices under headings: a section at level 2, a
+ * heading for each choice at level 3 with bold labels under it, and a
+ * smaller heading at level 4. Each part is one line or one blank line.
  */
-export const devAnswers: Readonly<
-  Record<DevOptions['answer'], readonly string[]>
-> = {
-  text: ['Done. The form now ', 'does what you asked, and its tests pass.'],
-  tables,
+const headings = [
+  'I checked the form, the hook, and the tests. Two choices need your answer.\n\n',
+  '## Needs your answer\n\n',
+  '### 1. Lookups can pass the rate limit\n\n',
+  '- **Severity:** Medium. **Effort:** Small.\n',
+  '- **Problem:** Each key press sends a lookup to `/api/places`.\n',
+  '- **Recommendation:** Wait 250 ms after the last key press.\n\n',
+  '#### How I checked\n\n',
+  'The end-to-end test that types an address fast got 3 responses with status `429`.\n\n',
+  '### 2. Suggestions cover the manual fields\n\n',
+  '- **Severity:** Low. **Effort:** Small.\n',
+  '- **Problem:** On a phone, the suggestions cover the city and postcode fields.\n',
+  '- **Recommendation:** Move the fields down while the list is open.',
+]
+
+/**
+ * What a scripted turn writes, in parts: its plan before its tool calls,
+ * which folds with its work when the turn ends, and its answer.
+ */
+export interface DevScript {
+  plan: readonly string[]
+  answer: readonly string[]
+}
+
+const plan = ['I will read ', 'the files that this touches first.']
+
+/**
+ * What each scripted turn writes, in the parts that the agent writes it.
+ * The page sends each part as its own update, and the whole answer last.
+ * With the headings answer, the plan starts with a heading, so its message
+ * line in the folded work holds a heading.
+ */
+export const devScripts: Readonly<Record<DevOptions['answer'], DevScript>> = {
+  text: {
+    plan,
+    answer: ['Done. The form now ', 'does what you asked, and its tests pass.'],
+  },
+  tables: { plan, answer: tables },
+  headings: {
+    plan: [
+      '## Plan\n',
+      '- Read the form and the hook.\n',
+      '- Then run the checkout tests.',
+    ],
+    answer: headings,
+  },
 }

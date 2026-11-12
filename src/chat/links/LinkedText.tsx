@@ -1,7 +1,14 @@
+import { entryName } from '../../../docs/mockups/src/components/chat/entryPaths'
 import { FileChip } from '../../../docs/mockups/src/components/chat/FileChip'
-import { WorkspaceChip } from '../../../docs/mockups/src/components/chat/WorkspaceChip'
+import { SentFileChip } from '../../../docs/mockups/src/components/chat/SentFileChip'
+import { SessionChip } from '../../../docs/mockups/src/components/chat/SessionChip'
+import {
+  WorkspaceChip,
+  type ChipOpener,
+} from '../../../docs/mockups/src/components/chat/WorkspaceChip'
 import inline from '../../../docs/mockups/src/components/common/InlineText.module.css'
 import type { FileEntry } from '../../shared/files'
+import type { Attachment } from '../../shared/messages'
 import { isPlainClick } from '../../shell/ui/AppLink'
 import { MentionIcon } from '../mentions/MentionIcon'
 import {
@@ -9,34 +16,41 @@ import {
   useChatMentions,
   useMentionTree,
 } from '../mentions/MentionsContext'
-import { chatParts, type ChatPart, type MentionLookup } from './chat-parts'
+import {
+  chatParts,
+  type AttachmentPart,
+  type ChatPart,
+  type MentionLookup,
+} from './chat-parts'
 import { chipOf, useChatLinks } from './LinksContext'
+import { sessionChipOf, useLinkedSession } from './session-links'
 import type { LinkTarget } from './workspace-links'
 
 /**
  * A workspace in a sent message or an answer: a link of the app to the page
- * that the link names. A plain click opens it in the same window, as the
- * other links of the app do. A click with a modifier key stays with the
- * browser, such as a new tab.
+ * that the link names. A link to a known session shows as its session chip.
+ * A plain click opens it in the same window, as the other links of the app
+ * do. A click with a modifier key stays with the browser, such as a new tab.
  */
 function LinkChip(props: { target: LinkTarget }) {
   const { open } = useChatLinks()
-  const { to } = props.target
-  return (
-    <WorkspaceChip
-      opener={(chip) => (
-        <a
-          {...chip}
-          href={to}
-          onClick={(event) => {
-            if (!open || !isPlainClick(event)) return
-            event.preventDefault()
-            open(to)
-          }}
-        />
-      )}
-      workspace={chipOf(props.target.workspace)}
+  const session = useLinkedSession(props.target)
+  const { to, workspace } = props.target
+  const opener = (chip: ChipOpener) => (
+    <a
+      {...chip}
+      href={to}
+      onClick={(event) => {
+        if (!open || !isPlainClick(event)) return
+        event.preventDefault()
+        open(to)
+      }}
     />
+  )
+  return session ? (
+    <SessionChip opener={opener} session={sessionChipOf(workspace, session)} />
+  ) : (
+    <WorkspaceChip opener={opener} workspace={chipOf(workspace)} />
   )
 }
 
@@ -76,7 +90,48 @@ function FileLink(props: { entry: FileEntry; source: string }) {
   )
 }
 
-function Part(props: { part: ChatPart }) {
+/**
+ * An attached file of a sent message, at the place of its mention: a link
+ * of the app to the file tab of the copy of the file, as a file chip opens
+ * its file. A click with a modifier key stays with the browser. While the
+ * message has not gone out, `opens` is false, because the copy does not
+ * exist yet. Then, and in a chat without the files of the workspace, such
+ * as an archived one, the chip opens nothing.
+ */
+function AttachmentLink(props: { part: AttachmentPart; opens: boolean }) {
+  const mentions = useChatMentions()
+  const files = props.opens ? mentions : null
+  const { path } = props.part
+  const copy: FileEntry = {
+    path,
+    name: entryName({ path }),
+    kind: 'file',
+    change: null,
+  }
+  return (
+    <SentFileChip
+      file={props.part.attachment}
+      mention={props.part.source}
+      opener={
+        files
+          ? (chip) => (
+              <a
+                {...chip}
+                href={files.href(copy)}
+                onClick={(event) => {
+                  if (!isPlainClick(event)) return
+                  event.preventDefault()
+                  files.openFile(path)
+                }}
+              />
+            )
+          : undefined
+      }
+    />
+  )
+}
+
+function Part(props: { part: ChatPart; opens: boolean }) {
   const { part } = props
   if (part.kind === 'text') return part.text
   if (part.kind === 'code') {
@@ -84,6 +139,9 @@ function Part(props: { part: ChatPart }) {
   }
   if (part.kind === 'file') {
     return <FileLink entry={part.entry} source={part.source} />
+  }
+  if (part.kind === 'attachment') {
+    return <AttachmentLink opens={props.opens} part={part} />
   }
   return <LinkChip target={part.target} />
 }
@@ -111,6 +169,59 @@ function useMentionLookup(read: boolean): MentionLookup | undefined {
   return (mention) => findMentioned(tree, mention.path, mention.folder)
 }
 
+/** How the chat reads a text: as an answer, or as a message of a member. */
+export interface TextReading {
+  /** `**` marks bold, as in an answer. */
+  strong?: boolean
+  /** Each mention of an entry of the file tree is a file chip. */
+  mentions?: boolean
+  /** The files of a sent message. The mention of each is its chip. */
+  attachments?: readonly Attachment[]
+}
+
+/**
+ * The parts of a text, as `chatParts` reads it with the workspaces of the
+ * chat. With `mentions`, it follows the tree of the chat for the chips of
+ * the files.
+ */
+export function useChatParts(text: string, reading: TextReading): ChatPart[] {
+  const { links } = useChatLinks()
+  const lookup = useMentionLookup(reading.mentions ?? false)
+  return chatParts(text, links, {
+    strong: reading.strong ?? false,
+    mentions: lookup,
+    attachments: reading.attachments,
+  })
+}
+
+/**
+ * Draws the parts of a text: text, code, and chips. One `<strong>` holds
+ * each run of bold text and chips. `opens` says whether the chip of an
+ * attached file opens its copy: only after its message went out to the
+ * agent.
+ */
+export function ChatText(props: {
+  parts: readonly ChatPart[]
+  opens?: boolean
+}) {
+  const opens = props.opens ?? false
+  return (
+    <>
+      {runsOf(props.parts).map((run, index) =>
+        run.kind === 'part' ? (
+          <Part key={index} opens={opens} part={run.part} />
+        ) : (
+          <strong key={index}>
+            {run.parts.map((part, inner) => (
+              <Part key={inner} opens={opens} part={part} />
+            ))}
+          </strong>
+        ),
+      )}
+    </>
+  )
+}
+
 /**
  * Text of a sent message or of an answer, as `chatParts` reads it: code,
  * and each workspace link as a chip. With `strong`, as in an answer, `**`
@@ -123,25 +234,5 @@ export function LinkedText(props: {
   strong?: boolean
   mentions?: boolean
 }) {
-  const { links } = useChatLinks()
-  const lookup = useMentionLookup(props.mentions ?? false)
-  const parts = chatParts(props.text, links, {
-    strong: props.strong ?? false,
-    mentions: lookup,
-  })
-  return (
-    <>
-      {runsOf(parts).map((run, index) =>
-        run.kind === 'part' ? (
-          <Part key={index} part={run.part} />
-        ) : (
-          <strong key={index}>
-            {run.parts.map((part, inner) => (
-              <Part key={inner} part={part} />
-            ))}
-          </strong>
-        ),
-      )}
-    </>
-  )
+  return <ChatText parts={useChatParts(props.text, props)} />
 }

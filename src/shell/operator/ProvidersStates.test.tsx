@@ -51,7 +51,7 @@ describe('the reads and the accounts of the Providers tab', () => {
     click(byRole('button', 'Try again', view))
     await settle()
     const page =
-      'AC Acme FX Futex FI Firna Operator C Operator Overview Orgs Users Waitlist Invite codes Providers'
+      'AC Acme Alt 1 Alt 1 FX Futex Alt 2 Alt 2 FI Firna Alt 3 Alt 3 Operator C Operator Overview Orgs Users Waitlist Invite codes Providers'
     expect({
       loading,
       failed,

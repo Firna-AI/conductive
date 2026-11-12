@@ -7,6 +7,7 @@ import { AppFrame, MobileFrame } from '../layout/AppFrame'
 import type { RailState } from '../layout/OrgRail'
 import { Page, type BackLink } from '../layout/Page'
 import { PauseNotice } from './pause'
+import { WaitlistOffNotice, type WaitlistState } from './waitlistSwitch'
 
 /** The tabs of the operator section. */
 export type OperatorTab =
@@ -38,10 +39,11 @@ const operatorRail: RailState = {
  * A page of the operator section: the header, the tabs Overview, Orgs,
  * Users, Waitlist, Invite codes, and Providers, and a dialog over the
  * page. While sign-ups are paused, each tab starts with the notice of the
- * pause. On a phone the six tabs keep one line while they fit. When they
- * do not fit, as on a phone of 390 px, the last ones move to a second
- * line, so that each tab shows. The header leads back to the workspaces,
- * unless the page gives its own way back.
+ * pause. While the waitlist is off, the notice of the switch follows it.
+ * On a phone the six tabs keep one line while they fit. When they do not
+ * fit, as on a phone of 390 px, the last ones move to a second line, so
+ * that each tab shows. The header leads back to the workspaces, unless the
+ * page gives its own way back.
  */
 export function OperatorPage(props: {
   viewport: Viewport
@@ -52,9 +54,12 @@ export function OperatorPage(props: {
   actions?: ReactNode
   dialog?: ReactNode
   signUps?: SignUps
+  waitlist?: WaitlistState
   children: ReactNode
 }) {
   const mobile = props.viewport === 'mobile'
+  const paused = props.signUps === 'paused'
+  const waitlist = props.waitlist ?? 'on'
   const home = { label: 'Workspaces', to: paths.shell }
   const page = (
     <Page
@@ -75,7 +80,8 @@ export function OperatorPage(props: {
       title={props.title}
       viewport={props.viewport}
     >
-      {props.signUps === 'paused' ? <PauseNotice /> : null}
+      {paused ? <PauseNotice waitlist={waitlist} /> : null}
+      {waitlist === 'off' ? <WaitlistOffNotice paused={paused} /> : null}
       {props.children}
     </Page>
   )

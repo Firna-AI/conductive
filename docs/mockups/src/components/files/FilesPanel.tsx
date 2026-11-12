@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { CircleSlash } from 'lucide-react'
+import { splitPath, withPublicOpen } from '../../fixtures/files'
 import { filesFor, type PathState } from '../../fixtures/maskedFiles'
 import type { BannerState } from '../../fixtures/pullRequests'
 import { checksPaths, paths } from '../../paths'
@@ -29,10 +30,32 @@ export type TreeState = (typeof treeStates)[number]
 /**
  * The kinds of file that open as a tab in the centre column: a code file,
  * a Markdown file, a diff, the diff of a file whose label hides a secret
- * value, and a file whose name the app does not know.
+ * value, and a file whose name the app does not know. Then a picture of
+ * the branch, an image whose bytes the browser cannot draw, and the copy
+ * of an attached screenshot, which All files does not list.
  */
 export type FileTabView =
-  'code' | 'markdown' | 'diff' | 'masked-diff' | 'unnamed'
+  | 'code'
+  | 'markdown'
+  | 'diff'
+  | 'masked-diff'
+  | 'unnamed'
+  | 'image'
+  | 'image-not-drawn'
+  | 'attachment'
+
+/** The open tab whose row All files marks: a file of the tree. */
+function treeTab(open: FileTabView | undefined) {
+  switch (open) {
+    case 'code':
+    case 'markdown':
+    case 'image':
+    case 'image-not-drawn':
+      return open
+    default:
+      return undefined
+  }
+}
 
 /** The All files, Changes, and Checks tabs, as links. */
 function FileTabs(props: {
@@ -75,6 +98,9 @@ function FileTabs(props: {
  * from GitHub and still show. When the cloud computer could not read the
  * files, `tree` keeps the saved list under a notice, or says that no list
  * is available. `paths` adds two files whose labels hide a secret value.
+ * `checksTop` stands above the checks, such as the actions of the pull
+ * request bar on a phone. `only` keeps the changes of these paths, such as
+ * the changed files that moved to the new branch of Continue.
  */
 export function FilesPanel(props: {
   view: FileList
@@ -84,19 +110,30 @@ export function FilesPanel(props: {
   open?: FileTabView
   placeholder?: ReactNode
   paths?: PathState
+  checksTop?: ReactNode
+  only?: readonly string[]
 }) {
-  const { view, open } = props
+  const { view, open, only } = props
   const masked = props.paths === 'masked'
   const files = filesFor(props.paths ?? 'plain')
-  const changes = props.edited ? files.changes : []
-  const tree = props.edited
-    ? files.tree
-    : files.tree.map((entry) => ({ ...entry, change: undefined }))
-  const treeOpen = open === 'code' || open === 'markdown' ? open : undefined
+  const changes = props.edited
+    ? files.changes.filter((file) => !only || only.includes(file.path))
+    : []
+  const names = new Set(changes.map((file) => splitPath(file.path).name))
+  const treeOpen = treeTab(open)
+  // The images of the branch lie in the public folder, which their tabs open.
+  const pictures = treeOpen === 'image' || treeOpen === 'image-not-drawn'
+  const shown = pictures ? withPublicOpen(files.tree) : files.tree
+  const tree = shown.map((entry) =>
+    props.edited && (!only || names.has(entry.name))
+      ? entry
+      : { ...entry, change: undefined },
+  )
   const lists = !props.placeholder
   return (
     <div className={styles.files}>
       <FileTabs banner={props.banner} changes={changes.length} view={view} />
+      {view === 'checks' ? props.checksTop : null}
       {view === 'checks' ? <ChecksList state={props.banner} /> : null}
       {view !== 'checks' && props.placeholder ? props.placeholder : null}
       {view === 'all' && lists && props.tree === 'none' ? (

@@ -1,7 +1,6 @@
 import {
   useCallback,
   useEffect,
-  useMemo,
   useSyncExternalStore,
   type ReactNode,
 } from 'react'
@@ -12,9 +11,11 @@ import { TouchScreen } from '../../docs/mockups/src/components/common/touch'
 import { ChatOverlays, historyEntries } from './components/ChatOverlays'
 import { SessionChat, type ChatHost } from './components/SessionChat'
 import { SessionTabs } from './components/SessionTabs'
+import { useTabKeys } from './components/tab-keys'
 import { rowOf, shownTab, type RenderTab } from './components/tab-row'
 import { ChatToasts, useTranscriptCopy } from './components/TranscriptCopy'
-import { LinksProvider, type ChatLinks } from './links/LinksContext'
+import { useChatLinksOf } from './links/chat-links'
+import { LinksProvider } from './links/LinksContext'
 import { useMentionCopy } from './links/mention-copy'
 import { MentionsProvider, type ChatMentions } from './mentions/MentionsContext'
 import { endedAt, historySessions, tabSessions } from './state/archive-view'
@@ -103,21 +104,6 @@ function permittedOverlay(overlay: Overlay, readOnly: boolean): Overlay {
   return readOnly && overlay.kind !== 'history' ? { kind: 'none' } : overlay
 }
 
-/**
- * The workspaces that the chips of the chat find, as the list of the org has
- * them now, and the way that a chip opens its page.
- */
-function useLinks(
-  controller: ChatController,
-  open: ((to: string) => void) | undefined,
-): ChatLinks {
-  const list = controller.workspaceList.workspaces
-  const workspaces = useSyncExternalStore(list.subscribe, list.get, list.get)
-  const { orgId } = controller.target
-  const links = useMemo(() => ({ orgId, workspaces }), [orgId, workspaces])
-  return useMemo(() => ({ links, open }), [links, open])
-}
-
 /** The session tabs, the chat of the open session, and the overlays. */
 function ChatBody(
   props: ChatViewProps & { controller: ChatController; snapshot: ChatSnapshot },
@@ -135,7 +121,7 @@ function ChatBody(
     snapshot.workspace?.state === 'starting' ||
     overlay.kind === 'history'
   const now = useNow(props.clock ?? systemClock, ticking)
-  const links = useLinks(controller, props.onOpenPage)
+  const links = useChatLinksOf(controller, snapshot, props.onOpenPage)
   const copy = useTranscriptCopy(controller, props.copy ?? browserCopy)
   useMentionCopy()
   useReport(snapshot.workspace, props.onWorkspaceChange)
@@ -150,6 +136,13 @@ function ChatBody(
     reopen,
     (item) => endedAt(snapshot, item),
   )
+  const tabs = rowOf(
+    snapshot.view,
+    tabSessions(snapshot),
+    shownTab(snapshot.view, active, content !== null),
+    props.renderTab,
+  )
+  useTabKeys({ tabs, controller, history, copy })
   const body = (
     <>
       <SessionTabs
@@ -167,12 +160,7 @@ function ChatBody(
         onStartRename={controller.startRename}
         readOnly={readOnly}
         renaming={overlay.kind === 'rename' ? overlay.sessionId : null}
-        tabs={rowOf(
-          snapshot.view,
-          tabSessions(snapshot),
-          shownTab(snapshot.view, active, content !== null),
-          props.renderTab,
-        )}
+        tabs={tabs}
       />
       {content ?? (
         <SessionChat

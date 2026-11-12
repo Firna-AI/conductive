@@ -1,9 +1,6 @@
 import { defineScreen } from '@mokly/mokly'
-import {
-  AccountScreen,
-  accountGeneral,
-  accountSchema,
-} from '../../../../screens/AccountScreen'
+import { AccountScreen } from '../../../../screens/AccountScreen'
+import { accountGeneral, accountSchema } from '../../../../screens/accountState'
 
 export const accountInvites = defineScreen({
   title: 'Invite code, sign-ups paused',
@@ -35,6 +32,15 @@ export const accountInvites = defineScreen({
       rationale:
         'An operator can disable the invite code of a user, such as a code that leaked, also from the Suspend dialog of that user. A disable is final, so the page offers nothing to turn it on again. The words name no operator and no reason.',
       props: { invites: 'disabled' },
+    },
+    {
+      slug: 'open-sign-up',
+      title: 'Open sign-up',
+      description:
+        'An operator turned off the waitlist, and sign-ups are not paused, so anyone can sign up. A notice in place of the description says that anyone can sign up now and that the invites stay for later. The invite link, Copy, and 3 of 5 invites left stay.',
+      rationale:
+        'During open sign-up, each sign-in gets app access, and the link signs a person in without a use of its code, so the count does not drop, from decision 230. The words never name the waitlist switch, because the user sees only its result. While sign-ups are paused, the notice of the pause shows instead, because the pause wins. A code that is used up or turned off keeps its own state.',
+      props: { invites: 'left', openSignUp: 'on' },
     },
   ],
 })

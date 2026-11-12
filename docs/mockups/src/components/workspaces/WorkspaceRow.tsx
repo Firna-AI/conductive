@@ -7,8 +7,8 @@ import a11y from '../common/a11y.module.css'
 import { classes } from '../common/classes'
 import { RowPointMenu, type RowControls } from './RowMenu'
 import type { WorkspaceRow } from './sections'
-import { activityPresentation } from './status'
-import { StatusGlyph } from './StatusGlyph'
+import { activityPresentation, listMarkLabel } from './status'
+import { WorkspaceMark } from './WorkspaceMark'
 import rowMenu from './RowMenu.module.css'
 import styles from './WorkspaceRow.module.css'
 
@@ -37,7 +37,7 @@ function RenameRow(props: {
         row.selected && styles.selected,
       )}
     >
-      <StatusGlyph status={row.status} />
+      <WorkspaceMark github={row.github} status={row.status} />
       <span
         aria-label="Workspace name"
         className={classes(rowMenu.field, page && rowMenu.fieldPage)}
@@ -78,12 +78,13 @@ function rowAction(
 }
 
 /**
- * One workspace on one line: its state as a small square on the left, its
- * name, and the time since its last activity. The action of the row,
- * Archive or Restore, covers the time on hover only. A drag lifts the row
- * and leaves a faint copy behind. `controls` draws the menu that a right
- * click opened, the field of Rename, or a hover, because a view runs no
- * script.
+ * One workspace on one line: its list mark on the left, its name, and the
+ * time since its last activity. The mark shows the GitHub state of its
+ * pull request in colour, and whether its agent works. The action of the
+ * row, Archive or Restore, covers the time on hover only. A drag lifts the
+ * row and leaves a faint copy behind. `controls` draws the menu that a
+ * right click opened, the field of Rename, or a hover, because a view runs
+ * no script.
  */
 export function WorkspaceRowView(props: {
   row: WorkspaceRow
@@ -111,10 +112,12 @@ export function WorkspaceRowView(props: {
   )
   const content = (
     <>
-      <StatusGlyph status={row.status} />
+      <WorkspaceMark github={row.github} status={row.status} />
       <span className={styles.name}>{row.workspace.name}</span>
       <span className={styles.time}>{row.workspace.updated}</span>
-      <span className={a11y.hidden}>, {status.label}</span>
+      <span className={a11y.hidden}>
+        , {listMarkLabel(row.github, row.status)}
+      </span>
     </>
   )
   if (props.drag) return <div className={className}>{content}</div>

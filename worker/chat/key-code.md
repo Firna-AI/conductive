@@ -24,7 +24,9 @@ first.
 - `first-message.ts`: the checks and the admission of the first message of
   a create.
 - `session-titles.ts`: the empty-name rule for the first session's workspace
-  title and each later session's first message with text.
+  title and each later session's first message with text. A text with only
+  the mentions of its own attached files counts as no text. In a title, each
+  such mention becomes the original name of its file.
 - `workspace-titles.ts`, `title-model.ts`, and `workspace-title.ts`: the
   background model request and the shared title storage and D1 projection.
   The shared writer checks the empty name and workspace access before it
@@ -36,7 +38,7 @@ first.
 - `browser-authorization.ts`: `authorizeChatBrowser`, the browser gate of
   the object. With the body that the gate already read, it runs
   `gateAccess` in place of `gate`, and finds the workspace again.
-  `WorkspaceChat.fetch` uses this form in the queue for each browser write.
+  `browserRequest` uses this form in the queue for each browser write.
 - `runner-authorization.ts`: `authorizeChatRunner`, the machine origin and
   token checks before the runner connection opens.
 - `browser-subscription.ts`: `subscribeBrowser`, the queue-owned start of
@@ -55,12 +57,35 @@ first.
 - `store.ts` and `history-storage.ts`: `ChatStore` and `ChatTransaction`,
   the records, the event numbers, the GitHub view of a transaction, and the
   chunks of large file reports and tree deltas.
+- `queue-turn.ts`: `ChatQueue`, the serial queue of `ChatStore.run`, and
+  `QueueTurn`, the handle whose `outside(call)` runs one call outside the
+  queue. `hasOutsideTurns` tells Archive that a queue task is outside.
+- `queue-generation.ts`: `QueueGenerations`, which keeps the member
+  receiver generation of each queue task for the guarded storage, the
+  provider fetch check, and the start guard.
+- `lifecycle-queue.ts`: `runWorkspaceLifecycle`, which runs one lifecycle
+  change in a queue task with its receiver generation, then calls
+  `flushRunner`.
+- `history-pages.ts`: `HistoryPages`, the pages of the stored history and
+  the index of replaced answers and tool states. A page reads one storage
+  list of 32 events. The session history route of the browser passes
+  `BROWSER_PAGE_LIMITS`, so its page reads on up to 2,048 stored events or
+  4 MiB of session events, and a long workspace costs few requests.
 - `routine-run.ts`: reports a routine's stored first-turn result after a chat transaction commits.
 - `workspace-store.ts`: creates the chat store with lifecycle turn-end reports and routine outcome recovery after each change.
 - `runner-channel.ts`, `runner-receipt.ts`, and `runner-refusal.ts`: the
   runner connection, the stream cursors, the file commands, and the receipt
   or refusal marker of each runner event. A connection keeps the protocol
   version of its `hello`, 1 or 2, and its `welcome` repeats that version.
+  It also keeps `hello.loginKinds` for the connection's dispatch checks.
+- `runner-connections.ts` and `runner-connection-store.ts`:
+  `RunnerConnections`, the native acceptance, restore, close, and idle
+  alarm of the current runner, and the chunked durable record of a
+  physical runner socket. That record keeps the negotiated protocol
+  version and the login kinds declared in `hello`.
+  A record without login kinds keeps that list absent for legacy support.
+  So after a wake, the runner keeps its login support and gets the commands
+  of its version with no second `hello` or `welcome`.
 - `runner-output.ts` and `runner-output-state.ts`: the filter from the
   actual start capture, and its encrypted state. Each runner stream keeps
   its held answer text. One workspace record keeps each shown answer end
@@ -76,28 +101,45 @@ first.
   marks the move as done, so later receipts do not scan older stream
   records again.
 - `authenticated-runner.ts`: `AuthenticatedRunner`, the token check of the
-  runner connection before each message and while it is idle.
+  runner connection before each message. `RunnerConnections.alarm` runs it
+  while the connection is idle.
 - [`runner-version-data.ts`](runner-version-data.ts): `readRunnerProtocolVersion`, the workspace pin read before a runner's welcome or commands.
   [`runner-handshake.ts`](runner-handshake.ts): `prepareRunnerHello` checks the `hello`, closes a runner below that pin, and starts the stream before the `welcome`.
 - `runner-event-identity.ts`: `readRunnerEventIdentity` returns the readable
   fields in `RunnerEventIdentity` for refusal, repair, and turn-context checks.
 - `runner-delivery.ts`: the sends of pending commands, with the login
-  check. Each command takes the shape of the connection's protocol
-  version. Version 1 gets the real login in each `turn` and `message`
-  command. Version 2 gets a turn token in each `turn` command, after the
-  running state commits, and no credential in a `message` command.
+  and runner support checks and the current branches that `branch-data.ts`
+  reads. Each command
+  takes the shape of the connection's protocol version. Version 1 gets the
+  real login in each `turn` and `message` command. Version 2 gets a turn
+  token in each `turn` command, after the running state commits, and no
+  credential in a `message` command.
   `gatewayRunnerCommand` in `runner-gateway-command.ts` builds that
-  version 2 command.
+  version 2 command. Delivery skips a command whose `deliveredTo` names
+  the current connection. Internal `PreparedCommand` holds the full login and
+  relative attachment paths. `ResolvedCommand` holds the live absolute paths.
+  The derived version 1 wire type excludes Codex ChatGPT sign-ins.
+  `runnerSupportsLogin` in the shared runner contract owns the exhaustive
+  rule for each login kind and protocol version. An absent `loginKinds`
+  list keeps legacy support. An explicit version 2 list names its support.
+  Version 1 cannot opt into ChatGPT. An unsupported turn or message gets
+  one failed end before any login or turn token reaches the runner.
   [The agent runner](integration/runner/README.md#the-agent-runner) gives
   the rules of both versions.
+- `runner-login-failure.ts`: `failCommandLogin`, the turn failure of a
+  command whose login cannot run, after the runner or at once.
 - `attachment-paths.ts`: the captured repository folder lookup and the
   absolute attachment paths of each runner send.
+- [`src/shared/attachment-paths.ts`](../../src/shared/attachment-paths.ts):
+  `attachmentPath`, the relative copy path of a file from its ID and its
+  name. The upload reply, admission, the copy, and the proof check use it.
+  The development fakes share it.
 - `ordered-dispatch.ts`: `dispatchInOrder` and `commandDispatchState`, the
   send, wait, or skip check of each pending command in stored order.
 - `report-repairs.ts`, `repair-refusal.ts`, and `repair-delivery.ts`: the
   report repair of each kind, its start or failure at a refusal, and its
   sends before the confirm.
-- `delivery-state.ts`: dispatch state before sending and queued-state restoration.
+- `delivery-state.ts`: dispatch state before sending, queued-state restoration, and the `deliveredTo` receipt of a sent command.
 - `port-reports.ts`: the listener-list parser, final port-label excerpts, and
   displayed-label checks. Private labels stay complete for the output filter.
   Runner reports require a sorted unique array. Only a workspace stop
@@ -113,7 +155,9 @@ first.
   command, the retry message of a turn end, safe turn context, late data,
   terminal events, and unanswered messages.
   `TurnLifecycle.runnerEnded`, `workspaceStopped`, and `fail` handle each source of a turn end.
-  `fail` ends a queued turn at once. The login check of runner delivery calls it only for a queued turn.
+  `fail` ends a queued turn at once. Runner compatibility failures use its
+  immediate mode for both queued and running turns. A running failure
+  keeps an interrupt for the prior process after the turn ends.
   A failed token or gateway check calls it for a running turn.
   Then `fail` keeps its Stop and cause until a runner end or workspace stop.
   `TurnCompletion.finish` in `turn-completion.ts` commits each end, updates the session, and advances waiting work.
@@ -121,11 +165,16 @@ first.
 - `turn-end-reports.ts`: `TurnEndReports` keeps the recorded ends of each
   committed transaction. `ChatStore.reportTurnEnds` gives each end to the
   `turnEnded` hook. It runs after the runner confirm, before each dispatch,
-  and at the end of each queued task. So the workspace lifecycle gets each
-  end by its turn ID, from one path, whatever ended the turn.
+  before a task steps outside the queue, and at the end of each queue task.
+  So the workspace lifecycle gets each end by its turn ID, from one path,
+  whatever ended the turn.
 - `sockets.ts`: the WebSocket upgrades of tabs and the runner.
-- `browser-tabs.ts`: open tabs, their grants, the refresh and expiry
-  timers, and the grant check before each send. By default,
+- `browser-connections.ts` and `browser-registration.ts`:
+  `BrowserConnections`, the native acceptance, restore, and close of tab
+  sockets, and the read of a saved registration.
+- `browser-tabs.ts`: open tabs, their grants, the batch refresh, the
+  `browser` alarm deadlines of physical tab sockets, and the grant check
+  before each send. By default,
   `WorkspaceChat` gives it `readConnectionAccess` from
   [`worker/security/connection-access.ts`](../security/connection-access.ts).
 - `router.ts`: `routeChat`, `routeRunner`, and `forwardWorkspaceRequest`,
@@ -140,4 +189,4 @@ first.
   `SessionLogins`, and the defaults of older session records.
 - `session-record.ts`: `sessionFor`, the read of one session record.
 - `types.ts`: `ChatDependencies`, `ChatCallbackPublisher`, `ChatStorage`,
-  and the peer types.
+  `PreparedCommand`, `ResolvedCommand`, and the peer types.

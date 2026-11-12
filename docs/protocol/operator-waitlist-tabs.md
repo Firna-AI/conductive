@@ -4,8 +4,9 @@ This doc holds the requirements and the decisions in force for the
 Waitlist tab, Approve, the Invite codes tab, and the pause of the operator
 section. It belongs to [Operator section](operator-section.md), which
 covers the access, the Overview, the Orgs and Users tabs, the Providers
-tab, and Suspend and Lift. [Waitlist](waitlist.md) states the waitlist,
-the codes, and the pause. The terms are those of the
+tab, and Suspend and Lift. [Waitlist](waitlist.md) states the waitlist
+and the codes. [Sign-ups](sign-ups.md) states the pause, the waitlist
+switch, and their controls in the section. The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
 says.
@@ -46,7 +47,7 @@ says.
 - A repeat approval, or the approval of a user who already has app
   access, gets HTTP 200, changes nothing, and sends no email.
 - Approve also works during the pause, as
-  [The pause](waitlist.md#the-pause) says.
+  [The pause](sign-ups.md#the-pause) says.
 - [The approval email](waitlist.md#the-approval-email) states the email
   and its retries.
 
@@ -71,16 +72,7 @@ says.
 
 ## The pause
 
-- A Sign-ups box at the top of the Invite codes tab says that sign-ups are
-  open. It holds Pause sign-ups (decision 160).
-- Pause sign-ups asks first. The question says that codes and org
-  invitations let nobody in until sign-ups resume, and that each code
-  keeps its uses. It also says that the waitlist stays open, and that
-  Approve still works.
-- While the pause is on, each tab of the section starts with a notice. The
-  notice names the operator who paused sign-ups, and when. It says what
-  waits, and it holds Resume sign-ups. On the Invite codes tab, it takes
-  the place of the Sign-ups box.
-- Resume sign-ups acts at once, with no question. Reason: it brings back
-  the usual state.
-- [The pause](waitlist.md#the-pause) states what the pause stops.
+- The section holds the controls of sign-ups: Pause sign-ups and the
+  waitlist switch. [The Sign-ups box](sign-ups.md#the-sign-ups-box),
+  [The questions](sign-ups.md#the-questions), and
+  [The notices](sign-ups.md#the-notices) state them.

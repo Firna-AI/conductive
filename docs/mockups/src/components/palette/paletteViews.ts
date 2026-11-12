@@ -24,6 +24,7 @@ export const openPaletteViews = [
   'search-loading',
   'search-unavailable',
   'search-repositories-unavailable',
+  'search-feedback',
 ] as const
 
 export type OpenPaletteView = (typeof openPaletteViews)[number]
@@ -51,6 +52,17 @@ export const paletteTabPaths: Readonly<Record<PaletteTab, string>> = {
   workspaces: paths.paletteWorkspaces,
   actions: paths.paletteActions,
   settings: paths.paletteSettings,
+}
+
+/**
+ * The page of each tab in the Mac app, where the palette shows the keys of
+ * the Mac app. The Mac app has no page of its own for the Workspaces tab.
+ */
+export const macPaletteTabPaths: Readonly<Record<PaletteTab, string>> = {
+  all: paths.macPalette,
+  workspaces: paths.paletteWorkspaces,
+  actions: paths.macPaletteActions,
+  settings: paths.macPaletteSettings,
 }
 
 /**
@@ -85,13 +97,15 @@ export const viewTabs: Readonly<Record<OpenPaletteView, PaletteTab>> = {
   'search-loading': 'all',
   'search-unavailable': 'all',
   'search-repositories-unavailable': 'all',
+  'search-feedback': 'all',
 }
 
 /**
  * The text that the person typed. The search finds the Checkout workspace
  * and an archived one. The number finds the workspace of `W-395`, and the
  * part of a number finds each workspace whose label holds it. Nothing in
- * Acme matches "refund". "new" matches actions and a setting.
+ * Acme matches "refund". "new" matches actions and a setting. "feedback"
+ * matches only Send feedback.
  */
 export const paletteQueries: Readonly<
   Partial<Record<OpenPaletteView, string>>
@@ -103,6 +117,7 @@ export const paletteQueries: Readonly<
   'search-loading': 'new',
   'search-unavailable': 'new',
   'search-repositories-unavailable': 'new',
+  'search-feedback': 'feedback',
 }
 
 /**

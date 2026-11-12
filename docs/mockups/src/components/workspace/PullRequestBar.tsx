@@ -1,163 +1,111 @@
-import { Spinner } from '@firna/ui/spinner'
-import { useSharedUiTheme } from '@firna/ui/theme'
-import {
-  Archive,
-  ArrowRight,
-  ArrowUpRight,
-  ChevronRight,
-  GitBranch,
-  GitPullRequest,
-} from 'lucide-react'
-import { pullRequest, type BannerState } from '../../fixtures/pullRequests'
-import { repositories } from '../../fixtures/repositories'
-import { baseBranchOf, type Workspace } from '../../fixtures/workspaces'
-import { checksPaths, paths } from '../../paths'
-import { ActionButton } from '../common/actions'
-import { ScreenLink, useOutsideHref } from '../common/ScreenLink'
+import { ChevronRight, GitBranch, GitPullRequest } from 'lucide-react'
+import { pullRequest } from '../../fixtures/pullRequests'
+import type { Workspace } from '../../fixtures/workspaces'
+import { barPaths, checksPaths } from '../../paths'
 import { classes } from '../common/classes'
-import { prStatus, type PrStatus } from './prStatus'
+import { ScreenLink } from '../common/ScreenLink'
+import { BarButtons, BarMessage } from './BarActions'
+import { agentActionLabels, barLabels } from './barCopy'
+import type { BarModel } from './barModel'
+import { Branches, PullRequestNumber, StateLabel } from './barParts'
+import { hasPullRequest, prStatus } from './prStatus'
 import styles from './PullRequestBar.module.css'
 
-/** The page of GitHub that opens a pull request into the base branch. */
-function compareUrl(workspace: Workspace): string {
-  const repository = repositories[workspace.repository]
-  return `https://github.com/${repository.name}/compare/${baseBranchOf(workspace)}...${workspace.branch}`
-}
-
-/** A link to GitHub. A narrow column keeps only its icon. */
-function GitHubLink(props: { href: string; label: string }) {
-  const href = useOutsideHref(props.href)
-  return (
-    <a
-      aria-label={props.label}
-      className={styles.action}
-      href={href}
-      rel="noreferrer"
-      target="_blank"
-    >
-      <span className={styles.actionLabel}>{props.label}</span>
-      <ArrowUpRight size={13} />
-    </a>
-  )
-}
-
 /**
- * The branch and its base branch, which its work goes to. A long base
- * branch, such as the head branch of a pull request, takes at most half of
- * the line, so both names show their start.
+ * The buttons of the bar, which keep their size at its end. The bar has no
+ * link to GitHub here: the number of a pull request opens it on GitHub.
  */
-function Branches(props: { workspace: Workspace }) {
-  const { workspace } = props
-  const base = baseBranchOf(workspace)
+function Actions(props: { bar: BarModel }) {
   return (
-    <span className={styles.branches}>
-      <GitBranch className={styles.muted} size={13} />
-      <span className={styles.branch}>{workspace.branch}</span>
-      <ArrowRight className={styles.muted} size={12} />
-      <span className={styles.base} title={base}>
-        {base}
-      </span>
-    </span>
-  )
-}
-
-function StateLabel(props: { status: PrStatus }) {
-  const theme = useSharedUiTheme()
-  const Icon = props.status.icon
-  return (
-    <span className={styles.state}>
-      {props.status.busy ? (
-        <Spinner color={theme.colors.muted} size={12} />
-      ) : null}
-      {Icon ? <Icon aria-hidden size={14} /> : null}
-      {props.status.text}
+    <span className={styles.actions}>
+      <BarButtons bar={props.bar} />
     </span>
   )
 }
 
 /**
  * The pull request of the workspace branch, at the top of the right column:
- * its number, its checks and merge state, and a link to GitHub. A branch
- * without a pull request shows its target and a link that creates one,
- * once the branch has a commit. After the merge, the bar offers Archive,
- * as decision 16 says.
+ * its number, which opens it on GitHub, its checks and merge state, and its
+ * main action. A branch without a pull request shows its target and Create
+ * pull request. A message, such as a refusal of GitHub, shows under the bar.
+ * Beside an action, a narrow bar drops its detail.
  */
-export function PullRequestBar(props: {
-  state: BannerState
-  workspace: Workspace
-  /** The workspace is not archived yet, so a merge offers Archive. */
-  archivable: boolean
-}) {
-  const { state, workspace } = props
-  if (state === 'none') {
+export function PullRequestBar(props: { bar: BarModel; workspace: Workspace }) {
+  const { bar, workspace } = props
+  const { banner } = bar
+  const withActions = bar.actions.length > 0 && styles.withActions
+  const message = bar.message ? (
+    <BarMessage kind={bar.message} workspace={workspace} />
+  ) : null
+  if (!hasPullRequest(banner)) {
+    const note =
+      banner === 'none' ? barLabels.noPullRequest : barLabels.noCommits
     return (
-      <div className={styles.bar}>
-        <Branches workspace={workspace} />
-        <GitHubLink href={compareUrl(workspace)} label="Create pull request" />
-      </div>
+      <>
+        <div className={classes(styles.bar, withActions)}>
+          <Branches workspace={workspace} />
+          {bar.actions.length === 0 ? (
+            <span className={styles.note}>{note}</span>
+          ) : (
+            <Actions bar={bar} />
+          )}
+        </div>
+        {message}
+      </>
     )
   }
-  if (state === 'no-commits') {
-    return (
-      <div className={styles.bar}>
-        <Branches workspace={workspace} />
-        <span className={styles.note}>No commits yet</span>
-      </div>
-    )
-  }
-  const status = prStatus(state)
+  const status = prStatus(banner)
   return (
-    <div className={classes(styles.bar, styles[status.tone])}>
-      <span className={styles.number}>#{pullRequest.number}</span>
-      <StateLabel status={status} />
-      {status.detail ? (
-        <span className={styles.detail}>{status.detail}</span>
-      ) : null}
-      <span className={styles.spacer} />
-      {state === 'merged' && props.archivable ? (
-        <ScreenLink asChild to={paths.justArchived}>
-          <ActionButton icon={Archive}>Archive</ActionButton>
-        </ScreenLink>
-      ) : null}
-      <GitHubLink href={pullRequest.url} label="Open on GitHub" />
-    </div>
+    <>
+      <div className={classes(styles.bar, styles[status.tone], withActions)}>
+        <PullRequestNumber href={pullRequest.url} number={pullRequest.number} />
+        <StateLabel status={status} />
+        {status.detail ? (
+          <span className={styles.detail}>{status.detail}</span>
+        ) : null}
+        <Actions bar={bar} />
+      </div>
+      {message}
+    </>
   )
 }
 
-/** The compact pull request row at the top of a workspace on a phone. */
-export function PullRequestRow(props: {
-  state: BannerState
-  workspace: Workspace
-}) {
-  const { state } = props
-  const createHref = useOutsideHref(compareUrl(props.workspace))
-  if (state === 'no-commits') {
+/**
+ * The compact pull request row at the top of a workspace on a phone. It
+ * opens the Checks tab, whose top holds the actions of the bar. A branch
+ * without a pull request and without an action is not a link.
+ */
+export function PullRequestRow(props: { bar: BarModel }) {
+  const { bar } = props
+  const { banner } = bar
+  if (!hasPullRequest(banner)) {
+    if (bar.actions.length === 0) {
+      return (
+        <div className={styles.row}>
+          <GitBranch className={styles.muted} size={14} />
+          <span className={styles.rowText}>
+            {banner === 'none' ? barLabels.noPullRequest : barLabels.noCommits}
+          </span>
+        </div>
+      )
+    }
+    const to =
+      banner === 'none' ? checksPaths.none : barPaths.noCommitsLocalWork
     return (
-      <div className={styles.row}>
-        <GitBranch className={styles.muted} size={14} />
-        <span className={styles.rowText}>No commits yet</span>
-      </div>
-    )
-  }
-  if (state === 'none') {
-    return (
-      <a
-        className={styles.row}
-        href={createHref}
-        rel="noreferrer"
-        target="_blank"
-      >
+      <ScreenLink className={styles.row} to={to}>
         <GitPullRequest className={styles.muted} size={14} />
-        <span className={styles.rowText}>Create pull request</span>
-        <ArrowUpRight className={styles.muted} size={14} />
-      </a>
+        <span className={styles.rowText}>
+          {agentActionLabels['create-pull-request']}
+        </span>
+        <ChevronRight className={styles.muted} size={15} />
+      </ScreenLink>
     )
   }
-  const status = prStatus(state)
+  const status = prStatus(banner)
   return (
     <ScreenLink
       className={classes(styles.row, styles[status.tone])}
-      to={checksPaths[state]}
+      to={checksPaths[banner]}
     >
       <span className={styles.number}>#{pullRequest.number}</span>
       <StateLabel status={status} />

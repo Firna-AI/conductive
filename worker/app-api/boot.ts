@@ -9,10 +9,13 @@ import {
 } from '../../src/shared/account'
 import { MODELS_PATH } from '../../src/shared/agents'
 import { GET_STARTED_PATH } from '../../src/shared/onboarding'
+import { ShortcutContractError } from '../../src/shared/shortcut-key'
+import { readSaveShortcutsRequest } from '../../src/shared/shortcut-read'
+import type { SaveShortcutsRequest } from '../../src/shared/shortcuts'
 import { choice, invalidInput } from '../chat/inputs'
 import { loginSecret, agentLoginContext } from '../chat/queries'
 import type { AppDependencies, AppEnv } from '../env'
-import { requiredString } from '../http'
+import { HttpError, requiredString } from '../http'
 import { isOperator } from '../operator/access'
 import { encrypt } from '../security/crypto'
 import type { RequestContext } from '../security/gate'
@@ -29,6 +32,7 @@ import {
 import { githubInstallUrl } from './feature-github'
 import { getStartedData } from './get-started-data'
 import { configuredDefaultChoice, configuredModels } from './models'
+import { accountShortcuts, saveAccountShortcuts } from './shortcuts-data'
 
 export async function bootRoute(
   request: Request,
@@ -53,6 +57,7 @@ export async function bootRoute(
           configuredDefaultChoice(env),
         agentLogins: await accountLogins(env.DB, userId),
         newWorkspaceView: await accountNewWorkspaceView(env.DB, userId),
+        shortcuts: await accountShortcuts(env.DB, userId),
         githubAppUrl: githubInstallUrl(env),
       } satisfies AccountResponse)
     }
@@ -67,6 +72,17 @@ export async function bootRoute(
     if (view === undefined) return invalidInput()
     await saveAccountNewWorkspaceView(env.DB, userId, view, dependencies.now())
     return Response.json({ view } satisfies SetNewWorkspaceViewResponse)
+  }
+  if (path === ACCOUNT_PATHS.shortcuts && request.method === 'PUT') {
+    let update: SaveShortcutsRequest
+    try {
+      update = readSaveShortcutsRequest(context.body)
+    } catch (error) {
+      if (error instanceof ShortcutContractError)
+        throw new HttpError(400, 'invalid_input', error.message)
+      throw error
+    }
+    return Response.json(await saveAccountShortcuts(env.DB, userId, update))
   }
   const agent = (['claude', 'codex'] as const).find(
     (agent) => path === agentLoginPath(agent),
@@ -91,7 +107,8 @@ export async function bootRoute(
   const body = context.body
   if (
     body?.agent !== agent ||
-    (body.kind !== 'api-key' && !(agent === 'claude' && body.kind === 'token'))
+    (body.kind !== 'api-key' && body.kind !== 'token') ||
+    (agent === 'codex' && body.kind === 'token')
   )
     return invalidInput()
   const kind: SaveAgentLoginRequest['kind'] = body.kind
@@ -109,9 +126,12 @@ export async function bootRoute(
     ciphertext,
     updatedAt,
   )
-  const login: SaveAgentLoginResponse =
-    agent === 'claude'
-      ? { agent, connected: true, kind, noReuse, updatedAt }
-      : { agent, connected: true, kind: 'api-key', noReuse, updatedAt }
+  const login: SaveAgentLoginResponse = {
+    agent,
+    connected: true,
+    kind,
+    noReuse,
+    updatedAt,
+  }
   return Response.json(login)
 }

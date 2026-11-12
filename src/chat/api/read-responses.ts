@@ -33,8 +33,13 @@ import {
   readUserMessage,
 } from './read-chat'
 
-/** What the composer needs to know about the agent logins of the user. */
-type AgentLogin = Pick<AgentLoginStatus, 'agent' | 'connected'>
+/**
+ * What the composer needs to know about an agent login of the user: its
+ * agent, whether it is connected, and why the app can no longer use it.
+ */
+type AgentLogin = Pick<AgentLoginStatus, 'agent' | 'connected'> & {
+  unusableCause?: string
+}
 
 export interface AccountSummary {
   /** The signed-in user, who reads the chat. */
@@ -115,7 +120,12 @@ export function readAccount(value: unknown): AccountSummary {
     defaultChoice: readChoice(source.defaultChoice),
     agentLogins: list((item): AgentLogin => {
       const login = record(item, 'agent login')
-      return { agent: readAgent(login.agent), connected: flag(login.connected) }
+      const read = {
+        agent: readAgent(login.agent),
+        connected: flag(login.connected),
+      }
+      if (login.unusableCause === undefined) return read
+      return { ...read, unusableCause: text(login.unusableCause) }
     })(source.agentLogins),
   }
 }

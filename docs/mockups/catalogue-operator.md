@@ -5,9 +5,10 @@ of the catalogue, the rules of its folder pages, and the entries that
 moved. This page gives what the operator controls: the pages of the
 waitlist, a suspended org, and the operator section with its child pages.
 
-The waitlist comes from decisions 160 to 163. A new GitHub sign-in creates
-an account without app access, and the person waits until an operator
-approves them, or a code or an org invitation lets them in. Its pages:
+The waitlist comes from decisions 160 to 163 and 230. Outside open sign-up,
+a new GitHub sign-in creates an account without app access. The person
+waits until an operator, a code, an org invitation, or open sign-up lets
+them in. Its pages:
 
 - `app/sign-in/waitlist` has the only screen of a person who waits, Sam
   Okafor, with the address that gets the approval email. Its child pages
@@ -27,11 +28,16 @@ approves them, or a code or an org invitation lets them in. Its pages:
   variant has the pause.
 - `app/account` shows the invite code of the user at the end of the
   General tab, with 3 of 5 invites left. Its child page `app/account/invites` has the
-  pause, and its variants have every invite used and a code that an
-  operator turned off.
+  pause, and its variants have every invite used, a code that an
+  operator turned off, and `open-sign-up`, whose notice says that anyone
+  can sign up now and that the invites stay for later.
 - The Sign up flow ends on the waitlist. The Join with an invite link flow
   goes from the link through Get started, so the people of each flow stay
   the same.
+- Open sign-up comes from decision 230: the waitlist is off and sign-ups
+  are not paused. `marketing/open-sign-up`, a child page of the home page,
+  shows that the page stays the same, with Sign up. The Open sign-up flow
+  goes from it through the sign-in to Get started.
 
 `app/orgs/suspended` shows Acme after the operator suspended it, from
 decision 129. Its notice is at the top of the list, and every workspace
@@ -93,8 +99,9 @@ pages:
 - `app/operator/waitlist` has the Waitlist tab: the people who wait, oldest
   first, a search, the question before Approve, the list after two
   approvals, one with its email not sent yet, and an empty waitlist.
-- `app/operator/codes` has the Invite codes tab: Sign-ups with Pause
-  sign-ups, the search, and the invite codes with their uses and states.
+- `app/operator/codes` has the Invite codes tab: Sign-ups with the state
+  of the waitlist, Turn off the waitlist, and Pause sign-ups, the search,
+  and the invite codes with their uses and states.
   Each code has Copy, and a code that works also has Copy join link. Its
   child pages are below.
 - `app/operator/providers` has the Providers tab: the slider of the
@@ -128,10 +135,13 @@ of `app/operator/user` and kept their paths:
   GitHub account has no verified email: no email goes out, and the person
   sees the app access at their next visit.
 - `app/operator/user/access` has a user who came in with an invite code.
-  Its variants have a user who came in with a referral code, with an org
-  invitation, which names the org and the admin who sent it, and as an
-  operator. Its `email-not-sent` variant has an approval whose email never
-  went, because the GitHub account has no verified email.
+  Its child pages were its variants and kept their paths. They have a user
+  who came in with a referral code, with an org invitation, which names
+  the org and the admin who sent it, and as an operator. `email-not-sent`
+  has an approval whose email never went, because the GitHub account has
+  no verified email. `open-sign-up` has a user who came in by open
+  sign-up, with the operator who turned off the waitlist. Its `waited`
+  variant has a person who waited and got app access at their next visit.
 - `app/operator/user/referral` has the question before the disable of a
   referral code. Its `disabled` variant has the disabled code.
 
@@ -146,5 +156,15 @@ The child pages of `app/operator/codes`:
   GitHub login of the owner of a referral code. Its variants have a search
   that finds the referral code of a user, and a search with no match.
 - `app/operator/codes/pause` has the question before Pause sign-ups. Its
-  variants have the Invite codes tab while sign-ups are paused, with
-  Resume sign-ups, and the same notice on the Waitlist and the Overview.
+  `waitlist-off` variant has the same question while the waitlist is off,
+  and its links keep the waitlist off. Its other variants have the Invite
+  codes tab while sign-ups are paused, with Resume sign-ups, and the same
+  notice on the Waitlist and the Overview.
+  The question and the notice say that new people wait, also while the
+  waitlist is off.
+- `app/operator/codes/waitlist-off` has the question before Turn off the
+  waitlist, with the number of people who wait. Its `turned-off` variant
+  has the Invite codes tab while the waitlist is off: the notice with Turn
+  on the waitlist, above a Sign-ups box that says Open. Its `waitlist` and
+  `overview` variants have the same notice on those tabs. Its `paused`
+  variant has both notices while sign-ups are paused, the pause first.

@@ -12,6 +12,7 @@ import {
   operatorCodesPath,
   operatorSignupPausePath,
   operatorWaitlistPath,
+  operatorWaitlistSwitchPath,
   type OperatorCodesResponse,
   type OperatorWaitlistResponse,
 } from '../shared/operator-waitlist'
@@ -26,8 +27,9 @@ import { operatorFixtures, orgRow, userRow } from './fixtures/operator'
 /**
  * Makes the person signed in an operator, and serves the operator replies
  * of the samples: the Overview, the newest orgs and users, the people who
- * wait, the invite codes, the pause, and the page of each sample org and
- * user. A test sets its own reply for a search, a failure, or a write.
+ * wait, the invite codes, the pause, the waitlist switch, the provider
+ * accounts, and the page of each sample org and user. A test sets its own
+ * reply for a search, a failure, or a write.
  */
 export function serveOperator(server: FakeApiServer, now = FAKE_TIME) {
   const fixtures = operatorFixtures(now)
@@ -58,6 +60,7 @@ export function serveOperator(server: FakeApiServer, now = FAKE_TIME) {
     nextCursor: null,
   } satisfies OperatorCodesResponse)
   server.json('GET', operatorSignupPausePath(), fixtures.pause)
+  server.json('GET', operatorWaitlistSwitchPath(), fixtures.waitlistSwitch)
   server.json('GET', operatorProvidersPath(), {
     accounts: ['boat', 'e2b'].map((id) => ({
       id,

@@ -12,6 +12,10 @@ requests. [Agent runner](../docs/protocol/agent-runner.md) and
 [Model gateway](../docs/protocol/model-gateway.md) state its requirements,
 and the [shared contracts](../src/shared/README.md) define its messages.
 
+The `hello` advertises every login kind that this runner can run.
+The Worker checks that list before dispatching a turn or message.
+An older runner receives no unsupported login and the turn fails with recovery steps.
+
 This folder is a separate Node 24 package with its own lockfile. The root
 `npm install` does not install it. Tests inject the fake workspace endpoint.
 The package also holds the sandbox's preview relay.
@@ -25,14 +29,18 @@ These facts belong to this implementation, not to the protocol docs.
   that program. The runner turns off its automatic updates. It starts the
   program through the SDK option `spawnClaudeCodeProcess`, so the runner
   owns the child process.
-- Codex runs through the Codex App Server. The runner starts
-  `codex app-server` from the `@openai/codex` package, which
-  `@openai/codex-sdk` installs.
-- Both agents run without approval prompts, with the rights of the service
-  user.
-- Both agents get the `conductive` workspace MCP server, and the sandbox's
-  `computer` MCP server when it exists. The [agent tools guide](agent-tools.md)
-  gives their settings, runtime context, and process lifetime.
+- Codex uses the pinned Codex App Server, through `@openai/codex-sdk`.
+  API keys use its private login request. ChatGPT sign-ins use a temporary
+  login file with a turn token and public account identity.
+  [Agent logins](agent-logins.md#codex) gives both routes through the gateway.
+  [Conversation continuation](codex-logins.md#conversation-continuation)
+  gives the resume and fork sequence after a login kind change.
+- Both agents request no approvals and the service user's rights. ChatGPT
+  workspace rules can replace these Codex settings on a ChatGPT turn.
+- The runner configures the `conductive` MCP server for both agents, and
+  the sandbox's `computer` MCP server when it exists. The
+  [agent tools guide](agent-tools.md) gives their settings, runtime
+  context, and process lifetime.
 - No command carries an agent login or a GitHub token. Each `turn` command
   carries a turn token for the model gateway, as [Agent logins](agent-logins.md)
   says. [GitHub tokens](../docs/protocol/github-tokens.md)
@@ -40,12 +48,13 @@ These facts belong to this implementation, not to the protocol docs.
 - Each agent process gets the commit author of its turn as `GIT_AUTHOR_NAME`,
   `GIT_AUTHOR_EMAIL`, `GIT_COMMITTER_NAME`, and `GIT_COMMITTER_EMAIL`.
   A message during the turn keeps that author, also when a new agent process
-  takes deferred input. Without an author, the process keeps the sandbox values.
-  A malformed author gives a local warning and keeps those values. The turn continues.
+  takes deferred input. Without an author, Git uses the workspace owner's
+  author from the Git system settings of the sandbox. A malformed author
+  gives a local warning, and Git uses those settings. The turn continues.
   A workspace gets this behaviour only from an org image built with this runner.
 - The [agent input guide](agent-input.md) describes the context folder,
-  the instructions that each session keeps, the sender line, and attached
-  files.
+  the instructions that each session keeps with their branches, the sender
+  line and the branch line of each message, and attached files.
 - When the running agent cannot take the model or the effort of a message
   at once, that message waits for the result of the agent. A new agent
   process then takes the waiting input on the same conversation and turn
@@ -89,22 +98,25 @@ These facts belong to this implementation, not to the protocol docs.
   result that lists them. Each result frees only the messages that it
   lists. Closing discards held input. The engine matches result lists exactly.
 - A Claude SDK result with the origin `task-notification` belongs to a
-  background task, such as a background command or subagent. The adapter
-  ignores such a result when it lists no sent message that still waits. An
-  ignored result does not take the message list of an earlier SDK frame. It
-  does not end the active turn, and it frees no sent message. When such a
+  background task, such as a background command or subagent. When such a
   result lists sent messages that still wait, it answers them as usual. So
   each result stays with the
   [messages that it answers](../docs/protocol/chat-and-events.md#what-the-chat-shows).
+- Such a result that lists no waiting message ends a wake-up reply during
+  a [background wait](background-work.md#the-wait). That reply stays in the
+  same turn. Outside a wait, the adapter ignores the result. An ignored
+  result does not take the message list of an earlier SDK frame. It does
+  not end the active turn, and it frees no sent message.
 - The runner saves the events of all sessions in one state file, in order,
   before it sends them. The state file holds the stream ID, its event
   counter, the unconfirmed events, the tree and changes revisions, and
   `turns` records of accepted turns. It holds the conversation reference and
-  the agent instructions of each session. It also holds the last
-  `start.updated` and `workspace.title` events, and the ID of each answered
-  [report request](reports.md). It holds no other command data, no
-  login, and no turn token. The runner saves a turn record before the
-  session save. The saves of `turn.started` and its end update that record.
+  the agent instructions of each session, with their branches. It also
+  holds the last `start.updated` and `workspace.title` events, and the ID of
+  each answered [report request](reports.md). It holds no other command
+  data, no login, and no turn token. The runner saves a turn record before
+  the session save. The saves of `turn.started` and its end update that
+  record.
   A turn stopped before its start also has a saved end record.
   The confirm of the end removes the record.
 - A failed save rejects only its own call, and later saves and events
@@ -133,16 +145,32 @@ These facts belong to this implementation, not to the protocol docs.
   unavailable. The state file holds no record of its initial files.
   A changed-file read failure also keeps the turn's completed state and
   marks its files as unavailable.
-- File reads and diffs use the shared UTF-8 decoder and keep a leading byte
-  order mark. A valid path can hold a tab, a newline, or a backslash. Each
-  path must still resolve inside the repository and pass the `.git` check.
-- File reads cap bytes at `FILE_READ_MAX_BYTES`, also when a caller asks
-  for more. Diffs use the same cap for each file version and for the patch.
-  The runner checks file and blob sizes before it loads their bytes.
-  Git stops patch output at the cap. An oversized result returns
-  `file_too_large`. Patch size reports the first byte over the limit.
+- The [file reports guide](file-reports.md) gives the base of each
+  comparison, the counts of each changes report, and the limits of file
+  reads and diffs.
 - Before it connects, the runner reads the `claude` program file once, so
   that the disk loads it early. It uses no credential and starts no agent.
+- After a start from a saved snapshot on Boat, the provider restores the
+  disk in the background. When the restore ends, a running program keeps
+  an old view of the disk at another path, such as
+  `/var/lib/ascii-lazy/retired/home/code/<name>`. A repository watch made
+  before that end then misses every later edit, so the file lists stop.
+  The runner checks once a second for the
+  [terminal's restore marker](../worker/terminal/README.md), which the
+  Worker writes when the provider reports the end of the restore. E2B
+  reports no background restore, so the Worker writes the marker as soon as
+  the sandbox reports ready. When the
+  marker appears, the runner watches the live folder again and scans the
+  repository once. A marker that exists when the watch starts changes
+  nothing, because that watch already sees the live folder. Each Git
+  command already resolves the folder path again, so only the watch moves.
+
+## Background work
+
+[Background work](background-work.md) gives how a Claude turn waits for the
+background work of its agent, the note at the end of a reply, the time
+limit of 120 minutes, the end reason, and their key code. A workspace gets
+this behaviour only from an org image built with this runner.
 
 ## Event limits
 
@@ -157,9 +185,10 @@ receipts, and the listening-port scan and scheduling boundaries.
 
 ## Preview relay
 
-The [preview relay guide](preview-relay.md) gives its entry points, build,
-service, socket activation, private ingress checks, HTTP and WebSocket
-forwarding, and tests.
+The [preview relay guide](preview-relay.md) gives what the relay does, its
+entry points, how it listens, its build, and its separate service with
+socket activation. It also gives the private ingress checks, the HTTP and
+WebSocket forwarding, and the tests.
 The relay preserves `Host: localhost:<port>` for the previewed app.
 
 ## Commands
@@ -210,63 +239,15 @@ tools that time the first agent start after a resume.
 
 ## Key code
 
-- `src/main.ts` and `src/config.ts`: the service entry point, the variables
-  and their defaults, the state file, and the reconnect after each drop.
-- [`src/relay/server.ts`](src/relay/server.ts): starts the preview relay.
-  The HTTP and upgrade handlers share the header rules and target connection code.
-- `src/runner.ts`: `Runner` joins the connection, agents, file and port
-  reports, and report requests.
-- `src/context-folder.ts`: `prepareContextFolder` adds the local exclude
-  rule and makes the context folders before startup reports.
-- `src/instructions.ts`: `agentInstructions`, with Claude's base rules.
-- [`OutputSanitizer`](../src/shared/output-sanitizer.ts) and the
-  [output field policy](../src/shared/output-fields.ts): the one filter
-  shared with the Worker. The runner supplies the workspace and turn tokens.
-- [`event-limits.ts`](../src/shared/event-limits.ts): portable UTF-8 byte
-  accounting and the shared tool and turn-summary caps.
-- `src/proc-ports.ts`, `src/socket-table.ts`, and `src/port-metadata.ts`:
-  socket-table reads, listener filters, and safe process names and folders.
-- `src/ports.ts`: `PortReporter`, its stable list, scan queue, and timer lifetime.
-- `src/port-report-budget.ts`: complete private port labels or whole-label
-  omission within the report budget, after runner credential filtering.
-- `src/file-parts.ts`: full report parts and bounded tree deltas.
-- `src/file-updates.ts`: the full tree or the tree delta of each scan, and
-  the check for a new changes report.
-- `src/link.ts`, `src/state.ts`, `src/socket.ts`, `src/commands.ts`, and
-  `src/stored-events.ts`: the hello, welcome, confirm, and resend rules, the
-  state file, the WebSocket, and checks of messages and saved events.
-- `src/serial-queue.ts`: the ordered queue of the saves and the events. A
-  failed step rejects only its own call, and later steps still run.
-- `src/report-state.ts`: the saved `start.updated` and `workspace.title`
-  events and the answered report request IDs of the state file.
-- `src/engine.ts`, `src/engine-runtime.ts`, and `src/turn-output.ts`:
-  session queues, cancelable turns, message delivery, controls, and text deltas.
-- `src/engine-disposal.ts`: one close path for deferred model changes, turn
-  ends, Stop, and shutdown.
-- `src/engine-pending.ts`: accepted turn saves and the ends of pending starts.
-- `src/providers/`: the Claude and Codex adapters, their event mapping, and
-  each agent environment. `claude-message.ts` joins whole Claude messages.
-  `message.ts` puts the sender line before the text of each message.
-  `lifetime.ts` owns each agent process until it exits, with its kill delay.
-  `attachment-description.ts` describes each attached file to both agents.
-  The [tool entry points](agent-tools.md#key-code) cover both MCP servers,
-  and the [login entry points](agent-logins.md#key-code) cover the credentials.
-- `src/files.ts`, `src/repository.ts`, and `src/checkpoint.ts`: the scan
-  queue, the file tree, the branch changes, bounded reads, and the files of
-  one turn.
-- `src/git-index.ts`, `src/git-entries.ts`, and `src/git-diff.ts`: temporary
-  indexes and objects for Git comparisons. The real index stays unchanged.
-- `src/git.ts`: Git commands and merge-base selection, which prefers the fetched remote-tracking base over a local branch.
-- `src/git-paths.ts`: shared Git namespace states for paths and parents.
-- `src/measure.ts`, `src/compare.ts`, `scripts/`, and `service/`: the
-  first-start measurement and its comparison, the build, the install
-  script, the Codex check, and the systemd unit.
+[Key code](key-code.md) lists the entry points of the runner, and the
+guides that give the entry points of each part.
 
 ## Related docs
 
 - [Architecture: sandbox software](../docs/architecture/components.md#sandbox-software)
 - [Agent runner](../docs/protocol/agent-runner.md)
-- [Agent runner: lost workspace updates](../docs/protocol/agent-runner.md#lost-workspace-updates)
+- [Agent runner: background work](../docs/protocol/agent-runner.md#background-work)
+- [Agent runner: lost workspace updates](../docs/protocol/lost-workspace-updates.md)
 - [Agent runner: listening ports](../docs/protocol/agent-runner.md#listening-ports)
 - [Agents and sessions: agents](../docs/protocol/agents-and-sessions.md#agents)
 - [Agent instructions](../docs/protocol/agent-instructions.md)

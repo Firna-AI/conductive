@@ -20,9 +20,13 @@ import { sampleUsers } from '../../test-support/fixtures/operator-samples'
 import type { DevBackend } from './backend'
 import { operatorOrgDetails } from './operator-orgs'
 import { searchOrgs, searchUsers } from './operator-search'
-import { operatorWaitlistRoutes } from './operator-waitlist-routes'
+import {
+  operatorWaitlistRoutes,
+  type OperatorRouteKit,
+} from './operator-waitlist-routes'
 import { providerRoutes } from './provider-routes'
 import { ID, json, RouteError, type Route } from './router'
+import { signupRoutes } from './signup-routes'
 
 /** The samples count their days back from the first time of the dev clock. */
 const BASE = FAKE_TIME
@@ -34,15 +38,15 @@ function ids(count: number, prefix: string): string[] {
 /**
  * The operator section of the dev fake: the sample orgs and users of the
  * mockups, and the orgs that Create org made in the page, which Suspend and
- * Lift change, the waitlist, the codes, and the pause of
- * `operatorWaitlistRoutes`, and the provider accounts of `providerRoutes`. Only an operator, from
- * `operator=1`, gets an answer, as the Worker says. A suspension of an org
- * of the user also suspends it in the state of the fake, so the fake
- * refuses each write of that org with `org_suspended`. The open app does
- * not read its orgs again, so its pages of that org show the suspension
- * only after such a refusal. After a lift, the fake takes the writes of
- * that org again, and the app keeps the mark of a refusal until it loads
- * again.
+ * Lift change, the waitlist and the codes of `operatorWaitlistRoutes`, the
+ * pause and the waitlist switch of `signupRoutes`, and the provider
+ * accounts of `providerRoutes`. Only an operator, from `operator=1`, gets
+ * an answer, as the Worker says. A suspension of an org of the user also
+ * suspends it in the state of the fake, so the fake refuses each write of
+ * that org with `org_suspended`. The open app does not read its orgs
+ * again, so its pages of that org show the suspension only after such a
+ * refusal. After a lift, the fake takes the writes of that org again, and
+ * the app keeps the mark of a refusal until it loads again.
  */
 export function operatorRoutes(backend: DevBackend): Route[] {
   const { state } = backend
@@ -85,6 +89,7 @@ export function operatorRoutes(backend: DevBackend): Route[] {
   }
   const records = () => state.operator
   const users = operatorUsersPath()
+  const kit: OperatorRouteKit = { backend, base: BASE, guard, userOf, operator }
   return [
     {
       method: 'GET',
@@ -196,7 +201,8 @@ export function operatorRoutes(backend: DevBackend): Route[] {
         } satisfies UserSuspensionLiftResponse)
       },
     },
-    ...operatorWaitlistRoutes({ backend, base: BASE, guard, userOf, operator }),
+    ...operatorWaitlistRoutes(kit),
+    ...signupRoutes(kit),
     ...providerRoutes(backend, guard, operator),
   ]
 }

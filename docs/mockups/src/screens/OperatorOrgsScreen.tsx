@@ -1,8 +1,8 @@
 import type { SchemaProps, Viewport } from '@mokly/mokly'
 import { TableCell, type TableColumn } from '@firna/ui/table'
+import { SearchField } from '../components/common/SearchField'
 import {
   AccountId,
-  DirectorySearch,
   DirectoryTable,
   NameCell,
   TargetState,
@@ -153,7 +153,7 @@ export function OperatorOrgsScreen(props: {
   const found = results(props.state.search)
   return (
     <OperatorPage tab="orgs" title="Operator" viewport={props.viewport}>
-      <DirectorySearch
+      <SearchField
         label="Search orgs"
         placeholder="Name, org ID, cloud computer ID, or preview address"
         query={found.query}

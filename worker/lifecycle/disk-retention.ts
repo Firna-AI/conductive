@@ -147,6 +147,7 @@ export async function keepWorkspaceDisk(
       sandboxId,
       deadlineAt,
       command,
+      row.ownerUserId,
     )
   }
   return { done: false, error: null }

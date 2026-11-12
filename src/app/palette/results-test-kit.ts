@@ -17,8 +17,14 @@ export const sections = core.sectionList.sections
 const repositories = core.repositories.repositories
 export const workspaces = workspaceFixtures().workspaces.workspaces
 
-/** The sections of the Account page outside the Mac app. */
-export const accountRows = ['Sign-in', 'GitHub', 'Agents', 'New workspaces']
+/** The sections of the Account page outside the Mac app, then Keyboard shortcuts. */
+export const accountRows = [
+  'Sign-in',
+  'GitHub',
+  'Agents',
+  'New workspaces',
+  'Keyboard shortcuts',
+]
 
 /** What the palette reads on the list of Acme, with the overrides. */
 export function source(overrides: Partial<PaletteSource> = {}): PaletteSource {

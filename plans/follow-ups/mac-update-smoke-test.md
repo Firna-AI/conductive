@@ -10,7 +10,7 @@
   - **Squirrel.Mac:** the macOS update framework inside Electron. It accepts a downloaded version, and it replaces the app when the update installs.
   - **Read-only copy:** a copy of the app that runs from its mounted DMG, or from the hidden read-only place where macOS runs a downloaded app until the user moves it.
 - **Background:**
-  - From `0.1.0`, each release build of the Mac app updates itself from the GitHub releases of `Firna-AI/remote-code`. No installed copy has done this yet.
+  - From `0.1.0`, each release build of the Mac app updates itself from the GitHub releases of `Firna-AI/conductive`. No installed copy has done this yet.
   - No automated test installs a real update. The unit tests in `desktop/src/updates.test.ts` use a fake updater, and the packaged tests do not check for updates. So only a real Mac and real releases test the whole path.
   - The app checks at launch and every 4 hours. It downloads a new version automatically, about 130 MB.
   - The app shows "The update is ready." with Restart now and Later only after Squirrel.Mac accepts the downloaded version. Restart now restarts the app into the new version. Later installs it at the next quit.
@@ -23,7 +23,7 @@
   - release-please opens the next release pull request after a `fix` or `feat` commit on `main`. From `0.1.0`, a `fix` commit gives `0.1.1`, and a `feat` commit gives `0.2.0`.
   - Each architecture has its own ZIP file in each release.
 - **Task:**
-  1. Quit every running copy of Conductive. Download the DMG of `v0.1.0` from `https://github.com/Firna-AI/remote-code/releases/tag/v0.1.0`: `Conductive-0.1.0-mac-arm64.dmg` for Apple silicon, or `Conductive-0.1.0-mac-x64.dmg` for Intel.
+  1. Quit every running copy of Conductive. Download the DMG of `v0.1.0` from `https://github.com/Firna-AI/conductive/releases/tag/v0.1.0`: `Conductive-0.1.0-mac-arm64.dmg` for Apple silicon, or `Conductive-0.1.0-mac-x64.dmg` for Intel.
   2. Open the DMG. Check that macOS opens it with no warning about the developer. Drag Conductive to Applications, then eject the DMG.
   3. Open Conductive from Applications. Check that macOS asks only whether to open an app from the internet, with no warning about the developer. Then quit the app.
   4. Open Terminal, and start the app with `/Applications/Conductive.app/Contents/MacOS/Conductive`, so that the log shows. Use this way to start the app in each step below.

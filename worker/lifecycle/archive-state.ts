@@ -5,9 +5,8 @@ import { providerForAccount } from '../sandbox/client'
 import { configuredProviderAccount } from '../sandbox/accounts'
 import { warnWorker } from '../warnings'
 import { errorSummary, WarningId } from '../warning-values'
-import { CREATE_CHECKPOINT_KEY } from '../members/creation-checkpoint'
+import { beginWorkspaceArchive } from './archive-begin'
 import { prepareArchivedLifecycle } from './archive-start'
-import { serializeStartJob } from './start-job-codec'
 import { recoverArchivedAllocation } from './archive-allocation'
 import { recordSandboxCleanup, retrySandboxCleanup } from './cleanup'
 import { readWorkspace, workspaceRecord } from './workspace-data'
@@ -42,45 +41,8 @@ export class WorkspaceArchive {
   }
 
   async begin(workspaceId: string): Promise<void> {
-    const { storage, lifecycle, startJobs, env, dependencies } = this.context
-    const row = await readArchiveResource(env.DB, workspaceId)
-    if (!row || row.archivedAt === null || row.orgDeleted !== null) return
-    const revision = (await storage.get('number', ARCHIVE_REVISION_KEY)) ?? 0
-    let state = await storage.get('archive', ARCHIVE_STATE_KEY)
-    if (!state || state.revision !== revision || !sameArchive(row, state)) {
-      const job = await startJobs.job()
-      const current = await lifecycle.read()
-      state = {
-        revision,
-        workspaceId,
-        orgId: row.orgId,
-        archivedAt: row.archivedAt,
-        sandboxId: row.sandboxId ?? job?.allocatedSandboxId ?? null,
-        providerAccount: row.providerAccount,
-        phase: 'initializing',
-        stoppedAt: row.stoppedAt ?? current?.stoppedAt ?? null,
-        stopRequestedAt: current?.diskRetentionCommand?.stopRequestedAt,
-        allocation: job?.createPayloadCiphertext
-          ? serializeStartJob(job)
-          : undefined,
-      }
-      const initial = state
-      await storage.transaction(async (transaction) => {
-        await transaction.put('archive', ARCHIVE_STATE_KEY, initial)
-        await transaction.delete(ARCHIVE_RESERVATION_KEY)
-        if (job?.kind === 'create')
-          await transaction.put(
-            'job',
-            CREATE_CHECKPOINT_KEY,
-            serializeStartJob({
-              ...job,
-              commandAttempt: `${job.attempt}:archive:${revision}`,
-            }),
-          )
-        await transaction.setAlarm(dependencies.now())
-      })
-    }
-    await this.advance()
+    const initial = await beginWorkspaceArchive(this.context, workspaceId)
+    if (initial) await this.advance(initial.defer)
   }
 
   async repair(workspaceId: string): Promise<void> {
@@ -121,11 +83,12 @@ export class WorkspaceArchive {
       await this.save({ ...state, phase: 'stop', stopRequestedAt: undefined })
     await this.advance()
     return (
+      !this.context.hasOutsideTurns?.() &&
       (await storage.get('archive', ARCHIVE_STATE_KEY))?.phase === 'retained'
     )
   }
 
-  async advance(): Promise<void> {
+  async advance(initializeOnly = false): Promise<void> {
     const { env, dependencies, storage, publish } = this.context
     const saved = await storage.get('archive', ARCHIVE_STATE_KEY)
     if (!saved) {
@@ -185,6 +148,10 @@ export class WorkspaceArchive {
           state,
         )
         await this.save(state)
+      }
+      if (initializeOnly || this.context.hasOutsideTurns?.()) {
+        await storage.setAlarm(dependencies.now())
+        return
       }
       if (state.phase === 'resolve' && state.allocation) {
         state = await recoverArchivedAllocation(this.context, state, (next) =>

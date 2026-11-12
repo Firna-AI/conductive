@@ -6,7 +6,9 @@ import {
   type GitHubInstallationsResponse,
   type GitHubRepositoriesResponse,
   type GitHubRepository,
+  type PollCodexDeviceResponse,
   type SetNewWorkspaceViewResponse,
+  type StartCodexDeviceResponse,
 } from '../../shared/account'
 import type {
   Agent,
@@ -19,6 +21,12 @@ import type { MessageSender } from '../../shared/messages'
 import type { GetStartedResponse } from '../../shared/onboarding'
 import type { OrgSummary } from '../../shared/orgs'
 import type { Section } from '../../shared/sections'
+import { ShortcutContractError } from '../../shared/shortcut-key'
+import {
+  readSaveShortcutsResponse,
+  readShortcutPreferences,
+} from '../../shared/shortcut-read'
+import type { SaveShortcutsResponse } from '../../shared/shortcuts'
 import { getStartedOrder } from '../get-started'
 import {
   choice,
@@ -28,6 +36,7 @@ import {
   maybeNested,
   maybeText,
   nested,
+  ParseError,
   record,
   text,
 } from './parse'
@@ -126,22 +135,90 @@ export function readLogin(value: unknown): AgentLoginStatus {
   if (!flag(login, 'connected')) return { agent, connected: false }
   const updatedAt = count(login, 'updatedAt')
   const noReuse = flag(login, 'noReuse')
-  if (agent === 'codex') {
-    return {
-      agent,
-      connected: true,
-      kind: choice(login, 'kind', ['api-key']),
-      noReuse,
-      updatedAt,
-    }
-  }
   return {
     agent,
     connected: true,
     kind: choice(login, 'kind', ['token', 'api-key']),
     noReuse,
     updatedAt,
+    ...(agent === 'codex' && login.unusableCause !== undefined
+      ? { unusableCause: text(login, 'unusableCause') }
+      : {}),
   }
+}
+
+/**
+ * What says whether turns can run on a login of the user. The full login
+ * status has these fields, and so do the narrower summaries of screens.
+ */
+export interface LoginUse {
+  connected: boolean
+  unusableCause?: string
+}
+
+/**
+ * Whether turns can run on a login of the user: it is connected, and the
+ * Worker gives no cause that stops it, such as a ChatGPT sign-in that
+ * OpenAI did not renew. A login that is missing cannot run turns.
+ */
+export function loginUsable(login: LoginUse | undefined): boolean {
+  return login?.connected === true && login.unusableCause === undefined
+}
+
+/** The states of a ChatGPT sign-in of Codex, as a poll answers them. */
+const CODEX_DEVICE_STATES = [
+  'waiting',
+  'connected',
+  'expired',
+  'failed',
+] as const satisfies readonly PollCodexDeviceResponse['state'][]
+
+/** A started ChatGPT sign-in: its handle, its code, and its times. */
+export function readCodexDeviceStart(value: unknown): StartCodexDeviceResponse {
+  const start = record(value, 'ChatGPT sign-in')
+  return {
+    handle: text(start, 'handle'),
+    userCode: text(start, 'userCode'),
+    verificationUrl: text(start, 'verificationUrl'),
+    expiresAt: count(start, 'expiresAt'),
+    pollIntervalMs: count(start, 'pollIntervalMs'),
+  }
+}
+
+/** The state of a ChatGPT sign-in, with the connected login at the end. */
+export function readCodexDevicePoll(value: unknown): PollCodexDeviceResponse {
+  const poll = record(value, 'ChatGPT sign-in')
+  const state = choice(poll, 'state', CODEX_DEVICE_STATES)
+  switch (state) {
+    case 'waiting':
+      return { state, pollIntervalMs: count(poll, 'pollIntervalMs') }
+    case 'connected':
+      return { state, login: nested(poll, 'login', readLogin) }
+    case 'expired':
+      return { state }
+    case 'failed':
+      return { state, cause: text(poll, 'cause') }
+  }
+}
+
+/** A shared shortcut reader whose contract error is a parse error of the reply. */
+function shortcutReply<T>(read: (value: unknown) => T, value: unknown): T {
+  try {
+    return read(value)
+  } catch (error) {
+    if (error instanceof ShortcutContractError)
+      throw new ParseError(error.message)
+    throw error
+  }
+}
+
+function readShortcuts(value: unknown) {
+  return shortcutReply(readShortcutPreferences, value)
+}
+
+/** The confirmed changes of the keyboard that a shortcut save saved. */
+export function readSavedShortcuts(value: unknown): SaveShortcutsResponse {
+  return shortcutReply(readSaveShortcutsResponse, value)
 }
 
 export function readAccount(value: unknown): AccountResponse {
@@ -150,6 +227,7 @@ export function readAccount(value: unknown): AccountResponse {
     user: nested(account, 'user', readUser),
     defaultChoice: nested(account, 'defaultChoice', readChoice),
     newWorkspaceView: choice(account, 'newWorkspaceView', NEW_WORKSPACE_VIEWS),
+    shortcuts: nested(account, 'shortcuts', readShortcuts),
     agentLogins: items(account, 'agentLogins', readLogin),
     operator: flag(account, 'operator'),
     githubAppUrl: text(account, 'githubAppUrl'),

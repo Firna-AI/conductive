@@ -51,9 +51,11 @@ The CLI is ready to use without a separate login step.
 | --- | --- |
 | In an agent turn | The person whose message started the turn |
 | In the shared Terminal | The workspace owner |
+| GitHub CLI outside an agent turn | The workspace owner |
 
 Commits name the person in the table as both author and committer.
 Commits that a script makes outside an agent turn name the workspace owner.
+An `author` or `committer` setting in the repository or in the global Git settings takes priority over the workspace owner's author.
 In a workspace with older cloud computer software, agent commits name the workspace owner.
 [Apply setup changes](/docs/cloud-computer#apply-setup-changes) says how to get newer software.
 Conductive uses their GitHub display name, or their login when the display name is missing or unusable.
@@ -66,6 +68,11 @@ An explicit `GH_TOKEN` or `GITHUB_TOKEN` value can replace the supplied CLI logi
 
 The token can reach repositories that both that person and the GitHub App can access.
 This can include repositories outside the Conductive org.
+
+**Merge** and **Continue** in the pull request bar use the GitHub account of the member who selects them.
+The shared Terminal still uses the workspace owner's account.
+
+- [Use pull request actions](/docs/pull-requests)
 
 ## Preview a running app
 
@@ -106,7 +113,8 @@ The program name uses at most 10 characters, including **…** when shortened.
 Its tooltip and screen reader label give the full name and folder.
 Use **+**, named **Preview another port**, to choose another server or enter its port.
 Use **Reload** to load the selected preview again.
-Use **Close preview** to close it.
+Use the **×** after the name of a preview tab to close that preview.
+It shows on the selected tab, and on another tab when you point to it.
 
 A preview expires after 24 hours.
 Stopping the workspace's computer also closes its previews.

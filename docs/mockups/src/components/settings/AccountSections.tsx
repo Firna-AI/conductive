@@ -6,17 +6,27 @@ import {
   shareNotSavedCause,
   sharedByDefault,
   type AgentLogins,
+  type LoginKind,
 } from '../../fixtures/logins'
 import { account, installations } from '../../fixtures/orgs'
+import type { ShortcutHost } from '../../fixtures/shortcutHosts'
 import { noop } from '../../noop'
 import { paths } from '../../paths'
 import { ActionButton } from '../common/actions'
-import { LinkTabs } from '../common/LinkTabs'
+import { classes } from '../common/classes'
+import { LinkTabs, type LinkTab } from '../common/LinkTabs'
 import { AccountAvatar } from '../orgs/OrgTile'
 import { StatusText } from '../common/StatusText'
 import { AgentConnectForm } from './AgentConnectForm'
+import type { SignInStep } from './chatGptSignInCopy'
+import {
+  LoginNotUsable,
+  SignedOutStatus,
+  type UnusableLogin,
+} from './LoginNotUsable'
 import { LoginShare } from './LoginShare'
 import { Section } from './Section'
+import { shortcutPages } from './shortcutPages'
 import styles from './AccountSections.module.css'
 
 const connected = <StatusText label="Connected" tone="success" />
@@ -75,7 +85,7 @@ export function GitHubSection(props: { connected: boolean }) {
 
 /**
  * The share setting under each connected login, as on the account. Each
- * login shows the value that a new login of its kind starts with.
+ * login shows the value that a new login of its agent and kind starts with.
  * `notSaved` names the agent whose last change the app did not save.
  */
 type LoginShares = { notSaved: AgentKey | null }
@@ -83,29 +93,46 @@ type LoginShares = { notSaved: AgentKey | null }
 /** The Connect form that is open under the row of an agent. */
 export type OpenAgentForm = {
   agent: AgentKey
+  /** The kind that its switch selects, by default the first of the agent. */
+  kind?: LoginKind
+  /** Where the main button leads: Connect, or the button that gets a code. */
   connectTo: string
   /** The form can close, because it did not open as the next step. */
   cancel: boolean
+  /** The step of the ChatGPT sign-in, when the switch selects it. */
+  signIn?: SignInStep
 }
 
 /**
  * Claude and Codex, each with Connect, or Connected and the kind of its
  * login. `form` opens the Connect form of an agent under its row.
  * `removable` gives each connected login its Remove, and `shares` its
- * share setting, as on the account.
+ * share setting, as on the account. `unusable` names a connected login
+ * that the app can no longer use: its row says Signed out, with the cause
+ * and Sign in again. Sign in again opens the form in the place of the
+ * cause, and the login keeps its row, Remove, and its share setting, as in
+ * the app.
  */
 export function AgentList(props: {
   logins: AgentLogins
   form?: OpenAgentForm
   removable?: boolean
   shares?: LoginShares
+  unusable?: UnusableLogin
 }) {
   const ids = useId()
   return (
-    <ul aria-label="Agents" className={styles.list}>
+    <ul aria-label="Agents" className={classes(styles.list, styles.agentList)}>
       {agentKeys.map((key) => {
         const login = props.logins[key]
-        const form = props.form?.agent === key ? props.form : undefined
+        const unusable =
+          login && props.unusable?.agent === key ? props.unusable : undefined
+        // The form opens in place of Connect, or under a login that the app
+        // can no longer use, as Sign in again opens it.
+        const form =
+          props.form?.agent === key && (!login || unusable)
+            ? props.form
+            : undefined
         const nameId = `${ids}-${key}`
         let action = form ? null : <ActionButton>Connect</ActionButton>
         if (login) {
@@ -120,20 +147,37 @@ export function AgentList(props: {
         }
         return (
           <li key={key}>
-            <div className={styles.row}>
+            <div className={classes(styles.row, styles.agentRow)}>
               <span className={styles.name} id={nameId}>
                 {agents[key].name}
               </span>
               <span className={styles.detail}>
                 {login ? (
                   <>
-                    {connected}
-                    <span className={styles.kind}>{loginLabels[login]}</span>
+                    {unusable ? <SignedOutStatus /> : connected}
+                    <span className={styles.kind}>
+                      {loginLabels[key][login]}
+                    </span>
                   </>
                 ) : null}
               </span>
               {action}
             </div>
+            {unusable && !form ? (
+              <LoginNotUsable
+                cause={unusable.cause}
+                signInTo={unusable.signInTo}
+              />
+            ) : null}
+            {form ? (
+              <AgentConnectForm
+                agent={key}
+                cancel={form.cancel}
+                connectTo={form.connectTo}
+                kind={form.kind}
+                signIn={form.signIn}
+              />
+            ) : null}
             {login && props.shares ? (
               <LoginShare
                 error={
@@ -141,14 +185,7 @@ export function AgentList(props: {
                 }
                 nameId={nameId}
                 onChange={noop}
-                shared={sharedByDefault[login]}
-              />
-            ) : null}
-            {form && !login ? (
-              <AgentConnectForm
-                agent={key}
-                cancel={form.cancel}
-                connectTo={form.connectTo}
+                shared={sharedByDefault[key][login]}
               />
             ) : null}
           </li>
@@ -161,12 +198,14 @@ export function AgentList(props: {
 /**
  * The agents that every org uses, Claude and Codex: each connected login
  * with its kind, Remove, and its share setting, or Connect, which opens the
- * form of the agent.
+ * form of the agent. `unusable` names a login that the app can no longer
+ * use.
  */
 export function AgentsSection(props: {
   logins: AgentLogins
   form?: OpenAgentForm
   shares: LoginShares
+  unusable?: UnusableLogin
 }) {
   return (
     <Section description="Every org uses these agents." title="Agents">
@@ -175,34 +214,43 @@ export function AgentsSection(props: {
         logins={props.logins}
         removable
         shares={props.shares}
+        unusable={props.unusable}
       />
     </Section>
   )
 }
 
-/** The two pages of the account. */
-export type AccountTab = 'general' | 'preferences'
+/** The pages of the account. */
+export type AccountTab = 'general' | 'preferences' | 'shortcuts'
 
 /**
  * The pages of the account, as tabs that link to each one: General, with
- * the sign-in and the connections, and Preferences.
+ * the sign-in and the connections, Preferences, and Keyboard shortcuts.
+ * The Mac app's General tab links to its own page, which has This Mac, and
+ * Keyboard shortcuts links to the tab of the host. `flow` moves a tab that
+ * does not fit to a second line, for a phone.
  */
-export function AccountTabs(props: { tab: AccountTab }) {
-  return (
-    <LinkTabs
-      label="Account"
-      tabs={[
-        {
-          label: 'General',
-          to: paths.account,
-          selected: props.tab === 'general',
-        },
-        {
-          label: 'Preferences',
-          to: paths.accountPreferences,
-          selected: props.tab === 'preferences',
-        },
-      ]}
-    />
-  )
+export function AccountTabs(props: {
+  tab: AccountTab
+  host: ShortcutHost
+  flow?: boolean
+}) {
+  const tabs: LinkTab[] = [
+    {
+      label: 'General',
+      to: props.host === 'mac-app' ? paths.thisMac : paths.account,
+      selected: props.tab === 'general',
+    },
+    {
+      label: 'Preferences',
+      to: paths.accountPreferences,
+      selected: props.tab === 'preferences',
+    },
+    {
+      label: 'Keyboard shortcuts',
+      to: shortcutPages[props.host].tab,
+      selected: props.tab === 'shortcuts',
+    },
+  ]
+  return <LinkTabs flow={props.flow} label="Account" tabs={tabs} />
 }

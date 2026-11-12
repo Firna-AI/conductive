@@ -1,6 +1,13 @@
 import type { ReactNode } from 'react'
 import type { LucideIcon } from 'lucide-react'
-import { FileCode, FileDiff, FileText, MessageSquare, X } from 'lucide-react'
+import {
+  File,
+  FileCode,
+  FileDiff,
+  FileText,
+  MessageSquare,
+  X,
+} from 'lucide-react'
 import { Menu, type MenuEntry } from '../common/Menu'
 import { ScreenLink } from '../common/ScreenLink'
 import { IconButton } from '../common/actions'
@@ -10,7 +17,11 @@ import { RenameField } from './RenameField'
 import tabDrag from './TabDrag.module.css'
 import styles from './WorkspaceTabs.module.css'
 
-export type TabKind = 'session' | 'code' | 'markdown' | 'diff'
+/**
+ * The kind of a tab, which sets its icon: a session, or the icon that All
+ * files gives a code file, a Markdown file, or another file, or a diff.
+ */
+export type TabKind = 'session' | 'code' | 'markdown' | 'file' | 'diff'
 
 export type WorkspaceTab = {
   key: string
@@ -28,6 +39,7 @@ const icons: Readonly<Record<TabKind, LucideIcon>> = {
   session: MessageSquare,
   code: FileCode,
   markdown: FileText,
+  file: File,
   diff: FileDiff,
 }
 

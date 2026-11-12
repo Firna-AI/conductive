@@ -2,7 +2,10 @@ import { endsTurn, turnOf } from './known-turns'
 import type { Transcript, TranscriptItem } from './transcript'
 
 /** An item of one turn: its text, a tool call, or a row where it ended. */
-export type TurnItem = Exclude<TranscriptItem, { kind: 'user' | 'lost' }>
+export type TurnItem = Exclude<
+  TranscriptItem,
+  { kind: 'user' | 'lost' | 'continued' }
+>
 
 /** The item shows where a turn ended: its end, its failure, or its refused end. */
 export function isEnd(item: TranscriptItem, turnId: string): boolean {

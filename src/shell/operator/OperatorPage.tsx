@@ -5,6 +5,7 @@ import { Page, type BackLink } from '../layout/Page'
 import { LinkTabs } from '../ui/links'
 import { useViewport } from '../ui/viewport'
 import { PauseNotice } from './PauseParts'
+import { WaitlistOffNotice } from './SwitchParts'
 
 /** The tabs of the operator section. */
 export type OperatorTab =
@@ -25,12 +26,14 @@ const tabs = [
 
 /**
  * A page of the operator section: the header, and the tabs Overview, Orgs,
- * Users, Waitlist, Invite codes, and Providers under it. While sign-ups are paused,
- * the page starts with the notice of the pause. On a phone the tabs keep
- * one line while they fit, and the last ones move to a second line, so that
- * each tab shows. The header of a phone leads back to the workspaces,
- * unless the page gives its own way back, which desktop shows too. The
- * actions sit in the header on desktop and in the footer on a phone.
+ * Users, Waitlist, Invite codes, and Providers under it. While sign-ups
+ * are paused, the page starts with the notice of the pause. While the
+ * waitlist is off, the notice of the switch follows it. On a phone the
+ * tabs keep one line while they fit, and the last ones move to a second
+ * line, so that each tab shows. The header of a phone leads back to the
+ * workspaces, unless the page gives its own way back, which desktop shows
+ * too. The actions sit in the header on desktop and in the footer on a
+ * phone.
  */
 export function OperatorPage(props: {
   tab: OperatorTab
@@ -62,6 +65,7 @@ export function OperatorPage(props: {
       title={props.title}
     >
       <PauseNotice />
+      <WaitlistOffNotice />
       {props.children}
     </Page>
   )

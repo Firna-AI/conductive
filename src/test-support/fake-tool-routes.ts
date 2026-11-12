@@ -3,6 +3,7 @@ import { desktopPath } from '../shared/desktop'
 import { filePaths } from '../shared/files'
 import { githubPaths, type BannerState } from '../shared/github'
 import { attachmentUploadPath } from '../shared/messages'
+import { attachmentPath } from '../shared/attachment-paths'
 import { previewPath, previewsPath } from '../shared/previews'
 import { terminalPaths } from '../shared/terminal'
 import type { FakeRouteWriter } from './fake-api-routes'
@@ -31,6 +32,24 @@ export function fakeGitHub(
     : data.banner
   routes.json('GET', githubPaths.banner(FAKE_IDS.org, workspaceId), bar)
   routes.json('GET', githubPaths.checks(FAKE_IDS.org, workspaceId), data.checks)
+  routes.json('GET', githubPaths.capabilities(FAKE_IDS.org, workspaceId), {
+    canWrite: true,
+    mergeMethod: 'squash',
+  })
+  routes.json(
+    'POST',
+    githubPaths.merge(FAKE_IDS.org, workspaceId),
+    {
+      state: 'pending',
+      mergeId: `merge-${workspaceId}`,
+    },
+    202,
+  )
+  routes.json(
+    'GET',
+    githubPaths.mergeResult(FAKE_IDS.org, workspaceId, `merge-${workspaceId}`),
+    { state: 'merged' },
+  )
 }
 
 export function fakeToolRoutes(
@@ -68,34 +87,26 @@ export function fakeToolRoutes(
   routes.json('GET', filePaths.diff(org, id, FAKE_FILE_PATH), data.diff)
   // The raw file upload of the app's upload operation, at the route of each
   // target: a workspace, and the first message of a new workspace.
-  routes.json(
-    'POST',
-    attachmentUploadPath(org, { type: 'workspace', workspaceId: id }),
-    {
-      attachment: {
-        id: 'attachment-1',
-        name: 'postcode-overlap.png',
-        kind: 'image',
-        mediaType: 'image/png',
-        sizeBytes: 290_816,
-      },
-    },
-    201,
-  )
-  routes.json(
-    'POST',
-    attachmentUploadPath(org, { type: 'new-workspace', messageId: '' }),
-    {
-      attachment: {
-        id: 'draft-attachment-1',
-        name: 'postcode-overlap.png',
-        kind: 'image',
-        mediaType: 'image/png',
-        sizeBytes: 290_816,
-      },
-    },
-    201,
-  )
+  for (const [fileId, target] of [
+    ['attachment-1', { type: 'workspace', workspaceId: id }],
+    ['draft-attachment-1', { type: 'new-workspace', messageId: '' }],
+  ] as const) {
+    const file = { id: fileId, name: 'postcode-overlap.png' }
+    routes.json(
+      'POST',
+      attachmentUploadPath(org, target),
+      attachmentPath(file).then((path) => ({
+        attachment: {
+          ...file,
+          path,
+          kind: 'image',
+          mediaType: 'image/png',
+          sizeBytes: 290_816,
+        },
+      })),
+      201,
+    )
+  }
   routes.json('GET', terminalPaths.connection(org, id), data.terminal)
   routes.json('GET', previewsPath(org, id), data.previews)
   routes.json('POST', previewsPath(org, id), data.preview, 201)

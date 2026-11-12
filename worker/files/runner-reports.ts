@@ -52,6 +52,9 @@ function joinReport(
     if (
       part.type !== 'changes.updated' ||
       part.changes.baseBranch !== first.changes.baseBranch ||
+      part.changes.unpushedCommits !== first.changes.unpushedCommits ||
+      part.changes.uncommittedFileCount !==
+        first.changes.uncommittedFileCount ||
       JSON.stringify(part.changes.summary) !==
         JSON.stringify(first.changes.summary)
     )
@@ -77,6 +80,12 @@ function joinReport(
     type: first.type,
     changes: {
       baseBranch: first.changes.baseBranch,
+      ...(first.changes.unpushedCommits === undefined
+        ? {}
+        : { unpushedCommits: first.changes.unpushedCommits }),
+      ...(first.changes.uncommittedFileCount === undefined
+        ? {}
+        : { uncommittedFileCount: first.changes.uncommittedFileCount }),
       ...(first.changes.displayBaseBranch === undefined
         ? {}
         : { displayBaseBranch: first.changes.displayBaseBranch }),

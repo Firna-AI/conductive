@@ -22,6 +22,10 @@ export class GitHubReader {
   private readonly dependencies: GitHubReadDependencies
   private readonly workspace: GitHubWorkspace
   private readonly token: string
+  private branchPull: {
+    dependencies: GitHubBranchDependencies
+    pull: Record<string, unknown>
+  } | null = null
 
   constructor(
     dependencies: GitHubReadDependencies,
@@ -46,23 +50,39 @@ export class GitHubReader {
     return repository
   }
 
+  async defaultBranch(): Promise<string> {
+    const repository = await this.repository(LOOKUP, {
+      head: this.workspace.branch,
+      ref: `refs/heads/${this.workspace.branch}`,
+      states: ['OPEN'],
+      after: null,
+    })
+    return repository.defaultBranchRef === null
+      ? this.workspace.defaultBranch
+      : text(object(repository.defaultBranchRef).name)
+  }
+
   async read(branches?: GitHubBranchDependencies): Promise<GitHubSnapshot> {
     const lookup = branches ?? (await this.dependenciesForBranch())
     if (lookup.pullNumber === null) {
-      return this.withoutPull(
-        lookup.headSha,
-        lookup.fullName,
-        lookup.baseBranch,
-      )
+      return this.withoutPull(lookup.headSha, lookup.baseBranch)
     }
-    const repository = await this.repository(PULL, {
-      number: lookup.pullNumber,
-    })
-    const pull = parsePull(repository.pullRequest, this.workspace)
-    const checks = await readChecks(pull, (after, mergeAfter) =>
+    const firstPage =
+      this.branchPull?.dependencies === lookup
+        ? this.branchPull.pull
+        : object(
+            (await this.repository(PULL, { number: lookup.pullNumber }))
+              .pullRequest,
+          )
+    this.branchPull = null
+    const pull = parsePull(firstPage, this.workspace)
+    const checks = await readChecks(pull, firstPage, (after, mergeAfter) =>
       this.repository(CHECKS, { number: pull.number, after, mergeAfter }),
     )
-    const reviewers = await this.reviewers(pull.number)
+    const reviewers = await this.reviewers(
+      pull.number,
+      firstPage.latestOpinionatedReviews,
+    )
     return {
       banner: pullBanner(
         this.workspace,
@@ -77,6 +97,7 @@ export class GitHubReader {
   }
 
   async dependenciesForBranch(): Promise<GitHubBranchDependencies> {
+    this.branchPull = null
     let headSha: string | null = null
     let fullName = this.workspace.fullName
     let baseBranch = this.workspace.baseBranch ?? this.workspace.defaultBranch
@@ -108,13 +129,15 @@ export class GitHubReader {
               this.workspace.repositoryId &&
             text(pull.headRefName) === this.workspace.branch
           ) {
-            return {
+            const dependencies = {
               pullNumber: integer(pull.number),
               headBranch: this.workspace.branch,
               headSha,
               fullName,
               baseBranch: this.workspace.baseBranch ?? text(pull.baseRefName),
             }
+            this.branchPull = { dependencies, pull }
+            return dependencies
           }
         }
         after = nextPage(connection.pageInfo, after)
@@ -131,7 +154,6 @@ export class GitHubReader {
 
   private async withoutPull(
     headSha: string | null,
-    fullName: string,
     baseBranch: string,
   ): Promise<GitHubSnapshot> {
     let ahead = 0
@@ -143,17 +165,12 @@ export class GitHubReader {
       const comparison = object(object(repository.ref).compare)
       ahead = integer(comparison.aheadBy)
     }
-    const repositoryUrl = `https://github.com/${fullName.split('/').map(encodeURIComponent).join('/')}`
     const banner: GitHubBanner = {
       state: ahead > 0 ? 'none' : 'no-commits',
       branch: this.workspace.branch,
       baseBranch,
       updatedAt: this.dependencies.now(),
       pullRequest: null,
-      createPullRequestUrl:
-        ahead > 0
-          ? `${repositoryUrl}/compare/${encodeURIComponent(baseBranch)}...${encodeURIComponent(this.workspace.branch)}?expand=1`
-          : null,
     }
     return {
       banner,
@@ -162,14 +179,14 @@ export class GitHubReader {
     }
   }
 
-  private async reviewers(number: number): Promise<string[]> {
+  private async reviewers(
+    number: number,
+    firstPage: unknown,
+  ): Promise<string[]> {
     const reviewers: string[] = []
     let after: string | null = null
+    let connection = object(firstPage)
     do {
-      const repository = await this.repository(REVIEWS, { number, after })
-      const connection = object(
-        object(repository.pullRequest).latestOpinionatedReviews,
-      )
       for (const value of nodes(connection.nodes)) {
         const review = object(value)
         if (review.state === 'CHANGES_REQUESTED' && review.author !== null) {
@@ -177,6 +194,12 @@ export class GitHubReader {
         }
       }
       after = nextPage(connection.pageInfo, after)
+      if (after !== null) {
+        const repository = await this.repository(REVIEWS, { number, after })
+        connection = object(
+          object(repository.pullRequest).latestOpinionatedReviews,
+        )
+      }
     } while (after !== null)
     return reviewers
   }

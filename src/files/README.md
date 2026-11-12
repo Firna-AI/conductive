@@ -4,7 +4,8 @@ The Files screens show the files of a workspace branch. All files is a
 tree of every file. Changes lists the files that the branch changes
 against the base branch, under the totals of the change. A file opens as a
 page with rendered Markdown or text with line numbers and syntax colours.
-A changed file opens its unified diff. The requirements are in
+An image file, which is a PNG, JPEG, GIF, or WebP file, opens as a
+picture. A changed file opens its unified diff. The requirements are in
 [Files and changes](../../docs/protocol/workspace-tools.md#files-and-changes).
 The visual spec is the `app/files` page of the
 [mockup catalogue](../../docs/mockups/README.md), and
@@ -17,16 +18,25 @@ app shell mounts them, as
 development pages and the tests run them against the fake API of
 [the browser fakes](../test-support/README.md).
 
+The files store keeps `ChangesResponse.unpushedCommits` and
+`ChangesResponse.uncommittedFileCount` from HTTP replies and events,
+including updates that change only a count. `parseChanges` refuses a reply
+whose count is present but is not a whole number. An older runner can omit
+either count. The store keeps it absent, so callers can distinguish an
+unknown count from zero.
+
 ## Integration
 
-The tab keeps one `WorkspaceFiles` store for each workspace whose Files
-part or chat showed, beside its kept chat. The Files part connects it
-through `useWorkspaceStore` of [the web app](../app/README.md). A stable
-`create` finds the kept store, or makes it. It starts nothing. A stable
-`connect` starts the store and returns its stop. The chat of the shell
-connects the same store while it shows, for the list of `@` and the file
-chips, so several parts share one connection, which stops after the last
-part stops:
+The tab keeps one `WorkspaceFiles` store for each workspace that it showed,
+beside its kept chat. The workspace screen connects it once, for the whole
+screen, through `useWorkspaceStore` of [the web app](../app/README.md), so
+the pull request bar knows the local work on every tab. The Files part and
+the other parts that show files only read it. The chat of the shell reads
+it for the list of `@` and the file chips, also on a phone before a visit
+to Files. A stable `create` finds the kept store, or makes it. It starts
+nothing. A stable `connect` starts the store and returns its stop. A second
+connect of the same store, such as the second run of an effect, shares its
+one connection, which stops after the last connect stops:
 
 ```ts
 const connections = new WeakMap<WorkspaceFiles, number>()
@@ -96,9 +106,17 @@ The screens:
   age. The notices show under each of the three tabs, and they have no
   Dismiss. The `now` prop
   gives the clock of the ages. Pass a stable function. The default is
-  `Date.now`.
+  `Date.now`. The `listKeys` prop gives the key of the command that opens
+  each list, as a tooltip and a name for `aria-keyshortcuts` of its tab.
 - `FilePage` shows one file tab. Markdown starts rendered, and its view
-  switch navigates to the same tab with the other mode.
+  switch navigates to the same tab with the other mode. The page knows an
+  image file by the name of its real path, as
+  [Files and changes](../../docs/protocol/workspace-tools.md#files-and-changes)
+  says. While the browser reads the size of a picture, the page shows that
+  the file opens. A changed picture stays on screen until the browser draws
+  or refuses the new one. Bytes that the browser cannot draw offer
+  Download, as a binary file does. An image file with no bytes shows that
+  it is empty.
 - `DiffPage` shows the diff of one changed file.
 - The `placeholder` prop of `FilePage` and `DiffPage` replaces the content
   of the page, for example with a sandbox state. The page then reads
@@ -131,7 +149,8 @@ Each screen takes `layout`: `desktop`, or `phone` with touch targets of at
 least 44 px. On a phone, a file page and a diff page link back to All
 files or Changes.
 
-Copy and Download take `targets`. The default, `browserTargets`, copies
+Copy and Download take `targets`. Copy is off for a picture and for each
+other file that is not text. The default, `browserTargets`, copies
 the original text with the clipboard of the browser, with each byte order
 mark of the file. The view and the line count leave out one leading mark.
 Its Download reads the download route of the client, `downloadHref(path)`,
@@ -156,16 +175,23 @@ place of a real path, because a path can hold a secret value.
 ## Safety
 
 File content, Markdown, paths, and diffs are untrusted. The screens show
-them as React text only. The Markdown renderer builds React elements from
-its own parse: HTML in a file shows as text, images show their alt text,
-and only absolute `http`, `https`, and `mailto` links become links. A link
-opens in a new tab with `noopener noreferrer`. Quotes and lists nest at
-most 16 levels deep, and deeper content shows as text. The parse runs in
-the worker, off the thread of the page, so a long or crafted file cannot
-stop the page.
+them as React text only, apart from the picture of an image file. The
+Markdown renderer builds React elements from its own parse: HTML in a
+file shows as text, a Markdown image shows its alt text, and only
+absolute `http`, `https`, and `mailto` links become links. A link opens
+in a new tab with `noopener noreferrer`. Quotes and lists nest at most 16
+levels deep, and deeper content shows as text. The parse runs in the
+worker, off the thread of the page, so a long or crafted file cannot stop
+the page.
 
 [The Markdown preview](markdown-preview.md#safety-limits) gives the
 limits of emphasis, of long runs of text, and of tables.
+
+The picture of an image file is an `img` element with a `data:` address
+of the bytes of the read, so the bytes show only as a picture. The
+[content security policy](../../docs/protocol/access-and-security.md#content-security-policy)
+of the web app and of the Mac app lets an image load from a `data:`
+address, but not from a `blob:` address.
 
 A file or a diff over the read limit shows the size and the limit that
 the backend sends, and the terminal as the way to open it. The download
@@ -191,8 +217,11 @@ holds, its samples, and its controls.
 Run the tests with `npm run test -- src/files`. The `*.mounted.test.tsx`
 files mount the screens in happy-dom, with `mount-test-kit.ts`, as the
 GitHub banner tests do. The kit also starts a store, presses a control,
-and answers the Markdown worker with `parseMarkdown`. The other screen
-tests keep their static markup checks in Node.
+and answers the Markdown worker with `parseMarkdown`.
+`page/picture-test-kit.tsx` opens a file page with a given read. Its
+`fakeDecoder` draws or refuses each picture by hand, in place of the image
+decoder of the browser. These tests do not run that decoder. The other
+screen tests keep their static markup checks in Node.
 
 ## Key code
 
@@ -222,6 +251,15 @@ tests keep their static markup checks in Node.
   label that a screen shows for a real path.
 - `panel/FilesPanel.tsx`, `page/FilePage.tsx`, `page/DiffPage.tsx`, and
   `tabs/FileTabItem.tsx`: the screens.
+- `page/file-view.ts`: `fileView`, what a file page shows of one read:
+  the picture of an image file that holds bytes, with a `data:` address
+  of those bytes, or, for each other file, the text or the binary mark of
+  `fileText` in `model/file-text.ts`.
+- `page/FileBody.tsx`: `FileContent`, the body of a file page. It draws
+  a picture through the mockups' `ImageView`, named by the file name of
+  the label of its path. `page/decode-picture.ts` gives `decodePicture`,
+  which loads a picture apart from the page to learn its size, or finds
+  that the browser cannot draw it.
 - `panel/UnavailableLists.tsx`: the notices of the failed repairs under
   the lists, with the mockups' `LostUpdateRow` and their ages, and the
   notice of a saved tree that the cloud computer could not read.
@@ -236,6 +274,8 @@ tests keep their static markup checks in Node.
   reader that the chat shares, and the line tests of
   `../markdown/lines.ts`. [List parts](../chat/agent-text.md#list-parts)
   gives the rules of the shared list code.
+  `src/markdown/headings.ts` holds its heading levels and the rules for
+  hash headings and underline headings.
 - `markdown/markdown-tables.ts`: `parseTable`, which reads one table of a
   file and fills its short rows, and `TableBudget`, the empty cells that
   the tables of one file may add. It reads each row with
@@ -247,7 +287,9 @@ tests keep their static markup checks in Node.
 - `markdown/MarkdownView.tsx`: the safe renderer of a parsed document.
   `parser` replaces the worker for a static render. It draws each table
   through the shared `MarkdownTable` of the mockups, with the margin of
-  its `.table` class.
+  its `.table` class. Its headings take their look from the shared
+  `MarkdownHeadings.module.css` of the mockups, which chat answers use
+  too, and its own CSS sets only their margins.
 - `code/`: the syntax colours and the code view. `code/file-kind.ts` gives
   `fileKind`, the kind of a file by its name: Markdown, code, or another
   file. A file is code when the code view gives it syntax colours.

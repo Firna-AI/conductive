@@ -1,10 +1,10 @@
 import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 import {
-  presentWorkspaceMessage,
   type WorkspaceEvent,
   type WorkspaceEventEnvelope,
 } from './workspace-events'
 import type { UserMessage } from '../../src/shared/messages'
+import type { ToolSessionAccess, ToolSessionWrite } from '../tools/services'
 import type { FirstWorkspaceMessage } from '../lifecycle/workspace-runtime'
 import type { RunnerFileCommand } from '../../src/shared/runner-files'
 import type { AppEnv } from '../env'
@@ -15,10 +15,12 @@ import {
   authorizeChatBrowser,
   type BrowserAccess,
 } from './browser-authorization'
-import { subscribeBrowser } from './browser-subscription'
 import { afterNumber } from './http-routes'
 import { browserRequest } from './browser-request'
-import { BrowserTabs } from './browser-tabs'
+import {
+  BrowserConnections,
+  type NativeBrowserConnections,
+} from './browser-connections'
 import { authorizeChatRunner } from './runner-authorization'
 import { WorkspaceTitles } from './workspace-titles'
 import { WorkspaceOperations } from './workspace-operations'
@@ -27,6 +29,7 @@ import type { ChatWorkspaceSummary } from './workspace-summary'
 import { ChatOperation } from './operation'
 import { RunnerChannel } from './runner-channel'
 import type { ChatStore, ChatTransaction } from './store'
+import type { QueueTurn } from './queue-turn'
 import { createWorkspaceChatStore } from './workspace-store'
 import {
   runWorkspaceOperation,
@@ -47,8 +50,8 @@ export class WorkspaceChat {
   readonly turnTokens: WorkspaceTurnTokens
   private readonly env: AppEnv
   private readonly dependencies: ChatDependencies
-  private readonly runner: RunnerChannel
-  private readonly browsers: BrowserTabs
+  readonly runner: RunnerChannel
+  readonly browsers: BrowserConnections
   private readonly operations: WorkspaceOperations
   private readonly titles: WorkspaceTitles
   private readonly binding: ChatWorkspaceBinding
@@ -57,12 +60,19 @@ export class WorkspaceChat {
     return this.operations.summary(workspaceId)
   }
 
-  runLifecycle<T>(operation: () => Promise<T>): Promise<T> {
+  runLifecycle<T>(operation: (turn: QueueTurn) => Promise<T>): Promise<T> {
     return this.store.run(operation)
   }
 
   flushRunner(): Promise<void> {
     return this.runner.flush()
+  }
+
+  acceptToolWrite(
+    input: ToolSessionWrite,
+    authorize: () => Promise<ToolSessionAccess>,
+  ) {
+    return this.operations.writeTool(input, authorize)
   }
 
   async acceptFirstMessage(first: FirstWorkspaceMessage): Promise<UserMessage> {
@@ -89,6 +99,7 @@ export class WorkspaceChat {
     storage: ChatStorage,
     env: AppEnv,
     overrides: Partial<ChatDependencies> = {},
+    native?: NativeBrowserConnections,
   ) {
     this.storage = storage
     this.env = env
@@ -108,7 +119,13 @@ export class WorkspaceChat {
       this.dependencies,
       (events) => this.publish(events),
     )
-    this.browsers = new BrowserTabs(this.dependencies)
+    this.browsers = new BrowserConnections(
+      this.store,
+      this.dependencies,
+      (id) => this.operation(id),
+      (id) => this.binding.bind(id),
+      native,
+    )
     this.turnTokens = new WorkspaceTurnTokens(
       this,
       env,
@@ -120,6 +137,8 @@ export class WorkspaceChat {
       this.dependencies,
       (events) => this.publish(events),
       (id, turnId, kind) => this.turnTokens.forRunningTurn(id, turnId, kind),
+      (id) => this.binding.bind(id),
+      native,
     )
     this.operations = new WorkspaceOperations({
       env,
@@ -129,6 +148,7 @@ export class WorkspaceChat {
       bind: (id) => this.binding.bind(id),
       publish: (events) => this.publish(events),
       closeRunner: () => this.runner.close(),
+      flushRunner: () => this.runner.flush(),
     })
   }
 
@@ -164,10 +184,14 @@ export class WorkspaceChat {
     return access
   }
 
-  async connectRunner(request: Request, peer: RunnerPeer): Promise<void> {
+  async connectRunner(
+    request: Request,
+    peer: RunnerPeer,
+    socket?: WebSocket,
+  ): Promise<void> {
     const workspace = await authorizeChatRunner(this.env, request)
     this.binding.bind(workspace.id)
-    await this.runner.open(workspace, peer)
+    await this.runner.open(workspace, peer, socket)
   }
 
   receiveRunner(peer: RunnerPeer, value: unknown): Promise<void> {
@@ -252,19 +276,9 @@ export class WorkspaceChat {
     access: BrowserAccess,
     after: number,
     peer: BrowserPeer,
+    socket?: WebSocket,
   ): Promise<() => void> {
-    return subscribeBrowser({
-      store: this.store,
-      browsers: this.browsers,
-      operation: this.operation(access.workspace.id),
-      access,
-      after,
-      peer: {
-        send: (message) =>
-          peer.send(presentWorkspaceMessage(message, access.presentation)),
-        close: () => peer.close(),
-      },
-    })
+    return this.browsers.subscribe(access, after, peer, socket)
   }
 
   private operation(workspaceId: string): ChatOperation {

@@ -4,8 +4,8 @@ This page belongs to [the design](design.md), which gives the style, the
 layouts, the design tokens, and the shared parts. This page gives the
 tabs, the tables, the Waitlist tab, the codes, and the approval email of
 the operator section. It also gives Suspend, Lift, and Approve, the daily
-chart, the notice of a pause, the Providers tab, the account of each org,
-and the account choice of an operator on Create org.
+chart, the notice of a pause, the waitlist switch, the Providers tab, the
+account of each org, and the account choice of an operator on Create org.
 
 - The operator section has the tabs Overview, Orgs, Users, Waitlist,
   Invite codes, and Providers, from `OperatorPage` in
@@ -15,7 +15,7 @@ and the account choice of an operator on Create org.
   390 px puts Providers on the second line. The overview uses
   the stat tiles, the line chart, the table, and the skeletons of
   `@firna/ui`. A view runs no script, so the chart keeps the width that the
-  page column gives it. The workspaces by state reuse `StatusGlyph`. A line
+  page column gives it. The workspaces by state reuse `StatusGlyph`, the mark of the header. A line
   under the users tile counts the people on the waitlist and opens the
   Waitlist tab.
 - A table of the operator keeps fewer columns on a phone, so that each
@@ -42,7 +42,8 @@ and the account choice of an operator on Create org.
   in its footer on a phone. A person who waits also has Approve there. Each
   asks first, with `ConfirmDialog`. The words of the questions and the
   notices live in `operatorCopy.ts`, and those of the waitlist, the app
-  access, the codes, and the pause in `accessCopy.ts` and `codeCopy.ts`.
+  access, the codes, the pause, and the waitlist switch in `accessCopy.ts`
+  and `codeCopy.ts`.
   These modules import no fixture, so the app uses them too. So do
   `WorkspaceStates` and `DailyChart`. Each text of an
   org takes its deletion, so the questions and the notices of a deleted
@@ -57,9 +58,16 @@ and the account choice of an operator on Create org.
   one slot for each day and shows every few labels, so the labels leave
   out the year. Its own table lists the UTC days, because the table of the
   Firna chart cannot name its first column.
+- The Sign-ups box at the top of the Invite codes tab names the state of
+  sign-ups. While the waitlist is on, it says Waitlist on, with Turn off
+  the waitlist beside Pause sign-ups. While the waitlist is off,
+  `WaitlistOffNotice` tops each tab with Turn on the waitlist, and the box
+  says Open with Pause sign-ups. So Open shows only during open sign-up.
 - While sign-ups are paused, `PauseNotice` tops each tab of the section,
-  with Resume sign-ups. On the Invite codes tab it takes the place of the
-  Sign-ups box, which holds Pause sign-ups while sign-ups are open.
+  with Resume sign-ups, before the notice of the switch. On the Invite
+  codes tab it takes the place of the whole Sign-ups box. Turn off the
+  waitlist asks first, and Turn on the waitlist and Resume sign-ups act at
+  once.
 - The Providers tab holds the weights of new orgs in its New orgs box: one
   slider between `boat` and `e2b`, from `WeightSlider`. `@firna/ui` has no
   slider, so it draws the range control of the browser in the accent

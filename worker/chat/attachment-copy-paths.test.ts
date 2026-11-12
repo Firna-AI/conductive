@@ -15,7 +15,7 @@ import {
 } from './attachment.test-support'
 import { prepareMessageAttachments } from './attachment-copy'
 import { providerCopy } from './attachment-copy.test-support'
-import { ATTACHMENTS_DIRECTORY } from './attachment-record'
+import { ATTACHMENTS_DIRECTORY } from '../../src/shared/attachment-paths'
 import { storeAttachment } from './attachment-storage'
 import { WORKSPACE_ID } from './harness.test-support'
 import { messageCommands } from './turn-lifecycle.test-support'
@@ -75,7 +75,11 @@ it('copies before delivery and preserves copy proof across reconnects while new 
   await entered.promise
   expect(runner.commands).toEqual([])
   release.resolve()
-  expect((await sending).status).toBe(202)
+  const accepted = await sending
+  expect(accepted.status).toBe(202)
+  expect(await accepted.json()).toMatchObject({
+    message: { attachments: [file, unsafe] },
+  })
   await fixture.drainAttachments()
   expect(provider.copies).toEqual([
     ATTACHMENT_IGNORE_BYTES,
@@ -147,7 +151,7 @@ it('copies before delivery and preserves copy proof across reconnects while new 
     FILE_BYTES,
     FILE_BYTES,
   ])
-  expect(provider.paths[7]).not.toBe(provider.paths[1])
+  expect(provider.paths[7]).toBe(provider.paths[1])
   const message = messageCommands(runner, 'another-file-message')[0]
   expect(message?.type).toBe('message')
   expect(message?.attachments[0]?.path).toBe(provider.paths[7])

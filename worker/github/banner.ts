@@ -1,6 +1,9 @@
-import type { GitHubBanner, GitHubCheck } from '../../src/shared/github'
+import {
+  githubSummary,
+  type GitHubBanner,
+  type GitHubCheck,
+} from '../../src/shared/github'
 import { HttpError } from '../http'
-import { failedCheck } from './checks'
 import type { GitHubWorkspace } from './contracts'
 import {
   choice,
@@ -95,7 +98,12 @@ export function pullBanner(
     branch: workspace.branch,
     baseBranch: workspace.baseBranch ?? pull.baseBranch,
     updatedAt: now,
-    pullRequest: { number: pull.number, title: pull.title, url: pull.url },
+    pullRequest: {
+      number: pull.number,
+      title: pull.title,
+      url: pull.url,
+      headSha: pull.headSha,
+    },
     review: pull.review,
     changesRequestedBy,
     mergedAt: pull.mergedAt,
@@ -108,14 +116,9 @@ export function pullBanner(
   if (pull.mergeable === 'CONFLICTING') return { ...common, state: 'conflict' }
   if (pull.review === 'changes-requested')
     return { ...common, state: 'changes-requested' }
-  if (checks.some(failedCheck)) return { ...common, state: 'checks-failed' }
-  if (
-    checks.some(
-      (check) => check.state === 'running' || check.state === 'queued',
-    )
-  ) {
-    return { ...common, state: 'checks-running' }
-  }
+  const summary = githubSummary({ ...common, state: 'ready-to-merge' }, checks)
+  if (summary === 'checks-failed' || summary === 'checks-running')
+    return { ...common, state: summary }
   if (pull.mergeState === 'BEHIND' || pull.mergeState === 'BLOCKED')
     return { ...common, state: 'blocked' }
   if (

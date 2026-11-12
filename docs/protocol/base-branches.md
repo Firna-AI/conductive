@@ -23,11 +23,15 @@ says.
 - A workspace keeps its base branch at each start: the create, a resume,
   and, on Boat, the restart near day 14 of a stop. The agent runner gets
   the base branch at each start.
+- After a merge, Continue makes the latest default branch the base branch
+  of the workspace, as
+  [The base and the new branch](continue.md#the-base-and-the-new-branch)
+  says (decision 223).
 - Changes and each diff compare the branch with its base branch, from the
   merge base of the two.
 - Reason: the base branch can move while a workspace works. A plain
   comparison would show the newer commits of the base branch as reverted.
-- The pull request bar names the base branch, and "Create pull request"
+- The pull request bar names the base branch, and "Create PR"
   opens a pull request into it, as
   [Banner states](github-banner.md#banner-states) says.
 - A pull request that the agent opens with the GitHub CLI, `gh`, targets the
@@ -36,7 +40,7 @@ says.
   pull request that started it.
 - A comparison with the default branch for every workspace was rejected. A
   pull request run would then show the commits of its pull request as its
-  own work. "Create pull request" would offer them in a second pull
+  own work. "Create PR" would offer them in a second pull
   request.
 - A base that also stores the commit where the branch starts was rejected.
   The merge base already keeps the newer commits of the base branch out of
@@ -63,8 +67,13 @@ says.
   pull request #482 of storefront".
 - For a merged pull request, the start step names the fetch of the base
   branch of the pull request.
-- The archive check counts no commit of the pull request as unpushed.
-  Reason: those commits are already on GitHub.
+- The local work of the pull request bar and of Continue counts no commit
+  of the pull request as unpushed, as
+  [Actions](github-banner.md#actions) and
+  [Local work](continue.md#local-work) say. Reason: those commits are
+  already on GitHub.
+- Archive runs no check for unpushed commits, as
+  [Archive](workspace-life.md#archive) says.
 - Work on the branch of the pull request itself was rejected, both in a
   new workspace and in a workspace that already has that branch.
 - Reason: two workspaces would then share one branch, or the run would

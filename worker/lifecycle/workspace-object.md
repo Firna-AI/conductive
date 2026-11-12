@@ -4,8 +4,8 @@ This page belongs to the [workspace lifecycle README](README.md). It
 describes the Durable Object of each workspace and of each image
 coordinator. It gives their names, the lifecycle steps, the alarm, the
 start logs, the event socket, and the event publication. It also gives the
-creates and resumes. [Routes](routes.md#the-git-credential-sender) gives
-the git credential sender.
+creates and resumes. [The git credential sender](git-credentials.md)
+gives the sender of a git credential request.
 [Turn recovery and the shown state](recovery-and-shown-state.md) gives the
 turn repair from the committed chat and the one writer of the shown state.
 
@@ -33,7 +33,7 @@ says:
   through the `turnEnded` hook. `turnDispatchFailed` also calls it for a
   turn that did not go out. These records keep the running sessions. They
   give no GitHub access, as
-  [The git credential sender](routes.md#the-git-credential-sender) says.
+  [The git credential sender](git-credentials.md) says.
 - `reportRunnerLifecycle` takes only the runner events `runner.ready`,
   `turn.started`, and `start.updated`. `runnerLifecycleDisconnected` takes
   a disconnect.
@@ -77,69 +77,14 @@ command start. For a workspace object, it:
   [The shown state](recovery-and-shown-state.md#the-shown-state) says
 - recovers and deletes an unresolved allocation after a start reaches its limit
 - keeps failed or cancelled resume stop cleanup after the start result ends
+- advances a running Continue by one phase. While it runs, the lifecycle
+  steps run only to advance a queued start, as
+  [Continue](continue.md#the-reservation) says
 
-`WorkspaceAlarms` in [`alarms.ts`](../features/alarms.ts) is the one
-scheduler of the object alarm. Each owner of a timed task stores its own
-due time there. The lifecycle owners are the lifecycle state, the start,
-and the publication of a create result. The `changed` retry, the delete of
-a failed create, the access stop, and the image coordinator are lifecycle
-owners too. Archive owns `lifecycle:archive` separately. Its saved phases keep
-allocation recovery, stop confirmation, retention, and deletion across reconstruction.
-Its publication retries include confirmed deletion, even while the state stays archived. The Mac devices, the previews, and GitHub store their due
-times there too.
-
-- Each write that changes a due time sets the object alarm to the earliest
-  stored due time.
-- A due time stays stored until its owner clears it. So a run that fails
-  or ends early still leaves the next alarm, also after a restart of the
-  object.
-- The scheduler clears a due time of the Mac devices after their run
-  succeeds, unless that run stored a new one.
-- `runWorkspaceAlarms` in [`workspace-alarms.ts`](../workspace-alarms.ts)
-  is the outer run of the object alarm. It runs the Mac devices, the
-  previews, and GitHub. It also starts the lifecycle run,
-  `runWorkspaceAlarm` in [`workspace-alarm.ts`](workspace-alarm.ts). The
-  lifecycle run runs the lifecycle owners.
-- Each run reads the due times that have come, and it runs their owners.
-- The lifecycle run also has a run lease, the due time `lifecycle:run`.
-  At its start, before it runs any owner, the run reads all stored due
-  times. Then it stores its own lease 30 seconds after its start. So that
-  read still shows the lease of an earlier run. The outer run and `take`,
-  the read-only query of the due times, store no lease.
-- Each lifecycle run deletes its lease at its end, as the steps below say.
-  Lifecycle runs go through the chat queue one at a time. So a lease that
-  the read finds comes from an earlier run that did not reach its end. A
-  reset of the object or a lost process can cause this. The new run then
-  treats every lifecycle owner as due, also before the time of the old
-  lease.
-- The recovery comes with the next lifecycle run. Another lifecycle due
-  time can start that run before the lease time. Otherwise the old lease
-  wakes the object at its time, because it counts as a due time from
-  then. The outer run then starts the lifecycle run. So the recovery can
-  come up to 30 seconds late.
-- For example, the end of a start clears the due time of the start before
-  the run sets the lifecycle due time. A reset between these two writes
-  can leave no other lifecycle due time.
-- At the end of each run, also when the run fails or ends early, the run
-  does these steps in one storage transaction:
-  1. The lifecycle run deletes its lease. So no due time moves to the time
-     of the lease.
-  2. The run finds each of its due times that had come when the run
-     started and that did not change during the run. The lifecycle run
-     looks only at due times of the lifecycle owners. The outer run looks
-     only at due times of the Mac devices, the previews, and GitHub.
-  3. It moves each due time that it found to the earliest stored due time
-     in the future. When no stored due time is in the future, it moves the
-     due time 30 seconds into the future.
-  4. It sets the object alarm to the earliest stored due time again.
-- A due time that a run cleared, replaced, or added stays as that run
-  left it.
-- The steps prevent an immediate new alarm for a task that a run skipped.
-  For example, the lifecycle run skips some tasks while the access stop or
-  a start is pending.
-- The run lease helps only when a run does not reach the steps at its
-  end. A run that fails with an error still does the steps and deletes
-  its lease. So the lease gives no recovery after that error.
+[The object alarm scheduler](alarm-scheduler.md) gives `WorkspaceAlarms`,
+the one scheduler of the object alarm: the owners and their due times, the
+security sources, Continue, the run lease, and the steps at the end of each
+run.
 
 The deadline and stop actions use the sandbox state in each Boat reply.
 When Boat refuses an action, they read the sandbox state once. The
@@ -234,10 +179,49 @@ create and resume. The workspace object runs that start:
   runs no startup command again and keeps its due time at that deadline.
   Each alarm and readiness report still checks the owner and requester.
   The shared success path prepares the lifecycle only after its final
-  access, cancellation, and deadline checks.
+  access, cancellation, deadline, and runner connection checks.
+- When the runner disconnects during these final checks, the start job
+  stays in its runner phase. The start then completes after a later
+  readiness report.
 - While a start job exists, the start keeps its own due time, and the
   lifecycle state keeps none. After the start ends, the alarm run sets the
   lifecycle due time from the saved state.
+- The progress phases of a start are `records`, `machine`, `ready`,
+  `fetch`, `branch`, `startup`, `terminal`, `terminal-password`, and
+  `runner`, up to the success of the start. They make most of their D1 and
+  Boat calls outside the chat queue. The start guard in
+  [`start-guard.ts`](start-guard.ts) runs each group of these calls with
+  `outside`, as [History and event order](../chat/history.md) says. So
+  chat reads, messages, and runner receipts do not wait for those calls.
+- Before and after each outside call, in the queue task, the start guard
+  reads the start job and the stop epoch. It also checks that the member
+  receiver fence is active with the generation of the start's queue task.
+  When the start job is gone, the fence check fails, or the second read
+  differs from the first, the call throws `StartSuperseded`. The advance
+  then ends with no further write, as after a lost reply. The lifecycle
+  run sets the start due time one second later.
+- The storage reads and writes of a start stay in its queue task. So do
+  its calls to the controller and to `DurableLifecycle`, with each
+  lifecycle state write. The token write, the admission, the runner
+  readiness check, and the D1 publication of a create result also stay in
+  the queue. The failure path of a cancelled or failed start makes all its
+  calls in the queue.
+- Allocation saves its encrypted request in the queue task. Then one
+  outside call records the ledger intent, creates the sandbox, records the
+  returned ID, and assigns the sandbox to the workspace row. No guard check
+  runs between the create reply and these D1 writes. So a member
+  suspension during the create still leaves the sandbox ID in D1.
+- When Archive ends a running start, Archive runs only its initialization
+  in that queue task. The initialization ends the start as stopped. The
+  next lifecycle run of the alarm runs the later Archive phases, with the
+  provider stop. Only the regular alarm task starts a lifecycle run, one
+  run at a time. So the provider stop comes after the last outside call of
+  the start.
+- While any queue task is outside the queue, Archive also runs only its
+  initialization, also for a second Archive. Then `finishStop` reports no
+  stop, so Restore leaves a pending stop to the lifecycle. So no Archive
+  or Restore step reads or changes the sandbox while a cancelled start
+  call can still reach the provider.
 - The first lifecycle prepare of each create and resume also starts the
   restore watch. After a start from a saved snapshot, Boat downloads the
   file content in the background. The
@@ -245,16 +229,16 @@ create and resume. The workspace object runs that start:
   that restore ends. The alarm reads the sandbox with
   `checkWorkspaceRestore` 5 seconds after the prepare, and then every
   5 seconds. `restoreWatchAt` in the lifecycle state keeps the time of the
-  next read. When the watch is due, its read takes the place of the Boat
-  state read of that alarm.
+  next read. When the watch is due, its read takes the place of the
+  provider state read of that alarm.
   - A reply with `hydrated: false` keeps the watch.
   - A reply with `hydrated: true`, or without `hydrated`, ends the watch.
-    The watch then writes the restore marker of the terminal with
-    `markTerminalRestoreEnded`. Boat's schema makes the field optional,
-    and Boat says that a sandbox that restored nothing is hydrated from
-    the start.
+    The watch then writes the restore marker with
+    `markTerminalRestoreEnded`. The terminal and the agent runner read it.
+    Boat's schema makes the field optional, and Boat says that a sandbox
+    that restored nothing is hydrated from the start.
   - A stopped or error state ends the watch, and the alarm applies that
-    state as the Boat state read does. A stopping state, such as
+    state as the provider state read does. A stopping state, such as
     `archiving`, also ends the watch. Neither writes the marker.
   - A Boat error or a failed marker command keeps the watch. The alarm
     error handling tries again in 30 seconds.
@@ -281,9 +265,10 @@ create and resume. The workspace object runs that start:
 
 ## The git credential sender
 
-[The git credential sender](routes.md#the-git-credential-sender) gives how
-`Workspace.credentialSender` maps the turn of a git credential request to
-its sender, beside the machine route.
+[The git credential sender](git-credentials.md) gives how
+`Workspace.credentialSender` maps the turn ID of a git credential request
+to a sender: the grant of a create, the grant of a Continue fetch, and the
+running chat turn. It also names the tests of the route.
 
 ## Turn recovery
 

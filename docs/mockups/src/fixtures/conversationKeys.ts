@@ -1,3 +1,5 @@
+import { barConversationKeys } from './barConversations'
+
 /**
  * The keys of the chat transcripts of `conversations.ts`, one for each
  * transcript that a mockup state can show.
@@ -26,12 +28,18 @@ export const conversationKeys = [
   'lost-turn-end',
   'files-unavailable',
   'stopped-files-unavailable',
+  'background-waiting',
+  'background-limit',
   'linked',
   'sent-files',
+  'sent-files-listed',
   'queued-files',
   'link-sent',
   'link-answer',
   'other-org-link',
+  'sent-by',
+  'sent-by-other',
+  'session-links',
   'steered',
   'mac-in-work',
   'mention-answer',
@@ -43,4 +51,7 @@ export const conversationKeys = [
   'tables-in-work',
   'nested-lists',
   'nested-lists-in-work',
+  'headings',
+  'headings-in-work',
+  ...barConversationKeys,
 ] as const

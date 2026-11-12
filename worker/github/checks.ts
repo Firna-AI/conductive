@@ -80,9 +80,3 @@ export function parseCheck(value: unknown, pullUrl: string): GitHubCheck {
         : null,
   }
 }
-
-export function failedCheck(check: GitHubCheck): boolean {
-  return ['failed', 'cancelled', 'action-required', 'timed-out'].includes(
-    check.state,
-  )
-}

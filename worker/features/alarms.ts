@@ -6,9 +6,17 @@ export type AlarmSource =
   | 'devices'
   | 'previews'
   | 'github'
+  | 'continue'
+  | 'browser'
+  | 'runner'
+
+const SECURITY_SOURCES = new Set(['devices', 'browser', 'runner'])
+const DEFERRED_UNTIL = 'security:regular-alarms-deferred-until'
 
 export interface AlarmTransaction {
   read(): Promise<Map<string, number>>
+  deferred(): Promise<number | undefined>
+  defer(at: number | null): Promise<unknown>
   put(key: string, at: number): Promise<void>
   delete(key: string): Promise<unknown>
   setAlarm(at: number): Promise<void>
@@ -21,26 +29,50 @@ interface AlarmStorage {
   ): Promise<T>
 }
 
+function nativeAlarmTransaction(
+  transaction: DurableObjectTransaction,
+): AlarmTransaction {
+  return {
+    read: () => transaction.list<number>({ prefix: 'alarm:' }),
+    deferred: () => transaction.get<number>(DEFERRED_UNTIL),
+    defer: (at) =>
+      at === null
+        ? transaction.delete(DEFERRED_UNTIL)
+        : transaction.put(DEFERRED_UNTIL, at),
+    put: (key, at) => transaction.put(key, at),
+    delete: (key) => transaction.delete(key),
+    setAlarm: (at) => transaction.setAlarm(at),
+    deleteAlarm: () => transaction.deleteAlarm(),
+  }
+}
+
 export function nativeAlarmStorage(storage: ReceiverStorage): AlarmStorage {
   return {
     transaction: (operation) =>
       storage.transaction((transaction) =>
-        operation({
-          read: () => transaction.list<number>({ prefix: 'alarm:' }),
-          put: (key, at) => transaction.put(key, at),
-          delete: (key) => transaction.delete(key),
-          setAlarm: (at) => transaction.setAlarm(at),
-          deleteAlarm: () => transaction.deleteAlarm(),
-        }),
+        operation(nativeAlarmTransaction(transaction)),
       ),
   }
 }
 
-async function scheduleWorkspaceAlarm(
+async function scheduleAlarmTransaction(
   transaction: AlarmTransaction,
 ): Promise<void> {
   const alarms = await transaction.read()
-  if (alarms.size) await transaction.setAlarm(Math.min(...alarms.values()))
+  const deferred = (await transaction.deferred()) ?? 0
+  if (alarms.size)
+    await transaction.setAlarm(
+      Math.max(
+        1,
+        Math.min(
+          ...[...alarms].map(([key, at]) =>
+            SECURITY_SOURCES.has(key.slice('alarm:'.length))
+              ? at
+              : Math.max(at, deferred),
+          ),
+        ),
+      ),
+    )
   else await transaction.deleteAlarm()
 }
 
@@ -58,14 +90,16 @@ export async function writeWorkspaceAlarm(
       : undefined
     await transaction.put(key, Math.min(at, previous ?? Infinity))
   }
-  await scheduleWorkspaceAlarm(transaction)
+  await scheduleAlarmTransaction(transaction)
 }
 
 export class WorkspaceAlarms {
   private readonly storage: AlarmStorage
+  private readonly securityStorage: AlarmStorage
   private readonly revisions = new Map<string, number>()
-  constructor(storage: AlarmStorage) {
+  constructor(storage: AlarmStorage, securityStorage: AlarmStorage = storage) {
     this.storage = storage
+    this.securityStorage = securityStorage
   }
 
   async set(
@@ -74,7 +108,10 @@ export class WorkspaceAlarms {
     keepEarlier = false,
   ): Promise<void> {
     this.revisions.set(source, (this.revisions.get(source) ?? 0) + 1)
-    await this.storage.transaction(async (transaction) => {
+    const storage = SECURITY_SOURCES.has(source)
+      ? this.securityStorage
+      : this.storage
+    await storage.transaction(async (transaction) => {
       await writeWorkspaceAlarm(transaction, source, at, keepEarlier)
     })
   }
@@ -113,7 +150,7 @@ export class WorkspaceAlarms {
             )
               await transaction.put(key, next)
           }
-          await scheduleWorkspaceAlarm(transaction)
+          await scheduleAlarmTransaction(transaction)
         }),
     }
   }
@@ -125,7 +162,7 @@ export class WorkspaceAlarms {
   }
 
   schedule(): Promise<void> {
-    return this.storage.transaction(scheduleWorkspaceAlarm)
+    return this.storage.transaction(scheduleAlarmTransaction)
   }
 
   async run(
@@ -135,7 +172,10 @@ export class WorkspaceAlarms {
   ): Promise<void> {
     const revision = this.revisions.get(source)
     const key = `alarm:${source}`
-    const at = await this.storage.transaction(async (transaction) =>
+    const storage = SECURITY_SOURCES.has(source)
+      ? this.securityStorage
+      : this.storage
+    const at = await storage.transaction(async (transaction) =>
       (await transaction.read()).get(key),
     )
     await operation()
@@ -144,21 +184,68 @@ export class WorkspaceAlarms {
       at <= now &&
       this.revisions.get(source) === revision
     )
-      await this.storage.transaction(async (transaction) => {
+      await storage.transaction(async (transaction) => {
         if (
           (await transaction.read()).get(key) === at &&
           this.revisions.get(source) === revision
         )
           await transaction.delete(key)
-        await scheduleWorkspaceAlarm(transaction)
+        await scheduleAlarmTransaction(transaction)
       })
   }
 
   defer(now: number, at: number): Promise<void> {
     return this.storage.transaction(async (transaction) => {
       for (const [key, dueAt] of await transaction.read())
-        if (dueAt <= now) await transaction.put(key, at)
-      await scheduleWorkspaceAlarm(transaction)
+        if (dueAt <= now && !SECURITY_SOURCES.has(key.slice('alarm:'.length)))
+          await transaction.put(key, at)
+      await scheduleAlarmTransaction(transaction)
     })
   }
+
+  takeSecurity(now: number): Promise<ReadonlySet<string>> {
+    return this.securityStorage.transaction(async (transaction) => {
+      const due = [...(await transaction.read())].filter(
+        ([key, at]) =>
+          at <= now && SECURITY_SOURCES.has(key.slice('alarm:'.length)),
+      )
+      for (const [key] of due) await transaction.put(key, now + 2_000)
+      await scheduleAlarmTransaction(transaction)
+      return new Set(due.map(([key]) => key.slice('alarm:'.length)))
+    })
+  }
+
+  deferRegular(at: number | null): Promise<void> {
+    return this.securityStorage.transaction(async (transaction) => {
+      const regular = [...(await transaction.read()).keys()].some(
+        (key) => !SECURITY_SOURCES.has(key.slice('alarm:'.length)),
+      )
+      await transaction.defer(regular ? at : null)
+      await scheduleAlarmTransaction(transaction)
+    })
+  }
+}
+
+/** Suspension releases regular ownership. Live security sources keep their deadlines. */
+export async function suspendWorkspaceAlarms(
+  transaction: DurableObjectTransaction,
+  stage: 'draining' | 'drained',
+): Promise<void> {
+  for (const key of (await transaction.list({ prefix: 'alarm:' })).keys()) {
+    if (
+      !SECURITY_SOURCES.has(key.slice('alarm:'.length)) &&
+      (stage === 'drained' || key !== 'alarm:lifecycle:run')
+    )
+      await transaction.delete(key)
+  }
+  if (stage === 'drained') await transaction.delete(DEFERRED_UNTIL)
+  await scheduleWorkspaceAlarm(transaction)
+}
+
+export async function scheduleWorkspaceAlarm(
+  transaction: DurableObjectTransaction,
+  options: { resumeRegular?: boolean } = {},
+): Promise<void> {
+  if (options.resumeRegular) await transaction.delete(DEFERRED_UNTIL)
+  await scheduleAlarmTransaction(nativeAlarmTransaction(transaction))
 }

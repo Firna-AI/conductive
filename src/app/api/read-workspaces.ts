@@ -1,4 +1,5 @@
 import type { Attachment, UserMessage } from '../../shared/messages'
+import { readGitHubSummary } from '../../shared/github-read'
 import type {
   CreateWorkspaceResponse,
   OrderedWorkspaceResponse,
@@ -46,6 +47,7 @@ export function readWorkspace(value: unknown): Workspace {
     branch: text(workspace, 'branch'),
     choice: nested(workspace, 'choice', readChoice),
     state: choice(workspace, 'state', WORKSPACE_STATES),
+    github: readGitHubSummary(workspace.github),
     createdAt: count(workspace, 'createdAt'),
     updatedAt: count(workspace, 'updatedAt'),
     archivedAt: maybeCount(workspace, 'archivedAt'),
@@ -109,6 +111,7 @@ export function readAttachment(value: unknown): Attachment {
   return {
     id: text(attachment, 'id'),
     name: text(attachment, 'name'),
+    path: maybeText(attachment, 'path'),
     kind: choice(attachment, 'kind', ['image', 'file']),
     mediaType: text(attachment, 'mediaType'),
     sizeBytes: count(attachment, 'sizeBytes'),

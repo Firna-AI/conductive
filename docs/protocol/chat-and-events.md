@@ -9,7 +9,9 @@ that reach the browser. Linked pages cover
 [the agent runner](agent-runner.md) in the sandbox. The terms are those of
 the [architecture doc](../architecture.md#terms). A decision number names
 a dated record, as [Decision numbers](../architecture.md#decision-numbers)
-says.
+says. A background work decision number names a decision of the change
+that keeps a turn open for background work, as
+[Agent runner](agent-runner.md) says.
 
 ## Agents
 
@@ -43,6 +45,11 @@ says.
 
 [Messages and attachments](messages-and-attachments.md) holds the composer, turns, retries, titles, and attached files.
 
+### Messages from the bar
+
+[Messages from the bar](messages-and-attachments.md#messages-from-the-bar)
+holds how an agent action of the pull request bar sends its fixed prompt.
+
 ## Workspace links
 
 - [Workspace links](workspace-links.md) says how chat text and the message
@@ -66,7 +73,21 @@ says.
   the end of the turn.
 - While a turn runs, the chat shows the time since the turn started, and
   Stop sits beside Send.
+- A Claude turn that waits for its
+  [background work](agent-runner.md#background-work) shows as any running
+  turn. The output of the agent after each notification joins that turn.
+- The chat shows no line and no workspace state for the wait (background
+  work decision 3). A line in the running turn that names the work, and a
+  workspace state such as "waiting", were not chosen.
 - A finished turn ends with its duration and the files that it changed.
+- A turn that ended at the time limit of background work shows
+  "Background work stopped at the time limit" in its end, above its
+  duration and its files (background work decision 3). The
+  [mockup catalogue](../mockups/catalogue.md) draws it at
+  `app/chat/background-limit`.
+- The line names no length of the limit. Reason: the member cannot change
+  the limit.
+- A toast at the limit was rejected, because a routine run has no open tab.
 - When the runner cannot tell which files a turn changed, its end shows
   "Changed files unavailable" in place of the files (decision 109). The
   turn still shows as finished or stopped, not as failed.
@@ -79,6 +100,9 @@ says.
 - A refused runner event shows one chat line that names the lost data, unless
   it is a [lost workspace update](agent-runner.md#lost-workspace-updates).
   Such a line among the work of a turn folds with that work (decision 151).
+- After [Continue](continue.md), each session shows one note at its place,
+  with the member who pressed Continue, the new branch, and its base. To
+  that member it says "You". The note reaches no agent.
 - The chat hides the messages that the SDK adds on its own, such as
   "[Request interrupted by user]".
 - Each result of the agent shows with the messages that it answers. One
@@ -88,6 +112,16 @@ says.
 
 - While a turn runs, each agent message shows in full. Each run of tool
   calls gets its own line that folds it, such as "3 tool calls".
+- While a turn runs, only its newest run of tool calls shows its calls. That
+  run stays open between two calls and after a message that follows it,
+  until a newer run starts or the turn ends. Each earlier run of the turn is
+  folded.
+- Reason: the user watches the newest work, and the earlier work stays
+  short. A run that folds when its calls are done was rejected, because it
+  closed and opened again at each call. A run that folds when a message
+  follows it, and every run open until the turn ends, were rejected too.
+- A click opens or closes a run of tool calls, and the run keeps that
+  choice while the chat shows it.
 - When a turn ends, also when it stops or fails, the work before its answer
   folds into one line (decision 150).
 - Reason: the answer of a long turn stays easy to find. A fold while the
@@ -114,6 +148,16 @@ says.
   and each message. A click opens a message line to its full text.
 - When the user opens or closes a fold or a run of tool calls, its line
   stays in place. Its list opens or closes below the line.
+- The line of a tool call gives a verb for its kind, its target, and then
+  its detail, such as "Ran `npm test`".
+- The target of a call to a tool of an MCP server, such as the computer
+  tools, is the name of that tool without its server, such as
+  `get_window_state`. Its detail is the subject of the call, such as a
+  query, a path, or an address.
+- Reason: a subject alone, such as `menu`, does not say which tool ran,
+  and a full name, such as `mcp__computer__get_window_state`, is hard to
+  read. Words of the app for each computer tool were rejected, because
+  they need a list of tool names that the provider can change.
 
 ## Session transcripts
 
@@ -141,4 +185,4 @@ says.
 
 ## The agent runner
 
-[The agent runner](agent-runner.md#the-agent-runner) states its connection, events, limits, turns, and report repairs.
+[The agent runner](agent-runner.md) states its connection, events, limits, turns, the background work of Claude turns, and report repairs.

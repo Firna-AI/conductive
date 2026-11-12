@@ -13,6 +13,11 @@ methods of `Workspace`.
   lifecycle change of `Workspace` runs in it through `runLifecycle`, then
   calls `flushRunner`. So a waiting turn goes out when the lifecycle state
   allows it.
+- The progress phases of a sandbox start make most of their D1 and
+  provider calls outside the queue, as
+  [Creates and resumes](../../lifecycle/workspace-object.md#creates-and-resumes)
+  says. So the chat reads, the messages, and the runner receipts do not
+  wait for those calls.
 - `acceptFirstMessage`, `stopWorkspace`, `commitWorkspaceEvent`, and
   `flushRunner` do not enter the queue. Call them only inside it.
   `workspaceSummary` enters the queue.
@@ -57,6 +62,8 @@ methods of `Workspace`.
   it before. It reports the event to the lifecycle. A runner that is ready
   before the start is prepared gets its turns only after that. Their
   messages and model changes wait behind them.
+- A runner connection that the object restores after a wake gets no
+  `welcome`. So neither `runnerHello` nor `runnerReady` runs again.
 - `runnerEventStored(envelope, publish)` runs after each other stored runner
   event or refusal marker. It reports `turn.started` and `start.updated`,
   with no time. It reports no turn end.
@@ -105,12 +112,18 @@ methods of `Workspace`.
   with visible output, and whether a dispatched turn runs. Its record
   commits with the events and the turns. Queued turns do not count as
   working.
-- Known limit: `Workspace.alarm` holds the queue during one lifecycle
-  phase. A phase can make several provider requests. Each can take up to 30
-  seconds, 65 for a file read, or 610 for a command. The restore watch runs
-  such a command when it writes the restore marker. So a slow phase delays
-  the chat reads, the messages, and the runner receipts of that workspace.
-  The startup script and the terminal setup run detached, so no request
-  waits for their whole run, as
-  [Creates and resumes](../../lifecycle/workspace-object.md#creates-and-resumes)
-  says.
+- Known limit: other lifecycle work still holds the queue during its D1
+  and provider calls. The lifecycle step of the alarm holds it for the
+  restore watch, the provider state read, the deadline extension, and the
+  idle stop.
+  Disk retention, Archive, cleanup, and the access stop also make their
+  calls in the queue. A start keeps its admission, its runner readiness
+  check, its failure path, and its token write in the queue. So does the
+  D1 publication of a create result. Each lifecycle state write, also for
+  a start step, writes the shown state to D1 in the queue.
+- A provider request of that work can take up to 30 seconds, 65 for a file
+  read, or 610 for a command. The restore watch runs such a command when it
+  writes the restore marker. So a slow call delays the chat reads, the
+  messages, and the runner receipts of that workspace. The native alarm
+  handler returns before the regular alarm task ends, and the access
+  deadlines do not wait for it, as [Alarms](../../README.md#alarms) says.

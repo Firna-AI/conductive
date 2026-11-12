@@ -26,6 +26,7 @@ function attachedTurn(agent: Agent) {
     {
       id: 'image',
       name: 'Screenshot.PNG',
+      path: null,
       kind: 'image',
       mediaType: 'image/png',
       sizeBytes: 12,
@@ -33,6 +34,7 @@ function attachedTurn(agent: Agent) {
     {
       id: 'pdf',
       name: 'Plan "A".PDF',
+      path: null,
       kind: 'file',
       mediaType: 'application/pdf',
       sizeBytes: 23,
@@ -154,6 +156,47 @@ it('gives Codex original attachment metadata and keeps local image inputs', asyn
           type: 'text',
           text: 'Attached file: {"name":"Plan \\"A\\".PDF","mediaType":"application/pdf","path":"/test/repository/.context/attachments/11111111111111111111111111111111/Plan-A.pdf","sizeBytes":23}',
           text_elements: [],
+        },
+      ],
+    },
+  })
+  const branchCommand = attachedTurn('codex').command
+  await provider.send({
+    ...branchCommand,
+    message: {
+      ...branchCommand.message,
+      id: 'attachment-with-current-branches',
+    },
+    branches: { workspaceBranch: 'owner/next', targetBranch: 'trunk' },
+  })
+  expect(
+    servers.latest.writes.findLast((write) => write.method === 'turn/steer'),
+  ).toMatchObject({
+    params: {
+      input: [
+        {
+          type: 'text',
+          text: 'Sender: @alice\nCurrent branches: workspace "owner/next"; target "trunk".\n\nChange the file.',
+          text_elements: [],
+        },
+        {
+          type: 'text',
+          text: 'The sender attached these files. Read each file before you answer. Each image is also in this message.',
+          text_elements: [],
+        },
+        {
+          type: 'text',
+          text: 'Attached file: {"name":"Plan \\"A\\".PDF","mediaType":"application/pdf","path":"/test/repository/.context/attachments/11111111111111111111111111111111/Plan-A.pdf","sizeBytes":23}',
+          text_elements: [],
+        },
+        {
+          type: 'text',
+          text: 'Attached file: {"name":"Screenshot.PNG","mediaType":"image/png","path":"/test/repository/.context/attachments/22222222222222222222222222222222/Screenshot.png","sizeBytes":12}',
+          text_elements: [],
+        },
+        {
+          type: 'localImage',
+          path: '/test/repository/.context/attachments/22222222222222222222222222222222/Screenshot.png',
         },
       ],
     },

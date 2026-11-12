@@ -97,7 +97,10 @@ the privileged-command helper and the provider's `runCommand`. It throws a
 provider error when the command fails or times out. The
 [restore watch](../lifecycle/workspace-object.md#creates-and-resumes) of
 the workspace object calls it. `/run` is memory, so each start begins
-without the marker.
+without the marker. The agent runner reads the same marker to watch the
+live repository folder again, as the [runner guide](../../runner/README.md)
+says. The path lives in
+[`src/shared/restore-marker.ts`](../../src/shared/restore-marker.ts).
 E2B boots from the saved disk and omits the optional `hydrated` field.
 The common restore check then writes this marker as soon as the sandbox reports ready.
 It needs no delayed repair of a retired disk view.
@@ -194,6 +197,10 @@ An independent deadline cancels idle connections if an access read stalls.
 Frame checks use only the live registration. They run no D1 access query.
 Cleanup removes the registration and its scheduled work.
 Inject `dependencies.terminalSchedule` and `now` to test these deadlines.
+
+Each terminal socket is a bridge. `bridgeSocket` joins the browser socket to an outbound socket to the ttyd port.
+Such a bridge keeps its workspace object active, also while it is idle, as [Work that keeps the object active](../README.md#work-that-keeps-the-object-active) says.
+So the access timers of the terminal stay in memory.
 
 `scripts.ts` builds the exact password program, launcher, and shell server
 installed in the image. Its trusted options select paths, account names,

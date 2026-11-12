@@ -18,13 +18,15 @@ export type ApprovalEmailNote =
 /**
  * How a user got app access: the way in, and who or what let them in. An
  * org invitation keeps its org and the admin who sent it, because an
- * accepted invitation does not stay.
+ * accepted invitation does not stay. Open sign-up keeps the operator who
+ * last turned off the waitlist.
  */
 export type WayIn =
   | { kind: 'approval'; by: string; email: ApprovalEmailNote }
   | { kind: 'invite-code'; label: string }
   | { kind: 'referral-code'; owner: string }
   | { kind: 'org-invitation'; org: string; by: string }
+  | { kind: 'open-sign-up'; by: string }
   | { kind: 'operator' }
   | { kind: 'existing' }
 

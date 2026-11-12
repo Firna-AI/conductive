@@ -1,9 +1,11 @@
 # Messages and attachments
 
 This doc holds the requirements and the decisions in force for the messages
-of a session and the files that a message carries. It belongs to
+of a session. It belongs to
 [Chat and events](chat-and-events.md), which covers the agents, the
-sessions, what the chat shows, and the events. The terms are those of the
+sessions, what the chat shows, and the events.
+[Message attachments](message-attachments.md) holds the files that a
+message carries. The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
 says.
@@ -15,7 +17,7 @@ says.
 - A change to another model of the same agent stays in the session
   (decision 51).
 - A model of the other agent opens a new session with that agent, and the
-  draft moves there with its files.
+  draft moves there with its files, each at its place in the text.
 - Reason: neither SDK can switch agents inside one session. A hand-over of
   the transcript to the other agent was rejected. The user chose the way
   that Conductor works.
@@ -68,6 +70,8 @@ says.
   [Create a workspace](create-a-workspace.md)
   says. The app accepts that message before the sandbox is ready
   (decision 14).
+- A message from the agent tools follows these rules. Its text ends with
+  the lines of [The `Sent by:` line](session-calls.md#the-sent-by-line).
 - The app also accepts a later message while the sandbox is not ready
   (decisions 14 and 130). Examples are the first start, a resume, and the
   error state of a failed first start.
@@ -111,6 +115,13 @@ says.
   starter after a stop continues the same session. The next message of
   another member does the same while the starter shares the login.
 - A turn that fails names the cause, and Try again retries the turn.
+- When the cloud computer cannot run a turn's login kind, the turn fails
+  with a cause and sends no credential to its runner (decision 174).
+- For a ChatGPT sign-in, the cause offers two ways to continue. An admin
+  rebuilds the org image, then the member starts a new workspace. Or the
+  member connects an OpenAI API key.
+- The same rule applies to a message that joins a turn. A reconnect
+  does not repeat a failed turn or send its credential again.
 - Try again can retry only the newest turn of a session, and only when that
   turn failed (decision 97). It sends the retry message that the failure
   names.
@@ -131,9 +142,14 @@ says.
   for a title after accepting its first message (decision 184). The request asks
   for three to five words. Workers AI is the model service of Cloudflare,
   on the account that hosts the app.
-- The model writes the title from the text of that message. The request
-  holds no other data of the workspace. It uses no agent login of a
-  member. The chat does not show it.
+- The model writes the title from the text of that message. It leaves out
+  the `---` line and the `Sent by:` line of a message from the agent tools.
+  Reason: the title names the task, not its sender.
+- In that text, each mention of one of its attached files becomes the name
+  of the file (decision 262 D). The request holds no other data of the
+  workspace. It uses no agent login of a member. The chat does not show it.
+- Reason: a path makes a poor title. A request with the copy path of each
+  file was rejected for that reason.
 - The reply to the message does not wait for the title. The workspace
   then takes the title as its name, as
   [Workspace and session names](agents-and-sessions.md#workspace-and-session-names) says.
@@ -145,6 +161,9 @@ says.
   starts it.
 - A first message with no text starts no request. The next message with
   text in the workspace then starts it.
+- For the title request, a message whose text holds only the mentions of
+  its own attached files counts as a message with no text. The same holds
+  for a session title, as [Sessions](agents-and-sessions.md#sessions) says.
 - Reason: the name shows within seconds, while the sandbox starts, and the
   operator chooses the model and its speed.
 - A request in the sandbox on the agent login of the member was rejected.
@@ -154,101 +173,49 @@ says.
   sends each first message to another company. A name from the first
   words of the message, with no model, was rejected, because such names
   are weaker.
+- The request also asks for plain words with no underscores (decision 255).
+- The app changes each underscore of the answer to a space. The title then
+  follows the rule of a title from a message, as
+  [Sessions](agents-and-sessions.md#sessions) says. So each run of spaces
+  becomes one space.
+- The title keeps its hyphens and its letter case, because words such as
+  "sign-in", "GitHub", and "iOS" need them.
+- This rule covers only a title that the model writes. A session title from
+  a member's message keeps its underscores. A name from a create call keeps
+  them too, as [Create and list calls](agent-tools.md#create-and-list-calls)
+  says.
+- Reason: the model writes names such as `add_conductive_app`, also when
+  the request asks for spaces. A change of the request alone was rejected
+  for that reason.
+- A larger model was rejected, because no model is sure to keep the format,
+  and each title then costs more and takes longer.
+- A change of the shown name only was rejected, because the stored name
+  then keeps the underscores. A refusal of a title with underscores was
+  rejected, because the workspace then stays "Untitled".
+- A split of a one-word title at each hyphen, dot, and slash was rejected,
+  because it changes names such as "Node.js".
+- The same rule for a session title from a member's message was rejected,
+  because a member can write `user_id` on purpose.
+- A title that keeps a word with underscores from the first message was
+  rejected, because the name then holds underscores that no member asked
+  for. A member who wants underscores names the workspace with Rename.
+
+### Messages from the bar
+
+- An [agent action](github-banner.md#agent-actions) of the pull request bar
+  sends its fixed prompt as a message of the member who clicks, to the
+  session that the member saw last, with its model and effort.
+- It follows each rule of a message from the composer, and the draft stays
+  as it is. The chat shows it as a message of that member, with no mark of
+  the action. Reason: an action is a message (decision 220).
 
 ## Attachments
 
-- Each file of a message can contain at most 25 MB, or 25,000,000 bytes
-  (decision 132).
-- The composer refuses a larger file before its upload, and names the
-  limit. The Worker refuses a larger file too, with HTTP 413 and the error
-  code `attachment_too_large`.
-- The composer shows each upload while it runs. A failed upload offers Try
-  again and Remove. Send waits while a file uploads, and while a failed
-  upload waits for Try again or Remove.
-- Each attached file has a × that removes it, as
-  [Remove a chip of the composer](file-mentions.md#remove-a-chip-of-the-composer)
-  says. This × is the Remove of a failed upload.
-- An upload works also before the cloud computer of its workspace exists,
-  and while that cloud computer starts or is stopped (decision 132).
-- The Worker stores each uploaded file in one R2 bucket of the app, outside
-  the cloud computer (decision 132).
-- Storage in the object of each workspace was rejected, because each file
-  must then go in chunks. Uploads only into a running cloud computer were
-  rejected, because a message to a new or stopped workspace could then not
-  carry files at once.
-- [Orgs and workspaces](isolation.md#orgs-and-workspaces) states
-  which messages can use an uploaded file.
-  [Attachment uploads](access-and-security.md#attachment-uploads) states
-  how the browser sends a file (decision 144).
-- When the turn of a message starts, the Worker copies each file of the
-  message into the cloud computer of the workspace (decision 132).
-- Each file goes to `.context/attachments/<digest>/<safe name>` in the
-  folder of the workspace's own repository (decision 242). The digest is
-  32 lowercase hexadecimal characters from the IDs of the message and the
-  file. [The context folder](repository-folders.md#the-context-folder)
-  states the folder.
-- The safe name keeps the ASCII letters, digits, dots, underscores, and
-  hyphens of the original name. One hyphen replaces each run of other
-  characters. It keeps at most 100 characters, with its extension in
-  lowercase. An empty stem becomes `file`.
-- Before the first file of each copy, the Worker writes a `.gitignore` file
-  that holds `*` into `.context/attachments/`. So Git ignores each copied
-  file, also when the runner adds no exclude rule.
-- Reason: agents and members who use the terminal find each file next to
-  the code, and Changes and commits leave it out. The Worker copy reaches
-  every workspace at once, also one with an older runner. Both agents
-  start in the folder of that repository.
-- A hidden file in the home folder was rejected, because agents and
-  members do not find it there. A runner link to a hidden copy was
-  rejected, because each file then has two names. A download by the runner
-  was rejected, because only the Worker reads the bucket.
-- The agent gets a message only after each of its files is in the cloud
-  computer. This holds also for a message that joins a running turn.
-- While the files of a message copy, each later message of the same turn
-  waits. The agent then gets the messages of that turn in the order that
-  the workspace accepted them.
-- Stop and the turns of other sessions do not wait for a copy.
-- Reason: a later message can correct an earlier one. A rule that holds all
-  work of the workspace during a copy was rejected, because it would hold
-  Stop and the other sessions.
-- With the message, the agent gets one line that tells it to read each
-  file before it answers (decision 244). This line comes once, after the
-  text of the message. Then one line for each file gives its absolute
-  path, its name, its media type, and its size in bytes. The copy holds
-  the exact bytes of the upload.
-- Codex also gets each image as image input. For a message with an image,
-  its read line also says that each image is in the message. Reason: Codex
-  then spends no tool step on an image that it already has.
-- Reason: the read instruction stands next to the files. The size tells
-  the agent how large a file is before it reads it, as in Conductor.
-- A rule in the agent instructions was rejected, because it stands once in
-  each session, far from the files. Conductor's block, with only a path
-  and a size, was rejected, because the agent loses the name and the media
-  type. A read line in the text of the message was rejected, because that
-  text holds only the words of the member.
-- Image input for Claude was not chosen, because an image that the model
-  service cannot decode can fail the whole turn.
-- An older runner gives the agent no read line and no size. Each build of
-  the org image installs the newest runner, as
-  [The agent runner](agent-runner.md#the-agent-runner) says.
-- A turn cannot start when a file of its message cannot reach the cloud
-  computer. That turn fails and names the cause. Try again copies the
-  files again.
-- A copy that fails for a message that joins a running turn fails that
-  turn in the same way. The workspace also stops the agent of that turn, as
-  [The agent runner](agent-runner.md#the-agent-runner) says.
-- The chat shows the name and the size of each file of a sent message.
-- The app deletes the files of a workspace with the workspace, also in the
-  purge of a deleted org (decision 132).
-- A failed first start deletes no file of the first message. The files stay
-  with the accepted message in the failed workspace, as
-  [Create a workspace](create-a-workspace.md#a-failed-first-start)
-  says. Try again uses them in the same workspace.
-- The app deletes an unsent file 7 days after its upload (decision 132). A
-  file is unsent while no accepted message uses it.
-- When a send names a draft file that the app deleted, the composer shows
-  that file as a failed upload. Its Try again uploads the file again from
-  the device.
+[Message attachments](message-attachments.md#attachments) states the size
+limit, the upload, the storage, the copy into the cloud computer, and the
+deletion of the files of a message. It also states the files in the
+message field, their drop, their place in the text, and the files of a
+sent message.
 
 ## Workspace links
 

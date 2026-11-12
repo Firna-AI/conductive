@@ -16,10 +16,12 @@ import {
   orgSuspendedBody,
   serveSuspendedAcme,
 } from '../../../test-support/suspended-org'
+import { openPaletteTab } from '../../palette/palette-test-kit'
+import { pressHintKey } from '../../shortcuts/shortcut-test-kit'
 import { click, settle } from '../../test-mount'
 import { filesHref } from '../files/files-address'
 import { emit } from '../kept-test-kit'
-import { linksTo, linkTo, openTab } from '../wiring-test-kit'
+import { linksTo, linkTo, openTab, socketsOf } from '../wiring-test-kit'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
@@ -48,6 +50,38 @@ describe('the GitHub state in the workspace', () => {
     })
     expect(column.textContent).toContain('2 checks failed')
     expect(column.textContent).toContain('2 of 6 failed')
+  })
+
+  test('the key of Open PR on GitHub opens the pull request in a new tab while the bar links it', async () => {
+    holdAnimationFrames()
+    const server = new FakeApiServer()
+    const opened: string[] = []
+    const { app } = await openPaletteTab(routes.workspace(org, id), {
+      server,
+      events: socketsOf(server).events,
+      openInNewTab: (url) => opened.push(url),
+    })
+    const linked = pressHintKey(app, 'open-pull-request', document.body)
+    await settle()
+    // A branch without a pull request has no link to one.
+    const none = toolFixtures('none')
+    emit(server, {
+      type: 'github.updated',
+      banner: none.banner.banner,
+      checks: none.checks,
+    })
+    const unlinked = pressHintKey(app, 'open-pull-request', document.body)
+    await settle()
+
+    expect({
+      linked: linked.defaultPrevented,
+      unlinked: unlinked.defaultPrevented,
+      opened,
+    }).toEqual({
+      linked: true,
+      unlinked: false,
+      opened: ['https://github.com/acme/storefront/pull/482'],
+    })
   })
 
   test('on a phone, the pull request row opens the Checks tab', async () => {

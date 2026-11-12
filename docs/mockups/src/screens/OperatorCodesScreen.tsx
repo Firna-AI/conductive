@@ -2,17 +2,16 @@ import type { SchemaProps, Viewport } from '@mokly/mokly'
 import { Plus } from 'lucide-react'
 import { ActionButton } from '../components/common/actions'
 import { ScreenLink } from '../components/common/ScreenLink'
+import { SearchField } from '../components/common/SearchField'
 import {
   DisableCodeDialog,
   NewCodeDialog,
 } from '../components/operator/codeDialogs'
 import { codeCell, codeColumns } from '../components/operator/codes'
-import {
-  DirectorySearch,
-  DirectoryTable,
-} from '../components/operator/directory'
+import { DirectoryTable } from '../components/operator/directory'
 import { OperatorPage } from '../components/operator/OperatorPage'
 import { PauseDialog, SignUpsSection } from '../components/operator/pause'
+import { TurnOffWaitlistDialog } from '../components/operator/waitlistSwitch'
 import {
   codeSearches,
   inviteCodes,
@@ -25,7 +24,7 @@ import { paths } from '../paths'
 export const operatorCodesSchema = {
   type: 'object',
   additionalProperties: false,
-  required: ['list', 'dialog', 'signUps'],
+  required: ['list', 'dialog', 'signUps', 'waitlist'],
   properties: {
     /**
      * The invite codes newest first, after New code, after a disable, or
@@ -34,10 +33,17 @@ export const operatorCodesSchema = {
     list: {
       enum: ['newest', 'made', 'disabled', 'invite', 'referral', 'none'],
     },
-    /** New code, or the question before a disable or the pause. */
-    dialog: { enum: ['none', 'new', 'disable', 'pause'] },
+    /**
+     * New code, or the question before a disable, the pause, or Turn off
+     * the waitlist.
+     */
+    dialog: {
+      enum: ['none', 'new', 'disable', 'pause', 'turn-off-waitlist'],
+    },
     /** Sign-ups are open, or an operator paused them. */
     signUps: { enum: ['open', 'paused'] },
+    /** The waitlist is on, or an operator turned it off. */
+    waitlist: { enum: ['on', 'off'] },
   },
 } as const
 
@@ -95,8 +101,13 @@ function results(list: OperatorCodesState['list']): Results {
   }
 }
 
+/**
+ * The dialog over the tab. The question before the pause keeps the state of
+ * the waitlist switch in its links.
+ */
 function CodesDialog(props: {
   dialog: OperatorCodesState['dialog']
+  waitlist: OperatorCodesState['waitlist']
   viewport: Viewport
 }) {
   switch (props.dialog) {
@@ -117,22 +128,24 @@ function CodesDialog(props: {
         />
       )
     case 'pause':
-      return <PauseDialog viewport={props.viewport} />
+      return <PauseDialog viewport={props.viewport} waitlist={props.waitlist} />
+    case 'turn-off-waitlist':
+      return <TurnOffWaitlistDialog viewport={props.viewport} />
   }
 }
 
 /**
- * The Invite codes tab of the operator: the state of sign-ups with Pause,
- * a search, and the invite codes, newest first, with their uses and
- * states. The search finds a code by its text, an invite code by its
- * label, and a referral code by the GitHub login of its owner. New code in
- * the header makes a code.
+ * The Invite codes tab of the operator: the state of sign-ups with Pause
+ * sign-ups and the waitlist switch, a search, and the invite codes, newest
+ * first, with their uses and states. The search finds a code by its text,
+ * an invite code by its label, and a referral code by the GitHub login of
+ * its owner. New code in the header makes a code.
  */
 export function OperatorCodesScreen(props: {
   state: OperatorCodesState
   viewport: Viewport
 }) {
-  const { list, dialog, signUps } = props.state
+  const { list, dialog, signUps, waitlist } = props.state
   const found = results(list)
   return (
     <OperatorPage
@@ -143,14 +156,21 @@ export function OperatorCodesScreen(props: {
           </ActionButton>
         </ScreenLink>
       }
-      dialog={<CodesDialog dialog={dialog} viewport={props.viewport} />}
+      dialog={
+        <CodesDialog
+          dialog={dialog}
+          viewport={props.viewport}
+          waitlist={waitlist}
+        />
+      }
       signUps={signUps}
       tab="codes"
       title="Operator"
       viewport={props.viewport}
+      waitlist={waitlist}
     >
-      {signUps === 'open' ? <SignUpsSection /> : null}
-      <DirectorySearch
+      {signUps === 'open' ? <SignUpsSection waitlist={waitlist} /> : null}
+      <SearchField
         label="Search codes"
         placeholder="Code, label, or GitHub login"
         query={found.query}

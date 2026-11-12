@@ -9,6 +9,7 @@ import type {
   RunnerCommandV1,
   RunnerInterrupt,
   RunnerLogin,
+  RunnerLoginKind,
   WorkspaceToRunnerV1,
   WorkspaceToRunnerV2,
   RunnerEventEnvelope,
@@ -89,9 +90,9 @@ export interface StoredAttachment {
 }
 
 export type PreparedMessageCommand = (
-  | Omit<Extract<RunnerCommandV1, { type: 'turn' }>, 'attachments'>
-  | Omit<Extract<RunnerCommandV1, { type: 'message' }>, 'attachments'>
-) & { attachments: readonly StoredAttachment[] }
+  | Omit<Extract<RunnerCommandV1, { type: 'turn' }>, 'attachments' | 'login'>
+  | Omit<Extract<RunnerCommandV1, { type: 'message' }>, 'attachments' | 'login'>
+) & { attachments: readonly StoredAttachment[]; login: RunnerLogin }
 
 export type PreparedCommand =
   PreparedMessageCommand | RunnerInterrupt | RunnerChangeModel
@@ -109,18 +110,25 @@ export type PendingCommand =
   | RunnerInterrupt
   | RunnerChangeModel
 
+type ResolveCommand<Command> = Command extends PreparedMessageCommand
+  ? Omit<Command, 'attachments'> & { attachments: readonly RunnerAttachment[] }
+  : Command
+
+export type ResolvedCommand = ResolveCommand<PreparedCommand>
+
 export interface RunnerPeer {
   send(message: WorkspaceToRunnerV1 | WorkspaceToRunnerV2): void
   close(): void
 }
 
 export interface ActiveRunner {
+  id: string
   peer: AuthenticatedRunner
   workspace: RunnerWorkspaceRecord
   streamId: string | null
   protocolVersion: RunnerProtocolVersion | null
+  loginKinds?: readonly RunnerLoginKind[]
   ready: boolean
-  delivered: Set<string>
 }
 
 export interface BrowserPeer {
@@ -140,6 +148,9 @@ export type ChatCallbackPublisher = (
 ) => Promise<void>
 
 export interface ChatDependencies {
+  readBranches(
+    workspaceId: string,
+  ): Promise<import('../../src/shared/runner').RunnerBranches | null>
   readCommitAuthor: (userId: string) => Promise<CommitAuthor | null>
   readAutomaticTitleWorkspace: (
     workspaceId: string,
@@ -182,8 +193,10 @@ export interface ChatDependencies {
   browserOpened(workspaceId: string, tabId: string): Promise<void>
   browserClosed(workspaceId: string, tabId: string): Promise<void>
   now: () => number
-  scheduleBrowserCheck: ConnectionScheduler
-  scheduleRunnerCheck: ConnectionScheduler
+  scheduleBrowserCheck?: ConnectionScheduler
+  browserAlarm?: (at: number | null) => Promise<void>
+  scheduleRunnerCheck?: ConnectionScheduler
+  runnerAlarm?: (at: number | null) => Promise<void>
   readRunnerAccess: (workspaceId: string, tokenHash: string) => Promise<boolean>
   readRunnerProtocolVersion: (workspaceId: string) => Promise<number | null>
   readConnectionAccess: (

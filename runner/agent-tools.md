@@ -4,6 +4,10 @@ The [agent runner](README.md) registers two stdio MCP servers for each
 agent process. The [agent-tool requirements](../docs/protocol/agent-tools.md)
 define their behavior.
 
+For a Codex ChatGPT turn, the rules of its ChatGPT workspace can limit
+these servers or add managed MCP commands. Codex applies those rules in
+the org's sandbox, as [Codex logins](codex-logins.md#chatgpt-sign-in) says.
+
 ## Computer tools
 
 Both agents get the `computer` MCP server of the sandbox when it has one.
@@ -32,6 +36,17 @@ The CLI inherits the same context from the agent process.
 A message from another member or a deferred model change keeps the
 active turn's context. Each new turn starts fresh tool processes.
 Closing the SDK or App Server also stops its workspace MCP child.
+
+The tools create and list workspaces, and list repositories, sections, and models.
+They also provide `create_session`, `list_sessions`, `send_message`, and `read_session` across the org.
+An omitted workspace ID names the calling workspace.
+Session reads need only the workspace token. Session writes need the active turn and follow its sender.
+A session link contains the workspace and session IDs.
+Workspace and session links in an answer show as chips.
+A `Sent by:` line names the sending session. An agent must not reply only to confirm it.
+The [tool guide](../tools/README.md#sessions) gives defaults, transcript continuation, and retry IDs.
+The runner puts this guidance in each new session's instructions.
+An existing session keeps its saved instructions after a restart.
 
 ## Key code
 

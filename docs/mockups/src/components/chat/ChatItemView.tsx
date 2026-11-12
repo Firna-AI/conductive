@@ -1,20 +1,22 @@
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
 import { CircleAlert, CircleStop } from 'lucide-react'
-import type { ChatItem } from '../../fixtures/conversations'
 import { people, type PersonKey } from '../../fixtures/members'
 import { paths } from '../../paths'
 import { ActionButton } from '../common/actions'
+import { classes } from '../common/classes'
+import headingStyles from '../common/MarkdownHeadings.module.css'
 import { Notice } from '../common/Notice'
 import { ScreenLink } from '../common/ScreenLink'
 import { AgentBlocks } from './AgentBlocks'
-import { AttachmentChips } from './AttachmentChips'
+import { ContinuedLine } from './ContinuedLine'
+import type { SingleItem } from './groupItems'
 import { LinkedLine } from './LinkedLine'
 import { LostLine } from './LostLine'
 import { turnFilesUnavailable, unlistedFiles } from './lostCopy'
 import { MacCommand } from './MacCommand'
-import { MessageText } from './MessageText'
-import { ToolGroup } from './ToolGroup'
+import { filesWithoutPlace, MessageText } from './MessageText'
+import { SentFiles } from './SentFiles'
 import { TurnEnd } from './TurnEnd'
 import styles from './ChatItemView.module.css'
 
@@ -30,38 +32,43 @@ function stoppedLine(by: PersonKey | undefined, viewer: PersonKey): string {
 }
 
 /**
- * One item of a chat transcript. `viewer` is the person signed in, who
- * reads the transcript.
+ * One item of a chat transcript, other than a tool call, which joins a run
+ * of tool calls. `viewer` is the person signed in, who reads the transcript.
  */
-export function ChatItemView(props: { item: ChatItem; viewer: PersonKey }) {
+export function ChatItemView(props: { item: SingleItem; viewer: PersonKey }) {
   const { item, viewer } = props
   const theme = useSharedUiTheme()
   switch (item.kind) {
-    case 'user':
+    case 'user': {
+      const files = item.attachments ?? []
+      const listed = filesWithoutPlace(item.text, files)
       return (
         <div className={styles.user}>
           <div className={styles.bubble}>
-            <MessageText mentions text={item.text} />
+            <MessageText
+              files={files}
+              mentions
+              text={item.text}
+              waits={item.queued}
+            />
           </div>
-          {item.attachments ? (
-            <AttachmentChips attachments={item.attachments} sent />
-          ) : null}
+          {listed.length > 0 ? <SentFiles files={listed} /> : null}
         </div>
       )
+    }
     case 'agent':
       return (
-        <div className={styles.agent}>
+        <div className={classes(styles.agent, headingStyles.headings)}>
           <AgentBlocks blocks={item.blocks} />
         </div>
       )
-    case 'tool':
-      return <ToolGroup calls={[item]} />
     case 'mac-command':
       return <MacCommand request={item.request} state={item.state} />
     case 'turn-end':
       return (
         <TurnEnd
           duration={item.duration}
+          endReason={item.endReason}
           files={item.files}
           filesUnavailable={item.filesUnavailable}
           omittedFiles={item.omittedFiles}
@@ -75,6 +82,14 @@ export function ChatItemView(props: { item: ChatItem; viewer: PersonKey }) {
       return (
         <LinkedLine
           link={<ScreenLink to={paths.noStarterLogin}>{item.from}</ScreenLink>}
+        />
+      )
+    case 'continued':
+      return (
+        <ContinuedLine
+          base={item.base}
+          branch={item.branch}
+          who={item.by === viewer ? 'You' : people[item.by].name}
         />
       )
     case 'stopped':

@@ -2,6 +2,7 @@ import {
   operatorCodesPath,
   operatorSignupPausePath,
   operatorWaitlistPath,
+  operatorWaitlistSwitchPath,
   type OperatorApprovalResponse,
 } from '../../src/shared/operator-waitlist'
 import type { AppDependencies, AppEnv } from '../env'
@@ -19,6 +20,7 @@ import {
 import { numericGitHubId } from './directory'
 import { changeSignupPause, readSignupPause } from './signup-pause'
 import { readOperatorWaitlist } from './waitlist-directory'
+import { changeWaitlistSwitch, readWaitlistSwitch } from './waitlist-switch'
 
 export async function operatorWaitlistRoute(
   request: Request,
@@ -34,6 +36,9 @@ export async function operatorWaitlistRoute(
   const pause =
     path === operatorSignupPausePath() &&
     ['GET', 'POST', 'DELETE'].includes(method)
+  const waitlistSwitch =
+    path === operatorWaitlistSwitchPath() &&
+    ['GET', 'POST', 'DELETE'].includes(method)
   const approval =
     method === 'POST'
       ? path.match(/^\/api\/operator\/users\/([^/]+)\/approval$/)
@@ -42,7 +47,8 @@ export async function operatorWaitlistRoute(
     method === 'POST'
       ? path.match(/^\/api\/operator\/invite-codes\/([^/]+)\/disable$/)
       : null
-  if (!waitlist && !codes && !pause && !approval && !disable) return null
+  if (!waitlist && !codes && !pause && !waitlistSwitch && !approval && !disable)
+    return null
   if (!isOperator(env, context.user.githubId))
     throw new HttpError(
       403,
@@ -52,6 +58,17 @@ export async function operatorWaitlistRoute(
   const db = env.DB
   if (waitlist)
     return Response.json(await readOperatorWaitlist(db, url.searchParams))
+  if (waitlistSwitch)
+    return Response.json(
+      await (method === 'GET'
+        ? readWaitlistSwitch(db)
+        : changeWaitlistSwitch(
+            db,
+            method === 'POST',
+            context.user.id,
+            dependencies.now(),
+          )),
+    )
   if (codes) {
     if (method === 'GET')
       return Response.json(await readOperatorCodes(db, url.searchParams))

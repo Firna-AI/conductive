@@ -17,14 +17,20 @@
   so only a workspace that starts from an image built after the merge has
   this behaviour. `docs/protocol/github-tokens.md`, section "Commit
   author", states the rule.
+- The sandbox variables hold no turn ID and no commit author. A shell that
+  loads them again keeps the turn's values. Codex runs each command in such
+  a login shell. Before this rule, a Codex agent's `git push` could fail
+  with "GitHub access failed. Check the current turn and sign in again."
 - **Task:** After the deploy, run **Build computer** for a test org. Create
   a new workspace from the new image. Let a second member send a message in
-  that workspace and ask the agent to commit and push. Read the author of
-  the commit on GitHub.
+  that workspace and ask an agent powered by Claude to commit and push. Do
+  the same in a second session with an agent powered by Codex. Read the
+  author of both commits on GitHub.
 - **Impact if no action:** A fault in the turn author path stays unknown,
   and teammates' commits can name the workspace owner without notice.
 - **Needs:** The merged change on the deployment, an org with two members
   and a connected agent login, and a repository where the second member may
   push.
-- **Done when:** GitHub shows the commit with the second member's display
-  name and no-reply address, and links it to that member's account.
+- **Done when:** Both pushes succeed. GitHub shows both commits with the
+  second member's display name and no-reply address, and links them to
+  that member's account.

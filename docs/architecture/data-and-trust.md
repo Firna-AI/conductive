@@ -16,13 +16,15 @@ and the separate preview domain.
 | Data                                                                         | Home                                     |
 | ---------------------------------------------------------------------------- | ---------------------------------------- |
 | Users, orgs, members, sections, workspaces, settings, suspensions, and lifts | D1                                       |
-| App access, the codes and their uses, the pause, and approval email states   | D1                                       |
+| App access, the codes and their uses, and approval email states              | D1                                       |
+| The pause and the waitlist switch                                            | D1                                       |
 | Routines and their runs | D1 |
 | The org and the provider account of each sandbox and each saved snapshot     | D1                                       |
 | The provider account of each org, and the weights of new orgs with each change | D1 |
 | Env var values, agent logins, and the traffic token of each E2B sandbox | The Worker's storage, encrypted |
 | The Boat key, the E2B key, and the other keys of the Worker | Worker secrets |
 | Chat history and banner state                                                | The workspace Durable Object             |
+| A copy of the [GitHub state](../protocol/github-banner.md#the-github-state) of each workspace, for the lists | D1 |
 | Files attached to chat messages | The attachment storage, an R2 bucket |
 | The records of attached files | D1 |
 | The repository, the files, and the agent sessions                            | The home folder of the sandbox           |

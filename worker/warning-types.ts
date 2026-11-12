@@ -11,6 +11,8 @@ export const SIMPLE_WARNINGS = {
     'Sandbox provider assignment uses the configured account weights.',
   provider_assignment_choice_ignored:
     'The selected sandbox provider account is unavailable. Assignment uses the account weights.',
+  workspace_alarm_failed:
+    'Workspace alarm work failed. Its durable deadline will retry.',
   routine_schedule_failed:
     'A routine schedule could not run. The next scan will try again.',
   routine_queued_start_failed:
@@ -42,6 +44,9 @@ export const SIMPLE_WARNINGS = {
   activity_update_failed: 'Workspace activity update failed.',
   workspace_title_unconfigured:
     'The workspace title request was skipped: Workers AI is not configured.',
+  shortcut_keys_skipped:
+    'Some stored shortcut keys are no longer valid and were skipped.',
+  shortcut_change_skipped: 'An unreadable stored shortcut change was skipped.',
 } as const
 
 /** Each kind permits only its fixed text and the safe values that it needs. */
@@ -74,6 +79,12 @@ export type WorkerWarning =
   | {
       kind: 'workspace_first_message_failed' | 'runner_message_failed'
       workspaceId: WarningId
+      error: ErrorSummary
+    }
+  | {
+      kind: 'git_credential_failed'
+      workspaceId: WarningId | null
+      turn: boolean
       error: ErrorSummary
     }
   | {

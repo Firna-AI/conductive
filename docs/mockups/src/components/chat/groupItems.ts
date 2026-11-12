@@ -9,13 +9,17 @@ export type WorkItem = Extract<
   { kind: 'agent' | 'tool' | 'mac-command' | 'lost' }
 >
 
+/** An item that the chat draws on its own: a tool call joins a run instead. */
+export type SingleItem = Exclude<ChatItem, { kind: 'tool' }>
+
 /**
  * A chat item, a run of tool calls that the chat shows as one group, or a
- * run of the work of an ended turn that folds into one line.
+ * run of the work of an ended turn that folds into one line. `open` says
+ * whether a run shows its calls, as `groupItems` decides.
  */
 export type ChatEntry =
-  | { kind: 'item'; item: ChatItem }
-  | { kind: 'tools'; id: string; calls: ToolCallItem[] }
+  | { kind: 'item'; item: SingleItem }
+  | { kind: 'tools'; id: string; calls: ToolCallItem[]; open: boolean }
   | { kind: 'work'; id: string; steps: WorkItem[] }
 
 /** Whether an item ends its turn: the turn finished, stopped, or failed. */
@@ -96,10 +100,27 @@ function foldedRuns(part: readonly ChatItem[]): WorkItem[][] {
 }
 
 /**
+ * The IDs of the items of the running turn: the items after the member
+ * message that started it, up to the working line. A message sent during
+ * the turn joins it. No turn runs when the chat has no working line.
+ */
+function runningItems(items: readonly ChatItem[]): Set<string> {
+  const working = items.findIndex((item) => item.kind === 'working')
+  if (working < 0) return new Set()
+  const start = items.findLastIndex(
+    (item, index) =>
+      index < working &&
+      ((item.kind === 'user' && !item.during) || isEnd(item)),
+  )
+  return new Set(items.slice(start + 1, working).map((item) => item.id))
+}
+
+/**
  * Groups the items of a chat into the entries that it draws. When a turn
  * ends, the work before the answer of each part folds into one entry.
- * Each other run of consecutive tool calls is one group, as while a turn
- * runs.
+ * Each other run of consecutive tool calls is one group. While a turn runs,
+ * only its newest run shows its calls, also after a message that follows
+ * it. Each other run shows them while one of its calls is not done.
  */
 export function groupItems(items: readonly ChatItem[]): ChatEntry[] {
   const runs = endedParts(items).flatMap(foldedRuns)
@@ -111,9 +132,26 @@ export function groupItems(items: readonly ChatItem[]): ChatEntry[] {
     if (run) entries.push({ kind: 'work', id: `work-${item.id}`, steps: run })
     if (folded.has(item.id)) continue
     const last = entries.at(-1)
-    if (item.kind !== 'tool') entries.push({ kind: 'item', item })
-    else if (last?.kind === 'tools') last.calls.push(item)
-    else entries.push({ kind: 'tools', id: item.id, calls: [item] })
+    if (item.kind !== 'tool') {
+      entries.push({ kind: 'item', item })
+      continue
+    }
+    const tools: Extract<ChatEntry, { kind: 'tools' }> =
+      last?.kind === 'tools'
+        ? last
+        : { kind: 'tools', id: item.id, calls: [], open: false }
+    if (tools !== last) entries.push(tools)
+    tools.calls.push(item)
+  }
+  const running = runningItems(items)
+  const newest = entries.findLast(
+    (entry) => entry.kind === 'tools' && running.has(entry.id),
+  )
+  for (const entry of entries) {
+    if (entry.kind !== 'tools') continue
+    entry.open = running.has(entry.id)
+      ? entry === newest
+      : entry.calls.some((call) => call.status !== 'done')
   }
   return entries
 }

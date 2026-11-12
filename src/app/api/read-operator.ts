@@ -140,6 +140,7 @@ function readAccessSource(value: unknown): OperatorAccessSource {
   const source = record(value, 'source')
   const kind = choice(source, 'kind', [
     'approval',
+    'open_signup',
     'invite_code',
     'referral_code',
     'org_invitation',
@@ -148,6 +149,7 @@ function readAccessSource(value: unknown): OperatorAccessSource {
   ])
   switch (kind) {
     case 'approval':
+    case 'open_signup':
       return { kind, operator: maybeNested(source, 'operator', readIdentity) }
     case 'invite_code':
       return {

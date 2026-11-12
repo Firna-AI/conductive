@@ -1,6 +1,6 @@
 import { randomToken } from '../security/crypto'
 import type { BrowserAccess } from './browser-authorization'
-import type { BrowserTabs } from './browser-tabs'
+import type { BrowserTabs, BrowserPersistence } from './browser-tabs'
 import type { ChatOperation } from './operation'
 import type { ChatStore } from './store'
 import type { WorkspaceEventPeer } from './workspace-events'
@@ -12,6 +12,7 @@ interface BrowserSubscriptionOptions {
   access: BrowserAccess
   after: number
   peer: WorkspaceEventPeer
+  persist?: BrowserPersistence
 }
 
 export function subscribeBrowser({
@@ -21,6 +22,7 @@ export function subscribeBrowser({
   access,
   after,
   peer,
+  persist,
 }: BrowserSubscriptionOptions): Promise<() => void> {
   return store.run(async () => {
     if (access.workspace.archivedAt === null) await operation.logins.refresh()
@@ -36,6 +38,7 @@ export function subscribeBrowser({
           sessionId: access.context.sessionId,
         },
         tabId,
+        persist,
       )
       .catch((error: unknown) => {
         try {

@@ -3,6 +3,7 @@ import { replacesLists } from '../../../../docs/mockups/src/components/workspace
 import { useServices } from '../../../app/services'
 import type { WorkspaceFiles } from '../../../files/model/files-store'
 import type {
+  FileListKind,
   FilesLayout,
   FilesNavigation,
   FilesTab,
@@ -10,9 +11,13 @@ import type {
 import { DiffPage } from '../../../files/page/DiffPage'
 import { FilePage } from '../../../files/page/FilePage'
 import { FilesPanel } from '../../../files/panel/FilesPanel'
+import type { CommandKey } from '../../../files/ui/LinkTabs'
+import { ChecksActions } from '../../../github/BarButtons'
 import { ChecksList } from '../../../github/ChecksList'
+import { shortcutLabels, useShortcutHint } from '../../shortcuts/shortcut-hints'
 import type { WorkspaceContext, WorkspaceFeatures } from '../features'
-import { useGitHubFeed } from '../github/WorkspaceGitHub'
+import { BarKeys } from '../github/bar-keys'
+import { useGitHubFeed, useScreenBar } from '../github/WorkspaceGitHub'
 import { SandboxPanel } from '../SandboxNotice'
 import { useSavedView } from '../saved-view'
 import { filesPlace, tabOf } from './files-address'
@@ -21,11 +26,7 @@ import {
   useFilesNavigation,
   useOpenTab,
 } from './files-navigation'
-import {
-  useFileTargets,
-  useKeptFiles,
-  useWorkspaceFiles,
-} from './workspace-files'
+import { useFileTargets, useKeptFiles } from './workspace-files'
 
 /**
  * The state of a sandbox that does not run, in place of the content of a
@@ -98,21 +99,37 @@ function sandboxPlaceholder(context: WorkspaceContext): ReactNode {
 }
 
 /**
+ * The keys of Go to All files, Go to Changes, and Go to Checks, for the
+ * tooltips of the tabs of the lists.
+ */
+function useListKeys(): Partial<Record<FileListKind, CommandKey>> {
+  return {
+    all: shortcutLabels('All files', useShortcutHint('go-to-all-files')),
+    changes: shortcutLabels('Changes', useShortcutHint('go-to-changes')),
+    checks: shortcutLabels('Checks', useShortcutHint('go-to-checks')),
+  }
+}
+
+/**
  * All files, Changes, and Checks, in the right column on desktop and in the
  * Files tab of a phone, where a file or a diff shows as a page. This part
- * connects the kept files of the workspace. Checks shows the GitHub state of
- * the workspace screen, also while the sandbox shows in place of the lists.
+ * reads the kept files that the workspace screen connects. Checks shows the
+ * GitHub state of the workspace screen, also while the sandbox shows in
+ * place of the lists. On a phone, the actions of the bar top the Checks tab,
+ * and their keys run while it shows them.
  */
 function FilesPart(props: { context: WorkspaceContext }) {
   const { context } = props
-  const files = useWorkspaceFiles(context)
+  const files = useKeptFiles(context)
   const navigation = useFilesNavigation(context)
   const github = useGitHubFeed()
+  const bar = useScreenBar()
   const { now } = useServices()
   const saved = useSavedView(context.savedView)
   const place = filesPlace(context.view)
   useAddressList(context.savedView, place?.kind === 'list' ? place.list : null)
   const tab = tabOf(place)
+  const listKeys = useListKeys()
   const layout = context.viewport === 'phone' ? 'phone' : 'desktop'
   if (layout === 'phone' && tab) {
     return (
@@ -125,13 +142,26 @@ function FilesPart(props: { context: WorkspaceContext }) {
       />
     )
   }
+  const controls = bar?.controls ?? null
+  const checks = github ? (
+    <>
+      {layout === 'phone' ? (
+        <>
+          <BarKeys controls={controls} />
+          <ChecksActions controls={controls} />
+        </>
+      ) : null}
+      <ChecksList github={github} />
+    </>
+  ) : undefined
   return (
     <FilesPanel
       activeTab={tab}
-      checks={github ? <ChecksList github={github} /> : undefined}
+      checks={checks}
       files={files}
       layout={layout}
       list={place?.kind === 'list' ? place.list : (saved?.fileList ?? 'all')}
+      listKeys={listKeys}
       navigation={navigation}
       now={now}
       placeholder={sandboxPlaceholder(context)}

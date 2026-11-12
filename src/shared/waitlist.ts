@@ -20,6 +20,7 @@ interface ReferralCode {
 export interface WaitlistStateResponse {
   appAccess: boolean
   signupsPaused: boolean
+  waitlistOn: boolean
   approvalEmail: string | null
   referralCode: ReferralCode | null
 }

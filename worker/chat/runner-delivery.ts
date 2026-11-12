@@ -1,9 +1,8 @@
 import type { WorkspaceEventEnvelope } from './workspace-events'
-import type { RunnerCommandV1, RunnerLogin } from '../../src/shared/runner'
+import { runnerSupportsLogin, type RunnerLogin } from '../../src/shared/runner'
 import type { WorkspaceTurnTokens } from '../model-gateway/workspace'
 import { DeliveryState } from './delivery-state'
 import { RunnerAccessDenied, SenderAccessDenied } from './login-access'
-import { unavailableLoginMessage } from './session-login'
 import { ChatOperation } from './operation'
 import {
   commandDispatchState,
@@ -11,14 +10,19 @@ import {
   type DispatchResult,
   type DispatchState,
 } from './ordered-dispatch'
-import { gatewayRunnerCommand } from './runner-gateway-command'
+import {
+  compatibilityFailure,
+  gatewayRunnerCommand,
+  legacyRunnerCommand,
+} from './runner-gateway-command'
+import { failCommandLogin } from './runner-login-failure'
 import type { ChatStore } from './store'
-import { TurnLifecycle } from './turn-lifecycle'
 import type {
   ActiveRunner,
   ChatDependencies,
   PendingCommand,
   PreparedCommand,
+  ResolvedCommand,
 } from './types'
 import { AttachmentPreparation } from './attachment-delivery'
 
@@ -94,7 +98,13 @@ export class RunnerDelivery {
     detach: () => void,
     advance: () => void,
   ): Promise<DispatchState> {
-    if (!isCurrent() || active.delivered.has(command.commandId)) return 'skip'
+    if (
+      !isCurrent() ||
+      (await this.store.read(active.workspace.id, (view) =>
+        view.commandDelivered(command.commandId, active.id),
+      ))
+    )
+      return 'skip'
     let prepared: DispatchResult<PreparedCommand>
     try {
       prepared = await this.command(active, command)
@@ -110,7 +120,7 @@ export class RunnerDelivery {
       if (state !== 'send') return state
     }
     await this.store.reportTurnEnds()
-    const outbound: RunnerCommandV1 =
+    const outbound: ResolvedCommand =
       checked.type === 'turn' || checked.type === 'message'
         ? {
             ...checked,
@@ -162,7 +172,7 @@ export class RunnerDelivery {
               active.workspace.id,
               this.forRunningTurn,
             )
-          : outbound
+          : legacyRunnerCommand(outbound)
       if (!outgoing) {
         advance()
         return 'skip'
@@ -179,8 +189,7 @@ export class RunnerDelivery {
         )
       return 'skip'
     }
-    active.delivered.add(command.commandId)
-    await this.dispatch.sent(active.workspace.id, command)
+    await this.dispatch.sent(active.workspace.id, command, active.id)
     return 'send'
   }
 
@@ -221,6 +230,20 @@ export class RunnerDelivery {
       await this.failLogin(active.workspace.id, command)
       return this.unavailable(active.workspace.id, command)
     }
+    if (
+      !active.protocolVersion ||
+      !runnerSupportsLogin(active.protocolVersion, login, active.loginKinds)
+    ) {
+      await this.failLogin(
+        active.workspace.id,
+        command,
+        compatibilityFailure(login),
+        'immediate',
+      )
+      return this.unavailable(active.workspace.id, command)
+    }
+    const branches = await this.dependencies.readBranches(active.workspace.id)
+    if (!branches) throw new RunnerAccessDenied()
     const fields = {
       commandId: command.commandId,
       sessionId: command.sessionId,
@@ -228,6 +251,7 @@ export class RunnerDelivery {
       message: { ...message, state: 'sent' as const },
       attachments: command.attachments,
       login,
+      branches,
     }
     if (command.type === 'message')
       return { state: 'send', command: { type: 'message', ...fields } }
@@ -255,25 +279,20 @@ export class RunnerDelivery {
     }))
   }
 
-  private async failLogin(
+  private failLogin(
     workspaceId: string,
     command: Extract<PendingCommand, { messageId: string }>,
     reason?: string,
+    completion: 'after-runner' | 'immediate' = 'after-runner',
   ): Promise<void> {
-    await this.store.change(
-      workspaceId,
-      async (transaction) => {
-        const turn = await transaction.turn(command.turnId)
-        if (!turn || turn.state !== 'queued') return
-        const session = await transaction.session(turn.sessionId)
-        if (!session || session.activeTurnId !== turn.id) return
-        await new TurnLifecycle(transaction, session).fail(
-          turn.id,
-          reason ?? unavailableLoginMessage(session),
-          this.dependencies.randomId,
-        )
-      },
+    return failCommandLogin(
+      this.store,
+      this.dependencies,
       this.publish,
+      workspaceId,
+      command,
+      reason,
+      completion,
     )
   }
 }

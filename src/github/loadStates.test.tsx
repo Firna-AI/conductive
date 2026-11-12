@@ -10,27 +10,13 @@ import { buttonsIn, feedOf, render, textOf } from './testing'
 function renderScreens(github: GitHubFeed) {
   const desktop = render(
     <>
-      <PullRequestBar
-        github={github}
-        now={FAKE_TIME}
-        onArchive={() => undefined}
-        viewer={{ id: 'cal', role: 'admin' }}
-        workspace={{
-          owner: {
-            id: 'cal',
-            githubLogin: 'calummoore',
-            displayName: null,
-            avatarUrl: null,
-          },
-          state: 'ready',
-        }}
-      />
+      <PullRequestBar controls={null} github={github} now={FAKE_TIME} />
       <ChecksList github={github} />
     </>,
   )
   const phone = render(
     <>
-      <PullRequestRow checksHref="/checks" github={github} />
+      <PullRequestRow checksHref="/checks" controls={null} github={github} />
       <ChecksList github={github} />
     </>,
   )

@@ -3,6 +3,7 @@ import { createChatApi, type WorkspaceTarget } from '../api/client'
 import type { StreamEnvelope } from '../api/read-workspace'
 import { DeviceReads, refreshDevices } from '../device/device-actions'
 import { createDeviceApi } from '../device/device-api'
+import { SessionReads } from '../links/session-reads'
 import {
   WorkspaceStream,
   type StreamTimers,
@@ -39,6 +40,7 @@ export function createChatContext(
   options: ChatContextOptions,
   store: ChatStore,
   live: () => boolean,
+  draftEpoch: number,
 ): ChatContext {
   const { target, subscribe, timers } = options
   const api = createChatApi(options.client, target)
@@ -54,9 +56,10 @@ export function createChatContext(
     picks: new Map(),
     moves: new Map(),
     newId: options.newId ?? (() => crypto.randomUUID()),
+    prompts: new Map(),
     newDraftId: () => {
       drafts += 1
-      return `draft-${drafts}`
+      return `draft:new:${draftEpoch}:${drafts}`
     },
     newFileId: () => {
       files += 1
@@ -70,6 +73,10 @@ export function createChatContext(
       api: createDeviceApi(options.client),
       reads: new DeviceReads(),
     },
+    sessionReads: new SessionReads((workspaceId) =>
+      createChatApi(options.client, { ...target, workspaceId }).sessions(),
+    ),
+    tabChoices: { count: 0 },
     stream: new WorkspaceStream({
       target,
       subscribe,

@@ -1,12 +1,11 @@
 import type { WorkspaceEvent, WorkspaceEventEnvelope } from './workspace-events'
-import { HttpError } from '../http'
 import {
   FIRST_MESSAGE_ADMISSION_KEY,
   type FirstWorkspaceMessage,
 } from '../lifecycle/workspace-runtime'
 import { chatFilesStorage } from './files-storage'
 import { saveHistoryEvent } from './history-storage'
-import { HistoryPages } from './history-pages'
+import { HistoryPages, type SessionPage } from './history-pages'
 import { ChatRecords } from './chat-records'
 import type { FilesStorage } from '../files/storage'
 import type { GitHubStateTransaction } from '../github/contracts'
@@ -22,12 +21,8 @@ import {
 } from './storage-keys'
 import type { ChatData, ChatStorage, PendingCommand, StoredTurn } from './types'
 import { TurnEndReports, type TurnEndReport } from './turn-end-reports'
-
-interface ChatMetadata {
-  workspaceId: string
-  through: number
-  commandThrough: number
-}
+import { ChatQueue, type QueueTurn } from './queue-turn'
+import { readChatMetadata, type ChatMetadata } from './store-metadata'
 
 export class ChatTransaction extends ChatRecords {
   readonly workspaceId: string
@@ -98,6 +93,30 @@ export class ChatTransaction extends ChatRecords {
       )
     )?.command
   }
+  async commandDelivered(
+    commandId: string,
+    connectionId: string,
+  ): Promise<boolean> {
+    return (
+      (await this.data.get<{ deliveredTo?: string }>(key('command', commandId)))
+        ?.deliveredTo === connectionId
+    )
+  }
+  async saveCommandDelivery(
+    commandId: string,
+    connectionId: string,
+  ): Promise<void> {
+    const record = await this.data.get<{
+      command: PendingCommand
+      order: number
+      deliveredTo?: string
+    }>(key('command', commandId))
+    if (record)
+      await this.data.put(key('command', commandId), {
+        ...record,
+        deliveredTo: connectionId,
+      })
+  }
   saveTurn(turn: StoredTurn): Promise<void> {
     return this.summary
       .turn(turn, this.now)
@@ -138,8 +157,8 @@ export class ChatTransaction extends ChatRecords {
   saveCursor(streamId: string, through: number): Promise<void> {
     return this.data.put(key('cursor', streamId), through)
   }
-  history(after: number, through = this.through, sessionId?: string) {
-    return this.pages.read(after, Math.min(through, this.through), sessionId)
+  history(after: number, through = this.through, session?: SessionPage) {
+    return this.pages.read(after, Math.min(through, this.through), session)
   }
 
   async emit(
@@ -173,7 +192,7 @@ export class ChatTransaction extends ChatRecords {
 
 /** Transactions commit each event with its cursor and affected records. */
 export class ChatStore {
-  private tail: Promise<unknown> = Promise.resolve()
+  private readonly queue = new ChatQueue(() => this.reportTurnEnds())
   private readonly storage: ChatStorage
   private readonly now: () => number
   private readonly changed: (workspaceId: string) => Promise<void>
@@ -192,20 +211,24 @@ export class ChatStore {
     this.changed = changed
   }
 
-  run<T>(work: () => Promise<T>): Promise<T> {
-    const result = this.tail.then(async () => {
-      try {
-        return await work()
-      } finally {
-        await this.reportTurnEnds()
-      }
-    })
-    this.tail = result.catch(() => undefined)
-    return result
+  run<T>(work: (turn: QueueTurn) => Promise<T>): Promise<T> {
+    return this.queue.run(work)
   }
 
   settled(): Promise<unknown> {
-    return this.tail
+    return this.queue.settled()
+  }
+
+  idle(): Promise<void> {
+    return this.queue.idle()
+  }
+
+  get currentTurn(): QueueTurn | undefined {
+    return this.queue.currentTurn
+  }
+
+  get hasOutsideTurns(): boolean {
+    return this.queue.hasOutsideTurns
   }
 
   reportTurnEnds(): Promise<void> {
@@ -216,21 +239,6 @@ export class ChatStore {
     return (await this.storage.get<ChatMetadata>(META))?.workspaceId
   }
 
-  private async metadata(
-    data: ChatData,
-    workspaceId: string,
-  ): Promise<ChatMetadata> {
-    const stored = await data.get<ChatMetadata>(META)
-    if (stored && stored.workspaceId !== workspaceId) {
-      throw new HttpError(
-        404,
-        'workspace_not_found',
-        'The workspace is not available.',
-      )
-    }
-    return stored ?? { workspaceId, through: 0, commandThrough: 0 }
-  }
-
   async read<T>(
     workspaceId: string,
     work: (view: ChatTransaction) => Promise<T>,
@@ -238,7 +246,7 @@ export class ChatStore {
     return work(
       new ChatTransaction(
         this.storage,
-        await this.metadata(this.storage, workspaceId),
+        await readChatMetadata(this.storage, workspaceId),
         this.now(),
       ),
     )
@@ -253,7 +261,7 @@ export class ChatStore {
       async (data) => {
         const transaction = new ChatTransaction(
           data,
-          await this.metadata(data, workspaceId),
+          await readChatMetadata(data, workspaceId),
           this.now(),
         )
         const result = await work(transaction)

@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react'
 import { FolderGit2, GitBranch } from 'lucide-react'
+import { useFileDropGuard } from '../../app/file-drags'
 import { nameLabel } from '../../shared/name-label'
 import type { Workspace, WorkspaceState } from '../../shared/workspaces'
 import { StatusGlyph } from '../../../docs/mockups/src/components/workspaces/StatusGlyph'
@@ -74,7 +75,8 @@ function DevHeader(props: { workspace: Workspace; mobile: boolean }) {
  * The development page of the chat: the chat of one fake workspace in the
  * place that the app gives it, with controls for the recorded state and
  * live events. The desktop layout keeps the mockup's columns, so the chat
- * column is 718 px wide in a 1440 px window.
+ * column is 718 px wide in a 1440 px window. As in the app, a drop of files
+ * outside the message box does nothing.
  */
 export function DevPage(props: {
   backend: DevBackend
@@ -90,6 +92,7 @@ export function DevPage(props: {
   )
   const [mentions] = useState(() => devMentions(note))
   const mobile = options.viewport === 'mobile'
+  useFileDropGuard()
   const chat = (
     <WorkspaceChat
       client={backend.client}

@@ -91,6 +91,10 @@ it('installs working CLI and MCP tools under a root with spaces and apostrophes'
       'conductive workspaces create --repository ID --message TEXT',
     )
     expect(help.stdout).toContain('conductive mcp')
+    expect(help.stdout).toContain('conductive sessions list')
+    expect(help.stdout).toContain('conductive sessions read')
+    expect(help.stdout).toContain('conductive sessions create')
+    expect(help.stdout).toContain('conductive sessions send')
 
     const mcp = await imageTestProcess(
       executable,
@@ -123,6 +127,10 @@ it('installs working CLI and MCP tools under a root with spaces and apostrophes'
             { name: 'list_repositories' },
             { name: 'list_sections' },
             { name: 'list_models' },
+            { name: 'list_sessions' },
+            { name: 'read_session' },
+            { name: 'create_session' },
+            { name: 'send_message' },
           ],
         },
       },

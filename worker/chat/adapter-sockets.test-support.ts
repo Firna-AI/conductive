@@ -1,6 +1,7 @@
 import { WebSocket } from 'miniflare'
 
 export class SocketInbox {
+  readonly received: unknown[] = []
   private readonly values: unknown[] = []
   private readonly readers: ((value: unknown) => void)[] = []
 
@@ -9,6 +10,7 @@ export class SocketInbox {
       if (typeof event.data !== 'string')
         throw new Error('Expected a text socket message.')
       const value: unknown = JSON.parse(event.data)
+      this.received.push(value)
       const reader = this.readers.shift()
       if (reader) reader(value)
       else this.values.push(value)
@@ -27,9 +29,25 @@ export async function closeSockets(...sockets: WebSocket[]): Promise<void> {
     sockets.map((socket) => {
       if (socket.readyState === WebSocket.READY_STATE_CLOSED)
         return Promise.resolve()
-      return new Promise<void>((resolve) => {
-        socket.addEventListener('close', () => resolve(), { once: true })
-        socket.close(1000, 'The test has finished using this connection.')
+      return new Promise<void>((resolve, reject) => {
+        const finish = () => {
+          socket.removeEventListener('close', finish)
+          resolve()
+        }
+        socket.addEventListener('close', finish, { once: true })
+        try {
+          socket.close(1000, 'The test has finished using this connection.')
+        } catch (error) {
+          if (
+            !(error instanceof TypeError) ||
+            error.message !== 'WebSocket already closed'
+          ) {
+            socket.removeEventListener('close', finish)
+            reject(error)
+            return
+          }
+        }
+        if (socket.readyState === WebSocket.READY_STATE_CLOSED) finish()
       })
     }),
   )

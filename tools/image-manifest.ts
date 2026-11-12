@@ -10,8 +10,12 @@ export const WORKSPACE_TOOL_SOURCE_PATHS = [
   'tools/runtime.ts',
   'tools/device-client.ts',
   'tools/device-cli.ts',
+  'tools/session-cli.ts',
+  'tools/session-responses.ts',
+  'tools/session-mcp-tools.ts',
   'src/shared/device.ts',
   'src/shared/device-read.ts',
+  'src/shared/github-read.ts',
   'src/shared/agent-tools.ts',
 ] as const
 

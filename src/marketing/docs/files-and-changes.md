@@ -38,10 +38,21 @@ Use its back action to return to **All files**.
 
 Text shows line numbers and syntax colours.
 Markdown offers **Preview** for its rendered content and **Source** for its text.
-Binary files offer **Download** so you can open them with another application.
+PNG, JPEG, GIF, and WebP files show as pictures up to the 5 MiB read limit.
+A picture keeps its proportions and fits the view.
+SVG files show their source as text.
+
+Other binary files offer **Download** so you can open them with another application.
+The file view also offers **Download** if the browser cannot draw an image within the read limit.
 
 These views let you read the files.
 Ask the agent to change a file, or use **Terminal**.
+
+You can also open an attached file from its chip in a sent message.
+It opens the copy in the workspace's repository folder after the message reaches the agent.
+Restore an archived workspace before opening its attached files.
+
+- [Attach files to messages](/docs/sessions-and-chat#attach-files)
 
 ## Inspect changes
 
@@ -53,6 +64,7 @@ The base branch is the branch that the workspace's work targets.
 A workspace you create uses the repository's default branch.
 A run for an opened or pushed pull request uses that pull request's head branch.
 A run for a merged pull request uses that pull request's base branch.
+After **Continue**, the workspace's base branch is the repository's latest default branch.
 The comparison starts at the common commit of the workspace branch and its base branch.
 Newer commits on the base branch therefore stay out of **Changes**.
 
@@ -62,6 +74,11 @@ It is broader than the changed-file summary of one agent turn.
 
 Use the list to check the agent's result before you commit or open a pull request.
 A committed file can remain in **Changes** while the branch differs from its base branch.
+
+On an open pull request, files not committed or commits not pushed give **Commit and push** priority in the bar.
+It replaces Merge and the fix actions until that work is pushed.
+Some uncommitted work can exist without a visible diff in this list.
+Use `git status` in **Terminal** to inspect it.
 
 ## Copy or download content
 

@@ -3,6 +3,7 @@ import type { DeviceApprovalAction } from '../../shared/device'
 import type { TranscriptDetail } from '../../shared/sessions'
 import type { WorkspaceTab, WorkspaceView } from '../../shared/workspace-view'
 import { createChatApi, type WorkspaceTarget } from '../api/client'
+import type { SessionReads } from '../links/session-reads'
 import { answerCommand, refreshDevices } from '../device/device-actions'
 import { browserTimers } from '../stream/workspace-stream'
 import { copyTranscript, type CopyServices } from '../transcript-copy'
@@ -12,16 +13,18 @@ import {
   type ChatSnapshot,
   type Overlay,
 } from './chat-snapshot'
+import { showAddressSession } from './address-session'
 import { closeLocally, isArchived, showLocally } from './archive-view'
-import { attachFiles, removeFile, retryFile } from './attachment-actions'
+import { attachFiles } from './attachment-actions'
 import type { ChatContext } from './context'
 import {
   createChatContext,
   type ChatContextOptions,
 } from './controller-context'
 import { hydrate, watchShownSession } from './history'
-import { loadChat } from './load'
 import { followSources, withSources } from './sources'
+import { loadChat } from './load'
+import { endDraftFiles } from './drafts'
 import {
   interruptTurn,
   resumeWorkspace,
@@ -30,6 +33,8 @@ import {
   setDraftText,
 } from './message-actions'
 import { chooseModel } from './model-actions'
+import { draftFileSource } from './draft-file-source'
+import { sendPrompt, type PromptOutcome } from './prompt-actions'
 import { moveTab } from './tab-actions'
 import type { TabPlace } from './tab-order'
 import { ownWorkspaceList, type WorkspaceList } from './workspace-list'
@@ -93,6 +98,11 @@ export class ChatController {
   readonly subscribe = (listener: () => void) => this.store.subscribe(listener)
   readonly getSnapshot = (): ChatSnapshot => this.store.get()
 
+  /** The reads of the sessions of linked workspaces for this load. */
+  get sessionReads(): SessionReads {
+    return this.context.sessionReads
+  }
+
   /**
    * Loads the chat, then opens its stream. From now on, each session that
    * becomes the shown session loads its history.
@@ -102,10 +112,9 @@ export class ChatController {
     this.started = true
     this.context = this.createContext(this.run)
     const { sources } = this.options
+    const fresh = { ...initialSnapshot, draftEpoch: this.run }
     // The values of the app replace the reset ones at once, then follow it.
-    this.store.update(() =>
-      sources ? withSources(initialSnapshot, sources) : initialSnapshot,
-    )
+    this.store.update(() => (sources ? withSources(fresh, sources) : fresh))
     this.unfollow = sources ? followSources(this.store, sources) : null
     this.unwatch = watchShownSession(this.context)
     this.unlist = this.workspaceList.watch()
@@ -114,8 +123,18 @@ export class ChatController {
 
   readonly stop = (): void => {
     this.run += 1
+    this.context.sessionReads.close()
     for (const upload of this.context.uploads.values()) upload.abort()
     this.context.uploads.clear()
+    this.store.update((snapshot) => ({
+      ...snapshot,
+      sessionStates: Object.fromEntries(
+        Object.entries(snapshot.sessionStates).map(([id, state]) => [
+          id,
+          { ...state, draft: endDraftFiles(state.draft) },
+        ]),
+      ),
+    }))
     this.unwatch?.()
     this.unwatch = null
     this.unfollow?.()
@@ -152,7 +171,8 @@ export class ChatController {
   }
 
   private createContext(run: number): ChatContext {
-    return createChatContext(this.options, this.store, () => this.run === run)
+    const live = () => this.run === run
+    return createChatContext(this.options, this.store, live, run)
   }
 
   private overlay(overlay: Overlay): void {
@@ -176,6 +196,18 @@ export class ChatController {
     this.readOnly()
       ? showLocally(this.context, sessionId)
       : selectSession(this.context, sessionId)
+  /**
+   * Shows the open session that an app address names, as
+   * `showAddressSession` says. An abort of `signal`, such as at a newer
+   * address, makes the lookup show nothing.
+   */
+  readonly showAddress = (sessionId: string, signal: AbortSignal) =>
+    showAddressSession(
+      this.context,
+      sessionId,
+      () => !signal.aborted,
+      (id) => void this.select(id),
+    )
   readonly newSession = () => this.write(() => newSession(this.context))
   readonly startRename = (sessionId: string) =>
     this.overlay({ kind: 'rename', sessionId })
@@ -198,15 +230,26 @@ export class ChatController {
     hydrate(this.context, sessionId, true)
   readonly setDraft = (sessionId: string, text: string) =>
     setDraftText(this.context, sessionId, text)
-  readonly attachFiles = (sessionId: string, files: readonly File[]) =>
-    this.write(() => attachFiles(this.context, sessionId, files))
-  /** Try again on a file whose upload failed. */
-  readonly retryFile = (sessionId: string, fileId: string) =>
-    this.write(() => retryFile(this.context, sessionId, fileId))
-  readonly removeFile = (sessionId: string, fileId: string) =>
-    removeFile(this.context, sessionId, fileId)
+  readonly attachFiles = (
+    sessionId: string,
+    files: readonly File[],
+    folders: readonly string[] = [],
+  ) =>
+    this.readOnly() ? [] : attachFiles(this.context, sessionId, files, folders)
+  /** A field follows its draft identity, also during a move before React renders. */
+  readonly draftFiles = (draftId: string) =>
+    draftFileSource(
+      () => this.context,
+      draftId,
+      () => this.readOnly(),
+    )
   readonly send = (sessionId: string) =>
     this.write(() => sendDraft(this.context, sessionId))
+  /** Sends a fixed prompt to the session of the chat, as `sendPrompt` says. */
+  readonly sendPrompt = (text: string): Promise<PromptOutcome> =>
+    this.readOnly()
+      ? Promise.resolve('unavailable')
+      : sendPrompt(this.context, text)
   readonly retry = (sessionId: string, messageId: string) =>
     this.write(() => retryTurn(this.context, sessionId, messageId))
   readonly interrupt = (sessionId: string) =>

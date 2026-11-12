@@ -132,6 +132,7 @@ export function startWorkspace(
     branch,
     choice: first.choice,
     state: 'starting',
+    github: null,
     createdAt: at,
     updatedAt: at,
     archivedAt: null,

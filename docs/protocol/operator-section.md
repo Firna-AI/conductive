@@ -7,8 +7,9 @@ waitlist there (decision 160), and sets the weights of new orgs
 (e2b decision 222). [Waitlist tabs](operator-waitlist-tabs.md) holds the
 Waitlist tab, Approve, the Invite codes tab, and the pause.
 [Operator actions](operator-actions.md) states who is an operator, and what
-a suspension and a lift do. [Waitlist](waitlist.md) states the waitlist, the
-codes, and the pause. The terms are those of the
+a suspension and a lift do. [Waitlist](waitlist.md) states the waitlist and
+the codes. [Sign-ups](sign-ups.md) states the pause, the waitlist switch,
+and their controls in the section. The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
 says. An e2b decision number names a decision of the change that adds E2B as
@@ -40,10 +41,11 @@ that doc says.
   gets `access_required`, as
   [What a person who waits can reach](waitlist.md#what-a-person-who-waits-can-reach)
   says.
-- The section changes three settings of the app: the codes and the pause
-  (decision 160), and the weights of new orgs (e2b decision 222). It makes and
-  disables invite codes, disables referral codes, turns the pause on and
-  off, and saves the weights. It changes no other setting (decision 143).
+- The section changes four settings of the app: the codes, the pause, and
+  the waitlist switch (decisions 160 and 230), and the weights of new orgs
+  (e2b decision 222). It makes and disables invite codes, disables referral
+  codes, turns the pause on and off, turns the waitlist off and on, and
+  saves the weights. It changes no other setting (decision 143).
 - The section cannot change who is an operator. Reason: a stolen session
   of an operator then cannot add an operator.
 
@@ -54,8 +56,8 @@ that doc says.
 - The section shows only counts, names, IDs, dates, roles, states, codes,
   and weights. It shows no chat, file, env value, agent login, or email
   address. Reason: the section then holds the least personal data.
-- While the pause is on, each tab starts with the notice of the pause, as
-  [The pause](operator-waitlist-tabs.md#the-pause) says.
+- While the pause is on or the waitlist is off, each tab starts with a
+  notice, as [The notices](sign-ups.md#the-notices) says.
 
 ## The Overview
 

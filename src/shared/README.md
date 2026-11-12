@@ -9,6 +9,14 @@ Dates use Unix milliseconds. IDs and model names are opaque strings.
 `Workspace.number` is the immutable number in its org.
 `Workspace.link` is its absolute web link, with org and workspace IDs.
 `AgentWorkspaceSummary` gives the same number and link.
+`Workspace.github` is the GitHub summary of its pull request, or null.
+`GitHubSummary` and `githubSummary` in `github.ts` give its four values from a banner and its checks.
+[The GitHub state](../../docs/protocol/github-banner.md#the-github-state) states their order.
+`readGitHubSummary` in `github-read.ts` keeps a known summary and reads an absent or unknown value as null.
+The browser readers and the sandbox tools use it, so an older reply still reads.
+It has no runtime import, so the tool image can embed it.
+`AgentCreateWorkspaceResponse.sessionLink` gives the first session's absolute app link.
+`AgentSessionWriteResponse` keeps the accepted session, message, and turn while reporting current workspace and resume state.
 `nameLabel` in `name-label.ts` gives the display label "Untitled" for null.
 
 Each area owns its paths and payloads. Import from that area directly.
@@ -28,50 +36,8 @@ Errors without details keep the code and message only.
 `repositoryPath` names one repository of an org. PUT adds it and DELETE
 removes it. Each request sends `EmptyRequest` and returns the current list.
 
-`runner.ts` defines the versioned handshake, commands, numbered events,
-confirmations, and resend rules. Its comments state the delivery contract.
-`RunnerProtocolVersion` is 1 or 2. The Worker accepts both versions.
-The `welcome` repeats the version of the runner's `hello`.
-`RUNNER_PROTOCOL_VERSION` is 2. The packaged runner sends it, and
-each full image build records it.
-The credential of a turn belongs to the session starter, whoever sent the
-message:
-
-- `RunnerTurnV1` and `RunnerMessageDuringTurnV1` carry the real agent
-  login in `login`, with its agent, kind, and secret.
-- `RunnerTurnV2` carries a turn token in `credential`, with the agent and
-  the login kind. It has no `login`.
-- `RunnerMessageDuringTurnV2` carries no credential and no login.
-
-`RunnerTurn`, `RunnerMessageDuringTurn`, `RunnerCommand`, and
-`WorkspaceToRunner` cover both versions. Their `V1` and `V2` forms give the
-shapes of one version. The runner imports the `V2` forms and uses
-a turn token.
-The [model gateway](../../worker/model-gateway/README.md#model-requests)
-gives the form of a turn token.
-`RUNNER_EVENT_MAX_BYTES` limits the complete serialized runner event envelope.
-The 1 MiB limit leaves room for the workspace storage wrapper.
-The workspace stores a refusal marker before it confirms a permanent refusal.
-Storage and network failures remain unconfirmed.
-After a refused file tree, changes list, start steps, workspace name, or port list,
-`RunnerReportRefresh` asks for one fresh full report of that `RunnerReportKind`.
-It carries no login and no turn token. A redelivery keeps its command ID.
-`ports.ts` defines the common listening-port fields and both report phases.
-`RunnerPortsUpdated` carries complete selected private labels.
-`PortsUpdated` carries final filtered display labels, with a null list when
-there is no current report. The display limits apply only after the workspace
-filter. The module owns those limits and the shared count limit.
-`terminal.ts` owns `TERMINAL_PORT`, shared by the runner exclusion
-and the terminal backend.
-[Listening ports](../../docs/protocol/agent-runner.md#listening-ports) states
-that report, its limits, and its refresh kind.
-`runner-transport.ts` defines the injectable socket boundary.
-`RunnerConnection` and `RunnerConnector` take the type of the Worker's
-messages.
-Browser response types carry no login and no turn token.
-Turn commands also carry the commit author of the member whose message started the turn.
-Message commands carry no commit author.
-An uploaded attachment reaches the runner as a path, after the backend puts it there.
+[Runner contracts](runner-contracts.md) gives the handshake, commands, events,
+confirmations, reports, and credentials.
 
 `messages.ts` owns the attachment metadata and target identity.
 `AttachmentUploadTarget` names a workspace or stable first-message ID.
@@ -79,6 +45,26 @@ An uploaded attachment reaches the runner as a path, after the backend puts it t
 `ATTACHMENT_MAX_BYTES` is the decoded file limit.
 `attachmentUploadUrl` appends the filename, media type, and first-message target as URL data.
 The browser posts one raw file as `application/octet-stream` with its known byte length.
+`Attachment.path` is the copy path of the file, relative to the workspace repository.
+The upload reply gives it, so each upload has its path before Send.
+Each file of an accepted message gives it too, and the browser builds no path.
+A file of a message stored before this field has no path.
+The browser and runner readers give null for it, and no mention matches it.
+
+`feedback.ts` owns `FEEDBACK_PATH`, the request and reply types of the
+feedback routes, and their byte limits. `FEEDBACK_BODY_MAX_BYTES` is the
+JSON body limit of a send. `FEEDBACK_SCREENSHOTS_MAX_BYTES` is the limit of
+the decoded screenshots of one message. `SendFeedbackRequest` carries each
+screenshot as base64 `content` only, with no name and no media type.
+`FeedbackResponse.replyEmail` is the reply address, or null.
+`images.ts` holds the one image signature reader of the browser and the
+Worker. `readImage(bytes)` returns a `CheckedImage` of one `ImageKind`:
+PNG, JPEG, GIF, or WebP. It returns null for other bytes. A symbol that the
+module does not export brands `CheckedImage`, so other code gets one only
+from `readImage`. The [mail sender](../../worker/mail-sender.ts) takes
+attachments only as checked images. It writes each file name and media
+type from the kind. [Feedback](../../docs/protocol/feedback.md) states the
+rules.
 
 `files.ts` defines full trees, tree updates, and branch changes.
 A full tree contains real paths relative to the repository root.
@@ -98,6 +84,14 @@ Tree and changes revisions have independent sequences within each runner stream.
 A new stream starts with full reports. A reconnect keeps its revisions and parts.
 The workspace joins all parts before it publishes a full browser report.
 Branch changes include committed, staged, unstaged, and untracked work.
+`ChangesResponse.unpushedCommits` counts the current branch's commits that
+no remote branch holds. `ChangesResponse.uncommittedFileCount` counts the
+raw Git status records of uncommitted work, also untracked files, and
+counts a rename once. It also counts a file whose edit brings back its base
+content, which Changes lists in no row. So it can differ from the number
+of rows. Each changes part repeats both complete counts.
+The current runner always sends both. Reports from older workspace images
+can omit either, and readers preserve that absence instead of assuming zero.
 `runner-files.ts` defines file read and diff commands and their matching results.
 The backend sets the read limit. The sample limit in the fixtures is not product policy.
 Read and diff results do not enter the stored chat event stream.
@@ -125,12 +119,20 @@ shortens port labels only after its final filter.
 Its omission count measures normalized source UTF-8 bytes before JSON escaping.
 Turn summaries keep at most 200 files and 256 KiB of serialized file-list data.
 They count omitted files. The complete Changes response has no summary cap.
+A `turn.completed` event can carry `endReason`, of the type `TurnEndReason`.
+The runner, the Worker, and the browser use that one type.
+Its one value is `background_work_limit`.
 `runner.event-refused` belongs only to workspace chat events.
 It identifies the lost runner event without copying its data.
 Its `repairFailed: true` flag marks a refused replacement of a lost workspace update.
 Only the workspace sets that flag.
 [Lost workspace updates](../../docs/protocol/agent-runner.md#lost-workspace-updates)
 states the rules of the request and of a failed repair.
+`workspace.continued` is the note of Continue in one session. It belongs to
+`ChatEvent`, so it reaches the browser stream, but not to `AgentChatEvent`
+or to the runner events. Only the Worker writes it. It names its
+`sessionId`, the `member` who pressed Continue, the new `branch`, and its
+`baseBranch`.
 
 `events.ts` defines the browser stream. Its event numbers span all sessions
 and runner connections of one workspace. A reconnect uses the last stored number.
@@ -166,11 +168,15 @@ suspensions. Operator org rows and pages include `providerAccount`.
 weights, org counts, last operator change, and the GET and PUT path.
 The user records in `operator.ts` include `OperatorUserAccess` from
 `operator-waitlist.ts`. That module also defines waitlist, approval, code,
-and pause paths and replies. The operator sees email states and verified
-email flags, never email addresses. GitHub creation times let the app show
-account age. Access sources carry the operator, code label, referral
-owner, or org and inviting admin. Referral records include recipients
-with their GitHub names, or null.
+pause, and waitlist switch paths and replies. `operatorWaitlistSwitchPath`
+names the switch. `OperatorWaitlistSwitch` gives `waitlistOn`,
+`updatedAt`, the operator of the last change, and `waiting`, the count of
+people who wait, as the Waitlist tab counts them. The operator sees email
+states and verified email flags, never email addresses. GitHub creation
+times let the app show account age. Access sources carry the operator,
+code label, referral owner, or org and inviting admin. The `open_signup`
+source carries the operator who last turned the waitlist off. Referral
+records include recipients with their GitHub names, or null.
 `OrgSummary.suspension` in `orgs.ts` exposes only the org suspension time to its members.
 [Operator actions](../../worker/operator/README.md) gives the access and the reply codes.
 
@@ -191,7 +197,7 @@ That JSON reply of `Preview.url` holds an authorizer `url` and the `expiresAt` o
 The `url` carries the preview hostname and a 60-second grant only in its fragment.
 [Port previews](../../docs/protocol/terminal-previews-and-desktop.md#port-previews) states its access rules.
 Each open of a port preview gets a new preview ID, and the API never gives out
-a revoked ID again (decision 86). The Preview tool hides revoked previews by their ID.
+a revoked ID again. The Preview tool hides revoked previews by their ID.
 The git credential payload is not defined yet.
 [GitHub tokens](../../docs/protocol/tokens-and-secrets.md#github-tokens) states its rule.
 
@@ -199,61 +205,31 @@ The git credential payload is not defined yet.
 This file transport stays on sandbox tmpfs between the Worker and runner.
 It carries the exact per-target outer alias and no credential.
 
-## Key code
+### Key Code
 
-- [Session Markdown](transcript/session-markdown.ts) folds session pages and
-  builds concise or full transcripts. [Markdown items](transcript/markdown-items.ts)
-  format the shared chat words, paths, and commands. [Markdown code](transcript/markdown-code.ts)
-  keeps inline and block fences longer than their content's backticks.
-- [Lost data](transcript/lost-data.ts) maps refusal event types to the same
-  product names for the browser line and the copied transcript.
-- [Agent words](agents.ts) supply the effort labels, model lookup, and model
-  labels for the chat, the new-workspace picker, and the mockups.
-- [Duration](transcript/duration.ts) formats elapsed chat and command times.
-  [Tool words](transcript/tool-words.ts) supply tool verbs, fold counts,
-  and the rule that starts a run open.
-- [Turn words](transcript/turn-words.ts) supply running, stopped, and failed
-  lines, with omitted-file and unavailable-file data.
-- [Command words](transcript/command-words.ts) supply Mac names, command
-  states, notes, and output text. Browser code supplies icons and colours.
-- [Session events](transcript/session-events.ts) take stored Worker envelopes
-  or parsed browser envelopes and select one session's events.
-- [Session log](transcript/session-log.ts) folds those events and session
-  records in event order. It keeps the transcript and each item's first time.
-- [Transcript](transcript/transcript.ts) defines the items and folds each
-  session event with its [turn helpers](transcript/turn-events.ts).
-- [Item placement](transcript/item-placement.ts) keeps late items in their
-  turn. [Command placement](transcript/command-placement.ts) puts each Mac
-  command after the items that began before it.
-- [Turn work](transcript/turn-work.ts) finds each ended turn's folded work.
-  [Transcript entries](transcript/transcript-entries.ts) group the items and
-  generic inserts. Browser callers use React nodes as the insert content.
+- [Shortcut commands](shortcut-commands.ts) define the stable command IDs.
+  The app and Worker share this list, including Copy link, pull request
+  actions, and both transcript copies. Account reads and saves accept
+  these commands through `isShortcutCommandId`.
+- [Shortcut keys](shortcut-key.ts) parse canonical key text from unknown
+  values. Only keypad digits have keypad names.
+  [Fixed keys](shortcut-fixed.ts) and [text keys](shortcut-text-keys.ts)
+  supply the same rules to the recorder and the Worker.
+  Enter with any modifiers and plain Space are fixed on both keyboards.
+- [Shortcut contracts](shortcuts.ts) define account overrides and batch
+  saves. Empty keys remove all bindings. Null in a save restores defaults.
+  [Shortcut readers](shortcut-read.ts) check each save as a complete batch.
+  Reply readers drop unreadable or fixed keys and keep the other keys in order.
+  A change that loses every key falls back to defaults. An empty stored list
+  still removes every key.
+  `AccountResponse.shortcuts` carries both keyboards.
+  `ACCOUNT_PATHS.shortcuts` names the batch save route.
 
-- [Port reports](ports.ts) carry sorted listening ports and their safe labels.
-- [Terminal contracts](terminal.ts) own the port shared with the listener exclusion.
-- [Commit author](commit-author.ts) builds a GitHub user's commit author and its four Git variables.
-- [Org contracts](orgs.ts) carry custom initials and GitHub repository choices for org creation.
-  `CreateOrgRequest.providerAccount` carries an operator's account choice.
-  Omission means By weights. The Worker ignores the field from other users.
-- [Member contracts](members.ts) name each invitation by its email. Each member keeps the `User` with their GitHub login. `PendingOrgInvite` adds the org ID and name, for the invitations that the signed-in user can accept.
-- [Account contracts](account.ts) include the repository list available before an org exists. `AgentLoginStatus.noReuse` of a connected login is true when other members cannot use it. `UpdateAgentLoginRequest` changes only that value, without the secret.
-- [Waitlist contracts](waitlist.ts) define the state read, code use, and join paths. Their state gives app access, the pause, the approval email, and the personal referral code's totals. `SessionResponse` in [account.ts](account.ts) adds app access to the sign-in session reply.
-- [Operator waitlist contracts](operator-waitlist.ts) define approval results, email states, code management, pause changes, and user access details.
-- [GitHub setup](github-setup.ts) names the address where GitHub returns after an install, and the `state` values of the install link.
-- [Org settings](org-settings.ts) carry the base image software for the Cloud computer tab.
-- [Routines](routines.ts) define routine paths, editable fields, triggers, inactive reasons, and run states.
-  Author-filter requests carry logins. Saved filters carry account IDs and canonical logins.
-  Run now takes a page request ID and returns its run after workspace admission.
-  Run history returns up to 50 runs and a `nextCursor` for `routinePaths.runs`.
-  Each run carries its own `agent` and `owner`, independent of later routine edits or owner moves.
-  An unknown historical agent or owner is null.
-  Removed workspaces have a null run workspace ID, while first-turn failures keep their workspace link.
-  A pull request trigger can carry `skipLogin`, the account login of an author or sender skip.
-  Older runs and skips without an account omit it.
-- [Workspace views](workspace-view.ts) add the routine ID and name of a run, or null, in backend replies.
-  The routine's `pullRequest` holds the run's pull request number and URL, or null for scheduled and Run now runs.
-  Replies also carry `baseBranch`, resolved by the Worker. View writes cannot change it.
-- [Base image](base-image.ts) records the software labels, their primary source, and the source check date.
-- [Browser fakes](../test-support/README.md) use these response types.
-- [Runner fakes](../../worker/test-support/README.md) use these message types.
-- [Migrations](../../migrations/README.md) define the D1 tables and reserved ranges.
+[Shared contracts key code](key-code.md) names the files, the types, and
+the functions of the shared contracts that a reader opens first. It covers
+the session addresses, the Markdown transcripts, and the shared words and
+parts of a transcript. It also covers the mentions, the attachment paths,
+and the session titles. Then it gives the contracts of the other areas,
+such as ports, orgs, members, the waitlist, workspaces, GitHub, feedback,
+and routines. It ends with links to the browser fakes, the runner fakes,
+and the migrations.

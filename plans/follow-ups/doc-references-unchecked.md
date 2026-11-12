@@ -45,3 +45,17 @@
   - `docs/protocol/file-mentions.md` links `access-and-security.md#secrets-that-users-enter`. That heading is in `docs/protocol/tokens-and-secrets.md`.
   - `docs/protocol/terminal-previews-and-desktop.md` links `../architecture.md#sandbox-software`. That heading is in `docs/architecture/components.md`.
   - Both links are broken on `main` itself, not because of that merge. This note fixes neither. Option B of this item would find both.
+- **Evidence update, 2026-11-10:** the Archive and context integration into `calummoore/github-status-bar-actions` found another existing broken reference on captured main `6fd184c53e77dee208687512244ebcaf5fa120e9`.
+  - `docs/protocol/pricing.md` links to `conductor-cloud-comparison.md`. The current page is `docs/protocol/conductor-comparison.md`.
+  - The file-mentions link recorded above remains broken on both captured parents. Its intended heading remains in `docs/protocol/tokens-and-secrets.md`.
+  - Captured main fixes the older preview link to `../architecture/components.md#sandbox-software`. That earlier example is closed.
+  - The changed internal guides pass their link checks. These unchanged upstream references need correction with the approved reference-check work. This branch adds no gate and changes neither protocol requirement.
+- **Evidence update, 2026-11-10:** captured main `247c772afaf09cae29856f67dc4ada41b646cb20` fixes the pricing and file-mention references recorded above.
+  - Pricing now links to `docs/protocol/conductor-comparison.md`.
+  - File mentions now links to `docs/protocol/tokens-and-secrets.md#secrets-that-users-enter`.
+  - Both observations are closed. The approved future reference check remains open. This branch adds no gate.
+- **Evidence update, 2026-11-11:** a link check on branch `calummoore/composer-file-drag-and-drop` read only Markdown headings as anchors. It reported one link as missing, but that link has a target.
+  - `worker/files/README.md:38` links `../chat/integration/README.md#milestone-9-files`.
+  - `worker/chat/integration/README.md:142` keeps that anchor in HTML: `<a id="milestone-9-files"></a>`. The heading under it is `## Files`, with the anchor `#files`.
+  - Both files are the same on captured main `f5eb804fcc2007b3348fa76d67d759363d01fb3d`.
+  - A check that reads only headings reports this link as missing. This note closes the report. It changes no file and adds no gate.

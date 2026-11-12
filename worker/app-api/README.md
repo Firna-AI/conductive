@@ -1,7 +1,7 @@
 # App API
 
-This folder holds the browser routes of the app shell and of the workspace
-lifecycle. `route` in [`routes.ts`](../routes.ts) tries them after the app
+This folder holds the browser routes of the app shell, of the workspace
+lifecycle, and of feedback. `route` in [`routes.ts`](../routes.ts) tries them after the app
 request gate, so each handler gets the parsed body and the signed-in user.
 Each handler returns `null` for a path that it does not own. The
 [Worker routes](../README.md#routes) list every route of the Worker.
@@ -10,17 +10,20 @@ Each handler returns `null` for a path that it does not own. The
 
 | Handler | Routes |
 | --- | --- |
-| `bootRoute` in [`boot.ts`](boot.ts) | `GET /api/account`, `GET /api/models`, `GET /api/get-started`, `PUT /api/account/default-model`, `PUT /api/account/new-workspace-view`, and `PUT`, `PATCH`, and `DELETE` of `/api/account/agent-logins/:agent` |
+| `bootRoute` in [`boot.ts`](boot.ts) | `GET /api/account`, `GET /api/models`, `GET /api/get-started`, `PUT /api/account/default-model`, `PUT /api/account/new-workspace-view`, `PUT /api/account/shortcuts`, and `PUT`, `PATCH`, and `DELETE` of `/api/account/agent-logins/:agent` |
+| `codexDeviceRoute` in [`codex-device.ts`](codex-device.ts) | `POST /api/account/agent-logins/codex/device` starts a ChatGPT sign-in. `POST` of its `/:handle` polls and exchanges it |
 | `shellRoute` in [`shell.ts`](shell.ts) | `GET` of the sections, the repositories, the members, and the workspace list of an org. `GET` and `PUT` of the view of a workspace, and `PUT` of its read mark |
 | `featureShellRoute` in [`feature-shell.ts`](feature-shell.ts) | GitHub installations and available repositories of the account; Create org with initials and repositories; settings reads and writes; repository choices; section writes; workspace names and moves |
 | `archiveRoute` in [`archive.ts`](archive.ts) | `POST` of a workspace’s `archive` and `restore` |
 | `chatLifecycleRoute` in [`lifecycle.ts`](lifecycle.ts) | `POST` of the workspace list, which creates a workspace. `GET` of a workspace, `POST` of its `resume` and `activity`, and image build, refresh, and log routes |
+| `feedbackRoute` in [`feedback.ts`](feedback.ts) | `GET` and `POST` of `/api/feedback`. [Feedback routes](feedback.md) gives their checks, their errors, and the email |
 
 `featureShellRoute` in [feature-shell.ts](feature-shell.ts) serves account GitHub
 access, org creation with initials and repository choices, shared settings,
 repository selection, sections, and workspace metadata.
 The [invitation route](invitations.ts) serves the signed-in pending list and explicit acceptance.
 The [archive route](archive.ts) archives and restores a workspace through its workspace object, as [Archive](../../docs/protocol/workspace-life.md#archive) says.
+The [Continue route](continue.ts) starts a Continue job and reads its result in the real workspace object, as [Continue routes](../lifecycle/continue-routes.md) says.
 `membersRoute` alone serves the org list and one org.
 It also serves Leave, org recovery, roles, invitations, and workspace ownership.
 Leave keeps the existing last-active-admin rule and native owner-change maintenance.
@@ -40,17 +43,50 @@ View writes cannot change this branch.
   `CONDUCTIVE_DEFAULT_CHOICE`, as
   [Deployment inputs](../../docs/deployment.md#models) says. A missing or
   invalid value gives a 503 on its own route only.
-- An account reply reads `user_preferences` and the records of the agent
+- An account reply reads `user_preferences`, `user_shortcuts`, and the records of the agent
   logins. It also gives the page of the GitHub App from `GITHUB_APP_SLUG`,
   so a screen links to that page without a GitHub read. A login write
   encrypts the secret with `agentLoginContext(userId, agent)` and
   `BOAT_KEY_ENCRYPTION_KEY`. No reply holds a stored secret.
+- `PUT /api/account/shortcuts` takes `SaveShortcutsRequest` and returns
+  `SaveShortcutsResponse` from the shared shortcut contracts. The shared
+  reader checks the whole request before any write. A contract error
+  returns HTTP 400 with `invalid_input` and the reader's message.
+  Enter with any modifiers and plain Space are fixed keys on both keyboards.
+  Only keypad digits can use keypad names in a saved key.
+  `shortcuts-data.ts` batches the changes and the reply's read in one D1
+  transaction. Null keys delete a row. Empty keys keep an empty override.
+  The account's `shortcuts` field carries both keyboards and skips retired
+  commands. The shared reply reader drops unreadable or fixed stored keys.
+  It preserves valid keys in order and keeps empty overrides. A change
+  that loses every key falls back to defaults. Each unreadable stored row,
+  including bad JSON, is skipped without blocking the account or save reply.
+  The Worker logs fixed warning text when it skips unreadable data.
+  The foreign key deletes these rows
+  with their user. [Storage](../../docs/protocol/keyboard-shortcuts.md#storage)
+  gives the requirements.
 - A new login or a change of kind sets `noReuse` to true for a Claude
-  subscription token and false for an API key. Replacing a secret of the
-  same kind keeps its preference. A `PATCH` changes only that login's
-  preference for the signed-in account. It needs no secret and keeps `updatedAt` as the
-  last secret-save time. It returns the current metadata, including a
+  subscription token or a Codex ChatGPT sign-in, and false for an API key.
+  The Worker and the dev backend use `defaultAgentLoginNoReuse` in the
+  [account contract](../../src/shared/account.ts) for these defaults.
+  Replacing a secret of the same kind keeps its preference. A `PATCH`
+  changes only that login's preference for the signed-in account. It needs
+  no secret and keeps `updatedAt` as the last secret-save time. It returns
+  the current metadata, including a
   disconnected status when the login was removed.
+- Codex connects to ChatGPT through the [device sign-in service](../codex-auth/README.md).
+  Its start reply holds the code, verification link, expiry, and poll interval.
+  Its poll reply reports waiting, connected, expired, or failed.
+  An unfinished sign-in compares the saved login date with the current login
+  before each OpenAI request and in its final conditional login write.
+  A change ends the sign-in with a cause that asks for a new code.
+  After completion, each poll reads the current Codex login through `accountLogins`.
+  A removed login returns a disconnected status while the sign-in state stays connected until expiry.
+  The required credential task owner retains the poll's exchange and save through `execution.waitUntil`.
+  Both routes use the signed-in account. A handle from another account returns 404.
+  The ordinary login save accepts only an API key for Codex.
+  A connected Codex login can carry `unusableCause` after a refused renewal.
+  Reconnect clears the failure and its refresh claim.
 - Get started has only the steps `github-app`, `org`, and `agent-login`.
 - Create org requires at least one repository. `createShellOrg` starts its
   first image build after it saves the org, its admin, and its repositories.
@@ -86,6 +122,15 @@ View writes cannot change this branch.
   reply read it with `readChatWorkspaceSummary`. A read or a Resume reply
   takes it from the same read as its record, as
   [Browser routes](../lifecycle/README.md#browser-routes) says.
+- Each full workspace record also gives `github`, the GitHub summary of
+  its pull request, or null. The list and lifecycle readers select it from
+  the D1 workspace row. So the summary adds no GitHub request and no
+  Durable Object read. The chat summary reads above stay as they are.
+- A change of the summary keeps the activity time and the order of the
+  row. The [GitHub banner backend](../github/README.md#the-summary-copy)
+  writes it, and
+  [The GitHub state](../../docs/protocol/github-banner.md#the-github-state)
+  states its values.
 - A workspace path decodes its workspace ID once.
 - An archived workspace keeps its view readable. A view write, a read mark,
   and a lifecycle action other than Restore get `409 workspace_archived`.
@@ -140,14 +185,33 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
 
 - `boot.test.ts` checks the boot routes, the saved preferences, the
   encrypted logins, and a missing model list. Two users save different
-  defaults, New workspace views, and logins, both with a Claude login.
-  After each save and a delete, each reads only their own account and
-  Get started step.
+  defaults, New workspace views, shortcut changes, and logins, including a Codex ChatGPT
+  sign-in. After each save and a delete, each reads only their own account
+  and Get started step.
   `boot-account.test-support.ts` holds the account helpers of that test.
+  `boot-account-isolation.test-support.ts` holds its two-user scenario.
+- `shortcuts.test.ts` checks ordered saves, empty overrides, reset by row
+  deletion, separate keyboards, rejected batches, fixed keys, and retired
+  commands in account and save replies. It saves and reads the shared
+  Create PR command ID. Its stored-data cases also check
+  recovery from unreadable keys and JSON without losing valid keys.
 - `agent-login-secret.test.ts` checks that a saved login keeps no
   whitespace, and that a read removes the whitespace of an older login.
+  It also checks that an older runner gets no ChatGPT login and reports
+  the next steps for a turn that it cannot run.
+- `codex-device.test.ts` checks the device exchange, encrypted storage,
+  account isolation, expiry, and overlapping polls.
+  Repeated finished polls keep the current share setting, failure cause, login kind, and removal.
+  `codex-device-failure.test.ts` keeps the failed exchange and safe-cause checks.
+  `codex-device-owner.test.ts` checks that an approved exchange commits after the polling client leaves.
+  `codex-device-login-change.test.ts` checks removals, API key saves, and newer
+  ChatGPT sign-ins before polling, between OpenAI calls, and before the final save.
+  It also checks the accepted save-and-remove return to an absent login.
+  Its OpenAI replies come from `codex-device.test-support.ts`.
 - `agent-login-reuse.test.ts` checks the login-kind defaults, the private
   preference update, and unchanged secret data and timestamps.
+- `agent-login-migration.test.ts` checks that the table rebuild keeps
+  existing login values and accepts Codex tokens.
 - `feature-github-install.test.ts` checks the install link of the GitHub
   App, and the default app when the slug is missing or not valid.
 - `shell-resources.test.ts` and `chat-read-state.test.ts` check the lists,
@@ -182,6 +246,9 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
 - `feature-repository-builds.test.ts` checks the admin's repository build,
   repeated saves, removals, adds after a failed build, and a failed start
   that keeps the choice.
+- `feedback.test.ts`, `feedback-refusals.test.ts`, and
+  `feedback-body.test.ts` check the feedback routes with a fake Resend, as
+  [Feedback routes](feedback.md#development) says.
 
 ### Key code
 
@@ -189,6 +256,10 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
   [`get-started-data.ts`](get-started-data.ts), and
   [`models.ts`](models.ts): the account, its logins, Get started, and the
   model variables.
+- [`shortcuts-data.ts`](shortcuts-data.ts): account shortcut reads and
+  atomic batch saves, checked with the shared shortcut readers.
+- [`codex-device.ts`](codex-device.ts): the account routes for ChatGPT
+  device sign-in, over the [Codex auth service](../codex-auth/README.md).
 - [`get-started-github.ts`](get-started-github.ts):
   `getStartedGitHubComplete`, the one owner of the `github-app` step.
 - [`shell.ts`](shell.ts) and [`shell-data.ts`](shell-data.ts): the lists of
@@ -198,6 +269,8 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
   its reader, and the refusal of archived writes.
 - [`workspace-path.ts`](workspace-path.ts): the workspace ID of a path.
 - [`lifecycle.ts`](lifecycle.ts): the lifecycle routes and their options.
+- [`continue.ts`](continue.ts): `continueRoute`, which checks the Continue
+  request body and gives the start and each poll to the workspace object.
 - [`feature-shell.ts`](feature-shell.ts): shell write dispatch after the
   request gate. [`feature-settings.ts`](feature-settings.ts) encrypts env
   values and their secret marks. Replies return names and marks only.
@@ -218,6 +291,11 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
   the org's saved choices with repositories that its reader can access,
   and starts a build after an add.
   Their `*-data.ts` files keep queries and guarded writes.
+- [`feedback.ts`](feedback.ts), [`feedback-input.ts`](feedback-input.ts),
+  [`feedback-data.ts`](feedback-data.ts), and
+  [`feedback-mail.ts`](feedback-mail.ts): the feedback routes, the checked
+  body, the reply email and reachable IDs, and the email.
+  [Feedback routes](feedback.md#key-code) gives each entry point.
 
 ### Related docs
 
@@ -225,4 +303,5 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
 - [Workspace lifecycle](../lifecycle/README.md#browser-routes)
 - [Deployment inputs](../../docs/deployment.md)
 - [Workspaces and sandboxes](../../docs/protocol/workspaces-and-sandboxes.md)
+- [Feedback](../../docs/protocol/feedback.md)
 - [Shared contracts](../../src/shared/README.md)

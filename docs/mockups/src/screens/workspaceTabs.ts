@@ -7,7 +7,8 @@ import {
   newSession,
   workspaceSessions,
 } from '../fixtures/sessions'
-import { splitPath } from '../fixtures/files'
+import { screenshotCopy } from '../fixtures/attachments'
+import { branchPictures, splitPath } from '../fixtures/files'
 import { maskedDiffPath } from '../fixtures/maskedFiles'
 import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
@@ -20,6 +21,19 @@ import { codeTabKey, moreTabs, withCodeMoved } from './workspaceTabRow'
  */
 export function isNew(state: WorkspaceState): boolean {
   return state.workspace === 'saved-carts' || state.run !== undefined
+}
+
+/**
+ * The states after the second session sent a message to the first session
+ * and to Saved carts. Each session tab then leads to the chat of its session
+ * at that time.
+ */
+function sessionLinkStates(state: WorkspaceState): boolean {
+  return (
+    state.tab === 'later-session' ||
+    state.conversation === 'sent-by' ||
+    state.composer === 'session-link'
+  )
 }
 
 /** The history of the workspace, with a note while a new workspace has none. */
@@ -44,6 +58,33 @@ export function workspaceName(
 }
 
 /**
+ * The tab of an image file that the state opens: a picture of the branch,
+ * an image whose bytes the browser cannot draw, or the copy of an attached
+ * screenshot. A picture takes the icon that All files gives each other
+ * file. A read of the copy names it by its file name, because no list
+ * names it.
+ */
+function pictureTab(state: WorkspaceState): WorkspaceTab | undefined {
+  const tab = (key: string, path: string, to: string): WorkspaceTab => ({
+    key,
+    kind: 'file',
+    title: splitPath(path).name,
+    to,
+    selected: true,
+  })
+  switch (state.tab) {
+    case 'image':
+      return tab('image', branchPictures.picture, paths.image)
+    case 'image-not-drawn':
+      return tab('image', branchPictures.damaged, paths.imageNotDrawn)
+    case 'attachment':
+      return tab('copy', screenshotCopy.path, paths.attachmentOpen)
+    default:
+      return undefined
+  }
+}
+
+/**
  * The tabs of the centre column: the sessions, the code file that stays
  * open, and the file, the diff, or the new session that the state opens.
  * Each new tab opens at the end of the row, as the linked session does. A
@@ -55,7 +96,8 @@ export function workspaceName(
  * the starter of the first session is not available, that first session
  * leads to its view for the member, beside the linked session. While the
  * starter keeps the login for their own messages, the first session leads
- * to that view.
+ * to that view. After the second session sent its messages, the second
+ * session can show, and each session tab leads to its chat of that time.
  */
 export function tabsFor(
   state: WorkspaceState,
@@ -68,8 +110,10 @@ export function tabsFor(
   const [first, second] = workspaceSessions
   const linked =
     state.tab === 'linked-session' || state.composer === 'no-starter-login'
+  const sent = sessionLinkStates(state)
   let firstPath: string = linked ? paths.noStarterLogin : paths.app
   if (state.composer === 'not-shared') firstPath = paths.loginNotShared
+  if (sent) firstPath = paths.sentBy
   const tabs: WorkspaceTab[] = [
     {
       key: first.key,
@@ -82,7 +126,8 @@ export function tabsFor(
       key: second.key,
       kind: 'session',
       title: nameLabel(second.title),
-      selected: false,
+      to: sent ? paths.sessionChips : undefined,
+      selected: state.tab === 'later-session',
     },
     {
       key: codeTabKey,
@@ -113,6 +158,8 @@ export function tabsFor(
       selected: true,
     })
   }
+  const picture = pictureTab(state)
+  if (picture) tabs.push(picture)
   if (state.tab === 'unnamed-file') {
     tabs.push({
       key: 'unnamed',

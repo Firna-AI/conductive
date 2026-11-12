@@ -1,4 +1,5 @@
 import type { WorkspaceEventEnvelope } from './workspace-events'
+import { attachmentPath } from '../../src/shared/attachment-paths'
 import { HttpError } from '../http'
 import { attachmentCopyKey } from './attachment-record'
 import { commandDispatchState, type DispatchState } from './ordered-dispatch'
@@ -17,6 +18,17 @@ interface Preparation {
   isCurrent: () => boolean
   ready: boolean
   sandboxId: string | null
+}
+
+async function hasCurrentPaths(command: MessageCommand): Promise<boolean> {
+  for (const attachment of command.attachments) {
+    const file = command.message.attachments.find(
+      (file) => file.id === attachment.attachmentId,
+    )
+    if (!file || attachment.relativePath !== (await attachmentPath(file)))
+      return false
+  }
+  return true
 }
 
 /** Each message and destination owns one copy, independently of its commands and connections. */
@@ -55,12 +67,10 @@ export class AttachmentPreparation {
       previous.isCurrent = isCurrent
       return previous.ready ? 'send' : 'wait'
     }
-    // An old absolute-path command has no proof for the repository destination.
+    // An old command path has no proof for the current file destination.
     if (
-      command.attachments.every(
-        (attachment) => typeof attachment.relativePath === 'string',
-      ) &&
       sandboxId !== null &&
+      (await hasCurrentPaths(command)) &&
       (await this.store.read(active.workspace.id, (view) =>
         view.attachmentCopy(command.message.id, sandboxId),
       ))
@@ -140,7 +150,7 @@ export class AttachmentPreparation {
         if (
           (command.type === 'turn' || command.type === 'message') &&
           command.messageId === original.message.id &&
-          !runner.delivered.has(command.commandId) &&
+          !(await view.commandDelivered(command.commandId, runner.id)) &&
           (await commandDispatchState(view, command)) === 'send'
         )
           return command

@@ -12,6 +12,11 @@ to each open tab. A tab is one browser connection to the events socket.
 requirements. This README names the code, its guarantees, and the seams
 for other milestones.
 
+A Codex ChatGPT login stores its structured sign-in only in the Worker.
+Version 2 delivery gives the runner a turn token and public account claims.
+The [Codex authentication backend](../codex-auth/README.md) renews the real
+tokens. A failed renewal makes the login unavailable to chat dispatch.
+
 ## Entry points
 
 `Workspace` in [`worker/workspace.ts`](../workspace.ts) is the Durable
@@ -55,6 +60,8 @@ gives their rules.
 - `readChatWorkspaceResponse(orgId, workspaceId, appOrigin)` returns the reply of a
   workspace read or Resume and that summary, as
   [Browser routes](../lifecycle/README.md#browser-routes) says.
+- `writeAgentSession(input)` accepts trusted tool requests after exact-object, org, archive, and current-sender checks inside the queue.
+  The [tools README](../tools/README.md#session-writes) gives its machine routes and resume behavior.
 
 [The workspace lifecycle](integration/README.md#the-workspace-lifecycle)
 says how the lifecycle and chat work together.
@@ -77,7 +84,16 @@ through that cutoff in a separate `ChatStore.run` task. Runner events and
 writes can proceed between pages. The captured session record stays fixed.
 The shared `SessionMarkdown` folds pages and renders both kinds of copy.
 It uses the same grouping, command placement, and words as browser chat.
+It puts the line of a turn's end reason before the duration and the changed
+files of that turn.
 The route keeps no generated transcript in storage.
+
+`buildSessionTranscript` also serves the workspace tools through trusted workspace RPCs.
+Its `TranscriptAccess` input carries workspace identity and presentation without a browser context.
+The machine handler and the target object check access before the build.
+The [tools README](../tools/README.md#session-reads) gives the machine paths, query options, reply fields, and size budget.
+`transcript-window.ts` selects whole lines or recoverable fragments after the shared build.
+The browser copy still returns the complete text with its existing detail query and response shape.
 
 ## Session names
 
@@ -96,12 +112,20 @@ The same queue also serves later resumes.
 Lifecycle readiness controls delivery to the runner.
 Try again replaces the failed first computer without accepting the stored messages again.
 
+`send` takes a parsed message and its actual sender, so browser and trusted tool callers share one admission path.
+Its optional acceptance callback saves a tool request in the message transaction.
+`tool-session-write.ts` owns tool request replay and atomic creation with an optional first message.
+`ChatRecords` stores each `ToolSessionRequest` beside its accepted session and message.
+The workspace title request removes only the canonical final tool footer from its stored first-message input.
+
 ## Access
 
-[Chat backend access](access.md) gives the gates that the Durable Object
-runs itself. It covers the browser gate and its second check in the
-queue, the grants of open tabs, the runner token checks, the workspace
-version pin, the login lookups, and an org suspension.
+[Chat backend access and open connections](access.md) gives the gates
+that the Durable Object runs itself. It covers the browser gate and its
+second check in the queue, the grants of open tabs, the runner token
+checks, the workspace version pin, the binding of the object, the login
+lookups and checks, and an org suspension. It also gives the native state
+of the tab and runner sockets across a wake.
 
 ## History and event order
 
@@ -131,12 +155,13 @@ runner for one fresh full report after it refuses an update. It describes
 the stored records, the refusal checks, and the sends before each confirm.
 
 `workspace-events.ts` defines the private saved event shape and presents browser events.
-Each authorized connection captures its app origin and immutable workspace number.
+Each authorized tab socket keeps its app origin and immutable workspace number in its attachment.
 Replay and live events get the same fields before they reach the browser.
 Older saved workspace updates can omit number and link.
 Presentation fills both fields while it keeps each saved name, state, time, and event number.
+An older saved update without a GitHub summary presents null.
 The HTTP history route uses the same presentation.
-No origin is saved in the workspace object.
+No origin is saved in the chat records or the history.
 
 ## Tests
 
@@ -148,11 +173,6 @@ npm run typecheck
 The shared chat and runner fixtures run the production workspace object in Miniflare with native SQLite.
 Their restart helpers evict the real object.
 [Chat backend tests](tests.md) names the native controls and each group of tests.
-
-`write-access.test.ts` holds a rename at its body read or in the queue.
-Then one access fact ends, such as a sign-out, a removal from the org, or
-an archive. The rename gets the refusal that a new request would get, and
-saves nothing. A new refused request leaves its body unread.
 
 ## Seams for other milestones
 

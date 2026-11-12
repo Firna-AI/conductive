@@ -2,6 +2,7 @@ import { expect, it, vi } from 'vitest'
 
 import type { RunnerTurn } from '../../src/shared/runner'
 import { turn } from '../test-support/harness'
+import { fakeCodexAccount } from '../test-support/providers'
 import { parseWorkspaceMessage } from './commands'
 
 const parse = (value: unknown) => parseWorkspaceMessage(value, () => {})
@@ -15,12 +16,16 @@ function command() {
     turnId: original.turnId,
     message: original.message,
     attachments: original.attachments,
+    branches: { workspaceBranch: 'owner/continued', targetBranch: 'trunk' },
     credential: {
       agent: 'claude',
       kind: 'api-key',
       token: 'sk-ant-api-turn-token',
     },
-    commitAuthor: null,
+    commitAuthor: {
+      name: 'Alice Example',
+      email: '1+alice@users.noreply.github.com',
+    },
   }
 }
 
@@ -68,6 +73,7 @@ it('parses a turn credential and a message without a credential', () => {
     turnId: input.turnId,
     message: input.message,
     attachments: [],
+    branches: { workspaceBranch: 'owner/continued', targetBranch: 'trunk' },
   })
   expect(() =>
     parse({
@@ -88,6 +94,79 @@ it('parses a turn credential and a message without a credential', () => {
       login: { agent: 'claude', kind: 'api-key', secret: 'real-login' },
     }),
   ).toThrow()
+})
+
+it('keeps stable attachment paths and reads older metadata with a null path', () => {
+  const original = command()
+  const file = {
+    id: 'file',
+    name: 'trace.txt',
+    kind: 'file',
+    mediaType: 'text/plain',
+    sizeBytes: 7,
+  }
+  for (const path of ['.context/attachments/file/trace.txt', null, undefined]) {
+    const attachment = { ...file, path }
+    const input = {
+      ...original,
+      message: { ...original.message, attachments: [attachment] },
+    }
+    expect(parse(input)).toMatchObject({
+      message: { attachments: [{ ...file, path: path ?? null }] },
+    })
+  }
+})
+
+it('keeps public ChatGPT identity and requires its typed fields on token turns', () => {
+  const input = turn('chatgpt', 'alice', 'codex')
+  const credential = {
+    agent: 'codex',
+    kind: 'token',
+    token: 'sk-turn-token',
+    account: fakeCodexAccount,
+  }
+  expect(parse({ ...input, credential })).toEqual({
+    ...input,
+    credential,
+  })
+  expect(
+    parse({
+      ...input,
+      credential: {
+        ...credential,
+        account: {
+          accountId: 'account',
+          email: null,
+          planType: null,
+          userId: null,
+        },
+      },
+    }),
+  ).toMatchObject({
+    credential: {
+      account: {
+        accountId: 'account',
+        email: null,
+        planType: null,
+        userId: null,
+      },
+    },
+  })
+  expect(() =>
+    parse({
+      ...input,
+      credential: { ...credential, account: undefined },
+    }),
+  ).toThrow('Expected an object.')
+  expect(() =>
+    parse({
+      ...input,
+      credential: {
+        ...credential,
+        account: { ...fakeCodexAccount, accountId: 123 },
+      },
+    }),
+  ).toThrow('Expected text.')
 })
 
 it('keeps the supplied commit author only on a turn command', () => {

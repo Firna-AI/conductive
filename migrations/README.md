@@ -80,6 +80,18 @@ and body for stable delivery retries. A missing verified email saves the
 disabled a code. [The operator backend](../worker/operator/README.md#approval-email-delivery)
 owns email delivery and code management.
 
+`202611092050_waitlist_switch.sql` adds the waitlist switch to the one row
+of `signup_settings`. `waitlist_on` starts on, also on the existing row.
+`waitlist_updated_at` and `waitlist_updated_by_user_id` keep the last
+change, and both start empty. The deletion of that operator clears the
+reference. The migration rebuilds `user_app_access` with the new source
+`open_signup`. It keeps every existing row and value, and the same keys,
+references, and checks. No table refers to `user_app_access`, so the
+rebuild drops no reference.
+[The operator backend](../worker/operator/README.md#waitlist-codes-and-sign-ups)
+owns the switch, and [the waitlist backend](../worker/waitlist/README.md#integration)
+owns open sign-up grants.
+
 `202611092100_provider_accounts.sql` adds `provider_account` to each table
 that holds a sandbox ID or a saved snapshot name: `workspaces`,
 `image_builds`, `image_build_jobs`, `lifecycle_sandbox_cleanup`,
@@ -115,6 +127,17 @@ A Worker version from before this migration cannot run on the new schema, as
 [When a deploy fails](../docs/automatic-deploys.md#when-a-deploy-fails) says.
 The [lifecycle provider accounts](../worker/lifecycle/provider-accounts.md#org-images)
 page gives the readers and the rules of these records.
+
+`202611100000_codex_access_token.sql` rebuilds `agent_logins` to accept a Codex access token with the kind `token`.
+It keeps every row, column, and other rule, including `no_reuse`, the primary key, and the user deletion cascade.
+
+`202611100001_codex_chatgpt_login.sql` adds the refresh claim and safe failure cause to `agent_logins`.
+It preserves the encrypted secret and its login timestamps.
+It adds `codex_devices` for encrypted, account-owned device authorizations and their safe terminal states and causes.
+Its nullable `login_updated_at` holds the current Codex login date at start, or null without a login.
+Polls and the final conditional save compare that date with the current login.
+Completed device rows keep no login-status copy. Poll replies read the current `agent_logins` record.
+Its expiry index serves scheduled cleanup. User deletion removes these records through the user foreign key.
 
 `202611100900_computer_ledger.sql` adds the retained computer ledger. Each
 entry names its computer by the provider account and the sandbox ID
@@ -181,6 +204,21 @@ Existing runs keep null because their original choice is not known.
 A null base branch uses the repository default branch.
 Existing rows keep that fallback.
 
+`202611101600_shortcuts.sql` adds `user_shortcuts`.
+Each row holds one account's changed command for one keyboard, with its
+ordered keys as JSON. An empty list keeps a command without keys.
+The primary key keeps each account, keyboard, and command separate.
+Deleting the user deletes these rows through the foreign key.
+[Keyboard shortcuts](../docs/protocol/keyboard-shortcuts.md#storage)
+states the storage rules.
+
+`202611102114_workspace_github_summary.sql` adds the nullable `workspaces.github_summary` column.
+A check accepts only `checks-running`, `checks-failed`, `checks-passed`, and `merged`.
+The migration copies nothing, so each existing row keeps `NULL` until its next GitHub refresh.
+The workspace object keeps the column as a copy of its committed banner state, as [The summary copy](../worker/github/README.md#the-summary-copy) says.
+The complete banner state and its events stay in Durable Object storage.
+[The GitHub state](../docs/protocol/github-banner.md#the-github-state) states the four values.
+
 ## Reserved ranges
 
 Each milestone owns the complete inclusive range below.
@@ -216,6 +254,7 @@ UI and wiring milestones normally need no migration. Their ranges stay reserved.
 | Workspace link chips | `202611091200`–`202611091259` |
 | Chat attachment metadata | `202611081800`–`202611081859` |
 | Preferences and New workspace dialog | `202611082300`–`202611082359` |
+| Codex logins | `202611100000`–`202611100059` |
 | Computer ledger account merge | `202611100900`–`202611100959` |
 | Software image for first builds | `202611101200`–`202611101259` |
 | 16 Deployment | `202611071800`–`202611071859` |
@@ -223,6 +262,7 @@ UI and wiring milestones normally need no migration. Their ranges stay reserved.
 | Routines: records and routes | `202611101300`–`202611101359` |
 | Routines: runs and Run now | `202611101400`–`202611101459` |
 | Routines: pull request runs | `202611101500`–`202611101559` |
+| Keyboard shortcuts storage | `202611101600`–`202611101659` |
 
 ## Key code
 

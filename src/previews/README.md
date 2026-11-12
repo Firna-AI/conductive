@@ -32,13 +32,20 @@ as the Preview page, as
   of the failure, and the last list stays. A newer report, also a null one,
   ends it. The notice never shows over a preview in its frame.
 - The words, the tab label, and the row styles are those of the mockups:
-  `previewCopy.ts` and `PortForm.module.css` in
+  `previewCopy.ts`, `PreviewTabs.module.css`, and `PortForm.module.css` in
   `docs/mockups/src/components/tools/`, and `LostUpdateRow` for the notice.
 - Each preview has a tab. Tabs are links, so each preview has an address in
   the browser history. A plain click goes to the address in the page. Ctrl,
   Shift, and middle clicks keep the browser's own action.
+- Each tab holds its Close button, after its label, with the rule of the
+  session tabs: the button shows on the shown tab, on hover, and while the
+  focus is in the tab. A hidden button keeps its place, so a tab keeps its
+  size on hover. On a phone, a hidden button takes no place. The button's
+  name is "Close" and the label of its tab, such as `Close 5173 vite`.
 - Reload loads the frame again. Close sends a DELETE with an empty JSON
-  object, and the tab goes when the server confirms it.
+  object, and the tab goes when the server confirms it. The button waits
+  while its request runs. A failed close shows its message under the tabs,
+  with the port of the preview, also when that tab is not the shown tab.
 - A `preview.revoked` event of the same workspace removes its preview. A
   later list does not bring it back, and neither does a new `subscribe`. An
   event of another workspace changes nothing. The preview reducer takes the
