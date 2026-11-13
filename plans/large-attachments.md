@@ -26,6 +26,14 @@ Two Cloudflare limits block a simple raise of the limit. The checks of
   The copy runs in the workspace object, so today it fails for each file
   above 100 MiB. The copy request also stops after 65 seconds.
 
+The user approved the implementation of all milestones and TODOs of this
+plan on 13 November 2026: "impl all plan milestones and tasks". The
+`default orchestrator` session of this workspace runs the milestones one
+after the other, because they share the attachment docs and code. The
+runner milestone runs beside the backend milestones, because it changes
+only the runner package. Codex offers `xhigh` as its highest effort here,
+so the Codex actions run at `xhigh`.
+
 This change does not cover a resumable upload after a reload, progress of
 the download in the chat, or a paste of a file. The brainstorm notes are in
 `.context/large-uploads/`.
