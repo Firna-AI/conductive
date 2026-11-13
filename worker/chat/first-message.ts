@@ -18,6 +18,7 @@ interface FirstMessageIdentity extends User {
   agent: string
   model: string
   effort: string
+  fast: number
 }
 
 export function firstMessageIdentity(
@@ -29,7 +30,7 @@ export function firstMessageIdentity(
     u.display_name AS displayName, u.avatar_url AS avatarUrl,
     w.archived_at AS archivedAt,
     r.org_id AS orgId, r.session_id AS sessionId, r.first_turn_id AS turnId,
-    r.first_message_id AS messageId, r.agent, r.model, r.effort
+    r.first_message_id AS messageId, r.agent, r.model, r.effort, r.fast
     FROM workspace_runtime r JOIN workspaces w ON w.id = r.workspace_id
     JOIN orgs o ON o.id = w.org_id
     JOIN users u ON u.id = r.created_by_user_id
@@ -52,7 +53,8 @@ export function requireFirstMessage(
     identity.messageId !== first.request.id ||
     identity.agent !== first.request.choice.agent ||
     identity.model !== first.request.choice.model ||
-    identity.effort !== first.request.choice.effort
+    identity.effort !== first.request.choice.effort ||
+    (identity.fast === 1) !== (first.request.choice.fast ?? false)
   )
     throw new HttpError(
       404,
@@ -75,6 +77,13 @@ export async function admitFirstMessage(
   dependencies: ChatDependencies,
   archived: boolean,
 ): Promise<UserMessage> {
+  first = {
+    ...first,
+    request: {
+      ...first.request,
+      choice: dependencies.normalizeChoice(first.request.choice),
+    },
+  }
   const existing = await existingMessage(
     transaction,
     first.sessionId,

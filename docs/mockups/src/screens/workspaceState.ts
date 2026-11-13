@@ -43,6 +43,7 @@ export const workspaceStateSchema = {
     'tabRow',
     'temporary',
     'composer',
+    'modelChoice',
     'resize',
     'rightColumn',
     'overlay',
@@ -129,6 +130,12 @@ export const workspaceStateSchema = {
     temporary: { enum: temporaryTabStates },
     /** The composer, as `composerStates` says. */
     composer: { enum: composerStates },
+    /**
+     * The model, the effort, and the speed of the next message: those of
+     * the workspace, the same with fast mode on, or Sonnet 5.5 High, a model
+     * that offers no fast mode.
+     */
+    modelChoice: { enum: ['workspace', 'fast', 'no-fast'] },
     /**
      * The user drags the handle of the right column to widen it, or the
      * handle between the file lists and the tools to raise the split.
@@ -244,6 +251,7 @@ export const readyWorkspace: WorkspaceState = {
   tabRow: 'opened',
   temporary: 'none',
   composer: 'empty',
+  modelChoice: 'workspace',
   resize: 'none',
   rightColumn: 'shown',
   overlay: 'none',

@@ -14,6 +14,8 @@ export const SIMPLE_WARNINGS = {
   routine_background_start_failed:
     'A pull request run could not start in the background.',
   marketing_site_unavailable: 'The built marketing site is not available.',
+  turn_speed_invalid:
+    'A turn end had a speed that the Worker does not know. It counts as standard speed.',
   github_app_slug_invalid:
     'GITHUB_APP_SLUG is not a GitHub App slug. The install link uses the default slug.',
   github_installation_status_failed:

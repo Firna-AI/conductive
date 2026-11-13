@@ -39,10 +39,13 @@ decision number names a dated record, as
 - The calls cover each command of Conductor's CLI whose feature Conductive
   has (decision 277). Reason: an agent can then manage the work that it
   hands out.
-- Calls for routines, for the env vars of one workspace, and for fast mode
-  were left out (decision 277). Reason: Conductor's CLI refuses the
-  workspace token for its routine commands, so its agents cannot use them
-  either. Conductive has no env vars for one workspace and no fast mode.
+- Calls for routines and for the env vars of one workspace were left out
+  (decision 277). Reason: Conductor's CLI refuses the workspace token for
+  its routine commands, so its agents cannot use them either. Conductive
+  has no env vars for one workspace.
+- Fast mode has no call of its own. Each call that takes a model also takes
+  fast mode, as Conductor's CLI takes it beside the model and the effort.
+  [Fast mode](fast-mode.md#agent-tools) gives the rules.
 - Both tools call the Worker with the workspace token of their sandbox.
 - With the workspace token, the tools can make only these calls.
   [The workspace token](tokens-and-secrets.md#the-workspace-token) states

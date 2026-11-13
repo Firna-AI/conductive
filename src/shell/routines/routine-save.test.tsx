@@ -113,7 +113,12 @@ describe('a save of the routine page', () => {
           repositoryId: 'storefront',
           sectionId: 'general',
           prompt: 'List the pull requests merged since the last workday.',
-          choice: { agent: 'claude', model: 'Opus 5.5', effort: 'high' },
+          choice: {
+            agent: 'claude',
+            model: 'Opus 5.5',
+            effort: 'high',
+            fast: false,
+          },
           timeZone: 'UTC',
           triggers: [
             { kind: 'hourly', minute: 15 },

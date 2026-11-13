@@ -1,6 +1,7 @@
 import { useRef, type ReactNode } from 'react'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import styles from '../../../docs/mockups/src/components/chat/ChatPane.module.css'
+import type { PlaceMemory } from './chat-place'
 import { ChatKeeper, useReadingPlace } from './reading-place'
 
 /**
@@ -11,18 +12,28 @@ import { ChatKeeper, useReadingPlace } from './reading-place'
  * change of size of the transcript, and the folds use the same keeper.
  * Each new ID in `sent`, a message that the user sent from this chat, shows
  * the bottom of the chat. A message of another member does not move it.
+ * `place` keeps the reader's place in the shown session while another tab
+ * shows, and gives it back when the session shows again.
  */
 export function ChatPane(props: {
   mobile: boolean
   empty?: ReactNode
   /** The IDs of the messages that this chat sent and that wait for a reply. */
   sent: readonly string[]
+  /** The kept place of the shown session. */
+  place?: PlaceMemory | null
   children?: ReactNode
   footer: ReactNode
 }) {
   const scroller = useRef<HTMLDivElement>(null)
   const transcript = useRef<HTMLDivElement>(null)
-  const keeper = useReadingPlace(scroller, transcript, !props.empty, props.sent)
+  const keeper = useReadingPlace(
+    scroller,
+    transcript,
+    !props.empty,
+    props.sent,
+    props.place,
+  )
   return (
     <section
       aria-label="Chat"

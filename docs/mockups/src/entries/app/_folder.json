@@ -20,6 +20,7 @@
     "repository-change",
     "archive",
     "composer",
+    "fast-mode",
     "attachments",
     "workspace-links",
     "file-mentions",

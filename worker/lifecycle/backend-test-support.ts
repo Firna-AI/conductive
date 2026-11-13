@@ -90,6 +90,7 @@ export async function backendFixture(sharedHarness?: TestHarness) {
         id,
         {
           MACHINE_ORIGIN: env.MACHINE_ORIGIN,
+          CONDUCTIVE_MODELS: env.CONDUCTIVE_MODELS,
           SANDBOX_PROVIDER_ACCOUNTS: env.SANDBOX_PROVIDER_ACCOUNTS,
           GITHUB_APP_PRIVATE_KEY: id.startsWith('org-image:')
             ? imageAppKey()

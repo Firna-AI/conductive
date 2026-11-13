@@ -1,6 +1,6 @@
 import type { Options } from '@anthropic-ai/claude-agent-sdk'
 
-import type { Effort } from '../../../src/shared/agents'
+import type { AgentChoice, Effort } from '../../../src/shared/agents'
 
 /** The effort levels that the Claude Agent SDK accepts. */
 type ClaudeEffortLevel = 'low' | 'medium' | 'high' | 'xhigh' | 'max'
@@ -39,4 +39,17 @@ export function claudeStartOptions(
  */
 export function claudeEffortSettings(effort: Effort): ClaudeEffortSettings {
   return { effortLevel: level(effort), ultracode: effort === 'ultra' }
+}
+
+/**
+ * The `query()` options that start a Claude session with a choice: its
+ * effort, and the fast mode flag setting beside a setting of the effort.
+ */
+export function claudeStart(
+  choice: AgentChoice,
+): Pick<Options, 'effort' | 'thinking' | 'settings'> {
+  const start = claudeStartOptions(choice.effort)
+  // The start options set settings only as an object, never as a file path.
+  const settings = typeof start.settings === 'object' ? start.settings : {}
+  return { ...start, settings: { ...settings, fastMode: choice.fast } }
 }

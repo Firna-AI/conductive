@@ -57,7 +57,7 @@ export const fakeUser = fakeUsers[0]
 export function coreFixtures(role: OrgRole = 'admin') {
   const account: AccountResponse = {
     user: role === 'member' ? fakeUsers[1] : fakeUser,
-    defaultChoice,
+    defaultChoice: { ...defaultChoice, fast: defaultChoice.fast ?? false },
     newWorkspaceView: 'page',
     shortcuts: { mac: [], other: [] },
     agentLogins: [
@@ -86,6 +86,7 @@ export function coreFixtures(role: OrgRole = 'admin') {
         model: model.name,
         label: model.name,
         efforts: model.efforts,
+        ...(model.fast === undefined ? {} : { fast: model.fast }),
       })),
     ),
   }

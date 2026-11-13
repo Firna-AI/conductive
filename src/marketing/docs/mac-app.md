@@ -51,6 +51,7 @@ Return to the Mac app after the installation or owner approval.
 Its setup state updates when its window becomes active.
 
 Open your org and workspace to continue the same cloud work.
+The next time that the Mac app starts, it opens the last workspace that you opened.
 Back and Forward move between pages in the window.
 Links to other websites open in your default browser.
 

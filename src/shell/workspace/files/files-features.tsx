@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useMemo, type ReactNode } from 'react'
 import { replacesLists } from '../../../../docs/mockups/src/components/workspace/sandboxNoticeState'
 import { useServices } from '../../../app/services'
 import type { WorkspaceFiles } from '../../../files/model/files-store'
@@ -11,6 +11,7 @@ import type {
 import { DiffPage } from '../../../files/page/DiffPage'
 import { FilePage } from '../../../files/page/FilePage'
 import { FilesPanel } from '../../../files/panel/FilesPanel'
+import { KeptScroll, scrollTabKey } from '../../../files/ui/kept-scroll'
 import type { CommandKey } from '../../../files/ui/LinkTabs'
 import { ChecksActions } from '../../../github/BarButtons'
 import { ChecksList } from '../../../github/ChecksList'
@@ -171,19 +172,29 @@ function FilesPart(props: { context: WorkspaceContext }) {
   )
 }
 
-/** The file or diff tab of the address, in the centre of a desktop. */
+/**
+ * The file or diff tab of the address, in the centre of a desktop. Each tab
+ * keeps its scroll offset in the kept files of the workspace.
+ */
 function FilesCenter(props: { context: WorkspaceContext; tab: FilesTab }) {
-  const { context } = props
+  const { context, tab } = props
   const files = useKeptFiles(context)
   const navigation = useFilesNavigation(context)
+  const tabKey = scrollTabKey(tab)
+  const kept = useMemo(
+    () => ({ places: files.scrollPlaces, tab: tabKey }),
+    [files, tabKey],
+  )
   return (
-    <TabPage
-      context={context}
-      files={files}
-      layout="desktop"
-      navigation={navigation}
-      tab={props.tab}
-    />
+    <KeptScroll.Provider value={kept}>
+      <TabPage
+        context={context}
+        files={files}
+        layout="desktop"
+        navigation={navigation}
+        tab={tab}
+      />
+    </KeptScroll.Provider>
   )
 }
 

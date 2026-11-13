@@ -24,6 +24,7 @@ export async function send(
     response: SendMessageResponse,
   ) => Promise<void>,
 ): Promise<SendMessageResponse> {
+  input = { ...input, choice: dependencies.normalizeChoice(input.choice) }
   const existing = await operation.read((view) =>
     existingMessage(view, sessionId, input, user),
   )
