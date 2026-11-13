@@ -42,8 +42,8 @@ Replaced ways:
   `src/chat/links/workspace-links.ts` and the link reading of
   `docs/mockups/src/components/chat/workspaceLinks.ts` → the reader of
   `src/markdown/web-links.ts`. Consumers: `chatParts`, `textParts` of the
-  message field, `MessageText` of the mockups, and their tests. Moved and
-  deleted in Milestone 3.
+  message field, `MessageText`, `WebLinkText`, and `DraftText` of the
+  mockups, and their tests. Moved and deleted in Milestone 3.
 
 ## Terms
 
@@ -417,6 +417,23 @@ These calls are mine, made on 10 November 2026 under the decision test.
   Milestone 3 moves them to the shared reader, with no change to a screen,
   because the shared reader does not exist before Milestone 3.
 
+The mockups of Milestone 1 settled these details on 13 November 2026,
+under the same test:
+
+- In a sent message, only the address of a Markdown link is the link. Its
+  brackets and its label stay text, because each address of chat text is
+  a link, and a message of a member shows as typed.
+- A message line of the work of a turn reads its text as an answer does,
+  so its Markdown links show as their labels.
+- A label that reads as an address shows the address as the text has it,
+  as a bare address does. The title gives the address as the URL parser
+  writes it.
+- The label test ignores the spaces at the ends of a label and the case of
+  `www.`. The invisible characters are the default ignorable code points
+  of Unicode, such as a zero-width space.
+- A local address without a port names the default port of its scheme:
+  80 for `http`, and 443 for `https`.
+
 ## Components
 
 - `src/markdown/web-links.ts`: the one reader of addresses for chat text,
@@ -444,31 +461,31 @@ Depends on: none
 Draw the links of chat text, the local address flow, and the changed link
 screen of another org, on desktop and on a phone.
 
-- [ ] Add `TextLink` with its CSS module in
+- [x] Add `TextLink` with its CSS module in
       `docs/mockups/src/components/common/`, as the design says.
-- [ ] Draw the link parts in `MessageText` and
+- [x] Draw the link parts in `MessageText` and
       `docs/mockups/src/components/chat/workspaceLinks.ts`: bare
       addresses, labels of Markdown links in answers, a label that is an
       address, an address alone in inline code, and a local address.
-- [ ] Add the page `app/chat/links`, with these five screens:
-  - [ ] An answer with a bare pull request address, a Markdown link as
+- [x] Add the page `app/chat/links`, with these five screens:
+  - [x] An answer with a bare pull request address, a Markdown link as
         its label, and an address alone in inline code.
-  - [ ] A Markdown link whose label is another address. The real address
+  - [x] A Markdown link whose label is another address. The real address
         shows.
-  - [ ] An answer with `http://localhost:3000`. A press opens
+  - [x] An answer with `http://localhost:3000`. A press opens
         `app/tools/preview`.
-  - [ ] A sent message with a bare address and a Markdown link as typed.
-  - [ ] A closed and an open message line of a folded turn, with a link.
+  - [x] A sent message with a bare address and a Markdown link as typed.
+  - [x] A closed and an open message line of a folded turn, with a link.
 - [ ] Draw the answer of decision 5, when it is B or C.
-- [ ] Add the user flow `user-flows/open-a-local-server`: the answer with
+- [x] Add the user flow `user-flows/open-a-local-server`: the answer with
       the local address, then the port preview of port 3000.
-- [ ] Update `app/workspace-links/messages`: the link to a workspace of
+- [x] Update `app/workspace-links/messages`: the link to a workspace of
       another org is now a link that opens in the app.
-- [ ] Update `docs/mockups/catalogue.md` for the new page, the flow, and
+- [x] Update `docs/mockups/catalogue.md` for the new page, the flow, and
       the changed screen.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages on both
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages on both
       sizes with `npm run mockups:serve`.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
 
 ## Milestone 2: Documentation and protocol

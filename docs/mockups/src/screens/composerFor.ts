@@ -38,6 +38,7 @@ const runningConversations = new Set([
   'sent-files',
   'sent-files-listed',
   'link-sent',
+  'chat-links-sent',
   ...barRunningConversations,
   'sent-by',
   'sent-by-other',

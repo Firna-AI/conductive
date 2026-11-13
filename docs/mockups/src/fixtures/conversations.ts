@@ -18,6 +18,7 @@ import {
 } from './autocompleteTurn'
 import { backgroundConversations } from './backgroundConversations'
 import { barConversations, type ContinuedItem } from './barConversations'
+import { chatLinkConversations } from './chatLinkConversations'
 import type { ChangedFile } from './files'
 import {
   headingConversations,
@@ -205,4 +206,5 @@ export const conversations: Readonly<
   ...barConversations({ history, cutOff: cutOffTurn }),
   ...listConversations,
   ...headingConversations,
+  ...chatLinkConversations(history),
 }
