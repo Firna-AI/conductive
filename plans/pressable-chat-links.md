@@ -21,7 +21,8 @@ preview.
 
 Contract owners:
 
-- [Chat Markdown](../docs/protocol/chat-markdown.md).
+- [Chat Markdown](../docs/protocol/chat-markdown.md), and its linked page
+  [Chat links](../docs/protocol/chat-links.md).
 - [Workspace links](../docs/protocol/workspace-links.md).
 - [Port previews](../docs/protocol/port-previews.md).
 - [Workspace tools](../docs/protocol/workspace-tools.md), for the file
@@ -434,6 +435,14 @@ under the same test:
 - A local address without a port names the default port of its scheme:
   80 for `http`, and 443 for `https`.
 
+The protocol docs of Milestone 2 made this call of this change on 13
+November 2026, under the same test:
+
+- The Markdown of an image, such as `![alt](address)`, shows as typed, and
+  its address is a link. Its `[alt](address)` part is not a label link.
+  Reason: [Agent instructions](../docs/protocol/agent-instructions.md)
+  relies on the rule that the chat shows the Markdown of an image as text.
+
 ## Components
 
 - `src/markdown/web-links.ts`: the one reader of addresses for chat text,
@@ -500,21 +509,27 @@ addresses, and of links in the file preview.
       reader can observe. Change the rule that other links show as typed,
       and the rejection that names links as a reason. Define the chat
       link decision number.
-- [ ] `docs/protocol/workspace-links.md`: a link that is not a chip is a
+  - The section is the linked page `docs/protocol/chat-links.md`, which
+    also defines the chat link decision number and holds the label test.
+    Waits for decision 5: each rule of a label link past the label test.
+    Waits for decision 6: what a copy of a label link gives.
+- [x] `docs/protocol/workspace-links.md`: a link that is not a chip is a
       link, and an address alone in inline code is a link in code. Change
       "No link makes the app send a request that reaches another org", so
       that only a press opens a page of another org.
-- [ ] `docs/protocol/port-previews.md`: a press on a local address of the
+- [x] `docs/protocol/port-previews.md`: a press on a local address of the
       chat opens its preview, as a press on a listed server does.
 - [ ] `docs/protocol/workspace-tools.md`: a link of the file preview opens
       as a link of the chat does, with the answer of decision 4.
-- [ ] Read both legal pages in full, `src/marketing/terms.ts` and
+  - Waits for decision 4: the rule for a link to a local address in a
+    file. The rest of the TODO is in the doc.
+- [x] Read both legal pages in full, `src/marketing/terms.ts` and
       `src/marketing/privacy.ts`. Update each sentence that restates a
       changed fact.
-- [ ] Read each public guide in `src/marketing/docs/` in full. Update
+- [x] Read each public guide in `src/marketing/docs/` in full. Update
       each sentence that restates a changed fact, as
       [Website docs](../docs/protocol/website-docs.md) says.
-- [ ] Check the rows of `src/marketing/from-conductor/` for a feature that
+- [x] Check the rows of `src/marketing/from-conductor/` for a feature that
       this change ships, and update its status or note.
 
 ## Milestone 3: The shared link reader

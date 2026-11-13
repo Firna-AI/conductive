@@ -1,5 +1,13 @@
 # Port previews
 
+This doc holds the requirements and the decisions in force for the port
+previews of the Preview tool. It belongs to
+[Tools of a workspace](workspace-tools.md#port-previews). A decision
+number names a dated record, as
+[Decision numbers](../architecture.md#decision-numbers) says. A chat link
+decision number names a decision of the change that makes each web
+address of chat text a link, as [Chat links](chat-links.md) says.
+
 - A preview shows in a frame inside the app, with an "Open" link that
   opens it in a new tab. Reason: Safari blocks the cookies of the
   previewed app inside a frame.
@@ -53,6 +61,26 @@
 - The tooltip and the accessible name of the tab give the port, the full
   name, and the folder. Reason: the user asked for a short tab label, and
   the cut label must not hide which server the tab shows.
+- A press on a local address in chat text opens the preview of its port,
+  in the workspace of the chat (chat link decision 2 C). It uses the same
+  request and checks as a typed port, as a click on a listed server does.
+  [Local addresses](chat-links.md#local-addresses) says which
+  addresses are local, and which port each one names.
+- The link of a local address is the address of the Preview tool with
+  that port. That address opens the preview of the port, also in a new
+  tab. A port that has an open preview shows that preview, with no new
+  request. The address then names the preview.
+- The path, the query, and the hash of the local address do not carry
+  over. So the preview opens at the first page of the server.
+- Reason: an agent gives the local address of a server that it started in
+  the sandbox. A press that opened the computer of the reader would show
+  an error page or another server.
+- A press that opens the port form, where a second press opens the
+  server, was rejected, because one press can open it. A preview address
+  in place of each local address of the text was rejected, because the
+  app would then open previews by itself. An agent tool that gives the
+  preview address was rejected, because answers still copy local
+  addresses from the output of servers.
 - Nothing opens by itself, and no notice of a server shows outside the
   Preview tool.
 - A name and a folder are text that screens show. So the filters of

@@ -9,7 +9,10 @@ field of each composer.
 gives the number, the label, and the link of each workspace. The terms are
 those of the [architecture doc](../architecture.md#terms). A decision
 number names a dated record, as
-[Decision numbers](../architecture.md#decision-numbers) says. The
+[Decision numbers](../architecture.md#decision-numbers) says. A chat link
+decision number names a decision of the change that makes each web
+address of chat text a link, as [Chat links](chat-links.md) says. That
+doc gives the rules of the other links in chat text. The
 [mockup catalogue](../mockups/catalogue.md) draws these screens at
 `app/workspace-links`, in New workspace, and in the flows
 `user-flows/link-a-workspace` and `user-flows/open-a-session-link`.
@@ -58,8 +61,9 @@ number names a dated record, as
   and the chip gives the whole name as its title.
 - A chip never makes a message wider than its column. Reason: a long chip
   must not push a message past the edge of a phone screen.
-- A chip shows only data that the app already shows the reader. No link
-  makes the app send a request that reaches another org.
+- A chip shows only data that the app already shows the reader. A link to
+  a page of another org opens that page only on a press. Before the press,
+  no link makes the app send a request that reaches another org.
 
 ### Which links show as chips
 
@@ -79,14 +83,15 @@ number names a dated record, as
 - The app resolves each link as a browser does before it looks for the
   workspace. So a chip always shows the workspace whose page a press
   opens, also for a link with `..` or other odd parts.
-- Every other link stays plain text. Examples are a link to another org, to
-  an unknown or removed workspace, or to a workspace that the reader may
-  not see.
+- Every other link is not a chip. In chat text, it is a link, as
+  [Chat links](chat-links.md) says (chat link decision 1 D). Examples are
+  a link to another org, to an unknown or removed workspace, or to a
+  workspace that the reader may not see.
 - Reason: a person sees only the workspaces of the orgs where they are a
   member, as
   [Orgs and workspaces](isolation.md#orgs-and-workspaces) says.
-- A link of an earlier app domain stays plain text too. Reason: no change of
-  the domain is planned, and a plain link still works where the old domain
+- A link of an earlier app domain is not a chip either. Reason: no change of
+  the domain is planned, and its link still works where the old domain
   forwards to the new one.
 - Text such as `W-395` stays text, also when a workspace of the org has
   that label (decision 211).
@@ -133,15 +138,17 @@ number names a dated record, as
 - A Markdown link whose target is a workspace link, such as
   `[W-395](<link>)`, shows as the chip alone. Reason: an agent often writes
   links in Markdown.
-- A link in inline code or in a code block stays code. Reason: code shows
-  exact text.
+- A workspace link alone in inline code is a link inside its code box, not
+  a chip, as [Links in code](chat-links.md#links-in-code) says (chat link
+  decision 3 B). A workspace link in longer code or in a code block
+  stays code. Reason: code shows its exact text, which a chip hides.
 - A chip in a message or an answer is a link of the app. A press opens the
   page that its link names, in the same window, as the other links of the
   app do.
 - In the Mac app, [Navigation](desktop-app.md#navigation) states where the
   page opens.
-- A long word, such as a long link that stays plain text, breaks to fit the
-  line. Reason: a long link must not pass the edge of a phone screen.
+- A long word, such as a long link, breaks to fit the line. Reason: a long
+  link must not pass the edge of a phone screen.
 - A sent message keeps the plain link of each chip. The agent gets that
   link in the text of the message.
 - Reason: the link names the workspace by its ID, so its label and its name
@@ -167,6 +174,8 @@ number names a dated record, as
   the chips of attached files, as
   [The chip in the field](message-attachments.md#the-chip-in-the-field)
   says. A paste of formatted text keeps only its text.
+- An address that is not a chip stays text in the field. Reason: a press in
+  the field places the caret, as in other text.
 - A chip in the field is one unit of the text. Backspace and Delete remove
   it whole, and the arrow keys step over it.
 - A chip in the field shows its list mark in a cell at its start. A

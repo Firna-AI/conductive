@@ -6,6 +6,7 @@ import {
 } from '../../../../screens/workspaceState'
 
 const relatedDocs = [
+  'docs/protocol/chat-links.md',
   'docs/protocol/chat-markdown.md',
   'docs/protocol/workspace-links.md',
   'docs/protocol/port-previews.md',

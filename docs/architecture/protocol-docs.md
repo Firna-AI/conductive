@@ -23,7 +23,8 @@ This page lists each protocol doc and what it covers.
     row, which moves, reassigns, renames, and archives the workspace.
   - [Workspace tools](../protocol/workspace-tools.md)
     - [Port previews](../protocol/port-previews.md): detected servers, manual
-      opening, preview tabs, and the relay requirement.
+      opening, the open from a local address in the chat, preview tabs,
+      and the relay requirement.
 - [Chat and events](../protocol/chat-and-events.md): sessions, messages, what
   the chat shows, and the events.
   - [Messages and attachments](../protocol/messages-and-attachments.md)
@@ -134,6 +135,9 @@ This page lists each protocol doc and what it covers.
   - [Chat tables](../protocol/chat-tables.md): the tables of agent
     messages, their short rows and wide tables, and the table rules that
     they share with the file preview.
+  - [Chat links](../protocol/chat-links.md): the links of agent messages
+    and of sent messages, the labels of Markdown links, local addresses,
+    and links in code.
 - [GitHub tokens](../protocol/github-tokens.md): the git and CLI account
   scope of a cloud computer, the author of each commit in a sandbox, and the
   GitHub actions of the Worker as a member.
