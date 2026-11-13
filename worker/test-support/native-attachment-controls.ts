@@ -29,11 +29,12 @@ export function nativeAttachmentControls(env: AppEnv, now: () => number) {
       id: string,
       chunks: readonly NativeByteChunk[],
     ) => {
+      let next = 0
       const source = new ReadableStream<Uint8Array>({
-        start(controller) {
-          for (const chunk of chunks)
-            controller.enqueue(new Uint8Array(chunk.sizeBytes).fill(chunk.fill))
-          controller.close()
+        pull(controller) {
+          const chunk = chunks[next++]
+          if (!chunk) return controller.close()
+          controller.enqueue(new Uint8Array(chunk.sizeBytes).fill(chunk.fill))
         },
       })
       return storeAttachment(env, input, source, { now, newId: () => id })

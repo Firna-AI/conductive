@@ -104,11 +104,11 @@ it('passes the counted raw body through native FixedLengthStream into real R2 wi
   }
 })
 
-it('accepts exactly 25,000,000 raw bytes and rejects a larger declared file', async () => {
+it('accepts exactly 100,000,000 raw bytes and rejects a larger declared file', async () => {
   const fixture = await createFixture()
-  const bytes = new Uint8Array(25_000_000)
+  const bytes = new Uint8Array(100_000_000)
   bytes[0] = 255
-  bytes[24_999_999] = 128
+  bytes[99_999_999] = 128
   const response = await upload(fixture, bytes)
   expect(response.status).toBe(201)
   const result = {
@@ -124,12 +124,12 @@ it('accepts exactly 25,000,000 raw bytes and rejects a larger declared file', as
   expect(
     Buffer.compare(Buffer.from(await stored.arrayBuffer()), Buffer.from(bytes)),
   ).toBe(0)
-  const oversized = await upload(fixture, new Uint8Array(25_000_001))
+  const oversized = await upload(fixture, new Uint8Array(100_000_001))
   expect(oversized.status).toBe(413)
   expect(await oversized.json()).toEqual({
     error: {
       code: 'attachment_too_large',
-      message: 'Each file can be up to 25 MB.',
+      message: 'Each file can be up to 100 MB.',
     },
   })
   expect((await attachmentBucket(fixture.env).list()).objects).toHaveLength(1)
@@ -145,7 +145,7 @@ it('accepts exactly 25,000,000 raw bytes and rejects a larger declared file', as
   expect(await overflowing.json()).toEqual({
     error: {
       code: 'attachment_too_large',
-      message: 'Each file can be up to 25 MB.',
+      message: 'Each file can be up to 100 MB.',
     },
   })
   expect((await attachmentBucket(fixture.env).list()).objects).toHaveLength(1)
