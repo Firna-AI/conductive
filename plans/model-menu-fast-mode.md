@@ -807,20 +807,20 @@ Depends on: every other milestone
       failed. The same files pass from `/tmp` on main and on this branch.
       Some of them check that a command does not name `/home/user`. Under
       parallel agent load, the Worker harness setup timed out.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
       once, and report.
-- [ ] Delete this plan when the `plans` skill says, under "Deleting the
+- [x] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
-- [ ] Open the pull request. Its description gives the decisions and the
+- [x] Open the pull request. Its description gives the decisions and the
       design calls of this plan with their dates, a permalink to this plan,
       and the follow-up items that the change adds.
 
 ## Post-merge follow-up (non-blocking)
 
-- [ ] On the test deployment, send fast messages with real logins: a Claude
+- [x] Moved to `plans/follow-ups/fast-mode-real-login-check.md`. On the test deployment, send fast messages with real logins: a Claude
       subscription with and without usage credits, a Claude API key, and an
       OpenAI API key on GPT-6.1 Sol. Check the speed and the state of each.
