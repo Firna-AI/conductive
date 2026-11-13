@@ -203,6 +203,11 @@ On a phone, use a long press.
 File and diff tabs share the row on a computer.
 A phone shows the session tabs there.
 
+Each tab in the row keeps your place when you open another tab or another workspace.
+A session tab returns to the message you read.
+If you were at the end of the chat, it shows the newest messages.
+Reloading the page forgets these places.
+
 Closing a session keeps its conversation in **Session history**.
 If its agent is working, closing asks first because it stops the turn.
 Open **Session history** to reopen the conversation.

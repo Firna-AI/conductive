@@ -40,6 +40,11 @@ type Resource = 'tree' | 'changes'
  */
 export class WorkspaceFiles {
   readonly client: FilesClient
+  /**
+   * The scroll offset of each file and diff tab of the workspace, by tab and
+   * view, which stays while the app keeps the store. A reload forgets it.
+   */
+  readonly scrollPlaces = new Map<string, number>()
   private readonly subscribeToStream: FilesSubscribe
   private sync: FilesSync = emptySync
   private snapshot: FilesSnapshot = {

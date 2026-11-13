@@ -74,3 +74,18 @@
 .messageBody li > :is(h1, h2, h3, h4, h5, h6) + :is(p, pre, div, ol, ul) {
   margin-top: 6px;
 }
+
+/*
+ * One row of the transcript, which holds the key of the reader's place. It
+ * lays out its parts as the mockups' transcript does, and an empty row,
+ * such as an answer with no text, takes no space and no gap.
+ */
+.row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-chat-gap);
+}
+
+.row:empty {
+  display: none;
+}

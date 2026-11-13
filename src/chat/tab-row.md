@@ -1,8 +1,8 @@
 # The tab row
 
 This guide belongs to [the chat](README.md). It gives the rules of the one
-order of the session, file, and diff tabs, the drag, the tab menu, and the
-scroll of the row.
+order of the session, file, and diff tabs, the drag, the tab menu, the
+scroll of the row, and the reader's place that each tab keeps.
 [The tab row](../../docs/protocol/agents-and-sessions.md#the-tab-row) states
 the requirements.
 
@@ -106,3 +106,16 @@ the requirements.
   drop place again after each scroll. This scroll starts only after the
   pointer moves, so a long press that holds still scrolls nothing, and its
   release opens the tab menu.
+- Each tab keeps the reader's place while another tab, workspace, or page
+  shows, as
+  [The scroll of the chat](../../docs/protocol/chat-and-events.md#the-scroll-of-the-chat)
+  says. `ChatController.places` keeps the place of each session tab: the
+  bottom, or the key of the top row in view with the distance of its top
+  below the top of the box. `TranscriptView` puts each entry, pending
+  message, and the running turn in one row with a `data-row` key, which
+  lays out its parts as the transcript does. The keeper of the reader's
+  place in `components/reading-place.ts` writes the place at each note, and
+  a new keeper, for another session or a new mount, shows the kept place.
+  A row that left the transcript gives the bottom. The kept files of the
+  workspace keep the offset of each file and diff tab, as the
+  [Files README](../files/README.md#kept-scroll-offsets) says.

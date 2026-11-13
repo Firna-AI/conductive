@@ -4,6 +4,7 @@ import type { DeviceApprovalAction } from '../../shared/device'
 import type { TranscriptDetail } from '../../shared/sessions'
 import type { WorkspaceTab, WorkspaceView } from '../../shared/workspace-view'
 import { createChatApi, type WorkspaceTarget } from '../api/client'
+import type { ChatPlaces } from '../components/chat-place'
 import type { SessionReads } from '../links/session-reads'
 import { answerCommand, refreshDevices } from '../device/device-actions'
 import { browserTimers } from '../stream/workspace-stream'
@@ -74,6 +75,8 @@ export class ChatController {
    * it shows, from `start` or `show` to `hide` or `stop`.
    */
   readonly workspaceList: WorkspaceList
+  /** The reader's place in each session tab, while the app keeps the chat. */
+  readonly places: ChatPlaces = new Map()
   private readonly options: ChatControllerOptions
   private readonly store = new ChatStore()
   private context: ChatContext
