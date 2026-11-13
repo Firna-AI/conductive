@@ -15,6 +15,7 @@ import { ScreenLink } from '../common/ScreenLink'
 import { ShortcutTip } from '../common/ShortcutTip'
 import { TintedTheme, type ButtonTint } from '../common/tint'
 import {
+  agentActionCommand,
   agentActionLabels,
   barLabels,
   barMessageText,
@@ -48,7 +49,7 @@ function BarButton(props: {
     case 'agent':
       return (
         <ShortcutTip
-          command={action.action}
+          command={agentActionCommand(action.action)}
           label={agentActionLabels[action.action]}
         >
           <TintedTheme tint={tint}>

@@ -114,7 +114,8 @@ continues, and archives.
 | Checks failed | Fix checks | The agent |
 | Merge conflict | Resolve conflicts | The agent |
 | Changes requested | Address review | The agent |
-| An open pull request with local work, in any state | Commit and push | The agent |
+| An open pull request with changed files that are not committed, in any state | Commit and push | The agent |
+| An open pull request with only commits that no remote branch holds, in any state | Push | The agent |
 | Ready to merge, for a member who may merge | Merge, named by its method | The app |
 | Merged | Continue and Archive | The app |
 | No commits and no local work | None: "No commits yet" | None |
@@ -123,9 +124,18 @@ continues, and archives.
 - The bar counts the local work of the current branch: its changed files,
   also untracked files, and its commits that no remote branch holds.
 - Local work comes first (decision 228). While an open pull request has
-  local work, Commit and push takes the place of Merge and of the fixes. A
-  merged or a closed pull request is not open.
+  local work, Commit and push or Push takes the place of Merge and of the
+  fixes. A merged or a closed pull request is not open.
 - Reason: no merge leaves work behind in the sandbox.
+- The button names the step that the agent does. When a file is not
+  committed, the button is Commit and push, and its prompt asks the agent
+  to commit and push. When the local work is only commits, the button is
+  Push, and its prompt asks the agent to push the branch. The user chose
+  this on 12 November 2026.
+- Reason: Commit and push on a clean tree made members look for files that
+  were not committed.
+- Push and Commit and push share one command and one key, as
+  [the default keys](keyboard-shortcuts-keys.md#the-default-keys) say.
 - In each state that has a pull request, the number of the pull request
   opens it on GitHub. An arrow after the number marks the link. The bar has
   no other link to the pull request. The user chose this on 10 November

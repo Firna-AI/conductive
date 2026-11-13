@@ -97,7 +97,7 @@ export const reviewAndMergeFeatures: readonly ParityFeature[] = [
     area: 'review-and-merge',
     name: 'Commit and push',
     status: 'available',
-    note: 'Commit and push asks the agent to commit changed files and push the branch.',
+    note: 'Commit and push asks the agent to commit changed files and push the branch. With only unpushed commits, the button is Push.',
   },
   {
     id: 'pr-view',
@@ -118,7 +118,7 @@ export const reviewAndMergeFeatures: readonly ParityFeature[] = [
     area: 'review-and-merge',
     name: 'Suggested next action',
     status: 'available',
-    note: 'The pull request bar offers agent actions, Merge, and Continue. Open pull requests with uncommitted files or unpushed commits show Commit and push first.',
+    note: 'The pull request bar offers agent actions, Merge, and Continue. Open pull requests with uncommitted files show Commit and push first, and with only unpushed commits show Push first.',
   },
   {
     id: 'merge-conflict-help',
