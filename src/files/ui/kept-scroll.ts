@@ -6,12 +6,18 @@ import {
   type RefObject,
 } from 'react'
 
+/** The scroll offset of a box, down and sideways, as the box gives them. */
+export interface ScrollOffset {
+  top: number
+  left: number
+}
+
 /**
  * The scroll offsets of the file and diff tabs of one workspace, by tab and
  * view, and the tab that shows now.
  */
 export interface KeptScrollTab {
-  places: Map<string, number>
+  places: Map<string, ScrollOffset>
   /** The key of the shown tab, such as `file:src/app.ts`. */
   tab: string
 }
@@ -24,7 +30,8 @@ const readerInput = ['wheel', 'touchstart', 'pointerdown', 'keydown'] as const
 
 /**
  * The ref of the scroll box of `view`, such as `code` or `preview`, whose
- * offset the shown tab keeps. At its mount the box shows the kept offset.
+ * offset the shown tab keeps, down and sideways, because a line of code can
+ * be wider than the box. At its mount the box shows the kept offset.
  * Content that grows after the mount, such as a preview with pictures, can
  * be too short for it at first. So the box tries again at each change of
  * size, until it reaches the offset or the reader scrolls. Until then a
@@ -37,15 +44,23 @@ export function useKeptScroll(view: string): RefObject<HTMLDivElement | null> {
     const element = box.current
     if (!tab || !element) return
     const key = `${tab.tab}\n${view}`
-    const saved = tab.places.get(key) ?? 0
-    let waiting = saved > 0
+    const saved = tab.places.get(key) ?? { top: 0, left: 0 }
+    let waiting = saved.top > 0 || saved.left > 0
     const restore = () => {
       if (!waiting) return
-      element.scrollTop = saved
-      if (element.scrollTop >= saved - 1) waiting = false
+      element.scrollTop = saved.top
+      element.scrollLeft = saved.left
+      const reached = (now: number, kept: number) => now >= kept - 1
+      if (
+        reached(element.scrollTop, saved.top) &&
+        reached(element.scrollLeft, saved.left)
+      ) {
+        waiting = false
+      }
     }
     const keep = () => {
-      if (!waiting) tab.places.set(key, element.scrollTop)
+      if (waiting) return
+      tab.places.set(key, { top: element.scrollTop, left: element.scrollLeft })
     }
     const stopWaiting = () => {
       waiting = false

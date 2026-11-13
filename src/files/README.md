@@ -170,8 +170,8 @@ The shell supplies the design tokens as `--ui-*` CSS variables and the
 
 ### Kept scroll offsets
 
-Each file and diff tab of the centre keeps its scroll offset while another
-tab or workspace shows, as
+Each file and diff tab of the centre keeps its scroll offset, down and
+sideways, while another tab or workspace shows, as
 [The tab row](../../docs/protocol/agents-and-sessions.md#the-tab-row) says.
 `WorkspaceFiles.scrollPlaces` holds the offsets, by tab and view, for as
 long as the app keeps the store. The desktop tab page gives the shown tab
@@ -181,7 +181,9 @@ through the `KeptScroll` context of `ui/kept-scroll.ts`. `CodeView`,
 the context, such as a file page on a phone, keeps nothing. Content that
 grows after the mount gets the offset again at each change of size, until
 the box reaches it or the reader scrolls. `ui/kept-scroll.dom.test.tsx`
-tests it.
+tests the hook, and `TabScroll.test.tsx` of the
+[workspace files](../shell/workspace/files/) tests the tabs of the
+workspace screen.
 
 ## Labels of paths
 

@@ -116,6 +116,8 @@ the requirements.
   lays out its parts as the transcript does. The keeper of the reader's
   place in `components/reading-place.ts` writes the place at each note, and
   a new keeper, for another session or a new mount, shows the kept place.
-  A row that left the transcript gives the bottom. The kept files of the
+  A row that left the transcript gives the bottom. Each send of this tab,
+  also a fixed prompt while a file tab shows, puts the place of its session
+  at the bottom. The kept files of the
   workspace keep the offset of each file and diff tab, as the
   [Files README](../files/README.md#kept-scroll-offsets) says.

@@ -2,7 +2,12 @@
 import { act } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { workspaceSessions } from '../../../docs/mockups/src/fixtures/sessions'
-import { byRole, queryByText } from '../../test-support/dom-queries'
+import {
+  byRole,
+  queryByRole,
+  queryByText,
+} from '../../test-support/dom-queries'
+import { asMessageField, typeMessage } from '../../test-support/message-field'
 import { MOUNTED_TEST_TIMEOUT, press, waitFor } from '../../test-support/mount'
 import { said } from './event-kit'
 import {
@@ -82,6 +87,26 @@ describe('the place of each session tab', () => {
     await showPage(null)
     await waitFor(() => queryByText(late), 'the output that came')
     await resize()
+    expect(chat.topOf(chat.rowOf(older))).toBe(100)
+  })
+
+  it('keeps the read row of a session whose sent message still waits, when the tab shows again', async () => {
+    const { resize } = await mountLongTurn()
+    const chat = layOutChat()
+    await resize()
+    const box = await waitFor(
+      () => queryByRole('textbox', 'Message'),
+      'the message box',
+    )
+    typeMessage(asMessageField(box), 'Ship it.')
+    await press(byRole('button', 'Send'))
+    await waitFor(() => queryByText('Ship it.'), 'the waiting message')
+    await resize()
+    chat.read(chat.rowOf(older), 100)
+
+    await visitOtherTab()
+    await resize()
+    expect(queryByText('Ship it.')).not.toBeNull()
     expect(chat.topOf(chat.rowOf(older))).toBe(100)
   })
 

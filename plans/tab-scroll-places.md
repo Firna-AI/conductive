@@ -52,9 +52,19 @@ Design calls (my calls, 2026-11-13):
   Markdown file each keep their own offset. A page whose content grows after
   the mount, such as a preview with pictures, tries the saved offset again at
   each change of size, until it reaches it or the user scrolls.
-- The chat keeps the places of its session tabs in its `ChatController`.
-  The files of a workspace keep the places of its file and diff tabs in its
-  `WorkspaceFiles`. Both live as long as the kept workspace.
+- The chat keeps the places of its session tabs in its `ChatStore`, which
+  `ChatController.places` gives. Each send of this browser tab puts the
+  place of its session at the bottom, also while a file tab shows. The files
+  of a workspace keep the places of its file and diff tabs in its
+  `WorkspaceFiles`. Both live as long as the kept workspace. (Changed on
+  2026-11-13 after review finding 1: a fixed prompt sent while a file tab
+  showed kept the old place.)
+- A file or diff tab keeps its offset down and sideways, because a line of
+  code can be wider than the box. (Review finding 5, 2026-11-13.)
+
+Open decision: review finding 2 asks whether a tab that the user closes and
+opens again starts at its last place or afresh. The code keeps the last
+place until the user answers.
 
 Contract owners:
 
@@ -69,54 +79,54 @@ Depends on: none
 
 State the new requirements of the tab row and of the chat scroll.
 
-- [ ] Add the place of each tab to "The scroll of the chat" in
+- [x] Add the place of each tab to "The scroll of the chat" in
       `docs/protocol/chat-and-events.md`, with its reason.
-- [ ] Add the place of file and diff tabs to "The tab row" in
+- [x] Add the place of file and diff tabs to "The tab row" in
       `docs/protocol/agents-and-sessions.md`, with its reason.
-- [ ] Read both legal pages and each public guide in full. Update each
+- [x] Read both legal pages and each public guide in full. Update each
       sentence that restates the scroll of the chat or of a tab.
-- [ ] Check the row of the comparison page in
+- [x] Check the row of the comparison page in
       `src/marketing/from-conductor/` for a listed feature that this changes.
 
 ## Milestone 2: The place of a chat tab
 
 Depends on: 1
 
-- [ ] Wrap each transcript entry, pending message, and the running turn in
+- [x] Wrap each transcript entry, pending message, and the running turn in
       one row element with a `data-row` key, in `TranscriptView.tsx`.
-- [ ] Add a store of chat places to `ChatController`: the bottom, or a row
+- [x] Add a store of chat places to `ChatController`: the bottom, or a row
       key with its offset from the top of the box.
-- [ ] Give `useReadingPlace` the store and the shown session. A new
+- [x] Give `useReadingPlace` the store and the shown session. A new
       `ReadingPlace` restores the saved place, then writes the place at each
       note. A change of session builds a new `ReadingPlace`.
-- [ ] Tests in `ReadingPlace.dom.test.tsx` or a new test file: a session
+- [x] Tests in `ReadingPlace.dom.test.tsx` or a new test file: a session
       switch, a file tab and back, output while away at the bottom and
       higher up, a lost anchor row, and a send after a return.
-- [ ] Update `src/chat/README.md` and `src/chat/transcript.md` or
+- [x] Update `src/chat/README.md` and `src/chat/transcript.md` or
       `tab-row.md`.
 
 ## Milestone 3: The place of a file or diff tab
 
 Depends on: 1
 
-- [ ] Add a store of tab places to `WorkspaceFiles`.
-- [ ] Add a hook that restores and writes the scroll offset of a box for a
+- [x] Add a store of tab places to `WorkspaceFiles`.
+- [x] Add a hook that restores and writes the scroll offset of a box for a
       tab key and a view. It retries at each change of size until it
       reaches the offset or the user scrolls.
-- [ ] Use it in `CodeView`, `MarkdownView`, and `DiffView` through a
+- [x] Use it in `CodeView`, `MarkdownView`, and `DiffView` through a
       context that the desktop tab page gives.
-- [ ] Tests: two file tabs, a diff tab, the chat between them, and a late
+- [x] Tests: two file tabs, a diff tab, the chat between them, and a late
       growth of the content.
-- [ ] Update `src/files/README.md`.
+- [x] Update `src/files/README.md`.
 
 ## Milestone 4: Verification, commit, review, and pull request
 
 Depends on: every other milestone
 
 - [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
-- [ ] Check the change in a browser on `npm run dev`: session tabs, file and
+- [x] Check the change in a browser on `npm run dev`: session tabs, file and
       diff tabs, and a return from another workspace.
-- [ ] Commit with Conventional Commits and push the branch.
+- [x] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record

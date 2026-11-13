@@ -1,4 +1,5 @@
 import type { FilesClient } from '../api/files-client'
+import type { ScrollOffset } from '../ui/kept-scroll'
 import { parseStreamMessage, type StreamEnvelope } from '../api/parse-events'
 import {
   noFailedRepairs,
@@ -44,7 +45,7 @@ export class WorkspaceFiles {
    * The scroll offset of each file and diff tab of the workspace, by tab and
    * view, which stays while the app keeps the store. A reload forgets it.
    */
-  readonly scrollPlaces = new Map<string, number>()
+  readonly scrollPlaces = new Map<string, ScrollOffset>()
   private readonly subscribeToStream: FilesSubscribe
   private sync: FilesSync = emptySync
   private snapshot: FilesSnapshot = {

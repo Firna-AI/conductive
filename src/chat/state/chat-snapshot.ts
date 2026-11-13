@@ -1,3 +1,4 @@
+import type { ChatPlaces } from '../components/chat-place'
 import type { DraftFile } from '../../app/draft-files'
 import type { AgentModel } from '../../shared/agents'
 import type { UserMessage } from '../../shared/messages'
@@ -229,6 +230,13 @@ export function anyTurnRuns(snapshot: ChatSnapshot): boolean {
 
 /** Holds the snapshot, and tells React when it changes. */
 export class ChatStore {
+  /**
+   * The reader's place in each session tab, which stays while the app keeps
+   * the chat. It is no part of the snapshot, because the chat reads it only
+   * when a session shows. A send of this tab puts its session at the bottom,
+   * also while another tab shows, as `showWaiting` says.
+   */
+  readonly places: ChatPlaces = new Map()
   private snapshot: ChatSnapshot = initialSnapshot
   private readonly listeners = new Set<() => void>()
 

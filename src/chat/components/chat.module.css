@@ -77,8 +77,9 @@
 
 /*
  * One row of the transcript, which holds the key of the reader's place. It
- * lays out its parts as the mockups' transcript does, and an empty row,
- * such as an answer with no text, takes no space and no gap.
+ * lays out its parts as the mockups' transcript does. A row whose part
+ * renders nothing takes no space and no gap, as the part did before it had
+ * a row.
  */
 .row {
   display: flex;
