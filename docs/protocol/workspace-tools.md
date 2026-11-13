@@ -7,8 +7,11 @@ previews, and the desktop. It belongs to
 provider, the org image, and the startup script. The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
-says. A terminal links decision number names a decision of the change
-that makes the addresses in the terminal open. The [mockup catalogue](../mockups/catalogue.md) draws the tools at
+says. A chat link decision number names a decision of the change that
+makes each web address of chat text a link, as
+[Chat links](chat-links.md) says. A terminal links decision number names
+a decision of the change that makes the addresses in the terminal open.
+The [mockup catalogue](../mockups/catalogue.md) draws the tools at
 `app/files` and `app/tools`.
 
 ## Files and changes
@@ -23,6 +26,17 @@ that makes the addresses in the terminal open. The [mockup catalogue](../mockups
   the temporary tab, as [Temporary tabs](temporary-tabs.md) says.
 - Markdown shows rendered, with a switch to its source. Code shows with line
   numbers and syntax colours.
+- A link of the Markdown preview has the look and the title of a
+  [link of chat text](chat-links.md) (chat link decision 1 D). A link to a
+  page of the app opens that page in the app, in the same window, as in
+  chat text. Reason: a link of the app in a file then works in the Mac app
+  too.
+- A link that names neither a page of the app nor a
+  [local address](chat-links.md#local-addresses) opens a new tab with
+  `noopener noreferrer`, as in chat text.
+- Unlike chat text, the Markdown preview also links a `mailto` address,
+  an address with a user name or a password, and an address of the app
+  that names no page.
 - The header of a file tab can copy and download the file.
 - Reading a file has a size limit of 5 MiB, or 5,242,880 bytes.
   Reason: Boat's file read stops at 5 MiB, so a file read that falls back

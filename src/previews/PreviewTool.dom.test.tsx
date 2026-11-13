@@ -83,7 +83,13 @@ async function mountTool(fetch: ApiFetch, tools: ToolEvents) {
   await mount(
     <PreviewTool
       now={() => FAKE_TIME}
-      route={{ previewId: null, href: (id) => `#${id}`, navigate }}
+      route={{
+        previewId: null,
+        port: null,
+        href: (id) => `#${id}`,
+        navigate,
+        replace: vi.fn(),
+      }}
       touch={false}
       workspace={{ orgId: org, workspaceId, fetch, subscribe: tools.subscribe }}
     />,

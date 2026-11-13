@@ -1,0 +1,11 @@
+/*
+ * A link in untrusted text: the colour and the underline of a link in the
+ * Markdown preview of a file. The font, the size, and the weight come from
+ * the text around it. A long link breaks anywhere to fit the line.
+ */
+.link {
+  color: var(--ui-link);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  overflow-wrap: anywhere;
+}

@@ -19,6 +19,7 @@
     "open-a-session-link",
     "open-a-terminal-link",
     "mention-a-file",
-    "drop-a-file"
+    "drop-a-file",
+    "open-a-local-server"
   ]
 }

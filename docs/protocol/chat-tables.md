@@ -45,8 +45,8 @@ at `app/chat/tables`, and in the open work of a turn at
   it.
 - With no colon, the column keeps its text at the start.
 - The header cell of a column takes the alignment of its column too.
-- The text of a cell shows its inline code, its strong text, and its
-  workspace chips, as in a paragraph.
+- The text of a cell shows its inline code, its strong text, its links,
+  and its workspace chips, as in a paragraph.
 - A row with more cells than the header row shows only the cells under
   the columns. The other cells do not show.
 

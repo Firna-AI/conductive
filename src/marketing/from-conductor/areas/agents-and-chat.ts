@@ -147,7 +147,7 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     area: 'agents-and-chat',
     name: 'Chat links',
     status: 'planned',
-    note: 'Clickable web links and labelled Markdown links are planned for chat. Local server links will open the workspace preview.',
+    note: 'Web links, labelled Markdown links, and addresses alone in inline code are planned for chat. Local server links will open the workspace preview.',
     due: null,
   },
   {

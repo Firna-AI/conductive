@@ -1,10 +1,11 @@
 import { describe, expect, test } from 'vitest'
 import { routes } from '../../app/router'
+import { webAddressParts } from '../../markdown/web-links'
 import type { Workspace } from '../../shared/workspaces'
 import { FAKE_IDS, FAKE_ORIGIN } from '../../test-support/fixtures/core'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
 import { chatParts, type ChatPart } from './chat-parts'
-import { linkTarget, textParts, type WorkspaceLinks } from './workspace-links'
+import { linkTarget, type WorkspaceLinks } from './workspace-links'
 
 const { org } = FAKE_IDS
 const listed = workspaceFixtures().workspaces.workspaces
@@ -34,7 +35,7 @@ const messageParts = (text: string, list: WorkspaceLinks = links) =>
 
 /** The parts of the text of a message field, with a chip for each link. */
 function fieldShapes(text: string) {
-  return textParts(text).map((part) => {
+  return webAddressParts(text).map((part) => {
     const target = part.kind === 'link' ? linkTarget(part.href, links) : null
     return target
       ? { chip: target.workspace.id, to: target.to }
@@ -97,6 +98,22 @@ describe('the workspace links of a text', () => {
     const odd = address(`${routes.workspace(org, first.id)}/../${second.id}`)
     expect(shapes(messageParts(odd))).toEqual([
       { chip: second.id, to: routes.workspace(org, second.id) },
+    ])
+  })
+
+  test('doubled slashes keep chips on the app page, with the tab, query, and hash', () => {
+    const path = routes.workspace(org, first.id)
+    const tab = routes.workspace(org, first.id, 'files', 'src/cart.ts')
+    for (const text of [address(`/${path}`), address(`//${path}`)]) {
+      expect(shapes(messageParts(text))).toEqual([{ chip: first.id, to: path }])
+      expect(fieldShapes(text)).toEqual([{ chip: first.id, to: path }])
+    }
+    const text = address(`/${tab}?line=2#diff`)
+    expect(shapes(messageParts(text))).toEqual([
+      { chip: first.id, to: `${tab}?line=2#diff` },
+    ])
+    expect(fieldShapes(text)).toEqual([
+      { chip: first.id, to: `${tab}?line=2#diff` },
     ])
   })
 

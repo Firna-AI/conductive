@@ -1,16 +1,6 @@
 import { parseRoute, routes } from '../../app/router'
+import { appAddress } from '../../markdown/web-links'
 import type { Workspace } from '../../shared/workspaces'
-
-/** A part of the text of a message field: plain text, or a link. */
-export type TextPart =
-  | { kind: 'text'; text: string }
-  | {
-      kind: 'link'
-      /** The web address of the link. */
-      href: string
-      /** The link as the text has it, such as a Markdown link. */
-      source: string
-    }
 
 /** The workspaces whose links show as chips: the visible ones of one org. */
 export interface WorkspaceLinks {
@@ -29,59 +19,6 @@ export interface LinkTarget {
   to: string
   /** The session of a session link, or null for another page of the workspace. */
   sessionId: string | null
-}
-
-/** The target of a Markdown link: a web address, which can stand in angle brackets. */
-const markdownTarget = /\(<?(https?:\/\/[^\s<>)`]+)>?\)/y
-
-/**
- * A bare web address. It does not end with punctuation, so a full stop after
- * it stays text. A web address holds no backtick, so a backtick after it
- * ends it.
- */
-const bareLink = /https?:\/\/[^\s<>`]*[^\s<>`.,;:!?'")\]]/y
-
-/** A Markdown link with its label on one line, or a bare web address. */
-const linkPattern = new RegExp(
-  `\\[[^\\]\\n]*\\]${markdownTarget.source}|${bareLink.source}`,
-  'g',
-)
-
-/**
- * The target of a Markdown link that starts at `at`, such as `(<address>)`:
- * its web address and its length, or null.
- */
-export function markdownTargetAt(
-  text: string,
-  at: number,
-): { href: string; length: number } | null {
-  markdownTarget.lastIndex = at
-  const match = markdownTarget.exec(text)
-  return match ? { href: match[1] ?? '', length: match[0].length } : null
-}
-
-/** The bare web address that starts at `at`, or null. */
-export function bareLinkAt(text: string, at: number): string | null {
-  bareLink.lastIndex = at
-  return bareLink.exec(text)?.[0] ?? null
-}
-
-/**
- * Splits the text of a message field into plain text and links. A message
- * field keeps plain text, so it reads no code: a link in backticks counts.
- */
-export function textParts(text: string): TextPart[] {
-  const parts: TextPart[] = []
-  let end = 0
-  for (const match of text.matchAll(linkPattern)) {
-    if (match.index > end) {
-      parts.push({ kind: 'text', text: text.slice(end, match.index) })
-    }
-    parts.push({ kind: 'link', href: match[1] ?? match[0], source: match[0] })
-    end = match.index + match[0].length
-  }
-  if (end < text.length) parts.push({ kind: 'text', text: text.slice(end) })
-  return parts
 }
 
 /** The origin of a link, such as the link of a workspace, or null. */
@@ -136,7 +73,7 @@ export function linkTarget(
   if (!workspace || originOf(workspace.link) !== url.origin) return undefined
   return {
     workspace,
-    to: `${url.pathname}${url.search}${url.hash}`,
+    to: appAddress(url),
     sessionId: route.session ?? null,
   }
 }

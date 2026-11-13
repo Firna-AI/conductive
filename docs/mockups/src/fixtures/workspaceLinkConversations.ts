@@ -20,8 +20,8 @@ export const workspaceLinkDraft = `Check that the suggestions stay closed when $
 export const followUpTask = `Debounce the address lookups of ${checkoutAutocomplete.link} to 250 ms, so we stay under the rate limit of the places proxy.`
 
 /**
- * A workspace of Futex, another org of Cal. In a chat of Acme its link
- * stays plain text.
+ * A workspace of Futex, another org of Cal. In a chat of Acme its link is
+ * a link of the app, not a chip.
  */
 const futexLink = workspaceLink(
   'YGgla7tCO_DSRXWe0F29xaLU5veBuBzeIWNkb3nSvPk',
@@ -47,8 +47,8 @@ const linkAnswer: readonly string[] = [
  * The chats of Checkout address autocomplete after a message that links
  * another workspace. `history` is the finished turn before it. In the
  * answer, a Markdown link and a bare link to a workspace of Acme show as
- * chips, and a link in code stays code. A link to a workspace of another
- * org stays plain text.
+ * chips, and a link inside longer code stays code. A link to a workspace
+ * of another org is a link of the app, not a chip.
  */
 export function workspaceLinkConversations(history: readonly ChatItem[]) {
   const ask: ChatItem = {

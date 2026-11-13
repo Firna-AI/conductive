@@ -26,7 +26,7 @@ how a screen is built, and links to the other pages.
 | `app/new-workspace` | An empty chat, the first build of a new org, a repository that waits for its build, its error, files on the first message, the model menu with Fast on, the dialog, a pasted workspace link, the start, a queued second message, the first turn, a failed start, Try again |
 | `app/routines` | The routines of the org, a routine, its triggers, its runs, and a run workspace |
 | `app/org-settings`  | General with Delete org, then Repositories and Cloud computer with the notice of a repository change, the first build of a new org, and Members |
-| `app/chat`          | A finished turn with its work folded, then running turns, turns that an agent stopped, open work, tables in replies, lists in replies, headings in replies, lost data, lost updates, unread files, the time limit of background work, and a fast turn at standard speed |
+| `app/chat`          | A finished turn with its work folded, then running turns, turns that an agent stopped, open work, tables in replies, lists in replies, headings in replies, links in chat text, lost data, lost updates, unread files, the time limit of background work, and a fast turn at standard speed |
 | `app/mac-commands`  | A command that an agent runs on the Mac of the sender, in the chat            |
 | `app/sessions`      | A new session, the history, closing one while it works, and a linked session  |
 | `app/reassign`      | The owner of a workspace, its reassign menu, a member's view, a stopped turn  |
@@ -42,7 +42,7 @@ how a screen is built, and links to the other pages.
 | `app/tools`         | The terminal tabs and their states, a link in the terminal under the pointer, then the Preview tool with its detected servers and its failed list repair, and the hidden Desktop, kept for its return |
 | `app/panels`        | The right column, widened by the handle on its inner edge, and then hidden    |
 | `mac-app`           | The Mac app: its window, the waitlist, its device commands, This Mac, Keyboard shortcuts, and the palette with keys |
-| `user-flows`        | Sign up, sign up during open sign-up, join with an invite link, create a workspace, create one in the dialog, reopen it, open one from the palette, send feedback, archive one from its row, create an org, run a Mac command, create a routine, link a workspace, open a session link, open a terminal link, merge and continue, mention a file, drop a file |
+| `user-flows`        | Sign up, sign up during open sign-up, join with an invite link, create a workspace, create one in the dialog, reopen it, open one from the palette, send feedback, archive one from its row, create an org, run a Mac command, create a routine, link a workspace, open a session link, open a terminal link, merge and continue, mention a file, drop a file, open a local server |
 
 A folder page shows at most five screens, saved states included. A folder
 with child folders shows only its canonical screen, as `marketing`, `marketing/docs`, `app`,

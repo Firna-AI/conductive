@@ -21,7 +21,8 @@ preview.
 
 Contract owners:
 
-- [Chat Markdown](../docs/protocol/chat-markdown.md).
+- [Chat Markdown](../docs/protocol/chat-markdown.md), and its linked page
+  [Chat links](../docs/protocol/chat-links.md).
 - [Workspace links](../docs/protocol/workspace-links.md).
 - [Port previews](../docs/protocol/port-previews.md).
 - [Workspace tools](../docs/protocol/workspace-tools.md), for the file
@@ -42,8 +43,8 @@ Replaced ways:
   `src/chat/links/workspace-links.ts` and the link reading of
   `docs/mockups/src/components/chat/workspaceLinks.ts` → the reader of
   `src/markdown/web-links.ts`. Consumers: `chatParts`, `textParts` of the
-  message field, `MessageText` of the mockups, and their tests. Moved and
-  deleted in Milestone 3.
+  message field, `MessageText`, `WebLinkText`, and `DraftText` of the
+  mockups, and their tests. Moved and deleted in Milestone 3.
 
 ## Terms
 
@@ -380,7 +381,7 @@ These calls are mine, made on 10 November 2026 under the decision test.
 - An app address is the raw segments of the path, without decoding,
   joined with one slash, then the query and the hash of the link. Chips
   use it too. This applies option D of
-  `plans/follow-ups/chip-leading-slashes-wrong-host.md` to every page.
+  [plans/follow-ups/chip-leading-slashes-wrong-host.md](https://github.com/Firna-AI/conductive/blob/e31da6c90/plans/follow-ups/chip-leading-slashes-wrong-host.md) to every page.
 - The reader checks the app origin before the local hosts, because the
   app origin of `npm run dev`, `http://127.0.0.1:5173`, is a local address.
 - Every other link opens in a new tab with `noopener noreferrer`, so other
@@ -417,6 +418,31 @@ These calls are mine, made on 10 November 2026 under the decision test.
   Milestone 3 moves them to the shared reader, with no change to a screen,
   because the shared reader does not exist before Milestone 3.
 
+The mockups of Milestone 1 settled these details on 13 November 2026,
+under the same test:
+
+- In a sent message, only the address of a Markdown link is the link. Its
+  brackets and its label stay text, because each address of chat text is
+  a link, and a message of a member shows as typed.
+- A message line of the work of a turn reads its text as an answer does,
+  so its Markdown links show as their labels.
+- A label that reads as an address shows the address as the text has it,
+  as a bare address does. The title gives the address as the URL parser
+  writes it.
+- The label test ignores the spaces at the ends of a label and the case of
+  `www.`. The invisible characters are the default ignorable code points
+  of Unicode, such as a zero-width space.
+- A local address without a port names the default port of its scheme:
+  80 for `http`, and 443 for `https`.
+
+The protocol docs of Milestone 2 made this call of this change on 13
+November 2026, under the same test:
+
+- The Markdown of an image, such as `![alt](address)`, shows as typed, and
+  its address is a link. Its `[alt](address)` part is not a label link.
+  Reason: [Agent instructions](../docs/protocol/agent-instructions.md)
+  relies on the rule that the chat shows the Markdown of an image as text.
+
 ## Components
 
 - `src/markdown/web-links.ts`: the one reader of addresses for chat text,
@@ -444,31 +470,31 @@ Depends on: none
 Draw the links of chat text, the local address flow, and the changed link
 screen of another org, on desktop and on a phone.
 
-- [ ] Add `TextLink` with its CSS module in
+- [x] Add `TextLink` with its CSS module in
       `docs/mockups/src/components/common/`, as the design says.
-- [ ] Draw the link parts in `MessageText` and
+- [x] Draw the link parts in `MessageText` and
       `docs/mockups/src/components/chat/workspaceLinks.ts`: bare
       addresses, labels of Markdown links in answers, a label that is an
       address, an address alone in inline code, and a local address.
-- [ ] Add the page `app/chat/links`, with these five screens:
-  - [ ] An answer with a bare pull request address, a Markdown link as
+- [x] Add the page `app/chat/links`, with these five screens:
+  - [x] An answer with a bare pull request address, a Markdown link as
         its label, and an address alone in inline code.
-  - [ ] A Markdown link whose label is another address. The real address
+  - [x] A Markdown link whose label is another address. The real address
         shows.
-  - [ ] An answer with `http://localhost:3000`. A press opens
+  - [x] An answer with `http://localhost:3000`. A press opens
         `app/tools/preview`.
-  - [ ] A sent message with a bare address and a Markdown link as typed.
-  - [ ] A closed and an open message line of a folded turn, with a link.
+  - [x] A sent message with a bare address and a Markdown link as typed.
+  - [x] A closed and an open message line of a folded turn, with a link.
 - [ ] Draw the answer of decision 5, when it is B or C.
-- [ ] Add the user flow `user-flows/open-a-local-server`: the answer with
+- [x] Add the user flow `user-flows/open-a-local-server`: the answer with
       the local address, then the port preview of port 3000.
-- [ ] Update `app/workspace-links/messages`: the link to a workspace of
+- [x] Update `app/workspace-links/messages`: the link to a workspace of
       another org is now a link that opens in the app.
-- [ ] Update `docs/mockups/catalogue.md` for the new page, the flow, and
+- [x] Update `docs/mockups/catalogue.md` for the new page, the flow, and
       the changed screen.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages on both
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages on both
       sizes with `npm run mockups:serve`.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
 
 ## Milestone 2: Documentation and protocol
@@ -483,21 +509,27 @@ addresses, and of links in the file preview.
       reader can observe. Change the rule that other links show as typed,
       and the rejection that names links as a reason. Define the chat
       link decision number.
-- [ ] `docs/protocol/workspace-links.md`: a link that is not a chip is a
+  - The section is the linked page `docs/protocol/chat-links.md`, which
+    also defines the chat link decision number and holds the label test.
+    Waits for decision 5: each rule of a label link past the label test.
+    Waits for decision 6: what a copy of a label link gives.
+- [x] `docs/protocol/workspace-links.md`: a link that is not a chip is a
       link, and an address alone in inline code is a link in code. Change
       "No link makes the app send a request that reaches another org", so
       that only a press opens a page of another org.
-- [ ] `docs/protocol/port-previews.md`: a press on a local address of the
+- [x] `docs/protocol/port-previews.md`: a press on a local address of the
       chat opens its preview, as a press on a listed server does.
 - [ ] `docs/protocol/workspace-tools.md`: a link of the file preview opens
       as a link of the chat does, with the answer of decision 4.
-- [ ] Read both legal pages in full, `src/marketing/terms.ts` and
+  - Waits for decision 4: the rule for a link to a local address in a
+    file. The rest of the TODO is in the doc.
+- [x] Read both legal pages in full, `src/marketing/terms.ts` and
       `src/marketing/privacy.ts`. Update each sentence that restates a
       changed fact.
-- [ ] Read each public guide in `src/marketing/docs/` in full. Update
+- [x] Read each public guide in `src/marketing/docs/` in full. Update
       each sentence that restates a changed fact, as
       [Website docs](../docs/protocol/website-docs.md) says.
-- [ ] Check the rows of `src/marketing/from-conductor/` for a feature that
+- [x] Check the rows of `src/marketing/from-conductor/` for a feature that
       this change ships, and update its status or note.
 
 ## Milestone 3: The shared link reader
@@ -507,20 +539,20 @@ Depends on: 2
 Add the one reader of addresses, and build each app address from the
 route.
 
-- [ ] Add `src/markdown/web-links.ts` with the kinds of the design and
+- [x] Add `src/markdown/web-links.ts` with the kinds of the design and
       the end rule of a bare address.
-- [ ] Move `chatParts` and `textParts` to its bare address reader. Delete
+- [x] Move `chatParts` and `textParts` to its bare address reader. Delete
       `bareLinkAt` and `bareLink` of `src/chat/links/workspace-links.ts`.
-- [ ] Move `docs/mockups/src/components/chat/workspaceLinks.ts` to the
+- [x] Move `docs/mockups/src/components/chat/workspaceLinks.ts` to the
       shared reader. Run `npm run mockups:check`. No screen changes.
-- [ ] Build the address of each chip with the app address builder. Add
+- [x] Build the address of each chip with the app address builder. Add
       the doubled-slash case of
-      `plans/follow-ups/chip-leading-slashes-wrong-host.md` to
+      [plans/follow-ups/chip-leading-slashes-wrong-host.md](https://github.com/Firna-AI/conductive/blob/e31da6c90/plans/follow-ups/chip-leading-slashes-wrong-host.md) to
       `src/chat/links/workspace-links.test.ts`. Delete that item.
-- [ ] Add `src/markdown/web-links.test.ts`: each kind, the refused schemes
+- [x] Add `src/markdown/web-links.test.ts`: each kind, the refused schemes
       and credentials, the end rule, the local hosts with and without a
       port, and an app origin on a local host.
-- [ ] Name the reader in [Agent text](../src/chat/agent-text.md).
+- [x] Name the reader in [Agent text](../src/chat/agent-text.md).
 
 ## Milestone 4: The Preview tool opens a port from its address
 
@@ -528,14 +560,14 @@ Tags: ui
 
 Depends on: 2
 
-- [ ] Read a port from the address of the Preview tool in
+- [x] Read a port from the address of the Preview tool in
       `src/shell/workspace/tools/tool-address.ts`, and build that address.
-- [ ] In `src/previews/PreviewTool.tsx`, open the port of the address with
+- [x] In `src/previews/PreviewTool.tsx`, open the port of the address with
       the same request and checks as a typed port. An open port shows its
       preview with no request. Then the address names the preview.
-- [ ] Test the open of a port from the address, the open port, and a
+- [x] Test the open of a port from the address, the open port, and a
       failed open.
-- [ ] Update the [previews README](../src/previews/README.md).
+- [x] Update the [previews README](../src/previews/README.md).
 
 ## Milestone 5: Links in chat text
 

@@ -173,10 +173,18 @@ tools.
 | ------- | ---------- |
 | `terminal` | The Terminal tool |
 | `preview`, `preview/<previewId>` | The Preview tool, with that preview |
+| `preview/port/<port>` | The Preview tool, which shows or opens the preview of that port |
 | `desktop` | The Terminal tool, because Desktop is hidden |
 
 - An address that names a tool shows it and saves it as `tool` of the
   view. Without one, the saved view names the tool.
+- `previewPortHref` gives the address of a port. Its port is a whole
+  number from 1 to 65535, with no leading zero. Another value shows the
+  Preview tool with no preview and no port.
+- The Preview tool shows or opens the preview of the port of the address,
+  as [the previews](../../previews/README.md#behaviour) say. Then the
+  address of that preview takes the place of the address of the port, with
+  no new history entry. After a failed open, `preview` takes its place.
 - The `desktop` address and a saved `desktop` tool show Terminal. Neither
   mounts Desktop or saves Terminal in place of the saved tool. The view
   keeps `desktop` as a valid tool.
