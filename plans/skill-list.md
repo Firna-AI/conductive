@@ -1,6 +1,6 @@
 # Skill list in the composer
 
-Status: Active. On branch `calummoore/perth-lc63`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
+Status: Active. [PR #358](https://github.com/Firna-AI/conductive/pull/358) is open. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
 `/` in the composer of a workspace chat opens a list of the skills that the
 agent can use, as `@` opens the list of files today
