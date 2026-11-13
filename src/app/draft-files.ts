@@ -31,12 +31,38 @@ export function stopFile(
 }
 
 /**
- * One intake: the files that upload, the oversized file names, and the
- * folder names supplied by the caller. Each refused kind stays separate.
+ * What a drop refused before any upload, by name: each zip of a dropped
+ * folder that passed the size limit, and each dropped folder that the
+ * browser could not read.
+ */
+export interface IntakeRefusals {
+  tooLarge: readonly string[]
+  folders: readonly string[]
+}
+
+export const noRefusals: IntakeRefusals = { tooLarge: [], folders: [] }
+
+/** Whether an intake attaches or refuses nothing, such as a cancelled pick. */
+export function emptyIntake(
+  files: readonly File[],
+  refusals: IntakeRefusals,
+): boolean {
+  return (
+    files.length === 0 &&
+    refusals.tooLarge.length === 0 &&
+    refusals.folders.length === 0
+  )
+}
+
+/**
+ * One intake: the files that upload, the names of the files over the size
+ * limit, and the names of the unreadable folders. The names of the zips
+ * over the size limit join the files over the limit, after them. Each
+ * refused kind stays separate.
  */
 export function splitPick(
   files: readonly File[],
-  folders: readonly string[] = [],
+  refusals: IntakeRefusals = noRefusals,
 ): {
   uploads: File[]
   refused: string[]
@@ -44,10 +70,13 @@ export function splitPick(
 } {
   return {
     uploads: files.filter((file) => file.size <= ATTACHMENT_MAX_BYTES),
-    refused: files
-      .filter((file) => file.size > ATTACHMENT_MAX_BYTES)
-      .map((file) => file.name),
-    refusedFolders: [...folders],
+    refused: [
+      ...files
+        .filter((file) => file.size > ATTACHMENT_MAX_BYTES)
+        .map((file) => file.name),
+      ...refusals.tooLarge,
+    ],
+    refusedFolders: [...refusals.folders],
   }
 }
 

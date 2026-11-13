@@ -3,12 +3,15 @@ import type { ComposerState } from '../components/chat/Composer'
 import type { MentionTree } from '../components/chat/FileMentionList'
 import {
   afterDropCaret,
+  afterFolderDropCaret,
   attachmentDraft,
   beforeDrop,
   beforeDropAttachments,
   draftAttachments,
   droppedAttachments,
+  droppedFolderAttachments,
   failedAttachments,
+  folderDropDraft,
   uploadingAttachments,
   type Attachment,
 } from '../fixtures/attachments'
@@ -45,8 +48,9 @@ type ComposerKey = WorkspaceState['composer']
 /**
  * The files of each composer state with files. A file over the size limit
  * stays out of the message, so its state holds only the files that the
- * composer attached, and a notice names the file. A dropped folder stays
- * out in the same way.
+ * composer attached, and a notice names the file. A dropped folder comes as
+ * its zip. A folder that the browser cannot read stays out in the same way
+ * as a file over the limit.
  */
 const composerFiles: Partial<Record<ComposerKey, readonly Attachment[]>> = {
   attachments: draftAttachments,
@@ -57,7 +61,8 @@ const composerFiles: Partial<Record<ComposerKey, readonly Attachment[]>> = {
   'attachment-pointer': draftAttachments,
   'drop-over': beforeDropAttachments,
   dropped: droppedAttachments,
-  'dropped-folder': droppedAttachments,
+  'dropped-folder': droppedFolderAttachments,
+  'unreadable-folder': droppedAttachments,
 }
 
 /**
@@ -70,7 +75,8 @@ const dropDrafts: Partial<
 > = {
   'drop-over': beforeDrop,
   dropped: { draft: attachmentDraft, caret: afterDropCaret },
-  'dropped-folder': { draft: attachmentDraft, caret: afterDropCaret },
+  'dropped-folder': { draft: folderDropDraft, caret: afterFolderDropCaret },
+  'unreadable-folder': { draft: attachmentDraft, caret: afterDropCaret },
 }
 
 /** The composer states whose Send leads to the message with its files. */

@@ -1,10 +1,13 @@
 import {
   changeFile,
+  emptyIntake,
+  noRefusals,
   runFileJob,
   runFileQueue,
   splitPick,
   uploadingFile,
   type DraftFile,
+  type IntakeRefusals,
 } from '../../app/draft-files'
 import { sessionState } from './chat-snapshot'
 import type { ChatContext } from './context'
@@ -62,17 +65,17 @@ async function upload(
  * size limit never uploads: its name goes to the notice of the draft, which
  * the next pick replaces. Each other file shows at once and uploads, one
  * after another. Returns their IDs immediately. Send waits until each is ready.
- * Folder names are refusal data only, including an intake with no files.
+ * The refusals of a drop go to the notices too, also with no files.
  */
 export function attachFiles(
   context: ChatContext,
   sessionId: string,
   files: readonly File[],
-  folders: readonly string[] = [],
+  refusals: IntakeRefusals = noRefusals,
 ): string[] {
-  if ((files.length === 0 && folders.length === 0) || !context.live()) return []
+  if (emptyIntake(files, refusals) || !context.live()) return []
   const draftId = draftIdOf(context, sessionId)
-  const { uploads, refused, refusedFolders } = splitPick(files, folders)
+  const { uploads, refused, refusedFolders } = splitPick(files, refusals)
   const added = uploads.map((file) => uploadingFile(context.newFileId(), file))
   const queued = added.map((item) => reserveUpload(context, draftId, item))
   changeDraft(context, draftId, (draft) => ({

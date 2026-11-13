@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Likelihood:** Common. **Effort:** Large. **Confidence:** High. **Harder later:** Yes.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-08, from branch `calummoore/command-palette-mockups`, review round 1, the wider fix of finding 1.
-- **Location:** `src/shell/ui/Menu.tsx` (the desktop menu of `MenuButton`), `src/members/ui/PopoverSurface.tsx:52`, `src/chat/ui/Menu.tsx`, and `src/chat/device/CommandChoices.tsx:58`.
+- **Location:** `src/shell/ui/Menu.tsx` (the desktop menu of `MenuButton`), `src/shell/ui/PopoverSurface.tsx` (moved from `src/members/ui/`), `src/chat/ui/Menu.tsx`, and `src/chat/device/CommandChoices.tsx:58`.
 - **Reason:** the shared surface reaches the menus of the members UI and of the chat, outside the diff of the command palette, and other open branches add menus too.
 
 - **Terms:**
@@ -11,7 +11,7 @@
   - **Desktop menu:** a list of choices that opens beside its button, such as the repository filter of the command palette.
 - **Background:** The app has three UI kits, each with its own menus:
   - The shell: `MenuButton` in `src/shell/ui/Menu.tsx`.
-  - The members UI: `ChoiceMenu`, drawn on `PopoverSurface` in `src/members/ui/PopoverSurface.tsx`.
+  - The members UI: `ChoiceMenu`, drawn on `PopoverSurface`, now in `src/shell/ui/PopoverSurface.tsx`.
   - The chat: `src/chat/ui/Menu.tsx`, and the Allow menu in `src/chat/device/CommandChoices.tsx`.
   - The members surface and the Allow menu open in the top layer. Where the browser has no Popover API, such as happy-dom in tests, they open in place. The shell menus and the other chat menus always open in place, with absolute positions inside their parent box.
 - **Problem:** A box with `overflow: hidden` or its own scroll clips each menu that opens in place inside it. The command palette met this case. Its card clipped the repository filter menu when the results were short. Chrome measured the card bottom at 290 px, and the `acme/marketing-site` choice at 318 px. The palette branch removed the clip from its card as a direct fix. Every other in-place menu keeps the problem.
@@ -26,3 +26,4 @@
 - **Previous examples:** Commit `5171e3b` moved the member menus to `PopoverSurface`. Commit `714ecb9` bounded the chat request region and moved the Allow menu to the top layer. The command palette branch removed the clip of its card.
 - **Recommendation:** B. One surface for every desktop menu removes the class.
 - **Action:** fix after merge, apply B, because it reaches the members and chat menus outside the diff of the command palette.
+- **Status on 12 November 2026:** Option A is done, on branch `calummoore/porto-joqk`. `PopoverSurface` moved to `src/shell/ui/`. `MenuButton` and the member menus draw on it. A shell menu now opens in the top layer. It opens on the side of its placement when it fits there, otherwise on the side with more room. Chrome showed the section menu of the sidebar flip above its button near the bottom of the window. The chat part of B stays open: `src/chat/ui/Menu.tsx` still opens in place.

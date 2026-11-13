@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import { attachmentPath } from '../shared/attachment-paths'
-import { pickWorkspaceFiles } from './draft-files.test-support'
+import { pickWorkspaceFiles, unreadable } from './draft-files.test-support'
 import { mentionText } from '../shared/mention-text'
 import { fileMark } from './draft-marks'
 import { attachmentUploadPath } from '../shared/messages'
@@ -113,6 +113,19 @@ describe('NewWorkspaceModel', () => {
     expect(draft.draft.get().messageId).not.toBe('client-1')
   })
 
+  test('a picked section wins over the section of the draft until the send', async () => {
+    const server = new FakeApiServer()
+    const draft = (await loaded(server)).newWorkspace(null)
+    draft.setSection('checkout')
+    draft.setText('Fix the flaky cart test.')
+    await draft.send(defaults)
+    const [sent] = server.requests.slice(-1)
+    expect({
+      sent: (await sent.json()).sectionId,
+      after: draft.draft.get().sectionId,
+    }).toEqual({ sent: 'checkout', after: null })
+  })
+
   test('a failed create keeps the draft, and Try again sends the same message', async () => {
     const server = new FakeApiServer()
     server.json(
@@ -210,7 +223,7 @@ describe('NewWorkspaceModel', () => {
     held.hold('POST', createPath)
     const creating = draft.send(defaults)
     await pickWorkspaceFiles(draft, [notes()])
-    expect(draft.attach([], ['Ignored folder'])).toEqual([])
+    expect(draft.attach([], unreadable('Ignored folder'))).toEqual([])
     expect(draft.draft.get()).toMatchObject({ refused: [], refusedFolders: [] })
     held.release('POST', createPath)
     const created = await creating

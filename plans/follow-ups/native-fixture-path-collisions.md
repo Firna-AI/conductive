@@ -1,0 +1,35 @@
+# Native fixtures rewrite their own paths
+
+- **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-13, during the merge of main into pull request #326.
+- **Location:** `worker/lifecycle/saved-script-test-support.ts`, `worker/lifecycle/continue-native.test-support.ts`, `worker/lifecycle/image-sources/native-process-test-support.ts`, and `worker/lifecycle/image-sources/local-source-test-support.ts`.
+- **Reason:** These test helpers are unchanged by the Extend feature and its conflict resolution.
+
+- **Terms:**
+  - **Fixture root:** the private folder that holds the local files of one native integration test.
+- **Background:**
+  - Native tests rewrite production paths into fixture paths before they execute shell commands.
+  - Some fixture roots are under the repository's `.context/` folder.
+  - In a checkout under `/home/user/code`, a replacement target can contain another production prefix that a later replacement matches.
+  - Command checks can also mistake the known fixture root for a production path.
+  - A complete gate in `/home/user/code/remote-code` had 18 failed tests in these native execution paths.
+  - One failure was `error: could not lock config file .../case-.../code/remote-code/.context/.../system-gitconfig: No such file or directory`.
+  - Another was `cd: can't cd to .../home/code/remote-code/.context/.../home/working repo's folder`.
+  - `worker/lifecycle/image-sources/local-materialize.test.ts` also rejected a mapped command because its fixture root contained `/home/user`.
+  - The saved workspace startup failure reproduced on main at `246e2d787025de390f0de633801a60172e00cfd2` under the same prefix.
+  - All affected native test files passed on that main commit from `/tmp/pr326-main-baseline`.
+  - All affected files and the device suites then passed against the merged tree from `/tmp/pr326-merge-verify`: 165 tests in 52 files.
+- **Problem:** Sequential replacements can rewrite paths that earlier replacements inserted. Literal checks can reject valid fixture paths.
+- **Impact if no action:** Native integration tests fail in cloud checkouts under `/home/user/code`.
+- **Root question:** How can native test commands stay isolated for every checkout path?
+- **Options:**
+  - **A.** Run these tests from a checkout outside the production prefixes. This is a manual workaround. Effort: Small.
+  - **B.** Move fixture roots to the system temporary folder. This avoids the normal cloud prefix, but keeps the replacement assumption. Effort: Small.
+  - **C.** Share one mapper that replaces original paths once and excludes the known fixture root from production-path checks. Effort: Small.
+- **Left out:** Longer timeouts, retries, and weaker assertions do not correct the mapped paths.
+- **Wider fix:** C. One mapper prevents replacement targets from becoming new inputs and keeps the isolation checks.
+- **Previous examples:** `plans/follow-ups/tests-leave-storage-in-context.md` records a separate problem with fixture storage under `.context/`.
+- **Related:** `plans/follow-ups/tests-leave-storage-in-context.md` changes fixture storage ownership. This item changes path mapping and validation.
+- **Recommendation:** C. It removes the path assumption and preserves the safety checks.
+- **Action:** fix after merge, apply C. Keep the fix in a separate branch from the merge conflict resolution.

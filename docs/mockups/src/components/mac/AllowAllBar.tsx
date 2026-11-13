@@ -107,10 +107,14 @@ export function AllowAllBar() {
         <>
           <span className={styles.left}>{left} left</span>
           <ScreenLink asChild to={paths.macExtend}>
-            <ActionButton icon={TimerReset}>Extend</ActionButton>
+            <ActionButton icon={TimerReset} tone="outline">
+              Extend
+            </ActionButton>
           </ScreenLink>
           <ScreenLink asChild to={paths.macStop}>
-            <ActionButton icon={Square}>Stop</ActionButton>
+            <ActionButton icon={Square} tone="outline">
+              Stop
+            </ActionButton>
           </ScreenLink>
         </>
       ) : null}

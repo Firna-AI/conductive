@@ -14,10 +14,11 @@ that shows their chips.
   generation. `runFileQueue` starts the reserved uploads of a pick, or of
   a text that brings files back, one at a time, and `stopFile` ends a
   generation. `splitPick` splits one attach: the files that upload, the
-  names of the files over the size limit, and a copy of the folder names.
+  names of the files and the zips over the size limit, and a copy of the
+  names of the folders that could not be read, from `IntakeRefusals`.
 - `new-workspace-files.ts`: `DraftUploads`, the uploads of a first message
   before its workspace exists. Its `attach` gives the IDs of a pick at
-  once, and keeps the folder names that the caller gives, also with no
+  once, and keeps the refused names that the caller gives, also with no
   files. Its `setText` makes the files follow the marks. A change of
   person ends its uploads, its files, and the names that it refused.
 - `draft-file-state.ts`: the files of the marks of a draft text, which the
@@ -48,6 +49,7 @@ that shows their chips.
   `controlledUploads` gives uploads whose replies wait for the test.
   `withPickedFiles` writes the marks of new files at the end of a draft
   text, as the field does. `uploadsSettled` waits until no file of a list
-  uploads. `pickWorkspaceFiles` attaches files, with optional folder
-  names, to a New workspace model, writes the marks of the files, and
-  waits for their uploads.
+  uploads. `pickWorkspaceFiles` attaches files, with optional refusals, to
+  a New workspace model, writes the marks of the files, and waits for
+  their uploads. `unreadable` gives the refusals of folders that could not
+  be read.

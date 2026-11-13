@@ -151,6 +151,14 @@ number names a dated record, as
 
 - Rename puts a field in the row, in place of the name and the time. The
   field holds the name, and the name is selected.
+- A double click on a row of the sidebar also opens this field, when the
+  menu of the row offers Rename. A double click with a modifier key does
+  not. The user asked for it on 12 November 2026.
+- The first click of the double click opens the workspace, as a click
+  does. The second click does not open it again, so the history gets one
+  entry. The field then opens in the row.
+- On the list page, the first click replaces the list with the
+  workspace. So a double click there opens the workspace and no field.
 - For a workspace without a name, the field is empty.
 - Enter saves the name. A move of the focus out of the field saves it too.
   Escape closes the field and keeps the old name.
@@ -178,8 +186,12 @@ number names a dated record, as
   write. One action archives the workspace once, also for the open
   workspace while it loads.
 - Archive does not open the workspace, and it starts no cloud computer.
-- While the write runs, the app shows that the Archive is pending. When the
-  write fails, the row stays in its section, and a toast names the failure.
+- Archive shows as done at once, before its write gets a reply: the row
+  moves to the Archived group, and the open workspace shows as archived.
+  No control shows a busy state for it.
+- When the write fails, the row goes back to its section, the open
+  workspace shows as it was before, and a toast names the failure.
+- The toast after a done Archive comes with the reply of its write.
 - After the archive, the current page stays, and the row moves to the
   Archived group. The toast after Archive offers Restore, as
   [Restore](workspace-life.md#restore) says.

@@ -45,6 +45,35 @@ function RepositoryPicker(props: {
 }
 
 /**
+ * The org and the section of the new workspace, as a compact picker at the
+ * end of the header. `menu` draws its menu of the sections open below it.
+ */
+function SectionPicker(props: {
+  place: string
+  section: string
+  menu?: readonly MenuEntry[]
+}) {
+  return (
+    <span className={classes(styles.anchor, styles.placeMenu)}>
+      <ActionButton
+        accessibilityLabel={`Section: ${props.section}`}
+        expanded={props.menu !== undefined}
+        menu
+        tone="plain"
+        trailing={
+          <ChevronDown aria-hidden className={styles.chevron} size={13} />
+        }
+      >
+        {props.place}
+      </ActionButton>
+      {props.menu ? (
+        <Menu entries={props.menu} label="Section" placement="below-end" />
+      ) : null}
+    </span>
+  )
+}
+
+/**
  * Create, with the hint of its key: on a computer, Enter creates the
  * workspace, and Shift+Enter adds a line. Create is off until the message
  * can go.
@@ -77,6 +106,13 @@ export type NewWorkspaceDialogProps = {
   repositoryMenu?: readonly MenuEntry[]
   /** The org and the section that the new workspace joins. */
   place: string
+  /** The section that the new workspace joins, such as General. */
+  section: string
+  /**
+   * The section menu, drawn open: each section of the org in the order of
+   * the list, with the current one checked. Archived is not a section.
+   */
+  sectionMenu?: readonly MenuEntry[]
   /** The message, with a chip for each of its files at its place. */
   text: string
   attachments: readonly Attachment[]
@@ -109,7 +145,8 @@ export type NewWorkspaceDialogProps = {
 /**
  * New workspace as a wide, compact dialog over the dimmed app, drawn open,
  * for a computer. The repository picker sits at the top left, and the org
- * and the section of the new workspace at the top right. The message fills
+ * and the section of the new workspace at the top right, as a picker of the
+ * section. The message fills
  * the middle, with a chip for each of its files at its place, and a pasted
  * link to a workspace of the org shows as a chip, as in the composer. The
  * model picker sits at the bottom left, and the attach button and Create
@@ -137,7 +174,11 @@ export function NewWorkspaceDialog(props: NewWorkspaceDialogProps) {
               name={props.repository}
             />
           ) : null}
-          <span className={styles.place}>{props.place}</span>
+          <SectionPicker
+            menu={props.sectionMenu}
+            place={props.place}
+            section={props.section}
+          />
         </div>
         <div className={styles.body}>
           <MessageField

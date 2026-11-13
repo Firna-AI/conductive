@@ -3,9 +3,15 @@ import type { LucideIcon } from 'lucide-react'
 import { Button } from '@firna/ui/button'
 import { noop } from '../../noop'
 import { useControlSizes } from './touch'
+import { actionStyle } from './outlineTone'
 import styles from './actions.module.css'
 
-export type ActionTone = 'primary' | 'secondary' | 'plain' | 'danger'
+/**
+ * The tone of an action button. `outline` is the border and the label of
+ * `secondary` without its fill, for a button on a tinted bar.
+ */
+export type ActionTone =
+  'primary' | 'secondary' | 'outline' | 'plain' | 'danger'
 
 /** The state of a button that opens a menu. */
 type MenuTrigger = {
@@ -40,6 +46,7 @@ export function ActionButton(
   },
 ) {
   const control = useControlSizes()
+  const tone = props.tone ?? 'secondary'
   return (
     <Button
       {...triggerProps(props)}
@@ -55,8 +62,8 @@ export function ActionButton(
       numberOfLines={1}
       onPress={noop}
       size="sm"
-      style={{ height: control.height, paddingHorizontal: 10 }}
-      tone={props.tone ?? 'secondary'}
+      style={actionStyle(control.height, tone === 'outline')}
+      tone={tone === 'outline' ? 'secondary' : tone}
       trailing={props.trailing}
     >
       {props.children}

@@ -2,7 +2,7 @@ import { useCallback, useSyncExternalStore } from 'react'
 import { useNavigation } from '../../../app/navigation'
 import { routes } from '../../../app/router'
 import { anyTurnRuns } from '../../../chat/state/chat-snapshot'
-import type { BarActions } from '../../../github/barActions'
+import type { BarActions, BarActionsPorts } from '../../../github/barActions'
 import { localWorkOf, type BarControls } from '../../../github/barView'
 import { createContinueActions } from '../../../github/continueActions'
 import { createGitHubActions } from '../../../github/githubActions'
@@ -10,7 +10,7 @@ import type { WorkspaceTarget } from '../../../github/githubClient'
 import type { GitHubFeed } from '../../../github/githubStore'
 import { useBarActions, useBarControls } from '../../../github/useBarControls'
 import type { GitHubSubscription } from '../../../github/useGitHubState'
-import { useOrgServices } from '../../context'
+import { useOrgModel } from '../../context'
 import type { WorkspaceContext } from '../features'
 import { useKeptFiles } from '../files/workspace-files'
 
@@ -24,12 +24,13 @@ export function useScreenActions(
   context: WorkspaceContext,
   github: GitHubSubscription,
 ): BarActions {
-  const services = useOrgServices(context.org.id)
+  const model = useOrgModel(context.org.id)
+  const { services } = model
   const { org, workspace, stream, chat } = context
   const { states, retry } = github
-  const { branch } = workspace
+  const { branch, repositoryId } = workspace
   const ports = useCallback(
-    (target: WorkspaceTarget) => ({
+    (target: WorkspaceTarget): BarActionsPorts => ({
       branch,
       github: createGitHubActions(services.api.fetch, target),
       continues: createContinueActions(services.api, target),
@@ -39,8 +40,9 @@ export function useScreenActions(
       refreshGitHub: retry,
       streamLast: stream.last,
       reconnects: stream.reconnects,
+      access: model.githubAccessOf(repositoryId),
     }),
-    [branch, services, chat, stream, states, retry],
+    [branch, repositoryId, services, model, chat, stream, states, retry],
   )
   return useBarActions({ orgId: org.id, workspaceId: workspace.id }, ports)
 }

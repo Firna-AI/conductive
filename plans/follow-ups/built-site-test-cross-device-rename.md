@@ -1,6 +1,6 @@
 # Site build test fails on cross-device rename
 
-- **Severity:** Medium. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
+- **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Post-merge task.
 - **Added:** 2026-11-10, from the CI of pull request #155 on branch `calummoore/codex-models-addition`.
 - **Location:** `buildSiteAssets` in `worker/marketing/built-site.test-support.ts:31-42`, and `worker/marketing/built-site.test.ts`.
@@ -24,6 +24,10 @@
 
   - That commit got no rerun. Then `main` added `--force` to the build command, in "feat(marketing): add Markdown product documentation" (#133). After that change, the test passed in two CI runs and in two local runs of the full suite.
   - The local runs cannot show the failure, because the repository and `/tmp` were on one file system there.
+  - On 2026-11-13, `npm run check` reproduced the failure in `/home/user/code/remote-code`, with `--force` still present.
+  - Astro could not rename `InterVariable.DiVDrmQJ.woff2` from the repository's `.astro/.prerender/_astro/` folder into `/tmp/conductive-site-*/_astro/`.
+  - The 12 site tests then passed from checkouts under `/tmp` on main at `246e2d787025de390f0de633801a60172e00cfd2` and on the merged tree.
+  - This confirms that `--force` does not remove the failure when the folders are on separate file systems.
 - **Task:**
   - Find out when the build moves an asset out of the prerender folder, and why the first run did not fail. A cold image cache and two builds that share the prerender folder are suspected sources. Neither is confirmed.
   - Find out whether `--force` removes the case.

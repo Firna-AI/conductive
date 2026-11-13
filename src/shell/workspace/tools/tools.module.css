@@ -1,6 +1,7 @@
 /*
- * The place of the terminal in the tools panel. It stays mounted while
- * another tool shows, so its connection stays, and it hides then.
+ * The place of the terminal or of Preview in the tools panel. Each stays
+ * mounted while another tool shows, so its connection and its frames
+ * stay, and it hides then.
  */
 .tool {
   display: flex;
