@@ -94,6 +94,17 @@
 }
 
 /*
+ * The title of the temporary tab, which the next press on a file or a diff
+ * replaces (decision 284). Only the title changes: it shows in italics, also
+ * on the lifted copy of a drag. Its last letter leans past the end of the
+ * title, so a little room at the end keeps the clip of the row off it.
+ */
+.temporary {
+  padding-right: 0.2em;
+  font-style: italic;
+}
+
+/*
  * A phone has no room to keep the current tab whole. Every tab shrinks:
  * the current one keeps the start of its title, and the others can shrink
  * to their icon, which stays 44 px wide to touch.

@@ -34,7 +34,7 @@ export const fileMentionChips = defineScreen({
       slug: 'sent',
       title: 'Sent',
       description:
-        'Cal sent the message. It shows the file chip and the folder chip. A press on the file chip opens the file in a tab, and a press on the folder chip shows All files with the folder open. The answer of the agent keeps its paths as text.',
+        'Cal sent the message. It shows the file chip and the folder chip. The file has a tab, so a press on the file chip shows that tab, as a press in All files does. A press on the folder chip shows All files with the folder open. The answer of the agent keeps its paths as text.',
       rationale:
         'The agent gets the text of the message as Cal wrote it, with `@` and each path inside the repository (decision 216). Chips show only in the messages of members, because only the composer writes mentions.',
       props: { conversation: 'mention-answer', composer: 'empty' },

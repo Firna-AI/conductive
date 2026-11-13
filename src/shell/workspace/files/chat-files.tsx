@@ -28,7 +28,12 @@ import type { WorkspaceContext } from '../features'
 import { useSavedView } from '../saved-view'
 import { filesPlace, tabOf } from './files-address'
 import { useFilesNavigation, useLeaveForSession } from './files-navigation'
-import { filesTabsOf, sameFilesTab, withoutTab } from './view-tabs'
+import {
+  filesTabsOf,
+  isTemporaryTab,
+  sameFilesTab,
+  withoutTab,
+} from './view-tabs'
 import { useKeptFilesWhile } from './workspace-files'
 
 /** The subscription while the row shows no file tabs: to nothing. */
@@ -59,10 +64,11 @@ function useTabLabels(
 
 /**
  * A file or diff tab of the saved view, at the place in the tab row that
- * the chat gives it, with the label of its path. Close of the shown tab
- * shows the next file tab, else the one before, else the chat with its
- * session. While the tab shows, the key of Close tab closes it, as its
- * Close does.
+ * the chat gives it, with the label of its path, and in italics when the
+ * view marks it as the temporary tab. Close of the shown tab shows the next
+ * file tab, else the one before, else the chat with its session. A close of
+ * the temporary tab clears the mark. While the tab shows, the key of Close
+ * tab closes it, as its Close does.
  */
 function FileTab(props: {
   context: WorkspaceContext
@@ -70,6 +76,7 @@ function FileTab(props: {
   shown: FilesTab | null
   tab: FilesTab
   label: string | null
+  temporary: boolean
   draw: Extract<TabDraw, { kind: 'row' }>
 }) {
   const { context, navigation, shown, tab } = props
@@ -108,6 +115,7 @@ function FileTab(props: {
       onClose={close}
       selected={isShown(tab)}
       tab={tab}
+      temporary={props.temporary}
     />
   )
 }
@@ -159,17 +167,21 @@ function useMentions(
  * their places in the tab row, with the copy that a drag lifts, and the
  * diff that a file of a finished turn opens. Each tab takes the label of
  * its path from the kept files, for its title and its drawing, so each name
- * of the tab hides each secret value. When the chat makes a session active
- * while `content` shows a file, the address goes back to the chat. The
- * chat reads the kept files for the list of `@` and the file chips, also
- * on a phone before a visit to Files: `KeptFilesConnection` of the screen
- * keeps them connected. An archived workspace has no files.
+ * of the tab hides each secret value. The temporary tab of the saved view
+ * draws its title in italics, also on the lifted copy, and its title for
+ * the row stays the name alone. Keep open of its tab menu keeps it, as a
+ * double-click on it does. When the chat makes a session active while
+ * `content` shows a file, the address goes back to the chat. The chat reads
+ * the kept files for the list of `@` and the file chips, also on a phone
+ * before a visit to Files: `KeptFilesConnection` of the screen keeps them
+ * connected. An archived workspace has no files.
  */
 export function useChatFiles(
   context: WorkspaceContext,
   content: ReactNode,
 ): ChatFiles {
   const navigation = useFilesNavigation(context)
+  const view = useSavedView(context.savedView)
   const shown = content === null ? null : tabOf(filesPlace(context.view))
   useLeaveForSession(context, shown !== null)
   const archived = context.sandbox === 'archived'
@@ -180,11 +192,12 @@ export function useChatFiles(
   if (archived) return {}
   const renderTab: RenderTab = (tab) => {
     const label = labelOf(tab)
+    const temporary = isTemporaryTab(view, tab)
     return {
       title: fileTabName(tab, label),
       draw: (draw) =>
         draw.kind === 'lifted' ? (
-          <LiftedFileTab label={label} tab={tab} />
+          <LiftedFileTab label={label} tab={tab} temporary={temporary} />
         ) : (
           <FileTab
             context={context}
@@ -193,9 +206,11 @@ export function useChatFiles(
             navigation={navigation}
             shown={shown}
             tab={tab}
+            temporary={temporary}
           />
         ),
       show: () => navigation.navigate(tab),
+      keep: temporary ? () => navigation.keep(tab) : null,
     }
   }
   return {

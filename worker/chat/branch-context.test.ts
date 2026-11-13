@@ -1,7 +1,6 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
 import { retryMessagePath, sessionPaths } from '../../src/shared/sessions'
-import type { RunnerProtocolVersion } from '../../src/shared/runner'
 import { FakeRunner } from '../test-support/fake-runner'
 import { createHarness, type TestHarness } from '../test-support/harness'
 import { createChatFixture, WORKSPACE_ID } from './harness.test-support'
@@ -17,19 +16,20 @@ afterAll(async () => {
   await harness.dispose()
 })
 
-async function checkBranches(protocolVersion: RunnerProtocolVersion) {
+it('reads current branches for each turn, in-turn message, reconnect, retry, and reopened session', async () => {
   const f = await createChatFixture(harness)
   const session = await f.createSession()
-  const runner = await f.connect(
-    new FakeRunner({ workspaceId: WORKSPACE_ID, protocolVersion }),
-  )
+  const runner = await f.connect(new FakeRunner({ workspaceId: WORKSPACE_ID }))
   runner.emit({ type: 'runner.ready' })
   await f.drain()
   await f.send(session.id, 'first')
   const first = runner.commands[0]
   if (first?.type !== 'turn') throw new Error('Missing first turn.')
-  expect('login' in first).toBe(protocolVersion === 1)
-  expect('credential' in first).toBe(protocolVersion === 2)
+  expect(first).not.toHaveProperty('login')
+  expect(first.credential).toMatchObject({
+    agent: 'claude',
+    token: expect.stringMatching(/^sk-/),
+  })
   expect(first.commitAuthor).toEqual({
     name: 'Octocat',
     email: '7+octocat@users.noreply.github.com',
@@ -146,9 +146,4 @@ async function checkBranches(protocolVersion: RunnerProtocolVersion) {
   expect(JSON.stringify((await f.history(session.id)).events)).not.toContain(
     'Current branches:',
   )
-}
-
-it.each([1, 2] as const)(
-  'reads current branches for each turn, in-turn message, reconnect, retry, and reopened session on protocol %s',
-  checkBranches,
-)
+})

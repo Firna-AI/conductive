@@ -56,12 +56,15 @@ export type TabDraw =
  * the tab menu and the status of the row name the tab by it, and the row
  * takes no name from a path. `draw` draws the tab by the same name, as
  * `TabDraw` asks. `show` shows the tab, as a plain click on its link does,
- * for the keys of Previous tab and Next tab.
+ * for the keys of Previous tab and Next tab. `keep` keeps the temporary tab
+ * in its place, as a double-click on the tab does, for Keep open of its tab
+ * menu. It is null for each kept tab, whose menu has no Keep open.
  */
 interface RenderedTab {
   title: string
   draw: (draw: TabDraw) => ReactNode
   show: () => void
+  keep: (() => void) | null
 }
 
 /** Renders a file or diff tab of the host, as `RenderedTab` says. */

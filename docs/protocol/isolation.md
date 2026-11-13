@@ -38,9 +38,8 @@ logins, as [Tokens and secrets](tokens-and-secrets.md) says.
   again at most every 30 seconds, and closes each tab that fails. A
   [suspension](operator-actions.md#sessions-and-sign-in) of the user ends
   that access too.
-- A runner connection gets no agent login and no turn token after its
-  workspace token is revoked. The workspace checks the token again before
-  it sends each of them.
+- A runner connection gets no turn token after its workspace token is
+  revoked. The workspace checks the token again before it sends each one.
   [Workspace tokens and runners](operator-actions.md#workspace-tokens-and-runners)
   states the checks of an open runner connection.
 - No request names a sandbox or a saved snapshot. The Worker takes each
@@ -156,46 +155,29 @@ logins, as [Tokens and secrets](tokens-and-secrets.md) says.
   as [GitHub tokens](tokens-and-secrets.md#github-tokens) and
   [Mac commands](agent-tools.md#mac-commands) say.
 - A routine run uses its owner's agent login and GitHub token while no
-  person watches. Its sandbox follows the same version pin rules below.
+  person watches. Its sandbox follows the same rules below.
   [Risks that stay open](routines.md#risks-that-stay-open) states the
   risks of routines.
-- With each turn, the agent runner gets a credential of the starter over
-  its connection to the Durable Object. Reason: the sandbox gets its
-  secrets only at a start, and the sessions of one sandbox can have
-  different starters.
-- The runner of a sandbox comes from its org image. A newer runner has
-  protocol version 2 or later. An older runner has protocol version 1.
-  [The agent runner](agent-runner.md#the-agent-runner) states which runner
-  versions a workspace accepts.
-- A newer runner gets a turn token as the credential of each turn. An
-  older runner gets a supported agent login itself. This rule holds for each
-  runner connection.
-- An own endpoint login never reaches a sandbox, whatever its version pin.
-  The gateway keeps its address and its key in the Worker (gateway
-  decision 10). An older runner gets no turn on such a login. Such a turn
-  fails before an agent starts, as a turn on a login that cannot be used
-  does. Reason: an older runner would hold the key itself, and each
-  process of its sandbox could read it.
+- With each turn, the agent runner gets a turn token for the login of the
+  starter, over its connection to the Durable Object. Reason: the sandbox
+  gets its secrets only at a start, and the sessions of one sandbox can
+  have different starters.
+- No agent login reaches a sandbox, whatever the version pin of its
+  workspace (decision 120). The [model gateway](model-gateway.md) adds the
+  login of the starter to each model request of the turn.
+- The runner of a sandbox comes from its org image. A workspace accepts
+  only a runner of a supported protocol version, as
+  [Runner versions](version-pins.md#runner-versions) says.
+- An own endpoint login never reaches a sandbox. The gateway keeps its
+  address and its key in the Worker (gateway decision 10).
 - Before a turn or a later message reaches a runner, the app checks
   that the runner can use its login kind (decision 174).
 - A ChatGPT turn needs a runner that declares support for that sign-in.
-  An older runner, including an earlier version 2 runner, cannot use it.
+  An earlier runner of version 2 does not declare it.
 - A runner that cannot use the login gets no turn or message command
   and no credential. The turn fails once with a recovery cause.
 - The cause offers a new workspace after an admin rebuilds the org
   image, or an OpenAI API key. A reconnect does not send the failed turn again.
-- A ChatGPT sign-in never reaches a sandbox, including one whose older
-  runner can still receive other agent logins.
-- The version pin of a workspace is the lowest runner protocol version that
-  it accepts. The workspace takes the pin from the org image that its
-  cloud computer starts from. A stop and a resume keep the pin. A
-  workspace or an org image with no recorded version counts as version 1.
-  The version pin of a sandbox is the version pin of its workspace.
-- The version pin decides whether an agent login can reach a sandbox. A
-  runner connection does not change the version pin. So a newer runner
-  does not keep the agent logins out of a sandbox with a version pin of 1.
-  [Version pins](version-pins.md) gives the rules and the risks of each
-  version pin.
 - The workspace gives the credential of a turn to the runner only while
   the starter is a member of the org.
   [Messages](messages-and-attachments.md#messages) says what a message of another
@@ -232,7 +214,6 @@ logins, as [Tokens and secrets](tokens-and-secrets.md) says.
 - A record that names the host of an own endpoint was rejected, because
   the members of an org trust each other with their logins (own endpoint
   decision 5).
-- The runner never writes a login to disk.
 - On a ChatGPT turn, the rules of the signed-in ChatGPT workspace
   apply to Codex (decisions 173 and 175).
 - Risk: hooks and MCP commands from those rules run in the sandbox of
@@ -251,23 +232,17 @@ logins, as [Tokens and secrets](tokens-and-secrets.md) says.
   token. A copy of the token of a workspace that another member owns
   keeps the runner connection, the git credential route, and the agent
   tools after the member who copied it is removed from the org or
-  suspended. So that member can get the credentials and the GitHub tokens
-  of later turns (decision 124). In a sandbox with a version pin of 2 or
-  later, these credentials are turn tokens. In a sandbox with a version
-  pin of 1, they can be the agent logins themselves, because that member
-  can connect as an older runner.
+  suspended. So that member can get the turn tokens and the GitHub tokens
+  of later turns (decision 124).
 - A suspension revokes the workspace tokens of the workspaces that the
   suspended user owns. It revokes no token of another member's workspace,
   as
   [Workspace tokens and runners](operator-actions.md#workspace-tokens-and-runners)
   says.
 
-### A sandbox with a version pin of 2 or later
+### Turn tokens in a sandbox
 
-[A sandbox with a version pin of 2 or later](version-pins.md#a-sandbox-with-a-version-pin-of-2-or-later)
-states the login rules and the risks of such a sandbox.
-
-### A sandbox with a version pin of 1
-
-[A sandbox with a version pin of 1](version-pins.md#a-sandbox-with-a-version-pin-of-1)
-states the login rules and the risks of such a sandbox.
+[Turn tokens in a sandbox](version-pins.md#turn-tokens-in-a-sandbox)
+states the login rules and the risks of the turn token in a sandbox.
+[Version pins](version-pins.md) also states which runner version a
+workspace accepts, and its version pin.

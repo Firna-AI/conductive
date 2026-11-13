@@ -86,7 +86,7 @@ it('closes an idle native runner after owner suspension through its scheduled ac
   const runner = await fixture.openRunner(workspaceId)
   runner.send({
     type: 'hello',
-    protocolVersion: 1,
+    protocolVersion: 2,
     workspaceId,
     streamId: 'native-idle',
   })

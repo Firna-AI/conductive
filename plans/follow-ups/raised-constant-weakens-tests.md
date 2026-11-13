@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-10, the blocked wider fix of finding 40 of round 3 of the final review of branch `conductor/model-gateway-worker-model-proxy-decision-120`, option E of its check.
-- **Location:** The section "Prove that each test can fail" of the `testing` skill, in the shared skills repository `futex-ai/skills`. The examples in this repository: `worker/lifecycle/image-runner-version.test.ts`, the version write in `worker/lifecycle/build-admission-data.ts:65-67`, and `RUNNER_PROTOCOL_VERSION` in `src/shared/runner.ts:9`.
+- **Location:** The section "Prove that each test can fail" of the `testing` skill, in the shared skills repository `futex-ai/skills`. The examples in this repository: `worker/lifecycle/image-runner-version.test.ts`, the version write in `worker/lifecycle/build-admission-data.ts:66-68`, and `RUNNER_PROTOCOL_VERSION` in `src/shared/runner.ts:11`.
 - **Reason:** The fix adds a rule to the shared `testing` skill, which lives outside this repository and applies to every repository of the user.
 
 - **Terms:**

@@ -14,7 +14,8 @@ is relative to `src/chat/`, the folder of this guide.
   holds the local IDs of drafts and files, the upload generations, the
   devices, and the event stream. Each draft ID holds the run.
 - `state/tab-order.ts`: the pure row order, the places of the open
-  sessions, and the move before or after a neighbour.
+  sessions, and the move before or after a neighbour, which keeps a
+  temporary tab whose place it changes.
 - `components/SessionTabs.tsx`: the tab row, with the session tabs of
   `components/SessionTab.tsx` and the tabs of `renderTab`.
   `components/tab-row.ts`: `RenderTab`, `TabDraw`, and `rowOf`, the tabs of
@@ -28,8 +29,8 @@ is relative to `src/chat/`, the folder of this guide.
   its items with the mark of each item that changes the workspace, the
   items of a read-only row, the long press that opens that row's menu, and
   its drawing at a point or in a sheet.
-  `components/useTabMoves.ts`: the moves of the row, the focus after a move
-  from the menu, and the words of the status.
+  `components/useTabMoves.ts`: the moves of the row and Keep open, the
+  focus after a move or a keep from the menu, and the words of the status.
 - `components/TranscriptCopy.tsx`: `useTranscriptCopy`, the copy of a
   transcript from the tab menu with the toast of its result, and
   `ChatToasts`, the toasts of the host, else the chat's own.

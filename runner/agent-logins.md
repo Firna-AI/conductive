@@ -4,27 +4,21 @@ This page belongs to the [agent runner](README.md). It gives the facts of
 this implementation about agent logins and turn tokens.
 [How the agents reach the gateway](../docs/protocol/model-gateway.md#how-the-agents-reach-the-gateway)
 states the requirements.
-[A sandbox with a version pin of 2 or later](../docs/protocol/isolation.md#a-sandbox-with-a-version-pin-of-2-or-later)
+[Turn tokens in a sandbox](../docs/protocol/isolation.md#turn-tokens-in-a-sandbox)
 states the accepted risks.
 
 An agent login is the Claude subscription token, ChatGPT sign-in, or
-API key of the member who started a session. This runner speaks
-runner protocol version 2, so no runner command gives it an agent login.
-Each `turn` command carries a turn token in place of the login. The
-[model gateway](../worker/model-gateway/README.md) of the Worker adds the
-login to each model request. Only the [measure tool](#the-measure-tool)
-uses a real login, which a developer gives it.
-
-An older org image can hold a runner of protocol version 1. Such a runner
-gets a supported agent login itself with each turn, as
-[A sandbox with a version pin of 1](../docs/protocol/isolation.md#a-sandbox-with-a-version-pin-of-1)
-says.
+API key of the member who started a session. No runner command gives the
+runner an agent login. Each `turn` command carries a turn token in place
+of the login. The [model gateway](../worker/model-gateway/README.md) of
+the Worker adds the login to each model request. Only the
+[measure tool](#the-measure-tool) uses a real login, which a developer
+gives it.
 
 The runner's `hello.loginKinds` lists Claude tokens, Claude API keys,
-Codex API keys, and Codex ChatGPT sign-ins. An older `hello` without this
-list supports the first three kinds only. Version 1 cannot add ChatGPT
-support through that list. The Worker checks each turn and later message
-before it builds a command. An unsupported login ends the turn with a
+Codex API keys, and Codex ChatGPT sign-ins. A `hello` without this list
+supports the first three kinds only. The Worker checks each turn and later
+message before it builds a command. An unsupported login ends the turn with a
 cause. Reconnect cannot send that turn again.
 
 ## The turn token
@@ -34,9 +28,9 @@ cause. Reconnect cannot send that turn again.
   command carries no credential. A Codex `token` credential also holds
   public account identity: the account ID, email, plan type, and user ID.
 - The runner closes its connection with code 1002 when a command lacks a
-  field that it needs, or has an invalid one. An example is a version 1
-  `turn` command, which has a `login` and no `credential`. A `welcome` of
-  another protocol version also closes the connection.
+  field that it needs, or has an invalid one. An example is a `turn`
+  command with no `credential`. A `welcome` of another protocol version
+  also closes the connection.
 - The parser ignores other fields. It keeps only the fields that it reads.
 - The runner starts each turn with the token of its `turn` command. That
   token stays for the whole turn, also when a model change starts a new
@@ -221,7 +215,7 @@ because no runner command carries a login.
   Claude or Codex ChatGPT turn. Each file holds only a turn token.
 - A copy of a turn token works only as
   [The turn token](../docs/protocol/model-gateway.md#the-turn-token) says.
-  [A sandbox with a version pin of 2 or later](../docs/protocol/isolation.md#a-sandbox-with-a-version-pin-of-2-or-later)
+  [Turn tokens in a sandbox](../docs/protocol/isolation.md#turn-tokens-in-a-sandbox)
   states these accepted risks.
 - The descriptor pipe of the measure tool stops only the automatic copy of
   the developer login into new processes. A process of the same user can

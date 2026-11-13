@@ -34,7 +34,8 @@ states of the workspace screen draw them. The child pages:
   Ready to merge for a member with read access, without Merge.
 - `app/banner/local-work` has Commit and push in the place of Merge, Fix
   checks, Resolve conflicts, and Address review, and in a state without an
-  action of its own.
+  action of its own. Its `commits` variant has only commits that are not
+  pushed, so the bar offers Push.
 - `app/banner/sent` has the message of each agent action in the chat, as a
   message of the member who clicked, while the agent works on it.
 - `app/banner/continue` has the question of Continue with local work, the

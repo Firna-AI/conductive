@@ -64,7 +64,10 @@ describe('workspace turn tokens', () => {
     expect(
       JSON.stringify([...(await fixture.snapshot()).records]),
     ).not.toContain(token)
-    expect(JSON.stringify(runner.received)).not.toContain(token)
+    expect(JSON.stringify(runner.received)).toContain(token)
+    expect(JSON.stringify(runner.received)).not.toContain(
+      `secret-${fixture.member.id}-codex`,
+    )
     runner.emit(terminalEvent(turn, 'finished'))
     await fixture.drain()
     expect(await check()).toEqual({ ok: false, reason: 'turn_not_active' })
