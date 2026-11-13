@@ -23,7 +23,7 @@ it('fetches and validates the newest release from the configured server', async 
   expect(requests.map((request) => [request.url, request.redirect])).toEqual([
     [
       'https://releases.example.test/base/releases/latest/conductive/x86_64-unknown-linux-musl',
-      'error',
+      'manual',
     ],
   ])
   expect(release).toEqual({
@@ -64,8 +64,12 @@ it('refuses unsafe or incomplete release metadata', async () => {
     })
 })
 
-it('fails clearly when the release server fails or returns invalid JSON', async () => {
+it('fails clearly when the release server redirects, fails or returns invalid JSON', async () => {
   for (const response of [
+    Response.json(metadata, {
+      status: 302,
+      headers: { Location: 'https://other.example.test/release' },
+    }),
     new Response(null, { status: 503 }),
     new Response('{'),
   ])

@@ -38,7 +38,7 @@ export async function latestSoftwareRelease(
     }).url.replace(/\/$/, '')
     const response = await fetch(
       new Request(`${base}/releases/latest/conductive/${target}`, {
-        redirect: 'error',
+        redirect: 'manual',
       }),
     )
     if (!response.ok) throw unavailable()

@@ -123,6 +123,7 @@ it('creates and lists workspaces and resources through workspace authentication'
         agent: 'codex',
         model: 'owner-default-model',
         effort: 'high',
+        fast: false,
       },
     },
   ])
