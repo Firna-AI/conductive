@@ -69,8 +69,8 @@ number names a dated record, as
   or deleted.
 - It then checks the owner's agent login for the agent of the run, and the
   owner's GitHub access.
-- With a newer runner, each turn of the first session uses that owner's
-  login through the [model gateway](model-gateway.md). The sandbox gets
+- Each turn of the first session uses that owner's login through the
+  [model gateway](model-gateway.md). The sandbox gets
   a turn token, as [Agent logins in a sandbox](isolation.md#agent-logins-in-a-sandbox)
   says.
 - A run takes the agent, the model, and the effort of its routine at its

@@ -21,38 +21,33 @@ beforeAll(async () => {
 beforeEach(() => harness.reset())
 afterAll(() => harness.dispose())
 
-const cases = ([1, 2] as const).flatMap((protocolVersion) =>
-  [CLAUDE, CODEX].flatMap((choice) =>
-    [false, true].map((noReuse) => ({
-      choice,
-      agent: choice.agent,
-      protocolVersion,
-      noReuse,
-      refusedEndpoint: 'https://192.168.1.1/private',
-    })),
-  ),
+const cases = [CLAUDE, CODEX].flatMap((choice) =>
+  [false, true].map((noReuse) => ({
+    choice,
+    agent: choice.agent,
+    noReuse,
+    refusedEndpoint: 'https://192.168.1.1/private',
+  })),
 )
 
 cases.push(
   {
     choice: CLAUDE,
     agent: 'claude',
-    protocolVersion: 2,
     noReuse: false,
     refusedEndpoint: 'https://8.8.8.8/private',
   },
   {
     choice: CODEX,
     agent: 'codex',
-    protocolVersion: 2,
     noReuse: false,
     refusedEndpoint: 'https://[2606:4700:4700::1111]/private',
   },
 )
 
 it.each(cases)(
-  'blocks $agent endpoint $refusedEndpoint on protocol $protocolVersion when refused or unsupported, with noReuse=$noReuse',
-  async ({ choice, protocolVersion, noReuse, refusedEndpoint }) => {
+  'blocks $agent endpoint $refusedEndpoint when refused, with noReuse=$noReuse',
+  async ({ choice, noReuse, refusedEndpoint }) => {
     const fixture = await createChatFixture(harness)
     try {
       const session = await fixture.createSession(choice)
@@ -75,25 +70,23 @@ it.each(cases)(
         }),
       })
       expect(saved.status).toBe(200)
-      if (protocolVersion === 2) {
-        await fixture.env.DB.prepare(
-          'UPDATE agent_logins SET ciphertext = ?, endpoint_origin = ? WHERE user_id = ? AND agent = ?',
+      await fixture.env.DB.prepare(
+        'UPDATE agent_logins SET ciphertext = ?, endpoint_origin = ? WHERE user_id = ? AND agent = ?',
+      )
+        .bind(
+          await encrypt(
+            JSON.stringify({
+              endpoint: refusedEndpoint,
+              secret: 'endpoint-key',
+            }),
+            agentLoginContext(fixture.owner.id, choice.agent),
+            fixture.env.BOAT_KEY_ENCRYPTION_KEY,
+          ),
+          new URL(refusedEndpoint).origin,
+          fixture.owner.id,
+          choice.agent,
         )
-          .bind(
-            await encrypt(
-              JSON.stringify({
-                endpoint: refusedEndpoint,
-                secret: 'endpoint-key',
-              }),
-              agentLoginContext(fixture.owner.id, choice.agent),
-              fixture.env.BOAT_KEY_ENCRYPTION_KEY,
-            ),
-            new URL(refusedEndpoint).origin,
-            fixture.owner.id,
-            choice.agent,
-          )
-          .run()
-      }
+        .run()
       const sharing = await harness.request(path, fixture.ownerCookie, {
         method: 'PATCH',
         body: JSON.stringify({ noReuse }),
@@ -101,7 +94,6 @@ it.each(cases)(
       expect(sharing.status).toBe(200)
       const runner = new FakeRunner({
         workspaceId: WORKSPACE_ID,
-        protocolVersion,
       })
       runner.emit({ type: 'runner.ready' })
       await fixture.connect(runner)
@@ -113,10 +105,7 @@ it.each(cases)(
         turnId: first.session.activeTurnId,
         error: {
           code: 'agent_login_required',
-          message:
-            protocolVersion === 1
-              ? `Octocat's ${choice.agent === 'claude' ? 'Claude' : 'Codex'} login is not available. Try again or send a new message.`
-              : `Octocat's ${choice.agent === 'claude' ? 'Claude' : 'Codex'} login needs a public https:// endpoint with a host name. Update the login on the account page.`,
+          message: `Octocat's ${choice.agent === 'claude' ? 'Claude' : 'Codex'} login needs a public https:// endpoint with a host name. Update the login on the account page.`,
         },
         retryMessageId: 'first',
         durationMs: 0,
@@ -174,7 +163,6 @@ it('moves another member to a linked session when the starter endpoint is refuse
       .run()
     const runner = new FakeRunner({
       workspaceId: WORKSPACE_ID,
-      protocolVersion: 2,
     })
     runner.emit({ type: 'runner.ready' })
     await fixture.connect(runner)

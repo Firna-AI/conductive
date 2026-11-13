@@ -19,6 +19,7 @@ export type RoutineTab = 'routine' | 'runs'
  */
 export const ACCOUNT_TABS = [
   'general',
+  'agents',
   'preferences',
   'shortcuts',
   'this-mac',
@@ -49,7 +50,7 @@ export type OperatorView =
 export type Route =
   | { screen: 'home' }
   | { screen: 'get-started' }
-  /** `connect` opens the Connect form of that agent on General. */
+  /** `connect` opens the Connect form of that agent on the Agents tab. */
   | { screen: 'account'; tab: AccountTab; connect: Agent | null }
   | { screen: 'create-org'; first: boolean }
   | { screen: 'org'; orgId: string }
@@ -97,9 +98,9 @@ function operatorList(list: OperatorList, search: string): string {
 export const routes = {
   home: () => '/',
   getStarted: () => '/get-started',
-  /** General, with the Connect form of `connect` open. */
+  /** General, or the Agents tab with the Connect form of `connect` open. */
   account: (connect?: Agent) =>
-    connect ? `/account?connect=${connect}` : '/account',
+    connect ? `/account/agents?connect=${connect}` : '/account',
   accountTab: (tab: AccountTab) =>
     tab === 'general' ? '/account' : `/account/${tab}`,
   createOrg: (first = false) => (first ? '/orgs/new?first=1' : '/orgs/new'),
@@ -215,12 +216,12 @@ export function parseRoute(pathname: string, search: string): Route {
   if (first === 'account' && area === undefined) {
     // The segment after `account` names the tab.
     const tab = tabOf(ACCOUNT_TABS, orgId)
+    const connect = agentParam(query.get('connect'))
     if (tab) {
-      return {
-        screen: 'account',
-        tab,
-        connect: agentParam(query.get('connect')),
-      }
+      // An older link put `?connect=` on General, which no longer holds the
+      // agents, so it opens the Agents tab.
+      const shown = tab === 'general' && connect ? 'agents' : tab
+      return { screen: 'account', tab: shown, connect }
     }
   }
   if (first !== 'orgs' || orgId === undefined) return { screen: 'not-found' }

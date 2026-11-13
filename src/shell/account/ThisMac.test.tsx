@@ -78,7 +78,13 @@ describe('This Mac in the account', () => {
       requests: macRequests(server),
     }).toEqual({
       tabs: {
-        all: ['General', 'Preferences', 'Keyboard shortcuts', 'This Mac'],
+        all: [
+          'General',
+          'Agents',
+          'Preferences',
+          'Keyboard shortcuts',
+          'This Mac',
+        ],
         open: ['This Mac'],
       },
       sections: ['This Mac'],
@@ -102,7 +108,7 @@ describe('This Mac in the account', () => {
       sections: sections(view),
       requests: macRequests(server),
     }).toEqual({
-      sections: ['GitHub', 'Agents', 'Invite code'],
+      sections: ['GitHub', 'Invite code'],
       requests: [],
     })
   })
@@ -122,10 +128,10 @@ describe('This Mac in the account', () => {
       requests: macRequests(server),
     }).toEqual({
       tabs: {
-        all: ['General', 'Preferences', 'Keyboard shortcuts'],
+        all: ['General', 'Agents', 'Preferences', 'Keyboard shortcuts'],
         open: ['General'],
       },
-      sections: ['GitHub', 'Agents', 'Invite code'],
+      sections: ['GitHub', 'Invite code'],
       requests: [],
     })
   })

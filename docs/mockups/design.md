@@ -174,8 +174,9 @@ sessions as tabs above the chat, and four tabs at the bottom.
   and the attach button and Create, with the hint of the Enter key, at the
   bottom right. A phone always opens the page, so the dialog has no phone
   layout.
-- The account has three tabs, General, Preferences, and Keyboard
-  shortcuts, as links, as the org settings have. On a phone, a tab that
+- The account has four tabs, General, Agents, Preferences, and Keyboard
+  shortcuts, as links, as the org settings have. The Mac app adds This Mac
+  as its fifth tab. On a phone, a tab that
   does not fit moves to a second line. Preferences holds the New
   workspaces section, whose rows put each label beside its control in two
   columns. A segmented control chooses how New workspace opens, with a

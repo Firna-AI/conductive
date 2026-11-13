@@ -21,6 +21,7 @@ import { ShortcutsTab } from './shortcuts/ShortcutsTab'
  */
 const tabs = [
   { tab: 'general', label: 'General' },
+  { tab: 'agents', label: 'Agents' },
   { tab: 'preferences', label: 'Preferences' },
   { tab: 'shortcuts', label: 'Keyboard shortcuts' },
   { tab: 'this-mac', label: 'This Mac' },
@@ -34,7 +35,9 @@ function TabContent(props: {
 }) {
   switch (props.tab) {
     case 'general':
-      return <GeneralTab connect={props.connect} user={props.user} />
+      return <GeneralTab user={props.user} />
+    case 'agents':
+      return <AgentsSection connect={props.connect} />
     case 'preferences':
       return <DefaultsSection />
     case 'shortcuts':
@@ -64,19 +67,15 @@ function ThisMac() {
 }
 
 /**
- * The General tab: the GitHub sign-in, and what every org shares, the
- * GitHub App and the agents. The invite code of the user comes next, so
- * that a phone shows the form of an agent near the top. The deleted orgs
- * of the user come last, with Restore, only while one exists. `connect`
- * opens the Connect form of an agent at first, as the link of a missing
- * login does.
+ * The General tab: the GitHub sign-in, the GitHub App that every org
+ * shares, and the invite code of the user. The deleted orgs of the user
+ * come last, with Restore, only while one exists.
  */
-function GeneralTab(props: { user: User; connect: Agent | null }) {
+function GeneralTab(props: { user: User }) {
   return (
     <>
       <SignInSection user={props.user} />
       <GitHubSection />
-      <AgentsSection connect={props.connect} />
       <InviteCodeSection />
       <DeletedOrgsSection />
     </>
@@ -84,15 +83,15 @@ function GeneralTab(props: { user: User; connect: Agent | null }) {
 }
 
 /**
- * The account, in three tabs, and four in the Mac app. Each tab is a link
- * with its own address. General holds the GitHub sign-in, what every org
- * shares, and the invite code of the user. Preferences holds how new
- * workspaces start: their model, and how New workspace opens. Keyboard
- * shortcuts holds the keys of the commands. The Mac app adds This Mac, with
- * the commands that always run on this Mac. A browser has no Mac, so it
- * shows General at the address of This Mac. A phone moves a tab that does
- * not fit to a second line. The product is free, so the page shows no plan
- * and no billing.
+ * The account, in four tabs, and five in the Mac app. Each tab is a link with its own address.
+ * General holds the GitHub sign-in, the GitHub App, and the invite code of
+ * the user. Agents holds the logins of Claude and Codex, which every org
+ * shares. `connect` opens the Connect form of an agent at first, as the
+ * link of a missing login does. Preferences holds how new workspaces
+ * start: their model, and how New workspace opens. Keyboard shortcuts
+ * holds the keys of the commands. A phone moves a tab that does not fit to a second line.
+ * The Mac app adds This Mac last. A browser shows General at its address.
+ * The product is free, so the page shows no plan and no billing.
  */
 export function AccountScreen(props: {
   user: User

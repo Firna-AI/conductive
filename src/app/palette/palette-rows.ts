@@ -217,6 +217,7 @@ export function orgSettingRows(
 
 /** The tab of the Account page that holds a section, or that a row is. */
 function accountTabOf(id: AccountSettingId): AccountTab {
+  if (id === 'agents') return 'agents'
   if (id === 'new-workspaces') return 'preferences'
   if (id === 'keyboard-shortcuts') return 'shortcuts'
   if (id === 'this-mac') return 'this-mac'

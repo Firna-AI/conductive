@@ -1,7 +1,6 @@
 /** The catalogue paths that screens link to. */
 export const paths = {
   marketing: 'marketing',
-  pricing: 'marketing/pricing',
   docs: 'marketing/docs',
   docsGetStarted: 'marketing/docs/get-started',
   terms: 'marketing/terms',
@@ -56,6 +55,7 @@ export const paths = {
   feedbackEmpty: 'app/feedback/states',
   feedbackSending: 'app/feedback/states/sending',
   account: 'app/account',
+  accountAgents: 'app/account/agents',
   accountPreferences: 'app/account/preferences',
   accountShortcuts: 'app/account/shortcuts',
   accountShortcutsRecording: 'app/account/shortcuts/recording',
@@ -237,6 +237,7 @@ export const barPaths = {
     'fix-checks': 'app/banner/sent',
     'create-pull-request': 'app/banner/sent/create-pull-request',
     'commit-and-push': 'app/banner/sent/commit-and-push',
+    push: 'app/banner/sent/push',
     'resolve-conflicts': 'app/banner/sent/resolve-conflicts',
     'address-review': 'app/banner/sent/address-review',
   },

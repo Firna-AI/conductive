@@ -234,6 +234,7 @@ export function createWorkspaceController(
     async runnerLifecycleDisconnected(publish): Promise<void> {
       await lifecycle.runnerDisconnected(publish)
     },
+    runnerProtocolUnsupported: (reason) => starts.runnerUnsupported(reason),
     async scheduleImage(state: ImageCoordinatorState): Promise<void> {
       await images.schedule(state)
     },

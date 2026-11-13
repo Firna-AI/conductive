@@ -53,7 +53,7 @@ const thisMacSetting: Command = {
   to: paths.thisMac,
 }
 
-/** GitHub and Agents, which follow Sign-in on the General tab. */
+/** GitHub, which follows Sign-in on the General tab, then Agents, its own tab. */
 const generalSettings: readonly Command[] = [
   {
     label: 'GitHub',
@@ -65,7 +65,7 @@ const generalSettings: readonly Command[] = [
     label: 'Agents',
     lead: icon(Bot),
     words: ['claude', 'codex', 'login', 'api key', 'token'],
-    to: paths.account,
+    to: paths.accountAgents,
   },
 ]
 

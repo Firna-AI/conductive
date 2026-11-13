@@ -30,7 +30,7 @@ export const termsDocument: LegalDocument = {
   at ${appDomain}, and in the Mac app. You accept their current version
   each time that you continue with GitHub to sign in. ${productName} keeps
   the latest version that you accepted, and the time when you first
-  accepted it. Effective date: 11 November 2026.`,
+  accepted it. Effective date: 12 November 2026.`,
   sections: [
     {
       title: `Who runs ${productName}`,
@@ -51,8 +51,8 @@ export const termsDocument: LegalDocument = {
           Mac app. Each workspace has its own cloud computer, where agents
           powered by Claude and Codex work. A workspace can hold one task
           after another, with one branch at a time.`,
-        paragraph`${productName} is free until billing starts. Nobody pays
-          until they choose a plan.`,
+        paragraph`${productName} is free. The operator charges no fee for
+          it.`,
       ],
     },
     {
@@ -76,27 +76,18 @@ export const termsDocument: LegalDocument = {
             connect and for following its terms.
             The runs of a routine start their sessions on the login of the
             member who owns the routine.
-            A newer cloud computer starts from an org image that requires
-            ${productName} to keep agent logins outside the cloud computer.
-            ${productName} enforces this requirement for computers that start
-            from that image. Its agents send their model requests and receive
-            their answers through ${productName} on Cloudflare. These requests
+            ${productName} keeps agent logins outside cloud computers.
+            Each turn gets a temporary credential for model requests.
+            The agents send their model requests and receive their answers
+            through ${productName} on Cloudflare. These requests
             can hold your messages, files, code, and command results.
             ${productName} adds the login and sends each request to
             Anthropic, OpenAI, or the chosen endpoint. An own endpoint gets
             the messages, files, and command results of each turn on its
             login, whoever sent the message. Its address and key never reach
-            a cloud computer. A turn on an own endpoint needs agent software
-            that supports temporary credentials. An older cloud computer
-            starts from an earlier org image. ${productName}
-            still permits older software there that receives supported agent
-            logins themselves. A ChatGPT sign-in is never sent there.
-            With that older software, the agents send their model requests to
-            Anthropic or OpenAI from the cloud computer. Installing newer
-            software in that cloud computer does not remove this risk. A new
-            image build gives the protection to each cloud computer that starts
-            from it. In both kinds of cloud computer, agent settings in the
-            repository can send the model requests of the agents to another
+            a cloud computer. ${productName} starts turns only with
+            supported agent software. Agent settings in the repository can
+            send the model requests of the agents to another
             address instead.`,
           text`Keep your keys and logins safe. Connect only accounts that you
             have permission to use. If a key or login is exposed, revoke it
@@ -206,7 +197,7 @@ export const termsDocument: LegalDocument = {
           you can read it while the cloud computer is stopped. It also keeps
           the files that you attach to messages. It copies each file to the
           cloud computer when the agent starts work on its message. When it
-          passes on the model requests of a newer cloud computer, it keeps no
+          passes on the model requests of a cloud computer, it keeps no
           copy of a request or of its answer. It writes no body or header
           value of them to its logs.`,
         paragraph`Continue starts a new branch from the latest default branch
