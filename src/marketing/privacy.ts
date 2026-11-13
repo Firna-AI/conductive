@@ -24,7 +24,7 @@ export const privacyDocument: LegalDocument = {
   title: legalTitles.privacy,
   description: `The privacy notice of ${productName}.`,
   lead: text`This notice says which personal data ${productName} uses, why
-  it uses it, and who gets it. Effective date: 12 November 2026.`,
+  it uses it, and who gets it. Effective date: 13 November 2026.`,
   sections: [
     {
       title: 'Who is responsible',
@@ -92,17 +92,19 @@ export const privacyDocument: LegalDocument = {
           Its disk keeps your code, your files, your agent sessions, and each
           secret value that a script or an agent wrote there. ${productName}
           then deletes the cloud computer, unless a member restores the
-          workspace before then.`,
-        paragraph`${productName} keeps each file that you send with a message
-          until it deletes the workspace of the message. It deletes an unsent
-          file 7 days after you upload it.`,
+          workspace before then. At the end of the 14 days, the workspace
+          leaves the Archived group and the command palette.`,
+        paragraph`Removing a workspace from the list keeps its chat history
+          and attached files. They stay until the org is deleted.
+          A direct link or a chat link still opens its read-only chat.
+          ${productName} deletes an unsent file 7 days after you upload it.`,
         paragraph`An account that waits for app access stays until you ask
           for its deletion, as every other account does.`,
         paragraph`Account records, the latest Terms acceptance, and
           suspension records do not automatically expire when you stop
           using ${productName}. Workspace chat history and Mac command records
           stay while their org exists, including while a cloud computer is
-          stopped. When ${productName} passes on model requests and their
+          stopped or a workspace is removed. When ${productName} passes on model requests and their
           answers, it keeps no copy of them.`,
         paragraph`A connected agent login stays until you remove or replace
           it. Panel sizes stay in your browser until you clear its saved

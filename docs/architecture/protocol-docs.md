@@ -13,10 +13,13 @@ This page lists each protocol doc and what it covers.
     shell variable of each repository in a sandbox, and the context folder
     of each workspace.
   - [Life of a workspace](../protocol/workspace-life.md): the start steps,
-    the time limits, the states, the stop and resume, the archive, the
-    restore, and Continue.
+    the time limits, the states, the archive, the restore, the removal from
+    the list after 14 days, and Continue.
     - [Workspace list marks](../protocol/workspace-marks.md): GitHub colours,
       agent motion, unread output, and reduced motion.
+    - [Stop and resume](../protocol/stop-and-resume.md): the stop of a
+      sandbox without activity, its resume, the starts from the agent
+      tools, and the restart near day 14 of a stop.
   - [Continue](../protocol/continue.md): the next task of a workspace after a
     merge, on a new branch with the same sandbox and sessions.
   - [Workspace menu](../protocol/workspace-menu.md): the menu of a workspace
@@ -89,9 +92,11 @@ This page lists each protocol doc and what it covers.
   - [Names from the workspace tools](../protocol/tool-names.md): the rule
     for the names and titles that the calls give.
 - [Orgs and members](../protocol/orgs-and-members.md): orgs, sections,
-  roles, the first run, and the end of an org.
+  roles, and the first run.
   - [Org rail order](../protocol/org-rail-order.md): the order of the orgs
     in the rail that each person keeps, and how the person changes it.
+  - [Delete org](../protocol/delete-org.md): the end of an org, the 7 days
+    before the app deletes everything of it, and its Restore.
 - [Mac app](../protocol/desktop-app.md): the shell for macOS, its sign-in, and
   Mac commands.
   - [Mac packages and updates](../protocol/desktop-packages-and-updates.md)

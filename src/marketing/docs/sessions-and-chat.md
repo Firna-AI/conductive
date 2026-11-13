@@ -22,6 +22,11 @@ Restore the workspace before starting a session or sending another message.
 Restore is available for 14 days after Archive while its computer is kept.
 Select **Resume** if the restored workspace is already open.
 
+After 14 days, the workspace leaves **Archived** and the command palette.
+A direct link or a chat link still opens its read-only chat.
+The bar says **Removed on** followed by the removal date.
+Conductive keeps its chat history and attached files until the org is deleted.
+
 - [Create a workspace](/docs/workspaces#create-a-workspace-from-a-message)
 - [Connect an agent login](/docs/agent-logins)
 - [Restore an archived workspace](/docs/workspaces#restore-an-archived-workspace)
@@ -77,7 +82,8 @@ Each chip keeps its place in the sent message.
 When the message reaches the agent, select its file chip to open the copy.
 The copy opens in the workspace's file view.
 This can start a stopped cloud computer.
-Restore an archived workspace before opening its attached files.
+Restore an archived workspace within 14 days before opening its attached files.
+After removal, Conductive keeps the attached files, but the workspace's file tools stay unavailable.
 
 Attached files arrive in `.context/attachments/` in the workspace's repository folder.
 Each file keeps the same path when you retry its message.
@@ -123,8 +129,10 @@ The title of a session in another workspace updates when the chat loads.
 Session links also show as small boxes in agent answers and pasted message drafts.
 A member can type the same **Sent by:** line, so it does not prove who wrote a message.
 
-An agent can read archived workspaces and closed sessions.
-It cannot send messages to an archived workspace or a closed session.
+An agent can read archived and removed workspaces by ID.
+It can also read closed sessions.
+Workspace lists leave out removed workspaces unless the agent asks for them.
+It cannot send messages to an archived or removed workspace or a closed session.
 Use **Stop** in each affected session if agents keep replying to each other without useful work.
 
 - [Get the current workspace tools](/docs/cloud-computer#apply-setup-changes)
@@ -241,7 +249,7 @@ A long read returns part of the transcript, with its line range and a way to rea
 For a stop through an agent's tools, the transcript gives **Stopped from** and the sending session's link.
 
 You can copy another tab's conversation without changing the selected tab.
-Both options work in archived and other read-only workspaces.
+Both options work in archived and removed workspaces, and in other read-only workspaces.
 
 For a closed session, reopen it from **Session history** before copying.
 

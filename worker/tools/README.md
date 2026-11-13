@@ -38,10 +38,11 @@ Its current owner must still belong to that org.
 The token must not be revoked.
 The handler grants no access to other routes, methods, hosts, or sockets.
 
-GET returns the number, web link, name, branch, state, and owner of every workspace in the calling org.
+GET returns the number, web link, name, branch, state, and owner of every workspace in the calling org that is not removed.
 The owner gives `id`, `githubLogin`, and `displayName`, with no avatar.
 The link uses the configured app origin, not the machine request origin.
 It includes other owners' workspaces and archived workspaces.
+A [removed workspace](../../docs/protocol/workspace-life.md#removed-workspaces) shows only with the `removed` option.
 Its optional filters and paging follow [Workspace lists](workspaces.md#workspace-lists).
 The repository list reads the calling org's newest good image, in GitHub name order.
 `current` marks the calling workspace's repository.
@@ -61,7 +62,7 @@ The reserved workspace path value `current` resolves to the calling workspace fr
 No new sandbox credential supplies that ID.
 The handler and the real target object both check the target's org and the org's active state.
 The object also checks its exact workspace identity before it reads chat storage.
-An archived target remains readable. The caller's own token still needs its normal live-workspace access.
+An archived target remains readable, also after its removal. The caller's own token still needs its normal live-workspace access.
 
 The session list includes closed sessions, in creation order with ID as the tie breaker.
 Its optional `limit` and `offset` follow [Session list paging](sessions.md#session-list-paging).

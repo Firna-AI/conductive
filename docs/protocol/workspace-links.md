@@ -12,7 +12,8 @@ number names a dated record, as
 [Decision numbers](../architecture.md#decision-numbers) says. The
 [mockup catalogue](../mockups/catalogue.md) draws these screens at
 `app/workspace-links`, in New workspace, and in the flows
-`user-flows/link-a-workspace` and `user-flows/open-a-session-link`.
+`user-flows/link-a-workspace`, `user-flows/open-a-session-link`, and
+`user-flows/open-a-removed-workspace`.
 
 ## Copy link
 
@@ -53,7 +54,8 @@ number names a dated record, as
   waits for another.
 - The marks mean what they mean in the workspace list, as
   [The list mark](workspace-life.md#the-list-mark) says. A chip of an
-  archived workspace shows that the workspace is archived.
+  archived workspace shows that the workspace is archived, also after it
+  left the list.
 - A chip keeps the height of its line of text. A long name is cut short,
   and the chip gives the whole name as its title.
 - A chip never makes a message wider than its column. Reason: a long chip
@@ -69,18 +71,22 @@ number names a dated record, as
   - Its path leads to a page of one workspace: the workspace or one of its
     tabs.
   - That workspace belongs to the org of the chat or of New workspace, and
-    the reader may see it. An archived workspace counts too.
+    the reader may see it. An archived workspace counts too, also a
+    [removed workspace](workspace-life.md#removed-workspaces).
 - In this doc, a workspace link is a link that meets these rules.
 - A session link is a workspace link whose path names one session of that
   workspace, as [Session links](agents-and-sessions.md#session-links)
   says. It shows as a [session chip](#session-chips).
 - Reason: people also copy the address bar, which can hold the path of a
   tab.
+- The chip of a removed workspace still opens its read-only chat
+  (decision 519). Reason: only a direct link opens a removed workspace,
+  so its chip must not become plain text.
 - The app resolves each link as a browser does before it looks for the
   workspace. So a chip always shows the workspace whose page a press
   opens, also for a link with `..` or other odd parts.
 - Every other link stays plain text. Examples are a link to another org, to
-  an unknown or removed workspace, or to a workspace that the reader may
+  a workspace that does not exist, or to a workspace that the reader may
   not see.
 - Reason: a person sees only the workspaces of the orgs where they are a
   member, as

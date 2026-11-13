@@ -24,6 +24,11 @@ Its computer and files can stay available for Restore for 14 days after Archive.
 Restore the workspace while **Restore** is available.
 Then select **Resume** before you use the file tools.
 
+After 14 days, the workspace leaves **Archived** and the command palette.
+A direct link or a chat link still opens its read-only chat.
+Conductive keeps its chat history and attached files until the org is deleted.
+File tools stay unavailable after removal.
+
 - [Restore an archived workspace](/docs/workspaces#restore-an-archived-workspace)
 
 ## Read a file
@@ -55,7 +60,7 @@ Ask the agent to change a file, or use **Terminal**.
 
 You can also open an attached file from its chip in a sent message.
 It opens the copy in the workspace's repository folder after the message reaches the agent.
-Restore an archived workspace before opening its attached files.
+Restore an archived workspace within 14 days before opening its attached files.
 
 - [Attach files to messages](/docs/sessions-and-chat#attach-files)
 

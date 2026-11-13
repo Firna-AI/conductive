@@ -166,9 +166,11 @@ Continue waits while an agent turn runs in any session of the workspace.
 After a merge, the workspace owner and org admins can select **Archive** in the bar.
 Archive stops its cloud computer at once, without checking the work or asking a question.
 It keeps the computer and its files for 14 days.
-The chat stays read-only in **Archived**, with no file lists or tools.
+The workspace stays in **Archived** for those 14 days.
+Its chat is read-only, with no file lists or tools.
 
 The notification after Archive offers **Restore**.
+It also gives the day the workspace leaves the list.
 Every member of an active org can restore the workspace while its computer and Restore window remain available.
 Restore returns it to its section and place in the list, stopped.
 Select **Resume** if the restored workspace is already open.
@@ -177,6 +179,9 @@ On a computer, point to its row in **Archived** to find **Restore**.
 
 Restore ends after 14 days.
 Conductive then deletes the computer and its files.
+The workspace leaves **Archived** and the command palette.
+A direct link or a chat link still opens its read-only chat.
+Conductive keeps its chat history and attached files until the org is deleted.
 The merge alone does not archive the workspace.
 
 - [Archive a workspace](/docs/workspaces#archive-a-workspace)

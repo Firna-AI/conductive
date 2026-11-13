@@ -66,7 +66,7 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the palette at
 - Without such an org, it offers only Create org, Send feedback, and the
   Account settings. [Help](command-palette-actions.md#help) gives the
   reason for Send feedback.
-- The palette treats a [deleted](orgs-and-members.md#delete-org) org as
+- The palette treats a [deleted](delete-org.md) org as
   absent. Such an org has no Switch to row, and its settings do not show.
 - On the page of a deleted org, the palette offers nothing of that org.
 - The palette finds only the workspaces of its org, as the palette of
@@ -103,8 +103,15 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the palette at
   because it needs data that the app does not keep or send.
 - With a query, the All tab shows the matches in four groups, in this
   order: Workspaces, Actions, Settings, and Archived. Archived holds the
-  archived workspaces that match. Reason: the person finds an old
-  workspace without a change of tab, and the active workspaces stay first.
+  matches among the workspaces of the Archived group of the list. Reason:
+  the person finds an old workspace without a change of tab, and the
+  active workspaces stay first.
+- A [removed workspace](workspace-life.md#removed-workspaces) shows in no
+  group and in no tab of the palette (decision 519). Only a direct link
+  opens it.
+- A search that also finds the removed workspaces, in a group of their
+  own, was left out (decision 519). It can come when members ask to find
+  old work without a link.
 - With a query, each other tab shows its matches in its own groups.
 - A group without a match does not show.
 
@@ -167,8 +174,9 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the palette at
   A section is not tied to a repository, so the repository is a filter.
 - The filters start at All repositories and Active each time that the
   palette opens.
-- With the Archived filter, the tab shows the archived workspaces in one
-  Archived group, in the order of the list.
+- With the Archived filter, the tab shows the workspaces of the Archived
+  group of the list. They show in one Archived group, in the order of the
+  list.
 
 ## Actions
 

@@ -16,8 +16,8 @@ These docs belong to this doc:
   variable of each repository in a sandbox, and the context folder of each
   workspace.
 - [Life of a workspace](workspace-life.md): the start steps, the time
-  limits, the states, the stop and resume, the archive, the restore, and
-  Continue.
+  limits, the states, the stop and resume, the archive, the restore, the
+  removal from the list after 14 days, and Continue.
 - [Continue](continue.md): the next task of a workspace after a merge, on
   a new branch with the same sandbox and sessions.
 - [Workspace menu](workspace-menu.md): the menu of a workspace row, which
@@ -199,7 +199,7 @@ These docs belong to this doc:
 
 ## Stop and resume
 
-[Stop and resume](workspace-life.md#stop-and-resume) holds these workspace requirements.
+[Stop and resume](stop-and-resume.md) holds these workspace requirements.
 
 ## Archive
 

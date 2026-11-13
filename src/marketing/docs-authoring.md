@@ -210,13 +210,13 @@ pages.
 | Overview | `/docs` | [Architecture](../../docs/architecture.md) |
 | Get started | `/docs/get-started` | [Orgs and members](../../docs/protocol/orgs-and-members.md#get-started) |
 | Agent logins | `/docs/agent-logins` | [Agents and sessions](../../docs/protocol/agents-and-sessions.md#agents), [Security](../../docs/protocol/access-and-security.md), [Tokens and secrets](../../docs/protocol/tokens-and-secrets.md#agent-logins), [Isolation of orgs and sandboxes](../../docs/protocol/isolation.md#agent-logins-in-a-sandbox) |
-| Workspaces | `/docs/workspaces` | [Create a workspace](../../docs/protocol/create-a-workspace.md), [Workspaces](../../docs/protocol/workspaces-and-sandboxes.md), [Life of a workspace](../../docs/protocol/workspace-life.md) |
+| Workspaces | `/docs/workspaces` | [Create a workspace](../../docs/protocol/create-a-workspace.md), [Workspaces](../../docs/protocol/workspaces-and-sandboxes.md), [Life of a workspace](../../docs/protocol/workspace-life.md), [Stop and resume](../../docs/protocol/stop-and-resume.md) |
 | Sessions and chat | `/docs/sessions-and-chat` | [Chat and events](../../docs/protocol/chat-and-events.md), [Messages and attachments](../../docs/protocol/messages-and-attachments.md), [Repository folders](../../docs/protocol/repository-folders.md#the-context-folder) |
 | Files and changes | `/docs/files-and-changes` | [Workspace tools](../../docs/protocol/workspace-tools.md#files-and-changes) |
 | Terminal and previews | `/docs/terminal-and-previews` | [Workspace tools](../../docs/protocol/workspace-tools.md), [Terminal, previews, and desktop](../../docs/protocol/terminal-previews-and-desktop.md) |
 | Pull requests | `/docs/pull-requests` | [GitHub banner](../../docs/protocol/github-banner.md) |
 | Cloud computer | `/docs/cloud-computer` | [Org image](../../docs/protocol/org-image.md#the-org-image) |
-| Orgs and members | `/docs/orgs-and-members` | [Orgs and members](../../docs/protocol/orgs-and-members.md) |
+| Orgs and members | `/docs/orgs-and-members` | [Orgs and members](../../docs/protocol/orgs-and-members.md), [Delete org](../../docs/protocol/delete-org.md) |
 | Mac app | `/docs/mac-app` | [Mac app](../../docs/protocol/desktop-app.md), [Mac packages and updates](../../docs/protocol/desktop-packages-and-updates.md), [Mac app sign-in](../../docs/protocol/desktop-sign-in.md), [Permissions and Mac commands](../../docs/protocol/desktop-commands.md), [Releases](../../desktop/RELEASES.md) |
 | Security | `/docs/security` | [Access and security](../../docs/protocol/access-and-security.md), [Isolation of orgs and sandboxes](../../docs/protocol/isolation.md), [Tokens and secrets](../../docs/protocol/tokens-and-secrets.md), [Terminal, previews, and desktop](../../docs/protocol/terminal-previews-and-desktop.md), [Agent tools](../../docs/protocol/agent-tools.md) |
 

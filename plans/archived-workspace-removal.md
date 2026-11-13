@@ -279,33 +279,33 @@ Postcode lookup for the shipping and billing forms, `W-372`, removed on
 
 Depends on: 1
 
-- [ ] `docs/protocol/workspace-life.md`: Archive and Restore give the
+- [x] `docs/protocol/workspace-life.md`: Archive and Restore give the
       removal at the end of Restore, decisions 518, 519, and 520. Replace
       the requirement of decision 16 that the chat stays in the Archived
       group.
-- [ ] `docs/protocol/orgs-and-members.md`: the Archived group holds only
+- [x] `docs/protocol/orgs-and-members.md`: the Archived group holds only
       the workspaces whose Restore has not ended.
-- [ ] `docs/protocol/workspace-calls.md`: the default of the list, the
+- [x] `docs/protocol/workspace-calls.md`: the default of the list, the
       `removed` filter, and the removal time of `get_workspace`.
-- [ ] `docs/protocol/operator-section.md`: the Removed count, and the
+- [x] `docs/protocol/operator-section.md`: the Removed count, and the
       top five orgs that count every workspace.
-- [ ] `docs/protocol/command-palette.md`: the Archived filter and the
+- [x] `docs/protocol/command-palette.md`: the Archived filter and the
       search leave out removed workspaces.
-- [ ] `docs/protocol/workspace-links.md`: a link to a removed workspace
+- [x] `docs/protocol/workspace-links.md`: a link to a removed workspace
       still opens it.
-- [ ] Update the member counts in `docs/protocol/orgs-and-members.md` and
+- [x] Update the member counts in `docs/protocol/orgs-and-members.md` and
       in any doc that gives the count of the Remove member dialog.
-- [ ] Read the Terms page and the Privacy page in full. Update each
+- [x] Read the Terms page and the Privacy page in full. Update each
       sentence that restates the Archive facts. The Privacy page says
       that the chat and the attached files stay until the org is deleted.
-- [ ] Read each public guide in `src/marketing/docs/` in full. Update each
+- [x] Read each public guide in `src/marketing/docs/` in full. Update each
       sentence on the Archived group and on the chat after 14 days:
       `workspaces.md`, `sessions-and-chat.md`, `overview.md`,
       `security.md`, and `pull-requests.md` at least.
-- [ ] Update the notes of the Archive rows of the comparison page
+- [x] Update the notes of the Archive rows of the comparison page
       (`src/marketing/from-conductor/areas/workspaces-and-branches.ts`).
       Their statuses stay.
-- [ ] Update `worker/tools/README.md`, `worker/tools/workspaces.md`, and
+- [x] Update `worker/tools/README.md`, `worker/tools/workspaces.md`, and
       `tools/calls.md`.
 
 ## Milestone 3: Worker and agent tools
@@ -328,6 +328,10 @@ Depends on: 2
       (`worker/operator/workspace-counts.ts` and its readers).
 - [ ] Tests: list default and filter, read by ID of a removed workspace,
       session reads, operator counts.
+- [ ] Update `worker/operator/overview.md` and `worker/operator/README.md`
+      (five state counts), the Tests and Key code parts of
+      `worker/tools/workspaces.md`, and the README entry of the shared
+      removal helper.
 
 ## Milestone 4: App
 
@@ -360,6 +364,7 @@ Depends on: 1, 3
       their seed data.
 - [ ] Tests: the group, the palette, the timer, the bar, the toast, and a
       chip that opens a removed workspace.
+- [ ] Update `src/app/suspended-org.md`, which counts "from the list".
 - [ ] Check the list, the bar, and a chip link in the browser.
 
 ## Milestone 5: Verification, commit, review, and pull request

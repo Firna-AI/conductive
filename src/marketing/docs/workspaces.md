@@ -136,6 +136,7 @@ Its name and mark follow the workspace as they change.
 
 The link opens the workspace for a person who has access.
 It grants no org membership.
+A direct link or a chat link still opens a removed workspace's read-only chat.
 Typing `W-12` alone leaves plain text in the message.
 
 ## Organize work with sections
@@ -156,6 +157,8 @@ On a phone, use a long press to lift its row.
 Ask an agent to create, inspect, or rename a workspace.
 It can also move the workspace to the top of a section.
 It can find workspaces by owner, state, repository, name, recent activity, and archive state.
+Workspace lists leave out removed workspaces unless the agent asks for them.
+An agent can still read a removed workspace and its sessions by ID.
 Ask for your workspaces, or give another member's name or GitHub login.
 Workspace and session lists can return a smaller page of results.
 When an agent creates a workspace, it can set the workspace name and its first session's title.
@@ -262,10 +265,12 @@ It asks no confirmation question.
 Archive stops the computer and its agent work at once.
 
 Conductive keeps the computer and its files for 14 days after Archive.
-The chat stays read-only in **Archived**.
+The workspace stays in **Archived** for those 14 days.
+Its chat is read-only.
 File lists, Terminal, previews, and other workspace tools stay unavailable while it is archived.
 
 The notification after Archive names the workspace and offers **Restore**.
+It also gives the day the workspace leaves the list.
 Use that action if you archived the workspace by mistake.
 
 ## Restore an archived workspace
@@ -284,6 +289,7 @@ The command palette offers **Restore workspace** for the archived workspace you 
 On a phone, open its row.
 Then select **Restore** in the workspace bar.
 The archived bar gives the Archive date and the last day of Restore.
+It also gives the day the workspace leaves the list, even when Restore is unavailable.
 
 Restore brings back the workspace with its files and agent sessions.
 It returns to its section and its place in the list.
@@ -296,9 +302,13 @@ Restore keeps the workspace's owner.
 If that owner is suspended, ask an org admin to reassign the workspace before resuming.
 
 Restore ends after 14 days, even while the computer's deletion is still in progress.
-The archived bar shows when Restore ended until deletion completes.
-It says the computer is deleted only after that deletion completes.
-The chat stays read-only after the computer and its files are deleted.
+Conductive deletes the cloud computer and the files on it.
+The workspace leaves **Archived**, the command palette, and member workspace counts.
+A direct link or a chat link still opens its read-only chat.
+The bar says **Removed on** followed by the removal date.
+Its text says that the cloud computer is deleted or is being deleted.
+
+Conductive keeps the workspace's chat history and attached files until the org is deleted.
 Keep work in GitHub if you need it after the Restore window ends.
 
 - [Review files and changes](/docs/files-and-changes)

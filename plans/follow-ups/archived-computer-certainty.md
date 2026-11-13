@@ -18,7 +18,7 @@
   - While a replay of a lost create reply fails, the Archive owner writes no computer ID to the workspace row. The Archive reply reads the row after that first pass, at `worker/lifecycle/archive-workspace.ts:35-37`.
   - `workspaceRestoreUntil` in `src/shared/workspaces.ts:7-14` returns null when the row has no computer ID. Each Worker reply and event takes `restoreUntil` from it.
   - `archivedRestore` in `src/shell/workspace/sandbox-view.ts:40-42` gives no Restore state for a null `restoreUntil`. That case shows the bar "Its cloud computer is deleted, and the chat is read-only." and the panel text "The files and the tools went with the cloud computer.", at `src/shell/workspace/notice-copy.ts:80-87`.
-  - The requirement, at the Restore section of `docs/protocol/workspace-life.md`: "The bar says that the cloud computer is deleted only after the delete. Before that, it gives the day when Restore ended." So a deletion claim needs a confirmed delete.
+  - The requirement, at the Restore section of `docs/protocol/workspace-life.md`: "The bar says that the cloud computer is deleted only after the delete. Before that, the bar of a removed workspace says that the cloud computer is being deleted." So a deletion claim needs a confirmed delete.
   - The same section says that an archived workspace without a kept sandbox offers no Restore, and that the app refuses such a Restore with HTTP 409.
   - The ledger already records the pending request, the recovered ID, and the confirmed delete of each org computer.
   - The Worker sends facts, and the browser chooses the words, through the notice type in `docs/mockups/src/components/workspace/sandboxNoticeState.ts`, which the app imports.
@@ -30,7 +30,7 @@
 - **Impact if no action:** The app tells members that a computer and its files are gone while the computer can still exist, through the recovery and after the end of Restore. No data is lost, and Restore stays unavailable.
 - **Root question:** How can an archived workspace report computer loss without claiming an unconfirmed deletion?
 - **Options:**
-  - **A.** Use the chat-only words for every archived record with a null `restoreUntil`. Effort: Small. Blocked: after the last day of Restore it drops the day when Restore ended, which `docs/protocol/workspace-life.md` requires. It also removes the drawn state `app/archive/deleted` of the mockup catalogue.
+  - **A.** Use the chat-only words for every archived record with a null `restoreUntil`. Effort: Small. Blocked: after the last day of Restore it drops the day when Restore ended, which `docs/protocol/workspace-life.md` requires. It also removes the drawn state `app/archive/removed` of the mockup catalogue.
   - **B.** Project the certainty of the computer apart from Restore availability, from the existing ledger.
     - The reply carries the computer state as its own typed field, read from the row and the ledger. The notice maps that field to its states exhaustively.
     - A computer may exist while the row has an ID, or while a ledger row of the workspace has no deleted date and no refused create. This covers a lost reply, a recovered ID before its row write, and a failed-start delete that still retries.

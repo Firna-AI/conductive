@@ -30,7 +30,7 @@ export const termsDocument: LegalDocument = {
   at ${appDomain}, and in the Mac app. You accept their current version
   each time that you continue with GitHub to sign in. ${productName} keeps
   the latest version that you accepted, and the time when you first
-  accepted it. Effective date: 12 November 2026.`,
+  accepted it. Effective date: 13 November 2026.`,
   sections: [
     {
       title: `Who runs ${productName}`,
@@ -204,6 +204,16 @@ export const termsDocument: LegalDocument = {
           passes on the model requests of a cloud computer, it keeps no
           copy of a request or of its answer. It writes no body or header
           value of them to its logs.`,
+        paragraph`Archive stops a workspace's cloud computer and keeps it
+          for 14 days. Members of an active org can restore it during
+          those 14 days while its computer is kept. When the 14 days end, ${productName} deletes
+          the cloud computer and its files. The workspace leaves the
+          Archived group, the command palette, and member workspace counts.
+          Its read-only chat still opens through a direct link or a chat
+          link.`,
+        paragraph`${productName} keeps the removed workspace's chat history
+          and attached files until the org is deleted. Removing
+          the workspace from the list does not delete this data.`,
         paragraph`Continue starts a new branch from the latest default branch
           of the repository. It keeps the cloud computer and its sessions.
           Changed files move to the new branch. Commits that are not pushed

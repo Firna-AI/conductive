@@ -29,7 +29,7 @@ the first session title, and the create request ID, as
   token. Each other target must be a workspace of the calling org. An
   unknown target gives HTTP 404 `workspace_not_found`.
 - A get needs only the workspace token. It also reads an archived
-  workspace.
+  workspace, also a removed one.
 - A write calls `requireCallingToolTurn`. The stored active turn gives the
   sender. The sender must still be a member of the org who is not
   suspended. The request supplies no identity.
@@ -48,6 +48,9 @@ the first session title, and the create request ID, as
 - `createdAt`, and `lastActivityAt`, the row's `updated_at`, whose age the
   workspace list of the app shows
 - `archivedAt`, and `restoreUntil` while a sandbox is kept
+- `removedAt`: for a removed workspace, the time of the removal, 14 days
+  after `archivedAt`. Else `null`. A removed workspace keeps the state
+  `archived`.
 
 ## Rename and move
 
@@ -89,6 +92,7 @@ the first session title, and the create request ID, as
 | `query` | Text after trimming. A blank value counts as no option. |
 | `updatedSince` | Signed epoch milliseconds, a safe integer, with no lower bound. |
 | `archived` | `true` or `false`. |
+| `removed` | `true` or `false`. A call without it counts as `false`. |
 | `limit` | 1 to 100. |
 | `offset` | A nonnegative safe integer. |
 
@@ -97,11 +101,15 @@ the first session title, and the create request ID, as
   Unicode lower case. A workspace without a name matches no text.
 - `updatedSince` compares with the row's `updated_at`.
 - `archived` uses the archive time and the archived state of the row.
+- `removed` uses the archive time of the row. The row is removed when
+  that time plus the 14 days of Restore is at or before the time of the
+  read. So without `removed`, `archived` true or `state` archived gives no
+  removed row. `archived` false with `removed` true gives an empty list.
 - The list keeps creation order, with the ID as the tie breaker.
 - `hasMore` is in the reply only when the call gives a limit.
 - A malformed option gives HTTP 400 `invalid_input`.
-- A call without options gives every workspace of the org, also the
-  archived ones.
+- A call without options gives every workspace of the org that is not
+  removed, also the archived ones.
 - The owner filter reads no login and has no mine form.
 
 ## Creation replay and first title

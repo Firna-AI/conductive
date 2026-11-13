@@ -124,6 +124,11 @@ An org can have several admins.
 Every member of an active org can restore another member's archived workspace within 14 days of Archive while its computer is kept.
 Restore ends after 14 days, even while Conductive retries deleting the computer.
 Archived chats stay read-only until Restore.
+After 14 days, the workspace leaves **Archived** and the command palette.
+A direct link or a chat link still opens its read-only chat.
+Conductive keeps its chat history and attached files until the org is deleted.
+
+The workspace counts in **Members** leave out removed workspaces.
 
 - [Restore an archived workspace](/docs/workspaces#restore-an-archived-workspace)
 
@@ -157,6 +162,7 @@ Work with people you trust with your agent and GitHub logins.
 An admin can remove another member from **Members**.
 That member loses ordinary access to the org.
 Their workspaces stay in the org and move to the admin who removed them.
+This includes removed workspaces, although the member's workspace count leaves them out.
 
 If you need to leave an active org, ask another admin to remove your membership.
 The last active admin must arrange another active admin or delete the org.
@@ -192,6 +198,8 @@ It lists each deleted org with **Restore** above its steps.
 Restoring brings back its workspaces, chats, and settings.
 Archived workspaces stay archived after the org returns.
 Their existing Restore deadlines continue to apply.
+Workspaces archived at least 14 days ago stay out of **Archived** and the command palette.
+Their read-only chat still opens by direct link or chat link.
 Deleting the org does not extend a workspace's 14 days of Restore.
 Other stopped workspaces start their computers when you open them.
 

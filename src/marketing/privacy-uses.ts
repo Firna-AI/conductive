@@ -128,7 +128,9 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         that you attach to a message stay in the
         storage of ${productName} at Cloudflare. When the agent starts
         work on the message, ${productName} copies them to the cloud
-        computer of the workspace.`,
+        computer of the workspace. Removing the workspace from the list
+        keeps its chat history and attached files until the org is
+        deleted.`,
       text`Mac commands: ${productName} keeps each request and its result.
         They record the command, its folder, its reason, its time limit,
         and the output. A request also names the Mac that gets it.

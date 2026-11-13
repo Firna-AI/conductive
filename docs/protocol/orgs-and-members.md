@@ -1,8 +1,9 @@
 # Orgs and members
 
 This doc holds the requirements and the decisions in force for orgs, their
-sections, and their members. It also covers the first run and the end of
-an org. A linked page covers [the order of the org rail](org-rail-order.md).
+sections, and their members. It also covers the first run. Linked pages
+cover [the order of the org rail](org-rail-order.md) and
+[the delete of an org](delete-org.md).
 The terms are those of the [architecture doc](../architecture.md#terms). A
 decision number names a dated record, as
 [Decision numbers](../architecture.md#decision-numbers) says.
@@ -95,7 +96,7 @@ decision number names a dated record, as
   only an admin builds (decision 57).
 - The person can connect an agent while the build runs.
 - While the person has a deleted org, Get started lists it before the
-  steps, with Restore, as [Delete org](#delete-org) says.
+  steps, with Restore, as [Delete org](delete-org.md) says.
 - When every step is done, Get started shows its finish: a line about the
   org, and an Open button for the org, such as "Open Acme".
 - The Open button stays on in every state of the build (decision 150 of PR #92).
@@ -128,8 +129,17 @@ decision number names a dated record, as
 - Deleting a section moves its workspaces to General, also the archived
   ones. Reason: no workspace gets lost, and a Restore always has a section
   to go back to.
-- The app keeps the archived workspaces in the Archived group at the end
-  of the list. The users do not edit that group.
+- The app keeps each archived workspace in the Archived group at the end
+  of the list until its Restore ends (decision 518). The users do not edit
+  that group. [Removed workspaces](workspace-life.md#removed-workspaces)
+  says what happens then.
+- Each count of workspaces on the screens of an org leaves out the removed
+  workspaces. These are the count of the Archived group and the count of
+  each member on the Members tab. They are also the counts in the
+  questions of Remove member and Leave org.
+- Reason: a count then matches the rows in the list.
+- The page of an org with an empty list asks for a first workspace, also
+  when the org has removed workspaces.
 - A workspace row offers Archive only to its owner and the org's admins.
   Only hover reveals its archive icon over the time without moving the row
   content. Selection and keyboard focus alone keep the time visible.
@@ -228,6 +238,8 @@ decision number names a dated record, as
   states the choice when no such admin exists (decision 123).
 - Reason: each workspace keeps a person in the org who is responsible for
   it.
+- The [removed workspaces](workspace-life.md#removed-workspaces) of the
+  member move too, because the app keeps their data.
 - Their routines in the org move to the member who gets the workspaces,
   turned off, as [When the owner leaves](routines.md#when-the-owner-leaves)
   says (decision 508 E).
@@ -242,54 +254,6 @@ decision number names a dated record, as
 
 ## Delete org
 
-- Delete org asks for the name of the org.
-- It stops every sandbox of the org and hides the org at once
-  (decision 30).
-- The app deletes everything of the org after 7 days, unless an admin
-  restores the org.
-- Reason: the work of every member stays safe for 7 days, and a stopped
-  sandbox costs no machine time.
-- A delete at once was rejected, because an admin could then delete the
-  unpushed work of a member.
-- The delete also removes the saved snapshots of the org, with the org
-  image.
-- A deleted org leaves the org rail at once. Its other members cannot
-  open it.
-- For 7 days, the General tab of the Account page lists the deleted org
-  for its admins, with Restore. The section shows only while the user has
+- [Delete org](delete-org.md) holds the requirements of Delete org, the
+  7 days before the app deletes everything of the org, and the Restore of
   a deleted org.
-- The address of a deleted org still opens its page, and that page also
-  offers Restore. So an old link to the org is not a dead end.
-- Reason: the faded tiles of deleted orgs stayed in the way after a
-  delete, as the user said on 12 November 2026. A faded tile in the rail
-  was the earlier rule. A new tab of the Account page was rejected,
-  because it is empty on most days.
-- Delete org then opens the next org that is not deleted, else Get
-  started. Its question says that an admin restores the org from Account
-  settings.
-- A person whose orgs are all deleted counts as a person without an org.
-  So the app opens Get started, as for a new person, and its org step
-  offers Create org.
-- While the person has a deleted org, Get started also lists it before
-  its steps, with Restore, as the Account page does. Restore there opens
-  the org. Without a deleted org, Get started shows no such list.
-- Reason: a phone shows Get started without the rail, so it has no other
-  way to the Account page. The user chose this on 13 November 2026.
-  Opening the page of a deleted org, as before, was rejected, because a
-  person who wants a new org then meets the deleted org first. A link to
-  the Account page on the phone layout of Get started was rejected,
-  because Restore then sits one page away from where the person lands.
-- A suspended deleted org offers no Restore, in the Account page or on
-  its page, because a suspended org refuses a restore.
-- Restore brings the org back as it was. Its workspaces start again when
-  they open. A workspace whose owner is suspended does not start, as
-  [Operator actions](operator-actions.md#starts-stops-and-builds) says.
-- The routines of a deleted org start no runs. After a Restore, each runs
-  once for the schedule times that it missed, as
-  [Suspensions and deleted orgs](routines.md#suspensions-and-deleted-orgs)
-  says.
-- An unfinished create continues when its workspace opens after Restore.
-  It then gets a new start limit of 20 minutes, the limit of each start in
-  [Time limits of builds and starts](workspace-life.md#time-limits-of-builds-and-starts).
-  The workspace keeps its original creation date.
-- Reason: the create makes no progress while its org is deleted.

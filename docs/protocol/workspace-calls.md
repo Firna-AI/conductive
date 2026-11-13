@@ -73,15 +73,19 @@ number names a dated record, as
 
 ## List the workspaces
 
-- A workspace list call returns every workspace of the org, with its
+- A workspace list call returns the workspaces of the org, each with its
   number, its link, its name, its branch, its state, and its owner.
   Reason: every member of the org already sees these workspaces.
 - The owner of an entry has the member ID, the GitHub login, and the
   display name of the workspace owner, and no avatar (decision 283). A
   member without a display name has only the ID and the login. Reason: an
   agent can then find the ID of an owner whom a message names in words.
-- The list holds the archived workspaces too. It gives the workspaces in
-  the order of their creation, the oldest first.
+- The list holds the archived workspaces too. It leaves out the
+  [removed workspaces](workspace-life.md#removed-workspaces), unless the
+  call asks for them (decision 519). It gives the workspaces in the order
+  of their creation, the oldest first.
+- Reason: the list of the app leaves them out, and the tools give what a
+  member sees.
 - The list can take these filters (decisions 277 and 282):
   - an owner: a member ID, for only the workspaces that this member owns
   - a state: only the workspaces whose entry gives that state
@@ -92,12 +96,16 @@ number names a dated record, as
   - a time: only the workspaces whose latest activity is at that time or
     later
   - archived or not archived: only the workspaces in that group
+  - removed or not removed: only the workspaces in that group. Without
+    this filter, the list gives only the workspaces that are not removed.
 - The latest activity of a workspace is the time whose age the workspace
   list of the app shows.
 - A list with more than one filter gives the workspaces that match each
-  of them. A filter that matches no workspace gives an empty list. A
-  workspace without a name matches no text. A blank text counts as no
-  filter.
+  of them. So without the removed filter, the filter archived or the state
+  archived gives only the archived workspaces that are not removed. The
+  filters not archived and removed together give an empty list.
+- A filter that matches no workspace gives an empty list. A workspace
+  without a name matches no text. A blank text counts as no filter.
 - Reason: Conductor's `workspace list` filters in the same way.
 - The owner filter takes only a member ID (decision 283). The sender line
   of each message gives the member ID of its sender, as
@@ -117,25 +125,28 @@ number names a dated record, as
 - The help of the CLI and the description of `list_workspaces` say where
   an agent gets a member ID. They also say that a member ID is for the
   arguments of the tools, and that an answer to a member names a member by
-  name, not by member ID.
+  name, not by member ID. They say that the list leaves out the removed
+  workspaces unless the call asks for them.
 - The list can also take a limit of 1 to 100, and an offset. The offset
   counts the workspaces before the first one of the reply, from 0.
 - A reply with a limit says whether more workspaces follow.
-- Without a filter, a limit, or an offset, the list gives every workspace.
-  Reason: existing callers keep working.
+- Without a filter, a limit, or an offset, the list gives every workspace
+  that is not removed. Reason: existing callers keep working. They get
+  fewer rows, as decision 519 asks.
 - A filter, a limit, or an offset of the wrong form gets HTTP 400 with the
   error code `invalid_input`. A limit outside 1 to 100 and an offset below
   0 have the wrong form.
 
 ## Get a workspace
 
-- `get_workspace` takes a workspace.
+- `get_workspace` takes a workspace, also a removed one (decision 519).
 - The reply gives the facts of an entry of the workspace list, with its
   owner. It also gives the repository, the base branch, the section, the
   time of its creation, and the time of its latest activity.
 - For an archived workspace, the reply also gives the time of the archive.
   While the app keeps its cloud computer, the reply also gives the end of
-  Restore.
+  Restore. For a removed workspace, the reply also gives the time of the
+  removal, and its state stays archived.
 - Reason: Conductor's `workspace get` and `workspace status` give one
   workspace.
 - The base branch is the branch that

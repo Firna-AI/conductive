@@ -115,7 +115,7 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
 - For each start, it keeps the provider account with the org image and the
   sandbox. So the start continues after a restart.
 - Its storage keeps the chat history, so a stopped or archived workspace
-  still shows its chat.
+  still shows its chat, also after it leaves the list.
 - It revokes the preview hostnames of its workspace.
 
 ## Attachment storage
