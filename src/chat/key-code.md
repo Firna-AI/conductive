@@ -84,7 +84,8 @@ is relative to `src/chat/`, the folder of this guide.
   states the rules of that chip. The chip opens the file tab of its copy
   through `openFile` and `href` of `ChatMentions`. It opens nothing when
   `ChatText` gets no `opens`, or in a chat without `ChatMentions`.
-  `LinkedText` reads and draws a text in one step. `mention-copy.ts` makes
+  `AnswerText` reads and draws the text of an answer in one step.
+  `mention-copy.ts` makes
   the browser's own copy of chat text give the text of each chip that has
   a `data-mention` mark: each file chip and each `SentFileChip`. Each such
   chip holds its copy text in a `ChipCopyText`, which shows only while the
@@ -187,7 +188,7 @@ is relative to `src/chat/`, the folder of this guide.
   with the text that an underline turns into a heading.
   `components/AgentText.tsx`: `AgentText`, which draws them, with the
   heading style that the file preview shares, and `AgentBlocks`, which the
-  message line shares. Their text draws through `LinkedText` of `links/`.
+  message line shares. Their text draws through `AnswerText` of `links/`.
 - `components/ToolGroup.tsx`: a run of tool calls, with `FoldLine` and
   `CallLine`, which the work fold shares.
 - `components/reading-place.ts`: the keeper of the reader's place, which

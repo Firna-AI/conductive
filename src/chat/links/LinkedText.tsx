@@ -267,21 +267,6 @@ export function ChatText(props: {
   )
 }
 
-/**
- * Text of a sent message or of an answer, as `chatParts` reads it: code,
- * and each workspace link as a chip. With `strong`, `**` marks bold, and
- * one `<strong>` holds each run of bold text and chips. With `mentions`,
- * as in a message of a member, each mention of an entry of the file tree is
- * a file chip.
- */
-export function LinkedText(props: {
-  text: string
-  strong?: boolean
-  mentions?: boolean
-}) {
-  return <ChatText parts={useChatParts(props.text, props)} />
-}
-
 const answerReading: TextReading = { strong: true, mentions: true, paths: true }
 
 /**

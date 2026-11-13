@@ -1,15 +1,18 @@
 // @vitest-environment happy-dom
 
 import { describe, expect, test } from 'vitest'
+import type { AgentChoice } from '../../shared/agents'
 import type { FileEntry } from '../../shared/files'
+import type { UserMessage } from '../../shared/messages'
 import { accessibleName } from '../../test-support/dom-queries'
-import { FAKE_IDS } from '../../test-support/fixtures/core'
+import { FAKE_IDS, FAKE_TIME, fakeUser } from '../../test-support/fixtures/core'
+import { senderSnapshot } from '../../test-support/fixtures/workspaces'
 import { mount, press } from '../../test-support/mount'
 import {
   MentionsProvider,
   type ChatMentions,
 } from '../mentions/MentionsContext'
-import { LinkedText } from './LinkedText'
+import { UserBubble } from '../components/TranscriptItem'
 import { Copying, copyAll } from './mention-copy-test-kit'
 import { LinksProvider } from './LinksContext'
 
@@ -18,7 +21,32 @@ const entries: FileEntry[] = [
   { path: 'README.md', name: 'README.md', kind: 'file', change: null },
 ]
 
-async function mountText(text: string | string[], mentions: boolean) {
+const opus: AgentChoice = {
+  agent: 'claude',
+  model: 'Opus 5.5',
+  effort: 'high',
+  fast: false,
+}
+
+/** A sent message of a member with `text`. */
+function sent(id: string, text: string): UserMessage {
+  return {
+    id,
+    sessionId: FAKE_IDS.session,
+    sender: senderSnapshot(fakeUser),
+    text,
+    attachments: [],
+    choice: opus,
+    createdAt: FAKE_TIME,
+    state: 'sent',
+  }
+}
+
+/**
+ * Mounts sent messages as the chat draws them. With `workspaceFiles`, the
+ * chat has the tree of its workspace, as a chat that is not archived.
+ */
+async function mountText(text: string | string[], workspaceFiles: boolean) {
   const opened: string[] = []
   const shown: string[] = []
   const snapshot = {
@@ -35,18 +63,21 @@ async function mountText(text: string | string[], mentions: boolean) {
   const texts = Array.isArray(text) ? text : [text]
   const { container } = await mount(
     <LinksProvider value={{ links: { orgId: FAKE_IDS.org, workspaces: [] } }}>
-      <MentionsProvider value={value}>
+      <MentionsProvider value={workspaceFiles ? value : null}>
         <Copying>
-          {texts.map((item) => (
-            <p key={item}>
-              <LinkedText mentions={mentions} text={item} />
-            </p>
+          {texts.map((item, index) => (
+            <UserBubble key={item} message={sent(`message-${index}`, item)} />
           ))}
         </Copying>
       </MentionsProvider>
     </LinksProvider>,
   )
   return { container, opened, shown }
+}
+
+/** The index of a node among the children of its parent. */
+function indexOf(node: Node): number {
+  return Array.prototype.indexOf.call(node.parentNode?.childNodes ?? [], node)
 }
 
 describe('file chips in a sent message', () => {
@@ -103,12 +134,15 @@ describe('file chips in a sent message', () => {
     )
     const held = document.getSelection()?.getRangeAt(0)
     expect({
-      startsBefore: held?.comparePoint(first, 0),
-      endsAfter: held?.isPointInRange(second, second.childNodes.length),
-    }).toEqual({ startsBefore: 0, endsAfter: true })
+      start: [held?.startContainer, held?.startOffset],
+      end: [held?.endContainer, held?.endOffset],
+    }).toEqual({
+      start: [first.parentNode, indexOf(first)],
+      end: [second.parentNode, indexOf(second) + 1],
+    })
   })
 
-  test('a text read without mentions shows each mention as text', async () => {
+  test('a chat without the files of its workspace shows each mention as text', async () => {
     const view = await mountText('Moved @README.md', false)
     expect({
       links: view.container.querySelectorAll('a').length,

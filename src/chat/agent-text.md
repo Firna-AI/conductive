@@ -29,7 +29,7 @@ state the requirements.
 - `AgentBlocks` draws the blocks of a message in order. `AgentText` and the
   open body of `MessageLine` share it. A table draws through
   `MarkdownTable`. A paragraph, a heading, a list item, and a table cell
-  draw their text through `LinkedText`, with bold, so a workspace link in a
+  draw their text through `AnswerText`, with bold, so a workspace link in a
   cell shows as a chip.
 - A numbered list counts up from the number of its first item, as
   Markdown numbers it. So a list that starts at 2, such as the rest of a
@@ -48,7 +48,7 @@ state the requirements.
 - `MessageLine` draws the code blocks of its summary as spans, with no
   button, because a summary is a button. A code block under an open line
   draws through `AgentBlocks`, so it has the button.
-- `AgentText`, `LinkedText`, and `MessageLine` draw React text and
+- `AgentText`, `AnswerText`, and `MessageLine` draw React text and
   elements only. So HTML in a message shows as text.
 - A `<summary>` holds only phrasing content and headings, and no
   paragraph, list, or table. So `MessageLine` draws each block as a span,
@@ -109,8 +109,9 @@ state the requirements.
 - `AnswerText` in `links/LinkedText.tsx` draws the text of an answer:
   `AgentText` and `MessageLine` use it for each paragraph, heading, list
   item, and table cell. It reads bold, workspace links, `@` mentions, and
-  paths in inline code. `LinkedText` keeps the other readings, such as a
-  message of a member, which reads mentions but keeps its code.
+  paths in inline code. A message of a member reads its parts with
+  `useChatParts` and draws them with `ChatText`, in `UserBubble` of
+  `components/TranscriptItem.tsx`. It reads mentions but keeps its code.
 - `chatParts` gives a `file` part for a mention or inline code that names
   an entry of the tree. `links/file-targets.ts` reads both:
   `mentionTarget` finds the entry of a mention, with a line target and an
@@ -188,7 +189,7 @@ preview:
   an underline on the last line of a list item counts when a line break
   follows the item.
 - `AgentText` draws a heading as `h1` to `h6`, at its level, with its text
-  through `LinkedText`. A heading with no text draws nothing, so a screen
+  through `AnswerText`. A heading with no text draws nothing, so a screen
   reader meets no empty heading.
 - `MessageLine` draws a heading as a span with the `heading` class of the
   mockups' `ToolGroup.module.css`. That class gives the heading weight,

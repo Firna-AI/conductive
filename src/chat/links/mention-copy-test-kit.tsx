@@ -12,18 +12,25 @@ export function Copying(props: { children: ReactNode }) {
 }
 
 /**
- * The text of a block as the page shows it while a copy runs: a chip shows
- * only its copy text. The test page loads no style sheet, so this follows
- * the rule of `ChipCopyText.module.css`.
+ * Whether the copy state shows a text node, by the rule of
+ * `ChipCopyText.module.css`: in a chip, the copy state hides each element
+ * child but the copy text, and it keeps the bare text of the chip. The test
+ * page loads no style sheet, so this follows the rule by hand.
  */
+function shownWhileCopying(node: Node): boolean {
+  for (let at: Node | null = node; at?.parentElement; at = at.parentElement) {
+    if (!at.parentElement.hasAttribute('data-mention')) continue
+    return !(at instanceof Element) || at.classList.contains(COPY_TEXT_CLASS)
+  }
+  return true
+}
+
+/** The text of a block as the page shows it while a copy runs. */
 function copyModeText(block: Element): string {
   const walker = document.createTreeWalker(block, NodeFilter.SHOW_TEXT)
   let text = ''
   for (let node = walker.nextNode(); node; node = walker.nextNode()) {
-    const parent = node.parentElement
-    const chip = parent?.closest('[data-mention]')
-    if (chip && !parent?.closest(`.${COPY_TEXT_CLASS}`)) continue
-    text += node.textContent ?? ''
+    if (shownWhileCopying(node)) text += node.textContent ?? ''
   }
   return text
 }
