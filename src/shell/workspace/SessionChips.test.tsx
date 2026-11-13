@@ -90,7 +90,7 @@ describe('session chips in the chat of the app', () => {
       reads: reads.length,
     }).toEqual({
       own: [
-        `W-${own.number} Session Debounce lookups by 300 ms, Checks passed, Ready`,
+        `W-${own.number} Session Debounce lookups by 300 ms, Ready to merge, Ready`,
       ],
       open: [`${label} Session Plan saved carts, Starting`],
       closed: [`${label} Session Read the cart notes, Starting`],

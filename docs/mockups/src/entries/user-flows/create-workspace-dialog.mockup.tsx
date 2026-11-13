@@ -10,7 +10,7 @@ export const createWorkspaceDialog = defineUseCase({
       screenPath: 'app/account/preferences',
       title: 'Choose Dialog',
       description:
-        'On the Preferences tab of the account, the user chooses Dialog under New workspaces. The choice saves at once.',
+        'On the Preferences tab of the account, the user chooses Dialog under New workspaces. The choice saves at once. An account made before 12 November 2026 opens the page until this choice. A new account has Dialog already and skips this step.',
     },
     {
       screenPath: 'app',

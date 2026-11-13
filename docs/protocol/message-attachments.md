@@ -14,8 +14,13 @@ at `app/attachments`, in New workspace, and in the flow
 
 ## Attachments
 
-- Each file of a message can contain at most 25 MB, or 25,000,000 bytes
-  (decision 132).
+- Each file of a message can contain at most 100 MB, or 100,000,000
+  bytes.
+- Reason: Cloudflare accepts a request body of at most 100 MB on a zone of
+  the Free or Pro plan, and the browser sends each file in one request, as
+  [Attachment uploads](access-and-security.md#attachment-uploads) says. A
+  higher limit was rejected, because it needs uploads in parts or a zone of
+  the Business or Enterprise plan.
 - The composer refuses a larger file before its upload, and names the
   limit. The Worker refuses a larger file too, with HTTP 413 and the error
   code `attachment_too_large`.
@@ -145,10 +150,19 @@ at `app/attachments`, in New workspace, and in the flow
 - Each of these composers takes a drop of files on its whole message box:
   the text, the bar, and the padding. In the New workspace dialog, the
   message box is the whole dialog card.
+- The chat of a workspace also takes a drop of files anywhere on its
+  column: the session tabs, the transcript, the notices, and the message
+  box. The files go to the message box of the open session, and the box
+  shows its drop state while files are over the column. Reason: the user
+  asked for this, because a drop that must hit the box is hard to aim.
+- An overlay over the chat, such as a menu or a dialog, takes no drop for
+  the message box. Reason: a drop on a menu or on a question that attaches
+  a file would surprise the user.
 - A drop on the text puts the files at the place under the pointer. A drop
-  on the rest of the box puts them at the caret, or at the end of the text
-  when the field has no caret. Reason: the user asked for the files at the
-  cursor, which can mean the pointer or the caret.
+  on the rest of the box, or elsewhere on the chat, puts them at the caret,
+  or at the end of the text when the field has no caret. Reason: the user
+  asked for the files at the cursor, which can mean the pointer or the
+  caret.
 - During a drag of files over the text, the field draws a drop caret at
   the place under the pointer. The caret and the selection of the field
   move only at the drop. Reason: a cancelled drag then leaves the selection
@@ -157,7 +171,8 @@ at `app/attachments`, in New workspace, and in the flow
   box adds no hint text, so the draft keeps its room.
 - While the composer takes no change, such as during a create, its box
   takes no drop. The pointer then shows that a drop does nothing.
-- A drop of files outside each message box does nothing. Reason: the
+- A drop of files elsewhere does nothing: outside the chat and each
+  message box, and on the chat while it shows no message box. Reason: the
   browser would open the file in place of the app, and each draft lives
   only in the memory of its tab. The Feedback dialog still takes a drop
   and a paste of screenshots.

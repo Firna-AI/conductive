@@ -50,15 +50,14 @@ export interface FakeApiOptions {
 
 /**
  * The GitHub state of the record of the fake workspace: `github` when the
- * options give it, also `null`, or else the state of the bar of `banner` and
- * its checks, as the Worker copies it.
+ * options give it, also `null`, or else the state of the bar of `banner`, as
+ * the Worker copies it.
  */
 export function fakeGitHubSummary(
   options: Pick<FakeApiOptions, 'banner' | 'github'>,
 ): GitHubSummary | null {
   if (options.github !== undefined) return options.github
-  const { banner, checks } = toolFixtures(options.banner)
-  return githubSummary(banner.banner, checks.checks)
+  return githubSummary(toolFixtures(options.banner).banner.banner)
 }
 
 function routeKey(method: string, path: string): string {

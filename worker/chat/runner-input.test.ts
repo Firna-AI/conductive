@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest'
 
-import { parseRunnerEnvelope } from './runner-input'
+import { parseRunnerEnvelope, parseRunnerTransport } from './runner-input'
 import { numberedRunnerInput } from './runner-fixtures.test-support'
 
 const context = { sessionId: 'session-1', turnId: 'turn-1' }
@@ -50,6 +50,25 @@ function envelope(event: unknown) {
     event,
   }
 }
+
+it('reads positive integer protocol versions before the handshake owns support', () => {
+  const hello = {
+    type: 'hello',
+    workspaceId: 'workspace',
+    streamId: 'stream',
+  }
+  for (const protocolVersion of [1, 2, 3])
+    expect(parseRunnerTransport({ ...hello, protocolVersion })).toEqual({
+      ...hello,
+      protocolVersion,
+    })
+  for (const protocolVersion of [0, -1, 0.5, '2', null, undefined])
+    expect(() =>
+      parseRunnerTransport({ ...hello, protocolVersion }),
+    ).toThrowError(
+      expect.objectContaining({ status: 400, code: 'invalid_input' }),
+    )
+})
 
 it('preserves omission counts and a known optional turn end reason in runner chat events', () => {
   for (const event of [

@@ -25,6 +25,8 @@ export function applyDeviceSettings(
       outcome = dependencies.permissions.stopWorkspace(operation.workspaceId)
     if (operation.action === 'extend-workspace')
       outcome = dependencies.permissions.extendWorkspace(operation.workspaceId)
+    if (operation.action === 'keep-workspace')
+      outcome = dependencies.permissions.keepWorkspace(operation.workspaceId)
   } catch {
     dependencies.warn()
     outcome = {

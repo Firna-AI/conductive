@@ -3,7 +3,7 @@ import type { CommitAuthor } from '../../src/shared/commit-author'
 import type { Attachment, UserMessage } from '../../src/shared/messages'
 import type {
   RunnerTurnCredential,
-  WorkspaceToRunnerV2 as WorkspaceToRunner,
+  WorkspaceToRunner,
 } from '../../src/shared/runner'
 import { RUNNER_PROTOCOL_VERSION } from '../../src/shared/runner'
 import { array, integer, nullable, object, oneOf, string } from './parse'

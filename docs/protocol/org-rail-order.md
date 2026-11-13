@@ -108,8 +108,8 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the order at
 ## A suspended or deleted org
 
 - A suspended org moves like any other org (decision 516 A).
-- A deleted org moves too. Its admins still see its faded tile, as
-  [Delete org](orgs-and-members.md#delete-org) says.
+- A deleted org has no tile to move. Its admins restore it from Account
+  settings, as [Delete org](orgs-and-members.md#delete-org) says.
 - Reason: the rail order belongs to the person and spans their orgs, so a
   move is not a change in the org. Other members see no change.
   [What members of a suspended org keep](operator-actions.md#what-members-of-a-suspended-org-keep)

@@ -28,8 +28,8 @@ Model use on an own endpoint bills where its owner runs it.
 ## Connect Claude
 
 1. Open **Account**.
-2. Open **General**.
-3. Find Claude under **Agents**.
+2. Open **Agents**.
+3. Find Claude.
 4. Select **Connect**.
 5. Choose **Subscription token** or **API key**.
 6. Paste the token or key into its field.
@@ -52,8 +52,8 @@ Conductive keeps the stored login hidden in Account.
 ## Connect Codex
 
 1. Open **Account**.
-2. Open **General**.
-3. Find Codex under **Agents**.
+2. Open **Agents**.
+3. Find Codex.
 4. Select **Connect**.
 
 ### Use a ChatGPT plan
@@ -104,8 +104,8 @@ The endpoint must support the API and key format of that agent:
 | Codex | OpenAI Responses API | Bearer token | `https://gateway.example.com/v1` |
 
 1. Open **Account**.
-2. Open **General**.
-3. Find the agent under **Agents**.
+2. Open **Agents**.
+3. Find the agent.
 4. Select **Connect**.
 5. Choose **Own endpoint**.
 6. Enter the address in **Endpoint**.
@@ -202,6 +202,10 @@ The row shows the cause, such as **ChatGPT access expired.**
 Select **Sign in again**.
 Then complete the [ChatGPT sign-in steps](/docs/agent-logins#use-a-chatgpt-plan) again.
 
+If the error says the agent software cannot use ChatGPT sign-in, ask an admin to run **Build computer**.
+After it succeeds, create a new workspace.
+You can also connect an OpenAI API key.
+
 Check the error from the provider.
 Make sure you connected the account you want to use.
 Note your choice for **Let other members use this login** before removing the login.
@@ -218,33 +222,24 @@ If a share-setting change fails, the switch returns to its saved value.
 ## Understand access to credentials
 
 Conductive stores agent logins encrypted.
+It keeps these logins outside cloud computers.
 
-A newer cloud computer starts from a shared setup that requires Conductive to keep agent logins outside the computer.
-Its model requests and answers pass through Conductive on Cloudflare.
+Model requests and answers pass through Conductive on Cloudflare.
 Conductive adds the session starter's login before sending each request to Anthropic, OpenAI, or the chosen endpoint.
-Each turn there gets a temporary credential called a turn token.
+Each turn gets a temporary credential called a turn token.
 Code and members with terminal access can read or copy that credential.
 
 They can use it only through Conductive on the session starter's login while the turn runs.
 A copied token also works from outside the computer during that turn.
 A copied token cannot start a new model request after the turn ends.
 Your ChatGPT sign-in never enters a cloud computer.
-An older cloud computer cannot run Codex with ChatGPT.
-The share switch does not hide credentials available on the computer.
 
-An own endpoint's address and key never reach a cloud computer, including an older computer.
-Its turn needs agent software that supports temporary credentials.
-If the software cannot use them, the turn cannot start.
+An own endpoint's address and key never reach a cloud computer.
+Each turn needs supported agent software.
+If Conductive reports unsupported agent software, ask an admin to run **Build computer**.
+After it succeeds, create a new workspace.
 
-For subscription tokens and provider API keys, an older cloud computer still permits software to receive the session starter's agent login itself.
-Code and members with terminal access can read or copy that login during a turn.
-A copied login can remain usable after the turn ends.
-Installing newer software on that computer does not remove this risk.
-A new build gives the protection to new cloud computers created from its setup.
-Ask an admin to run **Build computer**.
-After it succeeds, create a new workspace to get the newer protection.
-
-The share switch does not hide either kind of credential from code or members with terminal access.
+The share switch does not hide turn tokens from code or members with terminal access.
 Work in an org with people you trust with your agent and GitHub logins.
 
 - [Understand sessions and chat](/docs/sessions-and-chat)

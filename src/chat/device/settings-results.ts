@@ -2,6 +2,7 @@ import type {
   DevicePairing,
   DeviceSettings,
   DeviceSettingsOutcome,
+  DeviceWorkspaceWindow,
 } from '../../shared/device'
 import type { SettingsChange } from './device-api'
 import { equalPairing } from './device-snapshot'
@@ -14,15 +15,23 @@ import { nameLabel } from '../../shared/name-label'
  */
 export interface ChangeResult {
   change: SettingsChange
-  /** The exact command, or the name of the workspace of the 15 minutes. */
+  /** The exact command, or the name of the workspace of the grant. */
   subject: string
   outcome: DeviceSettingsOutcome
 }
 
 /**
- * The control of a change: Remove of one exact command, or Stop of the 15
- * minutes of one workspace. A control has one change at a time, and keeps
- * the result of its last change.
+ * Whether a grant runs at `now`: the 15 minutes before their end, or a
+ * grant until Stop, whose end time is null.
+ */
+export function grantRuns(grant: DeviceWorkspaceWindow, now: number): boolean {
+  return grant.expiresAt === null || grant.expiresAt > now
+}
+
+/**
+ * The control of a change: Remove of one exact command, or the grant of one
+ * workspace, which Stop and Keep share. A control has one change at a
+ * time, and keeps the result of its last change.
  */
 export function controlOf(change: SettingsChange): string {
   return change.action === 'remove-command'
@@ -32,7 +41,7 @@ export function controlOf(change: SettingsChange): string {
 
 /**
  * What a change acts on: the exact command, or the name of a workspace. A
- * Stop whose 15 minutes are gone keeps the name of its last result.
+ * Stop whose grant is gone keeps the name of its last result.
  */
 export function subjectOf(
   change: SettingsChange,
@@ -52,7 +61,7 @@ export function subjectOf(
  * Whether the control of a result is gone from the settings that show, so
  * that only the result can repeat its change. Null settings show nothing.
  */
-export function controlGone(
+function controlGone(
   result: ChangeResult,
   settings: DeviceSettings | null,
   now: number,
@@ -64,15 +73,38 @@ export function controlGone(
   }
   return !settings.workspaceWindows.some(
     (grant) =>
-      grant.workspaceId === change.workspaceId && grant.expiresAt > now,
+      grant.workspaceId === change.workspaceId && grantRuns(grant, now),
+  )
+}
+
+/**
+ * Whether only the result can repeat its change: the Mac did not save or
+ * did not make it, and its control is gone. A Keep is never repeated,
+ * because it needs the 15 minutes that are gone.
+ */
+export function repeatable(
+  result: ChangeResult,
+  settings: DeviceSettings | null,
+  now: number,
+): boolean {
+  return (
+    result.outcome.status !== 'done' &&
+    result.change.action !== 'keep-workspace' &&
+    controlGone(result, settings, now)
   )
 }
 
 /** The name of the control that repeats the change of a result. */
 export function repeatLabel(result: ChangeResult): string {
-  const verb = result.change.action === 'remove-command' ? 'remove' : 'stop'
-  return `Try again to ${verb} ${result.subject}`
+  return `Try again to ${verbs[result.change.action]} ${result.subject}`
 }
+
+const verbs = {
+  'remove-command': 'remove',
+  'stop-workspace': 'stop',
+  'keep-workspace': 'keep',
+  'extend-workspace': 'extend',
+} as const satisfies Record<SettingsChange['action'], string>
 
 /**
  * Why a change that waited no longer goes: this Mac went away, so no
@@ -106,6 +138,11 @@ const titles = {
     done: 'Extended',
     'done-not-saved': 'Extended, not saved',
     failed: 'Not extended',
+  },
+  'keep-workspace': {
+    done: 'Kept until you stop',
+    'done-not-saved': 'Kept, not saved',
+    failed: 'Not kept',
   },
 } as const satisfies Record<
   SettingsChange['action'],

@@ -1,7 +1,9 @@
 // @vitest-environment happy-dom
 
 import { expect, it, vi } from 'vitest'
-import { accessibleName } from '../../test-support/dom-queries'
+import { TouchScreen } from '../../../docs/mockups/src/components/common/touch'
+import type { ChangedFile } from '../../shared/files'
+import { accessibleName, byRole } from '../../test-support/dom-queries'
 import { mount, MOUNTED_TEST_TIMEOUT, press } from '../../test-support/mount'
 import { TurnEnd } from './TurnEnd'
 
@@ -41,4 +43,72 @@ it('names each changed file of a turn by its label, and opens the diff of its re
     leaks: false,
     opened: ['scripts/seed-acme-7f3k.sql', 'README.md'],
   })
+})
+
+function manyFiles(count: number): ChangedFile[] {
+  return Array.from({ length: count }, (_, index) => ({
+    path: `src/file-${index + 1}.ts`,
+    change: 'modified' as const,
+    added: 1,
+    removed: 0,
+  }))
+}
+
+/** The text of each chip of `manyFiles`: its name and its added lines. */
+function chipTexts(count: number): string[] {
+  return Array.from({ length: count }, (_, index) => `file-${index + 1}.ts+1`)
+}
+
+function chipNames(root: ParentNode): string[] {
+  return [...root.querySelectorAll('li')].map((item) => item.textContent ?? '')
+}
+
+it('shows 8 files on desktop, then shows all of them and the unlisted count after Show more', async () => {
+  const view = await mount(
+    <TurnEnd
+      durationMs={1_000}
+      files={manyFiles(12)}
+      filesUnavailable={false}
+      omittedFiles={47}
+      onOpenDiff={() => undefined}
+    />,
+  )
+  const before = chipNames(view.container)
+  const button = byRole('button', 'Show 4 more changed files', view.container)
+  await press(button)
+  expect({
+    before,
+    after: chipNames(view.container),
+    focused: document.activeElement?.getAttribute('aria-label'),
+  }).toEqual({
+    before: [...chipTexts(8), 'Show 4 more'],
+    after: [...chipTexts(12), '47 more files'],
+    focused: 'Open the changes of src/file-9.ts',
+  })
+})
+
+it('shows 5 files on a phone', async () => {
+  const view = await mount(
+    <TouchScreen>
+      <TurnEnd
+        durationMs={1_000}
+        files={manyFiles(6)}
+        filesUnavailable={false}
+        omittedFiles={0}
+      />
+    </TouchScreen>,
+  )
+  expect(chipNames(view.container)).toEqual([...chipTexts(5), 'Show 1 more'])
+})
+
+it('shows no button when the files fit', async () => {
+  const view = await mount(
+    <TurnEnd
+      durationMs={1_000}
+      files={manyFiles(8)}
+      filesUnavailable={false}
+      omittedFiles={0}
+    />,
+  )
+  expect(view.container.querySelector('button')).toBeNull()
 })

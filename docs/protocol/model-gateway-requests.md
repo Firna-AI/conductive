@@ -190,7 +190,7 @@ decision of the change that adds the egress container, as that doc says.
 
 ## Risks
 
-- [A sandbox with a version pin of 2 or later](isolation.md#a-sandbox-with-a-version-pin-of-2-or-later)
+- [Turn tokens in a sandbox](isolation.md#turn-tokens-in-a-sandbox)
   states what the processes of a sandbox and the members of its org can
   do with a turn token. It also states where a settings file in the
   repository can send the token.

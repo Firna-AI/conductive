@@ -56,7 +56,7 @@ it('restores encrypted held text after native eviction and publishes the hidden 
     })
     expect(await runner.inbox.next()).toEqual({
       type: 'welcome',
-      protocolVersion: 1,
+      protocolVersion: 2,
       streamId: 'held-output',
       confirmedThrough: eventNumber,
     })

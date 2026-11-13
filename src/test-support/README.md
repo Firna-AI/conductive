@@ -104,7 +104,7 @@ The default org is `acme`. The default workspace is `checkout-autocomplete`.
 `FAKE_IDS` in `fixtures/core.ts` names the shared sample IDs.
 Options select the org role, workspace state, conversation, and GitHub banner state.
 `github` sets the GitHub summary of the default workspace record, and `null` gives none.
-Without it, `fakeGitHubSummary` gives the summary of the banner and its checks, as the Worker copies it.
+Without it, `fakeGitHubSummary` gives the summary of the banner, as the Worker copies it.
 `workspaceFixtures(state, github)` takes that summary for the default workspace.
 The dev fake of `../app/dev/` uses `fakeGitHubSummary` too.
 Its seed makes `email-dark-mode` work without GitHub state, so its grey mark moves.

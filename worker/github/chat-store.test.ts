@@ -201,7 +201,7 @@ it('repairs a failed summary copy after SQLite eviction without another GitHub r
   expect(replay.status).toBe(200)
   expect(await replay.json()).toEqual({ snapshot })
   const repaired = await harness.inspect()
-  expect(await summary()).toBe('checks-passed')
+  expect(await summary()).toBe('ready-to-merge')
   expect(repaired.reads).toBe(0)
   expect(repaired.staged).toEqual([])
   expect(storedRecords(repaired)).toEqual(records)

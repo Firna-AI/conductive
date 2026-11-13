@@ -80,7 +80,7 @@ async function mountGeneral(server: FakeApiServer, connect: 'claude' | null) {
   const app = await startedApp(server, { fetch: held.fetch })
   const view = mountScreen(
     app,
-    <AccountScreen connect={connect} tab="general" user={fakeUser} />,
+    <AccountScreen connect={connect} tab="agents" user={fakeUser} />,
   )
   await settle()
   return { view, held, claude: () => listItems(view.innerHTML, 'Agents')[0] }

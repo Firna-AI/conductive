@@ -92,6 +92,23 @@ it('keeps the old end and timer when saving Extend fails', () => {
   expect(test.timers.size).toBe(0)
 })
 
+it('leaves an until-Stop grant in memory when Extend is requested', () => {
+  const test = setup()
+  const store = test.open()
+  store.allowWorkspaceUntilStop('one', 'First workspace')
+  const write = vi.spyOn(test.files, 'write')
+  expect(store.extendWorkspace('one')).toEqual({
+    status: 'failed',
+    message: 'This workspace already allows all commands until you stop.',
+  })
+  expect(store.settings().workspaceWindows).toEqual([
+    { workspaceId: 'one', workspaceName: 'First workspace', expiresAt: null },
+  ])
+  expect(store.permits('anything', 'one')).toBe(true)
+  expect(write).not.toHaveBeenCalled()
+  expect(test.timers.size).toBe(0)
+})
+
 it('replaces the old timer and removes the saved grant at the extended end', () => {
   const test = setup()
   const store = test.open()

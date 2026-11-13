@@ -110,7 +110,7 @@ it('closes an idle native runner and refuses resumes while keeping chat history 
   const runner = await fixture.openRunner(workspaceId)
   runner.send({
     type: 'hello',
-    protocolVersion: 1,
+    protocolVersion: 2,
     workspaceId,
     streamId: 'org-idle',
   })

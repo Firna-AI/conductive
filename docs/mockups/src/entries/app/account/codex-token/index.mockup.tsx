@@ -1,6 +1,6 @@
 import { defineScreen } from '@mokly/mokly'
 import { AccountScreen } from '../../../../screens/AccountScreen'
-import { accountGeneral, accountSchema } from '../../../../screens/accountState'
+import { accountAgents, accountSchema } from '../../../../screens/accountState'
 
 export const accountCodexToken = defineScreen({
   title: 'Codex on a ChatGPT plan',
@@ -10,7 +10,7 @@ export const accountCodexToken = defineScreen({
     'The user chose option A of decision 175 on 10 November 2026: Codex connects with a device code sign-in to the ChatGPT plan of the member. A new ChatGPT sign-in is not shared, because the terms of OpenAI forbid making an account available to anyone else, and one typed default for each agent and kind sets it, from decision 171. The owner can still turn the switch on, as decision 116 allows for each login. The user chose on 10 November 2026 to show no note about the terms. The app keeps the sign-in encrypted and renews it, so the row shows no expiry date.',
   relatedDocs: [],
   propSchema: accountSchema,
-  props: { ...accountGeneral, codexLogin: 'token' },
+  props: { ...accountAgents, codexLogin: 'token' },
   render: (props, context) => (
     <AccountScreen state={props} viewport={context.viewport} />
   ),

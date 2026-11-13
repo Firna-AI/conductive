@@ -34,7 +34,8 @@ import styles from './BarActions.module.css'
  * follows. The main action takes the tint of the bar, outside its link,
  * because the link of the mockups needs the button as its own child. On
  * desktop, the tooltip of a button that takes a click names the key of its
- * command, such as "Create PR (⇧⌘P)".
+ * command, such as "Create PR (⇧⌘P)". Each button without a tint takes the
+ * outline tone, so the colour of the bar shows through it.
  */
 function BarButton(props: {
   action: BarAction
@@ -43,7 +44,7 @@ function BarButton(props: {
 }) {
   const { action, tint } = props
   // Only a tint fills the main action. A bar without one shows the outline.
-  const tone = tint ? 'primary' : 'secondary'
+  const tone = tint ? 'primary' : 'outline'
   switch (action.kind) {
     case 'agent':
       return (
@@ -118,12 +119,12 @@ function BarButton(props: {
           off={action.busy || action.disabled}
         >
           {action.disabled ? (
-            <ActionButton disabled icon={Archive}>
+            <ActionButton disabled icon={Archive} tone="outline">
               {barLabels.archive}
             </ActionButton>
           ) : (
             <ScreenLink asChild to={paths.justArchived}>
-              <ActionButton busy={action.busy} icon={Archive}>
+              <ActionButton busy={action.busy} icon={Archive} tone="outline">
                 {barLabels.archive}
               </ActionButton>
             </ScreenLink>

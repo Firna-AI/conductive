@@ -24,7 +24,7 @@ async function fixture() {
 }
 
 const guidance = [
-  'This turn stays open while it runs, for up to 2 hours from the first wait.',
+  'This turn stays open while it runs, for up to 30 days from the first wait.',
   'A member message during a wait starts the count again.',
   'You get a notification when each task ends or each wake-up fires.',
   'Stop each task that you do not need, such as a dev server, with TaskStop.',

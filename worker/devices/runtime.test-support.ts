@@ -163,7 +163,7 @@ export async function deviceFixture(options: { entry?: string } = {}) {
   runner.send(
     JSON.stringify({
       type: 'hello',
-      protocolVersion: 1,
+      protocolVersion: 2,
       workspaceId: WID,
       streamId: 'stream',
     }),

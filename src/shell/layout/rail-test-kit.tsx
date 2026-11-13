@@ -1,5 +1,6 @@
 import { act } from 'react'
 import type { AppModel } from '../../app/app-model'
+import { activeOrgs } from '../../app/kept-org'
 import { memoryNavigation } from '../../app/navigation'
 import { routes } from '../../app/router'
 import { useStore } from '../../app/store'
@@ -16,7 +17,7 @@ import { OrgRail } from './OrgRail'
 
 /** The rail over the org list of the app, as `RailFrame` draws it. */
 function Rail(props: { app: AppModel; user: User }) {
-  const orgs = useStore(props.app.orgs)
+  const orgs = activeOrgs(useStore(props.app.orgs))
   return (
     <OrgRail
       current={{ org: 'acme' }}

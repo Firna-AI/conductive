@@ -87,12 +87,16 @@ It receives no cookie or local command bridge.
 
 Local permissions belong to the signed-in account on this Mac.
 The app keeps exact allowed commands and workspace deadlines under its private user-data directory.
+A workspace grant until Stop stays only in memory.
+A quit, a sign-out, an expired or rejected sign-in, or another account ends it.
+Keep turns the running 15 minutes of a workspace into a grant until Stop.
 The settings name comes from the OS hostname.
 The connection sends that hostname as display metadata for command requests.
 Remove and Stop revoke permissions in memory even when saving fails.
 The revocation stays in force for the rest of the app run, including reconnects.
 A failed save can restore the old permission after a full app restart.
-Extend sets a running workspace grant's end to the Mac's current time plus 15 minutes.
+Extend sets a running 15-minute grant's end to the Mac's current time plus 15 minutes.
+It leaves a grant until Stop unchanged.
 It keeps the workspace name and never starts a grant that ended or does not exist.
 The Mac saves the new end before replacing the grant and its timer.
 A failed save keeps the old end and timer and reports failed.
@@ -289,7 +293,8 @@ The package includes only `dist/app/` and `dist/bundle/`.
 - [Device connection](src/device/connection.ts) owns authentication, pairing, heartbeat, and reconnect state.
 - [Device session](src/device/session.ts) owns pending requests, scoped approvals, settings operations, and cancellation.
 - [Device settings](src/device/settings.ts) reports change outcomes and checks settings replies against the device message budget.
-- [Local permissions](src/device/permissions.ts) owns exact command rules, the Always allow budget, and workspace deadlines.
+- [Local permissions](src/device/permissions.ts) owns exact command rules, the Always allow budget, workspace deadlines, and grants until Stop.
+- [Permission file](src/device/permission-file.ts) reads and writes the saved permissions, without the grants until Stop.
 - [Command runner](src/device/runner.ts) owns time and output limits through injected process and clock boundaries.
 - [Device contract](../src/shared/device.ts) supplies shared message types, routes, and wire limits.
 - [Desktop contract](../worker/security/desktop-contract.ts) shares the desktop origin and session cookie format without Worker dependencies.

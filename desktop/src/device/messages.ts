@@ -28,7 +28,8 @@ function approval(value: unknown): value is DeviceApprovalAction {
     value === 'deny' ||
     value === 'allow' ||
     value === 'always-allow' ||
-    value === 'allow-workspace-15-minutes'
+    value === 'allow-workspace-15-minutes' ||
+    value === 'allow-workspace-until-stop'
   )
 }
 function operation(value: unknown): value is DeviceSettingsAction {
@@ -38,7 +39,8 @@ function operation(value: unknown): value is DeviceSettingsAction {
       (value.action === 'remove-command' &&
         typeof value.command === 'string') ||
       ((value.action === 'stop-workspace' ||
-        value.action === 'extend-workspace') &&
+        value.action === 'extend-workspace' ||
+        value.action === 'keep-workspace') &&
         text(value.workspaceId)))
   )
 }

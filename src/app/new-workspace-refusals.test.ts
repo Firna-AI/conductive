@@ -29,7 +29,7 @@ async function newForm() {
 
 function oversized(name: string): File {
   const file = note(name)
-  Object.defineProperty(file, 'size', { value: 25_000_001 })
+  Object.defineProperty(file, 'size', { value: 100_000_001 })
   return file
 }
 

@@ -38,7 +38,7 @@ export function attachmentTooLarge(): HttpError {
   return new HttpError(
     413,
     'attachment_too_large',
-    'Each file can be up to 25 MB.',
+    'Each file can be up to 100 MB.',
   )
 }
 

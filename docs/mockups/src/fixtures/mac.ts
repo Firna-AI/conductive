@@ -1,4 +1,5 @@
 import type { PersonKey } from './members'
+import { checkoutAutocomplete, savedCarts } from './workspaces'
 
 /**
  * The Mac of the person signed in. The Mac app registers it as a device
@@ -122,6 +123,21 @@ export const allowAllLeft = '14:32'
  * to 15 minutes from the time of the Mac.
  */
 export const extendedLeft = '15:00'
+
+/** What a grant until Stop shows in place of the time left. */
+export const untilStop = 'Until you stop'
+
+/**
+ * The workspaces whose commands all run on this Mac without asking: one
+ * with the time left of its 15 minutes, and one until the user stops it.
+ */
+export const allowedWorkspaces: readonly {
+  name: string
+  left: string | null
+}[] = [
+  { name: checkoutAutocomplete.name, left: allowAllLeft },
+  { name: savedCarts.name, left: null },
+]
 
 /** The always-allowed command that the change states of This Mac remove. */
 export const removedCommand = 'npm run lint'
