@@ -107,7 +107,8 @@ app.
   - Reopen closed session reopens the session that closed last. The
     session history lists that session first.
   - Switch to org 1 to 9 opens the org at that place in the org rail,
-    counted from the top.
+    counted from the top, as
+    [Opening an org](org-rail-order.md#opening-an-org) says.
   - Open workspace 1 to 9 opens the workspace at that place among the rows
     that the workspace list shows, counted from the top. A collapsed
     section and a closed Archived group add no row.
@@ -223,7 +224,8 @@ app.
 - The changes of a person belong to the account (decision 190). So they
   apply in every browser and in the Mac app.
 - Reason: the keys then work the same everywhere, and the browser still
-  stores only the panel sizes. Changes that stay on each device were
+  stores only the panel sizes and the
+  [last workspaces](org-rail-order.md#opening-an-org). Changes that stay on each device were
   rejected, because a new browser, a private window, and the Mac app would
   each start from the default keys.
 - One set of keys for the whole org was rejected, because the keys are a

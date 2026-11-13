@@ -24,9 +24,12 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
   disables codes, pauses sign-ups, and turns the waitlist off and on.
   [Operator section](../protocol/operator-section.md) states its rules.
 - Tabs are links, so each tool and each file view has its own address.
-- The browser stores only the panel sizes: the widths of the sidebar and
-  the right column, and the split of the right column. All other state
-  comes from the Worker. A tab keeps the chats that it showed in memory, as
+- The browser stores only the panel sizes and the last workspaces. The
+  panel sizes are the widths of the sidebar and the right column, and the
+  split of the right column. The last workspaces are the address of the
+  last workspace page of each org, as
+  [Opening an org](../protocol/org-rail-order.md#opening-an-org) says. All
+  other state comes from the Worker. A tab keeps the chats that it showed in memory, as
   [Chat and events](../protocol/chat-and-events.md#events) says.
 
 ## Mac app
