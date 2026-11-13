@@ -102,6 +102,7 @@ the design gaps that the design below now covers.
 - **Previous examples:** Terminal tabs decision 2 sent a similar limit, the number of tabs, to the user.
 - **Recommendation:** B. It holds a long build log, and a connect stays near 1 MB.
 - **Action:** ask the user, because it writes a new limit into the protocol doc, and no value is clearly best.
+- **Outcome:** On 13 November 2026, the user chose A: 2,000 lines on both sides. tmux keeps its default `history-limit`, and xterm.js keeps 2,000 lines.
 
 ## Design
 
@@ -262,8 +263,8 @@ Depends on: 1
 
 - [ ] Update the Terminal section of `docs/protocol/workspace-tools.md`:
   - [ ] Every line of output reaches the screen and its history.
-  - [ ] A new connection shows the output history, up to the limit of
-        Decision 2, and the current screen.
+  - [ ] A new connection shows the output history, up to 2,000 lines
+        (Decision 2 A), and the current screen.
   - [ ] A drag past the top or the bottom edge scrolls and selects the
         history. The wheel scrolls the history, unless a program in the
         shell uses the mouse.
@@ -303,7 +304,8 @@ Depends on: 2
 - [ ] Install the bridge files, and run them from the launcher with the
       private Node and without the Node variables. Add the fallback of
       design call 4.
-- [ ] Set the tmux `history-limit` to the number of Decision 2.
+- [ ] Check that the tmux `history-limit` stays at its default of 2,000
+      lines, as Decision 2 A says.
 - [ ] Add the bridge tsconfig, and leave the bridge out of
       `tsconfig.worker.json`.
 - [ ] Add unit tests for the reader, including a captured `%end` line, and
@@ -329,7 +331,7 @@ Depends on: 3
       panel below that.
 - [ ] After a hello, drop the replies of xterm.js. Send focus reports and
       pastes as messages. Acknowledge the written bytes.
-- [ ] Set the xterm.js history to the number of Decision 2.
+- [ ] Set the xterm.js history to 2,000 lines, as Decision 2 A says.
 - [ ] Keep OSC 8 links as plain text.
 - [ ] Let the development page send a hello and another viewer's size.
 - [ ] Add tests for the session and the screen.
