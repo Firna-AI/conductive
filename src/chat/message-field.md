@@ -121,6 +121,14 @@ that those chips show, from the attach to the send.
   state, and the field draws the drop caret under a pointer over the text.
   The drop state follows the elements that the drag entered and has not
   left, so a move from the text to the bar keeps it.
+- In the chat of a workspace, the whole column is the drop area of the
+  box, through `useChatDropArea` of `components/chat-drop-area.ts`. The
+  column gives each drag event to the box that it holds, so a drop on the
+  tabs or the transcript works as a drop on the bar. The box then spreads
+  no handlers of its own, so each event reaches it once. A drag event from
+  a portal, such as the menu of a tab, reaches the column through React
+  but is not on its element, so the column leaves it to the guard. While
+  no box shows, the column takes no drag.
   [Drops](../../docs/protocol/message-attachments.md#drops) states the
   requirements.
 - At the drop, `droppedItems` of [`file-drags.ts`](../app/file-drags.ts)
@@ -141,7 +149,7 @@ that those chips show, from the attach to the send.
   the dialog of a suspended org takes none. Such a box offers no drop, so
   the pointer shows that a drop does nothing. Its drop state and its drop
   caret go as soon as it stops taking changes, also during a hover.
-  Outside each box, `useFileDropGuard` of the app makes a drop of files do
+  Outside each box and its drop area, `useFileDropGuard` of the app makes a drop of files do
   nothing, as [Composition](../app/README.md#composition) says.
 - `FieldHandle` gives `focus()`, `insertFiles(ids, point?)`,
   `showDropCaret(point)`, and `clearDropCaret()`. A `FieldPoint` is a point

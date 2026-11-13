@@ -18,8 +18,8 @@ sign-in gate.
 The composer lists the files of the Files development page after `@`, and
 a press on a file chip notes what the app opens. The page has no file tab,
 so a press on the chip of a sent attached file also only notes its path.
-As in the app, its message box takes a drop of files, and a drop of files
-elsewhere on the page does nothing.
+As in the app, the chat takes a drop of files anywhere on its column for
+its message box, and a drop of files elsewhere on the page does nothing.
 
 `npm run dev` also shows the chat, in the workspace screen of the whole
 app, over the fake API of the app. That fake has limits for the chat, as

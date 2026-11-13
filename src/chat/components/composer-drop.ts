@@ -41,7 +41,7 @@ export interface ComposerDropOptions {
 }
 
 /** The drag handlers of the element of a message box. */
-type ComposerDropHandlers = Pick<
+export type ComposerDropHandlers = Pick<
   DOMAttributes<HTMLElement>,
   'onDragEnter' | 'onDragOver' | 'onDragLeave' | 'onDrop'
 >
@@ -73,8 +73,10 @@ function filesOf(items: readonly DroppedItem[]): File[] {
  * page before the zips are done, the drop attaches nothing. While the
  * composer takes no change, the box takes no drop, and the pointer shows
  * that a drop does nothing. The drop state and the drop caret go when the
- * composer stops taking changes, also during a hover. The box cancels each event of a drag of files, so the browser
- * never opens a file.
+ * composer stops taking changes, also during a hover. The box cancels each
+ * event of a drag of files, so the browser never opens a file. A drop area
+ * around the box, such as the column of the chat, can hear the drag in its
+ * place, as `useChatDropArea` says.
  */
 export function useComposerDrop(options: ComposerDropOptions): ComposerDrop {
   const { field, editable } = options
