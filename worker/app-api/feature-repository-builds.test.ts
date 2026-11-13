@@ -20,6 +20,7 @@ import {
 } from '../lifecycle/build-data'
 import { startImageBuild } from '../lifecycle/image-builds'
 import { imageRuntime } from '../lifecycle/runtime'
+import { withSoftwareRelease } from '../lifecycle/software-release-test-support'
 import { changeShellRepository } from './feature-repositories'
 import { shellRepositoryId } from './feature-repositories-data'
 import { shellGitHubCatalog } from './feature-shell.test-support'
@@ -54,7 +55,7 @@ async function setup() {
   }
   let sequence = 0
   const dependencies = {
-    fetch: active.github.fetch,
+    fetch: withSoftwareRelease(active.github.fetch),
     now: () => 3_000_000_000_000,
     randomToken: () => `repository-build-${++sequence}`,
   }
