@@ -1,4 +1,4 @@
-# Workspace links, file mentions, and tools
+# Workspace links, file and skill mentions, and tools
 
 These pages are part of [the mockup catalogue](catalogue.md).
 
@@ -106,3 +106,24 @@ On a phone each chip of the composer keeps its icon and ends with a ×.
 The flow `user-flows/mention-a-file` goes from the query to the sent
 message, and ends with a press on the file chip, which opens
 `app/files/code`.
+
+`app/skill-mentions` draws the list of `/` and the skill chip of the plan
+of the skill list. Its canonical screen has the query `/pl` at the start of
+a message in Checkout address autocomplete. The list lies above the message
+box, where the list of `@` lies. Each row has the skill icon, the name, and
+the description of a skill, muted and cut with an ellipsis. `plans` comes
+first and is highlighted, then the skills whose descriptions hold the
+query. Its child pages:
+
+- `app/skill-mentions/list` has the list without a query, in name order.
+  Its `loading` variant says "Loading skills…", its `unavailable` variant
+  says "The list of skills is unavailable", and its `none` variant says
+  "This repository has no skills" for `/` alone.
+- `app/skill-mentions/chips` has the skill chip `plans` at the start of
+  the message box. Its `pointer` variant has the pointer over the icon of
+  the chip, where a × takes the place of the icon. Its `sent` variant has
+  the sent message with the chip, and the answer of the agent.
+
+On a phone the skill chip keeps its icon and ends with a ×, as each chip
+of the composer does. The flow `user-flows/use-a-skill` goes from the
+query `/pl`, through the pick of `plans`, to the sent message.

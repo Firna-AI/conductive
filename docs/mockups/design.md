@@ -235,9 +235,9 @@ sessions as tabs above the chat, and four tabs at the bottom.
 - [The marks](design-marks.md) give the list mark, the mark
   of the header, and the marks of routine runs. They also give the mark of
   an agent.
-- [Workspace, session, and file chips](design-chat.md#workspace-session-and-file-chips)
+- [Workspace, session, file, and skill chips](design-chat.md#workspace-session-file-and-skill-chips)
   gives the workspace links, the session links, file mentions, the list of
-  `@`, and chip removal.
+  `@`, skill chips, the list of `/`, and chip removal.
 - The parts of routines live in `src/components/routines/`. The routine
   page puts its form beside the Runs column on desktop. A phone shows a
   saved routine in two tabs, Routine and Runs. The Runs list holds the

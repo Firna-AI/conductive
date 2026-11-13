@@ -2,20 +2,33 @@ import { useEffect, useRef, type ReactNode } from 'react'
 import { classes } from '../common/classes'
 import styles from './FileMentionList.module.css'
 
-/** A row of the list of `@`: the labels of one file or folder. */
+/**
+ * A row of the list of `@`: the labels of one file or folder. The list of
+ * `/` gives each skill a row too, with its description and no folder.
+ */
 export type MentionListRow = {
-  /** The real path, which stays the key of the row. */
+  /** The real path, or the name of a skill, which stays the key of the row. */
   key: string
   name: string
   /** The folder that holds the entry, with a final `/`, or '' at the root. */
   folder: string
+  /** The muted line after the name, such as the description of a skill. */
+  description?: string
   /** The icon, as All files draws it. The caller gives it. */
   icon: ReactNode
 }
 
+/** The spoken name of a row: the name, then its folder or its description. */
+function rowLabel(row: MentionListRow): string {
+  const detail = row.folder || row.description
+  return detail ? `${row.name}, ${detail}` : row.name
+}
+
 /**
  * The list of `@` above the message box, as wide as the box: the icon,
- * the name, and the folder of each row, as in Conductor.
+ * the name, and the folder of each row, as in Conductor. The list of `/`
+ * shows the name and the description of each skill in the same way, and
+ * `label` names its listbox.
  * `highlighted` marks the row that Enter or Tab picks. `line` takes the
  * place of the rows, such as while the tree loads. It takes no fixtures,
  * so the app draws its list with it. `onPick` and `onHighlight` come from
@@ -27,6 +40,8 @@ export type MentionListRow = {
  */
 export function MentionList(props: {
   id: string
+  /** The name of the listbox. Without it, the list holds files and folders. */
+  label?: string
   rows: readonly MentionListRow[]
   highlighted: number | null
   line: string | null
@@ -53,13 +68,13 @@ export function MentionList(props: {
       ) : null}
       {props.rows.length > 0 ? (
         <div
-          aria-label="Files and folders"
+          aria-label={props.label ?? 'Files and folders'}
           className={styles.rows}
           role="listbox"
         >
           {props.rows.map((row, index) => (
             <div
-              aria-label={row.folder ? `${row.name}, ${row.folder}` : row.name}
+              aria-label={rowLabel(row)}
               aria-selected={index === props.highlighted}
               className={classes(
                 styles.row,
@@ -77,6 +92,9 @@ export function MentionList(props: {
               <span className={styles.name}>{row.name}</span>
               {row.folder ? (
                 <span className={styles.folder}>{row.folder}</span>
+              ) : null}
+              {row.description ? (
+                <span className={styles.description}>{row.description}</span>
               ) : null}
             </div>
           ))}

@@ -57,8 +57,12 @@ Answered on 2026-11-13: **B**.
 - Left out: a fixed list of built-in commands, because it shows no skills.
   A read of `SKILL.md` files from GitHub by the Worker, because it misses
   new skills, the skills of the Codex home, and the org skills. An idle
-  Claude session only to call `supportedCommands()`, because a scan of the
-  project folders gives the same set without a process or a login.
+  Claude session only to call `supportedCommands()`, because it needs a
+  process and a login for each start.
+- Correction on 2026-11-13, from the spike of Milestone 3: Claude also
+  reports 16 skills that come with its CLI, such as `dataviz`. A scan of
+  the folders does not find them. The choice stays B. The list leaves
+  these skills out, as a design call below says.
 - Reason: the list has descriptions, works for both agents, and can take
   the org skills when that plan merges.
 
@@ -84,6 +88,29 @@ Answered on 2026-11-13: **B**.
   so it is only the fallback when no other form runs the skill.
 - Reason: it matches the file chips, and it stays right when the model
   changes before the send.
+
+### Skill list decision 3: How Claude runs a manual-only skill
+
+Open since 2026-11-13. Asked in the chat. It blocks only the Claude form
+of a manual-only skill in Milestone 3.
+
+- Background: a manual-only skill sets `disable-model-invocation: true` in
+  its `SKILL.md`. In the spike of Milestone 3, Claude ran no such skill
+  that the text named after the sender line (0 of 2). It ran each one
+  when `/name` came before the sender line (2 of 2).
+- Root question: how does Claude run a manual-only skill that a member
+  picks?
+- **A.** Leave manual-only skills out of the Claude list.
+- **B.** Put `/name` of a manual-only skill before the sender line. One
+  such skill for each message, and the sender line becomes the skill
+  arguments.
+- **C.** Add the text of the `SKILL.md` to the message. Skill settings such
+  as `allowed-tools` and `$ARGUMENTS` then do nothing.
+- **D.** Put `/name` before the sender line for every Claude skill.
+- Left out: a separate `/name` message before the member's message,
+  because the skill then runs before the agent sees the request.
+- Recommendation: B. It is the only tested form that runs a manual-only
+  skill with all its settings.
 
 ## Design
 
@@ -149,6 +176,19 @@ Each call below is my call, made on 2026-11-13.
 - A chip of a skill that the agent of the send does not have, such as
   after a change of the model, stays a chip. That agent gets the text
   `/name` unchanged. Reason: the member sees the chip and can remove it.
+- The skills that come with the Claude CLI, such as `dataviz`, stay out of
+  the list. Reason: a scan of folders cannot find them, and decision 1
+  chose a scan. A member can still name them in text.
+- The spike of Milestone 3 found these forms, with evidence in
+  `.context/skill-list/spike/`:
+  - Claude runs a normal skill when the text names it as `/name` after the
+    sender line. So the text of a Claude message stays as the member
+    wrote it.
+  - Codex adds the skill to the model input for the item
+    `{ type: "skill", name, path }`, where `path` is the absolute path of
+    the `SKILL.md` that `skills/list` gives. A wrong path is dropped
+    without an error. Codex has no login on the test computer, so no model
+    answer is proven.
 - The agent input: Codex gets the structured skill item of option D, and
   the text keeps `/name`. Milestone 3 first checks how each agent runs a skill
   that a message names after the sender line, because each message to an
@@ -156,6 +196,33 @@ Each call below is my call, made on 2026-11-13.
   the one that runs the skill in both checks. When neither the in-text
   form nor a line of its own runs the skill, Milestone 3 stops, and the
   plan asks the user.
+
+#### Design calls from the mockups
+
+Each call below is my call, made on 2026-11-13, from the mockups of
+Milestone 1 (`app/skill-mentions` and `user-flows/use-a-skill`).
+
+- The line "This repository has no skills" shows only for `/` alone. A
+  query after `/` closes the list, as when no skill matches. Reason: the
+  design said both that an empty report shows the line and that no match
+  closes the list. With the line for each query, the line would show over
+  the chat for each typed path, such as `see /tmp`.
+- The lines "Loading skills…" and "The list of skills is unavailable" show
+  for each query, because no list can say yet whether a skill matches.
+  Enter still sends, as the design says for a list with no row.
+- The skill chip shows the skill icon and the name without `/`, as a file
+  chip shows its name without `@`. The icon is `SquareSlash` of the Lucide
+  set, a `/` in a square, because `/` opens the list. The title of the chip
+  is the description of the skill. Screen readers hear "Skill" before the
+  name.
+- A press on a skill chip in a sent message opens nothing. Reason: a skill
+  of the Codex home or of the org skills repository has no file of the
+  branch to open, and the title gives the description.
+- The rows of the list show the skill icon before the name, as the rows of
+  the list of files show an icon. `MentionList` takes an optional
+  `description` for each row and an optional `label` for its listbox, which
+  the list of skills sets to "Skills". Milestone 6 uses both, and the list
+  of files stays as it is.
 
 ## Milestone 1: Mockups
 
@@ -166,21 +233,21 @@ Depends on: none
 The skill list in the composer, the skill chip in the field and in a sent
 message, and the flow of a pick.
 
-- [ ] Add `app/skill-mentions` to the catalogue, beside
+- [x] Add `app/skill-mentions` to the catalogue, beside
       `app/file-mentions`. Draw the list with rows of a name and a muted
       description, the highlighted row, and the lines for loading, for an
       unavailable list, and for a repository without skills. Reuse
       `docs/mockups/src/components/chat/MentionList` and `FileChip`.
-- [ ] Draw the skill chip in the message field and in a sent message, with
+- [x] Draw the skill chip in the message field and in a sent message, with
       its icon cell and its ×, as
       [Remove a chip of the composer](../docs/protocol/file-mentions.md#remove-a-chip-of-the-composer)
       says.
-- [ ] Add the flow `user-flows/use-a-skill`: type `/pl`, pick `plans`, and
+- [x] Add the flow `user-flows/use-a-skill`: type `/pl`, pick `plans`, and
       send.
-- [ ] Update `docs/mockups/catalogue.md`.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages at
+- [x] Update `docs/mockups/catalogue.md`.
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages at
       `http://127.0.0.1:4173`.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
 
 ## Milestone 2: Documentation and protocol
@@ -211,7 +278,7 @@ Depends on: 2
 
 The runner writes each skill text of a message in the form of its agent.
 
-- [ ] Check, with one real session of each agent on this cloud computer,
+- [x] Check, with one real session of each agent on this cloud computer,
       how the agent runs a picked skill. For Claude, test `/name` in the
       text after the sender line, `/name` at the very start of the prompt,
       and a line of its own after the branch line. For Codex, test the

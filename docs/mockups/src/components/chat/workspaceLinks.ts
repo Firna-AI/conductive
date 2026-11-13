@@ -5,10 +5,12 @@ import {
   type AttachedPart,
   type MentionPart,
 } from './fileMentions'
+import { skillParts, type SkillPart } from './skillMentions'
 
 /**
  * A part of a text: plain text, code in backticks, a link, a mention of a
- * file or a folder, or a mention of an attached file of the message.
+ * file or a folder, a mention of an attached file of the message, or a
+ * skill.
  */
 export type TextPart =
   | { kind: 'text'; text: string }
@@ -21,6 +23,7 @@ export type TextPart =
     }
   | MentionPart
   | AttachedPart
+  | SkillPart
 
 /**
  * A Markdown link to a web address, or a bare web address. A bare address
@@ -43,7 +46,10 @@ function linkParts(text: string): TextPart[] {
   return parts
 }
 
-/** Plain text with its links, and with its mentions when `mentions` asks. */
+/**
+ * Plain text with its links, and with its mentions and its skills when
+ * `mentions` asks.
+ */
 function plainParts(
   text: string,
   mentions: boolean,
@@ -51,16 +57,21 @@ function plainParts(
 ): TextPart[] {
   if (!mentions) return linkParts(text)
   return mentionParts(text, files).flatMap((part): TextPart[] =>
-    part.kind === 'text' ? linkParts(part.text) : [part],
+    part.kind === 'text'
+      ? skillParts(part.text).flatMap((piece): TextPart[] =>
+          piece.kind === 'text' ? linkParts(piece.text) : [piece],
+        )
+      : [part],
   )
 }
 
 /**
- * Splits a text into plain text, code, links, and mentions. In a sent
- * message or an answer, `code` is true: each part in backticks is code,
- * and a link or a mention in it stays code. A message box keeps plain
- * text, so it reads no code. Only the text of a member, in a message box
- * or a sent message, reads mentions, so `mentions` is false in an answer.
+ * Splits a text into plain text, code, links, mentions, and skills. In a
+ * sent message or an answer, `code` is true: each part in backticks is
+ * code, and a link, a mention, or a skill in it stays code. A message box
+ * keeps plain text, so it reads no code. Only the text of a member, in a
+ * message box or a sent message, reads mentions and skills, so `mentions`
+ * is false in an answer.
  * A mention of the copy path of one of the `files` of a sent message is
  * the mention of that file.
  */

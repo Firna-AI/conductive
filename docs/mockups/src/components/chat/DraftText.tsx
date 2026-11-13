@@ -1,11 +1,13 @@
 import type { Attachment } from '../../fixtures/attachments'
 import type { MentionEntry } from '../../fixtures/fileMentions'
+import type { Skill } from '../../fixtures/skills'
 import { useChatWorkspaces, type ChatRow } from './chatWorkspaces'
 import { DraftFileChip, type ChipUpload } from './DraftFileChip'
 import { draftParts } from '../../../../../src/app/draft-marks'
 import { entryName } from './entryPaths'
 import { FileChip } from './FileChip'
 import { iconOf, LinkChip } from './MessageText'
+import { SkillChip } from './SkillChip'
 import { linkTarget, textParts, type LinkTarget } from './workspaceLinks'
 import styles from './DraftText.module.css'
 
@@ -15,13 +17,15 @@ type DraftItem =
   | { kind: 'caret' }
   | { kind: 'file'; file: Attachment }
   | { kind: 'mention'; entry: MentionEntry }
+  | { kind: 'skill'; skill: Skill }
   | { kind: 'link'; target: LinkTarget }
 
 /**
  * The parts of a draft: its text, the chip of each attached file at its
  * mark, the chip of each link to a workspace of the org or to one of its
- * sessions, and the chip of each mention of the tree. A mark of a file that
- * the draft does not hold shows nothing.
+ * sessions, the chip of each mention of the tree, and the chip of each
+ * skill of the list. A mark of a file that the draft does not hold shows
+ * nothing.
  */
 function itemsOf(
   text: string,
@@ -37,6 +41,8 @@ function itemsOf(
       switch (piece.kind) {
         case 'mention':
           return { kind: 'mention', entry: piece.entry }
+        case 'skill':
+          return { kind: 'skill', skill: piece.skill }
         case 'link': {
           const target = linkTarget(piece.href, rows)
           return target
@@ -57,13 +63,13 @@ function itemsOf(
 const caretItem: DraftItem = { kind: 'caret' }
 
 function isChip(item: DraftItem): boolean {
-  return item.kind === 'file' || item.kind === 'mention' || item.kind === 'link'
+  return item.kind !== 'text' && item.kind !== 'caret'
 }
 
 /**
  * The draft holds a chip: an attached file, a link to a workspace of the
- * org or to one of its sessions, or a mention of a file or a folder of the
- * tree.
+ * org or to one of its sessions, a mention of a file or a folder of the
+ * tree, or a skill.
  */
 export function holdsChips(draft: string, rows: readonly ChatRow[]): boolean {
   return (
@@ -83,14 +89,14 @@ function uploadOf(file: Attachment): ChipUpload {
 
 /**
  * The draft of a message box as plain text, with each attached file, each
- * link to a workspace of the org or to one of its sessions, and each
- * mention of the tree as a chip. A link to a session that the chat read is
- * a session chip. A chip is one unit of the text, which the caret steps
- * over and Backspace removes whole, so it is not editable inside the
- * editable field. Each chip starts with the cell of its icon, which a
- * pointer turns into a × that removes it. In the app a press on the name of
- * a file chip opens the file, and a press on the name of an attached file
- * opens nothing.
+ * link to a workspace of the org or to one of its sessions, each mention
+ * of the tree, and each skill as a chip. A link to a session that the
+ * chat read is a session chip. A chip is one unit of the text, which the
+ * caret steps over and Backspace removes whole, so it is not editable
+ * inside the editable field. Each chip starts with the cell of its icon,
+ * which a pointer turns into a × that removes it. In the app a press on
+ * the name of a file chip opens the file, and a press on the name of an
+ * attached file or of a skill opens nothing.
  *
  * `files` are the files of the draft, by the draft IDs of their marks. A
  * view runs no script, so `caret` draws the caret at that index of the
@@ -142,6 +148,15 @@ export function DraftText(props: {
                   entry={item.entry}
                   icon={iconOf(item.entry)}
                   removal={{ name: entryName(item.entry), pointer }}
+                />
+              </span>
+            )
+          case 'skill':
+            return (
+              <span contentEditable={false} key={index}>
+                <SkillChip
+                  removal={{ name: item.skill.name, pointer }}
+                  skill={item.skill}
                 />
               </span>
             )

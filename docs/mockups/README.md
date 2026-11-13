@@ -68,9 +68,9 @@ operator section. Its linked page
 [the pull request bar](catalogue-bar.md) gives `app/banner` and its child
 pages. The [chat and routines](catalogue-chat-and-routines.md) page gives
 the child pages and flows of `app/chat` and `app/routines`. The
-[workspace links, file mentions, and tools](catalogue-workspace-tools.md)
+[workspace links, file and skill mentions, and tools](catalogue-workspace-tools.md)
 page gives the child pages and flows of `app/workspace-links`,
-`app/file-mentions`, and `app/tools`.
+`app/file-mentions`, `app/skill-mentions`, and `app/tools`.
 The [command palette and feedback](catalogue-palette.md) page gives the child
 pages of `app/command-palette` and `app/feedback`, the Feedback dialog,
 and the flow that sends feedback.
@@ -133,7 +133,7 @@ a dropped folder that the browser cannot read. [The chat](design-chat.md) gives 
   image tabs of the centre column. `temporaryTabStates` covers the
   temporary tab, which `src/screens/workspaceTemporaryTab.ts` draws in the
   row. `composerStates` covers the composer, with its links, mentions,
-  attached files, and drops.
+  skills, attached files, and drops.
 - A flow (`defineUseCase`) lists the paths of existing screens. Each screen
   that a flow uses names the flow in `useCasePaths`.
 - Screens link to each other with `ScreenLink` from

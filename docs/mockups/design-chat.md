@@ -218,7 +218,7 @@ background work.
   - The words name what stopped, not the number of the limit, because the
     member cannot change it.
 
-## Workspace, session, and file chips
+## Workspace, session, file, and skill chips
 
 - `WorkspaceChip` in `src/components/chat/` draws a link to a workspace of
   the org as a chip in a line of text: a small rounded pill with the list
@@ -295,3 +295,20 @@ background work.
   place of the rows while the tree loads, when no tree is available, and
   when nothing matches. `fileMentions.ts` beside it reads the mentions of
   a text and orders the rows.
+- `SkillChip` in `src/components/chat/` draws a skill of the agent as a
+  chip of the same size: the skill icon, `SkillIcon`, and the name of the
+  skill. The icon is `SquareSlash` of the Lucide set, a `/` in a square,
+  because `/` opens the list of skills. Its title is the description of
+  the skill, and screen readers hear "Skill" before the name. In a message
+  box it has the cell of its icon and the × of `ChipRemove.tsx`, as a file
+  chip does. A sent message shows it without a ×, and a press opens
+  nothing. It takes no fixtures, so the app can use it too.
+- `SkillMentionList` in `src/components/chat/` draws the list of `/` above
+  the message box, in the place of the list of `@`. It renders through
+  `MentionList`: each row gives the name and a `description`, which shows
+  muted after the name and is cut with an ellipsis, and `label` names the
+  listbox "Skills". One line takes the place of the rows before the first
+  skills report, when the runner sent no report, and, for `/` alone, when
+  the repository has no skills. When no skill matches the query, the list
+  closes. `skillCopy.ts` holds the words of these lines, and
+  `skillMentions.ts` reads the skills of a text and orders the rows.

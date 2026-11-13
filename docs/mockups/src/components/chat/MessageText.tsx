@@ -15,6 +15,7 @@ import { FileChip } from './FileChip'
 import { entryName } from './entryPaths'
 import { SentFileChip } from './SentFileChip'
 import { SessionChip, type ChipSession } from './SessionChip'
+import { SkillChip } from './SkillChip'
 import { strongRuns } from './strongText'
 import {
   linkTarget,
@@ -140,6 +141,9 @@ function Part(props: { part: TextPart; waits?: boolean }) {
       />
     )
   }
+  if (part.kind === 'skill') {
+    return <SkillChip mention={part.source} skill={part.skill} />
+  }
   return <LinkText href={part.href} source={part.source} />
 }
 
@@ -171,7 +175,8 @@ export function LinkText(props: { href: string; source?: string }) {
  * workspace or a session shows as the chip alone. Other links stay plain
  * text, and so does a link in code. With `strong`, as in an answer, `**`
  * marks bold. In the text of a member, `mentions` makes each mention of a
- * file or a folder of the tree a chip that opens the file.
+ * file or a folder of the tree a chip that opens the file, and each skill
+ * of the list a skill chip, which opens nothing.
  *
  * `files` are the attached files of a sent message. A mention of the copy
  * path of one of them shows as the chip of that file, which opens the file

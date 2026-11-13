@@ -25,6 +25,7 @@ import { workspaceLinkDraft } from '../fixtures/workspaceLinkConversations'
 import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
 import { otherStarter, sessionLoginFor } from './sessionStarter'
+import { skillChipFor, skillListFor } from './skillComposer'
 import { isNew } from './workspaceTabs'
 import type { WorkspaceState } from './workspaceState'
 
@@ -85,6 +86,7 @@ const sendsFiles = new Set<ComposerKey>(['attachments', 'too-large'])
 /** The states that draw the pointer over the icon of the first chip. */
 const pointerStates = new Set<ComposerKey>([
   'file-chip-pointer',
+  'skill-chip-pointer',
   'workspace-link-pointer',
   'attachment-pointer',
 ])
@@ -101,13 +103,15 @@ const mentionLists: Partial<
 }
 
 /**
- * The draft of a state with chips: file chips, a workspace link, or two
- * session links.
+ * The draft of a state with chips: file chips, a skill chip, a workspace
+ * link, or two session links.
  */
 function chipDraft(composer: ComposerKey): string | undefined {
   if (composer === 'file-chips' || composer === 'file-chip-pointer') {
     return mentionChipsDraft
   }
+  const skill = skillChipFor(composer)
+  if (skill) return skill
   if (composer === 'session-link') return sessionLinkDraft
   const link =
     composer === 'workspace-link' || composer === 'workspace-link-pointer'
@@ -151,6 +155,7 @@ export function isRunning(state: WorkspaceState): boolean {
  * chip, and the draft keeps the plain link. A pasted link to a session
  * shows as a session chip in the same way. `@` opens the list of the
  * files and folders above the box, and a picked entry shows as a chip.
+ * `/` opens the list of skills there, and a picked skill shows as a chip.
  *
  * Each attached file is a chip at its place in the text. While files hover
  * over the box, the desktop shows the drop state with the drop caret in the
@@ -175,6 +180,7 @@ export function composerFor(
   const files = fresh ? undefined : composerFiles[state.composer]
   const drop = fresh ? undefined : dropDrafts[state.composer]
   const mention = fresh ? undefined : mentionLists[state.composer]
+  const skills = fresh ? undefined : skillListFor(state.composer)
   const chips = fresh ? undefined : chipDraft(state.composer)
   const choice =
     state.conversation === 'model-not-served'
@@ -186,6 +192,7 @@ export function composerFor(
   else if (files) draft = attachmentDraft
   else if (!fresh && nextMessage) draft = followUpDraft
   else if (mention) draft = mention.draft
+  else if (skills) draft = skills.draft
   else if (chips) draft = chips
   else if (!fresh && state.composer === 'draft') {
     draft = isNew(state) ? savedCartsDraft : followUpDraft
@@ -215,6 +222,7 @@ export function composerFor(
     blocked: needsLogin,
     sessionLogin: sessionLoginFor(opensLinked ? undefined : starter),
     mention: mention?.tree,
+    skills: skills?.source,
     drop:
       drop !== undefined &&
       state.composer === 'drop-over' &&
