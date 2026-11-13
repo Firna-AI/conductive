@@ -9,6 +9,14 @@ export const terminalScriptsAndPreviewsFeatures: readonly ParityFeature[] = [
     note: 'One cloud terminal keeps running through disconnects, with text selection and copying while programs use the mouse.',
   },
   {
+    id: 'terminal-links',
+    area: 'terminal-scripts-and-previews',
+    name: 'Terminal links',
+    status: 'in-progress',
+    note: 'Opening web links from terminal output is in progress. Local server links will open the workspace preview.',
+    due: null,
+  },
+  {
     id: 'terminal-tabs',
     area: 'terminal-scripts-and-previews',
     name: 'Terminal tabs',
