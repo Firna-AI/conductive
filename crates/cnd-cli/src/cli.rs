@@ -5,6 +5,7 @@ use clap::Parser;
 use crate::command::Command;
 use crate::error::{Error, Result};
 use crate::release;
+use crate::sandbox_command;
 use crate::update_command;
 
 /// Arguments for the Conductive program.
@@ -26,6 +27,9 @@ impl Cli {
         let _parts = release::parts()?;
         if let Command::Update(arguments) = self.command {
             return update_command::execute(arguments).await;
+        }
+        if let Command::Relay = self.command {
+            return sandbox_command::relay().await;
         }
         Err(Error::NotAvailable {
             command: self.command,

@@ -48,12 +48,9 @@ the [lifecycle README](../worker/lifecycle/README.md#browser-routes) says.
 with a user name, a password, a query, or a fragment. It also refuses a
 digest that is not 64 hexadecimal characters.
 
-The archive must hold these programs:
-
-- `runner/main.mjs`: the agent runner, with its SDK dependencies.
-- `runner/relay.mjs`: the preview relay, with no npm dependency.
-
-Both programs use the [private Node runtime](runtime.md).
+The archive holds `runner/main.mjs`, the agent runner with its SDK dependencies.
+The runner uses the [private Node runtime](runtime.md).
+The static `conductive` program supplies the preview relay.
 The archive holds no Node runtime.
 
 Put no credential in the URL or in the archive. Each saved snapshot keeps
@@ -113,7 +110,7 @@ release. `conductive update apply` activates a complete release locally.
 The runner remains the Node program from the runner part.
 The system installer links `/usr/local/bin/conductive` to
 `/opt/conductive/current/conductive`. This Rust program supplies the workspace
-CLI, the MCP server, and release updates.
+CLI, the MCP server, the preview relay, Git credentials, and release updates.
 
 `package-system.sh` builds a reproducible archive with the release units
 from `release/`. It renders the start scripts with paths under
@@ -195,20 +192,18 @@ build, a disk retention restart, and an unfinished start start no runner.
 - [`install-runtime.sh`](install-runtime.sh): installs the private Node.
   Its arguments are the download URL, the digest, and the version folder.
 - [`install.sh`](install.sh): installs the runner archive, its service,
-  the relay service and socket, and the git helper.
+  the relay service and socket, and the Rust credential alias.
   Its arguments are the archive URL and the digest.
 - [`runner-start.sh`](runner-start.sh) and
   [`conductive-runner.service`](conductive-runner.service): start the agent
   runner, and map the sandbox variables to the runner variables.
 - [`preview-relay-start.sh`](preview-relay-start.sh) and
   [`conductive-preview-relay.service`](conductive-preview-relay.service):
-  start the preview relay with the private Node.
+  start the Rust preview relay.
 - [`conductive-preview-relay.socket`](conductive-preview-relay.socket):
   holds the relay port and passes its listener to the relay service.
 - [The terminal backend](../worker/terminal/service.ts): owns apt package installation and the workspace start hook.
-- [`git-credential-helper.sh`](git-credential-helper.sh) and
-  [`git-credential-helper.mjs`](git-credential-helper.mjs): the git
-  credential helper.
+- [Credential crate](../crates/cnd-credential/README.md): supplies the Rust Git credential helper and token mode.
 - [`github-cli.sh`](github-cli.sh): gives the GitHub CLI a fresh token for each command.
 - [`image-runtime.ts`](../worker/lifecycle/image-runtime.ts): the pinned
   Node release, its digest, and its paths.

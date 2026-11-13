@@ -10,7 +10,6 @@ await build({
   absWorkingDir: root,
   entryPoints: {
     runner: 'src/main.ts',
-    relay: 'src/relay/main.ts',
     measure: 'sdk-helper/src/measure.ts',
     compare: 'sdk-helper/src/compare.ts',
   },

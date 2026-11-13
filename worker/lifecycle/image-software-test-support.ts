@@ -11,7 +11,7 @@ import { shellQuote } from './commands'
 import { imageNodeExecutable } from './image-runtime'
 import { stagedImageSoftware } from './image-software-staging-test-support'
 
-export async function imageSoftwareFixture(options: { relay?: boolean } = {}) {
+export async function imageSoftwareFixture(options: { runner?: boolean } = {}) {
   const root = await mkdtemp(join(tmpdir(), "conductive software's "))
   onTestFinished(() => rm(root, { recursive: true, force: true }))
   const installation = join(root, 'opt/conductive')
@@ -27,6 +27,7 @@ export async function imageSoftwareFixture(options: { relay?: boolean } = {}) {
     commands,
     dirname(node),
     payload,
+    join(installation, 'current'),
     repository,
     join(root, 'usr/local/bin'),
     join(root, 'etc/systemd/system'),
@@ -85,12 +86,15 @@ cp ${shellQuote(archive)} "$output"
   workspace: process.env.CONDUCTIVE_WORKSPACE_ID,
   configuredNode: process.env.CONDUCTIVE_NODE,
 }))\n`
-  await writeFile(join(payload, 'main.mjs'), program)
-  if (options.relay !== false)
-    await writeFile(
-      join(payload, 'relay.mjs'),
-      'process.stdout.write(JSON.stringify({ node: process.execPath, relay: true }))\n',
-    )
+  if (options.runner !== false)
+    await writeFile(join(payload, 'main.mjs'), program)
+  await writeFile(
+    join(installation, 'current/conductive'),
+    `#!/bin/sh
+printf '{"command":"%s"}\\n' "$1"
+`,
+    { mode: 0o755 },
+  )
   const packed = await imageTestProcess('/usr/bin/tar', [
     '-czf',
     archive,

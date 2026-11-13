@@ -26,8 +26,11 @@ The commands are `runner`, `relay`, `mcp`, `git-credential`, `update`,
 `workspaces`, `sessions`, `messages`, `sections`, `repositories`, `models`,
 `previews`, and `mac`. The workspace commands and `mcp` run the 24 calls in
 [cnd-tools](../cnd-tools/README.md). They preserve the Worker replies and
-refusal codes. The commands `runner`, `relay`, and `git-credential` report
-"not available yet" to stderr and exit with status 1.
+refusal codes. `relay` serves previews through [cnd-relay](../cnd-relay/README.md).
+`git-credential` supplies fresh GitHub tokens through
+[cnd-credential](../cnd-credential/README.md). The installed
+`conductive-git-credential` executable name selects that subcommand.
+Only `runner` reports "not available yet" and exits with status 1.
 
 `update check` uses `cli-updater` to read and compare the newest release.
 It downloads into a private version folder. It checks the program digest
@@ -94,8 +97,9 @@ The musl build needs a C compiler for musl. On Ubuntu, install the
 - [update/ports.rs](src/update/ports.rs) defines disk, process, and updater boundaries.
 - [update/disk.rs](src/update/disk.rs) stores complete versions and locks.
 - [update_tests.rs](tests/update_tests.rs) checks real files and local HTTP downloads.
+- [sandbox_command.rs](src/sandbox_command.rs) composes the relay and credential runtimes.
 - [tool_command.rs](src/tool_command.rs) composes the workspace CLI and MCP runtime.
-- [cli_tests.rs](src/_tests_/cli_tests.rs) checks parsing for pending command families.
+- [cli_tests.rs](src/_tests_/cli_tests.rs) checks relay argument parsing.
 
 ### Related Docs
 

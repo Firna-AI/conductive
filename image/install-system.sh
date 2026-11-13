@@ -9,7 +9,7 @@ install -d -m 755 /etc/udev/rules.d /usr/local/bin
 install -m 644 "$system/60-conductive-disk-cache.rules" /etc/udev/rules.d/60-conductive-disk-cache.rules
 ln -sfn "$root/current/conductive" /usr/local/bin/conductive
 ln -sfn "$system/github-cli.sh" /usr/local/bin/gh
-ln -sfn "$system/git-credential-helper.sh" /usr/local/bin/conductive-git-credential
+ln -sfn "$root/current/conductive" /usr/local/bin/conductive-git-credential
 git config --system --replace-all credential.helper /usr/local/bin/conductive-git-credential
 git config --system credential.useHttpPath true
 systemctl daemon-reload

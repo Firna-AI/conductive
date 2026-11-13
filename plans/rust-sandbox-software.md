@@ -295,11 +295,11 @@ Depends on: 4, 5
 
 Depends on: 4, 5
 
-- [ ] Port the git credential helper to `conductive git-credential`, and point the system Git setting at it.
-- [ ] Port the preview relay to `conductive relay`, with the socket activation of `conductive-preview-relay.socket`.
-- [ ] Port the relay tests, which use real local servers.
-- [ ] Delete `image/git-credential-helper.*` and `runner/src/relay/`.
-- [ ] Update `image/github.md` and `runner/preview-relay.md`.
+- [x] Port the git credential helper to `conductive git-credential`, and point the system Git setting at it.
+- [x] Port the preview relay to `conductive relay`, with the socket activation of `conductive-preview-relay.socket`.
+- [x] Port the relay tests, which use real local servers.
+- [x] Delete `image/git-credential-helper.*` and `runner/src/relay/`.
+- [x] Update `image/github.md` and `runner/preview-relay.md`.
 
 ## Milestone 8: Node SDK helper
 
@@ -338,7 +338,7 @@ Depends on: 4, 6, 7, 8, 10
 - [ ] Confirm a new release (`conductive update started`) only after the Rust runner gets its first `welcome`, not when its process starts. Milestone 4 confirms at process start, because the Node runner cannot report its connection.
 - [ ] Delete the Node runner core, `image/install.sh`, `image/package-runner.mjs`, the two runner archive variables, and the `runner:typecheck` and `runner:test` steps that test deleted code. Keep the helper's typecheck and tests in `npm run check`.
 - [ ] Run the live check of `image/developer-scripts.md` in a real sandbox. Save the evidence under `.context/rust-sandbox-software/`.
-- [ ] Update `runner/README.md`, `runner/key-code.md`, and the other runner guides.
+- [ ] Update `runner/README.md`, `runner/key-code.md`, and the other runner guides. Include `image/start.md`, which still names the Node relay after Milestone 7.
 
 ## Milestone 12: Verification, commit, review, and pull request
 

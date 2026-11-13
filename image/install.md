@@ -112,7 +112,6 @@ versions/<version>/complete
 versions/<failed-version>/rejected
 parts/<sha256>/complete
 parts/<runner-sha256>/runner/main.mjs
-parts/<runner-sha256>/runner/relay.mjs
 parts/<node-sha256>/bin/node
 parts/<system-sha256>/install-system.sh
 parts/<system-sha256>/*          # scripts, units, wrapper, and udev rule
@@ -128,7 +127,9 @@ Apply calls `current/system/install-system.sh`. That script installs all
 release units into `/etc/systemd/system`, copies the udev rule, sets the
 system Git credential helper, and links the `gh` wrapper. It also links
 `/usr/local/bin/conductive` to `/opt/conductive/current/conductive`.
-That program serves workspace commands, MCP, and release updates.
+That program serves workspace commands, MCP, previews, Git credentials, and release updates.
+The credential alias `/usr/local/bin/conductive-git-credential` links to the
+same program and selects `git-credential`.
 It runs
 `systemctl daemon-reload` and enables the runner, relay, terminal, and
 check timer. It starts no service and changes no package.
@@ -140,12 +141,12 @@ The release units are:
 - `conductive-update-check.timer`: boot and hourly checks.
 - `conductive-update-confirm.service`: root confirmation after a local runner start.
 - `conductive-runner.service`: Node runner as `user`.
-- `conductive-preview-relay.service` and `.socket`: Node relay as `user`.
+- `conductive-preview-relay.service` and `.socket`: Rust relay as `user`.
 - `conductive-terminal.service` and `conductive-terminal-sessions.service`: terminal services as `user`.
 
 The runner, relay, and terminal entry points use `current/system/`.
-Each runner or relay start resolves `current` once and uses that version's
-private Node and runner part. The next apply restores `previous` when a
+Each runner start resolves `current` once and uses that version's
+private Node and runner part. The relay executes the active Rust program. The next apply restores `previous` when a
 new release still has its pending marker. Collection after confirmation
 retains current and previous and removes other versions and unused parts.
 A running download defers collection without delaying the runner.

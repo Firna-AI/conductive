@@ -4,7 +4,7 @@ import { expect, it } from 'vitest'
 
 import { imageSoftwareFixture } from './image-software-test-support'
 
-it('installs the runner and relay and starts both with the private runtime', async () => {
+it('installs the runner with the private runtime and starts the Rust relay', async () => {
   const fixture = await imageSoftwareFixture()
   const installed = await fixture.install()
   expect(installed.exitCode, installed.stderr).toBe(0)
@@ -44,8 +44,7 @@ it('installs the runner and relay and starts both with the private runtime', asy
   const relay = await fixture.relayStart()
   expect(relay.exitCode, relay.stderr).toBe(0)
   expect(JSON.parse(relay.stdout)).toEqual({
-    node: process.execPath,
-    relay: true,
+    command: 'relay',
   })
   const github = await fixture.githubCli(['--version'])
   expect(github.exitCode, github.stderr).toBe(0)
@@ -65,8 +64,8 @@ it('installs the runner and relay and starts both with the private runtime', asy
   expect((await fixture.calls()).at(-1)).toBe('private Node')
 })
 
-it('rejects an archive without the relay before it replaces installed software', async () => {
-  const fixture = await imageSoftwareFixture({ relay: false })
+it('rejects an archive without the runner before it replaces installed software', async () => {
+  const fixture = await imageSoftwareFixture({ runner: false })
   const installed = await fixture.install()
   expect(installed.exitCode).toBe(1)
   expect(await fixture.calls()).toEqual([])

@@ -12,11 +12,11 @@ use crate::update_command::UpdateArgs;
 pub(crate) enum Command {
     /// Run agent sessions. Not available yet.
     Runner(PendingArgs),
-    /// Relay port previews. Not available yet.
-    Relay(PendingArgs),
+    /// Relay port previews on the private socket.
+    Relay,
     /// Serve workspace tools over MCP.
     Mcp(PendingArgs),
-    /// Supply Git credentials. Not available yet.
+    /// Supply fresh GitHub credentials.
     GitCredential(PendingArgs),
     /// Stage or apply a sandbox software update.
     Update(UpdateArgs),
@@ -42,7 +42,7 @@ impl fmt::Display for Command {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         let name = match self {
             Self::Runner(_) => "runner",
-            Self::Relay(_) => "relay",
+            Self::Relay => "relay",
             Self::Mcp(_) => "mcp",
             Self::GitCredential(_) => "git-credential",
             Self::Update(_) => "update",

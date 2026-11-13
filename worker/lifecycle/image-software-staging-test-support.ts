@@ -6,8 +6,6 @@ import { imageNodeExecutable } from './image-runtime'
 import installScript from '../../image/install.sh?raw'
 import runtimeInstall from '../../image/install-runtime.sh?raw'
 import runnerStart from '../../image/runner-start.sh?raw'
-import credentialStart from '../../image/git-credential-helper.sh?raw'
-import credentialScript from '../../image/git-credential-helper.mjs?raw'
 import githubCli from '../../image/github-cli.sh?raw'
 import runnerService from '../../image/conductive-runner.service?raw'
 import previewRelayStart from '../../image/preview-relay-start.sh?raw'
@@ -30,18 +28,14 @@ const runnerUrlMarker = '__CONDUCTIVE_STAGED_RUNNER_URL__'
 const runnerUrl = '${CONDUCTIVE_MACHINE_ORIGIN%/}' + MACHINE_PATHS.runner
 
 function rootedScript(source: string, name: string, root: string): string {
-  const credential = name === 'git-credential-helper.sh'
-  if (
-    !source.startsWith('#!/bin/sh\n') ||
-    (credential && (/[`\\]/.test(source) || source.includes('$(')))
-  )
+  if (!source.startsWith('#!/bin/sh\n'))
     throw new Error(`Unsafe staged image script: ${name}`)
 
   // Protect the rendered Node path before mapping other production paths.
   const protectedSource = source
     .replaceAll(shellQuote(imageNodeExecutable()), nodeMarker)
     .replaceAll(runnerUrl, runnerUrlMarker)
-  const roots = credential ? credentialRoots : softwareRoots
+  const roots = softwareRoots
   const mapped = protectedSource.replace(
     /(?<![\w./-])\/[\w./-]+/g,
     (path: string, offset: number) => {
@@ -71,8 +65,6 @@ export function stagedImageSoftware(root: string): ReadonlyMap<string, string> {
       '@RUNNER_PATH@',
       MACHINE_PATHS.runner,
     ),
-    'git-credential-helper.sh': credentialStart,
-    'git-credential-helper.mjs': credentialScript,
     'github-cli.sh': githubCli,
     'conductive-runner.service': runnerService,
     'preview-relay-start.sh': previewRelayStart,

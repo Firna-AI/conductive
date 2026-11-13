@@ -1,25 +1,15 @@
-//! Command boundary tests for unavailable functionality.
-
-use clap::Parser;
+//! Command parsing for the implemented relay.
 
 use crate::cli::Cli;
-use crate::command::Command;
-use crate::error::Error;
+use clap::Parser;
 
-#[tokio::test]
-async fn relay_command_with_arguments_reports_unavailable() -> Result<(), clap::Error> {
-    let cli = Cli::try_parse_from(["conductive", "relay", "--port", "7682"])?;
-
-    let error = cli.execute().await.err();
-    assert!(matches!(
-        error,
-        Some(Error::NotAvailable {
-            command: Command::Relay(_),
-        })
-    ));
+#[test]
+fn relay_uses_the_private_socket_without_address_options() {
+    let cli = Cli::try_parse_from(["conductive", "relay"]);
+    assert!(cli.is_ok());
+    let error = Cli::try_parse_from(["conductive", "relay", "--port", "7682"]).err();
     assert_eq!(
-        error.map(|error| error.to_string()),
-        Some("[cnd-cli/command] relay is not available yet".to_owned())
+        error.map(|value| value.kind()),
+        Some(clap::error::ErrorKind::UnknownArgument)
     );
-    Ok(())
 }

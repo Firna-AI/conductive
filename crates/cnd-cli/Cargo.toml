@@ -13,6 +13,8 @@ name = "conductive"
 path = "src/main.rs"
 
 [dependencies]
+cnd-credential = { workspace = true }
+cnd-relay = { workspace = true }
 cnd-tools = { workspace = true }
 cnd-release = { workspace = true }
 cli-updater = { workspace = true }
@@ -37,4 +39,5 @@ workspace = true
 
 [dev-dependencies]
 tempfile = "3.27.0"
+tokio = { version = "1.54.1", features = ["process", "io-util", "net"] }
 unimock = "0.6.8"
