@@ -52,13 +52,11 @@ async function failedEnds(fixture: ChatFixture, sessionId: string) {
 }
 
 it('ends unsupported ChatGPT turns once without sending credentials and permits a new capable runner', async () => {
-  const legacyRunners: Omit<FakeRunnerOptions, 'workspaceId'>[] = [
-    { protocolVersion: 1 },
-    { protocolVersion: 1, loginKinds: RUNNER_SUPPORTED_LOGIN_KINDS },
+  const runnersWithoutChatGPT: Omit<FakeRunnerOptions, 'workspaceId'>[] = [
     { protocolVersion: 2 },
     { protocolVersion: 2, loginKinds: [{ agent: 'codex', kind: 'api-key' }] },
   ]
-  for (const options of legacyRunners) {
+  for (const options of runnersWithoutChatGPT) {
     await harness.reset()
     const fixture = await createChatFixture(harness)
     await connectChatGPT(fixture)
@@ -125,67 +123,61 @@ it('ends unsupported ChatGPT turns once without sending credentials and permits 
 })
 
 it('ends a running turn before refusing a later unsupported login and stops its prior process', async () => {
-  for (const protocolVersion of [1, 2] as const) {
-    await harness.reset()
-    const fixture = await createChatFixture(harness)
-    const session = await fixture.createSession(CODEX)
-    const runner = await fixture.connect(
-      new FakeRunner({ workspaceId: WORKSPACE_ID, protocolVersion }),
-    )
-    runner.emit({ type: 'runner.ready' })
-    await fixture.drain()
-    await fixture.send(session.id, 'api-key-start', fixture.ownerCookie, CODEX)
-    const [started] = messageCommands(runner, 'api-key-start')
-    if (started?.type !== 'turn')
-      throw new Error('The API-key turn did not start.')
-    await connectChatGPT(fixture)
-    await fixture.send(
-      session.id,
-      'unsupported-message',
-      fixture.ownerCookie,
-      CODEX,
-    )
-    expect(messageCommands(runner, 'unsupported-message')).toEqual([])
-    expect(runner.commands.map(({ type }) => type)).toEqual([
-      'turn',
-      'interrupt',
-    ])
-    expect(runner.commands.at(-1)).toMatchObject({
-      type: 'interrupt',
+  const fixture = await createChatFixture(harness)
+  const session = await fixture.createSession(CODEX)
+  const runner = await fixture.connect(
+    new FakeRunner({ workspaceId: WORKSPACE_ID }),
+  )
+  runner.emit({ type: 'runner.ready' })
+  await fixture.drain()
+  await fixture.send(session.id, 'api-key-start', fixture.ownerCookie, CODEX)
+  const [started] = messageCommands(runner, 'api-key-start')
+  if (started?.type !== 'turn')
+    throw new Error('The API-key turn did not start.')
+  await connectChatGPT(fixture)
+  await fixture.send(
+    session.id,
+    'unsupported-message',
+    fixture.ownerCookie,
+    CODEX,
+  )
+  expect(messageCommands(runner, 'unsupported-message')).toEqual([])
+  expect(runner.commands.map(({ type }) => type)).toEqual(['turn', 'interrupt'])
+  expect(runner.commands.at(-1)).toMatchObject({
+    type: 'interrupt',
+    turnId: started.turnId,
+  })
+  expect(await failedEnds(fixture, session.id)).toEqual([
+    {
+      type: 'turn.failed',
+      sessionId: session.id,
       turnId: started.turnId,
-    })
-    expect(await failedEnds(fixture, session.id)).toEqual([
-      {
-        type: 'turn.failed',
-        sessionId: session.id,
-        turnId: started.turnId,
-        error: { code: 'agent_login_required', message: unsupportedCause },
-        retryMessageId: 'api-key-start',
-        durationMs: 0,
-      },
-    ])
-    expect(await sessionRecord(fixture, session.id)).toMatchObject({
-      activeTurnId: null,
+      error: { code: 'agent_login_required', message: unsupportedCause },
       retryMessageId: 'api-key-start',
-    })
-    expect((await lifecycleSnapshot(fixture)).turns).toMatchObject([
-      { id: started.turnId, state: 'failed' },
-    ])
-    expect(JSON.stringify(runner.received)).not.toContain(
-      'real-chatgpt-token-kept-in-worker',
-    )
-    runner.emit(terminalEvent(started, 'stopped'))
-    runner.emit(terminalEvent(started, 'stopped'))
-    await fixture.drain()
-    expect(await failedEnds(fixture, session.id)).toHaveLength(1)
-    expect((await lifecycleSnapshot(fixture)).commands).toEqual([])
-    await fixture.disconnect(runner)
-    await fixture.connect(runner)
-    expect(messageCommands(runner, 'api-key-start')).toHaveLength(1)
-    expect(messageCommands(runner, 'unsupported-message')).toEqual([])
-    expect(await failedEnds(fixture, session.id)).toHaveLength(1)
-    await fixture.chat.closeConnections()
-  }
+      durationMs: 0,
+    },
+  ])
+  expect(await sessionRecord(fixture, session.id)).toMatchObject({
+    activeTurnId: null,
+    retryMessageId: 'api-key-start',
+  })
+  expect((await lifecycleSnapshot(fixture)).turns).toMatchObject([
+    { id: started.turnId, state: 'failed' },
+  ])
+  expect(JSON.stringify(runner.received)).not.toContain(
+    'real-chatgpt-token-kept-in-worker',
+  )
+  runner.emit(terminalEvent(started, 'stopped'))
+  runner.emit(terminalEvent(started, 'stopped'))
+  await fixture.drain()
+  expect(await failedEnds(fixture, session.id)).toHaveLength(1)
+  expect((await lifecycleSnapshot(fixture)).commands).toEqual([])
+  await fixture.disconnect(runner)
+  await fixture.connect(runner)
+  expect(messageCommands(runner, 'api-key-start')).toHaveLength(1)
+  expect(messageCommands(runner, 'unsupported-message')).toEqual([])
+  expect(await failedEnds(fixture, session.id)).toHaveLength(1)
+  await fixture.chat.closeConnections()
 })
 
 it('requires the API-key capability for an own endpoint and sends only its API-key turn credential', async () => {

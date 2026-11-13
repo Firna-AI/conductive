@@ -1,5 +1,6 @@
 import type { WebSocket } from 'miniflare'
 import { afterEach, beforeAll, expect, it } from 'vitest'
+import { expectSocketGatewayLogin } from '../runner-credential.test-support'
 
 import {
   chatHistoryPath,
@@ -100,8 +101,14 @@ it('joins runner readiness, reconnect, confirmed stop and the next queued turn w
     sessionId: 'first-session',
     turnId: 'first-turn',
     message: { id: 'first-message' },
-    login: { secret: 'outer-secret-owner' },
+    credential: { token: expect.stringMatching(/^sk-/) },
   })
+  await expectSocketGatewayLogin(
+    active.runtime,
+    OUTER_WORKSPACE,
+    turn,
+    'outer-secret-owner',
+  )
   expect(await runner.inbox.next()).toMatchObject({
     type: 'model',
     sessionId: 'first-session',

@@ -1,4 +1,5 @@
 import {
+  agentActionCommand,
   agentActionLabels,
   barLabels,
   mergeLabels,
@@ -29,7 +30,7 @@ export interface BarCommand {
 function commandOf(action: BarAction): ShortcutCommandId {
   switch (action.kind) {
     case 'agent':
-      return action.action
+      return agentActionCommand(action.action)
     case 'merge':
       return 'merge-pull-request'
     case 'continue':

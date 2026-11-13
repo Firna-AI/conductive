@@ -5,12 +5,17 @@ import { FakeApiServer } from '../../test-support/fake-api'
 import { scenarioFetch } from '../../test-support/fake-bar-dev'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
 import type { FetchLike } from '../githubClient'
-import type { GitHubSource } from '../githubStore'
+import type { GitHubSource } from '../githubSource'
 import type { DevOptions } from './devOptions'
 import { sampleReplies } from './devSamples'
 
-/** How the fake GitHub answers: at once, after two seconds, or with an error. */
-export type GitHubMode = 'normal' | 'slow' | 'error'
+/**
+ * How the fake GitHub answers. `normal` answers at once. `slow` waits two
+ * seconds before each reply. `stored` waits two seconds only for the
+ * GitHub reads, and gives the stored state of the sample at once, as after
+ * an earlier read. `error` fails the banner read.
+ */
+export type GitHubMode = 'normal' | 'slow' | 'stored' | 'error'
 
 export interface DevSource extends GitHubSource {
   /** The fake API, for the chat, the files, and the stream of the page. */
@@ -23,6 +28,7 @@ export interface DevSource extends GitHubSource {
 
 const bannerPath = githubPaths.banner(FAKE_IDS.org, FAKE_IDS.workspace)
 const checksPath = githubPaths.checks(FAKE_IDS.org, FAKE_IDS.workspace)
+const storedPath = githubPaths.stored(FAKE_IDS.org, FAKE_IDS.workspace)
 
 function wait(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
@@ -58,6 +64,12 @@ export function createDevSource(
     server.json('GET', bannerPath, replies.banner)
     server.json('GET', checksPath, replies.checks)
   }
+  if (mode === 'stored') {
+    const { banner } = replies.banner
+    server.json('GET', storedPath, {
+      state: { banner, checks: replies.checks },
+    })
+  }
   if (failing) {
     const error = {
       code: 'github_unavailable',
@@ -66,7 +78,8 @@ export function createDevSource(
     server.json('GET', bannerPath, { error }, 503)
   }
   const fetch: FetchLike = async (input, init) => {
-    if (mode === 'slow') await wait(2_000)
+    const stored = new URL(input, 'http://dev.test').pathname === storedPath
+    if (mode === 'slow' || (mode === 'stored' && !stored)) await wait(2_000)
     return actions(input, init)
   }
   return {

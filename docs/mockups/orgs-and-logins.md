@@ -5,9 +5,9 @@ how a screen is built, and links to the other pages.
 
 ## Orgs and members
 
-The product is free for now, as the user decided on 5 November 2026 in
-decision 45. So the screens show no plans, no billing, no seats, and no
-plan limits.
+The product is free, as the user decided on 5 November 2026 in decision
+45. On 13 November 2026, the user chose not to release it commercially. So
+the screens show no plans, no billing, no seats, and no plan limits.
 
 - An admin invites a person by email, from decision 78. An open invite shows
   its email, and a member row shows the GitHub login. The roles are admin and
@@ -95,13 +95,25 @@ plan limits.
   one is added, as `app/orgs/new/no-repository` shows. When the GitHub App
   reaches no repository, the list asks the person to give it access, with
   Manage access, as `app/orgs/new/no-access` shows.
-- Delete org asks for the org name. The deleted org stays faded in the rail
-  of its admins until the date when everything is deleted, and its page
-  offers Restore.
+- Delete org asks for the org name. The deleted org leaves the rail. Until
+  the date when everything is deleted, the General tab of the Account page
+  lists it for its admins with Restore, as `app/account/deleted-orgs`
+  shows. Its page still offers Restore at its address.
+- Each person keeps their own order of their orgs, from decision 515 C of
+  11 November 2026, as `app/orgs/reorder` shows. The server saves it with
+  their memberships, so the rail, the org switcher of a phone, and the org
+  rows of the command palette show it on every device. A drag on the rail,
+  or Move up and Move down in the menu of a tile, change it. Alt and Up or
+  Down move a focused tile, from decision 517 B. On a phone, a long press
+  lifts an org in the org switcher and opens no menu. A new org goes at the
+  end of the rail. Create org, Operator, and the account stay where they
+  are.
 - The operator can suspend an org, from decision 129. Its members still
   open it and read its chats, and its notice gives the abuse address.
   Nothing in it can change, so its screens show no action that it refuses,
-  also for an admin. No notice promises its files. An archived workspace
+  also for an admin. Its tile in the rail still moves, because the order of the rail belongs to the person,
+  from decision 516 A, as `app/orgs/reorder/suspended` shows. No notice
+  promises its files. An archived workspace
   offers no Restore, as `app/orgs/suspended/workspace/archived` shows. A
   deleted org that is also suspended shows the notice above its page, keeps
   the date when everything is deleted, and offers no Restore, as
@@ -205,6 +217,10 @@ plan limits.
 - A login belongs to the person, so the agent step has its own state. A
   person who leaves the last org returns to Get started with the agent
   still connected, as `app/sign-in/get-started/no-org` shows.
+- A person whose orgs are all deleted counts as a person with no org.
+  While a deleted org exists, Get started shows the Deleted orgs list with
+  Restore before its steps, as `app/sign-in/get-started/deleted-orgs`
+  shows. Otherwise it shows no list.
 - The app and the mockups take the words of Get started from
   `src/screens/getStartedCopy.ts`. The words make no claim about earlier
   use.

@@ -26,6 +26,7 @@ const closedMenu: RowMenu = {
   open: false,
   show: () => {},
   rename: null,
+  startRename: null,
 }
 
 const noActions: SectionActions = {

@@ -49,6 +49,10 @@ export function ArchivedGroup(props: {
   onToggle: (open: boolean) => void
   menus?: RowMenus
   restoreAction?: (workspace: Workspace) => (() => void) | undefined
+  /**
+   * The write of a row that runs. Only a Restore shows busy: an Archive
+   * that runs already shows its row here, as done.
+   */
   running?: (workspaceId: string) => ArchiveAction | null
 }) {
   const { open } = props
@@ -76,7 +80,7 @@ export function ArchivedGroup(props: {
           {props.rows.map((row) => (
             <li key={row.id}>
               <WorkspaceRow
-                acting={(props.running?.(row.id) ?? null) !== null}
+                acting={props.running?.(row.id) === 'restore'}
                 menu={props.menus?.(row)}
                 now={props.now}
                 onRestore={props.restoreAction?.(row)}

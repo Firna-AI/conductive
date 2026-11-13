@@ -149,7 +149,7 @@ it('maps SDK partial text, thinking, tools, message UUIDs, and stopped output', 
   })
   await runner.idle()
   expect(sdk.models.at(-1)).toBe('new-model')
-  expect(sdk.efforts.at(-1)).toEqual({ effortLevel: 'max' })
+  expect(sdk.efforts.at(-1)).toEqual({ effortLevel: 'max', ultracode: false })
   expect(sdk.interrupts).toBe(0)
   expect(sdk.closed).toBe(true)
   await runner.idle()
@@ -215,7 +215,10 @@ it('maps SDK partial text, thinking, tools, message UUIDs, and stopped output', 
   await runner.idle()
   const fourthUuid = string((await sdk.nextUser()).uuid)
   expect(sdk.models.at(-1)).toBe('follow-up-model')
-  expect(sdk.efforts.at(-1)).toEqual({ effortLevel: 'medium' })
+  expect(sdk.efforts.at(-1)).toEqual({
+    effortLevel: 'medium',
+    ultracode: false,
+  })
   await sdk.raw({
     type: 'assistant',
     user_message_uuids: [thirdUuid],

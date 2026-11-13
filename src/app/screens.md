@@ -16,8 +16,9 @@ the Help row of the command palette opens.
 - Get started has three steps: the GitHub App, an org, and Claude or
   Codex. A reply of the API names only these steps.
 - Only the GitHub App step comes from that reply. The org step and the org
-  of Get started follow the org list, also a deleted org, as the address
-  `/` does. The agent step follows the logins of the account. So a leave of
+  of Get started follow the orgs that are not deleted, as the address `/`
+  does. A person whose orgs are all deleted gets Create org again, and
+  Get started lists those orgs with Restore before its steps. The agent step follows the logins of the account. So a leave of
   the last org offers Create org again, and a connect on Account completes
   its step at once. `setupSteps` in `setup-steps.ts` derives them, and each
   screen reads them through `AppModel.getStarted`.
@@ -51,6 +52,13 @@ the Help row of the command palette opens.
   chooses at least one, also while the list is empty or did not load.
 - The rail, the org switcher, and General show the saved initials of an
   org. An org without them shows the initials of its name.
+- The rail and the org switcher show the orgs in the person's own order.
+  The person moves an org tile by drag, by its tile menu with Move up and
+  Move down, or by Alt and Up or Down on a focused tile. On a phone, a
+  long press lifts an org in the org switcher. A move shows at once, and a
+  failed save takes back only that move, with a toast. A suspended org
+  moves like any other. A deleted org has no tile, as
+  [Org rail order](../../docs/protocol/org-rail-order.md) says.
 - A suspended org shows its notice, and no action that it refuses, as
   [A suspended org](suspended-org.md) says.
 - Only an operator gets the operator section, from the rail and the org
@@ -145,9 +153,10 @@ the Help row of the command palette opens.
   says. Each of its places opens it through `useNewWorkspace`: the row at
   the top of the list, the button of the main area of an org, the item in
   the menu of a section, and the command palette. The dialog opens on a
-  computer when the user chose it. The place opens the page on a phone,
-  without that choice, while the account loads, and while a New workspace
-  form shows. A New workspace form marks itself with `useShownForm`. The
+  computer when the account's view is the dialog. The server gives the
+  dialog to an account without a saved view. The place opens the page on
+  a phone, when the account's view is the page, while the account loads,
+  and while a New workspace form shows. A New workspace form marks itself with `useShownForm`. The
   row stays a link, so a click with a modifier key opens the page in a
   new tab.
 - Every desktop frame hosts the dialog, over the whole frame
@@ -166,6 +175,10 @@ the Help row of the command palette opens.
   with no section, as the row does, so General keeps one draft. A create that the server accepts opens the new workspace, also
   when the dialog closed while the create ran. A failed create request
   keeps the dialog open with Try again.
+- The section of a draft is its key, and a pick of the Section menu of
+  the dialog (`NewWorkspaceModel.setSection`) wins over it. The pick stays
+  in the draft of the key, so the page of that key names the picked
+  section too. A send ends the pick.
 - The message field of the dialog takes the focus as the dialog opens.
   When the dialog closes and the address stays, the focus goes back to
   the control that opened it. When the address changes, such as after
@@ -273,8 +286,8 @@ the requirements. The mockups `app/sign-in/waitlist`, `app/sign-in/join`,
   the code no more.
 - For a person with app access, a join link uses no code, and `/` opens as
   usual.
-- The Account page ends with the invite code of the user, after the model
-  of new workspaces: the invite link with Copy, the code, and the invites
+- The General tab of the Account page ends with the invite code of the
+  user: the invite link with Copy, the code, and the invites
   left. It has the states of the pause, of every invite used, and of a code
   that an operator turned off. During [open sign-up](../../docs/protocol/sign-ups.md#open-sign-up),
   it shows the open sign-up notice while invites remain. The pause wins.

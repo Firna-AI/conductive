@@ -4,7 +4,7 @@ import { MacAppScreen, macAppSchema } from '../../../screens/MacAppScreen'
 export const macStop = defineScreen({
   title: 'Stop the 15 minutes',
   description:
-    'The user pressed Stop in the bar of the 15 minutes. The Mac stopped them and saved the change, so the bar says Stopped, and each command from this workspace asks first again. The bar names the result until the next Stop of the workspace.',
+    'The user pressed Stop in the bar of the 15 minutes. The Mac stopped them and saved the change, so the bar says Stopped, and each command from this workspace asks first again. The bar names the result until the next Stop of the workspace. Stop of a grant until Stop shows the same results.',
   rationale:
     'The user asked for an explicit result of each change: done, done but not saved, or failed (7 November 2026). The result stays in the bar after the 15 minutes end, because their bar would otherwise go with the result.',
   relatedDocs: [],
@@ -34,7 +34,7 @@ export const macStop = defineScreen({
       slug: 'failed',
       title: 'Not stopped',
       description:
-        'The Mac could not stop the 15 minutes. The bar names the cause, and keeps the time left and Stop, so the user can stop them again. A Stop that waited while the Mac reconnected shows the same way: it never goes to the new connection by itself.',
+        'The Mac could not stop the 15 minutes. The bar names the cause, and keeps the time left, Extend, and Stop, so the user can stop them again. A Stop that waited while the Mac reconnected shows the same way: it never goes to the new connection by itself.',
       rationale:
         'A change that failed stays in view until the next Stop of the workspace, and the app does not try again by itself (7 November 2026).',
       props: { change: 'stop-failed' },

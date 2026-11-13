@@ -9,7 +9,7 @@
 - **Terms:**
   - **Pointer section:** A retained heading with a link to content moved to another page. It keeps an existing anchor valid.
 - **Background:** The repository asks agents to keep files near 200 lines and split files that pass 300. These guides combine several topics. The deployment guide already passed 300 lines before the latest main integration. Main's provider-account work grew the sandbox guide from 219 to 304 lines. Its computer ledger work grew the member guide from 299 to 303 lines. Its software-image work grew the image guide past the target.
-- **Problem:** `docs/deployment.md` has 405 lines and `image/README.md` has 302. Captured main `6fd184c53e77dee208687512244ebcaf5fa120e9` shortened the sandbox guide to 251 lines and the member guide to 273. Those two observations are closed. The current file-length command checks JavaScript, TypeScript, and Astro files, so it does not report these Markdown files.
+- **Problem:** `docs/deployment.md` has 405 lines and `image/README.md` has 302. Captured main `6fd184c53e77dee208687512244ebcaf5fa120e9` shortened the sandbox guide to 251 lines and the member guide to 273. Those two observations are closed. The file-length rule of `npm run lint` checks JavaScript, TypeScript, and Astro files, so it does not report these Markdown files.
 - **Impact if no action:** Readers must scan long guides. New changes must maintain several topics in each file. The files remain above the repository target.
 - **Root question:** How can these guides stay short while keeping their facts and working links?
 - **Options:**

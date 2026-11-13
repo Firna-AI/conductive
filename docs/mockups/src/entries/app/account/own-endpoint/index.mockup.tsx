@@ -1,7 +1,7 @@
 import { defineScreen } from '@mokly/mokly'
 import { productName } from '../../../../brand'
 import { AccountScreen } from '../../../../screens/AccountScreen'
-import { accountGeneral, accountSchema } from '../../../../screens/accountState'
+import { accountAgents, accountSchema } from '../../../../screens/accountState'
 
 export const ownEndpoint = defineScreen({
   title: 'Own endpoint',
@@ -10,7 +10,7 @@ export const ownEndpoint = defineScreen({
     'Decision 1 A of the own endpoint plan, which Cal chose on 8 November 2026: each agent gets an own endpoint login, with an address and a key that the app stores encrypted. The gateway of the app, not the cloud computer, sends each model request of a turn to the endpoint with the key (gateway decision 10 B), so the hint says that the requests go through the app. One shared rule checks the address and builds the exact address of each request (decision 9 E), and the hint names that address: the base address with /v1/messages added. The form names the models that the app offers. After the save, the app reads the model list of the endpoint and hides from the pickers of the owner each model of the app that the list does not name (decision 10 G), as app/account/endpoint-models shows. The key hint promises no test.',
   relatedDocs: [],
   propSchema: accountSchema,
-  props: { ...accountGeneral, form: 'claude', ownEndpoint: 'form' },
+  props: { ...accountAgents, form: 'claude', ownEndpoint: 'form' },
   render: (props, context) => (
     <AccountScreen state={props} viewport={context.viewport} />
   ),

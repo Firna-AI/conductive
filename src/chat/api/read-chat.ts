@@ -33,6 +33,7 @@ export const readEffort = oneOf<Effort>({
   high: true,
   xhigh: true,
   max: true,
+  ultra: true,
 })
 const readToolKind = oneOf<ToolCall['kind']>({
   read: true,

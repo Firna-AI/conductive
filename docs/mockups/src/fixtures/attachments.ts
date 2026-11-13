@@ -51,6 +51,18 @@ const consoleLog: Attachment = {
   path: '.context/attachments/b81e4a6c03f7d29e5c1a8b4f6d2e07a9/checkout-console.log',
 }
 
+/**
+ * The zip of the dropped folder `checkout-screens`. The browser zips a
+ * dropped folder, so it uploads as one file.
+ */
+const folderZip: Attachment = {
+  id: 'folder-zip',
+  name: 'checkout-screens.zip',
+  kind: 'file',
+  sizeBytes: 1_846_272,
+  path: '.context/attachments/9c4e7a1d2b6f08e35a7c9d1e4b2f6a80/checkout-screens.zip',
+}
+
 /** The copy of the screenshot, which a press on its sent chip opens. */
 export const screenshotCopy = screenshot
 
@@ -86,8 +98,18 @@ export const largeRecording = {
   sizeBytes: 49_912_218,
 } as const
 
-/** A folder of screenshots that a drop holds, which the app does not attach. */
+/** A folder of screenshots that a drop holds, which the browser zips. */
 export const droppedFolder = 'checkout-screens'
+
+/**
+ * Just after a drop of the screenshot and the folder: both upload, and
+ * neither has a measurement yet.
+ */
+export const droppedFolderAttachments: readonly Attachment[] = [
+  { ...screenshot, state: 'uploading' },
+  { ...folderZip, state: 'uploading' },
+  consoleLog,
+]
 
 /** The words of the message around the places of the screenshot and the log. */
 const overlapWords = {
@@ -129,6 +151,16 @@ export const beforeDrop = {
 /** After the drop, the caret stands after the new chip and its space. */
 export const afterDropCaret =
   overlapWords.start.length + fileMark(screenshot.id).length + 1
+
+/** The draft after the drop of the screenshot and the folder together. */
+export const folderDropDraft = overlapText(
+  `${fileMark(screenshot.id)} ${fileMark(folderZip.id)} `,
+  fileMark(consoleLog.id),
+)
+
+/** After that drop, the caret stands after the zip and its space. */
+export const afterFolderDropCaret =
+  afterDropCaret + fileMark(folderZip.id).length + 1
 
 /**
  * A message from before the files had a place in its text. Its text holds

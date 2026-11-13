@@ -10,6 +10,7 @@ import type {
   SessionTranscriptResponse,
 } from '../../shared/sessions'
 import type {
+  TemporaryTab,
   WorkspaceTab,
   WorkspaceView,
   WorkspaceViewResponse,
@@ -17,6 +18,7 @@ import type {
 import {
   count,
   flag,
+  isRecord,
   list,
   nullable,
   oneOf,
@@ -174,11 +176,34 @@ function readTab(value: unknown): WorkspaceTab {
   }
 }
 
+function readTemporaryTab(
+  value: unknown,
+  tabs: readonly WorkspaceTab[],
+): TemporaryTab | null {
+  if (
+    !isRecord(value) ||
+    (value.kind !== 'file' && value.kind !== 'diff') ||
+    typeof value.path !== 'string' ||
+    !value.path
+  )
+    return null
+  return tabs.some(
+    (tab) =>
+      tab.kind !== 'session' &&
+      tab.kind === value.kind &&
+      tab.path === value.path,
+  )
+    ? { kind: value.kind, path: value.path }
+    : null
+}
+
 export function readView(value: unknown): WorkspaceView {
   const view = record(record(value, 'view response').view, 'view')
+  const tabs = list(readTab)(view.tabs)
   return {
-    tabs: list(readTab)(view.tabs),
+    tabs,
     activeTab: nullable(readTab)(view.activeTab),
+    temporaryTab: readTemporaryTab(view.temporaryTab, tabs),
     fileList: oneOf({ all: true, changes: true, checks: true })(view.fileList),
     tool: oneOf({ terminal: true, preview: true, desktop: true })(view.tool),
   }

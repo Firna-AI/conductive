@@ -122,14 +122,20 @@ export interface DeviceCurrentResponse {
 }
 
 export type DeviceApprovalAction =
-  'deny' | 'allow' | 'always-allow' | 'allow-workspace-15-minutes'
+  | 'deny'
+  | 'allow'
+  | 'always-allow'
+  | 'allow-workspace-15-minutes'
+  | 'allow-workspace-until-stop'
 export interface DeviceApprovalRequest extends DevicePairing {
   action: DeviceApprovalAction
 }
+/** A grant: every command from one workspace runs on the Mac without asking. */
 export interface DeviceWorkspaceWindow {
   workspaceId: string
   workspaceName: string | null
-  expiresAt: number
+  /** The end of the 15 minutes, or null for a grant that runs until Stop. */
+  expiresAt: number | null
 }
 /** The Worker relays this value. Only the Mac stores or applies these rules. */
 export interface DeviceSettings {
@@ -141,6 +147,9 @@ export type DeviceSettingsAction =
   | { action: 'read' }
   | { action: 'remove-command'; command: string }
   | { action: 'stop-workspace'; workspaceId: string }
+  | { action: 'extend-workspace'; workspaceId: string }
+  /** Turns the running 15 minutes of a workspace into a grant until Stop. */
+  | { action: 'keep-workspace'; workspaceId: string }
 export interface DeviceSettingsRequest extends DevicePairing {
   operation: Exclude<DeviceSettingsAction, { action: 'read' }>
 }

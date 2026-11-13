@@ -166,6 +166,9 @@ Later outcomes retain it, so the UI excludes approval wait from execution time.
 The Worker never grants permission from a saved command rule or window.
 It never persists local permission settings.
 Settings reads and changes wait for a matching main-process operation result.
+Extend uses the same paired settings relay as Stop and requires a workspace ID.
+The Worker validates and relays Extend without storing or changing the grant.
+Only the Mac checks whether the grant still runs and chooses its new end.
 A failed send or disconnected socket removes and rejects the matching waiter.
 Each result relays `done`, `done-not-saved`, or `failed` with the current settings.
 An oversized settings result uses a small `settings.failed` frame.

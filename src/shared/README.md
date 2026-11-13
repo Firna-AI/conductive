@@ -10,7 +10,8 @@ Dates use Unix milliseconds. IDs and model names are opaque strings.
 `Workspace.link` is its absolute web link, with org and workspace IDs.
 `AgentWorkspaceSummary` gives the same number and link.
 `Workspace.github` is the GitHub summary of its pull request, or null.
-`GitHubSummary` and `githubSummary` in `github.ts` give its four values from a banner and its checks.
+`GitHubSummary` and `githubSummary` in `github.ts` give it from a banner: the state of the bar, or null without a pull request and for a closed pull request.
+`checksSummary` gives the checks of a pull request as one value, for the bar.
 [The GitHub state](../../docs/protocol/github-banner.md#the-github-state) states their order.
 `readGitHubSummary` in `github-read.ts` keeps a known summary and reads an absent or unknown value as null.
 The browser readers and the sandbox tools use it, so an older reply still reads.
@@ -26,6 +27,11 @@ keeps the stored mark inside each compare-and-swap attempt. A missing or
 deleted name starts secret. An explicit mark changes it with the value.
 Its `classify` change carries only a name and a mark, so it keeps the value.
 `api.ts` keeps the existing sign-in and org paths and common records.
+`API_PATHS.orgOrder` names `PUT /api/org-order`, outside the paths of one org.
+`MoveOrgRequest` in `orgs.ts` carries `orgId` and the zero-based `index` among the other visible orgs.
+`readMoveOrgRequest` validates its fields. A move returns 204 without a body.
+The org list uses each person's saved order. A new membership goes at the end.
+[Org rail order](../../docs/protocol/org-rail-order.md) states the requirements.
 Its `ApiErrorBody` carries the error code and message.
 The optional `error.details` identifies an unknown routine author login.
 It carries `login`, `triggerIndex`, and `list`.
@@ -220,6 +226,12 @@ The git credential payload is not defined yet.
 
 ### Key Code
 
+- [Workspace views](workspace-view.ts) define the saved view and its
+  `temporaryTab` field. The field names one file or diff by kind and path,
+  without a display mode, or is null. The Worker and browser readers use
+  null for an absent or invalid mark, or one that names no open tab.
+  [The saved view](../../docs/protocol/temporary-tabs.md#the-saved-view)
+  gives the requirements.
 - [Shortcut commands](shortcut-commands.ts) define the stable command IDs.
   The app and Worker share this list, including Copy link, pull request
   actions, and both transcript copies. Account reads and saves accept

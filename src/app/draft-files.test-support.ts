@@ -1,7 +1,7 @@
 import type { FileReply, FileTransport } from './api/client'
 import { flushMicrotasks } from './test-kit'
 import { deferred } from '../test-support/mount'
-import type { DraftFile } from './draft-files'
+import { noRefusals, type DraftFile, type IntakeRefusals } from './draft-files'
 import { draftParts, draftText } from './draft-marks'
 import type { NewWorkspaceModel } from './new-workspace-model'
 
@@ -68,12 +68,17 @@ export async function uploadsSettled(
   })
 }
 
+/** The refusals of a drop whose folders the browser could not read. */
+export function unreadable(...folders: string[]): IntakeRefusals {
+  return { tooLarge: [], folders }
+}
+
 export function pickWorkspaceFiles(
   model: NewWorkspaceModel,
   files: readonly File[],
-  folders: readonly string[] = [],
+  refusals: IntakeRefusals = noRefusals,
 ): Promise<void> {
-  const ids = model.attach(files, folders)
+  const ids = model.attach(files, refusals)
   if (ids.length > 0)
     model.setText(withPickedFiles(model.draft.get().text, ids))
   return uploadsSettled(() => model.draft.get().files, model.draft.subscribe)

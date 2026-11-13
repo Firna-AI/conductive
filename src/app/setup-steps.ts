@@ -14,11 +14,11 @@ export interface SetupSources {
 
 /**
  * The org of Get started and of the address `/`: the first org that is not
- * deleted, else a deleted org, whose page offers Restore. Null without an
- * org.
+ * deleted. Null without one, so a person whose orgs are all deleted gets
+ * Create org again. The Account page lists the deleted orgs, with Restore.
  */
 export function setupOrg(orgs: readonly OrgSummary[]): OrgSummary | null {
-  return orgs.find((org) => !org.deletion) ?? orgs[0] ?? null
+  return orgs.find((org) => !org.deletion) ?? null
 }
 
 /** The steps from the reply of the API, the org list, and the account. */
@@ -42,7 +42,7 @@ function deriveSteps(
 /**
  * The steps of Get started as the app shows them. Only the step of the
  * GitHub App comes from the reply of the API. The org step and the org of
- * Get started follow the org list, also a deleted org, as the address `/`
+ * Get started follow the orgs that are not deleted, as the address `/`
  * does. The step of the agent follows the logins of the account that can
  * run turns, as the Worker counts them. So a leave or a connect on another
  * page shows at once. The value is null until the

@@ -1,3 +1,4 @@
+import type { GitHubCapabilities } from '../shared/github'
 import { membersPath, type MembersResponse } from '../shared/members'
 import {
   orgSettingsPaths,
@@ -20,6 +21,7 @@ import {
   readRepositories,
   readSettings,
 } from './api/read-settings'
+import { listWithArchives } from './archive-overlay'
 import { Creations } from './creations'
 import { workspaceUpdated, type ListData } from './list-changes'
 import { NewWorkspaceModel } from './new-workspace-model'
@@ -27,7 +29,7 @@ import { buildsWait, listWait, onEntry, routinesWait } from './org-waits'
 import { Refresher, type Refreshing } from './refresh'
 import { Resource } from './resource'
 import type { AppServices } from './services'
-import { ready, Store, valueOf, type Loadable, type Readable } from './store'
+import { derived, partOf, valueOf, type Loadable, type Readable } from './store'
 import { WorkspaceActions } from './workspace-actions'
 import {
   neverSuspended,
@@ -37,26 +39,6 @@ import {
 
 export type OrgPart =
   'list' | 'repositories' | 'builds' | 'members' | 'routines'
-
-/** One part of a loaded value, which changes only when that part changes. */
-function partOf<T, P>(
-  source: Readable<Loadable<T>>,
-  pick: (value: T) => P,
-): Readable<Loadable<P>> {
-  const select = (value: Loadable<T>): Loadable<P> =>
-    value.state === 'ready' ? ready(pick(value.value)) : value
-  const target = new Store(select(source.get()))
-  source.subscribe(() => {
-    const next = source.get()
-    const current = target.get()
-    const kept =
-      next.state === 'ready' &&
-      current.state === 'ready' &&
-      pick(next.value) === current.value
-    if (!kept) target.set(select(next))
-  })
-  return target
-}
 
 /**
  * The data of one org: its list of sections and workspaces, its
@@ -83,13 +65,25 @@ export class OrgModel {
     readonly settings: Resource<OrgSettings>
   }
   readonly sections: Readable<Loadable<readonly Section[]>>
+  /**
+   * The workspaces as screens show them: each Archive that runs shows as
+   * done, so it feels instant. A failed Archive shows the row as before.
+   */
   readonly workspaces: Readable<Loadable<readonly Workspace[]>>
+  /**
+   * The workspaces as the server confirmed them, without the Archives that
+   * wait for their reply. The detail of the open workspace follows them, so
+   * its order never takes a record that a failed Archive takes back.
+   */
+  readonly confirmedWorkspaces: Readable<Loadable<readonly Workspace[]>>
   readonly repositories: Readable<Loadable<readonly Repository[]>>
   readonly builds: Readable<Loadable<BuildsResponse>>
   readonly members: Readable<Loadable<MembersResponse>>
   readonly routines: Readable<Loadable<readonly ListedRoutine[]>>
   /** The create requests of this tab, which a sign-out ends. */
   readonly creations = new Creations()
+  /** The GitHub access of the signed-in member, by repository ID. */
+  private readonly githubAccess = new Map<string, GitHubCapabilities>()
   readonly workspaceActions: WorkspaceActions
   private readonly parts: Readonly<Record<OrgPart, Refreshing>>
   private readonly drafts = new Map<string, NewWorkspaceModel>()
@@ -132,7 +126,12 @@ export class OrgModel {
     const { list, repositories, builds, members, routines } = this.resources
     this.workspaceActions = new WorkspaceActions(this)
     this.sections = partOf(list.store, (value) => value.sections)
-    this.workspaces = partOf(list.store, (value) => value.workspaces)
+    this.confirmedWorkspaces = partOf(list.store, (value) => value.workspaces)
+    this.workspaces = derived(
+      this.confirmedWorkspaces,
+      this.workspaceActions.running,
+      listWithArchives,
+    )
     this.repositories = repositories.store
     this.builds = builds.store
     this.members = members.store
@@ -185,8 +184,16 @@ export class OrgModel {
     )
   }
 
+  /** A workspace as screens show it, as `workspaces` says. */
   workspace(workspaceId: string): Workspace | undefined {
     return valueOf(this.workspaces.get())?.find(
+      (item) => item.id === workspaceId,
+    )
+  }
+
+  /** A workspace as the server confirmed it, as `confirmedWorkspaces` says. */
+  confirmedWorkspace(workspaceId: string): Workspace | undefined {
+    return valueOf(this.confirmedWorkspaces.get())?.find(
       (item) => item.id === workspaceId,
     )
   }
@@ -224,6 +231,30 @@ export class OrgModel {
       }),
       `build ${build.id}`,
     )
+  }
+
+  /** Forgets the GitHub access of the person who signed out. */
+  forgetGitHubAccess(): void {
+    this.githubAccess.clear()
+  }
+
+  /**
+   * The last GitHub access of the signed-in member to one repository of
+   * the org, as the pull request bar read it. The bar of another workspace
+   * of the repository shows it at once, while it reads the access again.
+   * A sign-out or another person forgets it, as `forgetGitHubAccess` says.
+   */
+  githubAccessOf(repositoryId: string): {
+    get: () => GitHubCapabilities | undefined
+    set: (access: GitHubCapabilities | undefined) => void
+  } {
+    return {
+      get: () => this.githubAccess.get(repositoryId),
+      set: (access) => {
+        if (access) this.githubAccess.set(repositoryId, access)
+        else this.githubAccess.delete(repositoryId)
+      },
+    }
   }
 }
 

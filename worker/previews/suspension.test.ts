@@ -123,10 +123,9 @@ it('checks owner suspension before issuing grants or forwarding preview data fro
     (await setup.handler.proxy(handoffRequest(unused, TEST_ORIGIN))).status,
   ).toBe(404)
   expect((await setup.handler.proxy(setup.previewRequest())).status).toBe(404)
-  const after = reader?.read()
-  source.send('after suspension')
-  await expect(after).rejects.toMatchObject({ name: 'AbortError' })
+  // The refused request reads access for the viewer, so it ends the open stream at once.
   expect(source.cancelled).toBe(true)
+  await expect(reader?.read()).rejects.toMatchObject({ name: 'AbortError' })
   expect(harness.requests).toHaveLength(0)
 })
 

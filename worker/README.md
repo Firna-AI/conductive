@@ -14,9 +14,9 @@ The Worker reads that key from the Worker secret `BOAT_API_KEY`.
 The Worker variable `BOAT_ORG_ID` names the app's Boat organization.
 The [chat backend](chat/README.md) owns the sessions, the messages, and the event history of each workspace.
 The [lifecycle](lifecycle/README.md) records each image's runner version and copies it before each new computer allocation.
-The chat backend refuses a runner below that pin before the welcome or any command.
-It accepts runner protocol versions 1 and 2 at or above the pin.
-The packaged runner sends version 2, and each full image build records version 2.
+The chat backend accepts only runner protocol version 2, which the packaged runner sends and each full image build records.
+It closes a runner of another version, or below that pin, before the welcome or any command.
+A version below 2 also fails the waiting and running turns and a waiting start, as [Runner versions](../docs/protocol/version-pins.md#runner-versions) says.
 The [operator area](operator/README.md) owns the operator's app-wide numbers,
 suspensions, waitlist approvals, invite codes, sign-up pause, and waitlist switch.
 New accounts wait for app access unless an operator identity, open sign-up,
@@ -112,9 +112,8 @@ The [model gateway](model-gateway/README.md) accepts only a turn token.
 It adds the starter's login to allowed Anthropic, OpenAI, or own endpoint requests.
 Its request upload and model answer both stream.
 The chat backend checks the login kinds of the runner before delivery.
-Version 2 gets a turn token. Version 1 gets only supported real logins.
-ChatGPT sign-in requires declared support and never goes to a version 1 runner.
-Own endpoint turns use API-key mode and never go to a version 1 runner.
+Each `turn` command carries a turn token and never a real login.
+ChatGPT sign-in requires declared support. Own endpoint turns use API-key mode.
 The [tools composition](tools/composition.ts) reads the active stored turn.
 It keeps the inherited owner separate from the sender of the first message.
 
@@ -139,7 +138,7 @@ The [member composition](members/composition.ts) supplies the durable lifecycle 
 
 One `Workspace` class serves each workspace object and each Mac broker object.
 It accepts server sockets in three roles through the platform's [hibernation API](https://developers.cloudflare.com/durable-objects/best-practices/websockets/): the events socket of a browser tab, the runner socket, and the Mac device socket.
-These sockets keep their wire formats and protocol versions, so installed Mac apps and runners from older images need no change.
+These sockets keep their wire formats, so installed Mac apps and supported runners from older images need no change.
 
 `WorkspaceSockets` in [native-sockets.ts](native-sockets.ts) is the only caller of `acceptWebSocket`.
 It gives each socket a trusted role, and it sends each message, close, and error event to the owner of that role.
@@ -232,7 +231,7 @@ Run `node worker/chat/integration/run-browser-harness.mjs` to serve a production
 [Outer Worker tests](chat/integration/outer-worker-tests.md#browser-harness) gives its settings.
 Run `npm run test -- worker/operator` to check the overview and the suspension of users and orgs.
 Run `npm run test -- worker/chat/adapter.test.ts worker/chat/browser-native-access.test.ts worker/chat/runner-native-access.test.ts worker/chat/runner-native-delivery.test.ts worker/features/security-alarms.test.ts worker/devices` to check the native sockets, their wake, and the shared alarm.
-Run `npm run test -- worker/model-gateway worker/http/request-body.test.ts` to check version 2 token delivery, model forwarding, turn access, streamed answers, and upload limits.
+Run `npm run test -- worker/model-gateway worker/http/request-body.test.ts` to check turn token delivery, model forwarding, turn access, streamed answers, and upload limits.
 The [test support area](test-support/README.md) supplies local D1 and fake providers.
 [Deployment inputs](../docs/deployment.md) lists the bindings, variables, and secrets of a deployment.
 `wrangler.jsonc` turns on the `global_fetch_strictly_public` compatibility flag.
@@ -261,7 +260,7 @@ Call other parts of the app through a binding or an RPC method, not a global `fe
 - [workspace.ts](workspace.ts) composes each workspace Durable Object. [workspace-lifecycle.ts](workspace-lifecycle.ts) exposes its lifecycle RPC methods and owns its [input activity](lifecycle/README.md#input-activity). Its constructor restores the native sockets, and it receives their message, close, and error events.
 - [native-sockets.ts](native-sockets.ts): `WorkspaceSockets`, the trusted socket roles, the attachment check, the restore, and the dispatch of native socket events.
 - [model-gateway/README.md](model-gateway/README.md): the machine model routes, credential replacement, header rules, stream cancellation, and turn-token checks.
-  The `turn` commands of a version 2 runner carry these tokens. The packaged runner uses version 2.
+  Each runner `turn` command carries one of these tokens.
 - [warnings.ts](warnings.ts): `warnWorker`, the one console warning of the Worker. It writes one structured object with fixed text and selected safe fields. It copies no extra caller field, token, error message, request body, command output, or response body. `WarningRecord` names the logged object type. `CommandFailed` carries a failed command's state, exit code, and time-out.
 - [warning-types.ts](warning-types.ts): `WorkerWarning`, the fixed warning kinds and their typed fields. Warning callbacks use this type too.
 - [warning-values.ts](warning-values.ts): `WarningId.checked` accepts the canonical 43-character base64url IDs from `randomToken`. Other values become `unknown` in the log only. `warningCode` and `errorSummary` keep allowlisted codes and command states. A generic error has the fixed kind `error`, with no class name.

@@ -217,15 +217,18 @@ export function orgSettingRows(
 
 /** The tab of the Account page that holds a section, or that a row is. */
 function accountTabOf(id: AccountSettingId): AccountTab {
+  if (id === 'agents') return 'agents'
   if (id === 'new-workspaces') return 'preferences'
   if (id === 'keyboard-shortcuts') return 'shortcuts'
+  if (id === 'this-mac') return 'this-mac'
   return 'general'
 }
 
 /**
- * The sections of the Account page, then its Keyboard shortcuts tab. Each
- * row opens the tab that holds it. Keyboard shortcuts runs the command of
- * the keys that opens the tab, whose key it shows.
+ * The sections of the Account page, then its Keyboard shortcuts tab, then
+ * its This Mac tab in the Mac app. Each row opens the tab that holds it.
+ * Keyboard shortcuts runs the command of the keys that opens the tab, whose
+ * key it shows.
  */
 export function accountRows(mac: boolean, withDetail: boolean): CommandRow[] {
   return accountSettingIds

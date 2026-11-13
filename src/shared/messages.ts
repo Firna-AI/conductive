@@ -3,7 +3,7 @@ import { orgPath, type Timestamp } from './api'
 import type { Session } from './sessions'
 import { filePaths } from './files'
 
-export const ATTACHMENT_MAX_BYTES = 25_000_000
+export const ATTACHMENT_MAX_BYTES = 100_000_000
 
 export type AttachmentUploadTarget =
   | { type: 'workspace'; workspaceId: string }

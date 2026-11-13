@@ -11,6 +11,7 @@ import { workspaceDrag } from '../fixtures/workspaces'
 import { paths } from '../paths'
 import type { NewOrg } from './listParts'
 import { OrgSwitcherSheet, SectionSheet } from './listSheets'
+import { orderRail, orgOrderView, type OrgOrderState } from './orgOrderStates'
 import type { WorkspaceListState } from './WorkspaceListScreen'
 
 type Open = WorkspaceListState['menu']
@@ -42,26 +43,35 @@ export function listPalette(view: PaletteView, viewport: Viewport): ReactNode {
 
 /**
  * The sheet of a phone over the list: the menu of a section, or the org
- * switcher, which an operator's adds Operator to.
+ * switcher, which an operator's adds Operator to. The org switcher shows
+ * the state of the reorder, `order`, when there is one.
  */
-export function listSheet(menu: Open): ReactNode {
+export function listSheet(menu: Open, order?: OrgOrderState): ReactNode {
+  const ordered = orgOrderView(order, 'mobile')
+  const orgs = ordered?.orgs
+  const drag = ordered?.drag
   switch (menu) {
     case 'section':
       return <SectionSheet />
     case 'orgs':
-      return <OrgSwitcherSheet current="acme" />
+      return <OrgSwitcherSheet current="acme" drag={drag} orgs={orgs} />
     case 'operator':
-      return <OrgSwitcherSheet current="acme" operator />
+      return (
+        <OrgSwitcherSheet current="acme" drag={drag} operator orgs={orgs} />
+      )
     default:
       return null
   }
 }
 
 /**
- * The rail of the list: the name of Futex beside the open org switcher,
- * and Operator with its name for an operator.
+ * The rail of the list: the state of the reorder, `order`, when there is
+ * one, with Operator for an operator. Otherwise the name of Futex beside
+ * the open org switcher, and Operator with its name for an operator.
  */
-export function listRail(menu: Open): RailState {
+export function listRail(menu: Open, order?: OrgOrderState): RailState {
+  const ordered = orderRail(order)
+  if (ordered) return { ...ordered, operator: menu === 'operator' }
   if (menu === 'orgs') return { ...acmeRail, hint: 'futex' }
   if (menu === 'operator') {
     return { ...acmeRail, operator: true, hint: 'operator' }

@@ -40,7 +40,7 @@ export const dropAFile = defineUseCase({
       screenPath: 'app/attachments/open',
       title: 'Open the screenshot',
       description:
-        'A press on the chip of the screenshot opens the file tab of its copy in the cloud computer, with its picture.',
+        'A press on the chip of the screenshot opens its copy in the cloud computer in the temporary tab, with its picture.',
     },
   ],
 })

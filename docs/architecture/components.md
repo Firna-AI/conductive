@@ -165,6 +165,8 @@ Every org image holds the app's own sandbox software:
   commands
 - a git credential helper that gets a fresh GitHub token for each git
   operation
+- a udev rule that stops disk flushes at each boot, as
+  [Disk flushes](../protocol/workspaces-and-sandboxes.md#disk-flushes) says
 
 The Worker builds one software image for each version of this software,
 when the deploy run asks. The software image holds the base image and this
@@ -180,15 +182,14 @@ App Server (decision 36).
 The runner finds the listening ports in the sandbox itself, with no Boat
 call (decision 220).
 
-A runner of protocol version 2 or later makes both agent programs send
-their model requests to the [model gateway](../protocol/model-gateway.md). It
-gives each agent program the turn token of its turn, and no agent login. A
-settings file in the repository can send the requests of Claude to another
-address, as
+The runner makes both agent programs send their model requests to the
+[model gateway](../protocol/model-gateway.md). It gives each agent program
+the turn token of its turn, and no agent login. A settings file in the
+repository can send the requests of Claude to another address, as
 [How the agents reach the gateway](../protocol/model-gateway.md#how-the-agents-reach-the-gateway)
-says. A runner of protocol version 1 gives the agent programs the agent
-login itself. Each sandbox keeps the runner of the org image that it starts
-from.
+says. Each sandbox keeps the runner of the org image that it starts from.
+The workspace refuses a runner of an unsupported protocol version, as
+[Runner versions](../protocol/version-pins.md#runner-versions) says.
 
 The preview relay forwards each preview request to a local port of the
 sandbox. The previewed server then gets its local address as `Host`
@@ -207,19 +208,16 @@ the rules.
   webhooks of every org.
 - **Anthropic and OpenAI:** the model use of each turn on a subscription
   token or an API key bills to the own Claude or OpenAI account of the
-  starter of its session. With a runner of protocol version 2 or later,
-  the model requests of a turn reach them through the model gateway of the
-  Worker. A settings file in the repository can send the requests of
-  Claude to another address instead. The gateway keeps no copy of a
-  request or an answer. With a runner of version 1, the agent programs
-  send their model requests from the sandbox to the provider.
+  starter of its session. The model requests of a turn reach them through
+  the model gateway of the Worker. A settings file in the repository can
+  send the requests of Claude to another address instead. The gateway
+  keeps no copy of a request or an answer.
 - **Own endpoints:** an own endpoint is a gateway or a proxy that a user
   chose, such as a proxy that pools subscriptions. A user can connect one
   as the agent login of Claude or of Codex. For each turn on such a login,
   the model gateway forwards the model requests of the turn to the
   endpoint, with the key that the user saved. So the endpoint gets the
-  messages, the files, and the command results of those turns. Only a
-  runner of protocol version 2 or later runs such a turn, and no sandbox
+  messages, the files, and the command results of those turns. No sandbox
   gets the address or the key.
   [Own endpoint logins](../protocol/own-endpoint-logins.md)
   and [Own endpoints](../protocol/model-gateway-requests.md#own-endpoints)
@@ -228,8 +226,8 @@ the rules.
   workspace that has no name, from its first message. Its use bills to the
   Cloudflare account of the app (decision 184).
 - **Boat:** the app's Boat account pays for every sandbox and every saved
-  snapshot. Use of the app is free until billing starts, as
-  [Pricing](../protocol/pricing.md) says.
+  snapshot. Use of the app is free, as
+  [Orgs and members](../protocol/orgs-and-members.md#orgs) says.
 - **Resend:** the email service sends every email of the app, from
   `mail.conductive.build`. These are the org invitations, the approval
   emails, and the feedback emails. The Worker sends each feedback email,

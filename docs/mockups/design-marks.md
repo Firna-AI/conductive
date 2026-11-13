@@ -9,9 +9,11 @@ of a workspace number with Copy link.
 - `WorkspaceMark` in `src/components/workspaces/` draws the list mark of a
   workspace, which the list, the rows of the command palette, and the
   workspace chips show. It is a 3 × 3 dot-matrix square in one colour for
-  the GitHub state of the pull request: rose when checks failed, amber
-  while checks run, the success green when checks passed, and the
-  `listMerged` purple after the merge. Without a GitHub state, every cell is
+  the GitHub state of the pull request, in the tone of the pull request
+  bar: rose when checks failed, the success green when the pull request is
+  ready to merge, the `listMerged` purple after the merge, and amber for a
+  merge conflict, requested changes, and Blocked. While checks run and for
+  a draft, the cells are lit grey. Without a GitHub state, every cell is
   dim grey. An archived workspace keeps faint grey cells, whatever its
   GitHub state. A light runs around the ring while the agent works or the
   checks run, and the centre cell stays dim. The whole square pulses while

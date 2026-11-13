@@ -1,5 +1,11 @@
-/** Two hours from the first wait, including model work after a wake-up. */
-const BACKGROUND_WORK_LIMIT_MS = 120 * 60 * 1000
+/** Thirty days from the first wait, including model work after a wake-up. */
+export const BACKGROUND_WORK_LIMIT_MS = 30 * 24 * 60 * 60 * 1000
+
+/**
+ * The longest delay of one Node timer. Node fires a longer timer after 1 ms,
+ * so a longer wait arms one step after another.
+ */
+export const MAX_TIMER_MS = 2 ** 31 - 1
 
 /** One turn's clock survives provider handoffs. Provider levels do not. */
 export class BackgroundWait {
@@ -93,7 +99,7 @@ export class BackgroundWait {
         if (!this.elapsed()) this.arm()
         else this.expire()
       },
-      Math.max(0, this.deadline - this.now()),
+      Math.min(MAX_TIMER_MS, Math.max(0, this.deadline - this.now())),
     )
   }
 }

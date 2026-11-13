@@ -4,7 +4,7 @@ import { homedir } from 'node:os'
 
 import type {
   RunnerLogin,
-  RunnerMessageDuringTurnV2,
+  RunnerMessageDuringTurn,
 } from '../../src/shared/runner'
 import { oneOf } from './parse'
 import { warmClaude } from './providers/binaries'
@@ -93,7 +93,7 @@ async function measure(): Promise<void> {
       event,
       warn: (message) => process.stderr.write(`${message}\n`),
     })
-    const command: RunnerMessageDuringTurnV2 = {
+    const command: RunnerMessageDuringTurn = {
       type: 'message',
       commandId: randomUUID(),
       sessionId,

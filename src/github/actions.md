@@ -36,6 +36,13 @@ knows:
   answer, the bar offers no agent action and no Merge. A failed read
   offers the agent actions and no Merge. Write access without an allowed
   method offers the agent actions and no Merge.
+- The `access` port keeps the last answer for the repository of the
+  workspace. `OrgModel.githubAccessOf` gives it, so every workspace of the
+  repository in the tab shares it. A new store shows that answer at once,
+  and still reads the access. A failed read forgets it. A stopped read
+  keeps it. The app model forgets each answer when the person signs out or
+  changes. [Merge](../../docs/protocol/github-banner.md#merge) gives the
+  rule.
 - `localWorkOf` reads the changes report of the kept files. Any one of
   these is local work: a positive raw count of uncommitted files, a listed
   file that is not committed, or a commit that no remote branch holds. The
@@ -46,6 +53,11 @@ knows:
   report of an older runner can lack either count. A missing count stays
   absent, never zero. Without the raw count, listed files show uncommitted
   work. A reported unpushed count still applies.
+- `localWorkOf` also gives the kind of the local work: `changes` when a
+  file is not committed, `commits` when only unpushed commits are left, or
+  `none`. On an open pull request, `changes` shows Commit and push and
+  `commits` shows Push. Both buttons run the command `commit-and-push`,
+  through `agentActionCommand` of the mockup copy.
 - Fix checks shows only while the checks name a check that blocks the
   merge: failed, timed out, cancelled, or one that needs an action. Its
   prompt lists them.

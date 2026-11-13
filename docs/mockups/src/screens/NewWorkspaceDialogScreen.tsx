@@ -4,6 +4,7 @@ import { NewWorkspaceDialog } from '../components/new-workspace/NewWorkspaceDial
 import { ChooseRepositoriesNotice } from '../components/new-workspace/notices'
 import { formWait } from '../components/new-workspace/waitingRepository'
 import { newOrg } from '../fixtures/repositories'
+import type { MenuEntry } from '../components/common/Menu'
 import { defaultSection, sections } from '../fixtures/sections'
 import {
   NewWorkspaceScreen,
@@ -34,6 +35,7 @@ export const newWorkspaceDialogSchema = {
     'login',
     'repositories',
     'repositoryMenu',
+    'sectionMenu',
     'waitingBuild',
     'result',
     'org',
@@ -43,6 +45,8 @@ export const newWorkspaceDialogSchema = {
   properties: {
     ...newWorkspaceFormProperties,
     org: { enum: ['active', 'new'] },
+    /** The menu of the sections, where the new workspace goes. */
+    sectionMenu: { enum: ['closed', 'open'] },
     firstBuild: newWorkspaceSchema.properties.firstBuild,
     viewer: newWorkspaceSchema.properties.viewer,
     /**
@@ -65,12 +69,20 @@ export const emptyDialog: NewWorkspaceDialogState = {
   login: 'connected',
   repositories: 'chosen',
   repositoryMenu: 'closed',
+  sectionMenu: 'closed',
   waitingBuild: 'building',
   result: 'form',
   org: 'active',
   firstBuild: 'succeeded',
   viewer: 'admin',
 }
+
+/** The sections of the org in the order of the list, with General checked. */
+const sectionMenu: MenuEntry[] = Object.values(sections).map((section) => ({
+  kind: 'item',
+  label: section.name,
+  checked: section.key === defaultSection,
+}))
 
 /**
  * New workspace as a dialog over the ready workspace, for a user who chose
@@ -130,6 +142,8 @@ export function NewWorkspaceDialogScreen(props: {
       drop={state.files === 'drop-over'}
       notices={notices}
       place={`${org.name} · ${sections[defaultSection].name}`}
+      section={sections[defaultSection].name}
+      sectionMenu={state.sectionMenu === 'open' ? sectionMenu : undefined}
       placeholder={taskPlaceholder}
       ready={hasWords(draft.text) && !waits(state) && !building && !waiting}
       repository={chosen ? page.repository.name : undefined}

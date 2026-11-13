@@ -149,6 +149,11 @@ export function createDeviceSession(dependencies: SessionDependencies) {
               entry.request.workspaceId,
               entry.request.workspaceName,
             )
+          if (message.action === 'allow-workspace-until-stop')
+            dependencies.permissions.allowWorkspaceUntilStop(
+              entry.request.workspaceId,
+              entry.request.workspaceName,
+            )
           execute(entry)
         } catch (error) {
           finish(entry)

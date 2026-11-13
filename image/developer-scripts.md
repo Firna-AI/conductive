@@ -96,15 +96,16 @@ that supply the archive to the build.
 A full build records the runner protocol version of the test Worker, not
 the version of the archive. So package the archive from the same commit as
 the test Worker, as [The runner archive](../docs/deployment.md#the-runner-archive)
-says. A workspace refuses a runner below the version of its image. So a
-runner of version 1 from an older archive gets no turns.
+says. A workspace refuses a runner of another protocol version, as
+[Runner versions](../docs/protocol/version-pins.md#runner-versions) says.
+So a runner from an archive of another version gets no turns.
 
-The check does not read the runner version of the image. With a runner of
-protocol version 2, the agents send the model requests of the chat steps
-through the [model gateway](../docs/protocol/model-gateway.md) of the test
-Worker. The gateway adds the login that the app stored for the account. A refresh
+The check does not read the runner version of the image. The agents send
+the model requests of the chat steps through the
+[model gateway](../docs/protocol/model-gateway.md) of the test Worker. The
+gateway adds the login that the app stored for the account. A refresh
 keeps the runner and the version of its image. So an image from an older
-build can still hold a runner of version 1, which gets that login itself.
+build can still hold a runner that the test Worker refuses.
 
 ### Variables
 
@@ -191,15 +192,15 @@ More facts:
 - The check writes no Boat key, cookie, login, response body, or agent
   answer to its output or its files.
 - Each fork gets `LIVE_AGENT_LOGIN` in its resume env. So a fork holds a
-  real login, unlike a sandbox with a version pin of 2 or later. Clean up
-  each sandbox that `cleanupNeeded` lists at once.
+  real login, unlike a workspace sandbox, which holds only turn tokens.
+  Clean up each sandbox that `cleanupNeeded` lists at once.
 
 ## Development
 
 - `npm run typecheck` does not check these TypeScript files. Check them
   with `npx tsc -p image/tsconfig.json`.
-- The lint, format, and file-length checks of `npm run check` include these
-  files.
+- The lint and format checks of `npm run check` include these files. Lint
+  includes the file-length limit.
 - No test runs these scripts.
 
 ## Key code

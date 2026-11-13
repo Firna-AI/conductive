@@ -33,7 +33,9 @@ in the line, and an open message line that shows its heading on its own
 line, in the weight of a heading. `app/chat/lost-data` draws the data that the
 chat does not have, from decision 76: tool output and turn files that the
 runner left out, and the lines of runner events that the workspace
-refused.
+refused. Its long turn shows 8 files, or 5 on a phone, then a
+"Show N more" button. The count of the files that the runner left out
+shows after that button opens the list.
 `app/chat/lost-updates` draws a failed repair, from decision 96. After a
 refused update that belongs to no session, such as a file update, the
 workspace asks for a fresh full report, and nothing shows. Only when that

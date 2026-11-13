@@ -61,6 +61,8 @@ the same reply from the saved history.
 `components/ReadingPlace.dom.test.tsx` lays the chat out as a browser lays
 out its reversed scroll box. It ends a long turn while the reader reads
 higher up, and checks the read row and the newest message at the bottom.
+While the reader reads higher up, a message of another member keeps the
+read row in place, and a message that the user sends goes to the bottom.
 `components/TabDrag.dom.test.tsx` mounts the chat with the real
 `FileTabItem` of the Files screens and drags tabs with pointer events over
 boxes that `components/tab-drag-test-kit.tsx` gives them. The file tab of
@@ -79,7 +81,13 @@ scrolls toward each end, and the drop goes to a place that the scroll
 showed. A second drag scrolls by the same step, so the first drag left no
 frame loop running. `components/TabMenu.dom.test.tsx` opens the tab menu
 with Shift and F10 and with a right click, moves a file tab with Move
-left, and opens the rename field in a tab that does not show.
+left, and opens the rename field in a tab that does not show. The menu of
+the temporary tab leads with Keep open and a line. Keep open calls the
+`keep` of the host, and the focus and the status follow. A read-only row
+opens no menu on that tab. `state/tab-order.test.ts` moves tabs through
+the controller and checks the saved order. A move that changes the place
+of the temporary tab drops its mark in the same save. A move of another
+tab, and a move to its own place, keep the mark.
 `components/TranscriptCopy.dom.test.tsx` copies the transcript of a tab
 that never showed, through the real controller, client, and menu, with
 the copy of the app's test services. Copy full transcript asks for the
@@ -237,7 +245,7 @@ stops its upload.
 the fake API. A failed upload keeps its file, Send waits, and Try again
 through the files source of the draft uploads the same file. It also
 checks the measured bytes of an upload. A pick with two files over the
-size limit and two folder names uploads only its other file. The draft
+size limit and two unreadable folders uploads only its other file. The draft
 keeps the names of each kind in their order, and Send clears them. A
 removed file and a stopped chat abort their uploads. An expired file that
 Send finds gone turns failed, and Try again uploads its kept `File`.
@@ -262,7 +270,7 @@ ignores late uploads. `state/draft-file-identity.test.ts` checks that a
 fresh start clears the old draft, and that the source of the old draft
 never reads the files of the new one. `state/draft-files.test-support.ts`
 gives `readyChat`, a started chat whose uploads wait for the test. Its
-`pickChatFiles` attaches files, with optional folder names, and writes
+`pickChatFiles` attaches files, with optional refusals, and writes
 the marks of the files as the field does. Both use the helpers of
 `../app/draft-files.test-support.ts`.
 
@@ -273,14 +281,15 @@ drop state, and drops files with the helpers of
 Files over the box show its drop state and the drop caret, a leave hides
 both, and a drag of text shows neither. A drop on the text puts the chips
 at its place: in order, with spaces, as one step of undo, and without the
-dragged path. A dropped folder gets no chip and no upload, and its notice
-names it, also for a folder alone. An empty file attaches, and Attach
+dragged path. A dropped folder becomes one zip chip at its place among
+the files of the drop, also a folder alone. A folder that cannot be read
+gets no chip, and its notice names it. An empty file attaches, and Attach
 files of the notice opens the file picker. The box takes a drop during a
 send, after the sent text left, and during an upload, and a drop on the
 bar puts the chips at the caret.
 
-`state/refused-folders.test.ts` gives a chat draft folder names with no
-files, and checks that the draft keeps a copy of the names with no upload.
+`state/refused-folders.test.ts` gives a chat draft the names of
+unreadable folders with no files, and checks that the draft keeps a copy of the names with no upload.
 An empty pick changes nothing, and a file with no bytes uploads and goes
 with the message. The names move with their draft to a new session, and
 another draft keeps its own. A later pick, or folders alone, replace both
