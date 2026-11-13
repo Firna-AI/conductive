@@ -166,6 +166,29 @@ branch as the target before the member chooses.
   pull request with the commits of the picked branch. C, no selection,
   because it adds a step before Send.
 
+### Decision 296: a phone does not show the base branch
+
+Open. Found by the mockups of Milestone 1 on 13 November 2026.
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Implementation.
+- **Category:** Docs or spec.
+- **Location:** `docs/mockups/src/components/workspace/BarActions.tsx:199` and `docs/protocol/github-banner.md`, under "Layouts".
+- **Background:** On a computer the bar names the branch and its base. On a phone the compact row shows only the state, and Create PR stands at the top of the Checks tab.
+- **Problem:** No phone screen names the base of a workspace without a pull request. Create PR on a phone opens a pull request into a branch that the phone does not show.
+- **Impact if no action:** A member on a phone cannot see that a stacked workspace targets its picked branch and not the default branch.
+- **Root question:** How does a member on a phone learn the target before Create PR?
+- **Options:**
+  - **A.** Show the branch and its base at the top of the Checks tab while the branch has no pull request. Effort: Small.
+  - **B.** Show the base in the compact row at the top of the workspace. Long names get cut more. Effort: Small.
+  - **C.** A, only when the base is not the default branch. Effort: Small.
+  - **D.** No change. Effort: Small.
+- **Left out:** A line in the workspace header, because the bar owns the branches.
+- **Wider fix:** None. This is one layout rule.
+- **Previous examples:** Pull request runs have a base that is not the default branch, and a phone does not show it either.
+- **Recommendation:** A. The base shows where the member presses Create PR, with one rule for every workspace.
+- **Action:** ask the user, because A changes the phone layout that `github-banner.md` states.
+
 ## Design calls
 
 My calls, made on 13 November 2026:
@@ -235,6 +258,49 @@ My calls, made on 13 November 2026:
   no longer covers branches. The pull request description of this change
   says so. Reason: the paused plan lives on another branch.
 
+Design calls from the mockups of Milestone 1, made on 13 November 2026:
+
+- Each New workspace page and dialog shows the branch control where it
+  shows the repository picker. The control always names a branch, so it has
+  no Clear, and a pick of the default branch hides the target choice.
+  Reason: the Clear of the paused plan was for a start point that a form
+  can leave out.
+- The picker lists the default branch first with the detail "default",
+  then the other branches with the time since their newest commit. A
+  search highlights its first match. The default branch needs no read of
+  GitHub, so its row shows in each state of the list, and a failed read
+  stops no start from it. Reason: the form knows the default branch.
+- The list states say "Loading branches…" and "Nothing matches" with the
+  query, as the command palette and the list of `@` do. A failed read
+  shows a notice with Try again. A token that cannot read the repository
+  shows a notice without an action, because only GitHub grants access.
+- The phone views of `app/new-workspace/start-branch/picker` and of its
+  variants draw the sheet, so the sheet has no page of its own. Reason: each
+  page draws a phone view.
+- The target choice is a segmented control on a computer, and two radio
+  cards on a phone. A line under the choice says what the pull request
+  then holds: only the new work, or also the commits of the picked branch.
+  In the dialog the choice takes a line of its own under the header.
+  Reason: the mockups showed that two branch names do not fit side by side
+  on a phone, and the line names the cost that decision 295 avoids.
+- A pick of another branch that is not the default branch keeps the target
+  choice of the member. Only a change of repository clears it. Reason:
+  decision 295 selects the picked branch only before the member chooses.
+- The refusal of a missing branch is the notice of a failed create, with
+  the cause and the kept message. Its one action is Start from and the
+  default branch, which puts the control back on that branch. Send stays on,
+  as after each failed create. The refusal of a token that cannot read the
+  repository offers Try again. Reason: Try again of a missing branch fails
+  the same way, as the reason against option B of decision 293 says.
+- The bar of decision 294 names the default branch, and a line under it
+  says "Now targets main, because the branch `<base>` is no longer on
+  GitHub." The line is a status, not a refusal, and it shows until a pull
+  request opens. On a phone it stands at the top of the Checks tab.
+  Reason: a pull request names its own base on GitHub.
+- A sentence puts "the branch" before a branch name. Reason: the mockups
+  showed that a name such as `calummoore/checkout-autocomplete` reads like
+  the name of a repository.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -244,22 +310,22 @@ Depends on: none
 Draw the branch picker and the target choice on New workspace, on desktop
 and on a phone.
 
-- [ ] Add `app/new-workspace/start-branch`, with child pages of five screens
+- [x] Add `app/new-workspace/start-branch`, with child pages of five screens
       or fewer:
-  - [ ] The page and the dialog with the branch control beside the
+  - [x] The page and the dialog with the branch control beside the
         repository picker, set to the default branch.
-  - [ ] The open picker with search, the default branch first, and the list
+  - [x] The open picker with search, the default branch first, and the list
         states: loading, no results, a failed GitHub read with Try again, and
         no GitHub access to the repository.
-  - [ ] A picked branch that is not the default branch, with the target
+  - [x] A picked branch that is not the default branch, with the target
         choice of decision 291 on each of its two values.
-  - [ ] The refusal of a missing branch, under decision 293.
-  - [ ] The picker as a sheet on a phone.
-- [ ] Draw the workspace after a start that stacks on a branch, with its pull
+  - [x] The refusal of a missing branch, under decision 293.
+  - [x] The picker as a sheet on a phone.
+- [x] Draw the workspace after a start that stacks on a branch, with its pull
       request bar naming that base, and the bar of decision 294.
-- [ ] Update `docs/mockups/catalogue.md` and `docs/mockups/design.md`.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
-- [ ] Update the design and the TODOs of this plan for each problem that the
+- [x] Update `docs/mockups/catalogue.md` and `docs/mockups/design.md`.
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages.
+- [x] Update the design and the TODOs of this plan for each problem that the
       mockups show.
 
 ## Milestone 2: Documentation and protocol
@@ -269,10 +335,14 @@ Depends on: 1
 State the requirements and the decisions in force for the work below.
 
 - [ ] In `docs/protocol/create-a-workspace.md`, add a "Start from a branch"
-      section with decisions 288, 291, 293, and 295. Change "The branch and
-      the name" so that the branch starts from the start branch.
+      section with decisions 288, 291, 293, and 295, and the rules of the
+      branch control, its picker, the target choice, and the refusals from
+      the design calls of the mockups. Change "The branch and the name" so
+      that the branch starts from the start branch.
 - [ ] In `docs/protocol/base-branches.md`, give the base of a workspace with
-      a picked branch and of an agent create call, and decision 294.
+      a picked branch and of an agent create call, and decision 294. In
+      `docs/protocol/github-banner.md`, add the line under the bar of a base
+      that moved, which shows until a pull request opens.
 - [ ] In `docs/protocol/continue.md`, replace decision 223 with decision 290.
 - [ ] In `docs/protocol/workspace-calls.md`, replace the text of decision 281
       with the two fields of decision 292, their defaults, and the replay of a
@@ -364,6 +434,11 @@ Depends on: 2
 
 - [ ] Apply decision 294 in `worker/github/client.ts`, the bar, and a
       command that updates `gh-merge-base` in the cloud computer.
+- [ ] Keep the name of the base that moved until a pull request opens, so
+      the bar and the top of the Checks tab of a phone show its line, as
+      `app/new-workspace/start-branch/stacked/base-moved` shows. Take the
+      words from `barCopy.ts` and the rule from the `baseMoved` fact of
+      `barModel.ts`.
 - [ ] Test a base that GitHub deleted before the pull request opens.
 - [ ] Update `worker/github/README.md`.
 
@@ -376,10 +451,15 @@ Depends on: 1, 3, 4
 - [ ] Build the branch control and the picker on the page and in the
       dialog, with search and the list states, as the mockups show.
 - [ ] Build the target choice of decision 291, with the first selection of
-      decision 295.
+      decision 295: a segmented control on a computer, and radio cards on
+      a phone. Keep the choice of the member when the member picks another
+      branch.
 - [ ] Keep the branch and the target in the draft, clear them on a change of
       repository, and send them with the create.
-- [ ] Show the refusals of the branch check, and keep the message.
+- [ ] Show the refusals of the branch check, and keep the message. A
+      missing branch offers Start from and the default branch, and a token
+      that cannot read the repository offers Try again. Take the words from
+      `docs/mockups/src/components/new-workspace/branchCopy.ts`.
 - [ ] Test the picker states, the clear, the target choice, and the create
       request.
 - [ ] Compare each screen with its mockup on desktop and on a phone. Update

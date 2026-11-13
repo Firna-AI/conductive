@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { ChevronDown, FolderGit2, Sparkles } from 'lucide-react'
 import { ActionButton } from '../components/common/actions'
 import { Menu, type MenuEntry } from '../components/common/Menu'
@@ -38,11 +39,13 @@ function RepositoryPicker(props: {
 }
 
 /**
- * The start of an empty chat, with the repository of the new workspace.
- * The note names the build that the workspace starts from. Before the
- * first good build there is none, and the notice over the composer says
- * why. While the repository of the form waits for its build, the notice
- * over the composer says when it is ready, so the note gives way.
+ * The start of an empty chat, with the repository of the new workspace and
+ * the branch control beside it. The target choice of a picked branch
+ * follows them. The note names the build that the workspace starts from.
+ * Before the first good build there is none, and the notice over the
+ * composer says why. While the repository of the form waits for its build,
+ * the notice over the composer says when it is ready, so the note gives
+ * way.
  */
 export function Start(props: {
   page: PageOrg
@@ -50,6 +53,10 @@ export function Start(props: {
   admin: boolean
   /** The open repository menu, on a computer. */
   menu?: readonly MenuEntry[]
+  /** The branch control, with its picker open below it on a computer. */
+  branch?: ReactNode
+  /** The target choice, when the form holds a picked branch. */
+  target?: ReactNode
 }) {
   const { page } = props
   const ready = formWait(page) === undefined
@@ -65,10 +72,17 @@ export function Start(props: {
             : `An admin of ${page.org.name} chooses its repositories first.`}
       </p>
       {props.chosen ? (
-        <RepositoryPicker menu={props.menu} repository={page.repository.name} />
+        <div className={styles.pickers}>
+          <RepositoryPicker
+            menu={props.menu}
+            repository={page.repository.name}
+          />
+          {props.branch}
+        </div>
       ) : props.admin ? (
         <ChooseRepositoriesButton />
       ) : null}
+      {props.chosen ? props.target : null}
       {props.chosen && ready && page.built ? (
         <p className={styles.note}>
           Starts from the cloud computer of {page.org.name}, built {page.built}.

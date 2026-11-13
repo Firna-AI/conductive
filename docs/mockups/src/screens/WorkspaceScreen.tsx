@@ -32,7 +32,7 @@ import { composerNotice } from './composerNotice'
 import { placeLostUpdate } from './lostUpdates'
 import { changedWorkspaces, chatWorkspacesOf } from './orgWorkspaces'
 import { viewerOf } from './sessionStarter'
-import { barOf, branchOf } from './workspaceBar'
+import { barOf, baseOf, branchOf } from './workspaceBar'
 import {
   FilesContent,
   filesPlaceholder,
@@ -101,6 +101,7 @@ export function WorkspaceScreen(props: {
     name: workspaceName(state, record),
     branch: branchOf(state, record),
     github: bannerSummary(state.banner),
+    ...baseOf(state, record),
   }
   const status = activityOf(state)
   const archived = state.sandbox === 'archived'

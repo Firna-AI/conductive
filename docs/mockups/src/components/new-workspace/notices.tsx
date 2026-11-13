@@ -1,8 +1,12 @@
+import type { ReactNode } from 'react'
 import { CircleAlert, FolderGit2 } from 'lucide-react'
 import { paths } from '../../paths'
 import { ActionButton } from '../common/actions'
 import { Notice } from '../common/Notice'
 import { ScreenLink } from '../common/ScreenLink'
+
+/** The title of a create that failed, or that the server refused. */
+const notCreated = "The workspace wasn't created"
 
 /**
  * A create that failed, over the composer of the New workspace page or in
@@ -18,7 +22,28 @@ export function CreateFailedNotice(props: { ready?: boolean }) {
       }
       body="The app can't reach the server. Your message is kept."
       icon={CircleAlert}
-      title="The workspace wasn't created"
+      title={notCreated}
+      tone="danger"
+    />
+  )
+}
+
+/**
+ * A create that the server refused, in the place of a failed create, such
+ * as for a picked branch that is no longer on GitHub (decision 293). `body`
+ * names the cause and says that the message stays. `action` is the one
+ * recovery of the refusal.
+ */
+export function CreateRefusedNotice(props: {
+  body: string
+  action: ReactNode
+}) {
+  return (
+    <Notice
+      action={props.action}
+      body={props.body}
+      icon={CircleAlert}
+      title={notCreated}
       tone="danger"
     />
   )

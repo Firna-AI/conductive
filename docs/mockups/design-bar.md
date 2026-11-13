@@ -39,9 +39,18 @@ the actions on top of the Checks tab of a phone, and Continue.
     pull request has no other link to it. The row of a phone is one link to
     the Checks tab, so its number stays plain, and the top of that tab keeps
     Open on GitHub.
-  - A refusal of GitHub, a Continue that stopped, and the wait of Continue
-    for a turn show as one line under the bar. The line takes the tint of
-    its state, and its bottom border stays neutral.
+  - A refusal of GitHub, a Continue that stopped, the wait of Continue for
+    a turn, and a base that moved to the default branch show as one line
+    under the bar. The line takes the tint of its state, and its bottom
+    border stays neutral.
+  - When GitHub no longer has the stored base of a workspace, the Worker
+    moves the base to the default branch (decision 294). The bar then names
+    the default branch, and its line says which branch GitHub no longer
+    has. That line is a status in the neutral tone, with the info icon, and
+    it shows until a pull request opens. The fact `baseMoved` of
+    `barModel.ts` chooses it, and `barCopy.ts` gives its words. On a phone
+    it stands alone at the top of the Checks tab, because a bar without an
+    action shows no buttons there.
   - On a phone the row opens the Checks tab. `ChecksActions` in
     `BarActions.tsx` draws the actions, the line, and the link to GitHub at
     the top of that tab, at touch size.

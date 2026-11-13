@@ -79,6 +79,12 @@ export type Workspace = {
    * gets the head branch of its pull request (decision 507 G).
    */
   baseBranch?: string
+  /**
+   * The stored base branch that GitHub no longer has, which the Worker
+   * replaced with the default branch (decision 294). The line under the
+   * pull request bar names it.
+   */
+  movedBase?: string
 }
 
 /** The branch that the work of a workspace goes to. */

@@ -21,6 +21,14 @@ import {
   taskPlaceholder,
   waits,
 } from './newWorkspaceParts'
+import {
+  branchControl,
+  branchRefusal,
+  branchRefusals,
+  branchSendTo,
+  branchSheet,
+  targetChoice,
+} from './newWorkspaceBranches'
 import { repositoryMenu, waitingNotice } from './newWorkspaceRepositories'
 import { Start } from './newWorkspaceStart'
 
@@ -33,6 +41,9 @@ export const newWorkspaceSchema = {
     'login',
     'repositories',
     'repositoryMenu',
+    'branch',
+    'target',
+    'branchMenu',
     'waitingBuild',
     'result',
     'org',
@@ -41,8 +52,11 @@ export const newWorkspaceSchema = {
   ],
   properties: {
     ...newWorkspaceFormProperties,
-    /** A form, or a failed create request that keeps the draft. */
-    result: { enum: ['form', 'error'] },
+    /**
+     * A form, a failed create request, or a create that the branch check
+     * refused. Each keeps the draft.
+     */
+    result: { enum: ['form', 'error', ...branchRefusals] },
     /** Acme in use or suspended, or Firna before its first workspace. */
     org: { enum: ['active', 'suspended', 'new'] },
     /** Firna needs its first good build before a message can go. */
@@ -61,6 +75,9 @@ export const newWorkspaceForm: NewWorkspaceState = {
   login: 'connected',
   repositories: 'chosen',
   repositoryMenu: 'closed',
+  branch: 'default',
+  target: 'picked',
+  branchMenu: 'closed',
   waitingBuild: 'building',
   result: 'form',
   org: 'active',
@@ -82,6 +99,7 @@ function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
   const building = state.org === 'new' && state.firstBuild !== 'succeeded'
   const waiting = formWait(page) !== undefined
   const failed = !suspended && state.result === 'error'
+  const refused = !suspended && !failed && state.result !== 'form'
   const draft = newWorkspaceDraft(state)
   // Send leads to the create flow, which draws the task of Saved carts.
   const linked = state.draft === 'workspace-link'
@@ -108,12 +126,17 @@ function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
     admin,
   })
   if (repositoryWait) notices.splice(failed ? 1 : 0, 0, repositoryWait)
+  if (refused) {
+    notices.unshift(branchRefusal(state.result, page.repository.name, 'page'))
+  }
   const menuOpen = state.repositoryMenu === 'open'
   // A first message with files leads to the screen of its queued files.
   // The file screens draw the Saved carts task of Acme, so the attach button
   // of Firna and of a linked task leads nowhere.
+  // A picked branch that the form targets leads to the stacked workspace.
   const created =
-    state.files === 'ready' ? paths.attachmentsQueued : paths.creating
+    branchSendTo(state) ??
+    (state.files === 'ready' ? paths.attachmentsQueued : paths.creating)
   return (
     <ChatPane
       composer={{
@@ -131,7 +154,12 @@ function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
         placeholder: taskPlaceholder,
         running: false,
         sendTo:
-          failed || linked || waiting || state.org === 'new' || !hasWords(text)
+          failed ||
+          refused ||
+          linked ||
+          waiting ||
+          state.org === 'new' ||
+          !hasWords(text)
             ? undefined
             : created,
       }}
@@ -139,6 +167,12 @@ function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
         suspended ? undefined : (
           <Start
             admin={admin}
+            branch={branchControl({
+              state,
+              repository: page.repository.name,
+              surface: 'page',
+              mobile: props.viewport === 'mobile',
+            })}
             chosen={state.repositories !== 'none'}
             menu={
               menuOpen && props.viewport === 'desktop'
@@ -146,6 +180,7 @@ function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
                 : undefined
             }
             page={page}
+            target={targetChoice(state, false)}
           />
         )
       }
@@ -200,10 +235,15 @@ export function NewWorkspaceScreen(props: {
           />
         </Sheet>
       ) : null
+    // The branch picker of a phone opens as a sheet, as the repository menu.
+    const branchMenu =
+      state.repositories !== 'none' && state.org !== 'suspended'
+        ? branchSheet(state, pageOrgData.repository.name)
+        : null
     return (
       <MobileFrame>
         {page}
-        {sheet}
+        {sheet ?? branchMenu}
       </MobileFrame>
     )
   }

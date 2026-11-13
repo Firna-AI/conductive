@@ -63,6 +63,15 @@
   margin-left: auto;
 }
 
+/*
+ * The target choice of a picked branch, on a line of its own under the
+ * pickers, with the same hairline under it as the header.
+ */
+.target {
+  padding: 8px 10px 8px 12px;
+  border-bottom: 1px solid var(--ui-border);
+}
+
 /* The org alone, as plain text, while the sections load. */
 .place {
   overflow: hidden;

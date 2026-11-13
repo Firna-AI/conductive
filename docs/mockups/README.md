@@ -52,8 +52,9 @@ Use the expand control of the frame to see the full desktop layout.
 desktop and the phone, the design tokens, and the parts that the screens
 share. Its linked pages give the parts of
 [the workspace](design-workspace.md), of [the chat](design-chat.md),
-of [the operator section](design-operator.md), and of
-[the pull request bar](design-bar.md). They also give [the marks](design-marks.md).
+of [the operator section](design-operator.md), of
+[the pull request bar](design-bar.md), and of
+[New workspace](design-new-workspace.md). They also give [the marks](design-marks.md).
 
 ## The catalogue
 
@@ -66,7 +67,8 @@ wait for a build. Its linked page,
 the pages of the waitlist, the child pages of `app/orgs/suspended`, and the
 operator section. Its linked page
 [the pull request bar](catalogue-bar.md) gives `app/banner` and its child
-pages. The [chat and routines](catalogue-chat-and-routines.md) page gives
+pages. Its linked page [New workspace](catalogue-new-workspace.md) gives
+`app/new-workspace/start-branch` and its child pages. The [chat and routines](catalogue-chat-and-routines.md) page gives
 the child pages and flows of `app/chat` and `app/routines`. The
 [workspace links, file mentions, and tools](catalogue-workspace-tools.md)
 page gives the child pages and flows of `app/workspace-links`,

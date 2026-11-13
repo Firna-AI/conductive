@@ -104,6 +104,16 @@ export type NewWorkspaceDialogProps = {
    * one off with its note, as on the New workspace page.
    */
   repositoryMenu?: readonly MenuEntry[]
+  /**
+   * The branch control beside the repository picker, with its picker drawn
+   * open below it, as on the New workspace page.
+   */
+  branch?: ReactNode
+  /**
+   * The target choice of a picked branch that is not the default branch,
+   * on a line of its own under the pickers.
+   */
+  target?: ReactNode
   /** The org and the section that the new workspace joins. */
   place: string
   /** The section that the new workspace joins, such as General. */
@@ -144,9 +154,11 @@ export type NewWorkspaceDialogProps = {
 
 /**
  * New workspace as a wide, compact dialog over the dimmed app, drawn open,
- * for a computer. The repository picker sits at the top left, and the org
- * and the section of the new workspace at the top right, as a picker of the
- * section. The message fills
+ * for a computer. The repository picker and the branch control sit at the
+ * top left, and the org and the section of the new workspace at the top
+ * right, as a picker of the section. A picked branch that is not the
+ * default branch adds the target choice on a line under them. The message
+ * fills
  * the middle, with a chip for each of its files at its place, and a pasted
  * link to a workspace of the org shows as a chip, as in the composer. The
  * model picker sits at the bottom left, and the attach button and Create
@@ -174,12 +186,16 @@ export function NewWorkspaceDialog(props: NewWorkspaceDialogProps) {
               name={props.repository}
             />
           ) : null}
+          {props.branch}
           <SectionPicker
             menu={props.sectionMenu}
             place={props.place}
             section={props.section}
           />
         </div>
+        {props.target ? (
+          <div className={styles.target}>{props.target}</div>
+        ) : null}
         <div className={styles.body}>
           <MessageField
             caret={props.caret}

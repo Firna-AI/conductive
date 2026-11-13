@@ -55,3 +55,8 @@ merge, show the dim mark.
 
 The flow `user-flows/merge-and-continue` goes from Ready to merge through
 the merge and Continue to the next task.
+
+`app/new-workspace/start-branch/stacked` has the bar of a workspace that
+stacks on a branch, which names that base. Its `base-moved` variant has the
+line under the bar after GitHub deleted that base, from decision 294, as
+[New workspace](catalogue-new-workspace.md) gives.

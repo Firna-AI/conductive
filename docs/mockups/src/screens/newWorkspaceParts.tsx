@@ -55,6 +55,35 @@ export const newWorkspaceFormProperties = {
   /** The repository menu, closed or drawn open. */
   repositoryMenu: { enum: ['closed', 'open'] },
   /**
+   * The branch that the new branch starts from (decision 288): the default
+   * branch of the repository, which the branch control shows until the
+   * member picks another, or a picked branch that is not the default.
+   */
+  branch: { enum: ['default', 'picked'] },
+  /**
+   * The target of a picked branch (decision 291): the picked branch, which
+   * New workspace selects first (decision 295), or the default branch. The
+   * choice shows only for a picked branch that is not the default branch.
+   */
+  target: { enum: ['picked', 'default'] },
+  /**
+   * The branch picker, closed or drawn open: the branches, a search that
+   * finds two, a search that finds none, the list while it loads, a read
+   * of GitHub that failed, or a GitHub account that cannot read the
+   * repository. A phone opens it as a sheet.
+   */
+  branchMenu: {
+    enum: [
+      'closed',
+      'open',
+      'search',
+      'no-match',
+      'loading',
+      'failed',
+      'no-access',
+    ],
+  },
+  /**
    * The build that a waiting repository waits for: the newest build failed,
    * a build runs, or no build runs, such as after a start that failed.
    */

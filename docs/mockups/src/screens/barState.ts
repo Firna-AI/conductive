@@ -32,6 +32,13 @@ export const barStateProperties = {
    * the latest base after Continue.
    */
   branch: { enum: ['first', 'continued'] },
+  /**
+   * The base branch of the workspace: its own, the picked branch after a
+   * start that stacks on it (decision 291), or the default branch after
+   * GitHub deleted that picked branch (decision 294). Then a line under
+   * the bar says that the base moved.
+   */
+  base: { enum: ['own', 'stacked', 'moved'] },
 } as const
 
 export const barStateKeys = [
@@ -39,12 +46,14 @@ export const barStateKeys = [
   'access',
   'appAction',
   'branch',
+  'base',
 ] as const
 
-/** No local work, write access, and no action of the app. */
+/** No local work, write access, no action of the app, and its own base. */
 export const barStateDefaults = {
   localWork: 'none',
   access: 'write',
   appAction: 'none',
   branch: 'first',
+  base: 'own',
 } as const

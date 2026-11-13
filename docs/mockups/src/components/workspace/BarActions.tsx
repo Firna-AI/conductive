@@ -1,9 +1,11 @@
+import type { LucideIcon } from 'lucide-react'
 import {
   Archive,
   CircleAlert,
   Clock,
   GitBranchPlus,
   GitMerge,
+  Info,
 } from 'lucide-react'
 import { pullRequest } from '../../fixtures/pullRequests'
 import { repositories } from '../../fixtures/repositories'
@@ -148,26 +150,35 @@ export function BarButtons(props: { bar: BarModel }) {
   ))
 }
 
+/** The icon of each status under the bar. A refusal shows `CircleAlert`. */
+const statusIcons: Partial<Record<BarMessageKind, LucideIcon>> = {
+  'continue-waits': Clock,
+  'base-moved': Info,
+}
+
 /**
  * A message under the bar, such as a refusal of GitHub. It tints its whole
  * line, and its edges stay neutral. Another refusal of GitHub leads to the
- * pull request on GitHub, where GitHub names the reason.
+ * pull request on GitHub, where GitHub names the reason. A wait and a base
+ * that moved to the default branch are a status, not a refusal.
  */
 export function BarMessage(props: {
   kind: BarMessageKind
   workspace: Workspace
 }) {
   const { workspace } = props
-  const waits = props.kind === 'continue-waits'
-  const Icon = waits ? Clock : CircleAlert
+  const StatusIcon = statusIcons[props.kind]
+  const status = StatusIcon !== undefined
+  const Icon = StatusIcon ?? CircleAlert
   const branches = {
     branch: workspace.branch,
     base: repositories[workspace.repository].defaultBranch,
+    moved: workspace.movedBase,
   }
   return (
     <div
-      className={classes(styles.message, !waits && styles.danger)}
-      role={waits ? 'status' : 'alert'}
+      className={classes(styles.message, !status && styles.danger)}
+      role={status ? 'status' : 'alert'}
     >
       <Icon aria-hidden className={styles.icon} size={14} />
       <span className={styles.text}>
@@ -193,10 +204,13 @@ export function ChecksActions(props: { bar: BarModel; workspace: Workspace }) {
       {bar.message ? (
         <BarMessage kind={bar.message} workspace={props.workspace} />
       ) : null}
-      <div className={styles.buttons}>
-        <BarButtons bar={bar} />
-        {bar.link ? <BarGitHubLink /> : null}
-      </div>
+      {/* A message without an action, such as a moved base, stands alone. */}
+      {bar.actions.length > 0 || bar.link ? (
+        <div className={styles.buttons}>
+          <BarButtons bar={bar} />
+          {bar.link ? <BarGitHubLink /> : null}
+        </div>
+      ) : null}
     </div>
   )
 }

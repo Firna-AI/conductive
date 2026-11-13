@@ -1,0 +1,48 @@
+/*
+ * The choice of two targets and the line under it, centred under the
+ * pickers of the New workspace page.
+ */
+.choice {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* On a phone the radio cards fill the width of the start. */
+.cards {
+  align-items: stretch;
+  width: 100%;
+  max-width: 360px;
+  gap: 8px;
+}
+
+/*
+ * In the dialog the choice starts the line, and the line about the pull
+ * request follows it when it fits, or goes under it.
+ */
+.inline {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 12px;
+  row-gap: 4px;
+}
+
+/*
+ * Each option of the segmented control takes the width of its words, up to
+ * a limit, so a long branch name ends in an ellipsis and the two options
+ * still fit in the dialog.
+ */
+.segments [role='radio'] {
+  max-width: 320px;
+}
+
+.line {
+  margin: 0;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  line-height: 1.45;
+}

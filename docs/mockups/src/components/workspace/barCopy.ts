@@ -54,16 +54,23 @@ export const barLabels = {
   noCommits: 'No commits yet',
 } as const
 
-/** The messages under the bar after a merge or a Continue. */
+/**
+ * The messages under the bar after a merge or a Continue, and the base
+ * that moved to the default branch before a pull request opened.
+ */
 export type BarMessageKind =
   | 'merge-moved-head'
   | 'merge-no-right'
   | 'merge-refused'
   | 'continue-waits'
   | 'continue-failed'
+  | 'base-moved'
 
-/** The branches that a message of the bar names. */
-export type BarBranches = { branch: string; base: string }
+/**
+ * The branches that a message of the bar names. `moved` is the stored base
+ * that GitHub no longer has, which the default branch replaced.
+ */
+export type BarBranches = { branch: string; base: string; moved?: string }
 
 /**
  * The words of each message. A moved head and a missing right use the
@@ -86,6 +93,10 @@ export function barMessageText(
       return 'Continue waits for the agent to finish.'
     case 'continue-failed':
       return `Continue stopped: the changed files clash with the latest ${branches.base}. The workspace stays on ${branches.branch}.`
+    case 'base-moved':
+      return branches.moved
+        ? `Now targets ${branches.base}, because the branch ${branches.moved} is no longer on GitHub.`
+        : `Now targets ${branches.base}.`
   }
 }
 

@@ -245,6 +245,17 @@ export const barPaths = {
   },
 } as const
 
+/** The screens of a start from a branch that is not the default branch. */
+export const branchPaths = {
+  page: 'app/new-workspace/start-branch',
+  dialog: 'app/new-workspace/start-branch/dialog',
+  dialogPicker: 'app/new-workspace/start-branch/dialog/open',
+  picker: 'app/new-workspace/start-branch/picker',
+  target: 'app/new-workspace/start-branch/target-choice',
+  targetDialog: 'app/new-workspace/start-branch/dialog/target',
+  stacked: 'app/new-workspace/start-branch/stacked',
+} as const
+
 /** The screen that shows the checks of each pull request state. */
 export const checksPaths = {
   none: 'app/banner',

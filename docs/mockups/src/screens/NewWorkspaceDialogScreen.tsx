@@ -22,6 +22,11 @@ import {
   taskPlaceholder,
   waits,
 } from './newWorkspaceParts'
+import {
+  branchControl,
+  branchRefusal,
+  targetChoice,
+} from './newWorkspaceBranches'
 import { repositoryMenu, waitingNotice } from './newWorkspaceRepositories'
 import { WorkspaceScreen } from './WorkspaceScreen'
 import { readyWorkspace } from './workspaceState'
@@ -35,6 +40,9 @@ export const newWorkspaceDialogSchema = {
     'login',
     'repositories',
     'repositoryMenu',
+    'branch',
+    'target',
+    'branchMenu',
     'sectionMenu',
     'waitingBuild',
     'result',
@@ -50,11 +58,12 @@ export const newWorkspaceDialogSchema = {
     firstBuild: newWorkspaceSchema.properties.firstBuild,
     viewer: newWorkspaceSchema.properties.viewer,
     /**
-     * The form, or a create request that did not reach the server. The
-     * dialog closes when the create succeeds, so the message of a failed
-     * start stays in its workspace instead.
+     * The form, a create request that did not reach the server, or a create
+     * that the branch check refused. The dialog closes when the create
+     * succeeds, so the message of a failed start stays in its workspace
+     * instead.
      */
-    result: { enum: ['form', 'error'] },
+    result: newWorkspaceSchema.properties.result,
   },
 } as const
 
@@ -69,6 +78,9 @@ export const emptyDialog: NewWorkspaceDialogState = {
   login: 'connected',
   repositories: 'chosen',
   repositoryMenu: 'closed',
+  branch: 'default',
+  target: 'picked',
+  branchMenu: 'closed',
   sectionMenu: 'closed',
   waitingBuild: 'building',
   result: 'form',
@@ -105,6 +117,7 @@ export function NewWorkspaceDialogScreen(props: {
   const chosen = state.repositories !== 'none'
   const waiting = formWait(page) !== undefined
   const failed = state.result === 'error'
+  const refused = !failed && state.result !== 'form'
   const draft = newWorkspaceDraft(state)
   const notices = formNotices(state, failed, !building && !waiting)
   if (state.org === 'new' && state.firstBuild !== 'succeeded') {
@@ -124,6 +137,9 @@ export function NewWorkspaceDialogScreen(props: {
     admin: state.viewer === 'admin',
   })
   if (repositoryWait) notices.splice(failed ? 1 : 0, 0, repositoryWait)
+  if (refused) {
+    notices.unshift(branchRefusal(state.result, page.repository.name, 'dialog'))
+  }
   if (!chosen) {
     notices.push(
       <ChooseRepositoriesNotice
@@ -137,6 +153,16 @@ export function NewWorkspaceDialogScreen(props: {
   const dialog = (
     <NewWorkspaceDialog
       attachments={draft.files}
+      branch={
+        chosen
+          ? branchControl({
+              state,
+              repository: page.repository.name,
+              surface: 'dialog',
+              mobile: false,
+            })
+          : undefined
+      }
       caret={ownDraft ? undefined : draft.caret}
       choice={page.choice}
       drop={state.files === 'drop-over'}
@@ -152,6 +178,7 @@ export function NewWorkspaceDialogScreen(props: {
           ? repositoryMenu(page, state.waitingBuild)
           : undefined
       }
+      target={chosen ? targetChoice(state, true) : undefined}
       text={ownDraft ? page.draft : draft.text}
     />
   )

@@ -40,6 +40,18 @@
   position: relative;
 }
 
+/*
+ * The repository picker and the branch control beside it. A narrow page
+ * puts the branch control on a line of its own.
+ */
+.pickers {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  max-width: 100%;
+}
+
 .note {
   margin: 0;
   color: var(--ui-muted);
