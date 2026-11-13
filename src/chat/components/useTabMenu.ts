@@ -1,6 +1,13 @@
 import { useCallback, useState } from 'react'
 import type { LucideIcon } from 'lucide-react'
-import { ArrowLeft, ArrowRight, Copy, CopyPlus, Pencil } from 'lucide-react'
+import {
+  ArrowLeft,
+  ArrowRight,
+  BookmarkCheck,
+  Copy,
+  CopyPlus,
+  Pencil,
+} from 'lucide-react'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import { transcriptItems } from '../../../docs/mockups/src/components/workspace/transcriptCopy'
 import styles from '../../../docs/mockups/src/components/workspace/WorkspaceTabs.module.css'
@@ -33,6 +40,8 @@ interface TabMenuItem {
 interface TabMenuActions {
   onRename: (id: string) => void
   onStep: (tab: RowTab, by: -1 | 1) => void
+  /** Keeps the temporary tab in its place, through the `keep` of its host. */
+  onKeep: (tab: RowTab) => void
   /** Copies the transcript of a session, during the press of its item. */
   onCopy: (id: string, detail: TranscriptDetail) => void
 }
@@ -48,8 +57,9 @@ const copyIcons: Readonly<Record<TranscriptDetail, LucideIcon>> = {
 
 /**
  * The groups of items of the menu of the tab at `index` of the row. A
- * session tab has Rename session, its two copies, and the moves. A file or
- * diff tab has the moves. A move that the place of the tab rules out is off.
+ * session tab has Rename session, its two copies, and the moves. The
+ * temporary tab has Keep open and the moves, and a kept file or diff tab
+ * has the moves. A move that the place of the tab rules out is off.
  */
 function groupsOf(
   tabs: readonly RowTab[],
@@ -82,7 +92,22 @@ function groupsOf(
       changes: true,
     },
   ]
-  if (tab.kind !== 'session') return [moves]
+  if (tab.kind === 'host') {
+    if (tab.keep === null) return [moves]
+    // The icon is a bookmark with a check, as the mockups draw it, because
+    // a pin names the pinned tabs of a browser.
+    const keep: TabMenuItem = {
+      entry: {
+        kind: 'item',
+        key: 'keep-open',
+        label: 'Keep open',
+        icon: BookmarkCheck,
+        onSelect: act(() => actions.onKeep(tab)),
+      },
+      changes: true,
+    }
+    return [[keep], moves]
+  }
   const copy = (detail: TranscriptDetail): TabMenuItem => ({
     entry: {
       kind: 'item',
@@ -130,11 +155,12 @@ function entriesOf(
  * F10, or the Menu key, on a focused tab opens it below the tab, through the
  * key handler of the tab, on every system. `open` opens it after a long
  * press of a drag that ends with no move. A read-only row leaves out each
- * item that changes the workspace, so a session tab keeps only its copies.
- * That row binds no drag, so a finger opens the menu with the long press of
- * `useLongPress`, which lifts no tab. A tab with no item, such as a file tab
- * of a read-only row, and a tab that shows its rename field open no menu,
- * so the browser shows its own.
+ * item that changes the workspace, so a session tab keeps only its copies,
+ * and the temporary tab loses Keep open with its moves. That row binds no
+ * drag, so a finger opens the menu with the long press of `useLongPress`,
+ * which lifts no tab. A tab with no item, such as a file tab of a read-only
+ * row, and a tab that shows its rename field open no menu, so the browser
+ * shows its own.
  */
 export function useTabMenu(
   props: {

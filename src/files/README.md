@@ -97,7 +97,7 @@ the screens, with a `FilesNavigation`:
   with a modifier key opens the address in a new browser tab.
 - `keep(tab)` handles a double-click on a file row or on a tab. The shell
   makes the tab of that file or diff a kept tab when it is the temporary
-  tab, and moves no address.
+  tab, and moves no address. Keep open in the tab menu calls it too.
 
 The screens:
 

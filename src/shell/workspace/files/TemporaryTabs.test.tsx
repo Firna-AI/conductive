@@ -9,11 +9,7 @@ import {
   workspaceViewPath,
   type WorkspaceView,
 } from '../../../shared/workspace-view'
-import {
-  accessibleName,
-  byLabel,
-  byRole,
-} from '../../../test-support/dom-queries'
+import { byLabel, byRole } from '../../../test-support/dom-queries'
 import { FakeApiServer } from '../../../test-support/fake-api'
 import { FAKE_IDS } from '../../../test-support/fixtures/core'
 import { FAKE_FILE_PATH } from '../../../test-support/fixtures/tools'
@@ -25,7 +21,7 @@ import {
 import { serveSuspendedAcme } from '../../../test-support/suspended-org'
 import { click, settle } from '../../test-mount'
 import { bodiesOf } from '../kept-test-kit'
-import { linkTo, openTab } from '../wiring-test-kit'
+import { linkTo, openTab, tabNames } from '../wiring-test-kit'
 import { filesHref } from './files-address'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
@@ -58,15 +54,6 @@ function markOf(body: unknown): unknown {
   return typeof body === 'object' && body !== null && 'temporaryTab' in body
     ? body.temporaryTab
     : 'none'
-}
-
-/** The name of each tab of the row, as a screen reader reads its control. */
-function tabNames(view: HTMLElement): string[] {
-  const row = byLabel('Sessions and files', view)
-  return Array.from(row.querySelectorAll('li'), (item) => {
-    const control = item.querySelector('a, button')
-    return control ? accessibleName(control) : ''
-  })
 }
 
 /** The link of All files or Changes, in the right column, to `tab`. */

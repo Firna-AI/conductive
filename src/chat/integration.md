@@ -63,8 +63,12 @@ mount the chat.
   from the tab menu. For `lifted`, it draws the copy that a drag lifts
   above the page: the icon and the whole title, with no link and no Close.
   Its `show()` shows the tab, as a plain click on its link does, for the
-  keys of Previous tab and Next tab. The host gives the key of Close tab
-  to its shown tab itself, as the shell does in `FileTab`.
+  keys of Previous tab and Next tab. Its `keep` keeps the temporary tab in
+  its place, as a double-click on the tab does, for Keep open of its tab
+  menu. The host gives `keep` only to the temporary tab of the saved view,
+  and null to each kept tab, whose menu then has no Keep open. The chat
+  calls it and saves nothing of its own. The host gives the key of Close
+  tab to its shown tab itself, as the shell does in `FileTab`.
   Without `renderTab`, the row shows only the session tabs, as on a phone.
   `components/tab-row.ts` holds these types.
 - `onOpenDiff` gets the real path of a changed file of a finished turn. The

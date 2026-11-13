@@ -27,6 +27,10 @@ temporary tab in the saved view, as
   for a diff tab, so a screen reader hears the state. Keep the label:
   Chrome puts a space between the title and a hidden text after it, as in
   "README.md , temporary".
+- The tab row also keeps the temporary tab: Keep open in its tab menu
+  calls `keep` of the navigation, and a move to another place drops the
+  mark, as [The tab row](../chat/tab-row.md) says. `FileTabItem` draws
+  nothing for either.
 - `LiftedFileTab` is the copy of the tab that a drag lifts above the page:
   its icon and its whole file name, with no link and no Close. With
   `temporary`, it keeps the italics.

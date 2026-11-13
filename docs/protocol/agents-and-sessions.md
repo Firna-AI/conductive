@@ -185,8 +185,8 @@ says.
   stays open, such as "README.md stays open".
 - [Keep a tab](temporary-tabs.md#keep-a-tab) says why the menu holds Keep
   open.
-- A move that changes the place of the temporary tab keeps it (decision
-  287 B). This holds for a drag, Move left, and Move right. A drag that
+- A move of the temporary tab to another place keeps it (decision
+  287 B). A move of another tab leaves it temporary. This holds for a drag, Move left, and Move right. A drag that
   Escape cancels, or that ends in the same place, leaves the tab temporary.
 - Reason: a move shows that the user wants the file at that place. A
   temporary tab that stays temporary after a move was rejected. The next

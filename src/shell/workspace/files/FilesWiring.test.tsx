@@ -148,12 +148,15 @@ describe('the Files screens in the workspace', () => {
     const dragging = rowStatus()
     await pressKey('Escape')
 
+    // The address opened the diff in the temporary tab, so its menu leads
+    // with Keep open.
     expect({ ...shown, menu, moved, dragging }).toEqual({
       tab: 'seed-[redacted].sql',
       tooltip: 'scripts/seed-[redacted].sql',
       page: true,
       address: true,
       menu: [
+        { name: 'Keep open', off: false },
         { name: 'Move left', off: false },
         { name: 'Move right', off: true },
       ],

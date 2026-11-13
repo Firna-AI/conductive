@@ -441,6 +441,21 @@ drawn.
   of the file in the temporary tab too. Reason: decision 264 B opens that
   chip as a file chip opens its file.
 
+These design calls were made on 13 November 2026, when Milestone 5 was
+built.
+
+- A move of another tab leaves the temporary tab temporary, also when the
+  move changes the index of the temporary tab. Reason: decision 287 asks
+  about a temporary tab that the user moves, and
+  [Keep a tab](../docs/protocol/temporary-tabs.md#keep-a-tab) says "A move
+  of the temporary tab to another place".
+- The row does not scroll for Keep open. Reason: the tab stays in its
+  place, and The tab row names no scroll for a keep.
+- The chat learns which tab is temporary only from the keep that the host
+  gives that tab, and Keep open calls the same keep as a double-click.
+  Reason: the host opens, keeps, and closes the mark, so the two keeps
+  stay one path.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -565,19 +580,22 @@ Tags: ui
 
 Depends on: 4
 
-- [ ] In `moveTab` of `src/chat/state/tab-order.ts`, or in its caller,
+- [x] In `moveTab` of `src/chat/state/tab-order.ts`, or in its caller,
       keep the temporary tab when a drag, Move left, or Move right changes
       its place (decision 287 B).
-- [ ] In `src/chat/components/useTabMenu.ts`, add Keep open to the tab
+- [x] In `src/chat/components/useTabMenu.ts`, add Keep open to the tab
       menu of the temporary tab, before Move left and Move right, with a
       line between them, and with the icon of the mockups,
       `BookmarkCheck`. Leave it out in a read-only workspace. After
       Keep open, give the focus back to the tab and tell a screen reader
       that the tab stays open (decision 286 B).
-- [ ] Add tests: a move that keeps the tab, a cancelled drag and a drop
+- [x] Add tests: a move that keeps the tab, a cancelled drag and a drop
       in the same place that do not, Keep open in the menu, no Keep open
       on a kept tab or in a read-only workspace, and the message.
-- [ ] Update `src/chat/README.md` and `src/files/README.md`.
+- [x] Update `src/chat/README.md` and `src/files/README.md`.
+
+Check evidence: the `m5-*.log` files, `m5-smoke-notes.txt`, and the
+screenshots of `app-m5/` under `.context/temporary-file-tabs/`.
 
 ## Milestone 6: Verification, commit, review, and pull request
 

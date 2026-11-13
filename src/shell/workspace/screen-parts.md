@@ -97,6 +97,10 @@ Each folder of a path is a part of the address. Another address under
   double-click selects no text. A switch between the preview and the
   source keeps the mark, because the mark names no mode. While the chat has
   not read the view, a double-click keeps nothing, as no click saves then.
+- Keep open in the tab menu of the temporary tab clears the mark in the
+  same way: the shell gives only that tab a `keep` for the chat. A move of
+  the temporary tab to another place in the row clears the mark too, in
+  the chat's save of the new order.
 - A click on a list saves the list. On desktop the list belongs to the
   right column, so the address keeps the tab of the centre. On a phone a
   list is a page with its own address. An address that names a list saves

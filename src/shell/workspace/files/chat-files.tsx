@@ -169,7 +169,8 @@ function useMentions(
  * its path from the kept files, for its title and its drawing, so each name
  * of the tab hides each secret value. The temporary tab of the saved view
  * draws its title in italics, also on the lifted copy, and its title for
- * the row stays the name alone. When the chat makes a session active while
+ * the row stays the name alone. Keep open of its tab menu keeps it, as a
+ * double-click on it does. When the chat makes a session active while
  * `content` shows a file, the address goes back to the chat. The chat reads
  * the kept files for the list of `@` and the file chips, also on a phone
  * before a visit to Files: `KeptFilesConnection` of the screen keeps them
@@ -209,6 +210,7 @@ export function useChatFiles(
           />
         ),
       show: () => navigation.navigate(tab),
+      keep: temporary ? () => navigation.keep(tab) : null,
     }
   }
   return {
