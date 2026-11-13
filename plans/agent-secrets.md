@@ -157,6 +157,68 @@ design call of 13 November 2026 under the decision test of the
   command can also write it to a file. So a member can learn a value that
   the settings hide from them.
 
+### Design calls from the mockups
+
+These calls of 13 November 2026 came out of the mockup milestone. The
+first group are calls of the mockup agent, which the orchestrator kept.
+The second group settle items that the mockups showed.
+
+- The Capabilities icon is the lucide `Blocks` icon with a native
+  "Capabilities" tooltip, as other icon buttons have. It sits after the
+  attach button in the composer, and before it in the New workspace
+  dialog. The closed icon shows no state, to keep the page plain.
+- The control is a popover on desktop and a sheet on a phone. It is a
+  list of parts: Secrets, then Mac access. A secret for all agents shows
+  checked and disabled, with "All agents". It links to Manage secrets,
+  or to Add a secret when the org has none. The control of an existing
+  workspace lists "Allowed in sessions" and "Values for this workspace",
+  each with Remove. A value for 15 minutes is not listed, because
+  secrets decision 8 B names only those two lists.
+- The Secrets tab sits after Cloud computer. Each row shows the name, the
+  description, Added by, and the last reveal, which members see too. A
+  revealed value shows on its own line with Copy and Hide. Delete asks
+  first, because the value cannot come back and its grants end. The All
+  agents switch saves at once, starts off, and shows only for admins. A
+  suspended org shows no Reveal.
+- The request card offers Deny and "Allow for this session" for a stored
+  secret. A temporary request has a value field and the choices 15
+  minutes, This workspace, and Save as secret. Allow stays off until a
+  value is typed. The card shows no time limit.
+- A late request says "The agent stopped waiting. Allow sends it a
+  message." The message of a late answer says "`NAME` is now available
+  in this session", with variants for 15 minutes, this workspace, and a
+  saved secret.
+- Run results reuse the look of the Mac command card. Values show as
+  `[redacted]`. Results fold with their turn. A late request never
+  folds. A waiting request keeps Stop in the composer, because the turn
+  runs.
+- A Mac command in a workspace with Mac access off says "Mac access is
+  off in the Capabilities of this workspace."
+- Archive and suspension end each open request as "Not answered", with
+  no choices, and Needs input ends. Reason: no agent waits there, and a
+  request that comes back after Restore would surprise.
+- On a phone, a temporary request shows Deny and "Give a value". That
+  opens a sheet with the field, the lifetime choice, and Allow. Reason:
+  phone forms already open as sheets, and a sheet leaves room for the
+  keyboard. The card was taller than the request region of a phone.
+- A request with mixed names gives the stored secrets the session
+  approval and each missing name its own field. One lifetime choice
+  covers every value. Reason: one task keeps one card.
+- Save uses the reason of the agent as the description of the new
+  secret. Reason: the reason says why the value is needed, and the card
+  stays short.
+- A closed session ends each of its open requests as "Not answered", as
+  Archive does. Reason: no agent waits there, and Needs input must end.
+- The exact-copy filter of the Durable Object also covers the text of a
+  request that comes from the cloud computer: the reason and any
+  command text. Reason: that text reaches the chat of every member.
+- No action moves an env var into Secrets. An admin adds the value to
+  Secrets again. Reason: env var values are write-only, and the env var
+  list stays as it is.
+- Replace changes the description too, with the rights of secrets
+  decision 3 B. Reason: Replace is the existing right to change a
+  secret, and a wrong description misleads the members who answer.
+
 ## Decisions
 
 ### Secrets decision 1: How an agent uses a secret
@@ -458,9 +520,154 @@ run path of the follow-up, and it keeps today's behaviour in each
 workspace that a person creates. Action: ask the user, because B,
 C, D, and E change decision 62 behaviour or add a refusal.
 
+### Secrets decision 10: A late answer from another member
+
+Open. Root question: how does the agent that asked learn of a late
+answer from any member? A late answer sends a message in the name of the
+member who answers. Another member's message runs on the starter's login
+only while the starter shares it (decision 116). Otherwise it opens a
+new linked session. So the agent that asked can miss the answer, and the
+approval stays with the first session. The options:
+
+- A. The app sends the message as an app notice in the session that
+  asked, on the starter's login, also when the login is not shared. It
+  spends the starter's login for one short turn. Effort: Medium.
+- B. The message uses the login of the sender of the turn that asked,
+  when it can run. Otherwise the widget says that the agent learns of the
+  answer at the next message. Effort: Medium.
+- C. The message keeps the login rules. When it would open a linked
+  session, the app sends nothing, and the widget says so. Effort: Small.
+- D. Only a member whose message can run in the session sees the choices
+  of a late request. Moved to Left out by the options check.
+- E. The message stays in the name of the member who answers, under the
+  login rules in force. When it cannot run in the session that asked, the
+  app keeps it as a pending notice, and the next message to that agent
+  carries it as a line. The widget says that the agent learns at the next
+  message. Effort: Medium.
+
+Left out: a linked session with the message, because the new session has
+none of the earlier history. D, because it breaks secrets decision 4 B.
+
+Facts from the options check: a new Claude subscription and a new ChatGPT
+sign-in are not shared by default (decisions 171 and 175), so the case of
+C is common. A runs a turn for the member who answers on a login that
+its owner does not share, which the share setting exists to stop. A
+session never changes its login (decision 105). The starter can also
+leave the org or remove the login, so each option needs the widget line
+of C for that case.
+
+Recommendation: B, with three fixes to its text. The new turn acts for
+the sender of the turn that asked, under that sender's login rules. The
+chat and the agent text name the member who answered. The fallback line
+also covers a starter's login that cannot run. The plan first
+recommended A. Reason: B acts as an answer in time does, keeps the share
+rule, and keeps the Mac and the GitHub token with the member whose task
+continues. Action: ask the user, because each option changes decision
+116 or secrets decision 4 B, or adds a new message kind.
+
+### Secrets decision 11: The command in a request and its result
+
+Open. Root question: where does the chat get the command and the output
+of a run with secrets? The mockups show the command and its output on
+the run card. In the design, the run call sends only its secrets, its
+reason, and its turn, and the output goes back to the agent only. The
+options:
+
+- A. The chat shows the run as the normal tool call line of the agent,
+  with a grant note under it. The request card shows no command. Effort:
+  Small.
+- B. The run call also sends the command text. The request card and the
+  run card show it. The run card takes the output from the tool call of
+  the same run, which the chat already filters. Effort: Medium.
+- C. The CLI and the MCP server also report the end of each run to the
+  Worker: the exit code, the time, and the output after their filter.
+  Effort: Medium.
+- D. The run call also sends the command text. The request card and the
+  late widget show it as the command that the agent says it will run.
+  The result card shows the names, the command, and what let it run, with
+  no output. The exact-copy filter also covers this text. Effort: Small.
+
+Left out: an approval for one command only, because a process can name
+one command and run another, and the task makes the session the unit of
+approval.
+
+Facts from the options check: no tool output reaches the chat today. The
+runner sends only the target, the description, and the state of each
+tool call (`runner/src/providers/tool.ts`). So B has no source for its
+output. A command on a card is only the claim of the agent, because the
+approval covers the session and the values go to the caller.
+
+Recommendation: D. The plan first recommended B. D keeps B's reason, a
+member sees what the agent says it will run, and drops B's output, which
+has no source. Choose C only if the chat must show output, which can
+hold a changed form of a value that the filter does not hide. Action: ask
+the user, because B, C, and D add data at a boundary that no requirement
+covers.
+
+### Secrets decision 12: Two features named "secret"
+
+Open. Root question: how does each feature get a name that says what it
+does? An env var on the Cloud computer tab can be marked "Secret"
+(decision 133), which only hides its value in the chat. The new Secrets
+tab sits beside it for a different kind of value. An admin can put a
+value in the wrong list, and it then reaches every cloud computer at each
+start. Only admins change env vars (decision 57). The options:
+
+- A. Keep both names. The Secrets tab already says when to use env vars.
+  Effort: Small.
+- B. Rename the env var mark to "Hidden" in the app, the mockups, and the
+  protocol docs. Effort: Medium.
+- C. Name the new feature "Agent secrets". Effort: Small.
+- D. A, plus one line in the env var section that tells admins to put
+  each value that needs a member's approval in Secrets, with a link.
+  Effort: Small.
+
+Left out: a mask of every env var value with no mark, because it breaks
+decision 133.
+
+Recommendation: B, with two fixes from the options check. Add the line
+of D, because the admin chooses the list in the env var form. Use a word
+other than "Hidden", such as "Hide on screen", because the guide
+`src/marketing/docs/cloud-computer.md` already says that every saved
+value stays hidden in the settings. B also changes three guides, the
+Privacy page, and a comparison row. Reason: the new word says what the
+mark does, and "secret" then names one thing. Action: ask the user, because B changes the words of
+decision 133, and C changes Cal's name for the feature.
+
+### Secrets decision 13: A notice of a waiting request
+
+Open. Root question: how does a member learn in time that an agent waits
+for a secret? A request waits 90 seconds. A Mac command request gets a
+macOS notification from the Mac app. A secret request gets only the
+Needs input mark, so many requests can turn late. The options:
+
+- A. Change nothing. Effort: Small.
+- B. The Mac app notifies the sender of the turn that asked. Effort:
+  Medium.
+- C. The Mac app notifies each member who has the workspace open.
+  Effort: Medium.
+
+- D. B, plus a browser notification to the sender in each open tab of
+  that member that is in the background. Effort: Medium.
+- E. D through a push service and a service worker, so that a closed
+  browser and a phone also get the notice. Effort: Large.
+- F. B, with Needs input as the trigger, so later kinds of request get
+  the notice with no new code. A Mac command is the exception, because
+  its own Mac already shows a notice. Effort: Medium.
+
+Left out: email, because 90 seconds is too short for it. A page title or
+Dock badge alone, because only a member who looks sees it.
+
+Recommendation: B. The sender waits for the turn, and the Mac app already
+notifies that person for Mac commands. Choose D if many members use a
+browser without the Mac app. F is the wider fix. The options check kept
+B. Action: ask the user, because it
+adds behaviour that no requirement covers.
+
 The options check of decisions 5, 6, and 7 is in
 `.context/agent-secrets/options-check.md`. The check of decisions 8 and 9
-is in `.context/agent-secrets/options-check-8-9.md`.
+is in `.context/agent-secrets/options-check-8-9.md`. The check of
+decisions 10 to 13 is in `.context/agent-secrets/options-check-10-13.md`.
 
 ## Milestone 1: Mockups
 
@@ -470,26 +677,32 @@ Depends on: none
 
 The mockups show each new screen and flow before any code changes.
 
-- [ ] Add a Secrets tab to the org settings mockup
+- [x] Add a Secrets tab to the org settings mockup
       (`docs/mockups/src/screens/orgSettingsTabs.tsx`). Show the admin
       view with Reveal and its record, the member view with each value
       hidden, the add form, and the replace and delete actions under
       secrets decision 3 B.
-- [ ] Add the Capabilities icon and its control to the New workspace page
+- [x] Add the Capabilities icon and its control to the New workspace page
       and dialog mockups, with the secrets part and the Mac access part.
-- [ ] Add the Capabilities icon and control of an existing workspace,
+- [x] Add the Capabilities icon and control of an existing workspace,
       beside the message box (secrets decision 8 B).
-- [ ] Add the request card above the composer: a stored secret, and a
+- [x] Add the request card above the composer: a stored secret, and a
       temporary request with a value field, 15 minutes, This workspace,
       and Save. Show the
       card without choices for a member who cannot answer, if any.
-- [ ] Add the late request widget in the chat, for a stored secret and
+- [x] Add the late request widget in the chat, for a stored secret and
       for a temporary request, and the message that a late answer sends.
-- [ ] Add the results in the chat: allowed, denied, and the run of a
+- [x] Add the results in the chat: allowed, denied, and the run of a
       command with its output.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
-- [ ] Update the design and the TODOs of this plan for each problem that
-      the mockups show.
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages.
+- [x] Update the design and the TODOs of this plan for each problem that
+      the mockups show. The mockup agent's report is in
+      `.context/agent-secrets/mockups-report.md`.
+- [x] Apply the design calls from the mockups for archive, the phone
+      sheet, mixed names, the description on Save, and Replace.
+- [ ] Apply the answers to secrets decisions 10 to 13 to the mockups.
+      Show the agent's own tool call line beside each run card, as the
+      real chat does.
 
 ## Milestone 2: Documentation and protocol
 
@@ -502,8 +715,9 @@ Depends on: 1
       `docs/protocol/agent-tool-access.md`, `docs/protocol/isolation.md`,
       `docs/protocol/create-a-workspace.md`,
       `docs/protocol/orgs-and-members.md`, `docs/protocol/routines.md`,
-      `docs/protocol/workspace-calls.md`, and
-      `docs/protocol/routine-runs.md`.
+      `docs/protocol/workspace-calls.md`,
+      `docs/protocol/routine-runs.md`, and the settings tabs in
+      `docs/protocol/command-palette-actions.md`.
 - [ ] Update the review focus of `CLAUDE.md` for secrets decision 2 A.
 - [ ] Read `src/marketing/privacy.ts` and `src/marketing/terms.ts` in
       full. Update each sentence that restates a changed fact.
@@ -571,6 +785,8 @@ Depends on: 4, 6
 
 - [ ] Build the request card, the late request widget, and the chat
       results from the mockup.
+- [ ] Run `npm run marketing:pictures`, because the composer now shows
+      the Capabilities icon.
 - [ ] Add tests beside the code. Check the flow in a browser.
 
 ## Milestone 8: Verification, commit, review, and pull request
