@@ -52,7 +52,7 @@ It covers a failed check and a later passed read, with an unchanged activity tim
 It also covers an older receipt replay, the repair of a missing copy, and a failed copy whose retry restarts `MemoryWorkspace`.
 A D1 trigger makes the copy fail.
 [summary-queue.test.ts](summary-queue.test.ts) proves with `MemoryWorkspace` that each copy ends before the next refresh reads GitHub.
-[The shared summary tests](../../src/shared/github.test.ts) cover the order of the four values.
+[The shared summary tests](../../src/shared/github.test.ts) cover the order of the checks and the copy of each bar state.
 
 [Recorded routing fields](recorded-webhooks.ts) come from the MIT-licensed
 [Octokit webhook examples](https://github.com/octokit/webhooks/tree/main/payload-examples/api.github.com).
