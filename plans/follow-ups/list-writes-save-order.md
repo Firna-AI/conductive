@@ -1,0 +1,35 @@
+# List writes can reach the server out of order
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-13, from branch `calummoore/oslo-tq4m`, review finding 2, the wider fix of review finding 1.
+- **Location:** `Resource.write` in `src/app/resource.ts`, the rule "List writes do not wait for each other" in `src/app/data-lifecycle.md`, and the writes in `src/app/section-actions.ts`.
+- **Reason:** The fix changes a rule and a test on `main`, so the user decides it.
+
+- **Related:** `plans/follow-ups/section-move-save-order.md` is the direct fix for section moves. Option A of this item covers it too.
+- **Terms:**
+  - **List write:** a change of the workspace list of an org that the page shows at once and then sends: create, rename, collapse, move, and delete of a section, and a move of a workspace to a section. They all go through `Resource.write` in `src/app/resource.ts`.
+  - **Save queue:** the queue of `Resource.save`. It sends the next save of a value only after the answer of the save before.
+- **Background:**
+  - `src/app/data-lifecycle.md` says: "The saves of one value go out one at a time ... List writes do not wait for each other." The reason is that the answer of a list write confirms only the fields of its own write, so the page stays right.
+  - The page stays right, but the server does not. Two writes of the same field can cross on the way, and the later request can arrive first. The server then keeps the older value.
+  - Three cases on `main` and on the section reorder branch:
+    - Two quick section moves, such as Move section down twice. The page and the database end with different orders.
+    - Two quick workspace moves of one row, such as two presses of Alt+Down (`moveToSection` in `src/app/section-actions.ts`). The row can be saved at its first place.
+    - A double click on a section header sends a collapse, then an expand (`setSectionCollapsed`). The database can keep the section collapsed while the page shows it open.
+  - The settings saves had the same problem. Commit `2ce9adcdb` fixed them with the save queue.
+- **Problem:** No list write waits for the one before it, so the server can keep an older value than the page shows.
+- **Impact if no action:** The next read of the list undoes the member's last change: an order, a place, or a collapse. Other members see the wrong order meanwhile.
+- **Root question:** How does each list change that a member makes reach the server in the order that the member made it?
+- **Options:**
+  - **A.** Make `Resource.write` send each write after the answer of the write or save before it, as `Resource.save` does now. Every list write is then in order, and each still shows at once and takes back only itself. Change the rule in `src/app/data-lifecycle.md`. Change the test in `src/app/section-actions.test.ts` that awaits a workspace move while a collapse waits, because the move then waits for the collapse. Cost: a stalled request holds every later list write, because a request has no time limit. Effort: Medium.
+  - **B.** Order only the writes that change one field twice: section moves, workspace moves, and collapses, each through an ordered write. Other list writes stay as they are. Effort: Medium.
+  - **C.** Send a sequence number with each list write, and let the Worker drop or hold an older write. This needs a new API field and stored state. Effort: Large.
+- **Left out:**
+  - Change nothing: it fails the goal.
+  - A Worker that runs the writes of an org one at a time: two requests can still reach the Worker in the reverse order.
+  - Block the controls while a write waits: each control needs a busy state, and the list stops feeling instant. The direct fix item lists it for section moves only.
+- **Wider fix:** A. It makes the right order the default, so a new list write cannot meet the problem.
+- **Previous examples:** Commit `2ce9adcdb`, the save queue for settings. Review finding 1 of branch `calummoore/oslo-tq4m`, two quick section moves.
+- **Recommendation:** A. It is the structural fix: one default in `Resource` removes the class.
+- **Action:** ask the user, because option A changes the rule "List writes do not wait for each other" in `src/app/data-lifecycle.md` and a test on `main`.

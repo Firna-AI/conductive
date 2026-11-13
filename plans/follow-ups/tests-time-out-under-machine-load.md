@@ -34,6 +34,7 @@
   After the heavy checks ended, the existing CLI test passed its single rerun in 3,235 ms.
   All 20 selected tests passed that rerun, with no assertion or timeout change in the existing test.
   Machine contention is the suspected source, but the rerun does not prove the cause.
+- On 13 November 2026, the branch `calummoore/oslo-tq4m`, which changes no Worker file, ran the complete gate on a machine with 4 CPUs and 8 GB of memory, beside a dev server and a headless Chrome. 113 Worker test files failed, most with `Test timed out in 15000ms`. The 440 files of the web app and the 88 files of the runner passed. A rerun of the 113 files with `--maxWorkers=2`, beside two review agents, failed each of the first 71 files again. Then a test worker hung for over an hour next to a defunct `workerd` process, with a load average near 0, and the run was stopped. `worker/app-api/feature-shell-sections.test.ts` passed alone two times, and a reviewer saw it time out alone while the rerun ran. `worker/lifecycle/continue-native.test.ts` failed for another reason, which `plans/follow-ups/continue-native-tests-under-home-user.md` holds.
 - **Problem:** These tests depend on wall-clock time limits, so a busy machine can fail them with no defect in the code.
 - **Impact if no action:** A slow CI runner or a busy developer machine can fail the gate now and then, and a person must rerun it.
 - **Root question:** How do these tests stay correct on a slow or busy machine?

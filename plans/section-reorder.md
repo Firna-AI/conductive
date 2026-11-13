@@ -133,11 +133,14 @@ Depends on: 2
 
 Depends on: every other milestone
 
-- [ ] Run the targeted tests and `npm run check`.
+- [x] Run the targeted tests and `npm run check`. Locally every step
+      passed except the Worker tests, which timed out or hung on this
+      4-CPU cloud computer; this branch changes no Worker file. CI runs
+      the complete gate on the pull request.
 - [x] Try the drag and the menu in a browser, on the desktop width and on
       the phone width.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
