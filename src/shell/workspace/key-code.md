@@ -85,7 +85,8 @@ this guide.
   the saved view, the preview or the port of the address, and their
   addresses. `previewPortHref` gives the address of the Preview tool with a
   port. `useToolSelect` is the select of a tool tab, which the Go to rows
-  of the command palette share.
+  of the command palette share. `tools/terminal-links.ts` gives the links
+  of the terminal: a local address opens `previewPortHref` of its port.
 - `WorkspacePaletteActions.tsx`: the actions that the screen offers to the
   command palette, as `workspaceActionIds` chooses them. Each one runs the
   control of the screen: +, the clock of the history, a tab of the right

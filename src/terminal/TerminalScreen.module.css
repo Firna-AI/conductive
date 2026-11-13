@@ -24,6 +24,27 @@
   cursor: text;
 }
 
+/* The hint below a link under the mouse pointer, as the mockup draws it. */
+.linkHint {
+  position: absolute;
+  z-index: 10;
+  padding: 2px 6px;
+  border: 1px solid var(--ui-border);
+  border-radius: 4px;
+  background: var(--ui-bar);
+  color: var(--ui-ink);
+  font-family: var(--ui-font-sans);
+  font-size: var(--ui-text-xs);
+  line-height: 1.5;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px var(--ui-shadow);
+  pointer-events: none;
+}
+
+.linkHint[hidden] {
+  display: none;
+}
+
 .keys {
   display: flex;
   flex-shrink: 0;

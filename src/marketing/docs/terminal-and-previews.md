@@ -37,6 +37,14 @@ git status
 Use your repository's instructions for dependency installation, tests, and development commands.
 The phone terminal adds a row of keys that a phone keyboard lacks.
 
+Web addresses in the terminal output are links.
+On a Mac, hold Cmd and click a link to open it.
+On Windows and Linux, hold Ctrl and click it.
+On a touch screen, tap the link.
+A local address, such as `http://localhost:3000`, opens **Preview** at its port.
+Other links open in a new browser tab.
+When a program shows a link with a label, its hint names the website that it opens.
+
 The shell keeps running when its connection drops.
 Reconnect to return to the same shell and running commands.
 A stop of the cloud computer ends those commands.
@@ -84,6 +92,8 @@ Each row shows a port and can also show a short program name and repository fold
 The list updates as servers start and stop.
 Servers that already have an open preview appear in their tabs.
 When the list is empty, the form asks you to start a server in **Terminal** or ask the agent.
+
+When the terminal shows the local address of your server, open it from there.
 
 To open a server by its port:
 

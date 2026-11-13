@@ -12,7 +12,6 @@ export const portPreview = defineScreen({
   rationale:
     'The user chose detected servers on 10 November 2026, with decisions 220 C and 221 D, and asked for a short tab label that is cut with "…". The list of the port form shows the folder, so the tab does not. A port that the latest list does not name keeps the label "Port 3000". The user asked on 10 November 2026 for the short label "Open" on the link to a new tab.',
   relatedDocs: [],
-  useCasePaths: ['user-flows/open-a-terminal-link'],
   propSchema: workspaceStateSchema,
   props: {
     ...readyWorkspace,
@@ -22,7 +21,10 @@ export const portPreview = defineScreen({
     ports: 'open',
     focus: 'tool',
   },
-  useCasePaths: ['user-flows/open-a-local-server'],
+  useCasePaths: [
+    'user-flows/open-a-local-server',
+    'user-flows/open-a-terminal-link',
+  ],
   render: (props, context) => (
     <WorkspaceScreen state={props} viewport={context.viewport} />
   ),

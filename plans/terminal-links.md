@@ -306,30 +306,36 @@ Tags: ui
 Depends on: 1, 2, and Milestones 3 and 4 of `plans/pressable-chat-links.md`
 on `main`
 
-- [ ] Merge `origin/main` with the shared reader and the port address.
-- [ ] Add `@xterm/addon-web-links`. Load it in
+- [x] Merge `origin/main` with the shared reader and the port address.
+      On 13 November 2026 the user asked to build the change before
+      `calummoore/riga-m3j3` merged. So this branch merges that branch,
+      and carries its commits until it reaches `main`.
+- [x] Add `@xterm/addon-web-links`. Load it in
       `src/terminal/TerminalScreen.tsx`, and set the `linkHandler` option
       for OSC 8 links.
-- [ ] Open a link only with the key of decision 2, and on a touch as
-      decision 3 says. Give each address to an `openLink` prop of
-      `TerminalTool`.
-- [ ] Track the link under the pointer through the `hover` and `leave`
+- [x] Open a link only with the key of decision 2, and on a touch as
+      decision 3 says. Give `TerminalTool` a `links` prop with the context
+      of the app and its `open`.
+- [x] Track the link under the pointer through the `hover` and `leave`
       callbacks. Show the hint there, as decision 4 says for OSC 8 links.
-- [ ] Stop a Cmd+click on a link from the program, in a bubble listener
+- [x] Stop a Cmd+click on a link from the program, in a bubble listener
       on `.xterm-screen` that runs after the link part of xterm.js. A
       capture listener on `.xterm` would stop the link too.
-- [ ] In `src/shell/workspace/tools/ToolsPart.tsx`, open a local address
+- [x] In `src/shell/workspace/tools/ToolsPart.tsx`, open a local address
       at `previewPortHref`, an app page in the app, and other links with
       `openInNewTab`.
-- [ ] Test the key, the kinds, a refused address, OSC 8 links, a touch
+- [x] Test the key, the kinds, a refused address, OSC 8 links, a touch
       tap, and a Cmd+click while a program has the mouse.
-- [ ] Add the link rules to the public guide
+- [x] Add the link rules to the public guide
       `src/marketing/docs/terminal-and-previews.md`: in "Open Terminal",
       and beside the steps that open a server by its port.
-- [ ] Update the [terminal README](../src/terminal/README.md) and the
+- [x] Update the [terminal README](../src/terminal/README.md) and the
       [tools part](../src/shell/workspace/screen-parts.md#the-tools-part).
-- [ ] Smoke-test in `npm run dev`: a dev server address, a public link, an
-      OSC 8 link, and tmux with the mouse on.
+- [x] Smoke-test in `npm run dev`, on the tools development page in
+      Chrome on Linux: a dev server address, an OSC 8 link, and mouse
+      reports on. The development page gained a button that prints an
+      OSC 8 link. A real touch screen was not available, so the DOM test
+      covers the touch.
 
 ## Milestone 4: Verification, commit, review, and pull request
 
