@@ -28,7 +28,7 @@ If you joined an org, its admin manages the repositories and shared setup.
 3. Choose the repository for the task.
 4. Choose a model and effort.
 5. Describe the task in the message box.
-6. Select **Send**.
+6. Select **Send** on the page, or **Create** in the dialog.
 
 For example:
 
@@ -45,14 +45,18 @@ Your message waits until the agent can begin.
 You can send more messages while that computer starts.
 The workspace keeps its accepted messages after a failed first start.
 
-Before the org's first successful build, **Send** stays off.
+Before the org's first successful build, the send button stays off.
 You can keep a draft in **New workspace** while that build runs.
 
 A newly added repository shows as unavailable in the repository menu until its build succeeds.
 Its note says when it will be ready.
-**Send** stays off while the selected repository waits for its build.
+The send button stays off while the selected repository waits for its build.
 
 ## Choose the page or dialog
+
+**New workspace** opens as a page or as a dialog over the current screen.
+On a computer, a new account opens the dialog.
+Older accounts keep the page.
 
 1. Open **Account**.
 2. Open **Preferences**.
