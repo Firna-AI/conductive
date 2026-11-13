@@ -226,8 +226,8 @@ the rules.
   workspace that has no name, from its first message. Its use bills to the
   Cloudflare account of the app (decision 184).
 - **Boat:** the app's Boat account pays for every sandbox and every saved
-  snapshot. Use of the app is free until billing starts, as
-  [Pricing](../protocol/pricing.md) says.
+  snapshot. Use of the app is free, as
+  [Orgs and members](../protocol/orgs-and-members.md#orgs) says.
 - **Resend:** the email service sends every email of the app, from
   `mail.conductive.build`. These are the org invitations, the approval
   emails, and the feedback emails. The Worker sends each feedback email,

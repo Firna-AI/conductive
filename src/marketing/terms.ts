@@ -51,8 +51,8 @@ export const termsDocument: LegalDocument = {
           Mac app. Each workspace has its own cloud computer, where agents
           powered by Claude and Codex work. A workspace can hold one task
           after another, with one branch at a time.`,
-        paragraph`${productName} is free until billing starts. Nobody pays
-          until they choose a plan.`,
+        paragraph`${productName} is free. The operator charges no fee for
+          it.`,
       ],
     },
     {

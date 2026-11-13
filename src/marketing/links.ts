@@ -22,12 +22,11 @@ export function macDownloadHref(chip: MacChip): string {
 export const docsPath = '/docs'
 
 /** A section of the site that the header marks as the current one. */
-export type SiteSection = 'docs' | 'pricing'
+export type SiteSection = 'docs'
 
 /** The paths of the pages of the site, on the root domain of the product. */
 export const sitePaths = {
   home: '/',
-  pricing: '/pricing',
   terms: '/terms',
   privacy: '/privacy',
   fromConductor: '/from-conductor',
@@ -43,7 +42,6 @@ export function pageHrefs(
   const href = (path: string) => (origin ? new URL(path, origin).href : path)
   return {
     home: href(sitePaths.home),
-    pricing: href(sitePaths.pricing),
     terms: href(sitePaths.terms),
     privacy: href(sitePaths.privacy),
     fromConductor: href(sitePaths.fromConductor),
