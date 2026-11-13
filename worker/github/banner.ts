@@ -1,5 +1,5 @@
 import {
-  githubSummary,
+  checksSummary,
   type GitHubBanner,
   type GitHubCheck,
 } from '../../src/shared/github'
@@ -116,7 +116,7 @@ export function pullBanner(
   if (pull.mergeable === 'CONFLICTING') return { ...common, state: 'conflict' }
   if (pull.review === 'changes-requested')
     return { ...common, state: 'changes-requested' }
-  const summary = githubSummary({ ...common, state: 'ready-to-merge' }, checks)
+  const summary = checksSummary(checks)
   if (summary === 'checks-failed' || summary === 'checks-running')
     return { ...common, state: summary }
   if (pull.mergeState === 'BEHIND' || pull.mergeState === 'BLOCKED')
