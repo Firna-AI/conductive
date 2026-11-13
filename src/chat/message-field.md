@@ -188,8 +188,8 @@ that those chips show, from the attach to the send.
   paste, the drag, and the drop. `focus-plugins.tsx` holds `FieldHandle`,
   `HandlePlugin`, and the plugin of the `caretAtEnd` option. At each focus
   without a press of the pointer, such as from Tab, that plugin puts the
-  caret back where it was, or at the end of a kept draft. The New
-  workspace page and dialog use that option.
+  caret back where it was, or at the end of a kept draft. The chat
+  composer and the New workspace page and dialog use that option.
 - In `components/chip-field/`, `attached-files.tsx` holds `FieldFiles`,
   its provider, and what a chip shows of a draft file.
   `attached-file-node.tsx` holds the node of an attached file, whose text
@@ -199,4 +199,7 @@ that those chips show, from the attach to the send.
   `point-caret.ts` finds the caret and the box of the drop caret at a
   point. `drop-caret.tsx` draws the drop caret, and `drop-move.ts` puts
   the nodes of a drop in place. `field-focus.ts` and `use-latest.ts` hold
-  small helpers of the plugins.
+  small helpers of the plugins. `focusField` commits a waiting change
+  before it moves the focus. A waiting change that leaves the caret of the
+  page, such as a reconcile of the chips, then cannot take the caret of
+  the focus with it.
