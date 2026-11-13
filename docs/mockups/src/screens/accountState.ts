@@ -29,10 +29,11 @@ export const accountSchema = {
   ],
   properties: {
     /**
-     * The tab: General, with the sign-in and the connections, Preferences,
-     * or Keyboard shortcuts. Each tab has its own address.
+     * The tab: General, with the sign-in and GitHub, Agents, with the
+     * logins of Claude and Codex, Preferences, or Keyboard shortcuts. Each
+     * tab has its own address.
      */
-    tab: { enum: ['general', 'preferences', 'shortcuts'] },
+    tab: { enum: ['general', 'agents', 'preferences', 'shortcuts'] },
     /** GitHub and the agents are connected, or not yet, as at the first run. */
     connections: { enum: ['connected', 'not-connected'] },
     /** The kind of the Codex login while Codex is connected. */
@@ -142,6 +143,12 @@ export const accountGeneral: AccountState = {
   shortcutSearch: 'none',
   shortcuts: 'default',
   host: 'chrome-mac',
+}
+
+/** The Agents tab of a connected account, in Chrome on a Mac. */
+export const accountAgents: AccountState = {
+  ...accountGeneral,
+  tab: 'agents',
 }
 
 /** The Keyboard shortcuts tab in a normal Chrome tab on a Mac. */

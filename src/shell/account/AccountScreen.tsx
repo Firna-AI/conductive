@@ -17,6 +17,7 @@ import { ShortcutsTab } from './shortcuts/ShortcutsTab'
 /** The tabs of the account, in their order. */
 const tabs = [
   { tab: 'general', label: 'General' },
+  { tab: 'agents', label: 'Agents' },
   { tab: 'preferences', label: 'Preferences' },
   { tab: 'shortcuts', label: 'Keyboard shortcuts' },
 ] as const satisfies readonly { tab: AccountTab; label: string }[]
@@ -29,7 +30,9 @@ function TabContent(props: {
 }) {
   switch (props.tab) {
     case 'general':
-      return <GeneralTab connect={props.connect} user={props.user} />
+      return <GeneralTab user={props.user} />
+    case 'agents':
+      return <AgentsSection connect={props.connect} />
     case 'preferences':
       return <DefaultsSection />
     case 'shortcuts':
@@ -58,30 +61,28 @@ function ThisMac() {
 }
 
 /**
- * The General tab: the GitHub sign-in, and what every org shares, the
- * GitHub App and the agents. The invite code of the user comes last, so
- * that a phone shows the form of an agent near the top. The Mac app adds
- * This Mac. `connect` opens the Connect form of an agent at first, as the
- * link of a missing login does.
+ * The General tab: the GitHub sign-in, the GitHub App that every org
+ * shares, and the invite code of the user. The Mac app adds This Mac.
  */
-function GeneralTab(props: { user: User; connect: Agent | null }) {
+function GeneralTab(props: { user: User }) {
   return (
     <>
       <SignInSection user={props.user} />
       <ThisMac />
       <GitHubSection />
-      <AgentsSection connect={props.connect} />
       <InviteCodeSection />
     </>
   )
 }
 
 /**
- * The account, in three tabs. Each tab is a link with its own address.
- * General holds the GitHub sign-in, what every org shares, and the invite
- * code of the user. Preferences holds how new workspaces start: their
- * model, and how New workspace opens. Keyboard shortcuts holds the keys of
- * the commands. A phone moves a tab that does not fit to a second line.
+ * The account, in four tabs. Each tab is a link with its own address.
+ * General holds the GitHub sign-in, the GitHub App, and the invite code of
+ * the user. Agents holds the logins of Claude and Codex, which every org
+ * shares. `connect` opens the Connect form of an agent at first, as the
+ * link of a missing login does. Preferences holds how new workspaces
+ * start: their model, and how New workspace opens. Keyboard shortcuts
+ * holds the keys of the commands. A phone moves a tab that does not fit to a second line.
  * The product is free, so the page shows no plan and no billing.
  */
 export function AccountScreen(props: {
