@@ -51,8 +51,8 @@ export const termsDocument: LegalDocument = {
           Mac app. Each workspace has its own cloud computer, where agents
           powered by Claude and Codex work. A workspace can hold one task
           after another, with one branch at a time.`,
-        paragraph`${productName} is free until billing starts. Nobody pays
-          until they choose a plan.`,
+        paragraph`${productName} is free. The operator charges no fee for
+          it.`,
       ],
     },
     {
@@ -147,6 +147,10 @@ export const termsDocument: LegalDocument = {
           it does on your Mac and to your data.`,
         paragraph`You can remove an always-allowed command, or stop the
           permission of a workspace, in the Mac app at any time.`,
+        paragraph`While the 15 minutes run, the workspace bar shows the
+          time left, Extend, Keep until I stop, and Stop. Extend resets
+          the time left to 15 minutes from now. Keep until I stop changes
+          the permission to last until you stop it. Stop ends it.`,
       ],
     },
     {

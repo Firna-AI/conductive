@@ -84,13 +84,16 @@ A browser or another Mac can show the request without those approval choices.
 
 ## Change saved permissions
 
-Open **Account** in the Mac app to find **This Mac**.
+Open **Account** in the Mac app, then the **This Mac** tab.
 It shows the Mac's name and **Available** or **Not available**.
 
 - Under **Always allowed**, use **Remove** to make that command ask again.
+  A long command shows its first lines. Use **Show all** to see all of it.
 - Under **All commands allowed**, use **Stop** to end that workspace's permission.
 - While that permission runs, the workspace also shows a bar with **Stop**.
 - During the 15 minutes, use **Keep until I stop** in the bar to keep that permission until you stop it.
+- While timed permission runs, **Extend** resets the time left to 15 minutes from now.
+  It works only while the 15 minutes run and never starts permission.
 
 Saved permissions belong to your signed-in account on that Mac.
 They do not give an agent general access to every Mac you use.

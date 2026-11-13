@@ -21,6 +21,7 @@ export const effortLabels: Readonly<Record<Effort, string>> = {
   high: 'High',
   xhigh: 'Extra high',
   max: 'Max',
+  ultra: 'Ultra',
 }
 
 export function findModel(

@@ -3,4 +3,5 @@
 /**
  * Effort wire values.
  */
-export type Effort = 'none' | 'low' | 'medium' | 'high' | 'xhigh' | 'max'
+export type Effort =
+  'none' | 'low' | 'medium' | 'high' | 'xhigh' | 'max' | 'ultra'

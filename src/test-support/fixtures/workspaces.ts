@@ -202,6 +202,7 @@ export function workspaceFixtures(
       })),
       activeTab: { kind: 'session', sessionId: FAKE_IDS.session },
       fileList: 'changes',
+      temporaryTab: null,
       tool: 'terminal',
     },
   }

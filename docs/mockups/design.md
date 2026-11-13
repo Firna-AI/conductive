@@ -27,6 +27,8 @@ right column. The toggle hides the right column, so the centre column
 takes its width, and shows it again. Then come a tab for each agent
 session and each open file or diff, in the order that the user gives them
 by drag, + for a new session, and a clock that opens the session history.
+The file or diff of the last press shows in the temporary tab, with its
+title in italics, until the next press replaces it.
 The right column has the pull request bar on top, the All files, Changes,
 and Checks lists below it, and the Terminal and Preview tabs at the bottom.
 It shows no file content. A phone shows an org switcher at the top of the list,
@@ -174,8 +176,9 @@ sessions as tabs above the chat, and four tabs at the bottom.
   and the attach button and Create, with the hint of the Enter key, at the
   bottom right. A phone always opens the page, so the dialog has no phone
   layout.
-- The account has three tabs, General, Preferences, and Keyboard
-  shortcuts, as links, as the org settings have. On a phone, a tab that
+- The account has four tabs, General, Agents, Preferences, and Keyboard
+  shortcuts, as links, as the org settings have. The Mac app adds This Mac
+  as its fifth tab. On a phone, a tab that
   does not fit moves to a second line. Preferences holds the New
   workspaces section, whose rows put each label beside its control in two
   columns. A segmented control chooses how New workspace opens, with a
@@ -311,8 +314,8 @@ sessions as tabs above the chat, and four tabs at the bottom.
   The attachment fixtures hold byte counts.
   The formatter shows sizes such as "12 KB" and "1.2 MB".
 - [The workspace](design-workspace.md) gives the messages that wait for
-  the sandbox, the tab row, and the number with Copy link. It also gives
-  the bars of the cloud computer.
+  the sandbox, the tab row with its temporary tab, and the number with Copy
+  link. It also gives the bars of the cloud computer.
 - [The chat](design-chat.md) gives the chips of attached files, the
   Markdown tables and headings of a reply and of a file preview, and the
   fold of the work of a turn. It also gives the data that the chat does

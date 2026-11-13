@@ -42,6 +42,7 @@ const efforts: Readonly<Record<Effort, Effort>> = {
   high: 'high',
   xhigh: 'xhigh',
   max: 'max',
+  ultra: 'ultra',
 }
 const workspaceStates: Readonly<Record<WorkspaceState, WorkspaceState>> = {
   working: 'working',

@@ -34,8 +34,13 @@ Then select **Resume** before you use the file tools.
 2. Open the folders that contain your file.
 3. Select the file.
 
-The file opens as a tab on a computer.
-On a phone, it opens within **Files**.
+On a computer, a click opens a file in one temporary tab.
+Its title shows in italics.
+The next click on another file replaces it in the same place.
+This applies to **All files**, **Changes**, and file chips in chat.
+If a file already has a tab, a click shows that tab.
+
+On a phone, each file opens within **Files**.
 Use its back action to return to **All files**.
 
 Text shows line numbers and syntax colours.
@@ -55,6 +60,24 @@ It opens the copy in the workspace's repository folder after the message reaches
 Restore an archived workspace before opening its attached files.
 
 - [Attach files to messages](/docs/sessions-and-chat#attach-files)
+
+## Keep a file open
+
+On a computer, keep a file in a normal tab so that another file does not replace it.
+Double-click its row in **All files** or **Changes**.
+You can also double-click the tab.
+
+To use the tab menu:
+
+1. Right-click the temporary tab.
+   With a keyboard, press **Shift+F10** while the tab has focus.
+2. Select **Keep open**.
+
+Moving the temporary tab to another place in the row also keeps it.
+A normal tab stays open until you close it.
+The next file without a tab opens in a new temporary tab.
+
+In a read-only workspace, use a double-click to keep the tab.
 
 ## Inspect changes
 
@@ -79,7 +102,8 @@ It is broader than the changed-file summary of one agent turn.
 Use the list to check the agent's result before you commit or open a pull request.
 A committed file can remain in **Changes** while the branch differs from its base branch.
 
-On an open pull request, files not committed or commits not pushed give **Commit and push** priority in the bar.
+On an open pull request, files not committed give **Commit and push** priority in the bar.
+Commits not pushed, with no files left to commit, give **Push** priority instead.
 It replaces Merge and the fix actions until that work is pushed.
 Some uncommitted work can exist without a visible diff in this list.
 Use `git status` in **Terminal** to inspect it.

@@ -32,6 +32,7 @@ function Shell(props: {
       props.navigation.navigate(target)
       if (target.kind === 'file') setTab(target)
     },
+    keep: props.navigation.keep,
   }
   return (
     <FilePage

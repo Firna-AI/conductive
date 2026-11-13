@@ -7,7 +7,6 @@ how a screen is built, and links to the other pages.
 | ------------------- | ----------------------------------------------------------------------------- |
 | `marketing`         | The home page of the site: the app, its features, the Mac app downloads, and Sign up |
 | `marketing/docs`    | The overview of the public docs, then a guide, with its Docs menu or its contents open on a phone |
-| `marketing/pricing` | The pricing page: four plans with their prices and cloud hours, the tax line, and how cloud hours count |
 | `marketing/terms`   | The Terms of use, with the operator details, suspension, and abuse reports     |
 | `marketing/privacy` | The Privacy notice, with the operator details and legal contact address       |
 | `marketing/not-found` | The page of the site for an address that it does not have                   |
@@ -36,7 +35,7 @@ how a screen is built, and links to the other pages.
 | `app/attachments`   | A file that uploads in the text, then a drop, a failed upload, a file over 100 MB, sent files, the file tab of a sent screenshot, and a first message with files |
 | `app/workspace-links` | Chips in a message and an answer, then Copy link and its failure, a pasted link, a link of another org, session chips, and messages that an agent sent |
 | `app/file-mentions` | The list of `@` with a query, then the list without one, its other states, and the file chips of the composer and of a sent message |
-| `app/files`         | All files, Changes with its summary, and a file, Markdown, diff, and image tab |
+| `app/files`         | All files, Changes with its summary, a file, Markdown, diff, and image tab, and the temporary tab that the next press replaces |
 | `app/tabs`          | A dragged tab, the moved row, a full row, the tab menu, and the rename field  |
 | `app/transcripts`   | Copy a transcript from the tab menu: the toast after a copy, a failed copy, and the menu of an archived workspace |
 | `app/tools`         | The terminal tabs and their states, then the Preview tool with its detected servers and its failed list repair, and the hidden Desktop, kept for its return |
@@ -283,8 +282,8 @@ that sends feedback.
 
 The catalogue draws the Keyboard shortcuts tab in the Mac app and in a
 browser, from decisions 190 to 196. The pages of
-`app/account` and `mac-app/this-mac` show it as the third tab of the
-account.
+`app/account` and `mac-app/this-mac` show it as the fourth tab of the
+account. In the Mac app, the This Mac tab follows it.
 
 - `app/account/shortcuts` shows the tab in a normal Chrome tab on a Mac.
   The search field of decision 195 stands at the top. The lines under it
@@ -349,8 +348,8 @@ account.
 - `mac-app/command-palette` shows the All tab of the palette over a
   workspace in the Mac app, with the key of each command row. The Search
   row of each Mac app page opens it. Its `actions` and `settings` variants
-  have those tabs. The Settings tab adds This Mac to the Account group,
-  which ends with Keyboard shortcuts. Its `changed-key` variant has the
+  have those tabs. The Settings tab adds This Mac to the end of the
+  Account group, after Keyboard shortcuts. Its `changed-key` variant has the
   Search row with ⇧⌘P, the person's key of the palette.
 
 [The pull request bar](catalogue-bar.md) gives `app/banner`, the bar of a

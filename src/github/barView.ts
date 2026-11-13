@@ -10,6 +10,7 @@ import {
   type BarAction,
   type BarFacts,
   type BarModel,
+  type LocalWorkKind,
 } from '../../docs/mockups/src/components/workspace/barModel'
 import type { GitHubBanner, GitHubCapabilities } from '../shared/github'
 import { bannerStatus } from './bannerStatus'
@@ -23,7 +24,7 @@ export type CapabilityState =
   | { status: 'failed' }
 
 /** The local work of the sandbox, or unknown while no changes report shows. */
-export type LocalWork = 'yes' | 'no' | 'unknown'
+export type LocalWork = LocalWorkKind | 'unknown'
 
 type MergeRefusal = 'merge-moved-head' | 'merge-no-right' | 'merge-refused'
 
@@ -101,14 +102,16 @@ function positive(count: number | undefined): boolean {
  * out, such as a file that an edit took back to its base content. The raw
  * count of the runner holds such files. An older runner sends no raw count.
  * Then only its listed files show the files that are not committed. The
- * unpushed commits that a report counts are local work too.
+ * unpushed commits that a report counts are local work too: without changed
+ * files, they are the only work, and the bar asks for a push.
  */
 export function localWorkOf(changes: ChangesResponse | null): LocalWork {
   if (changes === null) return 'unknown'
   const files =
     positive(changes.uncommittedFileCount) ||
     changes.files.some((file) => file.uncommitted)
-  return files || positive(changes.unpushedCommits) ? 'yes' : 'no'
+  if (files) return 'changes'
+  return positive(changes.unpushedCommits) ? 'commits' : 'none'
 }
 
 /**
@@ -212,7 +215,7 @@ export function barViewOf(input: BarInput): BarView {
   const { access, method } = accessOf(input.capabilities)
   const model = barModel({
     banner: banner.state,
-    localWork: input.localWork === 'yes',
+    localWork: input.localWork === 'unknown' ? 'none' : input.localWork,
     access,
     method: input.localWork === 'unknown' ? null : method,
     appAction: appActionOf(outcome),

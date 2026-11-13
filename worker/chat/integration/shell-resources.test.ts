@@ -93,6 +93,7 @@ it('serves real shell lists and keeps workspace views private to each member', a
     tabs: [{ kind: 'session', sessionId: 'first-session' }],
     activeTab: { kind: 'session', sessionId: 'first-session' },
     fileList: 'changes',
+    temporaryTab: null,
     tool: 'preview',
   }
   const saved = await fixture.request(path, {
@@ -117,7 +118,13 @@ it('serves real shell lists and keeps workspace views private to each member', a
       })
     ).json(),
   ).toEqual({
-    view: { tabs: [], activeTab: null, fileList: 'all', tool: 'terminal' },
+    view: {
+      tabs: [],
+      activeTab: null,
+      temporaryTab: null,
+      fileList: 'all',
+      tool: 'terminal',
+    },
     routine: null,
     baseBranch: 'main',
   })
@@ -174,6 +181,7 @@ it('decodes opaque workspace IDs for lifecycle reads and keeps archived writes r
     body: JSON.stringify({
       tabs: [],
       activeTab: null,
+      temporaryTab: null,
       fileList: 'all',
       tool: 'terminal',
     }),

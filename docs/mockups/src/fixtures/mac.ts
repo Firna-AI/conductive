@@ -112,11 +112,36 @@ export const safariOutput = [
 /** How long the Safari test ran on the Mac. */
 export const safariDuration = '16s'
 
+/** A page, packed and encoded, that the long command unpacks. */
+const packedPage = [
+  'H4sICB3p9GoCA2dyaWQxMS1tYWMuaHRtbACtXNty27gZvs9ToNqLtJ2I5lEk5cNMVtnUns3BG2/dmb2DSEjCmiJYELSs9extH6CP2CfpD5KgLFrORPk5mrENkPzw4cd/BCif',
+  'doWjKzUOrs40z9JRvPl+YjlI2gzml6crZmiJFlRWTJ1PqrUYhzBtVJtM3bx6u+Pc/EwLvkfPF9O50KmTI6h53RN5ZLnU/vPV3ORbh83PFWrqTOx7eLhdMX4cqWmrl235jS5W0pR5en',
+  '0BzuBDztNRCbk9IeFD5/gdCFyNV7QNc+20w9UiTdjWhQZG5fbUrH1m9c378m1FORX9qBev3l9ybJ7pnhCySdWsddvSpqX45JJvjgtaJpqmhMfhk15WWR0O11k7OFU/xinXLJEcZFPY',
+  'fxqnf/5ylKieNy78feqVHyxHSfAieVqWhY0YeM5UxvG8lOa8WU+5sCqrG8fszw9XdJi6s',
+].join('')
+
+/**
+ * A long always-allowed command: a script that unpacks a page into a new
+ * folder and opens it. This Mac shows its first three lines.
+ */
+export const longAllowed = `set -e; T=$(mktemp -d); echo '${packedPage}' | base64 -d | gunzip > "$T/grid.html"; open "$T/grid.html"`
+
 /** The commands that always run on this Mac without asking. */
-export const alwaysAllowed = ['git status', 'npm run lint', 'sw_vers'] as const
+export const alwaysAllowed = [
+  'git status',
+  longAllowed,
+  'npm run lint',
+  'sw_vers',
+] as const
 
 /** The time left in the window that allows every command, as mm:ss. */
 export const allowAllLeft = '14:32'
+
+/**
+ * The time left just after a done Extend, which sets the end of the window
+ * to 15 minutes from the time of the Mac.
+ */
+export const extendedLeft = '15:00'
 
 /** What a grant until Stop shows in place of the time left. */
 export const untilStop = 'Until you stop'

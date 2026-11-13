@@ -47,4 +47,7 @@ pub enum Effort {
     /// max.
     #[serde(rename = "max")]
     Max,
+    /// ultra.
+    #[serde(rename = "ultra")]
+    Ultra,
 }

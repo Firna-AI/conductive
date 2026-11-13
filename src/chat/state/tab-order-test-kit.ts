@@ -3,6 +3,7 @@ import { createApiClient } from '../../app/api/client'
 import { sessionsPath, type Session } from '../../shared/sessions'
 import {
   workspaceViewPath,
+  type TemporaryTab,
   type WorkspaceTab,
   type WorkspaceView,
 } from '../../shared/workspace-view'
@@ -34,10 +35,18 @@ export const file: WorkspaceTab = {
 }
 export const diff: WorkspaceTab = { kind: 'diff', path: 'src/app.ts' }
 
-/** A fake server that stores view writes and serves them through the view route. */
+/**
+ * A fake server that stores view writes and serves them through the view
+ * route. The saved view marks `temporaryTab` as its temporary tab, else none.
+ */
 export function tabChat(
   tabs: readonly WorkspaceTab[],
-  options: Parameters<typeof chatFor>[0] = {},
+  {
+    temporaryTab = null,
+    ...options
+  }: Parameters<typeof chatFor>[0] & {
+    temporaryTab?: TemporaryTab | null
+  } = {},
 ) {
   const saving: Promise<void>[] = []
   const completed: (() => void)[] = []
@@ -63,6 +72,7 @@ export function tabChat(
     tabs,
     activeTab: first,
     fileList: 'changes',
+    temporaryTab,
     tool: 'terminal',
   }
   chat.server.json('GET', viewPath, { view })

@@ -52,6 +52,13 @@
   This reproduces the failure outside the merge diff and outside the home folder.
   The blocked await and the cause remain unknown.
   Machine load is not established as the cause of these failures.
+- On 13 November 2026, a selected device suite on `calummoore/porto-4ubu` timed out in two unchanged Worker cases:
+  - `worker/devices/lifecycle.test.ts`, "relays all four approval choices only from the paired desktop session": `Error: Test timed out in 15000ms.`
+  - `worker/devices/request-key.test.ts`, "uses hashed URL keys for dot retry IDs while device frames keep their exact IDs": `Error: Test timed out in 15000ms.`
+  The files match main at `b409ef7f2a63de3065ed756e66871a3a3491aa85`.
+  Both files then passed unchanged together: 9 tests, no failures or skips, in 59.72 seconds.
+  Machine contention during native fixture work is suspected. The blocked await and the cause are not established.
+  The selected suite also found a malformed Extend result in the branch's settings relay test data. That test data was corrected separately.
 - **Problem:** These tests depend on wall-clock time limits, so a busy machine can fail them with no defect in the code.
 - **Impact if no action:** A slow CI runner or a busy developer machine can fail the gate now and then, and a person must rerun it.
 - **Root question:** How do these tests stay correct on a slow or busy machine?
