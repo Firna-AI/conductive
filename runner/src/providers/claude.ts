@@ -11,6 +11,11 @@ import { claudeBinary } from './binaries'
 import { ClaudeEvents } from './claude-events'
 import { ClaudeBackground } from './claude-background'
 import { ClaudeBackgroundNote } from './claude-background-note'
+import {
+  claudeEffortSettings,
+  claudeStartOptions,
+  type ClaudeEffortSettings,
+} from './claude-effort'
 import { ClaudeInputWindow } from './claude-input-window'
 import { spawnClaudeProcess } from './claude-process'
 import { writeClaudeProfile } from './claude-profile'
@@ -25,9 +30,7 @@ export interface ClaudeQuery extends AsyncIterable<unknown> {
   interrupt(): Promise<unknown>
   setModel(model?: string): Promise<void>
   setMaxThinkingTokens(tokens: number | null): Promise<void>
-  applyFlagSettings(settings: {
-    effortLevel: 'low' | 'medium' | 'high' | 'xhigh' | 'max' | null
-  }): Promise<void>
+  applyFlagSettings(settings: ClaudeEffortSettings): Promise<void>
   close(): void
 }
 
@@ -134,9 +137,7 @@ export function createClaudeFactory(
           },
           pathToClaudeCodeExecutable: binary(),
           model: options.choice.model,
-          ...(options.choice.effort === 'none'
-            ? { thinking: { type: 'disabled' } }
-            : { effort: options.choice.effort }),
+          ...claudeStartOptions(options.choice.effort),
           ...(options.conversationId ? { resume: options.conversationId } : {}),
           permissionMode: 'bypassPermissions',
           allowDangerouslySkipPermissions: true,
@@ -237,9 +238,7 @@ export function createClaudeFactory(
       },
       model: async (choice) => {
         await stream.setModel(choice.model)
-        await stream.applyFlagSettings({
-          effortLevel: choice.effort === 'none' ? null : choice.effort,
-        })
+        await stream.applyFlagSettings(claudeEffortSettings(choice.effort))
         await stream.setMaxThinkingTokens(choice.effort === 'none' ? 0 : null)
         return 'applied'
       },
