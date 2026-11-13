@@ -20,6 +20,18 @@ export async function requireOrgMember(
   return org
 }
 
+/**
+ * Runs independent checks and reads together, so a request waits for one
+ * trip to the database in place of one trip for each. When more than one
+ * fails, the error of the first in the list wins, as when they run in turn.
+ */
+export async function settleInOrder(
+  work: readonly Promise<unknown>[],
+): Promise<void> {
+  for (const result of await Promise.allSettled(work))
+    if (result.status === 'rejected') throw result.reason
+}
+
 export async function requireWorkspaceOrg(
   db: D1Database,
   orgId: string,

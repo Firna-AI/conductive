@@ -13,7 +13,7 @@ import {
 } from './launch'
 import { PrivatePorts } from './ports'
 import { PreviewRegistry } from './registry'
-import { PreviewTiming, SERVER_TIMING_HEADER } from './timing'
+import { ServerTiming, SERVER_TIMING_HEADER } from '../server-timing'
 import { bridgeSocket } from './socket'
 import type { ToolDependencies } from './types'
 
@@ -47,7 +47,7 @@ export class PreviewProxy {
 
   async fetch(request: Request): Promise<Response> {
     let connection: PreviewConnection | null = null
-    const timing = new PreviewTiming()
+    const timing = new ServerTiming()
     try {
       const url = new URL(request.url)
       const suffix = this.env.PREVIEW_DOMAIN

@@ -54,6 +54,15 @@ and the stop cleanup of a failed resume.
   loaded. A change to the chosen repositories takes effect after the next
   successful build. A repeat of the same first message ID from the same
   sender returns the same admitted workspace, including after a failed start.
+- `createWorkspace` makes its access checks and its first read together,
+  and the first failed check in its list names the error.
+  `prepareCreationRequest` checks no access, so each caller checks first.
+  The route-wide membership check comes after the create, because the
+  create makes the same check.
+- The 201 reply of a create has a `Server-Timing` header with the
+  `create`, `message`, and `project` steps, in milliseconds.
+  `ServerTiming` in [server-timing.ts](../server-timing.ts) writes it. The
+  header holds no ID, so a slow create can be measured from the browser.
 - A failed admitted create keeps its workspace, chat, first message, and
   queued messages. Each current member can read the saved cause and history.
   Failure revokes the token and detaches the failed sandbox after saving cleanup ownership.

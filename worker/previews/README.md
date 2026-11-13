@@ -252,7 +252,7 @@ The reply keeps the server's `Expires`, `Date`, and `Age`.
 A 304 without `Cache-Control` gets none, so the browser keeps the rules of its stored reply.
 The outer Worker keeps these rules, because it answers the preview host with `previewResponse` from [http.ts](../http.ts).
 
-`PreviewTiming` in [timing.ts](timing.ts) records the steps of each proxied request.
+`ServerTiming` in [server-timing.ts](../server-timing.ts) records the steps of each proxied request.
 A reply that passes every check gets `Server-Timing` with `access`, `relay`, `check`,
 `upstream`, and `check-after`. The outer route in [router.ts](../features/router.ts)
 puts `lookup` and `workspace` first, only when the reply already has the header.
@@ -280,7 +280,7 @@ The shared sandbox predicate refuses old grants, cookies, and each stream batch 
 - [preview-launch-path.ts](../security/preview-launch-path.ts) matches the exact launch path for the gate and the Mac app.
 - [credentials.ts](credentials.ts) issues grants with `launchGrant`, redeems each grant once with `redeemLaunchGrant`, and checks the credential cookies. Each one seals a `PreviewViewer`.
 - [proxy.ts](proxy.ts) routes the authorizer page and POST, checks the credential cookie, and owns the request flow.
-- [timing.ts](timing.ts) records the duration of each step for the `Server-Timing` header.
+- [server-timing.ts](../server-timing.ts) records the duration of each step for the `Server-Timing` header.
 - [hostname-cache.ts](hostname-cache.ts) keeps the workspace of each found preview hostname for the outer route.
 - [authorization.ts](authorization.ts) shares each access read and holds the 1-second access window.
 - [registry.ts](registry.ts) scopes HTTP and socket cancellation by workspace, preview, and viewer session.

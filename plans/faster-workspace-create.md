@@ -100,45 +100,48 @@ Depends on: none
 The create answer gets a `Server-Timing` header, so that the later
 milestones and the deployed app can be measured.
 
-- [ ] Move `PreviewTiming` from `worker/previews/timing.ts` to a shared
+- [x] Move `PreviewTiming` from `worker/previews/timing.ts` to a shared
       Worker module with a general name. Keep the preview behaviour and
       its tests.
-- [ ] Time the steps of the create route in
-      `worker/lifecycle/browser.ts`: the plan and its claim, the admission
-      in the workspace object, the first message, and the projection.
-      Add the header to the 201 answer only.
-- [ ] Test that a create answer has the header with the fixed step names,
+- [x] Time the steps of the create route in
+      `worker/lifecycle/browser.ts`: `create`, which holds the plan, the
+      claim, and the admission, then `message` and `project`. Add the
+      header to the 201 answer only.
+- [x] Test that a create answer has the header with the fixed step names,
       and no ID.
-- [ ] Update the lifecycle README and the previews README.
+- [x] Update the lifecycle README and the previews README.
 
 ## Milestone 2: Start the records step at once
 
 Depends on: none
 
-- [ ] Make `enqueueWorkspaceStart` keep the start alarm at now, in place
+- [x] Make `enqueueWorkspaceStart` keep the start alarm at now, in place
       of now + 1 s. Read the history of `storage.schedule()` first, and
       keep any case that needs it.
-- [ ] Test with a fake clock that a create gets its admission with no
-      wait of 1 s, and that a resume starts its first step at once.
-- [ ] Check that the later steps of a start keep their times.
-- [ ] Update `worker/lifecycle/workspace-object.md` if it names the delay.
+- [x] Test with a fake clock that a create gets its admission with no
+      wait of 1 s. A resume uses the same queue, so one test covers both.
+- [x] Check that the later steps of a start keep their times.
+- [x] Update `worker/lifecycle/workspace-object.md` if it names the delay.
 
 ## Milestone 3: Fewer database trips in the create route
 
 Depends on: 1
 
-- [ ] List each D1 query of the create route, from the gate to the
-      answer. Save the list under `.context/faster-workspace-create/`.
-- [ ] Drop each repeated check of the same fact in the same request, such
+- [x] List each D1 query of the create route, from the gate to the
+      answer. The list is in `.context/create-speed/create-route-queries.md`.
+- [x] Drop each repeated check of the same fact in the same request, such
       as the second membership check when the sender is the user.
-- [ ] Use the creation plan that the route holds in memory, in place of a
-      read of the same plan after its claim, when the claim is new.
-- [ ] Run the independent checks and reads in parallel. Keep the current
+- [x] Read the saved creation plan and its sender together, and reuse the
+      sender as the owner when they are the same person. My call on
+      13 November 2026, in place of the plan in memory: the saved plan
+      stays the one source for each repeat of the same message ID.
+- [x] Run the independent checks and reads in parallel. Keep the current
       order of their errors.
-- [ ] Test that each refusal stays the same: a person who is not a member,
+- [x] Test that each refusal stays the same: a person who is not a member,
       a suspended org, a missing repository, and a repeat of the same
-      message ID.
-- [ ] Update the lifecycle README.
+      message ID. `create-access.test.ts` adds the first two with their
+      order. Existing tests keep the others.
+- [x] Update the lifecycle README.
 
 ## Milestone 4: Verification, commit, review, and pull request
 

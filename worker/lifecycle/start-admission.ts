@@ -62,6 +62,8 @@ export async function enqueueWorkspaceStart(
   )
     return false
   await endpoint.beginLifecycleStart(job.kind)
-  await storage.schedule()
+  // The first step runs at once. A create answers only after its records
+  // step, so a later alarm would add its delay to each create.
+  await storage.schedule(dependencies.now())
   return true
 }
