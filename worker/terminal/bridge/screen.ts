@@ -1,3 +1,5 @@
+import { backgroundAfter } from './style.ts'
+
 /**
  * The state of a tmux pane, and the bytes that rebuild it in a new terminal:
  * the history above the screen, the screen, the cursor, and the modes that a
@@ -98,20 +100,33 @@ const reset = '\x1b[0m'
 /** Selects ASCII as G0 and line drawing as G1, and shifts in G0. */
 const characterSets = '\x1b(B\x1b)0\x0f'
 
-/** Ends a captured line: no colour, and G0, so no run of it stays open. */
-const lineEnd = `${reset}\x0f`
+/** Ends a capture: no colour, and G0, so no run of it stays open. */
+const captureEnd = `${reset}\x0f`
 
 /**
- * Prints captured lines as a flow from the cursor. tmux joined each line
- * that it wrapped, so xterm.js wraps it again at the same width and keeps
- * it one line for a copy. A line break follows each line but the last.
+ * Prints captures as a flow from the cursor. tmux joined each line that it
+ * wrapped, so xterm.js wraps it again at the same width and keeps it one
+ * line for a copy. A line break follows each line but the last. The style
+ * carries through each break, as tmux wrote it, but the background goes off
+ * around the break, so a scroll fills no row with it. Each capture starts
+ * from the default style, so a reset and SI end each capture.
  */
-function flow(lines: readonly Uint8Array[]): (string | Uint8Array)[] {
+function flow(
+  captures: readonly (readonly Uint8Array[])[],
+): (string | Uint8Array)[] {
   const parts: (string | Uint8Array)[] = []
-  lines.forEach((line, index) => {
-    if (index > 0) parts.push('\r\n')
-    parts.push(line, lineEnd)
-  })
+  for (const lines of captures) {
+    if (lines.length === 0) continue
+    if (parts.length > 0) parts.push('\r\n')
+    let background: string | null = null
+    lines.forEach((line, index) => {
+      if (index > 0)
+        parts.push(background ? `\x1b[49m\r\n${background}` : '\r\n')
+      parts.push(line)
+      background = backgroundAfter(line, background)
+    })
+    parts.push(captureEnd)
+  }
   return parts
 }
 
@@ -186,15 +201,15 @@ export function rebuildPane(
     `${reset}\x1b[?7h${characterSets}\x1b[H\x1b[2J\x1b[3J`,
   ]
   if (!state.alternate) {
-    parts.push(...flow(captures.whole))
+    parts.push(...flow([captures.whole]))
   } else {
     const history = state.historySize > 0 ? captures.history : []
-    parts.push(...flow([...history, ...captures.normal]))
+    parts.push(...flow([history, captures.normal]))
     // xterm.js saves this cursor at the switch, and the normal screen gets
     // it back when the program ends.
     const { alternate_saved_x: x, alternate_saved_y: y } = state.flags
     if (x !== unset && y !== unset) parts.push(`\x1b[${y + 1};${x + 1}H`)
-    parts.push('\x1b[?1049h\x1b[H\x1b[2J', ...flow(captures.screen))
+    parts.push('\x1b[?1049h\x1b[H\x1b[2J', ...flow([captures.screen]))
   }
   parts.push(modes(state))
   const chunks = parts.map((part) =>

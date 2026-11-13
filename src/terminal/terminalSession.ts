@@ -1,6 +1,6 @@
 import type { TerminalTransport } from '../shared/terminal'
 import { bridgeInputMessage, type BridgeSize } from '../shared/terminal-bridge'
-import { binaryMessage, pasteMessage, type BridgeEvent } from './bridgeLink'
+import { mouseMessage, pasteMessage, type BridgeEvent } from './bridgeLink'
 import { keySequence, withControl, type ExtraKey } from './terminalKeys'
 
 interface Disposable {
@@ -22,8 +22,8 @@ export interface TerminalScreen {
   onReply(listener: (data: string) => void): Disposable
   /** A focus report, which the screen sends while a program asked for it. */
   onFocusReport(listener: (data: string) => void): Disposable
-  /** A mouse report in a binary encoding, one character for each byte. */
-  onBinaryInput(listener: (data: string) => void): Disposable
+  /** A mouse report of the user. A binary one has a character for each byte. */
+  onMouseReport(listener: (data: string, binary: boolean) => void): Disposable
   /** Gives the screen a new size, such as the shared size of the bridge. */
   resize(cols: number, rows: number): void
   /** A message of the terminal bridge, after its nonce check. */
@@ -110,7 +110,9 @@ export class TerminalSession {
       if (!this.ended && !this.nonce) transport.write(data)
     })
     const focus = screen.onFocusReport((data) => this.focusReport(data))
-    const binary = screen.onBinaryInput((data) => this.binaryInput(data))
+    const mouse = screen.onMouseReport((data, binary) =>
+      this.mouseReport(data, binary),
+    )
     const bridge = screen.onBridge((event) => this.bridgeEvent(event))
     const resize = screen.onResize(({ cols, rows }) => {
       if (!this.ended && !this.nonce) transport.resize(cols, rows)
@@ -119,7 +121,7 @@ export class TerminalSession {
       () => input.dispose(),
       () => reply.dispose(),
       () => focus.dispose(),
-      () => binary.dispose(),
+      () => mouse.dispose(),
       () => bridge.dispose(),
       () => resize.dispose(),
       () => screen.setPasteHandler(null),
@@ -195,13 +197,19 @@ export class TerminalSession {
   }
 
   /**
-   * The transport carries text only, so a binary mouse report goes to the
-   * bridge as a message. Without a bridge, it goes nowhere, as before.
+   * With a bridge, each mouse report goes as a message, so the bridge can
+   * tell it from a key: a mouse report does not take the shared size. The
+   * transport carries text only, so without a bridge a binary report goes
+   * nowhere, and a text report goes as input, as before.
    */
-  private binaryInput(data: string): void {
-    if (this.ended || !this.nonce) return
+  private mouseReport(data: string, binary: boolean): void {
+    if (this.ended) return
+    if (!this.nonce) {
+      if (!binary) this.send(data)
+      return
+    }
     this.setControl(false)
-    this.transport.write(binaryMessage(this.nonce, data))
+    this.transport.write(mouseMessage(this.nonce, data))
     this.events.onInput?.()
   }
 

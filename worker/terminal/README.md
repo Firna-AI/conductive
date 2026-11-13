@@ -272,8 +272,9 @@ gives the requirements.
   the bridge holds the output until its read of the new size answers,
   sends the size, and then sends the held output.
 - **Keys, mouse reports, and pastes.** It sends keys with `send-keys -H`.
-  The transport carries text only, so a mouse report in a binary encoding
-  comes as a message, and the bridge sends its bytes as keys. A paste comes as a
+  Each mouse report comes as a message, also one in a binary encoding,
+  which the transport cannot carry as text. The bridge sends its bytes as
+  keys, but a mouse report does not take the shared size. A paste comes as a
   message. The bridge writes it to a private file in the runtime folder and
   pastes it with `paste-buffer -p`, so tmux adds the bracketed paste marks
   when the program asked for them. tmux 3.4 does not report that mode, so a

@@ -224,10 +224,16 @@ export class Bridge {
     }
   }
 
-  /** A mouse report in a binary encoding, which the transport cannot carry. */
+  /**
+   * A mouse report goes to the pane as keys, but it does not take the shared
+   * size: only a connect, a key, a paste, and a resize do.
+   */
   private mouse(base64: string): void {
     const bytes = decodeBase64(base64)
-    if (bytes && bytes.length > 0 && bytes.length <= 64) this.keys(bytes)
+    const state = this.state
+    if (!state || !bytes || bytes.length === 0 || bytes.length > 64) return
+    for (const command of keyCommands(state.pane, bytes))
+      this.queue.run([command], () => {})
   }
 
   private paste(base64: string): void {

@@ -166,14 +166,17 @@ it without `NODE_OPTIONS` and the other Node variables of the workspace.
 10. **Focus.** The browser sends focus reports as their own message. The
     bridge passes them to the pane, but a focus report does not take the
     shared size.
-11. **Size.** On a resize of its device, and on the first key, paste, or
-    mouse report after another viewer set the size, the bridge runs
+11. **Size.** On a resize of its device, and on the first key or paste
+    after another viewer set the size, the bridge runs
     `resize-window` with its own size. On each `%layout-change`, it sends
     the new size to the browser. The bridge and the browser accept at most
     500 columns and 200 rows. When the window is larger, the bridge sets it
     to its own size. Reason: a program in the shell can run
     `tmux resize-window` with any size, and a huge size needs more than
     1 GB in each tab.
+    Corrected on 13 November 2026, after review round 2: a mouse report
+    takes no size, because the protocol doc names only a connect, a key, a
+    paste, and a resize.
 12. **Colours.** The bridge sets the `window-style` of the window to the
     colours of the browser that answered last. Reason: with only control
     clients, tmux answers a colour query of a program with black.

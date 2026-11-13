@@ -96,11 +96,15 @@ it('holds the output after a layout change until the screen has the new size', (
   )
 })
 
-it('sends a mouse report of a binary encoding to the pane as keys', () => {
+it('sends a mouse report to the pane as keys, and takes no shared size for it', () => {
   const fake = fakeBridge()
   fake.control('%begin 1 1 0\n%end 1 1 0\n')
-  fake.answer()
-  fake.answer()
+  // Another viewer set the window to 80 by 20. This device is 40 by 3.
+  fake.answer(stateOf(80, 20))
+  fake.answer(stateOf(80, 20))
+  const resizes = () =>
+    fake.sent.filter((line) => line.startsWith('resize-window')).length
+  const before = resizes()
   const report = btoa('\x1b[M #!')
   fake.bridge.input(
     encoder.encode(
@@ -108,6 +112,9 @@ it('sends a mouse report of a binary encoding to the pane as keys', () => {
     ),
   )
   expect(fake.sent.at(-1)).toBe("send-keys -t '%1' -H 1b 5b 4d 20 23 21")
+  expect(resizes()).toBe(before)
+  fake.bridge.input(encoder.encode('a'))
+  expect(resizes()).toBe(before + 1)
 })
 
 it('sends a lone Escape key on when the flush timer runs, and not before', () => {

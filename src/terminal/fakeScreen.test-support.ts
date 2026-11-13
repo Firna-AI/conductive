@@ -12,7 +12,9 @@ export class FakeScreen implements TerminalScreen {
   private readonly inputListeners = new Set<(data: string) => void>()
   private readonly replyListeners = new Set<(data: string) => void>()
   private readonly focusListeners = new Set<(data: string) => void>()
-  private readonly binaryListeners = new Set<(data: string) => void>()
+  private readonly mouseListeners = new Set<
+    (data: string, binary: boolean) => void
+  >()
   private readonly bridgeListeners = new Set<(event: BridgeEvent) => void>()
   pasteHandler: ((text: string) => boolean) | null = null
   theme: { foreground: string; background: string } | null = {
@@ -28,7 +30,7 @@ export class FakeScreen implements TerminalScreen {
       this.inputListeners.size +
       this.replyListeners.size +
       this.focusListeners.size +
-      this.binaryListeners.size +
+      this.mouseListeners.size +
       this.bridgeListeners.size +
       this.resizeListeners.size
     )
@@ -53,9 +55,9 @@ export class FakeScreen implements TerminalScreen {
     return { dispose: () => this.focusListeners.delete(listener) }
   }
 
-  onBinaryInput(listener: (data: string) => void) {
-    this.binaryListeners.add(listener)
-    return { dispose: () => this.binaryListeners.delete(listener) }
+  onMouseReport(listener: (data: string, binary: boolean) => void) {
+    this.mouseListeners.add(listener)
+    return { dispose: () => this.mouseListeners.delete(listener) }
   }
 
   resize(cols: number, rows: number): void {
@@ -63,8 +65,8 @@ export class FakeScreen implements TerminalScreen {
     this.rows = rows
   }
 
-  sendBinary(data: string): void {
-    for (const listener of this.binaryListeners) listener(data)
+  sendMouse(data: string, binary: boolean): void {
+    for (const listener of this.mouseListeners) listener(data, binary)
   }
 
   onBridge(listener: (event: BridgeEvent) => void) {

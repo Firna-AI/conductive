@@ -5,6 +5,15 @@ import { forcedSelectionKey, keepPlainPresses } from './plainPresses'
 import type { TerminalScreen } from './terminalSession'
 
 type Listener = (data: string) => void
+type MouseListener = (data: string, binary: boolean) => void
+
+/**
+ * Whether the data is one mouse report in the SGR encoding. xterm.js sends
+ * each report in its own data event, and no key has this form.
+ */
+function isSgrMouseReport(data: string): boolean {
+  return data.startsWith('\x1b[<') && /^\d+;\d+;\d+[Mm]$/.test(data.slice(3))
+}
 
 /**
  * The control sequences of programs that xterm.js 6 answers by itself. It
@@ -49,7 +58,7 @@ export class XtermScreen implements TerminalScreen {
   private readonly userListeners = new Set<Listener>()
   private readonly replyListeners = new Set<Listener>()
   private readonly focusListeners = new Set<Listener>()
-  private readonly binaryListeners = new Set<Listener>()
+  private readonly mouseListeners = new Set<MouseListener>()
   private readonly bridgeListeners = new Set<(event: BridgeEvent) => void>()
   private readonly bridge = new BridgeReader()
   private pasteHandler: ((text: string) => boolean) | null = null
@@ -79,9 +88,13 @@ export class XtermScreen implements TerminalScreen {
       // The link of an OSC 8 stays plain text, as it was in the tmux screen.
       parser.registerOscHandler(8, () => true),
       xterm.onBinary((data) => {
-        for (const listener of this.binaryListeners) listener(data)
+        for (const listener of this.mouseListeners) listener(data, true)
       }),
       xterm.onData((data) => {
+        if (!this.focusing && !this.replying && isSgrMouseReport(data)) {
+          for (const listener of this.mouseListeners) listener(data, false)
+          return
+        }
         const listeners = this.focusing
           ? this.focusListeners
           : this.replying
@@ -131,9 +144,13 @@ export class XtermScreen implements TerminalScreen {
     return subscribe(this.focusListeners, listener)
   }
 
-  /** A mouse report in a binary encoding, one character for each byte. */
-  onBinaryInput(listener: Listener): IDisposable {
-    return subscribe(this.binaryListeners, listener)
+  /**
+   * A mouse report of the user. A binary one has one character for each
+   * byte, and the transport cannot carry it as text.
+   */
+  onMouseReport(listener: MouseListener): IDisposable {
+    this.mouseListeners.add(listener)
+    return { dispose: () => this.mouseListeners.delete(listener) }
   }
 
   resize(cols: number, rows: number): void {

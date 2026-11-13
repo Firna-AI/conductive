@@ -110,19 +110,22 @@ it('sends the colours again after a change of the scheme, only with a bridge', (
   expect(plain.inputs).toEqual([])
 })
 
-it('sends a binary mouse report as a message, and drops it without a bridge', () => {
+it('sends each mouse report as a message with a bridge, and keeps the old paths without one', () => {
   const { screen, transport, events } = bridged()
-  screen.sendBinary('\x1b[M #!')
-  expect(transport.inputs.at(-1)).toBe(
+  screen.sendMouse('\x1b[M #!', true)
+  screen.sendMouse('\x1b[<0;5;5M', false)
+  expect(transport.inputs.slice(-2)).toEqual([
     bridgeInputMessage(nonce, { kind: 'mouse', base64: btoa('\x1b[M #!') }),
-  )
-  expect(events.onInput).toHaveBeenCalledTimes(1)
+    bridgeInputMessage(nonce, { kind: 'mouse', base64: btoa('\x1b[<0;5;5M') }),
+  ])
+  expect(events.onInput).toHaveBeenCalledTimes(2)
   const plainScreen = new FakeScreen()
   const plain = new FakeTerminal()
   new TerminalSession(plainScreen, plain, {
     onClosed: vi.fn(),
     onControlChange: vi.fn(),
   }).start()
-  plainScreen.sendBinary('\x1b[M #!')
-  expect(plain.inputs).toEqual([])
+  plainScreen.sendMouse('\x1b[M #!', true)
+  plainScreen.sendMouse('\x1b[<0;5;5M', false)
+  expect(plain.inputs).toEqual(['\x1b[<0;5;5M'])
 })

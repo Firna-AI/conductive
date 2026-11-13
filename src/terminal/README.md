@@ -37,15 +37,18 @@ change can move the shared parts to the app's shared components.
   - it sends no reply of xterm.js, because tmux answers the program;
   - it sends focus reports and pastes as messages, so the bridge pastes
     through tmux with the bracketed paste marks of the program. It sends
-    a mouse report in a binary encoding as a message too, because the
-    transport carries text only;
+    each mouse report as a message too, so the bridge can tell it from a
+    key: a mouse report does not take the shared size;
   - it shows the size that all viewers share. The session gives the
     screen each shared size where the message comes in the output, also
     while the screen is hidden. The screen sends the size of its
     panel, counted at the normal font. A larger shared size gets a smaller
     font, down to 6px, and the panel scrolls when even that does not fit.
     A smaller one leaves empty space, with a line at its edge.
-- Without a hello, as with an older image, the screen works as before.
+- Without a hello, as with an older image, the screen works as before. A
+  mouse report in the SGR encoding then goes as input. The transport takes
+  text only, so a mouse report that xterm.js sends as binary data, in the
+  old X10 format, goes nowhere.
 - Links that a program marks with OSC 8 stay plain text.
 - On a phone, a key row adds Esc, Tab, Ctrl, Up, and Down. The keys keep the
   keyboard focus on the terminal. Ctrl applies to the user's next key only.
@@ -82,8 +85,8 @@ change can move the shared parts to the app's shared components.
   [shared contracts](../shared/README.md). Keep the function stable. A
   transport that closes, or a `connect` that throws, shows Disconnected with
   Reconnect. A source without `openSocket`, as in the development fake,
-  throws. The transport takes text only, so the tool does not send the
-  mouse reports that xterm.js sends as binary data, in the old X10 format.
+  throws. The transport takes text only. The rules for the binary mouse
+  reports of xterm.js are under Behaviour.
 - `onActivity` is optional. It runs for each input of the user: keys, text,
   paste, and mouse reports. It does not run for the replies of xterm.js.
   The development page shows the number of these inputs.

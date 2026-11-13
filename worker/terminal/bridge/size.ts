@@ -44,6 +44,7 @@ export class SharedSize {
   /** The size for the hello, which the screen gets with the first rebuild. */
   first(state: PaneState): BridgeSize {
     this.window = { columns: state.windowWidth, rows: state.windowHeight }
+    if (!same(this.requested, this.window)) this.requested = null
     this.sent = paneSize(state)
     return this.sent
   }

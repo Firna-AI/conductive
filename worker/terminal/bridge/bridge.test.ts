@@ -92,6 +92,22 @@ describe.skipIf(!runTmuxTests)('the terminal bridge with a real tmux', () => {
     )
   }, 30_000)
 
+  it('keeps the colour of a run that crosses lines for a new connection', async () => {
+    const tmux = await start()
+    const first = tmux.connect(12, 60)
+    await first.waitFor(prompt)
+    first.write("printf '\\033[31mred1\\nred2\\033[0m\\n'\r")
+    await first.waitFor('red2')
+    first.close()
+    const second = tmux.connect(12, 60)
+    await second.waitFor('\x1b[?25h')
+    const { buffer, lines } = await second.screen()
+    const row = lines.findIndex((line) => line === 'red2')
+    const cell = buffer.getLine(row)?.getCell(0)
+    expect(cell?.isFgPalette()).toBe(true)
+    expect(cell?.getFgColor()).toBe(1)
+  }, 30_000)
+
   it('pastes with the bracketed paste marks of a program, also after a reconnect', async () => {
     const tmux = await start()
     const first = tmux.connect(12, 60)
@@ -173,8 +189,8 @@ describe.skipIf(!runTmuxTests)('the terminal bridge with a real tmux', () => {
         viewer.write(bridgeInputMessage(nonce, { kind: 'ack', mark }))
     }, 100)
     try {
-      // The rebuild draws each row after a cursor move.
-      await viewer.waitFor(/(\n|H)FINISHED/, 30_000)
+      // The rebuild prints FINISHED at the start of a line.
+      await viewer.waitFor('\nFINISHED', 30_000)
     } finally {
       clearInterval(acknowledge)
     }

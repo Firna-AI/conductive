@@ -2,7 +2,12 @@ import { expect, it } from 'vitest'
 
 import { CommandQueue } from './queue'
 import { FlowControl } from './flow'
-import { PANE_STATE_FORMAT, parsePaneState, rebuildPane } from './screen'
+import {
+  PANE_STATE_FORMAT,
+  parsePaneState,
+  rebuildPane,
+  type PaneState,
+} from './screen'
 
 const bytes = (text: string) => new TextEncoder().encode(text)
 const text = (data: Uint8Array) => new TextDecoder().decode(data)
@@ -11,9 +16,12 @@ const fieldNames = [...PANE_STATE_FORMAT.matchAll(/#\{(\w+)\}/g)].map(
   (match) => match[1] ?? '',
 )
 
+/** Values of the state format by name. A name outside the format fails the type check. */
+type StateValues = Partial<Record<keyof PaneState['flags'], number | string>>
+
 /** The answer of the state format, with each value set by its name. */
-function stateLine(values: Record<string, number | string> = {}): string {
-  const base: Record<string, number | string> = {
+function stateLine(values: StateValues = {}): string {
+  const base: StateValues = {
     pane_id: '%1',
     window_id: '@2',
     session_id: '$3',
@@ -30,11 +38,16 @@ function stateLine(values: Record<string, number | string> = {}): string {
     wrap_flag: 1,
     scroll_region_lower: 2,
   }
-  return fieldNames.map((name) => values[name] ?? base[name] ?? 0).join(' ')
+  return fieldNames
+    .map((name) => {
+      const key = name as keyof StateValues
+      return values[key] ?? base[key] ?? 0
+    })
+    .join(' ')
 }
 
 function rebuilt(
-  values: Record<string, number>,
+  values: StateValues,
   lines: Partial<Record<'whole' | 'history' | 'screen' | 'normal', string[]>>,
 ) {
   const state = parsePaneState(stateLine(values))
@@ -71,9 +84,7 @@ it('prints the history and the screen as one flow, with wrap on and ASCII select
   const start = output.indexOf('\x1b[?7h\x1b(B\x1b)0\x0f')
   expect(start).toBeGreaterThan(-1)
   expect(start).toBeLessThan(output.indexOf('h1'))
-  expect(output).toContain(
-    'h1\x1b[0m\x0f\r\na long line\x1b[0m\x0f\r\nb\x1b[0m\x0f\r\n\x1b[0m\x0f',
-  )
+  expect(output).toContain('h1\r\na long line\r\nb\r\n\x1b[0m\x0f')
   expect(output).not.toContain('\x1b[?1049h')
   expect(output.endsWith('\x1b[r\x1b[2;3H\x1b[?25h')).toBe(true)
 })
@@ -86,7 +97,7 @@ it('prints a full-screen program on the alternate screen, after the saved cursor
       alternate_saved_y: 2,
       keypad_cursor_flag: 1,
       mouse_standard_flag: 1,
-      mouse_any_flag: 1,
+      mouse_button_flag: 0,
       mouse_sgr_flag: 1,
     },
     { whole: ['wrong'], history: ['h1'], normal: ['shell'], screen: ['vim'] },
@@ -98,7 +109,6 @@ it('prints a full-screen program on the alternate screen, after the saved cursor
   )
   expect(output.indexOf('\x1b[?1049h')).toBeLessThan(output.indexOf('vim'))
   expect(output).toContain('\x1b[?1h')
-  // tmux sets the any flag for each mouse mode, so only the all flag means 1003.
   expect(output).toContain('\x1b[?1000h\x1b[?1006h')
   expect(output).not.toContain('\x1b[?1003h')
 })
@@ -157,4 +167,37 @@ it('drops the output while too many marks wait, and catches up when all are ackn
   expect(events.filter((event) => event.startsWith('mark'))).toHaveLength(16)
   expect(events.at(-1)).toBe('catch up')
   expect(flow.behind).toBe(false)
+})
+
+it('keeps a style that tmux carries across a line break, and turns the background off around each break', () => {
+  const output = rebuilt(
+    { alternate_on: 1 },
+    {
+      history: ['\x1b[31mred1', 'red2'],
+      normal: ['\x1b[44mblue1', 'blue2\x1b[49m', 'plain', '\x1b[48;5;21mbar'],
+      screen: ['\x0eqqq', 'xx\x0f'],
+    },
+  )
+  // The red run reaches red2, and the history capture ends with a reset.
+  expect(output).toContain('\x1b[31mred1\r\nred2\x1b[0m\x0f\r\n')
+  // Each capture starts from the default style.
+  expect(output).toContain(
+    '\x1b[44mblue1\x1b[49m\r\n\x1b[44mblue2\x1b[49m\r\nplain\r\n\x1b[48;5;21mbar\x1b[0m\x0f',
+  )
+  // A line-drawing run stays on through the break.
+  expect(output).toContain('\x0eqqq\r\nxx\x0f\x1b[0m\x0f')
+})
+
+it.each([
+  ['mouse_standard_flag', 1000],
+  ['mouse_button_flag', 1002],
+  ['mouse_all_flag', 1003],
+  ['mouse_utf8_flag', 1005],
+  ['mouse_sgr_flag', 1006],
+] as const)('restores the mouse mode of %s alone', (flag, mode) => {
+  const output = rebuilt({ [flag]: 1 }, { whole: [] })
+  const set = [...output.matchAll(/\[\?(1000|1002|1003|1005|1006)h/g)].map(
+    (match) => Number(match[1]),
+  )
+  expect(set).toEqual([mode])
 })
