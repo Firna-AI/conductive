@@ -1,0 +1,247 @@
+# Save a Codex endpoint with its `/v1` base
+
+Status: Active. On branch `calummoore/quito-oqn7`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
+
+An own endpoint login for Codex saves the base address of the OpenAI
+Responses API, such as `https://proxy.example.com/v1`. The gateway adds
+`/responses` to it. A Claude address works with or without a final `/v1`,
+because the app drops it. A Codex address without `/v1` is accepted, but a
+proxy such as CLIProxyAPI serves the API only under `/v1`. So each Codex
+turn on that login fails with HTTP 404. A live check on 13 November 2026
+showed it on Cal's proxy: `/v1/responses` and `/v1/models` return 200, and
+`/responses` and `/models` return 404. A user who types the same address
+in both forms meets this, and nothing warns at the save.
+
+Cal chose option C of decision 1 below on 13 November 2026. At the save of
+a Codex endpoint, when the typed base serves no model list and the same
+base with `/v1` does, the app saves the `/v1` base. When the save can read
+no model list at all, the account page warns. The change does not cover
+one setup of a proxy for both agents. That is an open question of its own
+in this workspace, and this change does not depend on its answer. It also
+does not cover the Fable 5.2 failure on Cal's proxy, which is a proxy
+setting.
+
+Contract owners:
+
+- [Own endpoint logins](../docs/protocol/own-endpoint-logins.md).
+- The public guide [Agent logins](../src/marketing/docs/agent-logins.md).
+- The [model gateway README](../worker/model-gateway/README.md).
+- The [account screens doc](../src/app/account-screens.md).
+
+## Decisions
+
+### 1. Tell the user before a turn that a Codex address is wrong
+
+Added on 13 November 2026 from the live check of Cal's proxy, as item 3 of
+that report. The options check of 13 November 2026 changed the root
+question, added options D to G, changed the recommendation from B to C,
+changed the wider fix from B to E, and changed the effort of C from Small
+to Medium. Its report is in
+`.context/codex-endpoint-v1-base/options-check.md`.
+
+- **Severity:** Medium. **Likelihood:** Common. **Effort:** Medium.
+- **Source:** Implementation.
+- **Category:** Product bug.
+- **Location:** `src/shared/endpoint-address.ts:42`,
+  `worker/app-api/boot.ts:130`, and `worker/model-gateway/endpoint-models.ts`.
+- **Background:** The Claude form accepts an address with or without
+  `/v1`. The Codex form expects the API base, such as `https://host/v1`.
+  The hint of the form shows where the requests go. The save reads the
+  model list once, and a failed read shows nothing.
+- **Problem:** A user who types the same address in both forms gets a
+  Codex login that fails each turn with 404. The save does not warn.
+- **Impact if no action:** Users with one proxy for both agents often meet
+  this, and the cause stays hidden until a turn fails.
+- **Root question:** How does a Codex own endpoint login get a base that
+  its turns reach, or tell the user at the save that it has none?
+- **Options:**
+  - **A.** Change nothing. The hint of the form already shows the request
+    address. Effort: Small.
+  - **B.** When the Codex model list read at the save fails, warn on the
+    account page. Also read `/v1/models`, and when that works, suggest the
+    `/v1` address. Cost: one more call to the endpoint at the save, so the
+    protocol doc changes. Effort: Small.
+  - **C.** As B, but save the `/v1` address when only that address works.
+    Cost: the app changes what the user typed, and the rule that the form
+    shows the saved address gets an exception. Effort: Medium.
+  - **D.** The hint of the Codex form says "Add /v1" when the typed path
+    does not end with `/v1`. It makes no call. Risk: a fixed guess that
+    nags gateways with another base. Effort: Small.
+  - **E.** At the save, send a POST with an empty JSON body to
+    `<base>/responses`, and treat HTTP 404 as "no API at this base". Risk:
+    a new kind of call to the endpoint, and proxies answer an empty body
+    in different ways. Effort: Medium.
+  - **F.** In the gateway, after HTTP 404 from a base without `/v1`, send
+    the request again to `<base>/v1/responses`. Cost: the gateway must
+    keep each Codex request body, and the user gets no message. Effort:
+    Large.
+  - **G.** As C, and Refresh also makes the second read and saves the
+    `/v1` base. It repairs a login saved before the change with no new
+    key. Cost: Refresh encrypts the login again, with a guarded write.
+    Effort: Medium.
+- **Left out:** Always add `/v1` to a Codex address, because a gateway
+  whose API base has no `/v1` then fails. Add `/v1` only to an address with
+  no path, because an API at the root could then not connect. A call from
+  the browser, because the Worker must apply the address rule.
+- **Wider fix:** E. It tests the request route, so it also catches a wrong
+  base when the model list is at another place or is missing.
+- **Previous examples:** `plans/follow-ups/codex-save-guide-omits-endpoints.md`
+  covers a guide gap for Codex endpoints.
+- **Recommendation:** C, first B. The live check shows that `/v1` is the
+  usual repair, and the note shows the change, so the user need not save
+  again. E best protects the codebase.
+- **Chosen:** C, by Cal on 13 November 2026.
+
+## Design
+
+Each item is an agent call of 13 November 2026, unless it names Cal's
+choice. Cal can override any agent call.
+
+- **The read at the save.** For a Codex endpoint, the save reads
+  `<base>/models` with the key, as today. When that read fails and the
+  path of the base does not end with `/v1`, the save reads
+  `<base>/v1/models`. When the second read gives a model list, the save
+  stores `<base>/v1`, with the query of the typed address. Otherwise it
+  stores the typed base. A read succeeds only when the reader of
+  `worker/model-gateway/endpoint-models.ts` returns a list. Cal's choice C.
+  Gap: a base that lists models at its own path but serves the Responses
+  API only under `/v1` gets no second read and no warning. Option E covers
+  it.
+- **A second read at most.** The save makes at most two reads. The read
+  that succeeded becomes the model list of the login, so the save makes no
+  third read. The save skips the second read when the first read got no
+  HTTP answer, so that a hung endpoint holds the save for 10 seconds at
+  most, not 20. Agent call. Reason: the protocol doc limits the calls to
+  the endpoint.
+- **Before the store.** The reads run before the save encrypts and stores
+  the login, because the stored address depends on them. A read that
+  fails never fails the save. The store writes the login, its model list,
+  the attempt time, and the failure mark in one statement, so that the
+  first turn does not read the list again at once. Claude takes the same
+  path, so that one save path writes the list and the mark. Agent call.
+- **Only the save.** Refresh and the background read never change the
+  stored address. Agent call. Reason: a smaller change. Option G would
+  let Refresh repair a login saved before this change. Without it, such a
+  login needs Remove and Connect.
+- **Claude.** Claude keeps today's behaviour, because the app already
+  drops a final `/v1` of a Claude address. Agent call.
+- **What the browser gets.** The save response says that the app added
+  `/v1`, with a flag, and does not return the address. The browser keeps
+  getting only the host, as the protocol doc says. A later save or a
+  Remove clears the note. Agent call.
+- **The note.** After such a save, the account page shows a note under
+  the Codex row until the page reloads: "Conductive added /v1 to the
+  address, because the endpoint lists its models there." Agent call.
+  Reason for the words: the read proves only the model list, and the form
+  and the guide name the API "the OpenAI Responses API", not "the Codex
+  API".
+  Reason: the user must see that the saved address differs from the typed
+  one.
+- **The warning.** When the last model list read of an own endpoint login
+  failed, the account page shows a warning under the row of that agent:
+  "Conductive couldn't read the model list of this endpoint. Check the
+  address and the key." It keeps Refresh. A later read that succeeds
+  removes the warning. The warning shows for both agents, because a failed
+  read means the same for each. When the row also shows models that the
+  list leaves out, the row shows one Refresh, not two. Agent call. Cal's
+  choice C asked for the warning for Codex at the save. A Claude warning
+  and a warning after a later read cost no call, but only that width
+  needs the migration below.
+- **The failure mark.** A new nullable column of `agent_logins` holds the
+  time of the last failed read. A read that succeeds clears it. Each
+  write checks the ciphertext and the attempt ID, as `saveEndpointModels`
+  does, so that a late failed read of a replaced login cannot mark the
+  new login. Agent call. Reason: the attempt time is written before each
+  read, so it cannot tell a running read from a failed one.
+
+## Milestone 1: Mockups
+
+Tags: mockup
+
+Depends on: none
+
+The account page gets two states of a Codex own endpoint row: the note
+after a save that added `/v1`, and the warning after a failed model list
+read.
+
+- [ ] Add the note state to the mockups of `app/account/own-endpoint`, or
+      add a child page, with the text of the design.
+- [ ] Add the warning state, with Refresh, for an own endpoint row of each
+      agent.
+- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
+- [ ] Update the design and the TODOs of this plan for each problem that
+      the mockups show.
+
+## Milestone 2: Documentation and protocol
+
+Depends on: 1
+
+- [ ] Update `docs/protocol/own-endpoint-logins.md`: the second read at
+      the save of a Codex endpoint, the stored `/v1` base, the note, the
+      warning, and the exception to the rule that the form shows the saved
+      address. Keep the list of calls to the endpoint complete.
+- [ ] Update the public guide `src/marketing/docs/agent-logins.md` under
+      "Connect an own endpoint". Read every public guide in full, and
+      update each sentence that restates the changed facts. Line 123
+      says that the hint shows the saved address, which changes.
+- [ ] Read the Terms page `src/marketing/terms.ts` and the Privacy page
+      `src/marketing/privacy.ts` in full. Update each sentence that
+      restates the calls to an endpoint.
+- [ ] Update `worker/model-gateway/README.md` and
+      `src/app/account-screens.md`. Lines 36 to 38 of the account screens
+      doc say that the hint shows the saved address, which changes.
+
+## Milestone 3: Save, read, and failure mark
+
+Depends on: 2
+
+- [ ] Add a migration with the nullable failure column of `agent_logins`.
+- [ ] Write the failure time after a failed read, and clear it after a
+      read that succeeds, in `worker/model-gateway/endpoint-model-refresh.ts`
+      and its data module.
+- [ ] Add the second Codex read to the save in `worker/app-api/boot.ts`,
+      before the encryption, and save the read list as the model list.
+- [ ] Add the flag to `SaveAgentLoginResponse` and the failure state to
+      the account login status in `src/shared/account.ts`, and update the
+      fake API and the seeds.
+- [ ] Add Worker tests: a base without `/v1` that only serves `/v1`, a
+      base that serves both, a base that serves neither, a base that ends
+      with `/v1`, a query on the base, a first read with no HTTP answer,
+      Claude unchanged, Refresh that never changes the address, the
+      failure mark set and cleared, and a late failed read of a replaced
+      login.
+
+## Milestone 4: Account page
+
+Tags: ui
+
+Depends on: 1, 3
+
+- [ ] Show the note under the Codex row after a save with the flag.
+- [ ] Show the warning under each own endpoint row whose last read failed,
+      with Refresh.
+- [ ] Add component tests for the note and the warning.
+- [ ] Check the page in a browser with `npm run dev`.
+
+## Milestone 5: Verification, commit, review, and pull request
+
+Depends on: every other milestone
+
+- [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
+- [ ] Commit with Conventional Commits and push the branch.
+- [ ] Review the complete local diff against `origin/main` with the
+      `implementation-review` skill after the push. Report the findings,
+      then apply the fix rule: fix the `fix now` findings, record
+      follow-up items under `plans/follow-ups/` for the rest, re-review
+      once, and report.
+- [ ] Delete this plan when the `plans` skill says, under "Deleting the
+      plan".
+- [ ] Open the pull request. Its description gives the decisions and the
+      design calls of this plan with their dates, a permalink to this plan,
+      and the follow-up items that the change adds.
+
+## Post-merge follow-up (non-blocking)
+
+- [ ] On `conductive.build`, connect Cal's proxy for Codex with the
+      address without `/v1`. Check the note, the model list line, and one
+      Codex turn.
