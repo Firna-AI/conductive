@@ -20,7 +20,7 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     area: 'agents-and-chat',
     name: 'Mentions',
     status: 'available',
-    note: 'Use @ for workspace files and folders. File chips in agent answers are planned, while teammate and pull request mentions remain under consideration.',
+    note: 'Use @ for workspace files and folders. File chips in agent answers are in progress, while teammate and pull request mentions remain under consideration.',
   },
   {
     id: 'attachments',
@@ -103,8 +103,9 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     id: 'slash-commands',
     area: 'agents-and-chat',
     name: 'Slash commands',
-    status: 'considering',
-    note: 'A command menu in the message box is under consideration.',
+    status: 'in-progress',
+    note: 'A / menu for choosing skills in chat is in progress for agents powered by Claude and Codex.',
+    due: null,
   },
   {
     id: 'skills',
