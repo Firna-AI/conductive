@@ -173,6 +173,7 @@ describe('ChatController', () => {
         { kind: 'session', sessionId: 'third' },
       ],
       activeTab: { kind: 'session', sessionId: 'third' },
+      temporaryTab: null,
       fileList: 'changes',
       tool: 'terminal',
     })

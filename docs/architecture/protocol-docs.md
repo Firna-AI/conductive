@@ -22,6 +22,9 @@ This page lists each protocol doc and what it covers.
   - [Workspace menu](../protocol/workspace-menu.md): the menu of a workspace
     row, which moves, reassigns, renames, and archives the workspace.
   - [Workspace tools](../protocol/workspace-tools.md)
+    - [Temporary tabs](../protocol/temporary-tabs.md): the one file or diff
+      tab that the next press replaces, what opens and keeps it, and its
+      mark in the saved view.
     - [Port previews](../protocol/port-previews.md): detected servers, manual
       opening, preview tabs, and the relay requirement.
 - [Chat and events](../protocol/chat-and-events.md): sessions, messages, what

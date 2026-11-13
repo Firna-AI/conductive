@@ -26,10 +26,10 @@ export const sandboxStarting = defineScreen({
       slug: 'diff',
       title: 'Diff tab while starting',
       description:
-        'A diff that a member opens while the sandbox is stopped resumes the sandbox, as the open of the workspace does. The tab then waits for the sandbox in place of its diff. Its header keeps the name of the file and the lines that it changes, from the saved list of changes. On a phone the tab is a page of the Files tab. The diff opens when the sandbox is ready.',
+        'A diff that a member opens while the sandbox is stopped resumes the sandbox, as the open of the workspace does. The diff opens in the temporary tab, which then waits for the sandbox in place of its diff. Its header keeps the name of the file and the lines that it changes, from the saved list of changes. On a phone the tab is a page of the Files tab. The diff shows when the sandbox is ready.',
       rationale:
-        'The user chose on 10 November 2026 that opening a file or a change starts the sandbox (decision 247). The files and the tools wait until the sandbox is ready. A read during the start fails, so a page that reads then shows an error and Try again for a problem that the start ends by itself.',
-      props: { focus: 'files', tab: 'diff' },
+        'The user chose on 10 November 2026 that opening a file or a change starts the sandbox (decision 247). The files and the tools wait until the sandbox is ready. A read during the start fails, so a page that reads then shows an error and Try again for a problem that the start ends by itself. A press opens the diff in the temporary tab, from option B of decision 284, which the user chose on 11 November 2026.',
+      props: { focus: 'files', tab: 'diff', temporary: 'opened' },
     },
   ],
 })
