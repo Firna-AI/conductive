@@ -8,7 +8,7 @@ import styles from './SectionList.module.css'
  * name and the count of the section, also while the section is open, so
  * that it says how many workspaces move with it.
  */
-export function LiftedSectionHeader(props: { item: SidebarSection }) {
+function LiftedSectionHeader(props: { item: SidebarSection }) {
   const { section, rows } = props.item
   const Chevron = section.collapsed ? ChevronRight : ChevronDown
   return (

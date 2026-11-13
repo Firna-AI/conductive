@@ -96,13 +96,16 @@ and on the desktop.
 
 Depends on: 1
 
-- [ ] Update [Sections](../docs/protocol/orgs-and-members.md#sections):
+- [x] Update [Sections](../docs/protocol/orgs-and-members.md#sections):
       the menu items in their order, the drag of a section, and the
       shared order.
-- [ ] Update the section part of the public guide
+- [x] Update the section part of the public guide
       `src/marketing/docs/workspaces.md`. Read each other guide and both
       legal pages in full for sentences that restate the section menu.
-- [ ] Check each relative link of each changed Markdown file.
+      Only `workspaces.md` restated it. The role table of the guide
+      `orgs-and-members.md` lists no section action, so it stays as it
+      is (my call, 13 November 2026).
+- [x] Check each relative link of each changed Markdown file.
 
 ## Milestone 3: The order in the app
 
@@ -110,18 +113,18 @@ Tags: ui
 
 Depends on: 2
 
-- [ ] Add `sectionMoved(sectionId, index)` to `src/app/list-changes.ts`,
+- [x] Add `sectionMoved(sectionId, index)` to `src/app/list-changes.ts`,
       and `moveSection(org, sectionId, index)` to
       `src/app/section-actions.ts`, which sends `position`. Its answer
       confirms the place of the section only.
-- [ ] Add `move` to `SectionActions` in `useListActions.ts`, with the
+- [x] Add `moveTo` to `SectionActions` in `useListActions.ts`, with the
       toast of a failure.
-- [ ] Add the two menu items to `SectionHeader.tsx`.
-- [ ] Add the section drag on `usePointerDrag`: its layout reads the
+- [x] Add the two menu items to `SectionHeader.tsx`.
+- [x] Add the section drag on `usePointerDrag`: its layout reads the
       boxes of the sections, as `DropLayout` does for rows. Draw the
       lifted header, the faint section, and the line in `SectionList`.
       Split `SectionList.tsx` before it passes 300 lines.
-- [ ] Tests, as the `testing` skill says: the list change puts the
+- [x] Tests, as the `testing` skill says: the list change puts the
       section at its index; the menu items show and move the section; a
       drag of a header moves it and a click still collapses it; a failed
       write puts the order back.
@@ -131,7 +134,7 @@ Depends on: 2
 Depends on: every other milestone
 
 - [ ] Run the targeted tests and `npm run check`.
-- [ ] Try the drag and the menu in a browser, on the desktop width and on
+- [x] Try the drag and the menu in a browser, on the desktop width and on
       the phone width.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the

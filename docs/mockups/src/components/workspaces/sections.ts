@@ -60,7 +60,7 @@ export type ListMenu = { section: SectionKey }
  * A workspace that the user drags to another section: the list lifts its
  * row, and a line shows where it lands, before the row at `index`.
  */
-export type WorkspaceDrag = {
+type WorkspaceDrag = {
   kind: 'workspace'
   workspace: string
   section: SectionKey
@@ -72,7 +72,7 @@ export type WorkspaceDrag = {
  * lifts its header, and a line shows where it lands, before the section at
  * `index`. The index counts the sections without the dragged one.
  */
-export type SectionDrag = {
+type SectionDrag = {
   kind: 'section'
   section: SectionKey
   index: number
