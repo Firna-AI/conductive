@@ -101,6 +101,7 @@ it.each([
     try {
       await clock.set(DEVICE_TEST_NOW + 10_000)
       await clock.runAlarm()
+      await clock.evict()
       expect(await closed).toBe(1000)
     } finally {
       if (restore) await fixture.db.prepare(restore).run()

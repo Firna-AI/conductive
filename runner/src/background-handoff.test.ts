@@ -3,6 +3,7 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 import { engineFixture } from '../test-support/engine'
 import { duringTurn, turn } from '../test-support/harness'
 import type { FakeProvider } from '../test-support/providers'
+import { BACKGROUND_WORK_LIMIT_MS as LIMIT } from './engine-background'
 import type { ProviderProcess } from './providers/types'
 
 beforeEach(() => {
@@ -70,7 +71,7 @@ it('keeps the deadline across a deferred provider handoff after wake-up work', a
   await h.engine.idle()
   expect(h.providers.processes).toHaveLength(2)
   const second = h.providers.latest
-  await vi.advanceTimersByTimeAsync(7199000)
+  await vi.advanceTimersByTimeAsync(LIMIT - 1000)
   await h.engine.idle()
   expect(h.events.map(({ type }) => type)).toEqual(['turn.started'])
   second.emit({
@@ -84,7 +85,7 @@ it('keeps the deadline across a deferred provider handoff after wake-up work', a
     sessionId: 'session-1',
     turnId: 'turn-1',
     state: 'finished',
-    durationMs: 7200000,
+    durationMs: LIMIT,
     files: [],
     endReason: 'background_work_limit',
     omittedFileCount: 0,

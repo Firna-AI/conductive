@@ -64,7 +64,7 @@ export const workspacesAndBranchesFeatures: readonly ParityFeature[] = [
     area: 'workspaces-and-branches',
     name: 'Rename a workspace',
     status: 'available',
-    note: 'Right-click a workspace in the list and choose Rename.',
+    note: 'Double-click a workspace in the sidebar to rename it, or right-click it in the list and choose Rename.',
   },
   {
     id: 'city-names',
@@ -120,7 +120,7 @@ export const workspacesAndBranchesFeatures: readonly ParityFeature[] = [
     area: 'workspaces-and-branches',
     name: '.context folder',
     status: 'available',
-    note: 'Git ignores attached files in .context/attachments and, after a new computer build, agent notes in .context. Updating older workspaces is in progress.',
+    note: 'Git ignores attachments and, after a new computer build, .context agent notes. All files lists them after rebuilding, with older workspace updates in progress.',
   },
   {
     id: 'monorepo-working-directories',

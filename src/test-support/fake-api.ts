@@ -50,15 +50,14 @@ export interface FakeApiOptions {
 
 /**
  * The GitHub state of the record of the fake workspace: `github` when the
- * options give it, also `null`, or else the state of the bar of `banner` and
- * its checks, as the Worker copies it.
+ * options give it, also `null`, or else the state of the bar of `banner`, as
+ * the Worker copies it.
  */
 export function fakeGitHubSummary(
   options: Pick<FakeApiOptions, 'banner' | 'github'>,
 ): GitHubSummary | null {
   if (options.github !== undefined) return options.github
-  const { banner, checks } = toolFixtures(options.banner)
-  return githubSummary(banner.banner, checks.checks)
+  return githubSummary(toolFixtures(options.banner).banner.banner)
 }
 
 function routeKey(method: string, path: string): string {
@@ -69,7 +68,7 @@ function routeKey(method: string, path: string): string {
 
 /**
  * Fetch-compatible, in-memory server for development and tests.
- * Writes return recorded replies. They do not implement backend state changes.
+ * Writes return recorded replies, except org moves, which update the org list.
  * Override a reply with json(), empty(), or response() for the next screen state.
  * A file upload names its file in its query, so a reply for the path of an
  * upload route answers each file sent there.
@@ -78,7 +77,10 @@ function routeKey(method: string, path: string): string {
 export class FakeApiServer implements FakeRouteWriter {
   readonly requests: Request[] = []
   readonly events: FakeWorkspaceEvents
-  private readonly replies = new Map<string, Response | Promise<Response>>()
+  private readonly replies = new Map<
+    string,
+    Response | Promise<Response> | ((request: Request) => Promise<Response>)
+  >()
 
   constructor(options: FakeApiOptions = {}) {
     const conversation = options.conversation ?? 'history'
@@ -140,6 +142,14 @@ export class FakeApiServer implements FakeRouteWriter {
     this.replies.set(routeKey(method, path), response.clone())
   }
 
+  handle(
+    method: FakeMethod,
+    path: string,
+    handler: (request: Request) => Promise<Response>,
+  ): void {
+    this.replies.set(routeKey(method, path), handler)
+  }
+
   fetch = async (
     input: RequestInfo | URL,
     init?: RequestInit,
@@ -152,6 +162,7 @@ export class FakeApiServer implements FakeRouteWriter {
     const url = new URL(request.url)
     const key = routeKey(request.method, request.url)
     const response = await (this.replies.get(key) ?? this.uploadReply(request))
+    if (typeof response === 'function') return response(request)
     if (response) return response.clone()
     const historyPath = new URL(
       chatHistoryPath(FAKE_IDS.org, FAKE_IDS.workspace, FAKE_IDS.session),
@@ -193,7 +204,11 @@ export class FakeApiServer implements FakeRouteWriter {
   /** The reply for the path of a raw file upload, whatever file it names. */
   private uploadReply(
     request: Request,
-  ): Response | Promise<Response> | undefined {
+  ):
+    | Response
+    | Promise<Response>
+    | ((request: Request) => Promise<Response>)
+    | undefined {
     if (request.headers.get('Content-Type') !== 'application/octet-stream') {
       return undefined
     }

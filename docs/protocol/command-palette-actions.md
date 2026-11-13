@@ -100,6 +100,9 @@ actions at `app/command-palette/actions`, and the settings at
 - In the Mac app, the Account group also holds
   [This Mac](desktop-commands.md#saved-choices), the fourth tab, which only
   the Account page of the Mac app has.
+- The Deleted orgs section of the Account page has no row. Reason: it
+  shows only while the person has a deleted org, and the palette treats a
+  deleted org as absent.
 - The Account group lists its rows in the order of the Account page
   (decision 198). It goes tab by tab, and in each tab in the order of its
   sections. So Keyboard shortcuts follows New workspaces, and in the Mac

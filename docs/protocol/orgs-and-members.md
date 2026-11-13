@@ -2,10 +2,10 @@
 
 This doc holds the requirements and the decisions in force for orgs, their
 sections, and their members. It also covers the first run and the end of
-an org. The terms are those of the
-[architecture doc](../architecture.md#terms). A decision number names a
-dated record, as [Decision numbers](../architecture.md#decision-numbers)
-says.
+an org. A linked page covers [the order of the org rail](org-rail-order.md).
+The terms are those of the [architecture doc](../architecture.md#terms). A
+decision number names a dated record, as
+[Decision numbers](../architecture.md#decision-numbers) says.
 
 ## Orgs
 
@@ -19,7 +19,8 @@ says.
   (decision 80). No org has a Boat key.
 - Orgs that mirror GitHub accounts were rejected, because a new org would
   then need the GitHub App on another GitHub account.
-- The org rail lists the orgs of the user, and the user can create orgs.
+- The org rail lists the orgs of the user that are not deleted, and the
+  user can create orgs.
 - Create org accepts a name, custom initials, and chosen repositories.
 - Create org requires at least one repository (decision 151 of PR #92). The create
   screen says so, and Create org stays off until the person chooses one.
@@ -58,6 +59,12 @@ says.
   [open sign-up](sign-ups.md#open-sign-up), a new account waits for app
   access, as [Waitlist](waitlist.md) says (decision 230).
 
+## Org rail order
+
+- [Org rail order](org-rail-order.md) holds the requirements of the order
+  of the orgs in the rail that each person keeps: the drag, the tile menu,
+  the keys, and the long press on a phone.
+
 ## Get started
 
 - Get started is the only first run.
@@ -89,6 +96,8 @@ says.
 - A member who is not an admin sees each state with no action. Reason:
   only an admin builds (decision 57).
 - The person can connect an agent while the build runs.
+- While the person has a deleted org, Get started lists it before the
+  steps, with Restore, as [Delete org](#delete-org) says.
 - When every step is done, Get started shows its finish: a line about the
   org, and an Open button for the org, such as "Open Acme".
 - The Open button stays on in every state of the build (decision 150 of PR #92).
@@ -110,7 +119,8 @@ says.
   New section, and Delete section, in that order.
 - New workspace at the top of the list puts the workspace in General, the
   default section. New workspace in the menu of a section puts it in that
-  section.
+  section. The New workspace dialog can pick another section, as
+  [The dialog](create-a-workspace.md#the-dialog) says.
 - A workspace moves to another section by drag and drop. On a phone, a
   long press lifts the row.
 - A focused row also moves by keys.
@@ -245,8 +255,34 @@ says.
   unpushed work of a member.
 - The delete also removes the saved snapshots of the org, with the org
   image.
-- For 7 days, the deleted org stays faded in the rail of its admins, and
-  its page offers Restore. Its other members cannot open it.
+- A deleted org leaves the org rail at once. Its other members cannot
+  open it.
+- For 7 days, the General tab of the Account page lists the deleted org
+  for its admins, with Restore. The section shows only while the user has
+  a deleted org.
+- The address of a deleted org still opens its page, and that page also
+  offers Restore. So an old link to the org is not a dead end.
+- Reason: the faded tiles of deleted orgs stayed in the way after a
+  delete, as the user said on 12 November 2026. A faded tile in the rail
+  was the earlier rule. A new tab of the Account page was rejected,
+  because it is empty on most days.
+- Delete org then opens the next org that is not deleted, else Get
+  started. Its question says that an admin restores the org from Account
+  settings.
+- A person whose orgs are all deleted counts as a person without an org.
+  So the app opens Get started, as for a new person, and its org step
+  offers Create org.
+- While the person has a deleted org, Get started also lists it before
+  its steps, with Restore, as the Account page does. Restore there opens
+  the org. Without a deleted org, Get started shows no such list.
+- Reason: a phone shows Get started without the rail, so it has no other
+  way to the Account page. The user chose this on 13 November 2026.
+  Opening the page of a deleted org, as before, was rejected, because a
+  person who wants a new org then meets the deleted org first. A link to
+  the Account page on the phone layout of Get started was rejected,
+  because Restore then sits one page away from where the person lands.
+- A suspended deleted org offers no Restore, in the Account page or on
+  its page, because a suspended org refuses a restore.
 - Restore brings the org back as it was. Its workspaces start again when
   they open. A workspace whose owner is suspended does not start, as
   [Operator actions](operator-actions.md#starts-stops-and-builds) says.

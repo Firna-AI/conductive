@@ -6,14 +6,14 @@ export const navigationAndAppearanceFeatures: readonly ParityFeature[] = [
     area: 'navigation-and-appearance',
     name: 'Sidebar',
     status: 'available',
-    note: 'The sidebar groups workspaces into sections and shows GitHub checks and merges. Branch names and pull request details are under consideration.',
+    note: 'The sidebar groups workspaces into sections and shows the state of each pull request in colour. Branch names and pull request numbers are under consideration.',
   },
   {
     id: 'sidebar-sections',
     area: 'navigation-and-appearance',
     name: 'Sidebar sections',
     status: 'available',
-    note: 'Create sections and move workspaces between them by drag. New workspaces can start in a chosen section.',
+    note: 'Create sections and drag workspaces between them. Choose a section from the menu in the New workspace dialog.',
   },
   {
     id: 'command-palette',
@@ -40,9 +40,8 @@ export const navigationAndAppearanceFeatures: readonly ParityFeature[] = [
     id: 'vertical-panel-resizing',
     area: 'navigation-and-appearance',
     name: 'Vertical panel resizing',
-    status: 'in-progress',
-    note: 'Resizing the split between Files and the Terminal or Preview panel is in progress.',
-    due: null,
+    status: 'available',
+    note: 'Drag the divider between Files and the Terminal or Preview panel, or move it with the keyboard. The app remembers the split.',
   },
   {
     id: 'tab-order',
@@ -70,7 +69,7 @@ export const navigationAndAppearanceFeatures: readonly ParityFeature[] = [
     area: 'navigation-and-appearance',
     name: 'Status indicators',
     status: 'available',
-    note: 'List colours show GitHub checks and merges, with motion for work or needed input. Bold names mark unread output.',
+    note: 'List colours show the state of each pull request, in the colours of its bar, with motion for work or needed input. Bold names mark unread output.',
   },
   {
     id: 'wrapped-and-passport',

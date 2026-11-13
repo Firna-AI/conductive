@@ -55,7 +55,15 @@
   min-width: 0;
 }
 
-/* The org and the section that the new workspace joins, as plain text. */
+/*
+ * The menu of the org and the section that the new workspace joins, at the
+ * end of the header.
+ */
+.placeMenu {
+  margin-left: auto;
+}
+
+/* The org alone, as plain text, while the sections load. */
 .place {
   overflow: hidden;
   min-width: 0;

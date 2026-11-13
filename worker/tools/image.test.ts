@@ -8,10 +8,13 @@ import { expect, it } from 'vitest'
 import { TOOL_ENV } from '../../tools/context'
 import { MCP_PROTOCOL_VERSION } from '../../tools/mcp'
 import { imageNodeExecutable } from '../lifecycle/image-runtime'
+import { privilegedCommand, shellArgument } from '../terminal/privileged'
 import {
   installWorkspaceTools,
   WORKSPACE_TOOLS_COMMAND,
+  WORKSPACE_TOOLS_COMMAND_BYTES,
   WORKSPACE_TOOLS_SECRETS_FILE,
+  workspaceToolsCommands,
 } from './image'
 import { WORKSPACE_TOOL_SOURCES } from './image-assets'
 import { imageTestProcess } from './image-test-process'
@@ -21,6 +24,25 @@ import {
   mcpRepliesById,
   mcpRequest,
 } from './mcp-test-support'
+
+// Linux refuses one exec argument over 128 KiB. A command over that size
+// never starts in the sandbox, as the deploys after #267 showed.
+it('keeps each privileged install command under the Linux argument limit', () => {
+  expect(WORKSPACE_TOOLS_COMMAND_BYTES).toBeLessThan(128 * 1024)
+  const large = WORKSPACE_TOOL_SOURCES.map((source) => ({
+    ...source,
+    contents: source.contents.repeat(3),
+  }))
+  for (const sources of [WORKSPACE_TOOL_SOURCES, large]) {
+    const commands = workspaceToolsCommands(sources)
+    for (const command of commands) {
+      const bytes = new TextEncoder().encode(privilegedCommand(command))
+      expect(bytes.length).toBeLessThanOrEqual(WORKSPACE_TOOLS_COMMAND_BYTES)
+      expect(command.startsWith('set -eu\n')).toBe(true)
+    }
+    if (sources === large) expect(commands.length).toBeGreaterThan(2)
+  }
+})
 
 it('reports failed or incomplete image installation instead of accepting it', async () => {
   const sources = WORKSPACE_TOOL_SOURCES
@@ -33,10 +55,27 @@ it('reports failed or incomplete image installation instead of accepting it', as
     },
     { exitCode: null, stdout: '', stderr: '', timedOut: true },
   ]) {
+    let runs = 0
     await expect(
-      installWorkspaceTools(sources, async () => result),
+      installWorkspaceTools(sources, async () => {
+        runs += 1
+        return result
+      }),
     ).rejects.toThrow('The workspace tools could not be installed.')
+    expect(runs).toBe(1)
   }
+})
+
+it('keeps each privileged install command under the argument limit', () => {
+  const commands = workspaceToolsCommands(WORKSPACE_TOOL_SOURCES)
+  expect(commands.length).toBeGreaterThan(1)
+  for (const command of commands) {
+    expect(command.startsWith('set -eu\n')).toBe(true)
+    expect(
+      new TextEncoder().encode(privilegedCommand(command)).length,
+    ).toBeLessThanOrEqual(WORKSPACE_TOOLS_COMMAND_BYTES)
+  }
+  expect(commands.at(-1)).toContain(WORKSPACE_TOOLS_COMMAND)
 })
 
 it('installs working CLI and MCP tools under a root with spaces and apostrophes', async () => {
@@ -45,7 +84,11 @@ it('installs working CLI and MCP tools under a root with spaces and apostrophes'
     await installWorkspaceTools(
       WORKSPACE_TOOL_SOURCES,
       async (command) => {
-        const result = await imageTestProcess('/bin/sh', ['-c', command])
+        // Pass each command as one argument of an inner shell, as sudo does.
+        const result = await imageTestProcess('/bin/sh', [
+          '-c',
+          `/bin/sh -c ${shellArgument(command)}`,
+        ])
         expect(result.exitCode, result.stderr).toBe(0)
         return result
       },
@@ -160,7 +203,11 @@ it('requires the private runtime and never falls back to system Node or PATH', a
     await installWorkspaceTools(
       WORKSPACE_TOOL_SOURCES,
       async (command) => {
-        const result = await imageTestProcess('/bin/sh', ['-c', command])
+        // Pass each command as one argument of an inner shell, as sudo does.
+        const result = await imageTestProcess('/bin/sh', [
+          '-c',
+          `/bin/sh -c ${shellArgument(command)}`,
+        ])
         expect(result.exitCode, result.stderr).toBe(0)
         return result
       },

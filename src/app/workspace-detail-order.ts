@@ -119,7 +119,7 @@ export class DetailOrder {
       start,
       error,
     })
-    const listed = this.org.workspace(this.workspaceId)
+    const listed = this.org.confirmedWorkspace(this.workspaceId)
     this.show(detailAfterListLifecycle(next, listed) ?? next)
   }
 
@@ -147,7 +147,9 @@ export class DetailOrder {
    * Restore. Only the fields of the archive change.
    */
   followList(): void {
-    this.stopList ??= this.org.workspaces.subscribe(() => this.syncLifecycle())
+    this.stopList ??= this.org.confirmedWorkspaces.subscribe(() =>
+      this.syncLifecycle(),
+    )
     this.syncLifecycle()
   }
 
@@ -158,7 +160,7 @@ export class DetailOrder {
 
   private syncLifecycle(): void {
     const current = valueOf(this.detail.get())
-    const listed = this.org.workspace(this.workspaceId)
+    const listed = this.org.confirmedWorkspace(this.workspaceId)
     const next = detailAfterListLifecycle(current, listed)
     if (!next) return
     this.transitions += 1

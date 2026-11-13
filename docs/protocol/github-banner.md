@@ -49,6 +49,14 @@ number names a dated record, as
 - The Worker pushes the new state to every open tab of that workspace.
 - When a tab opens, the Worker reads the current pull request and the
   current checks of the branch from the GitHub API.
+- While that read runs, the tab shows the last state that the Worker
+  stored for the branch, when it has one. The fresh state replaces it
+  when the read answers. The user chose this on 12 November 2026.
+- Reason: a read from GitHub takes seconds, while the list already shows
+  the GitHub state of the workspace, so the bar must not show a loading
+  state for a known state.
+- A failed fresh read keeps the stored state on the screen, and the
+  GitHub events of the branch keep it current.
 - Events do not reach an archived workspace. Its open tab still reads the
   state when it opens. The user chose this on 11 November 2026.
 - Reason: each event read every workspace of the repository, also the
@@ -179,6 +187,13 @@ continues, and archives.
   [Merge as the member](github-tokens.md#merge-as-the-member) says.
 - When the Worker cannot read the access, the bar shows no Merge. Reason:
   a button that is sure to fail helps nobody.
+- While the bar reads the access, it uses the last access that the same tab
+  read for the member and the repository, when it has one. This applies to
+  Merge and to the agent actions. A failed read forgets that access, and a
+  sign-out forgets each one. The user chose this on 12 November 2026.
+- Reason: the access seldom changes, and a read from GitHub takes seconds.
+  The bar of another workspace of the same repository must not wait for
+  it. GitHub still checks the access at each merge.
 - GitHub keeps the final say, because it checks the rules of the branch at
   the merge.
 - Merge for every member was rejected, because a member without the right
@@ -231,8 +246,8 @@ continues, and archives.
   action-required check is a failure. A queued or running check runs. Each
   other check counts as passed.
 - The list mark of the workspace shows its
-  [GitHub state](#the-github-state) in one colour, as
-  [The list mark](workspace-life.md#the-list-mark) says.
+  [GitHub state](#the-github-state), the state of the bar, in the colour of
+  the bar, as [The list mark](workspace-life.md#the-list-mark) says.
 
 ## The GitHub state
 

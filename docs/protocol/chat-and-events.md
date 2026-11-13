@@ -80,6 +80,12 @@ holds how an agent action of the pull request bar sends its fixed prompt.
   work decision 3). A line in the running turn that names the work, and a
   workspace state such as "waiting", were not chosen.
 - A finished turn ends with its duration and the files that it changed.
+- The end shows at most 8 files on desktop and 5 on a phone. A
+  "Show N more" button after them shows all the listed files. The count of
+  files that the runner left out shows only after that button.
+- Reason: a turn that changes many files pushed its reply out of view
+  (Cal, 12 November 2026). A list of all files without a button was
+  rejected for that reason.
 - A turn that ended at the time limit of background work shows
   "Background work stopped at the time limit" in its end, above its
   duration and its files (background work decision 3). The
@@ -107,6 +113,21 @@ holds how an agent action of the pull request bar sends its fixed prompt.
   "[Request interrupted by user]".
 - Each result of the agent shows with the messages that it answers. One
   result can answer more than one message.
+
+### The scroll of the chat
+
+- At the bottom, the chat keeps the newest message in view.
+- While the user reads higher up, the row that they read keeps its place.
+  A message of another member, the output of an agent, and a fold that
+  closes do not move it.
+- A message that the user sends from the chat goes to the bottom of the
+  chat, also while the user reads higher up. This applies to the composer
+  and to the fixed prompts of the pull request bar, such as Create PR.
+- A message that the same member sends from another tab or device does
+  not move this chat.
+- Reason: the user who sends a message wants to see it and its answer. A
+  scroll for each message of the workspace was rejected, because it takes
+  the place of a reader who reads an earlier part of the chat.
 
 ### The work of a turn
 

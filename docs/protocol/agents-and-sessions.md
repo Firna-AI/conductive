@@ -28,7 +28,7 @@ says.
   changes, so a session never moves to the login of another member.
 - A member starts a session in one of these ways:
   - with "+"
-  - with a model of the other agent
+  - with a model of the other agent, in a session that has a message
   - with the first message of a new workspace
   - with a message that starts a new session, as
     [Messages](messages-and-attachments.md#messages) says
@@ -257,7 +257,8 @@ says.
   no name (decision 182). So no automatic name replaces a name that a
   member or the app gave.
 - A member names a workspace with Rename in the
-  [menu of its row](workspace-menu.md#rename).
+  [menu of its row](workspace-menu.md#rename), or with a double click on
+  its row in the sidebar.
 - The app gives no automatic name in an archived workspace, or in a
   workspace of a deleted org.
 - Reason: a missing name shows that no one named the workspace or the

@@ -67,7 +67,7 @@ function shown(
 }
 
 describe('setupSteps', () => {
-  test('the org step follows the org list, also a deleted org, the agent step follows the logins that can run turns, only the GitHub App step comes from the API, and nothing shows before the account loads', () => {
+  test('the org step follows the orgs that are not deleted, the agent step follows the logins that can run turns, only the GitHub App step comes from the API, and nothing shows before the account loads', () => {
     expect({
       inUse: shown(reply('acme', true, true, true), [acme], connected),
       leftLastOrg: shown(reply('acme', true, true, true), [], connected),
@@ -95,7 +95,7 @@ describe('setupSteps', () => {
       inUse: reply('acme', true, true, true),
       leftLastOrg: reply(null, true, false, true),
       deletedFirst: reply('acme', true, true, true),
-      deletedOnly: reply('labs', true, true, true),
+      deletedOnly: reply(null, true, false, true),
       connectedElsewhere: reply('acme', true, true, true),
       noLogin: reply('acme', true, true, false),
       signedOut: reply('acme', true, true, false),

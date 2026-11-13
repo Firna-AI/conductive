@@ -142,12 +142,12 @@ describe('workspace chips in the chat of the app', () => {
       `W-${linked.number} ${renamed.name}, Checks running, Starting`,
     ])
     // Only the GitHub state changes: the name, the state, and the time stay.
-    const passed: Workspace = { ...renamed, github: 'checks-passed' }
-    serveList(server, [archived, passed])
+    const readyToMerge: Workspace = { ...renamed, github: 'ready-to-merge' }
+    serveList(server, [archived, readyToMerge])
     await timers.runAll()
     await settle()
     expect(chipsOf(view, linked)).toEqual([
-      `W-${linked.number} ${renamed.name}, Checks passed, Starting`,
+      `W-${linked.number} ${renamed.name}, Ready to merge, Starting`,
     ])
     // Its cloud computer is ready, then its agent finishes a turn that the
     // reader has not read. With the same GitHub state, only the bold name
@@ -157,11 +157,11 @@ describe('workspace chips in the chat of the app', () => {
         name,
         linkTo(view, routes.workspace(org, linked.id)),
       ).classList.contains(chipStyles.strong)
-    serveList(server, [archived, { ...passed, state: 'ready' }])
+    serveList(server, [archived, { ...readyToMerge, state: 'ready' }])
     await timers.runAll()
     await settle()
     const ready = { words: chipsOf(view, linked), strong: strongName() }
-    serveList(server, [archived, { ...passed, state: 'unread' }])
+    serveList(server, [archived, { ...readyToMerge, state: 'unread' }])
     await timers.runAll()
     await settle()
     expect({
@@ -169,12 +169,12 @@ describe('workspace chips in the chat of the app', () => {
       unread: { words: chipsOf(view, linked), strong: strongName() },
     }).toEqual({
       ready: {
-        words: [`W-${linked.number} ${renamed.name}, Checks passed, Ready`],
+        words: [`W-${linked.number} ${renamed.name}, Ready to merge, Ready`],
         strong: false,
       },
       unread: {
         words: [
-          `W-${linked.number} ${renamed.name}, Checks passed, Done, unread`,
+          `W-${linked.number} ${renamed.name}, Ready to merge, Done, unread`,
         ],
         strong: true,
       },

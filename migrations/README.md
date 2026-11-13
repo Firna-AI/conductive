@@ -57,7 +57,7 @@ Chat attachment queries live in `worker/chat/attachment-data.ts` and `attachment
 `202611082300_new_workspace_view.sql` rebuilds `user_preferences` and keeps every existing row and value.
 The three default model columns can be all set or all unset.
 The nullable `new_workspace_view` column holds `page` or `dialog`.
-An unset view uses the page. An unset model uses the configured app default.
+An unset view used the page then. An unset model uses the configured app default.
 
 `202611091200_waitlist.sql` adds app access, invite and referral codes, code
 uses, and the sign-up pause. Each existing account gets app access from
@@ -215,11 +215,27 @@ A check accepts only `checks-running`, `checks-failed`, `checks-passed`, and `me
 The migration copies nothing, so each existing row keeps `NULL` until its next GitHub refresh.
 The workspace object keeps the column as a copy of its committed banner state, as [The summary copy](../worker/github/README.md#the-summary-copy) says.
 The complete banner state and its events stay in Durable Object storage.
-[The GitHub state](../docs/protocol/github-banner.md#the-github-state) states the four values.
+
+`202611130900_workspace_github_bar_states.sql` replaces the check of `workspaces.github_summary`, so that it accepts each state of the pull request bar except closed.
+The values are `checks-running`, `checks-failed`, `ready-to-merge`, `merged`, `conflict`, `changes-requested`, `draft`, and `blocked`.
+SQLite cannot change a check, so the migration copies the column into a new column with the new check, drops the old column, and renames the new one.
+It copies `checks-passed` as `ready-to-merge` and keeps each other value.
+So each row keeps its old colour until its next GitHub refresh writes the bar state.
+[The GitHub state](../docs/protocol/github-banner.md#the-github-state) states the values.
 
 `202611111230_workspace_first_session_title.sql` adds the nullable `workspace_creation_plans.first_session_title` column.
 The agent create tool stores the requested first session title there, so a repeated create keeps it.
 Existing plans keep `NULL`. A plan with `NULL` gives its first session no title at admission.
+
+`202611120000_org_rail_order.sql` adds the nullable integer `org_members.rail_position` column.
+It fills every existing membership by org creation time, then org ID, for each person.
+This keeps the current rail order at deployment. New memberships keep `NULL` and sort at the end.
+The [members backend](../worker/members/README.md) owns the reads and moves.
+
+`202611121200_new_workspace_view_existing.sql` saves the page as the view of each existing account without a saved view.
+It keeps every other preference and every saved view.
+An unset view now uses the dialog, so only accounts made after this migration get the dialog without a choice.
+[The preference](../docs/protocol/create-a-workspace.md#the-preference) gives the requirement.
 
 ## Reserved ranges
 

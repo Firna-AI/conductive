@@ -1,6 +1,7 @@
-import { useEffect, type ReactNode } from 'react'
+import { useEffect, useMemo, type ReactNode } from 'react'
 import { SearchX } from 'lucide-react'
 import { EmptyState } from '../../docs/mockups/src/components/common/EmptyState'
+import { activeOrgs } from '../app/kept-org'
 import type { Route } from '../app/router'
 import { routes } from '../app/router'
 import { useStore } from '../app/store'
@@ -24,8 +25,8 @@ import { WorkspaceScreen } from './workspace/WorkspaceScreen'
 import { inFirstRun } from '../app/get-started'
 
 /**
- * The desktop frame with the rail of the user's orgs. The rail of an
- * operator also leads to the operator section.
+ * The desktop frame with the rail of the user's orgs that are not deleted.
+ * The rail of an operator also leads to the operator section.
  */
 export function RailFrame(props: {
   user: User
@@ -34,7 +35,8 @@ export function RailFrame(props: {
   children: ReactNode
 }) {
   const app = useApp()
-  const orgs = useStore(app.orgs)
+  const all = useStore(app.orgs)
+  const orgs = useMemo(() => activeOrgs(all), [all])
   const getStarted = useStore(app.getStarted)
   const operator = useStore(app.account.account)?.operator === true
   return (

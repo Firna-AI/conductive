@@ -20,7 +20,7 @@ how a screen is built, and links to the other pages.
 | `app/workspace-menu` | The menu of a workspace row from a right click: its section and owner choices, Rename, Copy link, Archive from the list with its toast and Restore, and the menus of each role |
 | `app/command-palette` | The command palette over the list, with the keys of a browser tab: the All tab, then the other tabs with the Help group, searches and their states, and a search by number |
 | `app/feedback`      | The Feedback dialog that Send feedback opens over the list, then its states, the toast after a send, and the files that it does not add |
-| `app/orgs`          | The org switcher of a phone, Create org, the first org, new orgs, deleted, suspended |
+| `app/orgs`          | The org switcher of a phone, Create org, the first org, new orgs, deleted, suspended, and the order of the orgs |
 | `app/account`       | General with the GitHub sign-in, the GitHub App, the agent logins with own endpoints, and the invite code, then Preferences with the model and how New workspace opens, Keyboard shortcuts in a browser, the first run, the Connect forms with the ChatGPT sign-in of Codex, Codex on a ChatGPT plan and its sign-in that stopped working, and a share not saved |
 | `app/operator`      | The operator's Overview, Orgs, Users, Waitlist, and Invite codes tabs, the page of an org and of a user with Suspend, Lift, and Approve, the pause of sign-ups, the waitlist switch, and where an operator opens the section |
 | `app/banner`        | The pull request bar and Checks: no pull request, its other states, Merge, local work, the agent actions in the chat, and Continue |
@@ -33,7 +33,7 @@ how a screen is built, and links to the other pages.
 | `app/reassign`      | The owner of a workspace, its reassign menu, a member's view, a stopped turn  |
 | `app/archive`       | An archived workspace with Restore, the toast after Archive, the Archived group, the restored workspace, the end of Restore, and the bar after the delete |
 | `app/composer`      | Two uploaded files in a sentence, the picker, another member's login, and a missing agent |
-| `app/attachments`   | A file that uploads in the text, then a drop, a failed upload, a file over 25 MB, sent files, the file tab of a sent screenshot, and a first message with files |
+| `app/attachments`   | A file that uploads in the text, then a drop, a failed upload, a file over 100 MB, sent files, the file tab of a sent screenshot, and a first message with files |
 | `app/workspace-links` | Chips in a message and an answer, then Copy link and its failure, a pasted link, a link of another org, session chips, and messages that an agent sent |
 | `app/file-mentions` | The list of `@` with a query, then the list without one, its other states, and the file chips of the composer and of a sent message |
 | `app/files`         | All files, Changes with its summary, and a file, Markdown, diff, and image tab |
@@ -185,6 +185,10 @@ the tabs of the org settings are. Its child pages:
 - `app/account/invites` has the invite code while sign-ups are paused.
   [The waitlist, suspensions, and the operator](catalogue-operator.md)
   gives its variants.
+- `app/account/deleted-orgs` has the Deleted orgs section at the end of
+  General, with Acme Labs and Restore. Its `suspended` variant
+  has the org after a suspension, without Restore. Its `failed` variant
+  has a Restore that failed, with the error under the row.
 - `app/account/shortcuts` shows the Keyboard shortcuts tab in a browser, as
   the keyboard shortcuts section below gives.
 
@@ -204,9 +208,10 @@ why, with the model ID, the time of the last read of the list, and
 Refresh.
 
 `app/new-workspace/dialog` draws New workspace as a dialog over the ready
-workspace of `app`, for a user who chose the dialog. Its states are child
-pages. `first-build` shows Firna before its first good build, with the
-notice and Create off. The other child pages show files that upload, a
+workspace of `app`, for a new account or a user who chose the dialog.
+Its states are child pages. `first-build` shows Firna before its first
+good build, with the notice and Create off. `section` shows the open menu of the sections at
+the top right. The other child pages show files that upload, a
 drop of files on the whole dialog card, a draft with uploaded files and
 the notice of a missing agent login, a
 create request that failed, an org without chosen repositories, and a
@@ -215,6 +220,25 @@ pasted workspace link as a chip. The dialog uses the file chips of
 view shows the New workspace page in the same state.
 `user-flows/create-workspace-dialog` goes from Preferences through the
 dialog to the new workspace.
+
+`app/orgs/reorder` draws the order of the orgs that each person keeps,
+from decisions 515 C, 516 A, and 517 B of 11 November 2026. Its canonical
+screen has Firna dragged from the bottom of the rail to the top, and on a
+phone the same drag in the org switcher after a long press. Its variants:
+
+- `moved` has the rail and the org switcher after the move: Firna, Acme,
+  then Futex.
+- `menu` has the menu of Firna, the first tile, at the pointer of a right
+  click: Move up, which is off, and Move down. A phone has no tile menu,
+  so its view is the org switcher.
+- `long-press` has a long press that lifts Futex in the org switcher of a
+  phone, with the line at its place. Its desktop view has the start of a
+  drag of Futex on the rail.
+- `suspended` has the menu of Acme after the operator suspended it, with
+  both items on, and on a phone the drag of Acme in the org switcher.
+
+The state comes from the `orgOrder` control of the workspace list, which
+`src/screens/orgOrderStates.ts` describes.
 
 [The waitlist, suspensions, and the operator](catalogue-operator.md)
 gives the pages of the waitlist and the child pages of

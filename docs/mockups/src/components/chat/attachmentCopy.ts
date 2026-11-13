@@ -1,6 +1,7 @@
 /**
  * The words of the attached files: the state of an upload in the composer,
- * and the notices for a file over the size limit and for a dropped folder.
+ * and the notices for a file over the size limit and for a dropped folder
+ * that the browser cannot read.
  * The app stores each file until the turn of its message starts, so an
  * upload needs no cloud computer, also in a new workspace.
  */
@@ -44,16 +45,18 @@ export function notAttachedCountTitle(count: number): string {
  * the chosen file, because the size formatter counts in units of 1024 and
  * the limit counts in units of 1000. So the two numbers could disagree.
  */
-export const tooLargeBody = 'Each file can be up to 25 MB.'
+export const tooLargeBody = 'Each file can be up to 100 MB.'
 
 /** The action of that notice, which opens the file picker again. */
 export const smallerFileLabel = 'Attach a smaller file'
 
 /**
- * The body of the notice for a dropped folder, which the composer does not
- * attach. The title names the folder, as for a file over the size limit.
+ * The body of the notice for a dropped folder that the browser cannot read,
+ * so the composer cannot zip it. The title names the folder, as for a file
+ * over the size limit.
  */
-export const folderBody = 'Attach the files in the folder instead.'
+export const folderBody =
+  "The folder couldn't be read. Attach the files in it instead."
 
 /** The action of that notice, which opens the file picker. */
 export const attachFilesLabel = 'Attach files'

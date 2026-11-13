@@ -46,7 +46,7 @@ export function attachmentRoutes(
       throw new RouteError(
         413,
         'attachment_too_large',
-        'Each file can be up to 25 MB.',
+        'Each file can be up to 100 MB.',
       )
     }
     if (mode === 'wait') return new Promise<Response>(() => {})

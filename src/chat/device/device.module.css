@@ -51,24 +51,6 @@
   mask-image: linear-gradient(to bottom, #000 calc(100% - 1.5em), transparent);
 }
 
-/* The workspace of a running 15 minutes, its time left, and Stop. */
-.window {
-  flex: 1;
-  min-width: 0;
-  color: var(--ui-ink);
-  font-size: var(--ui-text-sm);
-  overflow-wrap: anywhere;
-}
-
-.left {
-  flex-shrink: 0;
-  color: var(--ui-amber-deep);
-  font-family: var(--ui-font-mono);
-  font-size: var(--ui-text-sm);
-  font-variant-numeric: tabular-nums;
-  font-weight: var(--ui-weight-strong);
-}
-
 .empty {
   margin: 0;
   color: var(--ui-muted);

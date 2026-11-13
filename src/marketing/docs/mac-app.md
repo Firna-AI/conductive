@@ -74,8 +74,10 @@ Read those details before you allow it.
 | Allow | The command runs once. |
 | Always allow | This exact command can run again on this Mac without asking. |
 | Allow all commands for 15 minutes | Every command from this workspace can run on this Mac during that time. |
+| Allow all commands until I stop | Every command from this workspace can run on this Mac until you stop it. |
 
-The arrow beside **Allow** opens the last two choices.
+The arrow beside **Allow** opens the last three choices.
+Permission until you stop also ends when you quit the Mac app or sign out.
 **Always allow** covers the command text in any requested folder.
 Only the Mac that received the request can approve it.
 A browser or another Mac can show the request without those approval choices.
@@ -87,8 +89,9 @@ It shows the Mac's name and **Available** or **Not available**.
 
 - Under **Always allowed**, use **Remove** to make that command ask again.
   A long command shows its first lines. Use **Show all** to see all of it.
-- Under **Allowed for 15 minutes**, use **Stop** to end that workspace's permission.
-- While timed permission runs, the workspace also shows a bar with **Stop**.
+- Under **All commands allowed**, use **Stop** to end that workspace's permission.
+- While that permission runs, the workspace also shows a bar with **Stop**.
+- During the 15 minutes, use **Keep until I stop** in the bar to keep that permission until you stop it.
 
 Saved permissions belong to your signed-in account on that Mac.
 They do not give an agent general access to every Mac you use.

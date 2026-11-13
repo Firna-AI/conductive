@@ -136,14 +136,18 @@ describe('a drop of files on New workspace', () => {
     })
   })
 
-  test('in the dialog, files over the card show its drop state, and a drop on the card puts the files at the caret and names a dropped folder in the notices of the dialog', async () => {
+  test('in the dialog, files over the card show its drop state, and a drop on the card puts the files and the zip of a dropped folder at the caret, and names a folder that cannot be read in the notices of the dialog', async () => {
     const server = serverWith('dialog')
     const tab = await openTab(server)
     click(newWorkspaceRow(sidebarOf(tab.view)))
     await settle()
     const dialog = openDialog(tab.view)
     typeText(messageIn(dialog), task)
-    const data = draggedFiles([png('cart.png'), { folder: 'checkout-screens' }])
+    const data = draggedFiles([
+      png('cart.png'),
+      { folder: 'checkout-screens', items: [png('overlap.png')] },
+      { folder: 'private', unreadable: true },
+    ])
     fireDrag(dialog, 'dragenter', data)
     const over = fireDrag(dialog, 'dragover', data)
     const hover = {
@@ -168,10 +172,10 @@ describe('a drop of files on New workspace', () => {
       dropped: {
         taken: true,
         dropping: false,
-        text: `${task} ${markOf(draft, 'cart.png')} `,
-        files: ['cart.png'],
+        text: `${task} ${markOf(draft, 'cart.png')} ${markOf(draft, 'checkout-screens.zip')} `,
+        files: ['cart.png', 'checkout-screens.zip'],
         notices: [
-          "checkout-screens wasn't attachedAttach the files in the folder instead.Attach files",
+          "private wasn't attachedThe folder couldn't be read. Attach the files in it instead.Attach files",
         ],
       },
     })

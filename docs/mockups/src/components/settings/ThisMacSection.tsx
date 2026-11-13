@@ -1,11 +1,15 @@
+import { Square } from 'lucide-react'
 import {
+  allowedWorkspaces,
   alwaysAllowed,
   failedMessage,
   longAllowed,
   notSavedMessage,
   removedCommand,
   thisMac,
+  untilStop,
 } from '../../fixtures/mac'
+import { classes } from '../common/classes'
 import { ActionButton } from '../common/actions'
 import { StatusText } from '../common/StatusText'
 import { ChangeOutcome, type ChangeStatus } from '../mac/ChangeOutcome'
@@ -36,13 +40,14 @@ const removals: Partial<
 
 /**
  * The Mac that the Mac app registers as a device (decision 62): its name,
- * its state, and the commands that always run on it, each with Remove. A
- * long command shows its first three lines, and its last line fades out,
- * with Show all under it. After a Remove, the result of the change shows
- * under the list until the next Remove of the same command. A command that
- * the Mac removed, also without saving, leaves the list, so a removal that
- * the Mac did not save offers Try again in its result. Only the Mac app
- * shows the section.
+ * its state, the commands that always run on it, each with Remove, and the
+ * workspaces whose commands all run without asking, each with the time
+ * left or Until you stop, and Stop (Mac until-stop decision 0).
+ * A long command shows three lines with a fade and Show all.
+ * After a Remove, the result of the change shows under the list until the
+ * next Remove of the same command. A command that the Mac removed, also
+ * without saving, leaves the list, so a removal that the Mac did not save
+ * offers Try again in its result. Only the Mac app shows the section.
  */
 export function ThisMacSection() {
   const change = useMacApp()?.change
@@ -76,6 +81,31 @@ export function ThisMacSection() {
             )}
             <ActionButton accessibilityLabel={`Remove ${command}`} tone="plain">
               Remove
+            </ActionButton>
+          </li>
+        ))}
+      </ul>
+      <span className={styles.label}>All commands allowed</span>
+      <ul
+        aria-label="Workspaces with all commands allowed"
+        className={styles.list}
+      >
+        {allowedWorkspaces.map((grant) => (
+          <li className={styles.row} key={grant.name}>
+            <span className={styles.workspace}>{grant.name}</span>
+            <span
+              className={classes(
+                styles.left,
+                grant.left === null && styles.open,
+              )}
+            >
+              {grant.left === null ? untilStop : `${grant.left} left`}
+            </span>
+            <ActionButton
+              accessibilityLabel={`Stop ${grant.name}`}
+              icon={Square}
+            >
+              Stop
             </ActionButton>
           </li>
         ))}

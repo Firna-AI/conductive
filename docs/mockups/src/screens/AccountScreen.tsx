@@ -9,6 +9,7 @@ import {
   GitHubSection,
   SignInSection,
 } from '../components/settings/AccountSections'
+import { DeletedOrgsSection } from '../components/settings/DeletedOrgsSection'
 import { InviteCodeSection } from '../components/settings/InviteCodeSection'
 import { DefaultsSection } from '../components/settings/PreferencesSections'
 import { ResetShortcutsDialog } from '../components/settings/ResetShortcutsDialog'
@@ -35,8 +36,9 @@ const firstRunRail: RailState = { orgs: [], current: 'account', firstRun: true }
 /**
  * The General tab: the GitHub sign-in, and what every org shares, the
  * GitHub App and the agents, with the share setting of each login and the
- * host of an own endpoint, then the invite code of the user, last, so that
- * a phone shows the form of an agent near the top.
+ * host of an own endpoint, then the invite code of the user, so that a
+ * phone shows the form of an agent near the top. The orgs that the user can
+ * restore come last, only while one exists.
  */
 function GeneralTab(props: { state: AccountState }) {
   return (
@@ -49,6 +51,7 @@ function GeneralTab(props: { state: AccountState }) {
         openSignUp={props.state.openSignUp === 'on'}
         state={props.state.invites}
       />
+      <DeletedOrgsSection state={props.state.deletedOrgs} />
     </>
   )
 }

@@ -164,7 +164,11 @@ async function sessionWrite(
   if (method === 'PUT' && action === 'model') {
     const body = await bodyOf(request)
     const choice = readChoice(body.choice)
-    if (choice.agent === session.choice.agent) {
+    // As the Worker does, a session with no message keeps another agent too.
+    const used = [...backend.messages.values()].some(
+      (message) => message.sessionId === session.id,
+    )
+    if (choice.agent === session.choice.agent || !used) {
       place(backend, { ...session, choice })
       return recordReply(backend, {
         session: { ...session, choice },
