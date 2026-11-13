@@ -11,7 +11,7 @@ Every accepted turn uses the model gateway. No real agent login reaches a sandbo
 Cal approved this removal on 12 November 2026: "we can remove version 1 now, no one is using it anymore".
 Cal requested the plan, implementation, review, and pull request in the same task.
 This approval covers deletion of version 1 functionality, tests of that functionality, and its documentation.
-It chooses option B of [the runner follow-up](follow-ups/runner-update-at-start.md), without its one-time workspace move.
+It chooses option B of [the runner follow-up](https://github.com/Firna-AI/conductive/blob/379f60628/plans/follow-ups/runner-update-at-start.md), without its one-time workspace move.
 It reverses gateway decision 2 and Cal's 9 November 2026 choice to give real logins to version 1 runners.
 The reversal date is 12 November 2026.
 The rejected alternatives are runner updates at each start, a scheduled refusal, and continued compatibility.
@@ -74,31 +74,40 @@ Messages from the orchestrator to delegates are agent instructions, not addition
 Depends on: none
 
 - [x] Check the supplied facts against code and search for other consumers.
-- [ ] Update internal requirements and area docs for gateway-only operation and unsupported-runner refusal.
+- [x] Update internal requirements and area docs for gateway-only operation and unsupported-runner refusal.
+  Evidence: `.context/remove-runner-protocol-v1/internal-docs.md`.
+  Move the naming requirements to a linked page to keep the touched protocol doc below its length target.
+  Close the obsolete tool-process check in `plans/boat-native-remote-workspaces.md`.
 - [x] Read both legal pages and every public guide in full. Update each affected statement.
 - [x] Check the comparison feature rows and update any affected status.
-- [ ] Check relative Markdown links in changed files.
+- [x] Check relative Markdown links in changed files.
+  Evidence: `.context/remove-runner-protocol-v1/combined-links.txt`.
 
 ## Milestone 2: Remove legacy code and move tests
 
 Depends on: 1
 
-- [ ] Delete legacy wire types, real-login dispatch, capability branches, and runtime fallbacks.
-- [ ] Reject unsupported hello messages and restored connections independently of the pin.
-- [ ] Use existing turn and start failure paths for obsolete runners. Preserve login availability metadata.
+- [x] Delete legacy wire types, real-login dispatch, capability branches, and runtime fallbacks.
+- [x] Reject unsupported hello messages and restored connections independently of the pin.
+- [x] Use existing turn and start failure paths for obsolete runners. Preserve login availability metadata.
   Give the rebuild and new-workspace remedy. Keep future-version refusal nondestructive.
-- [ ] Move live test assertions and fake runners to gateway credentials. Remove tests only for deleted behavior.
-- [ ] Verify refusal for old and missing pins, supported runners with old pins, and absence of real logins on the wire.
-- [ ] Run targeted checks, new async tests ten times, and break proofs for new regression tests.
+- [x] Move live test assertions and fake runners to gateway credentials. Remove tests only for deleted behavior.
+- [x] Verify refusal for old and missing pins, supported runners with old pins, and absence of real logins on the wire.
+- [x] Run targeted checks, new async tests ten times, and break proofs for new regression tests.
+
+Evidence: `.context/remove-runner-protocol-v1/code-report.md` and `.context/remove-runner-protocol-v1/root-targeted.txt`.
 
 ## Milestone 3: Follow-ups and verification
 
 Depends on: 2
 
-- [ ] Read all five named follow-ups. Delete only fully resolved items and update remaining live facts.
+- [x] Read all five named follow-ups. Delete only fully resolved items and update remaining live facts.
 - [x] Attempt a read-only production runner inventory only if credentials and an authorized route exist. Record any blocker.
-- [ ] Record a follow-up for the blocked read-only inventory of runners and old org images.
-- [ ] Run the deletion audit and check all changed Markdown links.
+- [x] Record a follow-up for the blocked read-only inventory of runners and old org images.
+  Item: `plans/follow-ups/production-runner-inventory.md`.
+- [x] Run the deletion audit and check all changed Markdown links.
+  Evidence: `.context/remove-runner-protocol-v1/implementation-audit-before.txt` and `.context/remove-runner-protocol-v1/combined-links.txt`.
+  Merge record: `.context/remove-runner-protocol-v1/merge-decisions.md`.
 - [ ] Run `npm run check` with Node 24 after desktop and runner dependency installation.
 - [ ] Commit with Conventional Commits and push the branch. Record Cal's deletion approval.
 - [ ] Review the complete diff against `origin/main` with the `implementation-review` skill after the push.

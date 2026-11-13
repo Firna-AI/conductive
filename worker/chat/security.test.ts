@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { expectGatewayLogin } from './runner-credential.test-support'
 import { API_PATHS } from '../../src/shared/api'
 import type { SendMessageResponse } from '../../src/shared/messages'
 import {
@@ -211,8 +212,11 @@ describe('workspace chat security', () => {
     expect(runner.commands).toHaveLength(2)
     const retried = runner.commands[1]
     if (retried?.type !== 'turn') throw new Error('Expected a retry turn.')
-    if (!retried.login) throw new Error('The version 1 turn has no login.')
-    expect(retried.login.secret).toBe(`secret-${fixture.owner.id}-claude`)
+    await expectGatewayLogin(
+      fixture,
+      retried,
+      `secret-${fixture.owner.id}-claude`,
+    )
     expect(
       (await fixture.history(session.id)).events.filter(
         ({ event }) => event.type === 'message.accepted',

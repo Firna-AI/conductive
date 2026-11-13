@@ -4,33 +4,31 @@ This page belongs to the [shared contracts](README.md).
 
 `runner.ts` defines the versioned handshake, commands, numbered events,
 confirmations, and resend rules. Its comments state the delivery contract.
-`RunnerProtocolVersion` is 1 or 2. The Worker accepts both versions.
+`RUNNER_PROTOCOL_VERSION` is 2, and `RunnerProtocolVersion` is that one
+version. The packaged runner sends it, and each full image build records it.
+The Worker accepts only that version. It closes a runner of any other
+version before the `welcome` and before any command, as
+[Runner versions](../../docs/protocol/version-pins.md#runner-versions) says.
 The `welcome` repeats the version of the runner's `hello`.
 The optional `hello.loginKinds` declares the login kinds the runner can use.
-A version 2 runner without it has only legacy support.
-ChatGPT sign-in needs an explicit declaration. Version 1 cannot declare it usable.
-`RUNNER_PROTOCOL_VERSION` is 2. The packaged runner sends it, and
-each full image build records it.
+`runnerSupportsLogin` reads that list. A runner without the list can use
+each login kind except a Codex ChatGPT sign-in.
 The credential of a turn belongs to the session starter, whoever sent the
 message:
 
-- `RunnerTurnV1` and `RunnerMessageDuringTurnV1` carry the real agent
-  login in `login`, with its agent, kind, and secret. Their typed login
-  excludes Codex ChatGPT sign-in.
-- `RunnerTurnV2` carries a turn token in `credential`, with the agent and
+- `RunnerTurn` carries a turn token in `credential`, with the agent and
   the login kind. A Codex ChatGPT credential also carries public account
-  claims for its temporary login file. It has no `login`.
-- `RunnerMessageDuringTurnV2` carries no credential and no login.
+  claims for its temporary login file.
+- `RunnerMessageDuringTurn` carries no credential.
+- No runner command carries a real agent login.
 
 `RunnerTurnCredential.promptCacheTtl` is optional and accepts only `'1h'`.
 The Worker sets it only for Claude own endpoint turns, which keep the `api-key` kind.
-The runner ignores unknown values. An older runner ignores the field.
+The runner ignores unknown values. A runner from before this field ignores it.
 Neither requires a new protocol version.
 
-`RunnerTurn`, `RunnerMessageDuringTurn`, `RunnerCommand`, and
-`WorkspaceToRunner` cover both versions. Their `V1` and `V2` forms give the
-shapes of one version. The runner imports the `V2` forms and uses
-a turn token.
+`RunnerCommand` and `WorkspaceToRunner` cover the commands and the other
+messages that the workspace sends to the runner.
 The [model gateway](../../worker/model-gateway/README.md#model-requests)
 gives the form of a turn token.
 

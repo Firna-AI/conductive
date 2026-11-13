@@ -204,11 +204,18 @@ npm run typecheck
   and the fences, the token check of a Mac ping, and a native alarm that
   returns while a token read waits. `runner-native-delivery.test.ts` checks
   that a wake resends no command or repair, keeps file ownership, and
-  revives no replaced runner. It runs for protocol versions 1 and 2. The
-  stored state holds no login after the wake. A version 2 `message` command
-  then carries no credential, and each version 2 `turn` command carries a
-  turn token and no login. A version 1 `turn` command still carries the
-  real login.
+  revives no replaced runner. The stored state holds no login after the
+  wake. A `message` command then carries no credential, and each `turn`
+  command carries a turn token and no login.
+- `runner-version.test.ts` checks the version refusal of a `hello`. A
+  version below `RUNNER_PROTOCOL_VERSION` closes before any command and
+  fails each waiting turn once with `runner_protocol_unsupported`, with an
+  old, a current, or a missing pin. A higher version, and a runner below
+  the pin, close and change no turn. A supported runner gets gateway
+  turns with a pin of 1, 2, or none. `runner-native-version.test.ts`
+  retires a saved runner record of an unsupported version, or with no
+  version, through a wake. The object stays usable, and a lower or missing
+  version fails the turns once.
 - `browser-native-close.test.ts` and `runner-native-close.test.ts` make a
   close the first event after a wake, with no restored peer. Their entries
   give the `prepare-close` and `close-handled` controls of
