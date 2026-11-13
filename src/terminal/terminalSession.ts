@@ -1,6 +1,6 @@
 import type { TerminalTransport } from '../shared/terminal'
 import { bridgeInputMessage, type BridgeSize } from '../shared/terminal-bridge'
-import { pasteMessage, type BridgeEvent } from './bridgeLink'
+import { binaryMessage, pasteMessage, type BridgeEvent } from './bridgeLink'
 import { keySequence, withControl, type ExtraKey } from './terminalKeys'
 
 interface Disposable {
@@ -22,6 +22,10 @@ export interface TerminalScreen {
   onReply(listener: (data: string) => void): Disposable
   /** A focus report, which the screen sends while a program asked for it. */
   onFocusReport(listener: (data: string) => void): Disposable
+  /** A mouse report in a binary encoding, one character for each byte. */
+  onBinaryInput(listener: (data: string) => void): Disposable
+  /** Gives the screen a new size, such as the shared size of the bridge. */
+  resize(cols: number, rows: number): void
   /** A message of the terminal bridge, after its nonce check. */
   onBridge(listener: (event: BridgeEvent) => void): Disposable
   /** Takes over each paste. A handler that returns false leaves it. */
@@ -106,6 +110,7 @@ export class TerminalSession {
       if (!this.ended && !this.nonce) transport.write(data)
     })
     const focus = screen.onFocusReport((data) => this.focusReport(data))
+    const binary = screen.onBinaryInput((data) => this.binaryInput(data))
     const bridge = screen.onBridge((event) => this.bridgeEvent(event))
     const resize = screen.onResize(({ cols, rows }) => {
       if (!this.ended && !this.nonce) transport.resize(cols, rows)
@@ -114,6 +119,7 @@ export class TerminalSession {
       () => input.dispose(),
       () => reply.dispose(),
       () => focus.dispose(),
+      () => binary.dispose(),
       () => bridge.dispose(),
       () => resize.dispose(),
       () => screen.setPasteHandler(null),
@@ -127,6 +133,15 @@ export class TerminalSession {
     if (this.ended || !this.nonce || panel === this.panel) return
     this.panel = panel
     this.transport.resize(cols, rows)
+  }
+
+  /** Sends the colours of the screen again, after a change of the scheme. */
+  coloursChanged(): void {
+    if (this.ended || !this.nonce) return
+    const colours = this.screen.colours() ?? fallbackColours
+    this.transport.write(
+      bridgeInputMessage(this.nonce, { kind: 'hello', ...colours }),
+    )
   }
 
   /** Sends one key of the key row, and keeps the keyboard on the terminal. */
@@ -160,13 +175,34 @@ export class TerminalSession {
         bridgeInputMessage(nonce, { kind: 'hello', ...colours }),
       )
       this.screen.setPasteHandler((text) => this.paste(nonce, text))
-      this.events.onSharedSize?.(event.size)
+      this.sharedSize(event.size)
     } else if (event.kind === 'size') {
-      this.events.onSharedSize?.(event.size)
+      this.sharedSize(event.size)
     } else if (this.nonce) {
       const ack = { kind: 'ack', mark: event.mark } as const
       this.transport.write(bridgeInputMessage(this.nonce, ack))
     }
+  }
+
+  /**
+   * Gives the screen the shared size at once, where the message comes in the
+   * output, so the output after it draws at that size also while the screen
+   * is hidden and cannot measure its panel.
+   */
+  private sharedSize(size: BridgeSize): void {
+    this.screen.resize(size.columns, size.rows)
+    this.events.onSharedSize?.(size)
+  }
+
+  /**
+   * The transport carries text only, so a binary mouse report goes to the
+   * bridge as a message. Without a bridge, it goes nowhere, as before.
+   */
+  private binaryInput(data: string): void {
+    if (this.ended || !this.nonce) return
+    this.setControl(false)
+    this.transport.write(binaryMessage(this.nonce, data))
+    this.events.onInput?.()
   }
 
   /** A focus report is not the user's key either, as a reply is not. */

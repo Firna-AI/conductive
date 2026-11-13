@@ -27,7 +27,7 @@ export const TERMINAL_HISTORY_LINES = 2_000
 /** The bridge sends a mark after each such number of output bytes. */
 export const BRIDGE_MARK_BYTES = 64 * 1_024
 
-/** The bridge stops reading tmux while this many marks wait for an answer. */
+/** The bridge drops the output while this many marks wait for an answer. */
 export const BRIDGE_MARK_WINDOW = 16
 
 /** The longest paste, in bytes of UTF-8, that the bridge accepts. */
@@ -59,6 +59,7 @@ export type BridgeInputMessage =
   | { readonly kind: 'ack'; readonly mark: number }
   | { readonly kind: 'focus'; readonly focused: boolean }
   | { readonly kind: 'paste'; readonly base64: string }
+  | { readonly kind: 'mouse'; readonly base64: string }
 
 const noncePattern = /^[0-9a-f]{32}$/
 const colourPattern = /^#[0-9a-f]{6}$/
@@ -140,6 +141,8 @@ export function bridgeInputMessage(
       return message(nonce, ['focus', value.focused ? 'in' : 'out'])
     case 'paste':
       return message(nonce, ['paste', value.base64])
+    case 'mouse':
+      return message(nonce, ['mouse', value.base64])
   }
 }
 
@@ -191,7 +194,11 @@ export function parseBridgeInput(
       ? { nonce, message: { kind, focused: first === 'in' } }
       : null
   }
-  if (kind === 'paste' && fields.length === 1 && first !== undefined) {
+  if (
+    (kind === 'paste' || kind === 'mouse') &&
+    fields.length === 1 &&
+    first !== undefined
+  ) {
     return base64Pattern.test(first)
       ? { nonce, message: { kind, base64: first } }
       : null

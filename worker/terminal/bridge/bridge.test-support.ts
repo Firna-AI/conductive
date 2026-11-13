@@ -1,8 +1,10 @@
 import { spawn, spawnSync, type ChildProcess } from 'node:child_process'
 import { mkdir, mkdtemp, writeFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
 import { resolve } from 'node:path'
 
 import xterm from '@xterm/headless'
+import { vi } from 'vitest'
 
 import {
   BRIDGE_OSC,
@@ -66,7 +68,9 @@ export async function tmuxServer() {
   const parent = resolve('.context/terminal-bridge-tests')
   await mkdir(parent, { recursive: true })
   const root = await mkdtemp(`${parent}/run-`)
-  const socket = `${root}/tmux.sock`
+  // tmux refuses a socket path of 108 characters or more, so the socket
+  // lives in a short folder, not under the checkout.
+  const socket = `${await mkdtemp(`${tmpdir()}/cbt-`)}/tmux.sock`
   const runner = `${root}/pty-run.py`
   await writeFile(runner, ptyRunner)
   const started = spawnSync('tmux', [
@@ -92,7 +96,18 @@ export async function tmuxServer() {
   const viewers: Viewer[] = []
   return {
     root,
+    socket,
     tmux,
+    /** Waits until a tmux format of the session has the value. */
+    async waitForFormat(format: string, value: string): Promise<void> {
+      await vi.waitFor(
+        () => {
+          const now = tmux('display-message', '-p', '-t', 'workspace', format)
+          if (now.trim() !== value) throw new Error(`${format} is ${now}`)
+        },
+        { timeout: 10_000, interval: 20 },
+      )
+    },
     connect(rows: number, columns: number) {
       const viewer = new Viewer(runner, socket, root, rows, columns)
       viewers.push(viewer)
@@ -157,11 +172,20 @@ class Viewer {
     this.process.stdin?.write(input)
   }
 
-  /** Waits until the output holds the text. */
-  async waitFor(text: string | RegExp, milliseconds = 10_000): Promise<void> {
+  /** The length of the output now, to wait for text after it. */
+  get mark(): number {
+    return this.data.length
+  }
+
+  /** Waits until the output after `from` holds the text. */
+  async waitFor(
+    text: string | RegExp,
+    milliseconds = 10_000,
+    from = 0,
+  ): Promise<void> {
     const deadline = Date.now() + milliseconds
     while (Date.now() < deadline) {
-      const output = this.data.toString('utf8')
+      const output = this.data.subarray(from).toString('utf8')
       if (typeof text === 'string' ? output.includes(text) : text.test(output))
         return
       await new Promise((done) => setTimeout(done, 50))

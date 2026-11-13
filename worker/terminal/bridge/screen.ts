@@ -2,7 +2,9 @@
  * The state of a tmux pane, and the bytes that rebuild it in a new terminal:
  * the history above the screen, the screen, the cursor, and the modes that a
  * program set. tmux 3.4 reports these modes as formats. It does not report
- * the bracketed paste mode, so the bridge sends each paste through tmux.
+ * the bracketed paste mode, so the bridge sends each paste through tmux. It
+ * does not report the character sets either, so the rebuild selects the
+ * ones that programs of the `tmux-256color` terminal expect.
  */
 
 const fields = [
@@ -17,16 +19,19 @@ const fields = [
   'alternate_on',
   'cursor_x',
   'cursor_y',
+  'alternate_saved_x',
+  'alternate_saved_y',
   'cursor_flag',
   'keypad_cursor_flag',
   'keypad_flag',
   'insert_flag',
   'wrap_flag',
+  'origin_flag',
   'scroll_region_upper',
   'scroll_region_lower',
   'mouse_standard_flag',
   'mouse_button_flag',
-  'mouse_any_flag',
+  'mouse_all_flag',
   'mouse_sgr_flag',
   'mouse_utf8_flag',
 ] as const
@@ -90,14 +95,22 @@ export function parsePaneState(line: string): PaneState | null {
 const encoder = new TextEncoder()
 const reset = '\x1b[0m'
 
-/** One screen of rows, each drawn at its own place. */
-function rows(
-  lines: readonly Uint8Array[],
-  height: number,
-): (string | Uint8Array)[] {
+/** Selects ASCII as G0 and line drawing as G1, and shifts in G0. */
+const characterSets = '\x1b(B\x1b)0\x0f'
+
+/** Ends a captured line: no colour, and G0, so no run of it stays open. */
+const lineEnd = `${reset}\x0f`
+
+/**
+ * Prints captured lines as a flow from the cursor. tmux joined each line
+ * that it wrapped, so xterm.js wraps it again at the same width and keeps
+ * it one line for a copy. A line break follows each line but the last.
+ */
+function flow(lines: readonly Uint8Array[]): (string | Uint8Array)[] {
   const parts: (string | Uint8Array)[] = []
-  lines.slice(0, height).forEach((line, index) => {
-    parts.push(`\x1b[${index + 1};1H`, line, reset)
+  lines.forEach((line, index) => {
+    if (index > 0) parts.push('\r\n')
+    parts.push(line, lineEnd)
   })
   return parts
 }
@@ -106,24 +119,31 @@ function mode(on: number, set: string, unset: string): string {
   return on === 1 ? set : unset
 }
 
+/** tmux reports this for a position that it never saved. */
+const unset = 4_294_967_295
+
 /** The modes, the scroll region, and the cursor of the pane. */
 function modes(state: PaneState): string {
   const { flags } = state
   const mouse = [
     [flags.mouse_standard_flag, 1000],
     [flags.mouse_button_flag, 1002],
-    [flags.mouse_any_flag, 1003],
+    [flags.mouse_all_flag, 1003],
     [flags.mouse_utf8_flag, 1005],
     [flags.mouse_sgr_flag, 1006],
   ]
     .filter(([on]) => on === 1)
     .map(([, number]) => `\x1b[?${number}h`)
     .join('')
+  const upper = flags.scroll_region_upper
   const region =
-    flags.scroll_region_upper === 0 &&
-    flags.scroll_region_lower === state.paneHeight - 1
+    upper === 0 && flags.scroll_region_lower === state.paneHeight - 1
       ? '\x1b[r'
-      : `\x1b[${flags.scroll_region_upper + 1};${flags.scroll_region_lower + 1}r`
+      : `\x1b[${upper + 1};${flags.scroll_region_lower + 1}r`
+  // Origin mode moves the cursor home, and then counts rows from the top
+  // of the scroll region.
+  const origin = flags.origin_flag === 1
+  const row = origin ? state.cursorY - upper : state.cursorY
   return [
     mode(flags.keypad_cursor_flag, '\x1b[?1h', '\x1b[?1l'),
     mode(flags.keypad_flag, '\x1b=', '\x1b>'),
@@ -131,35 +151,50 @@ function modes(state: PaneState): string {
     mode(flags.wrap_flag, '\x1b[?7h', '\x1b[?7l'),
     mouse,
     region,
-    `\x1b[${state.cursorY + 1};${state.cursorX + 1}H`,
+    origin ? '\x1b[?6h' : '',
+    `\x1b[${row + 1};${Math.min(state.cursorX, state.paneWidth - 1) + 1}H`,
     mode(flags.cursor_flag, '\x1b[?25h', '\x1b[?25l'),
   ].join('')
 }
 
+/** The captures of a pane, from one command line of the bridge. */
+export interface PaneCaptures {
+  /** The history and the screen, joined where tmux wrapped them. */
+  readonly whole: readonly Uint8Array[]
+  /** The history alone, for a pane that shows a full-screen program. */
+  readonly history: readonly Uint8Array[]
+  /** The screen that the pane shows. */
+  readonly screen: readonly Uint8Array[]
+  /** The normal screen behind a full-screen program. */
+  readonly normal: readonly Uint8Array[]
+}
+
 /**
- * The bytes that clear the terminal and rebuild the pane in it. `history`
- * holds the lines above the screen, joined where tmux wrapped them. `normal`
- * holds the rows of the normal screen. `alternate` holds the rows of a
- * full-screen program, when one runs.
+ * The bytes that clear the terminal and rebuild the pane in it. The lines
+ * print as a flow, so the history scrolls above the screen and the last
+ * lines fill the screen as they do in tmux. When a full-screen program runs,
+ * the normal screen prints first, and the program's screen prints on the
+ * alternate screen from its top.
  */
 export function rebuildPane(
   state: PaneState,
-  history: readonly Uint8Array[],
-  normal: readonly Uint8Array[],
-  alternate: readonly Uint8Array[] | null,
+  captures: PaneCaptures,
 ): Uint8Array {
   const parts: (string | Uint8Array)[] = [
     // Leave a full-screen program, reset the modes, and clear everything.
-    '\x1b[?1049l\x1b[r\x1b[?1000l\x1b[?1002l\x1b[?1003l\x1b[?1005l\x1b[?1006l',
-    `${reset}\x1b[H\x1b[2J\x1b[3J`,
+    '\x1b[?1049l\x1b[r\x1b[?6l\x1b[?1000l\x1b[?1002l\x1b[?1003l\x1b[?1005l\x1b[?1006l',
+    `${reset}\x1b[?7h${characterSets}\x1b[H\x1b[2J\x1b[3J`,
   ]
-  for (const line of history) parts.push(line, `${reset}\r\n`)
-  // New lines move the history above the screen, so the rows draw over
-  // blank rows and the history stays whole.
-  if (history.length > 0) parts.push('\n'.repeat(state.paneHeight - 1))
-  parts.push(...rows(normal, state.paneHeight))
-  if (alternate) {
-    parts.push('\x1b[?1049h\x1b[H\x1b[2J', ...rows(alternate, state.paneHeight))
+  if (!state.alternate) {
+    parts.push(...flow(captures.whole))
+  } else {
+    const history = state.historySize > 0 ? captures.history : []
+    parts.push(...flow([...history, ...captures.normal]))
+    // xterm.js saves this cursor at the switch, and the normal screen gets
+    // it back when the program ends.
+    const { alternate_saved_x: x, alternate_saved_y: y } = state.flags
+    if (x !== unset && y !== unset) parts.push(`\x1b[${y + 1};${x + 1}H`)
+    parts.push('\x1b[?1049h\x1b[H\x1b[2J', ...flow(captures.screen))
   }
   parts.push(modes(state))
   const chunks = parts.map((part) =>

@@ -55,6 +55,11 @@ export function hexColour(value: string | undefined): string | null {
   return /^#[0-9a-f]{6}$/i.test(normal) ? normal.toLowerCase() : null
 }
 
+/** The message of a mouse report in a binary encoding. */
+export function binaryMessage(nonce: string, data: string): string {
+  return bridgeInputMessage(nonce, { kind: 'mouse', base64: btoa(data) })
+}
+
 /**
  * The message of a paste, with its line ends as line feeds, which tmux turns
  * into the Return of a terminal. Null for a paste that is too long.

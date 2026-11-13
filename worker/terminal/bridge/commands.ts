@@ -18,18 +18,20 @@ export const stateCommand = `display-message -p ${quoted(PANE_STATE_FORMAT)}`
  * The commands that read the pane, in one command line. tmux runs the line
  * at once, and it keeps the output and the answers of the client in order.
  * So the output after the last answer joins the captures with no gap and no
- * repeat. The bridge never turns the output of the client off: in tmux 3.4,
- * `refresh-client -f no-output` during a flood of output can stall the
- * client for good.
+ * repeat. The line reads every capture that either screen mode needs, so
+ * the state in its first answer chooses among them. `-q` keeps the capture
+ * of the normal screen from failing when no full-screen program runs, so no
+ * later command of the line is lost. The bridge never turns the output of
+ * its client off: in tmux 3.4, `refresh-client -f no-output` during a flood
+ * of output can stall the client for good.
  */
-export function syncCommands(alternate: boolean): string[] {
-  return [
-    stateCommand,
-    'capture-pane -p -e -J -S - -E -1',
-    'capture-pane -p -e',
-    ...(alternate ? ['capture-pane -p -e -a'] : []),
-  ]
-}
+export const syncCommands: readonly string[] = [
+  stateCommand,
+  'capture-pane -p -e -J -S -',
+  'capture-pane -p -e -J -S - -E -1',
+  'capture-pane -p -e -J',
+  'capture-pane -p -e -J -a -q',
+]
 
 export function resizeCommand(columns: number, rows: number): string {
   return `resize-window -x ${columns} -y ${rows}`

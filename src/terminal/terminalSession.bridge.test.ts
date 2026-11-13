@@ -23,7 +23,8 @@ function bridged() {
 }
 
 it('answers the hello of the bridge with the colours of the screen, and takes its size', () => {
-  const { transport, events } = bridged()
+  const { screen, transport, events } = bridged()
+  expect([screen.cols, screen.rows]).toEqual([100, 30])
   expect(transport.inputs).toEqual([
     bridgeInputMessage(nonce, {
       kind: 'hello',
@@ -74,4 +75,54 @@ it('keeps replies, focus reports, and pastes as they were without a bridge', () 
   screen.reportFocus('\x1b[I')
   expect(transport.inputs).toEqual(['\x1b[1;1R', '\x1b[I'])
   expect(screen.pasteHandler).toBeNull()
+})
+
+it('gives the screen each shared size where the message comes, before the panel hears of it', () => {
+  const { screen, events } = bridged()
+  events.onSharedSize.mockImplementation(() =>
+    expect([screen.cols, screen.rows]).toEqual([40, 10]),
+  )
+  screen.bridge({ kind: 'size', size: { columns: 40, rows: 10 } })
+  expect(events.onSharedSize).toHaveBeenLastCalledWith({
+    columns: 40,
+    rows: 10,
+  })
+})
+
+it('sends the colours again after a change of the scheme, only with a bridge', () => {
+  const { screen, transport, session } = bridged()
+  screen.theme = { foreground: '#111111', background: '#fafafa' }
+  session.coloursChanged()
+  expect(transport.inputs.at(-1)).toBe(
+    bridgeInputMessage(nonce, {
+      kind: 'hello',
+      foreground: '#111111',
+      background: '#fafafa',
+    }),
+  )
+  const plain = new FakeTerminal()
+  const alone = new TerminalSession(new FakeScreen(), plain, {
+    onClosed: vi.fn(),
+    onControlChange: vi.fn(),
+  })
+  alone.start()
+  alone.coloursChanged()
+  expect(plain.inputs).toEqual([])
+})
+
+it('sends a binary mouse report as a message, and drops it without a bridge', () => {
+  const { screen, transport, events } = bridged()
+  screen.sendBinary('\x1b[M #!')
+  expect(transport.inputs.at(-1)).toBe(
+    bridgeInputMessage(nonce, { kind: 'mouse', base64: btoa('\x1b[M #!') }),
+  )
+  expect(events.onInput).toHaveBeenCalledTimes(1)
+  const plainScreen = new FakeScreen()
+  const plain = new FakeTerminal()
+  new TerminalSession(plainScreen, plain, {
+    onClosed: vi.fn(),
+    onControlChange: vi.fn(),
+  }).start()
+  plainScreen.sendBinary('\x1b[M #!')
+  expect(plain.inputs).toEqual([])
 })

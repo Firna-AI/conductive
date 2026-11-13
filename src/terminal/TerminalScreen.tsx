@@ -126,8 +126,6 @@ export function TerminalScreen(props: {
       session.resizePanel(panel.cols, panel.rows)
       const fontSize = fittedFontSize(normalFont, panel, shared)
       if (fontSize !== normalFont) xterm.options.fontSize = fontSize
-      if (xterm.cols !== shared.columns || xterm.rows !== shared.rows)
-        xterm.resize(shared.columns, shared.rows)
       const smaller = shared.columns < panel.cols || shared.rows < panel.rows
       host.dataset.shared = smaller ? 'smaller' : 'fits'
     }
@@ -160,6 +158,8 @@ export function TerminalScreen(props: {
     const xterm = xtermRef.current
     if (host && xterm) {
       xterm.options.theme = terminalTheme(cssTokens(host), scheme)
+      // The bridge answers the colour queries of programs with these colours.
+      sessionRef.current?.coloursChanged()
     }
   }, [scheme])
 

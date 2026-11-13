@@ -8,6 +8,7 @@ import links from './bridge/links.ts?raw'
 import main from './bridge/main.ts?raw'
 import queue from './bridge/queue.ts?raw'
 import screen from './bridge/screen.ts?raw'
+import size from './bridge/size.ts?raw'
 import sync from './bridge/sync.ts?raw'
 
 /** The folder of the terminal bridge in the image. */
@@ -34,5 +35,6 @@ export const BRIDGE_FILES: Readonly<Record<string, string>> = {
   'worker/terminal/bridge/main.ts': main,
   'worker/terminal/bridge/queue.ts': queue,
   'worker/terminal/bridge/screen.ts': screen,
+  'worker/terminal/bridge/size.ts': size,
   'worker/terminal/bridge/sync.ts': sync,
 }

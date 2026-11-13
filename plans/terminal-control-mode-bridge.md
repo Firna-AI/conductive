@@ -134,14 +134,15 @@ it without `NODE_OPTIONS` and the other Node variables of the workspace.
    the answers of a client in order, so the bridge drops the output until
    the last answer. A test showed that the capture and the output after it
    join with no gap and no duplicate line.
-   - It prints the history with colours and joined lines, then one screen
-     of new lines, which moves the history above the screen. A replay test
-     in xterm.js showed this.
-   - It draws each screen row at its place, then puts the cursor in place.
+   - It prints the history and the screen as one flow of joined lines, so
+     xterm.js wraps each line as tmux did, and the history scrolls above
+     the screen. Review round 1 changed this from rows drawn one by one,
+     which split each wrapped line of the screen.
    - When a full-screen program, such as vim, runs, it prints the normal
-     screen, switches xterm.js to the alternate screen, and draws that
-     screen. It sets the cursor keys mode, the keypad mode, the mouse mode,
-     and the scroll region that tmux reports.
+     screen, moves to the cursor that the program saved, switches xterm.js
+     to the alternate screen, and prints that screen. It sets the cursor
+     keys mode, the keypad mode, the mouse mode, origin mode, the scroll
+     region, and the character sets that programs expect.
 5. **The control-mode reader.** tmux does not escape the output of a
    command, so a captured line can read `%exit` or `%end`. The reader ends
    a block only at the `%end` or `%error` line whose time, number, and
@@ -211,8 +212,13 @@ These are my calls, made on 13 November 2026.
 1. **TypeScript run by Node.** The bridge is TypeScript that the private
    Node 24 runs directly. Reason: it shares the strict settings, the tests,
    and the lint of the other TypeScript code. A check of Node 24.22 showed
-   no warning. Plain `.mjs` with `checkJs` was the other choice. The bridge
-   gets its own Node tsconfig, and `tsconfig.worker.json` leaves it out.
+   no warning. Plain `.mjs` with `checkJs` was the other choice.
+   `tsconfig.worker.json` leaves the bridge out. Corrected on 13 November
+   2026, after review round 1: the bridge has no tsconfig of its own. The
+   test check with Node types, `tsconfig.worker-tests.json`, checks it.
+   That check also loads the Worker types, so it does not catch a Worker
+   global in a bridge file. The real-tmux tests and the install test run
+   the modules in Node. A Node-only check waits for the user.
 2. **`resize-window`, not `window-size manual`.** Reason: in tmux 3.4, the
    global `window-size manual` option stops the tmux server at the next
    `new-session`. A test showed this. `resize-window` sets manual sizing
@@ -323,6 +329,8 @@ Depends on: 2
       the shell server states the number of Decision 2 A.
 - [x] Add the bridge tsconfig, and leave the bridge out of
       `tsconfig.worker.json`.
+  - 13 November 2026: no bridge tsconfig was added. Design call 1 gives
+    the check that the bridge has.
 - [x] Add unit tests for the reader, including a captured `%end` line, and
       for the connect step.
 - [x] Add tests that run the bridge against a real tmux, as design call 8

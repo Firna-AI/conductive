@@ -49,6 +49,7 @@ export class XtermScreen implements TerminalScreen {
   private readonly userListeners = new Set<Listener>()
   private readonly replyListeners = new Set<Listener>()
   private readonly focusListeners = new Set<Listener>()
+  private readonly binaryListeners = new Set<Listener>()
   private readonly bridgeListeners = new Set<(event: BridgeEvent) => void>()
   private readonly bridge = new BridgeReader()
   private pasteHandler: ((text: string) => boolean) | null = null
@@ -77,6 +78,9 @@ export class XtermScreen implements TerminalScreen {
       }),
       // The link of an OSC 8 stays plain text, as it was in the tmux screen.
       parser.registerOscHandler(8, () => true),
+      xterm.onBinary((data) => {
+        for (const listener of this.binaryListeners) listener(data)
+      }),
       xterm.onData((data) => {
         const listeners = this.focusing
           ? this.focusListeners
@@ -125,6 +129,16 @@ export class XtermScreen implements TerminalScreen {
   /** A focus report, which xterm.js sends while a program asked for it. */
   onFocusReport(listener: Listener): IDisposable {
     return subscribe(this.focusListeners, listener)
+  }
+
+  /** A mouse report in a binary encoding, one character for each byte. */
+  onBinaryInput(listener: Listener): IDisposable {
+    return subscribe(this.binaryListeners, listener)
+  }
+
+  resize(cols: number, rows: number): void {
+    if (this.xterm.cols !== cols || this.xterm.rows !== rows)
+      this.xterm.resize(cols, rows)
   }
 
   /** A message of the terminal bridge, after its nonce check. */

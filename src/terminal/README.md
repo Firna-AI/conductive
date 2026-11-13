@@ -31,12 +31,17 @@ change can move the shared parts to the app's shared components.
   The screen reads the private messages of the bridge with its OSC handler,
   and shows none of them. It accepts the first hello of a connection, and
   later messages only with the nonce of that hello. After the hello:
-  - the screen answers with its text and background colours;
+  - the screen answers with its text and background colours, and sends
+    them again after each change of the colour scheme;
   - it acknowledges each mark of the flow control;
   - it sends no reply of xterm.js, because tmux answers the program;
   - it sends focus reports and pastes as messages, so the bridge pastes
-    through tmux with the bracketed paste marks of the program;
-  - it shows the size that all viewers share. It sends the size of its
+    through tmux with the bracketed paste marks of the program. It sends
+    a mouse report in a binary encoding as a message too, because the
+    transport carries text only;
+  - it shows the size that all viewers share. The session gives the
+    screen each shared size where the message comes in the output, also
+    while the screen is hidden. The screen sends the size of its
     panel, counted at the normal font. A larger shared size gets a smaller
     font, down to 6px, and the panel scrolls when even that does not fit.
     A smaller one leaves empty space, with a line at its edge.

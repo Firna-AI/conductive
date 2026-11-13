@@ -246,19 +246,34 @@ gives the requirements.
 - **Connect.** The bridge attaches with the client flag `ignore-size`, and
   it sets the size of the window to the size of its own terminal device. It sends the screen a hello with a random nonce and the
   shared size.
-- **Rebuild.** It reads the pane state with `display-message`. Then, in one
-  command line, it reads the state again and captures the history and the
-  screen. tmux keeps the output and the answers of a client in order, so
-  the bridge drops the output until the last answer, and the output after
-  it joins the captures with no gap. It never turns the output of its
-  client off, because in tmux 3.4 `refresh-client -f no-output` during a
-  flood of output can stall the client for good. It clears the screen, prints the history, moves it above the screen with new
-  lines, and draws each row, the cursor, and the modes that tmux reports.
-  When a full-screen program runs, it draws the normal screen, then the
-  alternate screen. It rebuilds again when the session, the window, or the
-  active pane changes.
+- **Rebuild.** In one command line, it reads the pane state with
+  `display-message` and captures the pane: the history with the screen,
+  the history alone, the screen, and the normal screen behind a full-screen
+  program. `-q` keeps the last capture from failing when no such program
+  runs, because a failed command ends its line. tmux keeps the output and
+  the answers of a client in order, so the bridge drops the output until
+  the last answer, and the output after it joins the captures with no gap.
+  It never turns the output of its client off, because in tmux 3.4
+  `refresh-client -f no-output` during a flood of output can stall the
+  client for good. It clears the screen, turns autowrap on, and selects
+  ASCII as G0 and line drawing as G1, which `tmux-256color` programs
+  expect. Then it prints the captured lines as a flow. tmux joined each
+  line that it wrapped (`-J`), so xterm.js wraps it again at the same
+  width, the history scrolls above the screen, and a long line stays one
+  line for a copy. Each line ends with SI, so no line-drawing run stays
+  open. When a full-screen program runs, it prints the normal screen,
+  moves to the cursor that the program saved, switches to the alternate
+  screen, and prints the program's screen. Last, it sets the cursor and
+  the modes that tmux reports, with origin mode and the scroll region. It
+  rebuilds again when the session, the window, or the active pane
+  changes.
 - **Output.** It passes the `%output` of the active pane to the device.
-- **Keys and pastes.** It sends keys with `send-keys -H`. A paste comes as a
+  After a `%layout-change`, a program redraws for the new size at once. So
+  the bridge holds the output until its read of the new size answers,
+  sends the size, and then sends the held output.
+- **Keys, mouse reports, and pastes.** It sends keys with `send-keys -H`.
+  The transport carries text only, so a mouse report in a binary encoding
+  comes as a message, and the bridge sends its bytes as keys. A paste comes as a
   message. The bridge writes it to a private file in the runtime folder and
   pastes it with `paste-buffer -p`, so tmux adds the bracketed paste marks
   when the program asked for them. tmux 3.4 does not report that mode, so a
@@ -270,7 +285,8 @@ gives the requirements.
   `%layout-change`, the bridge sends the new size to the screen. It keeps
   the size at most 500 columns and 200 rows, and takes its own size again
   when a program sets a larger one.
-- **Colours.** The screen's answer to the hello gives its colours. The
+- **Colours.** The screen's answer to the hello gives its colours, and the
+  screen sends them again after each change of the colour scheme. The
   bridge sets them as the `window-style` of the window, so tmux answers a
   colour query of a program with them.
 - **Flow control.** After the screen answers the hello, the bridge writes a

@@ -2,10 +2,8 @@ import {
   BRIDGE_MAX_PASTE_BYTES,
   BRIDGE_VERSION,
   bridgeOutputMessage,
-  clampBridgeSize,
   parseBridgeInput,
   type BridgeInputMessage,
-  type BridgeSize,
 } from '../../../src/shared/terminal-bridge.ts'
 import {
   keyCommands,
@@ -21,6 +19,7 @@ import type { DeviceLink, TmuxLink } from './links.ts'
 import { EXIT_BEFORE_HELLO } from './links.ts'
 import { parsePaneState, type PaneState } from './screen.ts'
 import { CommandQueue } from './queue.ts'
+import { SharedSize } from './size.ts'
 import { Sync } from './sync.ts'
 
 const encoder = new TextEncoder()
@@ -40,14 +39,16 @@ export class Bridge {
   private readonly splitter = new InputSplitter()
   private readonly sync: Sync
   private readonly flow: FlowControl
+  private readonly size: SharedSize
   private attached = false
   private state: PaneState | null = null
-  private sentSize: BridgeSize | null = null
-  /** The size of the last resize that this bridge asked for. */
-  private requested: BridgeSize | null = null
   private pastes = 0
   private cancelFlush: (() => void) | null = null
   private waitingKeys: Uint8Array[] = []
+  /** The size reads that wait for their answer after a layout change. */
+  private layoutReads = 0
+  /** The output that came while a size read waited. */
+  private heldOutput: Uint8Array[] = []
 
   constructor(tmux: TmuxLink, device: DeviceLink, nonce: string) {
     this.tmux = tmux
@@ -59,6 +60,13 @@ export class Bridge {
       mark: (mark) =>
         device.write(bridgeOutputMessage(nonce, { kind: 'mark', mark })),
       catchUp: () => this.sync.start(),
+    })
+    this.size = new SharedSize({
+      own: () => device.size(),
+      resize: (size) =>
+        this.queue.run([resizeCommand(size.columns, size.rows)], () => {}),
+      send: (size) =>
+        this.write(bridgeOutputMessage(nonce, { kind: 'size', size })),
     })
     this.sync = new Sync(this.queue, {
       rebuilt: (state, bytes) => this.rebuilt(state, bytes),
@@ -90,7 +98,7 @@ export class Bridge {
 
   /** The terminal device has a new size. */
   resized(): void {
-    if (this.attached) this.takeSize(true)
+    if (this.attached) this.size.take(true)
   }
 
   /** The tmux client exited. */
@@ -112,11 +120,15 @@ export class Bridge {
     }
     if (event.kind === 'output') {
       if (
-        !this.sync.running &&
-        !this.flow.behind &&
-        event.pane === this.state?.pane
+        this.sync.running ||
+        this.flow.behind ||
+        event.pane !== this.state?.pane
       )
-        this.write(event.data)
+        return
+      // A program redraws for a new size at once. The screen must get the
+      // size first, so the output waits until the read of the size ends.
+      if (this.layoutReads > 0) this.heldOutput.push(event.data)
+      else this.write(event.data)
       return
     }
     this.notification(event.name, event.args)
@@ -124,7 +136,7 @@ export class Bridge {
 
   private attach(): void {
     this.attached = true
-    this.takeSize(true)
+    this.size.take(true)
     this.sync.start()
   }
 
@@ -133,9 +145,13 @@ export class Bridge {
     if (name === 'exit') this.device.exit(0)
     if (!state) return
     if (name === 'layout-change' && args[0] === state.window) {
+      this.layoutReads += 1
       this.queue.run([stateCommand], (failed, blocks) => {
         const next = failed ? null : parsePaneState(text(blocks[0]?.[0]))
-        if (next) this.sized(next)
+        if (next) this.size.changed(next)
+        this.layoutReads -= 1
+        if (this.layoutReads > 0) return
+        for (const data of this.heldOutput.splice(0)) this.write(data)
       })
     } else if (
       (name === 'session-window-changed' && args[0] === state.session) ||
@@ -149,63 +165,15 @@ export class Bridge {
   private rebuilt(state: PaneState, bytes: Uint8Array): void {
     const first = this.state === null
     this.state = state
-    const size = paneSize(state)
     if (first) {
-      this.write(
-        bridgeOutputMessage(this.nonce, {
-          kind: 'hello',
-          version: BRIDGE_VERSION,
-          size,
-        }),
-      )
-      this.sentSize = size
+      const size = this.size.first(state)
+      const hello = { kind: 'hello', version: BRIDGE_VERSION, size } as const
+      this.write(bridgeOutputMessage(this.nonce, hello))
     } else {
-      this.sized(state)
+      this.size.changed(state)
     }
     this.write(bytes)
     for (const keys of this.waitingKeys.splice(0)) this.keys(keys)
-  }
-
-  /** Keeps the size inside the limits, and tells the screen each change. */
-  private sized(state: PaneState): void {
-    if (this.state) this.state = { ...this.state, ...sizeFields(state) }
-    // Another viewer took the size, so the next key takes it back.
-    if (
-      this.requested?.columns !== state.windowWidth ||
-      this.requested.rows !== state.windowHeight
-    )
-      this.requested = null
-    const limit = clampBridgeSize({
-      columns: state.windowWidth,
-      rows: state.windowHeight,
-    })
-    if (
-      limit.columns !== state.windowWidth ||
-      limit.rows !== state.windowHeight
-    )
-      this.takeSize(true)
-    const size = paneSize(state)
-    if (
-      size.columns === this.sentSize?.columns &&
-      size.rows === this.sentSize.rows
-    )
-      return
-    this.sentSize = size
-    this.write(bridgeOutputMessage(this.nonce, { kind: 'size', size }))
-  }
-
-  /** Gives the window the size of this device, when it differs. */
-  private takeSize(always: boolean): void {
-    const own = clampBridgeSize(this.device.size())
-    const state = this.state
-    const same = (size: BridgeSize | null) =>
-      size?.columns === own.columns && size.rows === own.rows
-    const current = state
-      ? { columns: state.windowWidth, rows: state.windowHeight }
-      : null
-    if (!always && (same(current) || same(this.requested))) return
-    this.requested = own
-    this.queue.run([resizeCommand(own.columns, own.rows)], () => {})
   }
 
   private keys(bytes: Uint8Array): void {
@@ -214,7 +182,7 @@ export class Bridge {
       this.waitingKeys.push(bytes)
       return
     }
-    this.takeSize(false)
+    this.size.take(false)
     for (const command of keyCommands(state.pane, bytes))
       this.queue.run([command], () => {})
   }
@@ -248,24 +216,27 @@ export class Bridge {
             () => {},
           )
         return
+      case 'mouse':
+        this.mouse(message.base64)
+        return
       case 'paste':
         this.paste(message.base64)
     }
   }
 
+  /** A mouse report in a binary encoding, which the transport cannot carry. */
+  private mouse(base64: string): void {
+    const bytes = decodeBase64(base64)
+    if (bytes && bytes.length > 0 && bytes.length <= 64) this.keys(bytes)
+  }
+
   private paste(base64: string): void {
     const state = this.state
     if (!state) return
-    let bytes: Uint8Array
-    try {
-      bytes = Uint8Array.from(atob(base64), (character) =>
-        character.charCodeAt(0),
-      )
-    } catch {
+    const bytes = decodeBase64(base64)
+    if (!bytes || bytes.length === 0 || bytes.length > BRIDGE_MAX_PASTE_BYTES)
       return
-    }
-    if (bytes.length === 0 || bytes.length > BRIDGE_MAX_PASTE_BYTES) return
-    this.takeSize(false)
+    this.size.take(false)
     const path = this.device.writePaste(bytes)
     this.pastes += 1
     const buffer = `conductive-paste-${this.nonce}-${this.pastes}`
@@ -281,15 +252,14 @@ export class Bridge {
   }
 }
 
+function decodeBase64(base64: string): Uint8Array | null {
+  try {
+    return Uint8Array.from(atob(base64), (character) => character.charCodeAt(0))
+  } catch {
+    return null
+  }
+}
+
 function text(line: Uint8Array | undefined): string {
   return line ? new TextDecoder().decode(line) : ''
-}
-
-function paneSize(state: PaneState): BridgeSize {
-  return clampBridgeSize({ columns: state.paneWidth, rows: state.paneHeight })
-}
-
-function sizeFields(state: PaneState) {
-  const { paneWidth, paneHeight, windowWidth, windowHeight } = state
-  return { paneWidth, paneHeight, windowWidth, windowHeight }
 }

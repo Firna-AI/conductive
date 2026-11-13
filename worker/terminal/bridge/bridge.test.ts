@@ -1,4 +1,6 @@
-import { afterEach, describe, expect, it } from 'vitest'
+import { existsSync, rmSync } from 'node:fs'
+
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { bridgeInputMessage } from '../../../src/shared/terminal-bridge'
 import { numbers, runTmuxTests, tmuxServer } from './bridge.test-support'
@@ -46,8 +48,8 @@ describe.skipIf(!runTmuxTests)('the terminal bridge with a real tmux', () => {
     await first.waitFor('END\r\n')
     first.close()
     const second = tmux.connect(20, 70)
-    await second.waitFor('END')
-    await new Promise((done) => setTimeout(done, 300))
+    // The rebuild ends with the cursor modes, after the history.
+    await second.waitFor('\x1b[?25h')
     const { lines, messages, buffer } = await second.screen()
     expect(messages[0]).toBe('hello;1;70;20')
     expect(numbers(lines)).toEqual(
@@ -72,16 +74,17 @@ describe.skipIf(!runTmuxTests)('the terminal bridge with a real tmux', () => {
     const first = tmux.connect(12, 60)
     await first.waitFor(prompt)
     first.write('seq 1 40; less /etc/passwd\r')
-    await first.waitFor('/etc/passwd')
+    await tmux.waitForFormat('#{alternate_on}', '1')
     first.close()
     const second = tmux.connect(12, 60)
-    await second.waitFor('root:')
-    await new Promise((done) => setTimeout(done, 300))
+    await second.waitFor('\x1b[?25h')
     const during = await second.screen()
     expect(during.buffer.type).toBe('alternate')
     expect(during.lines[0]).toMatch(/^root:/)
+    const beforeQuit = second.mark
     second.write('q')
-    await new Promise((done) => setTimeout(done, 500))
+    await second.waitFor('\x1b[?1049l', 10_000, beforeQuit)
+    await second.waitFor(/\$ /, 10_000, beforeQuit)
     const after = await second.screen()
     expect(after.buffer.type).toBe('normal')
     expect(numbers(after.lines)).toEqual(
@@ -94,7 +97,7 @@ describe.skipIf(!runTmuxTests)('the terminal bridge with a real tmux', () => {
     const first = tmux.connect(12, 60)
     await first.waitFor(prompt)
     first.write("printf '\\033[?2004h'; od -c\r")
-    await new Promise((done) => setTimeout(done, 300))
+    await tmux.waitForFormat('#{pane_current_command}', 'od')
     first.close()
     const second = tmux.connect(12, 60)
     await second.waitFor(/\$ /)
@@ -106,19 +109,6 @@ describe.skipIf(!runTmuxTests)('the terminal bridge with a real tmux', () => {
     await second.waitFor('^[[200~one\r\ntwo^[[201~')
     second.write('\x04')
     await second.waitFor(/033\s+\[\s+2\s+0\s+0\s+~/)
-  }, 30_000)
-
-  it('sends a lone Escape key on at once', async () => {
-    const tmux = await start()
-    const viewer = tmux.connect(12, 60)
-    await viewer.waitFor(prompt)
-    viewer.write('od -c\r')
-    await new Promise((done) => setTimeout(done, 300))
-    viewer.write('\x1b')
-    await new Promise((done) => setTimeout(done, 300))
-    viewer.write('\r\x04')
-    // The terminal device turns the Return into a line feed.
-    await viewer.waitFor(/033\s+\\n/)
   }, 30_000)
 
   it('gives the window the size of the viewer that typed last', async () => {
@@ -158,10 +148,18 @@ describe.skipIf(!runTmuxTests)('the terminal bridge with a real tmux', () => {
         background: '#eeeeee',
       }),
     )
-    viewer.write('yes | head -c 20000000; echo FINISHED\r')
-    await new Promise((done) => setTimeout(done, 8_000))
+    viewer.write('yes | head -c 3000000; echo FINISHED\r')
+    // The shell ends the flood, but the screen still shows the 16th mark
+    // as its last output, because the bridge drops the rest.
+    await vi.waitFor(
+      () => {
+        const screen = tmux.tmux('capture-pane', '-p', '-t', 'workspace')
+        if (!/^FINISHED$/m.test(screen)) throw new Error('No end yet.')
+      },
+      { timeout: 20_000, interval: 50 },
+    )
     const held = viewer.output.length
-    expect(held).toBeLessThan(2_000_000)
+    expect(viewer.output.toString('latin1').endsWith(';mark;16\x07')).toBe(true)
     expect(
       tmux
         .tmux('show-options', '-w', '-t', 'workspace', '-v', 'window-style')
@@ -194,3 +192,22 @@ describe.skipIf(!runTmuxTests)('the terminal bridge with a real tmux', () => {
     expect(await viewer.exited).toBe(0)
   }, 30_000)
 })
+
+describe.skipIf(!runTmuxTests)(
+  'the terminal bridge without a tmux server',
+  () => {
+    it('starts no server, and exits with code 3 so that the launcher runs the plain client', async () => {
+      const tmux = await start()
+      // tmux leaves the file of a socket whose server it killed.
+      tmux.tmux('kill-server')
+      rmSync(tmux.socket, { force: true })
+      const viewer = tmux.connect(12, 60)
+      try {
+        expect(await viewer.exited).toBe(3)
+        expect(existsSync(tmux.socket)).toBe(false)
+      } finally {
+        tmux.tmux('kill-server')
+      }
+    }, 30_000)
+  },
+)

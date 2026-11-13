@@ -1,4 +1,4 @@
-import { stateCommand, syncCommands } from './commands.ts'
+import { syncCommands } from './commands.ts'
 import type { CommandQueue } from './queue.ts'
 import { parsePaneState, rebuildPane, type PaneState } from './screen.ts'
 
@@ -14,11 +14,9 @@ export interface SyncEvents {
 
 /**
  * Reads the pane and rebuilds it. While it runs, the bridge drops the output
- * of the pane, because the captures hold it. It first reads whether a
- * full-screen program runs, because a capture of the screen behind it fails
- * when none runs. Then it reads the pane again with its captures, in one
- * command line. When the state changed between the two reads, or a command
- * failed, it starts again.
+ * of the pane, because the captures hold it. It reads the state and every
+ * capture in one command line. When the line fails, it reads again, a few
+ * times at most.
  */
 export class Sync {
   private readonly queue: CommandQueue
@@ -55,39 +53,25 @@ export class Sync {
       this.events.failed()
       return
     }
-    this.queue.run([stateCommand], (failed, blocks) => {
-      const first = failed ? null : parsePaneState(line(blocks[0]))
-      if (!first) {
+    this.queue.run(syncCommands, (failed, answers) => {
+      const state = failed ? null : parsePaneState(line(answers[0]))
+      if (!state) {
         this.read()
         return
       }
-      const commands = syncCommands(first.alternate)
-      this.queue.run(commands, (syncFailed, answers) => {
-        const state = syncFailed ? null : parsePaneState(line(answers[0]))
-        if (!state || state.alternate !== first.alternate) {
-          this.read()
-          return
-        }
-        this.finish(state, answers)
+      const bytes = rebuildPane(state, {
+        whole: answers[1] ?? [],
+        history: answers[2] ?? [],
+        screen: answers[3] ?? [],
+        normal: answers[4] ?? [],
       })
+      this.active = false
+      this.events.rebuilt(state, bytes)
+      if (this.again) {
+        this.again = false
+        this.start()
+      }
     })
-  }
-
-  private finish(
-    state: PaneState,
-    answers: readonly (readonly Uint8Array[])[],
-  ): void {
-    const history = state.historySize > 0 ? (answers[1] ?? []) : []
-    const visible = answers[2] ?? []
-    const bytes = state.alternate
-      ? rebuildPane(state, history, answers[3] ?? [], visible)
-      : rebuildPane(state, history, visible, null)
-    this.active = false
-    this.events.rebuilt(state, bytes)
-    if (this.again) {
-      this.again = false
-      this.start()
-    }
   }
 }
 
