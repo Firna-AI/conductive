@@ -2,7 +2,9 @@ import type { RunnerAttachment } from '../../../src/shared/runner'
 import type { ProviderInput } from './types'
 
 export const attachmentReadInstruction =
-  'The sender attached these files. Read each file before you answer.'
+  'The sender attached these files. Read each file, or the parts of a large file that you need, before you answer.'
+
+export const ATTACHMENT_IMAGE_MAX_BYTES = 25_000_000
 
 export function attachmentDescription(
   command: ProviderInput,

@@ -599,11 +599,11 @@ Depends on: 6
 
 Depends on: 2
 
-- [ ] Change the read line in
+- [x] Change the read line in
       `runner/src/providers/attachment-description.ts` for both adapters.
-- [ ] Give Codex an image as image input only up to 25,000,000 bytes, in
+- [x] Give Codex an image as image input only up to 25,000,000 bytes, in
       `runner/src/providers/codex.ts`.
-- [ ] Add runner tests for the line and for an image above the limit.
+- [x] Add runner tests for the line and for an image above the limit.
 - [ ] Update `worker/chat/attachments.md` and the runner README.
 
 ## Milestone 9: Verification, commit, review, and pull request

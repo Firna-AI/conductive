@@ -20,7 +20,7 @@ beforeEach(() => {
   onTestFinished(() => prepare.mockRestore())
 })
 
-function attachedTurn(agent: Agent) {
+function attachedTurn(agent: Agent, imageSizeBytes = 12) {
   const command = turn('attachments', 'alice', agent)
   command.message.attachments = [
     {
@@ -29,7 +29,7 @@ function attachedTurn(agent: Agent) {
       path: null,
       kind: 'image',
       mediaType: 'image/png',
-      sizeBytes: 12,
+      sizeBytes: imageSizeBytes,
     },
     {
       id: 'pdf',
@@ -86,14 +86,14 @@ it('gives Claude original attachment metadata and copied paths', async () => {
   await provider.send(command)
   expect((await sdk.nextUser()).message.content).toBe(
     'Sender: @alice [member ID: "alice"]\n\nChange the file.\n' +
-      'The sender attached these files. Read each file before you answer.\n' +
+      'The sender attached these files. Read each file, or the parts of a large file that you need, before you answer.\n' +
       'Attached file: {"name":"Plan \\"A\\".PDF","mediaType":"application/pdf","path":"/test/repository/.context/attachments/11111111111111111111111111111111/Plan-A.pdf","sizeBytes":23}\n' +
       'Attached file: {"name":"Screenshot.PNG","mediaType":"image/png","path":"/test/repository/.context/attachments/22222222222222222222222222222222/Screenshot.png","sizeBytes":12}',
   )
 })
 
-it('gives Codex original attachment metadata and keeps local image inputs', async () => {
-  const { command, options } = attachedTurn('codex')
+it('gives Codex original metadata and image input at exactly 25 MB', async () => {
+  const { command, options } = attachedTurn('codex', 25_000_000)
   const servers = new FakeAppServers()
   const provider = await createCodexFactory(servers.start)(options)
   onTestFinished(() => provider.close())
@@ -110,7 +110,7 @@ it('gives Codex original attachment metadata and keeps local image inputs', asyn
         },
         {
           type: 'text',
-          text: 'The sender attached these files. Read each file before you answer. Each image is also in this message.',
+          text: 'The sender attached these files. Read each file, or the parts of a large file that you need, before you answer. Each image is also in this message.',
           text_elements: [],
         },
         {
@@ -120,7 +120,7 @@ it('gives Codex original attachment metadata and keeps local image inputs', asyn
         },
         {
           type: 'text',
-          text: 'Attached file: {"name":"Screenshot.PNG","mediaType":"image/png","path":"/test/repository/.context/attachments/22222222222222222222222222222222/Screenshot.png","sizeBytes":12}',
+          text: 'Attached file: {"name":"Screenshot.PNG","mediaType":"image/png","path":"/test/repository/.context/attachments/22222222222222222222222222222222/Screenshot.png","sizeBytes":25000000}',
           text_elements: [],
         },
         {
@@ -149,7 +149,7 @@ it('gives Codex original attachment metadata and keeps local image inputs', asyn
         },
         {
           type: 'text',
-          text: 'The sender attached these files. Read each file before you answer.',
+          text: 'The sender attached these files. Read each file, or the parts of a large file that you need, before you answer.',
           text_elements: [],
         },
         {
@@ -181,7 +181,7 @@ it('gives Codex original attachment metadata and keeps local image inputs', asyn
         },
         {
           type: 'text',
-          text: 'The sender attached these files. Read each file before you answer. Each image is also in this message.',
+          text: 'The sender attached these files. Read each file, or the parts of a large file that you need, before you answer. Each image is also in this message.',
           text_elements: [],
         },
         {
@@ -202,3 +202,71 @@ it('gives Codex original attachment metadata and keeps local image inputs', asyn
     },
   })
 })
+
+it.each([false, true])(
+  'gives Codex a file line above 25 MB, with small image input: %s',
+  async (withSmallImage) => {
+    const { command, options } = attachedTurn('codex', 25_000_001)
+    if (withSmallImage) {
+      command.message.attachments = [
+        ...command.message.attachments,
+        {
+          id: 'small-image',
+          name: 'Small.PNG',
+          path: null,
+          kind: 'image',
+          mediaType: 'image/png',
+          sizeBytes: 12,
+        },
+      ]
+      command.attachments = [
+        ...command.attachments,
+        { attachmentId: 'small-image', path: '/test/repository/small.png' },
+      ]
+    }
+    const servers = new FakeAppServers()
+    const provider = await createCodexFactory(servers.start)(options)
+    onTestFinished(() => provider.close())
+    await provider.send(command)
+    expect(
+      servers.latest.writes.find((write) => write.method === 'turn/start'),
+    ).toMatchObject({
+      params: {
+        input: [
+          {
+            type: 'text',
+            text: 'Sender: @alice [member ID: "alice"]\n\nChange the file.',
+            text_elements: [],
+          },
+          {
+            type: 'text',
+            text:
+              'The sender attached these files. Read each file, or the parts of a large file that you need, before you answer.' +
+              (withSmallImage ? ' Each image is also in this message.' : ''),
+            text_elements: [],
+          },
+          {
+            type: 'text',
+            text: 'Attached file: {"name":"Plan \\"A\\".PDF","mediaType":"application/pdf","path":"/test/repository/.context/attachments/11111111111111111111111111111111/Plan-A.pdf","sizeBytes":23}',
+            text_elements: [],
+          },
+          {
+            type: 'text',
+            text: 'Attached file: {"name":"Screenshot.PNG","mediaType":"image/png","path":"/test/repository/.context/attachments/22222222222222222222222222222222/Screenshot.png","sizeBytes":25000001}',
+            text_elements: [],
+          },
+          ...(withSmallImage
+            ? [
+                {
+                  type: 'text',
+                  text: 'Attached file: {"name":"Small.PNG","mediaType":"image/png","path":"/test/repository/small.png","sizeBytes":12}',
+                  text_elements: [],
+                },
+                { type: 'localImage', path: '/test/repository/small.png' },
+              ]
+            : []),
+        ],
+      },
+    })
+  },
+)
