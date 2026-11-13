@@ -121,6 +121,12 @@ and cancellation rules when a response passes its byte budget.
 
 ## File reads
 
+`SandboxProvider.fileInfo(sandboxId, path)` reads metadata without file content.
+It uses the existing fixed `GET /sandboxes/{id}/files/info` route.
+It returns the validated absolute path, byte size, and directory flag.
+The adapter preserves typed provider errors, including 404 `not_found` and 503 `unavailable`.
+Attachment delivery uses this method to check files that the cloud computer already received.
+
 `SandboxProvider.readFile(sandboxId, path, maxBytes)` takes the backend's file byte limit.
 It returns a file result or a size result.
 The file result has the path, size, encoding, and content.
@@ -225,7 +231,7 @@ tests stay beside the adapter.
 - [transport-error-body.test.ts](transport-error-body.test.ts) checks the shared error budget and provider error mapping.
 - [file-response.ts](file-response.ts) calculates the file content budget.
 - [The shared readers](../http/bounded-body.ts) collect bounded bytes and decode and parse complete JSON bodies.
-- [file-read.ts](file-read.ts) parses file replies and runs the metadata fallback.
+- [file-read.ts](file-read.ts) validates file metadata, parses file content replies, and runs the metadata fallback.
 - [file-read.test.ts](file-read.test.ts) checks size results and safe errors from the metadata fallback.
 
 See the [access requirements](../../docs/protocol/isolation.md#orgs-and-workspaces),

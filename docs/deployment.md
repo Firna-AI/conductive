@@ -136,9 +136,10 @@ serves every org.
   no CORS rule. Only the Worker reads and writes the bucket, as
   [Orgs and workspaces](protocol/isolation.md#orgs-and-workspaces)
   says.
-- Add no lifecycle rule that deletes files by age. Such a rule would also
-  delete the files of sent messages, which stay until the app deletes their
-  workspace.
+- Add no lifecycle rule that deletes files by age. The Worker keeps each
+  accepted file until its transfer and the cloud computer's first start
+  succeed. Then it deletes the stored bytes and keeps the file record.
+  An age rule could delete bytes that a failed first start still needs.
 - The cloud computer downloads each attached file with a detached command.
   The Boat key needs `exec` for this transfer, as
   [The app's Boat account](#the-apps-boat-account) says.

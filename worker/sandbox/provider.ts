@@ -77,6 +77,12 @@ export type SandboxFileRead =
   | { kind: 'file'; file: SandboxFile }
   | { kind: 'too_large'; sizeBytes: number; limitBytes: number }
 
+export interface SandboxFileInfo {
+  path: string
+  sizeBytes: number
+  isDirectory: boolean
+}
+
 export type PortMode = 'localhost' | 'network'
 export interface PortCredential {
   readonly headers: Readonly<Record<string, string>>
@@ -100,6 +106,7 @@ export interface SandboxProvider {
     mode: PortMode,
   ): Promise<PrivatePort>
   desktop(sandboxId: string): Promise<SandboxDesktop>
+  fileInfo(sandboxId: string, path: string): Promise<SandboxFileInfo>
   readFile(
     sandboxId: string,
     path: string,

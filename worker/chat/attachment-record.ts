@@ -23,6 +23,8 @@ export interface AttachmentRecord {
   expiresAt: number
   claimedWorkspaceId: string | null
   claimedMessageId: string | null
+  transferredSandboxId: string | null
+  bytesDeletedAt: number | null
   revision: number
 }
 

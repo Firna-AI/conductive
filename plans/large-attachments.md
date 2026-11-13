@@ -581,22 +581,56 @@ These are the implementor's calls of 13 November 2026.
 
 Depends on: 3
 
-- [ ] Add the `transferred_sandbox_id` and `bytes_deleted_at` columns to
+- [x] Add the `transferred_sandbox_id` and `bytes_deleted_at` columns to
       `chat_attachments`, with a migration. Keep the `state` values.
-- [ ] Mark the file before the proof is saved. Delete only its R2 object
+- [x] Mark the file before the proof is saved. Delete only its R2 object
       after the first start of that cloud computer ended well.
-- [ ] Delete the R2 object of each transferred record that still has
+- [x] Delete the R2 object of each transferred record that still has
       bytes in the scheduled cleanup.
-- [ ] Add `fileInfo` to `SandboxProvider`, its Boat adapter, and the
+- [x] Add `fileInfo` to `SandboxProvider`, its Boat adapter, and the
       provider contract suite.
-- [ ] Check a transferred file with `fileInfo` before a later message or a
+- [x] Check a transferred file with `fileInfo` before a later message or a
       Try again. Fail the turn with `attachment_missing` when it is gone.
-- [ ] Add tests: the deletion, a later message, Try again, a changed size,
+- [x] Add tests: the deletion, a later message, Try again, a changed size,
       a failed first start before the deletion, and a new sandbox after
       it.
-- [ ] Update `worker/chat/attachments.md`.
-- [ ] Update `docs/deployment.md`, which says that the files of sent
+- [x] Update `worker/chat/attachments.md`.
+- [x] Update `docs/deployment.md`, which says that the files of sent
       messages stay until the app deletes their workspace.
+
+Verification evidence is in `.context/large-attachments/reports/m4.md`.
+
+### Design calls of Milestone 4
+
+These are the implementor's calls of 13 November 2026.
+
+- Byte deletion requires a succeeded `workspace_creation_attempts` record
+  and the current sandbox ID to match the transferred sandbox ID. Reason:
+  the lifecycle publishes this record after the native first start succeeds.
+  A ready workspace alone cannot prove that publication finished. A pending
+  or failed attempt therefore keeps its bytes. Legacy workspaces without an
+  attempt use their completed-start state.
+- `completeAttachments` runs the immediate byte deletion outside the chat
+  queue, after the message proof commits and dispatch resumes. Reason:
+  external storage must not hold Stop, runner events, or message admission.
+  The scheduled sweep retries deletion from the transferred record when the
+  first start succeeds or an earlier cleanup did not finish.
+- A later message checks provider metadata whenever the recorded sandbox
+  matches, also while R2 bytes remain. Reason: the protocol requires no
+  second transfer of a file that the cloud computer already received.
+- The transfer marker does not change the admission revision. Reason:
+  recording a completed download changes no claim or ownership.
+- The message owner collects each missing filename from admitted message
+  metadata when its file check gives `attachment_missing`. Reason: the
+  callback boundary preserves HTTP error codes but need not preserve an
+  error subclass. This also preserves the accepted filename order.
+- A directory at the file path counts as missing. Provider 404 means
+  missing, while other provider errors give `attachment_copy_failed`.
+  Reason: a directory cannot serve as the uploaded file, and an outage
+  does not prove that the file is gone.
+- A cleanup failure logs the existing retry warning and keeps the deletion
+  time empty. Reason: a later sweep can retry without failing a message
+  whose file transfer and proof already succeeded.
 
 ## Milestone 5: Upload in parts
 

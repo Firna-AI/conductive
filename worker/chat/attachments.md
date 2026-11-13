@@ -70,12 +70,12 @@ The key holds no command ID or runner connection.
 Their keys hash the file ID and sandbox ID with SHA-256.
 Two messages that need the same file on that computer wait for the same active transfer.
 The file owner clears after success or failure.
-A later message then downloads the original bytes again.
+A later message checks the completed file through provider metadata.
 
 The owner gives one file and its sandbox ID to `prepareMessageAttachments` in [attachment-copy.ts](attachment-copy.ts).
 That helper checks the current claim, uploader, workspace access, sandbox, provider account, and stored relative path.
 `attachmentRepositoryDirectory` in [attachment-paths.ts](attachment-paths.ts) selects the workspace repository from its captured folder map.
-The helper stores a random download token through [attachment-download-data.ts](attachment-download-data.ts).
+For a file that needs a transfer, the helper stores a random download token through [attachment-download-data.ts](attachment-download-data.ts).
 D1 keeps only its SHA-256 digest, file ID, workspace, org, sandbox, provider account, expiry, and claim time.
 The token expires after ten minutes.
 
@@ -90,6 +90,8 @@ The token appears only in the Authorization header of the download.
 `SandboxProvider.startCommand` starts it, and `getCommandStatus` polls it to completion.
 A failed command gives `attachment_copy_failed` through the normal failed-turn path.
 The helper checks the sandbox and provider account before and after the transfer.
+After a successful download, [attachment-transfer-data.ts](attachment-transfer-data.ts) records `transferred_sandbox_id` before the message proof.
+This update keeps the claim revision and the `claimed` state.
 The owner runs through `waitUntil` outside the chat queue.
 Stop, runner events, and confirmations keep using that queue during a transfer.
 
@@ -105,13 +107,15 @@ The continuation keeps the message and its file paths, so its check finds the sa
 It waits for a held copy, and it goes out at once after a finished copy.
 A reconnect to the same computer also finds the same owner, which then follows the newest connection.
 One active file owner serves each computer and path across messages.
-After a restart, a missing message proof starts a new download with a new token and temporary file.
+After a restart, a missing message proof checks a recorded transfer through provider metadata.
+When no transfer is recorded, it starts a new download with a new token and temporary file.
 The restarted command removes older temporary files of that file.
 Each final move is atomic, so overlapping downloads cannot mix bytes at the final path.
 No process ID is stored.
 
 Completion enters the chat queue again.
 It saves the copy proof with `ChatRecords.saveAttachmentCopy(messageId, sandboxId)`, marks the owner ready, and resumes dispatch.
+After the queue task ends, `completeAttachments` calls [attachment-transfer-cleanup.ts](attachment-transfer-cleanup.ts) to delete eligible stored bytes.
 It does this also when the first command or the first connection of the owner is gone.
 When no owner is in memory, as after a restart, the check reads that proof with `ChatRecords.attachmentCopy(messageId, sandboxId)`.
 It uses the proof only when each stored relative path of the command is the current shared path of its file.
@@ -135,7 +139,8 @@ After a continuation, that is the new turn, and the earlier turn keeps its end.
 The end gives the HTTP error of the copy, or else `attachment_copy_failed`.
 Its retry message is the message whose copy failed.
 Try again accepts the same text and files under a new message ID, so its files keep their paths.
-The new message ID gives a new owner and a new copy of the original bytes.
+The new message ID gives a new owner and a new check of each completed file.
+An incomplete transfer still downloads the original bytes.
 The end removes each pending command of that turn, so the failure adds no wait for a later message.
 When the failed turn was running, the same commit then saves an `interrupt` command for that turn.
 That interrupt goes out although the turn has ended, so the runner stops the agent of that turn.
@@ -145,6 +150,30 @@ So Try again needs no Worker wait, and the runner starts the retry after the old
 After that commit, the common turn-end report gives the end to the lifecycle and to device cleanup, as for every other turn end.
 A failure fails no turn when the newest connection of its owner has closed, or when the workspace names another sandbox.
 The current connection and computer then get their own owner.
+
+## Completed transfers
+
+`prepareMessageAttachments` reads `SandboxProvider.fileInfo` for each file whose recorded destination is the current sandbox.
+It uses the absolute copy path and compares the byte size with the stored upload size.
+It accepts a same-size edit without reading R2 or starting another download.
+A directory, a changed size, or a provider 404 makes the file missing.
+Other provider failures give `attachment_copy_failed`.
+The message owner checks every transferred file and collects missing names in message order.
+[attachment-missing.ts](attachment-missing.ts) builds the singular or plural `attachment_missing` cause.
+The failed-turn path saves that cause in both the turn and its event.
+Try again checks each path again, so a restored file can pass.
+
+While R2 bytes remain, a different sandbox downloads them and replaces the recorded destination.
+After byte deletion, a different sandbox gives `attachment_missing` without a provider read or download.
+
+[attachment-transfer-cleanup.ts](attachment-transfer-cleanup.ts) deletes only the R2 object, then sets `bytes_deleted_at`.
+It keeps the claimed record, so sent messages keep their file metadata and chips.
+Deletion requires the current sandbox to match the recorded destination.
+It also requires a succeeded `workspace_creation_attempts` record.
+Pending and failed attempts keep their bytes, even if the workspace state already says ready.
+A legacy workspace without an attempt uses its completed-start state instead.
+The immediate cleanup runs after the message proof commits.
+A cleanup failure keeps the record retryable and leaves the successful turn unchanged.
 
 ## Agent input
 
@@ -161,11 +190,13 @@ A message without attached files gets no read line or file lines.
 ## Cleanup
 
 The scheduled members cleanup deletes expired download tokens, including consumed tokens.
+It also retries byte deletion for transferred records after a successful first start.
 It also sweeps expired drafts.
 It uses conditional revisions before deleting a ready file.
 For a claim, the sweep calls the trusted `expireChatAttachment` RPC of the claiming workspace object.
 That RPC checks acceptance in the chat queue.
-An accepted file stays while its workspace survives, including Archive and a failed first start.
+An accepted file's metadata stays while its workspace survives, including Archive and a failed first start.
+Its bytes stay until its transfer and first start succeed.
 A create that failed before admission leaves no surviving workspace, so its file returns to its original draft deadline.
 An old claim's cleanup cannot delete the revised claim of a new attempt.
 
@@ -183,7 +214,9 @@ Copy tests inject detached command responses through `prepareAttachments`.
 The fake command downloads through the real one-use route with local D1 and R2.
 Shell tests execute the generated command with a fake curl boundary to check byte counts and atomic file placement.
 The copy owner tests use that fake transfer to count the writers of each computer and path, and the writes after delivery.
-The later-message test edits the first copy, then checks that the next message writes the original bytes to the same path.
+The later-message test keeps a same-size edit and checks metadata without another transfer or R2 read.
+The missing-file tests cover ordered names, changed sizes, a replacement sandbox, provider outages, and Try again after restoration.
+The retention and cleanup tests cover proof order, failed first starts, retryable byte deletion, and purge after byte deletion.
 The legacy-path tests store an old absolute or message-derived relative path with a proof, and check that the turn fails.
 The fixture never sends a request to a real provider.
 The cleanup integration test runs the production scheduled handler through `/__test/scheduled`, with the native workspace object, D1, and R2.

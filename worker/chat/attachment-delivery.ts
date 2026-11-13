@@ -2,6 +2,7 @@ import type { WorkspaceEventEnvelope } from './workspace-events'
 import { attachmentPath } from '../../src/shared/attachment-paths'
 import { HttpError } from '../http'
 import { attachmentCopyKey, attachmentNotFound } from './attachment-record'
+import { AttachmentMissing } from './attachment-missing'
 import { commandDispatchState, type DispatchState } from './ordered-dispatch'
 import { hash } from '../security/crypto'
 import type { ChatStore } from './store'
@@ -88,6 +89,7 @@ export class AttachmentPreparation {
     const work = Promise.resolve()
       .then(async () => {
         if (!(await hasCurrentPaths(command))) throw attachmentNotFound()
+        const missing: string[] = []
         for (const attachment of command.attachments) {
           const transferKey = await hash(
             JSON.stringify([attachment.attachmentId, sandboxId]),
@@ -107,23 +109,47 @@ export class AttachmentPreparation {
               .finally(() => this.transfers.delete(transferKey))
             this.transfers.set(transferKey, transfer)
           }
-          await transfer
+          try {
+            await transfer
+          } catch (error) {
+            if (
+              !(error instanceof HttpError) ||
+              error.code !== 'attachment_missing'
+            )
+              throw error
+            const file = command.message.attachments.find(
+              (file) => file.id === attachment.attachmentId,
+            )
+            if (!file) throw error
+            missing.push(file.name)
+          }
         }
+        if (missing.length > 0) throw new AttachmentMissing(missing)
       })
       .then(
         () =>
-          this.store.run(async () => {
-            if (this.pending.get(key) !== preparation) return
-            if (sandboxId !== null)
-              await this.store.change(
-                active.workspace.id,
-                (view) =>
-                  view.saveAttachmentCopy(command.message.id, sandboxId),
-                this.publish,
-              )
-            preparation.ready = true
-            await this.resume()
-          }),
+          this.store
+            .run(async () => {
+              if (this.pending.get(key) !== preparation) return false
+              if (sandboxId !== null)
+                await this.store.change(
+                  active.workspace.id,
+                  (view) =>
+                    view.saveAttachmentCopy(command.message.id, sandboxId),
+                  this.publish,
+                )
+              preparation.ready = true
+              await this.resume()
+              return true
+            })
+            .then(async (saved) => {
+              if (saved)
+                await this.dependencies.completeAttachments(
+                  active.workspace.id,
+                  command.attachments,
+                  sandboxId,
+                )
+            }),
         (error: unknown) =>
           this.store.run(async () => {
             if (this.pending.get(key) !== preparation) return
@@ -189,18 +215,19 @@ export class AttachmentPreparation {
         const session = await view.session(outbound.sessionId)
         if (!session || session.activeTurnId !== turn.id) return
         const running = turn.state === 'running'
+        const failure =
+          error instanceof HttpError
+            ? { code: error.code, message: error.message }
+            : {
+                code: 'attachment_copy_failed',
+                message:
+                  'The attached files could not reach the cloud computer. Try again.',
+              }
         await view.emit({
           type: 'turn.failed',
           sessionId: session.id,
           turnId: turn.id,
-          error:
-            error instanceof HttpError
-              ? { code: error.code, message: error.message }
-              : {
-                  code: 'attachment_copy_failed',
-                  message:
-                    'The attached files could not reach the cloud computer. Try again.',
-                },
+          error: failure,
           retryMessageId: outbound.messageId,
           durationMs:
             turn.startedAt === undefined
@@ -210,6 +237,7 @@ export class AttachmentPreparation {
         await new TurnCompletion(view, session).finish(turn, {
           state: 'failed',
           retryMessageId: outbound.messageId,
+          error: failure,
         })
         if (running)
           await view.saveCommand({

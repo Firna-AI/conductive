@@ -31,7 +31,7 @@ afterAll(async () => {
   await harness.dispose()
 })
 
-it('copies before delivery and preserves copy proof across reconnects while new messages and computers get fresh copies', async () => {
+it('copies before delivery and preserves copy proof across reconnects while new computers copy and later messages check the existing files', async () => {
   const longMessageId = 'valid-message-'.padEnd(400, 'x')
   const entered = held<void>()
   const release = held<void>()
@@ -152,15 +152,11 @@ it('copies before delivery and preserves copy proof across reconnects while new 
     FILE_BYTES,
     ATTACHMENT_IGNORE_BYTES,
     FILE_BYTES,
-    ATTACHMENT_IGNORE_BYTES,
-    FILE_BYTES,
-    ATTACHMENT_IGNORE_BYTES,
-    FILE_BYTES,
   ])
-  expect(provider.paths[9]).toBe(provider.paths[1])
+  expect(provider.paths[5]).toBe(provider.paths[1])
   const message = messageCommands(runner, 'another-file-message')[0]
   expect(message?.type).toBe('message')
-  expect(message?.attachments[0]?.path).toBe(provider.paths[9])
+  expect(message?.attachments[0]?.path).toBe(provider.paths[5])
   expect(message).not.toHaveProperty('login')
   expect(message).not.toHaveProperty('credential')
   runner.disconnect()

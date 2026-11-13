@@ -1,6 +1,6 @@
 import type { HttpFetch } from '../env'
 import { ProviderError } from './errors'
-import { readSandboxFile } from './file-read'
+import { readSandboxFile, readSandboxFileInfo } from './file-read'
 import {
   readCommand,
   readCommandStatus,
@@ -29,6 +29,10 @@ export class BoatClient implements SandboxProvider {
 
   readFile(sandboxId: string, path: string, maxBytes: number) {
     return readSandboxFile(this.transport, sandboxId, path, maxBytes)
+  }
+
+  fileInfo(sandboxId: string, path: string) {
+    return readSandboxFileInfo(this.transport, sandboxId, path)
   }
 
   async privatePort(

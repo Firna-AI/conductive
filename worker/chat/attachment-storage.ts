@@ -68,6 +68,8 @@ export async function storeAttachment(
     expiresAt: now + ATTACHMENT_DRAFT_MS,
     claimedWorkspaceId: null,
     claimedMessageId: null,
+    transferredSandboxId: null,
+    bytesDeletedAt: null,
     revision: 0,
   }
   if (!(await insertAttachment(env.DB, record))) throw attachmentNotFound()

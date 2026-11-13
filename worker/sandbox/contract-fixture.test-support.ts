@@ -22,6 +22,7 @@ export type ContractReply =
     }
   | { kind: 'large_file'; path: string; sizeBytes: number }
   | { kind: 'wrong_file'; path: string }
+  | { kind: 'file_info'; path: string; sizeBytes: number }
   | { kind: 'port' }
   | {
       kind: 'failure'

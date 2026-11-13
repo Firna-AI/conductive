@@ -1,6 +1,7 @@
 import type { AppEnv } from '../env'
 import { errorResponse } from '../http'
 import { attachmentCommandTransfer } from '../test-support/attachment-command'
+import { FakeBoat } from '../test-support/fake-boat'
 import { handleAttachmentDownload } from './attachment-download'
 
 export function providerCopy(
@@ -11,12 +12,15 @@ export function providerCopy(
     fail?: () => boolean
   } = {},
 ) {
+  const boat = new FakeBoat()
   const transfer = attachmentCommandTransfer({
     before: async () => {
       options.entered?.()
       await options.hold
     },
     fail: options.fail,
+    copied: (sandboxId, path, bytes) =>
+      boat.setFile(sandboxId, path, bytes.byteLength),
     download: async (request) => {
       try {
         return await handleAttachmentDownload(request, env)
@@ -29,8 +33,7 @@ export function providerCopy(
     ...transfer,
     fetch: async (request: Request) => {
       const response = await transfer.fetch(request)
-      if (!response) throw new Error('Unexpected provider request')
-      return response
+      return response ?? boat.fetch(request)
     },
   }
 }

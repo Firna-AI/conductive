@@ -4,7 +4,8 @@ const COLUMNS = `id, org_id AS orgId, uploader_user_id AS uploaderUserId,
  target_kind AS targetKind, target_id AS targetId, name, kind, media_type AS mediaType,
  size_bytes AS sizeBytes, object_key AS objectKey, multipart_id AS multipartId, state,
  created_at AS createdAt, expires_at AS expiresAt, claimed_workspace_id AS claimedWorkspaceId,
- claimed_message_id AS claimedMessageId, revision`
+ claimed_message_id AS claimedMessageId, transferred_sandbox_id AS transferredSandboxId,
+ bytes_deleted_at AS bytesDeletedAt, revision`
 
 export function readAttachment(db: D1Database, id: string) {
   return db

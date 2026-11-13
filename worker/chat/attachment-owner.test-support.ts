@@ -6,7 +6,7 @@ import { attachmentFixture, held } from './attachment.test-support'
 import { WORKSPACE_ID } from './harness.test-support'
 import type { ChatDependencies } from './types'
 
-export const AGENT_BYTES = new Uint8Array([65, 103, 101, 110, 116])
+export const AGENT_BYTES = new Uint8Array([65, 103, 101, 110, 116, 33])
 
 export function selectAttachmentComputer(harness: TestHarness, id: string) {
   return harness.env.DB.prepare(
@@ -45,13 +45,13 @@ export function attachmentOwnerCopy(harness: TestHarness, failFirst = false) {
       const key = fileKey(sandboxId, path)
       if (delivered.has(key)) lateWrites++
       files.set(key, bytes)
+      harness.boat.setFile(sandboxId, path, bytes.byteLength)
     },
   })
   const fetch = async (request: Request) => {
     requests.push(request)
     const response = await transfer.fetch(request)
-    if (!response) throw new Error('Unexpected provider request')
-    return response
+    return response ?? harness.boat.fetch(request)
   }
   const prepare: ChatDependencies['prepareAttachments'] = (...args) => {
     const copying = prepareMessageAttachments(harness.env, ...args, fetch)
@@ -65,12 +65,18 @@ export function attachmentOwnerCopy(harness: TestHarness, failFirst = false) {
     release,
     writes,
     requests,
+    get metadataRequests() {
+      return requests.filter((request) =>
+        new URL(request.url).pathname.endsWith('/files/info'),
+      )
+    },
     settleCopies: () => Promise.allSettled(work),
     settleReplacements: () => Promise.allSettled(work.slice(1)),
     edit: (sandboxId: string, path: string) => {
       const key = fileKey(sandboxId, path)
       delivered.add(key)
       files.set(key, AGENT_BYTES)
+      harness.boat.setFile(sandboxId, path, AGENT_BYTES.byteLength)
     },
     read: (sandboxId: string, path: string) =>
       files.get(fileKey(sandboxId, path)),
