@@ -73,4 +73,5 @@ export const composerStates = [
   'drop-over',
   'dropped',
   'dropped-folder',
+  'unreadable-folder',
 ] as const

@@ -178,8 +178,12 @@ number names a dated record, as
   write. One action archives the workspace once, also for the open
   workspace while it loads.
 - Archive does not open the workspace, and it starts no cloud computer.
-- While the write runs, the app shows that the Archive is pending. When the
-  write fails, the row stays in its section, and a toast names the failure.
+- Archive shows as done at once, before its write gets a reply: the row
+  moves to the Archived group, and the open workspace shows as archived.
+  No control shows a busy state for it.
+- When the write fails, the row goes back to its section, the open
+  workspace shows as it was before, and a toast names the failure.
+- The toast after a done Archive comes with the reply of its write.
 - After the archive, the current page stays, and the row moves to the
   Archived group. The toast after Archive offers Restore, as
   [Restore](workspace-life.md#restore) says.

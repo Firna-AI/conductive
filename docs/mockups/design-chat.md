@@ -31,9 +31,13 @@ background work.
     mockups and the app share that module. Send waits for each upload.
 - A file over 25 MB never becomes a chip: a notice over the composer names
   it, gives the limit, and offers "Attach a smaller file", as
-  `app/attachments/too-large` shows. A dropped folder is not attached
-  either: its notice names it, says to attach the files in it, and offers
-  "Attach files", as `app/attachments/drop/folder` shows.
+  `app/attachments/too-large` shows. A dropped folder becomes one zip
+  chip, such as `checkout-screens.zip`, at its place among the files of
+  the drop, as `app/attachments/drop/folder` shows. A zip over 25 MB gets
+  the notice of a file over 25 MB. A folder that the browser cannot read
+  is not attached: its notice names it, says that it could not be read and
+  to attach the files in it, and offers "Attach files", as
+  `app/attachments/drop/unreadable-folder` shows.
 - The whole message box takes a drop of files. While files hover over it,
   the box shows the drop state, a full border in the accent colour, from
   `dropping` in `Composer.module.css`. In the New workspace dialog, the

@@ -252,8 +252,11 @@ Its `markOf` gives the mark of a file of the draft by the name of the file.
 page and on the dialog card. A drop on the text of the page puts the files
 at the point. While a create runs, the box shows no drop state or drop
 caret, also for files that hovered as it began, and takes no drop. Files
-over the card show its drop state, and a dropped folder gets its notice in
-the dialog. `../App.dom.test.tsx` mounts `App` and checks the guard
+over the card show its drop state, a dropped folder attaches as its zip,
+and a folder that cannot be read gets its notice in the dialog.
+`folder-zip.test.ts` zips a folder with nested, empty, and hidden entries,
+gives the name of a zip over the size limit and of a folder that cannot be
+read, and stops with its drop. `../App.dom.test.tsx` mounts `App` and checks the guard
 outside each box, the browser's own drag of text and links, and the copy
 offer of a box. It also checks that the Feedback dialog still takes a
 dropped screenshot.

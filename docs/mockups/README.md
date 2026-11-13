@@ -80,7 +80,8 @@ gives the child pages of `app/attachments` and `app/files`, and the flow
 
 `app/attachments` shows each attached file as a chip at its place in the
 text of the message box. `app/attachments/drop` shows a drop of files into
-the text, and a dropped folder that the box does not attach.
+the text, a dropped folder that attaches as its zip, and a folder that the
+browser cannot read, which the box does not attach.
 `app/attachments/open` shows the file tab that a press on a sent chip
 opens, with the picture of the screenshot. The other child pages show a
 failed upload, a file over 25 MB, the sent message, and the files of a
@@ -100,7 +101,7 @@ a sent message. `ImageView` in `src/components/files/` draws the picture of
 an image file in its tab. These three parts take no fixtures, so the app
 can draw them too. [attachmentCopy.ts](src/components/chat/attachmentCopy.ts)
 holds the words of the chips, and of the notices for a file over 25 MB and
-a dropped folder. [The chat](design-chat.md) gives the design of each part.
+a dropped folder that the browser cannot read. [The chat](design-chat.md) gives the design of each part.
 
 ## Folder layout
 

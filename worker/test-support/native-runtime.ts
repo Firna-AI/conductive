@@ -15,6 +15,7 @@ import { NativeHostBridge } from './native-host-bridge'
 import { nativeWorkspaceBundle } from './native-bundle'
 import { readNativePacket } from './native-protocol'
 import { forceNativeEviction } from './native-eviction'
+import { migratedStorage, TEST_D1_ID } from './migrated-storage'
 
 const WORKER_NAME = 'worker-core-tests'
 const EXPORT_NAME = 'NativeWorkspace'
@@ -28,7 +29,10 @@ interface NativeBindings {
 export async function createNativeRuntime(
   environment: Record<string, string>,
   outbound: HttpFetch,
+  options: { migrated?: boolean } = {},
 ) {
+  // A migrated runtime starts from a copy of the run's migrated database.
+  const storage = options.migrated ? await migratedStorage() : null
   const actors = new Map<string, NativeActor>()
   const bridges = new Map<string, NativeHostBridge>()
   let now = NATIVE_TEST_TIME
@@ -36,6 +40,7 @@ export async function createNativeRuntime(
     enableDevRegistry: false,
     telemetry: { enabled: false },
     cf: false,
+    ...(storage && { resourcePersistencePath: storage.path }),
     workers: [
       {
         config: {
@@ -51,7 +56,7 @@ export async function createNativeRuntime(
                 { type: 'text' as const, value },
               ]),
             ),
-            DB: { type: 'd1', id: 'test-db' },
+            DB: { type: 'd1', id: TEST_D1_ID },
             CHAT_ATTACHMENTS: { type: 'r2', name: 'test-chat-attachments' },
             WORKSPACES: {
               type: 'durable-object',
@@ -195,6 +200,7 @@ export async function createNativeRuntime(
   return {
     runtime,
     bindings,
+    migrated: storage !== null,
     actor,
     setTime: async (at: number) => {
       now = at
@@ -235,6 +241,7 @@ export async function createNativeRuntime(
       await Promise.all([...actors.values()].map((actor) => actor.ready))
       for (const bridge of bridges.values()) bridge.cancel()
       await runtime.dispose()
+      await storage?.remove()
     },
   }
 }

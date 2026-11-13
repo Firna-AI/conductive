@@ -70,16 +70,24 @@ marks of a draft text.
 [Drops](../../docs/protocol/message-attachments.md#drops) states what the
 composer shows for a folder and for a file over the size limit.
 
+- A drop zips each dropped folder before the attach, through `intakeOf` of
+  `../app/file-drags.ts` and `zipFolder` of `../app/folder-zip.ts`. The
+  zip comes to the attach as a file. The drop gives the names of the other
+  folders in `IntakeRefusals` of `../app/draft-files.ts`: `tooLarge` names
+  each zip over the size limit, and `folders` names each folder that the
+  browser could not read.
 - The draft keeps the names that its last attach refused, in two lists.
-  `refused` holds the names of the files over the size limit, and
-  `refusedFolders` holds the names of the folders. Each list keeps the
-  order of its names. `splitPick` of `../app/draft-files.ts` makes both
-  lists for both owners. It copies the folder names, so a later change of
-  the caller's list changes nothing.
-- Each attach with a file or a folder replaces both lists. So a pick
-  clears the folders of an earlier attach, and an attach of folders alone
-  clears the earlier files over the size limit. An attach with no file and
-  no folder, such as a cancelled pick, changes nothing.
+  `refused` holds the names of the files and the zips over the size limit,
+  and `refusedFolders` holds the names of the folders that could not be
+  read. Each list keeps the order of its names, and the zips follow the
+  files. `splitPick` of `../app/draft-files.ts` makes both lists for both
+  owners. It copies the names, so a later change of the caller's lists
+  changes nothing.
+- Each attach with a file or a refused name replaces both lists. So a pick
+  clears the folders of an earlier attach, and an attach of refused
+  folders alone clears the earlier files over the size limit. An attach
+  with no file and no refused name, such as a cancelled pick, changes
+  nothing.
 - An upload, Try again, a detach, and undo keep both lists. A draft that
   moves to a new session keeps them.
 - The notice of the draft names the files of `refused`, through
@@ -97,8 +105,8 @@ composer shows for a folder and for a file over the size limit.
   with empty lists.
 - `ChatController.stop`, also at a sign-out, clears both lists of each
   draft. New workspace clears them when the life of the person who is
-  signed in ends. This holds also after an attach of folders alone, which
-  starts no upload.
+  signed in ends. This holds also after an attach of refused folders
+  alone, which starts no upload.
 
 ## Marks and files
 
