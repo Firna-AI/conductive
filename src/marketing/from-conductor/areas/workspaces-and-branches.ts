@@ -64,7 +64,7 @@ export const workspacesAndBranchesFeatures: readonly ParityFeature[] = [
     area: 'workspaces-and-branches',
     name: 'Rename a workspace',
     status: 'available',
-    note: 'Right-click a workspace in the list and choose Rename. Double-click rename in the sidebar is in progress.',
+    note: 'Double-click a workspace in the sidebar to rename it, or right-click it in the list and choose Rename.',
   },
   {
     id: 'city-names',
