@@ -4,9 +4,9 @@ import { MacAppScreen, macAppSchema } from '../../../screens/MacAppScreen'
 export const thisMac = defineScreen({
   title: 'This Mac',
   description:
-    'The account in the Mac app, with the This Mac section: the name of the Mac, its state, and the commands that always run on it without asking, each with Remove. After a Remove, its result shows under the list. The Mac app keeps the sidebar of the org beside the account.',
+    'The account in the Mac app, with the This Mac section: the name of the Mac, its state, the commands that always run on it without asking, each with Remove, and the workspaces whose commands all run without asking, each with the time left or Until you stop, and Stop. After a Remove, its result shows under the lists. The Mac app keeps the sidebar of the org beside the account.',
   rationale:
-    'Always allow covers the exact text of one command on this Mac, so the list shows each command as it was allowed (decision 62). The web app in a browser has no This Mac section.',
+    'Always allow covers the exact text of one command on this Mac, so the list shows each command as it was allowed (decision 62). One list holds the 15 minutes and the grants until Stop, because both cover every command of one workspace (Mac until-stop decision 0). The web app in a browser has no This Mac section.',
   relatedDocs: [],
   propSchema: macAppSchema,
   props: {

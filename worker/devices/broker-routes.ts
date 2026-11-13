@@ -28,6 +28,7 @@ export function approvalAction(value: unknown): DeviceApprovalAction {
     case 'allow':
     case 'always-allow':
     case 'allow-workspace-15-minutes':
+    case 'allow-workspace-until-stop':
       return value
     default:
       throw new HttpError(400, 'invalid_input', 'Choose a command permission.')
@@ -38,7 +39,7 @@ function settingsAction(value: unknown): DeviceSettingsAction {
   if (input.action === 'read') return { action: 'read' }
   if (input.action === 'remove-command')
     return { action: input.action, command: deviceRequired(input.command) }
-  if (input.action === 'stop-workspace')
+  if (input.action === 'stop-workspace' || input.action === 'keep-workspace')
     return {
       action: input.action,
       workspaceId: deviceRequired(input.workspaceId),

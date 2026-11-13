@@ -17,7 +17,7 @@ read the Mac's settings through `useMacSettings(client)`. Give it a stable
 `ApiClient`, such as `AppServices.api`, because a new client makes a new
 settings controller. `WorkspaceMacBar` calls `refresh` after the
 `workspace.updated` events of the workspace stream, which follow each change
-of a Mac command, so the bar shows the 15 minutes that an answer started.
+of a Mac command, so the bar shows the grant that an answer started.
 One burst of events, such as the stored history, gives one read.
 
 ```tsx
@@ -69,19 +69,22 @@ const { controller, state } = useMacSettings(services.api)
   One read or change of the settings runs at a time, in the order of the
   user's actions, so the Mac gets them in that order and the last reply
   holds every change. A failed change reads the settings again. The
-  countdowns read the clock and the Mac's end time.
-- Each control, Remove of one command or Stop of the 15 minutes of one
-  workspace, keeps the result of its last change: done, done but not saved,
-  or failed, with the cause that the Mac gave. The result stays through
+  countdowns read the clock and the Mac's end time. A grant whose end time
+  is `null` runs until Stop, and shows Until you stop.
+- Each control, Remove of one command or the grant of one workspace, keeps
+  the result of its last change: done, done but not saved, or failed, with
+  the cause that the Mac gave. Stop and Keep until I stop share the control
+  of the grant, so only one of them waits at a time. The result stays through
   every read, a Mac that goes away, and a new pairing, until the next change
   of that control. A change that waited while the pairing changed never goes
   to the new pairing: it fails with its cause, and the user acts again.
   `ThisMacSection` lists the results under its lists. The bar keeps the
-  result of a Stop after the 15 minutes end, and while 15 minutes run it
-  hides only a Stop that the Mac made and saved. When a change that the Mac
-  did not save or did not make took its row or its 15 minutes away, Try
-  again on its result repeats the same change through the current pairing,
-  only when the user presses it.
+  result of a Stop after the grant ends, and while a grant runs it hides
+  only a change that the Mac made and saved. When a Stop that the Mac did
+  not save or did not make took its row or its grant away, Try again on
+  its result repeats the same change through the current pairing, only
+  when the user presses it. A failed Keep shows only while its 15 minutes
+  run, so the bar never repeats a Keep.
 
 ## Tests
 

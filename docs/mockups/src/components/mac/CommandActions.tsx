@@ -13,7 +13,8 @@ import styles from './CommandActions.module.css'
 /**
  * The other ways to allow a command, each with what it covers (decision
  * 62). Always allow covers the exact command text on this Mac. The 15
- * minutes cover every command from this workspace on this Mac.
+ * minutes cover every command from this workspace on this Mac, and so does
+ * the choice until the user stops it (Mac until-stop decision 0).
  */
 const choices = [
   {
@@ -25,6 +26,11 @@ const choices = [
     label: 'Allow all commands for 15 minutes',
     scope: 'Every command from this workspace, on this Mac',
     to: paths.macAllowAll,
+  },
+  {
+    label: 'Allow all commands until I stop',
+    scope: 'Every command from this workspace, on this Mac, until you stop',
+    to: paths.macAllowUntilStop,
   },
 ] as const
 

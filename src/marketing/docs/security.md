@@ -228,7 +228,8 @@ Your browser can still keep the preview files that it loaded, as the preview app
 Mac commands run locally with the Mac user's permissions.
 Only the connected Mac that receives a request can approve it.
 **Always allow** covers the exact command text in any requested folder on that Mac.
-Timed permission covers every command from one workspace for 15 minutes.
+Workspace permission covers every command from one workspace for 15 minutes, or until you stop it.
+Permission until you stop also ends when you quit the Mac app or sign out.
 
 Use **Remove** or **Stop** in **This Mac** to change those saved permissions.
 Keep the app open and retry if a permission change takes effect but cannot save.

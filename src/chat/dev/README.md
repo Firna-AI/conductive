@@ -70,8 +70,9 @@ the chat chose. Stop and the close of a running tab
 record the member of the `role` option as the one who pressed Stop. Stop
 the sandbox ends a running turn with no Stop request. With `app=mac`, the
 page's Mac acts on each answer: Deny ends the request, and the other choices
-run the command and keep the choice. The bar of the 15 minutes shows above
-the header while they run. The Mac refuses a change of an older pairing, as
+run the command and keep the choice. The bar of a grant shows above the
+header while it runs. Keep until I stop in the bar of the 15 minutes turns
+them into a grant until Stop. The Mac refuses a change of an older pairing, as
 the Worker does.
 
 Uploads keep their bytes in memory. While the sandbox runs, an accepted

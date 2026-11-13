@@ -205,6 +205,7 @@ export const paths = {
   desktop: 'app/tools/desktop',
   macPrompt: 'mac-app/commands',
   macAllowAll: 'mac-app/commands/allow-all',
+  macAllowUntilStop: 'mac-app/commands/allow-until-stop',
   thisMac: 'mac-app/this-mac',
   macShortcuts: 'mac-app/shortcuts',
   macShortcutsRecording: 'mac-app/shortcuts/recording',
