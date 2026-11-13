@@ -121,7 +121,7 @@ export async function openAccount(
   const app = await startedApp(server, services)
   const view = mountScreen(
     app,
-    <AccountScreen connect={connect} tab="general" user={fakeUser} />,
+    <AccountScreen connect={connect} tab="agents" user={fakeUser} />,
   )
   return { app, view }
 }

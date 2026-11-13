@@ -3,10 +3,12 @@
 This page belongs to [Screens](screens.md). It describes the account,
 agent login forms, and model lists in the web app.
 
-- The account has three tabs, General, Preferences, and Keyboard shortcuts,
-  as the org settings have. Each tab is a link with its own address. General holds the
-  sign-in, This Mac, GitHub, and the agents. The `?connect=` address of an
-  agent opens its Connect form on General. Preferences holds the New
+- The account has four tabs, General, Agents, Preferences, and Keyboard
+  shortcuts, as the org settings have. Each tab is a link with its own
+  address. General holds the sign-in, This Mac, GitHub, and the invite
+  code. Agents, at `/account/agents`, holds the logins of Claude and
+  Codex. The `?connect=` address of an agent opens its Connect form on
+  Agents. An older `/account?connect=` link opens Agents too. Preferences holds the New
   workspaces section: Model and effort, and
   [the choice of how New workspace opens](../../docs/protocol/create-a-workspace.md#the-preference).
   On a phone, a tab that does not fit moves to a second line.

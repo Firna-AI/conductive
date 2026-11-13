@@ -21,7 +21,7 @@ how a screen is built, and links to the other pages.
 | `app/command-palette` | The command palette over the list, with the keys of a browser tab: the All tab, then the other tabs with the Help group, searches and their states, and a search by number |
 | `app/feedback`      | The Feedback dialog that Send feedback opens over the list, then its states, the toast after a send, and the files that it does not add |
 | `app/orgs`          | The org switcher of a phone, Create org, the first org, new orgs, deleted, suspended, and the order of the orgs |
-| `app/account`       | General with the GitHub sign-in, the GitHub App, the agent logins with own endpoints, and the invite code, then Preferences with the model and how New workspace opens, Keyboard shortcuts in a browser, the first run, the Connect forms with the ChatGPT sign-in of Codex, Codex on a ChatGPT plan and its sign-in that stopped working, and a share not saved |
+| `app/account`       | General with the GitHub sign-in, the GitHub App, and the invite code, then Agents with the agent logins and own endpoints, Preferences with the model and how New workspace opens, Keyboard shortcuts in a browser, the first run, the Connect forms with the ChatGPT sign-in of Codex, Codex on a ChatGPT plan and its sign-in that stopped working, and a share not saved |
 | `app/operator`      | The operator's Overview, Orgs, Users, Waitlist, and Invite codes tabs, the page of an org and of a user with Suspend, Lift, and Approve, the pause of sign-ups, the waitlist switch, and where an operator opens the section |
 | `app/banner`        | The pull request bar and Checks: no pull request, its other states, Merge, local work, the agent actions in the chat, and Continue |
 | `app/new-workspace` | An empty chat, the first build of a new org, a repository that waits for its build, its error, files on the first message, the dialog, a pasted workspace link, the start, a queued second message, the first turn, a failed start, Try again |
@@ -151,17 +151,21 @@ Acme, which adds acme/admin-dashboard and removes acme/marketing-site:
   keeps the notice of the install script, which shows only for a change
   of the install script.
 
-`app/account` shows the General tab of the account, with Claude connected
-by a subscription token and Codex by an API key. Its three tabs are links, as
-the tabs of the org settings are. Its child pages:
+`app/account` shows the General tab of the account: the sign-in, GitHub,
+and the invite code. Its four tabs are links, as the tabs of the org
+settings are. Its child pages:
 
+- `app/account/agents` shows the Agents tab, with Claude connected by a
+  subscription token and Codex by an API key. The user asked for this tab
+  on 13 November 2026.
 - `app/account/preferences` shows the Preferences tab, from decision 142
   of PR #73: the New workspaces section with Model and effort, and the
   choice of how New workspace opens on a computer, the page or a dialog.
   Its `not-saved` variant shows a save that failed, which keeps the saved
   choice.
 - `app/account/setup` shows General at the first run, with nothing
-  connected.
+  connected. Its `agents` variant shows the Agents tab at the first run,
+  with neither agent connected.
 - `app/account/connect-claude` has the Connect form of Claude, whose
   switch starts on Subscription token. Its `api-key` variant has that form
   with API key selected.
@@ -180,8 +184,8 @@ the tabs of the org settings are. Its child pages:
   variant has the ChatGPT sign-in form that Sign in again opens under that
   row, which keeps Remove and the share switch. Its `sign-in-again-code`
   variant has the code in that form.
-- `app/account/share-not-saved` shows General after a login share setting
-  failed to save, with its saved value and the cause beside the switch.
+- `app/account/share-not-saved` shows the Agents tab after a login share
+  setting failed to save, with its saved value and the cause beside the switch.
 - `app/account/invites` has the invite code while sign-ups are paused.
   [The waitlist, suspensions, and the operator](catalogue-operator.md)
   gives its variants.

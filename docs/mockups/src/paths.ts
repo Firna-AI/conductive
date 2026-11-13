@@ -56,6 +56,7 @@ export const paths = {
   feedbackEmpty: 'app/feedback/states',
   feedbackSending: 'app/feedback/states/sending',
   account: 'app/account',
+  accountAgents: 'app/account/agents',
   accountPreferences: 'app/account/preferences',
   accountShortcuts: 'app/account/shortcuts',
   accountShortcutsRecording: 'app/account/shortcuts/recording',

@@ -28,8 +28,8 @@ Model use on an own endpoint bills where its owner runs it.
 ## Connect Claude
 
 1. Open **Account**.
-2. Open **General**.
-3. Find Claude under **Agents**.
+2. Open **Agents**.
+3. Find Claude.
 4. Select **Connect**.
 5. Choose **Subscription token** or **API key**.
 6. Paste the token or key into its field.
@@ -52,8 +52,8 @@ Conductive keeps the stored login hidden in Account.
 ## Connect Codex
 
 1. Open **Account**.
-2. Open **General**.
-3. Find Codex under **Agents**.
+2. Open **Agents**.
+3. Find Codex.
 4. Select **Connect**.
 
 ### Use a ChatGPT plan
@@ -104,8 +104,8 @@ The endpoint must support the API and key format of that agent:
 | Codex | OpenAI Responses API | Bearer token | `https://gateway.example.com/v1` |
 
 1. Open **Account**.
-2. Open **General**.
-3. Find the agent under **Agents**.
+2. Open **Agents**.
+3. Find the agent.
 4. Select **Connect**.
 5. Choose **Own endpoint**.
 6. Enter the address in **Endpoint**.

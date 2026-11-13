@@ -28,19 +28,19 @@ const openForms: Readonly<Record<FormKey, OpenAgentForm>> = {
   claude: {
     agent: 'claude',
     kind: 'token',
-    connectTo: paths.account,
+    connectTo: paths.accountAgents,
     cancel: true,
   },
   'claude-api-key': {
     agent: 'claude',
     kind: 'api-key',
-    connectTo: paths.account,
+    connectTo: paths.accountAgents,
     cancel: true,
   },
   codex: {
     agent: 'codex',
     kind: 'api-key',
-    connectTo: paths.account,
+    connectTo: paths.accountAgents,
     cancel: true,
   },
   'codex-token': {

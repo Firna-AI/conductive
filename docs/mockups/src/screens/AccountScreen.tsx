@@ -34,10 +34,8 @@ const connectedRail: RailState = { orgs: orgList, current: 'account' }
 const firstRunRail: RailState = { orgs: [], current: 'account', firstRun: true }
 
 /**
- * The General tab: the GitHub sign-in, and what every org shares, the
- * GitHub App and the agents, with the share setting of each login and the
- * host of an own endpoint, then the invite code of the user, so that a
- * phone shows the form of an agent near the top. The orgs that the user can
+ * The General tab: the GitHub sign-in, the GitHub App that every org
+ * shares, then the invite code of the user. The orgs that the user can
  * restore come last, only while one exists. The Mac app adds the This Mac
  * section.
  */
@@ -48,7 +46,6 @@ function GeneralTab(props: { state: AccountState }) {
       <SignInSection />
       {mac ? <ThisMacSection /> : null}
       <GitHubSection connected={props.state.connections === 'connected'} />
-      <AgentsSection {...agentsFor(props.state)} />
       <InviteCodeSection
         fresh={props.state.connections !== 'connected'}
         openSignUp={props.state.openSignUp === 'on'}
@@ -69,6 +66,8 @@ function TabContent(props: {
   switch (state.tab) {
     case 'general':
       return <GeneralTab state={state} />
+    case 'agents':
+      return <AgentsSection {...agentsFor(state)} />
     case 'preferences':
       return (
         <DefaultsSection
@@ -89,8 +88,10 @@ function TabContent(props: {
 }
 
 /**
- * The account, in tabs. General holds the GitHub sign-in, what every org
- * shares, and the invite code of the user. Preferences holds how new
+ * The account, in tabs. General holds the GitHub sign-in, the GitHub App,
+ * and the invite code of the user. Agents holds the logins of Claude and
+ * Codex that every org shares, with the share setting of each login and
+ * the host of an own endpoint. Preferences holds how new
  * workspaces start: their model, and how New workspace opens. Keyboard
  * shortcuts holds the keys of the host: the Mac app, or the browser and the
  * keyboard of `state.host`. The product is free, so the page shows no plan

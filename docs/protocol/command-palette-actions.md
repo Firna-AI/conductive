@@ -96,7 +96,7 @@ actions at `app/command-palette/actions`, and the settings at
   Its label is the name of the org and "settings", such as "Acme settings".
 - The second group, Account, holds four sections of the Account page:
   Sign-in, GitHub, Agents, and New workspaces. It also holds Keyboard
-  shortcuts, the third tab of the Account page.
+  shortcuts, the fourth tab of the Account page.
 - In the Mac app, the Account group also holds
   [This Mac](desktop-commands.md#saved-choices), which only the Account
   page of the Mac app has.
