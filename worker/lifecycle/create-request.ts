@@ -6,6 +6,7 @@ import { requireOrgMember } from './access'
 import { readCreationImage } from './published-image-data'
 import type { WorkspaceRuntime } from './workspace-runtime'
 import type { WorkspaceStartJob } from './start-types'
+import { creationBranches } from './create-branches'
 
 export interface WorkspaceCreationBase {
   branch: string
@@ -36,6 +37,18 @@ export async function prepareCreationRequest(
     providerAccount,
   )
   const { repository } = image
+  const branches = base
+    ? { startBranch: base.branch, baseBranch: base.branch }
+    : await creationBranches(
+        env,
+        dependencies,
+        orgId,
+        sender.id,
+        input,
+        repository.defaultBranch,
+      )
+  await requireOrgMember(env.DB, orgId, user.id)
+  await requireOrgMember(env.DB, orgId, sender.id)
   const id = reservedId ?? dependencies.randomToken()
   const sessionId = dependencies.randomToken()
   const turnId = dependencies.randomToken()
@@ -52,7 +65,7 @@ export async function prepareCreationRequest(
     startupScript: image.startupScript,
     environmentCiphertext: image.environmentCiphertext,
     defaultBranch: repository.defaultBranch,
-    baseBranch: base?.branch,
+    ...branches,
     startSha: base?.startSha,
     repositoryLocations: image.repositoryLocations,
     turnId,
@@ -68,6 +81,12 @@ export async function prepareCreationRequest(
       branch,
       sessionId,
       firstSessionTitle: input.firstSessionTitle,
+      ...(!base && {
+        branches: {
+          startBranch: input.startBranch,
+          baseBranch: input.baseBranch,
+        },
+      }),
       request: input.firstMessage,
       createdAt: dependencies.now(),
     },

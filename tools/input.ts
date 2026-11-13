@@ -79,6 +79,10 @@ export function createWorkspaceInput(
     (typeof fields.requestId !== 'string' || fields.requestId.length === 0)
   )
     throw new ToolInputError('Use a nonempty request ID.')
+  for (const field of ['startBranch', 'baseBranch']) {
+    if (fields[field] !== undefined && typeof fields[field] !== 'string')
+      throw new ToolInputError('Use a Git branch name for each branch.')
+  }
   return {
     ...(typeof fields.requestId === 'string' && {
       requestId: fields.requestId,
@@ -87,6 +91,12 @@ export function createWorkspaceInput(
       firstSessionTitle: fields.firstSessionTitle,
     }),
     repositoryId: text(fields.repositoryId),
+    ...(typeof fields.startBranch === 'string' && {
+      startBranch: fields.startBranch,
+    }),
+    ...(typeof fields.baseBranch === 'string' && {
+      baseBranch: fields.baseBranch,
+    }),
     firstMessage: text(fields.firstMessage),
     ...(typeof fields.name === 'string' && { name: fields.name }),
     ...(model && {

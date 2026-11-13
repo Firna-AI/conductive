@@ -125,7 +125,7 @@ Chosen by Cal on 13 November 2026: A. The MCP tool and the CLI command of
 closes decision 281, which left a base branch for a create call to this
 change. On 11 November 2026 Cal also chose that this change gives agents a
 branch choice, with option B of
-[the branch check item](follow-ups/agent-branch-choice-check.md).
+the branch check follow-up item. This change applies that item's option B.
 
 - Not offered, from the options check: B, a start branch and a target of the
   start or the default branch. C, a base branch only. D, a start branch
@@ -387,50 +387,58 @@ State the requirements and the decisions in force for the work below.
 
 Depends on: 2
 
-- [ ] Add the shared contract of the branch list in `src/shared/`.
-- [ ] Add a browser route that lists the branches of one repository of the
+- [x] Add the shared contract of the branch list in `src/shared/`.
+- [x] Add a browser route that lists the branches of one repository of the
       org, with a search. It checks the member and the repository, reads with
       the member's GitHub user token, and stores nothing.
-- [ ] Test the route against the fake GitHub server: org and repository
+- [x] Test the route against the fake GitHub server: org and repository
       isolation, the order, search, an empty repository, and a failed GitHub
       read.
-- [ ] Update `worker/app-api/README.md` and `src/shared/README.md`.
+- [x] Update `worker/app-api/README.md` and `src/shared/README.md`.
+
+Evidence: `.context/start-from-branch/m3-red.log` and `m3-green.log`.
 
 ## Milestone 4: Create from a start branch and a base branch
 
 Depends on: 2
 
-- [ ] Add the optional `startBranch` and `baseBranch` to the create request,
+- [x] Add the optional `startBranch` and `baseBranch` to the create request,
       with the defaults of the design calls.
-- [ ] Add one Worker branch check, with the refusals of the design calls and
+- [x] Add one Worker branch check, with the refusals of the design calls and
       the fallback when GitHub cannot answer. Apply it to the browser create
       as decision 293 says.
-- [ ] Store the start branch with the creation plan in a migration, beside
+- [x] Store the start branch with the creation plan in a migration, beside
       the base branch. Keep Try again and each resume on the same branches.
-- [ ] Change the start command as the design calls say, in
+- [x] Change the start command as the design calls say, in
       `worker/lifecycle/start-command.ts` and
       `worker/lifecycle/default-branch-command.ts`.
-- [ ] Test each default, each refusal, the replay, the start command, an
+- [x] Test each default, each refusal, the replay, the start command, an
       empty repository, a branch deleted before the start, and Try again.
-- [ ] Delete `plans/follow-ups/agent-branch-choice-check.md`, because this
+- [x] Delete `plans/follow-ups/agent-branch-choice-check.md`, because this
       milestone applies its option B.
-- [ ] Update `worker/lifecycle/README.md`, `worker/lifecycle/default-branch.md`,
+- [x] Update `worker/lifecycle/README.md`, `worker/lifecycle/default-branch.md`,
       and `worker/lifecycle/workspace-object.md`.
+
+Evidence: `.context/start-from-branch/m4-red.log`, `m4-retry-red.log`, and `m4-green.log`.
+The publication race checks are in `branch-admission-red.log` and `branch-admission-green.log` in that folder.
 
 ## Milestone 5: The agent call
 
 Depends on: 4
 
-- [ ] Add `startBranch` and `baseBranch` to `create_workspace` in
+- [x] Add `startBranch` and `baseBranch` to `create_workspace` in
       `tools/workspace-mcp-tools.ts`, the CLI in `tools/cli-help.ts` and
       `tools/cli-options.ts`, and `src/shared/agent-workspaces.ts`. The help
       says what each field does and its default. Change "Omitted choices use
       the owner's defaults" so that it stays true.
-- [ ] Pass them through `worker/tools/create.ts` to the create of
+- [x] Pass them through `worker/tools/create.ts` to the create of
       Milestone 4.
-- [ ] Test the call through `runToolProcess` and the MCP adapter, with each
+- [x] Test the call through `runToolProcess` and the MCP adapter, with each
       default, a refusal, and a replay.
-- [ ] Update `worker/tools/README.md`.
+- [x] Update `worker/tools/README.md`.
+
+Evidence: `.context/start-from-branch/m5-red.log` and `m5-green-final.log`.
+Final checks and repeated test runs are in `.context/start-from-branch/final-repeat-summary.log` and `m3-5-report.md`.
 
 ## Milestone 6: Continue builds on the merged base
 

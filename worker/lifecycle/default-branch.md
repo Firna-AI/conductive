@@ -1,9 +1,10 @@
 # The default branch at a create
 
 This guide belongs to the [workspace lifecycle README](README.md). It gives
-the fetch step of a create, which prepares the base branch of the new
-workspace. The base branch of a create by a person is the default branch.
-The run of a routine can have another base branch, as
+the fetch step of a create, which prepares the start and base branches of
+the new workspace. The create can name both branches, as
+[Start from a branch](../../docs/protocol/start-from-a-branch.md) says.
+The run of a routine can also have another base branch, as
 [Browser routes](README.md#browser-routes) says.
 [The branch and the name](../../docs/protocol/create-a-workspace.md#the-branch-and-the-name)
 states the requirements, and [Repository layout](repository-layout.md)
@@ -12,8 +13,8 @@ gives the folder of each repository.
 The fetch step of a create runs `defaultBranchCommand` from
 [`default-branch-command.ts`](default-branch-command.ts).
 `workspacePhaseCommand` in [`start-command.ts`](start-command.ts) gives it
-the repository folder of the workspace map, the captured base branch, or
-the default branch when the workspace has none, the ID of the first turn,
+the repository folder of the workspace map, the captured default, start,
+and base branches, the ID of the first turn,
 and the trusted sender of the create. Without that sender, the step fails.
 
 The command exports the turn ID as `CONDUCTIVE_TURN_ID`. So the
@@ -34,15 +35,24 @@ and the credential helper of the image.
    push fails, it reads the remote refs again. When the remote is still
    empty, the step fails with the status of the push. Otherwise another
    push came first, and the step continues.
-4. Each successful path ends with a fetch of the base branch into its
-   remote-tracking reference, `refs/remotes/origin/<base branch>`. Then
-   the command points `refs/remotes/origin/HEAD` at that reference. The
-   branch step then creates the workspace branch from the start commit of
-   the run when it exists, or else from `FETCH_HEAD`. It sets the
-   `gh-merge-base` Git setting of the workspace branch to the base branch.
+4. Each successful path fetches the start branch into
+   `refs/remotes/origin/<start branch>`. A different base branch gets its
+   own fetch into `refs/remotes/origin/<base branch>`.
+5. The command points `refs/remotes/origin/HEAD` at the base reference.
+   The branch step creates the workspace branch from the start commit of
+   a pull request run when it exists. Otherwise it uses the start branch's
+   explicit remote reference. It sets `gh-merge-base` to the base branch.
 
-A remote with any ref gets no commit, also when it has no default branch.
-The fetch then fails, and the start fails.
+An empty remote gets its first commit only on the default branch.
+A missing start or base branch fails the fetch. The command confirms a
+missing ref with `git ls-remote --exit-code` after a failed fetch.
+It uses separate exit codes for the start and base branches.
+[`start-branch-failure.ts`](start-branch-failure.ts) maps them to a public
+failure that names the branch. An unavailable remote keeps the ordinary failure.
+The command quotes every branch with `shellQuote`.
+
+A remote with any ref gets no commit.
+A missing default branch fails the fetch only when it is the start or base branch.
 
 The command writes no local default branch, and it keeps the staged files
 and every local branch. On an older image whose repository has a local
@@ -63,6 +73,11 @@ says.
   and on an older image with a local default branch, the base is the
   fetched tip. The local default branch stays absent, or keeps its older
   commit.
+- `start-branches-command.test.ts` runs separate start and base fetches
+  with native Git. It checks the start commit, the base settings, shell
+  quoting, an empty remote, and branches deleted before the fetch.
+- `start-branch-retry.test.ts` checks the public named failure and keeps
+  both branches through Try again, object restart, and an ordinary resume.
 
 ## Key code
 

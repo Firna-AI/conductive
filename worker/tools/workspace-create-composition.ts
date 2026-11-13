@@ -69,6 +69,8 @@ export async function createWorkspaceFromTool(
     owner,
     {
       repositoryId: input.repositoryId,
+      startBranch: input.startBranch,
+      baseBranch: input.baseBranch,
       sectionId: input.sectionId,
       name: input.name,
       firstSessionTitle: input.firstSessionTitle,

@@ -14,7 +14,7 @@ Both tools give each call. Each CLI command starts with `conductive`.
 | --- | --- | --- |
 | `list_workspaces` | `workspaces list [--owner MEMBER_ID] [--state STATE] [--repository ID] [--query TEXT] [--updated-since MILLISECONDS] [--archived true\|false] [--limit NUMBER] [--offset NUMBER]` | Read |
 | `get_workspace` | `workspaces get [--workspace ID]` | Read |
-| `create_workspace` | `workspaces create --repository ID --message TEXT [--agent claude\|codex --model NAME] [--effort LEVEL] [--section ID] [--name TEXT] [--first-session-title TEXT] [--request-id ID]` | Write |
+| `create_workspace` | `workspaces create --repository ID --message TEXT [--agent claude\|codex --model NAME] [--effort LEVEL] [--section ID] [--name TEXT] [--first-session-title TEXT] [--request-id ID] [--start-branch BRANCH] [--base-branch BRANCH]` | Write |
 | `rename_workspace` | `workspaces rename --name TEXT [--workspace ID]` | Write |
 | `move_workspace` | `workspaces move --section ID [--workspace ID]` | Write |
 | `archive_workspace` | `workspaces archive [--workspace ID]` | Write |
@@ -82,6 +82,13 @@ rules.
 Create inherits the calling workspace's org and owner.
 An omitted model or effort uses the owner's default.
 An omitted section uses the org's default section.
+`--start-branch` supplies the first commit of the workspace branch.
+`--base-branch` sets its pull request target and Changes comparison.
+With neither option, both branches use the repository default.
+With only one option, both use that branch.
+The MCP fields are `startBranch` and `baseBranch`.
+Each named non-default branch gets the [branch check](../docs/protocol/start-from-a-branch.md#the-branch-check) with the calling turn sender's GitHub token.
+Creation replay runs before that check and keeps the original branches.
 The first message runs as the sender of the calling turn.
 `--name` gives an optional workspace name, and `--first-session-title` an optional title of the first session.
 Their help says: "Use plain words separated by spaces. Avoid underscores unless the user tells you to add them."

@@ -59,6 +59,8 @@ export async function runWorkspaceCommand(
           firstMessage: await cliMessage(values, input),
           name: values.name,
           firstSessionTitle: values['first-session-title'],
+          startBranch: values['start-branch'],
+          baseBranch: values['base-branch'],
           requestId: values['request-id'],
           ...((values.agent !== undefined || values.model !== undefined) && {
             model: { agent: values.agent, model: values.model },

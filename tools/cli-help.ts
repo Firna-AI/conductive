@@ -7,6 +7,7 @@ conductive workspaces get [--workspace ID]
 conductive workspaces create --repository ID --message TEXT
   [--agent claude|codex --model NAME] [--effort LEVEL] [--section ID] [--name TEXT]
   [--first-session-title TEXT] [--request-id ID]
+  [--start-branch BRANCH] [--base-branch BRANCH]
 conductive workspaces rename --name TEXT [--workspace ID]
 conductive workspaces move --section ID [--workspace ID]
 conductive workspaces archive [--workspace ID]
@@ -48,7 +49,11 @@ Previews require sign-in. Open returns a private preview link.
 Close of an already closed preview succeeds with closed: false.
 
 Create uses the calling workspace's org and owner.
-Omitted workspace choices use the owner's defaults and the default section.
+Omitted workspace model and effort use the owner's defaults. An omitted section uses the default section.
+--start-branch creates the workspace branch from that branch.
+--base-branch sets the pull request target and Changes comparison branch.
+If both branches are omitted, both use the repository default branch.
+If only one branch is given, both use that branch.
 Session create uses the turn sender's default choice. Send keeps the session's choice when omitted.
 For workspace create, session create, or send, replace --message TEXT with --message-file PATH.
 Use --message-file - to read raw stdin. Message text keeps all spaces and line endings.

@@ -131,6 +131,16 @@ The create answer gives the stored name and the first session's absolute `sessio
 The tools preserve string names, including blank names, and ignore names of other types.
 An optional `firstSessionTitle` and an optional `requestId` follow [Creation replay and first title](workspaces.md#creation-replay-and-first-title).
 A repeat with the same request ID resolves before the default lookup below.
+Optional `startBranch` and `baseBranch` use the normal lifecycle branch check.
+The start branch supplies the first commit of the workspace branch.
+The base branch supplies the pull request target and Changes comparison.
+With neither field, both use the repository default branch.
+With only one field, both use that branch.
+Both fields can name different branches.
+The check uses the calling turn sender's GitHub user token.
+It checks each named non-default branch and runs after creation replay.
+The [branch contract](../../docs/protocol/start-from-a-branch.md#the-branch-check) gives the refusals and the fallback when GitHub cannot answer.
+Try again and resume keep the saved branches.
 It reads saved owner preferences when the request omits model or effort.
 The injected account policy supplies defaults when no preference exists.
 Production returns HTTP 503 `default_model_unavailable` when no required default choice exists.

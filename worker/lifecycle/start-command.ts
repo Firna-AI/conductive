@@ -18,18 +18,21 @@ export function workspacePhaseCommand(
     job.repositoryLocations,
     row.repositoryId,
   )
+  const startBranch = job.startBranch ?? job.baseBranch ?? job.defaultBranch
   if (job.phase === 'fetch') {
     if (!job.creation) throw new Error('Missing trusted creation sender')
     return defaultBranchCommand({
       directory,
-      defaultBranch: job.baseBranch ?? job.defaultBranch,
+      defaultBranch: job.defaultBranch,
+      startBranch,
+      baseBranch: job.baseBranch ?? job.defaultBranch,
       turnId: job.turnId,
       sender: job.creation.sender,
     })
   }
   const start = job.startSha
-    ? `conductive_start=$(git rev-parse --verify --end-of-options ${shellQuote(`${job.startSha}^{commit}`)} 2>/dev/null) || conductive_start=FETCH_HEAD`
-    : 'conductive_start=FETCH_HEAD'
+    ? `conductive_start=$(git rev-parse --verify --end-of-options ${shellQuote(`${job.startSha}^{commit}`)} 2>/dev/null) || conductive_start=${shellQuote(`refs/remotes/origin/${startBranch}`)}`
+    : `conductive_start=${shellQuote(`refs/remotes/origin/${startBranch}`)}`
   return `set -eu
 export CONDUCTIVE_TURN_ID=${shellQuote(job.turnId)}
 cd ${shellQuote(directory)}

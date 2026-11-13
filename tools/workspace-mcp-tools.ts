@@ -12,7 +12,7 @@ import {
 export const WORKSPACE_CALLS = [
   {
     name: 'create_workspace',
-    description: `Create a workspace with this workspace's owner and start its first message. ${writeAccess} Omitted choices use the owner's defaults. The reply gives the workspace number and link, and the first session link. ${toolContext}`,
+    description: `Create a workspace with this workspace's owner and start its first message. ${writeAccess} Omitted model and effort use the owner's defaults. An omitted section uses the default section. The reply gives the workspace number and link, and the first session link. ${toolContext}`,
     inputSchema: {
       type: 'object',
       properties: {
@@ -22,6 +22,16 @@ export const WORKSPACE_CALLS = [
           description: 'A repository ID from list_repositories.',
         },
         firstMessage: { type: 'string', minLength: 1 },
+        startBranch: {
+          type: 'string',
+          description:
+            'Create the workspace branch from this branch. Omission uses baseBranch, or the repository default when both branches are omitted.',
+        },
+        baseBranch: {
+          type: 'string',
+          description:
+            'Use this branch for the pull request target and Changes comparison. Omission uses startBranch, or the repository default when both branches are omitted.',
+        },
         name: {
           type: 'string',
           description:

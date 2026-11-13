@@ -92,6 +92,8 @@ export interface WorkspacesResponse {
 export interface CreateWorkspaceRequest {
   repositoryId: string
   sectionId?: string
+  startBranch?: string
+  baseBranch?: string
   firstMessage: SendMessageRequest
 }
 export interface CreateWorkspaceResponse extends WorkspaceResponse {

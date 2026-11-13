@@ -21,6 +21,7 @@ import { routineRunsRoute } from './routines/run-route'
 import { hasAppAccess } from './waitlist/data'
 import { waitlistRoute } from './waitlist/route'
 import { feedbackRoute } from './app-api/feedback'
+import { branchesRoute } from './app-api/branches'
 
 export { routeDevice } from './devices/router'
 
@@ -70,6 +71,8 @@ export async function route(
   if (runs) return runs
   const routines = await routinesRoute(request, env, context, dependencies)
   if (routines) return routines
+  const branches = await branchesRoute(request, env, context, dependencies)
+  if (branches) return branches
   const featureShell = await featureShellRoute(
     request,
     env,

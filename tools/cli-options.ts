@@ -27,6 +27,8 @@ function commandOptions(args: readonly string[]): Options {
           section: string,
           name: string,
           'first-session-title': string,
+          'start-branch': string,
+          'base-branch': string,
         }
       case 'list':
         return {

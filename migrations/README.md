@@ -190,6 +190,10 @@ Existing runs keep null because their original choice is not known.
 A null base branch uses the repository default branch.
 Existing rows keep that fallback.
 
+`202611131528_workspace_start_branch.sql` adds the nullable creation plan
+`start_branch` beside the existing base branch. Old plans fall back to
+their base branch, then their captured default branch.
+
 `202611101600_agent_login_endpoints.sql` rebuilds `agent_logins` to accept
 the `endpoint` kind for both agents. The nullable `endpoint_origin` column
 is required only for that kind. The full endpoint stays inside the

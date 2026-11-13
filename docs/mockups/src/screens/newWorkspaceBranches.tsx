@@ -38,7 +38,7 @@ type Form = NewWorkspaceFormState
 export const branchRefusals = ['missing-branch', 'no-access'] as const
 
 /** The branch that the control shows, and that the new branch starts from. */
-export function formBranch(state: Form): string {
+function formBranch(state: Form): string {
   return state.branch === 'picked' ? pickedBranch : defaultBranch
 }
 

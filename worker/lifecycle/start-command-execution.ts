@@ -24,6 +24,7 @@ import { WorkspaceStartError } from './workspace-start'
 import { JobTimeLimit } from './job-time-limit'
 import { startTimeLimitReached } from './start-provider-retry'
 import type { StartCall } from './start-guard'
+import { missingStartBranchFailure } from './start-branch-failure'
 
 export async function advanceStartCommand(
   env: AppEnv,
@@ -98,6 +99,14 @@ export async function advanceStartCommand(
   await storage.retry(job.attempt, 'progress')
   if (status.more || status.running) return false
   if (status.state !== 'exited' || status.exitCode !== 0 || status.timedOut) {
+    if (
+      job.phase === 'fetch' &&
+      status.state === 'exited' &&
+      !status.timedOut
+    ) {
+      const missing = missingStartBranchFailure(job, status.exitCode)
+      if (missing) throw missing
+    }
     if (job.phase === 'terminal')
       warnWorker({
         kind: 'terminal_start_failed',

@@ -29,7 +29,7 @@ const priya = people.priya.login
  * The other branches of acme/storefront, newest commit first: the branches
  * of workspaces, and the branches that members pushed from elsewhere.
  */
-export const storefrontBranches: readonly BranchRow[] = [
+const storefrontBranches: readonly BranchRow[] = [
   { name: `${cal}/fix-cart-flake`, updated: '3m' },
   { name: `${cal}/apple-pay`, updated: '12m' },
   { name: `${cal}/next-16`, updated: '20m' },

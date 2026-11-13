@@ -144,11 +144,16 @@ create and resume. The workspace object runs that start:
 - The write that ends the `records` phase stores the admission in the start
   job. The end of the create moves it to the completed creation record. A
   repeat with other content still gets the admitted first message.
+- The creation plan keeps the start branch beside the base branch and
+  optional pull request start commit. Older plans use the base, then the
+  default branch when the start branch is absent. A replay uses this plan
+  before any new branch check.
 - Resume restarts only a stopped or failed workspace. A resumed
   sandbox gets fresh env vars and runs the startup script again, but it
   fetches no code. A start older than the last stop cannot restart it.
 - After a failed first start, Resume instead queues a replacement create.
-  It keeps the workspace, branch, repository, creation date, and first-message IDs.
+  It keeps the workspace, workspace branch, start branch, base branch,
+  repository, creation date, and first-message IDs.
   It uses the current image and settings, with a fresh token and allocation key.
   It keeps the original preparation sender and the current retry requester separate.
   Previous cleanup finishes before new allocation, including after a restart.
@@ -160,7 +165,8 @@ create and resume. The workspace object runs that start:
   Its running steps become failed before the workspace error event is published.
   If no step is running or failed, the controller records the failed start itself.
   A later sandbox error after successful creation adds no such step.
-- Each start gives the sandbox the default branch of its repository. It
+- Each start gives the sandbox its base branch, with the repository default
+  as the fallback for a null base. It
   gives no setting for the computer tools, because Boat writes the entry
   of the `computer` server into the sandbox, as
   [What it does](../../runner/README.md#what-it-does) says.

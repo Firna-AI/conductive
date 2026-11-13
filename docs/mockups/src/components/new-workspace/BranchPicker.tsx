@@ -30,7 +30,7 @@ export type BranchOption = {
  * tone, and the dialog the plain tone, as for the repository picker. `to`
  * is the screen of the open picker, in the mockups.
  */
-export function BranchButton(props: {
+function BranchButton(props: {
   branch: string
   expanded: boolean
   tone?: ActionTone

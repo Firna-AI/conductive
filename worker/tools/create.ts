@@ -74,6 +74,8 @@ export async function createFromTool(
     orgId: caller.orgId,
     owner,
     repositoryId: input.repositoryId,
+    startBranch: input.startBranch,
+    baseBranch: input.baseBranch,
     sectionId,
     choice: choice({ ...model, effort }),
     firstMessageId,

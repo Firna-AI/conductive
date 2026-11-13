@@ -118,7 +118,8 @@ it('does not bootstrap a missing default branch when the remote has another ref'
   try {
     const commit = await fixture.createRemoteCommit('refs/tags/existing')
     const result = await fixture.execute()
-    expect(result.exitCode).toBe(128)
+    expect(result.exitCode).toBe(44)
+    expect(result.stderr).toContain('The branch `main` is no longer on GitHub.')
     expect(
       await fixture.remoteGit(
         'for-each-ref',

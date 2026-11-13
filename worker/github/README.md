@@ -2,6 +2,7 @@
 
 This module reads GitHub branch state for the shared banner and checks API.
 It also reads each member's merge access and runs direct merges as that member.
+It reads live repository branches for workspace creation with the member's GitHub user token.
 It also verifies GitHub App webhooks and finds their workspace targets.
 It stores its state and events in the [chat store](../chat/README.md) of the workspace Durable Object.
 It also keeps a copy of the GitHub summary of each workspace in D1, as [The summary copy](#the-summary-copy) says.
@@ -18,6 +19,10 @@ The [shared contracts](../../src/shared/github.ts) define the response bodies.
 
 ## Public boundaries
 
+- [readRepositoryBranches](branches.ts) reads every branch page and sorts and filters the result for the [browser route](../app-api/branches.ts).
+  [checkRepositoryBranch](branch-check.ts) checks a named branch for the [shared creation path](../lifecycle/create-branches.ts).
+  Both use [branch-query.ts](branch-query.ts) for bounded reads, repository identity checks, and safe access errors.
+  Neither stores branch data or returns a token.
 - [handleGitHubWebhook](webhook.ts) accepts `POST /v1/github/webhooks` on `MACHINE_ORIGIN`.
   It verifies `X-Hub-Signature-256` against the raw body before parsing or D1 access.
   It authenticates machines with `GITHUB_WEBHOOK_SECRET`, without the app gate.

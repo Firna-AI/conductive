@@ -1,4 +1,5 @@
 import type { User } from '../../src/shared/api'
+import type { CreateWorkspaceRequest } from '../../src/shared/workspaces'
 import type { SendMessageRequest } from '../../src/shared/messages'
 import type { MaskedStartLog } from './masked-start-log'
 import type { SavedProvisionedWorkspace } from './workspace-response'
@@ -16,6 +17,7 @@ interface WorkspaceStartData {
   environmentCiphertext: string | null
   defaultBranch: string
   baseBranch?: string
+  startBranch?: string
   startSha?: string
   repositoryLocations?: readonly RepositoryLocation[]
   turnId: string
@@ -84,6 +86,7 @@ interface WorkspaceCreation {
   city: string
   name?: string
   firstSessionTitle?: string
+  branches?: Pick<CreateWorkspaceRequest, 'startBranch' | 'baseBranch'>
   branch: string
   sessionId: string
   request: SendMessageRequest

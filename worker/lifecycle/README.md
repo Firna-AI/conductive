@@ -41,14 +41,25 @@ gives the create, read, resume, and activity routes of a workspace to
 `handleLifecycleRequest` serves, the options of its caller, and the rules
 of a create.
 
-The internal `createWorkspace` call can pass a base branch and a start commit separately from the browser request.
+The browser create accepts optional `startBranch` and `baseBranch` fields.
+[`create-branches.ts`](create-branches.ts) applies their defaults before creation.
+It checks each named non-default branch with the sender's fresh GitHub user token.
+The shared check in [`branch-check.ts`](../github/branch-check.ts) distinguishes a missing branch from missing repository access.
+It keeps the create's published-image repository policy when the current selection changes.
+A failed GitHub read or expired sign-in leaves the start to decide.
+Creation replays run before this check and keep the original branch choices.
+The internal `createWorkspace` call can pass a pull request base and start commit separately from those fields.
 Its provider account argument selects the published org image independently of those branch fields.
-The creation claim keeps them in its saved plan.
-The fetch updates `refs/remotes/origin/<base branch>`.
-The branch phase uses the event commit when it exists, or the fetched head otherwise.
+The creation claim keeps both branches and the start commit in its saved plan.
+It applies omitted defaults against the same publication that supplies the leased image.
+Named fields keep their values if publication changes before admission.
+A base equal to the repository default stays null in storage.
+The fetch updates remote-tracking refs for both the start and base branches.
+The branch phase uses the event commit when it exists, or the start branch's explicit remote ref otherwise.
 It sets the branch's `gh-merge-base` Git setting to the workspace base.
 Create, resume, and disk retention pass that base through `CONDUCTIVE_DEFAULT_BRANCH`.
 A null stored base uses the repository default branch.
+Try again keeps the saved start and base branches with its new allocation.
 
 ### Input activity
 

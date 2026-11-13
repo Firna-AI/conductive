@@ -22,6 +22,8 @@ export class RepositoryGitHub {
   pulls: Record<number, RepositoryPull> = { 2: repositoryPull() }
   checks = new Map<string, unknown[]>([[HEAD_SHA, [passedRun]]])
   pageSize = 100
+  commitDates = new Map<string, string>()
+  deniedTokens = new Set<string>()
   readonly merges = new RepositoryMerges()
   failure: Response | null = null
   onRequest: ((operation: string) => Promise<void>) | null = null
@@ -103,12 +105,39 @@ export class RepositoryGitHub {
     const operation = body.query.match(/query (\w+)/)?.[1] ?? ''
     await this.onRequest?.(operation)
     const variables = body.variables
+    if (
+      this.deniedTokens.has(
+        (request.headers.get('Authorization') ?? '').replace(/^Bearer /, ''),
+      )
+    )
+      return Response.json({
+        data: { repository: null },
+        errors: [{ type: 'NOT_FOUND', message: 'Private GitHub detail' }],
+      })
     if (`${variables.owner}/${variables.name}` !== this.fullName)
       return Response.json({ data: { repository: null } })
     const repository: Record<string, unknown> = {
       databaseId: this.repositoryId,
     }
-    if (operation === 'MergeCapabilities') {
+    if (operation === 'RepositoryBranch') {
+      const ref = String(variables.ref)
+      repository.ref = this.branches.has(ref)
+        ? { name: ref.slice('refs/heads/'.length) }
+        : null
+    } else if (operation === 'RepositoryBranches') {
+      repository.refs = this.page(
+        [...this.branches]
+          .filter(([ref]) => ref.startsWith('refs/heads/'))
+          .map(([ref, sha]) => ({
+            name: ref.slice('refs/heads/'.length),
+            target: {
+              committedDate:
+                this.commitDates.get(sha) ?? '2026-11-01T00:00:00Z',
+            },
+          })),
+        variables.after,
+      )
+    } else if (operation === 'MergeCapabilities') {
       Object.assign(
         repository,
         this.merges.capabilities(

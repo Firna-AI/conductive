@@ -3,6 +3,8 @@ import { MACHINE_PATHS, type AgentWorkspaceSummary } from './agent-tools.ts'
 import type { Workspace } from './workspaces'
 
 export interface AgentCreateWorkspaceRequest {
+  startBranch?: string
+  baseBranch?: string
   repositoryId: string
   firstMessage: string
   model?: { agent: Agent; model: string }
