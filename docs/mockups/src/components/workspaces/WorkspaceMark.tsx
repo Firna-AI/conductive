@@ -4,12 +4,19 @@ import { classes } from '../common/classes'
 import { MarkGrid, ring, ringDelay, type MarkCell } from './MarkGrid'
 import styles from './WorkspaceMark.module.css'
 
-/** The colour of each GitHub state. */
+/**
+ * The colour of each GitHub state: the tone of the pull request bar in the
+ * same state.
+ */
 const colours: Readonly<Record<GitHubSummary, string>> = {
-  'checks-failed': styles.checksFailed,
-  'checks-running': styles.checksRunning,
-  'checks-passed': styles.checksPassed,
+  'checks-running': styles.neutral,
+  'checks-failed': styles.danger,
+  'ready-to-merge': styles.success,
   merged: styles.merged,
+  conflict: styles.warning,
+  'changes-requested': styles.warning,
+  draft: styles.neutral,
+  blocked: styles.warning,
 }
 
 /** The middle column, which stays lit without motion while the agent asks. */
@@ -87,9 +94,11 @@ function cellOf(
 
 /**
  * The mark of a workspace in the list, the command palette, and chips: the
- * GitHub state of its pull request in one colour, on the grid of
- * `StatusGlyph`. Red is failed checks, amber running checks, green passed
- * checks, and purple a merge. A mark without a GitHub state is dim grey.
+ * GitHub state of its pull request in the colour of its pull request bar,
+ * on the grid of `StatusGlyph`. Red is failed checks, green ready to merge,
+ * purple a merge, and amber a merge conflict, requested changes, or a
+ * block. Running checks and a draft are grey. A mark without a GitHub state
+ * is dim grey.
  * A light runs around the ring while the agent works or the checks run,
  * and the mark pulses while the agent needs input. Every other mark is
  * still. It imports no fixture value, so the app uses it too.

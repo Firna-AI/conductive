@@ -1,6 +1,5 @@
 import type { Agent } from '../../src/shared/agents'
 import type { Session } from '../../src/shared/sessions'
-import type { RunnerProtocolVersion } from '../../src/shared/runner'
 import { usableAgentLogin, type AgentLogin } from './login-kind'
 import { LoginReuseDenied, readLogin } from './login-access'
 import type { SessionLoginMetadata } from './login-availability'
@@ -28,10 +27,9 @@ export class SessionLogins {
     userId: string,
     agent: Agent,
   ): Promise<SessionLoginMetadata> {
-    const metadata = await dependencies.readLoginMetadata(
-      [{ sessionId, userId, agent }],
-      dependencies.currentRunnerProtocolVersion(),
-    )
+    const metadata = await dependencies.readLoginMetadata([
+      { sessionId, userId, agent },
+    ])
     return metadata.get(sessionId) ?? unavailableMetadata
   }
 
@@ -52,7 +50,6 @@ export class SessionLogins {
     sessionId: string,
     runnerTokenHash?: string,
     senderId?: string,
-    protocolVersion?: RunnerProtocolVersion,
   ) {
     const session = await this.operation.read((view) =>
       sessionFor(view, sessionId),
@@ -65,7 +62,6 @@ export class SessionLogins {
         session.choice.agent,
         runnerTokenHash,
         senderId,
-        protocolVersion,
       )
     } catch (error) {
       if (!(error instanceof LoginReuseDenied)) throw error
@@ -75,10 +71,8 @@ export class SessionLogins {
     const invalidEndpoint =
       login?.kind === 'endpoint' &&
       !usableAgentLogin(login, this.dependencies.refusedEndpointDomains())
-    const unusable =
-      invalidEndpoint || (login?.kind === 'endpoint' && protocolVersion === 1)
     const metadata =
-      login && session.startedBy && !unusable
+      login && session.startedBy && !invalidEndpoint
         ? await SessionLogins.initial(
             this.dependencies,
             session.id,
@@ -124,10 +118,7 @@ export class SessionLogins {
           ],
     )
     const metadata = targets.length
-      ? await this.dependencies.readLoginMetadata(
-          targets,
-          this.dependencies.currentRunnerProtocolVersion(),
-        )
+      ? await this.dependencies.readLoginMetadata(targets)
       : new Map<string, SessionLoginMetadata>()
     for (const session of open)
       await this.save(session, metadata.get(session.id) ?? unavailableMetadata)

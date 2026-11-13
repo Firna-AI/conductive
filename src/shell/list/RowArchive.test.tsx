@@ -59,6 +59,16 @@ function archivedReply(workspaceId: string, restoreUntil: number | null) {
   return { ...detail, workspace: archived }
 }
 
+/** Whether the list shows a row for the workspace. */
+function listed(workspaceId: string): boolean {
+  try {
+    rowLink(workspaceId)
+    return true
+  } catch {
+    return false
+  }
+}
+
 /** The names of the dialogs that show. */
 function dialogs(): string[] {
   return Array.from(
@@ -140,7 +150,7 @@ describe('Archive from a workspace row', () => {
     })
   })
 
-  test('Archive of the open row during its first read, by its shortcut or its menu, sends one request, its toast brings the workspace back, and the end of the read resumes nothing', async () => {
+  test('Archive of the open row during its first read, by its shortcut, sends one request, moves the row to the Archived group at once, its toast brings the workspace back, and the end of the read resumes nothing', async () => {
     // The spinner of the first read stays on its first frame.
     holdAnimationFrames()
     const server = new FakeApiServer({ workspaceState: 'stopped' })
@@ -155,13 +165,11 @@ describe('Archive from a workspace row', () => {
     held.holdAnswer('POST', archivePath)
     click(archiveShortcut(workspace))
     await settle()
-    // While the Archive runs, its button is busy, and the menu sends nothing.
-    const busy = archiveShortcut(workspace).getAttribute('aria-busy')
-    rightClick(rowLink(workspace), { clientX: 120, clientY: 400 })
-    click(menuItem('Archive'))
-    await settle()
+    // While the Archive runs, its row already shows in the Archived group.
     const during = {
       dialogs: dialogs(),
+      archived: queryByRole('region', 'Archived')?.textContent ?? null,
+      listed: listed(workspace),
       writes: requestsFor(server, workspace).filter((line) =>
         line.startsWith('POST'),
       ),
@@ -181,7 +189,6 @@ describe('Archive from a workspace row', () => {
 
     expect({
       loading,
-      busy,
       during,
       after: {
         dialogs: dialogs(),
@@ -193,8 +200,12 @@ describe('Archive from a workspace row', () => {
       ),
     }).toEqual({
       loading: true,
-      busy: 'true',
-      during: { dialogs: [], writes: [`POST ${archivePath}`] },
+      during: {
+        dialogs: [],
+        archived: 'Archived1',
+        listed: false,
+        writes: [`POST ${archivePath}`],
+      },
       after: {
         dialogs: [],
         header: 'Checkout address autocomplete',

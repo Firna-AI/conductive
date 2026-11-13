@@ -3,10 +3,10 @@ import {
   RUNNER_SUPPORTED_LOGIN_KINDS,
 } from '../../src/shared/runner'
 import type {
-  RunnerCommandV2 as RunnerCommand,
+  RunnerCommand,
   RunnerEvent,
   RunnerEventEnvelope,
-  WorkspaceToRunnerV2 as WorkspaceToRunner,
+  WorkspaceToRunner,
 } from '../../src/shared/runner'
 import type { RunnerFileResponse } from '../../src/shared/runner-files'
 import type {

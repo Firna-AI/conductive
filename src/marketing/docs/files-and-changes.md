@@ -77,7 +77,8 @@ It is broader than the changed-file summary of one agent turn.
 Use the list to check the agent's result before you commit or open a pull request.
 A committed file can remain in **Changes** while the branch differs from its base branch.
 
-On an open pull request, files not committed or commits not pushed give **Commit and push** priority in the bar.
+On an open pull request, files not committed give **Commit and push** priority in the bar.
+Commits not pushed, with no files left to commit, give **Push** priority instead.
 It replaces Merge and the fix actions until that work is pushed.
 Some uncommitted work can exist without a visible diff in this list.
 Use `git status` in **Terminal** to inspect it.

@@ -20,6 +20,8 @@ archive packager and the live check.
 - Install the runner archive after a check of its SHA-256 digest.
 - Install and enable the systemd services of the agent runner and preview relay.
 - Install and enable the preview relay's socket unit.
+- Install the udev rule that stops disk flushes at each boot, as
+  [Disk flushes](install.md#disk-flushes) says.
 - Make the git credential helper the system credential helper of git.
 - Install the GitHub CLI and its wrapper, which gets a fresh token for each command.
 - Start no runner in a build sandbox. The service runs it only in a
@@ -225,7 +227,7 @@ GitHub CLI wrapper, their token rules, and their tests.
 - The workspace object filters runner events with the marked env values
   from the actual start capture before it checks their meaning, stores
   them, or sends them. This applies to older installed runners too.
-  The runner masks workspace tokens and logins. It receives no separate
+  The runner masks workspace tokens and turn tokens. It receives no separate
   org-value list, so its local state can keep raw org values. Real paths
   and base refs stay available for operations. Separate labels are masked.
 - The terminal password stays in `/run/conductive-terminal/password`, with

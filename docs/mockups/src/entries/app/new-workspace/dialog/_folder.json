@@ -1,6 +1,7 @@
 {
   "order": [
     "first-build",
+    "section",
     "files",
     "no-login",
     "not-created",

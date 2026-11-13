@@ -47,7 +47,7 @@ it('retains a gateway failure and Stop through SQLite eviction, then ends once a
     socket.send(
       JSON.stringify({
         type: 'hello',
-        protocolVersion: 1,
+        protocolVersion: 2,
         workspaceId: WORKSPACE_ID,
         streamId: 'gateway-stream',
       }),

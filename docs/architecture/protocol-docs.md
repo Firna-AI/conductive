@@ -6,7 +6,7 @@ that meet them, and gives the terms and the meaning of a decision number.
 This page lists each protocol doc and what it covers.
 
 - [Workspaces and sandboxes](../protocol/workspaces-and-sandboxes.md): the org
-  image and the life of a workspace.
+  image, the life of a workspace, and the disk flushes of a sandbox.
   - [Create a workspace](../protocol/create-a-workspace.md): New workspace as a
     page or as a dialog, the create, the branch, and a failed first start.
   - [Repository folders](../protocol/repository-folders.md): the folder and the
@@ -52,8 +52,9 @@ This page lists each protocol doc and what it covers.
 - [Access and security](../protocol/access-and-security.md): sign-in, the
   gates, the secrets, and the isolation of sandboxes and previews.
   - [Isolation of orgs and sandboxes](../protocol/isolation.md)
-    - [Version pins](../protocol/version-pins.md): the login rules and the
-      risks of each version pin.
+    - [Version pins](../protocol/version-pins.md): the runner version that
+      a workspace accepts, the version pin, and the risks of the turn
+      token in a sandbox.
   - [Tokens and secrets](../protocol/tokens-and-secrets.md)
     - [Own endpoint logins](../protocol/own-endpoint-logins.md): the
       endpoint and the key of each agent, the model list of the endpoint,
@@ -86,6 +87,8 @@ This page lists each protocol doc and what it covers.
     for the names and titles that the calls give.
 - [Orgs and members](../protocol/orgs-and-members.md): orgs, sections,
   roles, the first run, and the end of an org.
+  - [Org rail order](../protocol/org-rail-order.md): the order of the orgs
+    in the rail that each person keeps, and how the person changes it.
 - [Pricing](../protocol/pricing.md): the plans and their cloud hours, the
   extra hours, the seller and the tax, the pricing page, and the planned
   billing changes. Use is free until billing starts.
@@ -121,6 +124,8 @@ This page lists each protocol doc and what it covers.
   refreshes, and the first build of a new org.
 - [Agents and sessions](../protocol/agents-and-sessions.md): the agents and
   their logins, the sessions, and the names of workspaces and sessions.
+  - [Workspace and session names](../protocol/workspace-and-session-names.md):
+    the missing and the automatic names of workspaces and sessions.
 - [Workspace links](../protocol/workspace-links.md): Copy link, and the chips
   that show workspace links in chat.
 - [Chat Markdown](../protocol/chat-markdown.md): the formatting of agent

@@ -55,7 +55,6 @@ export class RunnerCommandPreparation {
         command.sessionId,
         active.workspace.tokenHash,
         message.sender.id,
-        active.protocolVersion ?? 1,
       )
       login = observed.login
       if (!login && observed.reason) {
@@ -72,19 +71,12 @@ export class RunnerCommandPreparation {
       return this.unavailable(active.workspace.id, command)
     }
     if (
-      !active.protocolVersion ||
-      (login.kind === 'endpoint'
-        ? active.protocolVersion !== 2 ||
-          !runnerSupportsLogin(
-            2,
-            { agent: login.agent, kind: 'api-key' },
-            active.loginKinds,
-          )
-        : !runnerSupportsLogin(
-            active.protocolVersion,
-            login,
-            active.loginKinds,
-          ))
+      !runnerSupportsLogin(
+        login.kind === 'endpoint'
+          ? { agent: login.agent, kind: 'api-key' }
+          : login,
+        active.loginKinds,
+      )
     ) {
       await this.failLogin(
         active.workspace.id,

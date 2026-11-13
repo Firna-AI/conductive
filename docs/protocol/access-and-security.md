@@ -174,7 +174,7 @@ rejected, because it needs a new secret, CORS rules, and a new host.
   refuses a request with no content type or with another content type.
 - A request needs a `Content-Length` header. The Worker refuses a request
   without it.
-- The body limit of these routes is 25,000,000 bytes, the file limit of
+- The body limit of these routes is 100,000,000 bytes, the file limit of
   [Attachments](messages-and-attachments.md#attachments). The Worker counts the
   bytes that arrive, as for every body.
 - A body or a `Content-Length` above that limit gets HTTP 413 with the
@@ -215,8 +215,8 @@ Later screens add the frame and connection sources that they need.
 ## Agent logins in a sandbox
 
 - [Agent logins in a sandbox](isolation.md#agent-logins-in-a-sandbox)
-  states how a login reaches the sandbox, its share setting, and its
-  risk. It also states the turn tokens and the risks of each version pin.
+  states how a turn uses a login, its share setting, and its risk. It
+  also states the turn tokens and their risks.
 
 ## GitHub tokens
 

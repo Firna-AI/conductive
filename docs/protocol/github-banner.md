@@ -49,6 +49,14 @@ number names a dated record, as
 - The Worker pushes the new state to every open tab of that workspace.
 - When a tab opens, the Worker reads the current pull request and the
   current checks of the branch from the GitHub API.
+- While that read runs, the tab shows the last state that the Worker
+  stored for the branch, when it has one. The fresh state replaces it
+  when the read answers. The user chose this on 12 November 2026.
+- Reason: a read from GitHub takes seconds, while the list already shows
+  the GitHub state of the workspace, so the bar must not show a loading
+  state for a known state.
+- A failed fresh read keeps the stored state on the screen, and the
+  GitHub events of the branch keep it current.
 - Events do not reach an archived workspace. Its open tab still reads the
   state when it opens. The user chose this on 11 November 2026.
 - Reason: each event read every workspace of the repository, also the
@@ -106,7 +114,8 @@ continues, and archives.
 | Checks failed | Fix checks | The agent |
 | Merge conflict | Resolve conflicts | The agent |
 | Changes requested | Address review | The agent |
-| An open pull request with local work, in any state | Commit and push | The agent |
+| An open pull request with changed files that are not committed, in any state | Commit and push | The agent |
+| An open pull request with only commits that no remote branch holds, in any state | Push | The agent |
 | Ready to merge, for a member who may merge | Merge, named by its method | The app |
 | Merged | Continue and Archive | The app |
 | No commits and no local work | None: "No commits yet" | None |
@@ -115,9 +124,18 @@ continues, and archives.
 - The bar counts the local work of the current branch: its changed files,
   also untracked files, and its commits that no remote branch holds.
 - Local work comes first (decision 228). While an open pull request has
-  local work, Commit and push takes the place of Merge and of the fixes. A
-  merged or a closed pull request is not open.
+  local work, Commit and push or Push takes the place of Merge and of the
+  fixes. A merged or a closed pull request is not open.
 - Reason: no merge leaves work behind in the sandbox.
+- The button names the step that the agent does. When a file is not
+  committed, the button is Commit and push, and its prompt asks the agent
+  to commit and push. When the local work is only commits, the button is
+  Push, and its prompt asks the agent to push the branch. The user chose
+  this on 12 November 2026.
+- Reason: Commit and push on a clean tree made members look for files that
+  were not committed.
+- Push and Commit and push share one command and one key, as
+  [the default keys](keyboard-shortcuts-keys.md#the-default-keys) say.
 - In each state that has a pull request, the number of the pull request
   opens it on GitHub. An arrow after the number marks the link. The bar has
   no other link to the pull request. The user chose this on 10 November
@@ -179,6 +197,13 @@ continues, and archives.
   [Merge as the member](github-tokens.md#merge-as-the-member) says.
 - When the Worker cannot read the access, the bar shows no Merge. Reason:
   a button that is sure to fail helps nobody.
+- While the bar reads the access, it uses the last access that the same tab
+  read for the member and the repository, when it has one. This applies to
+  Merge and to the agent actions. A failed read forgets that access, and a
+  sign-out forgets each one. The user chose this on 12 November 2026.
+- Reason: the access seldom changes, and a read from GitHub takes seconds.
+  The bar of another workspace of the same repository must not wait for
+  it. GitHub still checks the access at each merge.
 - GitHub keeps the final say, because it checks the rules of the branch at
   the merge.
 - Merge for every member was rejected, because a member without the right
@@ -231,8 +256,8 @@ continues, and archives.
   action-required check is a failure. A queued or running check runs. Each
   other check counts as passed.
 - The list mark of the workspace shows its
-  [GitHub state](#the-github-state) in one colour, as
-  [The list mark](workspace-life.md#the-list-mark) says.
+  [GitHub state](#the-github-state), the state of the bar, in the colour of
+  the bar, as [The list mark](workspace-life.md#the-list-mark) says.
 
 ## The GitHub state
 

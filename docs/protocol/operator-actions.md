@@ -162,6 +162,13 @@ whoever owns or started it (decision 129).
   the org alone.
 - Each other change that a member asks for gets the `org_suspended`
   refusal.
+- Each member's own order of the org rail is not a change in the org
+  (decision 516 A). So each member can still move the org in their rail,
+  as [Org rail order](org-rail-order.md#a-suspended-or-deleted-org) says.
+- Reason: that order spans all the orgs of the member, and other members
+  see no change. An order inside the org, such as the tab order of a
+  workspace, still does not change, as
+  [The tab row](agents-and-sessions.md#the-tab-row) says.
 - The rules of a leave in [Owners and admins](#owners-and-admins) still
   hold (decision 123). No member can become an admin while the org is
   suspended. So the only active admin cannot leave it until an operator

@@ -45,7 +45,10 @@ sessions as tabs above the chat, and four tabs at the bottom.
   marketing site and the sign-in page. The macOS app icon shows in the
   notifications of the Mac app.
 - `ActionButton` and `IconButton` in `src/components/common/actions.tsx` give
-  the Firna button the dense size and a lighter label.
+  the Firna button the dense size and a lighter label. The `outline` tone of
+  `ActionButton` keeps the border of the secondary tone without its fill, so
+  the tint of a bar shows through, as on Stop of the 15 minutes bar and on
+  Archive of the pull request bar.
 - On a phone every touch target is at least 44 px high. `MobileFrame` gives
   the Firna controls the touch sizes through `useControlSizes` in
   `src/components/common/touch.tsx`, and local controls read the
@@ -91,6 +94,19 @@ sessions as tabs above the chat, and four tabs at the bottom.
   Rename puts a field in place of the name and the time, with the name
   selected. `RowMenu.module.css` styles the field and the menu at the
   pointer.
+- `OrgRail` in `src/components/layout/` draws the order of the orgs that
+  each person keeps, from decisions 515 to 517, as `app/orgs/reorder`
+  shows. A drag of a tile looks like the drag of a tab and of a workspace
+  row: the tile lifts as a raised card, a faint copy stays at its place,
+  and a line in the accent colour marks where it lands. The line takes no
+  space, and the rail names no org during a drag. A right click on a tile
+  opens its menu at the pointer: Move up and Move down, from
+  `orgTileMenu.ts` in `src/components/orgs/`. Shift+F10 and the Menu key
+  open it beside the tile. A move that the place of the tile rules out
+  keeps its place, greyed. Create org, Operator, and the account have no
+  menu. On a phone, a long press lifts an org in the org switcher with the
+  same look, and opens no menu. `OrgDrop` and `OrgDrag.module.css` beside
+  `orgTileMenu.ts` draw the drag on the rail and in the org switcher.
 - `FailureToast` in `src/components/common/` draws the toast that names a
   change of the list that failed, with the message of the server, in the
   `ToastLayer` beside it, as `app/workspace-menu/rename/failed` shows.

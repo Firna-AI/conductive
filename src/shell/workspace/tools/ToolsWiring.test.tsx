@@ -78,6 +78,30 @@ describe('the tools in the workspace', () => {
     expect(saved.map(toolOf)).toEqual(['preview', 'terminal'])
   })
 
+  test('keep the preview frame and its page while the terminal shows', async () => {
+    holdAnimationFrames()
+    const server = new FakeApiServer()
+    const { view } = await openTab(server, routes.workspace(org, id))
+    const panel = toolsPanel(view)
+    const frameOf = () =>
+      panel.querySelector('iframe[title="Preview of port 3000"]')
+
+    click(linkTo(panel, toolHref(org, id, 'preview')))
+    await settle()
+    const frame = frameOf()
+    expect(frame).not.toBeNull()
+    click(linkTo(panel, toolHref(org, id, 'terminal')))
+    await settle()
+    expect(frame?.closest('[hidden]')).not.toBeNull()
+    click(linkTo(panel, toolHref(org, id, 'preview')))
+    await settle()
+
+    // The same frame shows again, so its page did not load again.
+    expect(frameOf()).toBe(frame)
+    expect(frame?.closest('[hidden]')).toBeNull()
+    expect(frame?.isConnected).toBe(true)
+  })
+
   test('keep the tool tabs around a stopped sandbox on desktop, and mount no tool', async () => {
     holdAnimationFrames()
     const server = new FakeApiServer({ workspaceState: 'stopped' })

@@ -4,7 +4,7 @@ import {
   readBannerResponse,
   readChecksResponse,
 } from '../../../github/githubParse'
-import type { SubscribeToWorkspace } from '../../../github/githubStore'
+import type { SubscribeToWorkspace } from '../../../github/githubSource'
 import type { WorkspaceSocketMessage } from '../../../shared/events'
 
 /**

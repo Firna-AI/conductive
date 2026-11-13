@@ -157,7 +157,7 @@ export const cloudFeatures: readonly ParityFeature[] = [
     area: 'cloud',
     name: 'Cloud agents run Mac commands',
     status: 'available',
-    note: 'Agents can request Mac commands. Saved command or temporary workspace permissions can allow them without another prompt.',
+    note: 'Mac commands support saved command permissions or workspace permissions for 15 minutes or until Stop. Extending timed permissions is in progress.',
   },
   {
     id: 'transfer-to-local',

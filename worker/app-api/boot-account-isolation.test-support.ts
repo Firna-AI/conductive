@@ -99,30 +99,30 @@ export async function expectAccountIsolation(
   await putAccountValue(harness, other, ACCOUNT_PATHS.defaultModel, { choice })
   await expectBoth(firstSaved, otherSaved)
   await putAccountValue(harness, first, ACCOUNT_PATHS.newWorkspaceView, {
-    view: 'dialog',
-  })
-  const firstDialog: AccountState = {
-    ...firstSaved,
-    newWorkspaceView: 'dialog',
-  }
-  await expectBoth(firstDialog, otherSaved)
-  await putAccountValue(harness, other, ACCOUNT_PATHS.newWorkspaceView, {
     view: 'page',
   })
-  await expectBoth(firstDialog, otherSaved)
+  const firstPage: AccountState = {
+    ...firstSaved,
+    newWorkspaceView: 'page',
+  }
+  await expectBoth(firstPage, otherSaved)
+  await putAccountValue(harness, other, ACCOUNT_PATHS.newWorkspaceView, {
+    view: 'dialog',
+  })
+  await expectBoth(firstPage, otherSaved)
   const removed = await harness.request(agentLoginPath('claude'), first, {
     method: 'DELETE',
     body: '{}',
   })
   expect(removed.status).toBe(204)
   await expectBoth(
-    { ...empty, defaultChoice: otherChoice, newWorkspaceView: 'dialog' },
+    { ...empty, defaultChoice: otherChoice, newWorkspaceView: 'page' },
     otherSaved,
   )
   const firstShortcuts: AccountState = {
     ...empty,
     defaultChoice: otherChoice,
-    newWorkspaceView: 'dialog',
+    newWorkspaceView: 'page',
     shortcuts: {
       mac: [
         { command: 'command-palette', keys: [readShortcutKeyText('Meta+P')] },
