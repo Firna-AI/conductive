@@ -135,10 +135,11 @@ Use **Stop** in each affected session if agents keep replying to each other with
 Each session has its own model and effort picker.
 A different model of the same agent keeps the conversation in that session.
 
-A model of the other agent opens a new session.
+A model of the other agent opens a new session when the session has messages.
 Your draft moves to it.
 The earlier conversation stays in its original session.
 The new session starts without a copy of that conversation.
+In a session with no messages, a model of the other agent stays in that session.
 
 If the chosen agent has no usable login, the message box offers **Connect** for that agent.
 Connect the login in **Account** before you send.
