@@ -173,10 +173,18 @@ tools.
 | ------- | ---------- |
 | `terminal` | The Terminal tool |
 | `preview`, `preview/<previewId>` | The Preview tool, with that preview |
+| `preview/port/<port>` | The Preview tool, which shows or opens the preview of that port |
 | `desktop` | The Terminal tool, because Desktop is hidden |
 
 - An address that names a tool shows it and saves it as `tool` of the
   view. Without one, the saved view names the tool.
+- `previewPortHref` gives the address of a port. Its port is a whole
+  number from 1 to 65535, with no leading zero. Another value shows the
+  Preview tool with no preview and no port.
+- The Preview tool shows or opens the preview of the port of the address,
+  as [the previews](../../previews/README.md#behaviour) say. Then the
+  address of that preview takes the place of the address of the port, with
+  no new history entry. After a failed open, `preview` takes its place.
 - The `desktop` address and a saved `desktop` tool show Terminal. Neither
   mounts Desktop or saves Terminal in place of the saved tool. The view
   keeps `desktop` as a valid tool.
@@ -201,6 +209,11 @@ tools.
   as Ctrl+K on Windows and Linux, as
   [Where a key goes](../../../docs/protocol/keyboard-shortcuts.md#where-a-key-goes)
   says. The buttons of the tool, such as Reconnect, keep no key.
+- The tools part gives the terminal its links, from `useTerminalLinks` of
+  `tools/terminal-links.ts`. A local address goes to `previewPortHref` of
+  its port, an app page to its address in the app, and every other link to
+  `openInNewTab`. The router decides which addresses of the app origin are
+  pages.
 - The tabs of the tools panel name the keys of Go to Terminal and Go to
   Preview in their tooltips, as the palette's Go to rows run them.
 - Each tool reads its routes with the `fetch` of the org's `ApiClient`,

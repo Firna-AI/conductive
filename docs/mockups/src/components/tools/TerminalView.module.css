@@ -50,6 +50,33 @@
   color: var(--ui-rose);
 }
 
+/* A link under the mouse pointer, with its hint below it. */
+.hovered {
+  position: relative;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.hint {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 1;
+  padding: 2px 6px;
+  border: 1px solid var(--ui-border);
+  border-radius: 4px;
+  background: var(--ui-bar);
+  color: var(--ui-ink);
+  font-family: var(--ui-font-sans);
+  font-size: var(--ui-text-xs);
+  font-weight: 400;
+  line-height: 1.5;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px var(--ui-shadow);
+  pointer-events: none;
+}
+
 .cursor {
   display: inline-block;
   width: 7px;

@@ -22,6 +22,17 @@ as the Preview page, as
   when each reported server has a tab, the form shows the field alone.
 - Open preview sends the port as JSON. A port that is open already shows its
   preview, with no request.
+- An address of the tool can name a port, such as the link of a local
+  address in chat text. The tool waits for the list and for an open that
+  runs. A port that is open already then shows its preview, with no
+  request. Otherwise the tool sends the open request of a typed port, and
+  the form shows while it runs. Each address of a port sends at most one
+  request.
+- Then the address of the preview takes the place of the address of the
+  port, with no new history entry, so Back does not open the port again. A
+  failed open shows its message in the form, and the address of the tool
+  takes the place of the address of the port. A move to another address
+  before the answer keeps that address.
 - A tab shows the port and the name of its server, cut to 10 characters,
   from the latest report. Its tooltip and its accessible name give the whole
   name and the folder. A port that the report does not name shows `Port`
@@ -67,7 +78,13 @@ as the Preview page, as
 ```tsx
 <PreviewTool
   now={now}
-  route={{ previewId, href: previewHref, navigate: goToPreview }}
+  route={{
+    previewId,
+    port,
+    href: previewHref,
+    navigate: goToPreview,
+    replace: replaceAddress,
+  }}
   touch={phone}
   workspace={{ orgId, workspaceId, fetch, subscribe }}
 />
@@ -78,9 +95,12 @@ as the Preview page, as
   clock of the browser.
 
 - `route` comes from the app shell, which owns the addresses. `previewId` is
-  the preview that the current address names. `href` gives the address of a
-  tab, and `navigate` goes there without a page load. When the address names
-  no preview, or one that is gone, the first tab shows.
+  the preview that the current address names, and `port` is the port that
+  it names. `href` gives the address of a tab, and `navigate` goes there
+  without a page load. `replace` puts the address of a preview, or of the
+  tool for null, in place of the current address, with no new history
+  entry. When the address names no preview, or one that is gone, the first
+  tab shows.
 - `workspace` and `touch` are the same as for the
   [terminal](../terminal/README.md#mount-the-tool). `workspace.subscribe` is
   required.
@@ -88,6 +108,11 @@ as the Preview page, as
 ## Key code
 
 - `PreviewTool.tsx`: the tool, its states, and the route seam.
+- `previewActions.ts`: the preview in the frame, the open, the close, and
+  the tabs, and the open of the port of the address with its move of the
+  address.
+- `addressPort.ts`: `useAddressPort`, which opens the port of each address
+  once.
 - `PreviewToolbar.tsx`: the link tabs and the actions of a preview.
 - `PreviewFrame.tsx`: the frame, its sandbox flags, and the new tab link.
 - `PreviewOpenForm.tsx`: the port form, its list states, and its field.

@@ -8,7 +8,17 @@ import { checkoutAutocomplete, savedCarts } from './workspaces'
 export type TerminalTone =
   'prompt' | 'plain' | 'muted' | 'success' | 'accent' | 'error'
 
-type TerminalSegment = { text: string; tone: TerminalTone }
+/**
+ * A link of the output under the mouse pointer: the terminal underlines it
+ * and shows its hint. A link without the pointer looks like its tone.
+ */
+export type HoveredLink = { hint: string }
+
+type TerminalSegment = {
+  text: string
+  tone: TerminalTone
+  hovered?: HoveredLink
+}
 
 export type TerminalLine = readonly TerminalSegment[]
 
@@ -52,6 +62,55 @@ export const workspaceSession: readonly TerminalLine[] = [
   plain(' GET /checkout 200 in 2304ms'),
   plain(' GET /api/places?q=221b%20baker 200 in 184ms'),
   plain(' GET /api/places?q=221b%20baker%20st 200 in 162ms'),
+]
+
+/** The hint of a link under the pointer, with the key of a Mac. */
+const linkHint = '⌘-click to open'
+
+/**
+ * The dev server of the open workspace, with the pointer on its local
+ * address.
+ */
+export const hoveredLinkSession: readonly TerminalLine[] = workspaceSession.map(
+  (line) =>
+    line[0]?.text === '   - Local:   http://localhost:3000'
+      ? [
+          { text: '   - Local:   ', tone: 'plain' },
+          {
+            text: 'http://localhost:3000',
+            tone: 'plain',
+            hovered: { hint: linkHint },
+          },
+        ]
+      : line,
+)
+
+/** The host of the report that the test run links with a label. */
+export const reportHost = 'reports.storefront.dev'
+
+/**
+ * A test run whose reporter prints a link with a label, an OSC 8 link, with
+ * the pointer on it. Its hint names the host of its real address.
+ */
+export const labelledLinkSession: readonly TerminalLine[] = [
+  prompt(workspaceLocation, 'npm run test:report'),
+  plain(''),
+  muted('> storefront@2.4.0 test:report'),
+  muted('> vitest run --reporter=html'),
+  plain(''),
+  success(' ✓ src/checkout/address.test.ts (6 tests) 412ms'),
+  success(' ✓ src/checkout/autocomplete.test.ts (9 tests) 688ms'),
+  plain(''),
+  plain('      Tests  15 passed (15)'),
+  [
+    { text: '     Report  ', tone: 'muted' },
+    {
+      text: 'Open the HTML report',
+      tone: 'accent',
+      hovered: { hint: `${linkHint} ${reportHost}` },
+    },
+  ],
+  plain(''),
 ]
 
 /** A test run in a second terminal of the open workspace, which ended. */

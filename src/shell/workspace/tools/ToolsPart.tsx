@@ -15,6 +15,7 @@ import { useOrgServices } from '../../context'
 import { useShortcutTerminal } from '../../shortcuts/shortcut-context'
 import { shortcutTip, useShortcutHint } from '../../shortcuts/shortcut-hints'
 import type { WorkspaceContext } from '../features'
+import { useTerminalLinks } from './terminal-links'
 import { offeredToolTabs, type ToolKey } from './tool-address'
 import { useToolNavigation, type ToolNavigation } from './tool-navigation'
 import styles from './tools.module.css'
@@ -134,6 +135,7 @@ export function ToolsPart(props: {
   const navigation = useToolNavigation(context)
   const connect = useTerminalConnect()
   const { org, workspace, toolEvents } = context
+  const links = useTerminalLinks(org.id, workspace.id)
   const toolWorkspace = useMemo<ToolWorkspace>(
     () => ({
       orgId: org.id,
@@ -156,6 +158,7 @@ export function ToolsPart(props: {
         <div className={styles.tool} hidden={tool !== 'terminal'}>
           <TerminalTool
             connect={connect}
+            links={links}
             screenRef={terminal}
             touch={touch}
             workspace={toolWorkspace}

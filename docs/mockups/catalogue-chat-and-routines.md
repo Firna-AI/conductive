@@ -30,7 +30,28 @@ heading at level 3 for each choice with its bold fields under it, and a
 heading at level 4 inside the first choice. Its `work` variant has the
 open work of a turn: a closed message line that shows its heading as text
 in the line, and an open message line that shows its heading on its own
-line, in the weight of a heading. `app/chat/lost-data` draws the data that the
+line, in the weight of a heading.
+
+`app/chat/links` draws the links of chat text, as the user chose on 10
+November 2026 with D of chat link decision 1, C of chat link decision 2,
+and B of chat link decision 3. Its canonical screen has an answer with the
+bare address of #482, a Markdown link in bold that shows as its label, and
+an address alone in code, which is a link inside its code box. Its
+variants:
+
+- `label-address` has two Markdown links whose labels read as addresses,
+  so each shows its real address in place of its label.
+- `local-address` has the address of the dev server,
+  `http://localhost:3000`. A press opens the port preview of port 3000 at
+  `app/tools/preview`. The flow `user-flows/open-a-local-server` goes from
+  this answer to that preview.
+- `sent` has a message of Cal with a bare address and a Markdown link,
+  which shows as typed.
+- `work` has the open work of a turn: a closed message line that starts
+  with a label link, and an open message line whose long address breaks to
+  fit the line.
+
+`app/chat/lost-data` draws the data that the
 chat does not have, from decision 76: tool output and turn files that the
 runner left out, and the lines of runner events that the workspace
 refused. Its long turn shows 8 files, or 5 on a phone, then a

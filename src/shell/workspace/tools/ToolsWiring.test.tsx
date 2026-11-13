@@ -14,10 +14,12 @@ import {
 import { byLabel, byRole, queryByRole } from '../../../test-support/dom-queries'
 import { FakeApiServer } from '../../../test-support/fake-api'
 import { FAKE_IDS, FAKE_TIME } from '../../../test-support/fixtures/core'
+import { toolFixtures } from '../../../test-support/fixtures/tools'
 import { workspaceFixtures } from '../../../test-support/fixtures/workspaces'
 import {
   holdAnimationFrames,
   MOUNTED_TEST_TIMEOUT,
+  waitFor,
 } from '../../../test-support/mount'
 import { nextEnvelope } from '../../../test-support/recorded-repairs'
 import { click, settle } from '../../test-mount'
@@ -29,7 +31,7 @@ import {
   openTab,
   socketsOf,
 } from '../wiring-test-kit'
-import { toolHref, type ToolKey } from './tool-address'
+import { previewPortHref, toolHref, type ToolKey } from './tool-address'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
@@ -211,4 +213,35 @@ describe('the tools in the workspace', () => {
     const saved = await bodiesOf(server, 'PUT', workspaceViewPath(org, id), 0)
     expect(saved.map(toolOf)).toEqual(['preview'])
   })
+
+  // The list of the fake API holds the preview of port 3000 only.
+  test.each([
+    { layout: 'desktop', viewport: 'desktop' },
+    { layout: 'a phone', viewport: 'phone' },
+  ] as const)(
+    'on $layout, a port address opens the preview of its port, and the address of the preview takes its place',
+    async ({ viewport }) => {
+      holdAnimationFrames()
+      const server = new FakeApiServer()
+      const opened = {
+        ...toolFixtures().preview.preview,
+        id: 'preview-8080',
+        port: 8080,
+      }
+      server.json('POST', previewsPath(org, id), { preview: opened }, 201)
+      const here = previewPortHref(org, id, 8080)
+      const { view, navigation } = await openTab(server, here, { viewport })
+      const frame = await waitFor(
+        () => view.querySelector('iframe[title^="Preview of port"]'),
+        'a preview frame',
+      )
+
+      expect(frame.getAttribute('title')).toBe('Preview of port 8080')
+      expect(navigation.history).toEqual([
+        toolHref(org, id, 'preview', opened.id),
+      ])
+      const opens = await bodiesOf(server, 'POST', previewsPath(org, id), 0)
+      expect(opens).toEqual([{ port: 8080 }])
+    },
+  )
 })

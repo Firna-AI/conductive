@@ -6,6 +6,7 @@ import { DesktopTool } from '../../desktop/DesktopTool'
 import { PreviewTool, type PreviewRoute } from '../../previews/PreviewTool'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
 import { TerminalTool } from '../TerminalTool'
+import type { TerminalLinks } from '../terminalLinks'
 import type { ConnectTerminal } from '../TerminalScreen'
 import type { ToolWorkspace } from '../tool-parts/workspace'
 import { DevControls } from './DevControls'
@@ -71,11 +72,23 @@ export function ToolsDevPage() {
     queueMicrotask(() => terminal.emit(mockupSessionOutput))
     return terminal
   }, [])
+  // The page lists each link that opens, in place of opening it.
+  const links = useMemo<TerminalLinks>(
+    () => ({
+      context: { appOrigin: window.location.origin, isAppPage: () => true },
+      open: (link) =>
+        setTerminalLog((list) => lastOf(list, `open ${JSON.stringify(link)}`)),
+    }),
+    [],
+  )
+  // The page names no port, so the tool never replaces its address.
   const route = useMemo<PreviewRoute>(
     () => ({
       previewId: params.preview,
+      port: null,
       href: (preview) => devHref(params, { preview }),
       navigate: (preview) => go(devHref(params, { preview })),
+      replace: (preview) => go(devHref(params, { preview })),
     }),
     [params],
   )
@@ -85,6 +98,7 @@ export function ToolsDevPage() {
     terminal: (
       <TerminalTool
         connect={connect}
+        links={links}
         onActivity={() => setActivity((count) => count + 1)}
         touch={touch}
         workspace={workspace}

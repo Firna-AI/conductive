@@ -44,6 +44,11 @@ function Choice(props: {
   )
 }
 
+/** A line with an OSC 8 link, whose label hides its address. */
+const labelledLinkOutput =
+  '\r\n     Report  \x1b]8;;https://reports.storefront.dev/run/1\x1b\\' +
+  'Open the HTML report\x1b]8;;\x1b\\\r\n'
+
 /**
  * The controls of the development page: the tool, its state, the layout, and
  * the scheme, and the events that the fake backend can send.
@@ -140,6 +145,14 @@ export function DevControls(props: {
         type="button"
       >
         Turn on mouse reports
+      </button>
+      <button
+        // A link with a label, as a test reporter prints it with OSC 8.
+        onClick={() => props.onTerminalOutput(labelledLinkOutput)}
+        onMouseDown={keepTerminalFocus}
+        type="button"
+      >
+        Print a link with a label
       </button>
       <button
         onClick={() =>

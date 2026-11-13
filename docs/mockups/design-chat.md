@@ -3,7 +3,7 @@
 This page belongs to [the design](design.md), which gives the style, the
 layouts, the design tokens, and the shared parts. This page gives workspace,
 session, and file chips with the list of `@`, and attached files with their
-drops. It gives the picture of an image file, the Markdown tables and
+drops. [Links in text](design-links.md) gives the other links of the chat. It gives the picture of an image file, the Markdown tables and
 headings of a reply and of a file preview, the work fold of a turn, and the
 line of a stopped turn. It also gives the data that the chat does not
 have, the files that the cloud computer could not read, the end of a turn at the time limit of
@@ -250,9 +250,9 @@ background work, and the end of a fast turn that ran at standard speed.
   - `MessageText` shows the chips in sent messages and in answers, as
     links to the screens of the workspaces. In an answer, `**` marks bold
     text, and a chip inside it is bold too. A Markdown link to a
-    workspace shows as the chip alone, and a link in code stays code. A
-    link to another org, or to a workspace that the list does not hold,
-    stays plain text, and a long link breaks to fit the line.
+    workspace shows as the chip alone. A link in code is no chip. A link
+    to another org, or to a workspace that the list does not hold, is a
+    link, as [Links in text](design-links.md) says.
   - The chat finds each workspace in the list of the org, with the
     archived ones and with the states of the list, through
     `ChatWorkspaces`. A phone finds the same workspaces with no list on

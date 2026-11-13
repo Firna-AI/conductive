@@ -36,6 +36,21 @@ change can move the shared parts to the app's shared components.
   forced selection, with Option on a Mac and Shift elsewhere. The wheel,
   the right and middle buttons, and a press with Cmd or Ctrl still reach
   the program. On a Mac, Cmd+C copies the selection.
+- Each `http` and `https` address of the output is a link, and so is a
+  link that a program marks with OSC 8. A click with Cmd on a Mac, or Ctrl
+  elsewhere, opens it. A touch opens it with no key. A plain click selects,
+  as before.
+- A link under a mouse pointer shows the underline of xterm.js and a hint
+  below it, or above it on the last rows: "⌘-click to open" or "Ctrl+click
+  to open". The hint of an OSC 8 link adds the host of its real address.
+  A touch shows no hint.
+- A click with the key on a link opens it and does not reach a program
+  that has the mouse. The screen stops the press after the link part of
+  xterm.js hears it, and before xterm.js sends it to the program. Off a
+  link, the click still reaches the program.
+- Every local address names the cloud computer, also an address with the
+  app origin. An address with another scheme, a user name, or a password
+  opens nothing and shows no hint.
 - When the connection ends, the screen keeps its output, takes no more
   input or size, and offers Reconnect. It also turns off the mouse reports
   of the program, so a drag selects the text and shows the text cursor.
@@ -61,6 +76,12 @@ change can move the shared parts to the app's shared components.
   Reconnect. A source without `openSocket`, as in the development fake,
   throws. The transport takes text only, so the tool does not send the
   mouse reports that xterm.js sends as binary data, in the old X10 format.
+- `links` is optional. It gives the app origin with the page check of the
+  router, and the `open` of each `TerminalLink`: a local address with its
+  port, an app page, or a web link. Without it, no link opens and no hint
+  shows. The workspace screen gives it, as
+  [the tools part](../shell/workspace/screen-parts.md#the-tools-part)
+  says.
 - `onActivity` is optional. It runs for each input of the user: keys, text,
   paste, and mouse reports. It does not run for the replies of xterm.js.
   The development page shows the number of these inputs.
@@ -154,8 +175,10 @@ The buttons send fake events: revoke a preview, start the sandbox, end the
 terminal connection, and change the workspace. In the `late` state, the
 terminal reads that start before the sandbox runs wait for Answer held
 reads. Three buttons make the shell ask for the cursor position, turn on
-focus reports, and turn on mouse reports, as tmux does. These three
-buttons leave the keyboard on the terminal.
+focus reports, and turn on mouse reports, as tmux does. A fourth prints a
+link with a label, as a test reporter does with OSC 8. These four buttons
+leave the keyboard on the terminal. The page lists each link that opens,
+in place of opening it.
 
 ## Key code
 
@@ -166,6 +189,12 @@ buttons leave the keyboard on the terminal.
 - `TerminalScreen.tsx`: the xterm.js screen, its fit, and the key row.
 - `xtermScreen.ts`: splits the data of xterm.js into the user's input and
   its own replies.
+- `terminalLinks.ts`: the kind of a link of the terminal, from the shared
+  reader `webLink` of `src/markdown/web-links.ts`, the key of a link
+  click, and the hint.
+- `xtermLinks.ts`: the links of xterm.js: the web links addon, the
+  handler of OSC 8 links, the hint, and the stop of a link click before it
+  reaches a program.
 - `plainPresses.ts`: keeps plain left presses for the selection of the page
   while a program has the mouse.
 - `terminalSession.ts`: connects the screen to a `TerminalTransport`.

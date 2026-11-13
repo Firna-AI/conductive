@@ -1,6 +1,7 @@
 {
   "order": [
     "terminals",
+    "terminal-links",
     "disconnected",
     "older-software",
     "preview",

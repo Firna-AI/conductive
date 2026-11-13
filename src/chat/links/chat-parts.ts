@@ -1,11 +1,10 @@
+import { bareAddressAt, markdownTargetAt } from '../../markdown/web-links'
 import { attachmentForMention } from '../../shared/attachment-mentions'
 import type { FileEntry } from '../../shared/files'
 import type { Attachment } from '../../shared/messages'
 import { mentionAt, type Mention } from '../../shared/mention-text'
 import {
-  bareLinkAt,
   linkTarget,
-  markdownTargetAt,
   type LinkTarget,
   type WorkspaceLinks,
 } from './workspace-links'
@@ -79,13 +78,13 @@ function markdownLinkAt(text: string, at: number): Token | null {
  * The bare web address at `at`, or null. Where `**` marks bold, the address
  * ends before the next mark, so bold around the address stays bold.
  */
-function bareLinkTokenAt(
+function bareAddressTokenAt(
   text: string,
   at: number,
   marks: boolean,
 ): Token | null {
   const mark = marks ? text.indexOf('**', at) : -1
-  const href = bareLinkAt(mark === -1 ? text : text.slice(0, mark), at)
+  const href = bareAddressAt(mark === -1 ? text : text.slice(0, mark), at)
   return href ? { kind: 'link', href, source: href, markdown: false } : null
 }
 
@@ -127,7 +126,7 @@ function tokens(text: string, reading: Reading): Token[] {
       : text[index] === '['
         ? markdownLinkAt(text, index)
         : text.startsWith('http', index)
-          ? bareLinkTokenAt(text, index, reading.marks)
+          ? bareAddressTokenAt(text, index, reading.marks)
           : null
     if (link?.kind === 'link') {
       index += add(link, link.source.length)
