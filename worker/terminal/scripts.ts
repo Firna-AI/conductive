@@ -3,6 +3,9 @@ import {
   TERMINAL_RUNTIME,
 } from '../../src/shared/restore-marker'
 import { TERMINAL_PORT } from '../../src/shared/terminal'
+import { TERMINAL_HISTORY_LINES } from '../../src/shared/terminal-bridge'
+import { imageNodeExecutable } from '../lifecycle/image-runtime'
+import { BRIDGE_MAIN } from './bridge-files'
 import { shellArgument } from './privileged'
 
 export { TERMINAL_RESTORE_MARKER, TERMINAL_RUNTIME }
@@ -21,6 +24,8 @@ export interface TerminalScriptOptions {
   entropyCommand: readonly string[]
   terminalCommand: readonly string[]
   multiplexerCommand: readonly string[]
+  /** The private Node and the path of the bridge program. */
+  bridgeCommand: readonly string[]
 }
 
 /**
@@ -45,6 +50,7 @@ const terminalScriptDefaults: TerminalScriptOptions = {
   entropyCommand: ['od', '-An', '-v', '-N32', '-tx1', '/dev/urandom'],
   terminalCommand: ['/usr/bin/ttyd'],
   multiplexerCommand: ['/usr/bin/tmux'],
+  bridgeCommand: [imageNodeExecutable(), BRIDGE_MAIN],
 }
 
 const validation = `valid_password() {
@@ -84,6 +90,30 @@ chmod 600 "$password_file"
 }
 
 /**
+ * The program that ttyd runs for each connection, with the repository path
+ * as its first argument. It runs the bridge with the private Node, without
+ * the Node variables of the workspace, which could load other code. When the
+ * private Node or the bridge is missing, or the bridge exits with code 3
+ * before it attached, it runs the plain tmux client.
+ */
+export function attachScript(
+  options: TerminalScriptOptions = terminalScriptDefaults,
+): string {
+  const [node = '', bridge = ''] = options.bridgeCommand
+  const [tmux = ''] = options.multiplexerCommand
+  const socket = shellArgument(`${options.runtimeDirectory}/tmux.sock`)
+  return `set -u
+node=${shellArgument(node)}
+bridge=${shellArgument(bridge)}
+if [ -x "$node" ] && [ -f "$bridge" ]; then
+  env -u NODE_OPTIONS -u NODE_PATH "$node" "$bridge" ${shellArgument(tmux)} ${socket} "$1" workspace && exit 0
+  status=$?
+  [ "$status" -eq 3 ] || exit "$status"
+fi
+exec ${options.multiplexerCommand.map(shellArgument).join(' ')} -N -S ${socket} new-session -A -s workspace -c "$1" /bin/bash -l`
+}
+
+/**
  * tmux gets the repository path, not the launcher's current folder. After a
  * start from a saved snapshot, the provider restores the disk in the
  * background. When the restore ends, the launcher's current folder can be an
@@ -103,7 +133,7 @@ ${validation}
 valid_password || exit 1
 password=$(cat -- "$password_file")
 [ -n "$password" ] || exit 1
-exec ${options.terminalCommand.map(shellArgument).join(' ')} --interface 0.0.0.0 --port ${TERMINAL_PORT} --writable --credential "conductive:$password" ${options.multiplexerCommand.map(shellArgument).join(' ')} -N -S ${shellArgument(`${options.runtimeDirectory}/tmux.sock`)} new-session -A -s workspace -c "$CONDUCTIVE_REPOSITORY_DIR" /bin/bash -l
+exec ${options.terminalCommand.map(shellArgument).join(' ')} --interface 0.0.0.0 --port ${TERMINAL_PORT} --writable --credential "conductive:$password" /bin/sh -c ${shellArgument(attachScript(options))} terminal-attach "$CONDUCTIVE_REPOSITORY_DIR"
 `
 }
 
@@ -116,6 +146,6 @@ set -a
 . ${shellArgument(options.environmentFile)}
 set +a
 cd "$CONDUCTIVE_REPOSITORY_DIR"
-exec ${options.multiplexerCommand.map(shellArgument).join(' ')} -S ${shellArgument(`${options.runtimeDirectory}/tmux.sock`)} -f /dev/null start-server ';' set-option -s exit-empty off ';' set-option -g mouse on ';' set-environment -g PROMPT_COMMAND ${shellArgument(terminalPromptCommand(options.restoreMarker))}
+exec ${options.multiplexerCommand.map(shellArgument).join(' ')} -S ${shellArgument(`${options.runtimeDirectory}/tmux.sock`)} -f /dev/null start-server ';' set-option -s exit-empty off ';' set-option -g mouse on ';' set-option -g history-limit ${TERMINAL_HISTORY_LINES} ';' set-environment -g PROMPT_COMMAND ${shellArgument(terminalPromptCommand(options.restoreMarker))}
 `
 }

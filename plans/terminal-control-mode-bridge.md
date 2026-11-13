@@ -116,10 +116,11 @@ It uses no npm package. ttyd runs one bridge for each connection, in a
 terminal device, with the session name as its argument. The launcher runs
 it without `NODE_OPTIONS` and the other Node variables of the workspace.
 
-1. **Attach.** The bridge puts its terminal device in raw mode. It runs
-   `tmux -N -S <socket> -C new-session -A -s <session> -c <repository> -f no-output,ignore-size,pause-after=<seconds>`
-   with a login Bash. `no-output` holds the output until the bridge has the
-   history. `ignore-size` keeps this client out of the tmux size rule.
+1. **Attach.** The bridge puts its terminal device in raw mode with
+   `stty raw -echo`, which also turns off the output processing. It runs
+   `tmux -N -S <socket> -C new-session -A -s <session> -c <repository> -f ignore-size`
+   with a login Bash. `ignore-size` keeps this client out of the tmux size
+   rule.
 2. **Hello.** The bridge makes a random nonce. It writes a private OSC to
    the browser with the nonce and the shared size. The browser accepts only
    the first hello of a connection, and later messages only with that
@@ -129,9 +130,10 @@ it without `NODE_OPTIONS` and the other Node variables of the workspace.
    own device, as a key does. So a first connect and a reload show the
    right size at once.
 4. **History and screen.** In one command line, the bridge reads the pane
-   state, captures the history and the screen, and turns the output on with
-   `refresh-client -f '!no-output'`. A test showed that the capture and the
-   live output join with no gap and no duplicate line.
+   state and captures the history and the screen. tmux keeps the output and
+   the answers of a client in order, so the bridge drops the output until
+   the last answer. A test showed that the capture and the output after it
+   join with no gap and no duplicate line.
    - It prints the history with colours and joined lines, then one screen
      of new lines, which moves the history above the screen. A replay test
      in xterm.js showed this.
@@ -146,12 +148,12 @@ it without `NODE_OPTIONS` and the other Node variables of the workspace.
    flags match its `%begin` line.
 6. **Output.** The bridge decodes each `%output` message of the active pane
    and writes the bytes to the browser.
-7. **Flow control.** The browser acknowledges the bytes that it wrote to
-   xterm.js. When more than 1 MB is not acknowledged, the bridge stops
-   reading tmux. tmux then pauses this client with `pause-after`, and the
-   bridge resynchronizes when the browser catches up. Reason: the Worker
-   relay and ttyd 1.7.4 pass no back pressure, so without this a flood of
-   output fills the memory of the Worker and of the tab.
+7. **Flow control.** The bridge writes a mark after each 64 KB of output,
+   and the browser acknowledges each mark that xterm.js parsed. When 16
+   marks wait, the bridge drops the output. When the browser acknowledged
+   every mark, the bridge resynchronizes. Reason: the Worker relay and ttyd
+   1.7.4 pass no back pressure, so without this a flood of output fills the
+   memory of the Worker and of the tab.
 8. **Keys.** The bridge sends each chunk of input to the pane with
    `send-keys -H`, in chunks of at most 1,024 bytes. Ctrl-b reaches the
    shell.
@@ -174,8 +176,8 @@ it without `NODE_OPTIONS` and the other Node variables of the workspace.
 12. **Colours.** The bridge sets the `window-style` of the window to the
     colours of the browser that answered last. Reason: with only control
     clients, tmux answers a colour query of a program with black.
-13. **Resync.** On `%pause`, on a change of the active window or pane, and
-    on a change of the session, the bridge resynchronizes. It clears the
+13. **Resync.** When the browser caught up, on a change of the active
+    window or pane, and on a change of the session, the bridge resynchronizes. It clears the
     browser screen and history, and runs the history and screen step again.
 14. **End.** On `%exit`, or when tmux exits, the bridge exits, and ttyd
     closes the connection.
@@ -228,18 +230,26 @@ These are my calls, made on 13 November 2026.
    Reason: the Worker and the app deploy together, so only a tab that was
    open before the deploy has the old code. A ttyd argument that selects
    the bridge would avoid this, but it needs a new socket argument.
-6. **tmux mouse support stays on.** Control clients get no mouse events, so
+6. **No tmux output flag and no `pause-after`.** The plan first used
+   `no-output` and `pause-after`. Tests on 13 November 2026 showed that
+   `refresh-client -f no-output` during a flood of output stalls the tmux
+   3.4 client for good: no answer and no output comes. A client that stops
+   reading its output for some seconds also stalls. So the bridge always
+   reads tmux, and drops output itself, while it rebuilds and while the
+   browser is behind. A test showed that the output and the answers of a
+   client stay in order, so the drop needs no flag.
+7. **tmux mouse support stays on.** Control clients get no mouse events, so
    the setting changes nothing for the bridge. The fallback client still
    uses it for the wheel.
-7. **tmux in CI.** The Tests jobs install the `tmux` package. The bridge
+8. **tmux in CI.** The Tests jobs install the `tmux` package. The bridge
    tests run the bridge in a terminal device with Python's `pty` module,
    and replay its output in `@xterm/headless`. Without tmux, outside CI,
    these tests are skipped with a message that names tmux. In CI they
    fail without tmux.
-8. **No notice for another viewer's size.** The screen shows the shared
+9. **No notice for another viewer's size.** The screen shows the shared
    size with no extra text. Typing in a viewer gives it the size. Reason:
    tmux shows no notice today either, and the mockups show the states.
-9. **OSC 8 links stay plain text.** Reason: today tmux removes them, and
+10. **OSC 8 links stay plain text.** Reason: today tmux removes them, and
    the choice on links waits for the user in a follow-up item.
 
 ## Milestone 1: Mockups
@@ -289,40 +299,40 @@ Depends on: 1
       `src/marketing/from-conductor/areas/terminal-scripts-and-previews.ts`.
 - [x] Update `plans/follow-ups/terminal-copy-browser-check.md` and the
       launcher design of `plans/terminal-tabs.md` for the bridge.
-- [ ] Add the bridge to the locations of
+- [x] Add the bridge to the locations of
       `plans/follow-ups/org-node-options-reach-sandbox-software.md`, which
-      says that the bridge clears the Node variables. It waits for the
+      says that the bridge clears the Node variables. It waited for the
       launcher of Milestone 3.
 
 ## Milestone 3: The bridge
 
 Depends on: 2
 
-- [ ] Add the control-mode reader, with the block rule of design step 5,
+- [x] Add the control-mode reader, with the block rule of design step 5,
       `%output` decoding, and the events that the bridge uses.
-- [ ] Add the connect step: hello, size at connect, history, screen,
+- [x] Add the connect step: hello, size at connect, history, screen,
       cursor, modes, and the alternate screen.
-- [ ] Add the browser messages: acknowledgements, pastes, focus reports,
+- [x] Add the browser messages: acknowledgements, pastes, focus reports,
       and colours.
-- [ ] Add keys, flow control, size with its limit, colours, resync, and
+- [x] Add keys, flow control, size with its limit, colours, resync, and
       exit.
-- [ ] Install the bridge files, and run them from the launcher with the
+- [x] Install the bridge files, and run them from the launcher with the
       private Node and without the Node variables. Add the fallback of
       design call 4.
-- [ ] Check that the tmux `history-limit` stays at its default of 2,000
-      lines, as Decision 2 A says.
-- [ ] Add the bridge tsconfig, and leave the bridge out of
+- [x] Set the tmux `history-limit` to 2,000 lines, its default, so that
+      the shell server states the number of Decision 2 A.
+- [x] Add the bridge tsconfig, and leave the bridge out of
       `tsconfig.worker.json`.
-- [ ] Add unit tests for the reader, including a captured `%end` line, and
+- [x] Add unit tests for the reader, including a captured `%end` line, and
       for the connect step.
-- [ ] Add tests that run the bridge against a real tmux, as design call 7
+- [x] Add tests that run the bridge against a real tmux, as design call 8
       says. Cover fast output, a flood with a slow reader, a connect with
       history, a connect during `less`, a paste into a program that asked
       for bracketed paste, two viewers with different sizes, a forged size,
       a resync, and the end of the shell.
-- [ ] Update the install and launcher tests.
-- [ ] Update `worker/terminal/README.md`.
-- [ ] Install `tmux` in the Tests jobs of `.github/workflows/ci.yml`.
+- [x] Update the install and launcher tests.
+- [x] Update `worker/terminal/README.md`.
+- [x] Install `tmux` in the Tests jobs of `.github/workflows/ci.yml`.
 
 ## Milestone 4: The screen
 

@@ -5,7 +5,7 @@ the workspace shell: one tmux session for each workspace, which outlives
 each connection.
 It is the only owner of the terminal software in a sandbox. That software
 is ttyd, tmux, their two systemd services, the launcher, the shell server,
-and the password program.
+the password program, and the terminal bridge.
 The [sandbox software](../../image/README.md) holds no terminal file.
 The production Worker forwards both terminal paths to the workspace object.
 Its feature handler keeps one terminal connection owner.
@@ -34,6 +34,10 @@ sandbox. The command installs the `ttyd` and `tmux` packages with
 - `/usr/local/lib/conductive/terminal-password`: the password program.
 - `/usr/local/lib/conductive/terminal-sessions`: the shell server, which
   starts the tmux server.
+- `/usr/local/lib/conductive/terminal-bridge/`: the files of the
+  [terminal bridge](#the-terminal-bridge), at their paths in this
+  repository. The command removes the folder first, so no file of an older
+  bridge stays.
 - `conductive-terminal.service`: the ttyd unit. The command enables it.
 - `conductive-terminal-sessions.service`: the shell server unit.
 
@@ -46,10 +50,8 @@ started from, also after a resume. So the pull request of each change to
 these files says that an existing workspace needs a new workspace to get
 the change.
 
-For an existing shell, `tmux set-option -g mouse on` enables scrolling
-immediately. Run it inside that workspace's Terminal tab. The setting lasts
-until the sandbox stops. A rebuilt image gives new workspaces the setting
-at each start.
+A workspace from an older image keeps its launcher, which runs the plain
+tmux client, until the user creates a new workspace.
 
 One quoted privileged-command helper owns the root commands.
 Both units require a nonsecret enable marker under `/run`.
@@ -63,26 +65,35 @@ The shell server loads the workspace variables from
 `/run/ascii-secrets/env.sh`, and moves to `CONDUCTIVE_REPOSITORY_DIR`, the
 repository folder. Then it starts one tmux server on the socket
 `/run/conductive-terminal/tmux.sock`. The server reads no tmux
-configuration file. It keeps running when no session exists, and it enables
-mouse support so wheel and trackpad scrolling reach the output history.
-The screen shows the default tmux status line, and Ctrl-b is the tmux prefix
-key. Each new shell gets the workspace variables
+configuration file. It keeps running when no session exists. It keeps
+2,000 lines of history in each pane, as the screen does. It enables mouse
+support, so the wheel scrolls the history in the plain tmux client of the
+fallback. The bridge gets no mouse events from tmux. Each new shell gets
+the workspace variables
 from this server. The server also sets `PROMPT_COMMAND` in the global tmux
 environment to the prompt hook below. The hook changes Bash's full-path
 prompt escape to its folder-name escape. This keeps the prompt's colours
 and other text, while showing only the current folder name.
 
 The launcher loads the same variables, moves to the repository folder, and
-checks the password before it runs ttyd. For each connection, ttyd runs a
-tmux client. The client attaches to the session `workspace`, which is the
-workspace shell. When that session does not exist, the client creates it
-with a login Bash shell in the repository folder. The client gives tmux the
-path of that folder, not its own current folder. After a start from a saved
+checks the password before it runs ttyd. For each connection, ttyd runs the
+attach program, which runs the terminal bridge with the private Node of the
+image. It removes `NODE_OPTIONS` and `NODE_PATH` of the workspace variables
+first, because they could make Node load other code. The bridge attaches
+to the session `workspace`, which is the workspace shell. When that session
+does not exist, the bridge creates it with a login Bash shell in the
+repository folder. It gives tmux the path of that folder, not its own
+current folder.
+
+When the private Node or the bridge is missing, or the bridge exits with
+code 3 because tmux exited before the bridge attached, the attach program
+runs the plain tmux client with the same session and folder. Any other exit
+code of the bridge ends the connection. After a start from a saved
 snapshot, Boat restores the disk in the background. When the restore ends,
 the current folder of the launcher can be an old view of the disk at
 another path, such as `/var/lib/ascii-lazy/retired/home/code/<name>`.
-The client never starts a tmux server. Without a running server, the client
-exits, and ttyd closes the connection.
+Neither the bridge nor the client starts a tmux server. Without a running
+server, they exit, and ttyd closes the connection.
 
 A shell that starts before the restore ends also stays in the old view
 when the restore ends. Bash still keeps the normal path in `$PWD`.
@@ -125,7 +136,7 @@ The hook has these limits:
 
 So every connection of a workspace attaches to the same session, with its
 running commands and its screen. Concurrent connections share it too. A
-dropped socket ends only its own tmux client. The tmux server runs in the
+dropped socket ends only its own bridge and its tmux client. The tmux server runs in the
 shell server unit, so a restart of the ttyd unit also keeps the session.
 
 The session ends when its last shell exits. The next connection then
@@ -207,16 +218,81 @@ temporary file. The launcher checks the password before it executes ttyd.
 of the restore marker.
 
 Tests execute the three programs with fake ttyd and tmux in isolated
-runtime folders. One test runs the folder hook in a real interactive Bash.
+runtime folders. The launcher tests check the attach program with a fake
+Node: the bridge without the Node variables, and the fallback to the plain
+tmux client. One test runs the folder hook in a real interactive Bash.
 It moves the folder of the shell as a restore does, and it writes the
 marker later. It checks that the shell stays in the old view until the
 marker exists, moves once, keeps `OLDPWD`, and stays at a later move of
 the folder. It also checks that the hook exports no variable. The install
 test runs `terminalInstallCommand()` with fake `sudo`, `apt-get`, and
-`systemctl` commands. The
+`systemctl` commands. It also checks that the installed bridge loads all
+its modules, and that the file list holds each module that the bridge
+imports. The
 [restore watch tests](../lifecycle/restore-watch.test.ts) of the lifecycle
 check when the Worker writes the marker. Run the tests of this area with
 `npm run test -- worker/terminal`.
+
+### The terminal bridge
+
+The bridge sits between ttyd and tmux, one for each connection. It attaches
+to the tmux session in control mode, where tmux sends the raw output of the
+shell as messages and draws no screen. So the screen gets every byte that
+the shell writes, and xterm.js keeps the output history itself. A plain tmux
+client sends only the lines that end on its screen, so fast output never
+reached the screen in full. [Terminal](../../docs/protocol/workspace-tools.md#terminal)
+gives the requirements.
+
+- **Connect.** The bridge attaches with the client flag `ignore-size`, and
+  it sets the size of the window to the size of its own terminal device. It sends the screen a hello with a random nonce and the
+  shared size.
+- **Rebuild.** It reads the pane state with `display-message`. Then, in one
+  command line, it reads the state again and captures the history and the
+  screen. tmux keeps the output and the answers of a client in order, so
+  the bridge drops the output until the last answer, and the output after
+  it joins the captures with no gap. It never turns the output of its
+  client off, because in tmux 3.4 `refresh-client -f no-output` during a
+  flood of output can stall the client for good. It clears the screen, prints the history, moves it above the screen with new
+  lines, and draws each row, the cursor, and the modes that tmux reports.
+  When a full-screen program runs, it draws the normal screen, then the
+  alternate screen. It rebuilds again when the session, the window, or the
+  active pane changes.
+- **Output.** It passes the `%output` of the active pane to the device.
+- **Keys and pastes.** It sends keys with `send-keys -H`. A paste comes as a
+  message. The bridge writes it to a private file in the runtime folder and
+  pastes it with `paste-buffer -p`, so tmux adds the bracketed paste marks
+  when the program asked for them. tmux 3.4 does not report that mode, so a
+  rebuilt screen cannot know it.
+- **Size.** All viewers share the size of the window. A connect, a resize,
+  and the first key or paste after another viewer took the size set it with
+  `resize-window`. The global `window-size manual` option is not used,
+  because tmux 3.4 then stops at the next `new-session`. On each
+  `%layout-change`, the bridge sends the new size to the screen. It keeps
+  the size at most 500 columns and 200 rows, and takes its own size again
+  when a program sets a larger one.
+- **Colours.** The screen's answer to the hello gives its colours. The
+  bridge sets them as the `window-style` of the window, so tmux answers a
+  colour query of a program with them.
+- **Flow control.** After the screen answers the hello, the bridge writes a
+  mark after each 64 KB of output, and the screen acknowledges the marks
+  that it parsed. When 16 marks wait, the bridge drops the output. When the
+  screen acknowledged every mark, it rebuilds the screen. It never stops reading tmux, because a tmux client
+  that cannot write its output stalls.
+- **Messages.** Both directions use one private OSC with the nonce, from
+  the shared bridge messages. The bridge takes the screen's messages out of
+  the input, so they never reach the shell. It drops a message with
+  another nonce.
+
+The private Node 24 runs the TypeScript files of the bridge directly, with
+its type stripping. So they use erasable syntax only, import only `node:`
+modules and each other, and keep their repository paths in the image.
+`tsconfig.worker.json` leaves them out, and the test check with Node types
+checks them.
+
+The tests in `bridge/` run the bridge against a real tmux in a terminal
+device of Python's `pty` module, and replay its output in
+`@xterm/headless`. They are skipped when the machine has no tmux, except in
+CI, which installs tmux. Run them with `npm run test -- worker/terminal/bridge`.
 
 An org suspension refuses new sockets with 403 `org_suspended`.
 The shared sandbox rule closes existing sockets at their next access check.
@@ -230,6 +306,8 @@ Terminal status reads remain available.
 - [service.ts](service.ts) exports `terminalInstallCommand`, which installs both packages, the three programs, and both units. It also exports the image hook `installTerminalService`, the setup command `terminalStartCommand`, the password read `startWorkspaceTerminal`, the marker writer `markTerminalRestoreEnded`.
 - [The shared terminal contract](../../src/shared/terminal.ts) owns `TERMINAL_PORT`.
 - [scripts.ts](scripts.ts) builds the password program, the launcher, and the shell server with `credentialScript`, `launcherScript`, and `sessionServerScript`. It also holds the marker path `TERMINAL_RESTORE_MARKER`, and it builds the folder hook with `terminalPromptCommand`.
+- [bridge/main.ts](bridge/main.ts) is the terminal bridge, and [bridge-files.ts](bridge-files.ts) lists its files for the install command.
+- [The shared bridge messages](../../src/shared/terminal-bridge.ts) give the private messages between the bridge and the screen, and the limits.
 - [credentials.ts](credentials.ts) encrypts the locally generated workspace password.
 - [store.ts](store.ts) binds each cached password to its current sandbox ID and provider account.
 - [privileged.ts](privileged.ts) quotes installation and service control commands.
