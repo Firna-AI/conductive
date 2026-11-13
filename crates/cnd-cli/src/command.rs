@@ -10,8 +10,8 @@ use crate::update_command::UpdateArgs;
 /// Command families served by the Conductive program.
 #[derive(Debug, Subcommand)]
 pub(crate) enum Command {
-    /// Run agent sessions. Not available yet.
-    Runner(PendingArgs),
+    /// Run agent sessions through the private SDK helper.
+    Runner,
     /// Relay port previews on the private socket.
     Relay,
     /// Serve workspace tools over MCP.
@@ -41,7 +41,7 @@ pub(crate) enum Command {
 impl fmt::Display for Command {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         let name = match self {
-            Self::Runner(_) => "runner",
+            Self::Runner => "runner",
             Self::Relay => "relay",
             Self::Mcp(_) => "mcp",
             Self::GitCredential(_) => "git-credential",

@@ -10,6 +10,7 @@ authors = ["Conductive"]
 rust-version = "1.98.1"
 
 [workspace.dependencies]
+cnd-runner = { path = "crates/cnd-runner" }
 cnd-credential = { path = "crates/cnd-credential" }
 cnd-relay = { path = "crates/cnd-relay" }
 cnd-tools = { path = "crates/cnd-tools" }

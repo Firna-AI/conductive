@@ -5,6 +5,7 @@ use clap::Parser;
 use crate::command::Command;
 use crate::error::{Error, Result};
 use crate::release;
+use crate::runner_command;
 use crate::sandbox_command;
 use crate::update_command;
 
@@ -27,6 +28,9 @@ impl Cli {
         let _parts = release::parts()?;
         if let Command::Update(arguments) = self.command {
             return update_command::execute(arguments).await;
+        }
+        if let Command::Runner = self.command {
+            return runner_command::execute().await;
         }
         if let Command::Relay = self.command {
             return sandbox_command::relay().await;

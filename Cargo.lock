@@ -307,9 +307,11 @@ dependencies = [
  "cnd-credential",
  "cnd-relay",
  "cnd-release",
+ "cnd-runner",
  "cnd-tools",
  "flate2",
  "internal-error",
+ "rustix",
  "serde",
  "serde_json",
  "tar",
@@ -319,6 +321,7 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "unimock",
+ "uuid",
 ]
 
 [[package]]

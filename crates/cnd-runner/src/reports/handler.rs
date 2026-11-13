@@ -82,10 +82,12 @@ impl CommandHandler for ReportCommandHandler {
         if self.stopped.load(Ordering::Acquire) {
             return Box::pin(async { Ok(()) });
         }
+        let welcomed = self.dependencies.next.connected();
         let initial = self.dependencies.files.refresh(true, None, None);
         let dependencies = self.dependencies.clone();
         let stopped = self.stopped.clone();
         Box::pin(async move {
+            welcomed.await?;
             if let Some(watches) = &dependencies.watches {
                 watches.start().await?;
             }

@@ -10,6 +10,7 @@ mod cli;
 mod command;
 mod error;
 mod release;
+mod runner_command;
 mod sandbox_command;
 mod tool_command;
 mod update_command;

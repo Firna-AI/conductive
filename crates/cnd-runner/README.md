@@ -1,10 +1,10 @@
 # cnd-runner
 
-This crate provides the durable runner connection and repository reports
-for Conductive. Depend on it to compose a workspace runner with a turn engine.
+This crate provides the runner connection, repository reports, and agent
+turn engine for Conductive. Depend on it to compose a full workspace runner.
 The [interface crate](../cnd-runner-interface/README.md) owns its wire types.
-The production service still uses the Node runner. The `conductive runner`
-command remains unavailable until the turn engine and service are connected.
+The `conductive runner` command composes this crate. The installed service
+still uses the Node runner until the separate service switch.
 
 ## Responsibilities
 
@@ -17,6 +17,9 @@ command remains unavailable until the turn engine and service are connected.
 - Send bounded file reports and stable listening-port reports.
 - Watch recursive repository changes and repair watches after a restore.
 - Prepare ignored context storage, including linked Git worktrees.
+- Run independent sessions through private Node SDK helper processes.
+- Filter credentials before saving chat output and preparing report labels.
+- Cancel pending turns, helper requests, and repository reads on Stop or shutdown.
 
 ## What This Crate Does
 
@@ -33,7 +36,9 @@ The event emitter retries pending agent output and terminal events once.
 A failed output retry permits the turn to continue. A failed start still
 reaches its caller. The caller supplies events after its credential filter.
 This crate bounds tool details, whole turn-file prefixes, file payloads,
-and complete envelopes. It does not implement the credential filter.
+and complete envelopes. The shared credential filter keeps tokens in process
+memory. It holds incomplete streamed prefixes and preserves operational paths
+and file contents. Report labels use the same filter before byte limits.
 
 The socket accepts HTTPS or WSS endpoints and uses rustls with public roots.
 It repairs lone UTF-16 surrogate escapes to U+FFFD before typed decoding.
@@ -84,7 +89,24 @@ Optionally supply `ReportWatchService` with a `WatchDriver`.
 The startup hook prepares context storage before the next handler warms agents.
 The connection handler reserves its initial scan before returning its future.
 Its startup hook starts watches before the first connection attempt.
-The turn engine must supply the credential filter before production use.
+Compose `AgentEngine` with `EngineDependencies` and the loaded state.
+Supply `CredentialFilter` to reports and `FilteredEmitter` around the saving
+emitter. Supply `NodeHelpers`, `GitTurnRepositories`, and `RunnerStartup`.
+Use the engine as the next handler of `ReportCommandHandler`.
+
+Each session pins its agent, instructions, and branch context. Helper
+handoffs retain the first turn's token, author, tool context, conversation,
+and background deadline. Result lists resolve only their named inputs.
+An empty ordinary result resolves all sent inputs. A wake-up resolves none.
+Claude background work can keep a turn open for thirty days from its first
+wait. Member input during a wait resets the deadline from its receipt time.
+
+Stop signals cancellation outside the session queue. Completion waits for
+helper cleanup and OS exit. A canceled completion scan gets a fresh file
+read with a ten-second limit. Failed saves retain their original event numbers.
+The first valid welcome triggers one noninteractive sudo call to the pinned
+`conductive update started` executable. The runner process remains unprivileged.
+The separate service switch must remove process-start release confirmation.
 
 ## Development
 
@@ -94,13 +116,15 @@ Run these commands from the repository root:
 cargo fmt --all -- --check
 cargo clippy --workspace --all-targets -- -D warnings
 cargo test --workspace
-cargo build --release --target x86_64-unknown-linux-musl -p cnd-runner
+cargo build --release --target x86_64-unknown-linux-musl -p cnd-cli
 ```
 
 Unit tests use unimock at the disk, Git, process, watch, scan, and link boundaries.
 Timer tests use paused Tokio time. Integration tests use temporary real Git
 repositories, native watches, a controlled disk, and an in-memory endpoint.
-No test needs an agent login or a cloud computer.
+Turn tests use controlled helper and repository boundaries. Helper transport
+tests start a small Node 24 fixture through real private pipes. No test needs
+an agent login or a cloud computer.
 The fake endpoint models cursors, gaps, duplicates, refusal confirmations,
 and connection drops. It does not run the Worker.
 
@@ -114,6 +138,12 @@ and connection drops. It does not run the Worker.
 - [socket.rs](src/socket.rs): `WebSocketConnector` supplies the production TLS socket.
 - [emitter.rs](src/emitter.rs): `SavingEmitter` applies the failed-save retry policy.
 - [runtime.rs](src/runtime.rs): `RunnerCore` recovers turns and owns reconnection and shutdown.
+- [handler.rs](src/engine/handler.rs): `AgentEngine` routes turns and Stop to independent session actors.
+- [service.rs](src/filter/service.rs): `CredentialFilter` filters chat, report labels, and helper warnings.
+- [driver.rs](src/helper/driver.rs): `HelperConnection` correlates requests while agent events stream.
+- [process.rs](src/helper/process.rs): `NodeHelpers` owns private pipes and process-group cleanup.
+- [startup.rs](src/helper/startup.rs): `RunnerStartup` clears stale credentials, warms the SDK, and confirms a welcome.
+- [runner_command.rs](../cnd-cli/src/runner_command.rs): the CLI composes the full runner and signal handling.
 - [limits.rs](src/limits.rs): `bound_event` applies serialized chat excerpts.
 - [commands.rs](src/json/commands.rs): `workspace_message` repairs and validates command JSON.
 - [service.rs](src/repository/service.rs): `Repository` supplies scans, reads, diffs, and checkpoints.

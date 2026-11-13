@@ -331,9 +331,9 @@ Depends on: 9
 
 Depends on: 4, 6, 7, 8, 10
 
-- [ ] Port the turn engine: turns, messages, interrupts, model changes, Stop, shutdown, background work, the output filter, the agent input, and the instructions.
-- [ ] Drive the agents through the Node SDK helper.
-- [ ] Port the matching tests with a fake helper.
+- [x] Port the turn engine: turns, messages, interrupts, model changes, Stop, shutdown, background work, the output filter, the agent input, and the instructions.
+- [x] Drive the agents through the Node SDK helper.
+- [x] Port the matching tests with a fake helper.
 - [ ] Switch the runner service to `conductive runner`, and remove the runner archive from the parts list.
 - [ ] Confirm a new release (`conductive update started`) only after the Rust runner gets its first `welcome`, not when its process starts. Milestone 4 confirms at process start, because the Node runner cannot report its connection.
 - [ ] Delete the Node runner core, `image/install.sh`, `image/package-runner.mjs`, the two runner archive variables, and the `runner:typecheck` and `runner:test` steps that test deleted code. Keep the helper's typecheck and tests in `npm run check`.

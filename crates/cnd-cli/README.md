@@ -30,7 +30,13 @@ refusal codes. `relay` serves previews through [cnd-relay](../cnd-relay/README.m
 `git-credential` supplies fresh GitHub tokens through
 [cnd-credential](../cnd-credential/README.md). The installed
 `conductive-git-credential` executable name selects that subcommand.
-Only `runner` reports "not available yet" and exits with status 1.
+`runner` starts the full [Rust runner](../cnd-runner/README.md). It uses the
+[runner configuration](../../runner/configuration.md), plus optional
+`CONDUCTIVE_NODE` and `CONDUCTIVE_SDK_HELPER` path overrides. Installed builds
+resolve Node and the helper beside the running release executable. Local
+builds use `node` and `dist/sdk-helper/sdk-helper.mjs` in the working folder.
+SIGTERM and SIGINT end live turns, save pending events, and close the connection.
+The installed runner service still uses the Node core.
 
 `update check` uses `cli-updater` to read and compare the newest release.
 It downloads into a private version folder. It checks the program digest
@@ -97,6 +103,7 @@ The musl build needs a C compiler for musl. On Ubuntu, install the
 - [update/ports.rs](src/update/ports.rs) defines disk, process, and updater boundaries.
 - [update/disk.rs](src/update/disk.rs) stores complete versions and locks.
 - [update_tests.rs](tests/update_tests.rs) checks real files and local HTTP downloads.
+- [runner_command.rs](src/runner_command.rs) composes the full runner and graceful shutdown.
 - [sandbox_command.rs](src/sandbox_command.rs) composes the relay and credential runtimes.
 - [tool_command.rs](src/tool_command.rs) composes the workspace CLI and MCP runtime.
 - [cli_tests.rs](src/_tests_/cli_tests.rs) checks relay argument parsing.

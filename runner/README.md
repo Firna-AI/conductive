@@ -28,6 +28,12 @@ The runner starts one helper child for each agent start.
 Only the helper starts the Claude and Codex adapters.
 Private pipes carry JSON lines between the two processes.
 
+The Rust runner is available through `conductive runner`. Its
+[library README](../crates/cnd-runner/README.md) describes composition and tests.
+It uses this folder's SDK helper through the same private JSON-line protocol.
+The installed service still runs this Node core. The service switch and
+live release check are separate work.
+
 ## What it does
 
 These facts belong to this implementation, not to the protocol docs.

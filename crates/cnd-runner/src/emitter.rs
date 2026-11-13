@@ -15,6 +15,10 @@ use crate::link::ports::RunnerLink;
 #[cfg_attr(test, unimock::unimock(api = EventEmitterMock))]
 #[async_trait]
 pub trait EventEmitter: Send + Sync {
+    /// Retry pending state without assigning another event number.
+    async fn persist(&self) -> Result<()> {
+        Ok(())
+    }
     /// Try each prepared event in order, even when an earlier event fails.
     async fn emit(&self, events: Vec<RunnerEvent>, report_command_id: Option<String>)
     -> Result<()>;
@@ -38,6 +42,9 @@ impl SavingEmitter {
 
 #[async_trait]
 impl EventEmitter for SavingEmitter {
+    async fn persist(&self) -> Result<()> {
+        self.link.persist().await
+    }
     async fn emit(
         &self,
         events: Vec<RunnerEvent>,

@@ -39,6 +39,29 @@ pub enum Error {
     /// The runner has no active socket.
     #[error("[cnd-runner/link] the runner is disconnected")]
     Disconnected,
+    /// A helper request reported a typed provider failure.
+    #[error("[cnd-runner/helper] {message}")]
+    Agent {
+        /// Stable provider code.
+        code: String,
+        /// Displayable provider cause, filtered before output.
+        message: String,
+    },
+    /// The helper exited before a pending request completed.
+    #[error("[cnd-runner/helper] The SDK helper process ended.")]
+    HelperExited,
+    /// The helper returned malformed framing or a missing model result.
+    #[error("[cnd-runner/helper] The SDK helper returned an invalid response.")]
+    HelperResponse,
+    /// A live operation was canceled by Stop or shutdown.
+    #[error("[cnd-runner/turn] The turn was stopped.")]
+    Canceled,
+    /// The sandbox could not confirm its connected release.
+    #[error("[cnd-runner/startup] The connected runner release could not be confirmed.")]
+    ReleaseConfirmation,
+    /// A turn's initial repository state could not be read.
+    #[error("[cnd-runner/turn] The repository could not be read before the agent started.")]
+    Checkpoint,
     /// IO, serialization, and external dependency failures retain their source.
     #[error("[cnd-runner] internal: {0:?}")]
     Internal(#[from] InternalError),

@@ -57,3 +57,7 @@ pub fn workspace_message(bytes: &[u8]) -> Result<WorkspaceToRunner> {
     }
     Ok(message)
 }
+
+#[cfg(test)]
+#[path = "_tests_/command_tests.rs"]
+mod command_tests;
