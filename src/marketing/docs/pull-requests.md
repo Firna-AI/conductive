@@ -82,9 +82,10 @@ The actions and GitHub links sit at the top of that view.
 | Merged | Choose **Continue**, or **Archive** when you own the workspace or are an admin. |
 | Closed without a merge | Open GitHub to review what happened. |
 
-On an open pull request, local work gives **Commit and push** priority over Merge and the fix actions.
+On an open pull request, local work gives **Commit and push** or **Push** priority over Merge and the fix actions.
 Local work means files not committed or commits that have not been pushed.
-The action asks the agent to commit and push that work.
+When any file is not committed, **Commit and push** asks the agent to commit and push that work.
+When only commits are left, **Push** asks the agent to push the branch.
 
 Each agent action sends a fixed message to the chat session you viewed last.
 It uses that session's model, effort, and normal send rules.
@@ -107,7 +108,7 @@ The merge uses your GitHub account.
 You need GitHub write access or more to see the action.
 GitHub also needs to allow a merge method.
 If Conductive cannot read that access, it hides Merge.
-Local work on an open pull request shows **Commit and push** instead.
+Local work on an open pull request shows **Commit and push** or **Push** instead.
 
 GitHub checks your access and the branch's rules before completing the merge.
 The bar shows **Merging** until the result arrives.

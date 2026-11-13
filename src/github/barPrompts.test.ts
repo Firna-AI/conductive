@@ -33,3 +33,13 @@ it('names the pull request, the target, the blocking checks in GitHub order, and
     "A reviewer requested changes on pull request #482. Read the open review comments with `gh`, make the changes, then commit and push. Don't reply on GitHub. If `gh` is missing or fails, stop and say that `gh` failed.",
   ])
 })
+
+it('asks for a commit and a push when files are not committed, and only for a push when only commits are left', () => {
+  const ready = snapshotOf('ready-to-merge')
+  expect([promptOf('commit-and-push', ready), promptOf('push', ready)]).toEqual(
+    [
+      'Commit the changes that are not committed, with a clear message, and push this branch.',
+      'Push this branch.',
+    ],
+  )
+})

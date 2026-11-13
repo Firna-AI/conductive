@@ -106,7 +106,7 @@ export function controlsOf(
       status: 'ready',
       capabilities: { canWrite: true, mergeMethod: 'squash' },
     },
-    localWork: 'no',
+    localWork: 'none',
     outcome: null,
     turnRuns: false,
     readOnly: false,
