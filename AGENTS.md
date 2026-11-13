@@ -56,7 +56,8 @@ Run each command from the repository root, with Node 24 from `.nvmrc`.
   the web app and the local Worker at `http://127.0.0.1:5173`.
 - Build: `npm run build`. It checks the types, builds the marketing site
   into `public/_site/`, and builds the web app and the Worker into
-  `dist/`.
+  `dist/`. `npm run build:bundle` builds the same files without the
+  typecheck.
 - Marketing site: `npm run site:dev` serves the Astro pages of the site at
   `http://localhost:4321`, and it reloads them on each change.
   `npm run site:build` builds them into `public/_site/`, which Git
@@ -75,13 +76,13 @@ Run each command from the repository root, with Node 24 from `.nvmrc`.
 - Early check: `npm run format:check` and `npm run lint`. Lint also
   rejects JavaScript, TypeScript, and Astro files over 300 lines, including
   comments and blank lines.
-- Complete gate: `npm run check`. It checks types, lint, format, file
-  length, tests, the app build, and the mockups. It also runs the typecheck
-  and the tests of the [agent runner](runner/README.md). It stops at its
-  first failed step. GitHub Actions runs it on pushes and pull requests. Run
-  `npm --prefix desktop ci` and `npm ci --prefix runner` once before the
-  gate, as CI does. These commands install the dependencies of the gate's
-  desktop and runner checks.
+- Complete gate: `npm run check`. It runs `npm run check:static`, then
+  `npm run test`. `npm run check:static` checks types, lint, format, file
+  length, the app build, and the mockups. It also runs the typecheck and
+  the tests of the [agent runner](runner/README.md). The gate stops at its
+  first failed step. Run `npm --prefix desktop ci` and
+  `npm ci --prefix runner` once before the gate, as CI does. These commands
+  install the dependencies of the gate's desktop and runner checks.
 - Format: `npm run format`.
 - Mockup check: `npm run mockups:check`. It runs the typecheck, then the
   strict build into `mokly-static/`.
@@ -90,9 +91,13 @@ Run each command from the repository root, with Node 24 from `.nvmrc`.
 
 ## CI
 
-GitHub Actions runs `npm run check` from `.github/workflows/ci.yml` on each
-pull request, and on each push to `main` and to the primary branch of the
-plan. A push to another branch runs no CI until its pull request opens.
+GitHub Actions runs the complete gate from `.github/workflows/ci.yml` on
+each pull request, and on each push to `main` and to the primary branch of
+the plan. A push to another branch runs no CI until its pull request opens.
+The gate runs as parallel jobs. The job `Static checks` runs
+`npm run check:static`. Four `Tests` jobs each run one quarter of the
+Vitest files, with `vitest run --shard`. The job `Complete gate` passes
+only when every one of these jobs passed.
 
 The active `Protect main` ruleset requires a pull request with a green
 `Complete gate` check. An admin can bypass its rules only through a pull
