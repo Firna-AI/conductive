@@ -124,7 +124,9 @@ test('the Mac app keeps many waiting commands above a reachable composer, scroll
     // The oldest request comes first, and it runs the long script, which
     // starts in view and ends past the edge of the region.
     const first = waiting.first()
-    const script = first.getByText('set -euo pipefail', { exact: false })
+    const script = first
+      .getByRole('code')
+      .filter({ hasText: 'set -euo pipefail' })
     expect((await edges(script)).top).toBeGreaterThanOrEqual(bounds.top)
     expect((await edges(script)).bottom).toBeGreaterThan(bounds.bottom)
     await first.getByRole('button', { name: 'Deny', exact: true }).focus()
