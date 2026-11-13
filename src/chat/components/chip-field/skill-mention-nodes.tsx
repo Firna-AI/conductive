@@ -44,7 +44,7 @@ export function FieldAgentProvider(props: {
 }
 
 /** The agent of the field, as `FieldAgentProvider` gives it. */
-export function useFieldAgent(): Agent | null {
+function useFieldAgent(): Agent | null {
   return useContext(FieldAgentContext)
 }
 

@@ -24,7 +24,7 @@ export const privacyDocument: LegalDocument = {
   title: legalTitles.privacy,
   description: `The privacy notice of ${productName}.`,
   lead: text`This notice says which personal data ${productName} uses, why
-  it uses it, and who gets it. Effective date: 12 November 2026.`,
+  it uses it, and who gets it. Effective date: 13 November 2026.`,
   sections: [
     {
       title: 'Who is responsible',

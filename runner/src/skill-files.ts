@@ -1,7 +1,7 @@
 import { readdir, stat } from 'node:fs/promises'
 import { basename, dirname, join } from 'node:path'
 
-export const SKILL_FILE = 'SKILL.md'
+const SKILL_FILE = 'SKILL.md'
 /** Codex scans its skill folders to this depth. */
 const CODEX_MAX_DEPTH = 6
 /** A scan of the Codex folders stops after this many folder entries. */
@@ -25,11 +25,11 @@ export interface SkillFiles {
   warnings: readonly string[]
 }
 
-export function claudeSkillFolder(repository: string): string {
+function claudeSkillFolder(repository: string): string {
   return join(repository, '.claude', 'skills')
 }
 
-export function codexSkillFolders(repository: string): readonly string[] {
+function codexSkillFolders(repository: string): readonly string[] {
   return [
     join(repository, '.agents', 'skills'),
     join(repository, '.codex', 'skills'),
@@ -144,7 +144,7 @@ function result(files: SkillFile[], warnings: string[]): SkillFiles {
   }
 }
 
-export function missing(error: unknown): boolean {
+function missing(error: unknown): boolean {
   const value = code(error)
   return value === 'ENOENT' || value === 'ENOTDIR'
 }

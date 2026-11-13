@@ -15,7 +15,7 @@ export const SKILL_DESCRIPTION_REPORT_MAX_CHARACTERS = 4096
  * The runner leaves out a skill with a longer name, in Unicode code points.
  * Claude offers no skill with a longer name.
  */
-export const SKILL_NAME_MAX_CHARACTERS = 256
+const SKILL_NAME_MAX_CHARACTERS = 256
 
 /** One skill that an agent can run, as the app shows it. */
 export interface AgentSkill {

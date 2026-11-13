@@ -466,9 +466,9 @@ Depends on: 1, 5
 
 Depends on: every other milestone
 
-- [ ] Set the `slash-commands` row to `available`, with a note that the
+- [x] Set the `slash-commands` row to `available`, with a note that the
       list shows the skills of the repository.
-- [ ] Set the effective date of the Privacy page to the merge day, as
+- [x] Set the effective date of the Privacy page to the merge day, as
       earlier changes of that page did.
 - [ ] Run the targeted tests and `npm run check`.
 - [ ] Commit with Conventional Commits and push the branch.

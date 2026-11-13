@@ -2,7 +2,7 @@ import type { Agent } from '../../../src/shared/agents'
 import { skillNames } from '../../../src/shared/skill-text'
 
 /** One skill of an agent list, with the absolute path of its `SKILL.md`. */
-export interface ListedSkill {
+interface ListedSkill {
   name: string
   path: string
 }
