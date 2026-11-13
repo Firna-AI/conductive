@@ -110,6 +110,27 @@ describe('the place of each session tab', () => {
     expect(chat.topOf(chat.rowOf(older))).toBe(100)
   })
 
+  it('shows the bottom when the user sends a message after a switch of session tabs', async () => {
+    const { resize } = await mountLongTurn()
+    const chat = layOutChat()
+    await resize()
+    chat.read(chat.rowOf(older), 100)
+    await visitOtherTab()
+    await resize()
+    expect(chat.topOf(chat.rowOf(older))).toBe(100)
+
+    const box = await waitFor(
+      () => queryByRole('textbox', 'Message'),
+      'the message box',
+    )
+    typeMessage(asMessageField(box), 'Ship it.')
+    await press(byRole('button', 'Send'))
+    await waitFor(() => queryByText('Ship it.'), 'the sent message')
+    chat.layoutAgain()
+    await resize()
+    expect(chat.scrollTop()).toBe(0)
+  })
+
   it('opens a session that kept no place at the bottom, not at the place of the tab before it', async () => {
     const { resize } = await mountLongTurn()
     const chat = layOutChat()

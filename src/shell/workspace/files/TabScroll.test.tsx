@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 
 import { act } from 'react'
-import { describe, expect, onTestFinished, test, vi } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
 import { routes } from '../../../app/router'
 import type { FilesTab } from '../../../files/navigation'
 import { queryByRole } from '../../../test-support/dom-queries'
@@ -28,28 +28,6 @@ const fileTab: FilesTab = {
 }
 const diffTab: FilesTab = { kind: 'diff', path: FAKE_FILE_PATH }
 
-/**
- * Gives each element a scroll position that a browser keeps, because
- * happy-dom lays out nothing. Each new element starts at the top.
- */
-function keepScrollPositions() {
-  const positions = new WeakMap<Element, number>()
-  const saved = Object.getOwnPropertyDescriptor(Element.prototype, 'scrollTop')
-  if (!saved) throw new Error('happy-dom has no scrollTop')
-  Object.defineProperty(Element.prototype, 'scrollTop', {
-    configurable: true,
-    get(this: Element) {
-      return positions.get(this) ?? 0
-    },
-    set(this: Element, value: number) {
-      positions.set(this, Math.max(0, value))
-    },
-  })
-  onTestFinished(() => {
-    Object.defineProperty(Element.prototype, 'scrollTop', saved)
-  })
-}
-
 /** The scroll box of the code or the diff of the shown page, once it shows. */
 function pageBox(view: HTMLElement): Promise<HTMLElement> {
   return waitFor(() => {
@@ -70,7 +48,6 @@ async function read(view: HTMLElement, top: number) {
 describe('the scroll offset of the file and diff tabs of the workspace', () => {
   test('each tab gives back its offset after the other tab and the chat showed', async () => {
     holdAnimationFrames()
-    keepScrollPositions()
     const server = new FakeApiServer()
     const file = filesHref(org, id, fileTab)
     const diff = filesHref(org, id, diffTab)
