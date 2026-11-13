@@ -17,7 +17,11 @@ import {
   history,
 } from './autocompleteTurn'
 import { backgroundConversations } from './backgroundConversations'
-import { barConversations, type ContinuedItem } from './barConversations'
+import {
+  barConversations,
+  type ContinuedItem,
+  type RepositoryChangedItem,
+} from './barConversations'
 import type { ChangedFile } from './files'
 import {
   headingConversations,
@@ -140,6 +144,7 @@ export type ChatItem =
       from: string
     }
   | ContinuedItem
+  | RepositoryChangedItem
 
 /** One tool call of an agent turn. */
 export type ToolCallItem = Extract<ChatItem, { kind: 'tool' }>

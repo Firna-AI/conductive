@@ -30,6 +30,7 @@ how a screen is built, and links to the other pages.
 | `app/mac-commands`  | A command that an agent runs on the Mac of the sender, in the chat            |
 | `app/sessions`      | A new session, the history, closing one while it works, and a linked session  |
 | `app/reassign`      | The owner of a workspace, its reassign menu, a member's view, a stopped turn  |
+| `app/repository-change` | The repository menu of the header, the question before a change, the change that runs, a change that stopped, and the workspace after it |
 | `app/archive`       | An archived workspace with Restore, the toast after Archive, the Archived group, the restored workspace, the end of Restore, and the bar after the delete |
 | `app/composer`      | Two uploaded files in a sentence, the picker, another member's login, and a missing agent |
 | `app/attachments`   | A file that uploads in the text, then a drop, a failed upload, a file over 100 MB, sent files, the file tab of a sent screenshot, and a first message with files |
@@ -373,6 +374,21 @@ pages:
   bar gives the day when Restore ended, and offers no Restore.
 - `app/archive/deleted` has the archived workspace after the app deleted
   its cloud computer, with no Restore.
+
+`app/repository-change` draws the repository change of Checkout address
+autocomplete, from repository change decisions 1 to 4. Its canonical
+screen has the open repository menu of the header. A chosen repository
+that the cloud computer does not hold shows New workspace as its detail.
+Its saved states:
+
+- `app/repository-change/question` has the question before the change,
+  with the work that stays with the old repository and the work that
+  moves to the new branch.
+- `app/repository-change/changing` has the change that runs, with a
+  spinner in the repository button.
+- `app/repository-change/failed` has the toast of a change that stopped.
+- `app/repository-change/changed` has the workspace on its new branch,
+  with the note of the change in the chat.
 
 [Chat and routines](catalogue-chat-and-routines.md) gives those catalogue
 pages, their child pages, and their related flows.

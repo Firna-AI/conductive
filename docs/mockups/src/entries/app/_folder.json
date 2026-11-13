@@ -17,6 +17,7 @@
     "mac-commands",
     "sessions",
     "reassign",
+    "repository-change",
     "archive",
     "composer",
     "attachments",

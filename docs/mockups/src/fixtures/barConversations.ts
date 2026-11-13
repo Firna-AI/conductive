@@ -2,6 +2,8 @@ import { agentPrompt, type AgentAction } from '../components/workspace/barCopy'
 import { continuedBranch, promptFacts } from './barActions'
 import type { ChatItem } from './conversations'
 import type { PersonKey } from './members'
+import { repositories } from './repositories'
+import { movedBranch, movedRepository } from './repositoryMove'
 
 /**
  * The note of Continue in a session: the member who pressed Continue, the
@@ -16,6 +18,18 @@ export type ContinuedItem = {
   base: string
 }
 
+/**
+ * The note of a repository change in a session: the member who changed
+ * it, the new repository, and the new branch.
+ */
+export type RepositoryChangedItem = {
+  kind: 'repository-changed'
+  id: string
+  by: PersonKey
+  repository: string
+  branch: string
+}
+
 /** The transcripts of the actions of the pull request bar. */
 export const barConversationKeys = [
   'sent-fix-checks',
@@ -27,6 +41,7 @@ export const barConversationKeys = [
   'after-merge-running',
   'continued',
   'continued-by-member',
+  'repository-changed',
 ] as const
 
 type BarConversationKey = (typeof barConversationKeys)[number]
@@ -66,8 +81,9 @@ function continued(by: PersonKey): ContinuedItem {
 /**
  * Each agent action after the turn that pushed the branch: Create pull
  * request after the turn that a stop cut off, and the others after the
- * turn that opened #482. Then a turn that runs after the merge, and the
- * note of Continue, from Cal and from Priya.
+ * turn that opened #482. Then a turn that runs after the merge, the
+ * note of Continue, from Cal and from Priya, and the note of a repository
+ * change.
  */
 export function barConversations(turns: {
   history: readonly ChatItem[]
@@ -97,5 +113,15 @@ export function barConversations(turns: {
     ],
     continued: [...history, continued('cal')],
     'continued-by-member': [...history, continued('priya')],
+    'repository-changed': [
+      ...history,
+      {
+        kind: 'repository-changed',
+        id: 'repository-changed',
+        by: 'cal',
+        repository: repositories[movedRepository].name,
+        branch: movedBranch,
+      },
+    ],
   }
 }

@@ -140,6 +140,8 @@ export function tabsFor(
       selected: state.tab === 'code',
     },
   ]
+  // A repository change closes the file tabs of the old repository.
+  if (state.repositoryMove === 'changed') tabs.pop()
   if (state.tabRow === 'full') tabs.push(...moreTabs)
   if (state.tab === 'markdown') {
     const to = paths.markdown

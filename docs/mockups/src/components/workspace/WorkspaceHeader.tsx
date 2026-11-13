@@ -1,9 +1,9 @@
 import type { Viewport } from '@mokly/mokly'
-import { ChevronLeft, FolderGit2, PanelRight } from 'lucide-react'
+import { ChevronLeft, PanelRight } from 'lucide-react'
 import { people } from '../../fixtures/members'
-import { repositories } from '../../fixtures/repositories'
 import type { ActivityStatus, Workspace } from '../../fixtures/workspaces'
 import { paths } from '../../paths'
+import { classes } from '../common/classes'
 import { ScreenLink } from '../common/ScreenLink'
 import { ShortcutTip } from '../common/ShortcutTip'
 import { IconButton } from '../common/actions'
@@ -12,6 +12,7 @@ import { activityPresentation } from '../workspaces/status'
 import { StatusGlyph } from '../workspaces/StatusGlyph'
 import { CopyLinkButton, type CopyResult } from './CopyLinkButton'
 import { OwnerPicker } from './OwnerPicker'
+import { RepositoryPicker } from './RepositoryPicker'
 import { RunLinks, type RunSource } from './RunLinks'
 import styles from './WorkspaceHeader.module.css'
 
@@ -30,7 +31,8 @@ function State(props: { status: ActivityStatus }) {
  * header names the repository. The label of the number follows the name,
  * and copies the link of the workspace. On desktop its tooltip names the
  * key of Copy link. On a phone it leads the line under
- * the name, before the repository. For an admin of the org,
+ * the name, before the repository. The repository opens the menu that
+ * moves the workspace to another repository. For an admin of the org,
  * the owner opens the menu that reassigns the workspace. On desktop the
  * header ends with the toggle that hides the right column and shows it
  * again. A run workspace also links to its routine and its pull request.
@@ -53,9 +55,22 @@ export function WorkspaceHeader(props: {
   rightHidden?: boolean
   /** The routine of a run workspace and the pull request of its run. */
   run?: RunSource
+  /**
+   * The menu of the repository is open, or the change of the repository
+   * runs. A phone shows the menu as a sheet.
+   */
+  repositoryControl?: 'open' | 'changing'
 }) {
   const { workspace, name } = props
-  const repository = repositories[workspace.repository].name
+  const repositoryOpen = props.repositoryControl === 'open'
+  const repository = (
+    <RepositoryPicker
+      changing={props.repositoryControl === 'changing'}
+      inline={props.viewport === 'mobile'}
+      open={repositoryOpen}
+      repository={workspace.repository}
+    />
+  )
   const owner = (
     <OwnerPicker
       compact={props.viewport === 'mobile'}
@@ -84,7 +99,7 @@ export function WorkspaceHeader(props: {
           <h1 className={styles.title}>{name}</h1>
           <span className={styles.line}>
             {copyLink}
-            <span className={styles.branch}>{repository}</span>
+            {repository}
           </span>
         </div>
         {owner}
@@ -94,11 +109,10 @@ export function WorkspaceHeader(props: {
       <header className={styles.bar}>
         <h1 className={styles.title}>{name}</h1>
         {copyLink}
-        <span className={styles.metas}>
-          <span className={styles.meta}>
-            <FolderGit2 aria-hidden className={styles.icon} size={13} />
-            <span className={styles.branch}>{repository}</span>
-          </span>
+        <span
+          className={classes(styles.metas, repositoryOpen && styles.metasOpen)}
+        >
+          {repository}
         </span>
         {owner}
         <State status={props.status} />

@@ -14,9 +14,17 @@ import type { PaletteContext } from '../components/palette/paletteContent'
 import { ArchivedToast } from '../components/workspace/ArchivedToast'
 import { ContinueDialog } from '../components/workspace/ContinueDialog'
 import { reassignMenu } from '../components/workspace/OwnerPicker'
+import { RepositoryChangeDialog } from '../components/workspace/RepositoryChangeDialog'
+import { repositoryMenuEntries } from '../components/workspace/RepositoryPicker'
+import {
+  repositoryFailure,
+  repositoryMenu,
+} from '../components/workspace/repositoryMoveCopy'
 import type { WorkspaceTab } from '../components/workspace/TabItem'
 import { TabMenuSheet } from '../components/workspace/TabMenu'
 import { transcriptToasts } from '../components/workspace/transcriptCopy'
+import { repositories } from '../fixtures/repositories'
+import { movedRepository } from '../fixtures/repositoryMove'
 import { workspaceSessions } from '../fixtures/sessions'
 import { closedTerminal, cloudComputerSilent } from '../fixtures/terminals'
 import type { Workspace } from '../fixtures/workspaces'
@@ -177,6 +185,32 @@ export function workspaceOverlay(
           />
         </Sheet>
       ) : null
+    case 'repository':
+      return mobile ? (
+        <Sheet title={workspace.name}>
+          <Menu
+            entries={repositoryMenuEntries(workspace.repository)}
+            label={repositoryMenu.label}
+            placement="sheet"
+          />
+        </Sheet>
+      ) : null
+    case 'repository-change':
+      return (
+        <RepositoryChangeDialog
+          from={workspace.repository}
+          to={movedRepository}
+          viewport={viewport}
+        />
+      )
+    case 'repository-failed':
+      return (
+        <FailureToast
+          message={repositoryFailure.clash(repositories[movedRepository].name)}
+          phone={mobile}
+          title={repositoryFailure.title}
+        />
+      )
     case 'tab-menu':
       return mobile && row.menuTab ? (
         <TabMenuSheet

@@ -32,6 +32,11 @@ export const barStateProperties = {
    * the latest base after Continue.
    */
   branch: { enum: ['first', 'continued'] },
+  /**
+   * The repository change of the workspace: none, a change that runs, or
+   * the workspace after the change, on a new branch of acme/billing-service.
+   */
+  repositoryMove: { enum: ['none', 'changing', 'changed'] },
 } as const
 
 export const barStateKeys = [
@@ -39,6 +44,7 @@ export const barStateKeys = [
   'access',
   'appAction',
   'branch',
+  'repositoryMove',
 ] as const
 
 /** No local work, write access, and no action of the app. */
@@ -47,4 +53,5 @@ export const barStateDefaults = {
   access: 'write',
   appAction: 'none',
   branch: 'first',
+  repositoryMove: 'none',
 } as const

@@ -145,6 +145,8 @@ export const workspaceStateSchema = {
      * menu of the first session or of the temporary tab, or the question of
      * Continue with work that is not pushed. Or the question before a
      * terminal closes, or the toast of a terminal that did not open or close.
+     * Or the menu of the repository, the question before a repository
+     * change, or the toast of a change that stopped.
      */
     overlay: {
       enum: [
@@ -157,6 +159,9 @@ export const workspaceStateSchema = {
         'close-terminal',
         'terminal-open-failed',
         'terminal-close-failed',
+        'repository',
+        'repository-change',
+        'repository-failed',
       ],
     },
     /**

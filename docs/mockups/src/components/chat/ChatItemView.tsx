@@ -10,6 +10,7 @@ import { Notice } from '../common/Notice'
 import { ScreenLink } from '../common/ScreenLink'
 import { AgentBlocks } from './AgentBlocks'
 import { ContinuedLine } from './ContinuedLine'
+import { RepositoryChangedLine } from './RepositoryChangedLine'
 import type { SingleItem } from './groupItems'
 import { LinkedLine } from './LinkedLine'
 import { LostLine } from './LostLine'
@@ -105,6 +106,14 @@ export function ChatItemView(props: { item: SingleItem; viewer: PersonKey }) {
         <ContinuedLine
           base={item.base}
           branch={item.branch}
+          who={item.by === viewer ? 'You' : people[item.by].name}
+        />
+      )
+    case 'repository-changed':
+      return (
+        <RepositoryChangedLine
+          branch={item.branch}
+          repository={item.repository}
           who={item.by === viewer ? 'You' : people[item.by].name}
         />
       )

@@ -14,7 +14,8 @@ it stops following, a question lists that work first.
 The user asked for the change on 13 November 2026, with a screenshot of
 the header. The user chose the approach in a brainstorm on the same day:
 repository change decisions 1 A, 2 B, and 3 B. The user also asked to
-copy the context folder to the new repository. The brainstorm notes are
+copy the context folder to the new repository. After the options check,
+the user chose decisions 3 D and 4 D on the same day. The brainstorm notes are
 in `.context/repository-change/brainstorm-notes.md`.
 
 This change does not cover a workspace with more than one repository, a
@@ -93,7 +94,7 @@ Answered on 13 November 2026: B.
 
 ### 3. Which work makes the question show
 
-Answered on 13 November 2026: B.
+Answered on 13 November 2026: B. Changed on the same day to D, after the options check.
 
 - **Severity:** Medium. **Effort:** Small.
 - **Source:** Design.
@@ -111,12 +112,12 @@ Answered on 13 November 2026: B.
 - **Left out:** A list of the work in the menu with no question, because the user asked to confirm first.
 - **Wider fix:** None.
 - **Previous examples:** The local-work question of Continue.
-- **Recommendation:** D. The first recommendation was B. D keeps B and also shows the work that the change carries into the new branch. The user's answer B stays in force until the user chooses D.
+- **Recommendation:** D. The first recommendation was B. D keeps B and also shows the work that the change carries into the new branch.
 - **Action:** ask the user, because the user said only "changes".
 
 ### 4. A repository that the cloud computer does not have
 
-Open. Added on 13 November 2026, from the design of decision 1 A.
+Answered on 13 November 2026: D. Added on the same day, from the design of decision 1 A.
 
 - **Severity:** Medium. **Effort:** Small.
 - **Source:** Design.
@@ -157,8 +158,10 @@ Design calls (my calls, 13 November 2026):
 - The repository button opens a menu with the chosen repositories of the
   org, in the order of New workspace. The current repository has a check.
   A repository that this cloud computer does not hold, also a waiting
-  repository, follows decision 4. Reason: one rule for the choice of a
-  repository.
+  repository, shows New workspace as its detail, and a note under the
+  menu says that such a repository is not in this cloud computer. A press
+  on its row opens New workspace with that repository picked, in the
+  section of this workspace, as decision 4 D says.
 - A workspace without a record of its folders holds only its current
   repository, for the menu. Reason: the Worker knows no other folder of
   it.
@@ -181,12 +184,14 @@ Design calls (my calls, 13 November 2026):
   new folder stays, and the copy skips it. Reason: the user asked for the
   copy, a skip loses no file, and the runner adds the exclude rule only
   in its start folder, so the copied files would show in Changes.
-- The question shows only when work exists, as decision 3 says. Its
+- The question shows only when work exists, as decision 3 D says. Its
   title is "Change repository?". It says that the workspace starts again
   on a new branch of the new repository, and that the old work stays in
   the old folder. It lists the local work with the `LocalWorkList` of
   Continue, an open pull request, and the pushed commits of the branch
-  that its base does not hold. A merged or closed pull request is not
+  that its base does not hold. A second list gives the local work in the
+  new folder, which moves to the new branch. A merged or closed pull
+  request is not
   work. It has Cancel and Change repository. Without such work, the
   change starts at once. Reason: with decision 1 A nothing is deleted, so
   the question says what the workspace stops following, not that work
@@ -235,17 +240,33 @@ Depends on: none
 The header, the menu, the question, the progress, the failure, and the
 note in the chat, on desktop and on a phone.
 
-- [ ] Make the repository of the mockup `WorkspaceHeader` a button with a
+- [x] Make the repository of the mockup `WorkspaceHeader` a button with a
       menu, on desktop and on a phone. Show the current repository, a
       waiting repository, and the state of decision 4.
-- [ ] Add the question of the change, with local work, a pull request,
+- [x] Add the question of the change, with local work, a pull request,
       and pushed commits. Reuse `ConfirmDialog` and `LocalWorkList`.
-- [ ] Add the progress state of the button and the failure toast.
-- [ ] Add the note of the change in the chat.
-- [ ] Add the pages to the catalogue and to `docs/mockups/catalogue.md`.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Add the progress state of the button and the failure toast.
+- [x] Add the note of the change in the chat.
+- [x] Add the pages to the catalogue and to `docs/mockups/catalogue.md`.
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages.
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
+      Evidence: `.context/repository-change/mockups-check.log` and the
+      screenshots in `.context/repository-change/shots/`.
+
+Mockup results (13 November 2026), merged into the design above:
+
+- "Not in this cloud computer" as the detail of a menu row cut the name
+  of the repository short. The row now shows New workspace as its
+  detail, and a second note under the menu says what it means.
+- The rows of the menu have no icons, as in the menu of New workspace.
+- The question shows two lists: the work that stays with the old
+  repository, with the open pull request and the pushed commits, and the
+  work of the new folder that moves to the new branch.
+- `LocalWorkList` takes an optional label and extra rows. Its default
+  output for Continue is the same.
+- The mockups keep the files and the preview of acme/storefront after the
+  change, because the fixtures have no files of acme/billing-service.
 
 ## Milestone 2: Documentation and protocol
 

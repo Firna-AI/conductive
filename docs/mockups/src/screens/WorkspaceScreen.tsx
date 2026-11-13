@@ -32,7 +32,7 @@ import { composerNotice } from './composerNotice'
 import { placeLostUpdate } from './lostUpdates'
 import { changedWorkspaces, chatWorkspacesOf } from './orgWorkspaces'
 import { viewerOf } from './sessionStarter'
-import { barOf, branchOf } from './workspaceBar'
+import { barOf, placeOf, repositoryControlOf } from './workspaceBar'
 import {
   FilesContent,
   filesPlaceholder,
@@ -99,7 +99,7 @@ export function WorkspaceScreen(props: {
     ...record,
     owner,
     name: workspaceName(state, record),
-    branch: branchOf(state, record),
+    ...placeOf(state, record),
     github: bannerSummary(state.banner),
   }
   const status = activityOf(state)
@@ -154,6 +154,7 @@ export function WorkspaceScreen(props: {
       copy={state.copyLink === 'none' ? undefined : state.copyLink}
       name={workspace.name}
       ownerOpen={state.overlay === 'reassign'}
+      repositoryControl={repositoryControlOf(state)}
       run={open.run}
       rightHidden={rightHidden}
       status={status}

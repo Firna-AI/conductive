@@ -90,9 +90,12 @@ export function startingLogFor(state: WorkspaceState): StartingLog | undefined {
 
 /**
  * The changed paths of the branch after Continue: the changed files that
- * moved to the new branch, or none. Any other branch shows every change.
+ * moved to the new branch, or none. After a repository change: none, as
+ * the new branch starts clean in the mockups. Any other branch shows every
+ * change.
  */
 function changedPaths(state: WorkspaceState): readonly string[] | undefined {
+  if (state.repositoryMove === 'changed') return []
   if (state.branch !== 'continued') return undefined
   return state.localWork === 'changes' ? unpushedWork.files : []
 }

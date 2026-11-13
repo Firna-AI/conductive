@@ -78,6 +78,11 @@
   min-width: 0;
 }
 
+/* An open menu of the repository lies below the group, so nothing clips it. */
+.metasOpen {
+  overflow: visible;
+}
+
 .mobile {
   display: flex;
   flex-shrink: 0;
