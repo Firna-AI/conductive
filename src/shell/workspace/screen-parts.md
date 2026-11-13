@@ -166,8 +166,10 @@ tools.
   address, and otherwise picks the preview in the panel.
 - On a phone each tool that the app offers is a page of the tab bar, with
   its own address.
-- The terminal mounts at its first show, then stays mounted and hidden
-  while another tool shows, so its connection stays. Its socket opens at
+- The terminal and Preview each mount at their first show, then stay
+  mounted and hidden while another tool shows. So the terminal keeps its
+  connection, and the page in the preview frame does not load again when
+  the user goes back to Preview. The socket of the terminal opens at
   the `socketPath` of the terminal state through `openSocket` of the app's
   event source, so the Mac app reaches its own Worker.
 - The mount of the Desktop tool stays for its return. It mounts at each
