@@ -768,8 +768,9 @@ Depends on: every other milestone
       On 2026-11-13 the gate passed from a copy of the branch under `/tmp`:
       1052 test files, 260 runner tests, the build, and the mockups. From
       the workspace folder under `/home/user`, 14 native shell test files
-      fail on main too, because their commands must not name `/home/user`.
-      Under parallel agent load, the Worker harness setup timed out.
+      failed. The same files pass from `/tmp` on main and on this branch.
+      Some of them check that a command does not name `/home/user`. Under
+      parallel agent load, the Worker harness setup timed out.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
