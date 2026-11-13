@@ -1,8 +1,6 @@
-import type { AgentChatEvent } from '../../src/shared/chat-events'
-import type {
-  RunnerChangeModel,
-  RunnerInterrupt,
-} from '../../src/shared/runner'
+import type { AgentChatEvent } from '../../src/shared/generated/AgentChatEvent'
+import type { RunnerChangeModel } from '../../src/shared/generated/RunnerChangeModel'
+import type { RunnerInterrupt } from '../../src/shared/generated/RunnerInterrupt'
 import type { ProviderEvent, ProviderInput } from './providers/types'
 import { cancelable } from './engine-cancel'
 import { disposeProvider } from './engine-disposal'

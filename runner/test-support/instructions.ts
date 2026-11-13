@@ -1,4 +1,4 @@
-import type { Agent } from '../../src/shared/agents'
+import type { Agent } from '../../src/shared/generated/Agent'
 import { object } from '../src/parse'
 import { createClaudeFactory } from '../src/providers/claude'
 import { createCodexFactory } from '../src/providers/codex'

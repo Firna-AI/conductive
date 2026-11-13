@@ -1,3 +1,4 @@
+import type { ChangesResponse } from '../shared/generated/ChangesResponse'
 import type { ButtonTint } from '../../docs/mockups/src/components/common/tint'
 import {
   barLabels,
@@ -10,7 +11,6 @@ import {
   type BarFacts,
   type BarModel,
 } from '../../docs/mockups/src/components/workspace/barModel'
-import type { ChangesResponse } from '../shared/files'
 import type { GitHubBanner, GitHubCapabilities } from '../shared/github'
 import { bannerStatus } from './bannerStatus'
 import { failingChecks } from './barPrompts'

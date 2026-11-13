@@ -1,10 +1,8 @@
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-
 import { onTestFinished } from 'vitest'
-
-import type { AgentChatEvent } from '../../src/shared/chat-events'
+import type { AgentChatEvent } from '../../src/shared/generated/AgentChatEvent'
 import { AgentEngine } from '../src/engine'
 import type { EngineOptions } from '../src/engine-session'
 import { agentInstructions } from '../src/instructions'

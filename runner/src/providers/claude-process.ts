@@ -1,12 +1,10 @@
 import { spawn } from 'node:child_process'
 import { Writable } from 'node:stream'
-
 import type {
   SpawnedProcess,
   SpawnOptions,
 } from '@anthropic-ai/claude-agent-sdk'
-
-import type { RunnerLogin } from '../../../src/shared/runner'
+import type { RunnerLogin } from '../../../src/shared/generated/RunnerLogin'
 import type { ProviderLifetime } from './lifetime'
 
 export function spawnClaudeProcess(

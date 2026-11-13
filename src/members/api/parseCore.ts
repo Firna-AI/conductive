@@ -1,4 +1,7 @@
-import type { Agent, AgentChoice, Effort } from '../../shared/agents'
+import type { Agent } from '../../shared/generated/Agent'
+import type { AgentChoice } from '../../shared/generated/AgentChoice'
+import type { Effort } from '../../shared/generated/Effort'
+import type { MessageSender } from '../../shared/generated/MessageSender'
 import type { OrgRole, User } from '../../shared/api'
 import { readGitHubSummary } from '../../shared/github-read'
 import type {
@@ -6,7 +9,6 @@ import type {
   OrgInvite,
   OrgMember,
 } from '../../shared/members'
-import type { MessageSender } from '../../shared/messages'
 import type { OrgSummary } from '../../shared/orgs'
 import type {
   Workspace,

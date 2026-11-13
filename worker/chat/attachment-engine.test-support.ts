@@ -1,4 +1,4 @@
-import type { AgentChatEvent } from '../../src/shared/chat-events'
+import type { AgentChatEvent } from '../../src/shared/generated/AgentChatEvent'
 import { engineFixture } from '../../runner/test-support/engine'
 import type { FakeRunner } from '../test-support/fake-runner'
 import type { attachmentFixture } from './attachment.test-support'

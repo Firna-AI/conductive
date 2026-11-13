@@ -1,6 +1,5 @@
 import { expect, it, vi } from 'vitest'
-
-import type { RunnerTurn } from '../../src/shared/runner'
+import type { RunnerTurn } from '../../src/shared/generated/RunnerTurn'
 import { turn } from '../test-support/harness'
 import { fakeCodexAccount } from '../test-support/providers'
 import { parseWorkspaceMessage } from './commands'

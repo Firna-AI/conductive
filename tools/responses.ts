@@ -1,3 +1,4 @@
+import type { MessageSender } from '../src/shared/generated/MessageSender'
 import type {
   AgentWorkspaceSummary,
   AgentListModelsResponse,
@@ -10,7 +11,6 @@ import type {
   AgentWorkspaceResponse,
   AgentWorkspaceListEntry,
 } from '../src/shared/agent-workspaces.ts'
-import type { MessageSender } from '../src/shared/messages.ts'
 import { readGitHubSummary } from '../src/shared/github-read.ts'
 import type { Workspace, WorkspaceState } from '../src/shared/workspaces.ts'
 import { agent, choice, effort, record, text, ToolInputError } from './input.ts'

@@ -1,8 +1,6 @@
-import type {
-  RunnerEvent,
-  RunnerReportRefresh,
-  WorkspaceToRunner,
-} from '../../src/shared/runner'
+import type { RunnerEvent } from '../../src/shared/generated/RunnerEvent'
+import type { RunnerReportRefresh } from '../../src/shared/generated/RunnerReportRefresh'
+import type { WorkspaceToRunner } from '../../src/shared/generated/WorkspaceToRunner'
 import type {
   RunnerConnectionRequest,
   RunnerConnector as TransportRunnerConnector,

@@ -1,10 +1,9 @@
-import type { AgentChoice } from '../../src/shared/agents'
-import type { CommitAuthor } from '../../src/shared/commit-author'
-import type { Attachment, UserMessage } from '../../src/shared/messages'
-import type {
-  RunnerTurnCredential,
-  WorkspaceToRunner,
-} from '../../src/shared/runner'
+import type { AgentChoice } from '../../src/shared/generated/AgentChoice'
+import type { CommitAuthor } from '../../src/shared/generated/CommitAuthor'
+import type { Attachment } from '../../src/shared/generated/Attachment'
+import type { UserMessage } from '../../src/shared/generated/UserMessage'
+import type { RunnerTurnCredential } from '../../src/shared/generated/RunnerTurnCredential'
+import type { WorkspaceToRunner } from '../../src/shared/generated/WorkspaceToRunner'
 import { RUNNER_PROTOCOL_VERSION } from '../../src/shared/runner'
 import { array, integer, nullable, object, oneOf, string } from './parse'
 import { parseBranches } from './instruction-state'

@@ -1,6 +1,6 @@
+import type { AgentChoice } from '../../src/shared/generated/AgentChoice'
+import type { MessageSender } from '../../src/shared/generated/MessageSender'
 import type { AgentListSectionsResponse } from '../../src/shared/agent-tools'
-import type { AgentChoice } from '../../src/shared/agents'
-import type { MessageSender } from '../../src/shared/messages'
 import { choice, record, text } from '../../tools/input'
 import { messageSender } from '../../tools/responses'
 import { HttpError } from '../http'

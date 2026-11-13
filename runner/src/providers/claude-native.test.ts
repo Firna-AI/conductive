@@ -1,9 +1,7 @@
 import { spawn } from 'node:child_process'
 import { Writable } from 'node:stream'
-
 import { afterEach, beforeEach, expect, it, onTestFinished, vi } from 'vitest'
-
-import type { RunnerLogin } from '../../../src/shared/runner'
+import type { RunnerLogin } from '../../../src/shared/generated/RunnerLogin'
 import { FakeChild } from '../../test-support/child'
 import { FakeClaudeQuery } from '../../test-support/claude-query'
 import { mockComputerServer } from '../../test-support/computer-mcp'

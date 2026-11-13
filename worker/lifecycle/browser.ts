@@ -1,4 +1,4 @@
-import type { UserMessage } from '../../src/shared/messages'
+import type { UserMessage } from '../../src/shared/generated/UserMessage'
 import {
   buildEventsPath,
   buildPath,

@@ -2,10 +2,10 @@
 
 import { act } from 'react'
 import { describe, expect, test, vi } from 'vitest'
+import type { UserMessage } from '../../shared/generated/UserMessage'
 import chipStyles from '../../../docs/mockups/src/components/chat/WorkspaceChip.module.css'
 import { routes } from '../../app/router'
 import { ManualDelay, requestLines } from '../../app/test-kit'
-import type { UserMessage } from '../../shared/messages'
 import { sessionLink } from '../../shared/session-link'
 import { sessionsPath } from '../../shared/sessions'
 import { workspacesPath, type Workspace } from '../../shared/workspaces'

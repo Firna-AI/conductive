@@ -1,6 +1,7 @@
-import type { AgentChoice } from './agents'
-import type { Timestamp } from './api'
-import type { MessageDraft, MessageSender } from './messages'
+import type { AgentChoice } from './generated/AgentChoice'
+import type { Timestamp } from './generated/Timestamp'
+import type { MessageSender } from './generated/MessageSender'
+import type { MessageDraft } from './messages'
 import { workspacePath } from './workspaces'
 
 export function sessionsPath(orgId: string, workspaceId: string): string {

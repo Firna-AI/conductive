@@ -1,0 +1,91 @@
+//! Regenerate the shared TypeScript runner protocol types.
+
+use std::{env, error::Error, fs, path::Path, process::Command};
+
+use ts_rs::{Config, TS};
+
+use cnd_runner_interface::{
+    agents, api, chat_events, commit_author, file_changes, file_tree, files, messages, ports,
+    runner, runner_commands, runner_credentials, runner_files, runner_handshake, workspaces,
+};
+
+fn main() -> Result<(), Box<dyn Error>> {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+    let output = root.join("src/shared/generated");
+    if output.exists() {
+        fs::remove_dir_all(&output)?;
+    }
+    let cfg = Config::new()
+        .with_out_dir(output)
+        .with_large_int("number")
+        .with_import_extension(Some("js"));
+    agents::Agent::export_all(&cfg)?;
+    agents::AgentChoice::export_all(&cfg)?;
+    agents::Effort::export_all(&cfg)?;
+    api::Timestamp::export_all(&cfg)?;
+    chat_events::AgentChatEvent::export_all(&cfg)?;
+    chat_events::ToolCall::export_all(&cfg)?;
+    chat_events::TurnEndReason::export_all(&cfg)?;
+    chat_events::TurnEventContext::export_all(&cfg)?;
+    commit_author::CommitAuthor::export_all(&cfg)?;
+    file_changes::BranchChangedFile::export_all(&cfg)?;
+    file_changes::ChangeKind::export_all(&cfg)?;
+    file_changes::ChangedFile::export_all(&cfg)?;
+    file_changes::ChangesResponse::export_all(&cfg)?;
+    file_changes::RunnerChangesPart::export_all(&cfg)?;
+    file_tree::FileEntry::export_all(&cfg)?;
+    file_tree::FileTreeChange::export_all(&cfg)?;
+    file_tree::FileTreeDelta::export_all(&cfg)?;
+    file_tree::FileTreeResponse::export_all(&cfg)?;
+    file_tree::RunnerFileEvent::export_all(&cfg)?;
+    file_tree::RunnerFileRevisionPart::export_all(&cfg)?;
+    file_tree::RunnerFileTreePart::export_all(&cfg)?;
+    files::DiffResponse::export_all(&cfg)?;
+    files::FileResponse::export_all(&cfg)?;
+    messages::Attachment::export_all(&cfg)?;
+    messages::MessageSender::export_all(&cfg)?;
+    messages::UserMessage::export_all(&cfg)?;
+    ports::ListeningPort::export_all(&cfg)?;
+    ports::RunnerPortsUpdated::export_all(&cfg)?;
+    runner::RunnerEvent::export_all(&cfg)?;
+    runner_commands::RunnerAttachment::export_all(&cfg)?;
+    runner_commands::RunnerBranches::export_all(&cfg)?;
+    runner_commands::RunnerChangeModel::export_all(&cfg)?;
+    runner_commands::RunnerCommand::export_all(&cfg)?;
+    runner_commands::RunnerControlCommand::export_all(&cfg)?;
+    runner_commands::RunnerInterrupt::export_all(&cfg)?;
+    runner_commands::RunnerMessageDuringTurn::export_all(&cfg)?;
+    runner_commands::RunnerReportKind::export_all(&cfg)?;
+    runner_commands::RunnerReportRefresh::export_all(&cfg)?;
+    runner_commands::RunnerTurn::export_all(&cfg)?;
+    runner_credentials::RunnerCodexAccount::export_all(&cfg)?;
+    runner_credentials::RunnerLogin::export_all(&cfg)?;
+    runner_credentials::RunnerLoginKind::export_all(&cfg)?;
+    runner_credentials::RunnerTurnCredential::export_all(&cfg)?;
+    runner_files::RunnerDiffResult::export_all(&cfg)?;
+    runner_files::RunnerFileCommand::export_all(&cfg)?;
+    runner_files::RunnerFileError::export_all(&cfg)?;
+    runner_files::RunnerFileResponse::export_all(&cfg)?;
+    runner_files::RunnerFileResult::export_all(&cfg)?;
+    runner_files::RunnerReadDiff::export_all(&cfg)?;
+    runner_files::RunnerReadFile::export_all(&cfg)?;
+    runner_handshake::RunnerConfirm::export_all(&cfg)?;
+    runner_handshake::RunnerEventEnvelope::export_all(&cfg)?;
+    runner_handshake::RunnerHello::export_all(&cfg)?;
+    runner_handshake::RunnerProtocolVersion::export_all(&cfg)?;
+    runner_handshake::RunnerResend::export_all(&cfg)?;
+    runner_handshake::RunnerToWorkspace::export_all(&cfg)?;
+    runner_handshake::RunnerWelcome::export_all(&cfg)?;
+    runner_handshake::WorkspaceToRunner::export_all(&cfg)?;
+    workspaces::StartStep::export_all(&cfg)?;
+    workspaces::WorkspaceStart::export_all(&cfg)?;
+    let status = Command::new("node")
+        .arg(root.join("node_modules/prettier/bin/prettier.cjs"))
+        .args(["--write", "src/shared/generated"])
+        .current_dir(root)
+        .status()?;
+    if !status.success() {
+        return Err("Prettier failed".into());
+    }
+    Ok(())
+}

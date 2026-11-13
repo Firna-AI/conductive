@@ -1,6 +1,5 @@
 import { expect, it } from 'vitest'
-
-import type { RunnerFileEvent } from '../../src/shared/files'
+import type { RunnerFileEvent } from '../../src/shared/generated/RunnerFileEvent'
 import { OutputSanitizer } from '../../src/shared/output-sanitizer'
 import { repositoryFixture } from '../test-support/repository'
 import { FileReporter } from './files'

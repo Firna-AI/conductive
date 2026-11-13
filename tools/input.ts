@@ -1,10 +1,12 @@
+import type { Agent } from '../src/shared/generated/Agent'
+import type { AgentChoice } from '../src/shared/generated/AgentChoice'
+import type { Effort } from '../src/shared/generated/Effort'
 import type {
   AgentCreateSessionRequest,
   AgentSendMessageRequest,
   AgentReadSessionRequest,
 } from '../src/shared/agent-sessions.ts'
 import type { AgentCreateWorkspaceRequest } from '../src/shared/agent-workspaces.ts'
-import type { Agent, AgentChoice, Effort } from '../src/shared/agents.ts'
 
 export const TOOL_AGENTS = [
   'claude',

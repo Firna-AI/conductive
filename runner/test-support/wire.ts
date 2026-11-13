@@ -1,11 +1,9 @@
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-
 import { onTestFinished, vi } from 'vitest'
-
-import type { ChangedFile } from '../../src/shared/files'
-import type { WorkspaceToRunner } from '../../src/shared/runner'
+import type { ChangedFile } from '../../src/shared/generated/ChangedFile'
+import type { WorkspaceToRunner } from '../../src/shared/generated/WorkspaceToRunner'
 import type { RunnerConnection as TransportRunnerConnection } from '../../src/shared/runner-transport'
 import {
   FakeDurableObjectEndpoint,

@@ -1,11 +1,8 @@
 import { mkdir } from 'node:fs/promises'
 import { join } from 'node:path'
-
+import type { CommitAuthor } from '../../../src/shared/generated/CommitAuthor'
 import { TOOL_ENV } from '../../../tools/context'
-import {
-  commitAuthorEnvironment,
-  type CommitAuthor,
-} from '../../../src/shared/commit-author'
+import { commitAuthorEnvironment } from '../../../src/shared/commit-author'
 import type { WorkspaceToolContext } from './workspace-tools'
 
 export async function prepareProviderHome(home: string): Promise<void> {

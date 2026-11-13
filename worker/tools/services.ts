@@ -1,3 +1,5 @@
+import type { AgentChoice } from '../../src/shared/generated/AgentChoice'
+import type { MessageSender } from '../../src/shared/generated/MessageSender'
 import type { AgentWorkspaceSummary } from '../../src/shared/agent-tools'
 import type {
   AgentListSessionsResponse,
@@ -18,10 +20,8 @@ import type {
   AgentRenameWorkspaceRequest,
   AgentMoveWorkspaceRequest,
 } from '../../src/shared/agent-workspaces'
-import type { AgentChoice, AgentModel } from '../../src/shared/agents'
-import type { MessageSender } from '../../src/shared/messages'
+import type { AgentModel } from '../../src/shared/agents'
 import type { User } from '../../src/shared/api'
-
 import type {
   AgentCreateSectionRequest,
   AgentCreateSectionResponse,

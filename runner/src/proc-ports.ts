@@ -1,6 +1,5 @@
 import { readdir, readFile, readlink } from 'node:fs/promises'
-
-import type { ListeningPort } from '../../src/shared/ports'
+import type { ListeningPort } from '../../src/shared/generated/ListeningPort'
 import { portFolder, portName } from './port-metadata'
 import { listeningSockets, type ListeningSocket } from './socket-table'
 

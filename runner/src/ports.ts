@@ -1,4 +1,5 @@
-import type { ListeningPort, RunnerPortsUpdated } from '../../src/shared/ports'
+import type { ListeningPort } from '../../src/shared/generated/ListeningPort'
+import type { RunnerPortsUpdated } from '../../src/shared/generated/RunnerPortsUpdated'
 import { PORT_REPORT_MAX_PORTS } from '../../src/shared/ports'
 import { SerialQueue } from './serial-queue'
 

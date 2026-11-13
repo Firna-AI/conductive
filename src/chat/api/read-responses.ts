@@ -1,5 +1,6 @@
+import type { AgentChoice } from '../../shared/generated/AgentChoice'
 import type { AgentLoginStatus, EndpointModelList } from '../../shared/account'
-import type { AgentChoice, AgentModel } from '../../shared/agents'
+import type { AgentModel } from '../../shared/agents'
 import type { Org, User } from '../../shared/api'
 import type { SendMessageResponse } from '../../shared/messages'
 import type {

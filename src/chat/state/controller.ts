@@ -1,5 +1,5 @@
+import type { AgentChoice } from '../../shared/generated/AgentChoice'
 import type { IntakeRefusals } from '../../app/draft-files'
-import type { AgentChoice } from '../../shared/agents'
 import type { DeviceApprovalAction } from '../../shared/device'
 import type { TranscriptDetail } from '../../shared/sessions'
 import type { WorkspaceTab, WorkspaceView } from '../../shared/workspace-view'

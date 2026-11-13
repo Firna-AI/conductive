@@ -1,7 +1,7 @@
+import type { CommitAuthor } from '../../src/shared/generated/CommitAuthor'
 import {
   COMMIT_AUTHOR_VARIABLES,
   commitAuthor,
-  type CommitAuthor,
 } from '../../src/shared/commit-author'
 import { TOOL_ENV } from '../../tools/context'
 import { readUser } from '../data/users'

@@ -1,5 +1,5 @@
-import type { AgentChatEvent } from '../../src/shared/chat-events'
-import type { ChangedFile } from '../../src/shared/files'
+import type { AgentChatEvent } from '../../src/shared/generated/AgentChatEvent'
+import type { ChangedFile } from '../../src/shared/generated/ChangedFile'
 import type { Checkpoint } from './checkpoint'
 import type { EngineOptions, SessionRuntime } from './engine-session'
 import type { ProviderEvent } from './providers/types'

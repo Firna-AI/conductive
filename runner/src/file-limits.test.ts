@@ -1,6 +1,6 @@
 import { expect, it, onTestFinished } from 'vitest'
-
-import type { FileEntry, RunnerFileEvent } from '../../src/shared/files'
+import type { FileEntry } from '../../src/shared/generated/FileEntry'
+import type { RunnerFileEvent } from '../../src/shared/generated/RunnerFileEvent'
 import { emptySnapshot, wireFixture } from '../test-support/wire'
 import { Runner } from './runner'
 import { EventStore } from './state'

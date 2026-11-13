@@ -1,5 +1,6 @@
+import type { ListeningPort } from '../../src/shared/generated/ListeningPort'
+import type { RunnerPortsUpdated } from '../../src/shared/generated/RunnerPortsUpdated'
 import { jsonBytes } from '../../src/shared/event-limits'
-import type { ListeningPort, RunnerPortsUpdated } from '../../src/shared/ports'
 
 const PRIVATE_REPORT_MAX_BYTES = 524_288
 

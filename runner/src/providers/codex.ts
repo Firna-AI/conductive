@@ -1,3 +1,4 @@
+import type { RunnerBranches } from '../../../src/shared/generated/RunnerBranches'
 import { WORKSPACE_TOOLS_MCP } from '../../../src/shared/agent-tools'
 import { TOOL_ENV } from '../../../tools/context'
 import { object, string } from '../parse'
@@ -18,7 +19,6 @@ import { providerMessage } from './message'
 import { startProcess, type StartProcess } from './process'
 import { JsonRpc } from './rpc'
 import type { ProviderFactory, ProviderInput } from './types'
-import type { RunnerBranches } from '../../../src/shared/runner'
 
 function input(command: ProviderInput, branches?: RunnerBranches | null) {
   return [

@@ -1,4 +1,5 @@
-import type { FileTreeChange, RunnerFileEvent } from '../../src/shared/files'
+import type { FileTreeChange } from '../../src/shared/generated/FileTreeChange'
+import type { RunnerFileEvent } from '../../src/shared/generated/RunnerFileEvent'
 import type { RepositorySnapshot } from './repository'
 
 export function treeUpdate(

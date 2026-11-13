@@ -1,6 +1,5 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
-
-import type { RunnerEvent } from '../../src/shared/runner'
+import type { RunnerEvent } from '../../src/shared/generated/RunnerEvent'
 import { ProcPortScanner } from '../../runner/src/proc-ports'
 import { PortReporter } from '../../runner/src/ports'
 import { procFixture } from '../../runner/test-support/proc'

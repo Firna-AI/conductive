@@ -92,6 +92,10 @@ Run each command from the repository root, with Node 24 from `.nvmrc`.
   strict build into `mokly-static/`.
 - Mockup preview: `npm run mockups:serve`. It serves the catalogue at
   `http://127.0.0.1:4173`, and it watches the edits.
+- Shared runner types: `cargo run -p cnd-runner-interface --example export_bindings`.
+  It regenerates every runner and agent chat event type with `ts-rs`, then
+  formats `src/shared/generated/` with Prettier. Install the root npm
+  dependencies first.
 - Rust checks: `cargo fmt --all -- --check`,
   `cargo clippy --workspace --all-targets -- -D warnings`, and
   `cargo test --workspace`. `cargo test -p <crate>` runs the tests of one
@@ -175,6 +179,16 @@ Apple silicon Mac jobs on Blacksmith.
   listed feature, update the status of its row in the same change. The
   claim rules are in
   [Conductor comparison](docs/protocol/conductor-comparison.md#statuses).
+
+- Rust owns the runner messages and their dependent types in
+  `crates/cnd-runner-interface/`. `ts-rs` writes their TypeScript into
+  `src/shared/generated/`. Import each generated type directly. Commit
+  generated files. Never edit them by hand. Runtime constants and readers
+  stay in `src/shared/`. The generator adds no check to the gate.
+- Wire 64-bit integers use JSON numbers and TypeScript `number`. Values
+  must stay within JavaScript's safe integer range, from -(2^53 - 1) to
+  2^53 - 1. Counts are non-negative. Wire dates use Unix milliseconds.
+  Decimal measurements use JSON numbers. IDs and model names are strings.
 
 ## Product
 

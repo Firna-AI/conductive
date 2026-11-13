@@ -1,4 +1,5 @@
-import type { Timestamp } from './api'
+import type { Timestamp } from './generated/Timestamp'
+import type { WorkspaceStart } from './generated/WorkspaceStart'
 import type { ChatEvent } from './chat-events'
 import type { FileEvent } from './files'
 import type { GitHubBanner, GitHubChecksResponse } from './github'
@@ -7,7 +8,6 @@ import {
   workspacePath,
   type Workspace,
   type WorkspaceResponse,
-  type WorkspaceStart,
 } from './workspaces'
 
 export function workspaceEventsPath(

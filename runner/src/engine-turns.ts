@@ -1,4 +1,4 @@
-import type { RunnerCommand } from '../../src/shared/runner'
+import type { RunnerCommand } from '../../src/shared/generated/RunnerCommand'
 import type { EngineOptions } from './engine-session'
 import { turnKey, type SavedTurn } from './state-turns'
 

@@ -1,6 +1,5 @@
 import { expect, it } from 'vitest'
-
-import type { ChangedFile } from '../../src/shared/files'
+import type { ChangedFile } from '../../src/shared/generated/ChangedFile'
 import { turn } from '../test-support/harness'
 import { wireFixture } from '../test-support/wire'
 import { mapTool } from './providers/tool'

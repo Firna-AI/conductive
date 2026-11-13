@@ -1,8 +1,8 @@
+import type { Attachment } from '../../shared/generated/Attachment'
 import type { AccountResponse } from '../../shared/account'
 import type { User } from '../../shared/api'
 import { BASE_IMAGE } from '../../shared/base-image'
 import type { MembersResponse, PendingOrgInvite } from '../../shared/members'
-import type { Attachment } from '../../shared/messages'
 import type {
   GetStartedResponse,
   GetStartedStep,

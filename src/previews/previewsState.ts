@@ -1,5 +1,5 @@
+import type { ListeningPort } from '../shared/generated/ListeningPort'
 import type { WorkspaceEvent } from '../shared/events'
-import type { ListeningPort } from '../shared/ports'
 import type { Preview } from '../shared/previews'
 import type { ToolError } from '../terminal/tool-parts/request'
 

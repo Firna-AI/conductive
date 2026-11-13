@@ -1,4 +1,5 @@
-import type { MessageSender, SendMessageRequest } from '../../shared/messages'
+import type { MessageSender } from '../../shared/generated/MessageSender'
+import type { SendMessageRequest } from '../../shared/messages'
 import {
   workspacesPath,
   type CreateWorkspaceResponse,

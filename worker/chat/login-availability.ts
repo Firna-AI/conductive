@@ -1,4 +1,4 @@
-import type { Agent } from '../../src/shared/agents'
+import type { Agent } from '../../src/shared/generated/Agent'
 import { readEndpointAddress } from '../../src/shared/endpoint-address'
 import type { Session } from '../../src/shared/sessions'
 import { workspaceTokenResourcePredicate } from '../data/workspace-token-access'

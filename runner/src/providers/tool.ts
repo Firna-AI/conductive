@@ -1,4 +1,4 @@
-import type { ToolCall } from '../../../src/shared/chat-events'
+import type { ToolCall } from '../../../src/shared/generated/ToolCall'
 import { object, string } from '../parse'
 
 /** The arguments that can name the subject of a call, in order. */

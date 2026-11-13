@@ -1,4 +1,5 @@
-import { effortLabels, type AgentModel, type Effort } from '../../shared/agents'
+import type { Effort } from '../../shared/generated/Effort'
+import { effortLabels, type AgentModel } from '../../shared/agents'
 
 const effortOrder = Object.keys(effortLabels)
 

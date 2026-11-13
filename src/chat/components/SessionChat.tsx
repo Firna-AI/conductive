@@ -1,5 +1,6 @@
 import { useMemo, type ReactNode } from 'react'
-import { modelLabel, type Agent } from '../../shared/agents'
+import type { Agent } from '../../shared/generated/Agent'
+import { modelLabel } from '../../shared/agents'
 import type { WorkspaceState } from '../../shared/workspaces'
 import { PendingCommands } from '../device/PendingCommands'
 import { DeviceLoadNotice, sessionCommands } from '../device/session-commands'

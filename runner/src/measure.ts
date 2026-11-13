@@ -1,11 +1,8 @@
 import { randomUUID } from 'node:crypto'
 import { performance } from 'node:perf_hooks'
 import { homedir } from 'node:os'
-
-import type {
-  RunnerLogin,
-  RunnerMessageDuringTurn,
-} from '../../src/shared/runner'
+import type { RunnerLogin } from '../../src/shared/generated/RunnerLogin'
+import type { RunnerMessageDuringTurn } from '../../src/shared/generated/RunnerMessageDuringTurn'
 import { oneOf } from './parse'
 import { warmClaude } from './providers/binaries'
 import { createClaudeFactory } from './providers/claude'

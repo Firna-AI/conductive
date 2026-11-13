@@ -1,10 +1,9 @@
 import { expect, it, vi } from 'vitest'
-
+import type { ChangedFile } from '../../src/shared/generated/ChangedFile'
 import { engineFixture } from '../test-support/engine'
 import { FakeProvider } from '../test-support/providers'
 import { deferred, sessionTurn, stop } from '../test-support/runtime'
 import type { Checkpoint } from './checkpoint'
-import type { ChangedFile } from '../../src/shared/files'
 import type { ProviderOptions, ProviderProcess } from './providers/types'
 
 it('keeps another session live while one provider start waits and disposes a canceled late provider', async () => {

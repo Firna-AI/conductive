@@ -1,13 +1,10 @@
 import { WebSocket } from 'miniflare'
-
+import type { RunnerCommand } from '../../../src/shared/generated/RunnerCommand'
+import type { RunnerEvent } from '../../../src/shared/generated/RunnerEvent'
+import type { RunnerEventEnvelope } from '../../../src/shared/generated/RunnerEventEnvelope'
+import type { RunnerToWorkspace } from '../../../src/shared/generated/RunnerToWorkspace'
 import { parseWorkspaceMessage } from '../../../runner/src/commands'
-import {
-  RUNNER_PROTOCOL_VERSION,
-  type RunnerCommand,
-  type RunnerEvent,
-  type RunnerEventEnvelope,
-  type RunnerToWorkspace,
-} from '../../../src/shared/runner'
+import { RUNNER_PROTOCOL_VERSION } from '../../../src/shared/runner'
 import type { OuterRuntime } from './outer-runtime.test-support'
 import { requestRunner } from './runner-socket.test-support'
 

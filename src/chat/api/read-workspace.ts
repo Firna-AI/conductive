@@ -1,11 +1,11 @@
+import type { StartStep } from '../../shared/generated/StartStep'
+import type { WorkspaceStart } from '../../shared/generated/WorkspaceStart'
 import type { ChatEvent } from '../../shared/chat-events'
 import type { WorkspaceEvent } from '../../shared/events'
 import { readGitHubSummary } from '../../shared/github-read'
 import type {
   OrderedWorkspaceResponse,
-  StartStep,
   Workspace,
-  WorkspaceStart,
   WorkspaceState,
 } from '../../shared/workspaces'
 import { count, isRecord, list, nullable, oneOf, record, text } from './json'

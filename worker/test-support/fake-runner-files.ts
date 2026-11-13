@@ -1,10 +1,8 @@
-import type {
-  FileEvent,
-  RunnerChangesPart,
-  RunnerFileEvent,
-  RunnerFileRevisionPart,
-  RunnerFileTreePart,
-} from '../../src/shared/files'
+import type { RunnerChangesPart } from '../../src/shared/generated/RunnerChangesPart'
+import type { RunnerFileEvent } from '../../src/shared/generated/RunnerFileEvent'
+import type { RunnerFileRevisionPart } from '../../src/shared/generated/RunnerFileRevisionPart'
+import type { RunnerFileTreePart } from '../../src/shared/generated/RunnerFileTreePart'
+import type { FileEvent } from '../../src/shared/files'
 
 function collectParts<Part extends RunnerFileRevisionPart>(
   reports: Map<string, Map<number, Part>>,

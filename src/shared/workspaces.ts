@@ -1,7 +1,11 @@
-import type { AgentChoice } from './agents'
-import { orgPath, type Timestamp } from './api'
+import type { AgentChoice } from './generated/AgentChoice'
+import type { Timestamp } from './generated/Timestamp'
+import type { MessageSender } from './generated/MessageSender'
+import type { UserMessage } from './generated/UserMessage'
+import type { WorkspaceStart } from './generated/WorkspaceStart'
+import { orgPath } from './api'
 import type { GitHubSummary } from './github'
-import type { MessageSender, SendMessageRequest, UserMessage } from './messages'
+import type { SendMessageRequest } from './messages'
 
 export const WORKSPACE_RESTORE_MS = 14 * 24 * 60 * 60 * 1_000
 
@@ -61,20 +65,6 @@ export interface Workspace {
   updatedAt: Timestamp
   archivedAt: Timestamp | null
   restoreUntil: Timestamp | null
-}
-
-export interface StartStep {
-  id: string
-  label: string
-  state: 'running' | 'completed' | 'failed'
-  startedAt: Timestamp
-  completedAt: Timestamp | null
-}
-
-export interface WorkspaceStart {
-  kind: 'create' | 'resume'
-  startedAt: Timestamp
-  steps: readonly StartStep[]
 }
 
 export interface WorkspaceResponse {

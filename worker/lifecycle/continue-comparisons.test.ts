@@ -1,11 +1,9 @@
 import { rm } from 'node:fs/promises'
 import { join } from 'node:path'
-
 import { expect, it } from 'vitest'
-
+import type { RunnerFileEvent } from '../../src/shared/generated/RunnerFileEvent'
 import { FileReporter } from '../../runner/src/files'
 import { Repository } from '../../runner/src/repository'
-import type { RunnerFileEvent } from '../../src/shared/files'
 import { continueNativeFixture } from './continue-native.test-support'
 
 it('keeps the retained reporter and diffs on the current workspace base after Continue and its default rename', async () => {

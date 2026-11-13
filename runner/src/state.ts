@@ -1,14 +1,12 @@
 import { randomUUID } from 'node:crypto'
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises'
 import { dirname } from 'node:path'
-
-import type { Agent } from '../../src/shared/agents'
+import type { Agent } from '../../src/shared/generated/Agent'
+import type { RunnerEvent } from '../../src/shared/generated/RunnerEvent'
+import type { RunnerEventEnvelope } from '../../src/shared/generated/RunnerEventEnvelope'
+import type { RunnerBranches } from '../../src/shared/generated/RunnerBranches'
 import { FILE_EVENT_MAX_BYTES } from '../../src/shared/files'
-import {
-  RUNNER_EVENT_MAX_BYTES,
-  type RunnerEvent,
-  type RunnerEventEnvelope,
-} from '../../src/shared/runner'
+import { RUNNER_EVENT_MAX_BYTES } from '../../src/shared/runner'
 import { jsonBytes } from '../../src/shared/event-limits'
 import { parseEnvelope, parseEvent } from './stored-events'
 import { array, integer, object, oneOf, string } from './parse'
@@ -21,7 +19,6 @@ import {
 } from './state-turns'
 import { SerialQueue } from './serial-queue'
 import { parseBranches } from './instruction-state'
-import type { RunnerBranches } from '../../src/shared/runner'
 import {
   emptyReports,
   parseReports,

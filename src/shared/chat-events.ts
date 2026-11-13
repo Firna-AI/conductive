@@ -1,9 +1,8 @@
+import type { MessageSender } from './generated/MessageSender'
+import type { UserMessage } from './generated/UserMessage'
+import type { RunnerEvent } from './generated/RunnerEvent'
+import type { AgentChatEvent } from './generated/AgentChatEvent'
 import type { TurnStopRequester } from './session-stop'
-import type { AgentChoice } from './agents'
-import type { Timestamp } from './api'
-import type { ChangedFile } from './files'
-import type { MessageSender, UserMessage } from './messages'
-import type { RunnerEvent } from './runner'
 import type { Session } from './sessions'
 
 /**
@@ -20,78 +19,6 @@ export const TURN_COMPLETED_MAX_FILES = 200
  * brackets, commas, and escapes. This bounds lists with very long file paths.
  */
 export const TURN_COMPLETED_FILES_MAX_BYTES = 262_144
-
-export interface TurnEventContext {
-  sessionId: string
-  turnId: string
-}
-
-/** A cause other than the end of the agent's reply that finished a turn. */
-export type TurnEndReason = 'background_work_limit'
-
-export interface ToolCall {
-  id: string
-  kind: 'read' | 'search' | 'create' | 'edit' | 'run' | 'computer' | 'other'
-  target: string
-  /**
-   * Keep the longest source prefix that fits TOOL_DETAIL_MAX_BYTES.
-   * Replace lone UTF-16 surrogates with U+FFFD before counting or truncating.
-   * Never split a Unicode code point. JSON escaping counts toward the cap.
-   * Null means no detail. Do not insert an omission notice into this text.
-   */
-  detail: string | null
-  /**
-   * UTF-8 bytes of the omitted normalized suffix, before JSON escaping.
-   * This non-negative safe integer is zero for null or complete detail.
-   * Each tool update counts its full source detail, not previous updates.
-   */
-  omittedDetailBytes: number
-  state: 'running' | 'done' | 'stopped' | 'failed'
-}
-
-/** Provider-neutral events. SDK messages and credentials never enter this union. */
-export type AgentChatEvent = TurnEventContext &
-  (
-    | {
-        type: 'turn.started'
-        senderId: string
-        choice: AgentChoice
-        startedAt: Timestamp
-        messageIds: readonly string[]
-      }
-    | { type: 'turn.thinking' }
-    | { type: 'assistant.delta'; messageId: string; text: string }
-    | {
-        type: 'assistant.completed'
-        messageId: string
-        text: string
-        /** One answer can respond to several user messages. */
-        userMessageIds: readonly string[]
-      }
-    | { type: 'tool.updated'; tool: ToolCall }
-    | {
-        type: 'turn.completed'
-        state: 'finished' | 'stopped'
-        durationMs: number
-        endReason?: TurnEndReason
-        /**
-         * Keep a prefix of the full unique-path list. Entries stay whole.
-         * Apply both TURN_COMPLETED_MAX_FILES and TURN_COMPLETED_FILES_MAX_BYTES.
-         */
-        files: readonly ChangedFile[]
-        /** Unknown changed files. When present, files is empty and omittedFileCount is zero. */
-        filesUnavailable?: true
-        /** Full list length minus files.length. A non-negative safe integer. */
-        omittedFileCount: number
-        userMessageIds: readonly string[]
-      }
-    | {
-        type: 'turn.failed'
-        error: { code: string; message: string }
-        retryMessageId: string
-        durationMs: number
-      }
-  )
 
 export type RunnerEventRefusalReason =
   'too_large' | 'invalid' | 'turn_not_active'

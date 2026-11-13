@@ -1,8 +1,8 @@
-import type { UserMessage } from '../../shared/messages'
+import type { UserMessage } from '../../shared/generated/UserMessage'
+import type { StartStep } from '../../shared/generated/StartStep'
 import { attachmentFiles } from '../../app/dev/attachment-files'
 import type {
   OrderedWorkspaceResponse,
-  StartStep,
   WorkspaceState,
 } from '../../shared/workspaces'
 import type { DevBackend } from './dev-backend'

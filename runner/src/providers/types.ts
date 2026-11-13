@@ -1,13 +1,12 @@
-import type { AgentChoice } from '../../../src/shared/agents'
-import type { ToolCall, TurnEndReason } from '../../../src/shared/chat-events'
-import type { CommitAuthor } from '../../../src/shared/commit-author'
-import type {
-  RunnerLogin,
-  RunnerTurnCredential,
-  RunnerMessageDuringTurn,
-  RunnerTurn,
-  RunnerBranches,
-} from '../../../src/shared/runner'
+import type { AgentChoice } from '../../../src/shared/generated/AgentChoice'
+import type { ToolCall } from '../../../src/shared/generated/ToolCall'
+import type { TurnEndReason } from '../../../src/shared/generated/TurnEndReason'
+import type { CommitAuthor } from '../../../src/shared/generated/CommitAuthor'
+import type { RunnerLogin } from '../../../src/shared/generated/RunnerLogin'
+import type { RunnerTurnCredential } from '../../../src/shared/generated/RunnerTurnCredential'
+import type { RunnerMessageDuringTurn } from '../../../src/shared/generated/RunnerMessageDuringTurn'
+import type { RunnerTurn } from '../../../src/shared/generated/RunnerTurn'
+import type { RunnerBranches } from '../../../src/shared/generated/RunnerBranches'
 import type { ProviderLifetime } from './lifetime'
 import type { WorkspaceToolContext } from './workspace-tools'
 

@@ -1,9 +1,9 @@
+import type { UserMessage } from '../src/shared/generated/UserMessage'
 import type {
   AgentCreateSessionResponse,
   AgentSendMessageResponse,
   AgentSessionResume,
 } from '../src/shared/agent-sessions.ts'
-import type { UserMessage } from '../src/shared/messages.ts'
 import type { Session } from '../src/shared/sessions.ts'
 import { choice, record, text, ToolInputError } from './input.ts'
 import {

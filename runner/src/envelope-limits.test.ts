@@ -1,6 +1,5 @@
 import { expect, it, onTestFinished } from 'vitest'
-
-import type { RunnerEventEnvelope } from '../../src/shared/runner'
+import type { RunnerEventEnvelope } from '../../src/shared/generated/RunnerEventEnvelope'
 import { FakeDurableObjectEndpoint } from '../../worker/test-support/fake-durable-object'
 import { diskFixture } from '../test-support/disk'
 import { turn } from '../test-support/harness'

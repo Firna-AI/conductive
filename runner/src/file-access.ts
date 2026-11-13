@@ -1,10 +1,10 @@
 import { constants } from 'node:fs'
 import { open, readlink, realpath, type FileHandle } from 'node:fs/promises'
 import { dirname, isAbsolute, relative, resolve, sep } from 'node:path'
-
+import type { FileResponse } from '../../src/shared/generated/FileResponse'
+import type { RunnerFileError } from '../../src/shared/generated/RunnerFileError'
 import { isFilePath } from '../../src/shared/file-path'
-import { FILE_READ_MAX_BYTES, type FileResponse } from '../../src/shared/files'
-import type { RunnerFileError } from '../../src/shared/runner-files'
+import { FILE_READ_MAX_BYTES } from '../../src/shared/files'
 import { decodeUtf8 } from '../../src/shared/utf8'
 
 export class FileAccessError extends Error {

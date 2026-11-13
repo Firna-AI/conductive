@@ -1,4 +1,5 @@
-import type { AgentChoice, AgentModel } from '../../src/shared/agents'
+import type { AgentChoice } from '../../src/shared/generated/AgentChoice'
+import type { AgentModel } from '../../src/shared/agents'
 import { choice, identifier, record } from '../chat/inputs'
 import type { AppEnv } from '../env'
 import { HttpError } from '../http'

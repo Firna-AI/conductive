@@ -1,14 +1,12 @@
+import type { RunnerCommand } from '../../src/shared/generated/RunnerCommand'
+import type { RunnerEvent } from '../../src/shared/generated/RunnerEvent'
+import type { RunnerEventEnvelope } from '../../src/shared/generated/RunnerEventEnvelope'
+import type { WorkspaceToRunner } from '../../src/shared/generated/WorkspaceToRunner'
+import type { RunnerFileResponse } from '../../src/shared/generated/RunnerFileResponse'
 import {
   RUNNER_PROTOCOL_VERSION,
   RUNNER_SUPPORTED_LOGIN_KINDS,
 } from '../../src/shared/runner'
-import type {
-  RunnerCommand,
-  RunnerEvent,
-  RunnerEventEnvelope,
-  WorkspaceToRunner,
-} from '../../src/shared/runner'
-import type { RunnerFileResponse } from '../../src/shared/runner-files'
 import type {
   RunnerConnection as TransportRunnerConnection,
   RunnerConnectionRequest,

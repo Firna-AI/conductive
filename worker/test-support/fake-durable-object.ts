@@ -1,19 +1,17 @@
+import type { RunnerCommand } from '../../src/shared/generated/RunnerCommand'
+import type { RunnerEventEnvelope } from '../../src/shared/generated/RunnerEventEnvelope'
+import type { RunnerHello } from '../../src/shared/generated/RunnerHello'
+import type { RunnerToWorkspace } from '../../src/shared/generated/RunnerToWorkspace'
+import type { WorkspaceToRunner } from '../../src/shared/generated/WorkspaceToRunner'
+import type { RunnerFileResponse } from '../../src/shared/generated/RunnerFileResponse'
 import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 import type { RunnerEventRefusalReason } from '../../src/shared/chat-events'
 import type {
   WorkspaceEvent,
   WorkspaceEventEnvelope,
 } from '../chat/workspace-events'
-import {
-  RUNNER_PROTOCOL_VERSION,
-  type RunnerCommand,
-  type RunnerEventEnvelope,
-  type RunnerHello,
-  type RunnerToWorkspace,
-  type WorkspaceToRunner,
-} from '../../src/shared/runner'
+import { RUNNER_PROTOCOL_VERSION } from '../../src/shared/runner'
 import type { RunnerConnector } from '../../src/shared/runner-transport'
-import type { RunnerFileResponse } from '../../src/shared/runner-files'
 import { FakeRunnerFileReports } from './fake-runner-files'
 import { FakeRunnerConnection } from './runner-connection'
 

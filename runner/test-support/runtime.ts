@@ -1,4 +1,4 @@
-import type { AgentChatEvent } from '../../src/shared/chat-events'
+import type { AgentChatEvent } from '../../src/shared/generated/AgentChatEvent'
 import { turn } from './harness'
 
 export function deferred<T>() {

@@ -1,4 +1,4 @@
-import type { RunnerAttachment } from '../../../src/shared/runner'
+import type { RunnerAttachment } from '../../../src/shared/generated/RunnerAttachment'
 import type { ProviderInput } from './types'
 
 export const attachmentReadInstruction =

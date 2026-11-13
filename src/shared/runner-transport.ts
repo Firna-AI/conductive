@@ -1,6 +1,7 @@
-import type { RunnerToWorkspace, WorkspaceToRunner } from './runner'
-
 /** An adapter can use a native WebSocket, Node, or the in-memory test endpoint. */
+
+import type { RunnerToWorkspace } from './generated/RunnerToWorkspace'
+import type { WorkspaceToRunner } from './generated/WorkspaceToRunner'
 export interface RunnerConnection<
   Message extends WorkspaceToRunner = WorkspaceToRunner,
 > {

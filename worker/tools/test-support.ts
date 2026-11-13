@@ -1,9 +1,9 @@
 import { vi } from 'vitest'
+import type { AgentChoice } from '../../src/shared/generated/AgentChoice'
 import { routes } from '../../src/app/router'
-
 import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 import { sessionLink } from '../../src/shared/session-link'
-import type { AgentChoice, AgentModel } from '../../src/shared/agents'
+import type { AgentModel } from '../../src/shared/agents'
 import { createWorkspaceToolClient } from '../../tools/client'
 import { TOOL_ENV, TOOL_TURN_HEADER } from '../../tools/context'
 import { requestBodyEntry } from '../http/request-body'

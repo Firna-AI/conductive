@@ -1,10 +1,7 @@
 import { watch } from 'node:fs'
-
-import type { RunnerFileEvent } from '../../src/shared/files'
-import type {
-  RunnerFileCommand,
-  RunnerFileResponse,
-} from '../../src/shared/runner-files'
+import type { RunnerFileEvent } from '../../src/shared/generated/RunnerFileEvent'
+import type { RunnerFileCommand } from '../../src/shared/generated/RunnerFileCommand'
+import type { RunnerFileResponse } from '../../src/shared/generated/RunnerFileResponse'
 import { FileAccessError, fileTooLarge } from './file-access'
 import { splitFileReport } from './file-parts'
 import { changesUpdated, treeUpdate } from './file-updates'

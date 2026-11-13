@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import type { AgentChoice } from '../../shared/agents'
+import type { AgentChoice } from '../../shared/generated/AgentChoice'
 import { chatHistoryPath } from '../../shared/events'
 import type { FakeApiServer } from '../../test-support/fake-api'
 import { sessionsPath } from '../../shared/sessions'

@@ -1,4 +1,5 @@
-import type { Agent, Effort } from './agents'
+import type { Agent } from './generated/Agent'
+import type { Effort } from './generated/Effort'
 import { MACHINE_PATHS, type AgentWorkspaceSummary } from './agent-tools.ts'
 import type { Workspace } from './workspaces'
 

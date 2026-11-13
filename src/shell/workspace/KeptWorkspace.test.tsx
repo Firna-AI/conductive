@@ -2,9 +2,9 @@
 
 import { act } from 'react'
 import { describe, expect, test, vi } from 'vitest'
+import type { AgentChoice } from '../../shared/generated/AgentChoice'
 import { HeldRequests, requestLines } from '../../app/test-kit'
 import { ACCOUNT_PATHS } from '../../shared/account'
-import type { AgentChoice } from '../../shared/agents'
 import { orgPath } from '../../shared/api'
 import { membersPath } from '../../shared/members'
 import { sessionsPath } from '../../shared/sessions'

@@ -1,8 +1,10 @@
-import type { Agent, AgentChoice } from '../../src/shared/agents'
-import type { AgentChatEvent } from '../../src/shared/chat-events'
-import type { ChangedFile } from '../../src/shared/files'
+import type { Agent } from '../../src/shared/generated/Agent'
+import type { AgentChoice } from '../../src/shared/generated/AgentChoice'
+import type { AgentChatEvent } from '../../src/shared/generated/AgentChatEvent'
+import type { ChangedFile } from '../../src/shared/generated/ChangedFile'
+import type { RunnerTurn } from '../../src/shared/generated/RunnerTurn'
+import type { RunnerBranches } from '../../src/shared/generated/RunnerBranches'
 import { MACHINE_PATHS } from '../../src/shared/agent-tools'
-import type { RunnerTurn } from '../../src/shared/runner'
 import type { Checkpoint } from './checkpoint'
 import type {
   ProviderEvent,
@@ -16,7 +18,6 @@ import { failureCause } from './providers/failure'
 import { cancelable } from './engine-cancel'
 import { ProviderLifetime } from './providers/lifetime'
 import type { WorkspaceToolRuntime } from './providers/workspace-tools'
-import type { RunnerBranches } from '../../src/shared/runner'
 import type { BuiltInstructions } from './instruction-state'
 import type { BackgroundWait } from './engine-background'
 

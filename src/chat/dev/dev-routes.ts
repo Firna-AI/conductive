@@ -1,6 +1,7 @@
+import type { Attachment } from '../../shared/generated/Attachment'
+import type { UserMessage } from '../../shared/generated/UserMessage'
 import { filePaths } from '../../shared/files'
 import { attachmentFiles, readCopiedFile } from '../../app/dev/attachment-files'
-import type { Attachment, UserMessage } from '../../shared/messages'
 import { attachmentPath } from '../../shared/attachment-paths'
 import { sessionsPath, type Session } from '../../shared/sessions'
 import { workspaceViewPath } from '../../shared/workspace-view'

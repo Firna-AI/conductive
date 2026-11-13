@@ -1,6 +1,5 @@
-import type { UserMessage } from '../../../src/shared/messages'
-import type { RunnerBranches } from '../../../src/shared/runner'
-
+import type { UserMessage } from '../../../src/shared/generated/UserMessage'
+import type { RunnerBranches } from '../../../src/shared/generated/RunnerBranches'
 export function providerMessage(
   message: UserMessage,
   current?: RunnerBranches,

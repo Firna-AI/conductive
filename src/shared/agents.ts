@@ -1,12 +1,6 @@
-export type Agent = 'claude' | 'codex'
-export type Effort = 'none' | 'low' | 'medium' | 'high' | 'xhigh' | 'max'
-
-export interface AgentChoice {
-  agent: Agent
-  model: string
-  effort: Effort
-}
-
+import type { AgentChoice } from './generated/AgentChoice'
+import type { Agent } from './generated/Agent'
+import type { Effort } from './generated/Effort'
 export interface AgentModel {
   agent: Agent
   model: string

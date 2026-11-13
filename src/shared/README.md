@@ -2,7 +2,14 @@
 
 These modules define the browser API, the runner protocol, and the pure
 transcript fold that the browser and the Worker share.
-They use JSON values and plain TypeScript types.
+They use JSON values and TypeScript types.
+The [runner interface crate](../../crates/cnd-runner-interface/README.md)
+owns runner messages, agent chat events, and each type they use.
+`ts-rs` writes those types into `generated/`. Import each generated file
+directly. Keep the runtime readers, constants, and helpers in TypeScript.
+Browser-only event unions and API types stay in their area modules.
+The [repository commands](../../AGENTS.md#commands) give the regenerate command.
+Do not edit generated files.
 They import no Cloudflare types, provider SDKs, or test fixtures.
 Dates use Unix milliseconds. IDs and model names are opaque strings.
 `Workspace.name` and `Session.title` are null until a name is set.
@@ -45,7 +52,8 @@ removes it. Each request sends `EmptyRequest` and returns the current list.
 [Runner contracts](runner-contracts.md) gives the handshake, commands, events,
 confirmations, reports, and credentials.
 
-`messages.ts` owns the attachment metadata and target identity.
+`generated/` contains `Attachment`, `MessageSender`, and `UserMessage`.
+`messages.ts` owns attachment upload targets, paths, and browser requests.
 `AttachmentUploadTarget` names a workspace or stable first-message ID.
 `attachmentUploadPath` selects the workspace or org-scoped draft base path.
 `ATTACHMENT_MAX_BYTES` is the decoded file limit.
@@ -92,7 +100,8 @@ attachments only as checked images. It writes each file name and media
 type from the kind. [Feedback](../../docs/protocol/feedback.md) states the
 rules.
 
-`files.ts` defines full trees, tree updates, and branch changes.
+`generated/` contains full trees, tree updates, and branch changes.
+`files.ts` owns file paths, limits, and browser-only event types.
 A full tree contains real paths relative to the repository root.
 Real `path`, `previousPath`, and `baseBranch` fields stay unchanged for
 keys, joins, reads, and diffs. Their optional `displayPath`,
@@ -118,7 +127,7 @@ content, which Changes lists in no row. So it can differ from the number
 of rows. Each changes part repeats both complete counts.
 The current runner always sends both. Reports from older workspace images
 can omit either, and readers preserve that absence instead of assuming zero.
-`runner-files.ts` defines file read and diff commands and their matching results.
+`generated/` contains file read and diff commands and their matching results.
 The backend sets the read limit. The sample limit in the fixtures is not product policy.
 Read and diff results do not enter the stored chat event stream.
 

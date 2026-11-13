@@ -1,8 +1,6 @@
-import type {
-  AgentChatEvent,
-  ToolCall,
-  TurnEventContext,
-} from '../../src/shared/chat-events'
+import type { AgentChatEvent } from '../../src/shared/generated/AgentChatEvent'
+import type { ToolCall } from '../../src/shared/generated/ToolCall'
+import type { TurnEventContext } from '../../src/shared/generated/TurnEventContext'
 import type { ProviderEvent } from './providers/types'
 
 export class TurnOutput {

@@ -1,5 +1,8 @@
-import type { Agent, AgentChoice, Effort } from './agents'
-import type { MessageSender, UserMessage } from './messages'
+import type { Agent } from './generated/Agent'
+import type { AgentChoice } from './generated/AgentChoice'
+import type { Effort } from './generated/Effort'
+import type { MessageSender } from './generated/MessageSender'
+import type { UserMessage } from './generated/UserMessage'
 import type { Session, TranscriptDetail } from './sessions'
 import type { AgentWorkspaceSummary } from './agent-tools'
 

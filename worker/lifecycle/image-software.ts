@@ -1,4 +1,4 @@
-import type { CommitAuthor } from '../../src/shared/commit-author'
+import type { CommitAuthor } from '../../src/shared/generated/CommitAuthor'
 import { HttpError, isRecord } from '../http'
 import { terminalPackagesCommand } from '../terminal/service'
 import { privilegedCommand } from '../terminal/privileged'

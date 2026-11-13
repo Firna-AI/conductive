@@ -1,7 +1,6 @@
 import { expect, it } from 'vitest'
-
+import type { RunnerFileResponse } from '../../src/shared/generated/RunnerFileResponse'
 import { FILE_READ_MAX_BYTES } from '../../src/shared/files'
-import type { RunnerFileResponse } from '../../src/shared/runner-files'
 import { repositoryFixture } from '../test-support/repository'
 import { FileReporter } from './files'
 import { Repository } from './repository'

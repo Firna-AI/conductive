@@ -1,6 +1,5 @@
 import { expect, it, vi } from 'vitest'
-
-import type { RunnerEvent } from '../../src/shared/runner'
+import type { RunnerEvent } from '../../src/shared/generated/RunnerEvent'
 import { refresh } from '../test-support/reports'
 import { deferred } from '../test-support/runtime'
 import { wireFixture } from '../test-support/wire'

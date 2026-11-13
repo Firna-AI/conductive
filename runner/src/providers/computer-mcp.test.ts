@@ -1,8 +1,6 @@
 import * as fs from 'node:fs/promises'
-
 import { afterEach, expect, it, vi } from 'vitest'
-
-import type { Agent } from '../../../src/shared/agents'
+import type { Agent } from '../../../src/shared/generated/Agent'
 import { FakeAppServers } from '../../test-support/app-server'
 import { FakeClaudeQuery } from '../../test-support/claude-query'
 import { turn } from '../../test-support/harness'

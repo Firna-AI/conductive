@@ -1,5 +1,5 @@
+import type { Attachment } from '../../src/shared/generated/Attachment'
 import type { Session } from '../../src/shared/sessions'
-import type { Attachment } from '../../src/shared/messages'
 import { sessionTitleFrom } from '../../src/shared/session-title'
 import type { ChatTransaction } from './store'
 import type { ChatDependencies } from './types'

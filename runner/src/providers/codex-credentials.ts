@@ -9,8 +9,7 @@ import {
   symlink,
 } from 'node:fs/promises'
 import { join } from 'node:path'
-
-import type { RunnerCodexAccount } from '../../../src/shared/runner'
+import type { RunnerCodexAccount } from '../../../src/shared/generated/RunnerCodexAccount'
 
 export interface CodexCredentials {
   directory: string

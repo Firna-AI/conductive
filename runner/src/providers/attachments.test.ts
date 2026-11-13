@@ -1,6 +1,5 @@
 import { beforeEach, expect, it, onTestFinished, vi } from 'vitest'
-
-import type { Agent } from '../../../src/shared/agents'
+import type { Agent } from '../../../src/shared/generated/Agent'
 import { FakeAppServers } from '../../test-support/app-server'
 import { FakeClaudeQuery } from '../../test-support/claude-query'
 import { mockComputerServer } from '../../test-support/computer-mcp'

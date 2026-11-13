@@ -1,4 +1,4 @@
-import type { UserMessage } from '../../src/shared/messages'
+import type { UserMessage } from '../../src/shared/generated/UserMessage'
 import type { Session } from '../../src/shared/sessions'
 import { attachmentCopyKey } from './attachment-record'
 import { normalizeSession, type StoredSession } from './session-storage'

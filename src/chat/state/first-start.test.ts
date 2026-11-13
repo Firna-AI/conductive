@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
+import type { WorkspaceStart } from '../../shared/generated/WorkspaceStart'
 import { fileMark } from '../../app/draft-marks'
 import { pickChatFiles } from './draft-files.test-support'
 import { sessionPaths } from '../../shared/sessions'
 import {
   workspacePath,
   type WorkspaceResponse,
-  type WorkspaceStart,
   type WorkspaceState,
 } from '../../shared/workspaces'
 import type { RecordedChatScenario } from '../../test-support/recorded-chat'

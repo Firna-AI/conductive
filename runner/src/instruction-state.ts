@@ -1,5 +1,5 @@
-import type { Agent } from '../../src/shared/agents'
-import type { RunnerBranches } from '../../src/shared/runner'
+import type { Agent } from '../../src/shared/generated/Agent'
+import type { RunnerBranches } from '../../src/shared/generated/RunnerBranches'
 import { object, string } from './parse'
 
 export interface BuiltInstructions {

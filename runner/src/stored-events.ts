@@ -1,15 +1,12 @@
-import type { ToolCall } from '../../src/shared/chat-events'
-import type {
-  ChangedFile,
-  FileEntry,
-  FileTreeChange,
-} from '../../src/shared/files'
-import type { RunnerEvent, RunnerEventEnvelope } from '../../src/shared/runner'
-import type { WorkspaceStart } from '../../src/shared/workspaces'
-import {
-  PORT_REPORT_MAX_PORTS,
-  type ListeningPort,
-} from '../../src/shared/ports'
+import type { ToolCall } from '../../src/shared/generated/ToolCall'
+import type { ChangedFile } from '../../src/shared/generated/ChangedFile'
+import type { FileEntry } from '../../src/shared/generated/FileEntry'
+import type { FileTreeChange } from '../../src/shared/generated/FileTreeChange'
+import type { RunnerEvent } from '../../src/shared/generated/RunnerEvent'
+import type { RunnerEventEnvelope } from '../../src/shared/generated/RunnerEventEnvelope'
+import type { WorkspaceStart } from '../../src/shared/generated/WorkspaceStart'
+import type { ListeningPort } from '../../src/shared/generated/ListeningPort'
+import { PORT_REPORT_MAX_PORTS } from '../../src/shared/ports'
 import { parseChoice } from './commands'
 import {
   array,

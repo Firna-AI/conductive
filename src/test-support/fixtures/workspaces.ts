@@ -1,3 +1,5 @@
+import type { MessageSender } from '../../shared/generated/MessageSender'
+import type { UserMessage } from '../../shared/generated/UserMessage'
 import { defaultChoice } from '../../../docs/mockups/src/fixtures/agents'
 import {
   closedSessions,
@@ -6,7 +8,6 @@ import {
 import { workspaceList } from '../../../docs/mockups/src/fixtures/workspaces'
 import type { User } from '../../shared/api'
 import type { GitHubSummary } from '../../shared/github'
-import type { MessageSender, UserMessage } from '../../shared/messages'
 import type { SessionsResponse } from '../../shared/sessions'
 import type { WorkspaceViewResponse } from '../../shared/workspace-view'
 import type {

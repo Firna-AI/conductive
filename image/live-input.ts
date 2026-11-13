@@ -1,6 +1,5 @@
 import { resolve, sep } from 'node:path'
-
-import type { AgentChoice } from '../src/shared/agents'
+import type { AgentChoice } from '../src/shared/generated/AgentChoice'
 
 export class CheckError extends Error {}
 

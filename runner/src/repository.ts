@@ -1,10 +1,7 @@
 import { basename, dirname } from 'node:path'
-
-import type {
-  ChangesResponse,
-  DiffResponse,
-  FileEntry,
-} from '../../src/shared/files'
+import type { ChangesResponse } from '../../src/shared/generated/ChangesResponse'
+import type { DiffResponse } from '../../src/shared/generated/DiffResponse'
+import type { FileEntry } from '../../src/shared/generated/FileEntry'
 import { checkpointFromIndex, type Checkpoint } from './checkpoint'
 import { contextFolderFiles } from './context-folder'
 import { readFileResponse } from './file-access'

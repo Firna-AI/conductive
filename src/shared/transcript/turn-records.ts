@@ -1,4 +1,4 @@
-import type { AgentChatEvent } from '../chat-events'
+import type { AgentChatEvent } from '../generated/AgentChatEvent'
 import type { Session } from '../sessions'
 import { endTurn, isRunning } from './known-turns'
 import { foldLate } from './late-events'

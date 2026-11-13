@@ -1,7 +1,7 @@
+import type { RunnerFileEvent } from '../../src/shared/generated/RunnerFileEvent'
 import {
   FILE_EVENT_MAX_BYTES,
   FILE_TREE_DELTA_MAX_CHANGES,
-  type RunnerFileEvent,
 } from '../../src/shared/files'
 import { jsonBytes } from '../../src/shared/event-limits'
 

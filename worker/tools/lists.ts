@@ -1,3 +1,4 @@
+import type { AgentChoice } from '../../src/shared/generated/AgentChoice'
 import {
   MACHINE_PATHS,
   type AgentListModelsResponse,
@@ -10,7 +11,6 @@ import { previewToolMethods } from './preview-routes'
 import { listToolWorkspaces } from './workspace-data'
 import { workspaceToolMethods } from './workspace-routes'
 import { workspaceListInput } from './workspace-input'
-import type { AgentChoice } from '../../src/shared/agents'
 import { HttpError } from '../http'
 import { readImageRepositories } from '../lifecycle/published-image-data'
 import type { AgentToolServices } from './services'

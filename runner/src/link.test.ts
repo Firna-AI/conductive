@@ -1,9 +1,6 @@
 import { expect, it, onTestFinished } from 'vitest'
-
-import type {
-  RunnerEventEnvelope,
-  WorkspaceToRunner,
-} from '../../src/shared/runner'
+import type { RunnerEventEnvelope } from '../../src/shared/generated/RunnerEventEnvelope'
+import type { WorkspaceToRunner } from '../../src/shared/generated/WorkspaceToRunner'
 import type { RunnerConnector as TransportRunnerConnector } from '../../src/shared/runner-transport'
 import { FakeDurableObjectEndpoint } from '../../worker/test-support/fake-durable-object'
 import { diskFixture } from '../test-support/disk'

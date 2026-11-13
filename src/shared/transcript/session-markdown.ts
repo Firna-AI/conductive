@@ -1,9 +1,5 @@
-import {
-  effortLabels,
-  modelLabel,
-  type AgentChoice,
-  type AgentModel,
-} from '../agents'
+import type { AgentChoice } from '../generated/AgentChoice'
+import { effortLabels, modelLabel, type AgentModel } from '../agents'
 import type { DeviceCommandRecord } from '../device'
 import { nameLabel } from '../name-label'
 import type { Session, TranscriptDetail } from '../sessions'

@@ -1,8 +1,6 @@
-import type {
-  BranchChangedFile,
-  ChangeKind,
-  ChangesResponse,
-} from '../../src/shared/files'
+import type { BranchChangedFile } from '../../src/shared/generated/BranchChangedFile'
+import type { ChangeKind } from '../../src/shared/generated/ChangeKind'
+import type { ChangesResponse } from '../../src/shared/generated/ChangesResponse'
 import { Git, zeroPaths } from './git'
 import { comparisonBase } from './comparison-base'
 import {

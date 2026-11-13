@@ -1,7 +1,6 @@
 import { createHash } from 'node:crypto'
 import { join, resolve } from 'node:path'
-
-import type { ChangedFile } from '../../src/shared/files'
+import type { ChangedFile } from '../../src/shared/generated/ChangedFile'
 import { Git } from './git'
 import { indexEntries } from './git-entries'
 import {

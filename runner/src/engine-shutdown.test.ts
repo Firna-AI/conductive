@@ -1,6 +1,5 @@
 import { expect, it, vi } from 'vitest'
-
-import type { ChangedFile } from '../../src/shared/files'
+import type { ChangedFile } from '../../src/shared/generated/ChangedFile'
 import { engineFixture } from '../test-support/engine'
 import { turn } from '../test-support/harness'
 import { FakeProvider } from '../test-support/providers'

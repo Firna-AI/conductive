@@ -1,4 +1,4 @@
-import type { Agent } from '../../src/shared/agents'
+import type { Agent } from '../../src/shared/generated/Agent'
 import type { Session } from '../../src/shared/sessions'
 import { usableAgentLogin, type AgentLogin } from './login-kind'
 import { LoginReuseDenied, readLogin } from './login-access'

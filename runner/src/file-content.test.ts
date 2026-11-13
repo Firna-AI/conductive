@@ -1,9 +1,7 @@
 import { symlink } from 'node:fs/promises'
 import { join } from 'node:path'
-
 import { expect, it } from 'vitest'
-
-import type { ChangesResponse } from '../../src/shared/files'
+import type { ChangesResponse } from '../../src/shared/generated/ChangesResponse'
 import { runnerHarness } from '../test-support/harness'
 
 const textChanges: ChangesResponse = {

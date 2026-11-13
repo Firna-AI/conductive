@@ -1,4 +1,4 @@
-import type { Agent } from '../../src/shared/agents'
+import type { Agent } from '../../src/shared/generated/Agent'
 import { productName } from '../../docs/mockups/src/brand'
 import { contextFolderPath } from './context-folder'
 

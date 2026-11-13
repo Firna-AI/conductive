@@ -1,7 +1,7 @@
+import type { UserMessage } from '../../shared/generated/UserMessage'
 import { chatHistoryPath } from '../../shared/events'
 import { sessionTitleFrom } from '../../shared/session-title'
 import { hasOwnWords } from '../../shared/attachment-mentions'
-import type { UserMessage } from '../../shared/messages'
 import type { Session } from '../../shared/sessions'
 import type { DevBackend } from './dev-backend'
 

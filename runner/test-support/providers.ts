@@ -1,5 +1,5 @@
-import type { AgentChoice } from '../../src/shared/agents'
-import type { RunnerCodexAccount } from '../../src/shared/runner'
+import type { AgentChoice } from '../../src/shared/generated/AgentChoice'
+import type { RunnerCodexAccount } from '../../src/shared/generated/RunnerCodexAccount'
 import type {
   ProviderEvent,
   ProviderFactory,

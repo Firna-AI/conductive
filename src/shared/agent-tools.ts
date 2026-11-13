@@ -1,4 +1,5 @@
-import type { AgentChoice, AgentModel } from './agents'
+import type { AgentChoice } from './generated/AgentChoice'
+import type { AgentModel } from './agents'
 import type { Workspace, WorkspaceState } from './workspaces'
 
 /** Machine routes use workspace or turn tokens, or a GitHub webhook signature. */

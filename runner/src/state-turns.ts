@@ -1,4 +1,5 @@
-import type { RunnerEvent, RunnerEventEnvelope } from '../../src/shared/runner'
+import type { RunnerEvent } from '../../src/shared/generated/RunnerEvent'
+import type { RunnerEventEnvelope } from '../../src/shared/generated/RunnerEventEnvelope'
 import { array, integer, object, string } from './parse'
 
 export interface SavedTurn {

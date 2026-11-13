@@ -1,9 +1,9 @@
+import type { AgentChoice } from '../../shared/generated/AgentChoice'
 import {
   createApiClient,
   type FetchLike,
   type FileTransport,
 } from '../../app/api/client'
-import type { AgentChoice } from '../../shared/agents'
 import { chatHistoryPath, type WorkspaceEvent } from '../../shared/events'
 import type { ChangeModelResponse, Session } from '../../shared/sessions'
 import { FakeApiServer, type FakeApiOptions } from '../../test-support/fake-api'

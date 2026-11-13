@@ -1,4 +1,5 @@
 import { useEffect, type ReactNode } from 'react'
+import type { AgentChoice } from '../../shared/generated/AgentChoice'
 import {
   draftReady,
   firstReadyRepository,
@@ -13,7 +14,7 @@ import {
 } from '../../app/repository-changes'
 import { routes } from '../../app/router'
 import { useStore, valueOf } from '../../app/store'
-import type { AgentChoice, AgentModel } from '../../shared/agents'
+import type { AgentModel } from '../../shared/agents'
 import type { Repository } from '../../shared/org-settings'
 import type { OrgSummary } from '../../shared/orgs'
 import { useApp, useOfferedModels, useOrgAccess, useOrgModel } from '../context'

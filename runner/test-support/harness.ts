@@ -1,12 +1,8 @@
 import { join } from 'node:path'
-
 import { onTestFinished } from 'vitest'
-
-import type { Agent } from '../../src/shared/agents'
-import type {
-  RunnerTurn,
-  RunnerMessageDuringTurn,
-} from '../../src/shared/runner'
+import type { Agent } from '../../src/shared/generated/Agent'
+import type { RunnerTurn } from '../../src/shared/generated/RunnerTurn'
+import type { RunnerMessageDuringTurn } from '../../src/shared/generated/RunnerMessageDuringTurn'
 import { FakeDurableObjectEndpoint } from '../../worker/test-support/fake-durable-object'
 import { Runner } from '../src/runner'
 import { DiskStorage, EventStore } from '../src/state'

@@ -1,6 +1,6 @@
 import { posix } from 'node:path'
-
-import { FILE_READ_MAX_BYTES, type DiffResponse } from '../../src/shared/files'
+import type { DiffResponse } from '../../src/shared/generated/DiffResponse'
+import { FILE_READ_MAX_BYTES } from '../../src/shared/files'
 import {
   FileAccessError,
   fileTooLarge,
