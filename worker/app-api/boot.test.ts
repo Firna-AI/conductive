@@ -154,6 +154,18 @@ it('reports missing operator model configuration without blocking unrelated rout
   expect(await modelsResponse.json()).toMatchObject({
     error: { code: 'models_unavailable' },
   })
+  const fastDefault = await harness.request(
+    ACCOUNT_PATHS.defaultModel,
+    cookie,
+    {
+      method: 'PUT',
+      body: JSON.stringify({ choice: { ...choice, fast: true } }),
+    },
+  )
+  expect(fastDefault.status).toBe(503)
+  expect(await fastDefault.json()).toMatchObject({
+    error: { code: 'models_unavailable' },
+  })
   const account = await harness.request(ACCOUNT_PATHS.account, cookie)
   expect(account.status).toBe(503)
   expect(await account.json()).toMatchObject({

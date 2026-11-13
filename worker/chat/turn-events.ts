@@ -27,16 +27,10 @@ export async function prepareAgentEvent(
     )
   }
   const { session, turn } = target
-  if (event.type === 'turn.completed' && !event.speed) {
-    for (const id of turn.messageIds) {
-      const message = await transaction.message(id)
-      if (message?.sessionId === turn.sessionId && message.choice.fast) {
-        event = {
-          ...event,
-          speed: { state: 'standard', cause: 'older_runner' },
-        }
-        break
-      }
+  if (event.type === 'turn.completed' && !event.speed && turn.olderRunner) {
+    event = {
+      ...event,
+      speed: { state: 'standard', cause: 'older_runner' },
     }
   }
   let acknowledged: readonly string[] = []
@@ -81,6 +75,7 @@ export async function prepareAgentEvent(
       }
     }
   }
+  let olderRunner = false
   for (const messageId of acknowledged) {
     const message = turn.messageIds.includes(messageId)
       ? await transaction.message(messageId)
@@ -92,6 +87,12 @@ export async function prepareAgentEvent(
         'The message is not available.',
       )
     }
+    if (
+      event.type === 'turn.started' &&
+      !event.choice.fast &&
+      message.choice.fast
+    )
+      olderRunner = true
   }
   return async () => {
     if (target.ended) {
@@ -111,6 +112,7 @@ export async function prepareAgentEvent(
       await transaction.emit(event, occurredAt, true)
       return
     }
+    if (olderRunner) turn.olderRunner = true
     turn.started = true
     if (event.type === 'turn.started') turn.startedAt = event.startedAt
     if (event.type === 'turn.started' && turn.state !== 'stopping')

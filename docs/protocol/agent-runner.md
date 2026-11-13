@@ -77,8 +77,8 @@ the change that keeps a turn open for background work.
   then mean an unknown list. Without the mark, the same values mean that
   the turn changed no files.
 - The mark never changes the state of the end, `finished` or `stopped`.
-- A `turn.completed` event of a turn with fast mode on also carries the
-  speed of the turn, with the cause of a standard speed, as
+- A `turn.completed` event of a turn with fast mode on carries its speed
+  when known, with the cause of a standard speed, as
   [The speed of a turn](fast-mode.md#the-speed-of-a-turn) says. The speed
   never changes the state of the end either.
 - A permanent refusal has one of three reasons: too large, invalid, or turn not active.

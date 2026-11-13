@@ -1,5 +1,6 @@
 import { expect, it, vi } from 'vitest'
 
+import type { AgentChoice } from '../../src/shared/agents'
 import { parseAgentEvent } from './agent-events'
 import { createRunnerLimitsFixture } from './runner-limits.test-support'
 import { choice, context } from './runner-fixtures.test-support'
@@ -35,38 +36,131 @@ it('stores and replays speed once after restart while dropping untrusted extra f
   ])
 })
 
-it('uses the turn messages for the older runner cause after the session choice changes', async () => {
+async function fastTurnFixture(
+  selected: AgentChoice = { ...choice, fast: true },
+) {
   const h = await createRunnerLimitsFixture()
+  const saveMessage = async (id: string, selected: AgentChoice) => {
+    await h.store.change(
+      'workspace',
+      async (transaction) => {
+        await transaction.saveMessage({
+          id,
+          sessionId: context.sessionId,
+          sender: {
+            id: 'sender',
+            githubLogin: 'sender',
+            displayName: null,
+            avatarUrl: null,
+          },
+          text: 'Run',
+          attachments: [],
+          choice: selected,
+          createdAt: 25,
+          state: 'queued',
+        })
+        const turn = await transaction.turn(context.turnId)
+        const session = await transaction.session(context.sessionId)
+        if (!turn || !session)
+          throw new Error('Missing fixture turn or session')
+        await transaction.saveTurn({
+          ...turn,
+          started: true,
+          messageIds: [...turn.messageIds, id],
+        })
+        await transaction.saveSession({ ...session, choice: selected })
+      },
+      () => undefined,
+    )
+  }
+  await saveMessage('first-message', selected)
+  return {
+    ...h,
+    saveMessage,
+    start: (echoed: Omit<AgentChoice, 'fast'> & { fast?: boolean }) =>
+      h.receive(1, {
+        ...context,
+        type: 'turn.started',
+        choice: echoed,
+        senderId: 'sender',
+        startedAt: 25,
+        messageIds: ['first-message'],
+      }),
+    ends: async () =>
+      (await h.history()).events
+        .filter(({ event }) => event.type === 'turn.completed')
+        .map(({ event }) => event),
+  }
+}
+
+it('keeps an early stop during the first file scan on a current fast runner without a speed note', async () => {
+  const h = await fastTurnFixture()
+  await h.start({ ...choice, fast: true })
+  const end = {
+    ...completed,
+    state: 'stopped',
+    userMessageIds: ['first-message'],
+  }
+  await h.receive(2, end)
+  expect(await h.ends()).toEqual([end])
+})
+
+it('keeps a pending stop before turn.started without a speed note', async () => {
+  const h = await fastTurnFixture()
+  const end = { ...completed, state: 'stopped', durationMs: 0 }
+  await h.receive(1, end)
+  expect(await h.ends()).toEqual([end])
+})
+
+it('keeps a crash-recovery end from a current fast runner without a speed note after restart', async () => {
+  const h = await fastTurnFixture()
+  await h.start({ ...choice, fast: true })
+  await h.connect('recovery-stream', true)
+  const end = {
+    ...completed,
+    state: 'stopped',
+    filesUnavailable: true,
+    userMessageIds: ['first-message'],
+  }
+  await h.receive(1, end)
+  expect(await h.ends()).toEqual([end])
+})
+
+it('keeps a standard Codex turn without a speed note when it defers a fast message', async () => {
+  const selected: AgentChoice = { ...choice, agent: 'codex' }
+  const h = await fastTurnFixture(selected)
+  await h.start(selected)
+  await h.saveMessage('deferred-message', { ...selected, fast: true })
+  const end = { ...completed, userMessageIds: ['first-message'] }
+  await h.receive(2, end)
+  expect(await h.ends()).toEqual([end])
+})
+
+it('keeps the older runner cause after the session choice changes and the Worker restarts', async () => {
+  const h = await fastTurnFixture()
+  await h.start({
+    agent: choice.agent,
+    model: choice.model,
+    effort: choice.effort,
+  })
   await h.store.change(
     'workspace',
     async (transaction) => {
-      await transaction.saveMessage({
-        id: 'fast-message',
-        sessionId: context.sessionId,
-        sender: {
-          id: 'sender',
-          githubLogin: 'sender',
-          displayName: null,
-          avatarUrl: null,
-        },
-        text: 'Run fast',
-        attachments: [],
-        choice: { ...choice, fast: true },
-        createdAt: 25,
-        state: 'sent',
-      })
-      const turn = await transaction.turn(context.turnId)
-      if (!turn) throw new Error('Missing fixture turn')
-      await transaction.saveTurn({ ...turn, messageIds: ['fast-message'] })
+      const session = await transaction.session(context.sessionId)
+      if (!session) throw new Error('Missing fixture session')
+      await transaction.saveSession({ ...session, choice })
     },
     () => undefined,
   )
-  await h.receive(1, { ...completed, userMessageIds: ['fast-message'] })
-  expect((await h.history()).events.map(({ event }) => event)).toContainEqual({
-    ...completed,
-    userMessageIds: ['fast-message'],
-    speed: { state: 'standard', cause: 'older_runner' },
-  })
+  await h.connect('stream', true)
+  await h.receive(2, { ...completed, userMessageIds: ['first-message'] })
+  expect(await h.ends()).toEqual([
+    {
+      ...completed,
+      userMessageIds: ['first-message'],
+      speed: { state: 'standard', cause: 'older_runner' },
+    },
+  ])
 })
 
 it('keeps the reported speed and reads a malformed speed as standard speed at the event boundary', () => {

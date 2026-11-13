@@ -40,10 +40,9 @@ View writes cannot change this branch.
 
 ## Rules
 
-- The model list and the default choice come from `CONDUCTIVE_MODELS` and
-  `CONDUCTIVE_DEFAULT_CHOICE`, as
-  [Deployment inputs](../../docs/deployment.md#models) says. A missing or
-  invalid value gives a 503 on its own route only.
+- [Model configuration dependencies](../../docs/deployment/models.md#configuration-failures)
+  states which operations need `CONDUCTIVE_MODELS` and
+  `CONDUCTIVE_DEFAULT_CHOICE`, and their failures.
 - Each model of the list can carry the `fast` mark.
   `PUT /api/account/default-model` saves fast mode with the model and the
   effort. It stores fast mode as off for a model without the mark, and a

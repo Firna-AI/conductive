@@ -398,9 +398,9 @@ programs. `.context/fast-mode/brainstorm-report.md` holds the evidence.
 - Routines carry fast in their choice, as messages do. Reason: fast mode
   decision 255 puts fast in each choice, and a routine saves a choice.
 - The runner protocol version stays. A runner without fast support runs
-  the turn at standard speed and reports no speed, so the end line shows
-  "Standard speed" with the cause "older runner". Reason: an older runner
-  already drops unknown choice fields, as it does for `promptCacheTtl`.
+  the turn at standard speed. The review finding 1 call of 2026-11-13 below
+  governs its speed note. Reason: an older runner already drops unknown
+  choice fields, as it does for `promptCacheTtl`.
 - Fable 5.2 gets no fast mark. Reason: the pinned Claude program sends the
   speed field only for model IDs with `opus-4-8` or `opus-5`.
 
@@ -420,9 +420,9 @@ My calls, on 2026-11-12, as the docs implementor of Milestone 2:
   255 rejected fast mode that the operator sets.
 - A new routine takes the fast mode of its owner's saved default, as New
   workspace does. Reason: the routine form uses the same picker.
-- A fast turn has standard speed only when the agent reports a request at
-  standard speed. Without a known cause, the end shows "Standard speed"
-  alone. Reason: a missing speed then means an older runner.
+- A turn with reported standard speed but no known cause shows "Standard
+  speed" alone. Reason: the agent can report standard speed without a known
+  cause. The review finding 1 call of 2026-11-13 below governs missing speed.
 
 My calls, on 2026-11-12, as the ui implementor of Milestone 6:
 
@@ -483,10 +483,22 @@ My calls, on 2026-11-12, as the non-UI implementor of Milestones 4 and 7:
 - A Claude rate-limit reason explains a fallback notice. The reason alone
   does not mark the turn as standard. Reason: a limit status can describe
   account capacity without reporting a standard-speed request.
-- The Worker checks the stored messages of the named turn for fast mode
-  when its runner gives no speed. It does not use the current session
-  choice. Reason: a model change or a later turn can change that choice
-  before a late end arrives.
+
+My calls, on 2026-11-13, as the non-UI implementor of review fixes 1 and 3:
+
+- Review finding 1, option D: at `turn.started`, the Worker marks a stored
+  turn as using an older runner only when a validated started message has
+  fast on and the echoed choice has fast off. The turn keeps the mark
+  across a Worker restart. An end without speed gets standard speed with
+  `older_runner` only for a marked turn. Each other end without speed
+  keeps no speed and shows no note. Reason: current runners can stop or
+  recover before they know the speed, and a standard Codex turn can defer
+  a fast message. Missing speed alone proves no older runner. This call
+  replaces the earlier missing-speed fallback design call.
+- Review finding 3, option C: the deployment guide gives one configuration
+  dependency rule per setting, with operation kinds and their failures.
+  Other docs link to those rules. Reason: a copied route list missed fast
+  writes, routine runs, transcript reads, and tool session defaults.
 
 My calls, on 2026-11-12, as the ui implementor of Milestones 5 and 8:
 

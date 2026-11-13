@@ -168,16 +168,21 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the switch at
 
 ### The speed of a turn
 
-- The end of each fast turn that finishes or stops gives its speed: fast,
-  or standard with its cause (fast mode decision 257).
-- The speed is standard when the agent says that it ran a request of the
-  turn at standard speed while fast mode was on. Otherwise the speed is
-  fast.
-- Codex does not say which speed OpenAI gave. So a fast Codex turn has
-  fast speed. Risk: the chat then shows no Codex turn that OpenAI served at
+- The end of each fast turn that finishes or stops gives its speed when
+  known: fast, or standard with its cause (fast mode decision 257).
+- A reported speed is standard when the agent says that it ran a request
+  of the turn at standard speed while fast mode was on. Otherwise the
+  reported speed is fast.
+- Codex does not say which speed OpenAI gave. A runner with fast support
+  therefore reports fast speed for a fast Codex turn when its speed is
+  known. Risk: the chat then shows no Codex turn that OpenAI served at
   standard speed.
-- A fast turn whose end gives no speed has standard speed, with the cause
-  of an older runner.
+- A fast turn whose start echoes fast mode as off has standard speed with
+  the cause of an older runner when its end gives no speed. The stored
+  message of that start must have fast mode on.
+- Any other end without speed keeps its speed unknown and shows no speed
+  note. Reason: a current runner can end a turn before it learns its speed.
+  Missing speed alone is not evidence of an older runner.
 - The end of a fast turn at standard speed shows "Standard speed" and its
   cause. Without a cause that the app knows, it shows "Standard speed"
   alone. The [mockup catalogue](../mockups/catalogue.md) draws this end at
