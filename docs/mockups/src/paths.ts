@@ -1,7 +1,6 @@
 /** The catalogue paths that screens link to. */
 export const paths = {
   marketing: 'marketing',
-  pricing: 'marketing/pricing',
   docs: 'marketing/docs',
   docsGetStarted: 'marketing/docs/get-started',
   terms: 'marketing/terms',
