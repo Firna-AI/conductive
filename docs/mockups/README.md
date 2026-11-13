@@ -39,8 +39,8 @@ Git ignores the build output, `mokly-static/` and
 
 The catalogue shows the desktop view beside the phone, in a frame narrower
 than a laptop screen. The desktop layout narrows with its app frame, which
-fills the window: below 1280 px the sidebar and the right column get
-narrower, and below 900 px the sidebar hides. The org rail stays, and the current org opens its list as its
+fills the window: below 1295 px the right column gets narrower, below
+1280 px the sidebar gets narrower, and below 900 px the sidebar hides. The org rail stays, and the current org opens its list as its
 own page. The number of a pull request in the bar opens it on GitHub, with
 an arrow. A narrow right column hides the detail of the pull request bar.
 When the bar shows an action, a column narrower than 520 px does the same.
@@ -76,7 +76,9 @@ pages of `app/command-palette` and `app/feedback`, the Feedback dialog,
 and the flow that sends feedback.
 The [attachments and files](catalogue-attachments-and-files.md) page
 gives the child pages of `app/attachments` and `app/files`, and the flow
-`user-flows/drop-a-file`.
+`user-flows/drop-a-file`. The [tab row and split panes](catalogue-tabs.md)
+page gives the child pages of `app/tabs`, with the split panes of
+`app/tabs/split`.
 
 `app/attachments` shows each attached file as a chip at its place in the
 text of the message box. `app/attachments/drop` shows a drop of files into
@@ -132,7 +134,9 @@ a dropped folder that the browser cannot read. [The chat](design-chat.md) gives 
   `src/screens/chatStates.ts`. `tabStates` covers the session, file, and
   image tabs of the centre column. `temporaryTabStates` covers the
   temporary tab, which `src/screens/workspaceTemporaryTab.ts` draws in the
-  row. `composerStates` covers the composer, with its links, mentions,
+  row. `paneStates` covers the split panes of the centre column, which
+  `src/screens/workspacePanes.ts` lays out and `src/screens/workspaceSplit.tsx`
+  draws. `composerStates` covers the composer, with its links, mentions,
   attached files, and drops.
 - A flow (`defineUseCase`) lists the paths of existing screens. Each screen
   that a flow uses names the flow in `useCasePaths`.

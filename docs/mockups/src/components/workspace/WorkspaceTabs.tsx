@@ -9,16 +9,26 @@ import { Menu, type MenuEntry } from '../common/Menu'
 import { ScreenLink } from '../common/ScreenLink'
 import { IconButton } from '../common/actions'
 import { classes } from '../common/classes'
+import { moveStatus, type TabMove } from './paneCopy'
 import { DropPlace, TabItem, type WorkspaceTab } from './TabItem'
 import { tabMenuOf } from './TabMenu'
 import tabScroll from './TabScroll.module.css'
 import styles from './WorkspaceTabs.module.css'
 
 /**
- * A tab in the middle of a drag: the key of the tab, and the place where it
- * lands, before the tab at `index`, or after the last tab.
+ * A tab in the middle of a drag. `tab` is the key of the dragged tab, which
+ * stays at its place in its own row as a faint copy. `index` is where it
+ * lands in this row: before the tab at `index`, or after the last tab. A
+ * drag that lands elsewhere, such as on the content of a pane, draws no
+ * line in this row. `from` is the dragged tab when it comes from the other
+ * pane of a split, and `move` names the pane that the drop moves it to.
  */
-export type TabDrag = { tab: string; index: number }
+export type TabDrag = {
+  tab: string
+  index?: number
+  from?: WorkspaceTab
+  move?: TabMove
+}
 
 /**
  * The sessions whose tabs the user closed, the last closed first: the mark
@@ -92,6 +102,11 @@ function placeAfterDrop(from: number, index: number): number {
  * `historyOpen` draws the history open, beside the clock or, on a phone, as
  * a sheet that the screen draws. On a phone the current tab shrinks too, so
  * that every tab keeps some of its title.
+ *
+ * A split centre column gives each pane its own row (split panes decision
+ * 1 C). `focused` marks the row of the focused pane, and only the right row
+ * keeps the clock. `border` parts the tabs of the two panes in the one row
+ * of a phone or of a narrow column.
  */
 export function WorkspaceTabs(props: {
   tabs: readonly WorkspaceTab[]
@@ -107,31 +122,71 @@ export function WorkspaceTabs(props: {
   menuTab?: string
   renaming?: string
   full?: boolean
+  /**
+   * The row of the focused pane of a split, whose shown tab takes the mark
+   * of the focus, or of the other pane. One pane draws no mark.
+   */
+  focused?: boolean
+  /** The row ends with the clock of the session history, as it starts. */
+  history?: boolean
+  /** The name of the row for a screen reader, which names its pane. */
+  label?: string
+  /**
+   * The index of the first tab of the right pane, in the one row that holds
+   * the tabs of both panes. A quiet border stands between the two parts.
+   */
+  border?: number
 }) {
-  const { tabs, drag, menuTab } = props
+  const { tabs, drag, menuTab, border } = props
   const readOnly = props.readOnly ?? false
   const phone = props.viewport === 'mobile'
   const full = props.full ?? false
   const from = tabs.findIndex((tab) => tab.key === drag?.tab)
-  const dragged = tabs[from]
+  const dragged = from < 0 ? drag?.from : tabs[from]
   const kept = props.renaming ?? tabs.find((tab) => tab.selected)?.key
   const endInView = full && kept !== undefined && tabs.at(-1)?.key === kept
   const menu = menuTab === undefined ? [] : tabMenuOf(tabs, menuTab, readOnly)
   const menuOpen = menu.length > 0
   // The lifted tab and a menu below a tab hang below the row.
-  const overRow = dragged !== undefined || (menuOpen && !phone)
-  const dropAt = (index: number) =>
-    dragged && drag?.index === index ? (
-      <DropPlace
-        count={tabs.length}
-        place={placeAfterDrop(from, index)}
-        tab={dragged}
-      />
-    ) : null
+  const lifted = dragged !== undefined && drag?.index !== undefined
+  const overRow = lifted || (menuOpen && !phone)
+  const dropAt = (index: number) => {
+    if (!dragged || drag?.index !== index) return null
+    // A tab from the other pane adds one tab to this row.
+    const move: TabMove = drag.move ?? {
+      kind: 'place',
+      place: from < 0 ? index + 1 : placeAfterDrop(from, index),
+      count: from < 0 ? tabs.length + 1 : tabs.length,
+    }
+    return <DropPlace status={moveStatus(dragged.title, move)} tab={dragged} />
+  }
+  // A line at the border ends the left part when the tab moves to the left
+  // pane, and else starts the right part.
+  const toLeft = drag?.move?.kind === 'pane' && drag.move.pane === 'left'
+  const before = (index: number) => {
+    if (index !== border || index === 0) return dropAt(index)
+    const mark = <li aria-hidden className={styles.paneBorder} />
+    return toLeft ? (
+      <>
+        {dropAt(index)}
+        {mark}
+      </>
+    ) : (
+      <>
+        {mark}
+        {dropAt(index)}
+      </>
+    )
+  }
   return (
     <nav
-      aria-label="Sessions and files"
-      className={classes(styles.bar, phone && styles.phone)}
+      aria-label={props.label ?? 'Sessions and files'}
+      className={classes(
+        styles.bar,
+        phone && styles.phone,
+        props.focused === true && styles.focused,
+        props.focused === false && styles.unfocused,
+      )}
     >
       <ul
         className={classes(
@@ -144,7 +199,7 @@ export function WorkspaceTabs(props: {
       >
         {tabs.map((tab, index) => (
           <Fragment key={tab.key}>
-            {dropAt(index)}
+            {before(index)}
             <TabItem
               menu={
                 menuOpen && tab.key === menuTab
@@ -164,11 +219,13 @@ export function WorkspaceTabs(props: {
           <IconButton icon={Plus} label="New session" />
         </ScreenLink>
       )}
-      <HistoryButton
-        anchored={!phone}
-        entries={props.historyEntries ?? historyEntries}
-        open={props.historyOpen ?? false}
-      />
+      {props.history === false ? null : (
+        <HistoryButton
+          anchored={!phone}
+          entries={props.historyEntries ?? historyEntries}
+          open={props.historyOpen ?? false}
+        />
+      )}
     </nav>
   )
 }

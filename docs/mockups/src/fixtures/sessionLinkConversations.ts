@@ -55,7 +55,7 @@ function done(
 }
 
 /** The first turn of the second session, which debounced the lookups. */
-const debounceTurn: readonly ChatItem[] = [
+export const debounceTurn: readonly ChatItem[] = [
   { kind: 'user', id: 'debounce-ask', text: debounceMessage },
   done(
     'edit-hook',

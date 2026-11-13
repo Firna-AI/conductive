@@ -317,8 +317,8 @@ sessions as tabs above the chat, and four tabs at the bottom.
   The attachment fixtures hold byte counts.
   The formatter shows sizes such as "12 KB" and "1.2 MB".
 - [The workspace](design-workspace.md) gives the messages that wait for
-  the sandbox, the tab row with its temporary tab, and the number with Copy
-  link. It also gives the bars of the cloud computer.
+  the sandbox, the tab row with its temporary tab and its split panes, and
+  the number with Copy link. It also gives the bars of the cloud computer.
 - [The chat](design-chat.md) gives the chips of attached files, the
   Markdown tables and headings of a reply and of a file preview, and the
   fold of the work of a turn. It also gives the data that the chat does

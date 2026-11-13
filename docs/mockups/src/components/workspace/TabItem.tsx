@@ -163,30 +163,37 @@ export function TabItem(props: {
 }
 
 /**
- * Where a dragged tab lands: a line between two tabs, and the tab lifted
- * under the pointer. `place` is the place of the tab after the drop, one of
- * `count`.
+ * The tab under the pointer during a drag: a raised card with its whole
+ * title. `className` places it, at a line of the row or over the content of
+ * a pane.
  */
-export function DropPlace(props: {
-  tab: WorkspaceTab
-  place: number
-  count: number
-}) {
+export function LiftedTab(props: { tab: WorkspaceTab; className: string }) {
+  return (
+    <div
+      aria-hidden
+      className={classes(styles.tab, styles.lifted, props.className)}
+    >
+      <span className={styles.link}>
+        <TabContent tab={props.tab} />
+      </span>
+    </div>
+  )
+}
+
+/**
+ * Where a dragged tab lands: a line between two tabs, and the tab lifted
+ * under the pointer. `status` tells a screen reader the place of the tab
+ * after the drop, as `moveStatus` words it.
+ */
+export function DropPlace(props: { tab: WorkspaceTab; status: string }) {
   return (
     <li className={tabDrag.drop}>
       <span aria-hidden className={tabDrag.line}>
         <span className={tabDrag.lineEnd} />
       </span>
-      <div
-        aria-hidden
-        className={classes(styles.tab, styles.lifted, tabDrag.float)}
-      >
-        <span className={styles.link}>
-          <TabContent tab={props.tab} />
-        </span>
-      </div>
+      <LiftedTab className={tabDrag.float} tab={props.tab} />
       <span className={a11y.hidden} role="status">
-        Moving {props.tab.title} to place {props.place} of {props.count}
+        {props.status}
       </span>
     </li>
   )

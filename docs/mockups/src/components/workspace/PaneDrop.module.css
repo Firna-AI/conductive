@@ -1,0 +1,61 @@
+/* The drop mark lies over the content of a pane and takes no pointer. */
+.layer {
+  position: absolute;
+  z-index: 5;
+  inset: 0;
+  pointer-events: none;
+}
+
+/*
+ * The area where the tab lands. Its whole outline takes the accent colour,
+ * as a drop of files on the message field does, so no edge of it is an
+ * accent strip. A light tint of the accent fills it.
+ */
+.mark {
+  position: absolute;
+  inset: 8px;
+  border: 2px solid var(--ui-primary);
+  border-radius: var(--ui-radius-lg);
+  background: color-mix(in srgb, var(--ui-primary) 10%, transparent);
+}
+
+.left {
+  right: calc(50% + 4px);
+}
+
+.right {
+  left: calc(50% + 4px);
+}
+
+/*
+ * A view runs no script, so it draws the lifted tab under the pointer, in
+ * the middle of the area. The app draws it above the page, at the pointer.
+ */
+.lifted {
+  position: absolute;
+  top: 40%;
+  width: max-content;
+  transform: translateX(-50%) rotate(-1.5deg);
+}
+
+.pointerLeft {
+  left: 25%;
+}
+
+.pointerRight {
+  left: 75%;
+}
+
+.pointerPane {
+  left: 50%;
+}
+
+/*
+ * A centre column narrower than two panes of 320 px shows one pane, so a
+ * drop on its content moves no tab (`SplitColumn.module.css`).
+ */
+@container centre (width < 641px) {
+  .mark {
+    display: none;
+  }
+}

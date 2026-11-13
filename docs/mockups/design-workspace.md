@@ -3,8 +3,8 @@
 This page belongs to [the design](design.md), which gives the style, the
 layouts, the design tokens, and the shared parts. This page gives the
 messages that wait for the sandbox and the tab row of the centre column,
-with its temporary tab. It also gives the number of a workspace with Copy
-link, and the bars of the cloud computer.
+with its temporary tab and its split panes. It also gives the number of a
+workspace with Copy link, and the bars of the cloud computer.
 
 - While a sandbox starts, also for the first time, Send queues each
   message in the workspace, as `app/new-workspace/waiting` shows. A queued
@@ -56,6 +56,32 @@ link, and the bars of the cloud computer.
   the same place, keeps it temporary. A phone row shows no file tabs, so a
   phone draws no temporary tab. `.temporary` of `WorkspaceTabs.module.css`
   styles the title.
+- `SplitColumn` in `src/components/workspace/` draws the centre column
+  with one pane, or two panes side by side, from split panes decisions
+  1 C, 2 A, and 3 B, as `app/tabs/split` shows. Each pane has its own
+  `WorkspaceTabs` row with its own +, and the session history ends the
+  right row. A tab stands in one row only. A hairline parts the panes, and
+  the `ResizeHandle` of the divider lies over it. A pane is at least
+  320 px wide. The row of the focused pane marks its shown tab: its icon
+  takes the accent colour, as the current item of the org rail does. The
+  shown tab of the other pane keeps its fill, with a quieter title, and
+  one pane draws no mark. Each pane that shows a session has its own chat
+  and message field. A bar of the cloud computer that takes the place of
+  the message field, such as the archived bar, shows once, under both
+  panes.
+  - During a drag, `PaneDrop` beside it draws the drop mark over the
+    content of a pane: a full outline in the accent colour over a light
+    tint of it, on the left or the right half of one pane, or on the whole
+    pane of a split. The lifted tab hangs under the pointer. A drop in the
+    other row shows the line of that row. `paneCopy.ts` gives the words
+    that a screen reader hears, such as "Moving app.ts to the right pane,
+    place 2 of 3".
+  - A phone, and a centre column narrower than 641 px, show one row with
+    the tabs of the left pane, a short neutral line, then the tabs of the
+    right pane, and the shown tab of the focused pane. There a drop on the
+    content shows no mark. The phone row still shows only session tabs.
+  - A read-only workspace shows the saved split, with no + and no drag.
+    `SplitColumn.module.css` and `PaneDrop.module.css` style these parts.
 - `TerminalTabs` in `src/components/tools/` draws the terminals of a
   workspace as a row of tabs above the shown terminal, with + at its end,
   from decisions 1 to 3 of the terminal tabs change, as `app/tools` shows. Its tabs are

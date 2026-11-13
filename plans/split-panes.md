@@ -174,6 +174,36 @@ as [Decision numbers](../docs/architecture.md#decision-numbers) says.
 - **Recommendation:** B. It matches VS Code, which the user chose in decision 1 C, and a press never changes the other pane.
 - **Action:** ask the user, because each option changes a decision in force: decision 284 B, the place rule of the temporary tab, or the tie rule of decision 3 B.
 
+### 6. The least width of a pane
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Implementation. The mockups of Milestone 1 found it on 13 November 2026.
+- **Category:** Docs or spec.
+- **Location:** `plans/split-panes.md`, Design, "The panes". `docs/mockups/src/components/workspace/SplitColumn.module.css:35,85`, `docs/mockups/src/components/workspace/RightColumn.module.css:7`, `src/shell/workspace/workspace.module.css:28-31`.
+- **Background:**
+  - The design gives each pane at least 320 px. Below two panes and the 1 px line, the column shows the one row of a small screen, and a drop on a half does nothing.
+  - The org rail takes 48 px and the sidebar 233 px. The right column takes 34 % of the window, from 280 px to 440 px, plus a border. So it takes 441 px at 1440 px and 436 px at 1280 px.
+  - The app already narrows the right column so that one chat keeps 360 px. The user does not touch it for that.
+- **Problem:** With the default panels, two panes of 320 px show only in a window of 1363 px or wider. In a 1280 px window, the centre column is 563 px, so the split shows as one row.
+- **Impact if no action:** On a common 1280 px window, the split seems to be missing until the user hides or narrows a panel.
+- **Root question:** When the window has too little room for two usable panes beside the panels, what gives way: the panes, the right column, or the split? The options check of 13 November 2026 wrote this question again, because the first one asked only for a pane width.
+- **Options:**
+  - **A.** Keep 320 px. The split needs a window of 1363 px with the default panels. A pane of code shows about 39 characters of a line. Effort: Small.
+  - **B.** Lower the least width to 280 px. Two panes then show from 1241 px with the default panels, so a 1280 px window fits them with 1.8 px to spare. A wider stored panel stops it. A pane of code shows about 33 characters. Effort: Small.
+  - **C.** A drop on a half hides the right column when the split needs the room. This hides a panel that the user did not touch. Effort: Medium.
+  - **D.** Added by the options check. Keep 320 px. While two panes show, the right column gives way to them, down to 280 px. The split then shows from 1179 px, also with stored panel widths. At 1280 px the right column narrows from 436 px to 358 px, so the pull request bar drops its detail and the terminal loses about 11 columns. At 1440 px nothing changes. Effort: Small.
+  - **E.** Added by the options check. Use with A or B. In a column too narrow for two panes, a drop on a half still saves the split, and the one row shows it. A wider window then shows both panes. The user can still think that the split failed. Effort: Small.
+  - **F.** Added by the options check. Use with A, B, or D. A pane narrower than 360 px gives its chat the paddings of a phone. A 320 px pane then gives its text as much room as a 320 px phone. The chat changes its look at that width. Effort: Small.
+- **Left out:**
+  - A split by share alone, with no least width. A pane can then get too narrow to use.
+  - A least width of 360 px, the chat floor of the app. Two panes then need 1443 px, so a 1440 px window loses the split.
+  - A sidebar that narrows for the split. It frees only 24 px, which is not enough at 1280 px.
+  - Panes one above the other in a narrow column. It breaks decision 2 A.
+- **Wider fix:** D. One rule then says how the centre and the right column share the room, for one pane and for two.
+- **Previous examples:** The app keeps one chat at least 360 px wide in `src/shell/workspace/workspace.module.css:28-31`. VS Code keeps an editor group at least 220 px wide. The right column narrows to 280 px in a narrow window.
+- **Recommendation:** D, in place of B, which the first draft recommended. D keeps 320 px panes and brings the split to 1280 px windows with any stored panel widths. If no panel may narrow, B with F is the next best.
+- **Action:** ask the user, because the options trade the reach of the split against the width of a pane and of the right column, and no option is clearly best.
+
 ## Design
 
 These are design calls of the agent, made on 13 November 2026, unless a
@@ -186,9 +216,9 @@ first draft, and this text closes them.
   A divider between them moves the split. The browser keeps the share of
   the left pane, as it keeps the panel widths in `src/app/panels.ts`.
   Reason: the panel widths already stay in the browser.
-- A pane is at least 320 px wide, the minimum of the right column. Reason:
-  with default panels, a 1440 px window leaves about 720 px, and two panes
-  must fit there.
+- A pane is at least 320 px wide, the minimum of the right column, until
+  decision 6 says otherwise. Reason: with default panels, a 1440 px window
+  leaves about 720 px, and two panes must fit there.
 - Each pane has its own tab row, with its own "+" (decision 1 C). The
   session history button stays at the far right of the right row, and it
   reopens a session in the focused pane (decision 3 B).
@@ -206,13 +236,28 @@ first draft, and this text closes them.
   groups. A later change can add them.
 - Each pane that shows a session has its own message field and its own
   drop area for files.
+- When the cloud computer does not run, one sandbox bar shows under both
+  panes, in place of both message fields. A bar that keeps the message
+  fields shows once, below them. Reason: one cloud computer needs one
+  Restore or Resume. The mockups found this gap.
+- The focused pane marks its shown tab with the accent colour of its icon.
+  The shown tab of the other pane keeps its fill, with a quieter title. One
+  pane draws no mark. Reason: the org rail marks its current item in the
+  same way, and the mark adds no new element.
 
 ### Moves between panes
 
 - During a drag, the content of a pane shows a drop mark. With one pane,
   a drop on the left or right half opens the second pane on that side.
-  With two panes, a drop on the content of a pane moves the tab to the end
-  of that pane's row.
+  With two panes, a drop on the content of the other pane moves the tab to
+  the end of that pane's row.
+- A drop that would change nothing shows no mark and moves nothing: a drop
+  on the content of the tab's own pane, and a drop on a half of the only
+  tab of the only pane. Reason: each mark then promises a real change, as
+  the off item of decision 4 B does. The mockups found this gap.
+- The drop mark is an accent outline over a light accent tint, as the drop
+  of a file on the message field shows. Reason: every drop in the app then
+  looks the same.
 - A drop in the other row puts the tab at the drop place of that row.
 - A move to the other pane, by a drop or by the item of decision 4, shows
   the moved tab in its new pane. That pane becomes the focused pane. The
@@ -220,7 +265,8 @@ first draft, and this text closes them.
   before it.
 - A drop inside the same row keeps the shown tab, as now.
 - The status of the row tells a screen reader the new pane and place, such
-  as "app.ts moves to the right pane, place 2 of 3".
+  as "app.ts moves to the right pane, place 2 of 3". During a drag over a
+  half, it says "Moving app.ts to a new right pane".
 - Escape cancels the drag, and nothing moves.
 - A move of the temporary tab to the other pane keeps it, as a move inside
   the row does (decision 287 B).
@@ -263,16 +309,26 @@ first draft, and this text closes them.
   the tabs of the right pane. The phone row still shows only session tabs.
 - The content area shows the shown tab of the focused pane. A press on a
   tab of the other pane makes that pane the focused pane.
-- So no tab moves between panes on a small screen, and the saved split
-  stays.
+- So a drop on the content moves no tab between panes there, and the
+  saved split stays.
 - A drop on a half of the content does nothing there, and the item of
   decision 4 is off. A drag or Move left and Move right across the border
   of the two parts moves the tab to the other pane, at that place.
+- The one row has one "+", which opens a session in the focused pane, and
+  the history button at its end. A short neutral line marks the border of
+  the two parts. Reason: a move across the line changes the pane, so the
+  line must show. The mockups found this gap.
+- On a phone, when the focused pane shows a file, the Chat tab shows the
+  shown session of the other pane, else the last session of the row.
+  Reason: a phone shows files only in its Files tab.
 
 ### Read-only workspaces
 
 - A read-only workspace shows the saved split, and binds no drag. Its tab
   menu leaves out the item of decision 4, as decision 214 says.
+- A read-only workspace shows only session tabs. So a saved pane with no
+  session tab does not show there, and the other pane fills the column.
+  The saved split stays for a Restore. The mockups found this gap.
 
 ### The chat state
 
@@ -292,23 +348,26 @@ Tags: mockup
 
 Depends on: none
 
-The mockups draw the split column on desktop. The phone layout does not
-change.
+The mockups draw the split column on desktop, and the one row of a phone
+and of a narrow centre column. They live under `app/tabs/split`.
 
-- [ ] Add a split workspace screen: two panes, two tab rows, the divider,
+- [x] Add a split workspace screen: two panes, two tab rows, the divider,
       and the mark of the focused pane. Draw a session beside a session,
       and a session beside a file.
-- [ ] Draw the drag: the drop marks for the left half, the right half, and
+- [x] Draw the drag: the drop marks for the left half, the right half, and
       a pane of an open split, and a tab over the other row.
 - [ ] Draw the control of decision 4 that the user chooses: the tab menu
       item, or the split button of each row.
 - [ ] Draw the temporary tab as decision 5 says.
-- [ ] Draw the one row of a narrow centre column, with the tabs of both
+- [x] Draw the one row of a narrow centre column, with the tabs of both
       panes.
-- [ ] Draw a read-only workspace with a split.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
-- [ ] Update the design and the TODOs of this plan for each problem that
-      the mockups show.
+- [x] Draw a read-only workspace with a split.
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages. The
+      screenshots are in `.context/split-panes/mockups/`.
+- [x] Update the design and the TODOs of this plan for each problem that
+      the mockups show. Decision 6 and seven design calls came from them.
+- [ ] Draw the least width of a pane as decision 6 says, when it changes
+      the drawn screens.
 
 ## Milestone 2: Documentation and protocol
 

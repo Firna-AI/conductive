@@ -37,7 +37,7 @@ how a screen is built, and links to the other pages.
 | `app/workspace-links` | Chips in a message and an answer, then Copy link and its failure, a pasted link, a link of another org, session chips, and messages that an agent sent |
 | `app/file-mentions` | The list of `@` with a query, then the list without one, its other states, and the file chips of the composer and of a sent message |
 | `app/files`         | All files, Changes with its summary, a file, Markdown, diff, and image tab, and the temporary tab that the next press replaces |
-| `app/tabs`          | A dragged tab, the moved row, a full row, the tab menu, and the rename field  |
+| `app/tabs`          | A dragged tab, the moved row, a full row, the tab menu, the rename field, and split panes with their drags, their one row, and an archived split |
 | `app/transcripts`   | Copy a transcript from the tab menu: the toast after a copy, a failed copy, and the menu of an archived workspace |
 | `app/tools`         | The terminal tabs and their states, then the Preview tool with its detected servers and its failed list repair, and the hidden Desktop, kept for its return |
 | `app/panels`        | The right column, widened by the handle on its inner edge, and then hidden    |
@@ -50,7 +50,7 @@ with child folders shows only its canonical screen, as `marketing`, `marketing/d
 `app/orgs/suspended`, `app/account`, `app/account/connect-codex`, `app/new-workspace`,
 `app/new-workspace/dialog`, `app/org-settings`,
 `app/org-settings/cloud-computer`, `app/operator`, `app/operator/user`, `app/operator/user/access`, `app/operator/codes`, `app/banner`, `app/chat`, `app/archive`, `app/workspace-links`, `app/routines`, `app/routines/routine`,
-`app/routines/triggers`, `app/orgs/suspended/routines`, `app/file-mentions`, `app/attachments`, `app/files`, `app/tools`, `app/account/shortcuts`, and `mac-app/shortcuts` do. `marketing/pictures` has no screen of its own. Each picture's capture
+`app/routines/triggers`, `app/orgs/suspended/routines`, `app/file-mentions`, `app/attachments`, `app/files`, `app/tabs`, `app/tabs/split`, `app/tools`, `app/account/shortcuts`, and `mac-app/shortcuts` do. `marketing/pictures` has no screen of its own. Each picture's capture
 page is its own entry at `marketing/pictures/<picture>`, so each page shows
 one screen. `marketing/from-conductor` has no screen of its own either. Its
 index document, `index.md`, gives the notes of the page and where its
@@ -60,8 +60,8 @@ and build-failed states moved from `app/repository-settings` and its updating
 and update-failed states, and declare `movedFrom`. The states of `app/shell`,
 `app/account`, `app/sign-in/waitlist`, `app/new-workspace`,
 `app/new-workspace/dialog`, `app/org-settings/cloud-computer`,
-`app/operator/user/access`, `app/archive`, `app/command-palette/search`, `app/attachments`, and
-`app/files` moved into their own folders and kept their paths. Each page
+`app/operator/user/access`, `app/archive`, `app/command-palette/search`, `app/attachments`,
+`app/files`, and `app/tabs` moved into their own folders and kept their paths. Each page
 shows only its canonical screen. `app/sign-in/get-started` moved into its
 own folder and
 kept its path. Its saved states `installed`, `org-created`, `connected`,
@@ -388,3 +388,6 @@ gives those catalogue pages and their related flows.
 
 [Attachments and files](catalogue-attachments-and-files.md) gives the child
 pages of `app/attachments` and `app/files`, and their related flow.
+
+[The tab row and split panes](catalogue-tabs.md) gives the child pages of
+`app/tabs`, with the split panes of `app/tabs/split`.

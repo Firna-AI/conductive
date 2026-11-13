@@ -12,7 +12,12 @@ import { startErrorKeys } from '../fixtures/starting'
 import { terminalStates } from '../fixtures/terminals'
 import { openableWorkspaces } from '../fixtures/workspaces'
 import { barStateDefaults, barStateKeys, barStateProperties } from './barState'
-import { composerStates, tabStates, temporaryTabStates } from './chatStates'
+import {
+  composerStates,
+  paneStates,
+  tabStates,
+  temporaryTabStates,
+} from './chatStates'
 import {
   feedbackStateDefaults,
   feedbackStateKeys,
@@ -42,6 +47,7 @@ export const workspaceStateSchema = {
     'tab',
     'tabRow',
     'temporary',
+    'panes',
     'composer',
     'modelChoice',
     'resize',
@@ -128,6 +134,8 @@ export const workspaceStateSchema = {
      * `overlay` opens on it.
      */
     temporary: { enum: temporaryTabStates },
+    /** The panes of the centre column, as `paneStates` says. */
+    panes: { enum: paneStates },
     /** The composer, as `composerStates` says. */
     composer: { enum: composerStates },
     /**
@@ -137,10 +145,11 @@ export const workspaceStateSchema = {
      */
     modelChoice: { enum: ['workspace', 'fast', 'no-fast'] },
     /**
-     * The user drags the handle of the right column to widen it, or the
-     * handle between the file lists and the tools to raise the split.
+     * The user drags the handle of the right column to widen it, the
+     * handle between the file lists and the tools to raise the split, or
+     * the divider between two panes of the centre column to the left.
      */
-    resize: { enum: ['none', 'right', 'split'] },
+    resize: { enum: ['none', 'right', 'split', 'panes'] },
     /**
      * The right column of the desktop: shown, or hidden with the toggle at
      * the end of the header. A phone has no right column.
@@ -245,6 +254,7 @@ export const readyWorkspace: WorkspaceState = {
   tab: 'session',
   tabRow: 'opened',
   temporary: 'none',
+  panes: 'one',
   composer: 'empty',
   modelChoice: 'workspace',
   resize: 'none',

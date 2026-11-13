@@ -67,8 +67,8 @@ variants:
   keeps the italics. A drop in another place keeps the tab.
 
 A phone row shows no file tabs, so the phone views of these pages show the
-file as a page of the Files tab. `app/tabs` names the page in the text of
-its tab menu and of its drag.
+file as a page of the Files tab. `app/tabs` and `app/tabs/menu` name the
+page in the text of the drag and of the tab menu.
 
 The flow `user-flows/drop-a-file` goes from the drag of a screenshot onto
 the message box, through the drop, the upload, and Send, to the sent

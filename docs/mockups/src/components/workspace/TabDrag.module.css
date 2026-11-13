@@ -63,3 +63,15 @@
   width: max-content;
   transform: translateX(-50%) rotate(-1.5deg);
 }
+
+/*
+ * At an end of the row, the lifted tab hangs inward from the line, so the
+ * row does not cut it, as the app moves it in near a side of the window.
+ */
+.drop:first-child .float {
+  transform: rotate(-1.5deg);
+}
+
+.drop:last-child .float {
+  transform: translateX(-100%) rotate(-1.5deg);
+}

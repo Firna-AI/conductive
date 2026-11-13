@@ -181,6 +181,35 @@
   padding-right: 9px;
 }
 
+/*
+ * The mark of the focused pane of a split (split panes decision 1 C). Its
+ * shown tab is the current tab of the column, so its icon takes the accent
+ * colour, as the current item of the org rail does. The shown tab of the
+ * other pane keeps its fill, with a quieter title. One pane draws no mark.
+ */
+.focused .selected .icon {
+  color: var(--ui-primary);
+}
+
+.unfocused .selected,
+.unfocused .selected:hover {
+  color: var(--ui-ink2);
+}
+
+/*
+ * The one row of a phone or of a narrow split column holds the tabs of the
+ * left pane, then the tabs of the right pane. A short neutral line parts
+ * them. It is a divider, not an accent, and it takes no pointer.
+ */
+.paneBorder {
+  flex: none;
+  align-self: center;
+  width: 1px;
+  height: 16px;
+  margin: 0 4px;
+  background: var(--ui-border2);
+}
+
 /* The clock of the session history, which its menu opens from. */
 .anchor {
   display: flex;

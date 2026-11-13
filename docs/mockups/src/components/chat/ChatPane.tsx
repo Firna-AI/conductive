@@ -31,7 +31,11 @@ import styles from './ChatPane.module.css'
  */
 export function ChatPane(props: {
   items: readonly ChatItem[]
-  composer: ComposerState
+  /**
+   * The message field. A pane of a split column leaves it out when one bar
+   * under both panes takes its place, as in an archived workspace.
+   */
+  composer?: ComposerState
   /**
    * The sandbox is not running: the bar takes the place of the composer. A
    * failed first start keeps the composer under its bar, so members can
@@ -51,6 +55,11 @@ export function ChatPane(props: {
    * open folds starts at its top.
    */
   fold?: FoldState
+  /**
+   * The name that keeps the scroll of the transcript in a comparison. Each
+   * chat of a split column has its own.
+   */
+  scrollName?: string
 }) {
   const mac = useMacApp()
   const empty = props.items.length === 0 && !props.starting
@@ -74,7 +83,7 @@ export function ChatPane(props: {
             styles.scroll,
             fold !== 'closed' && styles.fromTop,
           )}
-          data-mokly-scroll="chat-transcript"
+          data-mokly-scroll={props.scrollName ?? 'chat-transcript'}
         >
           <div className={styles.transcript}>
             {groupItems(transcript).map((entry) => {
@@ -124,7 +133,7 @@ export function ChatPane(props: {
         {mac?.choicesOpen && pending.length > 0 ? <DrawnChoices /> : null}
         {props.notice}
         {props.problem ? <SandboxBar {...props.problem} /> : null}
-        {composer ? <Composer {...props.composer} /> : null}
+        {composer && props.composer ? <Composer {...props.composer} /> : null}
       </div>
     </section>
   )

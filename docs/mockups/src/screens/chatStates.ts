@@ -41,6 +41,36 @@ export const temporaryTabStates = [
 ] as const
 
 /**
+ * The panes of the centre column, from split panes decisions 1 C and 2 A.
+ * `one` draws one pane with one tab row. `sessions` draws the first session
+ * and the code file in the left pane, beside the second session in the
+ * right pane, which has the focus after its drop. `file` draws both
+ * sessions in the left pane, which has the focus, beside the kept code file
+ * in the right pane.
+ *
+ * The `drag-` states draw a tab in the middle of a drag. Over one pane, the
+ * code file hovers over the left half of its content, or the second session
+ * over the right half. Over the split of `sessions`, the code file hovers
+ * over the content of the right pane, or over the right row before its
+ * first tab. A phone has no drop on the content, so its long press lifts
+ * the second session in the one row: at its place over one pane, and
+ * across the border into the left part over a split.
+ *
+ * A phone, and a centre column narrower than two panes of 320 px, draw one
+ * row with the tabs of both panes, and the shown tab of the focused pane.
+ * A read-only workspace draws the saved split, with no drag.
+ */
+export const paneStates = [
+  'one',
+  'sessions',
+  'file',
+  'drag-left',
+  'drag-right',
+  'drag-pane',
+  'drag-row',
+] as const
+
+/**
  * The composer: empty, with a message that is not sent yet, with attached
  * files, with its picker open, or with a message for an agent that is not
  * connected. Or with a message in a session whose starter's login is not

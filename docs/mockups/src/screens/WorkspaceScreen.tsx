@@ -1,14 +1,11 @@
 import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
-import { MessageSquarePlus } from 'lucide-react'
 import { ChatPane } from '../components/chat/ChatPane'
 import { ChatWorkspaces } from '../components/chat/chatWorkspaces'
-import { EmptyState } from '../components/common/EmptyState'
 import { FilePage } from '../components/files/FilePage'
 import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
 import { acmeRail } from '../components/layout/OrgRail'
 import { useMacApp } from '../components/mac/MacApp'
-import { SuspendedOrgNotice } from '../components/orgs/SuspendedOrgNotice'
 import { ChecksActions } from '../components/workspace/BarActions'
 import { MobileTabBar } from '../components/workspace/MobileTabBar'
 import {
@@ -20,24 +17,21 @@ import { WorkspaceBody } from '../components/workspace/WorkspaceBody'
 import { WorkspaceHeader } from '../components/workspace/WorkspaceHeader'
 import { WorkspaceTabs } from '../components/workspace/WorkspaceTabs'
 import { mayArchiveWorkspace } from '../components/workspaces/permissions'
-import { chatItemsFor } from '../fixtures/maskedFiles'
 import { memberViewer, people } from '../fixtures/members'
-import { orgs, suspendedOrg } from '../fixtures/orgs'
+import { suspendedOrg } from '../fixtures/orgs'
 import { bannerSummary } from '../fixtures/pullRequests'
 import type { ShortcutChanges } from '../fixtures/shortcutChanges'
 import { suspendedOwner } from '../fixtures/startRefusals'
 import { paths } from '../paths'
-import { composerFor } from './composerFor'
-import { composerNotice } from './composerNotice'
 import { placeLostUpdate } from './lostUpdates'
 import { changedWorkspaces, chatWorkspacesOf } from './orgWorkspaces'
 import { viewerOf } from './sessionStarter'
 import { barOf, branchOf } from './workspaceBar'
+import { chatPropsOf } from './workspaceChat'
 import {
   FilesContent,
   filesPlaceholder,
   openFile,
-  startingLogFor,
   ToolContent,
   workspaceSidebar,
 } from './workspaceParts'
@@ -54,6 +48,7 @@ import {
   drawnState,
   sandboxNotice,
 } from './workspaceSandbox'
+import { WorkspaceSplit } from './workspaceSplit'
 import type { WorkspaceState } from './workspaceState'
 import { tabRowOf } from './workspaceTabRow'
 import { historyFor, tabsFor, workspaceName } from './workspaceTabs'
@@ -71,6 +66,7 @@ const raisedSplit = 35
  * phone shows one at a time, with tabs to switch. In a suspended org the
  * chat history stays, and nothing in the workspace can change: no message,
  * no new session, no rename, no owner change, no Archive, and no Restore.
+ * The centre column can split into two panes, as `WorkspaceSplit` draws.
  * `overlay` lies over the workspace in place of the overlay of its state,
  * such as a dialog that another screen opens over it. The chat and the
  * overlay find the workspaces of their chips in the list of the screen.
@@ -115,36 +111,18 @@ export function WorkspaceScreen(props: {
   const restorable = archiveRestore(state) === 'available'
   const bar = barOf(state, { archivable, readOnly })
   const problem = sandboxNotice(state)
-  const fresh = state.tab === 'new-session'
   const rightHidden = state.rightColumn === 'hidden'
   const rows = chatWorkspacesOf(state, { workspace, status })
+  const chatProps = chatPropsOf(state, {
+    workspace,
+    items: open.items,
+    problem,
+    viewer,
+    viewport,
+  })
   const chat = (
     <ChatWorkspaces rows={rows}>
-      <ChatPane
-        composer={composerFor(state, workspace, viewport)}
-        empty={
-          <EmptyState
-            body={`The agent works on ${workspace.branch}, on the same cloud computer as the other sessions.`}
-            icon={MessageSquarePlus}
-            title="New session"
-          />
-        }
-        fold={state.fold}
-        items={fresh ? [] : chatItemsFor(open.items, state.paths)}
-        notice={
-          // An archived workspace keeps its archived bar, so the notice of a
-          // suspended org shows above it.
-          archived && suspended ? (
-            <SuspendedOrgNotice org={orgs[suspendedOrg]} />
-          ) : (
-            composerNotice(state, workspace)
-          )
-        }
-        problem={problem}
-        starting={startingLogFor(state)}
-        viewer={viewer}
-        viewport={viewport}
-      />
+      <ChatPane {...chatProps} />
     </ChatWorkspaces>
   )
   const workspaceHeader = (
@@ -190,6 +168,22 @@ export function WorkspaceScreen(props: {
       viewport={viewport}
     />
   )
+  // Split panes draw their own rows under the header, in place of the row.
+  const split =
+    state.panes === 'one' ? undefined : (
+      <ChatWorkspaces rows={rows}>
+        <WorkspaceSplit
+          chat={chatProps}
+          historyEntries={historyFor(state)}
+          panes={state.panes}
+          readOnly={readOnly}
+          state={state}
+          tabs={tabs}
+          viewport={viewport}
+          workspace={workspace}
+        />
+      </ChatWorkspaces>
+    )
   // A phone shows the actions of the bar at the top of the Checks tab.
   const checksTop =
     viewport === 'mobile' ? (
@@ -216,7 +210,7 @@ export function WorkspaceScreen(props: {
       return <MobileFrame>{palette}</MobileFrame>
     }
     const body = {
-      chat: (
+      chat: split ?? (
         <>
           {tabRow}
           {chat}
@@ -272,11 +266,12 @@ export function WorkspaceScreen(props: {
     >
       <WorkspaceBody
         center={
-          file ? (
+          split ??
+          (file ? (
             <FilePage placeholder={filesPlaceholder(state, true)} view={file} />
           ) : (
             chat
-          )
+          ))
         }
         files={files}
         filesShare={state.resize === 'split' ? raisedSplit : undefined}
@@ -284,7 +279,7 @@ export function WorkspaceScreen(props: {
         pullRequest={<PullRequestBar bar={bar} workspace={workspace} />}
         rightHidden={rightHidden}
         rightWidth={state.resize === 'right' ? widenedRight : undefined}
-        tabs={tabRow}
+        tabs={split ? undefined : tabRow}
         tools={
           archived ? undefined : (
             <ToolsPanel tool={state.tool}>{tool}</ToolsPanel>
