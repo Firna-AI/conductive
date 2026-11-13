@@ -39,7 +39,11 @@ function settingsAction(value: unknown): DeviceSettingsAction {
   if (input.action === 'read') return { action: 'read' }
   if (input.action === 'remove-command')
     return { action: input.action, command: deviceRequired(input.command) }
-  if (input.action === 'stop-workspace' || input.action === 'keep-workspace')
+  if (
+    input.action === 'stop-workspace' ||
+    input.action === 'extend-workspace' ||
+    input.action === 'keep-workspace'
+  )
     return {
       action: input.action,
       workspaceId: deviceRequired(input.workspaceId),

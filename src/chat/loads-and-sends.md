@@ -111,7 +111,9 @@ The session history stays open. The tab keeps its old name, and the sandbox bar 
   agent as Stop does while a turn runs and does not stop yet. The key of
   Model picker opens the menu of the model picker. The key of Next effort
   level chooses the next effort of the menu, with a wrap from the last
-  effort to the first.
+  effort to the first. For a model that the model list marks as fast, the
+  key of Fast mode turns fast mode on or off, as the Fast row of the menu
+  does.
 - Send works while the sandbox is not ready: during the first start of a
   new workspace, after it failed, and during a resume. The workspace queues
   each message for the sandbox, as

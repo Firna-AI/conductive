@@ -6,11 +6,11 @@ import type {
 } from '../chat/workspace-events'
 import {
   RUNNER_PROTOCOL_VERSION,
-  type RunnerCommandV2 as RunnerCommand,
+  type RunnerCommand,
   type RunnerEventEnvelope,
   type RunnerHello,
   type RunnerToWorkspace,
-  type WorkspaceToRunnerV2,
+  type WorkspaceToRunner,
 } from '../../src/shared/runner'
 import type { RunnerConnector } from '../../src/shared/runner-transport'
 import type { RunnerFileResponse } from '../../src/shared/runner-files'
@@ -41,7 +41,7 @@ export class FakeDurableObjectEndpoint {
   private readonly cursors = new Map<string, number>()
   private readonly options: FakeDurableObjectOptions
   private readonly files = new FakeRunnerFileReports()
-  private connection: FakeRunnerConnection<WorkspaceToRunnerV2> | null = null
+  private connection: FakeRunnerConnection<WorkspaceToRunner> | null = null
 
   constructor(options: FakeDurableObjectOptions) {
     this.options = options
@@ -51,7 +51,7 @@ export class FakeDurableObjectEndpoint {
     ).href
   }
 
-  connect: RunnerConnector<WorkspaceToRunnerV2> = (request) => {
+  connect: RunnerConnector<WorkspaceToRunner> = (request) => {
     if (
       request.url !== this.url ||
       request.workspaceToken !== this.options.workspaceToken
@@ -60,7 +60,7 @@ export class FakeDurableObjectEndpoint {
     }
     this.connection?.close()
     let hello: RunnerHello | null = null
-    const connection = new FakeRunnerConnection<WorkspaceToRunnerV2>(
+    const connection = new FakeRunnerConnection<WorkspaceToRunner>(
       (message) => {
         this.received.push(structuredClone(message))
         if (message.type === 'hello') {
@@ -113,7 +113,7 @@ export class FakeDurableObjectEndpoint {
 
   private store(
     message: RunnerEventEnvelope,
-    connection: FakeRunnerConnection<WorkspaceToRunnerV2>,
+    connection: FakeRunnerConnection<WorkspaceToRunner>,
   ): void {
     const through = this.cursors.get(message.streamId) ?? 0
     if (message.eventNumber > through + 1) {

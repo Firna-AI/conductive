@@ -5,19 +5,25 @@ agent login forms, and model lists in the web app.
 
 - The account has four tabs, General, Agents, Preferences, and Keyboard
   shortcuts, as the org settings have. Each tab is a link with its own
-  address. General holds the sign-in, This Mac, GitHub, and the invite
+  address. General holds the sign-in, GitHub, and the invite
   code. Agents, at `/account/agents`, holds the logins of Claude and
   Codex. The `?connect=` address of an agent opens its Connect form on
   Agents. An older `/account?connect=` link opens Agents too. Preferences holds the New
   workspaces section: Model and effort, and
   [the choice of how New workspace opens](../../docs/protocol/create-a-workspace.md#the-preference).
   On a phone, a tab that does not fit moves to a second line.
+- Model and effort saves each change at once through
+  `AccountModel.setDefaultChoice`. While it saves, the picker shows the new
+  choice. A Fast change keeps the menu open, so the switch shows its new
+  state in place. The trigger and the rows of the open menu take no other
+  change until the save ends. A failed save shows a toast, and the picker
+  shows the saved choice.
 - Keyboard shortcuts lists the keys of each command, and saves each change
   at once through `AccountModel.saveShortcuts`, as
   [the Keyboard shortcuts tab](../shell/account/shortcuts/README.md) says.
   The keys and every hint of the app use the saved changes at once.
-- The account of the Mac app shows This Mac after the sign-in section. A
-  browser shows none and asks no Mac.
+- The account of the Mac app adds This Mac as its fifth tab, after Keyboard
+  shortcuts. A browser shows General at its address and asks no Mac.
 - Each connected login of the account shows its share switch, "Let other
   members use this login", and Get started shows none. The switch saves
   at once through `AccountModel.setNoReuse`. While it saves, it shows the

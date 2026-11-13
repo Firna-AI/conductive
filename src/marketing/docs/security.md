@@ -49,6 +49,8 @@ In a workspace with older cloud computer software, agent commits name the worksp
 
 Other members' messages can spend a session starter's login while that person shares it.
 Without sharing, another member's message starts a new session on their own login.
+Any member who can send in a session can still change its model, effort, and **Fast** setting.
+That choice also applies to the starter's own messages, which use the starter's login.
 The agent can identify the member who sent each message.
 Another member's message during a turn does not change its GitHub account, commit author, or receiving Mac.
 
@@ -114,8 +116,8 @@ For an own endpoint, Conductive encrypts the address and key and keeps the host 
 Account shows the host, including any non-default port.
 Your browser gets neither the saved key nor the full saved address back.
 
-A newer cloud computer starts from a shared setup that requires Conductive to keep agent logins outside the computer.
-Its model requests and answers pass through Conductive on Cloudflare.
+Conductive keeps agent logins outside cloud computers.
+Model requests and answers pass through Conductive on Cloudflare.
 Conductive adds the session starter's login before sending each request to Anthropic, OpenAI, or the chosen endpoint.
 
 A chosen endpoint gets the messages, files, and command results of each turn on its login, whoever sent the message.
@@ -123,7 +125,7 @@ It processes them where its owner runs it.
 An own endpoint login starts with sharing on.
 Its owner can turn sharing off in **Account**.
 
-Each turn there gets a temporary credential called a turn token.
+Each turn gets a temporary credential called a turn token.
 It gives no copy of the stored login.
 A program or member with terminal access can read or copy it.
 
@@ -142,27 +144,16 @@ Conductive keeps no copy of a model request or answer as it passes them on.
 It writes no body or header value from those requests or answers to its logs.
 The normal chat history and Mac command records still stay on the service.
 
-An own endpoint's address and key never reach a cloud computer, including an older computer.
-Its turn needs agent software that supports temporary credentials.
-If the software cannot use them, the turn cannot start.
-
-For subscription tokens and provider API keys, an older cloud computer still permits software to receive the session starter's agent login itself.
-A program or member with terminal access can read or copy that login during a turn.
-A copied login can remain usable after the turn ends.
-Agent settings in the repository can also send that login to another address.
-Removing a login from Account does not revoke a copy held elsewhere.
+An own endpoint's address and key never reach a cloud computer.
+Each turn needs supported agent software.
+If Conductive reports unsupported agent software, ask an admin to run **Build computer**.
+After it succeeds, create a new workspace.
 
 Your ChatGPT sign-in stays outside the cloud computer.
 Conductive renews that sign-in for you.
-Your ChatGPT email, account ID, and plan can reach the cloud computer.
-An older cloud computer cannot run Codex with ChatGPT, so your ChatGPT sign-in never reaches it.
-
-Installing newer software on that computer does not remove this risk.
-A new build gives the protection to new cloud computers created from its setup.
-Ask an admin to run **Build computer**.
-Then create a new workspace from that build for the new protection.
-
-Agent settings in the repository can send an older computer's model requests and agent login to another address.
+Your ChatGPT email, account ID, and ChatGPT workspace name can reach the cloud computer.
+ChatGPT sign-in needs agent software that supports its temporary credentials.
+If its turn cannot start, follow the [ChatGPT recovery steps](/docs/agent-logins#recover-from-a-login-error).
 
 Code on the computer can also obtain the GitHub credential available to that workspace.
 This includes the workspace owner's GitHub credential outside a running agent turn.
@@ -230,6 +221,8 @@ Only the connected Mac that receives a request can approve it.
 **Always allow** covers the exact command text in any requested folder on that Mac.
 Workspace permission covers every command from one workspace for 15 minutes, or until you stop it.
 Permission until you stop also ends when you quit the Mac app or sign out.
+While the 15 minutes run, the workspace bar offers **Extend**, **Keep until I stop**, and **Stop**.
+**Extend** resets their time left to 15 minutes from now.
 
 Use **Remove** or **Stop** in **This Mac** to change those saved permissions.
 Keep the app open and retry if a permission change takes effect but cannot save.

@@ -9,18 +9,18 @@
 - **Terms:**
   - **Org env vars:** the env vars that an org admin saves in the org settings. Each cloud computer of the org gets them at each start.
   - **Agent environment:** the environment that the runner gives the `claude` program and the Codex App Server. `providerEnvironment` builds it.
-  - **Turn login:** the setup token or API key that a turn runs on. The runner gives it to the agent program on a private route, not in the environment.
+  - **Turn token:** the token that a turn runs on, in place of the agent login. The runner gives it to the agent program in a private file or a login request, not in the environment.
 - **Background:**
   - `image/runner-start.sh` loads `/run/ascii-secrets/env.sh` between `set -a` and `set +a`. So every org env var becomes part of the runner's environment.
   - `providerEnvironment` copies the runner's environment. It removes only the names that start with `ANTHROPIC_`, `CLAUDE_`, `OPENAI_`, or `CODEX_`, and `CLAUDECODE`.
   - So an org env var such as `NODE_TLS_REJECT_UNAUTHORIZED=0` reaches the `claude` program. The pinned program is built with Bun, and its binary reads that name. `SSL_CERT_FILE` reaches the Codex App Server, and its binary reads that name.
-  - With certificate checks off, or with a certificate store that the org chose, a machine on the network path can read each request of an agent. On a runner of protocol 2, each request goes to the model gateway with a turn token and the files of the turn. On a runner of protocol 1, it goes to Anthropic or OpenAI with the real login.
-  - The model gateway, on `main` since 10 November 2026, limits the harm on protocol 2: a copied turn token stops working when its turn ends. The files of the turn can still be read.
+  - With certificate checks off, or with a certificate store that the org chose, a machine on the network path can read each request of an agent. Each request goes to the model gateway with a turn token and the files of the turn.
+  - The model gateway, on `main` since 10 November 2026, limits the harm: a copied turn token stops working when its turn ends. The files of the turn can still be read.
   - `docs/protocol/isolation.md`, in "Agent logins in a sandbox", already accepts that the members of one org trust each other with their logins. So an admin who sets such a variable on purpose gains little. The risk is a variable set by mistake, for example for a company proxy.
   - The own endpoint plan of 8 November 2026 found this. Its address rule for own endpoints assumes that `https://` protects the key on the network path.
-- **Problem:** An org env var can turn off or replace the certificate checks of the agent programs. Then the turn token or the login, and the files of every member's turn, can be read on the network path.
-- **Impact if no action:** One wrong org env var exposes the turn tokens or the logins, and the files, of every member of the org to a machine on the network path, with no sign in the app.
-- **Root question:** Which org env vars may change how the agent programs check the servers that they send logins to?
+- **Problem:** An org env var can turn off or replace the certificate checks of the agent programs. Then the turn token and the files of every member's turn can be read on the network path.
+- **Impact if no action:** One wrong org env var exposes the turn tokens and the files of every member of the org to a machine on the network path, with no sign in the app.
+- **Root question:** Which org env vars may change how the agent programs check the servers that they send turn tokens to?
 - **Options:**
   - **A.** Remove `NODE_TLS_REJECT_UNAUTHORIZED` from the agent environment in `providerEnvironment`. Keep the variables that add a certificate, such as `NODE_EXTRA_CA_CERTS`. Cost: an org that needs certificate checks off for a company proxy loses that. Effort: Small.
   - **B.** As A, and also remove the variables that replace the certificate store, such as `SSL_CERT_FILE` and `SSL_CERT_DIR`. Cost: an org with its own certificate store must use `NODE_EXTRA_CA_CERTS`, which Codex does not read. Effort: Small.

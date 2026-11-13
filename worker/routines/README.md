@@ -31,7 +31,9 @@ Equal creation times sort by ID descending.
 The run state comes from its stored outcome, its workspace, and its creation attempt.
 Each run returns its recorded agent and its recorded owner as a person.
 The starter saves the complete agent choice once, before the login check.
-The check and workspace create use that same choice, including its model and effort.
+The check and workspace create use that same choice, including its model, effort, and fast mode.
+Routine saves keep fast mode only for a marked model.
+[Fast mode](../../docs/protocol/fast-mode.md#saved-defaults-new-workspaces-and-routines) gives the rules.
 Runs without a saved choice return null for the agent.
 Runs without a saved owner return null for the owner.
 Neither value falls back to the routine's current settings.
@@ -54,7 +56,7 @@ Scheduled and pull request runs also need an active routine.
 `startRoutineRun` checks access again before a new create and skips a queued run that cannot start.
 It checks the owner's agent login and fresh GitHub access before the create.
 The first session uses the owner's own login, independent of its share setting.
-A version 2 runner gets only a turn token for that login through the model gateway.
+The runner gets only a turn token for that login through the model gateway.
 It calls the existing workspace create and first-message admission paths.
 It does not wait for cloud computer startup.
 A repeat with a creation attempt uses its original sender and bypasses the routine access and login checks.

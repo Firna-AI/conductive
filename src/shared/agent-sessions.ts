@@ -6,6 +6,7 @@ import type { AgentWorkspaceSummary } from './agent-tools'
 interface AgentSessionChoiceRequest {
   model?: { agent: Agent; model: string }
   effort?: Effort
+  fast?: boolean
   requestId?: string
 }
 

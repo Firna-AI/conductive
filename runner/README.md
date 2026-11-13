@@ -12,9 +12,13 @@ requests. [Agent runner](../docs/protocol/agent-runner.md) and
 [Model gateway](../docs/protocol/model-gateway.md) state its requirements,
 and the [shared contracts](../src/shared/README.md) define its messages.
 
+The workspace refuses a runner of any other protocol version before any
+command, as [Runner versions](../docs/protocol/version-pins.md#runner-versions)
+says.
+
 The `hello` advertises every login kind that this runner can run.
 The Worker checks that list before dispatching a turn or message.
-An older runner receives no unsupported login and the turn fails with recovery steps.
+A login kind that a runner does not advertise gets no command, and the turn fails with recovery steps.
 
 This folder is a separate Node 24 package with its own lockfile. The root
 `npm install` does not install it. Tests inject the fake workspace endpoint.
@@ -29,12 +33,25 @@ These facts belong to this implementation, not to the protocol docs.
   that program. The runner turns off its automatic updates. It starts the
   program through the SDK option `spawnClaudeCodeProcess`, so the runner
   owns the child process.
+- The Claude Agent SDK has no `ultra` effort. `src/providers/claude-effort.ts`
+  starts and changes Ultra as the `max` level with the `ultracode` flag
+  setting on. Each other effort sends `ultracode: false`. Codex takes each
+  effort under its own name.
 - Codex uses the pinned Codex App Server, through `@openai/codex-sdk`.
   API keys use its private login request. ChatGPT sign-ins use a temporary
   login file with a turn token and public account identity.
   [Agent logins](agent-logins.md#codex) gives both routes through the gateway.
   [Conversation continuation](codex-logins.md#conversation-continuation)
   gives the resume and fork sequence after a login kind change.
+- Claude takes `fastMode` in its start settings and in `applyFlagSettings`.
+  Codex takes `serviceTierForTurn` on each `turn/start`: `priority` for fast
+  and `default` for standard. No thread setting keeps a tier across turns.
+- After each update of an agent SDK, check which models send the fast
+  fields. Check that Claude still turns on fast mode without its account
+  check under `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1`. The runner sets
+  no `CLAUDE_CODE_SKIP_FAST_MODE_ORG_CHECK`. Use a local capture endpoint,
+  as [Fast mode](../docs/protocol/fast-mode.md#the-requests-of-the-agents)
+  describes the request requirements.
 - Both agents request no approvals and the service user's rights. ChatGPT
   workspace rules can replace these Codex settings on a ChatGPT turn.
 - The runner configures the sandbox's `computer` and `conductive` MCP

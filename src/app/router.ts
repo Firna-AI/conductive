@@ -13,11 +13,16 @@ export type SettingsTab = (typeof SETTINGS_TABS)[number]
 
 /** The tabs of a saved routine on a phone: its form, and its runs. */
 export type RoutineTab = 'routine' | 'runs'
+/**
+ * The tabs of the account. Only the Mac app shows This Mac, so a browser
+ * shows General at its address.
+ */
 export const ACCOUNT_TABS = [
   'general',
   'agents',
   'preferences',
   'shortcuts',
+  'this-mac',
 ] as const
 
 export type AccountTab = (typeof ACCOUNT_TABS)[number]

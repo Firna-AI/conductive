@@ -1,4 +1,4 @@
-import { Fragment, type ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
 import type { PendingMessage } from '../state/chat-snapshot'
@@ -17,6 +17,22 @@ import {
   type TranscriptInsert,
 } from '../../shared/transcript/transcript-entries'
 import { WorkFold } from './WorkFold'
+import { rowKeyAttribute } from './chat-place'
+import local from './chat.module.css'
+
+/**
+ * One row of the transcript, with the key that the reader's place keeps. A
+ * row lays out its parts as the transcript does, and an empty row takes no
+ * space, so the rows change nothing that shows.
+ */
+function Row(props: { id: string; children: ReactNode }) {
+  const key = { [rowKeyAttribute]: props.id }
+  return (
+    <div className={local.row} {...key}>
+      {props.children}
+    </div>
+  )
+}
 
 /** The running turn: thinking until the agent writes, and the time since it started. */
 function WorkingRow(props: { turn: RunningTurn; now: number }) {
@@ -61,36 +77,49 @@ export function TranscriptView(props: {
         switch (entry.kind) {
           case 'insert':
             return (
-              <Fragment key={entry.insert.key}>{entry.insert.content}</Fragment>
+              <Row id={`insert:${entry.insert.key}`} key={entry.insert.key}>
+                {entry.insert.content}
+              </Row>
             )
           case 'tools':
             return (
-              <ToolGroup calls={entry.calls} open={entry.open} key={entry.id} />
+              <Row id={`tools:${entry.id}`} key={entry.id}>
+                <ToolGroup calls={entry.calls} open={entry.open} />
+              </Row>
             )
           case 'work':
-            return <WorkFold key={entry.id} steps={entry.steps} />
+            return (
+              <Row id={`work:${entry.id}`} key={entry.id}>
+                <WorkFold steps={entry.steps} />
+              </Row>
+            )
           case 'item':
             return (
-              <ItemView
-                actions={{
-                  canRetry: entry.item.id === retryable,
-                  retrying: props.retrying,
-                  onRetry: props.onRetry,
-                  onOpenDiff: props.onOpenDiff,
-                }}
-                item={entry.item}
-                key={entry.item.id}
-                readers={props.readers}
-                transcript={transcript}
-              />
+              <Row id={`item:${entry.item.id}`} key={entry.item.id}>
+                <ItemView
+                  actions={{
+                    canRetry: entry.item.id === retryable,
+                    retrying: props.retrying,
+                    onRetry: props.onRetry,
+                    onOpenDiff: props.onOpenDiff,
+                  }}
+                  item={entry.item}
+                  readers={props.readers}
+                  transcript={transcript}
+                />
+              </Row>
             )
         }
       })}
       {props.pending.map((message) => (
-        <UserBubble key={`pending:${message.id}`} message={message} />
+        <Row id={`pending:${message.id}`} key={`pending:${message.id}`}>
+          <UserBubble message={message} />
+        </Row>
       ))}
       {transcript.turn ? (
-        <WorkingRow now={props.now} turn={transcript.turn} />
+        <Row id="working">
+          <WorkingRow now={props.now} turn={transcript.turn} />
+        </Row>
       ) : null}
       {props.children}
     </>

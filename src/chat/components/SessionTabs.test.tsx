@@ -10,6 +10,7 @@ const choice: AgentChoice = {
   agent: 'claude',
   model: 'Opus 5.5',
   effort: 'high',
+  fast: false,
 }
 
 /** The tab bar with one session that has no title, as the row draws it. */

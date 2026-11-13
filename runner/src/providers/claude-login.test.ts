@@ -91,7 +91,7 @@ it('starts Claude with profile selectors and no gateway settings or credential d
   )
   expect(options?.env?.ANTHROPIC_PROFILE).toMatch(/^[A-Za-z0-9_.-]+$/)
   expect(options?.settingSources).toEqual(['project'])
-  expect(options?.settings).toBeUndefined()
+  expect(options?.settings).toEqual({ fastMode: false })
   expect(
     Object.keys(options?.env ?? {}).filter((key) =>
       /^(ANTHROPIC_|CLAUDE_CODE_.*FILE_DESCRIPTOR)/.test(key),
