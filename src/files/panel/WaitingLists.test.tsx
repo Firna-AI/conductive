@@ -8,7 +8,6 @@ import type { FileListKind } from '../navigation'
 import {
   filesAfterHistory,
   filesFor,
-  heldTree,
   slow,
   startFiles,
   testNavigation,
@@ -69,25 +68,37 @@ it(
   },
 )
 
-it(
-  'shows the load of a saved list and the Try again of another failed read while the sandbox starts',
+it.each([
+  { held: 'all', failed: 'changes' },
+  { held: 'changes', failed: 'all' },
+] as const)(
+  'shows the load of a saved $held list and the Try again of a failed $failed list while the sandbox starts',
   slow,
-  async () => {
+  async ({ held, failed }) => {
     const server = new FakeApiServer()
+    const path = { all: filePaths.tree, changes: filePaths.changes }
     server.json(
       'GET',
-      filePaths.changes(org, id),
+      path[failed](org, id),
       { error: { code: 'internal', message: 'Broken.' } },
       500,
     )
-    const held = heldTree(server)
-    const files = filesAfterHistory(server, held.fetch)
+    let release = () => {}
+    const reply = new Promise<void>((resolve) => (release = resolve))
+    const heldPath = path[held](org, id)
+    const files = filesAfterHistory(server, async (input, init) => {
+      if (new URL(input, 'http://app.test').pathname === heldPath) {
+        await reply
+      }
+      return server.fetch(input, init)
+    })
     files.start()
     await new Promise((resolve) => setTimeout(resolve, 0))
 
-    expect(starting(files, 'all')).toMatch(/Loading files$/)
-    expect(starting(files, 'changes')).toContain('didn&#x27;t load Try again')
-    held.release()
+    const loading = held === 'all' ? 'Loading files' : 'Loading changes'
+    expect(starting(files, held)).toMatch(new RegExp(`${loading}$`))
+    expect(starting(files, failed)).toContain('didn&#x27;t load Try again')
+    release()
     files.stop()
   },
 )
