@@ -2,7 +2,7 @@
 
 - **Severity:** Low. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Outside the scope.
-- **Added:** 2026-11-13, from the options check of the plan `plans/terminal-links.md` on branch `calummoore/delft-vl39`.
+- **Added:** 2026-11-13, from the options check of the terminal links plan on branch `calummoore/delft-vl39`.
 - **Location:** `src/terminal/TerminalScreen.tsx`.
 - **Reason:** The user asked for links that open on a click, and keyboard access needs its own control and key.
 

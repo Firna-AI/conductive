@@ -2,7 +2,7 @@
 
 - **Severity:** Low. **Likelihood:** Common. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
-- **Added:** 2026-11-10, from the options check of the plan `plans/pressable-chat-links.md` on branch `calummoore/chat-link-handling`. Narrowed on 2026-11-13 to the tool call lines by the plan `plans/terminal-links.md` on branch `calummoore/delft-vl39`, which makes the terminal addresses open.
+- **Added:** 2026-11-10, from the options check of the plan `plans/pressable-chat-links.md` on branch `calummoore/chat-link-handling`. Narrowed on 2026-11-13 to the tool call lines by the terminal links change on branch `calummoore/delft-vl39`, which makes the terminal addresses open.
 - **Location:** `src/chat/components/ToolGroup.tsx`, which draws the tool call lines of the chat.
 - **Reason:** The user asked for links in the chat text and in the terminal, and the tool call lines draw their text with another part.
 
@@ -22,7 +22,7 @@
   - **B.** Link the addresses of tool call lines with the shared link part of the chat. Cost: a press in a command can open an address that the command calls. Effort: Medium.
 - **Left out:** None.
 - **Wider fix:** B, with the shared link reader `src/markdown/web-links.ts` deciding each kind, so the tool call lines, the chat, and the terminal follow one rule.
-- **Previous examples:** The chat links of `plans/pressable-chat-links.md` and the terminal links of `plans/terminal-links.md`.
+- **Previous examples:** The chat links of `plans/pressable-chat-links.md` and the terminal links of branch `calummoore/delft-vl39`.
 - **Related:** `plans/follow-ups/local-address-path-in-preview.md`: a local address opens the first page of its server.
 - **Recommendation:** A. A tool call line shows a command, and a press there can open an address that the command calls.
 - **Action:** ask the user, because B adds pressable addresses to the tool call lines, which no requirement covers.
