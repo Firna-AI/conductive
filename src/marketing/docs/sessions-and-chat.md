@@ -65,7 +65,12 @@ Wait for uploads to finish before you send.
 If an upload fails, use **Try again** or remove its chip.
 Removing a chip takes its file off the draft.
 Undo brings back the chip and its file.
-To attach a folder's contents, select its files.
+
+To attach a folder, drop it into the message box.
+Your browser zips the folder before the upload, so the folder becomes one `.zip` file chip.
+The zip holds every file and folder in it, also hidden files.
+The zip can be up to 100 MB, as each file can.
+If the browser cannot read the folder, use **Attach files** in the notice to pick its files.
 
 Each chip keeps its place in the sent message.
 When the message reaches the agent, select its file chip to open the copy.
@@ -179,6 +184,9 @@ The answer stays visible beside it.
 Agent replies can contain headings, paragraphs, lists, code, and tables.
 A wide table scrolls sideways inside the message.
 The text around it keeps the width of the chat.
+To copy a code block, select **Copy code** in its top corner.
+With a mouse, the button shows when you point at the block.
+**Code copied** confirms the copy.
 
 While a reply arrives, the chat shows its headings, text, and table rows as they arrive.
 In the folded work of a turn, open a message line to read its table.

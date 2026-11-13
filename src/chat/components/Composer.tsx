@@ -5,7 +5,7 @@ import {
   focusStayed,
   type ComposerFocusRequest,
 } from '../../app/composer-focus'
-import { filesWait } from '../../app/draft-files'
+import { filesWait, type IntakeRefusals } from '../../app/draft-files'
 import type { Agent, AgentChoice, AgentModel } from '../../shared/agents'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
@@ -69,11 +69,12 @@ export interface ComposerProps {
   /**
    * Attaches the files of a pick or a drop to the draft. It gives their IDs
    * at once, while they upload, so their chips go into the text in the same
-   * event. `folders` names each folder of a drop, which it does not attach.
+   * event. A dropped folder comes as its zip. `refusals` names each folder
+   * of a drop whose zip is too large or that the browser could not read.
    */
   onAttach: (
     files: readonly File[],
-    folders?: readonly string[],
+    refusals?: IntakeRefusals,
   ) => readonly string[]
   onChooseModel: (choice: AgentChoice) => void
   /** The field takes the focus when it shows, as `ComposerFocus` says. */
@@ -120,8 +121,8 @@ function useComposerKeys(props: {
  * has no caret, and a chip that leaves the text takes its file off the
  * draft. The whole box takes a drop of files, as `useComposerDrop` says,
  * also while a message sends or a file uploads. Send waits while a file
- * uploads or failed. Files over the size limit and a dropped folder get a
- * notice over the box, which can open the file picker again.
+ * uploads or failed. Files over the size limit and a folder that could not
+ * be read get a notice over the box, which can open the file picker again.
  * While a turn runs, a message steers the turn, and Stop sits beside Send.
  * While the sandbox is not ready, Send still sends, and the workspace queues
  * the message. When a message spends the agent login of another member, a

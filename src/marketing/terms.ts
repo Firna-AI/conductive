@@ -147,14 +147,15 @@ export const termsDocument: LegalDocument = {
         paragraph`You decide which commands run. You can allow a command
           once. You can always allow the exact same command text on that
           Mac. You can allow every command of one workspace on that Mac
-          for 15 minutes.`,
+          for 15 minutes, or until you stop it. Permission until you stop
+          it also ends when the Mac app quits or signs out.`,
         paragraph`An allowed command runs with your own permissions on the
           Mac, in the folder that the request names. An always-allowed
           command runs in any folder that a later request names.`,
         paragraph`You answer for each command that you allow, and for what
           it does on your Mac and to your data.`,
         paragraph`You can remove an always-allowed command, or stop the
-          15 minutes, in the Mac app at any time.`,
+          permission of a workspace, in the Mac app at any time.`,
       ],
     },
     {

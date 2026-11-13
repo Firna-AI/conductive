@@ -166,11 +166,36 @@ at `app/attachments`, in New workspace, and in the flow
   browser would open the file in place of the app, and each draft lives
   only in the memory of its tab. The Feedback dialog still takes a drop
   and a paste of screenshots.
-- A dropped folder gets no chip. A notice of the composer names each
-  dropped folder, and says to attach the files in it. Its Attach files
-  opens the file picker. The other files of the drop still attach.
-- Reason: an upload of a folder fails, and a failed chip that Try again
-  cannot fix tells the member nothing.
+- The browser zips each dropped folder before its upload. The zip is one
+  attached file, with the name of the folder and `.zip`, such as
+  `checkout-screens.zip`, and the media type `application/zip`. Its chip
+  goes at the place of the folder among the files of the drop.
+- Reason: the user asked to upload a folder as its zip, made before the
+  upload. A folder then stays one chip and one file for the agent, which
+  can unzip it. The upload, the copy, and the size limit stay those of a
+  file.
+- The zip holds the folder itself, with each file and each folder in it,
+  also hidden files and empty folders. It compresses each file.
+- The zip leaves out no folder, also not `.git` or `node_modules`. Reason:
+  the user chose an exact copy of the dropped folder. The size limit then
+  refuses a folder that is too large, and its notice says so. A zip without
+  such folders was rejected for now.
+- The chips of a drop with a folder show when each folder of the drop is
+  zipped. A drop attaches nothing when its composer stops taking changes,
+  or leaves the page, before its zips are done.
+- The size limit of a file holds for the zip. The composer refuses a zip
+  over the limit as it refuses a file over the limit, and the notice names
+  the zip. The zip stops as soon as it passes the limit.
+- A dropped folder that the browser cannot read gets no chip. A notice of
+  the composer names the folder, says that it could not be read, and says
+  to attach the files in it. Its Attach files opens the file picker. The
+  other files of the drop still attach.
+- The file picker picks only files. A phone has no drop, so it attaches no
+  folder.
+- Reason: a browser picker takes either files or folders, so one picker
+  for both is not possible in a browser. The user chose a drop only for
+  now. A separate Attach folder control, a menu of the paperclip, and a
+  picker of the Mac app for both were not chosen.
 - A dropped file over the size limit gets no chip. The composer refuses it
   as it refuses a picked file, as [Attachments](#attachments) says.
 - A paste of a file or an image, such as a screenshot from the clipboard,

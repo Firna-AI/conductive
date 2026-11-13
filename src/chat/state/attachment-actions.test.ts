@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { uploadsSettled } from '../../app/draft-files.test-support'
+import { unreadable, uploadsSettled } from '../../app/draft-files.test-support'
 import { fileMark } from '../../app/draft-marks'
 import { pickChatFiles } from './draft-files.test-support'
 import type { FileReply, FileTransport } from '../../app/api/client'
@@ -139,7 +139,7 @@ describe('the files of a chat draft', () => {
         file(),
         sized('archive.zip', 100_000_001),
       ],
-      ['Pictures', 'Design notes'],
+      unreadable('Pictures', 'Design notes'),
     )
     const picked = chat.draftOf(id)
     const uploaded = await sentFiles(chat.server.requests)
