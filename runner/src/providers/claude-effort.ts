@@ -1,6 +1,6 @@
 import type { Options } from '@anthropic-ai/claude-agent-sdk'
 
-import type { Effort } from '../../../src/shared/agents'
+import type { Effort } from '../../../src/shared/generated/Effort'
 
 /** The effort levels that the Claude Agent SDK accepts. */
 type ClaudeEffortLevel = 'low' | 'medium' | 'high' | 'xhigh' | 'max'
