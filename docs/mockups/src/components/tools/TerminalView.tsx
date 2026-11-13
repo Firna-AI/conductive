@@ -1,5 +1,10 @@
-import type { TerminalLine, TerminalTone } from '../../fixtures/terminal'
+import type {
+  HoveredLink,
+  TerminalLine,
+  TerminalTone,
+} from '../../fixtures/terminal'
 import { ActionButton } from '../common/actions'
+import { useTouchScreen } from '../common/touch'
 import styles from './TerminalView.module.css'
 
 const toneClass: Readonly<Record<TerminalTone, string>> = {
@@ -21,6 +26,22 @@ const extraKeys = [
 ] as const
 
 /**
+ * A link under the mouse pointer: underlined, with its hint below it. A
+ * touch screen has no pointer, so it draws the link as its text.
+ */
+function Hovered(props: { link: HoveredLink; children: string }) {
+  if (useTouchScreen()) return props.children
+  return (
+    <span className={styles.hovered}>
+      {props.children}
+      <span className={styles.hint} role="tooltip">
+        {props.link.hint}
+      </span>
+    </span>
+  )
+}
+
+/**
  * A terminal session. With a prompt, the cursor waits after it; without one,
  * the cursor follows the output of the running command. Output that ended,
  * such as the log of a failed build, has no cursor.
@@ -38,7 +59,11 @@ export function TerminalView(props: {
           <div className={styles.line} key={index}>
             {line.map((segment, segmentIndex) => (
               <span className={toneClass[segment.tone]} key={segmentIndex}>
-                {segment.text}
+                {segment.hovered ? (
+                  <Hovered link={segment.hovered}>{segment.text}</Hovered>
+                ) : (
+                  segment.text
+                )}
               </span>
             ))}
           </div>
