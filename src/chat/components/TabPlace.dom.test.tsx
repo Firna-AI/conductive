@@ -9,6 +9,9 @@ import {
 } from '../../test-support/dom-queries'
 import { asMessageField, typeMessage } from '../../test-support/message-field'
 import { MOUNTED_TEST_TIMEOUT, press, waitFor } from '../../test-support/mount'
+import { sessionPaths } from '../../shared/sessions'
+import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
+import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
 import { said } from './event-kit'
 import {
   ended,
@@ -26,6 +29,8 @@ afterEach(() => {
 
 const [shown, other] = workspaceSessions.map((session) => session.title ?? '')
 const late = 'Late output while away.'
+const answer =
+  'The checkout form now suggests addresses. Manual entry still works.'
 
 /** Shows the other session tab, then the tab of the long turn again. */
 async function visitOtherTab(meanwhile: () => void = () => {}) {
@@ -127,6 +132,42 @@ describe('the place of each session tab', () => {
     await press(byRole('button', 'Send'))
     await waitFor(() => queryByText('Ship it.'), 'the sent message')
     chat.layoutAgain()
+    await resize()
+    expect(chat.scrollTop()).toBe(0)
+  })
+
+  it('forgets the place of a session tab that the user closes, so it opens at the bottom again', async () => {
+    const { resize, server } = await mountLongTurn()
+    // The fake answers a close and a reopen with its own old record.
+    const record = workspaceFixtures().sessions.sessions[1]
+    server.json(
+      'POST',
+      sessionPaths.close(FAKE_IDS.org, FAKE_IDS.workspace, record.id),
+      {
+        session: { ...record, closedAt: FAKE_TIME },
+        eventNumber: server.events.history().throughEventNumber + 1,
+      },
+    )
+    server.json(
+      'POST',
+      sessionPaths.reopen(FAKE_IDS.org, FAKE_IDS.workspace, record.id),
+      {
+        session: record,
+        eventNumber: server.events.history().throughEventNumber + 2,
+      },
+    )
+    const chat = layOutChat()
+    await press(byRole('button', other))
+    await waitFor(() => !queryByText(older), 'the other session')
+    await resize()
+    chat.read(chat.rowOf(answer), 140)
+    expect(chat.scrollTop()).toBeLessThan(0)
+
+    await press(byRole('button', `Close ${other}`))
+    await waitFor(() => queryByText(older), 'the long turn')
+    await press(byRole('button', 'Session history'))
+    await press(await waitFor(() => queryByText(other), 'the history entry'))
+    await waitFor(() => !queryByText(older), 'the reopened session')
     await resize()
     expect(chat.scrollTop()).toBe(0)
   })

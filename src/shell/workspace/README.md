@@ -194,7 +194,8 @@ fake API, with its address options, its controls, and the test command.
   workspace.
 - `files/TabScroll.test.tsx`: mounts the whole app over the fake API. It
   scrolls a file tab and a diff tab, shows the chat, and checks that each
-  tab gives its offset back.
+  tab gives its offset back. A tab that the user closes opens at the top
+  again.
 - `app-features.tsx`: the shell's own files, pull request, and owner
   parts, which `useFeatures` puts under the parts of the host. The screen
   draws its own tools panel when the host gives no `tools` part.

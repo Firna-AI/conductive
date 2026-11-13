@@ -10,6 +10,10 @@ import type { RenderTab, TabDraw } from '../../../chat/components/tab-row'
 import type { ChatMentions } from '../../../chat/mentions/MentionsContext'
 import { tabLabel } from '../../../files/model/file-labels'
 import type { WorkspaceFiles } from '../../../files/model/files-store'
+import {
+  scrollTabKey,
+  useForgetClosedTabs,
+} from '../../../files/ui/kept-scroll'
 import type {
   FilesNavigation,
   FilesTab,
@@ -163,7 +167,9 @@ function useMentions(
  * while `content` shows a file, the address goes back to the chat. The
  * chat reads the kept files for the list of `@` and the file chips, also
  * on a phone before a visit to Files: `KeptFilesConnection` of the screen
- * keeps them connected. An archived workspace has no files.
+ * keeps them connected. A file or diff tab that leaves the saved view, such
+ * as one that the user closed, forgets its kept scroll offset. An archived
+ * workspace has no files.
  */
 export function useChatFiles(
   context: WorkspaceContext,
@@ -176,6 +182,11 @@ export function useChatFiles(
   const tabs = !archived && context.viewport !== 'phone'
   const labelOf = useTabLabels(context, tabs)
   const files = useKeptFilesWhile(context, !archived)
+  const view = useSavedView(context.savedView)
+  useForgetClosedTabs(
+    files?.scrollPlaces ?? null,
+    view ? filesTabsOf(view).map(scrollTabKey) : null,
+  )
   const mentions = useMentions(context, files, navigation)
   if (archived) return {}
   const renderTab: RenderTab = (tab) => {

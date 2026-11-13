@@ -11,7 +11,7 @@ import type {
 import { DiffPage } from '../../../files/page/DiffPage'
 import { FilePage } from '../../../files/page/FilePage'
 import { FilesPanel } from '../../../files/panel/FilesPanel'
-import { KeptScroll } from '../../../files/ui/kept-scroll'
+import { KeptScroll, scrollTabKey } from '../../../files/ui/kept-scroll'
 import type { CommandKey } from '../../../files/ui/LinkTabs'
 import { ChecksActions } from '../../../github/BarButtons'
 import { ChecksList } from '../../../github/ChecksList'
@@ -180,9 +180,10 @@ function FilesCenter(props: { context: WorkspaceContext; tab: FilesTab }) {
   const { context, tab } = props
   const files = useKeptFiles(context)
   const navigation = useFilesNavigation(context)
+  const tabKey = scrollTabKey(tab)
   const kept = useMemo(
-    () => ({ places: files.scrollPlaces, tab: `${tab.kind}:${tab.path}` }),
-    [files, tab.kind, tab.path],
+    () => ({ places: files.scrollPlaces, tab: tabKey }),
+    [files, tabKey],
   )
   return (
     <KeptScroll.Provider value={kept}>

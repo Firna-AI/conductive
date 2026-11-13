@@ -180,7 +180,10 @@ through the `KeptScroll` context of `ui/kept-scroll.ts`. `CodeView`,
 `useKeptScroll`, with the view `code`, `diff`, or `preview`. A view outside
 the context, such as a file page on a phone, keeps nothing. Content that
 grows after the mount gets the offset again at each change of size, until
-the box reaches it or the reader scrolls. `ui/kept-scroll.dom.test.tsx`
+the box reaches it or the reader scrolls. When a tab leaves the saved view,
+such as at a close, `useForgetClosedTabs` forgets its offsets, so it opens
+at the top again. The chat files of the workspace screen call it.
+`ui/kept-scroll.dom.test.tsx`
 tests the hook, and `TabScroll.test.tsx` of the
 [workspace files](../shell/workspace/files/) tests the tabs of the
 workspace screen.

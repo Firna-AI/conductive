@@ -4,7 +4,7 @@ import { act } from 'react'
 import { describe, expect, test, vi } from 'vitest'
 import { routes } from '../../../app/router'
 import type { FilesTab } from '../../../files/navigation'
-import { queryByRole } from '../../../test-support/dom-queries'
+import { byRole, queryByRole } from '../../../test-support/dom-queries'
 import { FakeApiServer } from '../../../test-support/fake-api'
 import { FAKE_IDS } from '../../../test-support/fixtures/core'
 import { FAKE_FILE_PATH } from '../../../test-support/fixtures/tools'
@@ -13,7 +13,7 @@ import {
   MOUNTED_TEST_TIMEOUT,
   waitFor,
 } from '../../../test-support/mount'
-import { settle } from '../../test-mount'
+import { click, settle } from '../../test-mount'
 import { openTab } from '../wiring-test-kit'
 import { filesHref } from './files-address'
 
@@ -71,5 +71,22 @@ describe('the scroll offset of the file and diff tabs of the workspace', () => {
       fileTop: 240,
       diffTop: 90,
     })
+  })
+
+  test('a tab that the user closes forgets its offset, so it opens at the top again', async () => {
+    holdAnimationFrames()
+    const server = new FakeApiServer()
+    const file = filesHref(org, id, fileTab)
+    const { view, navigation } = await openTab(server, file)
+    await settle()
+    await read(view, 240)
+    act(() => navigation.push(filesHref(org, id, diffTab)))
+    await settle()
+
+    click(byRole('button', `Close ${fileName}`, view))
+    await settle()
+    act(() => navigation.push(file))
+    await settle()
+    expect((await pageBox(view)).scrollTop).toBe(0)
   })
 })

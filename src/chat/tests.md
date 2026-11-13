@@ -67,8 +67,9 @@ read row in place, and a message that the user sends goes to the bottom.
 session tab, or a page in place of the chat as a file tab does, and checks
 the read row after output came in the meantime. It also checks the bottom
 for a reader at the bottom, for a read row that folded away, and for a
-session that kept no place, and the read row of a session whose sent
-message still waits. `components/reading-place-test-kit.tsx` holds
+session that kept no place, the read row of a session whose sent message
+still waits, a send after a switch of session tabs, and the bottom of a
+session that the user closed and opened again. `components/reading-place-test-kit.tsx` holds
 the long turn and the layout of both files.
 `components/TabDrag.dom.test.tsx` mounts the chat with the real
 `FileTabItem` of the Files screens and drags tabs with pointer events over

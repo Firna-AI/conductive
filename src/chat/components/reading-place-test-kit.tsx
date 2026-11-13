@@ -118,7 +118,7 @@ export async function mountLongTurn() {
       for (const { callback, self } of observers) callback([], self)
     })
   const showPage = (page: ReactNode) => act(async () => setPage(page))
-  return { emit, resize, showPage }
+  return { emit, resize, showPage, server }
 }
 
 /** The scroll box of the chat and its transcript, while a transcript shows. */

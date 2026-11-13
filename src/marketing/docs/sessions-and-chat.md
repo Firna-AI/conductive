@@ -206,7 +206,7 @@ A phone shows the session tabs there.
 Each tab in the row keeps your place when you open another tab or another workspace.
 A session tab returns to the message you read.
 If you were at the end of the chat, it shows the newest messages.
-Reloading the page forgets these places.
+Closing a tab or reloading the page forgets these places.
 
 Closing a session keeps its conversation in **Session history**.
 If its agent is working, closing asks first because it stops the turn.

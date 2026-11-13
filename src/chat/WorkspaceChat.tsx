@@ -8,6 +8,7 @@ import type { Agent } from '../shared/agents'
 import type { WorkspaceView } from '../shared/workspace-view'
 import type { Workspace } from '../shared/workspaces'
 import { TouchScreen } from '../../docs/mockups/src/components/common/touch'
+import { useForgetClosedPlaces } from './components/chat-place'
 import { ChatOverlays, historyEntries } from './components/ChatOverlays'
 import type { ComposerFocus } from './components/Composer'
 import { SessionChat, type ChatHost } from './components/SessionChat'
@@ -139,6 +140,12 @@ function ChatBody(
   useMentionCopy()
   useReport(snapshot.workspace, props.onWorkspaceChange)
   useReport(snapshot.view, props.onViewChange)
+  useForgetClosedPlaces(
+    controller.places,
+    snapshot.load.state === 'ready'
+      ? tabSessions(snapshot).map((session) => session.id)
+      : null,
+  )
   const reopen = useCallback(
     (sessionId: string) => void controller.reopen(sessionId),
     [controller],

@@ -62,9 +62,11 @@ Design calls (my calls, 2026-11-13):
 - A file or diff tab keeps its offset down and sideways, because a line of
   code can be wider than the box. (Review finding 5, 2026-11-13.)
 
-Open decision: review finding 2 asks whether a tab that the user closes and
-opens again starts at its last place or afresh. The code keeps the last
-place until the user answers.
+- **A closed tab forgets its place: B.** (Cal, 2026-11-13, review finding
+  2.) A session tab that opens again shows the bottom, and a file or diff
+  tab shows the top. Rejected: A, a reopened tab returns to its last place,
+  because a reopened tab is a new tab to the user. Rejected: C, only file
+  and diff tabs forget, for the same reason.
 
 Contract owners:
 

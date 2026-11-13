@@ -163,6 +163,9 @@ says.
   says. A file or diff tab keeps its scroll offset, one for each of its
   views, such as the code and the preview of a Markdown file. A reload
   forgets the places. The user chose this on 13 November 2026.
+- A tab that the user closes forgets its place. When it opens again, a
+  session tab shows the bottom, and a file or diff tab shows the top. The
+  user chose this on 13 November 2026.
 - A right click on a tab opens its tab menu (decision 188).
 - On a focused tab, Shift and F10, or the Menu key, also opens the tab
   menu. This holds on every system.
