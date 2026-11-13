@@ -13,8 +13,6 @@ export type Token =
       markdown: boolean
       /** The label of a Markdown link, between its brackets. */
       label?: string
-      /** The link is a Markdown image, which starts with `!`. */
-      image?: boolean
     }
   | { kind: 'mention'; mention: Mention }
 
@@ -88,7 +86,7 @@ function imageLinkAt(text: string, at: number): Token | null {
   if (text[at + 1] !== '[') return null
   const link = markdownLinkAt(text, at + 1, true)
   if (link?.kind !== 'link' || /^https?:/u.test(link.href)) return null
-  return { ...link, source: `!${link.source}`, image: true }
+  return { ...link, source: `!${link.source}` }
 }
 
 /**

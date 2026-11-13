@@ -27,6 +27,7 @@ import {
   type EntryLookup,
   type FilePart,
 } from './chat-parts'
+import { fileOpener, fileTitle } from './file-opener'
 import { FileTextLink } from './FileTextLink'
 import { chipOf, useChatLinks } from './LinksContext'
 import { sessionChipOf, useLinkedSession } from './session-links'
@@ -102,21 +103,10 @@ function FileLink(props: { part: FilePart }) {
       name={entry.name}
       opener={
         mentions
-          ? (chip) => (
-              <a
-                {...chip}
-                href={mentions.href(entry, lines ?? undefined)}
-                onClick={(event) => {
-                  if (!isPlainClick(event)) return
-                  event.preventDefault()
-                  if (folder) mentions.showFolder(entry.path)
-                  else mentions.openFile(entry.path, lines ?? undefined)
-                }}
-              />
-            )
+          ? (chip) => <a {...chip} {...fileOpener(mentions, entry, lines)} />
           : undefined
       }
-      title={folder ? `${entry.path}/` : `${entry.path}${at}`}
+      title={fileTitle(entry, lines)}
     />
   )
 }
@@ -145,17 +135,7 @@ function AttachmentLink(props: { part: AttachmentPart; opens: boolean }) {
       mention={props.part.source}
       opener={
         files
-          ? (chip) => (
-              <a
-                {...chip}
-                href={files.href(copy)}
-                onClick={(event) => {
-                  if (!isPlainClick(event)) return
-                  event.preventDefault()
-                  files.openFile(path)
-                }}
-              />
-            )
+          ? (chip) => <a {...chip} {...fileOpener(files, copy, null)} />
           : undefined
       }
     />

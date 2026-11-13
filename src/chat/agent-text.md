@@ -75,8 +75,9 @@ state the requirements.
 
 - Sent messages and agent answers show each workspace link as a chip, as
   [Workspace links](../../docs/protocol/workspace-links.md) says. One
-  tokenizer, `chatParts` in `links/chat-parts.ts`, reads both, in one pass
-  from left to right. A backtick starts code first, so a link in code
+  tokenizer, `tokens` in `links/chat-tokens.ts`, reads both, in one pass
+  from left to right, and `chatParts` in `links/chat-parts.ts` turns its
+  tokens into parts. A backtick starts code first, so a link in code
   stays code. A Markdown link whose brackets stand outside code is one
   unit, also when its label holds code or bold, so it shows as its chip
   alone. Then bare links count. In an answer, `**` marks bold around text
@@ -125,8 +126,9 @@ state the requirements.
   paths count, as in an answer.
 - Code in the label of a Markdown link stays code. Where `**` marks bold, a
   mention ends before the mark.
-- A text follows the tree only when it holds `@`, or a backtick in an
-  answer. So a change of the tree draws only the texts that can change.
+- A text follows the tree only when it holds `@`, or in an answer a
+  backtick or `](`. So a change of the tree draws only the texts that can
+  change.
 - The folder of the repository comes from the read of the saved view, in
   `ChatSnapshot.repositoryFolder`. `WorkspaceChat` gives it to
   `MentionsProvider`, and `useRepositoryFolder` reads it.

@@ -8,6 +8,7 @@ const links = { orgId: FAKE_IDS.org, workspaces: [] }
 const entries: FileEntry[] = [
   { path: 'src/app.ts', name: 'app.ts', kind: 'file', change: null },
   { path: 'shots/after.png', name: 'after.png', kind: 'file', change: null },
+  { path: 'src/my app.ts', name: 'my app.ts', kind: 'file', change: null },
 ]
 
 const find: EntryLookup = (path, folder) =>
@@ -153,13 +154,24 @@ describe('file chips in an answer', () => {
   test('an image with no label shows the name of the file, and other targets stay text', () => {
     expect(
       answer(
-        `![](shots/after.png) ![x](https://a.test/x.png) [gone](src/gone.ts) [s](src/my%20app.ts)`,
+        `![](shots/after.png) ![x](https://a.test/x.png) [gone](src/gone.ts) [s](src/gone%20file.ts)`,
       ),
     ).toEqual([
       { link: 'shots/after.png', label: 'after.png' },
       {
-        text: ' ![x](https://a.test/x.png) [gone](src/gone.ts) [s](src/my%20app.ts)',
+        text: ' ![x](https://a.test/x.png) [gone](src/gone.ts) [s](src/gone%20file.ts)',
       },
+    ])
+  })
+
+  test('a link target with a space opens its file, escaped or in angle brackets', () => {
+    expect(
+      answer('[a](src/my%20app.ts) [b](<src/my app.ts>) [c](src/my app.ts)'),
+    ).toEqual([
+      { link: 'src/my app.ts', label: 'a' },
+      { text: ' ' },
+      { link: 'src/my app.ts', label: 'b' },
+      { text: ' [c](src/my app.ts)' },
     ])
   })
 })

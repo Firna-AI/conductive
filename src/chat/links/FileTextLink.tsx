@@ -1,8 +1,7 @@
 import inline from '../../../docs/mockups/src/components/common/InlineText.module.css'
-import { lineLabel } from '../../shared/line-target'
-import { isPlainClick } from '../../shell/ui/AppLink'
 import { useChatMentions } from '../mentions/MentionsContext'
 import type { FileLinkPart } from './chat-parts'
+import { fileOpener, fileTitle } from './file-opener'
 
 /**
  * A Markdown link or image of an answer to a file of the tree: a normal
@@ -14,8 +13,6 @@ import type { FileLinkPart } from './chat-parts'
 export function FileTextLink(props: { part: FileLinkPart }) {
   const mentions = useChatMentions()
   const { entry, lines, label } = props.part
-  const folder = entry.kind === 'directory'
-  const at = lines ? `:${lineLabel(lines)}` : ''
   const text = label.map((part, index) =>
     part.kind === 'code' ? (
       <code className={inline.code} key={index}>
@@ -31,14 +28,8 @@ export function FileTextLink(props: { part: FileLinkPart }) {
   return (
     <a
       className={inline.link}
-      href={mentions.href(entry, lines ?? undefined)}
-      onClick={(event) => {
-        if (!isPlainClick(event)) return
-        event.preventDefault()
-        if (folder) mentions.showFolder(entry.path)
-        else mentions.openFile(entry.path, lines ?? undefined)
-      }}
-      title={folder ? `${entry.path}/` : `${entry.path}${at}`}
+      {...fileOpener(mentions, entry, lines)}
+      title={fileTitle(entry, lines)}
     >
       {text}
     </a>

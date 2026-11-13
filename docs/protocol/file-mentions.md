@@ -218,8 +218,10 @@ names a decision of the change that added file chips to answers.
 - A path can end with a line target (answer chip decision 2). The chat
   reads these forms: `:N`, `:N-M`, `:N:C`, `#LN`, `#LN-LM`, and `#LNCC`. A
   column `C` does not count.
-- A line target counts in a mention of a file and in the path of inline
-  code. A range whose end comes before its start is not a line target.
+- A line target counts in a mention of a file, in the path of inline
+  code, and in the target of a Markdown link or image of an answer. A
+  link with a line target opens the file at the lines, as its chip
+  does. A range whose end comes before its start is not a line target.
 - The chip of a file with a line target adds the line or the range to its
   name, such as `app.ts:42` or `app.ts:42-50`. Its title is the whole
   path with the same target.
