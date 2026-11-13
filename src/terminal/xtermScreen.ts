@@ -1,4 +1,6 @@
 import type { IDisposable, IFunctionIdentifier, Terminal } from '@xterm/xterm'
+import { BRIDGE_OSC } from '../shared/terminal-bridge'
+import { BridgeReader, hexColour, type BridgeEvent } from './bridgeLink'
 import { forcedSelectionKey, keepPlainPresses } from './plainPresses'
 import type { TerminalScreen } from './terminalSession'
 
@@ -34,16 +36,22 @@ function subscribe(listeners: Set<Listener>, listener: Listener): IDisposable {
 /**
  * The xterm.js terminal of a session, with its data split by source. Each of
  * its own replies is marked where it starts: a parser hook runs before the
- * handler of each request that xterm.js answers, and a focus listener runs
- * before its focus handler while focus reports are on. All other data is the
- * user's: keys, text, composed text, paste, and mouse reports. A plain drag
- * selects text also while a program has the mouse. Create it after `open()`,
- * and write to xterm.js only through it.
+ * handler of each request that xterm.js answers. A focus listener runs
+ * before its focus handler while focus reports are on, and marks the focus
+ * report. All other data is the user's: keys, text, composed text, paste,
+ * and mouse reports. A plain drag selects text also while a program has the
+ * mouse. It reads the private messages of the terminal bridge, and keeps the
+ * links that a program marks with OSC 8 as plain text. Create it after
+ * `open()`, and write to xterm.js only through it.
  */
 export class XtermScreen implements TerminalScreen {
   private readonly xterm: Terminal
   private readonly userListeners = new Set<Listener>()
   private readonly replyListeners = new Set<Listener>()
+  private readonly focusListeners = new Set<Listener>()
+  private readonly bridgeListeners = new Set<(event: BridgeEvent) => void>()
+  private readonly bridge = new BridgeReader()
+  private pasteHandler: ((text: string) => boolean) | null = null
   private readonly disposables: IDisposable[] = []
   /** From a request until xterm.js has parsed the chunk that holds it. */
   private replying = false
@@ -62,14 +70,25 @@ export class XtermScreen implements TerminalScreen {
       ...csiRequests.map((id) => parser.registerCsiHandler(id, mark)),
       ...dcsRequests.map((id) => parser.registerDcsHandler(id, mark)),
       ...oscRequests.map((id) => parser.registerOscHandler(id, mark)),
+      parser.registerOscHandler(BRIDGE_OSC, (text) => {
+        const event = this.bridge.read(text)
+        if (event) for (const listener of this.bridgeListeners) listener(event)
+        return true
+      }),
+      // The link of an OSC 8 stays plain text, as it was in the tmux screen.
+      parser.registerOscHandler(8, () => true),
       xterm.onData((data) => {
-        const reply = this.replying || this.focusing
-        const listeners = reply ? this.replyListeners : this.userListeners
+        const listeners = this.focusing
+          ? this.focusListeners
+          : this.replying
+            ? this.replyListeners
+            : this.userListeners
         for (const listener of listeners) listener(data)
       }),
     )
     this.watchFocus()
     this.keepPlainDrags()
+    this.watchPastes()
   }
 
   get cols(): number {
@@ -101,6 +120,33 @@ export class XtermScreen implements TerminalScreen {
 
   onReply(listener: Listener): IDisposable {
     return subscribe(this.replyListeners, listener)
+  }
+
+  /** A focus report, which xterm.js sends while a program asked for it. */
+  onFocusReport(listener: Listener): IDisposable {
+    return subscribe(this.focusListeners, listener)
+  }
+
+  /** A message of the terminal bridge, after its nonce check. */
+  onBridge(listener: (event: BridgeEvent) => void): IDisposable {
+    this.bridgeListeners.add(listener)
+    return { dispose: () => this.bridgeListeners.delete(listener) }
+  }
+
+  /**
+   * Takes over each paste of the user. A handler that returns false leaves
+   * the paste to xterm.js.
+   */
+  setPasteHandler(handler: ((text: string) => boolean) | null): void {
+    this.pasteHandler = handler
+  }
+
+  /** The text and the background colours, as the bridge accepts them. */
+  colours(): { foreground: string; background: string } | null {
+    const theme = this.xterm.options.theme
+    const foreground = hexColour(theme?.foreground)
+    const background = hexColour(theme?.background)
+    return foreground && background ? { foreground, background } : null
   }
 
   onResize(
@@ -149,6 +195,22 @@ export class XtermScreen implements TerminalScreen {
           textarea.removeEventListener(type, after)
         }
       },
+    })
+  }
+
+  /** A capture listener runs before the paste listener of xterm.js. */
+  private watchPastes(): void {
+    const { element } = this.xterm
+    if (!element) return
+    const paste = (event: ClipboardEvent) => {
+      const text = event.clipboardData?.getData('text/plain') ?? ''
+      if (!this.pasteHandler || !text || !this.pasteHandler(text)) return
+      event.preventDefault()
+      event.stopImmediatePropagation()
+    }
+    element.addEventListener('paste', paste, true)
+    this.disposables.push({
+      dispose: () => element.removeEventListener('paste', paste, true),
     })
   }
 

@@ -23,7 +23,25 @@ change can move the shared parts to the app's shared components.
   font at 12px, lines 1.6 times the font size apart, and the status colours
   for the ANSI colours. It follows a change of the colour scheme.
 - The screen fits its box, and sends its size at the start and at each
-  change.
+  change. It keeps 2,000 lines of history, as tmux does in the cloud
+  computer.
+- A workspace from a newer image runs the
+  [terminal bridge](../../worker/terminal/README.md#the-terminal-bridge),
+  which passes every byte of the shell to the screen and says hello first.
+  The screen reads the private messages of the bridge with its OSC handler,
+  and shows none of them. It accepts the first hello of a connection, and
+  later messages only with the nonce of that hello. After the hello:
+  - the screen answers with its text and background colours;
+  - it acknowledges each mark of the flow control;
+  - it sends no reply of xterm.js, because tmux answers the program;
+  - it sends focus reports and pastes as messages, so the bridge pastes
+    through tmux with the bracketed paste marks of the program;
+  - it shows the size that all viewers share. It sends the size of its
+    panel, counted at the normal font. A larger shared size gets a smaller
+    font, down to 6px, and the panel scrolls when even that does not fit.
+    A smaller one leaves empty space, with a line at its edge.
+- Without a hello, as with an older image, the screen works as before.
+- Links that a program marks with OSC 8 stay plain text.
 - On a phone, a key row adds Esc, Tab, Ctrl, Up, and Down. The keys keep the
   keyboard focus on the terminal. Ctrl applies to the user's next key only.
 - xterm.js answers some requests of programs by itself, such as a cursor
@@ -154,8 +172,10 @@ The buttons send fake events: revoke a preview, start the sandbox, end the
 terminal connection, and change the workspace. In the `late` state, the
 terminal reads that start before the sandbox runs wait for Answer held
 reads. Three buttons make the shell ask for the cursor position, turn on
-focus reports, and turn on mouse reports, as tmux does. These three
-buttons leave the keyboard on the terminal.
+focus reports, and turn on mouse reports, as tmux does. Print 300 lines
+fills the history for a drag past the top edge. Bridge hello, Larger
+shared size, and Smaller shared size send the messages of a fake terminal
+bridge. These buttons leave the keyboard on the terminal.
 
 ## Key code
 
@@ -168,7 +188,11 @@ buttons leave the keyboard on the terminal.
   its own replies.
 - `plainPresses.ts`: keeps plain left presses for the selection of the page
   while a program has the mouse.
-- `terminalSession.ts`: connects the screen to a `TerminalTransport`.
+- `terminalSession.ts`: connects the screen to a `TerminalTransport`, and
+  speaks with the terminal bridge after its hello.
+- `bridgeLink.ts`: reads the messages of the bridge with the nonce rule,
+  and builds the paste message.
+- `sharedSize.ts`: the font that fits a shared size into the panel.
 - `terminalKeys.ts`: the bytes of the key row and of Ctrl with a key.
 - `terminalTheme.ts`: the colours and the type of the screen from the tokens.
 - `terminalApi.ts`: reads the terminal state.

@@ -3,6 +3,7 @@ import type { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
 import { toolFixtures } from '../../test-support/fixtures/tools'
 import { terminalPaths } from '../../shared/terminal'
+import { bridgeOutputMessage } from '../../shared/terminal-bridge'
 import {
   devPortReports,
   devStates,
@@ -143,6 +144,41 @@ export function DevControls(props: {
       </button>
       <button
         onClick={() =>
+          props.onTerminalOutput(
+            Array.from(
+              { length: 300 },
+              (_, line) => `line ${line + 1}\r\n`,
+            ).join(''),
+          )
+        }
+        onMouseDown={keepTerminalFocus}
+        type="button"
+      >
+        Print 300 lines
+      </button>
+      <button
+        onClick={() => props.onTerminalOutput(devBridge('hello', 52, 18))}
+        onMouseDown={keepTerminalFocus}
+        type="button"
+      >
+        Bridge hello
+      </button>
+      <button
+        onClick={() => props.onTerminalOutput(devBridge('size', 120, 40))}
+        onMouseDown={keepTerminalFocus}
+        type="button"
+      >
+        Larger shared size
+      </button>
+      <button
+        onClick={() => props.onTerminalOutput(devBridge('size', 30, 8))}
+        onMouseDown={keepTerminalFocus}
+        type="button"
+      >
+        Smaller shared size
+      </button>
+      <button
+        onClick={() =>
           change(
             'workspace',
             params.workspace === otherWorkspace
@@ -155,5 +191,17 @@ export function DevControls(props: {
         Switch workspace
       </button>
     </div>
+  )
+}
+
+/** The nonce of the fake terminal bridge of the development page. */
+const devNonce = '00112233445566778899aabbccddeeff'
+
+/** A message of the fake terminal bridge, as the real bridge writes it. */
+function devBridge(kind: 'hello' | 'size', columns: number, rows: number) {
+  const size = { columns, rows }
+  return bridgeOutputMessage(
+    devNonce,
+    kind === 'hello' ? { kind, version: 1, size } : { kind, size },
   )
 }

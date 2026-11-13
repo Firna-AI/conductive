@@ -340,21 +340,23 @@ Tags: ui
 
 Depends on: 3
 
-- [ ] Accept the hello and the size messages, with the nonce rule and the
+- [x] Accept the hello and the size messages, with the nonce rule and the
       size limit. Answer the hello with the colours of the screen.
-- [ ] Set xterm.js to the shared size. Send the panel size, measured at
+- [x] Set xterm.js to the shared size. Send the panel size, measured at
       12px, to the transport. Fit the font, down to 6px, and scroll the
       panel below that.
-- [ ] After a hello, drop the replies of xterm.js. Send focus reports and
+- [x] After a hello, drop the replies of xterm.js. Send focus reports and
       pastes as messages. Acknowledge the written bytes.
-- [ ] Set the xterm.js history to 2,000 lines, as Decision 2 A says.
-- [ ] Keep OSC 8 links as plain text.
-- [ ] Let the development page send a hello and another viewer's size.
-- [ ] Add tests for the session and the screen.
-- [ ] Update `src/terminal/README.md`.
-- [ ] Check the development page in a browser: a drag past the top edge
+- [x] Set the xterm.js history to 2,000 lines, as Decision 2 A says.
+- [x] Keep OSC 8 links as plain text.
+- [x] Let the development page send a hello and another viewer's size.
+- [x] Add tests for the session and the screen.
+- [x] Update `src/terminal/README.md`.
+- [x] Check the development page in a browser: a drag past the top edge
       scrolls and selects, Cmd+C copies, and both size states match the
-      mockups.
+      mockups. Headless Chrome checks of the panel and the phone layouts
+      passed. Their scripts and screenshots are in
+      `.context/terminal-control-mode-bridge/browser/`.
 
 ## Milestone 5: Verification, commit, review, and pull request
 

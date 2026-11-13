@@ -16,6 +16,15 @@
 .host {
   width: 100%;
   height: 100%;
+  /* A shared size that does not fit even at the smallest font scrolls. */
+  overflow: auto;
+  scrollbar-color: var(--ui-border) transparent;
+}
+
+/* The edge of a shared size that is smaller than the panel, as the
+   mockup draws it. */
+.host[data-shared='smaller'] :global(.xterm-screen) {
+  box-shadow: 1px 1px 0 var(--ui-border);
 }
 
 /* A plain drag selects also while a program has the mouse, so the screen
