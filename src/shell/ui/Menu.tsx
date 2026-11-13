@@ -63,6 +63,8 @@ export type MenuEntry =
 export interface MenuTriggerState {
   open: boolean
   toggle: () => void
+  /** The menu is busy, as `MenuButton` says, so the trigger shows as off. */
+  busy: boolean
 }
 
 /**
@@ -90,6 +92,13 @@ export function MenuButton(props: {
   /** The title of the phone sheet. It defaults to the label. */
   sheetTitle?: string
   className?: string
+  /**
+   * A change of the owner runs, such as a save after a switch row that kept
+   * the menu open. The trigger shows as off. The open menu stays open with
+   * its rows off, as `MenuList` says. A press outside or Escape still
+   * closes it.
+   */
+  busy?: boolean
 }) {
   const viewport = useViewport()
   const [open, setOpen] = useState(false)
@@ -97,6 +106,7 @@ export function MenuButton(props: {
   const close = () => setOpen(false)
   const phone = viewport === 'phone'
   const placement = props.placement ?? 'below-end'
+  const busy = props.busy ?? false
   useDismiss(open && !phone, anchor, close)
   // The palette key closes a desktop menu, which always closes. A phone
   // sheet holds the key.
@@ -106,7 +116,7 @@ export function MenuButton(props: {
   })
   return (
     <span className={props.className ?? ui.anchor} ref={anchor}>
-      {props.trigger({ open, toggle: () => setOpen((value) => !value) })}
+      {props.trigger({ open, toggle: () => setOpen((value) => !value), busy })}
       {open && !phone ? (
         <PopoverSurface
           align={placement.endsWith('end') ? 'end' : 'start'}
@@ -116,6 +126,7 @@ export function MenuButton(props: {
           side={placement.startsWith('above') ? 'above' : 'below'}
         >
           <MenuList
+            busy={busy}
             close={close}
             entries={props.entries}
             label={props.label}
@@ -127,6 +138,7 @@ export function MenuButton(props: {
       {open && phone ? (
         <Sheet close={close} title={props.sheetTitle ?? props.label}>
           <MenuList
+            busy={busy}
             close={close}
             entries={props.entries}
             label={props.label}

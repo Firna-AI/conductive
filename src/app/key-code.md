@@ -177,7 +177,10 @@ Each path is relative to `src/app/`, the folder of this page.
   `@firna/ui`, and flips it when it does not fit. The member menus use the
   same surface. `MenuList.tsx` draws the items, also a switch row, such as
   Fast in the model menu, which keeps the menu open, and an item that shows
-  choices. `PointMenu.tsx` draws a menu at a point above the page, with its
+  choices. While the owner of a `MenuButton` saves a change, its `busy`
+  state turns off the trigger and the items and switches of the open menu.
+  These rows keep the focus, and the menu stays open.
+  `PointMenu.tsx` draws a menu at a point above the page, with its
   choices beside it, and `menu-place.ts` keeps both inside the window.
   `menu-keys.ts`: `opensMenu`, the menu keys of a row and of a tab.
 - `workspace-model.ts` and `archive-model.ts`: an open workspace, its

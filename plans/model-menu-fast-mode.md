@@ -500,6 +500,30 @@ My calls, on 2026-11-13, as the non-UI implementor of review fixes 1 and 3:
   Other docs link to those rules. Reason: a copied route list missed fast
   writes, routine runs, transcript reads, and tool session defaults.
 
+My calls, on 2026-11-13, as the ui implementor of review fix 4:
+
+- Review finding 4, option D: `MenuButton` gives its busy state to the
+  trigger as `MenuTriggerState.busy`, and the trigger draws it as off.
+  Reason: the trigger is a render prop of the owner, so one state from
+  `MenuButton` keeps the trigger and the rows together.
+- Review finding 4, option D: a busy row takes the faded look of an item
+  that is off, with no hover. A row with the keyboard focus keeps its
+  highlight. Reason: a row that looks active but takes no press hides the
+  save, and the trigger already fades.
+- Review finding 4, option D: the busy state turns off the items and the
+  switches, not a row that shows a submenu. Reason: a `MenuButton` has no
+  submenus, and such a row changes nothing.
+- Review finding 4, option D: while the model saves, the picker offers the
+  models for the new choice. Reason: `useOfferedModels` keeps the model
+  that the picker shows.
+- Review finding 4, option D: the held-answer case is in a new file,
+  `src/shell/account/PreferencesSections.test.tsx`. Reason: in
+  `AccountScreen.test.tsx`, the case passes the 300-line limit of the lint.
+- Review finding 4, option D: the held answer of the case fails with
+  `503 models_unavailable`, and a later Medium press saves. Reason: the one
+  case then also checks that a failed save shows the saved choice and the
+  toast. No other test covers that path.
+
 My calls, on 2026-11-12, as the ui implementor of Milestones 5 and 8:
 
 - The Fast row is a button with the `menuitemcheckbox` role, as the other

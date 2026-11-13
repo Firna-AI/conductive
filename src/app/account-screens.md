@@ -10,6 +10,12 @@ agent login forms, and model lists in the web app.
   workspaces section: Model and effort, and
   [the choice of how New workspace opens](../../docs/protocol/create-a-workspace.md#the-preference).
   On a phone, a tab that does not fit moves to a second line.
+- Model and effort saves each change at once through
+  `AccountModel.setDefaultChoice`. While it saves, the picker shows the new
+  choice. A Fast change keeps the menu open, so the switch shows its new
+  state in place. The trigger and the rows of the open menu take no other
+  change until the save ends. A failed save shows a toast, and the picker
+  shows the saved choice.
 - Keyboard shortcuts lists the keys of each command, and saves each change
   at once through `AccountModel.saveShortcuts`, as
   [the Keyboard shortcuts tab](../shell/account/shortcuts/README.md) says.

@@ -93,6 +93,10 @@ export function ModelPicker(props: {
   choice: AgentChoice
   change: (choice: AgentChoice) => void
   placement?: Exclude<MenuPlacement, 'sheet'>
+  /**
+   * The picker takes no change, such as while one saves. The trigger and
+   * the rows of an open menu are off, and an open menu stays open.
+   */
   disabled?: boolean
 }) {
   const control = useControlSizes()
@@ -104,11 +108,12 @@ export function ModelPicker(props: {
   const effort = effortLabels[choice.effort]
   return (
     <MenuButton
+      busy={props.disabled}
       className={styles.anchor}
       entries={entries(props.models, choice, props.change)}
       label="Model and effort"
       placement={props.placement ?? 'above-start'}
-      trigger={({ open, toggle }) => (
+      trigger={({ open, toggle, busy }) => (
         <Button
           accessibilityLabel={`Model and effort: ${model}, ${effort}${choice.fast ? ', Fast' : ''}`}
           content={
@@ -122,7 +127,7 @@ export function ModelPicker(props: {
               <ChevronDown aria-hidden className={styles.chevron} size={12} />
             </span>
           }
-          disabled={props.disabled}
+          disabled={busy}
           expanded={open}
           hasPopup="menu"
           onPress={toggle}
