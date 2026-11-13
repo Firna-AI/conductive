@@ -24,7 +24,7 @@ export const privacyDocument: LegalDocument = {
   title: legalTitles.privacy,
   description: `The privacy notice of ${productName}.`,
   lead: text`This notice says which personal data ${productName} uses, why
-  it uses it, and who gets it. Effective date: 12 November 2026.`,
+  it uses it, and who gets it. Effective date: 13 November 2026.`,
   sections: [
     {
       title: 'Who is responsible',
@@ -93,9 +93,11 @@ export const privacyDocument: LegalDocument = {
           secret value that a script or an agent wrote there. ${productName}
           then deletes the cloud computer, unless a member restores the
           workspace before then.`,
-        paragraph`${productName} keeps each file that you send with a message
-          until it deletes the workspace of the message. It deletes an unsent
-          file 7 days after you upload it.`,
+        paragraph`${productName} keeps each attached file until the cloud
+          computer of its workspace has it and its first start succeeds.
+          It then deletes its own copy. The file stays in the cloud computer.
+          The message keeps the file's name, type, size, and path.
+          ${productName} deletes an unsent file 7 days after you upload it.`,
         paragraph`An account that waits for app access stays until you ask
           for its deletion, as every other account does.`,
         paragraph`Account records, the latest Terms acceptance, and

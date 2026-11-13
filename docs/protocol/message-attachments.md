@@ -1,50 +1,63 @@
 # Message attachments
 
 This doc holds the requirements and the decisions in force for the files
-that a message carries. It covers the upload and the copy of each file,
-the files in the message field and their drop, and the files of a sent
-message. It belongs to
+that a message carries. It covers the size limit, the upload, and the
+storage of each file, the files in the message field and their drop, and
+the files of a sent message. It belongs to
 [Messages and attachments](messages-and-attachments.md), which covers the
-messages of a session. The terms are those of the
-[architecture doc](../architecture.md#terms). A decision number names a
-dated record, as [Decision numbers](../architecture.md#decision-numbers)
-says. The [mockup catalogue](../mockups/catalogue.md) draws these screens
-at `app/attachments`, in New workspace, and in the flow
+messages of a session. [Attachment transfers](attachment-transfers.md)
+covers how each file gets into the cloud computer, and what the agent
+gets.
+
+The terms are those of the [architecture doc](../architecture.md#terms). A
+decision number names a dated record, as
+[Decision numbers](../architecture.md#decision-numbers) says. A
+large-upload decision number, such as large-upload decision 1, names a
+decision of the change that lets a message carry files of up to 1 GB. The
+[mockup catalogue](../mockups/catalogue.md) draws these screens at
+`app/attachments`, in New workspace, and in the flow
 `user-flows/drop-a-file`.
 
 ## Attachments
 
-- Each file of a message can contain at most 100 MB, or 100,000,000
-  bytes.
-- Reason: Cloudflare accepts a request body of at most 100 MB on a zone of
-  the Free or Pro plan, and the browser sends each file in one request, as
-  [Attachment uploads](access-and-security.md#attachment-uploads) says. A
-  higher limit was rejected, because it needs uploads in parts or a zone of
-  the Business or Enterprise plan.
+- Each file of a message can contain at most 1 GB, or 1,000,000,000 bytes
+  (large-upload decision 1). Reason: the user asked for files of up to
+  1 GB.
 - The composer refuses a larger file before its upload, and names the
-  limit. The Worker refuses a larger file too, with HTTP 413 and the error
-  code `attachment_too_large`.
+  limit. The Worker refuses a larger file too, at the start of its upload,
+  with HTTP 413 and the error code `attachment_too_large`.
 - The chip of each file shows its upload while it runs, as
   [The chip in the field](#the-chip-in-the-field) says. A failed upload
   offers Try again and Remove. Send waits while a file uploads, and while a
   failed upload waits for Try again or Remove.
+- The browser sends each file in parts, as
+  [Attachment uploads](attachment-uploads.md) says. It sends a failed part
+  again alone, up to three times. Try again of a failed upload sends only
+  the parts that the Worker did not confirm, while the tab keeps the
+  upload.
+- Reason: a dropped connection then costs one part, not the whole file. A
+  resume after a reload of the page was rejected, because a draft lives
+  only in the memory of its tab.
+- Risk: a reload of the page loses each upload that runs. A 1 GB upload
+  over a 20 Mbit/s link takes about 7 minutes.
 - Each attached file has a × that removes it, as
   [Remove a chip of the composer](file-mentions.md#remove-a-chip-of-the-composer)
   says. This × is the Remove of a failed upload.
 - An upload works also before the cloud computer of its workspace exists,
   and while that cloud computer starts or is stopped (decision 132).
 - The Worker stores each uploaded file in one R2 bucket of the app, outside
-  the cloud computer (decision 132).
+  the cloud computer (decision 132). This stored copy stays until the
+  cloud computer has the file, as
+  [The stored copy](attachment-transfers.md#the-stored-copy) says.
 - Storage in the object of each workspace was rejected, because each file
   must then go in chunks. Uploads only into a running cloud computer were
   rejected, because a message to a new or stopped workspace could then not
   carry files at once.
 - [Orgs and workspaces](isolation.md#orgs-and-workspaces) states
   which messages can use an uploaded file.
-  [Attachment uploads](access-and-security.md#attachment-uploads) states
-  how the browser sends a file (decision 144).
-- When the turn of a message starts, the Worker copies each file of the
-  message into the cloud computer of the workspace (decision 132).
+- When the turn of a message starts, each file of the message goes into
+  the cloud computer of the workspace, as
+  [The transfer](attachment-transfers.md#the-transfer) says.
 - Each file goes to `.context/attachments/<digest>/<safe name>` in the
   folder of the workspace's own repository (decisions 242 and 262 D). The
   digest is 32 lowercase hexadecimal characters from the ID of the file
@@ -55,68 +68,13 @@ at `app/attachments`, in New workspace, and in the flow
   hyphens of the original name. One hyphen replaces each run of other
   characters. It keeps at most 100 characters, with its extension in
   lowercase. An empty stem becomes `file`.
-- The reply of each upload gives the copy path of its file in `path`. Each
-  file of a sent message gives it too.
+- The reply that completes each upload gives the copy path of its file in
+  `path`. Each file of a sent message gives it too.
 - Reason: the text of a message names each file by this path, as
   [The send](#the-send) says. So Try again sends the same text, and no
   part of the app builds or rewrites a path. A digest of the IDs of the
   message and the file was rejected, because each new message, such as a
   Try again, then needs new paths in its text.
-- Each message copies its files before the agent gets it, also when an
-  earlier message copied the same file. So a later message with the same
-  file, such as a Try again, writes the same bytes to the same path again.
-- Reason: the agent then reads the bytes of the upload. A copy only when
-  the path holds no file was rejected, because a later message could then
-  read a copy that an agent changed or deleted.
-- Risk: two messages with the same file can copy it to one path at the
-  same time, while an agent reads it. An example is a send whose reply was
-  lost, then an edit and a new send.
-- Before the first file of each copy, the Worker writes a `.gitignore` file
-  that holds `*` into `.context/attachments/`. So Git ignores each copied
-  file, also when the runner adds no exclude rule.
-- Reason: agents and members who use the terminal find each file next to
-  the code, and Changes and commits leave it out. The Worker copy reaches
-  every workspace at once, also one with an older runner. Both agents
-  start in the folder of that repository.
-- A hidden file in the home folder was rejected, because agents and
-  members do not find it there. A runner link to a hidden copy was
-  rejected, because each file then has two names. A download by the runner
-  was rejected, because only the Worker reads the bucket.
-- The agent gets a message only after each of its files is in the cloud
-  computer. This holds also for a message that joins a running turn.
-- While the files of a message copy, each later message of the same turn
-  waits. The agent then gets the messages of that turn in the order that
-  the workspace accepted them.
-- Stop and the turns of other sessions do not wait for a copy.
-- Reason: a later message can correct an earlier one. A rule that holds all
-  work of the workspace during a copy was rejected, because it would hold
-  Stop and the other sessions.
-- With the message, the agent gets one line that tells it to read each
-  file before it answers (decision 244). This line comes once, after the
-  text of the message. Then one line for each file gives its absolute
-  path, its name, its media type, and its size in bytes. The copy holds
-  the exact bytes of the upload.
-- Codex also gets each image as image input. For a message with an image,
-  its read line also says that each image is in the message. Reason: Codex
-  then spends no tool step on an image that it already has.
-- Reason: the read instruction stands next to the files. The size tells
-  the agent how large a file is before it reads it, as in Conductor.
-- A rule in the agent instructions was rejected, because it stands once in
-  each session, far from the files. Conductor's block, with only a path
-  and a size, was rejected, because the agent loses the name and the media
-  type. A read line in the text of the message was rejected, because that
-  text holds only what the member wrote.
-- Image input for Claude was not chosen, because an image that the model
-  service cannot decode can fail the whole turn.
-- An older runner gives the agent no read line and no size. Each build of
-  the org image installs the newest runner, as
-  [The agent runner](agent-runner.md#the-agent-runner) says.
-- A turn cannot start when a file of its message cannot reach the cloud
-  computer. That turn fails and names the cause. Try again copies the
-  files again.
-- A copy that fails for a message that joins a running turn fails that
-  turn in the same way. The workspace also stops the agent of that turn, as
-  [The agent runner](agent-runner.md#the-agent-runner) says.
 - The app deletes the files of a workspace with the workspace, also in the
   purge of a deleted org (decision 132).
 - A failed first start deletes no file of the first message. The files stay
@@ -289,7 +247,8 @@ at `app/attachments`, in New workspace, and in the flow
   message, with its name and its size.
 - Try again sends the same text and the same files under a new message ID.
   Each mention still names the copy of its file, because the copy path
-  comes from the file only.
+  comes from the file only. [Later messages](attachment-transfers.md#later-messages)
+  states how Try again uses the copy in the cloud computer.
 - [Messages](messages-and-attachments.md#messages) and
   [Sessions](agents-and-sessions.md#sessions) state how a title names each
   file. [The text](session-transcripts.md#the-text) states how a transcript

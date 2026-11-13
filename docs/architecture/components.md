@@ -5,7 +5,8 @@ its boundaries. It uses the terms of the
 [architecture doc](../architecture.md#terms). The [flows page](flows.md)
 describes how the components work together. A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
-says.
+says. A large-upload decision number names a decision of the change that
+lets a message carry files of up to 1 GB.
 
 ## Marketing site
 
@@ -126,13 +127,16 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
   [Access and security](../protocol/isolation.md#orgs-and-workspaces)
   says.
 - Only the Worker reads and writes the bucket. The browser sends each file
-  as raw bytes in one request, and the Worker streams it into the bucket
-  (decision 144).
-- Before the agent runner gets a message, the Worker copies the files of
-  the message into the sandbox, through an upload address that Boat gives
-  for each file.
-- [Chat and events](../protocol/messages-and-attachments.md#attachments) states how
-  long a file stays.
+  in raw parts, and the Worker streams each part into the bucket
+  (large-upload decision 1).
+- Before the agent runner gets a message, the sandbox downloads each new
+  file of the message from a route of the Worker, with a one-use token
+  (large-upload decisions 2 and 5). The Worker starts that download
+  through Boat.
+- Once the sandbox has a file, the Worker deletes its bytes from the
+  bucket, and D1 keeps its record (large-upload decision 3).
+- [Attachment transfers](../protocol/attachment-transfers.md#the-stored-copy)
+  states how long the bucket keeps a file.
 
 ## Boat
 

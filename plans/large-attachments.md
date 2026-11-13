@@ -42,6 +42,9 @@ the download in the chat, or a paste of a file. The brainstorm notes are in
 Contract owners:
 
 - [Message attachments](../docs/protocol/message-attachments.md).
+- [Attachment uploads](../docs/protocol/attachment-uploads.md) and
+  [Attachment transfers](../docs/protocol/attachment-transfers.md), which
+  Milestone 2 split out of the docs above.
 - [Access and security](../docs/protocol/access-and-security.md#attachment-uploads).
 - [Chat attachment storage and delivery](../worker/chat/attachments.md).
 - The [sandbox README](../worker/sandbox/README.md).
@@ -463,28 +466,55 @@ computer.
 
 Depends on: 1
 
-- [ ] Update `docs/protocol/message-attachments.md`: the 1 GB limit, the
+- [x] Update `docs/protocol/message-attachments.md`: the 1 GB limit, the
       download by the cloud computer, the deletion after the transfer, the
       check of a later message and of Try again, and the new error.
       Remove the rejection of a download by the cloud computer.
-- [ ] Update `docs/protocol/access-and-security.md` with the download
+- [x] Update `docs/protocol/access-and-security.md` with the download
       route and its token, and with the part routes in place of the one
       raw `POST` of decision 144.
-- [ ] Update the read line and the image input of decision 244 in
+- [x] Update the read line and the image input of decision 244 in
       `docs/protocol/message-attachments.md`.
-- [ ] Update `docs/protocol/isolation.md`, which says that the Worker sends
+- [x] Update `docs/protocol/isolation.md`, which says that the Worker sends
       each attachment to the provider's upload address.
-- [ ] Update `docs/protocol/create-a-workspace.md` only if its words about
+- [x] Update `docs/protocol/create-a-workspace.md` only if its words about
       attachments of a failed first start change.
-- [ ] Read the Terms page and the Privacy page in full. Update each
+- [x] Read the Terms page and the Privacy page in full. Update each
       sentence about kept files, such as `src/marketing/terms.ts:206` and
       `src/marketing/privacy.ts:97`.
-- [ ] Read each public guide in full. Update
+- [x] Update the Privacy paragraph in `src/marketing/privacy-uses.ts`,
+      which the Privacy page imports.
+- [x] Read each public guide in full. Update
       `src/marketing/docs/sessions-and-chat.md:62` and each other sentence
       that states the limit or the kept files.
-- [ ] Update the comparison row in
+- [x] Update the comparison row in
       `src/marketing/from-conductor/areas/agents-and-chat.ts:30`.
-- [ ] Update `README.md:47`.
+- [x] Update `README.md:47`.
+
+### Design calls of Milestone 2
+
+These are the calls of the agents and the orchestrator, of 13 November
+2026.
+
+- The transfer rules moved to a new page,
+  [Attachment transfers](../docs/protocol/attachment-transfers.md), and
+  the upload rules to
+  [Attachment uploads](../docs/protocol/attachment-uploads.md). Reason:
+  the two docs passed the length target. Each old anchor still works.
+- The read line says that an image is in the message only for an image
+  that Codex gets as image input. Reason: for an image above
+  25,000,000 bytes, that sentence would be false.
+- Only the member who started an upload can send its parts and complete
+  it. Reason: each file belongs to its uploader, as the isolation rules
+  say.
+- The URL of each part carries the upload ID and the part number.
+  Reason: the preflight then allows no new request header.
+- A part that passes its body limit gets HTTP 413 with
+  `attachment_too_large`, as the raw routes do today.
+- The Terms acceptance version in `src/shared/terms.ts` stays. Reason: the
+  change only shortens how long the app keeps a file, and #325 also
+  changed the Terms text without a new version. A new version would ask
+  every member to accept the Terms again.
 
 ## Milestone 3: The cloud computer downloads each file
 
@@ -501,6 +531,8 @@ Depends on: 2
 - [ ] Delete `SandboxProvider.writeFile`, its Boat adapter, the
       `uploadFileUrl` route, and their tests.
 - [ ] Update `worker/chat/attachments.md` and the sandbox README.
+- [ ] Update `docs/deployment.md`, which says that the provider key needs
+      `file.write` to copy each attached file.
 - [ ] Run `npm run test -- worker/chat worker/sandbox`.
 
 ## Milestone 4: Delete the stored copy after the transfer
@@ -521,6 +553,8 @@ Depends on: 3
       a failed first start before the deletion, and a new sandbox after
       it.
 - [ ] Update `worker/chat/attachments.md`.
+- [ ] Update `docs/deployment.md`, which says that the files of sent
+      messages stay until the app deletes their workspace.
 
 ## Milestone 5: Upload in parts
 
@@ -557,6 +591,8 @@ Depends on: 1, 5
 Depends on: 6
 
 - [ ] Delete the raw `POST` routes, their constant, and their tests.
+- [ ] Link `worker/http/README.md` straight to
+      [Attachment uploads](../docs/protocol/attachment-uploads.md).
 - [ ] Update `worker/chat/attachments.md`.
 
 ## Milestone 8: The read line for large files

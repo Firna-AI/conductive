@@ -6,7 +6,9 @@ sandboxes, the terminal, and the port previews. The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
 says. A gateway decision number names a decision of the change that adds
-the [model gateway](model-gateway.md), as that doc says.
+the [model gateway](model-gateway.md), as that doc says. A large-upload
+decision number names a decision of the change that lets a message carry
+files of up to 1 GB.
 
 These docs belong to this doc:
 
@@ -19,6 +21,8 @@ These docs belong to this doc:
 - [Terminal, previews, and desktop](terminal-previews-and-desktop.md): the
   security of the terminal, the port previews, the proxies, and the
   desktop.
+- [Attachment uploads](attachment-uploads.md): the upload of an attached
+  file in parts, with the gate rules and the body limit of its routes.
 
 ## Sign-in
 
@@ -72,8 +76,8 @@ These docs belong to this doc:
 - The gate also checks app access, as
   [What a person who waits can reach](waitlist.md#what-a-person-who-waits-can-reach)
   says (decision 161).
-- The two attachment upload routes take raw bytes in place of a JSON body
-  (decision 144). [Attachment uploads](#attachment-uploads) states their
+- The two attachment part routes take raw bytes in place of a JSON body
+  (decision 144). [Attachment uploads](attachment-uploads.md) states their
   conditions. Every other write needs a JSON body.
 - The health check and GitHub sign-in with its callback need no sign-in.
   The callback checks its `state` value instead.
@@ -85,9 +89,10 @@ These docs belong to this doc:
   `Origin` (decision 60).
 - The hostname for machines is `api.conductive.build`. It serves the
   GitHub webhooks, the agent tools, the agent runner, the git credential
-  helper, the [model gateway](model-gateway.md), and the software image
-  route of the deploy run. Its gate checks a webhook signature or a
-  workspace token in place of the sign-in.
+  helper, the [model gateway](model-gateway.md), the software image route
+  of the deploy run, and the attachment downloads of the cloud computers.
+  Its gate checks a webhook signature or a workspace token in place of the
+  sign-in.
 - The gate also accepts a one-use build grant, but only on
   `/v1/internal/image-source/credential`, the route that gives the Git
   command of a build its read token (decision 90).
@@ -107,6 +112,31 @@ These docs belong to this doc:
 - The route refuses a request with a cookie or an `Origin` header. While
   an older Worker version answers, the route says so, and the deploy run
   asks again.
+- The gate also accepts a one-use download token, but only on
+  `POST /v1/internal/attachments/download` (large-upload decision 5). That
+  route gives a cloud computer one attached file, as
+  [The transfer](attachment-transfers.md#the-transfer) says. The request
+  carries the token as a bearer token.
+- The Worker makes a new random token for each download. The token names
+  one file, its workspace, and the sandbox of that workspace. The Worker
+  keeps only its SHA-256 digest.
+- A token works once, and only for 10 minutes after the Worker made it.
+  Each new attempt of a download needs a new token.
+- Reason: a copy of the token in the command history of the cloud computer
+  is useless once its download starts. A presigned URL of the bucket was
+  rejected, because it needs a new R2 key, and anyone who sees it can read
+  the file until it expires. A signed token with no stored record was
+  rejected, because it works again until it expires.
+- The route refuses a request with a cookie or an `Origin` header. Before
+  it sends the file, it checks each of these again:
+  - the workspace still names that sandbox, and it is not archived
+  - the org of the workspace is not deleted
+  - neither the workspace owner nor the uploader is suspended
+  - the uploader is still a member of the org
+  - the file still belongs to that workspace
+- Risk: code in the cloud computer can read the token for up to 10
+  minutes. The token gives only one file that is on its way to that same
+  cloud computer.
 - Each route of `api.conductive.build` has a path under `/v1/`
   (decision 102).
 - Paths without a version were rejected. Reason: a later change to the
@@ -159,40 +189,9 @@ A lint was rejected because a read through another name escapes it.
 
 ### Attachment uploads
 
-Decision 144 sends each attached file as raw bytes in one request. The
-Worker streams the bytes into storage, so it never holds the whole file in
-memory. One JSON body with Base64 was rejected, because one upload of
-25 MB then uses about 100 MB of memory. Uploads in parts were rejected,
-because they need stored part state. An upload straight to the bucket was
-rejected, because it needs a new secret, CORS rules, and a new host.
-
-- Two routes take the raw bytes of one file in one `POST` (decision 144).
-  One uploads a draft file of an org, and the other a file of a workspace.
-- Only these two routes take raw bytes and have the higher limit. A route
-  added later gets neither.
-- A request needs the content type `application/octet-stream`. The gate
-  refuses a request with no content type or with another content type.
-- A request needs a `Content-Length` header. The Worker refuses a request
-  without it.
-- The body limit of these routes is 100,000,000 bytes, the file limit of
-  [Attachments](messages-and-attachments.md#attachments). The Worker counts the
-  bytes that arrive, as for every body.
-- A body or a `Content-Length` above that limit gets HTTP 413 with the
-  error code `attachment_too_large`, in place of `body_too_large`.
-- A body whose bytes do not match its `Content-Length` stores no file.
-- The query of the URL carries the file name as `name`, and its media type
-  as `mediaType`. The upload of a draft file also carries the ID of the
-  first message as `messageId`.
-- For these routes, the gate keeps all its other checks:
-  - the host, the sign-in, and app access
-  - the `Origin` header
-  - the membership of the org
-  - the checks that refuse a write to the org, such as during a suspension
-- Reason: like a JSON body, `application/octet-stream` needs a preflight,
-  so a page on another site cannot send such a request. A request with no
-  content type needs no preflight, so the gate refuses it.
-- Reason: the URL carries the file name and the media type, so the
-  preflight allows no new request header.
+[Attachment uploads](attachment-uploads.md) states the two routes that
+take the parts of an attached file as raw bytes (large-upload decision 1).
+It also states their body limit of one part, and their gate rules.
 
 ## Content security policy
 
