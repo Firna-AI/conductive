@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import type { TabPlaces } from '../../app/tab-places'
 
 /**
  * Where the reader left the chat of a session: at the bottom, or at a row of
@@ -15,26 +15,7 @@ export interface PlaceMemory {
 }
 
 /** The places of the session tabs of one chat, by session ID. */
-export type ChatPlaces = Map<string, ChatPlace>
-
-/**
- * Forgets the place of each session that has no tab in `open`, such as a
- * session that the user closed, so it starts at the bottom when it opens
- * again. While the sessions load, `open` is null and nothing goes.
- */
-export function useForgetClosedPlaces(
-  places: ChatPlaces,
-  open: readonly string[] | null,
-): void {
-  const key = open?.join('\n') ?? null
-  useEffect(() => {
-    if (key === null) return
-    const kept = new Set(key.split('\n'))
-    for (const sessionId of places.keys()) {
-      if (!kept.has(sessionId)) places.delete(sessionId)
-    }
-  }, [places, key])
-}
+export type ChatPlaces = TabPlaces<ChatPlace>
 
 /** The attribute that holds the key of each row of the transcript. */
 export const rowKeyAttribute = 'data-row'

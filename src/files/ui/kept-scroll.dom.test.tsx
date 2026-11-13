@@ -1,6 +1,7 @@
 // @vitest-environment happy-dom
 import { act, type ReactNode } from 'react'
 import { afterEach, describe, expect, it, onTestFinished, vi } from 'vitest'
+import { TabPlaces } from '../../app/tab-places'
 import { mount, type Mounted } from '../../test-support/mount'
 import {
   KeptScroll,
@@ -79,7 +80,7 @@ function layOut(range: number) {
   }
 }
 
-const places = new Map<string, ScrollOffset>()
+let places = new TabPlaces<ScrollOffset>()
 const tabOf = (tab: string): KeptScrollTab => ({ places, tab })
 
 /** Shows `view` of `tab`, as the centre shows a file or diff tab. */
@@ -113,7 +114,7 @@ const offsetOf = (box: HTMLElement) => ({
 
 describe('the scroll offset of a file or diff tab', () => {
   it('gives each tab and each view its own offset back, down and sideways, and starts a new one at the top', async () => {
-    places.clear()
+    places = new TabPlaces<ScrollOffset>()
     layOut(1000)
     const [readme, diff] = [tabOf('file:README.md'), tabOf('diff:app.ts')]
     const page = await mount(show('preview', readme))
@@ -132,7 +133,7 @@ describe('the scroll offset of a file or diff tab', () => {
   })
 
   it('waits for content that grows after the mount, and keeps no offset of the short box', async () => {
-    places.clear()
+    places = new TabPlaces<ScrollOffset>()
     const layout = layOut(1000)
     const readme = tabOf('file:README.md')
     const page = await mount(show('preview', readme))
@@ -143,14 +144,17 @@ describe('the scroll offset of a file or diff tab', () => {
     await page.rerender(show('preview', readme))
     expect(boxOf(page).scrollTop).toBe(200)
     boxOf(page).dispatchEvent(new Event('scroll'))
-    expect(places.get('file:README.md\npreview')).toEqual({ top: 600, left: 0 })
+    expect(places.get('file:README.md', 'preview')).toEqual({
+      top: 600,
+      left: 0,
+    })
 
     await layout.grow(1000)
     expect(boxOf(page).scrollTop).toBe(600)
   })
 
   it('stops the wait when the reader scrolls', async () => {
-    places.clear()
+    places = new TabPlaces<ScrollOffset>()
     const layout = layOut(1000)
     const readme = tabOf('file:README.md')
     const page = await mount(show('preview', readme))
@@ -162,6 +166,9 @@ describe('the scroll offset of a file or diff tab', () => {
     read(boxOf(page), 50)
     await layout.grow(1000)
     expect(boxOf(page).scrollTop).toBe(50)
-    expect(places.get('file:README.md\npreview')).toEqual({ top: 50, left: 0 })
+    expect(places.get('file:README.md', 'preview')).toEqual({
+      top: 50,
+      left: 0,
+    })
   })
 })

@@ -129,15 +129,16 @@ holds how an agent action of the pull request bar sends its fixed prompt.
   the read row is gone, the chat shows the bottom.
 - The places stay while the browser tab keeps the workspace. A reload
   forgets them, and each chat then opens at the bottom.
-- A session tab that the user closes forgets its place. When the session
-  opens again, such as from the session history, it shows the bottom.
-  Reason: a reopened tab is a new tab to the user. The user chose this on
-  13 November 2026.
 - Reason: the user who looks at another tab comes back to read on. A saved
   scroll offset was rejected, because output that comes in the meantime
   moves the read row. A place that stays after a reload was rejected,
   because it needs browser storage that each sign-out must clear. The user
   chose both on 13 November 2026.
+- A session tab that closes forgets its place, also when another member
+  closes its session. When the session opens again, such as from the
+  session history, it shows the bottom.
+- Reason: a reopened tab is a new tab to the user. The user chose this on
+  13 November 2026.
 
 ### The work of a turn
 

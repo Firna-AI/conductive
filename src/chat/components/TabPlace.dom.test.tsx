@@ -136,7 +136,7 @@ describe('the place of each session tab', () => {
     expect(chat.scrollTop()).toBe(0)
   })
 
-  it('forgets the place of a session tab that the user closes, so it opens at the bottom again', async () => {
+  it('forgets the place of a session tab that the user closes, so it opens at the bottom again, and keeps the place of each other tab', async () => {
     const { resize, server } = await mountLongTurn()
     // The fake answers a close and a reopen with its own old record.
     const record = workspaceFixtures().sessions.sessions[1]
@@ -157,19 +157,28 @@ describe('the place of each session tab', () => {
       },
     )
     const chat = layOutChat()
+    await resize()
+    chat.read(chat.rowOf(older), 100)
     await press(byRole('button', other))
     await waitFor(() => !queryByText(older), 'the other session')
     await resize()
     chat.read(chat.rowOf(answer), 140)
     expect(chat.scrollTop()).toBeLessThan(0)
 
-    await press(byRole('button', `Close ${other}`))
+    await press(byRole('button', shown))
     await waitFor(() => queryByText(older), 'the long turn')
+
+    await press(byRole('button', `Close ${other}`))
+    await waitFor(() => !queryByRole('button', other), 'the closed tab')
     await press(byRole('button', 'Session history'))
     await press(await waitFor(() => queryByText(other), 'the history entry'))
     await waitFor(() => !queryByText(older), 'the reopened session')
     await resize()
     expect(chat.scrollTop()).toBe(0)
+    await press(byRole('button', shown))
+    await waitFor(() => queryByText(older), 'the long turn again')
+    await resize()
+    expect(chat.topOf(chat.rowOf(older))).toBe(100)
   })
 
   it('opens a session that kept no place at the bottom, not at the place of the tab before it', async () => {

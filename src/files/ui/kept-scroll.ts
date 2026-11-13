@@ -1,11 +1,11 @@
 import {
   createContext,
   useContext,
-  useEffect,
   useLayoutEffect,
   useRef,
   type RefObject,
 } from 'react'
+import type { TabPlaces } from '../../app/tab-places'
 
 /** The scroll offset of a box, down and sideways, as the box gives them. */
 export interface ScrollOffset {
@@ -18,7 +18,7 @@ export interface ScrollOffset {
  * view, and the tab that shows now.
  */
 export interface KeptScrollTab {
-  places: Map<string, ScrollOffset>
+  places: TabPlaces<ScrollOffset>
   /** The key of the shown tab, such as `file:src/app.ts`. */
   tab: string
 }
@@ -26,29 +26,6 @@ export interface KeptScrollTab {
 /** The key of a file or diff tab in the kept offsets. */
 export function scrollTabKey(tab: { kind: string; path: string }): string {
   return `${tab.kind}:${tab.path}`
-}
-
-/** The key of the kept offset of `view` in the tab with the key `tab`. */
-const placeKey = (tab: string, view: string) => `${tab}\n${view}`
-
-/**
- * Forgets the offsets of each tab whose key is not in `open`, such as a file
- * tab that the user closed, so it starts at the top when it opens again.
- * While the tabs load, `open` is null and nothing goes.
- */
-export function useForgetClosedTabs(
-  places: Map<string, ScrollOffset> | null,
-  open: readonly string[] | null,
-): void {
-  const key = open?.join('\n') ?? null
-  useEffect(() => {
-    if (places === null || key === null) return
-    const kept = new Set(key.split('\n'))
-    for (const place of places.keys()) {
-      const [tab = ''] = place.split('\n')
-      if (!kept.has(tab)) places.delete(place)
-    }
-  }, [places, key])
 }
 
 /** The tab whose scroll the views keep. Outside a tab, no view keeps it. */
@@ -72,8 +49,7 @@ export function useKeptScroll(view: string): RefObject<HTMLDivElement | null> {
   useLayoutEffect(() => {
     const element = box.current
     if (!tab || !element) return
-    const key = placeKey(tab.tab, view)
-    const saved = tab.places.get(key) ?? { top: 0, left: 0 }
+    const saved = tab.places.get(tab.tab, view) ?? { top: 0, left: 0 }
     let waiting = saved.top > 0 || saved.left > 0
     const restore = () => {
       if (!waiting) return
@@ -89,7 +65,8 @@ export function useKeptScroll(view: string): RefObject<HTMLDivElement | null> {
     }
     const keep = () => {
       if (waiting) return
-      tab.places.set(key, { top: element.scrollTop, left: element.scrollLeft })
+      const offset = { top: element.scrollTop, left: element.scrollLeft }
+      tab.places.set(tab.tab, offset, view)
     }
     const stopWaiting = () => {
       waiting = false

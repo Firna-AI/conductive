@@ -118,8 +118,9 @@ the requirements.
   a new keeper, for another session or a new mount, shows the kept place.
   A row that left the transcript gives the bottom. Each send of this tab,
   also a fixed prompt while a file tab shows, puts the place of its session
-  at the bottom. When a session leaves the tabs, such as at a close,
-  `useForgetClosedPlaces` in `components/chat-place.ts` forgets its place,
-  so it opens at the bottom again. The kept files of the
+  at the bottom. The places live in a `TabPlaces` store of
+  [the web app](../app/tab-places.ts). The chat gives it each list of the
+  session tabs through `useFollowTabs`, and a session that leaves the tabs,
+  such as at a close, forgets its place, so it opens at the bottom again. The kept files of the
   workspace keep the offset of each file and diff tab, as the
   [Files README](../files/README.md#kept-scroll-offsets) says.

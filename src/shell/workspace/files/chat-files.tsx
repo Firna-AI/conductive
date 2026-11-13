@@ -10,10 +10,8 @@ import type { RenderTab, TabDraw } from '../../../chat/components/tab-row'
 import type { ChatMentions } from '../../../chat/mentions/MentionsContext'
 import { tabLabel } from '../../../files/model/file-labels'
 import type { WorkspaceFiles } from '../../../files/model/files-store'
-import {
-  scrollTabKey,
-  useForgetClosedTabs,
-} from '../../../files/ui/kept-scroll'
+import { scrollTabKey } from '../../../files/ui/kept-scroll'
+import { useFollowTabs } from '../../../app/tab-places'
 import type {
   FilesNavigation,
   FilesTab,
@@ -183,7 +181,7 @@ export function useChatFiles(
   const labelOf = useTabLabels(context, tabs)
   const files = useKeptFilesWhile(context, !archived)
   const view = useSavedView(context.savedView)
-  useForgetClosedTabs(
+  useFollowTabs(
     files?.scrollPlaces ?? null,
     view ? filesTabsOf(view).map(scrollTabKey) : null,
   )

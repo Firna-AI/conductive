@@ -59,6 +59,11 @@ Design calls (my calls, 2026-11-13):
   `WorkspaceFiles`. Both live as long as the kept workspace. (Changed on
   2026-11-13 after review finding 1: a fixed prompt sent while a file tab
   showed kept the old place.)
+- Both owners keep their places in one `TabPlaces` store of the web app.
+  It forgets only a tab that leaves the last known list of open tabs, so a
+  tab that shows before the saved view lists it keeps its place, and a list
+  that is not known yet forgets nothing. (Review findings 11 and 12,
+  2026-11-13.)
 - A file or diff tab keeps its offset down and sideways, because a line of
   code can be wider than the box. (Review finding 5, 2026-11-13.)
 

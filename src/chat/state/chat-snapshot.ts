@@ -1,4 +1,5 @@
-import type { ChatPlaces } from '../components/chat-place'
+import { TabPlaces } from '../../app/tab-places'
+import type { ChatPlace } from '../components/chat-place'
 import type { DraftFile } from '../../app/draft-files'
 import type { AgentModel } from '../../shared/agents'
 import type { UserMessage } from '../../shared/messages'
@@ -236,7 +237,7 @@ export class ChatStore {
    * when a session shows. A send of this tab puts its session at the bottom,
    * also while another tab shows, as `showWaiting` says.
    */
-  readonly places: ChatPlaces = new Map()
+  readonly places = new TabPlaces<ChatPlace>()
   private snapshot: ChatSnapshot = initialSnapshot
   private readonly listeners = new Set<() => void>()
 
