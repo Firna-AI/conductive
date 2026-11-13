@@ -68,6 +68,23 @@ requirements.
   text, because it draws nothing. That hidden copy shows no chips, so the
   keyboard cannot reach a link in it.
 
+## Web addresses
+
+- `src/markdown/web-links.ts` reads web addresses for chat text, the
+  message field, and the mockups. It imports no React or app module.
+  `bareAddressAt` reads a bare address with its balanced parentheses and
+  without trailing punctuation or marks. `webAddressParts` splits plain
+  text into addresses and text, with an optional Markdown label.
+- `webLink` checks an address and gives its kind: an app page, a local
+  server with its port, or another web page. The caller supplies the app
+  origin and a page check built on `parseRoute`. `appAddress` joins the
+  raw path segments with one slash, then adds the query and hash.
+- `readsAsAddress` tests a Markdown label as it shows, without code marks,
+  bold marks, invisible characters, or spaces at its ends.
+- `chatParts` uses `bareAddressAt` and `markdownTargetAt`. The message
+  field uses `webAddressParts` and reads no code. Non-chip addresses in
+  the app stay text.
+
 ## Workspace chips
 
 - Sent messages and agent answers show each workspace link as a chip, as
@@ -80,8 +97,9 @@ requirements.
   and chips, and a bare link ends before a mark. Bold ends at code, as
   before. A Markdown link of no workspace shows its source with its code
   and bold, as before. `links/workspace-links.ts` reads each link with the
-  URL parser and `parseRoute`. A link is a chip only when it has the
-  origin of the links of the list, and the router reads a page of a
+  URL parser and `parseRoute`. It builds the chip address with
+  `appAddress` of `src/markdown/web-links.ts`. A link is a chip only when
+  it has the origin of the links of the list, and the router reads a page of a
   workspace of the org in that list. The chip shows the current name, in
   bold while the workspace has unread output, as the list does. Its
   list mark shows the state and the GitHub state, from `chipOf` in
@@ -96,7 +114,7 @@ requirements.
   While that read runs, after it fails, and for a session that the
   workspace does not hold, the link keeps the chip of its workspace. Every
   other link stays as the text has it. The message
-  field reads its text with `textParts`, which reads no code. A message line of
+  field reads its text with `webAddressParts`, which reads no code. A message line of
   a work fold shows chips too. A click on a chip there stays with the
   chip, so the line does not toggle, and a click with a modifier key opens
   a new tab as on any link.

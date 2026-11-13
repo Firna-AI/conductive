@@ -7,10 +7,10 @@ import {
   type LexicalNode,
 } from 'lexical'
 import { draftParts } from '../../../app/draft-marks'
+import { webAddressParts } from '../../../markdown/web-links'
 import {
   linkTarget,
   namesOrgWorkspace,
-  textParts,
   type WorkspaceLinks,
 } from '../../links/workspace-links'
 import { mentionParts, type Mention } from '../../../shared/mention-text'
@@ -51,7 +51,7 @@ function $rawNodes(text: string): LexicalNode[] {
 
 /** The nodes of plain text, where each workspace link can be a chip. */
 function $linkNodes(text: string, links: WorkspaceLinks): LexicalNode[] {
-  return textParts(text).flatMap((part): LexicalNode[] => {
+  return webAddressParts(text).flatMap((part): LexicalNode[] => {
     if (part.kind !== 'link') return $rawNodes(part.text)
     if (linkTarget(part.href, links)) {
       return [$createWorkspaceChipNode(part.source, part.href)]

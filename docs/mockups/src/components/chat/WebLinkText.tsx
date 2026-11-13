@@ -1,19 +1,18 @@
 import type { ReactNode } from 'react'
+import {
+  readsAsAddress,
+  webAddressParts,
+  webLink,
+  type WebAddressLink,
+  type WebLink,
+} from '../../../../../src/markdown/web-links'
 import { openPort } from '../../fixtures/previews'
 import { paths } from '../../paths'
 import inline from '../common/InlineText.module.css'
 import { ScreenLink, useOutsideHref } from '../common/ScreenLink'
 import { TextLink, type LinkOpener } from '../common/TextLink'
 import { useChatWorkspaces } from './chatWorkspaces'
-import {
-  bareParts,
-  linkPage,
-  linkTarget,
-  readsAsAddress,
-  webLink,
-  type LinkPart,
-  type WebLink,
-} from './workspaceLinks'
+import { linkContext, linkPage, linkTarget } from './workspaceLinks'
 
 /**
  * The screen of each port whose preview the mockups draw: the dev server
@@ -86,7 +85,7 @@ function WebLinkText(props: { link: WebLink; children: ReactNode }) {
  * address in it is a link, and the rest is text.
  */
 function TypedText(props: { text: string }) {
-  return bareParts(props.text).map((part, index) =>
+  return webAddressParts(props.text, false).map((part, index) =>
     part.kind === 'text' ? (
       part.text
     ) : (
@@ -103,9 +102,9 @@ function TypedText(props: { text: string }) {
  * as typed, and its address is the link. An address that is no link, such
  * as one with a user name, shows as typed.
  */
-export function WebLinkPart(props: { part: LinkPart; answer: boolean }) {
+export function WebLinkPart(props: { part: WebAddressLink; answer: boolean }) {
   const { href, source, label } = props.part
-  const link = webLink(href)
+  const link = webLink(href, linkContext)
   if (label === undefined) {
     return link ? <WebLinkText link={link}>{source}</WebLinkText> : source
   }
@@ -122,7 +121,7 @@ export function WebLinkPart(props: { part: LinkPart; answer: boolean }) {
  */
 export function CodeText(props: { text: string; href?: string }) {
   const { text, href } = props
-  const link = href === undefined ? undefined : webLink(href)
+  const link = href === undefined ? undefined : webLink(href, linkContext)
   if (href === undefined || !link) {
     return <code className={inline.code}>{text}</code>
   }

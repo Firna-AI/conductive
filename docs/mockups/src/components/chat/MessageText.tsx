@@ -1,4 +1,5 @@
 import { Fragment, type ReactNode } from 'react'
+import type { WebAddressLink } from '../../../../../src/markdown/web-links'
 import { nameLabel } from '../../../../../src/shared/name-label'
 import type { Attachment } from '../../fixtures/attachments'
 import type { MentionEntry } from '../../fixtures/fileMentions'
@@ -20,7 +21,6 @@ import {
   linkPage,
   linkTarget,
   textParts,
-  type LinkPart,
   type LinkTarget,
   type TextPart,
 } from './workspaceLinks'
@@ -116,7 +116,7 @@ function TargetChip(props: { target: LinkTarget }) {
  * A link of chat text: the chip of a workspace of the org, or a link that
  * `WebLinkPart` draws. `answer` shows a Markdown link as its label.
  */
-function ChatLink(props: { part: LinkPart; answer: boolean }) {
+function ChatLink(props: { part: WebAddressLink; answer: boolean }) {
   const target = linkTarget(props.part.href, useChatWorkspaces())
   if (target) return <TargetChip target={target} />
   return <WebLinkPart answer={props.answer} part={props.part} />
