@@ -57,6 +57,9 @@ state the requirements.
 - A new stream gets each command other than `report.refresh` only after its
   `runner.ready` event. A stream that sent `runner.ready` before gets them
   right after the `welcome`.
+- Send one `skills.updated` report after each connect, before
+  `runner.ready`. A `runner.ready` with no skills report since the connect
+  makes the skill list unavailable, as for an older runner.
 - A `report.refresh` command can come right after the `welcome`, before
   `runner.ready`, and during a running turn. Answer it with a full report of
   its kind.

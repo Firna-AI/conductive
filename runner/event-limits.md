@@ -44,3 +44,7 @@ port-label limits apply later, after the workspace's marked-env filter.
   These final excerpts never split a Unicode character.
   [Listening ports](../docs/protocol/agent-runner.md#listening-ports)
   gives the limits of that report: its ports, its names, and its folders.
+- `skills.updated` sends at most 200 skills for each agent. The runner
+  never cuts a name or a description. It sends a description over 4096
+  characters as an empty string, and fits whole descriptions in a 512 KiB
+  budget, as [Skills](reports.md#skills) says.

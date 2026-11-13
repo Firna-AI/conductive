@@ -11,10 +11,7 @@ import { checkpoint, changedSince } from './checkpoint'
 import { prepareContextFolder } from './context-folder'
 import { AgentEngine } from './engine'
 import { boundChatEvent } from '../../src/shared/event-limits'
-import {
-  filterDiffResponse,
-  filterFileResponse,
-} from '../../src/shared/output-fields'
+import { filteredFileResponse } from './file-reply'
 import { FileReporter } from './files'
 import { agentInstructions, type WorkspaceContext } from './instructions'
 import { RunnerLink } from './link'
@@ -29,6 +26,7 @@ import type { EventStore } from './state'
 import { PortReporter, type PortReporterOptions } from './ports'
 import { privatePortReport } from './port-report-budget'
 import { onRestoreEnd } from './restore-end'
+import { SkillReporter, type SkillReporterOptions } from './skills'
 import { TERMINAL_RESTORE_MARKER } from '../../src/shared/restore-marker'
 
 type RunnerConnector = TransportRunnerConnector<WorkspaceToRunner>
@@ -45,6 +43,8 @@ export interface RunnerOptions extends WorkspaceContext {
   warn: (message: string) => void
   disconnected: () => void
   ports?: PortReporterOptions
+  /** Production gives the lists that the providers read. */
+  skills?: SkillReporterOptions
   /** Tests use a temporary path. The service uses the sandbox marker. */
   restoreMarker?: string
 }
@@ -54,6 +54,7 @@ export class Runner {
   readonly files: FileReporter
   readonly engine: AgentEngine
   readonly ports: PortReporter | null
+  readonly skills: SkillReporter | null
   private readonly options: RunnerOptions
   private readonly sanitizer = new OutputSanitizer()
   private readonly emitted = new SerialQueue()
@@ -75,6 +76,17 @@ export class Runner {
           (event, commandId) => this.emit(event, false, commandId),
           options.warn,
         )
+      : null
+    this.skills = options.skills
+      ? new SkillReporter({
+          ...options.skills,
+          repository: options.cwd,
+          home: options.home,
+          now: options.now,
+          filter: (text) => this.sanitizer.text(text),
+          emit: (event, commandId) => this.emit(event, true, commandId),
+          warn: options.warn,
+        })
       : null
     const repository = new Repository(options.cwd, options.warn)
     this.files = new FileReporter(
@@ -129,6 +141,7 @@ export class Runner {
           await this.emit({ type: 'files.unavailable' })
         }
         await this.ports?.refresh(true)
+        await this.skills?.refresh({ full: true, reload: true })
         await this.emit({ type: 'runner.ready' })
       },
       disconnected: () => {
@@ -139,34 +152,15 @@ export class Runner {
           this.sanitizer.add(command.credential.token)
         const action =
           command.type === 'file.read' || command.type === 'file.diff'
-            ? this.files.request(command).then((response) => {
-                const text = (value: string) => this.sanitizer.text(value)
-                if (response.result.ok)
+            ? this.files
+                .request(command)
+                .then((response) =>
                   this.link.reply(
-                    response.type === 'file.read.result'
-                      ? {
-                          ...response,
-                          result: {
-                            ok: true,
-                            file: filterFileResponse(
-                              response.result.file,
-                              text,
-                            ),
-                          },
-                        }
-                      : {
-                          ...response,
-                          result: {
-                            ok: true,
-                            diff: filterDiffResponse(
-                              response.result.diff,
-                              text,
-                            ),
-                          },
-                        },
-                  )
-                else this.link.reply(response)
-              })
+                    filteredFileResponse(response, (value) =>
+                      this.sanitizer.text(value),
+                    ),
+                  ),
+                )
             : command.type === 'report.refresh'
               ? this.refresh(command)
               : this.engine.command(command)
@@ -192,7 +186,7 @@ export class Runner {
       this.warmed = true
     }
     if (this.watchFiles && !this.stopWatching) {
-      this.stopWatching = this.files.watch(this.options.warn)
+      this.stopWatching = this.watch()
       this.stopRestoreWatch = onRestoreEnd(
         this.options.restoreMarker ?? TERMINAL_RESTORE_MARKER,
         () => this.watchRestoredFiles(),
@@ -214,8 +208,10 @@ export class Runner {
     this.stopRestoreWatch?.()
     this.stopWatching?.()
     const closingPorts = this.ports?.close()
+    const closingSkills = this.skills?.close()
     await this.engine.close()
     await closingPorts
+    await closingSkills
     await this.link.persist()
     this.link.close()
   }
@@ -224,10 +220,16 @@ export class Runner {
   private watchRestoredFiles(): void {
     if (this.stopped || !this.stopWatching) return
     this.stopWatching()
-    this.stopWatching = this.files.watch(this.options.warn)
+    this.stopWatching = this.watch()
     void this.files
       .refresh()
       .catch(() => this.options.warn('The file lists could not update.'))
+    this.skills?.changed()
+  }
+
+  /** One repository watch serves the file reports and the skills report. */
+  private watch(): () => void {
+    return this.files.watch(this.options.warn, () => this.skills?.changed())
   }
 
   private emit(
@@ -280,6 +282,8 @@ export class Runner {
       await this.files.refresh(true, kind, command.commandId)
     else if (kind === 'ports.updated')
       await this.ports?.refresh(true, command.commandId)
+    else if (kind === 'skills.updated')
+      await this.skills?.refresh({ full: true, commandId: command.commandId })
     else
       await this.emitted.run(() =>
         this.link.refreshReport(kind, command.commandId, (report) =>

@@ -37,6 +37,7 @@ export function readRunnerEventIdentity(value: unknown): RunnerEventIdentity {
     case 'files.changed':
     case 'changes.updated':
     case 'ports.updated':
+    case 'skills.updated':
       type = value.type
   }
   const report =

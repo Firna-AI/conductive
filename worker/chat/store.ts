@@ -10,6 +10,7 @@ import { ChatRecords } from './chat-records'
 import type { FilesStorage } from '../files/storage'
 import type { GitHubStateTransaction } from '../github/contracts'
 import { ReportRepairs } from './report-repairs'
+import { WorkspaceSkills } from './skill-state'
 import { WorkspaceSummaryProjection } from './workspace-summary'
 import { PreviewRevocations } from '../previews/revocation-events'
 import { RunnerOutputState } from './runner-output-state'
@@ -32,6 +33,7 @@ export class ChatTransaction extends ChatRecords {
   readonly files: FilesStorage
   readonly github: GitHubStateTransaction
   readonly repairs: ReportRepairs
+  readonly skills: WorkspaceSkills
   readonly previews: PreviewRevocations
   readonly output: RunnerOutputState
   private readonly summary: WorkspaceSummaryProjection
@@ -49,6 +51,9 @@ export class ChatTransaction extends ChatRecords {
       emit: (event) => this.emit(event),
     }
     this.repairs = new ReportRepairs(data)
+    this.skills = new WorkspaceSkills(data, (event, occurredAt) =>
+      this.emit(event, occurredAt),
+    )
     this.previews = new PreviewRevocations(data, (event) => this.emit(event))
     this.summary = new WorkspaceSummaryProjection(
       data,

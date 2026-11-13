@@ -93,7 +93,7 @@ it('keeps the full failed receipt after a crash immediately after its commit', a
     sentMessage,
   } = await runningFixture()
   const before = await fixture.history(session.id)
-  expect(before.throughEventNumber).toBe(4)
+  expect(before.throughEventNumber).toBe(5)
   const tab = await fixture.tab()
   const received = structuredClone(runner.received)
   await fixture.failNextCommit('after', 'Injected post-commit crash')
@@ -123,18 +123,18 @@ it('keeps the full failed receipt after a crash immediately after its commit', a
     messageTurn: 'original-turn',
   })
   const expectedHistory = {
-    throughEventNumber: 6,
+    throughEventNumber: 7,
     events: [
       ...before.events,
       {
         workspaceId: WORKSPACE_ID,
-        eventNumber: 5,
+        eventNumber: 6,
         occurredAt: TEST_TIME,
         event: terminalEvent(turn, 'failed'),
       },
       {
         workspaceId: WORKSPACE_ID,
-        eventNumber: 6,
+        eventNumber: 7,
         occurredAt: TEST_TIME,
         event: { type: 'session.updated', session: failedSession },
       },
@@ -159,7 +159,7 @@ it('keeps the full accepted retry after a crash immediately after its commit', a
   runner.emit(terminalEvent(turn, 'failed'))
   await fixture.drain()
   const before = await fixture.history(session.id)
-  expect(before.throughEventNumber).toBe(6)
+  expect(before.throughEventNumber).toBe(7)
   const tab = await fixture.tab()
   await fixture.failNextCommit('after', 'Injected post-commit crash')
   const response = await retryRequest(fixture, session.id, 'original')
@@ -212,18 +212,18 @@ it('keeps the full accepted retry after a crash immediately after its commit', a
     })),
   ).toEqual({ cursor: 2, newest: 'retry-turn', messageTurn: 'retry-turn' })
   const expectedHistory = {
-    throughEventNumber: 8,
+    throughEventNumber: 9,
     events: [
       ...before.events,
       {
         workspaceId: WORKSPACE_ID,
-        eventNumber: 7,
+        eventNumber: 8,
         occurredAt: TEST_TIME,
         event: { type: 'message.accepted', message: retryMessage },
       },
       {
         workspaceId: WORKSPACE_ID,
-        eventNumber: 8,
+        eventNumber: 9,
         occurredAt: TEST_TIME,
         event: { type: 'session.updated', session: retrySession },
       },
@@ -278,12 +278,12 @@ it('keeps the full accepted retry after a crash immediately after its commit', a
     messages: [sentMessage, { ...retryMessage, state: 'sent' }],
   })
   expect(await fixture.history(session.id)).toEqual({
-    throughEventNumber: 9,
+    throughEventNumber: 10,
     events: [
       ...expectedHistory.events,
       {
         workspaceId: WORKSPACE_ID,
-        eventNumber: 9,
+        eventNumber: 10,
         occurredAt: TEST_TIME,
         event: {
           type: 'message.sent',

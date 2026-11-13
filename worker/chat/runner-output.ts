@@ -12,6 +12,7 @@ import { record, string, strings } from './inputs'
 import type { ChatTransaction } from './store'
 import type { RunnerWorkspaceRecord } from './types'
 import { displayPortReport } from './port-reports'
+import { displaySkillReport } from './skill-reports'
 
 export interface FilteredRunnerOutput {
   events: RunnerEventEnvelope[]
@@ -143,7 +144,9 @@ export async function filterRunnerOutput(
     event:
       event.type === 'ports.updated'
         ? displayPortReport(event)
-        : boundChatEvent(event),
+        : event.type === 'skills.updated'
+          ? displaySkillReport(event)
+          : boundChatEvent(event),
   }))
   return {
     events,

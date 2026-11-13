@@ -1,11 +1,8 @@
 import { WORKSPACE_TOOLS_MCP } from '../../../src/shared/agent-tools'
 import { TOOL_ENV } from '../../../tools/context'
 import { object, string } from '../parse'
-import {
-  attachmentDescription,
-  attachmentReadInstruction,
-} from './attachment-description'
 import { codexBinary } from './binaries'
+import { codexInput } from './codex-input'
 import { writeCodexCredentials } from './codex-credentials'
 import { codexNotification } from './codex-events'
 import { checkCodexGateway, codexSettings } from './codex-settings'
@@ -14,51 +11,16 @@ import { readComputerServer } from './computer-mcp'
 import { prepareProviderHome } from './environment'
 import { failureCause } from './failure'
 import { ProviderLifetime } from './lifetime'
-import { providerMessage } from './message'
 import { startProcess, type StartProcess } from './process'
 import { JsonRpc } from './rpc'
-import type { ProviderFactory, ProviderInput } from './types'
-import type { RunnerBranches } from '../../../src/shared/runner'
+import { noSkills, type SkillSource } from './skill-input'
+import type { ProviderFactory } from './types'
 
-function input(command: ProviderInput, branches?: RunnerBranches | null) {
-  return [
-    {
-      type: 'text',
-      text: providerMessage(command.message, command.branches, branches),
-      text_elements: [],
-    },
-    ...(command.attachments.length
-      ? [
-          {
-            type: 'text',
-            text:
-              attachmentReadInstruction +
-              (command.message.attachments.some((file) => file.kind === 'image')
-                ? ' Each image is also in this message.'
-                : ''),
-            text_elements: [],
-          },
-        ]
-      : []),
-    ...command.attachments.flatMap((attachment) => {
-      const metadata = command.message.attachments.find(
-        (item) => item.id === attachment.attachmentId,
-      )
-      const description = {
-        type: 'text',
-        text: attachmentDescription(command, attachment),
-        text_elements: [],
-      }
-      return metadata?.kind === 'image'
-        ? [description, { type: 'localImage', path: attachment.path }]
-        : [description]
-    }),
-  ]
-}
-
+/** `skills` gives the current Codex list at each send, also during a turn. */
 export function createCodexFactory(
   start: StartProcess = startProcess,
   credentials = writeCodexCredentials,
+  skills: SkillSource = noSkills,
 ): ProviderFactory {
   return async (options) => {
     options.signal?.throwIfAborted()
@@ -204,7 +166,7 @@ export function createCodexFactory(
                 threadId,
                 expectedTurnId: activeTurn,
                 clientUserMessageId: command.message.id,
-                input: input(command, options.instructionBranches),
+                input: codexInput(command, skills, options.instructionBranches),
               })
             } catch (error) {
               userIds = before
@@ -216,7 +178,7 @@ export function createCodexFactory(
             const result = object(
               await rpc.request('turn/start', {
                 threadId,
-                input: input(command, options.instructionBranches),
+                input: codexInput(command, skills, options.instructionBranches),
                 clientUserMessageId: command.message.id,
                 model: choice.model,
                 effort: choice.effort === 'none' ? 'none' : choice.effort,

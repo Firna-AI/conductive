@@ -160,6 +160,16 @@ first.
   displayed-label checks. Private labels stay complete for the output filter.
   Runner reports require a sorted unique array. Only a workspace stop
   publishes a null list.
+- `skill-reports.ts`: the skills-report parser, the description cut to 300
+  characters after the final filter, the check of the cut, and the browser
+  form `SkillsUpdated`. The parser leaves out a name that no skill text can
+  hold and a repeated name. `runner-event-limits.ts` refuses a list of more
+  than 200 skills, or a description of more than 4096 characters, as too
+  large.
+- `skill-state.ts`: `WorkspaceSkills` on `ChatTransaction.skills`. It
+  stores each filtered report as a `skills.updated` event. It publishes
+  `skills: null` once when a runner sends `runner.ready` with no skills
+  report since its connect, or when the repair of a refused report fails.
 - `runner-input.ts`, `runner-event-limits.ts`, `agent-events.ts`, and
   `other-events.ts`: the checks and the caps of runner messages.
   `parseRunnerEnvelope` applies the byte limits to the raw message.

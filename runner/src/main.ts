@@ -1,11 +1,14 @@
 import { configuration } from './config'
 import { createClaudeFactory } from './providers/claude'
 import { createCodexFactory } from './providers/codex'
+import { writeCodexCredentials } from './providers/codex-credentials'
 import { warmClaude } from './providers/binaries'
 import { Runner } from './runner'
 import { connectWebSocket } from './socket'
 import { DiskStorage, EventStore } from './state'
 import { ProcPortScanner } from './proc-ports'
+import { startProcess } from './providers/process'
+import { SkillLists } from './skills'
 
 const warn = (message: string) => process.stderr.write(`${message}\n`)
 
@@ -28,15 +31,20 @@ async function main(): Promise<void> {
       })
     }, 1000)
   }
+  const skills = new SkillLists()
   const runner = new Runner({
     ...config,
     store,
     connect: (request) => connectWebSocket(request, warn),
-    providers: { claude: createClaudeFactory(), codex: createCodexFactory() },
+    providers: {
+      claude: createClaudeFactory(),
+      codex: createCodexFactory(startProcess, writeCodexCredentials, skills),
+    },
     warm: warmClaude,
     now: Date.now,
     warn,
     disconnected: reconnect,
+    skills: { lists: skills },
     ports: {
       scan: () => ports.scan(),
       schedule: (scan, interval) => {

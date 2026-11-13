@@ -158,8 +158,12 @@ Each call below is my call, made on 2026-11-13.
     warns.
 - The runner keeps every skill that the agent loads. It takes the name and
   the description as the agent does: from the front matter, else the
-  folder name and the first paragraph. It leaves out only a skill whose
-  name holds white space, and it warns. Reason: no stored text can hold
+  folder name and, for Claude, the first line of text that is not empty,
+  without a heading mark. Codex needs a description, so a Codex skill
+  without one stays out. It leaves out a skill whose name holds white
+  space, and it warns. Changed on 2026-11-13, after a read of the Claude
+  program: the Claude list also leaves out a skill whose `user-invocable`
+  is not true, because Claude hides it from the menu of its user. Reason: no stored text can hold
   such a name, as for a path with a line break in the list of files. A
   stricter rule on names was rejected, because the list then hides skills
   that the agent runs.
@@ -255,6 +259,41 @@ Each call below is my call, made on 2026-11-13, while Milestone 2 wrote
   the life of the text and on how each agent gets it moved to
   `docs/protocol/session-instructions.md`.
 
+#### Design calls from the Worker
+
+Each call below is my call, made on 2026-11-13, in Milestone 5.
+
+- The browser event is `SkillsUpdated` in `src/shared/skills.ts`:
+  `{ type: 'skills.updated', skills: { claude, codex } | null }`. A
+  workspace with no such event has had no report, so the list shows
+  "Loading skills…". `skills: null` means unavailable. A list, also an
+  empty one, is the list. Reason: one event type gives the app all three
+  states, as `ports.updated` does for the servers.
+- The Worker stores `skills: null` once when a runner sends `runner.ready`
+  with no skills report since its connect. It stores it again only after
+  a list came between. Reason: an older runner sends `runner.ready` at
+  each connect, and a repeated event changes nothing.
+- A refused skills report counts as the report of its connect. Reason:
+  else `runner.ready` makes the list unavailable while the repair runs.
+- A failed repair of the skills report stores `skills: null` after its
+  refusal marker. Reason: the app then reads one event type, and does not
+  also read refusal markers, as the list of servers does.
+- The history keeps only the latest `skills.updated` event, as it keeps
+  only the latest full file tree. Reason: the runner sends a report at
+  each connect, of up to about 512 KiB, and each new tab reads the whole
+  history.
+- A list of more than 200 skills, or a description of more than 4096
+  characters, is refused as too large. The Worker leaves out a skill whose
+  name no skill text can hold, and the later skill of a repeated name, as
+  the runner does, and does not refuse the report. Reason: the limits are
+  size limits, and one bad name must not hide the whole list.
+- The cut to 300 characters adds no ellipsis. Reason: the row ends with an
+  ellipsis on screen, and the doc says "cuts".
+- The lost-data label of a refused skills report is "An update from the
+  cloud computer". Reason: no session line shows a marker of a report
+  that belongs to no session, and a new label needs a change of the
+  mockup copy in `docs/mockups/src/components/chat/lostCopy.ts`.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -315,50 +354,63 @@ The runner writes each skill text of a message in the form of its agent.
       and a line of its own after the branch line. For Codex, test the
       structured skill item and `$name` in the text. Save the transcripts
       under `.context/skill-list/`.
-- [ ] Write the chosen form in `providerMessage`
+- [x] Write the chosen form in `providerMessage`
       (`runner/src/providers/message.ts`) and the Codex input. Only a skill
       text that names a skill of the list of that agent changes. Keep every
       other `/` text unchanged.
-- [ ] Tests in `runner/src/providers/instructions.test.ts` or a new test
+      The text of both agents stays the stored text. Codex gets one skill
+      input for each listed skill of the text
+      (`runner/src/providers/skill-input.ts`), also during a turn. The
+      parser is `src/shared/skill-text.ts`, for Milestone 6 too. Open: the
+      Claude form of a manual-only skill waits for skill list decision 3.
+      A comment in `send` of `runner/src/providers/claude.ts` marks its
+      place.
+- [x] Tests in `runner/src/providers/instructions.test.ts` or a new test
       file: a skill at the start, after a space, in a code block, an
       unknown name, and both agents.
-- [ ] Update `runner/agent-input.md`.
+      The parser cases are in `src/shared/skill-text.test.ts`, and the
+      agent cases in `runner/src/providers/skill-input.test.ts`.
+- [x] Update `runner/agent-input.md`.
 
 ## Milestone 4: Runner skills report
 
 Depends on: 2
 
-- [ ] Add `src/skills.ts`: scan the Claude folder, parse the front
-      matter with the fallbacks of the design, cut the description, filter
-      credentials, and sort. One unreadable file warns and skips that
-      skill.
-- [ ] Add the Codex list from `skills/list`, with the scan of the Codex
+- [x] Add `src/skills.ts`: scan the Claude folder, parse the front
+      matter with the fallbacks of the design, send each description
+      whole (empty over 4096 characters), filter credentials, and sort.
+      One unreadable file warns and skips that skill.
+- [x] Add the Codex list from `skills/list`, with the scan of the Codex
       folders as its fallback.
-- [ ] Add the event `skills.updated` with the list of each agent. Send it
+- [x] Add the event `skills.updated` with the list of each agent. Send it
       after each connect, after a watcher scan that changes it, and for a
       `report.refresh` of that kind, as `ports.updated` does
       (`runner/src/ports.ts`, `runner/src/runner.ts`,
       `runner/src/commands.ts`, `runner/src/stored-events.ts`).
-- [ ] Tests: each folder, a name with white space, no front matter, a
+      The runner sends it and its tests pass. The six files of the app and
+      the Worker that the new members of `RunnerEvent` and
+      `RunnerReportKind` broke got their real behaviour in Milestone 5, and
+      `npm run typecheck` passes.
+- [x] Tests: each folder, a name with white space, no front matter, a
       long description, a credential in a description, more than 200
       skills, a change of a `SKILL.md`, a refresh, and a Codex app server
       without an answer.
-- [ ] Update `runner/README.md` and `runner/reports.md`.
+- [x] Update `runner/README.md` and `runner/reports.md`.
 
 ## Milestone 5: Worker skills state
 
 Depends on: 4
 
-- [ ] Accept `skills.updated` in the fixed list of runner events, with its
+- [x] Accept `skills.updated` in the fixed list of runner events, with its
       size limit (`worker/chat/runner-event-identity.ts`,
       `worker/chat/runner-event-limits.ts`, `worker/chat/runner-input.ts`,
       `worker/chat/repair-refusal.ts`).
-- [ ] Keep the latest list for each workspace and send it to each tab, as
+- [x] Keep the latest list for each workspace and send it to each tab, as
       `worker/chat/port-reports.ts` does for ports. Add the shared type in
       `src/shared/skills.ts`.
-- [ ] Mark the list unavailable when a runner starts and sends no skills
+- [x] Mark the list unavailable when a runner starts and sends no skills
       report, so that an older runner shows the unavailable line.
-- [ ] Tests in `worker/` for the store, the forward to a tab, a reconnect,
+- [x] Tests in `worker/` for the store, the forward to a tab, a reconnect,
       an older runner, and a refusal of a list over the limit.
 
 ## Milestone 6: Skill list and chips in the app

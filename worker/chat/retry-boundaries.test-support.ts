@@ -72,7 +72,7 @@ export async function checkRetryBoundaries(
       messageStates: ['sent', null],
       commands: [],
       cursor: 2,
-      through: 5,
+      through: 6,
       events: initialTypes,
     }
     const failed = {
@@ -82,7 +82,7 @@ export async function checkRetryBoundaries(
       messageStates: ['sent', null],
       commands: [],
       cursor: 3,
-      through: 7,
+      through: 8,
       events: [...initialTypes, 'turn.failed', 'session.updated'],
     }
     const accepted = {
@@ -95,7 +95,7 @@ export async function checkRetryBoundaries(
       messageStates: ['sent', 'queued'],
       commands: ['retry-command'],
       cursor: 3,
-      through: 9,
+      through: 10,
       events: [
         ...initialTypes,
         'turn.failed',

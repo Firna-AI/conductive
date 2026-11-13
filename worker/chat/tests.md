@@ -115,6 +115,15 @@ npm run typecheck
   across the final name and folder cuts. The real workspace lifecycle test in
   `integration/workspace-lifecycle.test.ts` checks the stop clear with no
   previews, and unchanged activity when a port report arrives.
+- `runner-skills.test.ts` checks that a skills report passes the secret
+  filter before the description cut, that a skill whose name held a secret
+  stays out, and that the history keeps only the latest list for each tab
+  and after a restart. `runner-skills-state.test.ts` checks the unavailable
+  list of a runner that sends no skills report, across reconnects and a
+  restart, and a refused list over the limit with its repair.
+- Each test whose runner sends `runner.ready` with no skills report also
+  stores one `skills.updated` event with `skills: null`. Event numbers in
+  such tests count it.
 - `runner-repairs.test-support.ts` builds a full and an oversized report of
   each kind, and reads the requests and markers of the repair tests.
 - `late-events.test.ts` and `never-started.test.ts` cover replay after a

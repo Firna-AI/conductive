@@ -46,6 +46,10 @@ page.
 
 - [Mention text](mention-text.ts) reads and writes the mention of a file or
   a folder, for the chat field, sent messages, and the attachment mentions.
+- [Skill text](skill-text.ts): `skillTextAt` reads the skill text `/name`
+  at one place, and `skillNames` gives the names of the skill texts of a
+  message outside code, each once. The runner uses it for the skill input
+  of Codex, and code reads as in a sent message of the chat.
 - [Attachment paths](attachment-paths.ts): `attachmentPath` builds the copy
   path of a file: `ATTACHMENTS_DIRECTORY`, a digest of the file ID alone,
   and the safe file name. The Worker and the development and test fakes

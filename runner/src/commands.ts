@@ -160,6 +160,7 @@ export function parseWorkspaceMessage(
         'start.updated',
         'workspace.title',
         'ports.updated',
+        'skills.updated',
       ]),
     }
   }

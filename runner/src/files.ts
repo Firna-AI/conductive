@@ -64,8 +64,14 @@ export class FileReporter {
     return this.pending
   }
 
-  /** Linux recursive watching includes new directories, index writes, and refs. */
-  watch(warn: (message: string) => void): () => void {
+  /**
+   * Linux recursive watching includes new directories, index writes, and
+   * refs. `changed` hears each change after the same short wait.
+   */
+  watch(
+    warn: (message: string) => void,
+    changed: () => void = () => {},
+  ): () => void {
     let timer: ReturnType<typeof setTimeout> | undefined
     const watcher = watch(this.repository.git.root, { recursive: true }, () => {
       clearTimeout(timer)
@@ -73,6 +79,7 @@ export class FileReporter {
         void this.refresh().catch(() =>
           warn('The file lists could not update.'),
         )
+        changed()
       }, 100)
     })
     watcher.on('error', () => warn('The repository watcher is unavailable.'))

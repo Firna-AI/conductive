@@ -8,7 +8,7 @@ import type {
   RunnerMessageDuringTurn,
 } from '../../src/shared/runner'
 import { FakeDurableObjectEndpoint } from '../../worker/test-support/fake-durable-object'
-import { Runner } from '../src/runner'
+import { Runner, type RunnerOptions } from '../src/runner'
 import { DiskStorage, EventStore } from '../src/state'
 import { FakeProviders } from './providers'
 import { repositoryFixture } from './repository'
@@ -62,6 +62,8 @@ export async function runnerHarness(
   beforeStart?: (
     repository: Awaited<ReturnType<typeof repositoryFixture>>,
   ) => Promise<void>,
+  extra: Pick<RunnerOptions, 'skills'> = {},
+  watch = false,
 ) {
   const repository = await repositoryFixture()
   await beforeStart?.(repository)
@@ -92,13 +94,14 @@ export async function runnerHarness(
     },
     disconnected: () => {},
     restoreMarker: join(repository.home, 'restore-ended'),
+    ...extra,
   }
   const runner = new Runner(options)
   let cutoff = false
   onTestFinished(async () => {
     if (!cutoff) await runner.close()
   })
-  await runner.start(false)
+  await runner.start(watch)
   return {
     ...repository,
     endpoint,

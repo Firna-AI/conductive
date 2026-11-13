@@ -226,6 +226,10 @@ export function createClaudeFactory(
           parent_tool_use_id: null,
           message: {
             role: 'user',
+            // Claude runs each skill that the text names, so the text stays
+            // as the member wrote it. Skill list decision 3 is open: the
+            // form of a manual-only skill (`disable-model-invocation: true`)
+            // goes here, and only here, once the user answers it.
             content:
               providerMessage(
                 command.message,

@@ -21,6 +21,7 @@ export const lostData: Readonly<
   'files.changed': 'all-files',
   'changes.updated': 'changes',
   'ports.updated': 'servers',
+  'skills.updated': 'update',
   'start.updated': 'start-steps',
   'workspace.title': 'title',
   'runner.ready': 'update',

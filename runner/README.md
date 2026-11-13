@@ -3,7 +3,7 @@
 The agent runner is the program of Conductive in each cloud computer, a
 Boat sandbox. It runs the agents powered by Claude and Codex for one
 workspace. It also reports the files and the changes of the workspace
-repository and the listening ports.
+repository, the listening ports, and the skills of each agent.
 
 The runner opens one outbound WebSocket to the workspace Durable Object.
 It speaks runner protocol version 2. It sends numbered events. It gets
@@ -190,7 +190,8 @@ the outbox size check.
 ## Report requests
 
 The [report guide](reports.md) gives full report requests, their saved
-receipts, and the listening-port scan and scheduling boundaries.
+receipts, the listening-port scan and scheduling boundaries, and the
+skills report of each agent.
 
 ## Preview relay
 
@@ -241,6 +242,7 @@ their defaults, and the startup failure message.
   checks no event sizes.
 - `test-support/` holds the runner fakes: a fake Claude SDK query, a fake
   Codex App Server, fake agent processes, and a temporary Git repository.
+  The fake App Server can give a set answer for a method, or no answer.
   `harness.ts` starts a `Runner` with them. The session fixture in
   `engine.ts` and the wire fixture in `wire.ts` use the production
   `DiskStorage` in a temporary folder. `disk.ts` supplies the controlled
@@ -275,6 +277,7 @@ guides that give the entry points of each part.
 - [Agent runner: background work](../docs/protocol/agent-runner.md#background-work)
 - [Agent runner: lost workspace updates](../docs/protocol/lost-workspace-updates.md)
 - [Agent runner: listening ports](../docs/protocol/agent-runner.md#listening-ports)
+- [Skill mentions: the skills report](../docs/protocol/skill-mentions.md#the-skills-report)
 - [Agents and sessions: agents](../docs/protocol/agents-and-sessions.md#agents)
 - [Agent instructions](../docs/protocol/agent-instructions.md)
 - [Access and security: agent logins in a sandbox](../docs/protocol/isolation.md#agent-logins-in-a-sandbox)

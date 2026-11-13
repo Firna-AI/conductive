@@ -10,6 +10,10 @@ import {
   PORT_REPORT_MAX_PORTS,
   type ListeningPort,
 } from '../../src/shared/ports'
+import {
+  SKILL_REPORT_MAX_SKILLS,
+  type AgentSkill,
+} from '../../src/shared/skills'
 import { parseChoice } from './commands'
 import {
   array,
@@ -125,6 +129,20 @@ function port(value: unknown): ListeningPort {
   return { port, name, folder }
 }
 
+function skills(value: unknown): AgentSkill[] {
+  const list = array(value, (value) => {
+    const input = object(value)
+    return {
+      name: string(input.name),
+      description: string(input.description),
+      ...(input.manualOnly === true ? { manualOnly: true } : {}),
+    }
+  })
+  if (list.length > SKILL_REPORT_MAX_SKILLS)
+    throw new Error('The saved skills exceed their limit.')
+  return list
+}
+
 export function parseEvent(value: unknown): RunnerEvent {
   const input = object(value)
   const type = string(input.type)
@@ -138,6 +156,8 @@ export function parseEvent(value: unknown): RunnerEvent {
       throw new Error('The saved listening ports exceed their limit.')
     return { type, ports }
   }
+  if (type === 'skills.updated')
+    return { type, claude: skills(input.claude), codex: skills(input.codex) }
   if (type === 'files.snapshot') {
     const tree = object(input.tree)
     return {

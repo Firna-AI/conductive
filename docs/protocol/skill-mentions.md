@@ -81,6 +81,9 @@ adds the list of skills, as
   `<repository>/.claude/skills/<folder>/SKILL.md`, in the folder of the
   workspace's own repository. Reason: the runner starts Claude with the
   settings of the project only.
+- The Claude list leaves out a skill whose front matter sets
+  `user-invocable` to a value that Claude does not read as true, such as
+  `false`. Reason: Claude hides such a skill from the menu of its user.
 - The skills that come with the Claude agent program, such as `dataviz`,
   stay out of the list. Reason: a read of the skill folders cannot find
   them. A member can still name them in the text.
@@ -92,12 +95,18 @@ adds the list of skills, as
   `<repository>/.agents/skills` and `<repository>/.codex/skills`, and the
   runner warns.
 - For a skill from a folder, the name and the description come from the
-  front matter of its `SKILL.md`. Without them, they are the name of the
-  folder and the first paragraph of the text, as the agent takes them.
+  front matter of its `SKILL.md`. Without a name, the name is the name of
+  the folder, as the agent takes it.
+- Without a description, a Claude skill takes the first line of its text
+  that is not empty, without a heading mark, as Claude does. A Codex skill
+  needs a description, as Codex does, so the Codex list leaves out a skill
+  without one.
 - The list holds every skill that the agent loads, except a skill whose
-  name holds white space. The runner warns for that skill. Reason: no
-  skill text can hold such a name. A stricter rule for names was
-  rejected, because the list would then hide skills that the agent runs.
+  name holds white space and a Claude skill that Claude hides from its
+  menu, as said above. The runner warns for a name with white space.
+  Reason: no skill text can hold such a name. A stricter rule for names
+  was rejected, because the list would then hide skills that the agent
+  runs.
 - A `SKILL.md` that the runner cannot read leaves out only its skill, and
   the runner warns.
 - Each list holds each name once. Of two skills with one name, the list

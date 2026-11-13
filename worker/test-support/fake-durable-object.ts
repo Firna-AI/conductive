@@ -14,6 +14,7 @@ import {
 } from '../../src/shared/runner'
 import type { RunnerConnector } from '../../src/shared/runner-transport'
 import type { RunnerFileResponse } from '../../src/shared/runner-files'
+import { presentSkillReport } from '../chat/skill-reports'
 import { FakeRunnerFileReports } from './fake-runner-files'
 import { FakeRunnerConnection } from './runner-connection'
 
@@ -175,6 +176,7 @@ export class FakeDurableObjectEndpoint {
     ) {
       return this.files.accept(message.streamId, event)
     }
+    if (event.type === 'skills.updated') return presentSkillReport(event)
     return event
   }
 }

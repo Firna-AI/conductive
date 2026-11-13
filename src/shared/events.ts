@@ -3,6 +3,7 @@ import type { ChatEvent } from './chat-events'
 import type { FileEvent } from './files'
 import type { GitHubBanner, GitHubChecksResponse } from './github'
 import type { PortsUpdated } from './ports'
+import type { SkillsUpdated } from './skills'
 import {
   workspacePath,
   type Workspace,
@@ -36,6 +37,7 @@ export type WorkspaceEvent =
   | ChatEvent
   | FileEvent
   | PortsUpdated
+  | SkillsUpdated
   | {
       type: 'workspace.updated'
       workspace: Workspace

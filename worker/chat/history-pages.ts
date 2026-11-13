@@ -19,6 +19,7 @@ const PAGE_SIZE = 32
 const INDEX_THROUGH = chatKey('history-index', 'through')
 const POSITION_THROUGH = chatKey('history-index', 'positions-through')
 const NEWEST_TREE = chatKey('history-index', 'tree')
+const NEWEST_SKILLS = chatKey('history-index', 'skills')
 
 function inSession(event: WorkspaceEvent, sessionId: string): boolean {
   return (
@@ -66,15 +67,22 @@ export class HistoryPages {
 
   async index(envelope: WorkspaceEventEnvelope): Promise<void> {
     const event = envelope.event
-    if (event.type === 'files.snapshot') {
-      const previous = await this.data.get<number>(NEWEST_TREE)
-      if (previous !== undefined && previous < envelope.eventNumber)
-        await deleteHistoryEvent(this.data, chatEventKey(previous))
-      await this.data.put(NEWEST_TREE, envelope.eventNumber)
-    }
+    if (event.type === 'files.snapshot')
+      await this.replace(NEWEST_TREE, envelope.eventNumber)
+    // Only the latest skills event holds the lists of the workspace.
+    if (event.type === 'skills.updated')
+      await this.replace(NEWEST_SKILLS, envelope.eventNumber)
     await this.compaction.index(envelope)
     await this.data.put(INDEX_THROUGH, envelope.eventNumber)
     await this.data.put(POSITION_THROUGH, envelope.eventNumber)
+  }
+
+  /** Deletes the older event that a newer full event replaces. */
+  private async replace(newest: string, eventNumber: number): Promise<void> {
+    const previous = await this.data.get<number>(newest)
+    if (previous !== undefined && previous < eventNumber)
+      await deleteHistoryEvent(this.data, chatEventKey(previous))
+    await this.data.put(newest, eventNumber)
   }
 
   async prepare(through: number): Promise<void> {

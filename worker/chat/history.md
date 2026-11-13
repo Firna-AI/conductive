@@ -33,6 +33,10 @@ streams, and the order of the runner commands.
   missed events from the stored history.
 - Each event gets the next workspace event number. The numbers start at 1,
   have no gaps, and span all sessions and runner streams.
+- A new full tree or a new `skills.updated` event deletes the older stored
+  event of its kind from the history. So the history keeps only the latest
+  tree and the latest skill lists, and the event numbers can have gaps
+  there.
 - A tab connects with `after`, the last event number that it has. It gets
   the stored events after that number in one or more `history` pages, in
   the shape of `ChatHistoryResponse` in

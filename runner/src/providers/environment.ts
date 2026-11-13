@@ -16,11 +16,9 @@ export async function prepareProviderHome(home: string): Promise<void> {
   )
 }
 
-/** Provider credentials never enter the inherited environment. */
-export function providerEnvironment(
+/** The inherited environment without provider settings, with the shared provider homes. */
+export function agentEnvironment(
   home: string,
-  tools: WorkspaceToolContext,
-  author: CommitAuthor | null,
 ): Record<string, string | undefined> {
   const env = { ...process.env }
   delete env.CONDUCTIVE_MEASURE_LOGIN
@@ -33,6 +31,16 @@ export function providerEnvironment(
   env.CODEX_HOME = `${home}/.conductive/codex`
   env.CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC = '1'
   env.DISABLE_AUTOUPDATER = '1'
+  return env
+}
+
+/** Provider credentials never enter the inherited environment. */
+export function providerEnvironment(
+  home: string,
+  tools: WorkspaceToolContext,
+  author: CommitAuthor | null,
+): Record<string, string | undefined> {
+  const env = agentEnvironment(home)
   env[TOOL_ENV.machineOrigin] = tools.machineOrigin
   env[TOOL_ENV.workspaceToken] = tools.workspaceToken
   env[TOOL_ENV.turnId] = tools.turnId

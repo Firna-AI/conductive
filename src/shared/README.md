@@ -140,6 +140,9 @@ It saves both before it confirms the corresponding raw event.
 Its UTF-8 byte count works in the Worker and Node.
 The workspace's [port report owner](../../worker/chat/port-reports.ts)
 shortens port labels only after its final filter.
+`output-fields.ts` leaves out each skill whose name the filter changes.
+The workspace's [skill report owner](../../worker/chat/skill-reports.ts)
+cuts skill descriptions only after that filter.
 
 `chat-events.ts` caps serialized tool detail at 64 KiB.
 Its omission count measures normalized source UTF-8 bytes before JSON escaping.

@@ -11,6 +11,7 @@ import {
   checkRunnerEventLimits,
 } from './runner-event-limits'
 import { checkDisplayedPortReport } from './port-reports'
+import { checkDisplayedSkillReport } from './skill-reports'
 
 export interface IncomingRunnerEnvelope {
   type: 'event'
@@ -85,13 +86,15 @@ export function parseRunnerEnvelope(
   return parseRunnerPayload(input)
 }
 
-/** File display labels can grow after the raw transport checks have passed. */
+/** Display labels can grow after the raw transport checks have passed. */
 export function parseRunnerOutputEnvelope(
   input: RunnerEventEnvelope,
 ): RunnerEventEnvelope {
   const parsed = parseRunnerPayload(input)
   if (parsed.event.type === 'ports.updated')
     checkDisplayedPortReport(parsed.event)
+  if (parsed.event.type === 'skills.updated')
+    checkDisplayedSkillReport(parsed.event)
   if (
     parsed.event.type !== 'files.snapshot' &&
     parsed.event.type !== 'files.changed' &&

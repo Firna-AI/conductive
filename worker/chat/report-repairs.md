@@ -29,8 +29,14 @@ one `RunnerReportKind`.
   `replacementRevision`. So the later parts of a reused revision count as a
   replacement.
 - The record, the marker, and the cursor commit in the receipt transaction.
-- A complete tree, changes list, start steps, name, or port list removes the record of
-  its kind in the same transaction. A tree delta and a pending part do not.
+- A complete tree, changes list, start steps, name, port list, or skills
+  report removes the record of its kind in the same transaction. A tree
+  delta and a pending part do not.
+- A refused skills report counts as the skills report of its connect. So the
+  next `runner.ready` does not make the list unavailable while its repair
+  runs. A failed repair of the skills report also stores
+  `{ type: 'skills.updated', skills: null }` after its marker, so the app
+  shows the list as unavailable.
 - After the commit, `RepairDelivery.flush` sends each `pending` record whose
   `deliveredTo` does not name the current connection. Each send then
   commits `sent` and `deliveredTo`. A wake keeps the connection ID, so it

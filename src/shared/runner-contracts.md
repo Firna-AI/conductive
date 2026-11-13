@@ -38,8 +38,9 @@ sign-in. Replies contain the public code and state, never the sign-in tokens.
 The 1 MiB limit leaves room for the workspace storage wrapper.
 The workspace stores a refusal marker before it confirms a permanent refusal.
 Storage and network failures remain unconfirmed.
-After a refused file tree, changes list, start steps, workspace name, or port list,
-`RunnerReportRefresh` asks for one fresh full report of that `RunnerReportKind`.
+After a refused file tree, changes list, start steps, workspace name, port list,
+or skills report, `RunnerReportRefresh` asks for one fresh full report of that
+`RunnerReportKind`.
 It carries no login and no turn token. A redelivery keeps its command ID.
 `ports.ts` defines the common listening-port fields and both report phases.
 `RunnerPortsUpdated` carries complete selected private labels.
@@ -50,6 +51,15 @@ filter. The module owns those limits and the shared count limit.
 and the terminal backend.
 [Listening ports](../../docs/protocol/agent-runner.md#listening-ports) states
 that report, its limits, and its refresh kind.
+`skills.ts` defines the skill fields, the report limits, and both report
+phases. `RunnerSkillsUpdated` carries the Claude list and the Codex list,
+each with its whole descriptions, and no path. `SkillsUpdated` carries the
+filtered lists with the descriptions cut for display, or a null `skills`
+when the list is unavailable. A workspace with no `skills.updated` event
+has had no report yet. The display cut applies only after the workspace
+filter.
+[The skills report](../../docs/protocol/skill-mentions.md#the-skills-report)
+states that report, its limits, and its refresh.
 `runner-transport.ts` defines the injectable socket boundary.
 `RunnerConnection` and `RunnerConnector` take the type of the Worker's
 messages.

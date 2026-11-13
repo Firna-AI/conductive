@@ -200,6 +200,17 @@ An older saved update without a GitHub summary presents null.
 The HTTP history route uses the same presentation.
 No origin is saved in the chat records or the history.
 
+## Skill lists
+
+The chat backend keeps the latest skill lists of the workspace, as
+[The list in the workspace](../../docs/protocol/skill-mentions.md#the-list-in-the-workspace)
+says. The lists are the latest `skills.updated` event of the history, so
+each tab gets them, also while the cloud computer sleeps. A runner report
+passes the output filter first. That filter leaves out each skill whose
+name held a secret value. Then `skill-reports.ts` cuts each description.
+`skill-state.ts` stores the result, and it publishes `skills: null` when the
+list is unavailable. [Chat backend key code](key-code.md) gives both files.
+
 ## Tests
 
 ```sh

@@ -8,8 +8,8 @@ part.
   and their defaults, the state file, and the reconnect after each drop.
 - [`src/relay/server.ts`](src/relay/server.ts): starts the preview relay.
   The HTTP and upgrade handlers share the header rules and target connection code.
-- `src/runner.ts`: `Runner` joins the connection, agents, file and port
-  reports, and report requests.
+- `src/runner.ts`: `Runner` joins the connection, agents, file, port, and
+  skills reports, and report requests.
 - [Agent input](agent-input.md#key-code): the context folder, the agent
   instructions with their branches, and the sender line and the branch line
   of each message.
@@ -23,6 +23,12 @@ part.
 - `src/ports.ts`: `PortReporter`, its stable list, scan queue, and timer lifetime.
 - `src/port-report-budget.ts`: complete private port labels or whole-label
   omission within the report budget, after runner credential filtering.
+- `src/skills.ts`: `SkillReporter`, its scan queue, and `SkillLists`.
+  `src/skill-files.ts` finds the `SKILL.md` files of each agent,
+  `src/skill-front-matter.ts` reads their front matter, `src/skill-read.ts`
+  takes each name and description as the agent does, `src/skill-codex.ts`
+  asks the Codex app server, and `src/skill-report.ts` applies the limits
+  and the budget of the report.
 - [File reports](file-reports.md#key-code): the scans, the file tree, the
   branch changes and their base, the report parts, and Git comparisons.
 - `src/restore-end.ts`: `onRestoreEnd` waits for the restore marker, so the
@@ -48,6 +54,8 @@ part.
   `tool.ts` maps each tool call to its chat line, and each adapter names
   the tool of an MCP call for it.
   `message.ts` puts the sender line before the text of each message.
+  `codex-input.ts` builds the Codex input of each message, and
+  `skill-input.ts` adds its skill inputs from the current Codex list.
   `codex-thread.ts` resumes saved Codex conversations and forks after a
   saved provider refusal. `rpc.ts` keeps structured JSON-RPC error data.
   `lifetime.ts` owns each agent process until it exits, with its kill delay.

@@ -1,9 +1,10 @@
 # Agent input
 
 The runner prepares the workspace context folder and builds the input of
-both agents: the instructions of each session, and the lines that it adds
-to each message. Its [key code](#key-code) names its entry points. The
-[runner README](README.md) gives the rest of the runner.
+both agents: the instructions of each session, the lines that it adds
+to each message, and the skill inputs of Codex. Its [key code](#key-code)
+names its entry points. The [runner README](README.md) gives the rest of
+the runner.
 
 ## The context folder
 
@@ -86,6 +87,39 @@ A message without files gets no extra line.
 [Agent input](../worker/chat/attachments.md#agent-input) in the attachment
 guide gives the exact instruction and the metadata source.
 
+## Skills of a message
+
+A message can name skills with skill texts, such as `/plans`.
+`skillNames` in `src/shared/skill-text.ts` finds them in the text that the
+member wrote, not in the sender line. A skill text is `/` and a name at the
+start of the text or after white space, up to the next white space. A skill
+text in code is code. Code reads as in a sent message of the chat: a
+backtick starts code, which runs to the next backtick, or to the end of the
+text.
+
+- Codex gets the text item unchanged. Right after it, the input gets one
+  item `{ "type": "skill", "name": "<name>", "path": "<path>" }` for each
+  distinct skill of the text that the current Codex list holds, in the
+  order of the text. `path` is the absolute path of the `SKILL.md` from
+  that list, from `skills/list` or from the scan of the Codex folders. The
+  read instruction and the lines of the attached files follow.
+- `turn/start` and `turn/steer` get the same items, so a message during a
+  turn gets them too. The provider reads the list at each send.
+- `main.ts` gives one `SkillLists` to the skills report and to
+  `createCodexFactory`. A Codex factory without the list, such as the one
+  of the first-start measurement, adds no skill item.
+- A name that the Codex list does not hold adds nothing. The text keeps
+  it.
+- Claude gets the text unchanged. Claude runs a skill that the text names
+  as `/name`, also after the sender line.
+- How Claude gets a manual-only skill (`disable-model-invocation: true`)
+  waits for skill list decision 3. Its form goes into `send` of
+  `src/providers/claude.ts`, where a comment marks the place.
+
+[Skills of a message](../docs/protocol/agent-instructions.md#skills-of-a-message)
+states these requirements. [Skills](reports.md#skills) in the report guide
+says how the runner makes each list.
+
 ## Key code
 
 - `src/context-folder.ts`: `prepareContextFolder` adds the local exclude
@@ -98,5 +132,12 @@ guide gives the exact instruction and the metadata source.
   at its first input.
 - `src/providers/message.ts`: `providerMessage`, the sender line and the
   branch line.
+- `src/providers/codex-input.ts`: `codexInput`, the input items of one
+  Codex message.
+- `src/providers/skill-input.ts`: `codexSkillInputs`, the skill inputs of
+  Codex, and `SkillSource`, the current list of each agent.
+- `src/providers/skill-input.test.ts`: the skill inputs of Codex, also
+  during a turn and from the scan of the Codex folders, and the text of
+  Claude.
 - `src/providers/instructions.test.ts` and `src/providers/branches.test.ts`:
   the saved text, the sender line, and the branch line of both agents.

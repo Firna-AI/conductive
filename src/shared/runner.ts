@@ -6,6 +6,7 @@ import type { RunnerFileEvent } from './files'
 import type { UserMessage } from './messages'
 import type { RunnerPortsUpdated } from './ports'
 import type { RunnerFileCommand, RunnerFileResponse } from './runner-files'
+import type { RunnerSkillsUpdated } from './skills'
 import type { WorkspaceStart } from './workspaces'
 
 export const RUNNER_PROTOCOL_VERSION = 2 as const
@@ -56,6 +57,7 @@ export type RunnerEvent =
   | AgentChatEvent
   | RunnerFileEvent
   | RunnerPortsUpdated
+  | RunnerSkillsUpdated
   | { type: 'runner.ready' }
   | { type: 'start.updated'; start: WorkspaceStart }
   | { type: 'workspace.title'; name: string }
@@ -199,6 +201,7 @@ export type RunnerReportKind =
   | 'start.updated'
   | 'workspace.title'
   | 'ports.updated'
+  | 'skills.updated'
 
 /** Request a complete current report. Transport redelivery keeps the command ID. */
 export interface RunnerReportRefresh {

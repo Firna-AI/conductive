@@ -22,12 +22,19 @@ export async function refuseRunnerEvent(
     type === 'runner.ready' ||
     type === 'start.updated' ||
     type === 'workspace.title' ||
+    type === 'skills.updated' ||
     type === 'files.snapshot' ||
     type === 'files.changed' ||
     type === 'changes.updated'
   const target = workspaceLevel
     ? null
     : await verifiedTurn(transaction, identity)
+  const repairFailed = await refuseReportRepair(
+    transaction,
+    message,
+    identity,
+    randomId,
+  )
   const marker: RunnerEventRefused = {
     type: 'runner.event-refused',
     streamId: message.streamId,
@@ -36,9 +43,7 @@ export async function refuseRunnerEvent(
     reason,
     sessionId: target?.session.id ?? null,
     turnId: target?.turn.id ?? null,
-    ...((await refuseReportRepair(transaction, message, identity, randomId))
-      ? { repairFailed: true as const }
-      : {}),
+    ...(repairFailed ? { repairFailed: true as const } : {}),
   }
   const occurredAt =
     typeof message.occurredAt === 'number' &&
@@ -48,6 +53,8 @@ export async function refuseRunnerEvent(
       : transaction.now
   await new RunnerFileReports(transaction.files).refuse(type)
   await transaction.emit(marker, occurredAt)
+  if (type === 'skills.updated')
+    await transaction.skills.refused(message.streamId, repairFailed, occurredAt)
   if (
     target?.active &&
     !target.ended &&

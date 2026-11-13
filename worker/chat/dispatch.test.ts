@@ -45,7 +45,7 @@ describe('durable runner dispatch', () => {
       { turnId },
     )
     expect(await stopped.json()).toEqual({
-      eventNumber: 6,
+      eventNumber: 7,
       turnId,
       state: 'stopped',
     })
@@ -78,7 +78,7 @@ describe('durable runner dispatch', () => {
       { turnId: unsent },
     )
     expect(await stopUnsent.json()).toEqual({
-      eventNumber: 11,
+      eventNumber: 12,
       turnId: unsent,
       state: 'stopped',
     })

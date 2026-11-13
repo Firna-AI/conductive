@@ -151,6 +151,7 @@ async function applyRunnerEvent(
   }
   if (event.type === 'runner.ready') {
     await transaction.saveStreamReady(message.streamId)
+    await transaction.skills.ready(message.streamId, parsed.occurredAt)
     return { ready: true, accepted: true }
   }
   if (
@@ -178,6 +179,9 @@ async function applyRunnerEvent(
     }
   } else if (apply) {
     await apply()
+  } else if (event.type === 'skills.updated') {
+    await transaction.skills.report(message.streamId, event, parsed.occurredAt)
+    await transaction.repairs.remove(event.type)
   } else if (!('sessionId' in event)) {
     if (event.type === 'workspace.title')
       await storeWorkspaceTitle(
