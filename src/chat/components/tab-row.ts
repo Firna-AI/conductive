@@ -6,7 +6,6 @@ import type {
 } from 'react'
 import { nameLabel } from '../../shared/name-label'
 import type { Session } from '../../shared/sessions'
-import { startedTurn } from '../../shared/transcript/turn-records'
 import type { WorkspaceTab, WorkspaceView } from '../../shared/workspace-view'
 import { rowTabs, tabKey } from '../state/tab-order'
 
@@ -129,12 +128,13 @@ export function shownTab(
  * The tabs of the row in the saved order. `shown` is the tab that shows as
  * the current one, if any, as `shownTab` gives it. `renderTab` names and
  * draws the file and diff tabs of the host. Without it, the row holds only
- * the session tabs.
+ * the session tabs. `isRunning` reads the current turn of each session.
  */
 export function rowOf(
   view: WorkspaceView | null,
   sessions: readonly Session[],
   shown: WorkspaceTab | null,
+  isRunning: (sessionId: string) => boolean,
   renderTab: RenderTab | undefined,
 ): RowTab[] {
   const records = new Map(sessions.map((item) => [item.id, item]))
@@ -154,7 +154,7 @@ export function rowOf(
           title,
           name,
           selected,
-          running: startedTurn(session) !== null,
+          running: isRunning(session.id),
         },
       ]
     }

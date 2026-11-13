@@ -1,6 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import type { AgentChoice } from '../../shared/agents'
+import { startedTurn } from '../../shared/transcript/turn-records'
 import { newSessionRecord } from '../state/test-kit'
 import { textOf } from './render-kit'
 import { SessionTabs } from './SessionTabs'
@@ -27,6 +28,7 @@ function tabBar(
     null,
     [untitled],
     { kind: 'session', sessionId: untitled.id },
+    () => startedTurn(untitled) !== null,
     undefined,
   )
   return renderToStaticMarkup(

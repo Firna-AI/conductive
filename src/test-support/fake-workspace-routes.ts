@@ -44,10 +44,11 @@ const eventNumber = 0
 export function fakeWorkspaceRoutes(
   routes: FakeRouteWriter,
   state: WorkspaceState,
-  conversation: RecordedChatScenario,
+  conversation: RecordedChatScenario | undefined,
   paths: PathState = 'plain',
   /** The GitHub state of the default workspace, as `workspaceFixtures` takes it. */
   github?: GitHubSummary | null,
+  workspaceStates?: ReadonlyMap<string, WorkspaceState>,
 ) {
   const data = workspaceFixtures(state, github)
   const org = FAKE_IDS.org
@@ -62,15 +63,18 @@ export function fakeWorkspaceRoutes(
       workspace.id === data.created.workspace.id
         ? data.created
         : { ...data.detail, workspace }
-    const running = runningAtEnd.has(conversation)
+    const workspaceState = workspaceStates?.get(id) ?? workspace.state
+    const scenario =
+      conversation ?? (workspaceState === 'working' ? 'running' : 'history')
+    const running = runningAtEnd.has(scenario)
     const sessions = {
       eventNumber,
       sessions: data.sessions.sessions.map((session) => ({
         ...session,
         workspaceId: id,
-        activeTurnId: running ? 'turn-1' : session.activeTurnId,
-        activeTurnStartedAt: running ? FAKE_TIME : session.activeTurnStartedAt,
-        retryMessageId: conversation === 'failed' ? data.message.id : null,
+        activeTurnId: running ? 'turn-1' : null,
+        activeTurnStartedAt: running ? FAKE_TIME : null,
+        retryMessageId: scenario === 'failed' ? data.message.id : null,
       })),
       history: data.sessions.history.map((session) => ({
         ...session,
@@ -171,7 +175,7 @@ export function fakeWorkspaceRoutes(
         state: 'stopping',
         eventNumber,
       })
-      const recorded = recordedChatEvents(conversation, id, session.id)
+      const recorded = recordedChatEvents(scenario, id, session.id)
       const events =
         paths === 'masked'
           ? withMaskedTurnFiles(recorded, maskedChangedFiles())

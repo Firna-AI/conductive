@@ -48,11 +48,19 @@ import { workspaceRoutes } from './workspace-routes'
  */
 export function createFakeServices(search: string): AppServices {
   const options = readDevOptions(search)
-  const server = new FakeApiServer(options.server)
+  const state = seedState(options)
+  const workspaceStates = new Map(
+    state.orgs.flatMap((org) =>
+      org.workspaces.map(
+        (workspace) => [workspace.id, workspace.state] as const,
+      ),
+    ),
+  )
+  const server = new FakeApiServer({ ...options.server, workspaceStates })
   const offset = FAKE_TIME - Date.now()
   const now = () => Date.now() + offset
   const newId = () => crypto.randomUUID()
-  const backend = createBackend(seedState(options), server.events, now, newId)
+  const backend = createBackend(state, server.events, now, newId)
   const signedOut: Route[] = options.signedOut
     ? [
         {
