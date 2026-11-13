@@ -36,10 +36,14 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         token for your account. ${productName} stores it encrypted, for
         every account, also while you wait for app access. It uses the
         token to read GitHub for you, and for the git calls of your
-        turns. It reads your repository rights and merge method. A merge
-        uses the token of the member who clicks. Continue fetches the
-        latest default branch with the token of the member who clicks
-        Continue.`,
+        turns. It reads your repository rights and merge method.
+        It reads the current branch list with your token and stores no copy
+        of that list. It checks named branches other than the default before
+        creating a workspace. This check uses the GitHub token of the member
+        who requests the workspace. A merge uses the token of the member who
+        clicks. Continue fetches the branch that the pull request merged into
+        with the token of the member who clicks Continue. If that branch no
+        longer exists, it fetches the default branch.`,
       text`The waitlist: a new account without app access waits while the
         waitlist is on or sign-ups are paused. It sees only the waitlist.
         When the waitlist is off and sign-ups are not paused, open sign-up

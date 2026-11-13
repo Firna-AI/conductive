@@ -9,6 +9,15 @@ This page lists each protocol doc and what it covers.
   image, the life of a workspace, and the disk flushes of a sandbox.
   - [Create a workspace](../protocol/create-a-workspace.md): New workspace as a
     page or as a dialog, the create, the branch, and a failed first start.
+    - [Create a workspace: the dialog](../protocol/create-a-workspace-dialog.md):
+      the parts of the dialog, its section, its notices, its close, and its
+      draft.
+    - [Start from a branch](../protocol/start-from-a-branch.md): the branch
+      control of New workspace, its picker, the target choice, and the
+      branch check of a create with its refusals.
+  - [Base branches](../protocol/base-branches.md): the base branch of each
+    workspace, a base branch that GitHub deleted, and the branch of a pull
+    request run.
   - [Repository folders](../protocol/repository-folders.md): the folder and the
     shell variable of each repository in a sandbox, and the context folder
     of each workspace.
@@ -155,6 +164,5 @@ This page lists each protocol doc and what it covers.
   page for people who move from Conductor, with the status of each
   Conductor feature.
 - [Routines](../protocol/routines.md): routines and their schedules, with the
-  linked pages [Routine runs](../protocol/routine-runs.md),
-  [Pull request runs](../protocol/pull-request-runs.md), and
-  [Base branches](../protocol/base-branches.md).
+  linked pages [Routine runs](../protocol/routine-runs.md) and
+  [Pull request runs](../protocol/pull-request-runs.md).

@@ -61,13 +61,29 @@ number names a dated record, as
   a repeat. The workspace state describes the current request.
 - Without a request ID, the tool makes one. Reason: a retry after a lost
   reply then makes no second workspace.
-- A create call names no base branch. The new workspace gets the default
-  branch of its repository as its base branch, as
-  [The base branch of a workspace](base-branches.md#the-base-branch-of-a-workspace)
-  says.
-- A base branch for a create call was left to the later change that lets
-  a create start from another branch (decision 281). So one rule gives the
-  target branch of each such create.
+- A create call can also name a start branch and a base branch
+  (decision 292). The new workspace branch starts from the start branch,
+  and its work targets the base branch, as
+  [Start from a branch](start-from-a-branch.md) says.
+- The defaults apply to the branches that the call names:
+  - With neither branch, both are the default branch of the repository.
+  - With only a start branch, the base branch is that start branch.
+  - With only a base branch, the start branch is that base branch.
+- Reason: New workspace also targets the picked branch first, and the user
+  asked for both branches.
+- A call can name any pair of branches, also a pair that New workspace does
+  not offer. Each named branch that is not the default branch gets the
+  branch check of [The branch check](start-from-a-branch.md#the-branch-check).
+- These ways were not offered, because each gives agents less than the
+  user asked for (decision 292):
+  - A start branch only.
+  - A base branch only.
+  - A start branch, with a target of that branch or of the default branch.
+- The help of the CLI and the description of `create_workspace` say what
+  each branch does, and its default.
+- A repeat with the same request ID keeps the branches of the first create,
+  whatever branches it names. It gets no branch check, as
+  [The branch check](start-from-a-branch.md#the-branch-check) says.
 - The reply to a create call gives the new workspace with its number and
   its link, and the first session with its link.
 

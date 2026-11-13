@@ -1,9 +1,10 @@
 # Base branches
 
 This doc holds the requirements and the decisions in force for the base
-branch of each workspace. It also covers the branch of a pull request run.
-It belongs to [Workspaces and sandboxes](workspaces-and-sandboxes.md), which
-covers the start of a workspace and its tools.
+branch of each workspace, also after GitHub deletes it. It also covers the
+branch of a pull request run. It belongs to
+[Workspaces and sandboxes](workspaces-and-sandboxes.md), which covers the
+start of a workspace and its tools.
 [Pull request runs](pull-request-runs.md) says which events start a pull
 request run. The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
@@ -14,19 +15,33 @@ says.
 
 - Each workspace has a base branch, the branch that its work targets
   (decision 507 G):
-  - A workspace that a person or an agent creates has the default branch of
-    its repository. The run of a schedule or of Run now has it too.
+  - A workspace from New workspace has the target that the member chose,
+    as [The target choice](start-from-a-branch.md#the-target-choice) says
+    (decision 291). A start from the default branch has the default branch.
+  - A workspace from the create call of an agent has the base branch of
+    that call (decision 292).
+    [Create a workspace](workspace-calls.md#create-a-workspace) gives the
+    defaults. A call that names no branch gives the default branch.
+  - The run of a schedule or of Run now has the default branch of its
+    repository.
   - The run of an opened or pushed pull request has the head branch of that
     pull request.
   - The run of a merged pull request has the base branch of that pull
     request.
+- A create that names the default branch as its base gets the same base
+  branch as a create that names none. Reason: that base branch then
+  follows a rename of the default branch.
 - A workspace keeps its base branch at each start: the create, a resume,
   and the restart near day 14 of a stop. The agent runner gets the base
   branch at each start.
-- After a merge, Continue makes the latest default branch the base branch
-  of the workspace, as
+- After a merge, Continue makes the branch that the pull request merged
+  into the base branch of the workspace. When GitHub no longer has that
+  branch, Continue takes the default branch, as
   [The base and the new branch](continue.md#the-base-and-the-new-branch)
-  says (decision 223).
+  says (decision 290).
+- A change of the base of an open pull request on GitHub does not change
+  the base branch of the workspace. A base branch that follows the pull
+  request on GitHub was left out for now (decisions 291 and 294).
 - Changes and each diff compare the branch with its base branch, from the
   merge base of the two.
 - Reason: the base branch can move while a workspace works. A plain
@@ -50,6 +65,26 @@ says.
 - Two groups in Changes, the work of the run and the changes of the pull
   request, were rejected. They need a second list in the reports of the
   agent runner.
+
+## A base branch that GitHub deleted
+
+- When GitHub no longer has the base branch of a workspace, the Worker
+  moves it to the default branch (decision 294). Continue takes the default
+  branch in the same case (decision 290).
+- Only an answer of GitHub that the branch does not exist moves the base
+  branch. A failed read of GitHub keeps it.
+- The cloud computer follows the move. Changes, the diffs, and a pull
+  request that the agent opens with `gh` then use the default branch.
+- The pull request bar then names the default branch, and a message under
+  the bar says that the base moved, as
+  [Banner states](github-banner.md#banner-states) says.
+- Reason: GitHub can delete a branch after its pull request merges, also
+  when another workspace stacks on it. After the move, the bar can read its
+  state, and Create PR opens a pull request into a branch that exists.
+- These ways were rejected (decision 294):
+  - No move. A normal stack then ends with a bar that cannot read its
+    state, and Create PR targets a branch that does not exist.
+  - A bar state that turns off Create PR. The app then gives no way back.
 
 ## The branch of a pull request run
 

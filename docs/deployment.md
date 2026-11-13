@@ -237,10 +237,13 @@ The computer tools need no deployment input. Boat writes the entry of the
 with no URL and no credential, and the runner reads it, as
 [What it does](../runner/README.md#what-it-does) says.
 
-`CONDUCTIVE_DEFAULT_BRANCH` needs no deployment input. A create or a resume
-gives the default branch of the repository of the workspace, from its
-queued start. A disk retention restart gives the current default branch of
-that repository.
+`CONDUCTIVE_DEFAULT_BRANCH` needs no deployment input. It names the base
+branch of the workspace, as
+[Base branches](protocol/base-branches.md#the-base-branch-of-a-workspace)
+says. A create, a resume, and a disk retention restart give the base
+branch that the Worker's record of the workspace names. Without one, a
+create or a resume gives the default branch of its queued start, and a
+disk retention restart gives the current default branch.
 
 `CONDUCTIVE_WORKSPACE_BRANCH` needs no deployment input either. A create, a
 resume, and a disk retention restart give the workspace branch that the

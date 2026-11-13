@@ -28,7 +28,7 @@ keeps them after the merge.
 - The steps reach every open tab of the workspace as they happen.
 - The steps are product steps, not the raw output of the provider.
 - A new workspace shows steps such as the start from the org image, the
-  fetch of the default branch, and the creation of the branch.
+  fetch of its start branch, and the creation of the branch.
 - The run of a pull request fetches that pull request, or its base branch
   after a merge.
   [The branch of a pull request run](base-branches.md#the-branch-of-a-pull-request-run)
@@ -252,8 +252,10 @@ keeps them after the merge.
 ## Continue
 
 - After the merge of its pull request, Continue moves a workspace to a new
-  branch from the latest default branch. The workspace keeps its sandbox
-  and its sessions (decision 223).
+  branch. The workspace keeps its sandbox and its sessions (decision 223).
+- The new branch starts from the branch that the pull request merged into
+  (decision 290). When GitHub no longer has that branch, it starts from the
+  default branch.
 - [Continue](continue.md) holds its requirements: who may continue, when
   Continue runs, its check for local work, the new branch, and the
   sessions after it.

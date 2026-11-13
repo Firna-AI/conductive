@@ -30,7 +30,7 @@ export const termsDocument: LegalDocument = {
   at ${appDomain}, and in the Mac app. You accept their current version
   each time that you continue with GitHub to sign in. ${productName} keeps
   the latest version that you accepted, and the time when you first
-  accepted it. Effective date: 12 November 2026.`,
+  accepted it. Effective date: 13 November 2026.`,
   sections: [
     {
       title: `Who runs ${productName}`,
@@ -204,8 +204,10 @@ export const termsDocument: LegalDocument = {
           passes on the model requests of a cloud computer, it keeps no
           copy of a request or of its answer. It writes no body or header
           value of them to its logs.`,
-        paragraph`Continue starts a new branch from the latest default branch
-          of the repository. It keeps the cloud computer and its sessions.
+        paragraph`Continue starts a new branch from the latest commit of the
+          branch that the pull request merged into. If that branch no longer
+          exists, it uses the repository's default branch. It keeps the
+          cloud computer and its sessions.
           Changed files move to the new branch. Commits that are not pushed
           stay on their local branches.`,
         paragraph`The agent actions in the pull request bar send messages as

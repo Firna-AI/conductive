@@ -85,8 +85,19 @@ Rules for the bar:
 - The bar names the branch of the workspace and its base branch, as
   [Base branches](base-branches.md) says (decision 507 G). A narrow column
   cuts each name with an ellipsis, and the full name shows as a tooltip.
-- Reason: one layout of the bar serves every workspace, also a pull request
-  run whose base branch is not the default branch.
+- Reason: one layout of the bar serves every workspace. This includes a
+  workspace whose base branch is not the default branch, such as a stack or
+  a pull request run.
+- The Worker moves a base branch that GitHub deleted to the default branch,
+  as [A base branch that GitHub deleted](base-branches.md#a-base-branch-that-github-deleted)
+  says. A message under the bar then says so (decision 294). It names the
+  default branch as the new target, and the branch that GitHub no longer
+  has.
+- That message is a status, not a refusal. It shows until a pull request
+  opens. Reason: a pull request names its own base branch on GitHub.
+- On a phone, that message shows at the top of the Checks tab, as
+  [Layouts](#layouts) says. The `base-moved` variant of the mockup
+  `app/new-workspace/start-branch/stacked` gives its words.
 - The bar offers "Create PR" for commits of the branch that its
   base branch does not have, and for local work, as [Actions](#actions)
   says. Create PR opens a pull request into the base branch.
@@ -227,9 +238,11 @@ continues, and archives.
   refusal, the message says that GitHub refused the merge, with Open on
   GitHub.
 - No GitHub error text reaches the browser.
-- Merge queues, stacked pull requests, auto-merge, and a bypass of the
-  rules of the branch are not part of the bar. A direct merge into a branch
-  that needs a merge queue gets the refusal of GitHub.
+- Merge queues, auto-merge, a bypass of branch rules, and actions on a
+  whole stack of pull requests are not part of the bar. A direct merge into
+  a branch that needs a merge queue gets the refusal of GitHub.
+- A workspace that stacks on another branch shows the bar of its own pull
+  request only.
 
 ## After the merge
 

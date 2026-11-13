@@ -127,7 +127,7 @@ Archived chats stay read-only until Restore.
 
 - [Restore an archived workspace](/docs/workspaces#restore-an-archived-workspace)
 
-Continue uses the GitHub account of the member who selects it to fetch the latest default branch.
+Continue uses the GitHub account of the member who selects it for its branch fetch.
 That account needs read access to the repository.
 Merge uses the clicking member's GitHub account, and GitHub checks its branch rules.
 An org role does not add GitHub access.

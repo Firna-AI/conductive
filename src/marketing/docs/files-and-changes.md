@@ -86,10 +86,13 @@ In a read-only workspace, use a double-click to keep the tab.
 The diff shows syntax colours, as a file does.
 
 The base branch is the branch that the workspace's work targets.
-A workspace you create uses the repository's default branch.
+A workspace you create targets the branch you select in **New workspace**.
+You can choose the default branch as the target instead.
 A run for an opened or pushed pull request uses that pull request's head branch.
 A run for a merged pull request uses that pull request's base branch.
-After **Continue**, the workspace's base branch is the repository's latest default branch.
+After **Continue**, the base is the branch that the pull request merged into, if it still exists.
+Otherwise, the base is the repository's default branch.
+If GitHub deletes the base branch, Conductive changes it to the default branch.
 The comparison starts at the common commit of the workspace branch and its base branch.
 Newer commits on the base branch therefore stay out of **Changes**.
 

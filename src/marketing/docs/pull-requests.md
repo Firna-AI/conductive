@@ -25,12 +25,18 @@ The bar can ask the agent to create a pull request with files not committed or c
 
 The action asks the agent to commit the changes, push this branch, and open a pull request.
 It targets the workspace's base branch, which is the branch this work will merge into.
-A workspace you create uses the repository's default branch.
+A workspace you create targets the branch you select in **New workspace**.
+You can choose the default branch as the target instead.
 For a pull request run, its first message names the initial target under **Your work goes to**.
-The pull request bar names the current target.
-After **Continue**, the workspace targets the latest default branch of its repository.
+On a computer, the pull request bar names the workspace's base branch.
+After **Continue**, it targets the branch the pull request merged into, or the default branch if that branch is gone.
 Your draft and its attached files stay unchanged.
 Conductive then shows the pull request's state for that branch.
+
+If GitHub deletes the workspace's base branch, Conductive changes it to the default branch.
+The bar explains that change until a pull request opens.
+Changing a pull request's target on GitHub leaves the workspace's base unchanged.
+Check the target on GitHub before merging after such a change.
 
 If the bar shows **No commits yet**, make a change or ask the agent to start the task.
 GitHub write access enables the agent actions.
@@ -153,8 +159,9 @@ Ask the org admin to check the GitHub App's repository access when needed.
 ## Continue after a merge
 
 Every org member can select **Continue** after the workspace's pull request merges.
-It starts a branch from the latest default branch in the same workspace.
-That default branch becomes the workspace's new base branch.
+It starts a branch from the latest commit of the branch that the pull request merged into.
+If that branch no longer exists, it uses the repository's default branch.
+That starting branch becomes the workspace's new base branch.
 It keeps the computer, files, sessions, and workspace name.
 Your GitHub account supplies the repository access for that fetch.
 Continue waits while an agent turn runs in any session of the workspace.

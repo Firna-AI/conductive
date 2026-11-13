@@ -118,7 +118,7 @@ decision number names a dated record, as
 - New workspace at the top of the list puts the workspace in General, the
   default section. New workspace in the menu of a section puts it in that
   section. The New workspace dialog can pick another section, as
-  [The dialog](create-a-workspace.md#the-dialog) says.
+  [The dialog](create-a-workspace-dialog.md#the-parts-and-the-section) says.
 - A workspace moves to another section by drag and drop. On a phone, a
   long press lifts the row.
 - A focused row also moves by keys.

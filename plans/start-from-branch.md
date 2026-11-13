@@ -301,6 +301,23 @@ Design calls from the mockups of Milestone 1, made on 13 November 2026:
   showed that a name such as `calummoore/checkout-autocomplete` reads like
   the name of a repository.
 
+Design calls from the docs of Milestone 2, made on 13 November 2026:
+
+- A token that cannot read the repository gets HTTP 403 with the code
+  `github_access_required` at the branch check. Reason: the design calls
+  give the rule, and 403 is the status of a missing permission.
+- An expired GitHub sign-in at the branch check or the list read counts as
+  "GitHub cannot answer", so the create goes on and the start decides.
+  Reason: a refusal there would be a new rejection, and the rule for a
+  GitHub read that fails already exists.
+- When GitHub does not answer whether the merged-into branch still
+  exists, Continue stops and keeps its branch, as it does today when its
+  first GitHub read fails. Reason: a fall back to the default branch could
+  set the wrong base.
+- The Terms changed, so `TERMS_VERSION` in `src/shared/terms.ts` names a
+  new revision. Reason: users agree to the current revision at their next
+  sign-in (decision 126).
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -334,34 +351,37 @@ Depends on: 1
 
 State the requirements and the decisions in force for the work below.
 
-- [ ] In `docs/protocol/create-a-workspace.md`, add a "Start from a branch"
+- [x] In `docs/protocol/create-a-workspace.md`, add a "Start from a branch"
       section with decisions 288, 291, 293, and 295, and the rules of the
       branch control, its picker, the target choice, and the refusals from
       the design calls of the mockups. Change "The branch and the name" so
-      that the branch starts from the start branch.
-- [ ] In `docs/protocol/base-branches.md`, give the base of a workspace with
+      that the branch starts from the start branch. The section links to
+      the new page `docs/protocol/start-from-a-branch.md`, which holds the
+      rules. The dialog moved to `docs/protocol/create-a-workspace-dialog.md`,
+      so that the doc stays under 300 lines.
+- [x] In `docs/protocol/base-branches.md`, give the base of a workspace with
       a picked branch and of an agent create call, and decision 294. In
       `docs/protocol/github-banner.md`, add the line under the bar of a base
       that moved, which shows until a pull request opens.
-- [ ] In `docs/protocol/continue.md`, replace decision 223 with decision 290.
-- [ ] In `docs/protocol/workspace-calls.md`, replace the text of decision 281
+- [x] In `docs/protocol/continue.md`, replace decision 223 with decision 290.
+- [x] In `docs/protocol/workspace-calls.md`, replace the text of decision 281
       with the two fields of decision 292, their defaults, and the replay of a
       request ID.
-- [ ] In `docs/protocol/github-tokens.md`, state the branch list read and the
+- [x] In `docs/protocol/github-tokens.md`, state the branch list read and the
       branch check with the member's GitHub token.
-- [ ] Update each other doc that restates the old start, the old target, or
+- [x] Update each other doc that restates the old start, the old target, or
       decision 223: `docs/protocol/agent-instructions.md`,
       `docs/protocol/workspace-life.md`, `docs/protocol/github-banner.md`,
       `docs/architecture.md`, `docs/architecture/flows.md`, and
       `docs/deployment.md`.
-- [ ] Read the Terms page, the Privacy page with its data uses, and each
+- [x] Read the Terms page, the Privacy page with its data uses, and each
       public guide in full. Update each sentence that restates a changed
       fact, such as the start of a workspace branch and the GitHub reads.
-- [ ] Update the comparison rows "Start from a branch, PR, or issue", "Latest
+- [x] Update the comparison rows "Start from a branch, PR, or issue", "Latest
       base branch", "Target branch", "Diff viewer", and "Default branch per
       repository" under the rules of
       `docs/protocol/conductor-comparison.md#statuses`.
-- [ ] Check each relative link of each changed Markdown file.
+- [x] Check each relative link of each changed Markdown file.
 
 ## Milestone 3: Branch list
 

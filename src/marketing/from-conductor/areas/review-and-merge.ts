@@ -6,7 +6,7 @@ export const reviewAndMergeFeatures: readonly ParityFeature[] = [
     area: 'review-and-merge',
     name: 'Diff viewer',
     status: 'available',
-    note: 'Open a unified diff with syntax colours against the default branch. Other diff views are under consideration.',
+    note: 'Open a unified diff with syntax colours against the workspace’s base branch. Other diff views are under consideration.',
   },
   {
     id: 'git-panel',

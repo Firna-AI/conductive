@@ -11,7 +11,9 @@ says.
 ## One task after another
 
 - After the merge of its pull request, Continue moves a workspace to a new
-  branch from the latest default branch of its repository (decision 223).
+  branch (decision 223). The new branch starts from the latest commit of
+  the base that [The base and the new branch](#the-base-and-the-new-branch)
+  gives (decision 290).
 - The workspace keeps its sandbox, with its files, its installed software,
   and its running processes. It keeps its sessions, and their agents keep
   their context.
@@ -26,8 +28,8 @@ says.
 - Reason: Continue keeps the context of the agents and the warm sandbox, as
   in Conductor.
 - These ways were rejected (decision 223):
-  - Continue in a new workspace from the latest default branch. Its
-    sandbox starts cold, and its agents start without the earlier context.
+  - Continue in a new workspace. Its sandbox starts cold, and its agents
+    start without the earlier context.
   - Continue in a new workspace that forks the sandbox. Its sessions start
     new, and it needs one more start on the app's Boat account.
   - Archive only. After each merge, the member then waits for a new
@@ -78,10 +80,31 @@ says.
 
 ## The base and the new branch
 
-- Continue fetches the latest default branch with the GitHub access of the
-  member who pressed Continue (decision 226), as
+- Continue builds on the branch that the pull request merged into, when
+  GitHub still has that branch (decision 290). Otherwise, it builds on the
+  default branch of the repository.
+- Continue reads that branch from the merged pull request on GitHub, at
+  the time of Continue. So it follows a change of the base of the pull
+  request on GitHub before the merge.
+- That branch becomes the base branch of the workspace, as
+  [Base branches](base-branches.md#the-base-branch-of-a-workspace) says.
+- Continue changes only the base branch of the workspace. The default
+  branch of the repository stays the branch that GitHub names.
+- Reason: a workspace on a long-lived branch, such as `develop`, then stays
+  on that branch after each merge.
+- These ways were rejected (decision 290):
+  - Always the default branch. A workspace on `develop` would then move to
+    `main` after each merge.
+  - Always the stored base branch. It fails when GitHub deleted that
+    branch.
+  - The stored base branch when GitHub still has it, else the default
+    branch. It picks the wrong branch after a change of the base on GitHub.
+  - A choice of the base when the member presses Continue. It adds a
+    question and a mockup.
+- Continue fetches the latest commit of that branch with the GitHub access
+  of the member who pressed Continue (decision 226), as
   [Continue](github-tokens.md#continue) in GitHub tokens says.
-- The new branch starts from that default branch.
+- The new branch starts from that commit.
 - The name of the new branch follows the rule of a new workspace, as
   [The branch and the name](create-a-workspace.md#the-branch-and-the-name)
   says: the current GitHub login of the workspace owner, a city name, and

@@ -12,10 +12,15 @@ rest of the life of a workspace. The terms are those of the
 decision number names a dated record, as
 [Decision numbers](../architecture.md#decision-numbers) says.
 
+Two linked pages belong to this doc.
+[Create a workspace: the dialog](create-a-workspace-dialog.md) holds the
+dialog. [Start from a branch](start-from-a-branch.md) holds a start from a
+branch that is not the default branch.
+
 ## New workspace
 
-- The New workspace page is an empty chat with a repository picker. The
-  first message creates the workspace.
+- The New workspace page is an empty chat with a repository picker and a
+  branch control. The first message creates the workspace.
 - New workspace opens as this page or as a dialog over the current screen.
   A preference of the user chooses which. Reason: the user asked for both
   ways.
@@ -84,51 +89,9 @@ decision number names a dated record, as
 
 ### The dialog
 
-- The dialog holds the parts of the page: the repository picker, the
-  message and its files, and the model picker.
-- The dialog always names the org and the section of the new workspace,
-  also General.
-- The org and the section are a menu of the sections of the org, in the
-  order of the list, with the current section checked. A pick puts the
-  new workspace in that section. The menu has no Archived item, because
-  Archived is a group of the list and not a section. The user asked for
-  the menu on 12 November 2026.
-- The pick belongs to the draft. So a close keeps it with the message,
-  and the page of the same org and section names the picked section. A
-  create ends the pick, so the next draft starts in the section that
-  opened it.
-- The button of the dialog is Create. The button of the page is Send,
-  because the page looks like the chat that it becomes.
-- The dialog shows the notices of the page: the first build, a waiting
-  repository, a missing agent login, a failed create with Try again, and an
-  org without chosen repositories.
-- In an org without chosen repositories, the dialog and the page tell a
-  member who is not an admin that an admin chooses them. An admin gets
-  Choose repositories. Reason: only an admin can choose them.
-- Escape and a press outside close the dialog, except while the create
-  runs.
-- An action of the dialog that opens another page, such as Connect Claude
-  or Choose repositories, closes the dialog first. The dialog also closes
-  when the address changes, such as with Back in the browser, also while
-  the create runs.
-- The dialog and the page of the same org and section share one draft.
-- A close of the dialog keeps the draft, with its message and its files,
-  as a move away from the page does. So no close loses a message.
-- When the page or the dialog shows a kept message again, the cursor
-  starts at the end of the message. After that, each click and key moves
-  the cursor as usual.
-- When the server accepts the create, the dialog closes, and the app opens
-  the new workspace, as after a create from the page. This holds also
-  when the dialog closed while the create ran.
-- A create in the background was rejected, because it needs a new notice
-  for a create that finished.
-- The dialog shows a failed create only when the create request fails.
-  When the sandbox of the new workspace then does not start, the workspace
-  keeps its queued messages and shows Try again, as
-  [A failed first start](#a-failed-first-start) says.
-- When the dialog opens, the message field gets the focus. When the dialog
-  closes and the screen stays, the focus goes back to the control that
-  opened it. When another screen opens, that screen takes the focus.
+- [Create a workspace: the dialog](create-a-workspace-dialog.md) holds the
+  requirements of the dialog: its parts, its section, its notices, its
+  close, and its draft.
 
 ### The send key
 
@@ -236,10 +199,23 @@ decision number names a dated record, as
   events, as a resume does. A stream of the progress in the create request
   was rejected, because it is a larger build.
 
+## Start from a branch
+
+- New workspace can start a workspace from a branch that is not the
+  default branch. The workspace then makes its own branch from the picked
+  branch (decision 288), and the member chooses its target (decision 291).
+- [Start from a branch](start-from-a-branch.md) holds the requirements of
+  the branch control, its picker, and the target choice (decision 295). It
+  also holds the branch check of a create and its refusals (decision 293).
+
 ## The branch and the name
 
 - A new workspace starts from the newest good org image. It then creates
-  its branch in the folder of its repository.
+  its branch in the folder of its repository, from the newest commit of
+  its start branch on GitHub.
+- The start branch is the default branch of the repository, unless the
+  create names another branch, as
+  [Start from a branch](start-from-a-branch.md) says.
 - The run of a pull request creates its branch from that pull request, as
   [The branch of a pull request run](base-branches.md#the-branch-of-a-pull-request-run)
   says (decision 505 A).
@@ -247,6 +223,8 @@ decision number names a dated record, as
   start first pushes an empty first commit to the default branch of the
   repository (decision 89). It then fetches that branch and creates the
   workspace branch from it.
+- The start pushes no first commit to a branch that is not the default
+  branch. Reason: a typo must not make a branch on GitHub.
 - The push uses the GitHub user token of the sender of the current turn,
   as [GitHub tokens](tokens-and-secrets.md#github-tokens) says. No
   command and no Git config holds the token.
@@ -255,10 +233,11 @@ decision number names a dated record, as
   push and fetches the default branch. The app never force-pushes.
 - When the app cannot read the refs of the repository, or when the push
   fails and the repository stays empty, the start fails.
-- Reason: the workspace branch starts from the default branch, and the
-  Changes list compares with it, so that branch must exist on GitHub. A
-  branch or a first commit only in the sandbox was rejected for that
-  reason, and a refused start because it blocks work in a new repository.
+- Reason: in an empty repository, the workspace branch starts from the
+  default branch. The Changes list compares with it, so that branch must
+  exist on GitHub. A branch or a first commit only in the sandbox was
+  rejected for that reason, and a refused start because it blocks work in
+  a new repository.
 - The branch name starts with the GitHub login that the workspace owner has
   at the create (decision 53).
 - A city name and four random characters follow, such as

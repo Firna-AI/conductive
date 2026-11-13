@@ -44,8 +44,9 @@ each feature.
 - **Workspace owner:** the person who is responsible for a workspace. It is
   the person who created the workspace, until an admin reassigns it.
 - **Continue:** the action after a merge that moves a workspace to a new
-  branch from the latest default branch. The workspace keeps its sandbox
-  and its sessions.
+  branch. The new branch starts from the branch that the pull request
+  merged into, or from the default branch when GitHub no longer has that
+  branch. The workspace keeps its sandbox and its sessions.
 - **Local work:** work in the sandbox of a workspace that GitHub does not
   have: changed files that are not committed, also untracked files, and
   commits that no remote branch holds.
@@ -96,6 +97,9 @@ each feature.
   is the member who created the routine, until that member leaves the org.
 - **Base branch:** the branch that the work of a workspace targets. Changes
   compares with it, and "Create PR" opens into it.
+- **Start branch:** the branch whose newest commit a new workspace branch
+  starts from. It is the default branch of the repository, unless the
+  create names another branch.
 
 ## Components
 

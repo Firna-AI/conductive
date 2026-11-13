@@ -196,11 +196,34 @@ rules. A decision number names a dated record, as
 - No GitHub error text reaches the browser. The Worker gives each refusal
   of GitHub as an error code of the app.
 
+## Branch reads
+
+- The picker of New workspace lists the branches of one repository of the
+  org. The Worker reads them live from GitHub with the GitHub user token of
+  the member who opens the picker. It stores no list.
+- The Worker answers only a member of the org, and only for a repository
+  of that org. The answer goes only to that member.
+- Reason: the browser gets no GitHub token, and each member sees only the
+  branches that GitHub shows to that member.
+- The branch check of a create asks GitHub for each named branch with the
+  GitHub user token of the sender, as
+  [The branch check](start-from-a-branch.md#the-branch-check) says. The
+  sender of a create call is the sender of the calling turn.
+- GitHub then checks the read access of that member. When the token cannot
+  read the repository, the app says so, and it does not claim that a
+  branch is missing.
+- The Worker gives each refusal of GitHub as an error code of the app, as
+  for a merge.
+
 ## Continue
 
-- Continue fetches the latest default branch with the GitHub token of the
-  member who pressed Continue (decision 226). GitHub then checks the read
-  access of that member.
+- Continue reads the merged pull request with the GitHub token of the
+  member who pressed Continue. With that token, it also asks GitHub whether
+  the base branch of that pull request still exists.
+- Continue fetches the latest commit of its base branch with the same
+  token (decision 226). GitHub then checks the read access of that member.
+  [The base and the new branch](continue.md#the-base-and-the-new-branch)
+  gives that base branch (decision 290).
 - The workspace runs this fetch as a trusted Continue job, as it runs the
   fetch of a create. The credential route gives the token to that job only
   while its fetch runs.

@@ -25,8 +25,9 @@ says.
   merge.
 - **Target branch:** the base branch of the workspace, as
   [The base branch of a workspace](base-branches.md#the-base-branch-of-a-workspace)
-  says. For a workspace that a member creates, it is the default branch of
-  the repository.
+  says. For a workspace that a member creates, it is the target that New
+  workspace gives, as
+  [The target choice](start-from-a-branch.md#the-target-choice) says.
 - **Branch line:** one line after the sender line of a message. It names
   the current workspace branch and the current target branch.
 - **Base prompt:** the general rules for work that a Claude agent gets
@@ -207,9 +208,11 @@ says.
   conversation. An agent can also keep the first instructions of a session
   until it summarizes the conversation.
 - The workspace branch and the target branch can change, by Continue or
-  by a new default branch. The instructions keep the branches of the start
-  of the session, and [the branch line](#the-branch-line) names the
-  current branches.
+  by a new default branch. The target branch also changes when GitHub
+  deletes it, as
+  [A base branch that GitHub deleted](base-branches.md#a-base-branch-that-github-deleted)
+  says. The instructions keep the branches of the start of the session,
+  and [the branch line](#the-branch-line) names the current branches.
 - A tool that returns facts that change, such as the pull request state,
   was rejected. It widens what the workspace token allows, and agents still
   need instructions to call it.

@@ -190,10 +190,17 @@ If you accepted an org invitation, your org is already open.
 
 1. Select **New workspace**.
 2. Choose the repository for your task.
-3. Choose a model for the agent you connected.
-4. Choose the effort in the same model menu.
-5. Describe your task in the message box.
-6. Select **Create** in the dialog, or **Send** on the page.
+3. Keep the default branch, or choose another starting branch.
+4. If you choose another branch, select its target.
+5. Choose a model for the agent you connected.
+6. Choose the effort in the same model menu.
+7. Describe your task in the message box.
+8. Select **Create** in the dialog, or **Send** on the page.
+
+The target is the branch where your work will merge.
+The starting branch is the target unless you choose the default branch instead.
+
+- [Choose a starting branch and target](/docs/workspaces#start-from-another-branch)
 
 For a first task, you can use this message:
 
@@ -208,6 +215,7 @@ On a phone, it opens as a page with a **Send** button.
 To open the page on a computer too, change **Open New workspace in** under **Preferences** in **Account**.
 
 The first message creates the workspace, its branch, and its first session.
+The new branch starts from the latest commit of your selected branch.
 Conductive shows the start steps as it starts the workspace's cloud computer.
 Your accepted message waits until the agent can begin.
 You can send more messages while that computer starts.

@@ -6,13 +6,22 @@ record, as [Decision numbers](../architecture.md#decision-numbers) says.
 
 ## Create a workspace
 
-1. The user sends the first message of a new workspace. The Worker records
-   the workspace, and its Durable Object keeps the message.
-2. With the Boat key, the Worker asks Boat for a sandbox from the newest
+1. The branch picker of New workspace asks the Worker for the branches of
+   the repository. The Worker reads them from GitHub with the GitHub token
+   of the user, and it stores no list.
+2. The user sends the first message of a new workspace, with its start
+   branch and its base branch. The Worker asks GitHub for each such branch
+   that is not the default branch, with the GitHub token of the user.
+3. The Worker records the workspace, and its Durable Object keeps the
+   message.
+4. With the Boat key, the Worker asks Boat for a sandbox from the newest
    good org image of the org. The sandbox gets the workspace token and the
    org's env vars, but no agent login.
-3. The Durable Object pushes each start step to the open tabs.
-4. The agent runner starts and connects to the Durable Object. The Durable
+5. The Durable Object runs the fetch of the create in the sandbox. It
+   fetches the start branch and the base branch, and creates the workspace
+   branch from the start branch. It pushes each start step to the open
+   tabs.
+6. The agent runner starts and connects to the Durable Object. The Durable
    Object sends it the waiting message.
 
 ## Chat
@@ -57,6 +66,11 @@ record, as [Decision numbers](../architecture.md#decision-numbers) says.
   refresh of the org image.
 - A pull request event can also start the runs of routines, as
   [Routine runs](#routine-runs) says.
+- When GitHub no longer has the base branch of a workspace, the Worker
+  moves it to the default branch. The move reaches D1, the Durable Object,
+  and the sandbox, as
+  [A base branch that GitHub deleted](../protocol/base-branches.md#a-base-branch-that-github-deleted)
+  says.
 
 ## Merge
 
@@ -70,14 +84,16 @@ record, as [Decision numbers](../architecture.md#decision-numbers) says.
 
 ## Continue
 
-1. A member presses Continue after the merge. The Durable Object starts the
-   sandbox when it is stopped.
-2. The Durable Object runs a trusted Continue job in the sandbox. Its fetch
-   of the default branch gets the GitHub token of that member through the
-   credential helper, only while the fetch runs.
-3. The job creates the new branch with the changed files. The default
-   branch becomes the base branch of the workspace. The Worker stores the
-   new branch and its base branch in D1 and in the Durable Object, and
+1. A member presses Continue after the merge. The Worker reads the merged
+   pull request from GitHub with the GitHub token of that member. The
+   branch that it merged into is the new base branch, or the default branch
+   when GitHub no longer has that branch.
+2. The Durable Object starts the sandbox when it is stopped. It runs a
+   trusted Continue job in the sandbox. Its fetch of the new base branch
+   gets the GitHub token of that member through the credential helper, only
+   while the fetch runs.
+3. The job creates the new branch with the changed files. The Worker stores
+   the new branch and its base branch in D1 and in the Durable Object, and
    reads the GitHub state of the new branch.
 4. The Durable Object pushes the new state and the note of Continue to
    every open tab. Each later message carries the new branch to the agent.

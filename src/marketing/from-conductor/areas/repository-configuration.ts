@@ -27,7 +27,7 @@ export const repositoryConfigurationFeatures: readonly ParityFeature[] = [
     area: 'repository-configuration',
     name: 'Default branch per repository',
     status: 'available',
-    note: 'New workspaces use the default branch set on GitHub. A separate branch setting in Conductive is under consideration.',
+    note: 'New workspaces start from the default branch on GitHub unless you choose another. A separate default setting in Conductive is under consideration.',
   },
   {
     id: 'files-to-copy',

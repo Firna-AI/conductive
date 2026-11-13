@@ -155,7 +155,7 @@ If its turn cannot start, follow the [ChatGPT recovery steps](/docs/agent-logins
 
 Code on the computer can also obtain the GitHub credential available to that workspace.
 This includes the workspace owner's GitHub credential outside a running agent turn.
-Continue also brings the clicking member's GitHub token into the cloud computer while it fetches the latest default branch.
+Continue also brings the clicking member's GitHub token into the cloud computer during its branch fetch.
 Code or members with terminal access can read that token during the fetch.
 
 Removing a member ends their ordinary access to the org.
