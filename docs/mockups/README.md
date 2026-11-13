@@ -84,11 +84,12 @@ the text, a dropped folder that attaches as its zip, and a folder that the
 browser cannot read, which the box does not attach.
 `app/attachments/open` shows the file tab that a press on a sent chip
 opens, with the picture of the screenshot. The other child pages show a
-failed upload, a file over 100 MB, the sent message, and the files of a
-queued first message. `app/files/image` shows the picture of an image file
-in its tab, and an image that the browser cannot draw. The flow
-`user-flows/drop-a-file` goes from the drop of a screenshot, through Send,
-to its file tab.
+failed upload, a file over 1 GB, the sent message, and the files of a
+queued first message. `app/attachments/missing` shows a Try again that
+failed, because a file of its message is no longer in the cloud computer.
+`app/files/image` shows the picture of an image file in its tab, and an
+image that the browser cannot draw. The flow `user-flows/drop-a-file` goes
+from the drop of a screenshot, through Send, to its file tab.
 
 `app/new-workspace/files` shows the same chips in the first message of a
 new workspace, before the workspace exists. `app/new-workspace/dialog/files`
@@ -100,8 +101,9 @@ file in the text of a message box, in each state of its upload.
 a sent message. `ImageView` in `src/components/files/` draws the picture of
 an image file in its tab. These three parts take no fixtures, so the app
 can draw them too. [attachmentCopy.ts](src/components/chat/attachmentCopy.ts)
-holds the words of the chips, and of the notices for a file over 100 MB and
-a dropped folder that the browser cannot read. [The chat](design-chat.md) gives the design of each part.
+holds the words of the chips, and of the notices for a file over 1 GB and
+a dropped folder that the browser cannot read. The app shares these words.
+[The chat](design-chat.md) gives the design of each part.
 
 ## Folder layout
 

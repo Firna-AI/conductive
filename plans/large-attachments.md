@@ -2,7 +2,8 @@
 
 Status: Active. On branch `calummoore/lisbon-ogce`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
-Today each file of a message can hold at most 25 MB (decision 132). The
+Today each file of a message can hold at most 100 MB, as #323 on `main`
+set on 13 November 2026 in place of the 25 MB of decision 132. The
 browser sends each file to the Worker in one request (decision 144). The
 Worker stores the file in the `CHAT_ATTACHMENTS` R2 bucket. When the turn
 of the message starts, the workspace object streams the stored copy into
@@ -68,7 +69,7 @@ Replaced ways:
   `src/app/attachment-upload.ts`, `src/app/dev/attachment-routes.ts`, and
   their tests. The Worker adds the part routes in Milestone 5. The app
   moves to them in Milestone 6. Milestone 7 deletes the raw `POST` routes
-  and their 25 MB limit.
+  and their 100 MB limit.
 
 ## Decisions
 
@@ -357,6 +358,13 @@ Chosen on 12 November 2026: A. Cal's answer: "5 = A".
   it again in a new message." Try again stays, as for each failed turn, but
   it fails again until the file is back at its path. Design call of
   12 November 2026.
+- When two or more files of the message are gone, the failed turn names
+  each of them in the order of the message: "<name> and <name> are no
+  longer in the cloud computer. Attach them again in a new message." So
+  the check reads every transferred file of the message before it fails
+  the turn. Reason: one new message then carries every missing file, and
+  no later try fails for a file that the first failure did not name.
+  Design call of 13 November 2026, from the mockups.
 - The 7-day expiry of an unsent file, and the deletion of the files of a
   deleted workspace or org, stay as they are.
 
@@ -411,6 +419,23 @@ Chosen on 12 November 2026: A. Cal's answer: "5 = A".
 - The token is visible to code in the cloud computer for up to 10 minutes.
   It gives only one file that is on its way to that same computer.
 
+### Found by the mockups
+
+- Main raised the limit of the raw `POST` routes from 25 MB to 100 MB, or
+  100,000,000 bytes, on 13 November 2026, in pull request #323. This
+  branch has that change since its merge of `origin/main`. The
+  orchestrator changed the raw route limit in the summary and in
+  Milestones 5 to 7 to 100 MB on 13 November 2026. The image limit of
+  25,000,000 bytes of large-upload decision 4 D is another limit, and it
+  stays.
+- The app imports the words of the notice for a file over the limit from
+  `docs/mockups/src/components/chat/attachmentCopy.ts`. So the 1 GB words
+  of Milestone 1 also show in the app, which still refuses each file over
+  100 MB until Milestone 6. The two expected notices in
+  `src/chat/components/AttachmentChips.test.tsx` now expect the 1 GB
+  words. The app notice says 1 GB before Milestone 6 only on this branch,
+  because the plan merges as one pull request.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -421,15 +446,17 @@ The notice for a file that is too large names the new limit. A new state
 shows a turn that failed because a file is no longer in the cloud
 computer.
 
-- [ ] Change the limit in `docs/mockups/src/components/chat/attachmentCopy.ts`
+- [x] Change the limit in `docs/mockups/src/components/chat/attachmentCopy.ts`
       and in the descriptions of `app/attachments/too-large` to 1 GB. Keep
       the reason why the notice gives no file size.
-- [ ] Add `app/attachments/missing`: a failed turn whose message names a
+- [x] Add `app/attachments/missing`: a failed turn whose message names a
       file that is no longer in the cloud computer. Its text asks the member
       to attach the file again in a new message.
-- [ ] Update the mockups README and the attachments catalogue.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Update the mockups README and the attachments catalogue.
+- [x] Update the rationale of `app/attachments`, which named the upload in
+      one request of decision 144.
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages.
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
 
 ## Milestone 2: Documentation and protocol
@@ -500,12 +527,12 @@ Depends on: 3
 Depends on: 2
 
 The Worker adds the part routes. The raw `POST` routes stay, with their
-25 MB limit, until the app moves.
+100 MB limit, until the app moves.
 
 - [ ] Add the start, part, and complete routes for a draft file and for a
       file of a workspace, with the checks of the design.
 - [ ] Register the part routes with a body limit of one part. Keep the
-      raw `POST` routes at 25,000,000 bytes under their own constant.
+      raw `POST` routes at 100,000,000 bytes under their own constant.
 - [ ] Set `ATTACHMENT_MAX_BYTES` to 1,000,000,000 for the part routes,
       and the Worker's notice text to "Each file can be up to 1 GB."
 - [ ] Add tests: a part beyond the size, a part of the wrong length, a
@@ -523,7 +550,7 @@ Depends on: 1, 5
 - [ ] Retry a failed part alone. Try again sends only the parts with no
       receipt.
 - [ ] Move the dev routes in `src/app/dev/attachment-routes.ts`.
-- [ ] Update every text in the app and its tests that names 25 MB.
+- [ ] Update every text in the app and its tests that names 100 MB.
 
 ## Milestone 7: Delete the raw upload routes
 

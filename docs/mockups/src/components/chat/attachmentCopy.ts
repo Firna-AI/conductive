@@ -41,11 +41,12 @@ export function notAttachedCountTitle(count: number): string {
 }
 
 /**
- * The body of that notice: the size limit of each file. It gives no size of
- * the chosen file, because the size formatter counts in units of 1024 and
- * the limit counts in units of 1000. So the two numbers could disagree.
+ * The body of that notice: the size limit of each file, 1,000,000,000
+ * bytes. It gives no size of the chosen file, because the size formatter
+ * counts in units of 1024 and the limit counts in units of 1000. So the two
+ * numbers could disagree: a file one byte over the limit shows as 953.7 MB.
  */
-export const tooLargeBody = 'Each file can be up to 100 MB.'
+export const tooLargeBody = 'Each file can be up to 1 GB.'
 
 /** The action of that notice, which opens the file picker again. */
 export const smallerFileLabel = 'Attach a smaller file'
