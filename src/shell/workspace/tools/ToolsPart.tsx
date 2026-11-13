@@ -103,11 +103,22 @@ function useTerminalConnect(): ConnectTerminal {
 }
 
 /**
+ * True from the first render with `shown` on. A tool mounts at its first
+ * show, then stays mounted and hidden while another tool shows.
+ */
+function useShownOnce(shown: boolean): boolean {
+  const [once, setOnce] = useState(shown)
+  if (shown && !once) setOnce(true)
+  return once
+}
+
+/**
  * The tools of the workspace that the app offers, Terminal and Preview: a
  * panel with their tabs on desktop, and the page of one tool on a phone.
  * Each tool reads the routes through the fetch of the org, and the events
- * of the workspace in order. The terminal stays mounted after its first
- * show, so its connection stays while another tool shows. The app hides
+ * of the workspace in order. The terminal and Preview each stay mounted
+ * after their first show, so the connection of the terminal and the page
+ * in the preview frame stay while another tool shows. The app hides
  * Desktop and keeps its mount for its return: it mounts at each show, so
  * it reads a new desktop address. A `placeholder`, such as the state of a
  * sandbox that does not run, takes the place of the tools: the tabs stay on
@@ -137,8 +148,8 @@ export function ToolsPart(props: {
   // read. Its buttons, such as Reconnect, keep none.
   const terminal = useShortcutTerminal()
   const { tool } = navigation
-  const [terminalShown, setTerminalShown] = useState(tool === 'terminal')
-  if (tool === 'terminal' && !terminalShown) setTerminalShown(true)
+  const terminalShown = useShownOnce(tool === 'terminal')
+  const previewShown = useShownOnce(tool === 'preview')
   const body = props.placeholder ?? (
     <>
       {terminalShown ? (
@@ -151,13 +162,15 @@ export function ToolsPart(props: {
           />
         </div>
       ) : null}
-      {tool === 'preview' ? (
-        <PreviewTool
-          now={now}
-          route={navigation.preview}
-          touch={touch}
-          workspace={toolWorkspace}
-        />
+      {previewShown ? (
+        <div className={styles.tool} hidden={tool !== 'preview'}>
+          <PreviewTool
+            now={now}
+            route={navigation.preview}
+            touch={touch}
+            workspace={toolWorkspace}
+          />
+        </div>
       ) : null}
       {tool === 'desktop' ? (
         <DesktopTool touch={touch} workspace={toolWorkspace} />

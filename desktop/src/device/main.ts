@@ -67,6 +67,7 @@ export function startMacDevice(dependencies: MainDeviceDependencies): void {
           events,
         }),
       session: sessions.session,
+      signedOut: sessions.signedOut,
       warn,
     })
     const changed = (_event: unknown, cookie: Cookie) => {

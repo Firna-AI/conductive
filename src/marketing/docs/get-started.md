@@ -111,7 +111,7 @@ The org step shows **Preparing** while it runs.
 
 Continue to the agent login while the build runs.
 You can also open the org before the build finishes.
-**New workspace** lets you write a message, but keeps **Send** off until the first build succeeds.
+**New workspace** lets you write a message, but keeps its send button off until the first build succeeds.
 
 If the build fails, select **Open the log** to read its cause.
 Correct the problem.
@@ -193,7 +193,7 @@ If you accepted an org invitation, your org is already open.
 3. Choose a model for the agent you connected.
 4. Choose the effort in the same model menu.
 5. Describe your task in the message box.
-6. Select **Send**.
+6. Select **Create** in the dialog, or **Send** on the page.
 
 For a first task, you can use this message:
 
@@ -203,8 +203,9 @@ Explain how to run the tests in this repository.
 
 On a computer, **Enter** sends and **Shift+Enter** adds a line.
 On a phone, **Enter** adds a line.
-Use **Send** to send from either layout.
-If you chose the dialog in your account preferences, its send button is **Create**.
+On a computer, **New workspace** opens as a dialog with a **Create** button.
+On a phone, it opens as a page with a **Send** button.
+To open the page on a computer too, change **Open New workspace in** under **Preferences** in **Account**.
 
 The first message creates the workspace, its branch, and its first session.
 Conductive shows the start steps as it starts the workspace's cloud computer.
@@ -213,7 +214,7 @@ You can send more messages while that computer starts.
 The workspace keeps them for the agent.
 
 This wait happens after the org has a successful build.
-Before that first build succeeds, keep your message in **New workspace** until **Send** becomes available.
+Before that first build succeeds, keep your message in **New workspace** until its send button becomes available.
 
 If the workspace's computer cannot start, read the error.
 Select **Try again** in the same workspace.

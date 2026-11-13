@@ -204,9 +204,9 @@ why, with the model ID, the time of the last read of the list, and
 Refresh.
 
 `app/new-workspace/dialog` draws New workspace as a dialog over the ready
-workspace of `app`, for a user who chose the dialog. Its states are child
-pages. `first-build` shows Firna before its first good build, with the
-notice and Create off. `section` shows the open menu of the sections at
+workspace of `app`, for a new account or a user who chose the dialog.
+Its states are child pages. `first-build` shows Firna before its first
+good build, with the notice and Create off. `section` shows the open menu of the sections at
 the top right. The other child pages show files that upload, a
 drop of files on the whole dialog card, a draft with uploaded files and
 the notice of a missing agent login, a

@@ -74,3 +74,50 @@
 .messageBody li > :is(h1, h2, h3, h4, h5, h6) + :is(p, pre, div, ol, ul) {
   margin-top: 6px;
 }
+
+/*
+ * A code block of an answer with its Copy button in the top corner. The
+ * code keeps room for the button on its first line, and the block is at
+ * least as high as the button, also on a phone.
+ */
+.codeBlock {
+  position: relative;
+}
+
+.codeBlock > pre {
+  box-sizing: border-box;
+  min-height: calc(var(--copy-size) + 8px);
+  padding-right: calc(var(--copy-size) + 12px);
+}
+
+/*
+ * The button sits inside the border of the block. Its background fills the
+ * space up to that border, so code that scrolls sideways does not show
+ * beside it.
+ */
+.codeCopy {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  display: flex;
+  padding: 3px;
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-raised);
+}
+
+/*
+ * With a mouse, the button shows while the pointer is on the block or the
+ * button has the focus, so it does not cover the code at other times. A
+ * touch screen has no hover, so there it always shows.
+ */
+@media (hover: hover) {
+  .codeCopy {
+    opacity: 0;
+    transition: opacity 120ms ease;
+  }
+
+  .codeBlock:hover .codeCopy,
+  .codeCopy:focus-within {
+    opacity: 1;
+  }
+}

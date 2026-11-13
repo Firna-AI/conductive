@@ -31,12 +31,13 @@ const renames = (items: readonly WorkspaceMenuItem[]) =>
   items.some((item) => item.kind === 'action' && item.action === 'rename')
 
 /**
- * The menus of the rows of a list, their Rename field, the Archive shortcut
- * of each row, and the Restore shortcut of each archived row. Each row gets
- * only the actions that the person can use. Every row offers Copy link,
- * also an archived row and a row of a read-only list, and a toast gives the
- * result of its copy. A change of the role, the workspace, or the org drops
- * an action that it takes away. The shortcut and Archive in the menu run the one
+ * The menus of the rows of a list, their Rename field, which a double click
+ * on a row also opens, the Archive shortcut of each row, and the Restore
+ * shortcut of each archived row. Each row gets only the actions that the
+ * person can use. Every row offers Copy link, also an archived row and a
+ * row of a read-only list, and a toast gives the result of its copy. A
+ * change of the role, the workspace, or the org drops an action that it
+ * takes away. The shortcut and Archive in the menu run the one
  * flow of the workspace, which archives at once and offers Restore in its
  * toast. Every member of an org that is not suspended restores an archived
  * row until its `restoreUntil`, and the shortcut ends at that time while
@@ -158,6 +159,12 @@ export function useRowMenus(props: {
               cancel: () => setRenaming(null),
             }
           : null,
+      startRename: renames(items)
+        ? () => {
+            setOpen(null)
+            setRenaming(workspace.id)
+          }
+        : null,
     }
   }
   const sectionOf = (id: string) =>

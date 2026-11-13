@@ -57,7 +57,7 @@ Chat attachment queries live in `worker/chat/attachment-data.ts` and `attachment
 `202611082300_new_workspace_view.sql` rebuilds `user_preferences` and keeps every existing row and value.
 The three default model columns can be all set or all unset.
 The nullable `new_workspace_view` column holds `page` or `dialog`.
-An unset view uses the page. An unset model uses the configured app default.
+An unset view used the page then. An unset model uses the configured app default.
 
 `202611091200_waitlist.sql` adds app access, invite and referral codes, code
 uses, and the sign-up pause. Each existing account gets app access from
@@ -225,6 +225,11 @@ Existing plans keep `NULL`. A plan with `NULL` gives its first session no title 
 It fills every existing membership by org creation time, then org ID, for each person.
 This keeps the current rail order at deployment. New memberships keep `NULL` and sort at the end.
 The [members backend](../worker/members/README.md) owns the reads and moves.
+
+`202611121200_new_workspace_view_existing.sql` saves the page as the view of each existing account without a saved view.
+It keeps every other preference and every saved view.
+An unset view now uses the dialog, so only accounts made after this migration get the dialog without a choice.
+[The preference](../docs/protocol/create-a-workspace.md#the-preference) gives the requirement.
 
 ## Reserved ranges
 
