@@ -1,3 +1,4 @@
+import type { AgentModel } from '../../shared/generated/AgentModel'
 import { Button } from '@firna/ui/button'
 import { ChevronDown } from 'lucide-react'
 import type { Agent } from '../../shared/generated/Agent'
@@ -8,7 +9,7 @@ import { useControlSizes } from '../../../docs/mockups/src/components/common/tou
 import { pickerButtonStyle } from '../../../docs/mockups/src/components/chat/pickerButton'
 import styles from '../../../docs/mockups/src/components/chat/ModelPicker.module.css'
 import { EFFORTS } from '../../app/api/read-core'
-import { effortLabels, modelLabel, type AgentModel } from '../../shared/agents'
+import { effortLabels, modelLabel } from '../../shared/agents'
 import { MenuButton, type MenuEntry } from './Menu'
 
 /** The effort that a new model keeps: the same one, or the next lower one. */

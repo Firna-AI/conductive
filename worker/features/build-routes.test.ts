@@ -25,7 +25,7 @@ afterEach(async () => {
   await fixture?.dispose()
 })
 
-it('mounts build history, logs and admin starts and installs workspace tools in the real image coordinator', async () => {
+it('mounts build history, logs and admin starts and installs the release in the real image coordinator', async () => {
   const active = (fixture = await featureFixture(bundle, {
     configuration: {
       CONDUCTIVE_RUNNER_ARCHIVE_URL: OUTER_SOFTWARE.url,
@@ -73,7 +73,7 @@ it('mounts build history, logs and admin starts and installs workspace tools in 
   await active.actor(`org-image:${OUTER_ORG}`).advanceStartAlarm()
   expect(
     active.boat.commands.some((command) =>
-      command.includes('/opt/conductive/agent-tools/tools/main.ts'),
+      command.includes('update check --bootstrap'),
     ),
   ).toBe(true)
   const build = await active.request(buildPath(OUTER_ORG, 'software-build'))

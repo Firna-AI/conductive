@@ -97,8 +97,8 @@ A normal workspace startup bootstraps a missing program in a detached root job.
 Downloads never hold the lock used by runner restarts.
 Activation shares `/run/conductive/bootstrap-activate.lock` with the restart.
 The first activation confirms its installation before it releases that lock.
-It first moves the legacy tools launcher to a separate path and selects the release's Node runtime.
-The release dispatcher keeps workspace tools available while their Rust implementation remains pending.
+The release program includes the workspace CLI and MCP server.
+Its system installer links `/usr/local/bin/conductive` to the active program.
 Disk retention starts do not bootstrap or restart the runner.
 [Installation](../../image/install.md) gives the command sequence and release layout.
 

@@ -284,12 +284,12 @@ Depends on: 2, and the merged removal of runner protocol version 1
 
 Depends on: 4, 5
 
-- [ ] Define the workspace tool requests and replies in `cnd-runner-interface`, generate their TypeScript, and point the Worker's tool routes at the generated types.
-- [ ] Port the 24 workspace tool calls of `tools/calls.md` to `conductive` commands and to `conductive mcp`, with the same options, replies, errors, and exit codes.
-- [ ] Port the tests of `tools/` to Rust tests with mocked HTTP.
-- [ ] Ship the tools in the release, and remove the separate tools install of `worker/tools/image.ts`.
-- [ ] Delete the Node tools in `tools/` that the Rust commands replace. Keep the developer scripts of `tools/` that are not workspace tools.
-- [ ] Update `tools/README.md` and `runner/agent-tools.md`.
+- [x] Define the workspace tool requests and replies in `cnd-runner-interface`, generate their TypeScript, and point the Worker's tool routes at the generated types.
+- [x] Port the 24 workspace tool calls of `tools/calls.md` to `conductive` commands and to `conductive mcp`, with the same options, replies, errors, and exit codes.
+- [x] Port the tests of `tools/` to Rust tests with mocked HTTP.
+- [x] Ship the tools in the release, and remove the separate tools install of `worker/tools/image.ts`.
+- [x] Delete the Node tools in `tools/` that the Rust commands replace. Keep the developer scripts of `tools/` that are not workspace tools.
+- [x] Update `tools/README.md` and `runner/agent-tools.md`.
 
 ## Milestone 7: Git credential helper and preview relay in Rust
 
@@ -324,8 +324,8 @@ Depends on: 5
 
 Depends on: 9
 
-- [ ] Port the file and changes reports of `runner/file-reports.md`, the report requests of `runner/reports.md`, the listening-port scan, and the restore marker watch.
-- [ ] Port the matching tests with a temporary Git repository.
+- [x] Port the file and changes reports of `runner/file-reports.md`, the report requests of `runner/reports.md`, the listening-port scan, and the restore marker watch.
+- [x] Port the matching tests with a temporary Git repository.
 
 ## Milestone 11: Rust runner: turns, and the switch
 

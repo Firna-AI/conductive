@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest'
 
-import { MACHINE_PATHS } from '../../src/shared/agent-tools'
-import { TOOL_TURN_HEADER } from '../../tools/context'
+import { MACHINE_PATHS, TOOL_TURN_HEADER } from '../../src/shared/agent-tools'
+
 import { credentialLauncher } from './credential-launcher-test-support'
 
 it('sends the credential turn header with no request body through the installed launcher', async () => {

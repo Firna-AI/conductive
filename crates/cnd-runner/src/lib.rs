@@ -9,9 +9,13 @@ pub mod json;
 pub mod limits;
 pub mod link;
 mod port_limits;
+pub mod ports;
+pub mod reports;
+pub mod repository;
 pub mod runtime;
 pub mod socket;
 pub mod state;
+pub mod watcher;
 
 #[cfg(test)]
 #[path = "_tests_/support.rs"]

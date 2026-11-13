@@ -1,3 +1,4 @@
+import type { AgentModel } from '../../shared/generated/AgentModel'
 import { useEffect, useRef, useState, type RefObject } from 'react'
 import { Button } from '@firna/ui/button'
 import { ArrowUp, Paperclip, Square } from 'lucide-react'
@@ -8,7 +9,7 @@ import {
   type ComposerFocusRequest,
 } from '../../app/composer-focus'
 import { filesWait, type IntakeRefusals } from '../../app/draft-files'
-import type { AgentModel } from '../../shared/agents'
+
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
 import styles from '../../../docs/mockups/src/components/chat/Composer.module.css'

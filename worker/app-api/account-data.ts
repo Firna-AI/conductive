@@ -1,3 +1,4 @@
+import type { AgentModel } from '../../src/shared/generated/AgentModel'
 import type { Agent } from '../../src/shared/generated/Agent'
 import type { AgentChoice } from '../../src/shared/generated/AgentChoice'
 import {
@@ -6,7 +7,7 @@ import {
   type NewWorkspaceView,
   type SaveAgentLoginRequest,
 } from '../../src/shared/account'
-import type { AgentModel } from '../../src/shared/agents'
+
 import { agentLoginKind } from '../chat/login-kind'
 import { endpointModelList } from './account-models'
 

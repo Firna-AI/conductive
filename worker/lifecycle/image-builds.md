@@ -45,6 +45,8 @@ refresh for an org admin and returns its ID. A request during a job gets
 its ID and schedules it again. Each alarm advances the job one step with
 `advanceBuildStep` in [`image-build-steps.ts`](image-build-steps.ts).
 Software and install commands run detached and stream their output.
+The software release includes the workspace CLI and MCP server.
+Builds need no separate tool source installation.
 D1 stores the step, output offsets, and log. Each row holds at most
 256 KiB of UTF-8 text, split between complete characters.
 

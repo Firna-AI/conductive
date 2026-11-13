@@ -1,3 +1,4 @@
+import type { WorkspaceState } from '../../shared/generated/WorkspaceState'
 // @vitest-environment happy-dom
 import { act } from 'react'
 import { describe, expect, it, vi } from 'vitest'
@@ -9,7 +10,7 @@ import type { WorkspaceEvent } from '../../shared/events'
 import { mentionText } from '../../shared/mention-text'
 import { attachmentUploadPath } from '../../shared/messages'
 import { sessionPaths } from '../../shared/sessions'
-import { workspacePath, type WorkspaceState } from '../../shared/workspaces'
+import { workspacePath } from '../../shared/workspaces'
 import {
   byRole,
   queryByRole,

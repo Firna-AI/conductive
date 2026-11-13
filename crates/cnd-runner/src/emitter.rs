@@ -12,6 +12,7 @@ use crate::error::Result;
 use crate::link::ports::RunnerLink;
 
 /// Serialized emission after the caller's credential filter has released text.
+#[cfg_attr(test, unimock::unimock(api = EventEmitterMock))]
 #[async_trait]
 pub trait EventEmitter: Send + Sync {
     /// Try each prepared event in order, even when an earlier event fails.

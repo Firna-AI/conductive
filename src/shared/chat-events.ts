@@ -1,9 +1,9 @@
+import type { Session } from './generated/Session'
 import type { MessageSender } from './generated/MessageSender'
 import type { UserMessage } from './generated/UserMessage'
 import type { RunnerEvent } from './generated/RunnerEvent'
 import type { AgentChatEvent } from './generated/AgentChatEvent'
 import type { TurnStopRequester } from './session-stop'
-import type { Session } from './sessions'
 
 /**
  * Maximum UTF-8 bytes of JSON.stringify(non-null detail), including quotes

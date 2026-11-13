@@ -1,6 +1,7 @@
+import type { AgentModel } from '../../shared/generated/AgentModel'
 // @vitest-environment happy-dom
 import { describe, expect, it } from 'vitest'
-import type { AgentModel } from '../../shared/agents'
+
 import { accessibleName, byRole } from '../../test-support/dom-queries'
 import { mount, press } from '../../test-support/mount'
 import { ModelPicker } from './ModelPicker'

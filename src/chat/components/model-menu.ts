@@ -1,8 +1,9 @@
+import type { AgentModel } from '../../shared/generated/AgentModel'
 import { ExternalLink } from 'lucide-react'
 import type { Agent } from '../../shared/generated/Agent'
 import type { AgentChoice } from '../../shared/generated/AgentChoice'
 import type { Effort } from '../../shared/generated/Effort'
-import { effortLabels, findModel, type AgentModel } from '../../shared/agents'
+import { effortLabels, findModel } from '../../shared/agents'
 import { effortFor } from '../state/format'
 import type { MenuEntry } from '../ui/Menu'
 

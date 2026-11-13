@@ -21,7 +21,7 @@ when the copy ends, as
 says.
 
 The [software image build](../worker/software-image/README.md) runs the same
-agent tools and image software commands as an org build. It has no
+release install command as an org build. It has no
 repository or environment variable.
 
 The software step calls `installImageSoftware`. The Worker reads the newest
@@ -30,11 +30,8 @@ sets its base URL. The default is `https://runner.conductive.build`.
 The Worker checks the binary, target, version, HTTPS URL, and SHA-256 digest.
 A failed read fails the build with a software-release error.
 
-The Worker writes the legacy tools launcher to `/opt/conductive/agent-tools/conductive`.
-It uses the active release's private Node runtime.
-The release command dispatcher sends `update` to the Rust program and other commands to that launcher.
-The tools writer never follows the public command link into a release file.
-When the separate launcher is absent, builds and first startup bootstrap migrate an existing launcher before apply.
+The release program includes the workspace CLI and MCP server.
+The Worker installs no separate tool source files or launcher.
 
 The command installs `gh`, `ttyd`, and `tmux` with apt.
 It disables and masks the package's own ttyd service.
@@ -130,8 +127,8 @@ folders never qualify for apply. A later check replaces them.
 Apply calls `current/system/install-system.sh`. That script installs all
 release units into `/etc/systemd/system`, copies the udev rule, sets the
 system Git credential helper, and links the `gh` wrapper. It also links
-`/usr/local/bin/conductive` to the release's [command dispatcher](conductive.sh).
-The dispatcher keeps the legacy workspace tools available until their Rust implementation replaces them.
+`/usr/local/bin/conductive` to `/opt/conductive/current/conductive`.
+That program serves workspace commands, MCP, and release updates.
 It runs
 `systemctl daemon-reload` and enables the runner, relay, terminal, and
 check timer. It starts no service and changes no package.

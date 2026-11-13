@@ -9,7 +9,6 @@ import {
   type StartupBootstrap,
 } from './software-bootstrap'
 import type { SoftwareRelease } from './software-release'
-import { migrateImageToolsCommand } from './image-tools'
 import { savedScriptCommand, type SavedScript } from './saved-script'
 
 export interface ImageSoftwareArtifact {
@@ -67,7 +66,6 @@ export function installImageSoftware(release: SoftwareRelease): string {
         'apt-get install -y gh',
         bootstrapDownload(release),
         `"$conductive_bootstrap/conductive" update check --bootstrap --server ${shellQuote(release.server)}`,
-        migrateImageToolsCommand(),
         '"$conductive_bootstrap/conductive" update apply',
         'test -x /opt/conductive/current/conductive',
         'test -f /opt/conductive/current/complete',

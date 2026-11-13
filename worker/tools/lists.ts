@@ -1,11 +1,10 @@
+import type { AgentListModelsResponse } from '../../src/shared/generated/AgentListModelsResponse'
+import type { AgentListRepositoriesResponse } from '../../src/shared/generated/AgentListRepositoriesResponse'
+import type { AgentListSectionsResponse } from '../../src/shared/generated/AgentListSectionsResponse'
+import type { AgentListWorkspacesResponse } from '../../src/shared/generated/AgentListWorkspacesResponse'
 import type { AgentChoice } from '../../src/shared/generated/AgentChoice'
-import {
-  MACHINE_PATHS,
-  type AgentListModelsResponse,
-  type AgentListRepositoriesResponse,
-  type AgentListSectionsResponse,
-} from '../../src/shared/agent-tools'
-import type { AgentListWorkspacesResponse } from '../../src/shared/agent-workspaces'
+import { MACHINE_PATHS } from '../../src/shared/agent-tools'
+
 import { sectionToolMethods } from './section-routes'
 import { previewToolMethods } from './preview-routes'
 import { listToolWorkspaces } from './workspace-data'

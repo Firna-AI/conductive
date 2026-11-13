@@ -23,7 +23,8 @@ without computer tools.
 ## Workspace tools
 
 Both agents also get the `conductive` workspace MCP server. It runs
-`/usr/local/bin/conductive mcp`, which the image builder installs.
+`/usr/local/bin/conductive mcp`. The sandbox release supplies the Rust
+program. Its system installer links the public command to the active release.
 Its settings hold no URL, token, or login. Codex forwards the three
 [tool environment names](../tools/README.md#use) to its stdio child.
 

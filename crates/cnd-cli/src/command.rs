@@ -14,27 +14,27 @@ pub(crate) enum Command {
     Runner(PendingArgs),
     /// Relay port previews. Not available yet.
     Relay(PendingArgs),
-    /// Serve workspace tools over MCP. Not available yet.
+    /// Serve workspace tools over MCP.
     Mcp(PendingArgs),
     /// Supply Git credentials. Not available yet.
     GitCredential(PendingArgs),
     /// Stage or apply a sandbox software update.
     Update(UpdateArgs),
-    /// Manage workspaces. Not available yet.
+    /// Manage workspaces.
     Workspaces(PendingArgs),
-    /// Manage sessions. Not available yet.
+    /// Manage sessions.
     Sessions(PendingArgs),
-    /// Read messages. Not available yet.
+    /// Read messages.
     Messages(PendingArgs),
-    /// Manage sections. Not available yet.
+    /// Manage sections.
     Sections(PendingArgs),
-    /// List repositories. Not available yet.
+    /// List repositories.
     Repositories(PendingArgs),
-    /// List models. Not available yet.
+    /// List models.
     Models(PendingArgs),
-    /// Manage port previews. Not available yet.
+    /// Manage port previews.
     Previews(PendingArgs),
-    /// Run a command on a connected Mac. Not available yet.
+    /// Run a command on a connected Mac.
     Mac(PendingArgs),
 }
 

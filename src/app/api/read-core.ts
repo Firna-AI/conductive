@@ -1,3 +1,4 @@
+import type { AgentModel } from '../../shared/generated/AgentModel'
 import type { Agent } from '../../shared/generated/Agent'
 import type { AgentChoice } from '../../shared/generated/AgentChoice'
 import type { Effort } from '../../shared/generated/Effort'
@@ -14,7 +15,7 @@ import {
   type SetNewWorkspaceViewResponse,
   type StartCodexDeviceResponse,
 } from '../../shared/account'
-import type { AgentModel } from '../../shared/agents'
+
 import type { OrgRole, User } from '../../shared/api'
 import type { GetStartedResponse } from '../../shared/onboarding'
 import type { OrgSummary } from '../../shared/orgs'

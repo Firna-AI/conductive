@@ -1,10 +1,12 @@
+import type { AgentModel } from '../../shared/generated/AgentModel'
+import type { Session } from '../../shared/generated/Session'
+import type { Workspace } from '../../shared/generated/Workspace'
 import type { UserMessage } from '../../shared/generated/UserMessage'
 import type { WorkspaceStart } from '../../shared/generated/WorkspaceStart'
 import type { DraftFile } from '../../app/draft-files'
-import type { AgentModel } from '../../shared/agents'
-import type { Session } from '../../shared/sessions'
+
 import type { WorkspaceView } from '../../shared/workspace-view'
-import type { Workspace } from '../../shared/workspaces'
+
 import type {
   AccountSummary,
   MemberSummary,

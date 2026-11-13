@@ -1,3 +1,4 @@
+import type { AgentModel } from '../../shared/generated/AgentModel'
 import { useId } from 'react'
 import { InputFrame } from '@firna/ui/input'
 import { Plug } from 'lucide-react'
@@ -5,7 +6,7 @@ import type { AgentChoice } from '../../shared/generated/AgentChoice'
 import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
 import form from '../../../docs/mockups/src/components/routines/form.module.css'
 import styles from '../../../docs/mockups/src/components/routines/PromptBox.module.css'
-import { effortLabels, modelLabel, type AgentModel } from '../../shared/agents'
+import { effortLabels, modelLabel } from '../../shared/agents'
 import { agentNames } from '../account/labels'
 import { ModelPicker } from '../ui/ModelPicker'
 

@@ -1,6 +1,7 @@
+import type { AgentModel } from '../shared/generated/AgentModel'
 import { describe, expect, test } from 'vitest'
 import type { AgentChoice } from '../shared/generated/AgentChoice'
-import type { AgentModel } from '../shared/agents'
+
 import {
   offeredModels,
   unlistedModels,

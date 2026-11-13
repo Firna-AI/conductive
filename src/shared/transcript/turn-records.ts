@@ -1,5 +1,6 @@
+import type { Session } from '../generated/Session'
 import type { AgentChatEvent } from '../generated/AgentChatEvent'
-import type { Session } from '../sessions'
+
 import { endTurn, isRunning } from './known-turns'
 import { foldLate } from './late-events'
 import type { Transcript } from './transcript'

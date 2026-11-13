@@ -1,7 +1,7 @@
 import { mkdir } from 'node:fs/promises'
 import { join } from 'node:path'
 import type { CommitAuthor } from '../generated/CommitAuthor'
-import { TOOL_ENV } from '../../../../tools/context'
+import { TOOL_ENV } from '../../../../src/shared/agent-tools'
 import { commitAuthorEnvironment } from '../../../../src/shared/commit-author'
 import type { WorkspaceToolContext } from '../generated/WorkspaceToolContext'
 

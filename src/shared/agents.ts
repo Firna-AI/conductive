@@ -1,12 +1,7 @@
+import type { AgentModel } from './generated/AgentModel'
 import type { AgentChoice } from './generated/AgentChoice'
-import type { Agent } from './generated/Agent'
+
 import type { Effort } from './generated/Effort'
-export interface AgentModel {
-  agent: Agent
-  model: string
-  label: string
-  efforts: readonly Effort[]
-}
 
 export const MODELS_PATH = '/api/models'
 export interface ModelsResponse {

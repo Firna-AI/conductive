@@ -1,3 +1,4 @@
+import type { Preview } from '../shared/generated/Preview'
 import { useRef, useState, type MouseEvent } from 'react'
 import { Plus, RotateCw, X } from 'lucide-react'
 import type { ListeningPort } from '../shared/generated/ListeningPort'
@@ -10,7 +11,7 @@ import tabStyles from '../../docs/mockups/src/components/tools/PreviewTabs.modul
 import tabScroll from '../../docs/mockups/src/components/workspace/TabScroll.module.css'
 import { useRowScroll } from '../chat/components/row-scroll'
 import { TabNodes } from '../chat/components/tab-nodes'
-import type { Preview } from '../shared/previews'
+
 import { ToolIconButton } from '../terminal/tool-parts/ToolButtons'
 import { useTouch } from '../terminal/tool-parts/ToolRoot'
 import { OpenInNewTab } from './PreviewFrame'

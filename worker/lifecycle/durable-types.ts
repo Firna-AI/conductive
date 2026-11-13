@@ -1,7 +1,8 @@
+import type { WorkspaceState } from '../../src/shared/generated/WorkspaceState'
 import type { WorkspaceStart } from '../../src/shared/generated/WorkspaceStart'
 import type { SendMessageRequest } from '../../src/shared/messages'
 import type { WorkspacePlatform } from './workspace-platform'
-import type { WorkspaceState } from '../../src/shared/workspaces'
+
 import type {
   RetentionCommandPort,
   RetentionCommandState,

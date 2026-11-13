@@ -3,7 +3,7 @@ import type { WebSocket } from 'miniflare'
 import { expect } from 'vitest'
 
 import { sessionsPath, sessionPaths } from '../../src/shared/sessions'
-import { TOOL_TURN_HEADER } from '../../tools/context'
+import { TOOL_TURN_HEADER } from '../../src/shared/agent-tools'
 import { CLAUDE } from '../chat/harness.test-support'
 import { record, string } from '../chat/inputs'
 import { closeSockets } from '../chat/adapter-sockets.test-support'

@@ -1,6 +1,9 @@
 import type { RunnerBranches } from '../generated/RunnerBranches'
-import { WORKSPACE_TOOLS_MCP } from '../../../../src/shared/agent-tools'
-import { TOOL_ENV } from '../../../../tools/context'
+import {
+  WORKSPACE_TOOLS_MCP,
+  TOOL_ENV,
+} from '../../../../src/shared/agent-tools'
+
 import { object, string } from '../parse'
 import {
   attachmentDescription,

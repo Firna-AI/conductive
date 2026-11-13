@@ -1,10 +1,11 @@
+import type { Workspace } from '../../shared/generated/Workspace'
 import { Fragment, useState, type KeyboardEvent } from 'react'
 import { createPortal } from 'react-dom'
 import styles from '../../../docs/mockups/src/components/workspaces/SectionList.module.css'
 import type { ArchiveAction } from '../../app/archive-model'
 import { stepTarget, type SectionGroup } from '../../app/sections'
 import { workspaceRowMove } from '../../app/shortcuts/navigation'
-import type { Workspace } from '../../shared/workspaces'
+
 import { nameLabel } from '../../shared/name-label'
 import ui from '../ui/ui.module.css'
 import { ArchivedGroup, useArchivedOpen } from './ArchivedGroup'

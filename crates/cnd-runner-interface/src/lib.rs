@@ -17,5 +17,6 @@ pub mod runner_files;
 pub mod runner_handshake;
 pub mod sdk_helper;
 pub mod sdk_helper_options;
+pub mod tools;
 pub mod wire;
 pub mod workspaces;

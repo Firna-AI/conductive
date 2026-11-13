@@ -1,3 +1,4 @@
+import type { Workspace } from '../../shared/generated/Workspace'
 // @vitest-environment happy-dom
 
 import { act } from 'react'
@@ -7,7 +8,7 @@ import chipStyles from '../../../docs/mockups/src/components/chat/WorkspaceChip.
 import { memoryNavigation, NavigationContext } from '../../app/navigation'
 import { routes } from '../../app/router'
 import { ManualDelay, requestLines } from '../../app/test-kit'
-import { workspacesPath, type Workspace } from '../../shared/workspaces'
+import { workspacesPath } from '../../shared/workspaces'
 import { accessibleName, byText } from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_IDS, FAKE_TIME, fakeUser } from '../../test-support/fixtures/core'

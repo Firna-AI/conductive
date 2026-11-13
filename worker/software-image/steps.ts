@@ -10,9 +10,6 @@ import {
   JobTimeLimit,
 } from '../lifecycle/job-time-limit'
 import type { SandboxProvider } from '../sandbox/provider'
-import { imageToolsCommand } from '../lifecycle/image-tools'
-import { workspaceToolsCommands } from '../tools/image'
-import { WORKSPACE_TOOL_SOURCES } from '../tools/image-assets'
 import { readSoftwareImage, saveSoftwareImage } from './data'
 import { keptOutput } from './output'
 import { SOFTWARE_IMAGE_FAILED } from './failure'
@@ -37,7 +34,7 @@ export async function advanceSoftwareImageStep(
     const sandboxId = await allocateSoftwareImage(db, provider, image)
     const current = await readSoftwareImage(db, image.id)
     if (current?.state === 'building' && current.phase === 'allocating')
-      await saveSoftwareImage(db, current, { sandboxId, phase: 'tools' })
+      await saveSoftwareImage(db, current, { sandboxId, phase: 'software' })
     return {}
   }
   if (!image.sandboxId) throw new Error('Missing software image sandbox')
@@ -48,34 +45,6 @@ export async function advanceSoftwareImageStep(
   await provider.setAutoStop(image.sandboxId, 1800)
   if (runtime.dependencies.now() >= image.startedAt + IMAGE_BUILD_TIME_LIMIT_MS)
     throw new JobTimeLimit('build')
-  if (image.phase === 'tools') {
-    let output = ''
-    let failed = false
-    for (const command of workspaceToolsCommands(WORKSPACE_TOOL_SOURCES)) {
-      const status = await provider.runCommand(
-        image.sandboxId,
-        imageToolsCommand(command),
-      )
-      output += status.stdout + status.stderr
-      failed = status.exitCode !== 0 || status.timedOut
-      if (failed) break
-    }
-    if (
-      !(await saveSoftwareImage(db, image, {
-        output: keptOutput(image.output + output),
-        phase: failed ? 'tools' : 'software',
-        ...(failed
-          ? {
-              state: 'failed',
-              error: SOFTWARE_IMAGE_FAILED,
-              completedAt: runtime.dependencies.now(),
-            }
-          : {}),
-      }))
-    )
-      throw new AttemptChanged()
-    return { output }
-  }
   if (image.phase === 'software') {
     if (image.processId === null) {
       const started = await provider.startCommand(

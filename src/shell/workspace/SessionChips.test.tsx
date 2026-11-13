@@ -1,3 +1,4 @@
+import type { Workspace } from '../../shared/generated/Workspace'
 // @vitest-environment happy-dom
 
 import { act } from 'react'
@@ -8,7 +9,7 @@ import { routes } from '../../app/router'
 import { ManualDelay, requestLines } from '../../app/test-kit'
 import { sessionLink } from '../../shared/session-link'
 import { sessionsPath } from '../../shared/sessions'
-import { workspacesPath, type Workspace } from '../../shared/workspaces'
+import { workspacesPath } from '../../shared/workspaces'
 import { accessibleName } from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
 import {

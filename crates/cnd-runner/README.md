@@ -1,10 +1,10 @@
 # cnd-runner
 
-This crate provides the durable runner connection for Conductive. Depend on
-it to compose a workspace runner with file reporters and a turn engine.
+This crate provides the durable runner connection and repository reports
+for Conductive. Depend on it to compose a workspace runner with a turn engine.
 The [interface crate](../cnd-runner-interface/README.md) owns its wire types.
 The production service still uses the Node runner. The `conductive runner`
-command remains unavailable until the file and turn owners are connected.
+command remains unavailable until the turn engine and service are connected.
 
 ## Responsibilities
 
@@ -13,6 +13,10 @@ command remains unavailable until the file and turn owners are connected.
 - Process welcome, confirmations, gaps, resends, and connection retries.
 - Keep conversation references, instructions, file revisions, turn records, and report receipts.
 - Read and write the existing Node state file format without a migration.
+- Read safe repository files and compare Git changes through private indexes and objects.
+- Send bounded file reports and stable listening-port reports.
+- Watch recursive repository changes and repair watches after a restore.
+- Prepare ignored context storage, including linked Git worktrees.
 
 ## What This Crate Does
 
@@ -41,6 +45,22 @@ Its command handler owns full reports, readiness, commands, and live-turn
 shutdown. These operations can run while the socket handles confirmations.
 The handler queues commands in wire order. It must stop its work when shutdown starts.
 
+The repository runs Git child processes with literal paths and cancellation.
+Comparisons preserve the real index and object store. Reads check the opened
+descriptor, reject escaped paths and Git metadata, and preserve binary bytes.
+Diffs use Git representations, including filters, link text, and submodules.
+
+File reports keep separate tree and changes histories. Filtering runs on each
+complete report before splitting. Multipart reports keep whole entries and
+independent revisions. Report repair saves the answer and request receipt
+together. Retained reports select the newest pending state under the store lock.
+
+Port scans inspect Linux socket tables and process metadata. They never read
+process environments. Reports require two successful scans for additions and
+removals. Complete labels stay cached for each socket identity.
+Native watches debounce file events by 100 ms. Restore polling reopens the
+live repository path once. Port scans run on an independent two-second timer.
+
 ## Quick Start
 
 Run the connection and state tests from the repository root:
@@ -56,6 +76,16 @@ sharing the store. An existing file supplies its saved stream ID.
 Give `RunnerCore` the loaded store, link, clock, and a `CommandHandler`.
 Drive `Runner::run` with a Tokio watch channel for shutdown.
 
+Compose `GitRepository` with `GitRunner` and `RepositoryIo` boundaries. Give
+`FileReporter` the loaded file revisions and a shared `ReportFilter`.
+Compose `PortReporter` with a `PortScanner`. Give `ReportCommandHandler`
+these reporters, the loaded store, and the next agent command handler.
+Optionally supply `ReportWatchService` with a `WatchDriver`.
+The startup hook prepares context storage before the next handler warms agents.
+The connection handler reserves its initial scan before returning its future.
+Its startup hook starts watches before the first connection attempt.
+The turn engine must supply the credential filter before production use.
+
 ## Development
 
 Run these commands from the repository root:
@@ -67,11 +97,12 @@ cargo test --workspace
 cargo build --release --target x86_64-unknown-linux-musl -p cnd-runner
 ```
 
-Unit tests use unimock at the disk, clock, and link boundaries. Integration
-tests use a controlled disk, an in-memory workspace endpoint, and a real
-private state file. No test needs an agent login or a cloud computer.
+Unit tests use unimock at the disk, Git, process, watch, scan, and link boundaries.
+Timer tests use paused Tokio time. Integration tests use temporary real Git
+repositories, native watches, a controlled disk, and an in-memory endpoint.
+No test needs an agent login or a cloud computer.
 The fake endpoint models cursors, gaps, duplicates, refusal confirmations,
-and connection drops. It does not run the Worker or assemble file reports.
+and connection drops. It does not run the Worker.
 
 ### Key Code
 
@@ -85,6 +116,14 @@ and connection drops. It does not run the Worker or assemble file reports.
 - [runtime.rs](src/runtime.rs): `RunnerCore` recovers turns and owns reconnection and shutdown.
 - [limits.rs](src/limits.rs): `bound_event` applies serialized chat excerpts.
 - [commands.rs](src/json/commands.rs): `workspace_message` repairs and validates command JSON.
+- [service.rs](src/repository/service.rs): `Repository` supplies scans, reads, diffs, and checkpoints.
+- [setup.rs](src/repository/setup.rs): context setup adds the exclude rule once and creates attachment storage.
+- [files.rs](src/reports/files.rs): `FileReporter` serializes captured report parts and file requests.
+- [handler.rs](src/reports/handler.rs): `ReportCommandHandler` connects reports to commands and durable state.
+- [prepare.rs](src/reports/prepare.rs): `ReportFilter` receives complete sources before byte limits.
+- [reporter.rs](src/ports/reporter.rs): `PortReporter` keeps stable bounded port lists.
+- [proc.rs](src/ports/proc.rs): `ProcPortScanner` captures Linux listeners and complete cached labels.
+- [service.rs](src/watcher/service.rs): `ReportWatchService` owns watch debounce, restore repair, and port timing.
 
 ### Related Docs
 
@@ -94,4 +133,7 @@ and connection drops. It does not run the Worker or assemble file reports.
 - [Sandbox architecture](../../docs/architecture/components.md#sandbox-software)
 - [Node runner](../../runner/README.md)
 - [Event limits](../../runner/event-limits.md)
+- [File reports](../../runner/file-reports.md)
+- [Report requests](../../runner/reports.md)
+- [Workspace files and changes](../../docs/protocol/workspace-tools.md#files-and-changes)
 - [Runner configuration](../../runner/configuration.md)

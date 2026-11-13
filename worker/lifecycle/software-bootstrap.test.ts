@@ -20,8 +20,6 @@ it('installs verified release software and apt packages without the legacy insta
     'tar -xzf "$conductive_bootstrap/program.tar.gz" -C "$conductive_bootstrap" conductive',
   )
   expect(command).toContain('update check --bootstrap --server')
-  expect(command).toContain('/opt/conductive/agent-tools/conductive')
-  expect(command.indexOf('sed ')).toBeLessThan(command.indexOf('update apply'))
   expect(command.indexOf('update check')).toBeLessThan(
     command.indexOf('update apply'),
   )
@@ -57,8 +55,6 @@ it('bootstraps only a missing program in a detached root job and serializes acti
     'flock /run/conductive/bootstrap-activate.lock sh -c',
   )
   expect(command).toContain('update started')
-  expect(command).toContain('/opt/conductive/agent-tools/conductive')
-  expect(command.indexOf('sed ')).toBeLessThan(command.indexOf('update apply'))
   expect(command).toContain(
     'sudo -n flock /run/conductive/bootstrap-activate.lock systemctl restart conductive-runner.service',
   )

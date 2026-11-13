@@ -1,6 +1,7 @@
+import type { Session } from './generated/Session'
+import type { TranscriptDetail } from './generated/TranscriptDetail'
 import type { AgentChoice } from './generated/AgentChoice'
-import type { Timestamp } from './generated/Timestamp'
-import type { MessageSender } from './generated/MessageSender'
+
 import type { MessageDraft } from './messages'
 import { workspacePath } from './workspaces'
 
@@ -14,8 +15,6 @@ export function sessionPath(
 ): string {
   return `${sessionsPath(orgId, workspaceId)}/${encodeURIComponent(sessionId)}`
 }
-
-export type TranscriptDetail = 'concise' | 'full'
 
 export interface SessionTranscriptResponse {
   markdown: string
@@ -49,24 +48,6 @@ export function retryMessagePath(
   messageId: string,
 ): string {
   return `${sessionPaths.messages(orgId, workspaceId, sessionId)}/${encodeURIComponent(messageId)}/retry`
-}
-
-export interface Session {
-  id: string
-  workspaceId: string
-  title: string | null
-  /** Its agent stays fixed. Another agent opens another session. */
-  choice: AgentChoice
-  createdAt: Timestamp
-  closedAt: Timestamp | null
-  activeTurnId: string | null
-  /** The stored start time of the active turn, or null before dispatch. */
-  activeTurnStartedAt: Timestamp | null
-  retryMessageId: string | null
-  startedBy: MessageSender | null
-  sourceSessionId: string | null
-  loginAvailable: boolean
-  loginShared: boolean
 }
 export interface SessionsResponse {
   eventNumber: number

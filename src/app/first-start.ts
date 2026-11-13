@@ -1,5 +1,6 @@
+import type { Workspace } from '../shared/generated/Workspace'
 import type { WorkspaceStart } from '../shared/generated/WorkspaceStart'
-import type { Workspace, WorkspaceResponse } from '../shared/workspaces'
+import type { WorkspaceResponse } from '../shared/workspaces'
 
 /**
  * The first start of a new workspace failed: the workspace shows the error

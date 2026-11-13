@@ -1,10 +1,12 @@
+import type { Workspace } from '../../src/shared/generated/Workspace'
+import type { WorkspaceState } from '../../src/shared/generated/WorkspaceState'
 import { activeOrgIdPredicate } from '../data/org-access'
 import { workspaceNameColumn } from '../data/workspace-name'
 import { presentWorkspace } from '../data/workspace-link'
 import { requireActiveOrg } from '../data/user-access'
 import type { User } from '../../src/shared/api'
 import type { SendMessageRequest } from '../../src/shared/messages'
-import type { Workspace, WorkspaceState } from '../../src/shared/workspaces'
+
 import { workspaceRestoreUntil } from '../../src/shared/workspaces'
 import { HttpError } from '../http'
 import { leasedImage, type LeasedImage } from './image-leases'

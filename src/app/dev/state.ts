@@ -1,3 +1,4 @@
+import type { Workspace } from '../../shared/generated/Workspace'
 import type { Attachment } from '../../shared/generated/Attachment'
 import type { AccountResponse } from '../../shared/account'
 import type { User } from '../../shared/api'
@@ -15,7 +16,7 @@ import type {
 import type { OrgSummary } from '../../shared/orgs'
 import type { Routine, RoutineRun } from '../../shared/routines'
 import type { Section } from '../../shared/sections'
-import type { Workspace, WorkspaceResponse } from '../../shared/workspaces'
+import type { WorkspaceResponse } from '../../shared/workspaces'
 import { coreFixtures } from '../../test-support/fixtures/core'
 import type { OperatorRecords } from '../../test-support/fixtures/operator'
 

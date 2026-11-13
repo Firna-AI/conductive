@@ -7,7 +7,7 @@ use ts_rs::{Config, TS};
 use cnd_runner_interface::{
     agents, api, chat_events, commit_author, file_changes, file_tree, files, messages, ports,
     provider_events, runner, runner_commands, runner_credentials, runner_files, runner_handshake,
-    sdk_helper, sdk_helper_options, workspaces,
+    sdk_helper, sdk_helper_options, tools, workspaces,
 };
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -80,6 +80,41 @@ fn main() -> Result<(), Box<dyn Error>> {
     runner_handshake::WorkspaceToRunner::export_all(&cfg)?;
     workspaces::StartStep::export_all(&cfg)?;
     workspaces::WorkspaceStart::export_all(&cfg)?;
+    tools::device::DeviceCommandInput::export_all(&cfg)?;
+    tools::device::DeviceCommandResponse::export_all(&cfg)?;
+    tools::previews::OpenPreviewRequest::export_all(&cfg)?;
+    tools::previews::AgentListPreviewsResponse::export_all(&cfg)?;
+    tools::previews::AgentOpenPreviewResponse::export_all(&cfg)?;
+    tools::previews::AgentClosePreviewResponse::export_all(&cfg)?;
+    tools::resources::AgentListRepositoriesResponse::export_all(&cfg)?;
+    tools::resources::AgentListSectionsResponse::export_all(&cfg)?;
+    tools::resources::AgentListModelsResponse::export_all(&cfg)?;
+    tools::resources::AgentCreateSectionRequest::export_all(&cfg)?;
+    tools::resources::AgentCreateSectionResponse::export_all(&cfg)?;
+    tools::resources::AgentDeleteSectionResponse::export_all(&cfg)?;
+    tools::sessions::AgentCreateSessionRequest::export_all(&cfg)?;
+    tools::sessions::AgentSendMessageRequest::export_all(&cfg)?;
+    tools::sessions::AgentSessionAccepted::export_all(&cfg)?;
+    tools::sessions::AgentSessionWriteResponse::export_all(&cfg)?;
+    tools::sessions::AgentCreateSessionResponse::export_all(&cfg)?;
+    tools::sessions::AgentSendMessageResponse::export_all(&cfg)?;
+    tools::session_actions::AgentSessionResponse::export_all(&cfg)?;
+    tools::session_actions::AgentRenameSessionRequest::export_all(&cfg)?;
+    tools::session_actions::AgentCloseSessionRequest::export_all(&cfg)?;
+    tools::session_actions::AgentStopSessionResponse::export_all(&cfg)?;
+    tools::session_actions::AgentGetMessageResponse::export_all(&cfg)?;
+    tools::session_reads::AgentListSessionsRequest::export_all(&cfg)?;
+    tools::session_reads::AgentListSessionsResponse::export_all(&cfg)?;
+    tools::session_reads::AgentReadSessionRequest::export_all(&cfg)?;
+    tools::session_reads::AgentReadSessionResponse::export_all(&cfg)?;
+    tools::session_reads::AgentTranscriptWindow::export_all(&cfg)?;
+    tools::workspaces::AgentCreateWorkspaceRequest::export_all(&cfg)?;
+    tools::workspaces::AgentCreateWorkspaceResponse::export_all(&cfg)?;
+    tools::workspaces::AgentListWorkspacesRequest::export_all(&cfg)?;
+    tools::workspaces::AgentListWorkspacesResponse::export_all(&cfg)?;
+    tools::workspaces::AgentWorkspaceResponse::export_all(&cfg)?;
+    tools::workspaces::AgentRenameWorkspaceRequest::export_all(&cfg)?;
+    tools::workspaces::AgentMoveWorkspaceRequest::export_all(&cfg)?;
     let helper_output = root.join("runner/sdk-helper/src/generated");
     if helper_output.exists() {
         fs::remove_dir_all(&helper_output)?;

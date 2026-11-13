@@ -4,6 +4,7 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 use cnd_runner_interface::runner_commands::RunnerCommand;
+use futures_util::future::BoxFuture;
 use tokio::sync::watch;
 use tokio::task::JoinSet;
 
@@ -15,8 +16,12 @@ use crate::state::store::EventStore;
 /// File and turn owners receive commands without blocking socket confirmations.
 #[async_trait]
 pub trait CommandHandler: Send + Sync {
-    /// Refresh reports and send runner.ready after each successful welcome.
-    async fn connected(&self) -> Result<()>;
+    /// Start warm-up and offline report schedules before the first connection attempt.
+    async fn start(&self) -> Result<()> {
+        Ok(())
+    }
+    /// Reserve initial reports in wire order, then send runner.ready after they finish.
+    fn connected(&self) -> BoxFuture<'static, Result<()>>;
     /// Queue one command in wire order. The handler owns its asynchronous work.
     fn command(&self, command: RunnerCommand) -> Result<()>;
     /// End accepted live turns before the final persist and socket close.
@@ -76,8 +81,8 @@ impl RunnerCore {
                 },
                 update = self.link.step() => match update {
                     Ok(LinkUpdate::Connected) => {
-                        let handler = self.handler.clone();
-                        jobs.spawn(async move { (round, handler.connected().await) });
+                        let connected = self.handler.connected();
+                        jobs.spawn(async move { (round, connected.await) });
                     },
                     Ok(LinkUpdate::Command(command)) => {
                         if self.handler.command(*command).is_err() { tracing::warn!("The runner command could not finish."); }
@@ -98,6 +103,7 @@ impl Runner for RunnerCore {
             self.store.persist().await?;
             self.store.recover(now).await?;
         }
+        self.handler.start().await?;
         let mut jobs = JoinSet::new();
         let mut round = 0;
         while !*shutdown.borrow() && shutdown.has_changed().is_ok() {

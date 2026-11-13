@@ -6,6 +6,7 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 use cnd_runner_interface::runner_commands::RunnerCommand;
+use futures_util::future::BoxFuture;
 use tokio::sync::watch;
 use unimock::{MockFn, Unimock, matching};
 
@@ -18,6 +19,7 @@ use crate::test_support::{Memory, clock};
 #[unimock::unimock(api = HandlerMock)]
 #[async_trait]
 trait Handler {
+    async fn start(&self) -> Result<()>;
     async fn shutdown(&self) -> Result<()>;
 }
 
@@ -35,8 +37,11 @@ impl Clock for TestClock {
 struct HandlerAdapter(Unimock);
 #[async_trait]
 impl CommandHandler for HandlerAdapter {
-    async fn connected(&self) -> Result<()> {
-        Ok(())
+    async fn start(&self) -> Result<()> {
+        Handler::start(&self.0).await
+    }
+    fn connected(&self) -> BoxFuture<'static, Result<()>> {
+        Box::pin(async { Ok(()) })
     }
     fn command(&self, _: RunnerCommand) -> Result<()> {
         Ok(())
@@ -52,6 +57,7 @@ async fn reconnects_after_one_second_and_saves_before_shutdown_close() {
     let store = memory.store().await;
     let (stop, receiver) = watch::channel(false);
     let link = Unimock::new((
+        HandlerMock::start.next_call(matching!()).returns(Ok(())),
         RunnerLinkMock::connect
             .next_call(matching!())
             .returns(Err(Error::Disconnected)),

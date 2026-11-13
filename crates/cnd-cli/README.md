@@ -24,9 +24,10 @@ sorts below every release.
 
 The commands are `runner`, `relay`, `mcp`, `git-credential`, `update`,
 `workspaces`, `sessions`, `messages`, `sections`, `repositories`, `models`,
-`previews`, and `mac`. The commands other than `update` report "not available yet"
-to stderr and exit with status 1. Those commands accept arguments only to
-report this error. They cause no operation.
+`previews`, and `mac`. The workspace commands and `mcp` run the 24 calls in
+[cnd-tools](../cnd-tools/README.md). They preserve the Worker replies and
+refusal codes. The commands `runner`, `relay`, and `git-credential` report
+"not available yet" to stderr and exit with status 1.
 
 `update check` uses `cli-updater` to read and compare the newest release.
 It downloads into a private version folder. It checks the program digest
@@ -93,7 +94,8 @@ The musl build needs a C compiler for musl. On Ubuntu, install the
 - [update/ports.rs](src/update/ports.rs) defines disk, process, and updater boundaries.
 - [update/disk.rs](src/update/disk.rs) stores complete versions and locks.
 - [update_tests.rs](tests/update_tests.rs) checks real files and local HTTP downloads.
-- [cli_tests.rs](src/_tests_/cli_tests.rs) checks parsing and the unavailable-command result.
+- [tool_command.rs](src/tool_command.rs) composes the workspace CLI and MCP runtime.
+- [cli_tests.rs](src/_tests_/cli_tests.rs) checks parsing for pending command families.
 
 ### Related Docs
 

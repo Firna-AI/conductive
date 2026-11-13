@@ -1,3 +1,4 @@
+import type { TranscriptDetail } from '../../shared/generated/TranscriptDetail'
 import type { AgentChoice } from '../../shared/generated/AgentChoice'
 import type { ApiClient } from '../../app/api/client'
 import { readWorkspaces } from '../../app/api/read-workspaces'
@@ -20,7 +21,6 @@ import {
   type CreateSessionRequest,
   type InterruptRequest,
   type RenameSessionRequest,
-  type TranscriptDetail,
 } from '../../shared/sessions'
 import {
   workspaceViewPath,

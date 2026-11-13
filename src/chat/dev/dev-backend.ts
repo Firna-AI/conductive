@@ -1,3 +1,5 @@
+import type { Session } from '../../shared/generated/Session'
+import type { Workspace } from '../../shared/generated/Workspace'
 import type { MessageSender } from '../../shared/generated/MessageSender'
 import type { UserMessage } from '../../shared/generated/UserMessage'
 import type { WorkspaceStart } from '../../shared/generated/WorkspaceStart'
@@ -5,9 +7,9 @@ import { handleTranscript } from './dev-transcript'
 import { createApiClient } from '../../app/api/client'
 import type { AgentLoginStatus } from '../../shared/account'
 import { chatHistoryPath, type WorkspaceEvent } from '../../shared/events'
-import type { Session } from '../../shared/sessions'
+
 import { sessionsPath } from '../../shared/sessions'
-import { workspacePath, type Workspace } from '../../shared/workspaces'
+import { workspacePath } from '../../shared/workspaces'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { fetchFiles } from '../../test-support/fake-files'
 import {

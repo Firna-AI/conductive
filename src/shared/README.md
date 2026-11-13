@@ -4,7 +4,8 @@ These modules define the browser API, the runner protocol, and the pure
 transcript fold that the browser and the Worker share.
 They use JSON values and TypeScript types.
 The [runner interface crate](../../crates/cnd-runner-interface/README.md)
-owns runner messages, agent chat events, and each type they use.
+owns runner messages, agent chat events, workspace tool requests and replies,
+and each type they use.
 `ts-rs` writes those types into `generated/`. Import each generated file
 directly. Keep the runtime readers, constants, and helpers in TypeScript.
 Browser-only event unions and API types stay in their area modules.
@@ -17,12 +18,14 @@ Dates use Unix milliseconds. IDs and model names are opaque strings.
 `Workspace.link` is its absolute web link, with org and workspace IDs.
 `AgentWorkspaceSummary` gives the same number and link.
 `Workspace.github` is the GitHub summary of its pull request, or null.
-`GitHubSummary` and `githubSummary` in `github.ts` give it from a banner: the state of the bar, or null without a pull request and for a closed pull request.
+`GitHubSummary` comes from `generated/`. `githubSummary` in `github.ts` gives
+it from a banner: the state of the bar, or null without a pull request and
+for a closed pull request.
 `checksSummary` gives the checks of a pull request as one value, for the bar.
 [The GitHub state](../../docs/protocol/github-banner.md#the-github-state) states their order.
 `readGitHubSummary` in `github-read.ts` keeps a known summary and reads an absent or unknown value as null.
 The browser readers and the sandbox tools use it, so an older reply still reads.
-It has no runtime import, so the tool image can embed it.
+Its imports carry types only.
 `AgentCreateWorkspaceResponse.sessionLink` gives the first session's absolute app link.
 `AgentSessionWriteResponse` keeps the accepted session, message, and turn while reporting current workspace and resume state.
 `nameLabel` in `name-label.ts` gives the display label "Untitled" for null.
@@ -176,7 +179,8 @@ The optional `error` of `workspace.updated` carries only the saved public
 code and message. A null error clears the previous error. An older event
 without this field keeps the previous error.
 
-`sessions.ts` defines the session paths, their requests and replies, and the `Session` record.
+`sessions.ts` defines the browser session paths and their requests and replies.
+`Session` and `TranscriptDetail` come from `generated/`.
 `Session.retryMessageId` names the one message that `retryMessagePath` accepts.
 It is the retry message of the newest turn when that turn failed, and null otherwise.
 A message or a retry that opens a linked session sets it to null on the source.
@@ -212,8 +216,9 @@ records include recipients with their GitHub names, or null.
 `OrgSummary.suspension` in `orgs.ts` exposes only the org suspension time to its members.
 [Operator actions](../../worker/operator/README.md) gives the access and the reply codes.
 
-`device.ts` defines Mac command paths, socket messages, pairing, and local settings relays.
-It has no imports and also serves the Mac app's NodeNext build.
+`device.ts` defines Mac command paths, socket messages, and local settings relays.
+Mac command input, result, record, and pairing types come from `generated/`.
+Its imports carry types only and also serve the Mac app's NodeNext build.
 `device-read.ts` validates its wire values and preserves command text, timeouts, and truncation.
 Command records return `requestKey` for URLs and retain `requestId` for retries and device frames.
 Settings results distinguish applied and saved changes, applied but unsaved changes, and failed changes.
@@ -221,6 +226,9 @@ The small settings failure frame identifies an oversized reply without closing t
 The combined Mac output cap is 65,536 UTF-8 bytes.
 
 `MACHINE_PATHS` in `agent-tools.ts` and `DEVICE_COMMAND_PATH` in `device.ts` put their machine routes under `/v1/`.
+`agent-tools.ts` also owns `TOOL_ENV`, `TOOL_TURN_HEADER`, and the workspace
+MCP registration. Tool paths stay in the `agent-*.ts` modules. Their payloads
+come from `generated/`. `agent-sessions.ts` owns the transcript byte budget.
 The machine origin and the preview domain stay Worker settings.
 `Preview.url` is the absolute launch address of a preview on the app origin.
 It holds no secret. The browser loads it as it is, in the frame and in a new tab.

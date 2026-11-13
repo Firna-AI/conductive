@@ -1,11 +1,12 @@
+import type { AgentListSectionsResponse } from '../../src/shared/generated/AgentListSectionsResponse'
 import type { AgentChoice } from '../../src/shared/generated/AgentChoice'
 import type { MessageSender } from '../../src/shared/generated/MessageSender'
-import type { AgentListSectionsResponse } from '../../src/shared/agent-tools'
-import { choice, record, text } from '../../tools/input'
-import { messageSender } from '../../tools/responses'
+
 import { HttpError } from '../http'
 import { workspaceTokenAccessPredicate } from '../data/workspace-token-access'
 import { hash } from '../security/crypto'
+import { choice, record, text } from './input'
+import { messageSender } from './workspace-replies'
 import {
   imageAdmissionError,
   readImageRepositories,

@@ -1,7 +1,6 @@
 import { privilegedCommand } from '../terminal/privileged'
 import { shellQuote } from './commands'
 import type { SoftwareRelease } from './software-release'
-import { migrateImageToolsCommand } from './image-tools'
 
 export type StartupBootstrap =
   { release: SoftwareRelease } | { warning: string }
@@ -24,7 +23,6 @@ export function startupBootstrap(input: StartupBootstrap): string {
   const activate = [
     'set -eu',
     'if [ ! -x /opt/conductive/current/conductive ]; then',
-    migrateImageToolsCommand(),
     '  "$1/conductive" update apply',
     '  test -x /opt/conductive/current/conductive',
     '  test -f /opt/conductive/current/complete',

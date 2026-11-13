@@ -3,7 +3,7 @@ import {
   COMMIT_AUTHOR_VARIABLES,
   commitAuthor,
 } from '../../src/shared/commit-author'
-import { TOOL_ENV } from '../../tools/context'
+import { TOOL_ENV } from '../../src/shared/agent-tools'
 import { readUser } from '../data/users'
 import type { AppEnv } from '../env'
 import { environmentValues, type OrgEnvironment } from './org-environment'

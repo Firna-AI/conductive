@@ -12,7 +12,8 @@ use crate::update_command;
 #[command(
     name = "conductive",
     version = release::VERSION,
-    about = "Conductive cloud computer commands"
+    about = "Conductive cloud computer commands",
+    after_long_help = cnd_tools::cli::HELP
 )]
 pub(crate) struct Cli {
     #[command(subcommand)]

@@ -1,3 +1,5 @@
+import type { Workspace } from '../../shared/generated/Workspace'
+import type { WorkspaceState } from '../../shared/generated/WorkspaceState'
 import type { Attachment } from '../../shared/generated/Attachment'
 import type { UserMessage } from '../../shared/generated/UserMessage'
 import type { StartStep } from '../../shared/generated/StartStep'
@@ -6,9 +8,7 @@ import { readGitHubSummary } from '../../shared/github-read'
 import type {
   CreateWorkspaceResponse,
   OrderedWorkspaceResponse,
-  Workspace,
   WorkspaceResponse,
-  WorkspaceState,
 } from '../../shared/workspaces'
 import {
   choice,

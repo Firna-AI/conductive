@@ -6,23 +6,27 @@ use async_trait::async_trait;
 use cnd_runner::error::Result;
 use cnd_runner::runtime::{CommandHandler, Runner, RunnerCore};
 use cnd_runner_interface::runner_commands::{RunnerCommand, RunnerControlCommand, RunnerInterrupt};
+use futures_util::future::BoxFuture;
 use tokio::sync::{Notify, watch};
 
 use crate::support::fixture::{FixedClock, Fixture};
 
 struct HeldReports {
     started: Notify,
-    release: Notify,
+    release: Arc<Notify>,
     commands: Mutex<Vec<String>>,
     stop: watch::Sender<bool>,
 }
 
 #[async_trait]
 impl CommandHandler for HeldReports {
-    async fn connected(&self) -> Result<()> {
+    fn connected(&self) -> BoxFuture<'static, Result<()>> {
         self.started.notify_one();
-        self.release.notified().await;
-        Ok(())
+        let release = self.release.clone();
+        Box::pin(async move {
+            release.notified().await;
+            Ok(())
+        })
     }
 
     fn command(&self, command: RunnerCommand) -> Result<()> {
@@ -52,7 +56,7 @@ async fn dispatches_commands_in_wire_order_while_initial_reports_wait() {
     let (stop, receiver) = watch::channel(false);
     let handler = Arc::new(HeldReports {
         started: Notify::new(),
-        release: Notify::new(),
+        release: Arc::new(Notify::new()),
         commands: Mutex::new(vec![]),
         stop,
     });

@@ -1,8 +1,9 @@
+import type { Session } from '../../shared/generated/Session'
 import type { AgentChoice } from '../../shared/generated/AgentChoice'
 import type { UserMessage } from '../../shared/generated/UserMessage'
 import { chatHistoryPath } from '../../shared/events'
 import type { SendMessageResponse } from '../../shared/messages'
-import { sessionsPath, type Session } from '../../shared/sessions'
+import { sessionsPath } from '../../shared/sessions'
 import type { FakeApiServer } from '../../test-support/fake-api'
 import {
   FAKE_IDS,

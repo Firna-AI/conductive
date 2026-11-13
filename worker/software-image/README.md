@@ -8,8 +8,8 @@ The [org lifecycle](../lifecycle/README.md) owns org builds and their pins.
 
 ## Responsibilities
 
-- Compute the version from the release version and the exact tools and image software commands.
-- Write the legacy tools launcher under `/opt/conductive/agent-tools/`, with the active release's Node path.
+- Compute the version from the release version and the exact release install command.
+- Install the workspace CLI and MCP server as part of the release program.
 - Keep each attempt, phase, resource intent, command offset, and output in D1.
 - Build one image at a time in the default provider account.
 - Recover resource requests and detached commands after a lost reply.
@@ -54,7 +54,7 @@ The tests use local D1 and the lifecycle fake provider.
 
 ### Key Code
 
-- [version.ts](version.ts): the hash of the release version, tools commands, and software command.
+- [version.ts](version.ts): the hash of the release version and software command.
 - [route.ts](route.ts) and [deploy-gate.ts](deploy-gate.ts): the machine route and token gate.
 - [build.ts](build.ts): admission, version replacement, and resumable advancement.
 - [steps.ts](steps.ts): sandbox readiness, commands, snapshot, and publication.

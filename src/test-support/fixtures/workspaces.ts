@@ -1,3 +1,6 @@
+import type { GitHubSummary } from '../../shared/generated/GitHubSummary'
+import type { Workspace } from '../../shared/generated/Workspace'
+import type { WorkspaceState } from '../../shared/generated/WorkspaceState'
 import type { MessageSender } from '../../shared/generated/MessageSender'
 import type { UserMessage } from '../../shared/generated/UserMessage'
 import { defaultChoice } from '../../../docs/mockups/src/fixtures/agents'
@@ -7,14 +10,12 @@ import {
 } from '../../../docs/mockups/src/fixtures/sessions'
 import { workspaceList } from '../../../docs/mockups/src/fixtures/workspaces'
 import type { User } from '../../shared/api'
-import type { GitHubSummary } from '../../shared/github'
+
 import type { SessionsResponse } from '../../shared/sessions'
 import type { WorkspaceViewResponse } from '../../shared/workspace-view'
 import type {
   CreateWorkspaceResponse,
   OrderedWorkspaceResponse,
-  Workspace,
-  WorkspaceState,
   WorkspacesResponse,
 } from '../../shared/workspaces'
 import { FAKE_IDS, FAKE_ORIGIN, FAKE_TIME, fakeUser, fakeUsers } from './core'

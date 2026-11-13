@@ -1,3 +1,5 @@
+import type { Workspace } from '../../shared/generated/Workspace'
+import type { WorkspaceState } from '../../shared/generated/WorkspaceState'
 import type { Agent } from '../../shared/generated/Agent'
 import type { AgentChoice } from '../../shared/generated/AgentChoice'
 import type { Effort } from '../../shared/generated/Effort'
@@ -10,11 +12,7 @@ import type {
   OrgMember,
 } from '../../shared/members'
 import type { OrgSummary } from '../../shared/orgs'
-import type {
-  Workspace,
-  WorkspaceState,
-  WorkspacesResponse,
-} from '../../shared/workspaces'
+import type { WorkspacesResponse } from '../../shared/workspaces'
 import {
   count,
   countOrNull,

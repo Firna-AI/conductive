@@ -9,7 +9,6 @@
         "src/**/dev/main.tsx",
         "src/files/markdown/markdown-worker.ts",
         "src/marketing/pages/**/*.astro",
-        "tools/main.ts",
         "tools/chatgpt-egress/proxy.ts",
         "worker/chatgpt-egress/index.ts",
         "image/*.mjs",

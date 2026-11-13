@@ -1,8 +1,9 @@
+import type { DeviceCommandRecord } from '../generated/DeviceCommandRecord'
 import type { ToolCall } from '../generated/ToolCall'
 import type { ChangedFile } from '../generated/ChangedFile'
 import type { UserMessage } from '../generated/UserMessage'
 import { sessionLink } from '../session-link'
-import type { DeviceCommandRecord } from '../device'
+
 import { endReasonText } from '../../../docs/mockups/src/components/chat/endReasonCopy'
 import {
   attachmentForMention,

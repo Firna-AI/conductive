@@ -1,8 +1,9 @@
+import type { Session } from './generated/Session'
 import type { AgentChoice } from './generated/AgentChoice'
 import type { UserMessage } from './generated/UserMessage'
 import type { Attachment } from './generated/Attachment'
 import { orgPath } from './api'
-import type { Session } from './sessions'
+
 import { filePaths } from './files'
 
 export const ATTACHMENT_MAX_BYTES = 100_000_000

@@ -4,12 +4,14 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 use cnd_runner_interface::runner::RunnerEvent;
+use cnd_runner_interface::runner_commands::RunnerReportKind;
 use cnd_runner_interface::runner_handshake::RunnerEventEnvelope;
 use tokio::sync::{Mutex, RwLock};
 
 use crate::disk::Disk;
 use crate::error::{Error, Result};
 use crate::json::codec;
+use crate::reports::prepare::ReportFilter;
 
 use super::mutations::append;
 use super::records::{RunnerState, SavedSession, SavedTurn};
@@ -40,6 +42,14 @@ pub trait EventStore: Send + Sync {
     async fn persist(&self) -> Result<()>;
     /// Save a report command receipt even when no retained report exists.
     async fn remember_report_command(&self, command_id: String) -> Result<()>;
+    /// Select, filter, append, and receipt a retained report in one state operation.
+    async fn refresh_report(
+        &self,
+        kind: RunnerReportKind,
+        command_id: String,
+        now: i64,
+        filter: Arc<dyn ReportFilter>,
+    ) -> Result<()>;
     /// Append one stopped end for each unfinished saved turn. Never start agents.
     async fn recover(&self, now: i64) -> Result<()>;
 }
@@ -146,6 +156,40 @@ impl EventStore for DurableStore {
     async fn remember_report_command(&self, command_id: String) -> Result<()> {
         let mut state = self.pending.lock().await;
         state.reports.commands.push(command_id);
+        self.save(&state).await
+    }
+
+    async fn refresh_report(
+        &self,
+        kind: RunnerReportKind,
+        command_id: String,
+        now: i64,
+        filter: Arc<dyn ReportFilter>,
+    ) -> Result<()> {
+        let mut state = self.pending.lock().await;
+        if state.reports.commands.contains(&command_id) {
+            return Ok(());
+        }
+        let report = match kind {
+            RunnerReportKind::StartUpdated => state
+                .reports
+                .latest
+                .start
+                .clone()
+                .map(RunnerEvent::RunnerStartUpdated),
+            RunnerReportKind::WorkspaceTitle => state
+                .reports
+                .latest
+                .title
+                .clone()
+                .map(RunnerEvent::RunnerWorkspaceTitle),
+            _ => return Err(Error::InvalidCommand),
+        };
+        if let Some(report) = report {
+            append(&mut state, filter.report(report)?, now, Some(command_id))?;
+        } else {
+            state.reports.commands.push(command_id);
+        }
         self.save(&state).await
     }
 

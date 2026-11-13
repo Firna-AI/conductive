@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest'
 
 import { COMMIT_AUTHOR_VARIABLES } from '../../src/shared/commit-author'
-import { TOOL_ENV } from '../../tools/context'
+import { TOOL_ENV } from '../../src/shared/agent-tools'
 import type { WorkspaceValues } from './platform-storage'
 import { isRecord } from '../http'
 import { TEST_TIME } from '../test-support/harness'
