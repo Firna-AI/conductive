@@ -1,4 +1,5 @@
 import type { TerminalLine, TerminalTone } from '../../fixtures/terminal'
+import type { SharedSize } from '../../fixtures/terminals'
 import { ActionButton } from '../common/actions'
 import styles from './TerminalView.module.css'
 
@@ -9,6 +10,11 @@ const toneClass: Readonly<Record<TerminalTone, string>> = {
   success: styles.success,
   accent: styles.accent,
   error: styles.error,
+}
+
+const sharedClass: Readonly<Record<SharedSize, string>> = {
+  larger: styles.larger,
+  smaller: styles.smaller,
 }
 
 /** Keys that a phone keyboard lacks, as a row above the keyboard. */
@@ -24,16 +30,25 @@ const extraKeys = [
  * A terminal session. With a prompt, the cursor waits after it; without one,
  * the cursor follows the output of the running command. Output that ended,
  * such as the log of a failed build, has no cursor.
+ *
+ * All viewers of a terminal share one size. When the shared size is larger
+ * than the panel, the text gets smaller so that the whole screen fits. When
+ * it is smaller, empty space follows the screen. Lines then break only where
+ * the shared size breaks them.
  */
 export function TerminalView(props: {
   lines: readonly TerminalLine[]
   prompt?: string
   extraKeys: boolean
   cursor?: boolean
+  shared?: SharedSize
 }) {
+  const screenClass = props.shared
+    ? `${styles.screen} ${styles.fixed} ${sharedClass[props.shared]}`
+    : styles.screen
   return (
     <div className={styles.terminal}>
-      <pre className={styles.screen} data-mokly-scroll="terminal">
+      <pre className={screenClass} data-mokly-scroll="terminal">
         {props.lines.map((line, index) => (
           <div className={styles.line} key={index}>
             {line.map((segment, segmentIndex) => (

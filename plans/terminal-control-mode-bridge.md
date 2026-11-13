@@ -251,11 +251,13 @@ Depends on: none
 The Terminal tool gets one new mockup with two states: a viewer whose panel
 is smaller than the shared size, and a viewer whose panel is larger.
 
-- [ ] Add `app/tools/shared-size` with both states, on a desktop and on a
+- [x] Add `app/tools/shared-size` with both states, on a desktop and on a
       phone. Show no tmux status line.
-- [ ] Run `npm run mockups:check`. Smoke-test the new pages.
-- [ ] Update the design and the TODOs of this plan for each problem that the
-      mockups show.
+- [x] Run `npm run mockups:check`. Smoke-test the new pages.
+- [x] Update the design and the TODOs of this plan for each problem that the
+      mockups show. The smaller state now keeps the newest lines at the
+      bottom, as a terminal does. Screenshots are in
+      `.context/terminal-control-mode-bridge/shots/`.
 
 ## Milestone 2: Documentation and protocol
 
