@@ -9,8 +9,11 @@ export async function requireOrgMember(
   userId: string,
   admin = false,
 ): Promise<Org> {
-  await requireActiveUser(db, userId)
-  const org = await findMembership(db, orgId, userId)
+  // The two reads run together. A suspended user still wins over a missing
+  // membership, as when they ran in turn.
+  const membership = findMembership(db, orgId, userId)
+  await settleInOrder([requireActiveUser(db, userId), membership])
+  const org = await membership
   if (!org) {
     throw new HttpError(404, 'org_not_found', 'The org is not available.')
   }

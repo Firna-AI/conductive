@@ -67,7 +67,7 @@ export async function runningRuntimeWorkspace(fixture: RuntimeFixture) {
   for (let step = 0; step < 16 && (await actor.checkpoint()); step++) {
     if ((await actor.checkpoint())?.phase === 'runner')
       await actor.reportRunnerLifecycle({ type: 'runner.ready' })
-    await actor.tick()
+    await actor.tickStart()
   }
   const result = await actor.waitCreationLifecycle()
   if (!result.ok) throw new Error(`Runtime create failed: ${result.error.code}`)

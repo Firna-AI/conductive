@@ -27,6 +27,9 @@ import { advanceScheduledAlarms } from './scheduled-alarms.test-support'
 import { exerciseRepairBudget } from './repair-budget-native-test-support'
 import { fakeAttachments } from '../test-support/attachments'
 
+/** The longest clock step of one start loop turn, far below the start limit. */
+const START_TICK_MS = 60_000
+
 /** Test transport only. Every start and stop runs the actual Workspace implementation. */
 export class WorkspaceRuntimeFixture extends Workspace {
   private heldMachine: ReturnType<typeof holdMachineCheckpoint> | undefined
@@ -116,6 +119,16 @@ export class WorkspaceRuntimeFixture extends Workspace {
         },
       ],
     )
+  }
+  /**
+   * One turn of a start loop. The real runtime also runs due alarms on its
+   * own, so a start can reach the runner phase during the turn. The clock
+   * then moves at most one minute, and never to the start deadline.
+   */
+  async tickStart(): Promise<void> {
+    const now = this.clock.now()
+    const next = (await this.ctx.storage.getAlarm()) ?? now
+    await this.tick(Math.max(now, Math.min(next, now + START_TICK_MS)))
   }
   async fireScheduledAlarm(): Promise<boolean> {
     if ((await this.ctx.storage.getAlarm()) === null) return false

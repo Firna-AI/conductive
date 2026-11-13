@@ -1,0 +1,34 @@
+# Real-runtime tests start their clock in the past
+
+- **Severity:** Medium. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-13, from the branch `calummoore/milan-ofz5`, review item 1.
+- **Location:** `worker/lifecycle/workspace-runtime-test-worker.ts:42`, `worker/lifecycle/runtime-lifecycle-test-support.ts:47`, `worker/lifecycle/runtime-chat-test-support.ts:27`, `worker/lifecycle/runtime-chat-test-support.ts:47`, `worker/lifecycle/real-runtime-test-support.ts:178`, `worker/lifecycle/ownership-maintenance-test-support.ts:42`, `worker/lifecycle/ownership-maintenance.test.ts:99`, `worker/lifecycle/runtime-state.test.ts:40`, `worker/operator/ownership-stop-race.test.ts`.
+- **Reason:** The fix changes the clock of a fixture that 17 test files use, and each file needs a check under load.
+
+- **Source:** Review. **Category:** Test.
+- **Terms:**
+  - **Real-runtime fixture:** the harness in `worker/lifecycle/real-runtime-test-support.ts` that runs the production workspace object in Miniflare, with real object alarms.
+  - **Manual clock:** the `ManualChatClock` of `WorkspaceRuntimeFixture`. It starts at `Date.now()`, and it moves only when a test calls `tick()`.
+- **Background:**
+  - `worker/lifecycle/tests.md` says: "Use `TEST_TIME` as the future origin for native alarms. An alarm near zero is already due on the real runtime clock. It can run before a manual test advance."
+  - The real-runtime fixture does not follow this rule. Its manual clock starts at `Date.now()`, so it falls behind the real clock as the test runs.
+  - Each alarm that the workspace object sets on the manual clock is then already due in real time. Miniflare runs it on its own, while the test also runs alarms with `tick()`.
+  - A logged run of `runtime-state.test.ts` on 13 November 2026 showed 80 alarm runs by Miniflare and 48 by `tick()`, on `main` as well as on the branch.
+  - Since the branch `calummoore/milan-ofz5`, the first step of a start is due at once, not 1 s later. So the race happens more often.
+  - That branch added `tickStart()`, which keeps the two start loops off the 20-minute start deadline. Other steps of other tests can still run in a random order.
+  - These tests failed on 4 CPUs on `main` and on the branch, with different tests in each run:
+    - `ownership-maintenance.test.ts` "retries a revoked-token stop after active ownership and preserves maintenance before a fresh resume": `expected [ Array(9) ] to deeply equal [ 'bx_1', 'bx_1', 'bx_1' ]`.
+    - `runtime-state.test.ts` "reconciles archived after an actual runtime restart": the state is `working` where the test expects `stopped`.
+    - `ownership-stop-race.test.ts` "keeps an operator stop pending when ownership changes before its native object call": `expected [ 'bx_1', 'bx_1', 'bx_1', 'bx_1' ] to deeply equal [ 'bx_1', 'bx_1' ]`.
+- **Problem:** Real alarms and manual ticks both run the workspace alarm, so the steps of a test have no fixed order.
+- **Impact if no action:** The complete gate fails at random under load, and each failure blocks a merge until a rerun.
+- **Root question:** How do the real-runtime tests run each alarm in a fixed order?
+- **Options:**
+  - **A.** Start the manual clock at `TEST_TIME`, as the test guide says. Move each `Date.now()` of the fixture helpers and of the 17 test files to the fixture clock or to `TEST_TIME`. Effort: Medium.
+  - **B.** Start the manual clock at `Date.now()` plus a fixed lead, such as 10 minutes. Check each test that compares an object time with `Date.now()`, such as an ownership change at `Date.now()` after a stop. Effort: Medium.
+- **Left out:** Retry the failed tests. A retry hides the race, and the testing skill allows a retry only with the user's approval. Make the fixture skip the real alarms. Inside the handler, `getAlarm()` gives `null`, so the fixture cannot keep the due time of a skipped alarm.
+- **Wider fix:** A. It follows the rule of the test guide for every test of the fixture.
+- **Previous examples:** `5386af5ae` "test: make the native test harness wait for complete work (#166)". `plans/follow-ups/tests-time-out-under-machine-load.md`.
+- **Recommendation:** A. It removes the race for every test of the fixture, and it follows the existing rule.
+- **Action:** fix after merge, apply A, because it changes 17 test files, and each one needs a check under load.
