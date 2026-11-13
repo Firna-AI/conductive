@@ -68,6 +68,7 @@ async function measure(): Promise<void> {
       agent,
       model: process.env.CONDUCTIVE_MEASURE_MODEL ?? '',
       effort: 'low' as const,
+      fast: false,
     }
     if (!choice.model) throw new Error('Set the measurement model.')
     const turnId = randomUUID()

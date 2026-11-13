@@ -16,6 +16,7 @@ import {
   continuedBy,
   filesUnread,
   omittedFiles,
+  standardSpeedOf,
   stoppedAttribution,
   stoppedNotes,
   turnCopy,
@@ -109,6 +110,7 @@ export function ItemView(props: {
           }
           omittedFiles={omittedFiles(props.transcript, item.turnId)}
           onOpenDiff={actions.onOpenDiff}
+          standardSpeed={standardSpeedOf(props.transcript, item.turnId)}
         />
       )
     case 'stopped':

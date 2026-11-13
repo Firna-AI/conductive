@@ -11,7 +11,8 @@ number names a dated record, as
 ## A run is a workspace
 
 - Each run creates a new workspace (decision 501 A). The workspace gets the
-  repository, the section, the model, and the effort of the routine.
+  repository, the section, the model, the effort, and the
+  [fast mode](fast-mode.md) of the routine.
 - A run workspace is a normal workspace (decision 504 A). It shows in the
   workspace list of its section, and it stays until someone archives it.
 - Every member can open a run workspace and send messages there, as in
@@ -73,8 +74,8 @@ number names a dated record, as
   [model gateway](model-gateway.md). The sandbox gets
   a turn token, as [Agent logins in a sandbox](isolation.md#agent-logins-in-a-sandbox)
   says.
-- A run takes the agent, the model, and the effort of its routine at its
-  first start, and keeps them for its check and its create.
+- A run takes the agent, the model, the effort, and the fast mode of its
+  routine at its first start, and keeps them for its check and its create.
 - Reason: a change of the routine during the start cannot give the check
   and the create two different agents.
 - A missing agent login fails the run with the code `agent_login_required`.

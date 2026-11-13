@@ -131,7 +131,9 @@ this guide.
   `RightColumnToggle.test.tsx` mounts the whole app over the fake API. It
   hides the right column, opens the workspace again, and shows the column.
   `WorkspaceKeys.test.tsx` runs the keys of the tab row, of the
-  composer, and the copy keys of the shown session in the whole app.
+  composer, and the copy keys of the shown session in the whole app. It
+  also runs the key of Fast mode, and reads that key at the end of the
+  Fast row of the model menu.
 - `CopyLink.tsx`: the label of the number, such as `W-395`, as the Copy
   link button of the header, as
   [Copy link](../../../docs/protocol/workspace-links.md#copy-link) says.

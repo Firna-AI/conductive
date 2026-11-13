@@ -19,6 +19,7 @@ it('delivers every member message on the running login and resumes stored conver
     agent: 'claude',
     model: 'bob-model',
     effort: 'medium',
+    fast: false,
   }
   h.endpoint.send({ ...duringTurn(queued), type: 'message', turnId: 'turn-1' })
   await h.runner.idle()
@@ -64,6 +65,7 @@ it('delivers every member message on the running login and resumes stored conver
     agent: 'claude',
     model: 'bob-model',
     effort: 'medium',
+    fast: false,
   })
   alice.emit({
     type: 'result',

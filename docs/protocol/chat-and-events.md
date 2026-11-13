@@ -102,6 +102,10 @@ holds how an agent action of the pull request bar sends its fixed prompt.
   missing. An empty list was rejected, because it says that the turn
   changed no files. A failed turn was rejected, because it shows a failure
   for finished work.
+- When a turn with fast mode on ran at standard speed, its end shows
+  "Standard speed" and the cause, as
+  [The speed of a turn](fast-mode.md#the-speed-of-a-turn) says. The turn
+  still shows as finished or stopped.
 - A tool detail and a turn file list give a count of data that their limits omit.
 - A refused runner event shows one chat line that names the lost data, unless
   it is a [lost workspace update](agent-runner.md#lost-workspace-updates).

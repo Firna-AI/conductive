@@ -4,7 +4,6 @@ import { act } from 'react'
 import { describe, expect, test, vi } from 'vitest'
 import { HeldRequests, requestLines } from '../../app/test-kit'
 import { ACCOUNT_PATHS } from '../../shared/account'
-import type { AgentChoice } from '../../shared/agents'
 import { orgPath } from '../../shared/api'
 import { membersPath } from '../../shared/members'
 import { sessionsPath } from '../../shared/sessions'
@@ -267,11 +266,12 @@ describe('a workspace that the tab showed', () => {
     )
     go(away)
     await settle()
-    const sonnet: AgentChoice = {
+    const sonnet = {
       agent: 'claude',
       model: 'Sonnet 5.5',
       effort: 'medium',
-    }
+      fast: false,
+    } as const
     server.json('PUT', ACCOUNT_PATHS.defaultModel, { choice: sonnet })
     server.json('PATCH', orgPath(org), {
       org: { ...orgs.orgs[0], name: 'Acme Labs' },

@@ -110,6 +110,7 @@ export function readChoice(value: unknown): AgentChoice {
     agent: choice(fields, 'agent', AGENTS),
     model: text(fields, 'model'),
     effort: choice(fields, 'effort', EFFORTS),
+    fast: fields.fast === true,
   }
 }
 
@@ -119,6 +120,7 @@ export function readModel(value: unknown): AgentModel {
     agent: choice(model, 'agent', AGENTS),
     model: text(model, 'model'),
     label: text(model, 'label'),
+    ...(typeof model.fast === 'boolean' && { fast: model.fast }),
     efforts: items(model, 'efforts', (effort) =>
       choice({ effort }, 'effort', EFFORTS),
     ),

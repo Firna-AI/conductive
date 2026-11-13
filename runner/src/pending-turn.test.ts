@@ -17,6 +17,7 @@ it('keeps idle model changes local and applies them inside the next cancelable t
     agent: 'claude' as const,
     model: 'next-model',
     effort: 'medium' as const,
+    fast: false,
   }
   await h.engine.command({
     type: 'model',

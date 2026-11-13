@@ -83,7 +83,9 @@ says.
   its features. Reason: Anthropic forbids that use for a product that builds
   on its Agent SDK.
 - The model picker names the model and the effort, such as "Opus 5.5 Max".
-  It does not show the words Claude or Codex.
+  While [fast mode](fast-mode.md) is on, it adds Fast, such as "Opus 5.5
+  Max Fast". A screen reader hears Fast too. The picker does not show the
+  words Claude or Codex.
 - The app marks each agent with a small mark of its own. It shows no brand
   logo of an agent.
 

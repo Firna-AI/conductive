@@ -21,6 +21,7 @@ export const choice: AgentChoice = {
   agent: 'claude',
   model: 'Opus 5.5',
   effort: 'high',
+  fast: false,
 }
 export const first: WorkspaceTab = {
   kind: 'session',
