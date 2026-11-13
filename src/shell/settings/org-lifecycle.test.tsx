@@ -4,10 +4,15 @@ import { describe, expect, test, vi } from 'vitest'
 import { memoryNavigation, NavigationContext } from '../../app/navigation'
 import { routes } from '../../app/router'
 import { requestLines } from '../../app/test-kit'
+import { API_PATHS } from '../../shared/api'
 import { deleteOrgPath, restoreOrgPath } from '../../shared/orgs'
 import { byDialog, byRole, queryByRole } from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
-import { FAKE_IDS, fakeUser } from '../../test-support/fixtures/core'
+import {
+  coreFixtures,
+  FAKE_IDS,
+  fakeUser,
+} from '../../test-support/fixtures/core'
 import {
   holdAnimationFrames,
   MOUNTED_TEST_TIMEOUT,
@@ -93,6 +98,38 @@ describe('the end of an org in the app', () => {
         org: { id: org, name: 'Acme', initials: 'AC', role: 'admin' },
       },
       writes: [`POST ${deleteOrgPath(org)}`, `POST ${restoreOrgPath(org)}`],
+    })
+  })
+
+  test('Delete org of the last org opens Get started, which lists the org with Restore', async () => {
+    holdAnimationFrames()
+    const server = new FakeApiServer()
+    const acme = coreFixtures().orgs.orgs.find((item) => item.id === org)
+    server.json('GET', API_PATHS.orgs, { orgs: [acme] })
+    const app = await startedApp(server)
+    const navigation = memoryNavigation(routes.settings(org))
+    const view = mountScreen(
+      app,
+      <NavigationContext.Provider value={navigation}>
+        <Shell />
+      </NavigationContext.Provider>,
+    )
+    await press(
+      await waitFor(
+        () => queryByRole('button', 'Delete org', view),
+        'the General tab of an admin',
+      ),
+    )
+    const dialog = byDialog('Delete Acme?')
+    await typeText(byRole('textbox', 'Type Acme to confirm', dialog), 'Acme')
+    await press(byRole('button', 'Delete org', dialog))
+    await waitFor(
+      () => view.querySelector('ul[aria-label="Deleted orgs"]'),
+      'Get started with the deleted org',
+    )
+    expect({ address: navigation.href(), rail: railOrgs(view) }).toEqual({
+      address: routes.getStarted(),
+      rail: ['Create org', 'Account'],
     })
   })
 

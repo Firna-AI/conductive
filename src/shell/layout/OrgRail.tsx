@@ -88,13 +88,6 @@ function RailHint(props: { name: string; hint?: ShortcutHint }) {
   )
 }
 
-/** The square of an org in the rail. A deleted org fades. */
-function RailTile(props: { org: OrgSummary; current: boolean }) {
-  const tile = <OrgTile current={props.current} org={props.org} size={26} />
-  if (!props.org.deletion) return tile
-  return <span className={styles.deleted}>{tile}</span>
-}
-
 /**
  * Offers the keys of Switch to org 1 to 9 while the rail shows. Each key
  * opens the org at its place, counted from the top, as the tile does, also
@@ -140,7 +133,7 @@ function OrderedOrg(props: {
         linkRef={order.linkRef(org.id)}
         to={routes.org(org.id)}
       >
-        <RailTile current={current} org={org} />
+        <OrgTile current={current} org={org} size={26} />
       </RailLink>
       {order.drag.dragged ? null : <RailHint name={org.name} hint={hint} />}
     </li>
@@ -189,10 +182,8 @@ export function OrgRail(props: {
   useOrgKeys(props.orgs)
   const order = useRailOrder(props.orgs)
   const { drag } = order
-  const labelOf = (org: OrgSummary) => {
-    if (org.deletion) return `${org.name}, deleted`
-    return isSuspended(org, refused) ? `${org.name}, suspended` : org.name
-  }
+  const labelOf = (org: OrgSummary) =>
+    isSuspended(org, refused) ? `${org.name}, suspended` : org.name
   return (
     <nav aria-label="Orgs" className={styles.rail}>
       <span className={styles.mark}>
@@ -249,9 +240,10 @@ export function OrgRail(props: {
       </RailLink>
       {drag.dragged && drag.lifted ? (
         <LiftedOrg at="rail" frame={drag.lifted}>
-          <RailTile
+          <OrgTile
             current={drag.dragged.id === currentOrg}
             org={drag.dragged}
+            size={26}
           />
         </LiftedOrg>
       ) : null}

@@ -58,7 +58,7 @@ export type RailState = {
 /** The rail of the canonical views: every org, with Acme open. */
 export const acmeRail: RailState = { orgs: orgList, current: 'acme' }
 
-/** Whether an org of the rail is deleted or suspended. */
+/** Whether an org of the rail is suspended. */
 function orgState(rail: RailState, key: OrgKey): OrgState | undefined {
   if (rail.suspended === key) return 'suspended'
   return undefined
@@ -112,11 +112,7 @@ export function OrgRail(props: RailState) {
         name={dragged.name}
         place={placeAfterDrop(from, index)}
       >
-        <RailTile
-          current={props.current === dragged.key}
-          org={dragged}
-          state={orgState(props, dragged.key)}
-        />
+        <RailTile current={props.current === dragged.key} org={dragged} />
       </OrgDrop>
     ) : null
   return (

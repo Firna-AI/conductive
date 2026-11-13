@@ -56,8 +56,8 @@ the Help row of the command palette opens.
   The person moves an org tile by drag, by its tile menu with Move up and
   Move down, or by Alt and Up or Down on a focused tile. On a phone, a
   long press lifts an org in the org switcher. A move shows at once, and a
-  failed save takes back only that move, with a toast. A suspended or
-  deleted org moves like any other, as
+  failed save takes back only that move, with a toast. A suspended org
+  moves like any other. A deleted org has no tile, as
   [Org rail order](../../docs/protocol/org-rail-order.md) says.
 - A suspended org shows its notice, and no action that it refuses, as
   [A suspended org](suspended-org.md) says.

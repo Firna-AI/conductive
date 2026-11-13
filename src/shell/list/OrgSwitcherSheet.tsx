@@ -24,9 +24,7 @@ function OrgRowContent(props: { org: OrgSummary; current: boolean }) {
   return (
     <>
       <OrgTile current={current} org={org} size={26} />
-      <span className={styles.sheetLabel}>
-        {org.deletion ? `${org.name}, deleted` : org.name}
-      </span>
+      <span className={styles.sheetLabel}>{org.name}</span>
       {current ? (
         <Check aria-hidden className={styles.check} size={15} />
       ) : null}
