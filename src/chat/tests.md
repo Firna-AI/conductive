@@ -195,8 +195,10 @@ opens the file tab of the copy that its link names. While a message
 waits, and in a chat without the files of its workspace, the chip shows
 and opens nothing. A copy of the messages gives the mention of each
 chip, also of a chip that opens nothing.
-`links/mention-copy-test-kit.tsx` holds the copy helpers of both DOM
-tests. `components/AttachmentChips.test.tsx` renders the notice of the
+`links/mention-copy-test-kit.tsx` holds the copy helpers of the DOM
+tests. The test page loads no style sheet, so `copyAll` gives the text of
+the page in the copy state by the rule of `ChipCopyText.module.css`. A
+real copy in Chrome is a manual check. `components/AttachmentChips.test.tsx` renders the notice of the
 files over the size limit, with one name or the count and the limit. It
 also renders the files under a sent message, with their sizes and no
 Remove.

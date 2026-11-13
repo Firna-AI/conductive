@@ -26,6 +26,8 @@
  */
 .lines {
   flex-shrink: 0;
+  /* The chip puts a gap between its parts. The lines join the name. */
+  margin-left: -5px;
   font-size: 0.94em;
   font-weight: 500;
   line-height: 1.25;

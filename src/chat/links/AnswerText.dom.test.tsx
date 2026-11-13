@@ -78,7 +78,8 @@ describe('file chips in an answer', () => {
       `See @src/app.ts. Saved \`${root}/shots/after.png\`.`,
     )
     expect(copyAll(view.container)).toEqual({
-      kept: true,
+      copying: true,
+      native: true,
       text: `See @src/app.ts. Saved ${root}/shots/after.png.`,
     })
   })

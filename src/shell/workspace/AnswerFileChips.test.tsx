@@ -2,6 +2,7 @@
 
 import { describe, expect, test, vi } from 'vitest'
 import { memoryNavigation, NavigationContext } from '../../app/navigation'
+import { accessibleName } from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_IDS, FAKE_TIME, fakeUser } from '../../test-support/fixtures/core'
 import { FAKE_FILE_PATH } from '../../test-support/fixtures/tools'
@@ -72,7 +73,7 @@ describe('file chips in an answer of the workspace screen', () => {
       `Changed \`${folder}/${FAKE_FILE_PATH}:2-3\`.`,
     )
     const chip = linkTo(view, lineHref)
-    const name = chip.textContent
+    const name = accessibleName(chip)
     click(chip)
     await settle()
     const marked = Array.from(

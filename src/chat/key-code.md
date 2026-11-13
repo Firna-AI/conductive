@@ -83,10 +83,13 @@ is relative to `src/chat/`, the folder of this guide.
   states the rules of that chip. The chip opens the file tab of its copy
   through `openFile` and `href` of `ChatMentions`. It opens nothing when
   `ChatText` gets no `opens`, or in a chat without `ChatMentions`.
-  `LinkedText` reads and draws a text in one step. `mention-copy.ts` gives
-  the copy of chat text with the mention of each chip that has a
-  `data-mention` mark: each file chip and each `SentFileChip`. It leaves
-  out text that the browser leaves out of a copy.
+  `LinkedText` reads and draws a text in one step. `mention-copy.ts` makes
+  the browser's own copy of chat text give the text of each chip that has
+  a `data-mention` mark: each file chip and each `SentFileChip`. Each such
+  chip holds its copy text in a `ChipCopyText`, which shows only while the
+  root of the page has `COPYING_CLASS`. The copy sets the class, moves an
+  edge of the selection inside a chip to the edge of the chip, and the
+  next animation frame removes the class before the page paints.
   `chipOf` in `LinksContext.tsx` gives what a chip shows of its workspace.
 - `links/session-links.ts`: `useLinkedSession`, the session that a chip
   finds: a live session of the chat's workspace, or one of the one read of

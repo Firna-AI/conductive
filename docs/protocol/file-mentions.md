@@ -86,6 +86,15 @@ names a decision of the change that added file chips to answers.
   [Files in answers](#files-in-answers) says.
 - A copy of a chip gives its mention. A paste of a mention gives a chip
   when the mention names an entry of the tree.
+- A copy of chat text with a chip is the browser's own copy (answer chip
+  decision 3). It keeps the formatted text, such as bold, code, lists, and
+  tables, for a paste into a rich editor. Each chip gives its text in the
+  plain text and in the formatted text. A selection that starts or ends
+  inside a chip takes the whole chip.
+- Reason: answers hold chips often, and a copy built by the app gave plain
+  text only. A formatted copy built by the app was rejected, because it
+  drifts from what the browser copies.
+- The copy is checked in Chrome. Firefox and Safari are not checked.
 - A draft keeps the mention of each chip. When a draft comes back, its
   mentions show as chips again.
 

@@ -69,33 +69,43 @@ describe('file chips in a sent message', () => {
     })
   })
 
-  test('a copy across two messages gives the mention of each file chip, and a copy without one stays native', async () => {
+  test('a copy across two messages stays with the browser, and each file chip shows its mention for it', async () => {
     const view = await mountText(
       ['Move @README.md into @src/lib/ now', 'Then read @README.md'],
       true,
     )
-    const withChips = copyAll(view.container)
-    const answer = await mountText('Moved @README.md', false)
-    expect({ withChips, plain: copyAll(answer.container) }).toEqual({
-      withChips: {
-        kept: true,
-        text: 'Move @README.md into @src/lib/ now\nThen read @README.md',
-      },
-      plain: { kept: false, text: '' },
+    expect(copyAll(view.container)).toEqual({
+      copying: true,
+      native: true,
+      text: 'Move @README.md into @src/lib/ now\nThen read @README.md',
     })
   })
 
-  test('a copy leaves out the text that the browser leaves out: the steps of a closed fold and text that takes no selection', async () => {
-    const view = await mountText('Move @README.md now', true)
-    const extra = document.createElement('div')
-    extra.innerHTML =
-      '<details><summary>1 tool call</summary><p>Hidden work</p></details>' +
-      '<p><span style="user-select: none">No selection</span>Visible</p>'
-    view.container.append(extra)
+  test('a copy without a file chip changes nothing', async () => {
+    const view = await mountText('Moved @README.md', false)
     expect(copyAll(view.container)).toEqual({
-      kept: true,
-      text: 'Move @README.md now\n1 tool call\nVisible',
+      copying: false,
+      native: true,
+      text: 'Moved @README.md',
     })
+  })
+
+  test('a selection that starts or ends inside a chip takes the whole chip', async () => {
+    const view = await mountText('Move @README.md into @src/lib/ now', true)
+    const [first, second] = view.container.querySelectorAll('a')
+    const range = document.createRange()
+    range.setStart(first.querySelector('span span')?.firstChild ?? first, 0)
+    range.setEnd(second.lastChild ?? second, 0)
+    document.getSelection()?.removeAllRanges()
+    document.getSelection()?.addRange(range)
+    document.dispatchEvent(
+      new ClipboardEvent('copy', { bubbles: true, cancelable: true }),
+    )
+    const held = document.getSelection()?.getRangeAt(0)
+    expect({
+      startsBefore: held?.comparePoint(first, 0),
+      endsAfter: held?.isPointInRange(second, second.childNodes.length),
+    }).toEqual({ startsBefore: 0, endsAfter: true })
   })
 
   test('a text read without mentions shows each mention as text', async () => {

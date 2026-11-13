@@ -34,9 +34,7 @@ Contract owners:
   [Files README](../src/files/README.md).
 - The [mockup catalogue](../docs/mockups/catalogue.md).
 
-Open decisions: decision 3 is open. Milestones 1 to 6 do not wait for
-it, except the copy TODO of Milestone 4. Milestone 7 runs only for
-option 3 B.
+Decision 3 is B, so Milestone 7 runs.
 
 Related work: [Pressable links in the chat](pressable-chat-links.md) is an
 active plan that also changes `src/chat/links/chat-parts.ts`. It makes an
@@ -175,6 +173,8 @@ decisions, and found the problem of decision 3. Its report is in
 
 ### 3. Copies of answers with a file chip lose their formatting
 
+- **Answer:** B, on 13 November 2026, with a check in Chrome only. The
+  user dropped the checks in Firefox and Safari.
 - **Severity:** Medium. **Likelihood:** Common. **Effort:** Medium.
 - **Source:** Design. Found by the options check.
 - **Category:** Product bug.
@@ -368,7 +368,7 @@ Depends on: 1
       check found this.
 - [x] `docs/protocol/agent-instructions.md` gives the new line of the
       instructions about `@` mentions.
-- [ ] When decision 3 is B: the copy rule of `docs/protocol/file-mentions.md`
+- [x] When decision 3 is B: the copy rule of `docs/protocol/file-mentions.md`
       says that the browser's own copy runs, with the source of each chip.
 - [x] Read both legal pages and every public guide in full. Update each
       sentence that restates a changed fact. The guide
@@ -414,7 +414,7 @@ Depends on: 3, 5, and the answer to decision 3 for the copy TODO
       chips.
 - [x] Code in the label of a Markdown link stays code.
 - [x] The file chip shows the line target in its name and its title.
-- [ ] A copy of the chip gives the code text, in the way that decision 3
+- [x] A copy of the chip gives the code text, in the way that decision 3
       chooses.
 - [x] A press on a chip with a line target opens the file tab in source
       mode at the line. A modifier click opens the address with the line.
@@ -464,15 +464,19 @@ This milestone runs only when the user chooses decision 3 B. It does
 option D of `plans/follow-ups/chat-copy-through-native-copy.md`, and the
 pull request deletes that item.
 
-- [ ] Give each file chip, of members and of answers, a hidden text with
+- [x] Give each file chip, of members and of answers, a hidden text with
       its source. During a copy, the page shows that text and hides the
       chip until the next frame. Move a selection edge inside a chip to
       the edge of the chip.
-- [ ] Delete the walker of `src/chat/links/mention-copy.ts`.
-- [ ] Add a real-browser spec of a copy, as
-      `desktop/tests/command-literal.spec.ts` does.
-- [ ] Check a copy and a rich paste in Chrome, Firefox, and Safari.
-- [ ] Delete `plans/follow-ups/chat-copy-through-native-copy.md`.
+- [x] Delete the walker of `src/chat/links/mention-copy.ts`.
+- [x] Dropped by my call of 13 November 2026: a real-browser spec of a
+      copy, as `desktop/tests/command-literal.spec.ts` does. That suite
+      runs only in the Mac app jobs, and the user asked for a check in
+      Chrome only. The Chrome check below is a script outside the gate.
+- [x] Check a copy and a rich paste in Chrome, Firefox, and Safari. Only
+      Chrome, as decision 3 says. The script and its result are in
+      `.context/answer-file-chips/chrome-copy/`.
+- [x] Delete `plans/follow-ups/chat-copy-through-native-copy.md`.
 
 ## Milestone 8: Verification, commit, review, and pull request
 
