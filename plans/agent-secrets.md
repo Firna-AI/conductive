@@ -351,7 +351,16 @@ against how long a value stays in the app.
 
 ### Secrets decision 8: Capabilities after the create
 
-Open. Root question: how does a member see and change what an existing
+Cal chose B on 13 November 2026: the same Capabilities icon shows in each
+workspace, beside the message box. Every member can see and change the
+pre-approved secrets and Mac access there, and remove the session
+approvals and each value for this workspace. Reason: it meets "edited
+from workspace settings", it gives the undo of a wrong grant, and it
+keeps each capability in one place.
+
+The record of the options as they were asked:
+
+Root question: how does a member see and change what an existing
 workspace allows, such as its pre-approved secrets and Mac access? Cal's
 first message said that secrets "can be edited from workspace settings",
 and no settings screen exists for one workspace. Without a change after
@@ -423,11 +432,20 @@ follow-up `plans/follow-ups/routine-turns-mac-commands.md`. Under A, an
 agent can also create a new workspace with Mac access on, past a switch
 that is off.
 
-Recommendation: D. The plan first recommended A, but A's reason is false
-for always-allowed commands. D keeps today's behaviour in each workspace
-that a person creates, and it closes the routine run path of the
-follow-up. The path through the session calls stays open, as Cal
-accepted for secrets in decision 5 C. Action: ask the user, because B,
+Cal asked on 13 November 2026 whether Mac commands run without a
+question. They do not, with one exception. The Mac app asks before each
+command. A grant of 15 minutes or until Stop covers one workspace, so it
+never covers a new workspace. Only a command with Always allow, by its
+exact text, runs with no question in a new workspace. So the gap that D
+closes is narrow: a steered agent can run only commands that the person
+already allowed everywhere.
+
+Recommendation: A, changed back from D after Cal's question. Under A the
+switch is an extra stop, today's behaviour stays, and the narrow gap stays
+with the open follow-up. The plan first recommended A, and the options
+check changed it to D. D stays the option that also closes the routine
+run path of the follow-up, and it keeps today's behaviour in each
+workspace that a person creates. Action: ask the user, because B,
 C, D, and E change decision 62 behaviour or add a refusal.
 
 The options check of decisions 5, 6, and 7 is in
