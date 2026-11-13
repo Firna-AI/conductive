@@ -1,4 +1,4 @@
-import type { ToolCall } from '../../src/shared/chat-events'
+import { readTurnSpeed, type ToolCall } from '../../src/shared/chat-events'
 import type {
   ChangedFile,
   FileEntry,
@@ -251,6 +251,9 @@ export function parseEvent(value: unknown): RunnerEvent {
       ...(input.endReason === 'background_work_limit'
         ? { endReason: input.endReason }
         : {}),
+      ...(input.speed === undefined
+        ? {}
+        : { speed: readTurnSpeed(input.speed) }),
       files: array(input.files, changed),
       ...(input.filesUnavailable === true ? { filesUnavailable: true } : {}),
       omittedFileCount: integer(input.omittedFileCount),

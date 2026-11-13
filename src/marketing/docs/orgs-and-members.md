@@ -44,7 +44,22 @@ A new org goes at the end.
 Suspended orgs move in the same way.
 Deleted orgs appear in Account settings.
 The command palette lists orgs in your order.
-When Conductive opens without a chosen org, it opens the first org in your list that is not deleted.
+
+## Switch between orgs
+
+On a computer, select an org in the org list at the far left.
+You can also use its keyboard shortcut, or **Switch to** in the command palette.
+Conductive opens the last workspace that you opened in that org, with the same session or tab.
+If that workspace is stopped, opening it starts its computer.
+Without a last workspace, the org's workspace list opens.
+
+On a phone, the org switcher opens the org's workspace list.
+
+Your browser and the Mac app each remember your last workspaces.
+They stay after a reload and a restart, but not on other devices.
+
+When Conductive opens without a chosen org, it opens the last workspace that you opened.
+If its org is deleted, or you have no last workspace, it opens the first org in your list that is not deleted.
 
 ## Create an org
 

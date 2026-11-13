@@ -111,6 +111,7 @@ export function readModels(value: unknown): readonly AgentModel[] {
       agent: readAgent(source.agent),
       model: text(source.model),
       label: text(source.label),
+      ...(typeof source.fast === 'boolean' && { fast: source.fast }),
       efforts: list(readEffort)(source.efforts),
     }
   })(record(value, 'models').models)

@@ -31,6 +31,15 @@ export async function providerEvent(
   }
   const turn = session.active
   if (!turn || (turn.stopped && !acceptedBeforeStop)) return
+  if (event.type === 'speed') {
+    if (
+      !turn.speed ||
+      (event.speed.state === 'standard' &&
+        (turn.speed.state === 'fast' || !turn.speed.cause))
+    )
+      turn.speed = event.speed
+    return
+  }
   if (event.type === 'background' || event.type === 'activity') {
     const done =
       event.type === 'background'

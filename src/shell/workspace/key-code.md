@@ -23,7 +23,10 @@ this guide.
   sandbox bar of the shell, the open file tabs, and the file page in place
   of the chat of the session, or the shell's own column for the chat slots.
 - `files/files-features.tsx`: the Files part, which reads the kept files
-  that the screen connects, and the file or diff page of the centre.
+  that the screen connects, and the file or diff page of the centre. The
+  page gives its tab to `KeptScroll`, so each file and diff tab keeps its
+  scroll offset, as
+  [Kept scroll offsets](../../files/README.md#kept-scroll-offsets) says.
 - `files/tab-open-resume.tsx`: `ResumeOnTabOpen`, which resumes a stopped
   sandbox at each visit that opens a file or diff tab, also a second click
   on the tab that shows. The screen draws it in each layout.
@@ -64,6 +67,10 @@ this guide.
   address. It checks the file that a tab keeps when the sandbox stops, no
   start at a switch of its view, and no start in a ready or a refused
   workspace.
+- `files/TabScroll.test.tsx`: mounts the whole app over the fake API. It
+  scrolls a file tab and a diff tab, shows the chat, and checks that each
+  tab gives its offset back. A tab that the user closes opens at the top
+  again.
 - `app-features.tsx`: the shell's own files, pull request, and owner
   parts, which `useFeatures` puts under the parts of the host. The screen
   draws its own tools panel when the host gives no `tools` part.
@@ -135,7 +142,9 @@ this guide.
   `RightColumnToggle.test.tsx` mounts the whole app over the fake API. It
   hides the right column, opens the workspace again, and shows the column.
   `WorkspaceKeys.test.tsx` runs the keys of the tab row, of the
-  composer, and the copy keys of the shown session in the whole app.
+  composer, and the copy keys of the shown session in the whole app. It
+  also runs the key of Fast mode, and reads that key at the end of the
+  Fast row of the model menu.
 - `CopyLink.tsx`: the label of the number, such as `W-395`, as the Copy
   link button of the header, as
   [Copy link](../../../docs/protocol/workspace-links.md#copy-link) says.

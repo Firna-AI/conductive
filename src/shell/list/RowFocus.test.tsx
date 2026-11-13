@@ -23,9 +23,15 @@ import {
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
-/** The link of the row of the workspace in the sidebar. */
+/**
+ * The link of the row of the workspace in the sidebar. The tile of the org
+ * in the rail can link to the same workspace, so the query stays in the
+ * sidebar.
+ */
 function sidebarRow(view: HTMLElement): HTMLElement {
-  const row = view.querySelector<HTMLElement>(`a[href="${here}"]`)
+  const row = view.querySelector<HTMLElement>(
+    `aside[aria-label="Workspaces"] a[href="${here}"]`,
+  )
   if (!row) throw new Error('The sidebar shows no row of the workspace.')
   return row
 }

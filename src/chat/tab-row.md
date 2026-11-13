@@ -3,7 +3,7 @@
 This guide belongs to [the chat](README.md). It gives the rules of the one
 order of the session, file, and diff tabs, the mark of the temporary tab
 and the moves that keep it, the drag, the tab menu with Keep open, and the
-scroll of the row.
+scroll of the row, and the reader's place that each tab keeps.
 [The tab row](../../docs/protocol/agents-and-sessions.md#the-tab-row) states
 the requirements.
 
@@ -127,3 +127,21 @@ the requirements.
   drop place again after each scroll. This scroll starts only after the
   pointer moves, so a long press that holds still scrolls nothing, and its
   release opens the tab menu.
+- Each tab keeps the reader's place while another tab, workspace, or page
+  shows, as
+  [The scroll of the chat](../../docs/protocol/chat-and-events.md#the-scroll-of-the-chat)
+  says. `ChatController.places` keeps the place of each session tab: the
+  bottom, or the key of the top row in view with the distance of its top
+  below the top of the box. `TranscriptView` puts each entry, pending
+  message, and the running turn in one row with a `data-row` key, which
+  lays out its parts as the transcript does. The keeper of the reader's
+  place in `components/reading-place.ts` writes the place at each note, and
+  a new keeper, for another session or a new mount, shows the kept place.
+  A row that left the transcript gives the bottom. Each send of this tab,
+  also a fixed prompt while a file tab shows, puts the place of its session
+  at the bottom. The places live in a `TabPlaces` store of
+  [the web app](../app/tab-places.ts). The chat gives it each list of the
+  session tabs through `useFollowTabs`, and a session that leaves the tabs,
+  such as at a close, forgets its place, so it opens at the bottom again. The kept files of the
+  workspace keep the offset of each file and diff tab, as the
+  [Files README](../files/README.md#kept-scroll-offsets) says.

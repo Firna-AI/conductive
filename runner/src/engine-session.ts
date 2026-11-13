@@ -1,5 +1,5 @@
 import type { Agent, AgentChoice } from '../../src/shared/agents'
-import type { AgentChatEvent } from '../../src/shared/chat-events'
+import type { AgentChatEvent, TurnSpeed } from '../../src/shared/chat-events'
 import type { ChangedFile } from '../../src/shared/files'
 import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 import type { RunnerTurn } from '../../src/shared/runner'
@@ -29,6 +29,7 @@ export interface ActiveTurn {
   resolvedMessageIds: Set<string>
   waiting: ProviderInput[]
   output: TurnOutput
+  speed?: TurnSpeed
   stopped: boolean
   provider: ProviderProcess | null
   lifetime: ProviderLifetime | null

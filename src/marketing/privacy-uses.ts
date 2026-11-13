@@ -168,6 +168,12 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         on GitHub, when available.`,
       text`Panel sizes: your browser keeps the sizes of the panels of the
         app. They stay in your browser.`,
+      text`Last workspaces: your browser keeps the address of the last
+        workspace page that you opened in each org. The address holds the
+        IDs of the org, the workspace, and the session or the preview. It
+        can also hold the name of a tool and the path of an open file. A
+        switch to the org opens that page again. The addresses stay in your
+        browser, also after you sign out, until you clear its saved data.`,
     ),
     paragraph`Where data protection law requires a lawful basis, the
       operator relies on performance of a contract to provide the

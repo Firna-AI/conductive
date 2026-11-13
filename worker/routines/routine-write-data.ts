@@ -23,6 +23,7 @@ export async function saveRoutine(
     input.choice.agent,
     input.choice.model,
     input.choice.effort,
+    input.choice.fast ? 1 : 0,
   ]
   const referenceValues = [
     input.orgId,
@@ -34,9 +35,9 @@ export async function saveRoutine(
     ? db
         .prepare(
           `INSERT INTO routines
-      (name, repository_id, section_id, prompt, agent, model, effort, active, inactive_reason,
+      (name, repository_id, section_id, prompt, agent, model, effort, fast, active, inactive_reason,
        failed_runs_in_a_row, time_zone, triggers_json, next_run_at, updated_at, id, org_id, owner_user_id, created_at)
-      SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+      SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
       WHERE ${activeShellMemberPredicate} AND ${referencesExist}`,
         )
         .bind(
@@ -58,7 +59,7 @@ export async function saveRoutine(
         )
     : db
         .prepare(
-          `UPDATE routines SET name = ?, repository_id = ?, section_id = ?, prompt = ?, agent = ?, model = ?, effort = ?,
+          `UPDATE routines SET name = ?, repository_id = ?, section_id = ?, prompt = ?, agent = ?, model = ?, effort = ?, fast = ?,
       active = CASE WHEN ? = 1 THEN ? ELSE active END,
       inactive_reason = CASE WHEN ? = 1 THEN ? ELSE inactive_reason END,
       failed_runs_in_a_row = CASE WHEN ? = 1 AND active = 0 AND ? = 1 THEN 0 ELSE failed_runs_in_a_row END,

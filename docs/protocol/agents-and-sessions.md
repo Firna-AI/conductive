@@ -83,7 +83,9 @@ says.
   its features. Reason: Anthropic forbids that use for a product that builds
   on its Agent SDK.
 - The model picker names the model and the effort, such as "Opus 5.5 Max".
-  It does not show the words Claude or Codex.
+  While [fast mode](fast-mode.md) is on, it adds Fast, such as "Opus 5.5
+  Max Fast". A screen reader hears Fast too. The picker does not show the
+  words Claude or Codex.
 - The app marks each agent with a small mark of its own. It shows no brand
   logo of an agent.
 
@@ -177,6 +179,15 @@ says.
 - A menu of the hidden tabs was rejected, because the shown tab and the
   drop places could still hide. A row that wraps onto more lines was
   rejected, because the chat would move down when a tab opens.
+- Each tab of the row keeps the reader's place while another tab or another
+  workspace shows. A session tab keeps the row that the user read, as
+  [The scroll of the chat](chat-and-events.md#the-scroll-of-the-chat)
+  says. A file or diff tab keeps its scroll offset, one for each of its
+  views, such as the code and the preview of a Markdown file. A reload
+  forgets the places. The user chose this on 13 November 2026.
+- A tab that closes forgets its place, also when another member closes its
+  session. When it opens again, a session tab shows the bottom, and a file
+  or diff tab shows the top. The user chose this on 13 November 2026.
 - A right click on a tab opens its tab menu (decision 188).
 - On a focused tab, Shift and F10, or the Menu key, also opens the tab
   menu. This holds on every system.

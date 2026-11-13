@@ -10,8 +10,11 @@ import {
   mcpToolCall,
 } from './mcp-test-support'
 
-export async function sessionToolFixture(bundle: string) {
-  const active = await agentWriteFixture(bundle)
+export async function sessionToolFixture(
+  bundle: string,
+  options: Parameters<typeof agentWriteFixture>[1] = {},
+) {
+  const active = await agentWriteFixture(bundle, options)
   const requests: Request[] = []
   const invoke = async (
     args: readonly string[],
