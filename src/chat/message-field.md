@@ -46,7 +46,8 @@ that those chips show, from the attach to the send.
   drag is the drag of Lexical.
 - The Attach files button of each composer opens the file picker. Attach a
   smaller file, in the notice of a file over the size limit, opens it too.
-  Attach files, in the notice of a dropped folder, opens it too.
+  Attach files, in the notice of a dropped folder that could not be read,
+  opens it too.
   A pick attaches its files, which gives their IDs at once, as
   [The attach](draft-files.md#the-attach) says. In the same change event,
   the composer puts their chips into the field with
@@ -123,13 +124,17 @@ that those chips show, from the attach to the send.
   [Drops](../../docs/protocol/message-attachments.md#drops) states the
   requirements.
 - At the drop, `droppedItems` of [`file-drags.ts`](../app/file-drags.ts)
-  splits the items. An item whose entry is a directory is a folder. Each
-  other item of kind file is a file, also an empty one. The composer
-  attaches the files with the folder names, also for a drop of folders
-  alone. Then `insertFiles(ids, point)` puts the chips at the place under
-  the pointer, else at the caret, else at the end. The box cancels each
-  event of a drag of files, so the browser opens no file and inserts no
-  path.
+  gives the items in their order. An item whose entry is a directory is a
+  folder. Each other item of kind file is a file, also an empty one. A
+  drop without a folder attaches its files at once. A drop with a folder
+  first zips each folder with `intakeOf`, then attaches the files and the
+  zips in the order of the drop, with the refused folders, also for a drop
+  of folders alone. Then `insertFiles(ids, point)` puts the chips at the
+  place under the pointer, else at the caret, else at the end. The hook
+  stops the zips that run when the box leaves the page, and a drop whose
+  zips end after the composer stopped taking changes attaches nothing. The
+  box cancels each event of a drag of files, so the browser opens no file
+  and inserts no path.
 - The chat box takes a drop whenever its composer shows, also while a
   message sends or a file uploads, because its field takes changes then.
   The New workspace page and dialog take no drop while a create runs, and
