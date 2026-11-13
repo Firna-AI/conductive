@@ -1,8 +1,9 @@
 import type { WorkspaceEventEnvelope } from './workspace-events'
 import { attachmentPath } from '../../src/shared/attachment-paths'
 import { HttpError } from '../http'
-import { attachmentCopyKey } from './attachment-record'
+import { attachmentCopyKey, attachmentNotFound } from './attachment-record'
 import { commandDispatchState, type DispatchState } from './ordered-dispatch'
+import { hash } from '../security/crypto'
 import type { ChatStore } from './store'
 import { TurnCompletion } from './turn-completion'
 import type {
@@ -31,8 +32,9 @@ async function hasCurrentPaths(command: MessageCommand): Promise<boolean> {
   return true
 }
 
-/** Each message and destination owns one copy, independently of its commands and connections. */
+/** Message proofs share active file transfers on the same destination. */
 export class AttachmentPreparation {
+  private readonly transfers = new Map<string, Promise<string | null>>()
   private readonly pending = new Map<string, Preparation>()
   private readonly store: ChatStore
   private readonly dependencies: ChatDependencies
@@ -84,15 +86,30 @@ export class AttachmentPreparation {
     }
     this.pending.set(key, preparation)
     const work = Promise.resolve()
-      .then(() =>
-        this.dependencies.prepareAttachments(
-          active.workspace.id,
-          command.message.sender.id,
-          command.message.id,
-          command.attachments,
-          sandboxId,
-        ),
-      )
+      .then(async () => {
+        if (!(await hasCurrentPaths(command))) throw attachmentNotFound()
+        for (const attachment of command.attachments) {
+          const transferKey = await hash(
+            JSON.stringify([attachment.attachmentId, sandboxId]),
+          )
+          let transfer = this.transfers.get(transferKey)
+          if (!transfer) {
+            transfer = Promise.resolve()
+              .then(() =>
+                this.dependencies.prepareAttachments(
+                  active.workspace.id,
+                  command.message.sender.id,
+                  command.message.id,
+                  [attachment],
+                  sandboxId,
+                ),
+              )
+              .finally(() => this.transfers.delete(transferKey))
+            this.transfers.set(transferKey, transfer)
+          }
+          await transfer
+        }
+      })
       .then(
         () =>
           this.store.run(async () => {

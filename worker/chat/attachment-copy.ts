@@ -1,14 +1,14 @@
 import type { AppEnv, HttpFetch } from '../env'
-import {
-  attachmentPath,
-  ATTACHMENTS_DIRECTORY,
-} from '../../src/shared/attachment-paths'
+import { attachmentPath } from '../../src/shared/attachment-paths'
 import { HttpError } from '../http'
 import { providerForAccount } from '../sandbox/client'
 import { attachmentWorkspace } from './attachment-claim-data'
 import { readAttachment } from './attachment-data'
 import { attachmentRepositoryDirectory } from './attachment-paths'
-import { attachmentBucket, attachmentNotFound } from './attachment-record'
+import { attachmentNotFound } from './attachment-record'
+import { createAttachmentDownload } from './attachment-download-data'
+import { attachmentDownloadCommand } from './attachment-download-command'
+import { runAttachmentDownload } from './attachment-download-process'
 import type { StoredAttachment } from './types'
 
 export async function prepareMessageAttachments(
@@ -29,15 +29,8 @@ export async function prepareMessageAttachments(
       'The attached files could not reach the cloud computer. Try again.',
     )
   if (workspace.sandboxId !== sandboxId) throw attachmentNotFound()
-  const bucket = attachmentBucket(env)
   const provider = providerForAccount(env, httpFetch, workspace.providerAccount)
   const directory = await attachmentRepositoryDirectory(env.DB, workspace)
-  await provider.writeFile(
-    workspace.sandboxId,
-    `${directory}/${ATTACHMENTS_DIRECTORY}/.gitignore`,
-    new Blob(['*']).stream(),
-    1,
-  )
   for (const attachment of attachments) {
     const current = await attachmentWorkspace(env.DB, workspaceId, userId)
     if (
@@ -55,13 +48,24 @@ export async function prepareMessageAttachments(
       attachment.relativePath !== (await attachmentPath(record))
     )
       throw attachmentNotFound()
-    const object = await bucket.get(record.objectKey)
-    if (!object || object.size !== record.sizeBytes) throw attachmentNotFound()
-    await provider.writeFile(
+    if (!env.MACHINE_ORIGIN) throw attachmentNotFound()
+    const token = await createAttachmentDownload(env.DB, {
+      attachmentId: record.id,
+      workspaceId,
+      orgId: workspace.orgId,
+      sandboxId: workspace.sandboxId,
+      providerAccount: workspace.providerAccount,
+    })
+    await runAttachmentDownload(
+      provider,
       workspace.sandboxId,
-      `${directory}/${attachment.relativePath}`,
-      object.body,
-      record.sizeBytes,
+      attachmentDownloadCommand({
+        directory,
+        relativePath: attachment.relativePath,
+        origin: env.MACHINE_ORIGIN,
+        token,
+        sizeBytes: record.sizeBytes,
+      }),
     )
   }
   const current = await attachmentWorkspace(env.DB, workspaceId, userId)

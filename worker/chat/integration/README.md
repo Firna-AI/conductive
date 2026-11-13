@@ -65,6 +65,10 @@ depends on where the code runs:
   committed event again, use the `publish` of
   `authorizedWorkspaceOperation`.
 
+The first-start attachment fixture fakes detached download commands.
+Its injected download calls the production machine route with native D1 and R2.
+The [outer Worker tests](outer-worker-tests.md) describe its failed-start and retry checks.
+
 ## The outer Worker
 
 - `createApp` in `worker/application.ts` forwards the Mac device routes to

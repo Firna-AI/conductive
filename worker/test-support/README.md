@@ -214,6 +214,7 @@ A callback counts as complete only after the `waitUntil` work that it starts end
 - `fake-runner-files.ts` joins valid file report parts for the endpoint.
 - `runner-connection.ts` supplies the in-memory socket.
 - `process-environment.ts` builds an isolated environment for a Node child process in a test.
+- [attachment-command.ts](attachment-command.ts) fakes detached attachment commands and their status replies. It reads the generated destination and bearer token, calls an injected download route, and records exact copied bytes.
 - `attachments.ts`: `fakeAttachments(ids)`, the attachment metadata of the lifecycle fixtures. Each file gets the `path` of the shared builder in `src/shared/attachment-paths.ts`, as an upload reply and an admitted message give it.
 
 See [the browser fakes](../../src/test-support/README.md),

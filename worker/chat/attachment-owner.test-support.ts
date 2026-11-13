@@ -1,3 +1,5 @@
+import { attachmentCommandTransfer } from '../test-support/attachment-command'
+import { handleAttachmentDownload } from './attachment-download'
 import type { TestHarness } from '../test-support/harness'
 import { prepareMessageAttachments } from './attachment-copy'
 import { attachmentFixture, held } from './attachment.test-support'
@@ -21,62 +23,35 @@ export function attachmentOwnerCopy(harness: TestHarness, failFirst = false) {
   const delivered = new Set<string>()
   const writes: { sandboxId: string; path: string }[] = []
   const requests: Request[] = []
-  const active = new Map<string, number>()
   const work: Promise<string | null>[] = []
   let maximumWriters = 0
   let lateWrites = 0
+  let active = 0
   const fileKey = (sandboxId: string, path: string) =>
     JSON.stringify([sandboxId, path])
-  const fetch = async (request: Request) => {
-    const url = new URL(request.url)
-    if (url.hostname === 'boat.dev') {
-      requests.push(request)
-      const body: { path: string } = await request.json()
-      const sandboxId = url.pathname.split('/').at(-3)
-      if (!sandboxId) throw new Error('The destination computer is missing.')
-      if (body.path.endsWith('/.gitignore'))
-        return Response.json({
-          ok: true,
-          type: 'file.upload_url',
-          method: 'PUT',
-          path: body.path,
-          url: 'https://attachment-owner.test/ignore',
-          expiresAt: '2099-01-01T00:00:00Z',
-        })
-      const index = writes.push({ sandboxId, path: body.path }) - 1
-      return Response.json({
-        ok: true,
-        type: 'file.upload_url',
-        method: 'PUT',
-        path: body.path,
-        url: `https://attachment-owner.test/${index}`,
-        expiresAt: '2099-01-01T00:00:00Z',
-      })
-    }
-    if (url.pathname === '/ignore') {
-      await request.arrayBuffer()
-      return new Response(null, { status: 204 })
-    }
-    const index = Number(url.pathname.slice(1))
-    const write = writes[index]
-    if (!write) throw new Error('The transfer grant is missing.')
-    const key = fileKey(write.sandboxId, write.path)
-    const count = (active.get(key) ?? 0) + 1
-    active.set(key, count)
-    maximumWriters = Math.max(maximumWriters, count)
-    try {
+  const transfer = attachmentCommandTransfer({
+    before: async (sandboxId, path) => {
+      const index = writes.push({ sandboxId, path }) - 1
+      maximumWriters = Math.max(maximumWriters, ++active)
       if (index === 0) {
         entered.resolve()
         await release.promise
       }
-      const bytes = new Uint8Array(await request.arrayBuffer())
-      if (index === 0 && failFirst) return new Response(null, { status: 503 })
+      active--
+    },
+    fail: () => failFirst && writes.length === 1,
+    download: (request) => handleAttachmentDownload(request, harness.env),
+    copied: (sandboxId, path, bytes) => {
+      const key = fileKey(sandboxId, path)
       if (delivered.has(key)) lateWrites++
       files.set(key, bytes)
-      return new Response(null, { status: 204 })
-    } finally {
-      active.set(key, count - 1)
-    }
+    },
+  })
+  const fetch = async (request: Request) => {
+    requests.push(request)
+    const response = await transfer.fetch(request)
+    if (!response) throw new Error('Unexpected provider request')
+    return response
   }
   const prepare: ChatDependencies['prepareAttachments'] = (...args) => {
     const copying = prepareMessageAttachments(harness.env, ...args, fetch)

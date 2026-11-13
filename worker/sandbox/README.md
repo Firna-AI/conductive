@@ -13,8 +13,6 @@ It sends `X-Boat-Org` with the organization ID of its account on every
 API request, `BOAT_ORG_ID` for `boat`. A change of the active Boat organization
 of the key's user then moves no work of the app.
 It forwards no browser cookie.
-File writes also send a signed PUT to the exact address that the fixed
-upload-grant route returns. That transfer sends no provider credential or org header.
 
 `SandboxProvider.privatePort(sandboxId, port, mode)` calls only the fixed host
 route. It requires explicit localhost or network mode and private access.
@@ -100,7 +98,7 @@ Make the organization and the key once, in the Boat dashboard:
    actions, and add these actions:
    `sandbox.create`, `sandbox.read`, `sandbox.update`, `sandbox.stop`,
    `sandbox.resume`, `sandbox.fork`, `sandbox.delete`, `exec`,
-   `snapshot.read`, `snapshot.write`, `file.read`, `file.write`, `host`, and `desktop`.
+   `snapshot.read`, `snapshot.write`, `file.read`, `host`, and `desktop`.
 4. Limit the key to one environment. Give it a lifetime of 365 days, and
    plan its replacement before that date.
 
@@ -161,26 +159,13 @@ The [Files backend](../files/README.md) checks decoded byte counts and converts 
 Provider failures use safe typed errors.
 Upstream error messages never reach the browser.
 
-## File writes
+## Attachment downloads
 
-`SandboxProvider.writeFile(sandboxId, path, body, sizeBytes)` is an internal streamed write.
-The caller authorizes the workspace and its actual sandbox before calling it.
-Each adapter creates missing parent folders.
-It replaces an existing file only after the upload completes.
-The adapter obtains a grant through `POST /sandboxes/{id}/files/upload-url`.
-It requires `file.upload_url`, method `PUT`, the exact requested canonical path,
-a future expiry, and an HTTPS address without user information.
-The [upload URL reference](https://docs.boat.dev/api/reference/agent/create-upload-url)
-defines the grant and permits files of any size.
-
-The adapter streams the body to that exact address with `application/octet-stream`.
-It follows no redirect and sends no cookie, Authorization, or `X-Boat-Org` header.
-It forwards each byte without encoding or a complete file buffer.
-It counts bytes against `sizeBytes` and requires the stream to finish before success.
-An incomplete source, a byte-count mismatch, or a failed transfer gives a safe typed error.
-The transfer uses the same 65 second request timeout as file reads.
-The adapter keeps the signed address out of its return value and errors.
-It does not copy transfer error text or codes.
+Attached files reach the sandbox through detached commands.
+The cloud computer downloads each file from a one-use route on the machine host.
+The command checks its size before an atomic move to the repository path.
+The provider needs `exec` for these commands.
+[Chat attachment delivery](../chat/attachments.md#dispatch) owns the download tokens, access checks, command, and polling.
 
 ## Development
 
@@ -227,7 +212,7 @@ tests stay beside the adapter.
 
 ### Key Code
 
-- [provider.ts](provider.ts) defines the server's sandbox and file read/write interface, with `PrivatePort` and `PortCredential`.
+- [provider.ts](provider.ts) defines the server's sandbox and file read interface, with `PrivatePort` and `PortCredential`.
 - [boat.ts](boat.ts) forwards provider operations to the Boat helpers. It builds the Boat port credential.
 - [provider-contract.test.ts](provider-contract.test.ts) runs the [provider contract suite](#provider-contract-suite) with the Boat driver, `createBoatContractFixture` in [boat-contract.test-support.ts](boat-contract.test-support.ts). Its port case checks the Boat port credential that `privatePort` returns.
 - [client.ts](client.ts) gives the client of an account with `providerForAccount`, and after the membership check with `orgProviderForAccount`.
@@ -242,9 +227,6 @@ tests stay beside the adapter.
 - [The shared readers](../http/bounded-body.ts) collect bounded bytes and decode and parse complete JSON bodies.
 - [file-read.ts](file-read.ts) parses file replies and runs the metadata fallback.
 - [file-read.test.ts](file-read.test.ts) checks size results and safe errors from the metadata fallback.
-- [file-write.ts](file-write.ts) validates upload grants and runs the internal file write.
-- [file-write-body.ts](file-write-body.ts) counts streamed bytes without buffering the file.
-- [file-write.test.ts](file-write.test.ts), [file-write-failure.test.ts](file-write-failure.test.ts), and [file-write-response.test.ts](file-write-response.test.ts) check bytes, path binding, credential separation, safe failures, and response budgets.
 
 See the [access requirements](../../docs/protocol/isolation.md#orgs-and-workspaces),
 the [rules of the app's Boat key](../../docs/protocol/isolation.md#the-apps-boat-key),

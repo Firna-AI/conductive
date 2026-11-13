@@ -520,20 +520,62 @@ These are the calls of the agents and the orchestrator, of 13 November
 
 Depends on: 2
 
-- [ ] Add the D1 migration for the download tokens, and the migrations
+- [x] Add the D1 migration for the download tokens, and the migrations
       README line.
-- [ ] Add the download route on the machine host, with its tests. Reuse the
+- [x] Add the download route on the machine host, with its tests. Reuse the
       access checks of today's copy.
-- [ ] Delete expired download tokens in the scheduled cleanup.
-- [ ] Replace the streamed write in `worker/chat/attachment-copy.ts` with
+- [x] Delete expired download tokens in the scheduled cleanup.
+- [x] Replace the streamed write in `worker/chat/attachment-copy.ts` with
       the download command and its status reads. Key the owner by file and
       sandbox.
-- [ ] Delete `SandboxProvider.writeFile`, its Boat adapter, the
+- [x] Delete `SandboxProvider.writeFile`, its Boat adapter, the
       `uploadFileUrl` route, and their tests.
-- [ ] Update `worker/chat/attachments.md` and the sandbox README.
-- [ ] Update `docs/deployment.md`, which says that the provider key needs
+- [x] Update `worker/chat/attachments.md` and the sandbox README.
+- [x] Update `docs/deployment.md`, which says that the provider key needs
       `file.write` to copy each attached file.
-- [ ] Run `npm run test -- worker/chat worker/sandbox`.
+- [x] Run `npm run test -- worker/chat worker/sandbox`. On this machine
+      the native tests time out under load, also on the committed code, as
+      `plans/follow-ups/tests-time-out-under-machine-load.md` says. Each
+      attachment test file passed alone from a copy under `/tmp`, except
+      `worker/chat/integration/failed-first-start-retry.test.ts`, which
+      also times out on the committed code without this change.
+
+Verification evidence is in `.context/large-attachments/reports/m3.md`.
+
+### Design calls of Milestone 3
+
+These are the implementor's calls of 13 November 2026.
+
+- `AttachmentPreparation` owns the active file-transfer map beside its
+  message owners. The map hashes the file ID and sandbox ID. Reason: two
+  sessions can share a transfer without changing message proofs or dispatch
+  order. A settled transfer leaves the map, so later messages still download
+  again until Milestone 4.
+- Each file gets its own detached command. That command writes `.gitignore`
+  before its download. Reason: each shared transfer must work independently
+  of the message that first needed it.
+- Curl uses a low-speed limit of 1,024 bytes per second for 60 seconds,
+  and a total limit of 3,600 seconds. Status reads wait one second between
+  unfinished results. Reason: a large file needs a long transfer limit,
+  while a stalled transfer and rapid status reads still need bounds.
+- A random UUID names each temporary file. An exit trap removes it after
+  failure. Reason: a restart can create a second command without mixing
+  bytes or leaving a partial file at the final path.
+- Token claims use one conditional D1 update with `RETURNING`. Expired
+  tokens leave through the existing attachment cleanup. Deleting an
+  attachment cascades to its tokens. Reason: one claim must win, and
+  deleted files need no surviving grant.
+- The download route uses the same real clock as token creation and the
+  image-source grant route. Reason: its ten-minute lifetime must use one
+  clock, independently of a workspace's scheduling clock.
+- `machine-grants.ts` holds the two private grant routes. Reason: the
+  application file would exceed 300 lines with both handlers inline.
+- The new route refuses access with fixed error text and no ownership
+  detail. Reason: a bearer token must reveal no file or workspace data
+  when an access check fails.
+- The first-start test fixture uses the existing lifecycle command hook.
+  Its fake download calls the production machine route. Reason: attachment
+  tests must not intercept unrelated provider requests.
 
 ## Milestone 4: Delete the stored copy after the transfer
 
@@ -604,13 +646,16 @@ Depends on: 2
 - [x] Give Codex an image as image input only up to 25,000,000 bytes, in
       `runner/src/providers/codex.ts`.
 - [x] Add runner tests for the line and for an image above the limit.
-- [ ] Update `worker/chat/attachments.md` and the runner README.
+- [x] Update `worker/chat/attachments.md` and the runner README.
 
 ## Milestone 9: Verification, commit, review, and pull request
 
 Depends on: every other milestone
 
 - [ ] Run the targeted tests and `npm run check`.
+- [ ] Confirm in CI that
+      `worker/chat/integration/failed-first-start-retry.test.ts` passes. It
+      times out on this machine, also without this change.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,

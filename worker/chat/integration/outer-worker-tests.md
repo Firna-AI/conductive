@@ -36,8 +36,7 @@ npm run test -- worker/chat/integration
   production route. After the failure and after the retry, the native
   expiry RPC keeps the expired claim and its bytes. The retry copies the
   exact bytes once. `first-start-attachments.test-support.ts` gives the
-  upload, a fake file upload address with its transfer, and that expiry
-  call.
+  upload, a fake detached command that calls the machine download route, and that expiry call.
 - `failed-creation-replay.test.ts` checks all history pages of a kept failed
   workspace through the normal member event socket, which stays live.
 - `workspace-lifecycle.test.ts` joins runner readiness, a reconnect, a
@@ -170,6 +169,5 @@ CHAT_HARNESS_ASSETS=path/to/client CHAT_HARNESS_PORT=5181 \
   The workspace stays readable with its error and queued messages.
   It returns through history and retries in the same workspace.
 - The Worker routes raw attachment uploads, and `attachment-raw.test.ts`
-  checks them with native R2. The fake provider of the harness gives no
-  file upload address, so a file copy into its fake sandbox fails. So such
+  checks them with native R2. The default fake provider does not run attachment download commands, so an attachment transfer into its fake sandbox fails. So such
   a check sends text.

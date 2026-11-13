@@ -67,8 +67,8 @@ it('retries the same failed workspace with a fresh token and dispatches every st
   const transfer = firstStartAttachmentTransfer()
   const active = (fixture = await createOuterRuntime(bundle, {
     persistencePath: await mkdtemp(`${directory}/retry-runtime-`),
-    outbound: transfer.outbound,
   }))
+  transfer.connect(active)
   const saveSetup = async (script: string, value: string) => {
     const ciphertext = await encrypt(
       JSON.stringify({ RETRY_SETUP: value }),

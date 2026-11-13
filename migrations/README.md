@@ -283,6 +283,10 @@ UI and wiring milestones normally need no migration. Their ranges stay reserved.
 | Keyboard shortcuts storage | `202611101600`–`202611101659` |
 | Agent workspace calls | `202611111200`–`202611111259` |
 
+`202611131221_attachment_download_tokens.sql` adds one-use attachment download grants.
+Each row holds a token digest, the file and destination identities, its expiry, and its claim time.
+Deleting an attachment also removes its grants.
+
 ## Key code
 
 - [The test harness](../worker/test-support/harness.ts) applies every SQL

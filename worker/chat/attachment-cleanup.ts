@@ -1,3 +1,4 @@
+import { cleanupAttachmentDownloads } from './attachment-download-data'
 import type { AppEnv } from '../env'
 import { warnWorker } from '../warnings'
 import {
@@ -108,6 +109,7 @@ export async function cleanupDraftAttachments(
   env: AppEnv,
   now: number,
 ): Promise<void> {
+  await cleanupAttachmentDownloads(env.DB, now)
   let after = ''
   while (true) {
     const records = await attachmentBatch(env.DB, { now, after })

@@ -9,7 +9,6 @@ metadata fallback.
 ## Response byte limits
 
 Every Boat API response uses the [shared bounded JSON reader](../http/README.md#bounded-json-reader).
-Signed file transfers use the same bounded byte reader without requiring JSON.
 The following limits are Worker policy chosen by the user.
 They are not published Boat response maxima.
 The Worker counts received bytes and does not trust `Content-Length`.
@@ -31,8 +30,6 @@ A command with a nonzero exit code still uses 18 MiB when its HTTP response is s
 | `GET`, `DELETE /saved-snapshots/{name}` | 1 MiB | 1 MiB |
 | `GET /sandboxes/{id}/files` | `4 × ceil(maxBytes / 3) + envelopeBytes` | 1 MiB |
 | `GET /sandboxes/{id}/files/info` | 1 MiB | 1 MiB |
-| `POST /sandboxes/{id}/files/upload-url` | 1 MiB | 1 MiB |
-| `PUT` to that grant's exact signed upload address | 1 MiB | 1 MiB |
 
 Here, 1 MiB is 1,048,576 bytes.
 The 18 MiB command budget is 18,874,368 bytes for the complete JSON body.

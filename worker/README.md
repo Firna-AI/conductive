@@ -107,6 +107,7 @@ On the machine hostname, the Worker serves the Mac command routes, the git
 credential route, the image source credential route, the
 [software image deploy route](software-image/README.md#deploy-route), the
 [workspace tools](tools/README.md), GitHub webhooks, the model gateway, and the runner socket.
+The machine host also serves the one-use [attachment download](chat/attachments.md#dispatch).
 These handlers use their own machine credentials and skip the browser gate.
 The [model gateway](model-gateway/README.md) accepts only a turn token.
 It adds the starter's login to allowed Anthropic, OpenAI, or own endpoint requests.
@@ -241,6 +242,7 @@ Call other parts of the app through a binding or an RPC method, not a global `fe
 ### Key Code
 
 - [app.ts](app.ts) exports the Worker HTTP handler.
+- [machine-grants.ts](machine-grants.ts) dispatches the private image-source credential and attachment download routes on the machine host.
 - [application.ts](application.ts) selects each host surface and dispatches the app and machine routes with their own access gates.
 - [http.ts](http.ts): `privateResponse` adds private response headers. It preserves an explicit referrer policy and defaults to `no-referrer`.
   `previewResponse` adds the same security headers to each reply of the preview host. It keeps the cache rules that the preview code set. A reply without rules gets `no-store`, except a bare 304.

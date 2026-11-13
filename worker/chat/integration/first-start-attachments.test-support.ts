@@ -1,5 +1,7 @@
 import { expect } from 'vitest'
 
+import { attachmentCommandTransfer } from '../../test-support/attachment-command'
+
 import { readAttachment as readPublicAttachment } from '../../../src/app/api/read-workspaces'
 import { attachmentUploadUrl } from '../../../src/shared/messages'
 import {
@@ -9,7 +11,7 @@ import {
 import type { HttpFetch } from '../../env'
 import { readAttachment } from '../attachment-data'
 import { attachmentBucket } from '../attachment-record'
-import { identifier, record } from '../inputs'
+import { record } from '../inputs'
 import type { Workspace } from './journey-entry.test-support'
 import type { OuterRuntime } from './outer-runtime.test-support'
 import { OUTER_ORG, OUTER_REPOSITORY } from './outer-seed.test-support'
@@ -24,32 +26,31 @@ export const REPAIRED_REPOSITORY_LOCATIONS = [
 ]
 
 export function firstStartAttachmentTransfer() {
-  const copies: Uint8Array[] = []
-  const paths: string[] = []
-  const outbound = async (request: Request, fallback: HttpFetch) => {
-    const url = new URL(request.url)
-    if (
-      url.hostname === 'boat.dev' &&
-      url.pathname.endsWith('/files/upload-url')
-    ) {
-      const path = identifier(record(await request.json()).path)
-      paths.push(path)
-      return Response.json({
-        ok: true,
-        type: 'file.upload_url',
-        method: 'PUT',
-        path,
-        url: 'https://first-start-files.test/copy',
-        expiresAt: '2099-01-01T00:00:00Z',
-      })
-    }
-    if (url.hostname === 'first-start-files.test') {
-      copies.push(new Uint8Array(await request.arrayBuffer()))
-      return new Response(null, { status: 200 })
-    }
-    return fallback(request)
+  let download: HttpFetch | undefined
+  const transfer = attachmentCommandTransfer({
+    download: (request) => {
+      if (!download) throw new Error('The download route is not connected.')
+      return download(request)
+    },
+  })
+  return {
+    ...transfer,
+    connect: (fixture: OuterRuntime) => {
+      download = async (request) => {
+        const response = await fixture.runtime.dispatchFetch(request.url, {
+          method: request.method,
+          headers: [...request.headers.entries()],
+        })
+        return new Response(await response.arrayBuffer(), {
+          status: response.status,
+          headers: [...response.headers.entries()],
+        })
+      }
+      fixture.boat.beforeCommand = async (command) => {
+        await transfer.start('first-start-sandbox', command)
+      }
+    },
   }
-  return { copies, paths, outbound }
 }
 
 export async function expectFirstStartCopies(

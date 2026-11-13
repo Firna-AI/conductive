@@ -62,34 +62,53 @@ A command that waits for its copy holds the later `turn` and `message` commands 
 So the agent gets the messages of that turn in accepted order.
 Stop and the commands of other turns do not wait.
 
-Each copy has one owner: one accepted message on one destination computer.
+Each message has one preparation owner on each destination computer.
 Each check first reads the current sandbox ID of the workspace with `attachmentSandboxId`.
-`attachmentCopyKey` in [attachment-record.ts](attachment-record.ts) builds the owner key with SHA-256 over the message ID and that sandbox ID.
-The fixed-length digest keeps the stored proof key short, so message IDs need no new length limit.
-The key holds no command ID and no runner connection.
-`AttachmentPreparation` keeps one owner for each key in memory.
-The owner gives its sandbox ID to `prepareMessageAttachments` in [attachment-copy.ts](attachment-copy.ts).
-That helper reads the current captured folder map with `workspaceRepositoryLocations`.
-`attachmentRepositoryDirectory` in [attachment-paths.ts](attachment-paths.ts) selects the folder of the workspace's own repository.
-Before the first attachment, the Worker writes `.context/attachments/.gitignore` with the single byte `*` under that folder.
-Then it joins each stored relative path to that folder and streams the file there.
-The provider creates missing parent folders, as [File writes](../sandbox/README.md#file-writes) says.
-That helper checks the sandbox before each file and after the last file.
-It fails when the workspace names another sandbox, so an owner never moves to another computer.
-The owner copies through `waitUntil` outside the chat queue.
+`attachmentCopyKey` in [attachment-record.ts](attachment-record.ts) hashes the message ID and that sandbox ID for its proof key.
+The key holds no command ID or runner connection.
+`AttachmentPreparation` also keeps active file transfers in memory.
+Their keys hash the file ID and sandbox ID with SHA-256.
+Two messages that need the same file on that computer wait for the same active transfer.
+The file owner clears after success or failure.
+A later message then downloads the original bytes again.
+
+The owner gives one file and its sandbox ID to `prepareMessageAttachments` in [attachment-copy.ts](attachment-copy.ts).
+That helper checks the current claim, uploader, workspace access, sandbox, provider account, and stored relative path.
+`attachmentRepositoryDirectory` in [attachment-paths.ts](attachment-paths.ts) selects the workspace repository from its captured folder map.
+The helper stores a random download token through [attachment-download-data.ts](attachment-download-data.ts).
+D1 keeps only its SHA-256 digest, file ID, workspace, org, sandbox, provider account, expiry, and claim time.
+The token expires after ten minutes.
+
+[attachment-download-command.ts](attachment-download-command.ts) builds the detached command.
+It starts with an empty environment and uses absolute commands, HTTPS, no curl configuration, and no redirects.
+It creates the file's parent folder and writes `*` into `.context/attachments/.gitignore`.
+It removes older temporary files of that file and downloads to a new random temporary file beside the destination.
+Curl uses a 1 KiB/s low-speed limit for 60 seconds and a one-hour total limit.
+The command checks the byte count before an atomic move to the final path.
+It removes its temporary file on failure and prints no output.
+The token appears only in the Authorization header of the download.
+`SandboxProvider.startCommand` starts it, and `getCommandStatus` polls it to completion.
+A failed command gives `attachment_copy_failed` through the normal failed-turn path.
+The helper checks the sandbox and provider account before and after the transfer.
+The owner runs through `waitUntil` outside the chat queue.
 Stop, runner events, and confirmations keep using that queue during a transfer.
-The provider helper accepts an injected HTTP boundary for tests.
+
+[attachment-download.ts](attachment-download.ts) serves `POST /v1/internal/attachments/download` on the machine origin.
+It refuses cookies and Origin headers, then claims an unexpired token once.
+It checks workspace access, the bound sandbox and account, the uploader, the file claim, and the stored size before streaming R2.
+Its private response carries `application/octet-stream` and the file's Content-Length.
+Each refused download gives a fixed error with no ownership detail.
 
 A continuation moves an unanswered message to a new turn with a new command ID.
 The runner ignores a command ID that it already received, so the continuation needs that new ID.
 The continuation keeps the message and its file paths, so its check finds the same owner key.
 It waits for a held copy, and it goes out at once after a finished copy.
 A reconnect to the same computer also finds the same owner, which then follows the newest connection.
-Thus the writes of one message's owner to its paths on one computer never overlap.
-That owner writes no copy after its message goes out.
-This guarantee covers one accepted message, not every message that uses the file.
-Each later message with the same file has its own owner, and it copies the original bytes to that same path again.
-So two messages can write that shared path, also while an agent reads it, as [Attachments](../../docs/protocol/message-attachments.md#attachments) says.
+One active file owner serves each computer and path across messages.
+After a restart, a missing message proof starts a new download with a new token and temporary file.
+The restarted command removes older temporary files of that file.
+Each final move is atomic, so overlapping downloads cannot mix bytes at the final path.
+No process ID is stored.
 
 Completion enters the chat queue again.
 It saves the copy proof with `ChatRecords.saveAttachmentCopy(messageId, sandboxId)`, marks the owner ready, and resumes dispatch.
@@ -104,7 +123,7 @@ A stored command with an old path cannot reuse its proof.
 An old path is the old absolute-path field, or a relative path from the old digest of the message ID and the file ID.
 `prepareMessageAttachments` also refuses that path, so its copy fails through the normal failed-turn path.
 Try again then admits the current path of each file.
-A new computer or a new message gets a new owner key and a new copy.
+A new computer or message gets a new preparation key and joins or starts its file transfers.
 A failed proof save closes the runner connection and clears the owner.
 Redelivery reads any proof that committed before the failure.
 
@@ -129,18 +148,20 @@ The current connection and computer then get their own owner.
 
 ## Agent input
 
-After the member's text, the runner adds one line: "The sender attached these files. Read each file before you answer."
+After the member's text, the runner adds one line: "The sender attached these files. Read each file, or the parts of a large file that you need, before you answer."
 The runner then gives the agent the original name, media type, copied absolute path, and `sizeBytes` of each file.
 It takes the size from the metadata of the message, with no file read.
 `attachmentDescription` in [attachment-description.ts](../../runner/src/providers/attachment-description.ts) writes that description for the Claude and Codex adapters.
 Each description is one line with a JSON object, so a name with quotes or a line break stays inside its value.
-Codex also gets each image as a local image input after its file line.
-For a message with an image, its read line adds "Each image is also in this message."
+Codex also gets each image of at most `ATTACHMENT_IMAGE_MAX_BYTES`, 25,000,000 bytes, as a local image input after its file line.
+A larger image gets only its file line.
+When at least one image goes as image input, the read line adds "Each image is also in this message."
 A message without attached files gets no read line or file lines.
 
 ## Cleanup
 
-The scheduled members cleanup also sweeps expired drafts.
+The scheduled members cleanup deletes expired download tokens, including consumed tokens.
+It also sweeps expired drafts.
 It uses conditional revisions before deleting a ready file.
 For a claim, the sweep calls the trusted `expireChatAttachment` RPC of the claiming workspace object.
 That RPC checks acceptance in the chat queue.
@@ -158,7 +179,9 @@ The sweep also removes completed orphan objects whose upload outlived its record
 The attachment tests use local Miniflare R2 and D1.
 Storage tests also call the internal storage boundary.
 The raw route tests use the real Worker and native R2 in Miniflare.
-Copy tests inject a fake grant and signed transfer through `prepareAttachments`.
+Copy tests inject detached command responses through `prepareAttachments`.
+The fake command downloads through the real one-use route with local D1 and R2.
+Shell tests execute the generated command with a fake curl boundary to check byte counts and atomic file placement.
 The copy owner tests use that fake transfer to count the writers of each computer and path, and the writes after delivery.
 The later-message test edits the first copy, then checks that the next message writes the original bytes to the same path.
 The legacy-path tests store an old absolute or message-derived relative path with a proof, and check that the turn fails.

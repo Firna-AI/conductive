@@ -1,7 +1,6 @@
 import type { HttpFetch } from '../env'
 import { ProviderError } from './errors'
 import { readSandboxFile } from './file-read'
-import { writeSandboxFile } from './file-write'
 import {
   readCommand,
   readCommandStatus,
@@ -30,15 +29,6 @@ export class BoatClient implements SandboxProvider {
 
   readFile(sandboxId: string, path: string, maxBytes: number) {
     return readSandboxFile(this.transport, sandboxId, path, maxBytes)
-  }
-
-  writeFile(
-    sandboxId: string,
-    path: string,
-    body: ReadableStream<Uint8Array>,
-    sizeBytes: number,
-  ): Promise<void> {
-    return writeSandboxFile(this.transport, sandboxId, path, body, sizeBytes)
   }
 
   async privatePort(

@@ -1,29 +1,36 @@
+import type { AppEnv } from '../env'
+import { errorResponse } from '../http'
+import { attachmentCommandTransfer } from '../test-support/attachment-command'
+import { handleAttachmentDownload } from './attachment-download'
+
 export function providerCopy(
+  env: AppEnv,
   options: {
     hold?: Promise<void>
     entered?: () => void
     fail?: () => boolean
   } = {},
 ) {
-  const paths: string[] = []
-  const copies: Uint8Array[] = []
-  const fetch = async (request: Request) => {
-    if (new URL(request.url).hostname === 'boat.dev') {
-      const body: { path: string } = await request.json()
-      paths.push(body.path)
-      return Response.json({
-        ok: true,
-        type: 'file.upload_url',
-        method: 'PUT',
-        path: body.path,
-        url: 'https://attachment-transfer.test/file',
-        expiresAt: '2099-01-01T00:00:00Z',
-      })
-    }
-    options.entered?.()
-    await options.hold
-    copies.push(new Uint8Array(await request.arrayBuffer()))
-    return new Response(null, { status: options.fail?.() ? 503 : 204 })
+  const transfer = attachmentCommandTransfer({
+    before: async () => {
+      options.entered?.()
+      await options.hold
+    },
+    fail: options.fail,
+    download: async (request) => {
+      try {
+        return await handleAttachmentDownload(request, env)
+      } catch (error) {
+        return errorResponse(error)
+      }
+    },
+  })
+  return {
+    ...transfer,
+    fetch: async (request: Request) => {
+      const response = await transfer.fetch(request)
+      if (!response) throw new Error('Unexpected provider request')
+      return response
+    },
   }
-  return { paths, copies, fetch }
 }

@@ -24,7 +24,7 @@ afterAll(async () => {
 it.each(['absolute', 'message-relative'] as const)(
   'fails a legacy %s path through copy preparation despite stored proof',
   async (kind) => {
-    const provider = providerCopy()
+    const provider = providerCopy(harness.env)
     const fixture = await attachmentFixture(harness, {
       prepareAttachments: (...args) =>
         prepareMessageAttachments(harness.env, ...args, provider.fetch),
