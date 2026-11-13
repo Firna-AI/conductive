@@ -1,5 +1,13 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { expect, it } from 'vitest'
+import textLink from '../../../docs/mockups/src/components/common/TextLink.module.css'
+import { parseRoute, routes } from '../../app/router'
+import { orgPath } from '../../shared/api'
+import {
+  LinkOpeningProvider,
+  type LinkOpening,
+} from '../../shell/ui/text-links'
+import { FAKE_IDS, FAKE_ORIGIN } from '../../test-support/fixtures/core'
 import { parseMarkdown } from './markdown-document'
 import { MarkdownView } from './MarkdownView'
 
@@ -9,6 +17,31 @@ function render(text: string): string {
     <MarkdownView parser={parseMarkdown} text={text} />,
   )
 }
+
+/**
+ * The link opener of a workspace screen whose servers run: the app origin
+ * of the tests, the check of the router for a page, and port previews.
+ */
+const opening: LinkOpening = {
+  appOrigin: FAKE_ORIGIN,
+  isAppPage: (url) =>
+    parseRoute(url.pathname, url.search).screen !== 'not-found',
+  open: () => {},
+  ports: { href: (port) => `/preview/${port}`, open: () => {} },
+}
+
+/** A static render in a workspace screen, which opens the links. */
+function renderInScreen(text: string): string {
+  return renderToStaticMarkup(
+    <LinkOpeningProvider value={opening}>
+      <MarkdownView parser={parseMarkdown} text={text} />
+    </LinkOpeningProvider>,
+  )
+}
+
+/** The look and the title of the shared link part, for an address. */
+const drawn = (address: string) => `class="${textLink.link}" title="${address}"`
+const newTab = 'rel="noopener noreferrer" target="_blank"'
 
 it('renders headings, a numbered list, and inline code', () => {
   const html = render(`# Storefront
@@ -87,15 +120,27 @@ it('shows HTML of the file as text', () => {
   )
 })
 
-it('links only absolute http, https, and mailto addresses', () => {
+it('links only absolute http, https, and mailto addresses, with the shared link part: a page of the app opens in the app, and every other link opens a new tab', () => {
+  const agents = routes.accountTab('agents')
+  const api = `${FAKE_ORIGIN}${orgPath(FAKE_IDS.org)}`
   const cases = [
     [
       '[site](https://example.com/a?b=1)',
-      '<a href="https://example.com/a?b=1" rel="noopener noreferrer" target="_blank">site</a>',
+      `<a ${drawn('https://example.com/a?b=1')} href="https://example.com/a?b=1" ${newTab}>site</a>`,
     ],
+    // Chat text keeps the next three addresses as text. A file links them.
     [
       '<mailto:dev@example.com>',
-      '<a href="mailto:dev@example.com" rel="noopener noreferrer" target="_blank">mailto:dev@example.com</a>',
+      `<a ${drawn('mailto:dev@example.com')} href="mailto:dev@example.com" ${newTab}>mailto:dev@example.com</a>`,
+    ],
+    [
+      '[login](https://dev:secret@example.com/)',
+      `<a ${drawn('https://dev:secret@example.com/')} href="https://dev:secret@example.com/" ${newTab}>login</a>`,
+    ],
+    [`[api](${api})`, `<a ${drawn(api)} href="${api}" ${newTab}>api</a>`],
+    [
+      `[agents](${FAKE_ORIGIN}${agents})`,
+      `<a ${drawn(`${FAKE_ORIGIN}${agents}`)} href="${agents}">agents</a>`,
     ],
     ['[run](javascript:alert(1))', '<p>run</p>'],
     ['[run](JaVaScRiPt:alert(1))', '<p>run</p>'],
@@ -105,13 +150,23 @@ it('links only absolute http, https, and mailto addresses', () => {
     ['![logo](https://example.com/logo.png)', '<p>logo</p>'],
     [
       '[ref]\n\n[ref]: https://example.com/ref',
-      '<a href="https://example.com/ref" rel="noopener noreferrer" target="_blank">ref</a>',
+      `<a ${drawn('https://example.com/ref')} href="https://example.com/ref" ${newTab}>ref</a>`,
     ],
   ] as const
   for (const [markdown, expected] of cases) {
-    expect(render(markdown), markdown).toContain(expected)
+    expect(renderInScreen(markdown), markdown).toContain(expected)
   }
-  expect(render('![logo](https://example.com/logo.png)')).not.toContain('<img')
+  expect(renderInScreen('![logo](https://example.com/logo.png)')).not.toContain(
+    '<img',
+  )
+})
+
+it('keeps a link to a local address as a link that opens a new tab, also where the screen opens the preview of a port', () => {
+  expect(
+    renderInScreen('Open [the dev server](http://localhost:3000).'),
+  ).toContain(
+    `<a ${drawn('http://localhost:3000/')} href="http://localhost:3000/" ${newTab}>the dev server</a>`,
+  )
 })
 
 it('renders a table, a quote, a rule, and a task list', () => {

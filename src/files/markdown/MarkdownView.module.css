@@ -69,12 +69,6 @@
   border-top: 1px solid var(--ui-border);
 }
 
-.doc a {
-  color: var(--ui-link);
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-
 .doc strong {
   color: var(--ui-ink);
   font-weight: var(--ui-weight-strong);

@@ -444,6 +444,25 @@ November 2026, under the same test:
   Reason: [Agent instructions](../docs/protocol/agent-instructions.md)
   relies on the rule that the chat shows the Markdown of an image as text.
 
+The implementation of Milestones 5 and 6 made these calls on 13 November
+2026, under the same test:
+
+- The app origin of the opener is the origin of the app host, not the
+  origin of the workspace links. Reason: in `npm run dev`, the dev fake
+  writes workspace links with another origin.
+- The `web` reader of `chatParts` is required, so a caller without it
+  fails the typecheck and cannot drop links without notice.
+- One provider around each layout of the workspace screen gives the
+  opener to the chat and to the file preview, on desktop and on a phone.
+  Reason: the Files tab of a phone is outside the chat.
+- Until decision 4 has its answer, a local address of a file opens a new
+  tab, as before this change. An option of the opener sets this where the
+  file preview draws its links. This is no option of decision 4. It keeps
+  the behaviour of `main`.
+- A file keeps each address that its parser accepts as a link, also one
+  that chat text keeps as text. Reason: the file preview gets no stricter
+  rule, as the design calls above say.
+
 ## Components
 
 - `src/markdown/web-links.ts`: the one reader of addresses for chat text,
@@ -601,14 +620,14 @@ Tags: ui
 
 Depends on: 3, 5
 
-- [ ] Draw each link of `inlineNodes` with `TextLink` and the opener of
+- [x] Draw each link of `inlineNodes` with `TextLink` and the opener of
       Milestone 5. Delete the anchor of `inlineNodes`. Keep the links
       that the design keeps for the file preview.
-- [ ] Give the file preview the opener context in the workspace screen.
+- [x] Give the file preview the opener context in the workspace screen.
 - [ ] Apply the answer of decision 4 to local addresses in a file.
-- [ ] Move the link test of `src/files/markdown/MarkdownView.test.tsx`
+- [x] Move the link test of `src/files/markdown/MarkdownView.test.tsx`
       to the shared link part, and add a link to an app page.
-- [ ] Update the safety rules of the [Files README](../src/files/README.md).
+- [x] Update the safety rules of the [Files README](../src/files/README.md).
 
 ## Milestone 7: Verification, commit, review, and pull request
 

@@ -30,6 +30,19 @@ export interface LinkOpening extends WebLinkContext {
   ports: PortPreviews | null
 }
 
+/**
+ * How a view opens a local address. `preview` opens the preview of its
+ * port, and keeps the address as text where the screen gives no port
+ * previews. `web` opens it as any other web link, in a new tab.
+ */
+type LocalOpening = 'preview' | 'web'
+
+/** What a view of untrusted text asks of its links. */
+export interface TextLinkOptions {
+  /** How a local address opens. The default is `preview`. */
+  local?: LocalOpening
+}
+
 /** The links of untrusted text: where each address leads, and its opener. */
 export interface TextLinks {
   /** Where an address leads, or undefined when it stays text. */
@@ -56,12 +69,18 @@ const outside: WebLinkContext = { appOrigin: '', isAppPage: () => false }
 
 /**
  * Where an address leads. Outside a screen, every accepted address is a
- * link. A screen without port previews keeps each local address as text.
+ * link. A screen without port previews keeps each local address as text,
+ * unless a local address opens as a web link.
  */
-function linkOf(href: string, opening: LinkOpening | null) {
+function linkOf(
+  href: string,
+  opening: LinkOpening | null,
+  local: LocalOpening,
+): WebLink | undefined {
   const link = webLink(href, opening ?? outside)
-  if (link?.kind === 'local' && opening && !opening.ports) return undefined
-  return link
+  if (link?.kind !== 'local') return link
+  if (local === 'web') return { kind: 'web', url: link.url }
+  return opening && !opening.ports ? undefined : link
 }
 
 /**
@@ -142,15 +161,17 @@ export function PlainLinks(props: { children: ReactNode }) {
 
 /**
  * The links of untrusted text where it shows. Outside a screen that opens
- * links, every link opens a new tab.
+ * links, every link opens a new tab. `options.local` says how a local
+ * address opens.
  */
-export function useTextLinks(): TextLinks {
+export function useTextLinks(options: TextLinkOptions = {}): TextLinks {
   const { opening, plain } = useContext(LinkStateContext)
+  const local = options.local ?? 'preview'
   return useMemo(
     () => ({
-      linkOf: (href) => linkOf(href, opening),
+      linkOf: (href) => linkOf(href, opening, local),
       opener: plain ? null : (link) => openerOf(link, opening),
     }),
-    [opening, plain],
+    [opening, plain, local],
   )
 }

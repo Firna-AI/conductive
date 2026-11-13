@@ -27,6 +27,7 @@ import { KeptFilesConnection } from './files/kept-files'
 import { ResumeOnTabOpen } from './files/tab-open-resume'
 import { WorkspaceGitHub } from './github/WorkspaceGitHub'
 import { HeaderNoticeBars } from './HeaderNoticeBars'
+import { WorkspaceLinks } from './link-opening'
 import { archivedRestore, contentState, sandboxView } from './sandbox-view'
 import { SandboxPanel } from './SandboxNotice'
 import { OpenSessionAddress } from './session-address'
@@ -51,7 +52,8 @@ function connectView(view: WorkspaceView): () => void {
  * A phone shows one view at a time, with tabs to switch. The shell draws
  * the header, the start steps, and the states of the sandbox, and the chat
  * fills the centre. The app's own parts fill the files, the tools, the pull
- * request bar, and the owner picker, unless the host gives its own.
+ * request bar, and the owner picker, unless the host gives its own. The
+ * links of the chat and of the file preview open as `WorkspaceLinks` says.
  *
  * The tab keeps the model, the header notices, the chat, and the tool
  * events of each workspace that it showed. So a return draws the workspace
@@ -237,20 +239,22 @@ export function WorkspaceScreen(props: {
       tool: tools,
     }
     const screen = (
-      <div className={page.mobileBody}>
-        {header}
-        <HeaderNoticeBars notices={notices} />
-        {features.pullRequest?.(context)}
+      <WorkspaceLinks context={context}>
         <div className={page.mobileBody}>
-          {archived || view === 'chat'
-            ? content.chat
-            : view === 'files'
-              ? content.files
-              : content.tool}
+          {header}
+          <HeaderNoticeBars notices={notices} />
+          {features.pullRequest?.(context)}
+          <div className={page.mobileBody}>
+            {archived || view === 'chat'
+              ? content.chat
+              : view === 'files'
+                ? content.files
+                : content.tool}
+          </div>
+          {archived ? null : <PhoneTabBar context={context} />}
+          {dialog}
         </div>
-        {archived ? null : <PhoneTabBar context={context} />}
-        {dialog}
-      </div>
+      </WorkspaceLinks>
     )
     // An archived workspace on a phone shows only its chat: no pull request
     // row and no Checks, so it reads no GitHub state and no files.
@@ -265,20 +269,22 @@ export function WorkspaceScreen(props: {
   return (
     <KeptFilesConnection context={context}>
       <WorkspaceGitHub context={context}>
-        <WorkspaceMacBar context={context} />
-        <div className={body.body}>
-          <div className={body.chat}>
-            {header}
-            <HeaderNoticeBars notices={notices} />
-            {chatArea}
+        <WorkspaceLinks context={context}>
+          <WorkspaceMacBar context={context} />
+          <div className={body.body}>
+            <div className={body.chat}>
+              {header}
+              <HeaderNoticeBars notices={notices} />
+              {chatArea}
+            </div>
+            <RightColumn
+              files={files}
+              pullRequest={features.pullRequest?.(context)}
+              tools={sandbox === 'archived' ? undefined : tools}
+            />
+            {dialog}
           </div>
-          <RightColumn
-            files={files}
-            pullRequest={features.pullRequest?.(context)}
-            tools={sandbox === 'archived' ? undefined : tools}
-          />
-          {dialog}
-        </div>
+        </WorkspaceLinks>
       </WorkspaceGitHub>
     </KeptFilesConnection>
   )

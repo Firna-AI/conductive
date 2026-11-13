@@ -1,9 +1,9 @@
-import { useContext, useMemo } from 'react'
+import { useContext, useMemo, type ReactNode } from 'react'
 import { useNavigation } from '../../app/navigation'
 import { parseRoute } from '../../app/router'
 import { useServices } from '../../app/services'
 import { PanelContext } from '../layout/panels'
-import type { LinkOpening } from '../ui/text-links'
+import { LinkOpeningProvider, type LinkOpening } from '../ui/text-links'
 import type { WorkspaceContext } from './features'
 import { previewPortHref } from './tools/tool-address'
 
@@ -21,7 +21,7 @@ function isAppPage(url: URL): boolean {
  * phone on the page of the tool. A read-only workspace, such as an
  * archived one, runs no server, so a local address stays text there.
  */
-export function useLinkOpening(context: WorkspaceContext): LinkOpening {
+function useLinkOpening(context: WorkspaceContext): LinkOpening {
   const { appOrigin } = useServices()
   const navigation = useNavigation()
   const panels = useContext(PanelContext)
@@ -44,4 +44,19 @@ export function useLinkOpening(context: WorkspaceContext): LinkOpening {
           },
     }
   }, [appOrigin, navigation, panels, org.id, workspace.id, readOnly, phone])
+}
+
+/**
+ * Opens the links of untrusted text in each part of the screen of a
+ * workspace as `useLinkOpening` says: the chat, and the file preview in
+ * the centre of a desktop and in the Files tab of a phone.
+ */
+export function WorkspaceLinks(props: {
+  context: WorkspaceContext
+  children: ReactNode
+}) {
+  const opening = useLinkOpening(props.context)
+  return (
+    <LinkOpeningProvider value={opening}>{props.children}</LinkOpeningProvider>
+  )
 }

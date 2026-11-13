@@ -3,6 +3,8 @@
 import { describe, expect, test, vi } from 'vitest'
 import { memoryNavigation, NavigationContext } from '../../app/navigation'
 import { routes } from '../../app/router'
+import { fakeWorkers } from '../../files/mount-test-kit'
+import { filePaths, type FileResponse } from '../../shared/files'
 import type { UserMessage } from '../../shared/messages'
 import { previewsPath } from '../../shared/previews'
 import {
@@ -28,9 +30,10 @@ import { Shell } from '../Shell'
 import { click, mountScreen, settle } from '../test-mount'
 import { startedApp } from '../test-render'
 import type { Viewport } from '../ui/viewport'
+import { filesHref } from './files/files-address'
 import { bodiesOf, emit, here, org, recordingSocket } from './kept-test-kit'
 import { previewPortHref, toolHref } from './tools/tool-address'
-import { linksTo, linkTo } from './wiring-test-kit'
+import { linksTo, linkTo, openTab } from './wiring-test-kit'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
@@ -121,5 +124,53 @@ describe('links of chat text in the workspace screen', () => {
       local: linksTo(view, portHref).length + linksTo(view, local).length,
       app: linksTo(text, agents).length,
     }).toEqual({ local: 0, app: 1 })
+  })
+})
+
+/** A Markdown file of the branch, as the file route of the Worker reads it. */
+function markdownFile(path: string, content: string): FileResponse {
+  return {
+    path,
+    mediaType: 'text/markdown',
+    encoding: 'utf-8',
+    content,
+    sizeBytes: new TextEncoder().encode(content).byteLength,
+  }
+}
+
+describe('links of the file preview in the workspace screen', () => {
+  test('on a phone, a link of a Markdown file to a page of the app opens that page in the same window', async () => {
+    holdAnimationFrames()
+    const workers = fakeWorkers()
+    const server = new FakeApiServer()
+    const path = 'docs/agents.md'
+    const text = `Connect Codex in [the agent settings](${FAKE_ORIGIN}${agents}).`
+    server.json(
+      'GET',
+      filePaths.content(org, id, path),
+      markdownFile(path, text),
+    )
+    const tab = { kind: 'file', path, mode: 'preview' } as const
+    const { view, navigation } = await openTab(
+      server,
+      filesHref(org, id, tab),
+      { viewport: 'phone' },
+    )
+    const parse = await waitFor(() => workers.live()[0], 'the parse')
+    parse.answer()
+    const link = await waitFor(
+      () =>
+        [...view.querySelectorAll('a')].find(
+          (anchor) => anchor.textContent === 'the agent settings',
+        ),
+      'the link of the file',
+    )
+    expect({
+      href: link.getAttribute('href'),
+      target: link.getAttribute('target'),
+    }).toEqual({ href: agents, target: null })
+    click(link)
+    await settle()
+    expect(navigation.href()).toBe(agents)
   })
 })

@@ -160,9 +160,11 @@ function ParsedInWorker(props: { text: string }) {
 /**
  * A Markdown file, rendered as formatted text. It builds React elements
  * only: HTML in the file shows as text, and only http, https, and mailto
- * links work. A link opens in a new tab and sends no referrer. A module
- * worker parses the text, so a long or crafted file never blocks the page.
- * `parser` parses on the calling thread instead, for a static render.
+ * links work. Each link opens through the link opener of the screen: a
+ * link to a page of the app opens in the app, and every other link opens a
+ * new tab that gets no referrer. A module worker parses the text, so a long
+ * or crafted file never blocks the page. `parser` parses on the calling
+ * thread instead, for a static render.
  */
 export function MarkdownView(props: { text: string; parser?: MarkdownParser }) {
   return props.parser ? (
