@@ -263,33 +263,36 @@ is smaller than the shared size, and a viewer whose panel is larger.
 
 Depends on: 1
 
-- [ ] Update the Terminal section of `docs/protocol/workspace-tools.md`:
-  - [ ] Every line of output reaches the screen and its history.
-  - [ ] A new connection shows the output history, up to 2,000 lines
+- [x] Update the Terminal section of `docs/protocol/workspace-tools.md`:
+  - [x] Every line of output reaches the screen and its history.
+  - [x] A new connection shows the output history, up to 2,000 lines
         (Decision 2 A), and the current screen.
-  - [ ] A drag past the top or the bottom edge scrolls and selects the
+  - [x] A drag past the top or the bottom edge scrolls and selects the
         history. The wheel scrolls the history, unless a program in the
         shell uses the mouse.
-  - [ ] All viewers of a shell share one size, at most 500 columns and 200
+  - [x] All viewers of a shell share one size, at most 500 columns and 200
         rows. A new connection, or the viewer where the user last typed or
         resized, sets it. Other viewers show that size.
-  - [ ] Each key reaches the program in the shell. The terminal has no key
+  - [x] Each key reaches the program in the shell. The terminal has no key
         commands and no status line of its own.
-  - [ ] Change the example of decision 246 from tmux to a program such as
+  - [x] Change the example of decision 246 from tmux to a program such as
         vim. Record Decisions 1 and 2 with their dates and the rejected
         options.
-  - [ ] Say that a workspace from an older image keeps the old behaviour.
-- [ ] Update `worker/terminal/README.md` and `src/terminal/README.md`.
-- [ ] Read both legal pages and every public guide in full. Update each
+  - [x] Say that a workspace from an older image keeps the old behaviour.
+- [x] Move the updates of `worker/terminal/README.md` and
+      `src/terminal/README.md` to Milestones 3 and 4, because they describe
+      the code of those milestones.
+- [x] Read both legal pages and every public guide in full. Update each
       sentence that restates a changed fact, such as
       `src/marketing/docs/terminal-and-previews.md`.
-- [ ] Check the row `workspace-terminal` in
+- [x] Check the row `workspace-terminal` in
       `src/marketing/from-conductor/areas/terminal-scripts-and-previews.ts`.
-- [ ] Update `plans/follow-ups/terminal-copy-browser-check.md` and the
+- [x] Update `plans/follow-ups/terminal-copy-browser-check.md` and the
       launcher design of `plans/terminal-tabs.md` for the bridge.
 - [ ] Add the bridge to the locations of
       `plans/follow-ups/org-node-options-reach-sandbox-software.md`, which
-      says that the bridge clears the Node variables.
+      says that the bridge clears the Node variables. It waits for the
+      launcher of Milestone 3.
 
 ## Milestone 3: The bridge
 
@@ -318,6 +321,7 @@ Depends on: 2
       for bracketed paste, two viewers with different sizes, a forged size,
       a resync, and the end of the shell.
 - [ ] Update the install and launcher tests.
+- [ ] Update `worker/terminal/README.md`.
 - [ ] Install `tmux` in the Tests jobs of `.github/workflows/ci.yml`.
 
 ## Milestone 4: The screen
@@ -337,6 +341,7 @@ Depends on: 3
 - [ ] Keep OSC 8 links as plain text.
 - [ ] Let the development page send a hello and another viewer's size.
 - [ ] Add tests for the session and the screen.
+- [ ] Update `src/terminal/README.md`.
 - [ ] Check the development page in a browser: a drag past the top edge
       scrolls and selects, Cmd+C copies, and both size states match the
       mockups.

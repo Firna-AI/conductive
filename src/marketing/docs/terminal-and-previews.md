@@ -42,6 +42,25 @@ Reconnect to return to the same shell and running commands.
 A stop of the cloud computer ends those commands.
 After a resume, start any needed server again.
 
+## Copy output
+
+1. Drag over the output to select it.
+2. Drag past the top or bottom edge to scroll and select more of the earlier output.
+3. Copy the selection, for example with Cmd+C on a Mac.
+
+The wheel scrolls the earlier output.
+A new connection shows up to 2,000 lines of earlier output.
+Every key goes to the shell, also Ctrl-b.
+
+Every member who opens the same terminal sees it at one shared size.
+The panel where someone last typed, pasted, or resized sets that size.
+Another panel can show smaller text, or empty space after the terminal.
+Type in a panel to give the terminal its size.
+
+A workspace with older cloud computer software shows only the visible screen when you drag.
+To get the newer terminal, ask an admin to run **Build computer**.
+After that build succeeds, create a new workspace.
+
 ## Know which GitHub account a command uses
 
 Git and the GitHub CLI, `gh`, get GitHub access through Conductive.
