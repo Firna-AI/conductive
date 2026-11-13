@@ -48,8 +48,8 @@ export const macAppSchema = {
      * A command that an agent asks to run on this Mac: none, the request
      * above the composer, the request of a longer time limit, the request
      * with the other ways to allow open, four requests with a long script,
-     * the notification while the app is in the background, or the 15
-     * minutes that allow every command.
+     * the notification while the app is in the background, the 15 minutes
+     * that allow every command, or the grant until the user stops it.
      */
     command: {
       enum: [
@@ -60,13 +60,14 @@ export const macAppSchema = {
         'many',
         'notification',
         'allow-all',
+        'allow-until-stop',
       ],
     },
     /**
      * The result of the last change of the Mac's settings: none, Remove of
-     * an always-allowed command in This Mac, or Stop in the bar of the 15
-     * minutes. The Mac made and saved it, made it but did not save it, or
-     * did not make it.
+     * an always-allowed command in This Mac, Stop in the bar of a grant, or
+     * Keep until I stop in the bar of the 15 minutes. The Mac made and
+     * saved it, made it but did not save it, or did not make it.
      */
     change: {
       enum: [
@@ -77,6 +78,7 @@ export const macAppSchema = {
         'stopped',
         'stop-not-saved',
         'stop-failed',
+        'keep-failed',
       ],
     },
     /**
@@ -119,6 +121,7 @@ const conversations = {
   many: 'mac-waiting-many',
   notification: 'mac-waiting',
   'allow-all': 'mac-done',
+  'allow-until-stop': 'mac-done',
 } as const satisfies Record<
   MacAppState['command'],
   WorkspaceState['conversation']
@@ -197,7 +200,11 @@ export function MacAppScreen(props: { state: MacAppState }) {
   return (
     <MacScreen
       active={command !== 'notification'}
-      banner={command === 'allow-all' ? <AllowAllBar /> : undefined}
+      banner={
+        command === 'allow-all' || command === 'allow-until-stop' ? (
+          <AllowAllBar untilStop={command === 'allow-until-stop'} />
+        ) : undefined
+      }
       change={change === 'none' ? undefined : change}
       choicesOpen={command === 'choices'}
       mode={props.state.window}

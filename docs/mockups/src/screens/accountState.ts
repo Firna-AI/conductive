@@ -4,6 +4,7 @@ import { accountLogins, loginKinds } from '../fixtures/logins'
 import { inviteStates } from '../components/settings/inviteCodeCopy'
 import { shortcutSearches } from '../components/settings/shortcutSearch'
 import { keyChanges } from '../components/settings/ShortcutsSections'
+import { deletedOrgStates } from '../components/settings/DeletedOrgsSection'
 import { browserHosts } from '../fixtures/shortcutHosts'
 
 export const accountSchema = {
@@ -26,6 +27,7 @@ export const accountSchema = {
     'shortcutSearch',
     'shortcuts',
     'host',
+    'deletedOrgs',
   ],
   properties: {
     /**
@@ -120,6 +122,12 @@ export const accountSchema = {
      * app of Chrome on a Mac. The Mac app draws its own pages.
      */
     host: { enum: browserHosts },
+    /**
+     * The orgs that the user deleted and can still restore: none, so the
+     * General tab has no Deleted orgs section, Acme Labs with Restore, Acme
+     * Labs after the operator suspended it, or a Restore that failed.
+     */
+    deletedOrgs: { enum: deletedOrgStates },
   },
 } as const
 
@@ -143,6 +151,7 @@ export const accountGeneral: AccountState = {
   shortcutSearch: 'none',
   shortcuts: 'default',
   host: 'chrome-mac',
+  deletedOrgs: 'none',
 }
 
 /** The Agents tab of a connected account, in Chrome on a Mac. */

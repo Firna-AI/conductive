@@ -41,7 +41,8 @@ On a phone, select the org name at the top of the list to open the org switcher.
 Then long-press an org and move it to its new place.
 
 A new org goes at the end.
-Suspended orgs and deleted orgs that you can still restore move in the same way.
+Suspended orgs move in the same way.
+Deleted orgs appear in Account settings.
 The command palette lists orgs in your order.
 When Conductive opens without a chosen org, it opens the first org in your list that is not deleted.
 
@@ -174,10 +175,20 @@ Only an admin can delete the org.
 5. Select **Delete org**.
 
 Conductive stops its cloud computers and hides the org from members at once.
+The org leaves the org list.
+Conductive opens your next org, or **Get started** when you have no other org.
 Admins can restore it for seven days before deletion completes.
 
-Open the faded org in the org list to find its restore action.
-The action says **Restore** followed by the org name.
+To restore a deleted org:
+
+1. Open your **Account** settings.
+2. Find the org under **Deleted orgs** on the **General** tab.
+3. Select **Restore** beside the org.
+
+The org returns to the org list.
+
+If all your orgs are deleted, **Get started** opens instead of an org.
+It lists each deleted org with **Restore** above its steps.
 Restoring brings back its workspaces, chats, and settings.
 Archived workspaces stay archived after the org returns.
 Their existing Restore deadlines continue to apply.

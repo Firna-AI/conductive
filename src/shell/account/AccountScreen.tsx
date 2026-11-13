@@ -9,6 +9,7 @@ import { useMacApp } from '../mac/mac-app'
 import { LinkTabs } from '../ui/links'
 import { useViewport } from '../ui/viewport'
 import { AgentsSection, SignInSection } from './AccountSections'
+import { DeletedOrgsSection } from './DeletedOrgsSection'
 import { GitHubSection } from './GitHubSection'
 import { InviteCodeSection } from './InviteCodeSection'
 import { DefaultsSection } from './PreferencesSections'
@@ -62,7 +63,8 @@ function ThisMac() {
 
 /**
  * The General tab: the GitHub sign-in, the GitHub App that every org
- * shares, and the invite code of the user. The Mac app adds This Mac.
+ * shares, and the invite code of the user. The deleted orgs of the user
+ * come last, with Restore, only while one exists. The Mac app adds This Mac.
  */
 function GeneralTab(props: { user: User }) {
   return (
@@ -71,6 +73,7 @@ function GeneralTab(props: { user: User }) {
       <ThisMac />
       <GitHubSection />
       <InviteCodeSection />
+      <DeletedOrgsSection />
     </>
   )
 }

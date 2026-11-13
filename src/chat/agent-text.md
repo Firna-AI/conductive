@@ -35,6 +35,17 @@ requirements.
   the `start` of the `ol`. A message line writes each number from it. As
   in CommonMark, a number has one to nine digits, so a longer number
   starts no list.
+- `AgentBlocks` draws each code block through `CodeBlock`. Inside a
+  `CodeCopyProvider`, `CodeBlock` adds a Copy code button beside the
+  `<pre>`, so the text of the `<pre>` stays the code alone. `ChatBody` in
+  `WorkspaceChat` gives the provider around the chat of the open session.
+  Its copy uses the `copy` services of the chat and shows a toast with the
+  result. Outside a provider, a code block has no button. The size of the
+  button comes from the control sizes, so the block keeps room for the
+  44 px button on a phone.
+- `MessageLine` draws the code blocks of its summary as spans, with no
+  button, because a summary is a button. A code block under an open line
+  draws through `AgentBlocks`, so it has the button.
 - `AgentText`, `LinkedText`, and `MessageLine` draw React text and
   elements only. So HTML in a message shows as text.
 - A `<summary>` holds only phrasing content and headings, and no

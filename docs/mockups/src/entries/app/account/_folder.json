@@ -10,6 +10,7 @@
     "share-not-saved",
     "own-endpoint",
     "endpoint-models",
-    "invites"
+    "invites",
+    "deleted-orgs"
   ]
 }

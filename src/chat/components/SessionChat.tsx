@@ -5,7 +5,11 @@ import { PendingCommands } from '../device/PendingCommands'
 import { DeviceLoadNotice, sessionCommands } from '../device/session-commands'
 import { tabSessions } from '../state/archive-view'
 import { sendBlock } from '../state/blockers'
-import { sessionState, type ChatSnapshot } from '../state/chat-snapshot'
+import {
+  hasMessages,
+  sessionState,
+  type ChatSnapshot,
+} from '../state/chat-snapshot'
 import type { ChatController } from '../state/controller'
 import { failedFirstStart } from '../../app/first-start'
 import {
@@ -147,9 +151,6 @@ export function SessionChat(props: SessionChatProps) {
     () => state.pending.map((message) => message.id),
     [state.pending],
   )
-  const hasMessages =
-    state.pending.length > 0 ||
-    state.transcript.items.some((item) => item.kind === 'user')
   const status = historyStatus(state)
   const content = showsContent(state, starting !== null)
   const viewerId = snapshot.account?.user.id ?? null
@@ -215,8 +216,8 @@ export function SessionChat(props: SessionChatProps) {
             snapshot.account?.agentLogins ?? [],
             session.choice,
           )}
-          onAttach={(picked, folders) =>
-            controller.attachFiles(session.id, picked, folders)
+          onAttach={(picked, refusals) =>
+            controller.attachFiles(session.id, picked, refusals)
           }
           onChangeText={(text) => controller.setDraft(session.id, text)}
           onChooseModel={(choice) =>
@@ -226,7 +227,7 @@ export function SessionChat(props: SessionChatProps) {
           onStop={() => void controller.interrupt(session.id)}
           running={state.transcript.turn !== null}
           sending={state.draft.sending}
-          sessionAgent={hasMessages ? session.choice.agent : undefined}
+          sessionAgent={hasMessages(state) ? session.choice.agent : undefined}
           startsSession={login?.kind === 'linked'}
           stopping={state.stopping}
         />

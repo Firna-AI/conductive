@@ -33,7 +33,7 @@ how a screen is built, and links to the other pages.
 | `app/reassign`      | The owner of a workspace, its reassign menu, a member's view, a stopped turn  |
 | `app/archive`       | An archived workspace with Restore, the toast after Archive, the Archived group, the restored workspace, the end of Restore, and the bar after the delete |
 | `app/composer`      | Two uploaded files in a sentence, the picker, another member's login, and a missing agent |
-| `app/attachments`   | A file that uploads in the text, then a drop, a failed upload, a file over 25 MB, sent files, the file tab of a sent screenshot, and a first message with files |
+| `app/attachments`   | A file that uploads in the text, then a drop, a failed upload, a file over 100 MB, sent files, the file tab of a sent screenshot, and a first message with files |
 | `app/workspace-links` | Chips in a message and an answer, then Copy link and its failure, a pasted link, a link of another org, session chips, and messages that an agent sent |
 | `app/file-mentions` | The list of `@` with a query, then the list without one, its other states, and the file chips of the composer and of a sent message |
 | `app/files`         | All files, Changes with its summary, and a file, Markdown, diff, and image tab |
@@ -189,6 +189,10 @@ settings are. Its child pages:
 - `app/account/invites` has the invite code while sign-ups are paused.
   [The waitlist, suspensions, and the operator](catalogue-operator.md)
   gives its variants.
+- `app/account/deleted-orgs` has the Deleted orgs section at the end of
+  General, with Acme Labs and Restore. Its `suspended` variant
+  has the org after a suspension, without Restore. Its `failed` variant
+  has a Restore that failed, with the error under the row.
 - `app/account/shortcuts` shows the Keyboard shortcuts tab in a browser, as
   the keyboard shortcuts section below gives.
 
@@ -208,9 +212,9 @@ why, with the model ID, the time of the last read of the list, and
 Refresh.
 
 `app/new-workspace/dialog` draws New workspace as a dialog over the ready
-workspace of `app`, for a user who chose the dialog. Its states are child
-pages. `first-build` shows Firna before its first good build, with the
-notice and Create off. `section` shows the open menu of the sections at
+workspace of `app`, for a new account or a user who chose the dialog.
+Its states are child pages. `first-build` shows Firna before its first
+good build, with the notice and Create off. `section` shows the open menu of the sections at
 the top right. The other child pages show files that upload, a
 drop of files on the whole dialog card, a draft with uploaded files and
 the notice of a missing agent login, a

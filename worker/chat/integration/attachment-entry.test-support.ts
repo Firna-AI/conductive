@@ -22,10 +22,10 @@ export default {
       const body = new ReadableStream<Uint8Array>({
         pull(controller) {
           if (fault === 'overflow') {
-            if (chunks < 25) {
+            if (chunks < 100) {
               chunks++
               controller.enqueue(new Uint8Array(1_000_000))
-            } else if (chunks === 25) {
+            } else if (chunks === 100) {
               chunks++
               controller.enqueue(new Uint8Array([1]))
             } else controller.close()
