@@ -20,7 +20,12 @@ const uploadPath = attachmentUploadPath(org, {
 })
 const defaults = {
   repositoryId: 'storefront',
-  choice: { agent: 'claude', model: 'Opus 5.5', effort: 'high' } as const,
+  choice: {
+    agent: 'claude',
+    model: 'Opus 5.5',
+    effort: 'high',
+    fast: false,
+  } as const,
 }
 const shortly = { timeout: 10_000 }
 
@@ -59,10 +64,10 @@ describe('the files of a New workspace draft', () => {
     await pickWorkspaceFiles(
       form,
       [
-        sized('recording.mov', 25_000_001),
-        sized('limit.bin', 25_000_000),
+        sized('recording.mov', 100_000_001),
+        sized('limit.bin', 100_000_000),
         notes(),
-        sized('archive.zip', 25_000_001),
+        sized('archive.zip', 100_000_001),
       ],
       unreadable('Pictures', 'Design notes'),
     )

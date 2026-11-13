@@ -138,7 +138,7 @@ it('maps SDK partial text, thinking, tools, message UUIDs, and stopped output', 
     type: 'model',
     commandId: 'model',
     sessionId: 'session-1',
-    choice: { agent: 'claude', model: 'new-model', effort: 'max' },
+    choice: { agent: 'claude', model: 'new-model', effort: 'max', fast: false },
   })
   await runner.idle()
   h.endpoint.send({
@@ -149,7 +149,11 @@ it('maps SDK partial text, thinking, tools, message UUIDs, and stopped output', 
   })
   await runner.idle()
   expect(sdk.models.at(-1)).toBe('new-model')
-  expect(sdk.efforts.at(-1)).toEqual({ effortLevel: 'max' })
+  expect(sdk.efforts.at(-1)).toEqual({
+    effortLevel: 'max',
+    ultracode: false,
+    fastMode: false,
+  })
   expect(sdk.interrupts).toBe(0)
   expect(sdk.closed).toBe(true)
   await runner.idle()
@@ -210,12 +214,17 @@ it('maps SDK partial text, thinking, tools, message UUIDs, and stopped output', 
     agent: 'claude',
     model: 'follow-up-model',
     effort: 'medium',
+    fast: false,
   }
   h.endpoint.send({ ...duringTurn(fourth), type: 'message', turnId: 'turn-3' })
   await runner.idle()
   const fourthUuid = string((await sdk.nextUser()).uuid)
   expect(sdk.models.at(-1)).toBe('follow-up-model')
-  expect(sdk.efforts.at(-1)).toEqual({ effortLevel: 'medium' })
+  expect(sdk.efforts.at(-1)).toEqual({
+    effortLevel: 'medium',
+    ultracode: false,
+    fastMode: false,
+  })
   await sdk.raw({
     type: 'assistant',
     user_message_uuids: [thirdUuid],

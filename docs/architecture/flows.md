@@ -19,12 +19,9 @@ record, as [Decision numbers](../architecture.md#decision-numbers) says.
 
 1. A tab sends a message to the Worker. The Durable Object forwards it to
    the agent runner, with the turn token of its turn and the current
-   branches of the workspace. A runner of protocol version 1 gets the agent
-   login of the starter of the session in place of the token. A turn on an
-   own endpoint login goes only to a runner of version 2 or later. The
-   Worker first copies the files of the message from the attachment storage
-   into the sandbox. An action of the pull request bar sends its fixed
-   prompt in the same way.
+   branches of the workspace. The Worker first copies the files of the
+   message from the attachment storage into the sandbox. An action of the
+   pull request bar sends its fixed prompt in the same way.
 2. The runner gives the message to the agent through the SDK. It numbers
    each agent event and sends it to the Durable Object.
 3. The agent sends each model request to the model gateway of the Worker,
@@ -37,8 +34,7 @@ record, as [Decision numbers](../architecture.md#decision-numbers) says.
    on their way to OpenAI. A settings file in the repository can send the requests of Claude
    to another address, as
    [How the agents reach the gateway](../protocol/model-gateway.md#how-the-agents-reach-the-gateway)
-   says. With a runner of version 1, the agent sends its model requests
-   to the provider itself.
+   says.
 4. The Durable Object stores each event, confirms it to the runner, and
    pushes it to every open tab of the workspace.
 

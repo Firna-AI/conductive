@@ -34,7 +34,7 @@ export const fileMentionChips = defineScreen({
       slug: 'sent',
       title: 'Sent',
       description:
-        'Cal sent the message. It shows the file chip and the folder chip. A press on the file chip opens the file in a tab, and a press on the folder chip shows All files with the folder open. The answer of the agent shows its mentions and the path `src/lib` in code as chips too, as app/file-mentions/answers shows. The function name `lookupAddress` stays code.',
+        'Cal sent the message. It shows the file chip and the folder chip. The file has a tab, so a press on the file chip shows that tab, as a press in All files does. A press on the folder chip shows All files with the folder open. The answer of the agent shows its mentions and the path `src/lib` in code as chips too, as app/file-mentions/answers shows. The function name `lookupAddress` stays code.',
       rationale:
         'The agent gets the text of the message as Cal wrote it, with `@` and each path inside the repository (decision 216). Answers show file chips too, from answer chip decisions 1 and 2 of 13 November 2026. App/file-mentions/answers gives their rules.',
       props: { conversation: 'mention-answer', composer: 'empty' },

@@ -5,7 +5,7 @@ import {
 } from '../components/feedback/feedbackCopy'
 import {
   agentActionLabels,
-  type AgentAction,
+  type CommandAgentAction,
 } from '../components/workspace/barCopy'
 import { transcriptItems } from '../components/workspace/transcriptCopy'
 import {
@@ -68,6 +68,7 @@ export type CommandId =
   | 'attach-files'
   | 'model-picker'
   | 'next-effort'
+  | 'fast-mode'
   | 'stop-agent'
   | 'copy-concise-transcript'
   | 'copy-full-transcript'
@@ -148,7 +149,7 @@ function macAppCommand(
 }
 
 /** An agent action of the pull request bar, with the label of its button. */
-function agentCommand(id: AgentAction, ...mac: Shortcut[]): CommandSpec {
+function agentCommand(id: CommandAgentAction, ...mac: Shortcut[]): CommandSpec {
   return command(id, agentActionLabels[id], ...mac)
 }
 
@@ -177,7 +178,9 @@ export function orgCommand(index: number): CommandId | undefined {
  * Copy link, the actions of the pull request bar, Copy concise transcript,
  * and Copy full transcript. Firefox keeps ⇧⌘P, so Create PR also has
  * ⌥⇧⌘P, and Firefox switches the text direction of a text field on ⇧⌘X, so
- * Fix checks has ⌥⌘X. The commands that a person can change come first.
+ * Fix checks has ⌥⌘X. Fast mode decision 258 C of 12 November 2026 adds Fast
+ * mode, the switch of the model menu, with ⇧⌘E, the key of Conductor. The
+ * commands that a person can change come first.
  * The fixed shortcuts of a group follow them, and the groups of fixed
  * shortcuts close the list.
  */
@@ -263,6 +266,7 @@ export const shortcutSpecs: readonly GroupSpec[] = [
       command('attach-files', 'Attach files', '⌘U'),
       command('model-picker', 'Model picker', '⌘/'),
       command('next-effort', 'Next effort level', '⌃⌘/'),
+      command('fast-mode', 'Fast mode', '⇧⌘E'),
       command('stop-agent', 'Stop the agent', '⌃⌘⌫'),
       command('copy-concise-transcript', transcriptItems.concise, '⌥⌘C'),
       command('copy-full-transcript', transcriptItems.full),

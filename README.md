@@ -30,9 +30,8 @@ deployment needs.
 Conductive has these features. The protocol docs state each one. A
 feature that is not complete yet says so.
 
-- Sign in with GitHub. The product is free until billing starts.
-  [Pricing](docs/protocol/pricing.md) states the coming plans, which the
-  pricing page of the marketing site shows. Billing is not built yet.
+- Sign in with GitHub. The product is free, with no plans or billing, as
+  [Orgs and members](docs/protocol/orgs-and-members.md#orgs) says.
 - A waitlist. A new account waits until an operator approves it, or an
   invite code, a referral code, or an org invitation lets the person in.
   An operator can turn the waitlist off. Each new person then gets in at
@@ -44,7 +43,7 @@ feature that is not complete yet says so.
 - Chat with agents powered by Claude and Codex. A workspace holds several
   sessions, and one picker sets the model and the effort.
 - Send a message during a turn, or stop the turn.
-- Attach files of up to 25 MB each to a message.
+- Attach files of up to 100 MB each to a message.
 - Each user connects a Claude subscription token, a ChatGPT plan through
   device code sign-in, an API key, or an own endpoint in Account or Get started.
 - Files and Changes, a terminal, and port previews. The live desktop is

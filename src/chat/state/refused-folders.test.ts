@@ -20,11 +20,12 @@ const codex = {
   agent: 'codex',
   model: 'GPT-6.1 Sol',
   effort: 'medium',
+  fast: false,
 } as const
 
 function oversized(name: string): File {
   const file = note(name)
-  Object.defineProperty(file, 'size', { value: 25_000_001 })
+  Object.defineProperty(file, 'size', { value: 100_000_001 })
   return file
 }
 

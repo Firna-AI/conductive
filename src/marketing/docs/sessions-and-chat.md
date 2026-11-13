@@ -61,7 +61,7 @@ A file dropped on the text goes where you drop it.
 A drop elsewhere uses the text cursor or the end.
 The text cursor then moves after the new chips.
 
-Each file can be up to 25 MB.
+Each file can be up to 100 MB.
 Wait for uploads to finish before you send.
 If an upload fails, use **Try again** or remove its chip.
 Removing a chip takes its file off the draft.
@@ -70,7 +70,7 @@ Undo brings back the chip and its file.
 To attach a folder, drop it into the message box.
 Your browser zips the folder before the upload, so the folder becomes one `.zip` file chip.
 The zip holds every file and folder in it, also hidden files.
-The zip can be up to 25 MB, as each file can.
+The zip can be up to 100 MB, as each file can.
 If the browser cannot read the folder, use **Attach files** in the notice to pick its files.
 
 Each chip keeps its place in the sent message.
@@ -92,7 +92,7 @@ After a new computer build, **All files** lists them, so you can open them there
 
 Open the session you want before selecting an agent action in the pull request bar.
 The action sends a fixed message from you to the session you viewed last.
-It uses that session's model, effort, and login rules.
+It uses that session's model, effort, **Fast** setting, and login rules.
 This also works while you view a file or **Checks**.
 
 Your draft, attached files, and uploads stay as they were.
@@ -141,6 +141,18 @@ The earlier conversation stays in its original session.
 The new session starts without a copy of that conversation.
 In a session with no messages, a model of the other agent stays in that session.
 
+Some models offer **Fast** at the end of the picker's menu.
+Turn it on for faster output.
+Fast output can cost more on the session's login.
+The picker then shows **Fast** after the effort.
+Press **⇧⌘E** on a Mac or **Ctrl+Shift+E** on another computer to turn it on or off.
+**Fast** stays on for later messages in the session until someone turns it off.
+Choosing a model without **Fast** turns it off.
+
+A turn with **Fast** on can still run at standard speed, for example when the agent reaches its fast limit.
+The turn then continues, and its end shows **Standard speed** with the cause.
+**Fast** stays on, so later turns run fast when the cause ends.
+
 If the chosen agent has no usable login, the message box offers **Connect** for that agent.
 Connect the login in **Account** before you send.
 
@@ -163,11 +175,13 @@ The chat shows **Working**, and **Stop** stays available.
 When a task ends or a wake-up arrives, the agent continues in the same turn.
 The turn ends when the agent finishes and no background work remains.
 
-The time limit is 2 hours from the start of the first wait.
+The time limit is 30 days from the start of the first wait.
 The agent's work after a notification also counts toward that limit.
 A message that joins the turn during a wait starts the count again from that message.
 If the limit passes during a reply, that reply finishes before the turn ends.
 At that limit, the turn ends with **Background work stopped at the time limit** above its duration and changed files.
+The cloud computer keeps running while the turn waits.
+Ask the agent to stop background work that it does not need, such as a dev server.
 
 Select **Stop** to interrupt the turn, including a wait for background work.
 The chat records the stop.
@@ -214,6 +228,11 @@ On a phone, use a long press.
 
 File and diff tabs share the row on a computer.
 A phone shows the session tabs there.
+
+Each tab in the row keeps your place when you open another tab or another workspace.
+A session tab returns to the message you read.
+If you were at the end of the chat, it shows the newest messages.
+Closing a tab or reloading the page forgets these places.
 
 Closing a session keeps its conversation in **Session history**.
 If its agent is working, closing asks first because it stops the turn.
@@ -268,6 +287,9 @@ The chat does not show the endpoint's host.
 If the login is private or unavailable, your message starts a new session on your own login.
 That session links back to the earlier conversation.
 It has no copy of the earlier history.
+
+Any member who can send in a session can change its model, effort, and **Fast** setting.
+That choice also applies to the messages of the member whose login the session uses.
 
 GitHub operations follow the person whose message started the running turn.
 Commits name that person as both author and committer.

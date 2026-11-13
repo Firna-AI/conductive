@@ -6,6 +6,7 @@ export const choice = {
   agent: 'claude',
   model: 'test',
   effort: 'high',
+  fast: false,
 } as const
 export const file = (path: string) => ({
   path,

@@ -91,18 +91,17 @@ Renaming it can stop the pull request bar from following the work.
 Use **Continue** after a merge to start a new branch that the bar follows.
 
 Open another workspace while an agent works.
-The list mark shows the pull request's GitHub state:
+The list mark shows the state of the pull request bar, in the colour of the bar:
 
 | Colour | Meaning |
 | --- | --- |
 | Red | Checks failed. |
-| Amber | Checks are running. |
-| Green | Checks passed. |
+| Green | Ready to merge. |
 | Purple | The pull request merged. |
-| Dim grey | No pull request, no checks, or closed without a merge. |
+| Amber | A merge conflict, requested changes, or a block. |
+| Grey | Checks are running, or the pull request is a draft. |
+| Dim grey | No pull request, or closed without a merge. |
 
-Failed checks take priority over checks that still run.
-A merge takes priority over all checks.
 Archived workspaces keep a faint grey mark.
 
 A light runs around the mark while the agent works or the checks run.
@@ -145,12 +144,14 @@ Use a section's menu to create a workspace in that section.
 The **New workspace** action at the top of the list uses **General**.
 In the **New workspace** dialog, you can select another section.
 
-The section menu also offers **Rename section**, **New section**, and **Delete section**.
+The section menu also offers **Rename section**, **Move section up**, **Move section down**, **New section**, and **Delete section**.
 Deleting a section moves its workspaces to **General**.
 The default section stays available.
 
 Drag a workspace to move it between sections.
-On a phone, use a long press to lift its row.
+Drag the header of a section to move the section to another place in the list.
+On a phone, use a long press to lift a row or a header.
+Every member of the org sees the same order of sections.
 
 ## Let an agent manage workspaces
 

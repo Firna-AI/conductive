@@ -147,6 +147,7 @@ export type DeviceSettingsAction =
   | { action: 'read' }
   | { action: 'remove-command'; command: string }
   | { action: 'stop-workspace'; workspaceId: string }
+  | { action: 'extend-workspace'; workspaceId: string }
   /** Turns the running 15 minutes of a workspace into a grant until Stop. */
   | { action: 'keep-workspace'; workspaceId: string }
 export interface DeviceSettingsRequest extends DevicePairing {

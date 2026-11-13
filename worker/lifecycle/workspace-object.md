@@ -183,6 +183,11 @@ create and resume. The workspace object runs that start:
 - When the runner disconnects during these final checks, the start job
   stays in its runner phase. The start then completes after a later
   readiness report.
+- When the chat backend refuses a runner below the supported protocol
+  version, a start in its runner phase fails at once through the existing
+  failure path of a start, with the cause of the refused turns, as
+  [Runner versions](../../docs/protocol/version-pins.md#runner-versions)
+  says. A refusal of a higher version leaves the start waiting.
 - While a start job exists, the start keeps its own due time, and the
   lifecycle state keeps none. After the start ends, the alarm run sets the
   lifecycle due time from the saved state.

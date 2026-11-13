@@ -10,7 +10,12 @@ import { testServices } from './test-kit'
 
 const defaults = {
   repositoryId: 'storefront',
-  choice: { agent: 'claude', model: 'Opus 5.5', effort: 'high' } as const,
+  choice: {
+    agent: 'claude',
+    model: 'Opus 5.5',
+    effort: 'high',
+    fast: false,
+  } as const,
 }
 const createPath = workspacesPath(FAKE_IDS.org)
 
@@ -29,7 +34,7 @@ async function newForm() {
 
 function oversized(name: string): File {
   const file = note(name)
-  Object.defineProperty(file, 'size', { value: 25_000_001 })
+  Object.defineProperty(file, 'size', { value: 100_000_001 })
   return file
 }
 

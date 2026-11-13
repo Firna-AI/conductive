@@ -42,6 +42,17 @@ export const sent = defineScreen({
       },
     },
     {
+      slug: 'push',
+      title: 'Push',
+      description:
+        'The sandbox had commits that are not pushed and no changed files, so Cal pressed Push in the place of Merge. The prompt asks the agent to push the branch.',
+      props: {
+        banner: 'ready-to-merge',
+        localWork: 'commits',
+        conversation: 'sent-push',
+      },
+    },
+    {
       slug: 'resolve-conflicts',
       title: 'Resolve conflicts',
       description:

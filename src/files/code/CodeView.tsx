@@ -1,8 +1,9 @@
-import { useLayoutEffect, useMemo, useRef, type CSSProperties } from 'react'
+import { useMemo, type CSSProperties } from 'react'
 import type { LineRange } from '../../shared/line-target'
 import { splitLines } from '../model/file-text'
 import { highlightLines, type Token, type TokenKind } from './highlight'
 import { languageOf } from './languages'
+import { useKeptScroll, type ScrollAim } from '../ui/kept-scroll'
 import styles from './code.module.css'
 
 const tokenClass: Readonly<Record<TokenKind, string | undefined>> = {
@@ -43,16 +44,39 @@ function shownLines(
 }
 
 /**
- * A text file with line numbers, and syntax colours for known languages.
- * With `marked`, the view scrolls the first marked line to its middle, and
- * marks each line of the range with a background colour. A new range
- * scrolls again.
+ * The aim of the scroll at the lines of the address: the first marked line
+ * in the middle of the view. Its key is the range of the address, not the
+ * lines that the file holds now, so a change of the file never scrolls.
+ */
+function lineAim(marked: LineRange | null | undefined): ScrollAim | null {
+  if (!marked) return null
+  return {
+    key: `${marked.start}-${marked.end}`,
+    offset: (box) => {
+      const line = box.querySelector<HTMLElement>('[data-marked]')
+      if (!line) return null
+      const top =
+        line.getBoundingClientRect().top - box.getBoundingClientRect().top
+      return {
+        top: box.scrollTop + top - (box.clientHeight - line.offsetHeight) / 2,
+        left: 0,
+      }
+    },
+  }
+}
+
+/**
+ * A text file with line numbers, and syntax colours for known languages. A
+ * file tab keeps its scroll offset. With `marked`, the view shows the first
+ * marked line in its middle in place of the kept offset, and marks each
+ * line of the range with a background colour. A new range scrolls again.
  */
 export function CodeView(props: {
   text: string
   name: string
   marked?: LineRange | null
 }) {
+  const box = useKeptScroll('code', lineAim(props.marked))
   const lines = useMemo(
     () => highlightLines(splitLines(props.text), languageOf(props.name)),
     [props.text, props.name],
@@ -60,20 +84,10 @@ export function CodeView(props: {
   const marked = shownLines(props.marked, lines.length)
   const start = marked?.start ?? null
   const end = marked?.end ?? null
-  const scroll = useRef<HTMLDivElement>(null)
-  const first = useRef<HTMLDivElement>(null)
-  useLayoutEffect(() => {
-    const view = scroll.current
-    const line = first.current
-    if (start === null || !view || !line) return
-    const top =
-      line.getBoundingClientRect().top - view.getBoundingClientRect().top
-    view.scrollTop += top - (view.clientHeight - line.offsetHeight) / 2
-  }, [start, end, lines])
   const isMarked = (number: number) =>
     start !== null && end !== null && number >= start && number <= end
   return (
-    <div className={styles.scroll} ref={scroll}>
+    <div className={styles.scroll} ref={box}>
       <pre className={styles.code} style={digitStyle(lines.length)}>
         {lines.map((tokens, index) => (
           <div
@@ -84,7 +98,6 @@ export function CodeView(props: {
             }
             data-marked={isMarked(index + 1) ? '' : undefined}
             key={index}
-            ref={index + 1 === start ? first : undefined}
           >
             <span className={styles.number}>{index + 1}</span>
             <span className={styles.text}>

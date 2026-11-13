@@ -142,7 +142,7 @@ export const cloudFeatures: readonly ParityFeature[] = [
     area: 'cloud',
     name: 'Sleep and wake',
     status: 'different',
-    note: 'Idle computers stop after 30 minutes, keep files and sessions, and resume when opened. Agent wake-ups that can keep computers running are planned.',
+    note: 'Idle computers stop after 30 minutes and resume with files and sessions. Background work from agents powered by Claude keeps computers running.',
   },
   {
     id: 'cloud-desktop',
@@ -157,7 +157,7 @@ export const cloudFeatures: readonly ParityFeature[] = [
     area: 'cloud',
     name: 'Cloud agents run Mac commands',
     status: 'available',
-    note: 'Agents can request Mac commands, with saved command or temporary workspace permissions. Extending permissions and allowing commands until Stop are in progress.',
+    note: 'Mac commands support saved command permissions or workspace permissions for 15 minutes or until Stop. Extending timed permissions is in progress.',
   },
   {
     id: 'transfer-to-local',

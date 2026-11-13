@@ -14,8 +14,8 @@ says.
 
 ## Messages
 
-- The composer chooses the model and the effort of each message, and with
-  the model its agent (decision 19).
+- The composer chooses the model, the effort, and the fast mode of each
+  message, and with the model its agent (decision 19).
 - A change to another model of the same agent stays in the session
   (decision 51).
 - A model of the other agent opens a new session with that agent, and the
@@ -224,11 +224,18 @@ says.
   rejected, because the name then holds underscores that no member asked
   for. A member who wants underscores names the workspace with Rename.
 
+### Fast mode
+
+- [Fast mode](fast-mode.md) states the Fast switch of the model menu, the
+  models that show it, its changes, and who may turn it on. It also states
+  the speed of a turn that cannot run fast, and the end of such a turn.
+
 ### Messages from the bar
 
 - An [agent action](github-banner.md#agent-actions) of the pull request bar
   sends its fixed prompt as a message of the member who clicks, to the
-  session that the member saw last, with its model and effort.
+  session that the member saw last, with its model, its effort, and its
+  fast mode.
 - It follows each rule of a message from the composer, and the draft stays
   as it is. The chat shows it as a message of that member, with no mark of
   the action. Reason: an action is a message (decision 220).

@@ -33,7 +33,9 @@ in the line, and an open message line that shows its heading on its own
 line, in the weight of a heading. `app/chat/lost-data` draws the data that the
 chat does not have, from decision 76: tool output and turn files that the
 runner left out, and the lines of runner events that the workspace
-refused.
+refused. Its long turn shows 8 files, or 5 on a phone, then a
+"Show N more" button. The count of the files that the runner left out
+shows after that button opens the list.
 `app/chat/lost-updates` draws a failed repair, from decision 96. After a
 refused update that belongs to no session, such as a file update, the
 workspace asks for a fresh full report, and nothing shows. Only when that
@@ -63,6 +65,16 @@ still ran at the time limit, so the turn ends as finished, with
 "Background work stopped at the time limit" above its duration and its
 files. Its `waiting` variant draws the same turn before the limit, which
 shows as any running turn.
+
+`app/chat/standard-speed` draws a fast turn that ran at standard speed,
+from fast mode decision 257. Fast is on in the trigger. Claude reached its
+fast limit, so the end line shows the duration, then "Standard speed · Fast
+limit reached", with the files of the turn under that note. Its
+`older-software` variant has a cloud computer with older software, which
+ignores fast mode, so the note says "Standard speed · Older cloud computer
+software". Its `stopped` variant has a stopped turn, whose line ends with
+the same words after a dot. A fast turn at fast speed ends as any turn
+does, as `app/fast-mode/trigger` shows.
 
 `app/routines` lists the routines of Acme, which the Routines link below
 New workspace opens. Its child pages:

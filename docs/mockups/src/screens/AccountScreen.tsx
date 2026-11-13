@@ -25,7 +25,7 @@ import {
 import type { ShortcutHost } from '../fixtures/shortcutHosts'
 import { viewerMembership } from '../fixtures/members'
 import { paths } from '../paths'
-import type { AccountState } from './accountState'
+import type { AccountState, AccountView } from './accountState'
 import { agentsFor } from './accountAgents'
 
 const connectedRail: RailState = { orgs: orgList, current: 'account' }
@@ -34,21 +34,15 @@ const connectedRail: RailState = { orgs: orgList, current: 'account' }
 const firstRunRail: RailState = { orgs: [], current: 'account', firstRun: true }
 
 /**
- * The General tab: the GitHub sign-in, and what every org shares, the
- * GitHub App and the agents, with the share setting of each login and the
- * host of an own endpoint, then the invite code of the user, so that a
- * phone shows the form of an agent near the top. The orgs that the user can
- * restore come last, only while one exists. The Mac app adds the This Mac
- * section.
+ * The General tab: the GitHub sign-in, the GitHub App that every org
+ * shares, then the invite code of the user. The orgs that the user can
+ * restore come last, only while one exists.
  */
 function GeneralTab(props: { state: AccountState }) {
-  const mac = useMacApp()
   return (
     <>
       <SignInSection />
-      {mac ? <ThisMacSection /> : null}
       <GitHubSection connected={props.state.connections === 'connected'} />
-      <AgentsSection {...agentsFor(props.state)} />
       <InviteCodeSection
         fresh={props.state.connections !== 'connected'}
         openSignUp={props.state.openSignUp === 'on'}
@@ -61,17 +55,20 @@ function GeneralTab(props: { state: AccountState }) {
 
 /** The content of the tab of a state, with the keys of its host. */
 function TabContent(props: {
-  state: AccountState
+  state: AccountView
   host: ShortcutHost
   changes: ShortcutChanges
 }) {
   const { state } = props
   switch (state.tab) {
     case 'general':
-      return <GeneralTab state={state} />
+      return <GeneralTab state={{ ...state, tab: 'general' }} />
+    case 'agents':
+      return <AgentsSection {...agentsFor({ ...state, tab: 'agents' })} />
     case 'preferences':
       return (
         <DefaultsSection
+          fastMenu={state.modelMenu === 'open-fast'}
           saveFailed={state.save === 'failed'}
           view={state.view}
         />
@@ -85,21 +82,26 @@ function TabContent(props: {
           search={state.shortcutSearch}
         />
       )
+    case 'this-mac':
+      return <ThisMacSection />
   }
 }
 
 /**
- * The account, in tabs. General holds the GitHub sign-in, what every org
- * shares, and the invite code of the user. Preferences holds how new
+ * The account, in tabs. General holds the GitHub sign-in, the GitHub App,
+ * and the invite code of the user. Agents holds the logins of Claude and
+ * Codex that every org shares, with the share setting of each login and
+ * the host of an own endpoint. Preferences holds how new
  * workspaces start: their model, and how New workspace opens. Keyboard
  * shortcuts holds the keys of the host: the Mac app, or the browser and the
- * keyboard of `state.host`. The product is free, so the page shows no plan
- * and no billing, and the sandbox provider stays out of sight. With the
+ * keyboard of `state.host`. The Mac app adds This Mac, with the commands
+ * that always run on this Mac. The product is free, so the page shows no
+ * plan and no billing, and the sandbox provider stays out of sight. With the
  * person's changes to the shortcuts, the Search row of the Mac app's
  * sidebar shows the person's key of the palette.
  */
 export function AccountScreen(props: {
-  state: AccountState
+  state: AccountView
   viewport: Viewport
 }) {
   const { state } = props

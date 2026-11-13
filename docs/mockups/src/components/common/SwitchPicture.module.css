@@ -1,0 +1,16 @@
+/*
+ * The switch styles of `@firna/ui` assume the box model of its views: a
+ * solid border inside the size of the box.
+ */
+.track {
+  display: inline-block;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  border-style: solid;
+}
+
+.knob {
+  display: block;
+  box-sizing: border-box;
+  border-style: solid;
+}

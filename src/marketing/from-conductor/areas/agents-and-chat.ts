@@ -13,21 +13,21 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     area: 'agents-and-chat',
     name: 'Chat tabs',
     status: 'available',
-    note: 'Open several agent sessions on the same branch. Closed sessions remain in session history.',
+    note: 'Open several agent sessions on one branch, with closed sessions in history. Each tab keeps your reading position across tabs and workspaces.',
   },
   {
     id: 'mentions',
     area: 'agents-and-chat',
     name: 'Mentions',
     status: 'available',
-    note: 'Type @ to mention workspace files or folders in chat. Teammate and pull request mentions remain under consideration.',
+    note: 'Use @ for workspace files and folders. File chips in agent answers are planned, while teammate and pull request mentions remain under consideration.',
   },
   {
     id: 'attachments',
     area: 'agents-and-chat',
     name: 'Attachments',
     status: 'available',
-    note: 'Attach files up to 25 MB each. A 100 MB limit is in progress.',
+    note: 'Attach files up to 100 MB each.',
   },
   {
     id: 'drag-and-drop-attachments',
@@ -40,9 +40,8 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     id: 'folder-attachments',
     area: 'agents-and-chat',
     name: 'Folder attachments',
-    status: 'in-progress',
-    note: 'Attaching dropped folders as zip files is in progress. Zip a folder and attach the file today.',
-    due: null,
+    status: 'available',
+    note: 'Drop a folder into chat or New workspace to attach it as one zip.',
   },
   {
     id: 'large-text-pastes',
@@ -70,7 +69,7 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     area: 'agents-and-chat',
     name: 'Stop, retry, and background tasks',
     status: 'available',
-    note: 'Stop ends a turn, and Try again retries failures. Agents powered by Claude keep turns open for background work.',
+    note: 'Stop ends turns and Try again retries failures. Agents powered by Claude wait up to 30 days for background work, and messages extend the wait.',
   },
   {
     id: 'plan-mode',
@@ -112,7 +111,7 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     area: 'agents-and-chat',
     name: 'Skills',
     status: 'available',
-    note: 'Agents powered by Claude load repository skills. Personal Mac skills are not copied.',
+    note: 'Agents powered by Claude load repository skills. A shared org skills repository for Claude and Codex is planned.',
   },
   {
     id: 'skill-use-indicators',
@@ -141,7 +140,7 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     area: 'agents-and-chat',
     name: 'Rich chat rendering',
     status: 'available',
-    note: 'Chat shows Markdown, headings, tables, lists, and code, with Copy code buttons in progress. Diagrams, maths, media, and Run buttons remain under consideration.',
+    note: 'Chat shows Markdown, headings, tables, lists, and code, with Copy code buttons. Diagrams, maths, media, and Run buttons remain under consideration.',
   },
   {
     id: 'chat-links',

@@ -61,7 +61,7 @@ async function account(server: FakeApiServer, fetch?: FetchLike) {
   const app = await startedApp(server, { fetch })
   mountScreen(
     app,
-    <AccountScreen connect={null} tab="general" user={fakeUser} />,
+    <AccountScreen connect={null} tab="agents" user={fakeUser} />,
   )
   return app
 }

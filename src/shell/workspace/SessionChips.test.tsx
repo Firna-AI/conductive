@@ -58,7 +58,7 @@ const message: UserMessage = {
   sender: senderSnapshot(fakeUser),
   text: `Ask ${link(id, 'debounce')}, then ${link(other.id, 'plan')}, ${link(other.id, 'notes')}, and ${link(other.id, 'missing')}.`,
   attachments: [],
-  choice: { agent: 'claude', model: 'Opus 5.5', effort: 'high' },
+  choice: { agent: 'claude', model: 'Opus 5.5', effort: 'high', fast: false },
   createdAt: FAKE_TIME,
   state: 'sent',
 }
@@ -90,7 +90,7 @@ describe('session chips in the chat of the app', () => {
       reads: reads.length,
     }).toEqual({
       own: [
-        `W-${own.number} Session Debounce lookups by 300 ms, Checks passed, Ready`,
+        `W-${own.number} Session Debounce lookups by 300 ms, Ready to merge, Ready`,
       ],
       open: [`${label} Session Plan saved carts, Starting`],
       closed: [`${label} Session Read the cart notes, Starting`],

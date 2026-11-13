@@ -27,8 +27,8 @@ state the rules.
   The credential path still decrypts and checks the full saved address.
   It returns a map of `SessionLoginMetadata` by session ID, with
   `loginAvailable` and `loginShared`. A session with no usable login gets
-  false for both. A refused endpoint or a connected protocol 1 runner
-  makes an own endpoint login unavailable.
+  false for both. A refused endpoint makes an own endpoint login
+  unavailable.
 - `agentLoginKind` in `login-kind.ts` gives the metadata and credential
   paths one rule for the saved login kinds.
 - `SessionLogins.refresh` runs the metadata path for the starters of all open

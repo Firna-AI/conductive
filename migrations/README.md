@@ -215,7 +215,13 @@ A check accepts only `checks-running`, `checks-failed`, `checks-passed`, and `me
 The migration copies nothing, so each existing row keeps `NULL` until its next GitHub refresh.
 The workspace object keeps the column as a copy of its committed banner state, as [The summary copy](../worker/github/README.md#the-summary-copy) says.
 The complete banner state and its events stay in Durable Object storage.
-[The GitHub state](../docs/protocol/github-banner.md#the-github-state) states the four values.
+
+`202611130900_workspace_github_bar_states.sql` replaces the check of `workspaces.github_summary`, so that it accepts each state of the pull request bar except closed.
+The values are `checks-running`, `checks-failed`, `ready-to-merge`, `merged`, `conflict`, `changes-requested`, `draft`, and `blocked`.
+SQLite cannot change a check, so the migration copies the column into a new column with the new check, drops the old column, and renames the new one.
+It copies `checks-passed` as `ready-to-merge` and keeps each other value.
+So each row keeps its old colour until its next GitHub refresh writes the bar state.
+[The GitHub state](../docs/protocol/github-banner.md#the-github-state) states the values.
 
 `202611111230_workspace_first_session_title.sql` adds the nullable `workspace_creation_plans.first_session_title` column.
 The agent create tool stores the requested first session title there, so a repeated create keeps it.
@@ -283,3 +289,8 @@ UI and wiring milestones normally need no migration. Their ranges stay reserved.
   migration in filename order to a fresh local D1 database.
 - [Shared contracts](../src/shared/) define the browser and runner payloads.
 - Run `npm run db:migrate` to apply the migrations to local development storage.
+
+`202611121610_fast_choices.sql` adds fast mode to workspace runtime records,
+creation plans, account defaults, and routines. Each column starts at 0.
+Sessions and routine run choices keep fast mode in their existing JSON records.
+[Fast mode](../docs/protocol/fast-mode.md) gives the choice rules.

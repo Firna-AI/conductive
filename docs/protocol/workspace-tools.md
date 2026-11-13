@@ -18,8 +18,10 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the tools at
   without a mark, as
   [The context folder](repository-folders.md#the-context-folder) says.
   Changes leaves them out.
-- A file opens as a tab in the centre column. Markdown shows rendered, with
-  a switch to its source. Code shows with line numbers and syntax colours.
+- A file opens in a tab of the centre column. A press on a file opens it in
+  the temporary tab, as [Temporary tabs](temporary-tabs.md) says.
+- Markdown shows rendered, with a switch to its source. Code shows with line
+  numbers and syntax colours.
 - A file tab can open at a line or a range of lines, such as from a file
   chip of an answer with a line target, as
   [Line targets](file-mentions.md#line-targets) says (answer chip
@@ -29,6 +31,9 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the tools at
 - The address of such a tab names the lines in its query, as
   `?line=42` or `?line=42-50`. So a link opened in a new browser tab
   shows the same lines. Each new address with lines scrolls again.
+- The lines win over the scroll place that the tab keeps. A later change
+  of the file does not scroll the tab again, so the reader keeps the
+  place.
 - The saved view of the workspace keeps the tab without the lines.
   Reason: the view follows the member in each browser tab, and another
   tab must not jump.
@@ -68,10 +73,12 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the tools at
   from the merge base of the two, as [Base branches](base-branches.md)
   says. Its summary gives the number of changed files and the lines that
   they add and remove.
-- A changed file opens its diff against the base branch as a tab. The
-  diff shows the syntax colours of the file, as code does.
-- Each new file or diff tab opens at the end of the tab row of the centre
-  column, as [The tab row](agents-and-sessions.md#the-tab-row) says.
+- A press on a changed file opens its diff against the base branch. The
+  diff opens in the temporary tab, as a file does. The diff shows the
+  syntax colours of the file, as code does.
+- A new temporary tab opens at the end of the tab row of the centre column.
+  A replaced one keeps its place, as
+  [The tab row](agents-and-sessions.md#the-tab-row) says.
 - The agent runner watches the repository and reports both lists.
   Branch changes count uncommitted and untracked work too.
 - The report of the branch changes also gives the number of commits of

@@ -47,14 +47,12 @@ decision number names a dated record, as
   it gives no link when no account has the app, and it cannot install the
   app on another account.
 - The org rail and General settings show the saved initials.
-- Use of the product is free until billing starts, as
-  [Before billing starts](pricing.md#before-billing-starts) says. Until
-  then, the app has no billing, and no limits of its own on workspaces,
-  hours, or members.
-- When billing starts, each org has a plan, and the org pays for its
-  members and its cloud hours (decision 250).
-  [The plans](pricing.md#the-plans) give the price, the hours, and the
-  limits of each plan.
+- Use of the product is free. The app and the site have no plans, no
+  prices, no billing, and no checkout. The app has no limits of its own on
+  workspaces, hours, or members.
+- Reason: on 13 November 2026, the user chose not to release Conductive
+  commercially. So the paid plans with included cloud hours, the billing,
+  and the pricing page were dropped.
 - A waitlist stands in front of the app (decision 160). Except during
   [open sign-up](sign-ups.md#open-sign-up), a new account waits for app
   access, as [Waitlist](waitlist.md) says (decision 230).
@@ -63,7 +61,8 @@ decision number names a dated record, as
 
 - [Org rail order](org-rail-order.md) holds the requirements of the order
   of the orgs in the rail that each person keeps: the drag, the tile menu,
-  the keys, and the long press on a phone.
+  the keys, and the long press on a phone. It also says which page opens
+  when the person opens an org.
 
 ## Get started
 
@@ -116,7 +115,19 @@ decision number names a dated record, as
 - Sections are groupings of workspaces that the people of the org define.
   A section is not tied to a repository.
 - Each section collapses, and has a menu with New workspace, Rename section,
-  New section, and Delete section, in that order.
+  Move section up, Move section down, New section, and Delete section, in
+  that order. The first section has no Move section up, and the last
+  section has no Move section down.
+- The order of the sections is the same for each member of the org. A
+  collapse is for the member only. Reason: a section is a grouping that
+  the people of the org define, as its name is.
+- A section moves to another place in the list by a drag of its header,
+  or by Move section up and Move section down. On a phone, a long press
+  lifts the header. A click on the header that drags nothing still
+  collapses the section. General moves like any other section. The
+  Archived group stays at the end of the list.
+- A member sees the order that another member changed at the next read
+  of the list, as for a rename.
 - New workspace at the top of the list puts the workspace in General, the
   default section. New workspace in the menu of a section puts it in that
   section. The New workspace dialog can pick another section, as
@@ -183,6 +194,8 @@ decision number names a dated record, as
   [Agents and sessions](agents-and-sessions.md#agents) says.
 - Every member can move a workspace to another section and rename it,
   while the workspace is not archived.
+- Every member can move a section to another place in the list, as each
+  member can create, rename, and delete a section.
 - A member who is not an admin sees the Members tab and the owner of each
   workspace, without the actions of an admin.
 - Only the workspace owner and the admins can archive a workspace

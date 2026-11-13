@@ -12,7 +12,12 @@ const org = FAKE_IDS.org
 /** What the form gives the send: its repository and its choice. */
 const defaults = {
   repositoryId: 'storefront',
-  choice: { agent: 'claude', model: 'Opus 5.5', effort: 'high' } as const,
+  choice: {
+    agent: 'claude',
+    model: 'Opus 5.5',
+    effort: 'high',
+    fast: false,
+  } as const,
 }
 
 /** The builds of Acme, whose org image lacks the chosen repositories `added`. */

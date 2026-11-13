@@ -24,16 +24,22 @@ decision number names a dated record, as
 
 ### The preference
 
-- The Account page has three tabs, General, Preferences, and Keyboard
-  shortcuts, each with its own address. Preferences holds the New
-  workspaces section, with Model and effort and the choice of how New
-  workspace opens (decision 142 of PR #73). General holds the other
-  sections of the account.
+- The Account page has four tabs, General, Agents, Preferences, and
+  Keyboard shortcuts, each with its own address. Agents holds the logins
+  of Claude and Codex (the user asked on 13 November 2026). Preferences
+  holds the New workspaces section, with Model and effort and the choice
+  of how New workspace opens (decision 142 of PR #73). General holds the
+  other sections of the account.
   [Keyboard shortcuts: the settings tab](keyboard-shortcuts-tab.md) gives
-  the third tab.
+  the fourth tab. The Mac app adds [This Mac](desktop-commands.md#saved-choices)
+  as the fifth tab.
 - Reason: all the settings of new workspaces then sit together. The
   section on General, with only the new choice on Preferences, was
   rejected, because the user then looks in two places.
+- Model and effort also saves fast mode, with the Fast switch of its menu.
+  New workspace starts from the saved choice with its fast mode, as
+  [Fast mode](fast-mode.md#saved-defaults-new-workspaces-and-routines)
+  says.
 - The choice offers the page and the dialog. Each change saves at once, as
   a change of Model and effort does.
 - When a save fails, the choice keeps the saved value, and an error shows

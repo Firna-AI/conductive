@@ -104,7 +104,7 @@ it('keeps pending file assembly after a post-commit crash and resumes the join a
   expect(await fixture.read((view) => view.cursor('stream'))).toBe(2)
   expect(fixture.sent.at(-1)).toEqual({
     type: 'welcome',
-    protocolVersion: 1,
+    protocolVersion: 2,
     streamId: 'stream',
     confirmedThrough: 2,
   })

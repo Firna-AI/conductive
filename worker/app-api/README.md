@@ -40,10 +40,15 @@ View writes cannot change this branch.
 
 ## Rules
 
-- The model list and the default choice come from `CONDUCTIVE_MODELS` and
-  `CONDUCTIVE_DEFAULT_CHOICE`, as
-  [Deployment inputs](../../docs/deployment.md#models) says. A missing or
-  invalid value gives a 503 on its own route only.
+- [Model configuration dependencies](../../docs/deployment/models.md#configuration-failures)
+  states which operations need `CONDUCTIVE_MODELS` and
+  `CONDUCTIVE_DEFAULT_CHOICE`, and their failures.
+- Each model of the list can carry the `fast` mark.
+  `PUT /api/account/default-model` saves fast mode with the model and the
+  effort. It stores fast mode as off for a model without the mark, and a
+  saved default without fast mode reads as off.
+  [Fast mode](../../docs/protocol/fast-mode.md#the-models-with-fast-mode)
+  states the rules.
 - An account reply reads `user_preferences`, `user_shortcuts`, and the records of the agent
   logins. It also gives the page of the GitHub App from `GITHUB_APP_SLUG`,
   so a screen links to that page without a GitHub read. A login write
@@ -77,8 +82,8 @@ View writes cannot change this branch.
   The save also passes `env.PREVIEW_DOMAIN` to refuse that deployment's preview domain and its subdomains.
   It preserves the query and drops the fragment and trailing slash.
   For Claude, it also drops a final `/v1`.
-  A valid own endpoint can run through the model gateway on protocol 2.
-  An invalid saved address or a protocol 1 runner makes it unavailable in chat.
+  A valid own endpoint runs through the model gateway.
+  An invalid saved address makes it unavailable in chat.
 - `PUT /api/account/shortcuts` takes `SaveShortcutsRequest` and returns
   `SaveShortcutsResponse` from the shared shortcut contracts. The shared
   reader checks the whole request before any write. A contract error

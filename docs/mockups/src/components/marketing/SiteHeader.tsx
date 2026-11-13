@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
 import { sourceRepositoryHref } from '../../../../../src/marketing/links'
-import { pricingLinkText } from '../../../../../src/marketing/pricing'
 import { GitHubMark } from '../common/GitHubMark'
 import { ScreenLink, useOutsideHref } from '../common/ScreenLink'
 import { classes } from '../common/classes'
@@ -10,32 +9,22 @@ import { Wordmark } from './Wordmark'
 import styles from './SiteHeader.module.css'
 
 /**
- * Where the header and the footer lead: the home page, the pricing page, the
- * docs, the page for people who move from Conductor, and the GitHub sign-in.
+ * Where the header and the footer lead: the home page, the docs, the page
+ * for people who move from Conductor, and the GitHub sign-in.
  */
 export type SiteLinks = {
   home: string
-  pricing: string
   docs: string
   fromConductor: string
   signIn: string
 }
 
 /** The section of the site that a page belongs to, which the header marks. */
-export type SiteSection = 'docs' | 'pricing'
+export type SiteSection = 'docs'
 
 /**
- * How the link of the current section tells screen readers where they are.
- * The docs hold many pages, and the pricing page is one page.
- */
-const ariaCurrent: Readonly<Record<SiteSection, 'true' | 'page'>> = {
-  docs: 'true',
-  pricing: 'page',
-}
-
-/**
- * The top of the site: the wordmark, Features, Download, Pricing, Docs,
- * GitHub, Sign in, and the main action. Features and Download lead to their
+ * The top of the site: the wordmark, Features, Download, Docs, GitHub,
+ * Sign in, and the main action. Features and Download lead to their
  * sections of the home page. A phone keeps the wordmark, Docs, GitHub as its
  * mark, and Sign in. A bare header has only the wordmark, for a page that
  * leads on to sign-in itself.
@@ -66,6 +55,8 @@ export function SiteHeader(props: {
 /**
  * A link to a section of the site. When the page belongs to that section,
  * the link takes the fill of the current section and tells screen readers.
+ * The docs hold many pages, so the link marks the current section, not the
+ * current page.
  */
 function SectionLink(props: {
   section: SiteSection
@@ -76,7 +67,7 @@ function SectionLink(props: {
   const current = props.current === props.section
   return (
     <ScreenLink
-      aria-current={current ? ariaCurrent[props.section] : undefined}
+      aria-current={current ? 'true' : undefined}
       className={classes(styles.link, current && styles.current)}
       to={props.to}
     >
@@ -86,11 +77,10 @@ function SectionLink(props: {
 }
 
 /**
- * The links of the header: Features, Download, Pricing, Docs, GitHub, Sign
- * in, and the main action. A phone leaves out Features, Download, Pricing,
- * and the main action, and its footer links the pricing page. There GitHub
- * shows only its mark, in a square touch target, so that every link fits
- * beside the wordmark.
+ * The links of the header: Features, Download, Docs, GitHub, Sign in, and
+ * the main action. A phone leaves out Features, Download, and the main
+ * action. There GitHub shows only its mark, in a square touch target, so
+ * that every link fits beside the wordmark.
  */
 function SiteNav(props: {
   links: SiteLinks
@@ -117,13 +107,6 @@ function SiteNav(props: {
           >
             Download
           </ScreenLink>
-          <SectionLink
-            current={props.current}
-            section="pricing"
-            to={props.links.pricing}
-          >
-            {pricingLinkText}
-          </SectionLink>
         </>
       )}
       <SectionLink current={props.current} section="docs" to={props.links.docs}>
