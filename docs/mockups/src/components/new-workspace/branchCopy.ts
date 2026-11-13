@@ -43,7 +43,7 @@ export const targetCopy = {
   picked: 'The pull request holds only the new work.',
   /** The line of the default branch, which also gets the picked branch. */
   defaultBranch: (picked: string) =>
-    `The pull request also holds the commits of ${picked}.`,
+    `The pull request also holds the commits of the branch ${picked}.`,
 } as const
 
 /**

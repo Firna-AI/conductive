@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useRef, type RefObject } from 'react'
 import { Button } from '@firna/ui/button'
 import { ArrowUp, Paperclip } from 'lucide-react'
 import styles from '../../../docs/mockups/src/components/chat/Composer.module.css'
@@ -40,12 +40,14 @@ export function Composer(props: {
   /** Whether the message can go now. */
   ready: boolean
   send: () => void
+  /** The handle of the message field, which the page can focus. */
+  field: RefObject<FieldHandle | null>
 }) {
   const control = useControlSizes()
   const draft = useStore(props.model.draft)
   const create = useStore(props.model.create)
   const picker = useRef<HTMLInputElement>(null)
-  const field = useRef<FieldHandle>(null)
+  const { field } = props
   const sending = create.state === 'sending'
   const sendKey = useSendKey(props.ready, props.send)
   const drop = useComposerDrop({

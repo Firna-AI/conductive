@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { FolderGit2, Sparkles } from 'lucide-react'
 import chat from '../../../docs/mockups/src/components/chat/ChatPane.module.css'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
@@ -7,6 +7,7 @@ import { currentBuild } from '../../app/org-model'
 import { routes } from '../../app/router'
 import { useStore, valueOf } from '../../app/store'
 import { whenOf, type When } from '../../app/time'
+import type { FieldHandle } from '../../chat/components/chip-field/focus-plugins'
 import type { OrgSummary } from '../../shared/orgs'
 import { useApp, useOrgAccess, useOrgModel } from '../context'
 import { Page } from '../layout/Page'
@@ -14,11 +15,13 @@ import { ActionButton } from '../ui/actions'
 import { useGo } from '../ui/AppLink'
 import { useViewport } from '../ui/viewport'
 import { orgRefusal, RefusedBar } from '../workspace/SandboxNotice'
+import { BranchControl } from './BranchPicker'
 import { Composer } from './Composer'
 import { useShownForm } from './NewWorkspaceHost'
 import { OrgLinks } from './OrgLinks'
 import { repositoriesFirst } from './notices'
 import { RepositoryMenu } from './parts'
+import { TargetChoice } from './TargetChoice'
 import {
   useNewWorkspaceForm,
   type NewWorkspaceForm,
@@ -30,12 +33,14 @@ function builtWhen(when: When): string {
 }
 
 /**
- * The start of the empty chat, with the repository of the new workspace. An
- * org without chosen repositories asks for them first: an admin gets Choose
- * repositories, and a member reads that an admin chooses them. It asks only
- * after the repositories load, as the dialog does. While the repository of
- * the form waits for its build, the notice over the composer says when it
- * is ready, so the note of the cloud computer gives way.
+ * The start of the empty chat, with the repository of the new workspace and
+ * the branch control beside it. A picked branch that is not the default
+ * branch adds the target choice under them. An org without chosen
+ * repositories asks for them first: an admin gets Choose repositories, and
+ * a member reads that an admin chooses them. It asks only after the
+ * repositories load, as the dialog does. While the repository of the form
+ * waits for its build, the notice over the composer says when it is ready,
+ * so the note of the cloud computer gives way.
  */
 function Start(props: {
   org: OrgSummary
@@ -43,6 +48,7 @@ function Start(props: {
   choose: (id: string) => void
 }) {
   const { org, form } = props
+  const { branch } = form
   const app = useApp()
   const go = useGo()
   const builds = valueOf(useStore(useOrgModel(org.id).builds))
@@ -65,13 +71,23 @@ function Start(props: {
       <h2 className={styles.title}>Start a workspace</h2>
       {body === null ? null : <p className={styles.body}>{body}</p>}
       {chosen ? (
-        <RepositoryMenu
-          chevron={styles.chevron}
-          choose={props.choose}
-          chosen={chosen}
-          repositories={form.repositories ?? []}
-          waiting={form.waiting}
-        />
+        <div className={styles.pickers}>
+          <RepositoryMenu
+            chevron={styles.chevron}
+            choose={props.choose}
+            chosen={chosen}
+            repositories={form.repositories ?? []}
+            waiting={form.waiting}
+          />
+          {branch ? (
+            <BranchControl
+              branch={branch}
+              orgId={org.id}
+              pick={form.pickBranch}
+              repository={chosen}
+            />
+          ) : null}
+        </div>
       ) : unchosen && org.role === 'admin' ? (
         <ActionButton
           icon={FolderGit2}
@@ -79,6 +95,14 @@ function Start(props: {
         >
           Choose repositories
         </ActionButton>
+      ) : null}
+      {chosen && branch?.target ? (
+        <TargetChoice
+          choose={form.chooseTarget}
+          defaultBranch={branch.defaultBranch}
+          picked={branch.name}
+          value={branch.target}
+        />
       ) : null}
       {chosen && builtAt !== null ? (
         <p className={styles.note}>
@@ -108,7 +132,8 @@ export function NewWorkspaceScreen(props: {
   const go = useGo()
   const orgModel = useOrgModel(org.id)
   const [model] = useState(() => orgModel.newWorkspace(props.sectionId))
-  const form = useNewWorkspaceForm(org, model, go)
+  const message = useRef<FieldHandle>(null)
+  const form = useNewWorkspaceForm(org, model, go, message)
   const sections = valueOf(useStore(orgModel.sections))
   const phone = useViewport() === 'phone'
   const { suspended } = useOrgAccess(org)
@@ -147,6 +172,7 @@ export function NewWorkspaceScreen(props: {
               <OrgLinks orgId={org.id}>
                 <Composer
                   choice={form.choice}
+                  field={message}
                   model={model}
                   models={form.models}
                   ready={form.ready}

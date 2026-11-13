@@ -27,6 +27,16 @@ the dev wiring in `dev/`, and what its fake routes do.
   stay through rename, delete, and restore. Settings changes during the
   first good build start one added build. The fake compares settings
   revisions with builds as the Worker does.
+- The branch list of New workspace gives the branches of the mockups for
+  acme/storefront, newest commit first, and only the default branch for
+  each other repository. `?branches=loading` never answers,
+  `?branches=failed` fails as a read of GitHub does, and
+  `?branches=no-access` says that the GitHub account cannot read the
+  repository. With `?branchCheck=missing` or `?branchCheck=no-access`, a
+  create that names a branch other than the default branch gets the
+  refusal of a missing branch or of a GitHub account without access, as
+  [Start from a branch](start-branch.md) says. The fake stores no branch of
+  a create.
 - The upload routes also keep the exact bytes of each upload, in a private
   store of the page. A send that names uploaded files gets a reply with its
   own message ID, text, model choice, and files. An archived workspace,

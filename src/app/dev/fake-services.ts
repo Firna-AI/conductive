@@ -21,6 +21,7 @@ import { attachmentRoutes } from './attachment-routes'
 import { attachmentFileRoutes } from './attachment-files'
 import { attachmentMessageFetch } from './attachment-message-routes'
 import { createBackend, guardScope } from './backend'
+import { branchRoutes } from './branch-routes'
 import { buildRoutes } from './build-routes'
 import { createRoutes } from './create-routes'
 import { feedbackRoutes } from './feedback-routes'
@@ -73,7 +74,8 @@ export function createFakeServices(search: string): AppServices {
     ...orgRoutes(backend),
     ...sectionRoutes(backend),
     ...workspaceRoutes(backend),
-    ...createRoutes(backend),
+    ...createRoutes(backend, options.branchCheck),
+    ...branchRoutes(backend, options.branches),
     ...attachmentRoutes(backend, options.upload),
     ...attachmentFileRoutes(backend),
     ...settingsRoutes(backend),

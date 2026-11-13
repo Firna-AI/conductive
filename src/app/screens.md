@@ -170,8 +170,8 @@ the Help row of the command palette opens.
   runs. An action of the dialog that opens another page, such as Connect
   or Choose repositories, closes the dialog first.
 - The dialog and the page of one org and section share one draft:
-  `OrgModel.newWorkspace(sectionId)`. So a close keeps the message and its
-  files. The menu of General, the default section, opens New workspace
+  `OrgModel.newWorkspace(sectionId)`. So a close keeps the message, its
+  files, and its branch. The menu of General, the default section, opens New workspace
   with no section, as the row does, so General keeps one draft. A create that the server accepts opens the new workspace, also
   when the dialog closed while the create ran. A failed create request
   keeps the dialog open with Try again.
@@ -189,7 +189,9 @@ the Help row of the command palette opens.
   only for such a move, until the focus leaves it. On a phone, no main
   area takes it.
 - The page and the dialog share their form (`useNewWorkspaceForm`): the
-  repository picker, the notices, the send, and one readiness. In an org
+  repository picker, the branch control with its target choice, as
+  [Start from a branch](start-branch.md) says, the notices, the send, and
+  one readiness. In an org
   without chosen repositories, an admin gets Choose repositories, and a
   member who is not an admin reads that an admin chooses them, as the
   empty page of the org says. Both ask only after the repositories load.
@@ -246,8 +248,10 @@ the Help row of the command palette opens.
   sign-out ends them, as
   [Attached files of a draft](../chat/draft-files.md) says.
 - A create request that fails keeps the message in the form, with "The
-  workspace wasn't created". Try again sends the same message ID. A failed
-  first start keeps its workspace instead, as
+  workspace wasn't created". Try again sends the same message ID. A
+  refusal of the branch check names its cause and its own action, as
+  [Refusals of the branch check](start-branch.md#refusals-of-the-branch-check)
+  says. A failed first start keeps its workspace instead, as
   [Creation recovery](creation-recovery.md#a-failed-first-start) says.
 
 ## The waitlist

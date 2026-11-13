@@ -22,6 +22,7 @@ import {
   readSettings,
 } from './api/read-settings'
 import { listWithArchives } from './archive-overlay'
+import { BranchLists } from './branch-lists'
 import { Creations } from './creations'
 import { workspaceUpdated, type ListData } from './list-changes'
 import { NewWorkspaceModel } from './new-workspace-model'
@@ -84,6 +85,8 @@ export class OrgModel {
   readonly creations = new Creations()
   /** The GitHub access of the signed-in member, by repository ID. */
   private readonly githubAccess = new Map<string, GitHubCapabilities>()
+  /** The branches of each repository that the member reads in a picker. */
+  readonly branches: BranchLists
   readonly workspaceActions: WorkspaceActions
   private readonly parts: Readonly<Record<OrgPart, Refreshing>>
   private readonly drafts = new Map<string, NewWorkspaceModel>()
@@ -97,6 +100,7 @@ export class OrgModel {
     const api = noteOrgRefusals(services.api, () => suspension.note())
     this.services = { ...services, api }
     this.orgId = orgId
+    this.branches = new BranchLists(api, orgId)
     this.resources = {
       list: new Resource<ListData>(async () => {
         const [sections, workspaces] = await Promise.all([
@@ -233,9 +237,13 @@ export class OrgModel {
     )
   }
 
-  /** Forgets the GitHub access of the person who signed out. */
+  /**
+   * Forgets what GitHub showed the person who signed out: the access and
+   * the branch lists.
+   */
   forgetGitHubAccess(): void {
     this.githubAccess.clear()
+    this.branches.forget()
   }
 
   /**

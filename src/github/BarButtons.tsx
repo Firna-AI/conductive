@@ -4,6 +4,8 @@ import {
   Clock,
   GitBranchPlus,
   GitMerge,
+  Info,
+  type LucideIcon,
 } from 'lucide-react'
 import styles from '../../docs/mockups/src/components/workspace/BarActions.module.css'
 import {
@@ -132,10 +134,18 @@ export function BarButtons(props: {
   )
 }
 
+/** The mark of each tone of a message under the bar. */
+const messageIcons: Readonly<Record<BarMessage['tone'], LucideIcon>> = {
+  status: Clock,
+  info: Info,
+  danger: CircleAlert,
+}
+
 /**
  * A message under the bar, such as a refusal of GitHub. It tints its whole
  * line, and its edges stay neutral. Another refusal of GitHub leads to the
- * pull request on GitHub, where GitHub names the reason.
+ * pull request on GitHub, where GitHub names the reason. A wait and a base
+ * that moved to the default branch are a status, not a refusal.
  */
 export function BarMessageLine(props: {
   message: BarMessage
@@ -143,12 +153,12 @@ export function BarMessageLine(props: {
   keyOf?: CommandKeyOf
 }) {
   const { message } = props
-  const waits = message.tone === 'status'
-  const Icon = waits ? Clock : CircleAlert
+  const danger = message.tone === 'danger'
+  const Icon = messageIcons[message.tone]
   return (
     <div
-      className={classes(styles.message, !waits && styles.danger)}
-      role={waits ? 'status' : 'alert'}
+      className={classes(styles.message, danger && styles.danger)}
+      role={danger ? 'alert' : 'status'}
     >
       <Icon aria-hidden className={styles.icon} size={14} />
       <span className={styles.text}>{message.text}</span>

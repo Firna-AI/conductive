@@ -56,8 +56,12 @@ export interface BarInput {
 
 export interface BarMessage {
   text: string
-  /** A wait shows as a status, and a refusal or a failure as an alert. */
-  tone: 'status' | 'danger'
+  /**
+   * A wait shows as a status with a clock, and a fact, such as a base that
+   * moved to the default branch, as a status with an info mark. A refusal
+   * or a failure shows as an alert.
+   */
+  tone: 'status' | 'info' | 'danger'
   /** The pull request on GitHub, where GitHub names the reason. */
   href: string | null
 }
@@ -191,6 +195,17 @@ function messageOf(
         tone: 'danger',
         href: null,
       }
+    case 'base-moved':
+      // The Worker moved a deleted base to the default branch, which the
+      // banner names as its base, and it keeps the deleted name.
+      return {
+        text: barMessageText(model.message, {
+          ...branches,
+          moved: banner.baseMoved,
+        }),
+        tone: 'info',
+        href: null,
+      }
     case undefined:
       break
   }
@@ -223,6 +238,7 @@ export function barViewOf(input: BarInput): BarView {
     readOnly: input.readOnly,
     archivable: input.archivable,
     archiving: input.archiving,
+    baseMoved: banner.baseMoved !== undefined,
   })
   const named = failingChecks(snapshot).length > 0
   const actions = model.actions.filter(

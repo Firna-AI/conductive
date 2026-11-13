@@ -16,6 +16,10 @@ that shows their chips.
   generation. `splitPick` splits one attach: the files that upload, the
   names of the files and the zips over the size limit, and a copy of the
   names of the folders that could not be read, from `IntakeRefusals`.
+- `new-workspace-draft.ts`: the draft of New workspace, the state of its
+  create, `draftReady`, and the repository that a draft keeps.
+  `new-workspace-branch.ts`: the branch of a draft and the fields of its
+  create, as [Start from a branch](start-branch.md) says.
 - `new-workspace-files.ts`: `DraftUploads`, the uploads of a first message
   before its workspace exists. Its `attach` gives the IDs of a pick at
   once, and keeps the refused names that the caller gives, also with no

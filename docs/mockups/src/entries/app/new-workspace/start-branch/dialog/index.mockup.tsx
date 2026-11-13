@@ -40,7 +40,7 @@ export const branchDialog = defineScreen({
       slug: 'target-default',
       title: 'Target main',
       description:
-        'Cal chose Target main in the dialog. The line about the pull request says that it also holds the commits of calummoore/checkout-autocomplete.',
+        'Cal chose Target main in the dialog. The line about the pull request says that it also holds the commits of the branch calummoore/checkout-autocomplete.',
       props: { branch: 'picked', target: 'default' },
     },
     {

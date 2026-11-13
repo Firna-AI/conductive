@@ -1,7 +1,9 @@
 import { expect, it } from 'vitest'
 import { FAKE_TIME } from '../test-support/fixtures/core'
+import { ChecksActions } from './BarButtons'
 import type { CommandKeyOf } from './barKeys'
 import type { BarInput } from './barView'
+import { readBannerResponse } from './githubParse'
 import type { GitHubFeed } from './githubStore'
 import { PullRequestBar } from './PullRequestBar'
 import {
@@ -183,5 +185,38 @@ it('names the key of the command of each button and of the number in its tooltip
     continuing: [number],
     waiting: [number, archive],
     archiving: [number, continues],
+  })
+})
+
+it('says under the bar, and at the top of the Checks tab of a phone, that the base moved to the default branch, until a pull request opens', () => {
+  const moved = 'calummoore/checkout-autocomplete'
+  const line = `Now targets main, because the branch ${moved} is no longer on GitHub.`
+  /** The bar and the top of the phone Checks tab of a banner reply. */
+  const shown = (state: 'no-commits' | 'ready-to-merge') => {
+    const { banner } = snapshotOf(state)
+    const reply = readBannerResponse({
+      banner: { ...banner, branch: 'calummoore/lisbon-7k2q', baseMoved: moved },
+    })
+    if (!reply) throw new Error('The banner reply did not read.')
+    const github = readyFeed({
+      banner: reply.banner,
+      checks: snapshotOf(state).checks,
+    })
+    const controls = controlsOf(github)
+    const bar = renderBar(github)
+    const top = render(<ChecksActions controls={controls} />)
+    return {
+      bar: textOf(bar).includes(line),
+      status: new RegExp(`role="status"[^>]*>[\\s\\S]*${line}`).test(bar),
+      top: textOf(top).includes(line),
+    }
+  }
+
+  expect({
+    noPullRequest: shown('no-commits'),
+    pullRequest: shown('ready-to-merge'),
+  }).toEqual({
+    noPullRequest: { bar: true, status: true, top: true },
+    pullRequest: { bar: false, status: false, top: false },
   })
 })

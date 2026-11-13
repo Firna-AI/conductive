@@ -79,9 +79,14 @@ the folder of this page.
   way that each place opens New workspace as the dialog or the page.
   `NewWorkspaceDialog.tsx`: the dialog.
 - `../shell/new-workspace/useNewWorkspaceForm.ts`: the form that the page
-  and the dialog share: the repository, the notices, the readiness, and
-  the send. `parts.tsx`: their repository menu. `waiting.tsx`: the notice
-  of a repository that waits for its build.
+  and the dialog share: the repository, the branch and its target, the
+  notices, the readiness, and the send. `parts.tsx`: their repository
+  menu. `BranchPicker.tsx`, `BranchList.tsx`, and `TargetChoice.tsx`: the
+  branch control, its picker, and the target choice, as
+  [Start from a branch](start-branch.md) says. `create-failure.tsx`: the
+  notice of a failed create. `dialog-parts.tsx`: the header and Create of
+  the dialog. `waiting.tsx`: the notice of a repository that waits for its
+  build.
   The model of each form is the `owner` of its chip field. The shared chip
   field supplies their focus handle. `CaretAtEndPlugin`
   restores the saved caret position when keyboard focus enters. Without a

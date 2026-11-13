@@ -16,6 +16,7 @@ export const samples = [
   'every-check',
   'no-checks',
   'long-base',
+  'base-moved',
 ] as const
 
 export type Sample = (typeof samples)[number]
@@ -28,6 +29,12 @@ export interface SampleReplies {
 const longBase =
   'release/customer-payments-checkout-autocomplete-accessibility-rollout-2026-november'
 const actionsUrl = 'https://github.com/acme/storefront/actions'
+
+/**
+ * A stored base that GitHub deleted, which the Worker moved to the default
+ * branch. The bar names it until a pull request opens.
+ */
+const movedBase = 'priyaraman/checkout-tax-rates'
 
 function check(
   name: string,
@@ -83,6 +90,11 @@ export function sampleReplies(
     case 'long-base':
       return {
         banner: { banner: { ...banner.banner, baseBranch: longBase } },
+        checks,
+      }
+    case 'base-moved':
+      return {
+        banner: { banner: { ...banner.banner, baseMoved: movedBase } },
         checks,
       }
   }

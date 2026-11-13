@@ -6,6 +6,12 @@ import type { RecordedChatScenario } from '../../test-support/recorded-chat'
 import { WORKSPACE_STATES } from '../api/read-workspaces'
 import { getStartedOrder } from '../get-started'
 import type { DevUploadMode } from './attachment-routes'
+import {
+  DEV_BRANCH_CHECKS,
+  DEV_BRANCH_LISTS,
+  type DevBranchCheck,
+  type DevBranchList,
+} from './branch-routes'
 
 const ROLES = ['admin', 'member'] as const satisfies readonly OrgRole[]
 
@@ -111,6 +117,12 @@ type DevInviteCode = (typeof INVITE_CODES)[number]
  * - `inviteCode=used-up|disabled`: every invite of the code of the user is
  *   used, or an operator turned the code off. The operator section shows
  *   the same code.
+ * - `branches=loading|failed|no-access`: the branch list of New workspace
+ *   never answers, fails as a read of GitHub does, or says that the GitHub
+ *   account cannot read the repository.
+ * - `branchCheck=missing|no-access`: a create that names a branch other
+ *   than the default branch gets the refusal of a branch that is no longer
+ *   on GitHub, or of a GitHub account that cannot read the repository.
  */
 export interface DevOptions {
   /** The options of the recorded server. */
@@ -141,6 +153,10 @@ export interface DevOptions {
   paused: boolean
   waitlistOff: boolean
   inviteCode: DevInviteCode
+  /** How the branch list answers. */
+  branches: DevBranchList
+  /** How the branch check of a create answers a named branch. */
+  branchCheck: DevBranchCheck
 }
 
 /** The value of `key` when it is one of `values`. */
@@ -192,6 +208,8 @@ export function readDevOptions(search: string): DevOptions {
     paused: params.get('paused') === '1',
     waitlistOff: params.get('waitlist') === 'off',
     inviteCode: pick(params, 'inviteCode', INVITE_CODES) ?? 'left',
+    branches: pick(params, 'branches', DEV_BRANCH_LISTS) ?? 'list',
+    branchCheck: pick(params, 'branchCheck', DEV_BRANCH_CHECKS) ?? 'found',
   }
 }
 

@@ -99,9 +99,14 @@ function readBanner(value: unknown): GitHubBanner | null {
     !isNumber(value.updatedAt)
   )
     return null
+  // The name of a deleted base is a status of the bar. A reply without it,
+  // or with a value that is not a name, shows no such line.
   const branch = {
     branch: value.branch,
     baseBranch: value.baseBranch,
+    ...(typeof value.baseMoved === 'string'
+      ? { baseMoved: value.baseMoved }
+      : {}),
     updatedAt: value.updatedAt,
   }
   const state = value.state

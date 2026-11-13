@@ -1,12 +1,10 @@
 import { useRef, useState } from 'react'
-import { CornerDownLeft, Paperclip } from 'lucide-react'
+import { Paperclip } from 'lucide-react'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import layer from '../../../docs/mockups/src/components/common/ConfirmDialog.module.css'
 import styles from '../../../docs/mockups/src/components/new-workspace/NewWorkspaceDialog.module.css'
 import { useNavigation } from '../../app/navigation'
-import type { NewWorkspaceModel } from '../../app/new-workspace-model'
-import { defaultSection } from '../../app/sections'
-import { useStore, valueOf } from '../../app/store'
+import { useStore } from '../../app/store'
 import {
   FolderNotice,
   noticedFolder,
@@ -18,7 +16,7 @@ import { useComposerDrop } from '../../chat/components/composer-drop'
 import { useSendKey } from '../../chat/components/send-key'
 import type { OrgSummary } from '../../shared/orgs'
 import { useApp, useOrgAccess, useOrgModel } from '../context'
-import { ActionButton, IconButton } from '../ui/actions'
+import { IconButton } from '../ui/actions'
 import { useGo } from '../ui/AppLink'
 import { ModelPicker } from '../ui/ModelPicker'
 import { Overlay, useModalLayer } from '../ui/Overlay'
@@ -26,53 +24,10 @@ import { trapTab } from '../ui/Sheet'
 import ui from '../ui/ui.module.css'
 import { orgRefusal, RefusedBar } from '../workspace/SandboxNotice'
 import { ChooseRepositoriesNotice } from './notices'
-import { RepositoryMenu, SectionMenu } from './parts'
+import { CreateButton, DialogHeader } from './dialog-parts'
 import local from './new-workspace.module.css'
 import { OrgLinks } from './OrgLinks'
 import { useNewWorkspaceForm } from './useNewWorkspaceForm'
-
-/**
- * The section that the new workspace joins, such as General: the pick of
- * the draft, else the section of the dialog. It is `undefined` while the
- * sections load, and for a section that the org no longer has.
- */
-function useSection(org: OrgSummary, model: NewWorkspaceModel) {
-  const sections = valueOf(useStore(useOrgModel(org.id).sections)) ?? []
-  const id = useStore(model.draft).sectionId ?? model.sectionId
-  const section =
-    id === null
-      ? defaultSection(sections)
-      : sections.find((item) => item.id === id)
-  return { sections, section }
-}
-
-/**
- * Create, with the hint of its key: on a computer, Enter creates the
- * workspace. Create is off until the message can go.
- */
-function CreateButton(props: {
-  ready: boolean
-  busy: boolean
-  create: () => void
-}) {
-  return (
-    <ActionButton
-      busy={props.busy}
-      disabled={!props.ready}
-      onPress={props.create}
-      tone={props.ready ? 'primary' : 'secondary'}
-      trailing={
-        <CornerDownLeft
-          aria-hidden
-          className={classes(styles.key, props.ready && styles.keyOnSolid)}
-          size={13}
-        />
-      }
-    >
-      Create
-    </ActionButton>
-  )
-}
 
 /**
  * The card of the dialog. While the create runs, Escape and a press outside
@@ -102,12 +57,11 @@ function DialogCard(props: {
     props.close()
     go(to)
   }
-  const form = useNewWorkspaceForm(org, model, leave)
+  const message = useRef<FieldHandle>(null)
+  const form = useNewWorkspaceForm(org, model, leave, message)
   const { suspended } = useOrgAccess(org)
-  const { sections, section } = useSection(org, model)
   const sending = form.create.state === 'sending'
   const card = useRef<HTMLElement>(null)
-  const message = useRef<FieldHandle>(null)
   // The file picker opens from the attach button and from the notice of a
   // file over the size limit. Its files go into the text at the caret.
   const picker = useRef<HTMLInputElement>(null)
@@ -147,31 +101,13 @@ function DialogCard(props: {
       tabIndex={-1}
       {...drop.handlers}
     >
-      <div className={styles.header}>
-        {form.repository && !suspended ? (
-          <RepositoryMenu
-            chevron={styles.chevron}
-            choose={(id) => model.setRepository(id)}
-            chosen={form.repository}
-            repositories={form.repositories ?? []}
-            tone="plain"
-            waiting={form.waiting}
-          />
-        ) : null}
-        {section ? (
-          <SectionMenu
-            chevron={styles.chevron}
-            choose={(id) => model.setSection(id)}
-            chosen={section}
-            className={classes(styles.anchor, styles.placeMenu)}
-            disabled={sending}
-            org={org.name}
-            sections={sections}
-          />
-        ) : (
-          <span className={styles.place}>{org.name}</span>
-        )}
-      </div>
+      <DialogHeader
+        form={form}
+        model={model}
+        org={org}
+        sending={sending}
+        suspended={suspended}
+      />
       {suspended ? (
         // A suspended org refuses each create, as on the page.
         <div className={classes(styles.notices, local.refused)}>
@@ -251,13 +187,15 @@ function DialogCard(props: {
 
 /**
  * New workspace as a dialog over the whole frame, on a computer, as the
- * mockup draws it. The repository picker sits at the top left, and the org
- * and the section of the new workspace at the top right, as a menu of the
- * sections of the org. The message and
- * its files fill the middle, with the notices of the page under them. The
- * model picker sits at the bottom left, and the attach button and Create
- * at the bottom right. The dialog and the page of an org and a section
- * share one draft, so a close keeps the message and its files.
+ * mockup draws it. The repository picker and the branch control sit at the
+ * top left, and the org and the section of the new workspace at the top
+ * right, as a menu of the sections of the org. A picked branch that is not
+ * the default branch adds the target choice on a line under them. The
+ * message and its files fill the middle, with the notices of the page under
+ * them. The model picker sits at the bottom left, and the attach button and
+ * Create at the bottom right. The dialog and the page of an org and a
+ * section share one draft, so a close keeps the message, its files, and its
+ * branch.
  */
 export function NewWorkspaceDialog(props: {
   orgId: string

@@ -22,7 +22,7 @@ export const branchTarget = defineScreen({
       slug: 'default',
       title: 'Target main',
       description:
-        'Cal chose Target main. The line under the choice says that the pull request also holds the commits of calummoore/checkout-autocomplete. Send creates Saved carts, which starts from that branch and targets main, so Changes and Create PR compare with main.',
+        'Cal chose Target main. The line under the choice says that the pull request also holds the commits of the branch calummoore/checkout-autocomplete. Send creates Saved carts, which starts from that branch and targets main, so Changes and Create PR compare with main.',
       rationale:
         'This is the case of a branch off a branch that still targets main. The line names the cost of the choice: until calummoore/checkout-autocomplete merges into main, its commits are part of the new pull request.',
       props: { target: 'default' },

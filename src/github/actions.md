@@ -61,6 +61,13 @@ knows:
 - Fix checks shows only while the checks name a check that blocks the
   merge: failed, timed out, cancelled, or one that needs an action. Its
   prompt lists them.
+- A base that GitHub deleted moved to the default branch, which the
+  banner names as its base, and `baseMoved` names the deleted branch. The
+  reader keeps it, and `barModel` gives its line under the bar until a
+  pull request opens, as
+  [The banner states](../../docs/protocol/github-banner.md#banner-states)
+  say. The line is a status with an info mark, not a refusal. On a phone it
+  tops the Checks tab, as each message of the bar does.
 - An archived workspace and a suspended org show only the links.
 - After the merge, every member sees Continue. Archive needs the Archive
   of the screen, which archives at once and asks no question. Continue

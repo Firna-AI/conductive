@@ -336,6 +336,21 @@ Design calls from the backend implementation, made on 13 November 2026:
   script and runner. Reason: a stopped computer must follow a base move,
   and the retained runner already reads the setting for each scan and diff.
 
+Design calls from the UI of Milestone 8, made on 13 November 2026:
+
+- A send ends the picked branch and its target, as it ends the message of
+  the draft. Reason: they belong to the draft.
+- Start from and the default branch also removes the refusal and moves the
+  focus to the message. Reason: the mockup shows the page without the
+  refusal after this action.
+- The search filters the list that the app already has, with no new read
+  for each key. Each open of the picker reads the list again and shows
+  "Loading branches…" until the reply. Reason: the Worker gives every
+  branch, and the protocol asks for a live list.
+- The target line says "the commits of the branch <name>". Reason: the
+  rule that puts "the branch" before a branch name. The first mockup copy
+  left it out.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -498,22 +513,30 @@ Tags: ui
 
 Depends on: 1, 3, 4
 
-- [ ] Build the branch control and the picker on the page and in the
+- [x] Build the branch control and the picker on the page and in the
       dialog, with search and the list states, as the mockups show.
-- [ ] Build the target choice of decision 291, with the first selection of
+- [x] Build the target choice of decision 291, with the first selection of
       decision 295: a segmented control on a computer, and radio cards on
       a phone. Keep the choice of the member when the member picks another
       branch.
-- [ ] Keep the branch and the target in the draft, clear them on a change of
+- [x] Keep the branch and the target in the draft, clear them on a change of
       repository, and send them with the create.
-- [ ] Show the refusals of the branch check, and keep the message. A
+- [x] Show the refusals of the branch check, and keep the message. A
       missing branch offers Start from and the default branch, and a token
       that cannot read the repository offers Try again. Take the words from
       `docs/mockups/src/components/new-workspace/branchCopy.ts`.
-- [ ] Test the picker states, the clear, the target choice, and the create
+- [x] Show the line of a base that moved, from `GitHubBanner.baseMoved`,
+      under the pull request bar on a computer and at the top of the Checks
+      tab on a phone, as `app/new-workspace/start-branch/stacked/base-moved`
+      shows. The banner reader of the app dropped the field before.
+- [x] Test the picker states, the clear, the target choice, and the create
       request.
-- [ ] Compare each screen with its mockup on desktop and on a phone. Update
+- [x] Compare each screen with its mockup on desktop and on a phone. Update
       `src/app/README.md`.
+
+Evidence: `.context/start-from-branch/m8-mutations.log`,
+`m8-repeat-summary.log`, `m8-test-cost.log`, and the screenshots in
+`.context/start-from-branch/ui/`.
 
 ## Milestone 9: Verification, commit, review, and pull request
 

@@ -8,7 +8,15 @@ import { maybeText, nested, record, text, texts } from '../api/parse'
 import { readChoice } from '../api/read-core'
 import { defaultSection } from '../sections'
 import { requireOrg, requireWorkspace, type DevBackend } from './backend'
-import { ID, json, requiredText, RouteError, type Route } from './router'
+import { checkBranches, type DevBranchCheck } from './branch-routes'
+import {
+  ID,
+  json,
+  optional,
+  requiredText,
+  RouteError,
+  type Route,
+} from './router'
 import { routes } from '../router'
 import { FAKE_ORIGIN } from '../../test-support/fixtures/core'
 import { createPlan, failFirstStart, runStart } from './start-steps'
@@ -59,6 +67,11 @@ export interface WorkspaceRequest {
   sectionId: string | null
   first: SendMessageRequest
   /**
+   * The start branch and the base branch that a create names, with the
+   * answer of the fake branch check. A routine run names none.
+   */
+  branches?: { named: readonly (string | undefined)[]; check: DevBranchCheck }
+  /**
    * A first start that fails keeps its workspace in the error state, as
    * the Worker keeps the workspace of a routine run.
    */
@@ -95,6 +108,9 @@ export function startWorkspace(
       'repository_not_found',
       'The repository is not available.',
     )
+  }
+  if (request.branches) {
+    checkBranches(repository, request.branches.named, request.branches.check)
   }
   // A draft can outlive its section. Its workspace then goes to General,
   // so that Try again does not fail on the same section again.
@@ -165,28 +181,47 @@ export function startWorkspace(
   }
 }
 
-/** Create workspace, from the first message of the user. */
+/**
+ * Create workspace, from the first message of the user. A named branch
+ * other than the default branch gets the answer `check` of the branch check.
+ */
 function createWorkspace(
   backend: DevBackend,
   org: OrgState,
   body: unknown,
+  check: DevBranchCheck,
 ): Response {
   const fields = record(body)
   const created = startWorkspace(backend, org, {
     repositoryId: requiredText(fields, 'repositoryId'),
     sectionId: maybeText(fields, 'sectionId'),
     first: readFirstMessage(fields.firstMessage),
+    branches: {
+      named: [
+        optional(fields, 'startBranch', text),
+        optional(fields, 'baseBranch', text),
+      ],
+      check,
+    },
   })
   return json(created satisfies CreateWorkspaceResponse, 201)
 }
 
-export function createRoutes(backend: DevBackend): Route[] {
+export function createRoutes(
+  backend: DevBackend,
+  check: DevBranchCheck = 'found',
+): Route[] {
   return [
     {
       method: 'POST',
       path: workspacesPath(ID.org),
       answer: ({ params, body }) =>
-        createWorkspace(backend, requireOrg(backend.state, params.org), body),
+        createWorkspace(
+          backend,
+          requireOrg(backend.state, params.org),
+          body,
+          check,
+        ),
     },
   ]
 }

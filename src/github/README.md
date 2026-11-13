@@ -196,7 +196,9 @@ mounts it, and the production build leaves it out.
   shows the actions in the whole screen.
 - `sample` changes the fake data to other valid data: `every-check` gives
   one check in each of the nine states, `no-checks` a pull request without
-  checks, and `long-base` a long target branch. `fake`, the default, keeps the data of the fake API.
+  checks, and `long-base` a long target branch. `base-moved` gives a base
+  that GitHub deleted, whose line shows under the bar of `none` and
+  `no-commits`. `fake`, the default, keeps the data of the fake API.
   The live events of a sample carry the same data as its replies.
 - Send gives a live `github.updated` event. With `github=error`, "Let GitHub
   answer" makes the next Try again succeed.

@@ -2,11 +2,9 @@ import type { ReactNode } from 'react'
 import { ArrowRight, CircleAlert, FolderGit2, Hammer, Plug } from 'lucide-react'
 import { Notice } from '../../../docs/mockups/src/components/common/Notice'
 import { firstBuildCopy as buildCopy } from '../../../docs/mockups/src/screens/firstBuildCopy'
-import type { ApiError } from '../../app/api/client'
 import { loginUsable } from '../../app/api/read-core'
 import { firstBuildOf } from '../../app/first-build'
 import { mayChangeSettings } from '../../app/permissions'
-import type { CreateState } from '../../app/new-workspace-model'
 import { routes } from '../../app/router'
 import { useStore, valueOf } from '../../app/store'
 import { formatElapsed, useNow } from '../../app/time'
@@ -169,67 +167,4 @@ export function ChooseRepositoriesNotice(props: {
       title={repositoriesFirst(org)}
     />
   )
-}
-
-/**
- * The code of a start that failed before the server took the message. Its
- * message is the one that the Worker saved for the start, such as its time
- * limit.
- */
-const startFailed = 'workspace_start_failed'
-
-const notStarted = "Its sandbox didn't start. Your message is kept."
-
-/**
- * The text of a create request that failed, by its status and code. The
- * form keeps the message, and Try again sends it with the same ID.
- */
-function failureBody(error: ApiError): string {
-  if (error.status === 0) {
-    return "The app can't reach the server. Your message is kept."
-  }
-  if (error.code === startFailed)
-    return `${error.message} Your message is kept.`
-  if (error.status >= 500) return notStarted
-  return `${error.message} Your message is kept.`
-}
-
-/**
- * A create request that failed. The draft stays, and Try again sends it
- * again. Try again is off while the message cannot go, as Send is. A start
- * that failed before the server took the message shows the message that
- * the Worker saved for it.
- */
-function CreateFailed(props: {
-  error: ApiError
-  ready: boolean
-  retry: () => void
-}) {
-  return (
-    <Notice
-      action={
-        <ActionButton
-          disabled={!props.ready}
-          onPress={props.retry}
-          tone="primary"
-        >
-          Try again
-        </ActionButton>
-      }
-      body={failureBody(props.error)}
-      icon={CircleAlert}
-      title="The workspace wasn't created"
-      tone="danger"
-    />
-  )
-}
-
-/** The notice of a create that failed, or `null` while none failed. */
-export function createFailure(
-  create: CreateState,
-  ready: boolean,
-  retry: () => void,
-): ReactNode {
-  if (create.state !== 'failed') return null
-  return <CreateFailed error={create.error} ready={ready} retry={retry} />
 }

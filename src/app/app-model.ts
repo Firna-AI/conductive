@@ -95,7 +95,7 @@ export class AppModel {
   /**
    * A sign-out, or a sign-in of another person, ends the create requests
    * of every org that still run, so that their answers change nothing. It
-   * also forgets the GitHub access of the person.
+   * also forgets the GitHub access and the branch lists of the person.
    */
   private followPerson(): void {
     const boot = this.boot.get()
