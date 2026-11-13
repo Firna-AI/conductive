@@ -109,10 +109,31 @@ design call of 13 November 2026 under the decision test of the
   the Mac app (secrets decision 4 B).
 - Temporary requests. When a run names a secret that the org does not
   have, the card asks for a value. The person who answers types it, then
-  chooses Use once or Save. Save creates an org secret with that name.
-  Its creator is the person who answers, and the session gets an
-  approval for it. Use once stores no secret. The life of a one-time
-  value waits for secrets decision 7.
+  chooses how long the value lasts: 15 minutes, this workspace, or Save.
+  Save creates an org secret with that name. Its creator is the person
+  who answers, and the session gets an approval for it. The other two
+  choices store no org secret (secrets decision 7).
+- A value for 15 minutes serves each run of the session that asked, for
+  15 minutes from the answer. A value for this workspace serves each run
+  of each session of the workspace until the workspace is archived. The
+  Durable Object keeps the value encrypted for that time, and its
+  exact-copy filter keeps a copy for the same time. My call for the
+  session and the end at Archive: the 15 minutes bound a short task, and
+  the workspace choice names its own scope.
+- Capabilities (secrets decision 6, Cal's choice). New workspace gets a
+  small icon with the label "Capabilities" on hover. It opens a control
+  with two parts for now: the pre-approved secrets, and Mac access. Later
+  features, such as MCP servers, add their own parts there. New
+  workspace gets no separate secret picker. The org settings keep a
+  Secrets tab, where members add, replace, delete, and admins reveal
+  secrets. My call for the Secrets tab: Cal chose the icon for the create
+  only, and secrets still need a place to be managed.
+- Mac access. A workspace with Mac access off refuses each Mac command
+  request of its agents, with a reason. The default and the change after
+  the create wait for secrets decisions 8 and 9. When a member turns Mac
+  access off, each waiting Mac request of the workspace ends with that
+  reason, and a running command runs to its end. My call: the Mac app
+  owns a running command, and a stop there is a separate choice.
 - Save does not set the mark for all agents. My call: only admins set the
   mark (secrets decision 3 B).
 - A workspace that an agent creates with the workspace tools starts with
@@ -198,7 +219,18 @@ messages in every workspace of the org.
 
 ### Secrets decision 5: Secrets in turns that no person started
 
-Open. Root question: which secrets may an agent use in a turn that no
+Cal chose C on 13 November 2026: no special rule. A request in a routine
+run, or in a turn that an agent started, waits for a member as each other
+request does. Reason (Cal): the time limit of a request ends the wait of
+the tool call, so an unanswered request no longer keeps a cloud computer
+awake. The late request stays in the chat. Risk that stays: an agent that
+outside text steers can use the grants of a workspace or a session
+through the session calls. The documentation milestone adds this risk to
+`docs/protocol/routines.md`.
+
+The record of the options as they were asked:
+
+Root question: which secrets may an agent use in a turn that no
 person started, and how does it get the others? A routine run starts with
 no person who watches, and text from other GitHub accounts can steer a
 pull request run. While a turn of the run runs, its agent can also start
@@ -235,7 +267,16 @@ same effort. Action: ask the user, because D adds a new refusal.
 
 ### Secrets decision 6: Where members manage secrets
 
-Open. Root question: where do members edit secrets, and how do they undo
+Cal chose a new option G on 13 November 2026: a small Capabilities icon
+in New workspace, with its label on hover. It controls the pre-approved
+secrets and Mac access for now, and later features such as MCP servers.
+Reason (Cal): it keeps the New workspace page and dialog uncluttered, and
+it gives later features one place. Options A to D below lost to G. The
+undo of a wrong grant, which C and D gave, is open as secrets decision 8.
+
+The record of the options as they were asked:
+
+Root question: where do members edit secrets, and how do they undo
 a grant that lets a workspace or a session use a secret with no question?
 No settings screen exists for one workspace. The task says that secrets
 "can be edited from workspace settings". Without an undo, a wrong grant
@@ -268,7 +309,15 @@ does not exist.
 
 ### Secrets decision 7: How long a one-time value lasts
 
-Open. Root question: which later commands may use a one-time value with
+Cal answered on 13 November 2026: "A - ask the user, 15 mins or for this
+workspace". The plan reads this as option F with other choices: the card
+asks the person who answers, and offers 15 minutes, this workspace, or
+Save. The reading is my guess, and Cal can correct it. Reason: an answer
+of one run alone does not ask the user anything.
+
+The record of the options as they were asked:
+
+Root question: which later commands may use a one-time value with
 no new question, and how long does the app keep a copy? The exact-copy
 filter of the Durable Object needs its own copy of a one-time value,
 because the value has no stored record. The options:
@@ -300,8 +349,90 @@ and it ends with the work that asked for it. The options check kept B.
 Action: ask the user, because the options trade the number of questions
 against how long a value stays in the app.
 
+### Secrets decision 8: Capabilities after the create
+
+Open. Root question: how does a member see and change what an existing
+workspace allows, such as its pre-approved secrets and Mac access? Cal's
+first message said that secrets "can be edited from workspace settings",
+and no settings screen exists for one workspace. Without a change after
+the create, a wrong pre-approval or a session approval ends only when
+its secret is deleted, and a workspace can hold one task after another.
+The options:
+
+- A. Only the create sets the capabilities. A grant ends only when its
+  secret is deleted. Effort: Small.
+- B. The same Capabilities icon shows in each workspace, beside the
+  message box. It shows and changes the pre-approved secrets and Mac
+  access of the workspace, and it removes the approvals of its sessions
+  and each value for this workspace. Every member can change it. Effort:
+  Medium.
+- C. B, but only the workspace owner and the admins change it, as for
+  Archive. Other members see it read-only. Effort: Medium.
+- D. No control in the workspace. The Secrets tab of the org settings
+  gets Ask again on each secret, which ends every grant of that secret.
+  Mac access stays as the create set it. Effort: Medium.
+- E. B for secrets. Mac access belongs to each member for each workspace,
+  and only that member changes their own switch. It covers only requests
+  to that member's Mac. One control then has a shared part and a
+  personal part. Effort: Medium.
+
+Left out: a settings page or a menu action for one workspace, because
+the user chose the five actions of the workspace menu and B gives the
+same changes in the Capabilities icon. A list of grants on each secret
+row, because B shows the grants of one workspace for less effort.
+
+Recommendation: B. It meets "edited from workspace settings", gives the
+undo of a wrong grant, and keeps each capability in one place. Every
+member can already allow a request in each session (secrets decision
+4 B). The options check kept B and added the values for this workspace
+to its control. Choose E if only the person at a Mac may turn Mac access
+on for that Mac. Action: ask the user, because each option sets a new
+access rule that no requirement covers.
+
+### Secrets decision 9: Mac access by default
+
+Open. Root question: may agents of a new workspace ask for Mac commands
+before a member chooses? Today each workspace can ask, and the Mac app
+on the Mac of the sender asks its user before each command, unless a
+saved choice covers it (decision 62). Mac access in Capabilities adds a
+stop for one workspace. The options:
+
+- A. On by default. Today's behaviour stays. A member turns it off in
+  Capabilities. Effort: Small.
+- B. Off by default for each new workspace. A member turns it on in
+  Capabilities. Existing workspaces keep it on. Agents of a new workspace
+  can ask only after that choice. Effort: Small.
+- C. On for a workspace that a person creates. Off for a workspace that
+  an agent or a routine creates. Effort: Medium.
+- D. On for a workspace that a person creates. A workspace that an agent
+  creates copies the Mac access of the calling workspace. A routine run
+  workspace starts off. Existing workspaces keep it on. Effort: Medium.
+- E. A for the switch, and Always allow in the Mac app covers one
+  workspace only. It changes decision 62, and people allow the same
+  command again in each workspace. Effort: Medium.
+
+Left out: a Mac access that skips the question on the Mac, because it
+breaks decision 62.
+
+Background from the options check: Always allow covers the exact command
+text in every workspace (`desktop/src/device/permissions.ts`). The
+routine owner sends the first turn of a run workspace. So under A, text
+in a pull request can make the agent of a run run an always-allowed
+command on the owner's Mac with no question. This is the open High
+follow-up `plans/follow-ups/routine-turns-mac-commands.md`. Under A, an
+agent can also create a new workspace with Mac access on, past a switch
+that is off.
+
+Recommendation: D. The plan first recommended A, but A's reason is false
+for always-allowed commands. D keeps today's behaviour in each workspace
+that a person creates, and it closes the routine run path of the
+follow-up. The path through the session calls stays open, as Cal
+accepted for secrets in decision 5 C. Action: ask the user, because B,
+C, D, and E change decision 62 behaviour or add a refusal.
+
 The options check of decisions 5, 6, and 7 is in
-`.context/agent-secrets/options-check.md`.
+`.context/agent-secrets/options-check.md`. The check of decisions 8 and 9
+is in `.context/agent-secrets/options-check-8-9.md`.
 
 ## Milestone 1: Mockups
 
@@ -316,9 +447,13 @@ The mockups show each new screen and flow before any code changes.
       view with Reveal and its record, the member view with each value
       hidden, the add form, and the replace and delete actions under
       secrets decision 3 B.
-- [ ] Add a secret picker to the New workspace page and dialog mockups.
+- [ ] Add the Capabilities icon and its control to the New workspace page
+      and dialog mockups, with the secrets part and the Mac access part.
+- [ ] Add the Capabilities control of an existing workspace, if secrets
+      decision 8 keeps it.
 - [ ] Add the request card above the composer: a stored secret, and a
-      temporary request with a value field, Use once, and Save. Show the
+      temporary request with a value field, 15 minutes, This workspace,
+      and Save. Show the
       card without choices for a member who cannot answer, if any.
 - [ ] Add the late request widget in the chat, for a stored secret and
       for a temporary request, and the message that a late answer sends.
@@ -338,7 +473,9 @@ Depends on: 1
 - [ ] Update `docs/protocol/agent-tools.md` and its count of calls,
       `docs/protocol/agent-tool-access.md`, `docs/protocol/isolation.md`,
       `docs/protocol/create-a-workspace.md`,
-      `docs/protocol/orgs-and-members.md`, and `docs/protocol/routines.md`.
+      `docs/protocol/orgs-and-members.md`, `docs/protocol/routines.md`,
+      `docs/protocol/workspace-calls.md`, and
+      `docs/protocol/routine-runs.md`.
 - [ ] Update the review focus of `CLAUDE.md` for secrets decision 2 A.
 - [ ] Read `src/marketing/privacy.ts` and `src/marketing/terms.ts` in
       full. Update each sentence that restates a changed fact.
@@ -356,7 +493,9 @@ Depends on: 2
 - [ ] Add the settings routes: list, create, replace, delete, set the
       mark, and reveal. Check the rights of secrets decision 3 B in the
       Worker. The list never holds a value.
-- [ ] Take the pre-approved secrets in the create of a workspace.
+- [ ] Take the capabilities in the create of a workspace: the
+      pre-approved secrets and Mac access. Refuse Mac command requests of a
+      workspace with Mac access off.
 - [ ] Add tests beside the code.
 
 ## Milestone 4: Tool routes and requests
@@ -385,14 +524,15 @@ Depends on: 4
       `tools/calls.md`.
 - [ ] Add tests beside the code.
 
-## Milestone 6: Secrets tab and New workspace picker
+## Milestone 6: Secrets tab and Capabilities
 
 Tags: ui
 
 Depends on: 3
 
 - [ ] Build the Secrets tab of the org settings from the mockup.
-- [ ] Build the secret picker of New workspace from the mockup.
+- [ ] Build the Capabilities icon and control of New workspace from the
+      mockup, and of an existing workspace if secrets decision 8 keeps it.
 - [ ] Add tests beside the code.
 
 ## Milestone 7: Request card and chat results
