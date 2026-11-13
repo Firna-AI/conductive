@@ -76,6 +76,8 @@ type DevInviteCode = (typeof INVITE_CODES)[number]
  *   the fake starts. Refresh and a save read a list that names every model.
  * - `modelList=v1-only|read-failed`: with `login=endpoint`, use the fake
  *   host that lists only under /v1, or the host that never lists models.
+ *   With `read-failed`, the Claude login keeps a list from a day before
+ *   that does not name the last Claude model of the app.
  * - `deleted=1`: Acme is deleted, as its admins see it.
  * - `suspended=1`: the operator suspended Acme. Each write of Acme gets
  *   `org_suspended`, except a leave, as the Worker does.

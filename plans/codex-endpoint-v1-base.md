@@ -223,6 +223,39 @@ choice. Cal can override any agent call.
   README into its linked `own-endpoints.md` page.
   Agent call of the Milestone 3 implementation, 13 November 2026.
   Reason: the README was at 299 lines before this implementation.
+- **Flags of one login.** `EndpointReads` in `src/app/endpoint-reads.ts`
+  keeps the flags of each agent with the save time of the login of that
+  save. The note and the warning show only while the account shows that
+  login. So a later save of the login, also in another tab, removes them,
+  and a Refresh answer that comes after a Remove or a new save changes
+  nothing. Agent call of the Milestone 4 implementation, 13 November 2026.
+  Reason: the flags describe one saved address, and the account reads the
+  logins again each minute. Without the save time, a login saved in
+  another tab would show a note or a warning about another address.
+- **Refresh keeps the focus.** When the one Refresh of a row moves between
+  the warning and the line of the models, after a read that failed or
+  worked, the new button takes the focus that the pressed one lost, as the
+  ChatGPT sign-in does for its steps. Agent call of the Milestone 4
+  implementation, 13 November 2026. Reason: the pressed button leaves the
+  page, so the keyboard would lose its place.
+- **One Refresh from the row.** `src/shell/account/EndpointDetails.tsx`
+  draws the lines in the order of the mockup part of the same name, and
+  makes the one Refresh of the row with the words of `endpointReadCopy.ts`.
+  `EndpointModels` takes that button, or none, as the mockup part does, so
+  it holds no words of Refresh. Agent call of the Milestone 4
+  implementation, 13 November 2026. Reason: one action keeps one busy state
+  for the row.
+- **Login writes split.** The writes of the agent logins move from
+  `src/app/account-model.ts` to `src/app/account-login-writes.ts`.
+  `AccountModel` keeps a short method for each. Agent call of the
+  Milestone 4 implementation, 13 November 2026. Reason: the model was at
+  293 lines, and the flags would take it past the limit of 300.
+- **Kept list in development.** With `?login=endpoint&modelList=read-failed`,
+  the Claude login also keeps a list from a day before that does not name
+  the last Claude model. Agent call of the Milestone 4 implementation, 13
+  November 2026. Reason: without a list, the seeded rows show no Refresh,
+  and `npm run dev` could not show the state of
+  `app/account/endpoint-models/read-failed-unlisted`.
 
 ## Milestone 1: Mockups
 
@@ -292,21 +325,22 @@ Tags: ui
 
 Depends on: 1, 3
 
-- [ ] Show the note under the Codex row after a save with the flag, with
+- [x] Show the note under the Codex row after a save with the flag, with
       `EndpointAddressNote` from
       `docs/mockups/src/components/settings/EndpointRead.tsx`, as
       `app/account/endpoint-models/v1-added` shows. Keep the flag beside
       the account data, so that the agent step of Get started shows it
       too.
-- [ ] Show the warning under each own endpoint row whose save or Refresh
+- [x] Show the warning under each own endpoint row whose save or Refresh
       returned the failed-read flag, until a reload, with Refresh, with `EndpointReadFailed` from the same file. Give it
       the Refresh button of the row, and take the words of Refresh from
       `endpointReadCopy.ts`, also in `src/shell/account/EndpointModels.tsx`.
       When the row also shows the models that the list leaves out,
       `EndpointModels` shows no Refresh, as
       `app/account/endpoint-models/read-failed-unlisted` shows.
-- [ ] Add component tests for the note and the warning.
-- [ ] Check the page in a browser with `npm run dev`.
+- [x] Add component tests for the note and the warning.
+- [x] Check the page in a browser with `npm run dev`. The screenshots and
+      the log are in `.context/codex-endpoint-v1-base/m4/`.
 
 ## Milestone 5: Verification, commit, review, and pull request
 

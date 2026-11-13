@@ -58,6 +58,12 @@ agent login forms, and model lists in the web app.
 - The app keeps the flags of the save and of Refresh beside the account
   data, only in memory. So the note and the warning stay when the agent
   step of Get started draws the list again, and a reload removes them.
+  The flags belong to the login of that save, by its save time. So a login
+  that a later save replaced, also in another tab, shows neither. A
+  Refresh answer that comes after a Remove or a new save changes nothing.
+  `EndpointReads` in `endpoint-reads.ts` keeps them.
+- When Refresh moves between the warning and the line of the models, after
+  a read that failed or worked, it keeps the keyboard focus.
 - The model pickers of the person follow these lists: the default model of
   Preferences, New workspace, the routine editor, and the composer of a
   message on the person's own login. Each picker keeps the model that it

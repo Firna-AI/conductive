@@ -1,8 +1,5 @@
 import {
   ACCOUNT_PATHS,
-  agentLoginPath,
-  refreshAgentLoginModelsPath,
-  codexDevicePath,
   type AccountResponse,
   type AgentLoginStatus,
   type GitHubInstallationsResponse,
@@ -11,8 +8,6 @@ import {
   type PollCodexDeviceResponse,
   type SaveAgentLoginRequest,
   type StartCodexDeviceResponse,
-  type UpdateAgentLoginRequest,
-  type UpdateAgentLoginResponse,
 } from '../shared/account'
 import type { Agent, AgentChoice } from '../shared/agents'
 import { API_PATHS } from '../shared/api'
@@ -20,19 +15,18 @@ import type { SaveShortcutsRequest } from '../shared/shortcuts'
 import { WAITLIST_PATHS, type WaitlistStateResponse } from '../shared/waitlist'
 import { AgentLogins } from './agent-logins'
 import { AccountLoginReads } from './account-login-reads'
+import { AccountLoginWrites } from './account-login-writes'
 import { ignore, nested, record } from './api/parse'
 import {
   readChoice,
-  readCodexDevicePoll,
-  readCodexDeviceStart,
   readGitHubRepositories,
   readInstallations,
-  readLogin,
   readNewWorkspaceView,
 } from './api/read-core'
 import { readSavedShortcuts } from './api/read-shortcuts'
 import { readWaitlistState } from './api/read-waitlist'
 import type { AppModel } from './app-model'
+import { EndpointReads, type LoginReads } from './endpoint-reads'
 import { Refresher } from './refresh'
 import { Resource } from './resource'
 import type { AppServices } from './services'
@@ -40,15 +34,20 @@ import { load, loading, Store, type Loadable, type Readable } from './store'
 
 /**
  * The account of the person signed in: the agent logins, the preferences,
- * the shortcut changes, and the GitHub App installations. A secret goes to
- * the Worker in a write and never comes back. The Worker keeps ChatGPT
- * tokens. The account shows each login's kind and share setting, which
- * says whether other members' messages in the person's sessions run on it.
- * Own endpoints also show their host and model list, which the owner's
- * pickers follow.
+ * the shortcut changes, and the GitHub App installations. The Worker keeps
+ * ChatGPT tokens. The account shows each login's kind and share setting,
+ * which says whether other members' messages in the person's sessions run
+ * on it. Own endpoints also show their host and model list, which the
+ * owner's pickers follow. `AccountLoginWrites` sends the writes of the
+ * logins.
  */
 export class AccountModel {
   readonly account = new Store<AccountResponse | null>(null)
+  /**
+   * Beside the account, the note and the warning of each own endpoint
+   * login, from the answers of its save and of Refresh in this page.
+   */
+  readonly endpointReads: Readable<LoginReads>
   readonly installations: Readable<Loadable<GitHubInstallationsResponse>>
   /** The repositories that Create org offers, before the org exists. */
   readonly repositories = new Store<Loadable<GitHubRepositoriesResponse>>(
@@ -62,6 +61,7 @@ export class AccountModel {
   /** The logins of `account`, in the order of their changes. */
   private readonly logins = new AgentLogins(this.account)
   private readonly loginReads: AccountLoginReads
+  private readonly loginWrites: AccountLoginWrites
   private readonly services: AppServices
   private readonly app: AppModel
   private readonly installationReads: Refresher<GitHubInstallationsResponse>
@@ -72,6 +72,14 @@ export class AccountModel {
     this.services = services
     this.app = app
     this.loginReads = new AccountLoginReads(app, this.account, this.logins)
+    const endpointReads = new EndpointReads()
+    this.endpointReads = endpointReads.store
+    this.loginWrites = new AccountLoginWrites(
+      services,
+      this.logins,
+      this.loginReads,
+      endpointReads,
+    )
     const installations = new Resource(() =>
       services.api.get(ACCOUNT_PATHS.githubInstallations, readInstallations),
     )
@@ -156,91 +164,37 @@ export class AccountModel {
     return this.logins.get(agent)
   }
 
-  /**
-   * Saves a login. The save of an own endpoint also reads the model list of
-   * the endpoint, which its answer does not hold, so the account is read
-   * again for it. A failed read of the account leaves the saved login
-   * without its list, so the pickers hide nothing until the next read.
-   */
-  async saveLogin(request: SaveAgentLoginRequest): Promise<void> {
-    const saved = await this.services.api.send(
-      'PUT',
-      agentLoginPath(request.agent),
-      request,
-      readLogin,
-    )
-    this.logins.put(saved)
-    if (saved.connected && saved.kind === 'endpoint')
-      await this.loginReads
-        .readAgent(saved.agent, this.logins.mark())
-        .catch(() => undefined)
+  /** Saves a login, as `AccountLoginWrites.save` says. */
+  saveLogin(request: SaveAgentLoginRequest): Promise<void> {
+    return this.loginWrites.save(request)
   }
 
-  /**
-   * Starts a ChatGPT sign-in of Codex. The Worker asks OpenAI for a code,
-   * and keeps the sign-in under the handle of the answer. No token comes to
-   * the browser.
-   */
+  /** Starts a ChatGPT sign-in of Codex. No token comes to the browser. */
   startCodexSignIn(): Promise<StartCodexDeviceResponse> {
-    return this.services.api.send(
-      'POST',
-      ACCOUNT_PATHS.codexDevice,
-      {},
-      readCodexDeviceStart,
-    )
+    return this.loginWrites.startCodexSignIn()
   }
 
-  /**
-   * Asks the Worker for the state of the ChatGPT sign-in of `handle`. At the
-   * end of a sign-in, the Worker saved the login, so the account shows it as
-   * the Codex login, as a save does.
-   */
-  async pollCodexSignIn(handle: string): Promise<PollCodexDeviceResponse> {
-    const answer = await this.services.api.send(
-      'POST',
-      codexDevicePath(handle),
-      {},
-      readCodexDevicePoll,
-    )
-    if (answer.state === 'connected') this.logins.put(answer.login)
-    return answer
+  /** Asks the Worker for the state of the ChatGPT sign-in of `handle`. */
+  pollCodexSignIn(handle: string): Promise<PollCodexDeviceResponse> {
+    return this.loginWrites.pollCodexSignIn(handle)
   }
 
   /** Refreshes an endpoint list, without restoring a changed login. */
-  async refreshModels(agent: Agent): Promise<void> {
-    const show = this.logins.mark()
-    await this.services.api.send(
-      'POST',
-      refreshAgentLoginModelsPath(agent),
-      {},
-      ignore,
-    )
-    await this.loginReads.readAgent(agent, show)
+  refreshModels(agent: Agent): Promise<void> {
+    return this.loginWrites.refreshModels(agent)
   }
 
   /**
    * Saves whether the messages of other members in the sessions of the user
-   * run on a login of the user. The reply holds the saved status of the
-   * login, which can say that the login is gone. A save, a remove, or
-   * another share change that comes first makes the reply old, so it does
-   * not show. A reply that shows is a change too, so that a read of the
-   * logins that ran meanwhile does not take it back.
+   * run on a login of the user, as `AccountLoginWrites.setNoReuse` says.
    */
-  async setNoReuse(agent: Agent, noReuse: boolean): Promise<void> {
-    const change = this.logins.change(agent)
-    const request: UpdateAgentLoginRequest = { noReuse }
-    const saved: UpdateAgentLoginResponse = await this.services.api.send(
-      'PATCH',
-      agentLoginPath(agent),
-      request,
-      readLogin,
-    )
-    this.logins.putReply(change, saved)
+  setNoReuse(agent: Agent, noReuse: boolean): Promise<void> {
+    return this.loginWrites.setNoReuse(agent, noReuse)
   }
 
-  async removeLogin(agent: Agent): Promise<void> {
-    await this.services.api.send('DELETE', agentLoginPath(agent), {}, ignore)
-    this.logins.put({ agent, connected: false })
+  /** Removes a login, with the note and the warning of its reads. */
+  removeLogin(agent: Agent): Promise<void> {
+    return this.loginWrites.remove(agent)
   }
 
   async setDefaultChoice(choice: AgentChoice): Promise<void> {
