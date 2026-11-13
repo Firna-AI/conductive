@@ -41,10 +41,11 @@ export interface ResourceOptions {
  *   fields that the answer confirms. A failed write takes back its own
  *   change only, so other writes, changes, and reads stay.
  * - A save is a write whose answer is the whole value. Its answer counts
- *   as an answer from the time that it arrives. The saves of one value go
- *   out one at a time, each after the answer of the one before, because an
- *   answer carries no order of its own. A failed save does not stop the
- *   next one.
+ *   as an answer from the time that it arrives.
+ * - The writes and saves of one value go out one at a time, each after the
+ *   answer of the one before. So the server gets them in the order that
+ *   they showed, and two changes of one field cannot cross on the way. A
+ *   failed write or save does not stop the next one.
  * - A failed read keeps a value that already shows. Only a read that fails
  *   before any answer shows its error. A value can name the errors that
  *   prove that it no longer exists, through `missing`: such a read shows its
@@ -58,8 +59,8 @@ export class Resource<T> {
   private count = 0
   private confirmed: Layer<T>[] = []
   private writes: Layer<T>[] = []
-  /** The last save in the queue. It never fails, so the next save can go. */
-  private saving: Promise<unknown> = Promise.resolve()
+  /** The last write or save in the queue. It never fails, so the next can go. */
+  private sending: Promise<unknown> = Promise.resolve()
   private readonly fetch: () => Promise<T>
   private readonly missing: (error: ApiError) => boolean
 
@@ -87,13 +88,11 @@ export class Resource<T> {
    * only its own caller.
    */
   save(send: () => Promise<T>): Promise<T> {
-    const run = this.saving.then(async () => {
+    return this.queued(async () => {
       const value = await send()
       this.answered(value, ++this.count)
       return value
     })
-    this.saving = run.catch(() => undefined)
-    return run
   }
 
   /**
@@ -110,7 +109,8 @@ export class Resource<T> {
   }
 
   /**
-   * Shows `change` while `send` runs. A success keeps `commit` of the answer
+   * Shows `change` at once, and sends it after every earlier write and save
+   * of this value has its answer. A success keeps `commit` of the answer
    * until a newer read. A failure takes back the change, and throws.
    */
   async write<A>(
@@ -122,7 +122,7 @@ export class Resource<T> {
     this.writes = [...this.writes, write]
     this.show()
     try {
-      const answer = await send()
+      const answer = await this.queued(send)
       write.change = commit(answer)
       write.at = ++this.count
       return answer
@@ -132,6 +132,13 @@ export class Resource<T> {
     } finally {
       this.show()
     }
+  }
+
+  /** Runs `send` after the write or save before it, also a failed one. */
+  private queued<A>(send: () => Promise<A>): Promise<A> {
+    const run = this.sending.then(send)
+    this.sending = run.catch(() => undefined)
+    return run
   }
 
   /**

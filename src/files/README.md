@@ -161,6 +161,28 @@ the app's `ApiClient`, so the Mac app reads the file from its own Worker.
 The shell supplies the design tokens as `--ui-*` CSS variables and the
 `@firna/ui` theme provider, as `docs/mockups/src/theme.ts` builds them.
 
+### Kept scroll offsets
+
+Each file and diff tab of the centre keeps its scroll offset, down and
+sideways, while another tab or workspace shows, as
+[The tab row](../../docs/protocol/agents-and-sessions.md#the-tab-row) says.
+`WorkspaceFiles.scrollPlaces` holds the offsets, by tab and view, for as
+long as the app keeps the store. The desktop tab page gives the shown tab
+through the `KeptScroll` context of `ui/kept-scroll.ts`. `CodeView`,
+`DiffView`, and the Markdown preview take their scroll box from
+`useKeptScroll`, with the view `code`, `diff`, or `preview`. A view outside
+the context, such as a file page on a phone, keeps nothing. Content that
+grows after the mount gets the offset again at each change of size, until
+the box reaches it or the reader scrolls. When a tab leaves the saved view,
+such as at a close, it forgets its offsets, so it opens at the top again.
+The offsets live in a `TabPlaces` store of the web app, in
+`src/app/tab-places.ts`, and the chat files of the workspace screen give it
+each list of the file and diff tabs through `useFollowTabs`.
+`ui/kept-scroll.dom.test.tsx`
+tests the hook, and `TabScroll.test.tsx` of the
+[workspace files](../shell/workspace/files/) tests the tabs of the
+workspace screen.
+
 ## Labels of paths
 
 [Labels of paths](labels.md) gives the label that each screen shows in

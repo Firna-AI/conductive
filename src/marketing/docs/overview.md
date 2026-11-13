@@ -30,6 +30,7 @@ You follow the work in your browser.
 Describe a task to agents powered by Claude and Codex.
 They can read code, change files, and run commands on the cloud computer.
 The message box lets you choose a model and its effort.
+Some models also offer **Fast** for faster output.
 
 Connect your own agent login before you start.
 Claude accepts a subscription token or an Anthropic API key.

@@ -163,6 +163,7 @@ it('keeps boot routes available during a GitHub failure and reports the installa
         agent: 'claude',
         model: 'operator-claude',
         effort: 'high',
+        fast: false,
       }),
     },
     handleStructuredLogs: ({ level, message }) => {

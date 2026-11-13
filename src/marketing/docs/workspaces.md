@@ -169,12 +169,14 @@ Use a section's menu to create a workspace in that section.
 The **New workspace** action at the top of the list uses **General**.
 In the **New workspace** dialog, you can select another section.
 
-The section menu also offers **Rename section**, **New section**, and **Delete section**.
+The section menu also offers **Rename section**, **Move section up**, **Move section down**, **New section**, and **Delete section**.
 Deleting a section moves its workspaces to **General**.
 The default section stays available.
 
 Drag a workspace to move it between sections.
-On a phone, use a long press to lift its row.
+Drag the header of a section to move the section to another place in the list.
+On a phone, use a long press to lift a row or a header.
+Every member of the org sees the same order of sections.
 
 ## Let an agent manage workspaces
 

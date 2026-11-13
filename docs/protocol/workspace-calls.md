@@ -39,6 +39,11 @@ number names a dated record, as
   (decision 52).
 - A create call can also choose the model, and with it the agent. It can
   also choose the effort and the section.
+- A create call can also turn on [fast mode](fast-mode.md) for a model
+  that has it. Otherwise the first message runs at standard speed. The
+  saved default of the owner gives the call no fast mode. Reason: that
+  default belongs to the owner, but the first message runs on the login of
+  the sender of the calling turn.
 - The new workspace gets the org and the workspace owner of the calling
   workspace.
 - Without a choice in the call, the new workspace gets the default section
@@ -250,10 +255,11 @@ a create call takes, with their IDs.
 - The model list returns the models that the app offers, in the order of
   the app's model setting. The model picker of the app offers the same
   models.
-- Each entry gives the agent, the model ID, the label, and the efforts of
-  the model.
+- Each entry gives the agent, the model ID, the label, the efforts of the
+  model, and whether the model has fast mode.
 - The answer also gives the default choice. A create uses it for the model
-  or the effort that the call does not name.
+  or the effort that the call does not name. Its fast mode is always off,
+  because a create runs fast only when the call asks for it.
 - The default choice is the saved default of the owner of the calling
   workspace. Without a saved default, it is the default choice of the app.
 - The default choice is `null` when the owner has no saved default and the

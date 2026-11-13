@@ -6,6 +6,7 @@ export interface AgentChoice {
   agent: Agent
   model: string
   effort: Effort
+  fast: boolean
 }
 
 export interface AgentModel {
@@ -13,6 +14,7 @@ export interface AgentModel {
   model: string
   label: string
   efforts: readonly Effort[]
+  fast?: boolean
 }
 
 export const MODELS_PATH = '/api/models'

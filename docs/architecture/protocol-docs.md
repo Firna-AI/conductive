@@ -43,6 +43,9 @@ This page lists each protocol doc and what it covers.
       limit, the upload, the storage, the copy into the cloud computer, and
       the deletion of the files of a message, and their chips and their
       drop in the message field.
+    - [Fast mode](../protocol/fast-mode.md): the Fast switch of the model
+      menu, the models that show it, who may turn it on, and the speed of a
+      turn that cannot run fast.
   - [File mentions](../protocol/file-mentions.md): the list of `@` in the
     composer, the chips of files and folders, the sent chips of attached
     files, and the removal of each chip of the composer.

@@ -75,6 +75,9 @@ sessions as tabs above the chat, and four tabs at the bottom.
   keeps its place, greyed, and its detail keeps the muted colour, so that
   the reason stays readable. An item with choices ends with an arrow, and
   its submenu opens beside the menu, level with the item.
+  A switch row, such as Fast in the model menu, ends with its switch.
+  Where the key of its command runs, `KeyChips` draws that key before the
+  switch, as a palette row ends with its key. A phone shows no key.
   A move that the place of a tab rules out keeps its place, greyed.
   A read-only workspace leaves out each item that it does not allow,
   from decision 214.

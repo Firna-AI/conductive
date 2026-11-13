@@ -8,7 +8,10 @@ import type { LucideIcon } from 'lucide-react'
 import { Check } from 'lucide-react'
 import a11y from '../../../docs/mockups/src/components/common/a11y.module.css'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
+import { KeyChips } from '../../../docs/mockups/src/components/common/KeyChips'
 import styles from '../../../docs/mockups/src/components/common/Menu.module.css'
+import { SwitchPicture } from '../../../docs/mockups/src/components/common/SwitchPicture'
+import type { ShortcutHint } from '../../shell/shortcuts/shortcut-hints'
 import controls from './controls.module.css'
 import { useFocusInside } from './dismiss'
 import local from './menu.module.css'
@@ -37,8 +40,24 @@ type MenuItem = {
   disabled?: boolean
 }
 
+/**
+ * A setting that is on or off, with a switch at the end of its row, such as
+ * Fast in the model menu. A change keeps the menu open, so the switch shows
+ * its new state in place.
+ */
+type MenuSwitch = {
+  kind: 'switch'
+  key: string
+  label: string
+  on: boolean
+  onToggle: () => void
+  /** The key of the command that changes the setting, before the switch. */
+  shortcut?: ShortcutHint
+}
+
 export type MenuEntry =
   | MenuItem
+  | MenuSwitch
   | { kind: 'label'; label: string }
   | { kind: 'note'; text: string }
   | { kind: 'divider' }
@@ -62,8 +81,11 @@ export type MenuPlacement =
   | MenuPoint
 
 /** The items that the keyboard reaches: the items that are on. */
-const ITEM =
-  '[role="menuitem"]:not(:disabled), [role="menuitemradio"]:not(:disabled)'
+const ITEM = [
+  '[role="menuitem"]:not(:disabled)',
+  '[role="menuitemradio"]:not(:disabled)',
+  '[role="menuitemcheckbox"]:not(:disabled)',
+].join(', ')
 
 /** A menu at a point keeps this gap to the right and bottom of the window. */
 const edge = 4
@@ -105,6 +127,34 @@ function Item(props: { entry: MenuItem }) {
       {entry.checked ? (
         <Check aria-hidden className={styles.check} size={14} />
       ) : null}
+    </button>
+  )
+}
+
+/**
+ * The row of a switch: its label, the key of its command, and the switch,
+ * as the mockup draws it. A click, Enter, or Space changes it. The row
+ * names its key to a screen reader, so the key chips are hidden from it.
+ */
+function SwitchItem(props: { entry: MenuSwitch }) {
+  const { entry } = props
+  return (
+    <button
+      aria-checked={entry.on}
+      aria-keyshortcuts={entry.shortcut?.aria}
+      className={classes(controls.bare, styles.item, controls.row)}
+      onClick={entry.onToggle}
+      role="menuitemcheckbox"
+      tabIndex={-1}
+      type="button"
+    >
+      <span className={styles.label}>{entry.label}</span>
+      {entry.shortcut ? (
+        <span aria-hidden className={styles.keys}>
+          <KeyChips shortcut={entry.shortcut.text} />
+        </span>
+      ) : null}
+      <SwitchPicture on={entry.on} />
     </button>
   )
 }
@@ -183,6 +233,8 @@ export function Menu(props: {
         switch (entry.kind) {
           case 'item':
             return <Item entry={entry} key={entry.key} />
+          case 'switch':
+            return <SwitchItem entry={entry} key={entry.key} />
           case 'label':
             return (
               <div className={styles.group} key={entry.label} role="none">

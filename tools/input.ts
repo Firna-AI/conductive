@@ -66,6 +66,7 @@ export function choice(value: unknown): AgentChoice {
     agent: agent(fields.agent),
     model: text(fields.model),
     effort: effort(fields.effort),
+    fast: fields.fast === true,
   }
 }
 
@@ -103,6 +104,7 @@ export function createWorkspaceInput(
       model: { agent: agent(model.agent), model: text(model.model) },
     }),
     ...(fields.effort !== undefined && { effort: effort(fields.effort) }),
+    ...(fields.fast !== undefined && { fast: fields.fast === true }),
     ...(fields.sectionId !== undefined && {
       sectionId: text(fields.sectionId),
     }),
@@ -137,7 +139,7 @@ export function readSessionInput(value: unknown): AgentReadSessionRequest {
 
 function sessionChoice(
   fields: Record<string, unknown>,
-): Pick<AgentCreateSessionRequest, 'model' | 'effort' | 'requestId'> {
+): Pick<AgentCreateSessionRequest, 'model' | 'effort' | 'fast' | 'requestId'> {
   const model = fields.model === undefined ? undefined : record(fields.model)
   if (
     fields.requestId !== undefined &&
@@ -149,6 +151,7 @@ function sessionChoice(
       model: { agent: agent(model.agent), model: text(model.model) },
     }),
     ...(fields.effort !== undefined && { effort: effort(fields.effort) }),
+    ...(fields.fast !== undefined && { fast: fields.fast === true }),
     ...(typeof fields.requestId === 'string' && {
       requestId: fields.requestId,
     }),

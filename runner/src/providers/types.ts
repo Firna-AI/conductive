@@ -1,5 +1,9 @@
 import type { AgentChoice } from '../../../src/shared/agents'
-import type { ToolCall, TurnEndReason } from '../../../src/shared/chat-events'
+import type {
+  ToolCall,
+  TurnEndReason,
+  TurnSpeed,
+} from '../../../src/shared/chat-events'
 import type { CommitAuthor } from '../../../src/shared/commit-author'
 import type {
   RunnerLogin,
@@ -15,6 +19,7 @@ export type ProviderInput = RunnerTurn | RunnerMessageDuringTurn
 export type ProviderEvent =
   | { type: 'conversation'; id: string }
   | { type: 'thinking' }
+  | { type: 'speed'; speed: TurnSpeed }
   | { type: 'delta'; messageId: string; text: string }
   | {
       type: 'answer'

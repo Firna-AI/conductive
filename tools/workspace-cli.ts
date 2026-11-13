@@ -1,5 +1,5 @@
 import type { WorkspaceToolClient } from './client.ts'
-import { cliNumber, parseToolArguments } from './cli-options.ts'
+import { cliFast, cliNumber, parseToolArguments } from './cli-options.ts'
 import {
   createWorkspaceInput,
   sessionWorkspace,
@@ -66,6 +66,7 @@ export async function runWorkspaceCommand(
             model: { agent: values.agent, model: values.model },
           }),
           effort: values.effort,
+          fast: cliFast(values.fast),
           sectionId: values.section,
         }),
       )

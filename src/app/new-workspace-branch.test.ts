@@ -14,7 +14,12 @@ const createPath = workspacesPath(org)
 const picked = 'calummoore/checkout-autocomplete'
 const defaults = {
   repositoryId: 'storefront',
-  choice: { agent: 'claude', model: 'Opus 5.5', effort: 'high' } as const,
+  choice: {
+    agent: 'claude',
+    model: 'Opus 5.5',
+    effort: 'high',
+    fast: false,
+  } as const,
 }
 
 async function loaded(server: FakeApiServer) {

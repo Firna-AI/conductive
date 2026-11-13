@@ -49,6 +49,7 @@ export const newWorkspaceSchema = {
     'org',
     'firstBuild',
     'viewer',
+    'modelMenu',
   ],
   properties: {
     ...newWorkspaceFormProperties,
@@ -63,6 +64,8 @@ export const newWorkspaceSchema = {
     firstBuild: { enum: firstBuildStates },
     /** Only an admin gets the link to the Cloud computer tab. */
     viewer: { enum: ['admin', 'member'] },
+    /** The menu of the model picker: closed, or open with fast mode on. */
+    modelMenu: { enum: ['closed', 'open-fast'] },
   },
 } as const
 
@@ -83,6 +86,7 @@ export const newWorkspaceForm: NewWorkspaceState = {
   org: 'active',
   firstBuild: 'succeeded',
   viewer: 'admin',
+  modelMenu: 'closed',
 }
 
 /**
@@ -137,6 +141,7 @@ function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
   const created =
     branchSendTo(state) ??
     (state.files === 'ready' ? paths.attachmentsQueued : paths.creating)
+  const fastMenu = state.modelMenu === 'open-fast'
   return (
     <ChatPane
       composer={{
@@ -147,10 +152,11 @@ function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
             : undefined,
         blocked: building || waiting || waits(state),
         caret: text === draft.text ? draft.caret : undefined,
-        choice: page.choice,
+        choice: fastMenu ? { ...page.choice, fast: true } : page.choice,
         draft: text,
         // A phone shows a pick at the caret in place of the drag.
         drop: state.files === 'drop-over' && props.viewport === 'desktop',
+        picker: fastMenu,
         placeholder: taskPlaceholder,
         running: false,
         sendTo:

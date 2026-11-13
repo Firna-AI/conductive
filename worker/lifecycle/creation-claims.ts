@@ -122,6 +122,7 @@ interface PlanRow {
   agent: AgentChoice['agent']
   model: string
   effort: AgentChoice['effort']
+  fast: number
   attachmentIds: string
   createdAt: number
 }
@@ -138,7 +139,7 @@ export async function recordedCreationJob(
     p.section_id AS sectionId, p.session_id AS sessionId, p.turn_id AS turnId, p.city, p.name, p.first_session_title AS firstSessionTitle, p.branch,
     p.start_attempt AS attempt, p.startup_script AS startupScript, p.environment_ciphertext AS environmentCiphertext,
     p.image_name AS imageName, p.provider_account AS providerAccount,
-    p.default_branch AS defaultBranch, p.base_branch AS baseBranch, p.start_branch AS startBranch, p.start_sha AS startSha, p.agent, p.model, p.effort,
+    p.default_branch AS defaultBranch, p.base_branch AS baseBranch, p.start_branch AS startBranch, p.start_sha AS startSha, p.agent, p.model, p.effort, p.fast,
     p.repositories_json AS repositoriesJson, p.repository_locations_json AS repositoryLocationsJson, p.message_text AS messageText,
     p.attachment_ids_json AS attachmentIds, a.created_at AS createdAt
     FROM workspace_creation_plans p JOIN workspace_creation_attempts a ON a.workspace_id = p.workspace_id
@@ -194,7 +195,12 @@ export async function recordedCreationJob(
         id: key.messageId,
         text: plan.messageText ?? text,
         attachmentIds,
-        choice: { agent: plan.agent, model: plan.model, effort: plan.effort },
+        choice: {
+          agent: plan.agent,
+          model: plan.model,
+          effort: plan.effort,
+          fast: plan.fast === 1,
+        },
       },
     },
   }

@@ -1,3 +1,4 @@
+import { modelChoice } from '../app-api/models'
 import type { User } from '../../src/shared/api'
 import type { CreateWorkspaceRequest } from '../../src/shared/workspaces'
 import { DEFAULT_PROVIDER_ACCOUNT } from '../sandbox/account-identity'
@@ -87,7 +88,10 @@ export async function prepareCreationRequest(
           baseBranch: input.baseBranch,
         },
       }),
-      request: input.firstMessage,
+      request: {
+        ...input.firstMessage,
+        choice: modelChoice(env, input.firstMessage.choice),
+      },
       createdAt: dependencies.now(),
     },
     processId: null,

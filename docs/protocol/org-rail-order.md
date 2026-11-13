@@ -3,7 +3,8 @@
 This doc holds the requirements and the decisions in force for the order
 of the orgs in the org rail. Each person keeps their own order. It covers
 the drag, the tile menu, the keys, the long press on a phone, and the
-places that use the order. It belongs to
+places that use the order. It also covers the page that opens when the
+person opens an org. It belongs to
 [Orgs and members](orgs-and-members.md), which covers orgs, their
 sections, and their members. The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
@@ -46,10 +47,33 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the order at
 - The Switch to rows of the command palette show the orgs in this order,
   as [Actions](command-palette-actions.md#actions) says.
 - Each place that picks the first org of the person uses this order. The
-  org that the address `/` opens is one such place. The org of the palette
+  org that the address `/` opens without a last workspace is one such
+  place, as [Opening an org](#opening-an-org) says. The org of the palette
   on a page without an org is another, as
   [The org of the palette](command-palette.md#the-org-of-the-palette)
   says.
+
+## Opening an org
+
+- The app remembers the last workspace that the person opened in each org,
+  with its session or its tab. The tile of the org in the rail, Switch to
+  org 1 to 9, and the Switch to rows of the palette open that workspace.
+- Without a last workspace, they open the list page of the org.
+- The browser or the Mac app keeps the last workspaces of each person. So
+  they stay after a reload and a restart of the Mac app, as the user chose
+  on 13 November 2026. Another device does not get them.
+- The address `/` opens the workspace that the person opened last, when
+  its org is not deleted and Get started does not show. Otherwise it
+  opens the first org that is not deleted.
+- The app forgets a last workspace when its page shows that the
+  workspace is not available.
+- The org switcher of a phone opens the list page of the org. Reason: a
+  phone has no sidebar, so the list is the way to move to a workspace.
+- The key of Workspace list still opens the list page of the org, as
+  [Keyboard shortcuts](keyboard-shortcuts.md) says.
+- A memory in the tab only was rejected, because a reload would forget the
+  place. A memory on the server was rejected, because it needs a new API
+  for a small gain.
 
 ## Drag
 

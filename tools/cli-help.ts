@@ -5,7 +5,7 @@ conductive workspaces list [--owner MEMBER_ID] [--state STATE] [--repository ID]
   [--limit NUMBER] [--offset NUMBER]
 conductive workspaces get [--workspace ID]
 conductive workspaces create --repository ID --message TEXT
-  [--agent claude|codex --model NAME] [--effort LEVEL] [--section ID] [--name TEXT]
+  [--agent claude|codex --model NAME] [--effort LEVEL] [--fast true|false] [--section ID] [--name TEXT]
   [--first-session-title TEXT] [--request-id ID]
   [--start-branch BRANCH] [--base-branch BRANCH]
 conductive workspaces rename --name TEXT [--workspace ID]
@@ -21,9 +21,9 @@ conductive sessions get --session ID [--workspace ID]
 conductive sessions read --session ID [--workspace ID] [--detail concise|full]
   [--start-line NUMBER] [--start-offset NUMBER]
 conductive sessions create [--workspace ID] [--title TEXT] [--message TEXT]
-  [--agent claude|codex --model NAME] [--effort LEVEL] [--request-id ID]
+  [--agent claude|codex --model NAME] [--effort LEVEL] [--fast true|false] [--request-id ID]
 conductive sessions send --session ID --message TEXT [--workspace ID]
-  [--agent claude|codex --model NAME] [--effort LEVEL] [--request-id ID]
+  [--agent claude|codex --model NAME] [--effort LEVEL] [--fast true|false] [--request-id ID]
 conductive sessions rename --session ID --title TEXT [--workspace ID]
 conductive sessions close --session ID [--workspace ID] [--stop-running-turn]
 conductive sessions stop --session ID [--workspace ID]
@@ -54,7 +54,9 @@ Omitted workspace model and effort use the owner's defaults. An omitted section 
 --base-branch sets the pull request target and Changes comparison branch.
 If both branches are omitted, both use the repository default branch.
 If only one branch is given, both use that branch.
-Session create uses the turn sender's default choice. Send keeps the session's choice when omitted.
+Session create uses the turn sender's default model and effort.
+Creates run fast only with --fast true, for a marked model.
+Send keeps the session's choice when omitted. --fast false turns fast mode off.
 For workspace create, session create, or send, replace --message TEXT with --message-file PATH.
 Use --message-file - to read raw stdin. Message text keeps all spaces and line endings.
 Keep --request-id to retry a create or send. Omission generates an ID.

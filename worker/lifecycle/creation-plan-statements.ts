@@ -18,10 +18,10 @@ export function planStatement(
     .prepare(
       `INSERT OR IGNORE INTO workspace_creation_plans
     (workspace_id, repository_id, owner_user_id, section_id, session_id, turn_id, city, branch,
-     start_attempt, startup_script, environment_ciphertext, image_name, default_branch, agent, model, effort, attachment_ids_json,
+     start_attempt, startup_script, environment_ciphertext, image_name, default_branch, agent, model, effort, fast, attachment_ids_json,
      repositories_json, repository_locations_json, message_text, base_branch, start_branch, start_sha, name, provider_account, first_session_title)
     SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, s.startup_script, s.env_vars_ciphertext,
-      b.snapshot_name, json_extract(repository.value, '$.defaultBranch'), ?, ?, ?, ?,
+      b.snapshot_name, json_extract(repository.value, '$.defaultBranch'), ?, ?, ?, ?, ?,
       j.repositories_json, j.repository_locations_json, ?,
       CASE WHEN ? = 1 AND ? = json_extract(repository.value, '$.defaultBranch') THEN NULL ELSE ? END,
       COALESCE(?, json_extract(repository.value, '$.defaultBranch')), ?, ?, b.provider_account, ?
@@ -42,6 +42,7 @@ export function planStatement(
       creation.request.choice.agent,
       creation.request.choice.model,
       creation.request.choice.effort,
+      creation.request.choice.fast ? 1 : 0,
       JSON.stringify(creation.request.attachmentIds),
       creation.request.text,
       requested ? 1 : 0,

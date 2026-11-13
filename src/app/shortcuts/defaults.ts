@@ -97,6 +97,7 @@ const defaults: Readonly<Record<PlainId, Defaults>> = {
   'attach-files': { mac: ['Meta+U'], other: ['Ctrl+U'] },
   'model-picker': { mac: ['Meta+/'], other: ['Alt+Shift+M'] },
   'next-effort': { mac: ['Ctrl+Meta+/'], other: ['Ctrl+Shift+/'] },
+  'fast-mode': { mac: ['Shift+Meta+E'], other: ['Ctrl+Shift+E'] },
   'stop-agent': { mac: ['Ctrl+Meta+Backspace'], other: ['Alt+Shift+S'] },
   'copy-concise-transcript': { mac: ['Alt+Meta+C'], other: ['Alt+Shift+C'] },
   'copy-full-transcript': { mac: [], other: [] },
