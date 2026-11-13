@@ -25,8 +25,6 @@ export type RailState = {
    * also shows the key that opens it.
    */
   hint?: OrgKey | 'operator'
-  /** An org that an admin deleted, which waits for its restore. */
-  deleted?: OrgKey
   /**
    * An org that the operator suspended. Its tile looks as before, because
    * its members still open it, and the org's pages show the notice.
@@ -60,9 +58,8 @@ export type RailState = {
 /** The rail of the canonical views: every org, with Acme open. */
 export const acmeRail: RailState = { orgs: orgList, current: 'acme' }
 
-/** Whether an org of the rail is deleted or suspended. */
+/** Whether an org of the rail is suspended. */
 function orgState(rail: RailState, key: OrgKey): OrgState | undefined {
-  if (rail.deleted === key) return 'deleted'
   if (rail.suspended === key) return 'suspended'
   return undefined
 }
@@ -96,6 +93,7 @@ function OperatorItem(props: { current: boolean; hint: boolean }) {
 /**
  * The narrow rail beside the sidebar: the logo, the orgs of the user in
  * their own order, a way to create another, and the account at the bottom.
+ * Deleted orgs appear in Account settings with Restore.
  * An operator also gets Operator above the account. Each org tile moves by
  * drag or by its menu. Create org, Operator, and the account stay.
  * The hint of an org shows the key of its place, counted from the top,
@@ -114,11 +112,7 @@ export function OrgRail(props: RailState) {
         name={dragged.name}
         place={placeAfterDrop(from, index)}
       >
-        <RailTile
-          current={props.current === dragged.key}
-          org={dragged}
-          state={orgState(props, dragged.key)}
-        />
+        <RailTile current={props.current === dragged.key} org={dragged} />
       </OrgDrop>
     ) : null
   return (

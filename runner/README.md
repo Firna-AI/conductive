@@ -174,7 +174,7 @@ These facts belong to this implementation, not to the protocol docs.
 
 [Background work](background-work.md) gives how a Claude turn waits for the
 background work of its agent, the note at the end of a reply, the time
-limit of 120 minutes, the end reason, and their key code. A workspace gets
+limit of 30 days, the end reason, and their key code. A workspace gets
 this behaviour only from an org image built with this runner.
 
 ## Event limits

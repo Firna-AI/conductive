@@ -171,7 +171,7 @@ the change that keeps a turn open for background work.
 - The note names each such task and wake-up, so each one at most once in a
   turn. Reason: a second note for the same work can loop the agent.
 - The note is guidance, not an error, so the reply goes on. It says that
-  the turn stays open while the work runs, for up to 2 hours. It says that
+  the turn stays open while the work runs, for up to 30 days. It says that
   a notification comes when each task ends or each wake-up fires.
 - The note asks the agent to stop each task that it does not need, such as
   a dev server. It asks the agent to delete each wake-up that it does not
@@ -188,8 +188,10 @@ the change that keeps a turn open for background work.
 
 ### The time limit
 
-- A turn waits for at most 120 minutes (background work decision 2). Reason:
-  Claude lets a background command run for up to 2 hours.
+- A turn waits for at most 30 days. The user chose this limit on
+  13 November 2026, in place of the 120 minutes of background work
+  decision 2. Reason: background work, such as a long job or a scheduled
+  wake-up, can need more than 2 hours.
 - No limit was rejected, because a forgotten task would then hold its
   sandbox without end.
 - The count starts at the first wait. Agent work after a notification
@@ -212,9 +214,13 @@ the change that keeps a turn open for background work.
 - A stopped end at the limit was rejected, because it shows no duration
   and no files.
 - Risk: a wait keeps each right of a running turn, such as its turn token,
-  for up to 2 hours more, as
+  for up to 30 days more, as
   [Turn tokens in a sandbox](version-pins.md#turn-tokens-in-a-sandbox)
   says.
+- Risk: a wait is a running turn, so the
+  [idle stop](workspace-life.md#stop-and-resume) does not stop its
+  sandbox. A task that the agent does not stop, such as a dev server, can
+  keep the sandbox running for up to 30 days.
 
 ## Listening ports
 

@@ -28,7 +28,7 @@ The gateway bases come from `MACHINE_PATHS.claudeGateway` and `MACHINE_PATHS.cod
 A route that a later change adds gets the default without code of its own.
 A machine route that needs a higher limit declares it in `requestBodyBudget`.
 A raw upload route declares its limit in the [raw upload registry](#raw-upload-routes) instead (decision 144).
-For a `POST` to such a route on the app host, the entry uses that `maxBytes`, 25,000,000 bytes, and its overflow error is 413 `attachment_too_large` (decision 144).
+For a `POST` to such a route on the app host, the entry uses that `maxBytes`, 100,000,000 bytes, and its overflow error is 413 `attachment_too_large` (decision 144).
 Beside that raw upload selection, `requestBodyEntry` selects `FEEDBACK_BODY_MAX_BYTES`, 10,000,000 bytes, for a `POST` to `FEEDBACK_PATH`, which is `/api/feedback`, on the app host.
 Both names come from [`src/shared/feedback.ts`](../../src/shared/feedback.ts).
 That JSON body keeps the 413 `body_too_large` error of the default.
@@ -62,7 +62,7 @@ The entry then returns the shared 413 error, including after an early upstream a
 | Input | HTTP status | Error code | Message |
 | --- | --- | --- | --- |
 | Body above its budget | 413 | `body_too_large` | The request is too large. Send less data. |
-| Body above the budget of a raw upload route (decision 144) | 413 | `attachment_too_large` | Each file can be up to 25 MB. |
+| Body above the budget of a raw upload route (decision 144) | 413 | `attachment_too_large` | Each file can be up to 100 MB. |
 
 Tests call `requestBodyEntry`, also for a handler that `createApp` does not mount.
 They pass the machine origin in the environment, so the entry selects the raised budget.
@@ -73,7 +73,7 @@ They pass the machine origin in the environment, so the entry selects the raised
 Each entry has a method, a path pattern, and `maxBytes`.
 One entry is a `POST` to `/api/orgs/{orgId}/attachments`, the draft upload of an org.
 The other is a `POST` to `/api/orgs/{orgId}/workspaces/{workspaceId}/attachments`.
-Both have `maxBytes` of 25,000,000 bytes, which is also the file limit.
+Both have `maxBytes` of 100,000,000 bytes, which is also the file limit.
 
 `raw-upload-routes.ts` exports these functions:
 
@@ -97,7 +97,7 @@ The gate puts that length in `RequestContext.rawUploadBytes`.
 | No content type, or one other than `application/octet-stream` | 415 | `file_content_type_required` | Send the file as application/octet-stream. |
 | No `Content-Length` header | 411 | `content_length_required` | Send the file with its byte length. |
 | A `Content-Length` that is not a whole decimal number | 400 | `invalid_content_length` | The file byte length is not valid. |
-| A `Content-Length` above `maxBytes` | 413 | `attachment_too_large` | Each file can be up to 25 MB. |
+| A `Content-Length` above `maxBytes` | 413 | `attachment_too_large` | Each file can be up to 100 MB. |
 
 The content type check removes surrounding spaces and converts the value to lowercase.
 It accepts no parameter, so `application/octet-stream; charset=binary` gets the 415 error.

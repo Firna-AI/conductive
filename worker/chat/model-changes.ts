@@ -2,10 +2,17 @@ import type { Session, ChangeModelResponse } from '../../src/shared/sessions'
 import type { User } from '../../src/shared/api'
 import { HttpError } from '../http'
 import { choice, draft, identifier } from './inputs'
+import { SessionLogins } from './session-login'
 import { createSession, queueModel } from './sessions'
 import type { ChatTransaction } from './store'
 import type { ChatDependencies } from './types'
 
+/**
+ * A model of the same agent stays in the session. A model of the other agent
+ * also stays in a session with no message yet, because no agent conversation
+ * exists yet. Then the login check runs again for the new agent. Otherwise a
+ * model of the other agent opens a new session (decision 51).
+ */
 export async function changeModel(
   transaction: ChatTransaction,
   session: Session,
@@ -15,8 +22,19 @@ export async function changeModel(
 ): Promise<ChangeModelResponse> {
   const next = choice(body?.choice)
   const savedDraft = draft(body?.draft)
-  if (next.agent === session.choice.agent) {
+  const otherAgent = next.agent !== session.choice.agent
+  if (!otherAgent || !(await transaction.newestTurn(session.id))) {
     session.choice = next
+    if (otherAgent && session.startedBy)
+      Object.assign(
+        session,
+        await SessionLogins.initial(
+          dependencies,
+          session.id,
+          session.startedBy.id,
+          next.agent,
+        ),
+      )
     await transaction.saveSession(session)
     await queueModel(transaction, session, dependencies.randomId())
     await transaction.emit({ type: 'session.updated', session })

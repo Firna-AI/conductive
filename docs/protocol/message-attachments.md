@@ -14,8 +14,13 @@ at `app/attachments`, in New workspace, and in the flow
 
 ## Attachments
 
-- Each file of a message can contain at most 25 MB, or 25,000,000 bytes
-  (decision 132).
+- Each file of a message can contain at most 100 MB, or 100,000,000
+  bytes.
+- Reason: Cloudflare accepts a request body of at most 100 MB on a zone of
+  the Free or Pro plan, and the browser sends each file in one request, as
+  [Attachment uploads](access-and-security.md#attachment-uploads) says. A
+  higher limit was rejected, because it needs uploads in parts or a zone of
+  the Business or Enterprise plan.
 - The composer refuses a larger file before its upload, and names the
   limit. The Worker refuses a larger file too, with HTTP 413 and the error
   code `attachment_too_large`.

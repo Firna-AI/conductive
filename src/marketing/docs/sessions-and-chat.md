@@ -61,7 +61,7 @@ A file dropped on the text goes where you drop it.
 A drop elsewhere uses the text cursor or the end.
 The text cursor then moves after the new chips.
 
-Each file can be up to 25 MB.
+Each file can be up to 100 MB.
 Wait for uploads to finish before you send.
 If an upload fails, use **Try again** or remove its chip.
 Removing a chip takes its file off the draft.
@@ -70,7 +70,7 @@ Undo brings back the chip and its file.
 To attach a folder, drop it into the message box.
 Your browser zips the folder before the upload, so the folder becomes one `.zip` file chip.
 The zip holds every file and folder in it, also hidden files.
-The zip can be up to 25 MB, as each file can.
+The zip can be up to 100 MB, as each file can.
 If the browser cannot read the folder, use **Attach files** in the notice to pick its files.
 
 Each chip keeps its place in the sent message.
@@ -135,10 +135,11 @@ Use **Stop** in each affected session if agents keep replying to each other with
 Each session has its own model and effort picker.
 A different model of the same agent keeps the conversation in that session.
 
-A model of the other agent opens a new session.
+A model of the other agent opens a new session when the session has messages.
 Your draft moves to it.
 The earlier conversation stays in its original session.
 The new session starts without a copy of that conversation.
+In a session with no messages, a model of the other agent stays in that session.
 
 If the chosen agent has no usable login, the message box offers **Connect** for that agent.
 Connect the login in **Account** before you send.
@@ -162,11 +163,13 @@ The chat shows **Working**, and **Stop** stays available.
 When a task ends or a wake-up arrives, the agent continues in the same turn.
 The turn ends when the agent finishes and no background work remains.
 
-The time limit is 2 hours from the start of the first wait.
+The time limit is 30 days from the start of the first wait.
 The agent's work after a notification also counts toward that limit.
 A message that joins the turn during a wait starts the count again from that message.
 If the limit passes during a reply, that reply finishes before the turn ends.
 At that limit, the turn ends with **Background work stopped at the time limit** above its duration and changed files.
+The cloud computer keeps running while the turn waits.
+Ask the agent to stop background work that it does not need, such as a dev server.
 
 Select **Stop** to interrupt the turn, including a wait for background work.
 The chat records the stop.

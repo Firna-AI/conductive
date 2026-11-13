@@ -28,7 +28,7 @@ it('counts the exact raw file cap and cancels its first excess byte despite a fa
   )
   for (const extra of [false, true]) {
     const stream = streamedBody([
-      new Uint8Array(25_000_000),
+      new Uint8Array(100_000_000),
       ...(extra ? [new Uint8Array(1), new Uint8Array(1)] : []),
     ])
     const response = await entry(
@@ -43,14 +43,14 @@ it('counts the exact raw file cap and cancels its first excess byte despite a fa
         ? {
             error: {
               code: 'attachment_too_large',
-              message: 'Each file can be up to 25 MB.',
+              message: 'Each file can be up to 100 MB.',
             },
           }
-        : { sizeBytes: 25_000_000 },
+        : { sizeBytes: 100_000_000 },
     )
     expect(stream.observed).toEqual({
       pulled: extra ? 2 : 1,
-      bytes: extra ? 25_000_001 : 25_000_000,
+      bytes: extra ? 100_000_001 : 100_000_000,
       cancelled: extra ? 1 : 0,
     })
   }
