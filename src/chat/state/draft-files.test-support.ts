@@ -1,3 +1,4 @@
+import { noRefusals, type IntakeRefusals } from '../../app/draft-files'
 import {
   controlledUploads,
   uploadsSettled,
@@ -9,9 +10,9 @@ export function pickChatFiles(
   chat: ReturnType<typeof chatFor>,
   sessionId: string,
   files: readonly File[],
-  folders: readonly string[] = [],
+  refusals: IntakeRefusals = noRefusals,
 ): Promise<void> {
-  const ids = chat.controller.attachFiles(sessionId, files, folders)
+  const ids = chat.controller.attachFiles(sessionId, files, refusals)
   if (ids.length > 0) {
     chat.controller.setDraft(
       sessionId,

@@ -38,6 +38,7 @@ On a computer, **Enter** sends the message.
 Use **Shift+Enter** to add a line.
 On a phone, **Enter** adds a line.
 Your message appears in the chat at once.
+The chat scrolls down to it, also when you read an earlier part of the chat.
 If it cannot send, it goes back to the message box, and the chat shows the cause.
 
 You can send a message while the workspace's computer starts.
@@ -64,7 +65,12 @@ Wait for uploads to finish before you send.
 If an upload fails, use **Try again** or remove its chip.
 Removing a chip takes its file off the draft.
 Undo brings back the chip and its file.
-To attach a folder's contents, select its files.
+
+To attach a folder, drop it into the message box.
+Your browser zips the folder before the upload, so the folder becomes one `.zip` file chip.
+The zip holds every file and folder in it, also hidden files.
+The zip can be up to 25 MB, as each file can.
+If the browser cannot read the folder, use **Attach files** in the notice to pick its files.
 
 Each chip keeps its place in the sent message.
 When the message reaches the agent, select its file chip to open the copy.
