@@ -26,10 +26,14 @@ open work of a turn at `app/chat/headings/work`.
 - The lines of one paragraph show as one paragraph.
 - A workspace link outside code shows as a chip, as
   [Messages and answers](workspace-links.md#messages-and-answers) says.
+- A `@` mention of a file or a folder of the workspace shows as a file
+  chip. Inline code whose whole text is the path of such an entry shows
+  as a file chip too, as [Files in answers](file-mentions.md#files-in-answers)
+  says. A code block stays code.
 - Other Markdown shows as the text that the agent wrote, such as a link
   that is not a workspace link, a quote, or emphasis with one `*`.
-- Inline code, strong text, and workspace chips also show in headings,
-  list items, and table cells. A code block shows its text with no
+- Inline code, strong text, workspace chips, and file chips also show in
+  headings, list items, and table cells. A code block shows its text with no
   formatting.
 - Each code block of an agent message has a Copy code button in its top
   corner. The button copies the text of the code block exactly as the

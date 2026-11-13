@@ -195,6 +195,11 @@ export interface ViewReply {
   view: WorkspaceView
   /** Null for a workspace that a person created. */
   routine: RunRoutine | null
+  /**
+   * The absolute folder of the workspace repository, or null when the
+   * reply gives none or gives a folder that is not absolute.
+   */
+  repositoryFolder: string | null
 }
 
 function readPullRequest(value: unknown): RunRoutine['pullRequest'] {
@@ -212,11 +217,18 @@ function readRunRoutine(value: unknown): RunRoutine {
   }
 }
 
+/** A folder of the cloud computer: an absolute path without a last `/`. */
+function readFolder(value: unknown): string | null {
+  if (typeof value !== 'string') return null
+  return /^\/[^\r\n]*[^/\r\n]$/u.test(value) ? value : null
+}
+
 export function readViewReply(value: unknown): ViewReply {
-  const routine = record(value, 'view response').routine
+  const reply = record(value, 'view response')
   return {
     view: readView(value),
-    routine: optional(nullable(readRunRoutine))(routine) ?? null,
+    routine: optional(nullable(readRunRoutine))(reply.routine) ?? null,
+    repositoryFolder: readFolder(reply.repositoryFolder),
   }
 }
 

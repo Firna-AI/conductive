@@ -19,3 +19,15 @@
 .open:hover {
   text-decoration: underline;
 }
+
+/*
+ * The line target after the name, such as `:19-22`. It never shrinks, so a
+ * long name loses its end first and the lines stay in view.
+ */
+.lines {
+  flex-shrink: 0;
+  font-size: 0.94em;
+  font-weight: 500;
+  line-height: 1.25;
+  white-space: nowrap;
+}

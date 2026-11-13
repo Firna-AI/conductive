@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { replacesLists } from '../../../../docs/mockups/src/components/workspace/sandboxNoticeState'
+import { useHref } from '../../../app/navigation'
 import { useServices } from '../../../app/services'
 import type { WorkspaceFiles } from '../../../files/model/files-store'
 import type {
@@ -21,7 +22,7 @@ import { useGitHubFeed, useScreenBar } from '../github/WorkspaceGitHub'
 import { SandboxPanel } from '../SandboxNotice'
 import { contentState } from '../sandbox-view'
 import { useSavedView } from '../saved-view'
-import { filesPlace, tabOf } from './files-address'
+import { addressLines, filesPlace, tabOf } from './files-address'
 import {
   useAddressList,
   useFilesNavigation,
@@ -64,6 +65,7 @@ function TabPage(props: {
 }) {
   const { tab, context } = props
   useOpenTab(context.savedView, tab)
+  const lines = addressLines(new URL(useHref(), 'https://app.invalid').search)
   const targets = useFileTargets(context.org.id)
   const common = {
     files: props.files,
@@ -74,7 +76,7 @@ function TabPage(props: {
     targets,
   }
   return tab.kind === 'file' ? (
-    <FilePage {...common} key={tab.path} tab={tab} />
+    <FilePage {...common} key={tab.path} lines={lines} tab={tab} />
   ) : (
     <DiffPage {...common} key={tab.path} tab={tab} />
   )

@@ -105,10 +105,14 @@ it('serves real shell lists and keeps workspace views private to each member', a
     routine: null,
     baseBranch: 'main',
   })
+  // A GET also gives the folder of the repository, for the file chips of
+  // the chat. This workspace keeps the folder of an old snapshot.
+  const folder = '/home/user/conductive/repositories/chat-repository'
   expect(await (await fixture.request(path)).json()).toEqual({
     view,
     routine: null,
     baseBranch: 'main',
+    repositoryFolder: folder,
   })
   expect(
     await (
@@ -120,6 +124,7 @@ it('serves real shell lists and keeps workspace views private to each member', a
     view: { tabs: [], activeTab: null, fileList: 'all', tool: 'terminal' },
     routine: null,
     baseBranch: 'main',
+    repositoryFolder: folder,
   })
   const outsider = await fixture.request(path, {
     headers: { Cookie: fixture.cookies.outsiderCookie },

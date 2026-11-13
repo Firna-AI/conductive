@@ -6,6 +6,7 @@ import {
   type ReactNode,
 } from 'react'
 import type { FileEntry } from '../../shared/files'
+import type { LineRange } from '../../shared/line-target'
 import { mentionable } from './mention-rows'
 
 /**
@@ -33,12 +34,15 @@ interface MentionFiles {
  */
 export interface ChatMentions {
   files: MentionFiles
-  /** Opens a file, as a press on the file in All files does. */
-  openFile: (path: string) => void
+  /**
+   * Opens a file, as a press on the file in All files does. With `lines`,
+   * the file opens as text with the lines in view and marked.
+   */
+  openFile: (path: string, lines?: LineRange) => void
   /** Shows All files with the folder open. */
   showFolder: (path: string) => void
   /** The address of the page that a chip opens, for a link. */
-  href: (entry: FileEntry) => string
+  href: (entry: FileEntry, lines?: LineRange) => string
 }
 
 /**
@@ -77,16 +81,33 @@ function treeOf(snapshot: MentionFilesSnapshot): MentionTree {
 
 const MentionsContext = createContext<ChatMentions | null>(null)
 
-/** Gives the composer and the messages inside it the files of the workspace. */
+const FolderContext = createContext<string | null>(null)
+
+/**
+ * Gives the composer and the messages inside it the files of the workspace,
+ * and `root`, the folder of its repository in the cloud computer, when the
+ * chat knows it.
+ */
 export function MentionsProvider(props: {
   value: ChatMentions | null
+  root?: string | null
   children: ReactNode
 }) {
   return (
     <MentionsContext.Provider value={props.value}>
-      {props.children}
+      <FolderContext.Provider value={props.root ?? null}>
+        {props.children}
+      </FolderContext.Provider>
     </MentionsContext.Provider>
   )
+}
+
+/**
+ * The folder of the repository in the cloud computer, or null. An answer
+ * reads a path under it as a file of the tree.
+ */
+export function useRepositoryFolder(): string | null {
+  return useContext(FolderContext)
 }
 
 /** The mentions of the chat, or null where no file can be mentioned. */

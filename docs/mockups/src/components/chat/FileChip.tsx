@@ -30,6 +30,11 @@ export function FileChip(props: {
   name?: string
   /** The label of the whole path, for the title. */
   title?: string
+  /**
+   * The line target after the name, such as `:19-22`. A long name loses
+   * its end first, so the lines stay in view.
+   */
+  lines?: string
   /** In a message box, a press on the name opens the file. */
   onOpen?: () => void
 }) {
@@ -62,6 +67,9 @@ export function FileChip(props: {
             nameText
           )}
         </span>
+        {props.lines ? (
+          <span className={styles.lines}>{props.lines}</span>
+        ) : null}
         {removal ? <ChipEndRemove removal={removal} /> : null}
       </>
     ),

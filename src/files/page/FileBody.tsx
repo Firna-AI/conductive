@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { File, FileBox } from 'lucide-react'
 import { ImageView } from '../../../docs/mockups/src/components/files/ImageView'
+import type { LineRange } from '../../shared/line-target'
 import { CodeView } from '../code/CodeView'
 import type { MarkdownParser } from '../markdown/markdown-document'
 import { MarkdownView } from '../markdown/MarkdownView'
@@ -79,6 +80,8 @@ export function FileContent(props: {
   view: FileView
   name: string
   mode: FileMode
+  /** The lines that the text view shows in view and marked. */
+  lines?: LineRange | null
   onDownload?: () => void
   /**
    * Parses Markdown on the calling thread, for a static render. Without
@@ -104,5 +107,11 @@ export function FileContent(props: {
   if (isMarkdown(props.path) && props.mode === 'preview') {
     return <MarkdownView parser={props.markdownParser} text={view.viewText} />
   }
-  return <CodeView name={splitPath(props.path).name} text={view.viewText} />
+  return (
+    <CodeView
+      marked={props.lines}
+      name={splitPath(props.path).name}
+      text={view.viewText}
+    />
+  )
 }

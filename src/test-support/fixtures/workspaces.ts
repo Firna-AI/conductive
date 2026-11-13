@@ -36,6 +36,14 @@ const personNamed = (key: string): User =>
  * workspace has the GitHub state of its mockup workspace, unless `github`
  * gives the one of `checkout-autocomplete`, also `null`.
  */
+/** The repository of the open workspace, which names its folder. */
+function openRepository(): string {
+  const open = workspaceList.find(
+    (workspace) => workspace.key === FAKE_IDS.workspace,
+  )
+  return open?.repository ?? 'repository'
+}
+
 export function workspaceFixtures(
   state: WorkspaceState = 'ready',
   github?: GitHubSummary | null,
@@ -203,6 +211,7 @@ export function workspaceFixtures(
       fileList: 'changes',
       tool: 'terminal',
     },
+    repositoryFolder: `/home/user/code/${openRepository()}`,
   }
   return { workspaces, detail, sessions, message, created, view }
 }

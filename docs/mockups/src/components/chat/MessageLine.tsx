@@ -8,6 +8,7 @@ import type {
 import type { MessageHeading } from '../../fixtures/headingConversations'
 import type { MessageList } from '../../fixtures/listConversations'
 import { classes } from '../common/classes'
+import markdown from '../files/MarkdownView.module.css'
 import { AgentBlocks } from './AgentBlocks'
 import { MessageText } from './MessageText'
 import styles from './ToolGroup.module.css'
@@ -32,7 +33,7 @@ function TableText(props: { table: MessageTable }) {
   return cells.map((cell, index) => (
     <Fragment key={index}>
       {index > 0 ? ' · ' : null}
-      <MessageText strong text={cell} />
+      <MessageText answer text={cell} />
     </Fragment>
   ))
 }
@@ -53,7 +54,7 @@ function LineList(props: { list: MessageList }) {
               <span className={styles.number}>{index + 1}.</span>{' '}
             </>
           ) : null}
-          <MessageText strong text={item.text} />{' '}
+          <MessageText answer text={item.text} />{' '}
           {item.list ? <LineList list={item.list} /> : null}
         </span>
       ))}
@@ -73,26 +74,39 @@ function LineHeading(props: { heading: MessageHeading }) {
   if (text.trim() === '') return null
   return (
     <span className={styles.heading}>
-      <MessageText strong text={text} />{' '}
+      <MessageText answer text={text} />{' '}
     </span>
   )
 }
 
 /**
- * A block of a message line: a paragraph, a heading, a list, or a table as
- * text.
+ * A block of a message line: a paragraph, a heading, a list, a table as
+ * text, or a code block. A code block takes the look of an answer's code
+ * block only while the line is open, so the closed line shows its text in
+ * the line.
  */
-function LineBlock(props: { block: AgentBlock }) {
+function LineBlock(props: { block: AgentBlock; open: boolean }) {
   const { block } = props
   if (typeof block === 'string') {
     return (
       <span className={styles.paragraph}>
-        <MessageText strong text={block} />{' '}
+        <MessageText answer text={block} />{' '}
       </span>
     )
   }
   if (block.kind === 'heading') return <LineHeading heading={block} />
   if (block.kind === 'list') return <LineList list={block} />
+  if (block.kind === 'code') {
+    return (
+      <>
+        <span
+          className={classes(styles.paragraph, props.open && markdown.block)}
+        >
+          {block.text}
+        </span>{' '}
+      </>
+    )
+  }
   return (
     <>
       <TableText table={block} />{' '}
@@ -120,12 +134,12 @@ export function MessageLine(props: { message: AgentItem; open: boolean }) {
         <MessageSquareText aria-hidden className={styles.icon} size={13} />
         <span className={styles.messageText}>
           {lead.map((block, index) => (
-            <LineBlock block={block} key={index} />
+            <LineBlock block={block} key={index} open={props.open} />
           ))}
           {table ? (
             <span className={styles.preview}>
               {rest.map((block, index) => (
-                <LineBlock block={block} key={index} />
+                <LineBlock block={block} key={index} open={props.open} />
               ))}
             </span>
           ) : null}

@@ -15,6 +15,7 @@ function visible(folders: ReadonlyMap<string, boolean>, open: string | null) {
 
 it('opens the folders that hold changes, with folders first and names in reading order', () => {
   expect(visible(new Map(), null)).toEqual([
+    '.context',
     '.github',
     'prisma',
     'public',
@@ -44,7 +45,13 @@ it('closes and opens folders as the user toggles them, and opens the folders of 
     ['.github', true],
   ])
   const rows = visible(folders, 'prisma/schema.prisma')
-  expect(rows.slice(0, 4)).toEqual(['.github', 'prisma', 'public', 'src'])
+  expect(rows.slice(0, 5)).toEqual([
+    '.context',
+    '.github',
+    'prisma',
+    'public',
+    'src',
+  ])
   expect(rows).not.toContain('  app')
   const withFile = treeRows(
     applyTreeDelta(tree, {
@@ -64,7 +71,8 @@ it('closes and opens folders as the user toggles them, and opens the folders of 
     folders,
     'prisma/schema.prisma',
   ).map((row) => row.entry.path)
-  expect(withFile.slice(0, 3)).toEqual([
+  expect(withFile.slice(0, 4)).toEqual([
+    '.context',
     '.github',
     'prisma',
     'prisma/schema.prisma',

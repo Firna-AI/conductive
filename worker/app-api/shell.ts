@@ -5,6 +5,7 @@ import { workspaceViewPath } from '../../src/shared/workspace-view'
 import { workspacePaths, workspacesPath } from '../../src/shared/workspaces'
 import { counter } from '../chat/inputs'
 import type { AppDependencies, AppEnv } from '../env'
+import { workspaceRepositoryFolder } from '../lifecycle/repository-location-data'
 import { readWorkspace, workspaceView } from '../lifecycle/workspace-data'
 import { listMembers } from '../members/membership'
 import type { RequestContext } from '../security/gate'
@@ -75,6 +76,7 @@ export async function shellRoute(
       view: await savedWorkspaceView(env.DB, workspaceId, userId),
       routine: await workspaceRoutine(env.DB, orgId, workspaceId),
       baseBranch: workspace.baseBranch,
+      repositoryFolder: await workspaceRepositoryFolder(env.DB, workspace),
     })
   if (path === viewPath && request.method === 'PUT') {
     requireWritableWorkspace(workspace)

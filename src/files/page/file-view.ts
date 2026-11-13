@@ -21,6 +21,15 @@ const pictureTypes: ReadonlyMap<string, string> = new Map([
   ['webp', 'image/webp'],
 ])
 
+/**
+ * The media type of a file that a file page shows as a picture, by the
+ * extension of its path, or undefined for each other file.
+ */
+export function pictureType(path: string): string | undefined {
+  const extension = /\.([^./]+)$/.exec(path)?.[1]
+  return extension ? pictureTypes.get(extension.toLowerCase()) : undefined
+}
+
 /** The bytes as base64, in steps that keep each `fromCharCode` call short. */
 function base64Of(bytes: Uint8Array): string {
   const step = 0x8000
@@ -40,8 +49,7 @@ function base64Of(bytes: Uint8Array): string {
  * Each other file is its text, or a file that is not text.
  */
 export function fileView(path: string, file: FileResponse): FileView {
-  const extension = /\.([^./]+)$/.exec(path)?.[1]
-  const type = extension && pictureTypes.get(extension.toLowerCase())
+  const type = pictureType(path)
   if (!type || file.content === '') return fileText(file)
   const content =
     file.encoding === 'base64'

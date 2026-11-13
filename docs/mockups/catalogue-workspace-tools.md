@@ -98,11 +98,19 @@ pages:
 - `app/file-mentions/chips` has a file chip and a folder chip in the
   message box. Its `pointer` variant has the pointer over the icon of the
   file chip, where a × takes the place of the icon. Its `sent` variant has
-  the sent message with both chips. Its `workspace-chip` and
-  `attached-file` variants show the same × on a pasted workspace link and
-  on an attached file in the text.
+  the sent message with both chips, and the answer with its own file
+  chips. Its `workspace-chip` and `attached-file` variants show the same
+  × on a pasted workspace link and on an attached file in the text.
+- `app/file-mentions/answers` has an answer of the agent with file chips,
+  from answer chip decisions 1 and 2 of 13 November 2026. A `@` mention,
+  an absolute path under the repository folder in code, and a relative
+  path with the line target `:19-22` in code show as chips. A path in
+  another repository and a code block stay code. A press on the chip with
+  the line target opens `app/files/code/at-line`.
 
 On a phone each chip of the composer keeps its icon and ends with a ×.
 The flow `user-flows/mention-a-file` goes from the query to the sent
 message, and ends with a press on the file chip, which opens
-`app/files/code`.
+`app/files/code`. The flow `user-flows/open-a-file-from-an-answer` goes
+from the answer of `app/file-mentions/answers` to the file tab at the
+lines, `app/files/code/at-line`.

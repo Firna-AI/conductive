@@ -3,10 +3,12 @@
 This guide belongs to [the chat](README.md). It gives the rules of the code
 that formats the text of agent messages: in the chat, and in a message line
 of an open work fold. It also gives the workspace chips of sent messages
-and answers. [Chat Markdown](../../docs/protocol/chat-markdown.md),
-[Chat tables](../../docs/protocol/chat-tables.md), and
-[Workspace links](../../docs/protocol/workspace-links.md) state the
-requirements.
+and answers, and the file chips of answers.
+[Chat Markdown](../../docs/protocol/chat-markdown.md),
+[Chat tables](../../docs/protocol/chat-tables.md),
+[Workspace links](../../docs/protocol/workspace-links.md), and
+[File mentions](../../docs/protocol/file-mentions.md#files-in-answers)
+state the requirements.
 
 - `textBlocks` reads the whole text of a message at each update. So a live
   message and the same message from the saved history show the same blocks.
@@ -66,7 +68,8 @@ requirements.
   its closed text in a visually hidden span. So the open line keeps a name
   for a screen reader. An empty heading before the table counts as no
   text, because it draws nothing. That hidden copy shows no chips, so the
-  keyboard cannot reach a link in it.
+  keyboard cannot reach a link in it. It reads its text with no links and
+  no files, through a `MentionsProvider` without files.
 
 ## Workspace chips
 
@@ -100,6 +103,30 @@ requirements.
   a work fold shows chips too. A click on a chip there stays with the
   chip, so the line does not toggle, and a click with a modifier key opens
   a new tab as on any link.
+
+## File chips in answers
+
+- `AnswerText` in `links/LinkedText.tsx` draws the text of an answer:
+  `AgentText` and `MessageLine` use it for each paragraph, heading, list
+  item, and table cell. It reads bold, workspace links, `@` mentions, and
+  paths in inline code. `LinkedText` keeps the other readings, such as a
+  message of a member, which reads mentions but keeps its code.
+- `chatParts` gives a `file` part for a mention or inline code that names
+  an entry of the tree. `links/file-targets.ts` reads both:
+  `mentionTarget` finds the entry of a mention, with a line target and an
+  end mark of a sentence after it. `codeTarget` finds the entry of inline
+  code, inside the repository or under its folder. The line targets come
+  from `splitLineTarget` in `src/shared/line-target.ts`.
+- Code in the label of a Markdown link stays code. Where `**` marks bold, a
+  mention ends before the mark.
+- A text follows the tree only when it holds `@`, or a backtick in an
+  answer. So a change of the tree draws only the texts that can change.
+- The folder of the repository comes from the read of the saved view, in
+  `ChatSnapshot.repositoryFolder`. `WorkspaceChat` gives it to
+  `MentionsProvider`, and `useRepositoryFolder` reads it.
+- The chip of a file with lines shows them after its name, and its press
+  calls `openFile` with the lines. The shell opens the file tab as text at
+  the lines.
 
 ## List parts
 

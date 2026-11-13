@@ -1,4 +1,5 @@
 import type { Attachment } from '../../fixtures/attachments'
+import { codeTarget } from './answerPaths'
 import type { ChatRow, ChatSession } from './chatWorkspaces'
 import {
   mentionParts,
@@ -56,27 +57,40 @@ function plainParts(
 }
 
 /**
+ * A part in backticks: code, or in an answer, the file chip of the entry
+ * of the tree that the whole code names.
+ */
+function codePart(text: string, answer: boolean): TextPart {
+  const target = answer ? codeTarget(text) : undefined
+  return target
+    ? { kind: 'mention', ...target, source: text, code: true }
+    : { kind: 'code', text }
+}
+
+/**
  * Splits a text into plain text, code, links, and mentions. In a sent
  * message or an answer, `code` is true: each part in backticks is code,
  * and a link or a mention in it stays code. A message box keeps plain
- * text, so it reads no code. Only the text of a member, in a message box
- * or a sent message, reads mentions, so `mentions` is false in an answer.
- * A mention of the copy path of one of the `files` of a sent message is
- * the mention of that file.
+ * text, so it reads no code. The text of a member reads mentions when
+ * `mentions` asks. An `answer` reads mentions too, and code whose whole
+ * text is a path of the tree is a file chip (answer chip decision 1). A
+ * mention of the copy path of one of the `files` of a sent message is the
+ * mention of that file.
  */
 export function textParts(
   text: string,
   code: boolean,
   mentions = false,
   files: readonly Attachment[] = [],
+  answer = false,
 ): TextPart[] {
   if (!code) return plainParts(text, mentions, files)
   return text
     .split('`')
     .flatMap((part, index): TextPart[] =>
       index % 2 === 1
-        ? [{ kind: 'code', text: part }]
-        : plainParts(part, mentions, files),
+        ? [codePart(part, answer)]
+        : plainParts(part, mentions || answer, files),
     )
 }
 

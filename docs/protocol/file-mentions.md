@@ -3,13 +3,16 @@
 This doc holds the requirements and the decisions in force for the list
 of `@` in the composer of a workspace chat, the chips of the files and
 folders that it puts into a message, the mentions and the sent chips of
-attached files, and the removal of each chip of the composer. The terms
+attached files, the file chips in the answers of the agents, and the
+removal of each chip of the composer. The terms
 are those of the [architecture doc](../architecture.md#terms). A decision
 number names a dated record, as
 [Decision numbers](../architecture.md#decision-numbers) says. The
 [mockup catalogue](../mockups/catalogue.md) draws these screens at
-`app/file-mentions`, at `app/attachments/sent`, and in the flow
-`user-flows/mention-a-file`.
+`app/file-mentions`, at `app/file-mentions/answers`, at
+`app/attachments/sent`, and in the flows `user-flows/mention-a-file` and
+`user-flows/open-a-file-from-an-answer`. An answer chip decision number
+names a decision of the change that added file chips to answers.
 
 ## The list
 
@@ -78,9 +81,9 @@ number names a dated record, as
 - A sent message shows a chip for each mention that names an entry of the
   tree, and for each mention of one of its attached files. Every other
   mention stays text. A mention in inline code or in a code block stays
-  code.
-- The answers of the agents keep their text. Reason: only the composer
-  writes mentions.
+  code. Inline code in a message of a member stays code.
+- The answers of the agents show file chips too, as
+  [Files in answers](#files-in-answers) says.
 - A copy of a chip gives its mention. A paste of a mention gives a chip
   when the mention names an entry of the tree.
 - A draft keeps the mention of each chip. When a draft comes back, its
@@ -98,6 +101,14 @@ number names a dated record, as
   writes it.
 - A mention starts at the start of the text, or after a space or a line
   break.
+- A mention of a file can end with a line target, such as
+  `@src/app.ts:42`, as [Line targets](#line-targets) says.
+- When a mention names no entry, and its last character is `.`, `,`, `;`,
+  `:`, `!`, `?`, or `)`, the chat drops that one character and reads the
+  mention again. The character then shows as text after the chip. Reason:
+  agents end sentences right after a mention, as in "See @src/app.ts."
+- Where `**` marks bold, as in an answer, a mention ends before the next
+  `**`. So bold around a mention stays bold.
 - The draft, the sent message, and the text that the agent gets hold the
   same mention of a file or a folder. For an attached file, Send writes
   the mention at the place of its chip, because the path comes only with
@@ -124,9 +135,8 @@ number names a dated record, as
 - A press on the chip opens the file tab of the copy, as a press on a file
   chip opens its file (decision 264 B). The press can resume a stopped
   cloud computer, as the open of each file does.
-- All files does not list the copy. So the tab shows "File" until the read
-  of the copy gives its safe name, as for each path that All files does not
-  list.
+- All files lists the copy, as it lists every file of the
+  [context folder](repository-folders.md#the-context-folder).
 - Reason: the member sees the file again in the file tab, as each other
   file of the workspace. A chip that opens nothing was rejected, because
   the member then cannot see the file after Send. A read of the file from
@@ -142,6 +152,62 @@ number names a dated record, as
   deleted it, the file tab shows "This file moved or was deleted", as for
   each other file.
 - A copy of the chip gives its mention, as for a file chip.
+
+## Files in answers
+
+- An answer of an agent shows a file chip for each mention that names an
+  entry of the tree, as a sent message does (answer chip decision 1). An
+  answer has no attached files.
+- An answer also shows a file chip for inline code whose whole text is the
+  path of an entry of the tree (answer chip decision 1). The path can
+  start with `./`. An absolute path counts when it starts with the
+  repository folder of the workspace and a `/`.
+- A folder can end with `/`. Inline code without a final `/` names a file,
+  or a folder when no file has that path.
+- Inline code stays code in each of these cases:
+  - Its text names no entry, or names a path in another repository or
+    outside the repository folder.
+  - It is one word with no `/`, no `.`, and no line target. Reason: words
+    such as `runner` name ideas as often as folders.
+  - It has a space at its start or its end, or a line break.
+  - It stands in the label of a Markdown link. Reason: no chip sits in a
+    link.
+  - It stands in a code block.
+- Reason: agents name the files that they write, such as screenshots in
+  the context folder, as absolute paths in inline code. A member then
+  opens each file from the answer. Paths in plain text and in Markdown
+  links were rejected, because plain words can become chips by mistake.
+- The agent instructions ask agents to name files as mentions, as
+  [Agent instructions](agent-instructions.md#what-the-instructions-hold)
+  says. Reason: one form is the form that agents use, and the chat reads
+  both forms.
+- A copy of a chip of an answer gives its text as the answer wrote it: the
+  mention, or the text of the code without backticks.
+- In a chat without a tree, such as the chat of an archived workspace,
+  each path stays code and each mention stays text. A chip shows when the
+  tree loads.
+- The Worker gives the repository folder with the saved view of the
+  workspace. Without a folder, such as before the first start, only paths
+  inside the repository give chips.
+
+### Line targets
+
+- A path can end with a line target (answer chip decision 2). The chat
+  reads these forms: `:N`, `:N-M`, `:N:C`, `#LN`, `#LN-LM`, and `#LNCC`. A
+  column `C` does not count.
+- A line target counts in a mention of a file and in the path of inline
+  code. A range whose end comes before its start is not a line target.
+- The chip of a file with a line target adds the line or the range to its
+  name, such as `app.ts:42` or `app.ts:42-50`. Its title is the whole
+  path with the same target.
+- A press on such a chip opens the file tab as text, also for a Markdown
+  file, with the lines in view and marked, as
+  [Files and changes](workspace-tools.md#files-and-changes) says.
+- A folder with a line target names nothing. A picture shows no line
+  numbers, so its chip drops the line target.
+- Reason: agents give paths with line numbers, and a member then sees the
+  line at once. A chip that opens the top of the file was rejected,
+  because its label promises a line that the tab does not show.
 
 ## Remove a chip of the composer
 

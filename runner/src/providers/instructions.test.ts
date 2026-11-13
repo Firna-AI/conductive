@@ -118,6 +118,12 @@ it.each(['claude', 'codex'] as const)(
     )
     expect(initialPrompt).toContain('Do not reply only to confirm it.')
     expect(initialPrompt).toContain(
+      'Name a file or a folder of the repository in a chat reply as @ and its path from the repository folder',
+    )
+    expect(initialPrompt).toContain(
+      'In commits, pull requests, issues, and files, write paths in backticks',
+    )
+    expect(initialPrompt).toContain(
       'Workspace repository folder: "/cloud/workspace"',
     )
     expect(initialPrompt).toContain('Workspace branch: "alice/tracked-task"')

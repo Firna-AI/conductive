@@ -1,13 +1,21 @@
 import type { Attachment } from '../../fixtures/attachments'
 import { mentionEntries, type MentionEntry } from '../../fixtures/fileMentions'
+import { pathTarget, type LineTarget } from './answerPaths'
 import { entryName } from './entryPaths'
 
-/** A mention in a text: `@` and the path of a file or a folder. */
+/**
+ * A file or a folder of the tree in a text: a mention, `@` and the path, or
+ * in an answer, inline code whose whole text is the path. A path can end
+ * with a line target.
+ */
 export type MentionPart = {
   kind: 'mention'
   entry: MentionEntry
-  /** The mention as the text has it, such as `@src/lib/`. */
+  /** The mention or the code as the text has it, such as `@src/lib/`. */
   source: string
+  line?: LineTarget
+  /** The part was inline code of an answer, so it ends bold as code does. */
+  code?: true
 }
 
 /**
@@ -24,24 +32,18 @@ export type AttachedPart = {
 /**
  * `@` at the start of the text or after a space or a line break, then a
  * path in quotes or a path up to the next space. A folder path ends with
- * `/`.
+ * `/`, and a file path can end with a line target.
  */
 const mentionPattern = /(?<=^|\s)@(?:"([^"\n]+)"|(\S+))/g
 
-/**
- * The entry of the tree that a mention path names. A path that ends with
- * `/` names a folder, and any other path names a file. Every other path
- * names nothing, so its mention stays text.
- */
-function mentionedEntry(path: string): MentionEntry | undefined {
-  const folder = path.endsWith('/')
-  const key = folder ? path.slice(0, -1) : path
-  return mentionEntries.find(
-    (entry) => entry.path === key && entry.folder === folder,
-  )
-}
+/** The marks that can end a sentence after a mention, as in "See @a.ts." */
+const endMarks = '.,;:!?)'
 
-/** A mention in a text: of an attached file, or of an entry of the tree. */
+/**
+ * A mention in a text: of an attached file, or of an entry of the tree. A
+ * path that ends with `/` names a folder, and any other path names a file.
+ * Every other path names nothing, so its mention stays text.
+ */
 function mentionOf(
   path: string,
   source: string,
@@ -49,8 +51,24 @@ function mentionOf(
 ): MentionPart | AttachedPart | undefined {
   const file = files.find((item) => item.path === path)
   if (file) return { kind: 'attached', file, source }
-  const entry = mentionedEntry(path)
-  return entry ? { kind: 'mention', entry, source } : undefined
+  const target = pathTarget(path, true)
+  return target ? { kind: 'mention', ...target, source } : undefined
+}
+
+/**
+ * The mention of a match. When the path names nothing and ends with one
+ * end mark, the mention without that mark is tried, and the mark stays
+ * text after the chip.
+ */
+function mentionAt(
+  match: RegExpMatchArray,
+  files: readonly Attachment[],
+): MentionPart | AttachedPart | undefined {
+  const path = match[1] ?? match[2]
+  const mention = mentionOf(path, match[0], files)
+  if (mention || match[1] !== undefined) return mention
+  if (!endMarks.includes(path.slice(-1))) return undefined
+  return mentionOf(path.slice(0, -1), match[0].slice(0, -1), files)
 }
 
 /**
@@ -65,13 +83,13 @@ export function mentionParts(
     []
   let end = 0
   for (const match of text.matchAll(mentionPattern)) {
-    const mention = mentionOf(match[1] ?? match[2], match[0], files)
+    const mention = mentionAt(match, files)
     if (!mention) continue
     if (match.index > end) {
       parts.push({ kind: 'text', text: text.slice(end, match.index) })
     }
     parts.push(mention)
-    end = match.index + match[0].length
+    end = match.index + mention.source.length
   }
   if (end < text.length) parts.push({ kind: 'text', text: text.slice(end) })
   return parts

@@ -18,6 +18,7 @@ export type TreeEntry = {
 }
 
 export const fileTree: readonly TreeEntry[] = [
+  { name: '.context', depth: 0, folder: true },
   { name: '.github', depth: 0, folder: true },
   { name: 'prisma', depth: 0, folder: true },
   { name: 'public', depth: 0, folder: true },

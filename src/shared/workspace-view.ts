@@ -19,6 +19,12 @@ export interface WorkspaceView {
 export interface WorkspaceViewResponse {
   view: WorkspaceView
   baseBranch?: string
+  /**
+   * The folder of the workspace repository in the cloud computer, such as
+   * `/home/user/code/checkout`, or null before the first start. Only the
+   * read of the view gives it.
+   */
+  repositoryFolder?: string | null
   routine?: {
     id: string
     name: string

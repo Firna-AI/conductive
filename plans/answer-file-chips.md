@@ -284,8 +284,13 @@ decision.
 - **Mentions in answers (decision 1):** a `@` mention in an answer reads
   as in a message of a member. It gives a chip when it names an entry of
   the tree, and it stays text otherwise. A mention in code stays code, so
-  `` `@src/app.ts` `` is code. A mention can also be an absolute path
-  under the repository folder.
+  `` `@src/app.ts` `` is code. A mention is always a path inside the
+  repository. The first design also read an absolute path after `@`. It
+  was dropped while building, because the mention reader of the composer
+  refuses absolute paths, and the instructions ask for repository paths.
+- **Bold around a mention:** where `**` marks bold, a mention ends before
+  the next `**`, as a bare link does. Found while building: otherwise
+  `**@src/app.ts**` shows its marks as text.
 - **Mentions with a line target:** a mention can end with a line target,
   such as `@src/app.ts:42`. This holds also in the messages of members,
   because one reader serves both. Today such a mention names no entry and
@@ -304,6 +309,22 @@ decision.
 - **Inline code in members' messages:** it stays code, as the protocol
   says today.
 
+- **After the mockups:** these calls of 13 November 2026 follow the
+  problems that the mockups showed.
+  - A long chip name loses the end of its name first, and the line target
+    always stays in view. Reason: the lines are what the answer points at.
+  - A chip of a file that no mockup page draws, such as a picture in
+    `.context/`, opens nothing in the mockups. The app opens the file.
+  - A short file that fits the view opens at its top. The view never
+    scrolls past the top of the file.
+  - The closed line of a message in the work fold shows file chips, as it
+    shows workspace chips. Only its hidden copy drops them.
+  - A folder chip from inline code opens All files with the folder open,
+    as a folder chip of a member message does.
+  - The sample tree of the mockups and the tests lists `.context/`, as
+    [The context folder](../docs/protocol/repository-folders.md#the-context-folder)
+    says.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -314,45 +335,46 @@ The chips page of `app/file-mentions` holds five screens, so the answer
 chips get a new child page. The file tab at a line is a new screen of
 `app/files/code`, or a child page when that page is full.
 
-- [ ] Add the child page `app/file-mentions/answers`: an answer with a
+- [x] Add the child page `app/file-mentions/answers`: an answer with a
       chip for a `@` mention, a chip for an absolute path in code, a chip
       for a relative path with a line target, a path in another repository that stays code, and a code
       block that stays code. Give the desktop and the phone variants.
-- [ ] Add the file tab at a line to `app/files/code`: a source file with
+- [x] Add the file tab at a line to `app/files/code`: a source file with
       a range of lines in view and marked, on desktop and on a phone.
-- [ ] Add a user flow `user-flows/open-a-file-from-an-answer`: an answer
+- [x] Add a user flow `user-flows/open-a-file-from-an-answer`: an answer
       with a chip, then the file tab at the line. Use the screens above.
-- [ ] Link the new pages from their parents and from
+- [x] Link the new pages from their parents and from
       `docs/mockups/catalogue.md`.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
-- [ ] Update the design and the TODOs of this plan for each problem that
-      the mockups show.
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages.
+- [x] Update the design and the TODOs of this plan for each problem that
+      the mockups show. Screenshots are in
+      `.context/answer-file-chips/mockups/`.
 
 ## Milestone 2: Documentation and protocol
 
 Depends on: 1
 
-- [ ] `docs/protocol/file-mentions.md`: replace "The answers of the agents
+- [x] `docs/protocol/file-mentions.md`: replace "The answers of the agents
       keep their text" with the rules of the design above, and cite answer
       chip decisions 1 and 2.
-- [ ] `docs/protocol/workspace-tools.md`: the file tab at a line, its
+- [x] `docs/protocol/workspace-tools.md`: the file tab at a line, its
       address, and the mark.
-- [ ] `docs/protocol/chat-markdown.md` and `docs/protocol/chat-tables.md`:
+- [x] `docs/protocol/chat-markdown.md` and `docs/protocol/chat-tables.md`:
       inline code of an answer can show as a file chip.
-- [ ] `docs/protocol/file-mentions.md`, "Chips of attached files": fix
+- [x] `docs/protocol/file-mentions.md`, "Chips of attached files": fix
       the sentence that All files does not list the copy of an attached
       file. [The context folder](../docs/protocol/repository-folders.md#the-context-folder)
       says that All files lists every file of `.context/`. The options
       check found this.
-- [ ] `docs/protocol/agent-instructions.md` gives the new line of the
+- [x] `docs/protocol/agent-instructions.md` gives the new line of the
       instructions about `@` mentions.
 - [ ] When decision 3 is B: the copy rule of `docs/protocol/file-mentions.md`
       says that the browser's own copy runs, with the source of each chip.
-- [ ] Read both legal pages and every public guide in full. Update each
+- [x] Read both legal pages and every public guide in full. Update each
       sentence that restates a changed fact. The guide
       `src/marketing/docs/sessions-and-chat.md` and
       `src/marketing/docs/files-and-changes.md` are the likely ones.
-- [ ] Check the row `mentions` of the comparison page in
+- [x] Check the row `mentions` of the comparison page in
       `src/marketing/from-conductor/areas/agents-and-chat.ts`. Update its
       status or note when this change ships a listed feature.
 
@@ -360,14 +382,14 @@ Depends on: 1
 
 Depends on: 2
 
-- [ ] The Worker adds the folder of the workspace repository to the reply
+- [x] The Worker adds the folder of the workspace repository to the reply
       of the workspace view, from `workspaceRepositoryLocations`. Add the
       field to `WorkspaceViewResponse` in `src/shared/workspace-view.ts`.
-- [ ] The browser reader of the reply keeps the folder. A reply without
+- [x] The browser reader of the reply keeps the folder. A reply without
       it, or with a folder that is not an absolute path, gives no folder.
       Then only relative paths match.
-- [ ] Update the fake Worker of the development pages and the tests.
-- [ ] Tests for the Worker reply and the browser reader, with and without
+- [x] Update the fake Worker of the development pages and the tests.
+- [x] Tests for the Worker reply and the browser reader, with and without
       the folder.
 
 ## Milestone 4: File chips in answers
@@ -376,30 +398,30 @@ Tags: ui
 
 Depends on: 3, 5, and the answer to decision 3 for the copy TODO
 
-- [ ] Add a reader of an answer path: it takes the text of inline code,
+- [x] Add a reader of an answer path: it takes the text of inline code,
       the tree, and the repository folder. It gives the entry and the line
       target, or nothing. Give it its own file and its own tests.
-- [ ] `chatParts` gives a `file` part, with its line target, for inline
+- [x] `chatParts` gives a `file` part, with its line target, for inline
       code of an answer whose text the reader matches. Each other code
       stays a `code` part.
-- [ ] `chatParts` reads `@` mentions in answers with the same lookup as
+- [x] `chatParts` reads `@` mentions in answers with the same lookup as
       in the messages of members. A mention reads a line target and
       drops an end mark of a sentence, as the design says.
-- [ ] `AgentText` and `MessageLine` read answers with the tree. Only
+- [x] `AgentText` and `MessageLine` read answers with the tree. Only
       text with a backtick follows the tree. The messages of members keep
       their reading.
-- [ ] The hidden copy of the closed line in `MessageLine` shows no file
+- [x] The hidden copy of the closed line in `MessageLine` shows no file
       chips.
-- [ ] Code in the label of a Markdown link stays code.
-- [ ] The file chip shows the line target in its name and its title.
+- [x] Code in the label of a Markdown link stays code.
+- [x] The file chip shows the line target in its name and its title.
 - [ ] A copy of the chip gives the code text, in the way that decision 3
       chooses.
-- [ ] A press on a chip with a line target opens the file tab in source
+- [x] A press on a chip with a line target opens the file tab in source
       mode at the line. A modifier click opens the address with the line.
-- [ ] Tests: the matches and the misses of the design, one word, bold
+- [x] Tests: the matches and the misses of the design, one word, bold
       around the chip, a table cell, a link label, the hidden copy, a
       copy, and a press.
-- [ ] Update `src/chat/README.md` and `src/chat/agent-text.md`.
+- [x] Update `src/chat/README.md` and `src/chat/agent-text.md`.
 
 ## Milestone 5: The file tab at a line
 
@@ -410,15 +432,15 @@ Depends on: 2
 Milestone 4 needs this milestone for the press on a chip with a line
 target, so this milestone can run before Milestone 4.
 
-- [ ] `filesPlace` and `filesHref` read and write the query `line=N` and
+- [x] `filesPlace` and `filesHref` read and write the query `line=N` and
       `line=N-M` on the address of a file tab. The workspace view keeps
       the tab without the line.
-- [ ] A new address with a line scrolls again, also on the file that
+- [x] A new address with a line scrolls again, also on the file that
       already shows.
-- [ ] `CodeView` scrolls the first line to the middle of the view and
+- [x] `CodeView` scrolls the first line to the middle of the view and
       marks the lines. A line past the end marks nothing.
-- [ ] Tests for the address, the scroll, and the mark.
-- [ ] Update `src/files/README.md`.
+- [x] Tests for the address, the scroll, and the mark.
+- [x] Update `src/files/README.md`.
 
 ## Milestone 6: The agent instructions
 
@@ -427,10 +449,10 @@ Depends on: 2
 Run this milestone after Milestone 4 lands, or in the same pull request,
 so that no agent writes mentions that the chat cannot show.
 
-- [ ] Add the line about `@` mentions to the workspace text of both
+- [x] Add the line about `@` mentions to the workspace text of both
       agents in `runner/src/instructions.ts`, beside the line about
       workspace links.
-- [ ] Update the test of the instructions.
+- [x] Update the test of the instructions.
 
 ## Milestone 7: The browser's own copy
 

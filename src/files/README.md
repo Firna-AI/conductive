@@ -90,10 +90,18 @@ the list. The kept chat loads it and saves it, and the shell changes it
 through the chat, so the view has one writer. The shell passes the view to
 the screens, with a `FilesNavigation`:
 
-- `href(target)` gives the address of a list, a file tab, or a diff tab.
-- `navigate(target)` handles a plain click. The shell saves the change in
-  the view, then moves the address. A click with a modifier key opens the
-  address in a new browser tab.
+- `href(target, lines)` gives the address of a list, a file tab, or a diff
+  tab. A file tab with `lines` names them in the query, as `?line=42-50`.
+- `navigate(target, lines)` handles a plain click. The shell saves the
+  change in the view, then moves the address. The view keeps the tab
+  without the lines. A click with a modifier key opens the address in a
+  new browser tab.
+
+The shell reads the lines of the address with `addressLines` and gives
+them to `FilePage`. `CodeView` then scrolls the first line to the middle of
+its view and marks each line of the range, as
+[Files and changes](../../docs/protocol/workspace-tools.md#files-and-changes)
+says. A file chip of an answer with a line target opens such an address.
 
 The screens:
 

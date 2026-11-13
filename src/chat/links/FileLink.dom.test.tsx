@@ -98,7 +98,7 @@ describe('file chips in a sent message', () => {
     })
   })
 
-  test('an answer shows each mention as text', async () => {
+  test('a text read without mentions shows each mention as text', async () => {
     const view = await mountText('Moved @README.md', false)
     expect({
       links: view.container.querySelectorAll('a').length,

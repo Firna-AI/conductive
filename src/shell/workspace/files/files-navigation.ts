@@ -8,6 +8,7 @@ import {
   type FilesTab,
   type FilesTarget,
 } from '../../../files/navigation'
+import type { LineRange } from '../../../shared/line-target'
 import type { WorkspaceTab } from '../../../shared/workspace-view'
 import type { SavedView, WorkspaceContext } from '../features'
 import { saveView, useSavedView, useViewKnown } from '../saved-view'
@@ -25,14 +26,14 @@ export function useFilesNavigation(context: WorkspaceContext): FilesNavigation {
   const { org, workspace, viewport, savedView } = context
   const onList = filesPlace(context.view)?.kind === 'list'
   return useMemo(() => {
-    const href = (target: FilesTarget) =>
-      filesHref(org.id, workspace.id, target)
+    const href = (target: FilesTarget, lines?: LineRange) =>
+      filesHref(org.id, workspace.id, target, lines)
     return {
       href,
-      navigate: (target) => {
+      navigate: (target, lines) => {
         if (target.kind !== 'list') {
           saveView(savedView, (view) => withActiveTab(view, target))
-          navigation.push(href(target))
+          navigation.push(href(target, lines))
           return
         }
         saveView(savedView, (view) => withFileList(view, target.list))
