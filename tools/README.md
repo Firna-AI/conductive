@@ -145,7 +145,7 @@ The image builder passes these assets to `installWorkspaceTools` from [the insta
 The installer places the sources under `/opt/conductive/agent-tools`.
 It writes each source with `printf %s` and a shell-quoted copy of its text.
 So each installed file keeps the exact bytes of its source, and the command needs no decoder.
-The installer splits the writes into several commands, so that each stays under the Linux limit for one argument.
+The writes go in several commands of at most 64 KiB each, as [the image installer](../worker/tools/README.md#image-installer) says.
 It installs `/usr/local/bin/conductive` as an executable launcher.
 The launcher reads `/run/ascii-secrets/env.sh` at runtime when that file exists.
 It then removes `NODE_OPTIONS` from the environment.

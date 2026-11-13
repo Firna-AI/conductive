@@ -3,11 +3,17 @@
 import { act } from 'react'
 import { describe, expect, onTestFinished, test, vi } from 'vitest'
 import { routes } from '../../app/router'
-import { byLabel, byRole } from '../../test-support/dom-queries'
+import { workspacesPath } from '../../shared/workspaces'
+import {
+  accessibleName,
+  byLabel,
+  byRole,
+  queryByText,
+} from '../../test-support/dom-queries'
 import { messageText } from '../../test-support/message-field'
 import { MOUNTED_TEST_TIMEOUT } from '../../test-support/mount'
 import { click, press, settle, typeText } from '../test-mount'
-import { here, org } from '../workspace/kept-test-kit'
+import { bodiesOf, here, org } from '../workspace/kept-test-kit'
 import {
   createCount,
   dialogIn,
@@ -15,6 +21,7 @@ import {
   mainOf,
   messageIn,
   newWorkspaceRow,
+  openDialog,
   openTab,
   placeOf,
   serverWith,
@@ -129,6 +136,42 @@ describe('the places of New workspace', () => {
     }).toEqual({
       withKey: { dialog: null, address: here, leftToBrowser: true },
       onForm: { dialog: null, address: routes.newWorkspace(org) },
+    })
+  })
+
+  test('the Section menu of the dialog offers each section and no Archived group, and its pick names the section on the dialog and the page and creates the workspace there', async () => {
+    const server = serverWith('dialog')
+    const tab = await openTab(server, { at: routes.org(org) })
+    places.row(tab.view)
+    await settle()
+    click(byRole('button', 'Section: General', openDialog(tab.view)))
+    const menu = byRole('menu', 'Section', openDialog(tab.view))
+    const offered = Array.from(
+      menu.querySelectorAll('[role="menuitemradio"]'),
+      (item) => accessibleName(item),
+    )
+    click(byRole('menuitemradio', 'Checkout', menu))
+    await settle()
+    const picked = placeOf(openDialog(tab.view))
+    // The page of General shares the draft, so it names the pick too.
+    press(messageIn(openDialog(tab.view)), 'Escape')
+    await tab.go(routes.newWorkspace(org))
+    const page = {
+      dialog: dialogIn(tab.view),
+      subtitle: queryByText('Acme · Checkout', tab.view) !== null,
+    }
+    await tab.go(routes.org(org))
+    places.row(tab.view)
+    await settle()
+    typeText(messageIn(openDialog(tab.view)), 'Let shoppers save their cart.')
+    click(byRole('button', 'Create', openDialog(tab.view)))
+    await settle()
+    const [sent] = await bodiesOf(server, 'POST', workspacesPath(org), 0)
+    expect({ offered, picked, page, sent }).toEqual({
+      offered: ['General', 'Checkout', 'Infra'],
+      picked: 'Acme · Checkout',
+      page: { dialog: null, subtitle: true },
+      sent: expect.objectContaining({ sectionId: 'checkout' }),
     })
   })
 })

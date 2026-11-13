@@ -60,9 +60,7 @@ its own secrets and variables.
   record. So the history of `production` lists only the runs that
   deployed.
 - When only one of the two settings exists, the run fails.
-- The jobs run on the Blacksmith runner `blacksmith-2vcpu-ubuntu-2404`.
-  The Blacksmith GitHub App must have access to this repository. Without
-  it, the jobs wait in the queue and never start.
+- The jobs run on the GitHub-hosted runner `ubuntu-24.04`.
 
 ## The deploy token
 

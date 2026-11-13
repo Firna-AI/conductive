@@ -15,8 +15,12 @@ import ui from './ui.module.css'
 /** The items of a menu that take the focus: the items that are on. */
 const ITEM = '[role^="menuitem"]:not(:disabled)'
 
-/** Where a list draws: beside its trigger, at a point, or in a sheet. */
-export type ListPlacement = MenuPlacement | 'point'
+/**
+ * Where a list draws: beside its trigger, at a point, or in a sheet.
+ * `anchored` is a list in a `PopoverSurface`, which places it beside its
+ * trigger.
+ */
+export type ListPlacement = MenuPlacement | 'point' | 'anchored'
 
 /** The choices of the items with a submenu, and how they opened. */
 export interface SubmenuControl {
@@ -182,7 +186,11 @@ export function MenuList(props: {
   return (
     <div
       aria-label={props.label}
-      className={classes(menu.menu, menu[placement], props.wide && menu.wide)}
+      className={classes(
+        menu.menu,
+        placement === 'anchored' ? ui.anchoredMenu : menu[placement],
+        props.wide && menu.wide,
+      )}
       onKeyDown={onKeyDown}
       onPointerMove={onPointerMove}
       ref={list}
