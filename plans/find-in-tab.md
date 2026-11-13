@@ -17,8 +17,8 @@ the user chose find decision 1 B. The brainstorm notes are in
 This change does not cover a search across sessions or across the files
 of the repository, find in the terminal, find in a port preview or in the
 live desktop, regular expressions, or replace. It also does not cover find
-in the Mac app outside the shown tab, such as on the Account page.
-`plans/follow-ups/mac-app-find-outside-tabs.md` records that gap.
+in the Mac app outside the shown tab, such as on the Account page, as find
+decision 2 A says.
 
 Contract owners:
 
@@ -77,6 +77,26 @@ This plan names its decisions after the change, as find decision 1, as
 - **Related:** Option C of `plans/follow-ups/chat-renders-whole-transcript.md` would draw only the chat rows near the view. Options A and B read the page, so they would then miss the rows that the chat does not draw.
 - **Recommendation:** B. It searches only the shown tab, works the same in both hosts, and opens folds, with no new bridge. C does the first two too, but needs more UI and covers part of the tab. D and E pay for a windowed chat or a windowed code view that no plan has chosen.
 - **Chosen:** B, by the user on 13 November 2026. The options check of the same day added D and E after that choice and kept B as its recommendation. It advised that the scope of a view gives text and a map from an offset to a DOM range, so that a view can move to D later. The design below follows that advice.
+
+### 2. The Mac app finds nothing outside a tab
+
+- **Severity:** Low. **Likelihood:** Common. **Effort:** Small.
+- **Source:** Review, from the options check of find decision 1.
+- **Category:** Product bug.
+- **Location:** `desktop/src/menu.ts:25`
+- **Background:** The find bar answers ⌘F only while a shown tab with text is on the page. The Mac app menu has no Find item. A browser has its own find on every page.
+- **Problem:** In the Mac app, ⌘F does nothing on a page without a shown tab with text, such as the workspace list or the Account page.
+- **Impact if no action:** A Mac app user cannot find text on those pages. The command palette still finds workspaces and settings.
+- **Root question:** How does a Mac app user find text on a page that has no shown tab with text?
+- **Options:**
+  - **A.** Change nothing. Effort: Small.
+  - **B.** Add Find to the Edit menu of the Mac app, with a native find bar on `findInPage`, for the pages where the page does not offer Find. It needs a bridge from the page to the Mac app, which the protocol rejects. Effort: Medium.
+  - **C.** Use the find bar, with the whole page as its scope, on the pages without a shown tab. It needs no bridge, and it changes the rule that find covers only the shown tab. Effort: Medium.
+- **Left out:** A Mac app find that also replaces the find bar. Find decision 1 B chose the find bar.
+- **Wider fix:** None. This is a missing feature, not a defect class.
+- **Previous examples:** Before this change, the Mac app had no find on any page.
+- **Recommendation:** A. The pages without a shown tab are short, and the palette already finds their rows.
+- **Chosen:** A, by the user on 13 November 2026. The follow-up item that recorded it was deleted in the same branch.
 
 ## Design
 
