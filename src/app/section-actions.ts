@@ -7,6 +7,7 @@ import {
   sectionAdded,
   sectionCollapsed,
   sectionDeleted,
+  sectionMoved,
   sectionRenamed,
   workspaceMoved,
 } from './list-changes'
@@ -14,7 +15,7 @@ import type { OrgModel } from './org-model'
 import { same } from './resource'
 
 /*
- * The writes of the list. A collapse, a delete, and a move show at once,
+ * The writes of the list. A collapse, a delete, and each move show at once,
  * and a create and a rename show their answer. Each write keeps its change
  * apart from the list that the server confirmed: a failure takes back only
  * that change, and an answer confirms only the fields of its write.
@@ -70,6 +71,30 @@ export async function setSectionCollapsed(
         readSectionResponse,
       ),
     (section) => sectionCollapsed(section.id, section.collapsed),
+  )
+}
+
+/**
+ * Moves a section to `index` of the list, as a drop or a move item of its
+ * menu does. The index counts the sections without the moved one. The
+ * order is the same for each member of the org. The answer confirms the
+ * place of the section only.
+ */
+export async function moveSection(
+  org: OrgModel,
+  sectionId: string,
+  index: number,
+): Promise<void> {
+  await org.resources.list.write(
+    sectionMoved(sectionId, index),
+    () =>
+      org.services.api.send(
+        'PATCH',
+        sectionPath(org.orgId, sectionId),
+        { position: index },
+        readSectionResponse,
+      ),
+    (section) => sectionMoved(section.id, section.position),
   )
 }
 
