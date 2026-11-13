@@ -104,11 +104,13 @@ describe('the Files screens in the workspace', () => {
     ).toBe('page')
     expect(currents(tabs, fileHref)).toEqual([null])
     // The last save is the chat's own, when it showed the session again.
+    // The press opened the file in the temporary tab, and the session tab
+    // leaves it temporary.
     const saved = await savedViews(server, from)
     expect(saved.at(-1)).toEqual({
       tabs: [...fixtures.view.view.tabs, fileTab],
       activeTab: { kind: 'session', sessionId: FAKE_IDS.session },
-      temporaryTab: null,
+      temporaryTab: { kind: 'file', path: FAKE_FILE_PATH },
       fileList: 'all',
       tool: 'terminal',
     })
@@ -175,7 +177,7 @@ describe('the Files screens in the workspace', () => {
     expect(await savedViews(server, 0)).toEqual([])
   })
 
-  test('on a phone, a file of a finished turn opens its diff in the Files tab, which leads back to Changes', async () => {
+  test('on a phone, a file of a finished turn opens its diff in the temporary tab of the Files tab, which leads back to Changes', async () => {
     holdAnimationFrames()
     const server = new FakeApiServer()
     const { view, navigation } = await openTab(
@@ -183,17 +185,27 @@ describe('the Files screens in the workspace', () => {
       routes.workspace(org, id),
       { viewport: 'phone' },
     )
+    const from = server.requests.length
 
     click(byRole('button', `Open the changes of ${FAKE_FILE_PATH}`, view))
     await settle()
 
-    const diff = filesHref(org, id, { kind: 'diff', path: FAKE_FILE_PATH })
+    const diffTab: FilesTab = { kind: 'diff', path: FAKE_FILE_PATH }
+    const diff = filesHref(org, id, diffTab)
     const changes = filesHref(org, id, { kind: 'list', list: 'changes' })
     expect(navigation.href()).toBe(diff)
     click(linkTo(byRole('region', fileName, view), changes))
     await settle()
     expect(navigation.href()).toBe(changes)
     expect(queryByLabel('Changed files', view)).not.toBeNull()
+    expect(await savedViews(server, from)).toEqual([
+      {
+        ...workspaceFixtures().view.view,
+        tabs: [...workspaceFixtures().view.view.tabs, diffTab],
+        activeTab: diffTab,
+        temporaryTab: { kind: 'diff', path: FAKE_FILE_PATH },
+      },
+    ])
   })
 
   test('in a suspended org, a click on a list changes the view in the tab only, and saves no view', async () => {

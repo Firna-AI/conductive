@@ -524,37 +524,40 @@ Tags: ui
 
 Depends on: 1, 3
 
-- [ ] In `src/shell/workspace/files/view-tabs.ts`, open a file or a diff
+- [x] In `src/shell/workspace/files/view-tabs.ts`, open a file or a diff
       in the temporary tab: replace the tab that the field names in its
       place, or add a tab at the end and name it in the field. Show a tab
       that is open with no change to the field. Keep a tab by clearing the
       field. Clear the field when its tab closes. A switch of mode keeps
       the field, because the field names the kind and the path.
-- [ ] In `src/files/navigation.ts` and
+- [x] In `src/files/navigation.ts` and
       `src/shell/workspace/files/files-navigation.ts`, make a press open
       the temporary tab, and make `useOpenTab` do the same for an address
       of a file with no tab. Add a keep for the double-click.
-- [ ] In `src/files/panel/FileTree.tsx` and
+- [x] In `src/files/panel/FileTree.tsx` and
       `src/files/panel/ChangeList.tsx`, keep the tab on a double-click of
       a file row. In `src/files/ui/FilesLink.tsx`, the second click of a
       double-click opens nothing again, and a double-click selects no
       text.
-- [ ] In `src/files/tabs/FileTabItem.tsx`, draw the italic title with
+- [x] In `src/files/tabs/FileTabItem.tsx`, draw the italic title with
       `.temporary` of the shared `WorkspaceTabs.module.css`, and keep the
       tab on a double-click. Tell a screen reader that the tab is
       temporary, as in "README.md, temporary", also in the `aria-label`
       of a diff tab. Keep `fileTabName` as it is, because the tab menu and
       the move messages use it. `LiftedFileTab` keeps the italics.
-- [ ] Check each other way that opens a file or a diff: the chips of a
+- [x] Check each other way that opens a file or a diff: the chips of a
       finished turn, the chips of a message, the chips of attached files
       in a sent message, and the file link of a diff page. Each one opens
       the temporary tab.
-- [ ] Add tests: the view functions, then the wiring of a press, a second
+- [x] Add tests: the view functions, then the wiring of a press, a second
       press, a double-click, an address, a switch of mode, and a close.
-- [ ] Update `src/files/README.md`, `src/shell/workspace/README.md`, and
+- [x] Update `src/files/README.md`, `src/shell/workspace/README.md`, and
       `src/chat/README.md`.
-- [ ] Smoke-test in the browser. Save the screenshots under
+- [x] Smoke-test in the browser. Save the screenshots under
       `.context/temporary-file-tabs/`.
+
+Check evidence: the `m4-*.log` files and the screenshots of `app/` under
+`.context/temporary-file-tabs/`.
 
 ## Milestone 5: Moves and the keyboard keep of a temporary tab
 
@@ -594,6 +597,12 @@ Depends on: every other milestone
       menu at the end of the row are cut off, as in the `kept` and `menu`
       variants of `app/files/temporary`. The fix draws the row in
       `WorkspaceTabs` of the mockups as the app scrolls it.
+- [ ] Record a follow-up item under `plans/follow-ups/` for the name of
+      the temporary tab in the mockups. `TabItem` of the mockups adds
+      ", temporary" as hidden text after the title, and Chrome reads
+      "README.md , temporary", with a space before the comma. The app
+      names the tab with the `aria-label` of its link, which gives
+      "README.md, temporary".
 - [ ] Record a follow-up item under `plans/follow-ups/` to move The tab
       row out of `docs/protocol/agents-and-sessions.md` to its own page.
       This change takes that doc to 282 lines, over the 250-line target

@@ -56,7 +56,8 @@ chips.
 ## Rules for this code
 
 - [The tab row](tab-row.md) gives the rules of the one order of the
-  tabs, the drag, the tab menu, and the scroll of the row.
+  tabs, the mark of the temporary tab, the drag, the tab menu, and the
+  scroll of the row.
 - [Transcript rules](transcript.md) give the rules of the stream cursor,
   the session logs, the transcript items and their counts, the changed
   files that the cloud computer could not read, the end reason of a

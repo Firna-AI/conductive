@@ -27,12 +27,15 @@ says.
   [the chat](../../chat/README.md#rules-for-this-code) says. The file or
   diff tab of the address shows in place of the chat of the session, and
   the tabs stay. No session tab is the current one then, and the row keeps
-  the tab of the address in view.
+  the tab of the address in view. The temporary tab of the saved view shows
+  its title in italics, and a screen reader hears "temporary" after its
+  name.
 - A click on a session tab, a new session, or a reopened session makes
   that session the active tab of the view. The address then goes back to
   the chat.
 - Close on a file tab takes it out of the view. When it shows, the next
-  file tab shows, else the one before, else the chat.
+  file tab shows, else the one before, else the chat. Close on the
+  temporary tab also clears its mark.
 - A file of a finished turn opens its diff tab. A phone shows it in the
   Files tab.
 - The chat gets the kept files of the workspace as `mentions`, for the
@@ -74,19 +77,33 @@ Each folder of a path is a part of the address. Another address under
 - The kept chat loads and saves the workspace view. The shell reads the
   tabs and the list from the chat, and changes them only through the
   chat's `updateView`, so the view has one writer. A read-only workspace
-  changes its view in the browser only, and saves nothing.
+  changes its view in the browser only, and saves nothing. Its temporary
+  tab follows the same rules in that copy, also a keep.
 - While the chat has not read the view, as during its load or after a
   failed load, the shell saves nothing, so the saved tabs stay. The file
   page still reads its file.
 - A click on a file or a diff saves its tab as the open and active tab,
   then moves the address. A page that shows from an address, such as a
   link or the browser history, saves its tab too.
+- A file or a diff with no tab opens in the temporary tab, as
+  [Temporary tabs](../../../docs/protocol/temporary-tabs.md) says. It takes
+  the place of the tab that the mark of the saved view names. Without that
+  tab, it opens at the end of the row. The mark then names it. A file or a
+  diff that has a tab shows that tab, and the mark stays. After a click,
+  the address finds the tab open, so it saves nothing more.
+- A double-click on a file row of All files or Changes, or on the
+  temporary tab, clears the mark. The tab then stays in its place as a kept
+  tab. The second click of the double-click opens nothing again, and the
+  double-click selects no text. A switch between the preview and the
+  source keeps the mark, because the mark names no mode. While the chat has
+  not read the view, a double-click keeps nothing, as no click saves then.
 - A click on a list saves the list. On desktop the list belongs to the
   right column, so the address keeps the tab of the centre. On a phone a
   list is a page with its own address. An address that names a list saves
   that list.
 - On a phone, a file or a diff shows as a page of the Files tab, with a
-  link back to All files or Changes.
+  link back to All files or Changes. A press there opens the temporary tab
+  of the saved view too, though the row of a phone shows no file tabs.
 - The lists show while the sandbox is stopped or failed, from the copy
   that the workspace keeps. While the sandbox starts, and while the app
   refuses its start, the sandbox panel shows in place of All files and

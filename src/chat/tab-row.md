@@ -1,8 +1,8 @@
 # The tab row
 
 This guide belongs to [the chat](README.md). It gives the rules of the one
-order of the session, file, and diff tabs, the drag, the tab menu, and the
-scroll of the row.
+order of the session, file, and diff tabs, the mark of the temporary tab,
+the drag, the tab menu, and the scroll of the row.
 [The tab row](../../docs/protocol/agents-and-sessions.md#the-tab-row) states
 the requirements.
 
@@ -10,6 +10,10 @@ the requirements.
   order includes each tab once. A host with no file or diff tabs leaves
   their saved places in the view. In a read-only workspace, the row uses
   the session tabs that the browser keeps.
+- The saved view also marks the temporary tab, which the host opens,
+  keeps, and closes, as
+  [Temporary tabs](../../docs/protocol/temporary-tabs.md) says. Each change
+  of the session tabs keeps the mark as it is.
 - The load gives each open session a place and removes the places of
   sessions that are not open. When an open session first arrives, the
   state adds its missing place at the end. It drops no other place.

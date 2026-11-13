@@ -166,15 +166,20 @@ fake API, with its address options, its controls, and the test command.
 - `files/files-navigation.ts`: the navigation of the Files screens, and
   the changes of the saved view that the address and the pages make.
 - `files/files-address.ts` and `files/view-tabs.ts`: the addresses of the
-  Files screens, and the tabs and the list of a view.
+  Files screens, and the tabs, the temporary tab, and the list of a view.
 - `files/files-store.ts` and `files/workspace-files.ts`: the store of one
   workspace over the transport of the app, its connection, and Copy and
   Download.
 - `files/FilesWiring.test.tsx`: mounts the whole app over the fake API. It
   opens a file beside the sessions, goes back by a session tab, and checks
   the saved view. It also checks a failed chat load, the diff of a turn on
-  a phone, a stopped, starting, and refused sandbox, and an archived
-  workspace.
+  a phone in the temporary tab, a stopped, starting, and refused sandbox,
+  and an archived workspace.
+- `files/view-tabs.test.ts` checks the rules of the temporary tab.
+  `files/TemporaryTabs.test.tsx` checks them in the whole app over the fake
+  API: a load, a replace, a switch of mode, a close, and an address. It
+  also checks a double-click on a row and on the tab, with one history
+  entry each, and a press and a keep in a suspended org.
 - `files/StartingPages.test.tsx`: mounts the whole app over the fake API at
   a file address and at a diff address while the sandbox starts. It checks
   the sandbox panel in place of the page, with no read, and the read once

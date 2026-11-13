@@ -108,6 +108,8 @@ export function DevApp(props: {
     () => ({
       href: (target: FilesTarget) => viewQuery(viewAfter(view, target)),
       navigate: (target: FilesTarget) => show(viewAfter(view, target)),
+      // The page has no saved view, so each tab that it opens stays open.
+      keep: () => {},
     }),
     [view],
   )
