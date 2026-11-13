@@ -55,7 +55,7 @@ Contract owners:
 ## Decisions
 
 The numbers 288 to 295 were the next free numbers on 13 November 2026.
-Decisions 288 to 292 hold Cal's answers. Decisions 293 to 295 are open. An
+Decisions 288 to 295 hold Cal's answers. An
 options check ran over the decisions and the design calls. It added options
 to decisions 288, 289, 290, and 291, corrected the design calls, and found
 decisions 293 and 294. Its report is in
@@ -133,105 +133,38 @@ branch choice, with option B of
 
 ### Decision 293: the branch check on the browser create
 
-- **Severity:** Medium. **Effort:** Small.
-- **Source:** Design.
-- **Category:** Docs or spec.
-- **Location:** `worker/lifecycle/create-request.ts:20` and `worker/lifecycle/workspaces.ts:44`.
-- **Background:** Cal chose the branch check for the agent create on 11
-  November 2026. New workspace gets its branches from a live list, so a
-  wrong name comes only from a stale list or an old tab. A start whose
-  branch is gone fails and waits for Try again. Try again uses the same
-  branch.
-- **Problem:** No decision says whether the browser create gets the check.
-  The check adds a refusal to a path that has none for branches today.
-- **Impact if no action:** A branch that is deleted after the pick makes a
-  workspace that fails. Each Try again fails too, until a member archives
-  it.
-- **Root question:** What happens when a member creates a workspace from a
-  branch that GitHub no longer has?
-- **Options:**
-  - **A.** The browser create uses the same branch check. A missing branch
-    gets a refusal, and the composer keeps the message. Effort: Small.
-  - **B.** No check. The start fails, and the failure names the missing
-    branch. Effort: Small.
-  - **C.** No check. When the start branch is gone, the start falls back to
-    the default branch and says so in a start step. Cost: the work starts
-    from a branch that the member did not pick. Effort: Medium.
-- **Left out:** None.
-- **Wider fix:** A. One check serves each create path.
-- **Previous examples:** A create in a waiting repository gets a refusal, and
-  the composer keeps the message (`repository_not_found`).
-- **Recommendation:** A. It leaves no failed workspace, and it reuses the
-  check of the agent create.
-- **Action:** ask the user, because A adds a refusal to the browser create.
+Chosen by Cal on 13 November 2026: A. The create from New workspace uses the
+same branch check as the agent create. A missing branch gets a refusal, and
+the composer keeps the message.
+
+- Rejected: B, no check and a start failure that names the branch, because
+  each Try again then fails the same way. C, no check and a fall back to the
+  default branch, because the work would start from a branch that the
+  member did not pick.
 
 ### Decision 294: a stored base that GitHub deleted
 
-- **Severity:** Medium. **Effort:** Medium.
-- **Source:** Review.
-- **Category:** Docs or spec.
-- **Location:** `worker/github/client.ts:155`.
-- **Background:** A stacked workspace stores the picked branch as its base.
-  GitHub often deletes a branch when its pull request merges. The pull
-  request bar compares the workspace branch with the stored base.
-- **Problem:** When the base is deleted before the workspace opens its pull
-  request, the bar shows "GitHub is not available. Try again." "Create PR"
-  then targets a branch that does not exist.
-- **Impact if no action:** A common stack flow ends with a broken bar. The
-  member must open the pull request by hand.
-- **Root question:** What does a workspace target when its base branch is
-  gone from GitHub?
-- **Options:**
-  - **A.** No change. Effort: Small.
-  - **B.** The bar says that the base branch is gone and turns off "Create
-    PR". The member asks the agent to open the pull request into another
-    branch. Cost: a new bar state with a mockup, and no way back in the app.
-    Effort: Medium.
-  - **C.** The Worker moves the stored base to the default branch, as
-    Continue does under decision 290. It updates the Git setting in the cloud
-    computer, and the bar says that the base moved. Cost: a new path that
-    changes a stored base, and a command in the cloud computer. Effort:
-    Medium.
-- **Left out:** A base that follows GitHub in every case, because the paused
-  plan owns it.
-- **Wider fix:** C. It uses one rule for a gone base, at Continue and at any
-  other time.
-- **Previous examples:** Decision 290 for Continue.
-- **Recommendation:** C. A stack then keeps working after its lower pull
-  request merges.
-- **Action:** ask the user, because the options add behaviour that no
-  requirement covers.
+Chosen by Cal on 13 November 2026: C. When the stored base of a workspace is
+gone from GitHub, the Worker moves the base to the default branch, as
+Continue does under decision 290. It updates the Git setting in the cloud
+computer, and the bar says that the base moved.
+
+- Problem that it solves: before, the bar showed "GitHub is not available.
+  Try again." and "Create PR" targeted a branch that did not exist. The
+  options check found it at `worker/github/client.ts:155`.
+- Rejected: A, no change, because a normal stack flow then ends with a
+  broken bar. B, a bar state that turns off "Create PR", because the app
+  then gives no way back.
+- Left out: a base that always follows GitHub, which the paused plan owns.
 
 ### Decision 295: the target selected first
 
-- **Severity:** Low. **Effort:** Small.
-- **Source:** Design.
-- **Category:** UX wording.
-- **Location:** None.
-- **Background:** Decision 291 offers two targets when the picked branch is
-  not the default branch. The text of the chosen option named the picked
-  branch as the first selection, but the answer did not confirm it. Cal
-  first asked whether the work would still target `main`.
-- **Problem:** No recorded answer says which target is selected first.
-- **Impact if no action:** A member who does not look gets the target that
-  this plan guesses.
-- **Root question:** Which target does New workspace select before the
-  member chooses?
-- **Options:**
-  - **A.** The picked branch. A member who forgets gets a stack, and Changes
-    shows only the new work. Effort: Small.
-  - **B.** The default branch. A member who forgets gets a pull request that
-    also holds the commits of the picked branch. Effort: Small.
-  - **C.** Neither. The member must choose before Send. Cost: one more step,
-    and Send can be off. Effort: Small.
-- **Left out:** None.
-- **Wider fix:** None. This is a choice of a default.
-- **Previous examples:** Pull request runs target the head branch of their
-  pull request (decision 507 G).
-- **Recommendation:** A. A forgotten choice then costs the least: the member
-  can change the base of the pull request on GitHub.
-- **Action:** ask the user, because the options trade one cost against
-  another, and Cal's first question points to B.
+Chosen by Cal on 13 November 2026: A. New workspace selects the picked
+branch as the target before the member chooses.
+
+- Rejected: B, the default branch, because a member who forgets then gets a
+  pull request with the commits of the picked branch. C, no selection,
+  because it adds a step before Send.
 
 ## Design calls
 
@@ -429,9 +362,8 @@ Depends on: 2
 
 Depends on: 2
 
-Waits for decision 294.
-
-- [ ] Apply decision 294 in `worker/github/client.ts` and the bar.
+- [ ] Apply decision 294 in `worker/github/client.ts`, the bar, and a
+      command that updates `gh-merge-base` in the cloud computer.
 - [ ] Test a base that GitHub deleted before the pull request opens.
 - [ ] Update `worker/github/README.md`.
 
