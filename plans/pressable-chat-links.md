@@ -75,7 +75,8 @@ and added decisions 5 and 6. Its report is in
 - **Answer:** D, on 10 November 2026.
 - **Severity:** Medium. **Likelihood:** Common. **Effort:** Medium.
 - **Source:** Design. First recorded in
-  `plans/follow-ups/chat-links-not-pressable.md` on 9 November 2026.
+  [plans/follow-ups/chat-links-not-pressable.md](https://github.com/Firna-AI/conductive/blob/f21071297/plans/follow-ups/chat-links-not-pressable.md)
+  on 9 November 2026.
 - **Category:** Product bug.
 - **Location:** `src/chat/links/chat-parts.ts:165` and `:173`,
   `src/chat/links/LinkedText.tsx:79`, `docs/protocol/chat-markdown.md:27`.
@@ -575,23 +576,23 @@ Tags: ui
 
 Depends on: 1, 3, 4
 
-- [ ] Add the opener and its context in `src/shell/ui/`. The workspace
+- [x] Add the opener and its context in `src/shell/ui/`. The workspace
       screen gives the app origin, the navigation, and the address of a
       port.
-- [ ] Make `chatParts` give a link part for each address that is not a
+- [x] Make `chatParts` give a link part for each address that is not a
       chip, as the design and the answer of decision 5 say.
-- [ ] Draw the link parts in `LinkedText` with `TextLink`, also in the
+- [x] Draw the link parts in `LinkedText` with `TextLink`, also in the
       message lines of a folded turn. The hidden copy of a line uses the
       plain mode.
 - [ ] Apply the answer of decision 6 to a copy of chat text.
-- [ ] Update the tests that expect other links as text, such as
+- [x] Update the tests that expect other links as text, such as
       `src/shell/workspace/LinkChips.test.tsx` and
       `src/chat/links/workspace-links.test.ts`. Add tests for the link
       parts and for a press on each kind of link.
-- [ ] Update the [chat README](../src/chat/README.md) and
+- [x] Update the [chat README](../src/chat/README.md) and
       [Agent text](../src/chat/agent-text.md).
-- [ ] Delete `plans/follow-ups/chat-links-not-pressable.md`.
-- [ ] Smoke-test in `npm run dev`: a bare address, a Markdown link, a
+- [x] Delete `plans/follow-ups/chat-links-not-pressable.md`.
+- [x] Smoke-test in `npm run dev`: a bare address, a Markdown link, a
       local address, and an address in code.
 
 ## Milestone 6: Links in the file preview

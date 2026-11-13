@@ -50,6 +50,14 @@ says.
   shows the right column on desktop, or the Files tab on a phone.
 - An archived workspace shows no file tabs and no file page, and its chat
   gets no files.
+- `ChatArea` gives the chat the link opener of `useLinkOpening`, through
+  `LinkOpeningProvider` of `../ui/text-links.tsx`, so the links of chat
+  text open as [Chat links](../../../docs/protocol/chat-links.md) says. A
+  link of the app opens its page in the same window. A local address
+  opens the address of the Preview tool with its port, from
+  `previewPortHref`. On desktop the right column then shows, as for a
+  folder chip, and a phone shows the Preview tab. A read-only workspace
+  gives no port previews, so a local address stays text there.
 - A `center` part of the host takes the place of the whole chat, also of
   its tabs.
 - When the features give the `tabs`, `transcript`, or `composer` slot, the

@@ -1,8 +1,23 @@
-import { bareAddressAt, markdownTargetAt } from '../../markdown/web-links'
+import { readsAsAddress, type WebLink } from '../../markdown/web-links'
 import { attachmentForMention } from '../../shared/attachment-mentions'
 import type { FileEntry } from '../../shared/files'
 import type { Attachment } from '../../shared/messages'
-import { mentionAt, type Mention } from '../../shared/mention-text'
+import type { Mention } from '../../shared/mention-text'
+import {
+  tokens,
+  type LinkToken,
+  type MarkdownLink,
+  type Token,
+} from './chat-tokens'
+import {
+  addressWords,
+  codePart,
+  labelWords,
+  type CodePart,
+  type LinkPart,
+  type LinkWord,
+  type WebLinkOf,
+} from './link-parts'
 import {
   linkTarget,
   type LinkTarget,
@@ -12,8 +27,9 @@ import {
 /** A part of a sent message or of an answer, as the chat shows it. */
 export type ChatPart =
   | { kind: 'text'; text: string; strong: boolean }
-  | { kind: 'code'; text: string }
+  | CodePart
   | { kind: 'chip'; source: string; target: LinkTarget; strong: boolean }
+  | LinkPart
   | { kind: 'file'; source: string; entry: FileEntry; strong: boolean }
   | AttachmentPart
 
@@ -29,125 +45,27 @@ export type AttachmentPart = {
   strong: boolean
 }
 
-/** A token of chat text, before the list of the org names its links. */
-type Token =
-  | { kind: 'text'; text: string }
-  | { kind: 'code'; text: string }
-  | { kind: 'mark' }
-  | { kind: 'link'; href: string; source: string; markdown: boolean }
-  | { kind: 'mention'; mention: Mention }
-
-/** What a reading of chat text looks for, besides code. */
-interface Reading {
-  /** `**` marks bold, as in an answer. */
-  marks: boolean
-  /** Links count. A Markdown link of no workspace reads again without them. */
-  links: boolean
-  /**
-   * Whether a mention counts, as in a message of a member. The `@` of each
-   * other mention reads as plain text.
-   */
-  mentions: (mention: Mention) => boolean
-}
-
 /** Finds the entry of the file tree that a mention names. */
 export type MentionLookup = (mention: Mention) => FileEntry | undefined
 
 /**
- * The Markdown link whose `[` stands at `at`, or null. Its label ends at the
- * first `]` outside code, on the same line, and its target follows at once.
- * So a label can hold code or bold.
- */
-function markdownLinkAt(text: string, at: number): Token | null {
-  let code = false
-  for (let index = at + 1; index < text.length; index += 1) {
-    const char = text[index]
-    if (char === '\n') return null
-    if (char === '`') code = !code
-    else if (char === ']' && !code) {
-      const target = markdownTargetAt(text, index + 1)
-      if (!target) return null
-      const source = text.slice(at, index + 1 + target.length)
-      return { kind: 'link', href: target.href, source, markdown: true }
-    }
-  }
-  return null
-}
-
-/**
- * The bare web address at `at`, or null. Where `**` marks bold, the address
- * ends before the next mark, so bold around the address stays bold.
- */
-function bareAddressTokenAt(
-  text: string,
-  at: number,
-  marks: boolean,
-): Token | null {
-  const mark = marks ? text.indexOf('**', at) : -1
-  const href = bareAddressAt(mark === -1 ? text : text.slice(0, mark), at)
-  return href ? { kind: 'link', href, source: href, markdown: false } : null
-}
-
-/**
- * The tokens of a chat text, from left to right. A backtick starts code,
- * which runs to the next backtick, or to the end of the text. Outside code,
- * a Markdown link, a bare web address, and a `**` mark each start where
- * they stand, so code and bold in a link label stay in the link.
- */
-function tokens(text: string, reading: Reading): Token[] {
-  const found: Token[] = []
-  let plain = ''
-  const add = (token: Token, length: number) => {
-    if (plain !== '') found.push({ kind: 'text', text: plain })
-    plain = ''
-    found.push(token)
-    return length
-  }
-  let index = 0
-  while (index < text.length) {
-    if (text[index] === '`') {
-      const end = text.indexOf('`', index + 1)
-      const close = end === -1 ? text.length : end
-      const code = text.slice(index + 1, close)
-      index += add({ kind: 'code', text: code }, close + 1 - index)
-      continue
-    }
-    if (reading.marks && text.startsWith('**', index)) {
-      index += add({ kind: 'mark' }, 2)
-      continue
-    }
-    const mention = mentionAt(text, index)
-    if (mention && reading.mentions(mention)) {
-      index += add({ kind: 'mention', mention }, mention.source.length)
-      continue
-    }
-    const link = !reading.links
-      ? null
-      : text[index] === '['
-        ? markdownLinkAt(text, index)
-        : text.startsWith('http', index)
-          ? bareAddressTokenAt(text, index, reading.marks)
-          : null
-    if (link?.kind === 'link') {
-      index += add(link, link.source.length)
-      continue
-    }
-    plain += text[index]
-    index += 1
-  }
-  if (plain !== '') found.push({ kind: 'text', text: plain })
-  return found
-}
-
-/**
- * Splits a sent message or an answer into text, code, and chips, with one
- * reading for both. Code comes first, so a link in code stays code. A
- * Markdown link whose brackets stand outside code is one unit, also when
- * its label holds code or bold: it shows as its chip alone when it names a
- * workspace of the list. Each other link shows its source as before: a
- * Markdown link with the code and the bold of its source. With `strong`,
- * as in an answer, `**` marks bold around text and chips. Bold ends at
- * code, as it did before. With `mentions`, as in a message of a member,
+ * Splits a sent message or an answer into text, code, chips, and links,
+ * with one reading for both. Code comes first, so a link in code is no
+ * chip: code that holds only one web address that is a link shows it as a
+ * link, and other code stays code. A Markdown link whose brackets stand
+ * outside code is one unit, also when its label holds code or bold: it
+ * shows as its chip alone when it names a workspace of the list.
+ *
+ * `web` says where each other address leads. A bare address shows as the
+ * text has it. With `strong`, as in an answer, a Markdown link shows as its
+ * label, with its code and bold, or as its address when the label reads as
+ * one. In a message of a member, a Markdown link shows as typed, and its
+ * address is a link as a bare address is. So does the Markdown of an image,
+ * such as `![alt](address)`. A Markdown link whose address is no link
+ * shows as typed, with its code and bold.
+ *
+ * With `strong`, `**` marks bold around text, chips, and links. Bold ends
+ * at code, as it did before. With `mentions`, as in a message of a member,
  * each mention of an entry of the file tree is a file chip, and each other
  * mention stays text. `attachments` are the files of a sent message: each
  * mention of the copy path of one of them is the chip of that file, before
@@ -158,6 +76,7 @@ export function chatParts(
   links: WorkspaceLinks,
   options: {
     strong: boolean
+    web: WebLinkOf
     mentions?: MentionLookup
     attachments?: readonly Attachment[]
   },
@@ -187,28 +106,61 @@ export function chatParts(
     if (entry) parts.push({ kind: 'file', source, entry, strong })
     else addText(source)
   }
-  const take = (list: readonly Token[]) => {
+  const addLink = (link: WebLink, words: readonly LinkWord[]) => {
+    parts.push({ kind: 'link', link, words, strong })
+  }
+  /** A bare address: a chip, a link, or text. */
+  const addAddress = (href: string) => {
+    const target = linkTarget(href, links)
+    const link = target ? undefined : options.web(href)
+    if (target) parts.push({ kind: 'chip', source: href, target, strong })
+    else if (link) addLink(link, addressWords(href))
+    else addText(href)
+  }
+  /** Text that shows as typed, with its code and bold but no link. */
+  const typed = (value: string) =>
+    take(
+      tokens(value, {
+        marks: options.strong,
+        links: false,
+        mentions: () => false,
+      }),
+      false,
+    )
+  const addMarkdown = (token: LinkToken, markdown: MarkdownLink) => {
+    const { href, source } = token
+    if (!markdown.image) {
+      const target = linkTarget(href, links)
+      if (target) {
+        parts.push({ kind: 'chip', source, target, strong })
+        return
+      }
+      const link = options.strong ? options.web(href) : undefined
+      if (link) {
+        const { label } = markdown
+        const words = readsAsAddress(label)
+          ? addressWords(href)
+          : labelWords(label)
+        addLink(link, words)
+        return
+      }
+    }
+    typed(markdown.before)
+    addAddress(href)
+    typed(markdown.after)
+  }
+  // Only code of the text itself links its address. Code in a label that
+  // shows as typed stays code.
+  const take = (list: readonly Token[], linked: boolean) => {
     for (const token of list) {
       if (token.kind === 'mark') strong = !strong
       else if (token.kind === 'text') addText(token.text)
       else if (token.kind === 'code') {
         strong = false
-        parts.push(token)
+        parts.push(linked ? codePart(token.text, options.web) : token)
       } else if (token.kind === 'mention') addMention(token.mention)
-      else {
-        const target = linkTarget(token.href, links)
-        if (target) {
-          parts.push({ kind: 'chip', source: token.source, target, strong })
-        } else if (token.markdown) {
-          take(
-            tokens(token.source, {
-              marks: options.strong,
-              links: false,
-              mentions: () => false,
-            }),
-          )
-        } else addText(token.source)
-      }
+      else if (token.markdown) addMarkdown(token, token.markdown)
+      else addAddress(token.href)
     }
   }
   take(
@@ -217,6 +169,7 @@ export function chatParts(
       links: true,
       mentions: counts,
     }),
+    true,
   )
   return parts
 }

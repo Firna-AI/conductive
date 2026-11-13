@@ -6,12 +6,12 @@ import {
   WorkspaceChip,
   type ChipOpener,
 } from '../../../docs/mockups/src/components/chat/WorkspaceChip'
-import inline from '../../../docs/mockups/src/components/common/InlineText.module.css'
 import { routes } from '../../app/router'
 import type { FileEntry } from '../../shared/files'
 import type { Attachment } from '../../shared/messages'
 import { sessionLink } from '../../shared/session-link'
 import { isPlainClick } from '../../shell/ui/AppLink'
+import { useTextLinks } from '../../shell/ui/text-links'
 import { MentionIcon } from '../mentions/MentionIcon'
 import {
   findMentioned,
@@ -26,6 +26,7 @@ import {
 } from './chat-parts'
 import { chipOf, useChatLinks } from './LinksContext'
 import { sessionChipOf, useLinkedSession } from './session-links'
+import { CodeText, WebLinkText } from './WebLinkText'
 import { sessionTarget, type LinkTarget } from './workspace-links'
 
 /**
@@ -157,9 +158,8 @@ function AttachmentLink(props: { part: AttachmentPart; opens: boolean }) {
 function Part(props: { part: ChatPart; opens: boolean }) {
   const { part } = props
   if (part.kind === 'text') return part.text
-  if (part.kind === 'code') {
-    return <code className={inline.code}>{part.text}</code>
-  }
+  if (part.kind === 'code') return <CodeText part={part} />
+  if (part.kind === 'link') return <WebLinkText part={part} />
   if (part.kind === 'file') {
     return <FileLink entry={part.entry} source={part.source} />
   }
@@ -169,7 +169,7 @@ function Part(props: { part: ChatPart; opens: boolean }) {
   return <LinkChip target={part.target} />
 }
 
-/** A run of bold text and chips, or one part without bold. */
+/** A run of bold text, chips, and links, or one part without bold. */
 type Run =
   { kind: 'strong'; parts: ChatPart[] } | { kind: 'part'; part: ChatPart }
 
@@ -204,24 +204,26 @@ export interface TextReading {
 
 /**
  * The parts of a text, as `chatParts` reads it with the workspaces of the
- * chat. With `mentions`, it follows the tree of the chat for the chips of
- * the files.
+ * chat, and with the web links of the screen that shows it. With
+ * `mentions`, it follows the tree of the chat for the chips of the files.
  */
 export function useChatParts(text: string, reading: TextReading): ChatPart[] {
   const { links } = useChatLinks()
+  const { linkOf } = useTextLinks()
   const lookup = useMentionLookup(reading.mentions ?? false)
   return chatParts(text, links, {
     strong: reading.strong ?? false,
+    web: linkOf,
     mentions: lookup,
     attachments: reading.attachments,
   })
 }
 
 /**
- * Draws the parts of a text: text, code, and chips. One `<strong>` holds
- * each run of bold text and chips. `opens` says whether the chip of an
- * attached file opens its copy: only after its message went out to the
- * agent.
+ * Draws the parts of a text: text, code, chips, and links. One `<strong>`
+ * holds each run of bold text, chips, and links. `opens` says whether the
+ * chip of an attached file opens its copy: only after its message went out
+ * to the agent.
  */
 export function ChatText(props: {
   parts: readonly ChatPart[]
@@ -247,10 +249,11 @@ export function ChatText(props: {
 
 /**
  * Text of a sent message or of an answer, as `chatParts` reads it: code,
- * and each workspace link as a chip. With `strong`, as in an answer, `**`
- * marks bold, and one `<strong>` holds each run of bold text and chips.
- * With `mentions`, as in a message of a member, each mention of an entry of
- * the file tree is a file chip.
+ * each workspace link as a chip, and each other web address as a link.
+ * With `strong`, as in an answer, `**` marks bold, one `<strong>` holds
+ * each run of bold text, chips, and links, and a Markdown link shows as its
+ * label. With `mentions`, as in a message of a member, each mention of an
+ * entry of the file tree is a file chip.
  */
 export function LinkedText(props: {
   text: string

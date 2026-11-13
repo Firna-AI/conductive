@@ -85,6 +85,15 @@ mount the chat.
   as for each link of the app.
   Without `onOpenPage`, a chip is a plain link. The app then shows the
   session of a session address with `ChatController.showAddress`.
+- The other links of sent messages and answers open through the link
+  opener of the app shell, `LinkOpeningProvider` of
+  `../shell/ui/text-links.tsx`, around the chat. It gives the origin of the
+  app host, the check for a page of the app, the navigation of the app,
+  and the port previews of the workspace, or none where no server runs.
+  The workspace screen gives it, as
+  [The chat of the workspace](../shell/workspace/screen-parts.md#the-chat-of-the-workspace)
+  says. Without it, as on the development page, each link opens a new
+  tab.
 - `content` takes a page that the app shows in place of the chat of the
   open session, such as an open file. The session tabs and the overlays
   stay, and no session tab is the current one.

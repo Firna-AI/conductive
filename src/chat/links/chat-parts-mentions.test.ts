@@ -4,6 +4,7 @@ import type { FileEntry } from '../../shared/files'
 import type { Attachment } from '../../shared/messages'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
 import { chatParts, type ChatPart, type MentionLookup } from './chat-parts'
+import { shapeOf, webLinkOf } from './links-test-kit'
 
 const links = { orgId: FAKE_IDS.org, workspaces: [] }
 
@@ -20,24 +21,20 @@ const lookup: MentionLookup = (mention) =>
       (entry.kind === 'directory') === mention.folder,
   )
 
-function shapes(parts: readonly ChatPart[]) {
-  return parts.map((part) =>
-    part.kind === 'file'
-      ? { file: part.entry.path }
-      : part.kind === 'attachment'
-        ? { attachment: part.attachment.id, path: part.path }
-        : part.kind === 'chip'
-          ? { chip: part.source }
-          : { [part.kind]: part.text },
-  )
-}
+const shapes = (parts: readonly ChatPart[]) => parts.map(shapeOf)
 
 describe('mentions in a sent message', () => {
   test('a mention of an entry of the tree is a file chip, and every other mention stays text', () => {
     const text =
       'Move @src/app.ts into @src/lib/ and @src/lib but not @src/gone.ts'
     expect(
-      shapes(chatParts(text, links, { strong: false, mentions: lookup })),
+      shapes(
+        chatParts(text, links, {
+          strong: false,
+          web: webLinkOf,
+          mentions: lookup,
+        }),
+      ),
     ).toEqual([
       { text: 'Move ' },
       { file: 'src/app.ts' },
@@ -51,9 +48,13 @@ describe('mentions in a sent message', () => {
     const text = 'Read `@src/app.ts` and @src/app.ts'
     expect({
       message: shapes(
-        chatParts(text, links, { strong: false, mentions: lookup }),
+        chatParts(text, links, {
+          strong: false,
+          web: webLinkOf,
+          mentions: lookup,
+        }),
       ),
-      answer: shapes(chatParts(text, links, { strong: true })),
+      answer: shapes(chatParts(text, links, { strong: true, web: webLinkOf })),
     }).toEqual({
       message: [
         { text: 'Read ' },
@@ -94,6 +95,7 @@ describe('mentions in a sent message', () => {
       shapes(
         chatParts(text, links, {
           strong: false,
+          web: webLinkOf,
           mentions,
           attachments: [legacy, shot],
         }),

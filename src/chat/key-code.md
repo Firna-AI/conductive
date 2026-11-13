@@ -66,16 +66,21 @@ is relative to `src/chat/`, the folder of this guide.
 - `links/`: `workspace-links.ts`, the link syntax, the reader of the
   links of a message field, and `linkTarget`, with the session of a
   session link. Its `sessionTarget` gives the same target for a session
-  that the chat names by its IDs. `chat-parts.ts` is the one tokenizer of
-  sent messages and answers. In it, each mention of a file of the message is an
+  that the chat names by its IDs. `chat-parts.ts` is the one reading of
+  sent messages and answers, over the tokens of `chat-tokens.ts`. In it,
+  each mention of a file of the message is an
   `AttachmentPart`, also when the tree holds that path, and also without a
   tree. Its `filesWithoutChip` gives the files of a message that no part
-  shows as a chip. `LinksContext.tsx` gives the workspaces that chips find
+  shows as a chip. `link-parts.ts` gives the `LinkPart` of a web link with
+  its words, and the `CodePart` of code that holds one address alone.
+  `LinksContext.tsx` gives the workspaces that chips find
   the open of a chip, and the origin of the chat's workspace link.
   `LinkedText.tsx` holds `useChatParts` and
   `ChatText`. `useChatParts` reads the parts of a text with the workspaces
-  and the tree of the chat, and the files of a sent message. `ChatText`
-  draws the parts with their workspace, session, and file chips, and each
+  and the tree of the chat, the files of a sent message, and the web links
+  of `useTextLinks` in `../shell/ui/text-links.tsx`. `ChatText`
+  draws the parts with their workspace, session, and file chips, their
+  links through `WebLinkText.tsx`, and each
   `AttachmentPart` as the mockups' `SentFileChip`.
   `SessionLinkText` draws a session that the chat names by its IDs, such
   as the session whose agent stopped a turn, with the same session chip.

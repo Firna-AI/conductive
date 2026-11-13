@@ -13,10 +13,12 @@ import { WorkspaceChatView } from '../../chat/WorkspaceChat'
 import type { WorkspaceStart } from '../../shared/workspaces'
 import { useApp } from '../context'
 import { useGo } from '../ui/AppLink'
+import { LinkOpeningProvider } from '../ui/text-links'
 import type { Action } from '../ui/useAction'
 import { useFeatures, type WorkspaceContext } from './features'
 import { useChatFiles } from './files/chat-files'
 import { filesCenter } from './files/files-features'
+import { useLinkOpening } from './link-opening'
 import { SandboxBar } from './SandboxNotice'
 import { StartingCard } from './StartingCard'
 import { ChatColumn } from './WorkspaceColumns'
@@ -47,7 +49,8 @@ function useComposerFocus(
 /**
  * The kept chat of the workspace, with the parts that the shell draws, and
  * the open files: their tabs at their places in the tab row, and `content`,
- * a file or diff tab in place of the chat of the session.
+ * a file or diff tab in place of the chat of the session. The links of its
+ * text open as `useLinkOpening` says.
  */
 function KeptChat(props: {
   context: WorkspaceContext
@@ -62,22 +65,25 @@ function KeptChat(props: {
   const files = useChatFiles(context, props.content)
   const phone = context.viewport === 'phone'
   const focus = useComposerFocus(context.workspace.id, phone)
+  const links = useLinkOpening(context)
   return (
-    <WorkspaceChatView
-      clock={clock}
-      composerFocus={focus}
-      content={props.content}
-      controller={props.chat}
-      copy={services}
-      host={props.host}
-      mentions={files.mentions}
-      onConnectAgent={(agent) => go(routes.account(agent))}
-      onOpenDiff={files.onOpenDiff}
-      onOpenPage={go}
-      readOnly={context.readOnly}
-      renderTab={files.renderTab}
-      viewport={phone ? 'mobile' : 'desktop'}
-    />
+    <LinkOpeningProvider value={links}>
+      <WorkspaceChatView
+        clock={clock}
+        composerFocus={focus}
+        content={props.content}
+        controller={props.chat}
+        copy={services}
+        host={props.host}
+        mentions={files.mentions}
+        onConnectAgent={(agent) => go(routes.account(agent))}
+        onOpenDiff={files.onOpenDiff}
+        onOpenPage={go}
+        readOnly={context.readOnly}
+        renderTab={files.renderTab}
+        viewport={phone ? 'mobile' : 'desktop'}
+      />
+    </LinkOpeningProvider>
   )
 }
 

@@ -70,11 +70,17 @@ chips.
 - [Chat Markdown](../../docs/protocol/chat-markdown.md) states the
   formatting of agent messages, with their headings and lists.
   [Chat tables](../../docs/protocol/chat-tables.md) states their tables.
-  [Workspace links](../../docs/protocol/workspace-links.md) states the
-  chips of sent messages and answers. [Agent text](agent-text.md) gives the
-  rules of the code that formats them: the chips, and the heading, list,
-  and table parts that the chat shares with the file preview and the
-  mockups.
+  [Chat links](../../docs/protocol/chat-links.md) states the links of sent
+  messages and answers, and
+  [Workspace links](../../docs/protocol/workspace-links.md) states their
+  chips. [Agent text](agent-text.md) gives the rules of the code that
+  formats them: the links, the chips, and the heading, list, and table
+  parts that the chat shares with the file preview and the mockups.
+- The links of chat text open through the link opener of the app shell, in
+  `../shell/ui/text-links.tsx`. The workspace screen gives it the pages of
+  the app and the port previews of the workspace, as
+  [Chat integration](integration.md) says. Outside that screen, each link
+  opens a new tab.
 - [Loads, records, and sends](loads-and-sends.md) gives the rules of
   the history loads, the read-only chats, the order of the records, the
   sends, the fixed prompts of the pull request bar, and Stop with the line
@@ -148,6 +154,8 @@ copy, the chat routes, the Mac commands, and the development page.
   agent messages, with their headings and lists.
 - [Chat tables](../../docs/protocol/chat-tables.md): the tables of agent
   messages.
+- [Chat links](../../docs/protocol/chat-links.md): the links of sent
+  messages and answers.
 - [Agent runner](../../docs/protocol/agent-runner.md): the limits of the
   runner events, their refusal markers, and the late events of a turn.
 - [Workspaces and sandboxes](../../docs/protocol/workspaces-and-sandboxes.md):

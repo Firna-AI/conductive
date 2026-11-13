@@ -153,6 +153,11 @@ fake API, with its address options, its controls, and the test command.
 - `ChatArea.tsx`: the chat of the centre, with the start steps and the
   sandbox bar of the shell, the open file tabs, and the file page in place
   of the chat of the session, or the shell's own column for the chat slots.
+  `link-opening.ts`: `useLinkOpening`, how the links of chat text open in
+  the screen: the pages of the app, and the port previews of the
+  workspace. `TextLinks.test.tsx` mounts the whole app. It presses a local
+  address and a link of the app on desktop, and checks that an archived
+  workspace keeps a local address as text.
 - `files/files-features.tsx`: the Files part, which reads the kept files
   that the screen connects, and the file or diff page of the centre.
 - `files/tab-open-resume.tsx`: `ResumeOnTabOpen`, which resumes a stopped
