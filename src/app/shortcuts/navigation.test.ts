@@ -66,10 +66,21 @@ test('matches row moves and divider keys exactly so modified shortcut arrows rem
   expect(workspaceRowMove({ ...up, metaKey: true })).toBeNull()
   expect(workspaceRowMove({ ...up, shiftKey: true })).toBeNull()
   const left = press({ key: 'ArrowLeft', code: 'ArrowLeft', metaKey: false })
-  expect(dividerKey(left)).toBe('left')
-  expect(dividerKey({ ...left, shiftKey: true })).toBe('large-left')
+  expect(dividerKey(left)).toBe('back')
+  expect(dividerKey({ ...left, shiftKey: true })).toBe('large-back')
   expect(dividerKey({ ...left, key: 'Home', code: 'Home' })).toBe('first')
   expect(dividerKey({ ...left, key: 'End', code: 'End' })).toBe('last')
   expect(dividerKey({ ...left, metaKey: true, altKey: true })).toBeNull()
   expect(dividerKey({ ...left, altKey: true, shiftKey: true })).toBeNull()
+  // A divider that lies across moves on Up and Down, and not on Left and Right.
+  const down = press({ key: 'ArrowDown', code: 'ArrowDown', metaKey: false })
+  expect(dividerKey(left, 'horizontal')).toBeNull()
+  expect(dividerKey(down)).toBeNull()
+  expect(dividerKey(down, 'horizontal')).toBe('forward')
+  expect(dividerKey({ ...down, shiftKey: true }, 'horizontal')).toBe(
+    'large-forward',
+  )
+  expect(dividerKey({ ...down, key: 'Home', code: 'Home' }, 'horizontal')).toBe(
+    'first',
+  )
 })

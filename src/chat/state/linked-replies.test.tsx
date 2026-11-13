@@ -247,12 +247,15 @@ describe('the draft when a reply opens a linked session', () => {
     chat.held.splice(0, 1)[0]()
     await retrying
     expect(snapshot(chat).activeSessionId).toBe(first)
-    expect(chat.draftOf(first)?.text).toBe(words)
+    expect(chat.draftOf(first)?.text).toBe('')
     expect(chat.draftOf(first)?.sending).toBe(true)
+    expect(pendingIn(chat, first)).toEqual([words])
     expect(snapshot(chat).sessions.map((item) => item.id)).toContain(LINKED)
     chat.held.splice(0, 1)[0]()
     await sending
     expect(snapshot(chat).activeSessionId).toBe(LINKED)
+    expect(pendingIn(chat, first)).toEqual([])
+    expect(pendingIn(chat, LINKED).at(-1)).toBe(words)
   })
 
   it('keeps both drafts, and the source shown, when the linked session already holds unfinished work', async () => {

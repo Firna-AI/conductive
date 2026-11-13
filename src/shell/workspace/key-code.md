@@ -7,7 +7,7 @@ this guide.
 
 - `WorkspaceScreen.tsx`: the screen of one open workspace. It takes a view
   of the kept workspace through `useWorkspaceStore`, and places the header,
-  the notices, the columns, and the features. Its `Unavailable` view shows
+  the notices, the columns, and the features. `Unavailable.tsx` shows
   a 404. A failed first start keeps the screen, and `failedFirstStart`
   marks its sandbox view.
 - `shown-workspaces.ts`: `ShownWorkspaces`, the kept workspaces of one tab
@@ -156,7 +156,14 @@ this guide.
   `refusedStart` in `SandboxNotice.tsx` turns a refused start error into
   the refused notice. `sandbox-view.ts` chooses the bar and the panels,
   also for a suspended org, for the saved message of a failed start, and
-  for the end of Restore. `ArchivedRestore.test.tsx` mounts the whole app
+  for the end of Restore. Until the open of the visit ends, as
+  `WorkspaceModel.opened` says, it shows the composer in place of the bar
+  of a sandbox that the open resumes, so that no Resume flashes at an open.
+  Meanwhile `WorkspaceHeader.tsx` shows Starting in place of Stopped, and
+  `contentState` gives the tools and the file pages the wait of a start,
+  with no Resume. The lists keep their saved copy. A tab that opens then
+  sends no second Resume.
+  `ArchivedRestore.test.tsx` mounts the whole app
   for Restore by a member and for its end at the last day.
 - `dev/`: the development page, with its options in `dev-options.ts` and
   its controls in `DevControls.tsx`.

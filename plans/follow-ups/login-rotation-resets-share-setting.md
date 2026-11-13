@@ -1,0 +1,31 @@
+# A key rotation resets the login's share setting
+
+- **Severity:** Medium. **Likelihood:** Common. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-09, from the options check of decision 4 of the own endpoint plan on branch `calummoore/cli-proxy-setup`.
+- **Location:** `removeAccountLogin` in `worker/app-api/account-data.ts:160`, the Remove action in `src/shell/account/AgentList.tsx:38`, and "Agent logins in a sandbox" in `docs/protocol/isolation.md`.
+- **Reason:** the own endpoint change does not touch how a login is replaced, and the fix changes the account page and its mockups.
+
+- **Terms:**
+  - **Share setting:** the setting of each agent login that says whether the messages of other members can run on it. The column is `no_reuse` of `agent_logins`.
+  - **Key rotation:** the owner replaces the secret of a login with a new secret of the same kind.
+- **Background:**
+  - "Agent logins in a sandbox" says: "A replaced login keeps its share setting while its kind stays the same." Its reason is that a key rotation keeps the choice of its owner.
+  - `saveAccountLogin` keeps the setting when a save replaces a row of the same kind.
+  - The account page offers no replace action. A connected login shows only Remove, and Connect shows only when no login exists. So a rotation in the app is Remove, then Connect.
+  - `removeAccountLogin` deletes the row. The next Connect then saves a new row with the default of its kind.
+  - The default of an API key is shared. So an API key that its owner made private is shared again after a rotation.
+  - `src/marketing/terms.ts` also says that the setting stays.
+- **Problem:** A key rotation in the app loses the owner's share choice, against the protocol and the Terms page.
+- **Impact if no action:** Other members can spend a key that its owner made private, from the first message after the rotation, and the owner sees no warning.
+- **Root question:** How does an owner replace the secret of a login and keep its share choice?
+- **Options:**
+  - **A.** Add a Replace action beside Remove. It opens the connect form and saves over the row, so the setting stays. Cost: a new action, its mockup, and a test. Effort: Medium.
+  - **B.** Show the share switch in the connect form, set to the last choice of that user and agent. Cost: the app must keep the last choice after Remove, and the save request gets a new field. Effort: Medium.
+  - **C.** Keep the setting in a separate row of the user that Remove does not delete. Cost: a migration, and a setting that outlives its login. Effort: Medium.
+  - **D.** Change the protocol and the Terms page: a removed login loses its setting. Cost: it accepts the reset. Effort: Small.
+- **Left out:** Keeping the row on Remove and clearing only the secret. It changes what Remove means, and a removed login must leave no secret behind.
+- **Wider fix:** A. One replace path keeps every rule that `saveAccountLogin` applies to a replaced login.
+- **Previous examples:** None found.
+- **Recommendation:** A. It matches the protocol as written, and it keeps Remove as a full removal.
+- **Action:** ask the user, because each option changes the account page or a requirement, and no option is clearly best before the user weighs a new action against a changed rule.

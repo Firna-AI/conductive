@@ -14,8 +14,13 @@ at `app/attachments`, in New workspace, and in the flow
 
 ## Attachments
 
-- Each file of a message can contain at most 25 MB, or 25,000,000 bytes
-  (decision 132).
+- Each file of a message can contain at most 100 MB, or 100,000,000
+  bytes.
+- Reason: Cloudflare accepts a request body of at most 100 MB on a zone of
+  the Free or Pro plan, and the browser sends each file in one request, as
+  [Attachment uploads](access-and-security.md#attachment-uploads) says. A
+  higher limit was rejected, because it needs uploads in parts or a zone of
+  the Business or Enterprise plan.
 - The composer refuses a larger file before its upload, and names the
   limit. The Worker refuses a larger file too, with HTTP 413 and the error
   code `attachment_too_large`.
@@ -145,10 +150,19 @@ at `app/attachments`, in New workspace, and in the flow
 - Each of these composers takes a drop of files on its whole message box:
   the text, the bar, and the padding. In the New workspace dialog, the
   message box is the whole dialog card.
+- The chat of a workspace also takes a drop of files anywhere on its
+  column: the session tabs, the transcript, the notices, and the message
+  box. The files go to the message box of the open session, and the box
+  shows its drop state while files are over the column. Reason: the user
+  asked for this, because a drop that must hit the box is hard to aim.
+- An overlay over the chat, such as a menu or a dialog, takes no drop for
+  the message box. Reason: a drop on a menu or on a question that attaches
+  a file would surprise the user.
 - A drop on the text puts the files at the place under the pointer. A drop
-  on the rest of the box puts them at the caret, or at the end of the text
-  when the field has no caret. Reason: the user asked for the files at the
-  cursor, which can mean the pointer or the caret.
+  on the rest of the box, or elsewhere on the chat, puts them at the caret,
+  or at the end of the text when the field has no caret. Reason: the user
+  asked for the files at the cursor, which can mean the pointer or the
+  caret.
 - During a drag of files over the text, the field draws a drop caret at
   the place under the pointer. The caret and the selection of the field
   move only at the drop. Reason: a cancelled drag then leaves the selection
@@ -157,15 +171,41 @@ at `app/attachments`, in New workspace, and in the flow
   box adds no hint text, so the draft keeps its room.
 - While the composer takes no change, such as during a create, its box
   takes no drop. The pointer then shows that a drop does nothing.
-- A drop of files outside each message box does nothing. Reason: the
+- A drop of files elsewhere does nothing: outside the chat and each
+  message box, and on the chat while it shows no message box. Reason: the
   browser would open the file in place of the app, and each draft lives
   only in the memory of its tab. The Feedback dialog still takes a drop
   and a paste of screenshots.
-- A dropped folder gets no chip. A notice of the composer names each
-  dropped folder, and says to attach the files in it. Its Attach files
-  opens the file picker. The other files of the drop still attach.
-- Reason: an upload of a folder fails, and a failed chip that Try again
-  cannot fix tells the member nothing.
+- The browser zips each dropped folder before its upload. The zip is one
+  attached file, with the name of the folder and `.zip`, such as
+  `checkout-screens.zip`, and the media type `application/zip`. Its chip
+  goes at the place of the folder among the files of the drop.
+- Reason: the user asked to upload a folder as its zip, made before the
+  upload. A folder then stays one chip and one file for the agent, which
+  can unzip it. The upload, the copy, and the size limit stay those of a
+  file.
+- The zip holds the folder itself, with each file and each folder in it,
+  also hidden files and empty folders. It compresses each file.
+- The zip leaves out no folder, also not `.git` or `node_modules`. Reason:
+  the user chose an exact copy of the dropped folder. The size limit then
+  refuses a folder that is too large, and its notice says so. A zip without
+  such folders was rejected for now.
+- The chips of a drop with a folder show when each folder of the drop is
+  zipped. A drop attaches nothing when its composer stops taking changes,
+  or leaves the page, before its zips are done.
+- The size limit of a file holds for the zip. The composer refuses a zip
+  over the limit as it refuses a file over the limit, and the notice names
+  the zip. The zip stops as soon as it passes the limit.
+- A dropped folder that the browser cannot read gets no chip. A notice of
+  the composer names the folder, says that it could not be read, and says
+  to attach the files in it. Its Attach files opens the file picker. The
+  other files of the drop still attach.
+- The file picker picks only files. A phone has no drop, so it attaches no
+  folder.
+- Reason: a browser picker takes either files or folders, so one picker
+  for both is not possible in a browser. The user chose a drop only for
+  now. A separate Attach folder control, a menu of the paperclip, and a
+  picker of the Mac app for both were not chosen.
 - A dropped file over the size limit gets no chip. The composer refuses it
   as it refuses a picked file, as [Attachments](#attachments) says.
 - A paste of a file or an image, such as a screenshot from the clipboard,
@@ -225,13 +265,16 @@ at `app/attachments`, in New workspace, and in the flow
   stored token that the Worker turns into the path for the runner was
   rejected, because the agent then reads other text than the stored
   message (decision 216).
-- A send that succeeds clears the text, unless the member changed the text
-  during the send. A failed send keeps the text with its chips. So Send
-  again sends the same text.
+- In a chat, Send clears the text with its chips at once, as
+  [Messages](messages-and-attachments.md#messages) says. A failed send
+  gives back the text with its chips, so Send again sends the same text.
+- In New workspace, a create that succeeds clears the text, unless the
+  member changed the text during the create. A failed create keeps the
+  text with its chips, so Send again sends the same text.
 - When a file leaves the draft without its chip, its chip leaves the text
-  too. Examples are a send whose text the member changed during the send,
-  a model change that keeps fewer files, and a sign-out. Reason: the text
-  never shows a chip without its file.
+  too. Examples are a create whose text the member changed during the
+  create, a model change that keeps fewer files, and a sign-out. Reason:
+  the text never shows a chip without its file.
 - A draft that a model change moves to a new session keeps each chip at its
   place.
 - The first message of a new workspace needs text beside the chips of its

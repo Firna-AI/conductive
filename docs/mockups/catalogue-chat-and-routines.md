@@ -33,7 +33,9 @@ in the line, and an open message line that shows its heading on its own
 line, in the weight of a heading. `app/chat/lost-data` draws the data that the
 chat does not have, from decision 76: tool output and turn files that the
 runner left out, and the lines of runner events that the workspace
-refused.
+refused. Its long turn shows 8 files, or 5 on a phone, then a
+"Show N more" button. The count of the files that the runner left out
+shows after that button opens the list.
 `app/chat/lost-updates` draws a failed repair, from decision 96. After a
 refused update that belongs to no session, such as a file update, the
 workspace asks for a fresh full report, and nothing shows. Only when that
@@ -48,6 +50,15 @@ could not read: a finished turn and a stopped turn
 without their changed files, All files with its saved list under a notice,
 and a new workspace with no list. The `tree` state draws the two states of
 All files.
+`app/chat/endpoint-models` shows option G of decision 10 of the own
+endpoint plan, which Cal chose on 10 November 2026: the pickers of the
+owner of a login hide each model that its endpoint does not list. In a
+session of Cal, the picker shows the models of the app without Fable 5.1,
+because the model list of Cal's proxy does not name it. Its `not-served`
+variant has a stopped turn on Fable 5.1, which the session kept as its
+model, and the notice names the model ID and no host. Its `member`
+variant has the same notice as Priya sees it.
+
 `app/chat/background-limit` draws a turn that waited for the background
 work of its agent, a watch of the checks of pull request #482. The checks
 still ran at the time limit, so the turn ends as finished, with

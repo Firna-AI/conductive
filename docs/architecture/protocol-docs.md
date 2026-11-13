@@ -6,7 +6,7 @@ that meet them, and gives the terms and the meaning of a decision number.
 This page lists each protocol doc and what it covers.
 
 - [Workspaces and sandboxes](../protocol/workspaces-and-sandboxes.md): the org
-  image and the life of a workspace.
+  image, the life of a workspace, and the disk flushes of a sandbox.
   - [Create a workspace](../protocol/create-a-workspace.md): New workspace as a
     page or as a dialog, the create, the branch, and a failed first start.
   - [Repository folders](../protocol/repository-folders.md): the folder and the
@@ -58,9 +58,15 @@ This page lists each protocol doc and what it covers.
     - [Version pins](../protocol/version-pins.md): the login rules and the
       risks of each version pin.
   - [Tokens and secrets](../protocol/tokens-and-secrets.md)
+    - [Own endpoint logins](../protocol/own-endpoint-logins.md): the
+      endpoint and the key of each agent, the model list of the endpoint,
+      and the addresses that the app accepts.
   - [Terminal, previews, and desktop](../protocol/terminal-previews-and-desktop.md)
 - [Model gateway](../protocol/model-gateway.md): the turn token, and the
   Worker routes that add the agent login to each model request.
+  - [Model gateway: requests and answers](../protocol/model-gateway-requests.md):
+    the upstream of each login, what passes to it and back, the own
+    endpoints, the streams, and the risks.
 - [GitHub banner](../protocol/github-banner.md): the pull request bar, its
   actions, Merge, and its events.
   - [The GitHub state](../protocol/github-summary.md): the four summary
@@ -83,6 +89,8 @@ This page lists each protocol doc and what it covers.
     for the names and titles that the calls give.
 - [Orgs and members](../protocol/orgs-and-members.md): orgs, sections,
   roles, the first run, and the end of an org.
+  - [Org rail order](../protocol/org-rail-order.md): the order of the orgs
+    in the rail that each person keeps, and how the person changes it.
 - [Pricing](../protocol/pricing.md): the plans and their cloud hours, the
   extra hours, the seller and the tax, the pricing page, and the planned
   billing changes. Use is free until billing starts.

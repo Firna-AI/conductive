@@ -27,14 +27,22 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     area: 'agents-and-chat',
     name: 'Attachments',
     status: 'available',
-    note: 'Attach files of up to 25 MB each for the agent to read. If a file is too large, attach a smaller file.',
+    note: 'Attach files up to 100 MB each.',
   },
   {
     id: 'drag-and-drop-attachments',
     area: 'agents-and-chat',
     name: 'Drag and drop attachments',
     status: 'available',
-    note: 'Drop files into chat or New workspace as inline chips at the pointer or caret. Sent chips open their copies in file tabs after delivery.',
+    note: 'Drop files into chat or New workspace as inline chips at the pointer or caret. A dropped folder attaches as one zip. Sent chips open their copies in file tabs after delivery.',
+  },
+  {
+    id: 'folder-attachments',
+    area: 'agents-and-chat',
+    name: 'Folder attachments',
+    status: 'in-progress',
+    note: 'Attaching dropped folders as zip files is in progress. Zip a folder and attach the file today.',
+    due: null,
   },
   {
     id: 'large-text-pastes',
@@ -133,7 +141,7 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     area: 'agents-and-chat',
     name: 'Rich chat rendering',
     status: 'available',
-    note: 'Chat shows Markdown, headings, tables, lists, and code. Diagrams, maths, media, and Run buttons are under consideration.',
+    note: 'Chat shows Markdown, headings, tables, lists, and code, with Copy code buttons in progress. Diagrams, maths, media, and Run buttons remain under consideration.',
   },
   {
     id: 'chat-links',
@@ -148,7 +156,7 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     area: 'agents-and-chat',
     name: 'Session links',
     status: 'available',
-    note: 'Session links open one chat session and show as chips in chat. Agent tools give these links; Copy link copies only the workspace link.',
+    note: 'Session links open one chat session and show as chips in chat. Copy link in the tab menu of a session copies its link, and agent tools give these links too.',
   },
   {
     id: 'copy-session-transcripts',

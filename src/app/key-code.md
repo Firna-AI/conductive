@@ -34,7 +34,7 @@ Each path is relative to `src/app/`, the folder of this page.
   app and the Mac app keep their transport. Its `sendFile` sends a raw file
   through the file transport of the services: `api/xhr-files.ts` in the
   browser and in the Mac app. `api/read-*.ts`: the readers.
-  [api/read-core.ts](api/read-core.ts) reads both shortcut keyboards and
+  [api/read-shortcuts.ts](api/read-shortcuts.ts) reads both shortcut keyboards and
   the reply of a shortcut save with the shared reply readers. A malformed
   account structure remains an `invalid_response` error from the API
   client.
@@ -50,9 +50,15 @@ Each path is relative to `src/app/`, the folder of this page.
   store over the event source of the app, with the reconnect rules of
   [Data lifecycle](data-lifecycle.md).
 - `app-model.ts`: the session, the orgs, the models list, Get started,
-  `putOrg`, which takes a confirmed org record, and `admit`, which opens
-  the app when app access arrives. `boot.ts`: `Boot`, the states of the
-  first load, and `readShared`, what every screen of the app shares.
+  `putOrg`, which takes a confirmed org record, `moveOrg`, which moves an
+  org in the person's own order, and `admit`, which opens the app when app
+  access arrives. `boot.ts`: `Boot`, the states of the first load, and
+  `readShared`, what every screen of the app shares.
+- `org-list.ts`: `OrgList`, the orgs of the person in their own order, as
+  `AppModel.orgs` gives them: the list that the server confirmed, then the
+  moves that wait for their answer.
+- `org-writes.ts`: the requests of `AppModel.createOrg` and
+  `AppModel.renameOrg`, each of which reads the org record from its answer.
 - `waitlist-model.ts`: `WaitlistModel`, the screen of a person who waits:
   the use of a code from the field or a join link, the invitations with
   Accept, and the read of the app access at each return to the page.
@@ -114,7 +120,10 @@ Each path is relative to `src/app/`, the folder of this page.
   default model, the New workspace view, the shortcut changes of each
   keyboard, the GitHub App installations, and the repositories that
   Create org offers. `saveShortcuts` saves one batch of changes for one
-  keyboard and keeps the confirmed changes of the reply. A screen watches the
+  keyboard and keeps the confirmed changes of the reply. The save of an own endpoint
+  login and `refreshModels` read the account again for the model list of
+  the endpoint, which only the account holds. A later change of the same
+  login makes that read old, so it does not show. A screen watches the
   installations: they read at once, and again with the steps of Get started
   each time that the user comes back to the page. It also reads the
   waitlist state for the invite code of the account.
@@ -152,19 +161,23 @@ Each path is relative to `src/app/`, the folder of this page.
   with the words of `listMarkLabel`. A right click or the menu keys open the menu
   of a row. `useRowMenus.tsx` gives each row the actions that the person
   can use, from `workspaceMenuItems` of the mockups, and draws the open
-  `RowMenu.tsx`. The Archive shortcut and Archive in the menu share one
+  `RowMenu.tsx`. Every row offers Copy link, which copies `workspace.link`
+  through `AppServices.copy` and gives its result in a toast. The Archive shortcut and Archive in the menu share one
   flow, `ShownWorkspaces.archive`, so a second press while it runs sends
   nothing. A row of the Archived group shows its Restore shortcut over the
   time on hover until the last day of Restore.
   `SectionHeader.tsx` draws a section header with its menu and Rename
   section. `useListActions.ts` runs the list changes, with a toast for a
   failure. `RowMenu.test.tsx`, `RowMenuAccess.test.tsx`,
-  `RowActions.test.tsx`, `RowArchive.test.tsx`, and `RowRename.test.tsx`
-  mount the whole app.
+  `RowActions.test.tsx`, `RowArchive.test.tsx`, `RowRename.test.tsx`, and
+  `RowCopyLink.test.tsx` mount the whole app.
   [Workspace menu](../../docs/protocol/workspace-menu.md) states the menu
   of a workspace row.
 - `../shell/ui/Menu.tsx`: `MenuButton`, the menu of the shell, a sheet on
-  a phone. `MenuList.tsx` draws the items, also an item that shows
+  a phone. On desktop it opens on `PopoverSurface.tsx`, in the top layer,
+  which places it beside its button with the dropdown placement of
+  `@firna/ui`, and flips it when it does not fit. The member menus use the
+  same surface. `MenuList.tsx` draws the items, also an item that shows
   choices. `PointMenu.tsx` draws a menu at a point above the page, with its
   choices beside it, and `menu-place.ts` keeps both inside the window.
   `menu-keys.ts`: `opensMenu`, the menu keys of a row and of a tab.
@@ -226,14 +239,17 @@ Each path is relative to `src/app/`, the folder of this page.
   connects, and shows only the new store. It also checks when the hook keeps
   a store, connects it again, or makes a new one.
 - `pointer-drag.ts`: `usePointerDrag`, the drag and drop of any pointer
-  that the tab row of the chat and the workspace list use: the press, the
-  start after a move of a mouse or a long press of a finger, Escape, the
-  click after a drag, the scroll lock of touch, and a new drop place after a
-  scroll under a still pointer. A menu event ends the press of a mouse
-  and keeps the press of a finger. `ownPress` keeps a press on a control
-  inside a dragged element, such as Close or Archive, for that control,
-  and `isOwnPress` says whether a control kept a press. `longPress` and
-  `touchSlop` are the hold of a finger and how far it moves first.
+  that the tab row of the chat, the workspace list, the org rail, and the
+  org switcher use: the press, the start after a move of a mouse or a long
+  press of a finger, Escape, the click after a drag, the scroll lock of
+  touch, and a new drop place after a scroll under a still pointer. A menu
+  event ends the press of a mouse and keeps the press of a finger.
+  `cancel` does what Escape does, for an owner whose layer takes Escape
+  first, such as the sheet of the org switcher. `ownPress` keeps a press
+  on a control inside a dragged element, such as Close or Archive, for
+  that control, and `isOwnPress` says whether a control kept a press.
+  `longPress` and `touchSlop` are the hold of a finger and how far it
+  moves first.
   `next-click.ts`: `stopNextClick`, which stops the click that ends a drag
   wherever it lands, also the late click of a finger.
   `pointer-drag.test.tsx` mounts the hook in happy-dom.
@@ -245,14 +261,24 @@ Each path is relative to `src/app/`, the folder of this page.
   through the tab row of a read-only chat.
   `../shell/list/useRowDrag.ts`: the drag of a workspace row to a place in
   a section, on `usePointerDrag`.
+- `../shell/orgs/useOrgDrag.ts`: the drag of an org in the rail and in the
+  org switcher of a phone, on `usePointerDrag`. `../shell/orgs/useOrgMove.ts`:
+  the move with the toast of a failed save.
+  `../shell/layout/useRailOrder.ts`: the drag, the tile menu
+  (`useTileMenu.tsx`), and Alt and Up or Down (`useRailMoves.ts`) of the
+  org tiles. `../shell/list/OrgSwitcherSheet.tsx`: the org switcher, where
+  a long press lifts an org.
 - `sideways-wheel.ts`: `useSidewaysWheel`, which turns a
   vertical wheel turn over a row that scrolls sideways into a sideways
   scroll of the row. A sideways swipe and a turn with Ctrl stay with the
   browser, and so does a turn past an end of the row. The tab row of the
   chat uses it, and any row that scrolls sideways can.
-- `file-drags.ts`: `carriesFiles`, whether a drag carries files, and
-  `droppedItems`, the files and the folder names of a drop, by the entry
-  of each item. `useFileDropGuard` cancels each drag of files that no part
+- `file-drags.ts`: `carriesFiles`, whether a drag carries files,
+  `droppedItems`, the files and the folders of a drop in their order, by
+  the entry of each item, and `intakeOf`, which turns each folder into its
+  zip. `folder-zip.ts`: `zipFolder`, the zip of one dropped folder in the
+  browser, with `fflate`, which stops at the size limit of an attachment.
+  `folder-entries.ts`: the parts of a dropped entry that the zip reads. `useFileDropGuard` cancels each drag of files that no part
   took, so the browser opens no file in place of the page. `App` and the
   chat development page mount it. The composer drop and the
   `useScreenshotDrop` of Feedback share `carriesFiles`.

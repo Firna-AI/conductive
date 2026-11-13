@@ -4,6 +4,7 @@ import { createGitHubStatePort } from '../github/chat-store'
 import type {
   GitHubRefresh,
   GitHubRefreshRequest,
+  GitHubSnapshot,
   GitHubWorkspace,
 } from '../github/contracts'
 import { installationTokenProvider } from '../github/credentials'
@@ -47,6 +48,33 @@ export class WorkspaceGitHub {
   }
 
   async refresh(workspace: GitHubWorkspace, signal: GitHubRefresh) {
+    return refreshWorkspace(
+      this.env.DB,
+      workspace,
+      signal,
+      this.stateOf(workspace),
+      {
+        ...this.dependencies,
+        token: installationTokenProvider(
+          {
+            ...this.env,
+            GITHUB_APP_PRIVATE_KEY: this.env.GITHUB_APP_PRIVATE_KEY ?? '',
+          },
+          this.dependencies.fetch,
+          this.dependencies.now,
+        ),
+      },
+    )
+  }
+
+  /** The last committed state of the workspace, with no GitHub read. */
+  async stored(
+    workspace: GitHubWorkspace,
+  ): Promise<GitHubSnapshot | undefined> {
+    return this.stateOf(workspace).stored()
+  }
+
+  private stateOf(workspace: GitHubWorkspace): WorkspaceGitHubState {
     if (!this.matches(workspace.id))
       throw new HttpError(
         404,
@@ -69,17 +97,7 @@ export class WorkspaceGitHub {
         },
       ),
     )
-    return refreshWorkspace(this.env.DB, workspace, signal, this.state, {
-      ...this.dependencies,
-      token: installationTokenProvider(
-        {
-          ...this.env,
-          GITHUB_APP_PRIVATE_KEY: this.env.GITHUB_APP_PRIVATE_KEY ?? '',
-        },
-        this.dependencies.fetch,
-        this.dependencies.now,
-      ),
-    })
+    return this.state
   }
 
   fetch(request: Request): Promise<Response> {

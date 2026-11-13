@@ -28,7 +28,7 @@ If you joined an org, its admin manages the repositories and shared setup.
 3. Choose the repository for the task.
 4. Choose a model and effort.
 5. Describe the task in the message box.
-6. Select **Send**.
+6. Select **Send** on the page, or **Create** in the dialog.
 
 For example:
 
@@ -45,14 +45,18 @@ Your message waits until the agent can begin.
 You can send more messages while that computer starts.
 The workspace keeps its accepted messages after a failed first start.
 
-Before the org's first successful build, **Send** stays off.
+Before the org's first successful build, the send button stays off.
 You can keep a draft in **New workspace** while that build runs.
 
 A newly added repository shows as unavailable in the repository menu until its build succeeds.
 Its note says when it will be ready.
-**Send** stays off while the selected repository waits for its build.
+The send button stays off while the selected repository waits for its build.
 
 ## Choose the page or dialog
+
+**New workspace** opens as a page or as a dialog over the current screen.
+On a computer, a new account opens the dialog.
+Older accounts keep the page.
 
 1. Open **Account**.
 2. Open **Preferences**.
@@ -63,8 +67,10 @@ The setting saves at once.
 The dialog uses **Create** for its send button.
 A phone always opens the page.
 
+The dialog shows the org and section at the top right.
+Select it to put the new workspace in another section.
 The page and dialog share the draft for the same org and section.
-Closing the dialog keeps that draft.
+Closing the dialog keeps that draft and its section.
 
 ## Follow the task
 
@@ -120,6 +126,12 @@ Use **+** for a new conversation on that same task.
 3. Paste the copied link into a message in the same org.
 
 **Link copied** confirms the copy.
+
+You can also copy the link from the workspace list.
+Right-click the workspace's row, or press **Shift+F10** while the row has focus.
+Then select **Copy link**.
+This works for archived workspaces too.
+
 The pasted link shows the workspace's number, name, and list mark in a small box.
 Its name and mark follow the workspace as they change.
 
@@ -131,6 +143,7 @@ Typing `W-12` alone leaves plain text in the message.
 
 Use a section's menu to create a workspace in that section.
 The **New workspace** action at the top of the list uses **General**.
+In the **New workspace** dialog, you can select another section.
 
 The section menu also offers **Rename section**, **New section**, and **Delete section**.
 Deleting a section moves its workspaces to **General**.

@@ -80,6 +80,12 @@ holds how an agent action of the pull request bar sends its fixed prompt.
   work decision 3). A line in the running turn that names the work, and a
   workspace state such as "waiting", were not chosen.
 - A finished turn ends with its duration and the files that it changed.
+- The end shows at most 8 files on desktop and 5 on a phone. A
+  "Show N more" button after them shows all the listed files. The count of
+  files that the runner left out shows only after that button.
+- Reason: a turn that changes many files pushed its reply out of view
+  (Cal, 12 November 2026). A list of all files without a button was
+  rejected for that reason.
 - A turn that ended at the time limit of background work shows
   "Background work stopped at the time limit" in its end, above its
   duration and its files (background work decision 3). The
@@ -107,6 +113,21 @@ holds how an agent action of the pull request bar sends its fixed prompt.
   "[Request interrupted by user]".
 - Each result of the agent shows with the messages that it answers. One
   result can answer more than one message.
+
+### The scroll of the chat
+
+- At the bottom, the chat keeps the newest message in view.
+- While the user reads higher up, the row that they read keeps its place.
+  A message of another member, the output of an agent, and a fold that
+  closes do not move it.
+- A message that the user sends from the chat goes to the bottom of the
+  chat, also while the user reads higher up. This applies to the composer
+  and to the fixed prompts of the pull request bar, such as Create PR.
+- A message that the same member sends from another tab or device does
+  not move this chat.
+- Reason: the user who sends a message wants to see it and its answer. A
+  scroll for each message of the workspace was rejected, because it takes
+  the place of a reader who reads an earlier part of the chat.
 
 ### The work of a turn
 
@@ -172,7 +193,17 @@ holds how an agent action of the pull request bar sends its fixed prompt.
 - Reason: one event type serves both agents, and the web app needs no
   change when an SDK changes its events.
 - Every open tab of a workspace gets the same events in the same order.
-- A tab that opens gets the stored history first, then the live events.
+- A tab that shows a session gets the newest part of its stored history
+  first. The live events start after that part, and the earlier history
+  loads above it (decision 280).
+- Reason: the newest messages and the work of a running turn show after
+  one read, also in a long session. Live events after the full history
+  were rejected, because a long session then showed nothing new until its
+  whole history had loaded.
+- The chat shows each event of a session once and in event order, also
+  when earlier history arrives after newer events.
+- While the earlier history loads, the chat says so above the messages
+  that it shows.
 - The Durable Object of the workspace stores every event, so the chat
   survives a stop of the sandbox.
 - A tab keeps the chat of each workspace that it showed in memory. A

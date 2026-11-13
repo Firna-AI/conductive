@@ -3,17 +3,21 @@ import type { ComposerState } from '../components/chat/Composer'
 import type { MentionTree } from '../components/chat/FileMentionList'
 import {
   afterDropCaret,
+  afterFolderDropCaret,
   attachmentDraft,
   beforeDrop,
   beforeDropAttachments,
   draftAttachments,
   droppedAttachments,
+  droppedFolderAttachments,
   failedAttachments,
+  folderDropDraft,
   uploadingAttachments,
   type Attachment,
 } from '../fixtures/attachments'
 import { barRunningConversations } from '../fixtures/barConversations'
 import { followUpDraft, steerDraft } from '../fixtures/conversations'
+import { unlistedChoice, unlistedLabels } from '../fixtures/endpointModels'
 import { mentionChipsDraft, mentionDrafts } from '../fixtures/fileMentions'
 import { savedCartsDraft } from '../fixtures/newWorkspaceConversations'
 import { sessionLinkDraft } from '../fixtures/sessionLinkConversations'
@@ -44,8 +48,9 @@ type ComposerKey = WorkspaceState['composer']
 /**
  * The files of each composer state with files. A file over the size limit
  * stays out of the message, so its state holds only the files that the
- * composer attached, and a notice names the file. A dropped folder stays
- * out in the same way.
+ * composer attached, and a notice names the file. A dropped folder comes as
+ * its zip. A folder that the browser cannot read stays out in the same way
+ * as a file over the limit.
  */
 const composerFiles: Partial<Record<ComposerKey, readonly Attachment[]>> = {
   attachments: draftAttachments,
@@ -56,7 +61,8 @@ const composerFiles: Partial<Record<ComposerKey, readonly Attachment[]>> = {
   'attachment-pointer': draftAttachments,
   'drop-over': beforeDropAttachments,
   dropped: droppedAttachments,
-  'dropped-folder': droppedAttachments,
+  'dropped-folder': droppedFolderAttachments,
+  'unreadable-folder': droppedAttachments,
 }
 
 /**
@@ -69,7 +75,8 @@ const dropDrafts: Partial<
 > = {
   'drop-over': beforeDrop,
   dropped: { draft: attachmentDraft, caret: afterDropCaret },
-  'dropped-folder': { draft: attachmentDraft, caret: afterDropCaret },
+  'dropped-folder': { draft: folderDropDraft, caret: afterFolderDropCaret },
+  'unreadable-folder': { draft: attachmentDraft, caret: afterDropCaret },
 }
 
 /** The composer states whose Send leads to the message with its files. */
@@ -119,6 +126,9 @@ export function isRunning(state: WorkspaceState): boolean {
  * a message with attached files, with the model picker open when the state
  * asks for it. A new session starts empty. In a session with messages,
  * the picker marks the models of the other agent as opening a new session.
+ * In a session of the viewer on an own endpoint, it leaves out the models
+ * that the model list of the endpoint does not name. After a turn that the
+ * endpoint did not serve, the session keeps the model of that turn.
  * A message for an agent that is not connected waits, and Send is off.
  *
  * Send also waits while a file uploads, or while a failed upload waits for
@@ -160,15 +170,21 @@ export function composerFor(
   const linkedState =
     state.composer === 'no-starter-login' || state.composer === 'not-shared'
   const opensLinked = !fresh && linkedState && starter !== undefined
+  const unlistedPicker = state.composer === 'picker-unlisted'
+  const nextMessage = noLogin || linkedState || unlistedPicker
   const files = fresh ? undefined : composerFiles[state.composer]
   const drop = fresh ? undefined : dropDrafts[state.composer]
   const mention = fresh ? undefined : mentionLists[state.composer]
   const chips = fresh ? undefined : chipDraft(state.composer)
+  const choice =
+    state.conversation === 'model-not-served'
+      ? unlistedChoice
+      : workspace.choice
   let draft = ''
   if (!fresh && state.conversation === 'steer') draft = steerDraft
   else if (drop) draft = drop.draft
   else if (files) draft = attachmentDraft
-  else if (!fresh && (noLogin || linkedState)) draft = followUpDraft
+  else if (!fresh && nextMessage) draft = followUpDraft
   else if (mention) draft = mention.draft
   else if (chips) draft = chips
   else if (!fresh && state.composer === 'draft') {
@@ -180,14 +196,20 @@ export function composerFor(
     sendTo = paths.attachmentsSent
   }
   return {
-    choice: workspace.choice,
+    choice,
     running: !fresh && isRunning(state),
     draft,
     attachments: files ?? [],
     attachTo:
       files && state.composer === 'attachments' ? paths.attachments : undefined,
-    picker: state.composer === 'picker',
-    sessionAgent: fresh ? undefined : workspace.choice.agent,
+    picker: state.composer === 'picker' || unlistedPicker,
+    sessionAgent: fresh ? undefined : choice.agent,
+    // Only the pickers of the owner of the login follow its model list, and
+    // a session keeps its current model.
+    hiddenModels:
+      unlistedPicker && starter === undefined
+        ? unlistedLabels.filter((label) => label !== choice.model)
+        : undefined,
     sendTo,
     startsSession: opensLinked,
     blocked: needsLogin,

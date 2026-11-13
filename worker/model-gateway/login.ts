@@ -1,12 +1,7 @@
 import type { Agent } from '../../src/shared/agents'
 import { agentLoginKind } from '../chat/login-kind'
-import {
-  agentLoginContext,
-  loginSecret,
-  senderLoginAccess,
-} from '../chat/queries'
+import { decryptAgentLogin, senderLoginAccess } from '../chat/queries'
 import type { AppEnv } from '../env'
-import { decrypt } from '../security/crypto'
 
 export async function gatewayLogin(
   env: AppEnv,
@@ -32,14 +27,5 @@ export async function decryptGatewayLogin(
   env: AppEnv,
   row: NonNullable<Awaited<ReturnType<typeof gatewayLogin>>>,
 ) {
-  const stored = await decrypt(
-    row.ciphertext,
-    agentLoginContext(row.userId, row.loginKind.agent),
-    env.BOAT_KEY_ENCRYPTION_KEY,
-  )
-  const secret =
-    row.loginKind.agent === 'codex' && row.loginKind.kind === 'token'
-      ? stored
-      : loginSecret(stored)
-  return { ...row.loginKind, secret }
+  return decryptAgentLogin(env, row.userId, row.loginKind, row.ciphertext)
 }

@@ -18,6 +18,8 @@ export function WorkspaceBody(props: {
   tools?: ReactNode
   /** The width of the right column while the user drags its handle. */
   rightWidth?: number
+  /** The share of the file lists while the user drags the split, in percent. */
+  filesShare?: number
   /** The user hid the right column with the toggle of the header. */
   rightHidden?: boolean
 }) {
@@ -30,6 +32,7 @@ export function WorkspaceBody(props: {
       </div>
       <RightColumn
         files={props.files}
+        filesShare={props.filesShare}
         hidden={props.rightHidden}
         pullRequest={props.pullRequest}
         tools={props.tools}

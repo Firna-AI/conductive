@@ -11,7 +11,7 @@ export type WorkspaceTab =
 
 export type TemporaryTab = { kind: 'file' | 'diff'; path: string }
 
-/** The server keeps view state. Only panel widths stay in the browser. */
+/** The server keeps view state. Only panel sizes stay in the browser. */
 export interface WorkspaceView {
   tabs: readonly WorkspaceTab[]
   activeTab: WorkspaceTab | null

@@ -40,3 +40,26 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* The workspace of a grant, its time left or Until you stop, and Stop. */
+.workspace {
+  flex: 1;
+  min-width: 0;
+  color: var(--ui-ink);
+  font-size: var(--ui-text-sm);
+  overflow-wrap: anywhere;
+}
+
+.left {
+  flex-shrink: 0;
+  color: var(--ui-amber-deep);
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-text-sm);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--ui-weight-strong);
+}
+
+/* A grant until Stop has no clock, so its words use the text font. */
+.open {
+  font-family: inherit;
+}

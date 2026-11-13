@@ -14,9 +14,11 @@ says. It builds against the fake API and the recorded chat events of
 
 The history button follows the available closed sessions, as
 [Sessions](../../docs/protocol/agents-and-sessions.md#sessions) says. The
-tab menu of a session copies its transcript as Markdown, also in a
-read-only workspace, as
-[Session transcripts](../../docs/protocol/session-transcripts.md) says.
+tab menu of a session copies its link, and its transcript as Markdown,
+also in a read-only workspace, as
+[Session transcripts](../../docs/protocol/session-transcripts.md) and
+[Session links](../../docs/protocol/agents-and-sessions.md#session-links)
+say.
 
 ## Use it in the app
 

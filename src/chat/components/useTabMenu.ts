@@ -9,6 +9,7 @@ import {
   Pencil,
 } from 'lucide-react'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
+import { linkItem } from '../../../docs/mockups/src/components/workspace/linkCopy'
 import { transcriptItems } from '../../../docs/mockups/src/components/workspace/transcriptCopy'
 import styles from '../../../docs/mockups/src/components/workspace/WorkspaceTabs.module.css'
 import { useLongPress } from '../../app/long-press'
@@ -44,6 +45,11 @@ interface TabMenuActions {
   onKeep: (tab: RowTab) => void
   /** Copies the transcript of a session, during the press of its item. */
   onCopy: (id: string, detail: TranscriptDetail) => void
+  /**
+   * Copies the link of a session, during the press of its item. Without
+   * it, as before the workspace loads, the menu has no Copy link.
+   */
+  onCopyLink?: (id: string) => void
 }
 
 /** The menu opens this far below a tab, as the mockups draw it. */
@@ -57,9 +63,10 @@ const copyIcons: Readonly<Record<TranscriptDetail, LucideIcon>> = {
 
 /**
  * The groups of items of the menu of the tab at `index` of the row. A
- * session tab has Rename session, its two copies, and the moves. The
- * temporary tab has Keep open and the moves, and a kept file or diff tab
- * has the moves. A move that the place of the tab rules out is off.
+ * session tab has Rename session, Copy link and its two transcript copies,
+ * and the moves. The temporary tab has Keep open and the moves, and a kept
+ * file or diff tab has the moves. A move that the place of the tab rules
+ * out is off.
  */
 function groupsOf(
   tabs: readonly RowTab[],
@@ -118,6 +125,20 @@ function groupsOf(
     },
     changes: false,
   })
+  const { onCopyLink } = actions
+  const link: TabMenuItem[] = onCopyLink
+    ? [
+        {
+          entry: {
+            kind: 'item',
+            key: 'copy-link',
+            ...linkItem,
+            onSelect: act(() => onCopyLink(tab.id)),
+          },
+          changes: false,
+        },
+      ]
+    : []
   const rename: TabMenuItem = {
     entry: {
       kind: 'item',
@@ -128,7 +149,7 @@ function groupsOf(
     },
     changes: true,
   }
-  return [[rename], [copy('concise'), copy('full')], moves]
+  return [[rename], [...link, copy('concise'), copy('full')], moves]
 }
 
 /**
@@ -155,12 +176,12 @@ function entriesOf(
  * F10, or the Menu key, on a focused tab opens it below the tab, through the
  * key handler of the tab, on every system. `open` opens it after a long
  * press of a drag that ends with no move. A read-only row leaves out each
- * item that changes the workspace, so a session tab keeps only its copies,
- * and the temporary tab loses Keep open with its moves. That row binds no
- * drag, so a finger opens the menu with the long press of `useLongPress`,
- * which lifts no tab. A tab with no item, such as a file tab of a read-only
- * row, and a tab that shows its rename field open no menu, so the browser
- * shows its own.
+ * item that changes the workspace, so a session tab keeps only Copy link
+ * and its transcript copies, and the temporary tab loses Keep open with its
+ * moves. That row binds no drag, so a finger opens the menu with the long
+ * press of `useLongPress`, which lifts no tab. A tab with no item, such as a
+ * file tab of a read-only row, and a tab that shows its rename field open no
+ * menu, so the browser shows its own.
  */
 export function useTabMenu(
   props: {

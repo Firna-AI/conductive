@@ -13,10 +13,12 @@ concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# The complete gate runs as parallel jobs. `npm run check` runs the same
+# steps in one process.
 jobs:
-  check:
-    name: Complete gate
-    runs-on: ubuntu-latest
+  static:
+    name: Static checks
+    runs-on: ubuntu-24.04
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
@@ -35,5 +37,52 @@ jobs:
           ELECTRON_SKIP_BINARY_DOWNLOAD=1 npm --prefix desktop ci
           npm ci --prefix runner
 
-      - name: Run complete gate
-        run: npm run check
+      - name: Run static checks
+        run: npm run check:static
+
+  tests:
+    name: Tests (${{ matrix.shard }}/4)
+    runs-on: ubuntu-24.04
+    strategy:
+      # Run every shard, so one run reports every failed test.
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      # Some Worker tests import runner code, so the runner packages install too.
+      - name: Install dependencies
+        run: |
+          npm ci
+          ELECTRON_SKIP_BINARY_DOWNLOAD=1 npm --prefix desktop ci
+          npm ci --prefix runner
+
+      - name: Run tests
+        run: npm run test -- --shard=${{ matrix.shard }}/4
+
+  gate:
+    # The required check. GitHub counts a skipped required check as passed, so
+    # this job always runs and fails unless every job above succeeded.
+    name: Complete gate
+    if: always()
+    needs: [static, tests]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check every job of the gate
+        env:
+          STATIC: ${{ needs.static.result }}
+          TESTS: ${{ needs.tests.result }}
+        run: |
+          echo "Static checks: $STATIC. Tests: $TESTS."
+          test "$STATIC" = success
+          test "$TESTS" = success

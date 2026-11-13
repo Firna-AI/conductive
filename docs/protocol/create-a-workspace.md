@@ -45,8 +45,12 @@ decision number names a dated record, as
   would surprise the user. A choice in the storage of the browser was
   rejected for that reason.
 - Without a saved choice, such as for a new account, New workspace opens
-  as the page. Reason: the user asked for the dialog as an option beside
-  the page.
+  as the dialog. The user asked for the dialog as the default for new
+  users on 12 November 2026.
+- Each account that existed before that change keeps the page, as its
+  saved choice. Reason: the user asked for the new default for new users
+  only. A default that also moved the existing accounts to the dialog was
+  rejected, because their New workspace would change without their choice.
 - A save of the choice saves no model. A user who never chose Model and
   effort keeps the default model and effort of the app.
 - An open app uses a choice that the user saved in another browser or in
@@ -64,10 +68,10 @@ decision number names a dated record, as
 - The dialog has no address. The address of New workspace always shows
   the page.
 - Reason: links, a reload, and a new tab then keep working.
-- On a computer, with the dialog chosen, New workspace opens the dialog
-  from each of its places: the row at the top of the list, the button of
-  an org without workspaces, the item in the menu of a section, and the
-  command palette.
+- On a computer, when the choice is the dialog, New workspace opens the
+  dialog from each of its places: the row at the top of the list, the
+  button of an org without workspaces, the item in the menu of a section,
+  and the command palette.
 - A click with a modifier key on the row at the top of the list opens the
   page in a new tab, as a click on a link does.
 - While the screen shows a New workspace form, New workspace opens the
@@ -82,6 +86,15 @@ decision number names a dated record, as
   message and its files, and the model picker.
 - The dialog always names the org and the section of the new workspace,
   also General.
+- The org and the section are a menu of the sections of the org, in the
+  order of the list, with the current section checked. A pick puts the
+  new workspace in that section. The menu has no Archived item, because
+  Archived is a group of the list and not a section. The user asked for
+  the menu on 12 November 2026.
+- The pick belongs to the draft. So a close keeps it with the message,
+  and the page of the same org and section names the picked section. A
+  create ends the pick, so the next draft starts in the section that
+  opened it.
 - The button of the dialog is Create. The button of the page is Send,
   because the page looks like the chat that it becomes.
 - The dialog shows the notices of the page: the first build, a waiting

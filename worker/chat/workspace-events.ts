@@ -1,5 +1,6 @@
 import type {
   ChatHistoryResponse as PublicHistory,
+  NewestChatHistoryResponse as PublicNewestHistory,
   WorkspaceEvent as PublicEvent,
   WorkspaceEventEnvelope as PublicEnvelope,
   WorkspaceSocketMessage as PublicMessage,
@@ -24,6 +25,7 @@ type SavedHistory<Page> = Page extends unknown
   : never
 
 export type ChatHistoryResponse = SavedHistory<PublicHistory>
+export type NewestChatHistoryResponse = SavedHistory<PublicNewestHistory>
 
 export type WorkspaceSocketMessage =
   | { type: 'history'; history: ChatHistoryResponse }
@@ -53,7 +55,15 @@ function presentWorkspaceEnvelope(
 export function presentWorkspaceHistory(
   history: ChatHistoryResponse,
   context: WorkspaceLinkContext,
-): PublicHistory {
+): PublicHistory
+export function presentWorkspaceHistory(
+  history: NewestChatHistoryResponse,
+  context: WorkspaceLinkContext,
+): PublicNewestHistory
+export function presentWorkspaceHistory(
+  history: ChatHistoryResponse | NewestChatHistoryResponse,
+  context: WorkspaceLinkContext,
+): PublicHistory | PublicNewestHistory {
   return {
     ...history,
     events: history.events.map((envelope) =>

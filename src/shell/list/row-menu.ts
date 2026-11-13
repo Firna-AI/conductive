@@ -29,6 +29,11 @@ export interface RowMenu {
   show: (opening: MenuOpening) => void
   /** The field of Rename, while it is open. */
   rename: RowRename | null
+  /**
+   * Opens the field of Rename, as a double click on the row does. It is
+   * null when the menu of the row does not offer Rename.
+   */
+  startRename: (() => void) | null
 }
 
 /** The menus of the rows of a list. */

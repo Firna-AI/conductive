@@ -20,8 +20,12 @@ until its last day. Selection and keyboard focus alone keep the time
 visible. The header has no Archive button. The shortcut and the menu of a
 row, the command palette, and the pull request bar archive in the same
 way, at once and with one request, as
-[Archive](../../../docs/protocol/workspace-life.md#archive) says. A toast
-then offers Restore. The archived bar, the row of the Archived group, and
+[Archive](../../../docs/protocol/workspace-life.md#archive) says. The
+Archive shows as done before its reply: the row moves to the Archived
+group, and the open workspace shows as archived. A failed Archive brings
+both back and names the failure in a toast, as
+[Archive](../../../docs/protocol/workspace-menu.md#archive) says. The
+toast after the reply offers Restore. The archived bar, the row of the Archived group, and
 the palette offer Restore to each member until the last day, as
 [Restore](../../../docs/protocol/workspace-life.md#restore) says.
 

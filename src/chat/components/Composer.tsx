@@ -1,7 +1,11 @@
-import { useRef, useState, type RefObject } from 'react'
+import { useEffect, useRef, useState, type RefObject } from 'react'
 import { Button } from '@firna/ui/button'
 import { ArrowUp, Paperclip, Square } from 'lucide-react'
-import { filesWait } from '../../app/draft-files'
+import {
+  focusStayed,
+  type ComposerFocusRequest,
+} from '../../app/composer-focus'
+import { filesWait, type IntakeRefusals } from '../../app/draft-files'
 import type { Agent, AgentChoice, AgentModel } from '../../shared/agents'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
@@ -19,9 +23,17 @@ import type { FieldFiles } from './chip-field/attached-files'
 import { ChipTextField } from './chip-field/ChipTextField'
 import type { FieldHandle } from './chip-field/focus-plugins'
 import local from './chat.module.css'
+import { useDropAreaHandlers } from './chat-drop-area'
 import { useComposerDrop } from './composer-drop'
 import { ModelPicker } from './ModelPicker'
 import { useSendKey } from './send-key'
+
+/** A request that the message field takes the focus once. */
+export interface ComposerFocus {
+  readonly request: ComposerFocusRequest
+  /** The composer took the request: it focused, or the focus had moved. */
+  readonly done: () => void
+}
 
 export interface ComposerProps {
   draft: Draft
@@ -58,13 +70,33 @@ export interface ComposerProps {
   /**
    * Attaches the files of a pick or a drop to the draft. It gives their IDs
    * at once, while they upload, so their chips go into the text in the same
-   * event. `folders` names each folder of a drop, which it does not attach.
+   * event. A dropped folder comes as its zip. `refusals` names each folder
+   * of a drop whose zip is too large or that the browser could not read.
    */
   onAttach: (
     files: readonly File[],
-    folders?: readonly string[],
+    refusals?: IntakeRefusals,
   ) => readonly string[]
   onChooseModel: (choice: AgentChoice) => void
+  /** The field takes the focus when it shows, as `ComposerFocus` says. */
+  focus?: ComposerFocus | null
+}
+
+/**
+ * Gives the focus to the field once for each request, when the composer
+ * shows it, unless the focus moved to another element since the request.
+ */
+function useRequestedFocus(
+  field: RefObject<FieldHandle | null>,
+  focus: ComposerFocus | null,
+) {
+  const request = focus?.request ?? null
+  const done = focus?.done
+  useEffect(() => {
+    if (request === null) return
+    if (focusStayed(request)) field.current?.focus()
+    done?.()
+  }, [field, request, done])
 }
 
 /**
@@ -89,9 +121,11 @@ function useComposerKeys(props: {
  * files of a pick go into the text at the caret, or at the end when the text
  * has no caret, and a chip that leaves the text takes its file off the
  * draft. The whole box takes a drop of files, as `useComposerDrop` says,
- * also while a message sends or a file uploads. Send waits while a file
- * uploads or failed. Files over the size limit and a dropped folder get a
- * notice over the box, which can open the file picker again.
+ * also while a message sends or a file uploads. In the chat, the whole
+ * column takes it for the box, as `useChatDropArea` says. Send waits while
+ * a file uploads or failed. Files over the size limit and a folder that
+ * could not be read get a notice over the box, which can open the file
+ * picker again.
  * While a turn runs, a message steers the turn, and Stop sits beside Send.
  * While the sandbox is not ready, Send still sends, and the workspace queues
  * the message. When a message spends the agent login of another member, a
@@ -101,7 +135,9 @@ function useComposerKeys(props: {
  * adds a line, so Enter never adds a line to a message that it sends. A
  * pasted workspace link shows as a chip, and the draft keeps the plain link.
  * In a chat with the files of its workspace, `@` opens the list of the files
- * and folders just above the box, and a pick shows as a file chip.
+ * and folders just above the box, and a pick shows as a file chip. A focus
+ * request, such as from a click on the workspace in the sidebar, puts the
+ * caret in the field when it shows.
  */
 export function Composer(props: ComposerProps) {
   const control = useControlSizes()
@@ -118,6 +154,7 @@ export function Composer(props: ComposerProps) {
   const off = empty || props.blocked || props.sending || filesWait(draft.files)
   const steers = props.running && props.startsSession !== true
   const sendKey = useSendKey(!off, props.onSend)
+  useRequestedFocus(field, props.focus ?? null)
   // The field takes changes while the composer shows, so the box takes a
   // drop also while Send is off.
   const drop = useComposerDrop({
@@ -125,6 +162,7 @@ export function Composer(props: ComposerProps) {
     editable: true,
     attach: props.onAttach,
   })
+  const boxDrops = useDropAreaHandlers(drop.handlers)
   const pick = () => picker.current?.click()
   return (
     <>
@@ -137,7 +175,7 @@ export function Composer(props: ComposerProps) {
               styles.composer,
               drop.dropping && styles.dropping,
             )}
-            {...drop.handlers}
+            {...boxDrops}
           >
             <ChipTextField
               files={props.files}

@@ -1,6 +1,7 @@
 import {
   ACCOUNT_PATHS,
   agentLoginPath,
+  refreshAgentLoginModelsPath,
   codexDevicePath,
   type AccountResponse,
   type AgentLoginStatus,
@@ -18,9 +19,9 @@ import { API_PATHS } from '../shared/api'
 import type { SaveShortcutsRequest } from '../shared/shortcuts'
 import { WAITLIST_PATHS, type WaitlistStateResponse } from '../shared/waitlist'
 import { AgentLogins } from './agent-logins'
+import { AccountLoginReads } from './account-login-reads'
 import { ignore, nested, record } from './api/parse'
 import {
-  readAccount,
   readChoice,
   readCodexDevicePoll,
   readCodexDeviceStart,
@@ -28,8 +29,8 @@ import {
   readInstallations,
   readLogin,
   readNewWorkspaceView,
-  readSavedShortcuts,
 } from './api/read-core'
+import { readSavedShortcuts } from './api/read-shortcuts'
 import { readWaitlistState } from './api/read-waitlist'
 import type { AppModel } from './app-model'
 import { Refresher } from './refresh'
@@ -40,11 +41,11 @@ import { load, loading, Store, type Loadable, type Readable } from './store'
 /**
  * The account of the person signed in: the agent logins, the preferences,
  * the shortcut changes, and the GitHub App installations. A secret goes to
- * the Worker in a write
- * and never comes back, and the Worker keeps the tokens of a ChatGPT
- * sign-in: the account shows only the kind of each login and its share
- * setting, which says whether other members' messages in the sessions of
- * the person run on it.
+ * the Worker in a write and never comes back. The Worker keeps ChatGPT
+ * tokens. The account shows each login's kind and share setting, which
+ * says whether other members' messages in the person's sessions run on it.
+ * Own endpoints also show their host and model list, which the owner's
+ * pickers follow.
  */
 export class AccountModel {
   readonly account = new Store<AccountResponse | null>(null)
@@ -60,8 +61,7 @@ export class AccountModel {
   readonly waitlist = new Store<Loadable<WaitlistStateResponse>>(loading)
   /** The logins of `account`, in the order of their changes. */
   private readonly logins = new AgentLogins(this.account)
-  /** The read of the logins while it runs, which a new open shares. */
-  private loginRead: Promise<void> | null = null
+  private readonly loginReads: AccountLoginReads
   private readonly services: AppServices
   private readonly app: AppModel
   private readonly installationReads: Refresher<GitHubInstallationsResponse>
@@ -71,6 +71,7 @@ export class AccountModel {
   constructor(services: AppServices, app: AppModel) {
     this.services = services
     this.app = app
+    this.loginReads = new AccountLoginReads(app, this.account, this.logins)
     const installations = new Resource(() =>
       services.api.get(ACCOUNT_PATHS.githubInstallations, readInstallations),
     )
@@ -148,29 +149,19 @@ export class AccountModel {
    * read keeps what shows.
    */
   refreshLogins(): Promise<void> {
-    this.loginRead ??= this.readLogins().finally(() => {
-      this.loginRead = null
-    })
-    return this.loginRead
-  }
-
-  /**
-   * The login of an agent in the answer shows only while no change of that
-   * login came during the read, so that a read never takes back a save, a
-   * remove, a share change, or a sign-in.
-   */
-  private async readLogins(): Promise<void> {
-    const show = this.logins.mark()
-    const account = await this.services.api
-      .get(ACCOUNT_PATHS.account, readAccount)
-      .catch(() => null)
-    if (account) show(account.agentLogins)
+    return this.loginReads.refresh()
   }
 
   login(agent: Agent): AgentLoginStatus {
     return this.logins.get(agent)
   }
 
+  /**
+   * Saves a login. The save of an own endpoint also reads the model list of
+   * the endpoint, which its answer does not hold, so the account is read
+   * again for it. A failed read of the account leaves the saved login
+   * without its list, so the pickers hide nothing until the next read.
+   */
   async saveLogin(request: SaveAgentLoginRequest): Promise<void> {
     const saved = await this.services.api.send(
       'PUT',
@@ -179,6 +170,10 @@ export class AccountModel {
       readLogin,
     )
     this.logins.put(saved)
+    if (saved.connected && saved.kind === 'endpoint')
+      await this.loginReads
+        .readAgent(saved.agent, this.logins.mark())
+        .catch(() => undefined)
   }
 
   /**
@@ -209,6 +204,18 @@ export class AccountModel {
     )
     if (answer.state === 'connected') this.logins.put(answer.login)
     return answer
+  }
+
+  /** Refreshes an endpoint list, without restoring a changed login. */
+  async refreshModels(agent: Agent): Promise<void> {
+    const show = this.logins.mark()
+    await this.services.api.send(
+      'POST',
+      refreshAgentLoginModelsPath(agent),
+      {},
+      ignore,
+    )
+    await this.loginReads.readAgent(agent, show)
   }
 
   /**

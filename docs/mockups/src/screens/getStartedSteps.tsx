@@ -169,7 +169,7 @@ export function AgentStep(props: {
   build: FirstBuildState
 }) {
   const connected = props.agent === 'connected'
-  const logins: AgentLogins = connected ? { claude: 'token' } : {}
+  const logins: AgentLogins = connected ? { claude: { kind: 'token' } } : {}
   const form: OpenAgentForm | undefined =
     !connected && props.step === 'done'
       ? {

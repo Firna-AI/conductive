@@ -7,39 +7,11 @@ import {
 } from 'react'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import styles from '../../../docs/mockups/src/components/layout/ResizeHandle.module.css'
-import {
-  panelRanges,
-  type Panel,
-  type PanelDrag,
-  type PanelMove,
-} from '../../app/panels'
-import { dividerKey, type DividerKey } from '../../app/shortcuts/navigation'
+import { panelRanges, type Panel, type PanelDrag } from '../../app/panels'
+import { dividerKey } from '../../app/shortcuts/navigation'
 import { useStore } from '../../app/store'
+import { dividerMove } from './divider-move'
 import { usePanelLayout } from './panels'
-
-const step = 8
-const bigStep = 32
-
-/**
- * The move of each key of a divider. `sign` is 1 when the handle widens
- * its panel as it moves right.
- */
-function keyMove(key: DividerKey, sign: 1 | -1): PanelMove {
-  switch (key) {
-    case 'left':
-      return { by: -sign * step }
-    case 'right':
-      return { by: sign * step }
-    case 'large-left':
-      return { by: -sign * bigStep }
-    case 'large-right':
-      return { by: sign * bigStep }
-    case 'first':
-      return { to: 'min' }
-    case 'last':
-      return { to: 'max' }
-  }
-}
 
 /** The width that a panel shows, without its border, as the layout draws it. */
 function useShownWidth(panel: RefObject<HTMLElement | null>): number | null {
@@ -99,7 +71,7 @@ export function ResizeHandle(props: {
     const key = dividerKey(event.nativeEvent)
     if (key === null) return
     event.preventDefault()
-    widths.step(props.panel, current(), keyMove(key, sign))
+    widths.step(props.panel, current(), dividerMove(key, sign))
   }
   return (
     <div

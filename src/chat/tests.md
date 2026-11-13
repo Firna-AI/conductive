@@ -4,7 +4,10 @@ This guide belongs to [the chat](README.md). It says what each test file of
 the chat checks. [Tests](README.md#tests) gives the command and the shared
 helpers.
 
-`state/prompt-actions.test.ts` sends fixed prompts over the fake API. It
+`state/instant-send.test.ts` checks a message while its send waits: it
+leaves the composer and shows in the chat at once, and it goes back to the
+composer, before newer text, when the Worker refuses it. It also shows a
+fixed prompt at once. `state/prompt-actions.test.ts` sends fixed prompts over the fake API. It
 checks the request and the unchanged draft, a send during a turn, a missing
 login, a linked session, and the client ID of a second try in the same and
 in another session. `components/ContinuedNote.test.tsx` folds the note of
@@ -15,7 +18,10 @@ It checks the plain message of a refused retry in a tab that missed newer events
 `state/linked-replies.test.tsx` drives replies of Send and Try again that
 name a linked session, in both orders, and two chats with different readers
 on one fake stream. `components/SessionLogin.test.tsx` renders the login
-label and its notices. `components/SourceLink.dom.test.tsx` presses the link
+label and its notices. `components/ComposerModels.dom.test.tsx` opens the
+model picker of a reader whose own endpoint list leaves models out, in the
+reader's own session, in the session of another member, and before a
+message that starts a linked session. `components/SourceLink.dom.test.tsx` presses the link
 of a linked session to its open and its closed source. In an archived
 workspace, it opens a linked session that closed before the archive from the
 session history. Its source link writes nothing.
@@ -55,6 +61,8 @@ the same reply from the saved history.
 `components/ReadingPlace.dom.test.tsx` lays the chat out as a browser lays
 out its reversed scroll box. It ends a long turn while the reader reads
 higher up, and checks the read row and the newest message at the bottom.
+While the reader reads higher up, a message of another member keeps the
+read row in place, and a message that the user sends goes to the bottom.
 `components/TabDrag.dom.test.tsx` mounts the chat with the real
 `FileTabItem` of the Files screens and drags tabs with pointer events over
 boxes that `components/tab-drag-test-kit.tsx` gives them. The file tab of
@@ -90,6 +98,10 @@ workspace on a phone, a finger that moves first opens nothing, and a long
 press lifts no tab, keeps the menu of the browser shut, and opens a sheet
 with only the copy items. The late click of the finger selects nothing,
 and Copy concise transcript copies the concise text.
+`components/SessionLinkCopy.dom.test.tsx` presses Copy link in the menu
+of a tab that does not show. It copies the link of that session, says
+"Link copied", keeps the shown tab, and sends no request. A refused write
+says "The link didn't copy. Try again."
 `../shared/transcript/session-markdown.test.ts` builds the concise and the
 full text of a copy. In a member's message, it checks the name of each
 attached file in place of its mention. It also checks that the attachments
@@ -233,7 +245,7 @@ stops its upload.
 the fake API. A failed upload keeps its file, Send waits, and Try again
 through the files source of the draft uploads the same file. It also
 checks the measured bytes of an upload. A pick with two files over the
-size limit and two folder names uploads only its other file. The draft
+size limit and two unreadable folders uploads only its other file. The draft
 keeps the names of each kind in their order, and Send clears them. A
 removed file and a stopped chat abort their uploads. An expired file that
 Send finds gone turns failed, and Try again uploads its kept `File`.
@@ -246,10 +258,10 @@ queued start. Undo of several stopped uploads starts them again in one
 new queue, and the stopped queue starts none of them.
 `state/draft-file-send.test.ts` sends a chat with only chips. It writes
 the returned path at every mark, with each attachment ID once, in the
-order of the first marks. After an edit during the send, the new text,
-the new files, and the escapes of literal text stay, without the sent
-marks. A refused send keeps the encoded text and the files, and a missing
-file turns failed, also when its chip left during the send.
+order of the first marks. Send clears the sent marks at once, and the
+text, the files, and the escapes of literal text from during the send
+stay. A refused send gives back the encoded text and the files, and each
+sent file that the Worker no longer has turns failed.
 `state/draft-file-moves.test.ts` reads the files of a moving draft through
 its source during store notifications. A model change sends the encoded
 text as it is, and its reply takes out each mark of an unkept file, also
@@ -258,7 +270,7 @@ ignores late uploads. `state/draft-file-identity.test.ts` checks that a
 fresh start clears the old draft, and that the source of the old draft
 never reads the files of the new one. `state/draft-files.test-support.ts`
 gives `readyChat`, a started chat whose uploads wait for the test. Its
-`pickChatFiles` attaches files, with optional folder names, and writes
+`pickChatFiles` attaches files, with optional refusals, and writes
 the marks of the files as the field does. Both use the helpers of
 `../app/draft-files.test-support.ts`.
 
@@ -269,13 +281,15 @@ drop state, and drops files with the helpers of
 Files over the box show its drop state and the drop caret, a leave hides
 both, and a drag of text shows neither. A drop on the text puts the chips
 at its place: in order, with spaces, as one step of undo, and without the
-dragged path. A dropped folder gets no chip and no upload, and its notice
-names it, also for a folder alone. An empty file attaches, and Attach
+dragged path. A dropped folder becomes one zip chip at its place among
+the files of the drop, also a folder alone. A folder that cannot be read
+gets no chip, and its notice names it. An empty file attaches, and Attach
 files of the notice opens the file picker. The box takes a drop during a
-send and an upload, and a drop on the bar puts the chips at the caret.
+send, after the sent text left, and during an upload, and a drop on the
+bar puts the chips at the caret.
 
-`state/refused-folders.test.ts` gives a chat draft folder names with no
-files, and checks that the draft keeps a copy of the names with no upload.
+`state/refused-folders.test.ts` gives a chat draft the names of
+unreadable folders with no files, and checks that the draft keeps a copy of the names with no upload.
 An empty pick changes nothing, and a file with no bytes uploads and goes
 with the message. The names move with their draft to a new session, and
 another draft keeps its own. A later pick, or folders alone, replace both

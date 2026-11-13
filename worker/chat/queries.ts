@@ -1,5 +1,4 @@
 import type { Agent } from '../../src/shared/agents'
-import type { RunnerLogin } from '../../src/shared/runner'
 import type { AppEnv } from '../env'
 import { CODEX_RECONNECT_CAUSE, parseCodexTokens } from '../codex-auth/tokens'
 import { failCodexRefresh } from '../codex-auth/token-store'
@@ -9,7 +8,11 @@ import {
 } from '../data/workspace-token-access'
 import { decrypt, hash } from '../security/crypto'
 import { workspaceNameColumn } from '../data/workspace-name'
-import { agentLoginKind } from './login-kind'
+import {
+  agentLoginKind,
+  type AgentLogin,
+  type AgentLoginKind,
+} from './login-kind'
 import type { RunnerWorkspaceRecord, WorkspaceRecord } from './types'
 
 const workspaceColumns = `w.id, w.org_id AS orgId, w.archived_at AS archivedAt`
@@ -91,7 +94,7 @@ export async function readAgentLogin(
   env: AppEnv,
   userId: string,
   agent: Agent,
-): Promise<RunnerLogin | null> {
+): Promise<AgentLogin | null> {
   const row = await env.DB.prepare(
     'SELECT kind, ciphertext FROM agent_logins WHERE user_id = ? AND agent = ? AND failure_cause IS NULL',
   )
@@ -99,15 +102,11 @@ export async function readAgentLogin(
     .first<{ kind: string; ciphertext: string }>()
   const loginKind = row ? agentLoginKind(agent, row.kind) : null
   if (!row || !loginKind) return null
-  const secret = await decrypt(
-    row.ciphertext,
-    agentLoginContext(userId, agent),
-    env.BOAT_KEY_ENCRYPTION_KEY,
-  )
+  const login = await decryptAgentLogin(env, userId, loginKind, row.ciphertext)
   if (
-    agent === 'codex' &&
-    loginKind.kind === 'token' &&
-    !parseCodexTokens(secret)
+    login?.agent === 'codex' &&
+    login.kind === 'token' &&
+    !parseCodexTokens(login.secret)
   ) {
     await failCodexRefresh(
       env.DB,
@@ -118,12 +117,42 @@ export async function readAgentLogin(
     )
     return null
   }
+  return login
+}
+
+export async function decryptAgentLogin(
+  env: AppEnv,
+  userId: string,
+  kind: AgentLoginKind,
+  ciphertext: string,
+): Promise<AgentLogin | null> {
+  const plaintext = await decrypt(
+    ciphertext,
+    agentLoginContext(userId, kind.agent),
+    env.BOAT_KEY_ENCRYPTION_KEY,
+  )
+  if (kind.kind !== 'endpoint')
+    return {
+      ...kind,
+      secret:
+        kind.agent === 'codex' && kind.kind === 'token'
+          ? plaintext
+          : loginSecret(plaintext),
+    }
+  const value: unknown = JSON.parse(plaintext)
+  if (
+    !value ||
+    typeof value !== 'object' ||
+    !('endpoint' in value) ||
+    typeof value.endpoint !== 'string' ||
+    !('secret' in value) ||
+    typeof value.secret !== 'string'
+  )
+    return null
   return {
-    ...loginKind,
-    secret:
-      agent === 'codex' && loginKind.kind === 'token'
-        ? secret
-        : loginSecret(secret),
+    ...kind,
+    endpoint: value.endpoint,
+    secret: loginSecret(value.secret),
   }
 }
 
@@ -149,7 +178,7 @@ export async function senderLoginAccess(
        EXISTS(SELECT 1 FROM org_members JOIN users login_owner ON login_owner.id = org_members.user_id
          WHERE org_id = w.org_id AND user_id = ? AND login_owner.suspended_at IS NULL) AS loginOwnerAllowed,
        EXISTS(SELECT 1 FROM agent_logins WHERE user_id = ? AND agent = ?
-         AND no_reuse = 1 AND user_id != ?) AS reuseDenied,
+         AND kind != 'endpoint' AND no_reuse = 1 AND user_id != ?) AS reuseDenied,
        EXISTS(SELECT 1 FROM workspace_tokens t WHERE t.workspace_id = w.id
          AND t.token_hash = ? AND ${workspaceTokenAccessPredicate}) AS runnerAllowed
      FROM workspaces w WHERE w.id = ?`,

@@ -13,9 +13,8 @@ import {
  * The states of the menu of a workspace row, as values of the `menu` prop
  * of the list: the menu at the pointer of a right click, its section and
  * owner choices, the field of Rename and its failed save, Archive from the
- * list, also of a stopped workspace, and Restore from its toast, the menus
- * of a member and of an admin on an archived row, and the hover of a row
- * without a menu.
+ * list, also of a stopped workspace, and Restore from its toast, and the
+ * menus of a member and of an admin on an archived row.
  */
 export const workspaceMenuStates = [
   'workspace',
@@ -30,7 +29,6 @@ export const workspaceMenuStates = [
   'workspace-own',
   'workspace-archived-row',
   'workspace-archived-member',
-  'workspace-hover',
 ] as const
 
 export type WorkspaceMenuState = (typeof workspaceMenuStates)[number]
@@ -58,10 +56,6 @@ export type Scenario = {
 
 function atPointer(workspace: string, submenu?: Submenu): Focus {
   return { workspace, drawing: { kind: 'menu', submenu } }
-}
-
-function hovered(workspace: string): Focus {
-  return { workspace, drawing: { kind: 'hover' } }
 }
 
 const targetName =
@@ -100,7 +94,6 @@ export const scenarios: Readonly<Record<WorkspaceMenuState, Scenario>> = {
   'workspace-archived-member': {
     member: true,
     archived: 'open',
-    focus: hovered(archivedTarget),
+    focus: atPointer(archivedTarget),
   },
-  'workspace-hover': { focus: hovered(menuTarget) },
 }

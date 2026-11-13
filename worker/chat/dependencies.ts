@@ -1,4 +1,5 @@
 import type { AppEnv } from '../env'
+import type { RunnerProtocolVersion } from '../../src/shared/runner'
 import { commitAuthor } from '../../src/shared/commit-author'
 import { readUser } from '../data/users'
 import { runnerTokenAllowed } from '../data/workspace-token-access'
@@ -18,6 +19,7 @@ import { prepareMessageAttachments } from './attachment-copy'
 import { attachmentWorkspace } from './attachment-claim-data'
 import { resolveAttachmentPaths } from './attachment-paths'
 import { filterRunnerOutput } from './runner-output'
+import { refreshEndpointModels } from '../model-gateway/endpoint-model-refresh'
 import { readRunnerBranches } from './branch-data'
 
 /**
@@ -29,8 +31,20 @@ export function chatDependencies(
   env: AppEnv,
   workspaceId: () => string | null,
   overrides: Partial<ChatDependencies> = {},
+  protocolVersion: () => RunnerProtocolVersion | null = () => null,
 ): ChatDependencies {
   return {
+    refreshEndpointModels: (userId, agent) =>
+      refreshEndpointModels(
+        env,
+        userId,
+        agent,
+        {
+          fetch: (request) => fetch(request),
+          now: overrides.now ?? Date.now,
+        },
+        { background: true },
+      ),
     readBranches: (id) => readRunnerBranches(env.DB, id),
     readCommitAuthor: async (userId) => {
       const user = await readUser(env.DB, userId)
@@ -49,11 +63,14 @@ export function chatDependencies(
       readConnectionAccess(env.DB, tabs, now),
     randomId: randomToken,
     randomConnectionId: randomToken,
-    readLoginMetadata: (targets) => {
+    currentRunnerProtocolVersion: protocolVersion,
+    refusedEndpointDomains: () =>
+      env.PREVIEW_DOMAIN ? [env.PREVIEW_DOMAIN] : [],
+    readLoginMetadata: (targets, version) => {
       const id = workspaceId()
       return id === null
         ? Promise.resolve(new Map<string, SessionLoginMetadata>())
-        : readLoginMetadata(env.DB, id, targets)
+        : readLoginMetadata(env, id, targets, version)
     },
     resolveAttachments: (userId, id, ids, messageId, usedIds) =>
       resolveMessageAttachments(

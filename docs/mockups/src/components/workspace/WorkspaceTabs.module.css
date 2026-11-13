@@ -173,6 +173,14 @@
   display: flex;
 }
 
+/*
+ * A tab that cannot close, such as the last terminal of a workspace, has no
+ * close button, so its label keeps the same padding at both ends.
+ */
+.kept .link {
+  padding-right: 9px;
+}
+
 /* The clock of the session history, which its menu opens from. */
 .anchor {
   display: flex;

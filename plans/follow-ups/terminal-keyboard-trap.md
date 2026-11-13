@@ -1,0 +1,36 @@
+# Keyboard users cannot leave the terminal
+
+- **Severity:** Medium. **Likelihood:** Common. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-10, from the options check of the plan `plans/terminal-tabs.md`, branch `calummoore/multiple-terminal-windows`. Updated on 2026-11-12 for the keyboard shortcuts of PR #216.
+- **Location:** `src/app/shortcuts/decision.ts:74`, `src/terminal/TerminalScreen.tsx`, `docs/protocol/keyboard-shortcuts.md:143`.
+- **Reason:** The problem is older than the terminal tabs change, and each option that removes it changes a requirement in force.
+
+- **Source:** Design.
+- **Category:** Product bug.
+- **Terms:**
+  - **Terminal:** the Terminal tool of a workspace, which shows a shell of the cloud computer. It draws the shell with xterm.js.
+  - **xterm.js:** the library that draws the terminal in the page. The app uses `@xterm/xterm` version 6.
+  - **Shortcut:** a key that runs a command of the app, such as ⌘K or Ctrl+K, which opens the command palette. `docs/protocol/keyboard-shortcuts.md` gives the rules.
+- **Background:**
+  - xterm.js turns Tab into a tab character for the shell, and it stops the browser's own action for the key. So Tab never moves the focus out of the terminal. Its source shows this in `src/common/input/Keyboard.ts`, in the case for key code 9.
+  - The app gives xterm.js no key handler of its own. A search of `src/` for `attachCustomKeyEventHandler` finds nothing.
+  - The keyboard shortcuts protocol says that the terminal keeps every key that a program in it can read. On Windows and Linux, no shortcut runs while the terminal has the focus, also not Ctrl+K. `src/app/shortcuts/decision.ts:74` does this. The reason is that shells read these keys, such as Ctrl+K to delete to the end of the line.
+  - On a Mac, a key with ⌘ goes to the app from the terminal. So ⌘K opens the palette, and a Mac user can leave through the palette. The Mac app runs only on macOS.
+  - Success criterion 2.1.2 of WCAG 2.1, No Keyboard Trap, asks that keyboard users can move the focus away from each part of a page.
+- **Problem:** In a browser on Windows or Linux, a keyboard user whose focus is in the terminal cannot reach any other control of the page. The browser's own keys, such as F6, move the focus to the browser's toolbar. Tab then enters the page again from its start.
+- **Impact if no action:** Keyboard users on Windows and Linux leave the page to reach the controls beside the terminal. The terminal tabs change adds a + button beside each terminal, which these users cannot reach from the terminal either.
+- **Root question:** How does a keyboard user move the focus from the terminal to the rest of the page?
+- **Options:**
+  - **A.** Tell users the browser's way out in the guide `src/marketing/docs/terminal-and-previews.md`. The way out leaves the page, and Tab then starts again at the top of the page. Effort: Small.
+  - **B.** Let Ctrl+K open the palette from the terminal also on Windows and Linux. It changes the rule that the terminal keeps every key, and shells lose Ctrl+K, which deletes to the end of the line. Effort: Small.
+  - **C.** Let one key, on every platform, move the focus from the terminal to the controls beside it, such as its tab row. The key must not clash with shells, tmux, or browsers. It changes the rule that the terminal keeps every key on Windows and Linux. Effort: Medium.
+  - **D.** Add a mode in which Tab moves the focus and does not reach the shell, as Ctrl+M does in VS Code. A key turns the mode on and off. It changes the same rule, and the user must know the mode. Effort: Medium.
+- **Left out:**
+  - Escape as the way out, because shells and programs such as Vim need Escape.
+  - Shift+Tab as the way out, because shells and programs read it as a key of their own.
+  - A button on the page that moves the focus, because a user in the terminal cannot reach it.
+- **Wider fix:** C. One key that leaves every terminal covers each control beside it, also controls that later changes add.
+- **Previous examples:** None found.
+- **Recommendation:** C. It keeps Ctrl+K for the shell and needs no mode, and it reaches every control beside the terminal.
+- **Action:** ask the user, because the recommended option changes the rule of `docs/protocol/keyboard-shortcuts.md` that the terminal keeps every key on Windows and Linux, and no user decision covers that change.

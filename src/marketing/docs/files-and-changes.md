@@ -15,7 +15,7 @@ Opening a file or a change starts the computer again.
 On a computer, the file lists sit beside the chat.
 On a phone, open the workspace's **Files** view.
 
-- **All files** shows the repository as a tree.
+- **All files** shows the repository as a tree. After a new computer build, it also lists the files in `.context/`.
 - **Changes** lists changes against the workspace's base branch.
 - **Checks** shows the pull request's GitHub checks.
 
@@ -82,6 +82,8 @@ In a read-only workspace, use a double-click to keep the tab.
 1. Open **Changes**.
 2. Select a changed file.
 3. Review its diff against the workspace's base branch.
+
+The diff shows syntax colours, as a file does.
 
 The base branch is the branch that the workspace's work targets.
 A workspace you create uses the repository's default branch.

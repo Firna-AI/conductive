@@ -50,7 +50,7 @@ pull request bar, and the owner picker. A host can give its own parts, as
 | `features`   | `WorkspaceFeatures` from `../shell/workspace/features.ts`: the workspace parts |
 
 `App` also mounts `useFileDropGuard` of `file-drags.ts`, so a drop of files
-outside each message box does nothing, as
+outside each message box and the chat around it does nothing, as
 [Drops](../../docs/protocol/message-attachments.md#drops) says. The guard
 hears each drag last, on the window. It leaves each drag that a part took,
 such as a message box or the Feedback dialog, and it never stops an event.
@@ -89,7 +89,7 @@ feature leaves its place empty.
 
 The org settings mount the members UI of `../members/`: `MembersSettings`
 for the Members tab, Delete org in the General tab of an admin, the restore
-page of a deleted org, and the read-only Repositories and Cloud computer
+page at the address of a deleted org, and the read-only Repositories and Cloud computer
 tabs of a member. The Cloud computer tab of a member gets the live builds,
 log, and settings of `ComputerModel`. The Repositories tab of a member gets
 the live builds of `OrgModel`, for its repository notice.
@@ -133,12 +133,16 @@ the Help row of the palette opens.
   read-only for screens, and writes go through the actions and models.
 - A secret goes out once, through `SecretForm`, and the field is empty after
   the save. No answer brings a stored secret back.
-- The browser keeps only the panel widths (`panels.ts`). A browser that
-  refuses its storage keeps them until the page closes.
+- The browser keeps only the panel sizes (`panels.ts` and
+  `column-split.ts`): the widths of the sidebar and the right column, and
+  the split of the right column. A browser that refuses its storage keeps
+  them until the page closes.
 - The open of a workspace and the settings reads of the Cloud computer
   tab count a generation. An answer that arrives after their screen
   closed or the user cancelled starts no stream, writes no older state,
-  and schedules no request.
+  and schedules no request. `WorkspaceModel.opened` says when the open
+  of the current visit ended, with the Resume that it sent. It is false
+  before the first open, during each open, and after a close.
 - Archive and Restore raise `updatedAt` of the workspace, also at the same
   clock. So a record from the other side of an Archive or a Restore shows
   only when its `updatedAt` is newer, whatever its source: a read, a
@@ -175,6 +179,16 @@ the Help row of the palette opens.
   and when its reply shows. A read shows the login of an agent only while
   that login had no change during the read. An open shares a read that
   runs already, and a failed read keeps what shows.
+- `AccountLoginReads` in `account-login-reads.ts` shares those reads with
+  each return to the visible page. While the account has an own endpoint
+  login, it also reads once a minute while the page shows. Each read merges
+  only the logins, with the same guards against local changes. A read across
+  a new app start or a sign-out changes nothing. Polling stops without an
+  own endpoint login or while the app is not ready. A hidden page cancels
+  its timer. When the page shows again, the reader reads once and resumes
+  polling.
+  The same reader owns the reads after an endpoint save or Refresh.
+  Those reads use the caller's mark to preserve later login changes.
 - Timers, the focus, the visibility, the input, and the keys of the page
   come from `AppServices` (`delay`, `onFocus`, `visible`, `onInput`, and
   `onKey`), so that no unit test runs a real timer or needs a browser
@@ -238,8 +252,11 @@ Its `markOf` gives the mark of a file of the draft by the name of the file.
 page and on the dialog card. A drop on the text of the page puts the files
 at the point. While a create runs, the box shows no drop state or drop
 caret, also for files that hovered as it began, and takes no drop. Files
-over the card show its drop state, and a dropped folder gets its notice in
-the dialog. `../App.dom.test.tsx` mounts `App` and checks the guard
+over the card show its drop state, a dropped folder attaches as its zip,
+and a folder that cannot be read gets its notice in the dialog.
+`folder-zip.test.ts` zips a folder with nested, empty, and hidden entries,
+gives the name of a zip over the size limit and of a folder that cannot be
+read, and stops with its drop. `../App.dom.test.tsx` mounts `App` and checks the guard
 outside each box, the browser's own drag of text and links, and the copy
 offer of a box. It also checks that the Feedback dialog still takes a
 dropped screenshot.
@@ -261,3 +278,23 @@ workspace share.
 [Key code: the palette, the layers, and the dialogs](key-code-layers.md)
 covers the command palette, the layers, the frames, New workspace as a
 dialog, and feedback with its screenshots.
+
+- `api/read-core.ts`: `readLogin` reads own endpoint metadata for both agents.
+  It keeps the host, kind, share choice, update time, and optional `modelList`.
+  The list has missing app model IDs and the last successful read time.
+  `dev/agent-login-routes.ts` simulates save and Refresh as successful lists with no missing models.
+  It changes neither another login nor the secret-save time.
+  `dev/agent-login-routes.ts` uses the shared address rule and keeps no secret
+  or full endpoint in development state. Its save uses the same public HTTPS
+  address builder and agent-specific normalization as the Worker.
+  The builder requires a public host name and refuses every IPv4 and IPv6 address.
+  The builder reads the product domain from the shared brand source.
+  The fake needs no preview domain configuration.
+  `?login=endpoint` seeds shared
+  own endpoint logins for both agents. `dev/endpoint-logins.ts` seeds them,
+  with the model lists of `?modelList`.
+- `endpoint-models.ts`: the one rule of the model lists of own endpoints.
+  `unlistedModels` gives the app models that the last list of a login does
+  not name, for the account page. `offeredModels` gives the models that a
+  picker of the owner offers. Every picker of the owner calls it, as
+  [Screens](screens.md) says.

@@ -19,7 +19,7 @@ shows only its canonical screen. Its child pages:
   `folder` variant has a drop with a folder, which the notice over the box
   names.
 - `app/attachments/failed` has a failed upload, with Try again in its chip.
-- `app/attachments/too-large` has a file over 25 MB. It gets no chip, and a
+- `app/attachments/too-large` has a file over 100 MB. It gets no chip, and a
   notice names it.
 - `app/attachments/sent` has the sent message, with each file as a chip at
   its place, while the agent answers. Its `listed` variant has a message

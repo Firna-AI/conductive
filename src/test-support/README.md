@@ -67,7 +67,14 @@ paths hold a fake secret value, and their records carry the labels of the
 mockups as display paths, in the file lists, the reads of the seed script,
 and the end of each finished turn. `fixtures/masked-paths.ts` holds them.
 
-Writes return recorded replies. They do not change backend state.
+Writes return recorded replies, except org moves.
+`fake-org-order-routes.ts` serves `PUT /api/org-order` and saves its order for later org list reads.
+It validates the shared move request and returns 204, or the Worker's validation and visibility errors.
+The app's stateful dev routes supply their own org list.
+`dev-org-order-route.ts` supplies a move handler for that stateful list.
+The app's dev route table must register it before a move can change that list.
+
+Other writes return recorded replies without changing backend state.
 The account fixture includes empty shortcut changes for both keyboards.
 The recorded shortcut save answers for the Mac keyboard.
 Override that reply to test another keyboard or saved changes.
@@ -102,6 +109,9 @@ Without it, `fakeGitHubSummary` gives the summary of the banner and its checks, 
 The dev fake of `../app/dev/` uses `fakeGitHubSummary` too.
 Its seed makes `email-dark-mode` work without GitHub state, so its grey mark moves.
 Replace a reply to draw a missing login, a first run, or a deleted org.
+`endpointLoginFixtures(updatedAt)` in `fixtures/agent-logins.ts` supplies
+connected own endpoint metadata for both agents. The development seed uses
+it for `?login=endpoint`. The fixture holds no key or full address.
 The fake answers `GET /api/invites` with no invitations. A test sets its own list with `server.json`.
 `server.signIn(user)` serves the session of another person, with app access, as a sign-in of that person does.
 The session reply has app access, and `GET /api/waitlist` answers with `accessState` of `fixtures/waitlist.ts`: no pause, the waitlist on, and the invite code of the mockups with 2 of its 5 invites used.
@@ -152,11 +162,13 @@ await view.rerender(<OwnerPicker {...props} workspace={next} />)
   `pressKey(key)` sends a keydown and a keyup to the focused element. Each runs inside `act`.
   Each fails with a named error when a person cannot use the target. `pressKey` checks the focused element.
 - `file-picker.ts`: `pickFiles(root, files)` picks files with the first Attach files button in `root`, as a member does.
-  The paperclip of a composer and the notice of a dropped folder both offer that button, and both open the same picker.
+  The paperclip of a composer and the notice of a dropped folder that could not be read both offer that button, and both open the same picker.
   It focuses and presses the button, so the focus leaves the message field for the button, as in Chrome.
   It then gives the file input of `root` the files and fires its change event, as a browser does after a pick.
 - `file-drop.ts`: `draggedFiles(items, text?)` gives a drag of files and folders from the desktop, with optional plain text beside them.
   Each item has kind file and an entry, and the types hold `Files`, as in Chrome. A folder comes as an empty file whose entry is a directory.
+  A folder can hold files and folders, which its entry gives in batches of two, or it can be unreadable.
+- `folder-entries.ts`: `folderEntry(folder)` gives the entry of a dropped folder, as `webkitGetAsEntry` gives it, for `draggedFiles` and for the tests of the zip.
   `draggedText(text, type?)` gives a drag of text or of a link.
   `fireDrag(target, type, data, { point, to })` fires one drag event, with a `copy` offer at `dragenter` and `dragover`.
   `dropOn(target, data, point?)` drags over the target and drops.
@@ -204,6 +216,8 @@ Replies, timers, and `waitFor` go on.
 - `fake-tool-routes.ts` records file, terminal, preview, desktop, and GitHub replies, also the member action routes of GitHub.
   Its upload replies give each file the `path` that `attachmentPath` in `src/shared/attachment-paths.ts` builds, as the Worker does.
 - `fake-api-routes.ts` defines the reply registration interface.
+- `fake-org-order-routes.ts` registers org list reads and moves on the recorded fake server.
+- `dev-org-order-route.ts` exports `devOrgOrderRoute` for the app's stateful dev route table.
 - `fake-events.ts` supplies history and live event messages.
 - `fake-terminal.ts` supplies decoded terminal output and records input and resize calls.
 - `recorded-chat.ts` supplies partial text, tools, queued messages, steer, stop, failure, omission counts, and refusal markers.

@@ -92,9 +92,27 @@ decision number names a dated record, as
 - Each grant and each credential cookie belongs to one viewer: the user
   and the session that launched the preview.
 - Each preview request and each batch of preview data checks the preview
-  and that viewer again.
+  and that viewer. One successful read of that access covers the checks of
+  that viewer that start within 1 second after the read started (preview
+  access decision 1). Preview access decisions are the decisions of the
+  change that added this rule.
   [Previews and their viewers](operator-actions.md#previews-and-their-viewers)
   states the full rules.
+- Reason: four database reads in a row made each request of a large dev
+  server wait about 0.4 seconds, and over 1 second under load.
+- Risk: a viewer who signs out, leaves or is removed from the org, or is
+  suspended can still load preview data for up to 1 second, plus the time
+  of one read.
+- A revocation by the workspace object ends access at once, also inside the
+  window: a closed preview, a stopped workspace, and an expired preview.
+- A check that refuses a viewer ends each open stream of that viewer at
+  once.
+- A request joins the connections of its viewer before its access read, so a
+  revocation during that read also ends it.
+- A relay lookup that calls the provider ends the window, and the request
+  reads again. Reason: that call can outlast a change of the sandbox.
+- A check with no wait for the window was rejected, because it kept the
+  preview of a large dev server slow.
 - A revoked or an unknown hostname gets no answer from any sandbox.
 - The preview relay is the app's own service in the sandbox, as
   [Sandbox software](../architecture/components.md#sandbox-software) says. Each preview
@@ -134,6 +152,23 @@ decision number names a dated record, as
   the preview.
 - Each response on the preview domain carries `Referrer-Policy:
   no-referrer`. Reason: other sites have no need for the preview address.
+- Each preview reply that passes every check carries a `Server-Timing`
+  header (preview timing decision 1). It gives the duration of each step of
+  the Worker: the hostname lookup, the trip to the workspace object, the
+  access read, the relay lookup, the access check before the call, the call
+  to the sandbox, and the access check after it. A step that the cache or the
+  access window covers shows a duration of 0. Preview timing decisions
+  are the decisions of the change that added this rule.
+- Reason: a preview of a large dev server took 10 seconds or more, and
+  only these durations show where a request waits.
+- The header holds fixed step names and whole milliseconds, and no ID,
+  address, or secret. A refused request gets no such header, so a refusal
+  does not show which check failed.
+- Risk: the previewed page can read the durations of its own requests.
+- The access checks of the body come after the headers, so the header
+  cannot give them.
+- The header of the previewed server never reaches the browser, as the
+  response header allowlist drops it.
 - A reply of the previewed server keeps its cache rules, and only the
   viewer's browser may keep it. A reply that gives the browser no
   lifetime must be checked again before each reuse.

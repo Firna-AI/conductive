@@ -4,35 +4,65 @@ import {
   type NewWorkspaceView,
   type SaveAgentLoginRequest,
 } from '../../src/shared/account'
-import type { Agent, AgentChoice } from '../../src/shared/agents'
+import type { Agent, AgentChoice, AgentModel } from '../../src/shared/agents'
+import { agentLoginKind } from '../chat/login-kind'
+import { endpointModelList } from './account-models'
 
-type ConnectedLogin = Extract<AgentLoginStatus, { connected: true }>
+interface LoginRow {
+  agent: Agent
+  kind: string
+  endpointOrigin: string | null
+  noReuse: number
+  updatedAt: number
+  modelIds: string | null
+  modelsReadAt: number | null
+  unusableCause: string | null
+}
 
 export async function accountLogins(
   db: D1Database,
   userId: string,
+  models: () => readonly AgentModel[],
 ): Promise<AgentLoginStatus[]> {
   const { results } = await db
     .prepare(
-      `SELECT agent, kind, no_reuse AS noReuse, updated_at AS updatedAt, failure_cause AS unusableCause FROM agent_logins
+      `SELECT agent, kind, endpoint_origin AS endpointOrigin,
+       no_reuse AS noReuse, updated_at AS updatedAt,
+       endpoint_model_ids AS modelIds, endpoint_models_read_at AS modelsReadAt, failure_cause AS unusableCause FROM agent_logins
        WHERE user_id = ? ORDER BY agent`,
     )
     .bind(userId)
-    .all<
-      Omit<ConnectedLogin, 'connected' | 'noReuse'> & {
-        noReuse: number
-        unusableCause: string | null
-      }
-    >()
+    .all<LoginRow>()
   return (['claude', 'codex'] as const).map((agent): AgentLoginStatus => {
     const login = results.find((item) => item.agent === agent)
-    if (!login) return { agent, connected: false }
-    const { unusableCause, ...metadata } = login
-    return {
-      ...metadata,
-      connected: true,
+    const loginKind = login ? agentLoginKind(agent, login.kind) : null
+    if (!login || !loginKind) return { agent, connected: false }
+    const metadata = {
+      connected: true as const,
       noReuse: login.noReuse === 1,
-      ...(agent === 'codex' && unusableCause !== null ? { unusableCause } : {}),
+      updatedAt: login.updatedAt,
+    }
+    if (loginKind.kind === 'endpoint') {
+      if (!login.endpointOrigin) return { agent, connected: false }
+      const modelList = endpointModelList(
+        agent,
+        login.modelIds,
+        login.modelsReadAt,
+        models,
+      )
+      return {
+        ...loginKind,
+        ...metadata,
+        host: new URL(login.endpointOrigin).host,
+        ...(modelList ? { modelList } : {}),
+      }
+    }
+    return {
+      ...loginKind,
+      ...metadata,
+      ...(loginKind.agent === 'codex' && login.unusableCause !== null
+        ? { unusableCause: login.unusableCause }
+        : {}),
     }
   })
 }
@@ -50,6 +80,7 @@ export function accountDefault(
     .first<AgentChoice>()
 }
 
+/** The saved New workspace view. A new account has none and gets the dialog. */
 export async function accountNewWorkspaceView(
   db: D1Database,
   userId: string,
@@ -60,7 +91,7 @@ export async function accountNewWorkspaceView(
     )
     .bind(userId)
     .first<{ view: NewWorkspaceView | null }>()
-  return row?.view ?? 'page'
+  return row?.view ?? 'dialog'
 }
 
 export async function saveAccountNewWorkspaceView(
@@ -103,14 +134,17 @@ export async function saveAccountLogin(
   kind: SaveAgentLoginRequest['kind'],
   ciphertext: string,
   now: number,
+  endpointOrigin: string | null = null,
 ): Promise<boolean> {
   const noReuse = await db
     .prepare(
-      `INSERT INTO agent_logins (user_id, agent, kind, ciphertext, no_reuse, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT(user_id, agent) DO UPDATE SET
-       kind = excluded.kind, ciphertext = excluded.ciphertext,
+      `INSERT INTO agent_logins (user_id, agent, kind, ciphertext, endpoint_origin, no_reuse, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(user_id, agent) DO UPDATE SET
+       kind = excluded.kind, ciphertext = excluded.ciphertext, endpoint_origin = excluded.endpoint_origin,
        no_reuse = CASE WHEN agent_logins.kind = excluded.kind
          THEN agent_logins.no_reuse ELSE excluded.no_reuse END,
+       endpoint_model_ids = NULL, endpoint_models_read_at = NULL,
+       endpoint_models_attempted_at = NULL, endpoint_models_attempt_id = NULL,
        updated_at = excluded.updated_at, refresh_claim = NULL,
        refresh_claim_until = NULL, failure_cause = NULL RETURNING no_reuse`,
     )
@@ -119,6 +153,7 @@ export async function saveAccountLogin(
       agent,
       kind,
       ciphertext,
+      endpointOrigin,
       defaultAgentLoginNoReuse(agent, kind) ? 1 : 0,
       now,
       now,
@@ -132,6 +167,7 @@ export async function updateAccountLoginReuse(
   userId: string,
   agent: Agent,
   noReuse: boolean,
+  models: () => readonly AgentModel[],
 ): Promise<AgentLoginStatus> {
   await db
     .prepare(
@@ -140,7 +176,7 @@ export async function updateAccountLoginReuse(
     .bind(noReuse ? 1 : 0, userId, agent)
     .run()
   return (
-    (await accountLogins(db, userId)).find(
+    (await accountLogins(db, userId, models)).find(
       (login) => login.agent === agent,
     ) ?? { agent, connected: false }
   )

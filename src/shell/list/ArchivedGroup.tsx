@@ -36,8 +36,8 @@ export function useArchivedOpen(
  * The archived workspaces at the end of the list. The group is the app's
  * own, not a section of the org, so it has no menu, and it is collapsed
  * until the user opens it, as `useArchivedOpen` says. An archived workspace
- * opens with its chat read-only. An admin's row has a menu that reassigns
- * the workspace. `restoreAction` gives a row its Restore shortcut, which
+ * opens with its chat read-only. The menu of each row copies the link of
+ * the workspace, and an admin's menu also reassigns it. `restoreAction` gives a row its Restore shortcut, which
  * covers its time on hover, as Archive does.
  */
 export function ArchivedGroup(props: {
@@ -49,6 +49,10 @@ export function ArchivedGroup(props: {
   onToggle: (open: boolean) => void
   menus?: RowMenus
   restoreAction?: (workspace: Workspace) => (() => void) | undefined
+  /**
+   * The write of a row that runs. Only a Restore shows busy: an Archive
+   * that runs already shows its row here, as done.
+   */
   running?: (workspaceId: string) => ArchiveAction | null
 }) {
   const { open } = props
@@ -76,7 +80,7 @@ export function ArchivedGroup(props: {
           {props.rows.map((row) => (
             <li key={row.id}>
               <WorkspaceRow
-                acting={(props.running?.(row.id) ?? null) !== null}
+                acting={props.running?.(row.id) === 'restore'}
                 menu={props.menus?.(row)}
                 now={props.now}
                 onRestore={props.restoreAction?.(row)}

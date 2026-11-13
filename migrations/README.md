@@ -57,7 +57,7 @@ Chat attachment queries live in `worker/chat/attachment-data.ts` and `attachment
 `202611082300_new_workspace_view.sql` rebuilds `user_preferences` and keeps every existing row and value.
 The three default model columns can be all set or all unset.
 The nullable `new_workspace_view` column holds `page` or `dialog`.
-An unset view uses the page. An unset model uses the configured app default.
+An unset view used the page then. An unset model uses the configured app default.
 
 `202611091200_waitlist.sql` adds app access, invite and referral codes, code
 uses, and the sign-up pause. Each existing account gets app access from
@@ -190,6 +190,18 @@ Existing runs keep null because their original choice is not known.
 A null base branch uses the repository default branch.
 Existing rows keep that fallback.
 
+`202611101600_agent_login_endpoints.sql` rebuilds `agent_logins` to accept
+the `endpoint` kind for both agents. The nullable `endpoint_origin` column
+is required only for that kind. The full endpoint stays inside the
+ciphertext with its key. The rebuild copies every existing row, ciphertext,
+timestamp, and `no_reuse` choice. It also keeps Codex token rows and the
+refresh claim, claim expiry, and failure cause. Existing rows get a null origin.
+
+`202611110407_agent_login_models.sql` adds nullable endpoint model IDs,
+the last successful read time, the last attempt time, and an attempt ID to
+`agent_logins`. It alters the table without replacing or deleting rows.
+The attempt ID prevents a late response from overwriting a newer read.
+
 `202611101600_shortcuts.sql` adds `user_shortcuts`.
 Each row holds one account's changed command for one keyboard, with its
 ordered keys as JSON. An empty list keeps a command without keys.
@@ -208,6 +220,16 @@ The complete banner state and its events stay in Durable Object storage.
 `202611111230_workspace_first_session_title.sql` adds the nullable `workspace_creation_plans.first_session_title` column.
 The agent create tool stores the requested first session title there, so a repeated create keeps it.
 Existing plans keep `NULL`. A plan with `NULL` gives its first session no title at admission.
+
+`202611120000_org_rail_order.sql` adds the nullable integer `org_members.rail_position` column.
+It fills every existing membership by org creation time, then org ID, for each person.
+This keeps the current rail order at deployment. New memberships keep `NULL` and sort at the end.
+The [members backend](../worker/members/README.md) owns the reads and moves.
+
+`202611121200_new_workspace_view_existing.sql` saves the page as the view of each existing account without a saved view.
+It keeps every other preference and every saved view.
+An unset view now uses the dialog, so only accounts made after this migration get the dialog without a choice.
+[The preference](../docs/protocol/create-a-workspace.md#the-preference) gives the requirement.
 
 ## Reserved ranges
 

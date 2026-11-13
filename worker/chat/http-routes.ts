@@ -9,7 +9,6 @@ import {
   sendMessage,
 } from './inputs'
 import { send, retryMessage } from './send-message'
-import { BROWSER_PAGE_LIMITS } from './history-pages'
 import { changeModel } from './model-changes'
 import type { ChatOperation } from './operation'
 import { sessionFor } from './session-record'
@@ -45,11 +44,12 @@ export async function chatRoute(
     const sessionId = identifier(url.searchParams.get('sessionId'))
     await operation.read((view) => sessionFor(view, sessionId))
     const through = url.searchParams.get('through')
+    const before = url.searchParams.get('before')
     const history = await operation.read((view) =>
-      view.history(
-        afterNumber(url),
+      view.newestHistory(
+        sessionId,
+        before === null ? undefined : counter(Number(before)),
         through === null ? undefined : counter(Number(through)),
-        { sessionId, limits: BROWSER_PAGE_LIMITS },
       ),
     )
     return Response.json(presentWorkspaceHistory(history, presentation))

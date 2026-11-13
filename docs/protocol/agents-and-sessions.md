@@ -28,7 +28,7 @@ says.
   changes, so a session never moves to the login of another member.
 - A member starts a session in one of these ways:
   - with "+"
-  - with a model of the other agent
+  - with a model of the other agent, in a session that has a message
   - with the first message of a new workspace
   - with a message that starts a new session, as
     [Messages](messages-and-attachments.md#messages) says
@@ -167,9 +167,12 @@ says.
 - On a phone, a long press that ends without a move opens the tab menu as
   a sheet.
 - The tab menu of a session tab holds three groups, with a line between
-  them: Rename session, then Copy concise transcript and Copy full
-  transcript, then Move left and Move right. The tab menu of a kept file or
-  diff tab holds Move left and Move right.
+  them: Rename session, then Copy link, Copy concise transcript, and Copy
+  full transcript, then Move left and Move right. The tab menu of a kept
+  file or diff tab holds Move left and Move right.
+- Copy link copies the link of the session of its tab, as
+  [Session links](#session-links) says. The user added it on 12 November
+  2026.
 - The tab menu of the temporary tab holds two groups, with a line between
   them: Keep open, then Move left and Move right (decision 286 B).
 - Reason: the tab menu groups its items by kind (decision 188).
@@ -206,8 +209,9 @@ says.
   suspended org, moves no tab.
 - The tab menu of a read-only workspace leaves out each item that changes
   the workspace, and keeps each item that changes nothing (decision 214).
-  So the tab menu of a session tab there holds only Copy concise transcript
-  and Copy full transcript. A file or diff tab there opens no tab menu.
+  So the tab menu of a session tab there holds only Copy link, Copy
+  concise transcript, and Copy full transcript. A file or diff tab there
+  opens no tab menu.
 - Reason: a read-only workspace accepts no change, but a member can still
   copy there, as
   [Read-only workspaces](session-transcripts.md#read-only-workspaces)
@@ -244,8 +248,17 @@ says.
   [Session chips](workspace-links.md#session-chips) says.
 - The agent tools give the link of each session that they name, as
   [The calls](session-calls.md#the-calls) says.
-- For now, Copy link copies only the link of the workspace. No item copies
-  a session link.
+- Copy link in the tab menu of a session tab copies the link of that
+  session, also in the Mac app and in a read-only workspace. The link has
+  the origin of the link of its workspace.
+- The menu closes at the press. After the copy, a toast says "Link
+  copied". When the copy fails, the toast says "The link didn't copy. Try
+  again." These are the words of
+  [Copy link](workspace-menu.md#copy-link) in the workspace menu.
+- Copy link does not change the shown tab, as a copy of a transcript does
+  not.
+- Copy link in the workspace header still copies the link of the
+  workspace, with no session. Reason: the header names the workspace.
 
 ## Workspace and session names
 
@@ -266,7 +279,8 @@ says.
   no name (decision 182). So no automatic name replaces a name that a
   member or the app gave.
 - A member names a workspace with Rename in the
-  [menu of its row](workspace-menu.md#rename).
+  [menu of its row](workspace-menu.md#rename), or with a double click on
+  its row in the sidebar.
 - The app gives no automatic name in an archived workspace, or in a
   workspace of a deleted org.
 - Reason: a missing name shows that no one named the workspace or the

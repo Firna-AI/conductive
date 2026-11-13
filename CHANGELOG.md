@@ -1,5 +1,64 @@
 # Changelog
 
+## [0.15.0](https://github.com/Firna-AI/conductive/compare/v0.14.0...v0.15.0) (2026-11-12)
+
+
+### Features
+
+* **chat:** load the newest chat history first ([#281](https://github.com/Firna-AI/conductive/issues/281)) ([f13c083](https://github.com/Firna-AI/conductive/commit/f13c083005b1bde6d6ebee12cccdf8214e38355d))
+* **files:** list context folder files in All files ([#288](https://github.com/Firna-AI/conductive/issues/288)) ([ad6e2ba](https://github.com/Firna-AI/conductive/commit/ad6e2bad5352b4b1437e25c59b8dd1edb439c3da))
+* **menus:** add Copy link to the workspace and session tab menus ([#292](https://github.com/Firna-AI/conductive/issues/292)) ([5bd05b4](https://github.com/Firna-AI/conductive/commit/5bd05b46c05312164ea67862b625f5286ef32196))
+* **sidebar:** focus the message box after a click on a workspace ([#279](https://github.com/Firna-AI/conductive/issues/279)) ([2d0e217](https://github.com/Firna-AI/conductive/commit/2d0e2174d5687ba8c94e2dba20444621cef4b958))
+
+
+### Bug Fixes
+
+* **files:** name a file tab from its read when no list holds the file ([#289](https://github.com/Firna-AI/conductive/issues/289)) ([c710a30](https://github.com/Firna-AI/conductive/commit/c710a306c10ac331e23d89d9f4efde44b71e4130))
+* **marketing:** refresh merged and pending comparison features ([#296](https://github.com/Firna-AI/conductive/issues/296)) ([82951d4](https://github.com/Firna-AI/conductive/commit/82951d42cc6c66cc8d6c017fb10f7a4a9876e30f))
+* **workspace:** show Starting, not a Resume bar, while an open resumes ([#290](https://github.com/Firna-AI/conductive/issues/290)) ([8c49081](https://github.com/Firna-AI/conductive/commit/8c49081e304c1070a6e2e09a89c49e3a7e93cc97))
+
+
+### Performance Improvements
+
+* **chat:** show a sent message at once and clear the composer ([#285](https://github.com/Firna-AI/conductive/issues/285)) ([9457304](https://github.com/Firna-AI/conductive/commit/9457304f6c5b22379a1ccf53222596476cd2b925))
+
+## [0.14.0](https://github.com/Firna-AI/conductive/compare/v0.13.0...v0.14.0) (2026-11-12)
+
+
+### Features
+
+* add own endpoint logins for Claude and Codex ([#263](https://github.com/Firna-AI/conductive/issues/263)) ([579ad69](https://github.com/Firna-AI/conductive/commit/579ad69850e002bbd4810f38f7ffa8cad86b7f2e))
+* **files:** show syntax colours in diffs ([#276](https://github.com/Firna-AI/conductive/issues/276)) ([9b0bbcb](https://github.com/Firna-AI/conductive/commit/9b0bbcbb2f86d588940839d939e5d24032ef9acd))
+* **model-gateway:** route ChatGPT through a Cloudflare Container ([#287](https://github.com/Firna-AI/conductive/issues/287)) ([1f1b54a](https://github.com/Firna-AI/conductive/commit/1f1b54aa4f97a524bb091db4cae2f721cff58121))
+* **terminal:** plan terminal tabs and draw their mockups ([#280](https://github.com/Firna-AI/conductive/issues/280)) ([b1874ca](https://github.com/Firna-AI/conductive/commit/b1874ca947ae5d85671b7afda771ce4c81f24a74))
+* **workspace:** resize the split between the files and the tools ([#283](https://github.com/Firna-AI/conductive/issues/283)) ([ade62e3](https://github.com/Firna-AI/conductive/commit/ade62e35e2abcde25199790116c47467f370df79))
+
+
+### Bug Fixes
+
+* **account:** follow background model list reads in an open tab ([579ad69](https://github.com/Firna-AI/conductive/commit/579ad69850e002bbd4810f38f7ffa8cad86b7f2e))
+* **account:** keep the model list in the reply of a share change ([579ad69](https://github.com/Firna-AI/conductive/commit/579ad69850e002bbd4810f38f7ffa8cad86b7f2e))
+* **chat:** name the model of the failed Codex message ([579ad69](https://github.com/Firna-AI/conductive/commit/579ad69850e002bbd4810f38f7ffa8cad86b7f2e))
+* **marketing:** refresh Conductor comparison notes ([#282](https://github.com/Firna-AI/conductive/issues/282)) ([cc472bb](https://github.com/Firna-AI/conductive/commit/cc472bb002d3182e3bd6bffeb84fbd777596941b))
+* **marketing:** track vertical panel resizing in progress ([#286](https://github.com/Firna-AI/conductive/issues/286)) ([1c66e33](https://github.com/Firna-AI/conductive/commit/1c66e330f852c6f72d60463e7a15d124b5d212c5))
+* **model-gateway:** keep ordinary request paths in endpoint answers ([579ad69](https://github.com/Firna-AI/conductive/commit/579ad69850e002bbd4810f38f7ffa8cad86b7f2e))
+* **ui:** make menu hover visible and show the pointer cursor ([#278](https://github.com/Firna-AI/conductive/issues/278)) ([8057cac](https://github.com/Firna-AI/conductive/commit/8057cacd3bd0cfddb2002ecbe8939f24bd633f70))
+
+## [0.13.0](https://github.com/Firna-AI/conductive/compare/v0.12.0...v0.13.0) (2026-11-12)
+
+
+### Features
+
+* **agent-tools:** manage workspaces, sessions, sections, and previews ([#267](https://github.com/Firna-AI/conductive/issues/267)) ([b8ed3c8](https://github.com/Firna-AI/conductive/commit/b8ed3c8f69e7ab69e8324860e48287812d9432ea))
+* **list:** run the mark light while checks run ([#277](https://github.com/Firna-AI/conductive/issues/277)) ([d789f9e](https://github.com/Firna-AI/conductive/commit/d789f9e904dfb4a74497f473c665cd3baed43e17))
+* **previews:** put Close on each preview tab ([#255](https://github.com/Firna-AI/conductive/issues/255)) ([10da61a](https://github.com/Firna-AI/conductive/commit/10da61afdb00e9e32b374c86a2db342ac7e436e7))
+
+
+### Bug Fixes
+
+* **list:** brighten the working light of the workspace mark ([#274](https://github.com/Firna-AI/conductive/issues/274)) ([e778799](https://github.com/Firna-AI/conductive/commit/e778799c7a77d2041e28088deb584cc4da029775))
+* **list:** keep the Archived group as it was after an Archive ([#271](https://github.com/Firna-AI/conductive/issues/271)) ([b504e8b](https://github.com/Firna-AI/conductive/commit/b504e8b8ab8a9d5e700c9a2aad99104434975166))
+
 ## [0.12.0](https://github.com/Firna-AI/conductive/compare/v0.11.0...v0.12.0) (2026-11-11)
 
 

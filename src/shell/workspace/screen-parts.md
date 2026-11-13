@@ -21,6 +21,12 @@ says.
   again.
 - Connect, on the notice of a missing agent login, opens the Connect form
   of the account.
+- A plain click on a workspace row of the sidebar puts a request in
+  `AppModel.composerFocus`. `ChatArea` gives the request of its workspace
+  to the chat as `composerFocus`, so the message field takes the focus
+  when it shows, as
+  [Chat integration](../../chat/integration.md) says. A phone gets no
+  request, so no keyboard opens on its own.
 - On desktop, the chat shows the file and diff tabs of the saved view
   among the session tabs, in the one order of the tab row. A file or diff
   tab moves by drag and with its tab menu, as a session tab does, as
@@ -121,14 +127,18 @@ Each folder of a path is a part of the address. Another address under
 - A stopped sandbox, and one whose later start failed, keep the file that
   a page already shows, as they keep the lists. Otherwise the sandbox panel
   takes the place of the content. The page hides the bar of the chat, so
-  its panel has Resume or Try again, and the words of a refusal. The
+  its panel has Resume or Try again, and the words of a refusal. While
+  the open of the workspace resumes the sandbox, the panel shows the wait
+  of a start instead, with no Resume. The
   header keeps the name of the file, and a diff keeps its changed lines.
 - Each visit that opens a file or diff tab resumes a stopped sandbox, as
   [Stop and resume](../../../docs/protocol/workspace-life.md#stop-and-resume)
   says. `ResumeOnTabOpen` listens to each visit of the app navigation:
   each click, link, and move back or forward. A visit opens a tab when it
   moves to another tab, or when it visits the address of the tab again, as
-  a second click on the tab or on its file does.
+  a second click on the tab or on its file does. A tab that opens while
+  the open of the workspace still resumes the sandbox sends no second
+  Resume.
 - A switch between the preview and the source keeps the tab, so it starts
   nothing. The address of the screen at its first show starts nothing
   there either, because the open of the workspace resumes the sandbox.
@@ -177,8 +187,10 @@ tools.
   address, and otherwise picks the preview in the panel.
 - On a phone each tool that the app offers is a page of the tab bar, with
   its own address.
-- The terminal mounts at its first show, then stays mounted and hidden
-  while another tool shows, so its connection stays. Its socket opens at
+- The terminal and Preview each mount at their first show, then stay
+  mounted and hidden while another tool shows. So the terminal keeps its
+  connection, and the page in the preview frame does not load again when
+  the user goes back to Preview. The socket of the terminal opens at
   the `socketPath` of the terminal state through `openSocket` of the app's
   event source, so the Mac app reaches its own Worker.
 - The mount of the Desktop tool stays for its return. It mounts at each
@@ -207,7 +219,9 @@ the ordered stream of the workspace.
   [The actions of the bar](../../github/actions.md) says. It reads the
   member's own GitHub access, the local work of the kept files, and the
   turns of each session of the kept chat. A new branch of the workspace
-  makes a new action state.
+  makes a new action state. The org model keeps the last access for each
+  repository, so the bar of another workspace of the repository offers
+  its actions at once.
 - A GitHub state of another branch than the workspace's, such as the merged
   state just after Continue, shows as loading. The store then reads the
   state of the branch once.

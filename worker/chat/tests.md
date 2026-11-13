@@ -29,7 +29,7 @@ An expired claim without an accepted message loses its record and its object. An
 `integration/failed-first-start-retry.test.ts` keeps the first-message file of a failed first start through the native `expireChatAttachment` RPC, a restart, and Try again in the same workspace.
 Try again copies its exact bytes once, as [Outer Worker tests](integration/outer-worker-tests.md) says.
 The HTTP and security raw-upload tests check shared route budgets and admission before body reads.
-The 25 MB boundary case creates its unknown-length stream inside the native runtime.
+The 100 MB boundary case creates its unknown-length stream inside the native runtime.
 It reads the stored byte count and exact byte samples from real R2 there.
 This keeps large byte arrays out of the test bridge while retaining the exact maximum and first excess byte.
 

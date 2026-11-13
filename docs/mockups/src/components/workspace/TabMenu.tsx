@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'
 import { Menu, type MenuEntry } from '../common/Menu'
 import { Sheet } from '../common/Sheet'
+import { linkItem } from './linkCopy'
 import type { WorkspaceTab } from './TabItem'
 import { transcriptItems } from './transcriptCopy'
 
@@ -53,8 +54,8 @@ const keepOpen: TabMenuItem = {
 
 /**
  * The groups of the menu of a tab, before a read-only workspace leaves
- * items out: a session tab has Rename session, its two copies, and the
- * moves. The temporary tab has Keep open and the moves, and a kept file or
+ * items out: a session tab has Rename session, Copy link and its two
+ * transcript copies, and the moves. The temporary tab has Keep open and the moves, and a kept file or
  * diff tab has only the moves.
  */
 function groupsOf(
@@ -65,6 +66,7 @@ function groupsOf(
     return [
       [{ label: 'Rename session', icon: Pencil, changes: true }],
       [
+        { ...linkItem, changes: false },
         { label: transcriptItems.concise, icon: Copy, changes: false },
         { label: transcriptItems.full, icon: CopyPlus, changes: false },
       ],
@@ -77,13 +79,13 @@ function groupsOf(
 /**
  * The menu of a tab: a right click opens it, and on a phone a long press
  * that ends without a move. A session tab leads with Rename session, the
- * one way to rename a session. Its two copy items follow: the concise copy,
- * with each fold of the chat closed, and the full copy, with every fold
- * open. The temporary tab leads with Keep open. Every tab moves one place
- * left or right. A move that the place of the tab rules out keeps its
- * place, off. A read-only workspace leaves out each item that changes the
- * workspace, so a session tab keeps only its copy items, and a file or
- * diff tab has no menu.
+ * one way to rename a session. Its copy items follow: Copy link, which
+ * copies the link of the session, the concise copy, with each fold of the
+ * chat closed, and the full copy, with every fold open. The temporary tab
+ * leads with Keep open. Every tab moves one place left or right. A move
+ * that the place of the tab rules out keeps its place, off. A read-only
+ * workspace leaves out each item that changes the workspace, so a session
+ * tab keeps only its copy items, and a file or diff tab has no menu.
  */
 export function tabMenuOf(
   tabs: readonly WorkspaceTab[],

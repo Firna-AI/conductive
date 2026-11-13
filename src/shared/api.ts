@@ -4,6 +4,7 @@ export const API_PATHS = {
   signOut: '/api/auth/logout',
   session: '/api/session',
   orgs: '/api/orgs',
+  orgOrder: '/api/org-order',
 } as const
 
 export function orgPath(orgId: string): string {

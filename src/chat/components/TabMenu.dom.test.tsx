@@ -66,6 +66,7 @@ describe('the tab menu', () => {
       opened: {
         items: [
           { name: 'Rename session', off: false },
+          { name: 'Copy link', off: false },
           { name: 'Copy concise transcript', off: false },
           { name: 'Copy full transcript', off: false },
           { name: 'Move left', off: true },
@@ -77,7 +78,7 @@ describe('the tab menu', () => {
     })
 
     const arrows: (string | null)[] = []
-    for (let press = 0; press < 3; press += 1) {
+    for (let press = 0; press < 4; press += 1) {
       await pressKey('ArrowDown')
       arrows.push(focused())
     }
@@ -93,7 +94,12 @@ describe('the tab menu', () => {
       closed: menuItems('Address autocomplete'),
       focus: focused(),
     }).toEqual({
-      arrows: ['Copy concise transcript', 'Copy full transcript', 'Move right'],
+      arrows: [
+        'Copy link',
+        'Copy concise transcript',
+        'Copy full transcript',
+        'Move right',
+      ],
       browserMenu: false,
       menus: 1,
       closed: [],
@@ -237,6 +243,7 @@ describe('the tab menu', () => {
     rightClick(tab, { clientX: 150, clientY: 12 })
     expect(menuItems(debounce)).toEqual([
       { name: 'Rename session', off: false },
+      { name: 'Copy link', off: false },
       { name: 'Copy concise transcript', off: false },
       { name: 'Copy full transcript', off: false },
       { name: 'Move left', off: false },

@@ -26,6 +26,11 @@ keeps the stored mark inside each compare-and-swap attempt. A missing or
 deleted name starts secret. An explicit mark changes it with the value.
 Its `classify` change carries only a name and a mark, so it keeps the value.
 `api.ts` keeps the existing sign-in and org paths and common records.
+`API_PATHS.orgOrder` names `PUT /api/org-order`, outside the paths of one org.
+`MoveOrgRequest` in `orgs.ts` carries `orgId` and the zero-based `index` among the other visible orgs.
+`readMoveOrgRequest` validates its fields. A move returns 204 without a body.
+The org list uses each person's saved order. A new membership goes at the end.
+[Org rail order](../../docs/protocol/org-rail-order.md) states the requirements.
 Its `ApiErrorBody` carries the error code and message.
 The optional `error.details` identifies an unknown routine author login.
 It carries `login`, `triggerIndex`, and `list`.
@@ -51,6 +56,26 @@ Each file of an accepted message gives it too, and the browser builds no path.
 A file of a message stored before this field has no path.
 The browser and runner readers give null for it, and no mention matches it.
 
+`endpoint-address.ts` owns `readEndpointAddress`, the shared endpoint
+address builder for forms, saves, dispatch, and the model gateway.
+It takes the agent and an options object with an optional model route, request query, and extra refused domains.
+It returns the normalized endpoint, origin, host, exact upstream address, and `secretForms`, or null for a refused address.
+`secretForms` owns the address patterns that both gateway output filters use.
+It includes whole addresses and the host name without its port.
+Relative and built request paths join the set only for a saved query or a path beyond the agent's base.
+The base path is empty for Claude. For Codex, it can be empty or `/v1`.
+It also includes saved path segments and query values with at least 12 characters.
+Each form has plain, percent-encoded, and JSON-escaped variants, including escaped slashes.
+Shorter parts match only inside a whole address form.
+`endpoint-host.ts` owns its public host check.
+It accepts only public host names and refuses every IPv4 and IPv6 address.
+It reads the product domain from `productDomain` in `docs/mockups/src/brand.ts`.
+Worker callers also pass `env.PREVIEW_DOMAIN` as an extra refused domain.
+The form and fake API use the same builder without preview configuration.
+The builder preserves queries, removes fragments and trailing slashes, and removes a final `/v1` for Claude.
+It can build model-list addresses without exposing a model-list gateway route.
+`ENDPOINT_ADDRESS_ERROR` gives the one refusal code and field message.
+Own endpoint logins stay outside the runner protocol.
 `feedback.ts` owns `FEEDBACK_PATH`, the request and reply types of the
 feedback routes, and their byte limits. `FEEDBACK_BODY_MAX_BYTES` is the
 JSON body limit of a send. `FEEDBACK_SCREENSHOTS_MAX_BYTES` is the limit of

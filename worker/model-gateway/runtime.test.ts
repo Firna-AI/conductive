@@ -2,7 +2,7 @@ import type { WebSocket } from 'miniflare'
 import { expect, it } from 'vitest'
 
 import { readSessions } from '../../src/chat/api/read-responses'
-import { readStoredEvents } from '../../src/chat/api/read-workspace'
+import { readNewestStoredEvents } from '../../src/chat/api/read-workspace'
 import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 import { chatHistoryPath } from '../../src/shared/events'
 import { sessionPaths, sessionsPath } from '../../src/shared/sessions'
@@ -166,11 +166,11 @@ it('retains a gateway failure and Stop through SQLite eviction, then ends once a
       throughEventNumber: 2,
     })
     const response = await runtime.dispatchFetch(
-      `${TEST_ORIGIN}${chatHistoryPath('org', WORKSPACE_ID, sessionId, 0)}`,
+      `${TEST_ORIGIN}${chatHistoryPath('org', WORKSPACE_ID, sessionId)}`,
       { headers },
     )
     expect(response.status).toBe(200)
-    const history = readStoredEvents(await response.json())
+    const history = readNewestStoredEvents(await response.json())
     expect(
       history.envelopes
         .filter(

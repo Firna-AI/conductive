@@ -1,4 +1,4 @@
-import type { AgentLoginStatus } from '../../shared/account'
+import type { AgentLoginStatus, EndpointModelList } from '../../shared/account'
 import type { AgentChoice, AgentModel } from '../../shared/agents'
 import type { Org, User } from '../../shared/api'
 import type { SendMessageResponse } from '../../shared/messages'
@@ -36,10 +36,11 @@ import {
 } from './read-chat'
 
 /**
- * What the composer needs to know about an agent login of the user: its
- * agent, whether it is connected, and why the app can no longer use it.
+ * The composer's login status, its unavailable cause, and the endpoint
+ * model list that the owner's picker follows.
  */
 type AgentLogin = Pick<AgentLoginStatus, 'agent' | 'connected'> & {
+  modelList?: EndpointModelList
   unusableCause?: string
 }
 
@@ -115,6 +116,14 @@ export function readModels(value: unknown): readonly AgentModel[] {
   })(record(value, 'models').models)
 }
 
+function readModelList(value: unknown): EndpointModelList {
+  const source = record(value, 'model list')
+  return {
+    missing: list(text)(source.missing),
+    checkedAt: count(source.checkedAt),
+  }
+}
+
 export function readAccount(value: unknown): AccountSummary {
   const source = record(value, 'account')
   return {
@@ -122,12 +131,15 @@ export function readAccount(value: unknown): AccountSummary {
     defaultChoice: readChoice(source.defaultChoice),
     agentLogins: list((item): AgentLogin => {
       const login = record(item, 'agent login')
-      const read = {
+      const modelList = optional(readModelList)(login.modelList)
+      return {
         agent: readAgent(login.agent),
         connected: flag(login.connected),
+        ...(modelList ? { modelList } : {}),
+        ...(login.unusableCause === undefined
+          ? {}
+          : { unusableCause: text(login.unusableCause) }),
       }
-      if (login.unusableCause === undefined) return read
-      return { ...read, unusableCause: text(login.unusableCause) }
     })(source.agentLogins),
   }
 }

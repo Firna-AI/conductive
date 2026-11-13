@@ -5,13 +5,21 @@ import { PendingCommands } from '../device/PendingCommands'
 import { DeviceLoadNotice, sessionCommands } from '../device/session-commands'
 import { tabSessions } from '../state/archive-view'
 import { sendBlock } from '../state/blockers'
-import { sessionState, type ChatSnapshot } from '../state/chat-snapshot'
+import {
+  hasMessages,
+  sessionState,
+  type ChatSnapshot,
+} from '../state/chat-snapshot'
 import type { ChatController } from '../state/controller'
 import { failedFirstStart } from '../../app/first-start'
-import { loginLabelOf, sessionLoginOf } from '../state/session-login'
+import {
+  composerModels,
+  loginLabelOf,
+  sessionLoginOf,
+} from '../state/session-login'
 import { ChatPane } from './ChatPane'
 import { ActionNotice, BlockNotice, LinkedSessionNotice } from './ChatNotices'
-import { Composer } from './Composer'
+import { Composer, type ComposerFocus } from './Composer'
 import { SandboxBar, StartingCard, type SandboxProblem } from './SandboxState'
 import {
   EarlierLoading,
@@ -58,6 +66,8 @@ export interface SessionChatProps {
    * suspended. The chat then shows its history and no control that writes.
    */
   readOnly?: boolean
+  /** The composer takes the focus when it shows, as `ComposerFocus` says. */
+  composerFocus?: ComposerFocus | null
 }
 
 /**
@@ -135,9 +145,12 @@ export function SessionChat(props: SessionChatProps) {
     notice && (notice.sessionId === null || notice.sessionId === id)
       ? notice
       : null
-  const hasMessages =
-    state.pending.length > 0 ||
-    state.transcript.items.some((item) => item.kind === 'user')
+  // Only this chat's own sends wait as pending messages, so each new one
+  // shows the bottom of the chat.
+  const sent = useMemo(
+    () => state.pending.map((message) => message.id),
+    [state.pending],
+  )
   const status = historyStatus(state)
   const content = showsContent(state, starting !== null)
   const viewerId = snapshot.account?.user.id ?? null
@@ -195,10 +208,16 @@ export function SessionChat(props: SessionChatProps) {
           choice={session.choice}
           draft={state.draft}
           files={files}
+          focus={props.composerFocus}
           login={loginLabelOf(login)}
-          models={snapshot.models}
-          onAttach={(picked, folders) =>
-            controller.attachFiles(session.id, picked, folders)
+          models={composerModels(
+            login,
+            snapshot.models,
+            snapshot.account?.agentLogins ?? [],
+            session.choice,
+          )}
+          onAttach={(picked, refusals) =>
+            controller.attachFiles(session.id, picked, refusals)
           }
           onChangeText={(text) => controller.setDraft(session.id, text)}
           onChooseModel={(choice) =>
@@ -208,7 +227,7 @@ export function SessionChat(props: SessionChatProps) {
           onStop={() => void controller.interrupt(session.id)}
           running={state.transcript.turn !== null}
           sending={state.draft.sending}
-          sessionAgent={hasMessages ? session.choice.agent : undefined}
+          sessionAgent={hasMessages(state) ? session.choice.agent : undefined}
           startsSession={login?.kind === 'linked'}
           stopping={state.stopping}
         />
@@ -225,6 +244,7 @@ export function SessionChat(props: SessionChatProps) {
       })}
       footer={footer}
       mobile={props.mobile}
+      sent={sent}
     >
       {content && status === 'loading' ? <EarlierLoading /> : null}
       <TranscriptView

@@ -10,6 +10,10 @@ It replaces the token with the starter's real login.
 Runner delivery gives a token in each `turn` command to a runner of protocol version 2.
 A runner of protocol version 1 gets only the real login kinds it supports.
 It never gets a ChatGPT sign-in.
+Own endpoint turns require protocol 2.
+Their runner commands use the existing API-key credential mode with a turn token.
+Their real address and key stay in Worker-only `AgentLogin` values.
+Protocol 1 uses the existing unusable-login failure before dispatch.
 The packaged runner and new full image builds use version 2.
 The runner also declares its login kinds in `hello.loginKinds`.
 A version 2 runner without ChatGPT support gets no ChatGPT turn credential.
@@ -24,25 +28,47 @@ The [model gateway protocol](../../docs/protocol/model-gateway.md) states the re
 | `/v1/model/codex`, ChatGPT sign-in only | `GET /backend-api/wham/config/bundle`, `GET /backend-api/wham/accounts/check`, `GET /backend-api/codex/models` | `https://chatgpt.com` |
 | `/v1/model/codex`, ChatGPT sign-in only | `POST /backend-api/codex/responses` | The workspace's HTTPS backend origin, or `https://chatgpt.com` |
 
-The `/responses` suffix is for an OpenAI API key only.
+An own endpoint login replaces the native upstream base in this table.
+[`readEndpointAddress`](../../src/shared/endpoint-address.ts) validates and builds that address at save, dispatch, and fetch time.
+It accepts only public HTTPS addresses with host names.
+It refuses every IPv4 and IPv6 address, credentials, internal names, and the app and preview domains.
+It normalizes the base path.
+The host check reads the product domain from `productDomain` in `docs/mockups/src/brand.ts`.
+The gateway runtime supplies `env.PREVIEW_DOMAIN` as an extra refused domain before each fetch.
+It preserves the endpoint query and appends the model request query.
+Claude drops a final `/v1` from the base before its route is added.
+Codex keeps its API base, including `/v1` when present.
+The builder also supports model-list addresses, but this gateway exposes no model-list route.
 
-### ChatGPT egress proxy
+The Worker reads an own endpoint's model list through
+[`endpoint-model-refresh.ts`](endpoint-model-refresh.ts).
+Save and account Refresh request a read immediately.
+Runner delivery schedules a background read after it sends a turn.
+[`endpoint-model-data.ts`](endpoint-model-data.ts) claims each attempt in D1.
+The claim limits background reads to once in ten minutes, including failed reads.
+[`endpoint-models.ts`](endpoint-models.ts) builds the agent's GET address and key headers.
+It follows no redirect and allows ten seconds and 1 MiB for the complete response.
+Claude requests `limit=1000` after the saved endpoint query.
+A Claude reply with `has_more: true` fails the read, so a partial list never replaces the cached list.
+It reads only `data[].id` and keeps no error body or diagnostic text.
+A failure keeps the previous IDs and successful read time.
+Writes check the login ciphertext and attempt ID, so an old response cannot replace a newer read or login.
+The account API compares those IDs with the app catalogue.
+No model discovery route becomes available to sandbox code.
 
-OpenAI blocks Cloudflare Worker traffic on `chatgpt.com`.
-It returns HTTP 403 and a block page, and Codex then stops with "workspace routing discovery failed".
-When the Worker has both `CHATGPT_EGRESS_URL` and `CHATGPT_EGRESS_SECRET`, the gateway sends each request for `chatgpt.com` or a `*.chatgpt.com` origin to that HTTPS proxy instead.
-It keeps the path, the query, the method, the headers, and the streamed body.
-It adds `x-conductive-egress-secret` with the shared secret and `x-conductive-egress-origin` with the ChatGPT origin.
-Every other upstream keeps the direct path.
-Without both settings, or with a URL that is not HTTPS, the gateway keeps the direct path.
+Each fetch uses manual redirects.
+A connection failure returns `model_endpoint_unreachable` without the host.
+`wrangler.jsonc` enables `global_fetch_strictly_public` for public same-zone routing.
+The runtime's public network also filters the IP addresses returned by DNS.
+Cloudflare documents custom ports for non-proxied hosts in its [compatibility flags](https://developers.cloudflare.com/workers/configuration/compatibility-flags/#allow-specifying-a-custom-port-when-making-a-subrequest-with-the-fetch-api).
+The compatibility date enables that behavior without another flag.
 
-[tools/chatgpt-egress/proxy.ts](../../tools/chatgpt-egress/proxy.ts) is the proxy.
-It runs on a host outside Cloudflare, behind a named Cloudflare Tunnel.
-A quick tunnel does not work, because it does not stream server-sent events.
-The proxy refuses a request without the secret with HTTP 403.
-It calls only an `https` origin on `chatgpt.com` or a subdomain of it.
-It drops the Cloudflare, tunnel, and connection headers before it calls OpenAI, and it streams the answer back.
-The proxy sees the ChatGPT access token in transit, so it must run on a host that the operator controls.
+The `/responses` suffix is for an OpenAI API key or own endpoint only.
+
+### ChatGPT egress
+
+[ChatGPT egress](chatgpt-egress.md) describes the container binding,
+the fallback proxy, and the direct path.
 
 The gateway preserves the query and the request body.
 It refuses every other suffix and method locally, including the connection probe and model discovery.
@@ -67,6 +93,8 @@ In profile mode, Claude sends each token as a bearer token, also for an API key.
 | --- | --- | --- | --- |
 | Claude API key | `sk-ant-api-` | `x-api-key` or `Authorization: Bearer` | `x-api-key` |
 | Claude subscription token | `sk-ant-oat01-` | `Authorization: Bearer` | `Authorization: Bearer` |
+| Own endpoint, Claude | `sk-ant-api-` | `x-api-key` or `Authorization: Bearer` | `x-api-key` |
+| Own endpoint, Codex | `sk-` | `Authorization: Bearer` | `Authorization: Bearer` |
 | OpenAI API key | `sk-` | `Authorization: Bearer` | `Authorization: Bearer` |
 | Codex ChatGPT sign-in | `sk-` | `Authorization: Bearer` | `Authorization: Bearer` |
 
@@ -75,13 +103,17 @@ A token whose prefix does not match the login kind of its turn gets `turn_token_
 A token in a header that the table does not give for its login kind gets the same refusal.
 The upstream gets the real login in the header of the last column.
 
-For a Claude API key, the gateway removes only the `oauth-2025-04-20` value from the `anthropic-beta` list.
+For a Claude API key or own endpoint, the gateway removes only the `oauth-2025-04-20` value from the `anthropic-beta` list.
 It keeps each other value.
 Claude sends two of these values only in profile mode: `prompt-caching-scope-2026-01-05` and `cache-diagnosis-2026-04-07`.
 They stay because the body of a profile request uses their features.
 That body uses a `cache_control` scope of `global` and a top-level `diagnostics` field.
 Do not remove them to match the normal API-key mode of Claude.
-The other login kinds keep `anthropic-beta` unchanged.
+A Claude subscription token keeps `anthropic-beta` unchanged.
+A Claude subscription token requests the one-hour prompt cache in the runner.
+A Claude own endpoint keeps API-key mode and adds `promptCacheTtl: '1h'` to its turn credential.
+The runner uses that field to request the same one-hour cache.
+Native API keys and Codex keep their cache defaults.
 
 The Codex model upload reader checks for one valid JSON object as bytes arrive.
 It checks each top-level `background` key after JSON string unescaping, including repeated keys.
@@ -101,7 +133,15 @@ stored account ID. The request cannot choose another account.
 Response headers use the content type, retry, request ID, and provider rate-limit rules.
 No provider cookie passes.
 Allowed response header values redact the real login.
-Error bodies redact both plain and JSON-escaped login bytes across chunk boundaries.
+For an own endpoint, both filters use the secret forms from the shared address builder.
+These include whole addresses, origin, host, and host name without its port.
+Relative and built request paths join the set only for a saved query or a path beyond the agent's base.
+The base path is empty for Claude. For Codex, it can be empty or `/v1`.
+The builder also includes each saved path segment and query value with at least 12 characters.
+It lists plain, percent-encoded, and JSON-escaped forms, including escaped slashes.
+Shorter address parts match only inside a whole address form.
+Key redaction keeps its existing rules.
+Error bodies redact these values across chunk boundaries.
 Success body chunks pass directly, with no text decoding or copy.
 
 For a ChatGPT sign-in, the fixed request names also include
@@ -192,13 +232,14 @@ The `request` helper of `gatewayHttp` in [http.test-support.ts](http.test-suppor
 - [workspace-access.ts](workspace-access.ts): `gatewayWorkspaceAllowed` checks the workspace and resource predicates in D1 before object access.
 - [paths.ts](paths.ts): gateway base matching and the fixed model method and suffix list.
 - [codex-upstream.ts](codex-upstream.ts): ChatGPT metadata forwarding and model routing in the Worker.
+- [codex-request-auth.ts](codex-request-auth.ts): binds ChatGPT credential tasks to the active request and turn.
 - [codex-auth.ts](codex-auth.ts): fresh credentials, one 401 renewal, observation of concurrent rotation, and the redaction set for the request.
 - [../codex-auth/tasks.ts](../codex-auth/tasks.ts): the required credential task owner, built from the request execution context.
 - [codex-routing.ts](codex-routing.ts): account selection, backend validation, and the routing-free account reply.
-- [egress.ts](egress.ts): the optional ChatGPT egress proxy for `chatgpt.com` requests.
+- [egress.ts](egress.ts): the egress path of `chatgpt.com` requests: the egress binding, then the fallback proxy.
 - [headers.ts](headers.ts): request and response header rules and authentication replacement.
   `hasClaudeMarkers` checks the markers of the `claude` program.
-  For a Claude API key, `upstreamHeaders` removes the OAuth value of `anthropic-beta`.
+  For a Claude API key or endpoint, `upstreamHeaders` removes the OAuth value of `anthropic-beta`.
 - [upload.ts](upload.ts): streaming upload and draining after an early reply.
 - [codex-body.ts](codex-body.ts): `CodexBodyScanner` checks the streamed JSON grammar and top-level `background` fields.
 - [json-tokens.ts](json-tokens.ts): `JsonTokens` reads JSON tokens and unescapes keys without keeping token text.
@@ -222,6 +263,7 @@ The `request` helper of `gatewayHttp` in [http.test-support.ts](http.test-suppor
   The turn keeps a random nonce and the login version for this derivation.
   Separate booleans record whether its Codex 401 recovery was used and remains pending.
 - [login.ts](login.ts): `gatewayLogin` checks starter access and reads the login row with its `updated_at` version.
+  It accepts native-provider and own endpoint login kinds.
   `decryptGatewayLogin` releases the login only after the turn check accepts that version.
 - [types.ts](types.ts): `TurnTokenCheck` and `TurnTokenEndpoint` define the trusted check result and RPC method.
 - [../workspace-lifecycle.ts](../workspace-lifecycle.ts): `checkTurnToken` selects the workspace from stored chat metadata.
@@ -235,6 +277,9 @@ The `request` helper of `gatewayHttp` in [http.test-support.ts](http.test-suppor
 - [delivery-runtime.test.ts](delivery-runtime.test.ts): the same version 2 `turn` command after an eviction of the workspace object, with only the nonce and the login version in SQLite.
 - [../chat/gateway-dispatch.test.ts](../chat/gateway-dispatch.test.ts): a failed version 2 send keeps the token state, so the resend carries the same token before the waiting message.
 - [workspace.test.ts](workspace.test.ts) and [login.test.ts](login.test.ts): token lifetime, login changes, Stop across a disconnect, event order, late data, and retry.
+- [endpoint-login.test.ts](endpoint-login.test.ts): both agents' endpoint routes and authentication, credential-free runner commands, revalidation, redirects, and unreachable endpoints.
+- [endpoint-errors.test.ts](endpoint-errors.test.ts): split endpoint and key redaction in errors and allowed headers.
+- [endpoint-redaction.test.ts](endpoint-redaction.test.ts): unchanged protocol paths and redaction of saved path or query forms in both filters.
 - [lease.test.ts](lease.test.ts): late answer starts, held uploads, and lease expiry during a held check, with a manual clock.
 - [codex-body.test.ts](codex-body.test.ts): HTTP refusals, upload cancellation, and unchanged accepted bytes through the fake OpenAI upstream.
 - [codex-token.test.ts](codex-token.test.ts): ChatGPT metadata, Worker routing, header filtering, route refusals, and failed discovery.

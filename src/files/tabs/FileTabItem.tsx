@@ -71,7 +71,7 @@ function FileTabLabel(props: {
  */
 export function FileTabItem(props: {
   tab: FilesTab
-  /** The label of the path, from `listLabel`, or null. */
+  /** The label of the path, from `tabLabel`, or null. */
   label: string | null
   selected: boolean
   /** The temporary tab, which the next press on a file or a diff replaces. */

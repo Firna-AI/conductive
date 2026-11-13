@@ -16,7 +16,7 @@ import type { Repository } from '../../shared/org-settings'
 import type { OrgSummary } from '../../shared/orgs'
 import type { Routine } from '../../shared/routines'
 import type { Section } from '../../shared/sections'
-import { useApp, useOrgModel } from '../context'
+import { useOfferedModels, useOrgModel } from '../context'
 import { ActionButton } from '../ui/actions'
 import { eachField, useSavedDraft } from '../ui/useSavedDraft'
 import { useViewport } from '../ui/viewport'
@@ -59,7 +59,6 @@ export function RoutineEditor(
   },
 ) {
   const { org, routine } = props
-  const models = useStore(useApp().models)
   const orgModel = useOrgModel(org.id)
   const members = valueOf(useStore(orgModel.members))?.members ?? []
   const phone = useViewport() === 'phone'
@@ -69,6 +68,8 @@ export function RoutineEditor(
   )
   const form = useSavedDraft(saved, followEachField)
   const { draft } = form
+  // The runs use the owner's login, so the picker follows the owner's lists.
+  const models = useOfferedModels(draft.choice)
   const { save, refused, refusal } = useRoutineSave({
     org,
     routine,

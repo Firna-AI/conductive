@@ -12,7 +12,7 @@ Have these ready:
 - A GitHub account.
 - GitHub read access to the repository where you will create a workspace.
 - Permission to install a GitHub App if you will set up your own org.
-- A Claude subscription token, an Anthropic API key, an OpenAI API key, or a ChatGPT plan.
+- A Claude subscription token, an Anthropic API key, an OpenAI API key, a ChatGPT plan, or an endpoint address and key.
 
 If you cannot install the GitHub App, ask a GitHub organization owner to help.
 If you join an existing org, its admin manages repository access.
@@ -111,7 +111,7 @@ The org step shows **Preparing** while it runs.
 
 Continue to the agent login while the build runs.
 You can also open the org before the build finishes.
-**New workspace** lets you write a message, but keeps **Send** off until the first build succeeds.
+**New workspace** lets you write a message, but keeps its send button off until the first build succeeds.
 
 If the build fails, select **Open the log** to read its cause.
 Correct the problem.
@@ -129,7 +129,9 @@ Choose the login you want to use:
 | --- | --- | --- |
 | Claude | Subscription token | Select **Subscription token**. Paste a token from `claude setup-token`. |
 | Claude | Anthropic API key | Select **API key**. Paste your Anthropic API key. |
+| Claude | Own endpoint | Select **Own endpoint**. Enter **Endpoint** and **API key**. |
 | Codex | OpenAI API key | Select **API key**. Paste your OpenAI API key. |
+| Codex | Own endpoint | Select **Own endpoint**. Enter **Endpoint** and **API key**. |
 | Codex | ChatGPT plan | Select **ChatGPT plan**. Select **Get a code**. Complete the ChatGPT sign-in. |
 
 For a subscription token, run this command on a computer where the `claude` command is installed:
@@ -142,10 +144,22 @@ Complete the browser authorization that the command opens.
 Paste the token it prints into Conductive's **Subscription token** field.
 If the command is unavailable, you can use the Anthropic API key option.
 
-For an API key, the form provides a link to create one with the provider.
+For an Anthropic or OpenAI API key, the form provides a link to create one with the provider.
 Paste the key into its field.
 Select **Connect**.
 The agent row then shows **Connected**.
+
+An own endpoint is a gateway or proxy that you choose for model requests.
+Use a public `https://` address with a host name and no user name or password.
+For Claude, it must serve the Anthropic Messages API.
+For Codex, it must serve the OpenAI Responses API.
+Read the hint under **Endpoint** to check the request address before selecting **Connect**.
+The connected row shows the host, including any non-default port.
+
+An own endpoint gets the messages, files, and command results of turns on that login.
+Model use bills where its owner runs the endpoint.
+An own endpoint login starts with sharing on.
+Open **Account** to change **Let other members use this login**.
 
 For a ChatGPT plan, first turn on device code sign-in in your ChatGPT security settings.
 Ask your ChatGPT admin if you cannot change that setting.
@@ -163,9 +177,10 @@ You can connect the other later in **Account**.
 
 If your first agent request reports a login error, open **Account**.
 Remove that agent's login.
-Then connect the correct account.
+Then connect the correct token, key, account, or endpoint.
 If the Codex row shows **Signed out**, select **Sign in again** instead.
 
+- [Connect an own endpoint and check its models](/docs/agent-logins#connect-an-own-endpoint)
 - [Manage logins and sharing](/docs/agent-logins)
 
 ## Create your first workspace
@@ -178,7 +193,7 @@ If you accepted an org invitation, your org is already open.
 3. Choose a model for the agent you connected.
 4. Choose the effort in the same model menu.
 5. Describe your task in the message box.
-6. Select **Send**.
+6. Select **Create** in the dialog, or **Send** on the page.
 
 For a first task, you can use this message:
 
@@ -188,8 +203,9 @@ Explain how to run the tests in this repository.
 
 On a computer, **Enter** sends and **Shift+Enter** adds a line.
 On a phone, **Enter** adds a line.
-Use **Send** to send from either layout.
-If you chose the dialog in your account preferences, its send button is **Create**.
+On a computer, **New workspace** opens as a dialog with a **Create** button.
+On a phone, it opens as a page with a **Send** button.
+To open the page on a computer too, change **Open New workspace in** under **Preferences** in **Account**.
 
 The first message creates the workspace, its branch, and its first session.
 Conductive shows the start steps as it starts the workspace's cloud computer.
@@ -198,7 +214,7 @@ You can send more messages while that computer starts.
 The workspace keeps them for the agent.
 
 This wait happens after the org has a successful build.
-Before that first build succeeds, keep your message in **New workspace** until **Send** becomes available.
+Before that first build succeeds, keep your message in **New workspace** until its send button becomes available.
 
 If the workspace's computer cannot start, read the error.
 Select **Try again** in the same workspace.

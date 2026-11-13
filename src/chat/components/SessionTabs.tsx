@@ -38,10 +38,10 @@ function keptTab(tabs: readonly RowTab[], renaming: string | null) {
  * for a new session on the same branch and cloud computer, and the clock of
  * the session history. Every tab closes. A tab moves by drag and drop, or
  * by a long press on a phone, as `useTabDrag` says, and its tab menu renames
- * a session, copies its transcript, keeps the temporary tab, and moves a tab
- * one place, as `useTabMenu` says. A row whose tabs do not fit scrolls
- * sideways, as `useRowScroll` says. On desktop the history and the tab menu
- * open beside their trigger; a phone shows them as sheets.
+ * a session, copies its link or its transcript, keeps the temporary tab, and
+ * moves a tab one place, as `useTabMenu` says. A row whose tabs do not fit
+ * scrolls sideways, as `useRowScroll` says. On desktop the history and the
+ * tab menu open beside their trigger; a phone shows them as sheets.
  */
 export function SessionTabs(props: {
   tabs: readonly RowTab[]
@@ -61,6 +61,8 @@ export function SessionTabs(props: {
   onCancelRename: () => void
   /** Copies the transcript of a session, during the press of its item. */
   onCopy: (id: string, detail: TranscriptDetail) => void
+  /** Copies the link of a session. Without it, the menu has no Copy link. */
+  onCopyLink?: (id: string) => void
   onMove: (tab: WorkspaceTab, place: TabPlace) => void
   onNew: () => void
   onShowHistory: (open: boolean) => void
@@ -83,6 +85,7 @@ export function SessionTabs(props: {
     onStep: moves.step,
     onKeep: moves.keep,
     onCopy: props.onCopy,
+    onCopyLink: props.onCopyLink,
   })
   const drag = useTabDrag({
     tabs,

@@ -176,6 +176,7 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
               gatewayEnv,
               chatGptEgress(gatewayEnv, dependencies),
             ),
+            previewDomain: gatewayEnv.PREVIEW_DOMAIN,
             workspaceAllowed: (id) =>
               gatewayWorkspaceAllowed(gatewayEnv.DB, id),
             codexLogin: (userId, failed) =>

@@ -10,7 +10,9 @@ The terms are those of the [architecture doc](../architecture.md#terms). A
 decision number names a dated record, as
 [Decision numbers](../architecture.md#decision-numbers) says. A gateway
 decision number names a decision of the change that adds the
-[model gateway](model-gateway.md), as that doc says.
+[model gateway](model-gateway.md), as that doc says. An own endpoint
+decision number names a decision of the change that adds the own endpoint
+logins, as [Tokens and secrets](tokens-and-secrets.md) says.
 
 ## Orgs and workspaces
 
@@ -168,6 +170,12 @@ decision number names a decision of the change that adds the
 - A newer runner gets a turn token as the credential of each turn. An
   older runner gets a supported agent login itself. This rule holds for each
   runner connection.
+- An own endpoint login never reaches a sandbox, whatever its version pin.
+  The gateway keeps its address and its key in the Worker (gateway
+  decision 10). An older runner gets no turn on such a login. Such a turn
+  fails before an agent starts, as a turn on a login that cannot be used
+  does. Reason: an older runner would hold the key itself, and each
+  process of its sandbox could read it.
 - Before a turn or a later message reaches a runner, the app checks
   that the runner can use its login kind (decision 174).
 - A ChatGPT turn needs a runner that declares support for that sign-in.
@@ -196,13 +204,14 @@ decision number names a decision of the change that adds the
   messages of other members can run on that login.
 - The kind of a login sets the default of its share setting. A new Claude
   subscription login does not let other members use it. A new ChatGPT
-  sign-in does not let them use it either (decisions 171 and 175). A new API key lets
-  them use it.
-- Reason: Anthropic's consumer terms forbid making a Claude account
-  available to anyone else. OpenAI's terms also forbid making an account
-  available to anyone else. The owner of an API key may
-  let a team use it. Sharing every login by default was rejected for these
-  reasons.
+  sign-in does not let them use it either (decisions 171 and 175). A new
+  API key or own endpoint login lets them use it (own endpoint decision 4).
+- Reason: Anthropic's consumer terms and OpenAI's terms forbid making an
+  account available to anyone else. The owner of an API key may let a team
+  use it. Sharing every login by default was rejected for these reasons.
+- Risk: an own endpoint can stand for personal subscriptions, such as a
+  proxy that pools them. Other members can spend those subscriptions until
+  the owner turns sharing off. Their terms can forbid that use.
 - A replaced login keeps its share setting while its kind stays the same. A
   login whose kind changes gets the default of its new kind. Reason: a key
   rotation keeps the choice of its owner.
@@ -220,6 +229,9 @@ decision number names a decision of the change that adds the
   while the login of the starter works.
 - The session record shows whether the login of its starter can be used,
   and whether the starter shares it. It holds no part of the login.
+- A record that names the host of an own endpoint was rejected, because
+  the members of an org trust each other with their logins (own endpoint
+  decision 5).
 - The runner never writes a login to disk.
 - On a ChatGPT turn, the rules of the signed-in ChatGPT workspace
   apply to Codex (decisions 173 and 175).

@@ -51,7 +51,7 @@ export function Composer(props: {
   const drop = useComposerDrop({
     field,
     editable: !sending,
-    attach: (files, folders) => props.model.attach(files, folders),
+    attach: (files, refusals) => props.model.attach(files, refusals),
   })
   const pick = () => picker.current?.click()
   return (

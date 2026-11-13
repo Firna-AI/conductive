@@ -35,12 +35,12 @@ const second = startedSignIn('device-2', 'PQRS-2345')
 
 /** The text of the Codex form after the switch, by its step. */
 const shown = {
-  expired: `Codex API key ChatGPT plan ${copy.expired} Cancel ${copy.newCode}`,
+  expired: `Codex API key ChatGPT plan Own endpoint ${copy.expired} Cancel ${copy.newCode}`,
   refused: (cause: string) =>
-    `Codex API key ChatGPT plan ${cause} Cancel ${copy.newCode}`,
+    `Codex API key ChatGPT plan Own endpoint ${cause} Cancel ${copy.newCode}`,
   /** The refusal because the setting is off, by the label of its button. */
   off: (button: string) =>
-    `Codex API key ChatGPT plan ${copy.causes.refused} ${copy.settingsLink.label} Cancel ${button}`,
+    `Codex API key ChatGPT plan Own endpoint ${copy.causes.refused} ${copy.settingsLink.label} Cancel ${button}`,
 }
 
 describe('the ChatGPT sign-in of Codex', () => {
@@ -205,10 +205,11 @@ describe('the ChatGPT sign-in of Codex', () => {
     expect({ signedOut, signIn, connected: codexItem(view) }).toEqual({
       signedOut: `Codex ${copy.signedOut} ChatGPT plan Remove ${cause} ${copy.signInAgain} ${share}`,
       signIn: {
-        item: `Codex ${copy.signedOut} ChatGPT plan Remove API key ChatGPT plan ${copy.intro} ${copy.settingsLink.label} Cancel ${copy.getCode} ${share}`,
+        item: `Codex ${copy.signedOut} ChatGPT plan Remove API key ChatGPT plan Own endpoint ${copy.intro} ${copy.settingsLink.label} Cancel ${copy.getCode} ${share}`,
         kinds: [
           { kind: 'API key', selected: false },
           { kind: 'ChatGPT plan', selected: true },
+          { kind: 'Own endpoint', selected: false },
         ],
       },
       connected: chatGptRow,

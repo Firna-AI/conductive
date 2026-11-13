@@ -7,10 +7,18 @@ import {
 import type { ApiError } from './api/client'
 import { readOrderedWorkspaceResponse } from './api/read-workspaces'
 import { ArchiveModel } from './archive-model'
+import { detailWithArchive } from './archive-overlay'
 import { WorkspaceStream, type Delay } from './events'
 import { resumesAtOpen } from './first-start'
 import type { OrgModel } from './org-model'
-import { asApiError, Store, valueOf, type Loadable } from './store'
+import {
+  asApiError,
+  derived,
+  Store,
+  valueOf,
+  type Loadable,
+  type Readable,
+} from './store'
 import { WorkspaceReadMarks } from './workspace-read-marks'
 import { workspaceMetadata } from './workspace-detail'
 import { DetailOrder, type WaitedReply } from './workspace-detail-order'
@@ -18,8 +26,21 @@ import { WorkspaceActivity } from './workspace-activity'
 
 /** The open workspace: its state, its start steps, Archive, and Restore. */
 export class WorkspaceModel {
-  readonly detail: Store<Loadable<WorkspaceResponse>>
+  /**
+   * The detail as the screen shows it. An Archive of the workspace that
+   * runs shows as done, so it feels instant, and a failed one shows the
+   * detail as before. The model itself reads the detail of `order`.
+   */
+  readonly detail: Readable<Loadable<WorkspaceResponse>>
   readonly startError = new Store<ApiError | null>(null)
+  /**
+   * The open of this visit ended: its read, and the Resume that it sends for
+   * a stopped sandbox, or for one whose later start failed. It is false
+   * before the first open, during each open, and after `close`. The screen
+   * shows the composer in place of the bar of such a sandbox until then,
+   * because the open resumes it.
+   */
+  readonly opened = new Store<boolean>(false)
   readonly archive: ArchiveModel
   readonly stream: WorkspaceStream
   readonly workspaceId: string
@@ -41,7 +62,11 @@ export class WorkspaceModel {
     this.order = new DetailOrder(org, workspaceId, (detail) =>
       this.ownerShown(detail.workspace.owner.id),
     )
-    this.detail = this.order.detail
+    this.detail = derived(
+      this.order.detail,
+      org.workspaceActions.running,
+      (detail, running) => detailWithArchive(detail, running.get(workspaceId)),
+    )
     this.stream = new WorkspaceStream(
       org.services.events,
       { orgId: org.orgId, workspaceId },
@@ -55,7 +80,7 @@ export class WorkspaceModel {
       org.services,
       workspacePaths.read(org.orgId, workspaceId),
       {
-        detail: this.detail,
+        detail: this.order.detail,
         last: this.stream.last,
         suspended: org.suspension.suspended,
         clearUnread: () => this.clearUnread(),
@@ -82,6 +107,16 @@ export class WorkspaceModel {
    */
   async open(): Promise<void> {
     const run = ++this.generation
+    this.opened.set(false)
+    try {
+      await this.openVisit(run)
+    } finally {
+      if (run === this.generation) this.opened.set(true)
+    }
+  }
+
+  /** The read of an open, and its Resume, until `opened`. */
+  private async openVisit(run: number): Promise<void> {
     this.order.followList()
     const visit = this.order.lifecycleChanges
     const path = workspacePath(this.org.orgId, this.workspaceId)
@@ -93,8 +128,10 @@ export class WorkspaceModel {
     } catch (error) {
       if (run !== this.generation) return
       if (this.changedInVisit(visit)) this.follow()
-      else if (valueOf(this.detail.get())?.workspace.state !== 'archived') {
-        this.detail.set({ state: 'failed', error: asApiError(error) })
+      else if (
+        valueOf(this.order.detail.get())?.workspace.state !== 'archived'
+      ) {
+        this.order.detail.set({ state: 'failed', error: asApiError(error) })
       }
       return
     }
@@ -103,6 +140,7 @@ export class WorkspaceModel {
     this.follow()
     if (run !== this.generation || this.suspended) return
     if (this.changedInVisit(visit)) return
+    // The shown detail counts an Archive that runs, which resumes nothing.
     const shown = valueOf(this.detail.get())
     if (shown && resumesAtOpen(shown))
       await this.resume().catch(() => undefined)
@@ -111,7 +149,7 @@ export class WorkspaceModel {
   /** Whether an Archive or a Restore came to the shown detail in this visit. */
   private changedInVisit(visit: number): boolean {
     return (
-      valueOf(this.detail.get()) !== undefined &&
+      valueOf(this.order.detail.get()) !== undefined &&
       this.order.lifecycleChanges !== visit
     )
   }
@@ -123,6 +161,7 @@ export class WorkspaceModel {
   /** Stops the stream. An open that still runs can no longer start it. */
   close(): void {
     this.generation += 1
+    this.opened.set(false)
     this.following = false
     this.order.stopFollow()
     this.order.forgetWaits()
@@ -178,7 +217,7 @@ export class WorkspaceModel {
    */
   async resume(): Promise<void> {
     const run = this.generation
-    const ownerId = valueOf(this.detail.get())?.workspace.owner.id
+    const ownerId = valueOf(this.order.detail.get())?.workspace.owner.id
     if (this.startError.get()?.code !== 'user_suspended')
       this.startError.set(null)
     let resumed: WaitedReply
@@ -195,7 +234,7 @@ export class WorkspaceModel {
       const problem = asApiError(error)
       const sameOwner =
         ownerId !== undefined &&
-        ownerId === valueOf(this.detail.get())?.workspace.owner.id
+        ownerId === valueOf(this.order.detail.get())?.workspace.owner.id
       if (
         run === this.generation &&
         (problem.code !== 'user_suspended' || sameOwner)
@@ -214,11 +253,11 @@ export class WorkspaceModel {
 
   /** Counts input in the open workspace, at most once a minute. */
   reportActivity(): void {
-    this.activity.report(valueOf(this.detail.get())?.workspace.state)
+    this.activity.report(valueOf(this.order.detail.get())?.workspace.state)
   }
 
   private clearUnread(): void {
-    if (valueOf(this.detail.get())?.workspace.state !== 'unread') return
+    if (valueOf(this.order.detail.get())?.workspace.state !== 'unread') return
     // A read that is newer than the stream can name output that no read mark
     // covers yet. It clears after the stream and a mark reach its number.
     if (this.order.through > this.stream.last.get()) return

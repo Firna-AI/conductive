@@ -67,19 +67,19 @@ the requirements.
   handler of the tab opens it on every system and stops the key, so the
   browser opens no menu of its own. On a phone, a long press that ends with
   no move opens it as a sheet. A session tab has Rename session, a line,
-  Copy concise transcript and Copy full transcript, a line, then Move left
-  and Move right, with the icons of the mockups. The temporary tab has Keep
-  open, with the bookmark icon of the mockups, a line, then Move left and
-  Move right. A kept file or diff tab has Move left and Move right. The
-  host tells the row which tab is temporary: only that tab gets a `keep`
-  from `renderTab`. A move that the place of the tab rules out is off: it
-  keeps its place at half opacity, and the arrow keys skip it. Escape or a
-  press outside closes the menu.
+  Copy link, Copy concise transcript, and Copy full transcript, a line,
+  then Move left and Move right, with the icons of the mockups. The
+  temporary tab has Keep open, with the bookmark icon of the mockups, a
+  line, then Move left and Move right. A kept file or diff tab has Move
+  left and Move right. The host tells the row which tab is temporary: only
+  that tab gets a `keep` from `renderTab`. A move that the place of the tab
+  rules out is off: it keeps its place at half opacity, and the arrow keys
+  skip it. Escape or a press outside closes the menu.
 - Each item that changes the workspace carries a mark: Rename session,
   Keep open, and the moves. A read-only chat leaves out the marked items,
   and a group with no item left loses its line. So a session tab there has
-  only its two copy items, and a file or diff tab, also the temporary tab,
-  has no item, so it opens no menu and the browser shows its own. A
+  only its three copy items, and a file or diff tab, also the temporary
+  tab, has no item, so it opens no menu and the browser shows its own. A
   read-only chat binds no drag, so a finger opens the menu with
   `useLongPress` of the web app: a hold of 450 ms that ends within 8 px. It
   lifts no tab, sends no write, and selects no tab, because the click after
@@ -102,6 +102,13 @@ the requirements.
   says. The menu closes, and a toast says "Transcript copied", or "The
   transcript didn't copy. Try again." It selects no tab, loads no history,
   and saves no view, also for a tab that never showed.
+- Copy link copies the link of the session of its tab, with the origin of
+  the link of the workspace, as
+  [Session links](../../docs/protocol/agents-and-sessions.md#session-links)
+  says. The menu closes, and a toast says "Link copied", or "The link
+  didn't copy. Try again." It sends no request and selects no tab. Before
+  the workspace loads, the chat knows no origin, so the menu has no Copy
+  link.
 - A row whose tabs do not fit at their minimum width scrolls sideways, with
   no scrollbar. It keeps the tab with the rename field, else the shown tab,
   whole in view: at the mount, when that tab changes, when the row gets

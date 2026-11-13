@@ -97,12 +97,13 @@ export function openDialog(view: HTMLElement): HTMLElement {
   return dialog
 }
 
-/** The org and the section that the dialog names, such as "Acme · General". */
+/**
+ * The org and the section that the dialog names on its Section menu, such
+ * as "Acme · General".
+ */
 export function placeOf(dialog: HTMLElement): string | undefined {
-  return Array.from(
-    dialog.querySelectorAll('span'),
-    (span) => span.textContent ?? '',
-  ).find((text) => text.includes(' · '))
+  const menu = dialog.querySelector('[aria-label^="Section: "]')
+  return menu?.textContent ?? undefined
 }
 
 /** The list beside the main area, which holds the row and the sections. */

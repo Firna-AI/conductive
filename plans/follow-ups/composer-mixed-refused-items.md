@@ -8,20 +8,20 @@
 
 - **Source:** Implementation. **Category:** UX wording.
 - **Terms:**
-  - **Notice over the box:** a box above the composer that names a problem and offers one action, such as the notice for a file over 25 MB.
-  - **Refused item:** an item of a drop or a pick that the composer does not attach. It is a folder, or a file over 25 MB.
+  - **Notice over the box:** a box above the composer that names a problem and offers one action, such as the notice for a file over 100 MB.
+  - **Refused item:** an item of a drop or a pick that the composer does not attach. It is a folder, or a file over 100 MB.
 - **Background:**
   - The composer file drops change lets a member drop files on the message box of the chat, the New workspace page, and its dialog. Each file then shows as a chip at its place in the text.
-  - The design of that change, of 10 November 2026, gives a dropped folder and a file over 25 MB no chip. The other files of the drop attach. Reason: a folder upload fails, and a failed chip that Try again cannot fix tells the member nothing.
+  - The design of that change, of 10 November 2026, gives a dropped folder and a file over 100 MB no chip. The other files of the drop attach. Reason: a folder upload fails, and a failed chip that Try again cannot fix tells the member nothing.
   - The notice over the box names each dropped folder and says to attach its files. Its action "Attach files" opens the file picker, so the member can select the files of the folder.
-  - The notice names a file over 25 MB as before that change: its name, or a count for two or more.
+  - The notice names a file over 100 MB as before that change: its name, or a count for two or more.
   - That change does not attach the files inside a dropped folder.
   - `docs/protocol/message-attachments.md:15-16` says only that the composer refuses a larger file before its upload and names the limit. No protocol doc states the words of a notice or the number of notices.
   - `docs/mockups/src/components/chat/attachmentCopy.ts:32-40` holds two titles: "<name> wasn't attached" and "<count> files weren't attached". The app uses the same two titles, in `src/chat/components/AttachmentChips.tsx:63-66`.
-  - The body of that notice is "Each file can be up to 25 MB.", and its action is "Attach a smaller file".
+  - The body of that notice is "Each file can be up to 100 MB.", and its action is "Attach a smaller file".
   - The notice gives no size of a refused file, as `attachmentCopy.ts:42-46` says. The size formatter counts in units of 1024, and the limit counts in units of 1000.
   - The mockup notice for a folder names one folder: "checkout-screens wasn't attached", then "Attach the files in the folder instead.", with "Attach files". It is `folderNotice` in `docs/mockups/src/screens/composerNotice.tsx:63-77`.
-  - No words exist for two folders, or for a folder and a file over 25 MB. "2 files weren't attached" is wrong for a folder.
+  - No words exist for two folders, or for a folder and a file over 100 MB. "2 files weren't attached" is wrong for a folder.
   - The file picker gives only files. The notice shows only the refused items of the last pick. The next pick replaces it, as `attachFiles` in `src/chat/state/attachment-actions.ts:57-61` says. So a mix of kinds comes only from one drop, which makes it rare.
   - The mockup host `composerNotice` returns one notice, in `docs/mockups/src/screens/composerNotice.tsx:92-98`.
   - In the app, each composer places `OversizeNotice` as its own element, in `src/chat/components/Composer.tsx:81-84` and `src/shell/new-workspace/Composer.tsx:46-49`. The New workspace dialog lists its notices, in `src/shell/new-workspace/NewWorkspaceDialog.tsx:174-184`. So a second notice needs a second element, but no new layout.

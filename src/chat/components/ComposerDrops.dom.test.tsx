@@ -120,67 +120,68 @@ describe('a drop of files on the chat composer', () => {
     })
   })
 
-  test('a dropped folder gets no chip and no upload, and the notice over the box names it, also for a folder alone; the files of the drop attach, also an empty one; Attach files in the notice opens the file picker', async () => {
+  test('a dropped folder becomes one zip chip at its place among the files of the drop, also a folder alone; a folder that cannot be read gets no chip, the notice over the box names it, and Attach files in the notice opens the file picker', async () => {
     const view = await mountComposer()
     const opened = vi.fn()
     view.root
       .querySelector('input[type="file"]')
       ?.addEventListener('click', opened)
-    const folder = dropOn(
+    const alone = dropOn(
       view.field,
-      draggedFiles([{ folder: 'checkout-screens' }]),
+      draggedFiles([
+        { folder: 'checkout-screens', items: [picked('overlap.png')] },
+      ]),
     )
-    const alone = {
-      taken: folder.defaultPrevented,
+    await act(flushMicrotasks)
+    const zipped = {
+      taken: alone.defaultPrevented,
       notices: notices(view.root),
       chips: view.chips(),
       files: names(view.draft().files),
-      uploads: view.jobs.length,
     }
     dropOn(
       view.box,
       draggedFiles([
         picked('login.png'),
-        { folder: 'design' },
+        { folder: 'design', items: [picked('logo.svg')] },
+        { folder: 'private', unreadable: true },
         new File([], 'empty.txt'),
       ]),
     )
+    await act(flushMicrotasks)
     const mixed = {
       notices: notices(view.root),
       chips: view.chips(),
       files: names(view.draft().files),
-      uploads: view.jobs.map(({ name }) => name),
       draft: view.draft().text,
     }
     const notice = view.root.querySelector<HTMLElement>('[role="alert"]')
     if (notice) await press(byRole('button', 'Attach files', notice))
-    expect({ alone, mixed, opened: opened.mock.calls.length }).toEqual({
-      alone: {
+    expect({ zipped, mixed, opened: opened.mock.calls.length }).toEqual({
+      zipped: {
         taken: true,
-        notices: [
-          "checkout-screens wasn't attachedAttach the files in the folder instead.Attach files",
-        ],
-        chips: [],
-        files: [],
-        uploads: 0,
+        notices: [],
+        chips: ['Attached file checkout-screens.zipUploading'],
+        files: ['checkout-screens.zip'],
       },
       mixed: {
         notices: [
-          "design wasn't attachedAttach the files in the folder instead.Attach files",
+          "private wasn't attachedThe folder couldn't be read. Attach the files in it instead.Attach files",
         ],
         chips: [
+          'Attached file checkout-screens.zipUploading',
           'Attached file login.pngUploading',
+          'Attached file design.zipUploading',
           'Attached file empty.txtUploading',
         ],
-        files: ['login.png', 'empty.txt'],
-        uploads: ['login.png'],
-        draft: `${view.markOf('login.png')} ${view.markOf('empty.txt')} `,
+        files: ['checkout-screens.zip', 'login.png', 'design.zip', 'empty.txt'],
+        draft: `${view.markOf('checkout-screens.zip')} ${view.markOf('login.png')} ${view.markOf('design.zip')} ${view.markOf('empty.txt')} `,
       },
       opened: 1,
     })
   })
 
-  test('the box takes a drop while a send runs, and while a file of the draft uploads, which keeps Send off; a drop on the bar puts the chips at the caret', async () => {
+  test('the box takes a drop while a send runs, after the sent text left, and while a file of the draft uploads, which keeps Send off; a drop on the bar puts the chips at the caret', async () => {
     // The only POST through the fetch of this chat is the send, because the
     // uploads go through the transport of the test.
     const view = await mountComposer('desktop', (request) => {
@@ -218,7 +219,7 @@ describe('a drop of files on the chat composer', () => {
       sending: { sending: true, taken: true, files: ['late.png'] },
       uploads: { sending: false, sendOff: 'true' },
       dropped: {
-        draft: `Ship it ${view.markOf('late.png')} ${view.markOf('more.png')} `,
+        draft: `${view.markOf('late.png')} ${view.markOf('more.png')} `,
         chips: [
           'Attached file late.pngUploading',
           'Attached file more.pngUploading',

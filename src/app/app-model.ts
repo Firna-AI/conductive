@@ -1,28 +1,30 @@
 import type { AgentModel } from '../shared/agents'
-import { API_PATHS, orgPath, type User } from '../shared/api'
+import { API_PATHS, type User } from '../shared/api'
 import { GET_STARTED_PATH, type GetStartedResponse } from '../shared/onboarding'
 import {
   leaveOrgPath,
   type CreateOrgRequest,
+  type MoveOrgRequest,
   type OrgSummary,
   type RenameOrgRequest,
 } from '../shared/orgs'
 import type { ApiClient } from './api/client'
-import { ignore, nested, record } from './api/parse'
-import { readGetStarted, readOrg } from './api/read-core'
+import { ignore } from './api/parse'
+import { readGetStarted } from './api/read-core'
 import { readSession } from './api/read-waitlist'
 import { AccountModel } from './account-model'
+import type { ComposerFocusRequest } from './composer-focus'
 import { FeedbackModel } from './feedback-model'
 import { failedBoot, readShared, type Boot } from './boot'
 import { InvitationsModel } from './invitations-model'
+import { OrgList } from './org-list'
 import { OrgModel } from './org-model'
-import { isSuspended } from './permissions'
+import { patchOrg, postOrg } from './org-writes'
+import { suspendedOrg } from './permissions'
 import type { AppServices } from './services'
 import { setupSteps } from './setup-steps'
 import { Store, type Readable } from './store'
 import { WaitlistModel } from './waitlist-model'
-
-const readOrgResponse = (body: unknown) => nested(record(body), 'org', readOrg)
 
 /**
  * The data that every screen shares: the person signed in, their orgs, the
@@ -31,7 +33,9 @@ const readOrgResponse = (body: unknown) => nested(record(body), 'org', readOrg)
  */
 export class AppModel {
   readonly boot = new Store<Boot>({ state: 'loading' })
-  readonly orgs = new Store<readonly OrgSummary[]>([])
+  private readonly orgList = new OrgList()
+  /** The orgs of the person in their own order, as `OrgList` says. */
+  readonly orgs: Readable<readonly OrgSummary[]> = this.orgList
   /**
    * The orgs whose requests the API refused with `org_suspended`. Such a
    * refusal shows that the org is suspended, also while its summary is old.
@@ -45,6 +49,11 @@ export class AppModel {
    * in memory only.
    */
   readonly lastOrg = new Store<string | null>(null)
+  /**
+   * The workspace whose message field takes the focus when its chat shows,
+   * as `ComposerFocusRequest` says. The tab keeps it in memory only.
+   */
+  readonly composerFocus = new Store<ComposerFocusRequest | null>(null)
   readonly models = new Store<readonly AgentModel[]>([])
   /**
    * The steps of Get started as every screen shows them. Only the step of
@@ -85,7 +94,8 @@ export class AppModel {
 
   /**
    * A sign-out, or a sign-in of another person, ends the create requests
-   * of every org that still run, so that their answers change nothing.
+   * of every org that still run, so that their answers change nothing. It
+   * also forgets the GitHub access of the person.
    */
   private followPerson(): void {
     const boot = this.boot.get()
@@ -96,7 +106,10 @@ export class AppModel {
     ) {
       return
     }
-    for (const org of this.orgModels.values()) org.creations.clear()
+    for (const org of this.orgModels.values()) {
+      org.creations.clear()
+      org.forgetGitHubAccess()
+    }
     this.userId = person
   }
 
@@ -154,7 +167,7 @@ export class AppModel {
     const shared = await readShared(this.services.api)
     if (this.boot.get() !== from) return
     this.account.account.set(shared.account)
-    this.orgs.set(shared.orgs)
+    this.orgList.load(shared.orgs)
     this.models.set(shared.models)
     this.setupReply.set(shared.getStarted)
     this.boot.set({ state: 'ready', user })
@@ -169,34 +182,12 @@ export class AppModel {
     let model = this.orgModels.get(orgId)
     if (!model) {
       model = new OrgModel(this.services, orgId, {
-        suspended: this.suspended(orgId),
+        suspended: suspendedOrg(orgId, this.orgs, this.refusedOrgs),
         note: () => this.noteSuspended(orgId),
       })
       this.orgModels.set(orgId, model)
     }
     return model
-  }
-
-  /**
-   * Whether an org is suspended, from its summary or from a refusal of the
-   * API, as a value to follow.
-   */
-  private suspended(orgId: string): Readable<boolean> {
-    return {
-      get: () => {
-        const org = this.orgs.get().find((item) => item.id === orgId)
-        return org !== undefined && isSuspended(org, this.refusedOrgs.get())
-      },
-      subscribe: (listener) => {
-        const stops = [
-          this.orgs.subscribe(listener),
-          this.refusedOrgs.subscribe(listener),
-        ]
-        return () => {
-          for (const stop of stops) stop()
-        }
-      },
-    }
   }
 
   /** The person opens a page of an org. */
@@ -236,10 +227,17 @@ export class AppModel {
    * follow it.
    */
   putOrg(org: OrgSummary): void {
-    this.orgs.change((orgs) =>
-      orgs.some((item) => item.id === org.id)
-        ? orgs.map((item) => (item.id === org.id ? org : item))
-        : [...orgs, org],
+    this.orgList.put(org)
+  }
+
+  /**
+   * Moves an org to `index` among the other orgs of the rail. The move
+   * shows at once. A failure takes back only this move, and throws.
+   */
+  moveOrg(orgId: string, index: number): Promise<void> {
+    const request: MoveOrgRequest = { orgId, index }
+    return this.orgList.move(orgId, index, () =>
+      this.services.api.send('PUT', API_PATHS.orgOrder, request, ignore),
     )
   }
 
@@ -248,26 +246,14 @@ export class AppModel {
    * of the repositories that it chose from the account's list.
    */
   async createOrg(request: CreateOrgRequest): Promise<OrgSummary> {
-    const org = await this.services.api.send(
-      'POST',
-      API_PATHS.orgs,
-      request,
-      readOrgResponse,
-    )
+    const org = await postOrg(this.services.api, request)
     this.putOrg(org)
     return org
   }
 
   /** Saves the name and the initials of an org. */
   async renameOrg(orgId: string, request: RenameOrgRequest): Promise<void> {
-    this.putOrg(
-      await this.orgApi(orgId).send(
-        'PATCH',
-        orgPath(orgId),
-        request,
-        readOrgResponse,
-      ),
-    )
+    this.putOrg(await patchOrg(this.orgApi(orgId), orgId, request))
   }
 
   /**
@@ -277,6 +263,6 @@ export class AppModel {
    */
   async leaveOrg(orgId: string): Promise<void> {
     await this.orgApi(orgId).send('POST', leaveOrgPath(orgId), {}, ignore)
-    this.orgs.change((orgs) => orgs.filter((org) => org.id !== orgId))
+    this.orgList.remove(orgId)
   }
 }

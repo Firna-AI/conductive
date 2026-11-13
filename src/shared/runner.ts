@@ -169,7 +169,12 @@ export interface RunnerCodexAccount {
 }
 
 export type RunnerTurnCredential =
-  | { agent: 'claude'; kind: 'token' | 'api-key'; token: string }
+  | {
+      agent: 'claude'
+      kind: 'token' | 'api-key'
+      token: string
+      promptCacheTtl?: '1h'
+    }
   | { agent: 'codex'; kind: 'api-key'; token: string }
   | {
       agent: 'codex'

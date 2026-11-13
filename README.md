@@ -44,9 +44,9 @@ feature that is not complete yet says so.
 - Chat with agents powered by Claude and Codex. A workspace holds several
   sessions, and one picker sets the model and the effort.
 - Send a message during a turn, or stop the turn.
-- Attach files of up to 25 MB each to a message.
-- Each user connects their own Claude subscription token, ChatGPT plan
-  through device code sign-in, or API keys.
+- Attach files of up to 100 MB each to a message.
+- Each user connects a Claude subscription token, a ChatGPT plan through
+  device code sign-in, an API key, or an own endpoint in Account or Get started.
 - Files and Changes, a terminal, and port previews. The live desktop is
   hidden for now, as [Desktop](docs/protocol/workspace-tools.md#desktop)
   says.
@@ -79,9 +79,15 @@ feature that is not complete yet says so.
 ## What a user needs
 
 - a GitHub account
-- a login for Claude, Codex, or both:
-  - Claude: a Claude subscription token or an Anthropic API key
-  - Codex: a ChatGPT plan with device code sign-in enabled, or an OpenAI API key
+- at least one agent login:
+  - for Claude, a Claude subscription token, an Anthropic API key, or an
+    own endpoint that serves the Anthropic Messages API
+  - for Codex, a ChatGPT plan with device code sign-in enabled, an OpenAI
+    API key, or an own endpoint that serves the OpenAI Responses API
+
+An own endpoint is a gateway or a proxy that the user chose, with its key.
+[Own endpoint logins](docs/protocol/own-endpoint-logins.md)
+states its address rule and its other rules.
 
 ## Get started
 
@@ -107,10 +113,8 @@ bucket name in `wrangler.jsonc` name the production database and bucket.
 Local commands, such as `npm run db:migrate` and `npm run dev`, use only
 the local storage.
 
-This local setup creates no Cloudflare resources and deploys nothing. The
-`Deploy` workflow in GitHub Actions deploys each push to `main`, as
-[Automatic deploys](docs/automatic-deploys.md) says. Put local secrets in
-`.dev.vars`, which Git ignores.
+This local setup creates no Cloudflare resources and deploys nothing. Put
+local secrets in `.dev.vars`, which Git ignores.
 
 The app origin is the scheme, host, and port of the web app. A deployed
 Worker reads it from `APP_ORIGIN`, which `wrangler.jsonc` does not set.
@@ -195,22 +199,23 @@ under `.wrangler/`, which Git also ignores.
 | `npm run typecheck`         | Generate types and check app, tools, Worker production, Worker tests, and the Astro files of the marketing site |
 | `npm run test`              | Run the Vitest tests                                           |
 | `npm run db:migrate`        | Apply the D1 migrations to local storage                       |
-| `npm run file-length:check` | Check the 300-line limit of JavaScript, TypeScript, and Astro files |
 | `npm run site:dev`          | Serve the marketing site from Astro at `http://localhost:4321`, and reload on edits |
 | `npm run site:build`        | Build the marketing site into `public/_site/`, with its file list |
-| `npm run check`             | Run every check, including the app build, the mockup checks, and the runner checks |
+| `npm run check`             | Run every check: `npm run check:static`, then the Vitest tests |
+| `npm run check:static`      | Run every check except the root Vitest tests, including the app build, the mockup checks, and the runner checks |
 | `npm run mockups:serve`     | Serve the catalogue at `http://127.0.0.1:4173`, and watch edits |
 | `npm run mockups:check`     | Check mockup types, then build the catalogue in strict mode     |
-| `npm run lint`              | Run ESLint                                                     |
+| `npm run lint`              | Run ESLint, including the 300-line limit of JavaScript, TypeScript, and Astro files |
 | `npm run format:check`      | Check formatting with Prettier                                 |
 | `npm run format`            | Format the files with Prettier                                 |
 
 GitHub Actions uses `.nvmrc`. It installs with `npm ci`,
 `npm --prefix desktop ci`, and `npm ci --prefix runner`. Then it runs
-`npm run check` on pull requests, and on pushes to `main` and to the primary
-branch of the plan. CI does not deploy. The `Deploy` workflow deploys each
-push to `main`, as [Automatic deploys](docs/automatic-deploys.md) says. It
-does not wait for CI.
+the complete gate on pull requests, and on pushes to `main` and to the
+primary branch of the plan. One job runs `npm run check:static`. Four jobs
+each run one quarter of the Vitest files at the same time. The job
+`Complete gate` passes only when all of them pass. CI does not deploy, as
+[Automatic deploys](docs/automatic-deploys.md) says.
 
 ## Mac app
 
@@ -238,48 +243,7 @@ features:
 
 ## Key code
 
-- `docs/mockups/src/entries/`: the Mokly entries of the screens, and the
-  user flows.
-- `docs/mockups/src/screens/`: one React component for each screen.
-- `docs/mockups/src/components/`: the parts that the screens share.
-- `docs/mockups/src/fixtures/`: the sample data of the screens.
-- `docs/mockups/src/brand.ts`: the product name, which every screen reads, and the GitHub repository of the releases.
-- `mokly.config.json`: the Mokly configuration.
-
-- `worker/app.ts`: the Worker's HTTP entry point.
-- `worker/marketing/`: built marketing pages, the agreement page before
-  GitHub, the file list, request markers, and the site's security headers.
-- `src/marketing/`: Astro pages, layouts, parts, styles, pictures, shared
-  legal text, the public guides, the shared rows and words of the
-  Conductor comparison page, and the shared plans and words of the pricing
-  page. Its [README](src/marketing/README.md) gives the build and preview
-  steps.
-- `src/shared/site-build.ts`: names and types shared by the Astro build
-  and the Worker.
-- `worker/security/`: GitHub sign-in, signed sessions, the request gate,
-  the app origin of each request, the Mac app's sign-in handoff and origin
-  rules, and the shared content security policy of the web app and the Mac
-  app.
-- `worker/data/`: D1 queries for users, orgs, and sessions.
-- `worker/sandbox/`: the provider accounts, the lookup of the client of each
-  account, and the typed Boat adapter. Production has one account, which
-  uses the app's one Boat key.
-- `src/app/`: the data of the web app, such as the typed API client, the
-  models that the screens read, the router, and the event stream. Its
-  [README](src/app/README.md) gives the rules and the key code of the
-  web app.
-- `src/shell/`: the screens of the app shell, such as the workspace list,
-  the workspace screen, Get started, and the settings. The
-  [web app README](src/app/README.md) also gives their rules and their
-  key code.
-- `src/shared/`: the browser API contracts, route paths, and runner message types.
-- `src/test-support/`: the fake API, recorded chat and file events, and terminal fake.
-- `worker/test-support/`: local D1, fake GitHub and Boat servers, and runner fakes.
-- `migrations/`: the D1 schema migrations.
-- `desktop/`: the Mac app, an Electron package of its own. Its
-  [README](desktop/README.md) gives its key code.
-
-The web app lives under `src/`, and the Cloudflare Worker under `worker/`.
+[Key code](docs/key-code.md) lists the entry points of the app, Worker, and mockups.
 
 ## Docs
 

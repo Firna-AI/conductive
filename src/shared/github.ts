@@ -5,6 +5,8 @@ export const githubPaths = {
   banner: (orgId: string, id: string) => `${workspacePath(orgId, id)}/github`,
   checks: (orgId: string, id: string) =>
     `${workspacePath(orgId, id)}/github/checks`,
+  stored: (orgId: string, id: string) =>
+    `${workspacePath(orgId, id)}/github/stored`,
   capabilities: (orgId: string, id: string) =>
     `${workspacePath(orgId, id)}/github/capabilities`,
   merge: (orgId: string, id: string) =>
@@ -115,4 +117,11 @@ export interface GitHubChecksResponse {
   state: 'waiting-for-pull-request' | 'available'
   /** Preserve GitHub's order. */
   checks: readonly GitHubCheck[]
+}
+/**
+ * The last GitHub state that the Worker stored for the workspace branch,
+ * without a GitHub read. Null before the first read of the branch.
+ */
+export interface GitHubStoredResponse {
+  state: { banner: GitHubBanner; checks: GitHubChecksResponse } | null
 }

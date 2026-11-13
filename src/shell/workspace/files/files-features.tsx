@@ -19,6 +19,7 @@ import type { WorkspaceContext, WorkspaceFeatures } from '../features'
 import { BarKeys } from '../github/bar-keys'
 import { useGitHubFeed, useScreenBar } from '../github/WorkspaceGitHub'
 import { SandboxPanel } from '../SandboxNotice'
+import { contentState } from '../sandbox-view'
 import { useSavedView } from '../saved-view'
 import { filesPlace, tabOf } from './files-address'
 import {
@@ -32,15 +33,16 @@ import { useFileTargets, useKeptFiles } from './workspace-files'
  * The state of a sandbox that does not run, in place of the content of a
  * file or diff page. The page hides the bar of the chat, so the state shows
  * the action of the bar, Resume or Try again, and the words of a refusal.
+ * While the open resumes the sandbox, it shows the wait of a start.
  */
 function pagePlaceholder(context: WorkspaceContext): ReactNode {
-  const { panel } = context
-  if (!panel) return undefined
+  const state = contentState(context.panel, context.resumingAtOpen)
+  if (!state) return undefined
   return (
     <SandboxPanel
       phone
       resume={context.resume}
-      state={panel}
+      state={state}
       workspace={context.workspace}
     />
   )

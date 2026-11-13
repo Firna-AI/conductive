@@ -11,7 +11,8 @@ import { ActionButton } from '../ui/actions'
  * login is connected.
  */
 export function unusableCause(login: AgentLoginStatus | null): string | null {
-  if (!login?.connected || login.agent !== 'codex') return null
+  if (!login?.connected || login.agent !== 'codex' || login.kind === 'endpoint')
+    return null
   return login.unusableCause ?? null
 }
 

@@ -34,8 +34,10 @@ plan limits.
   changes no login, and the cloud computer keeps running.
 - When a message uses the login of another member, the bar of the
   composer names that login after the model picker, such as "Cal's login"
-  in `app/composer/login`. So the box keeps its place. A message on the own
-  login of the viewer shows no name. When the login of the member who
+  in `app/composer/login`. So the box keeps its place. The label names an
+  own endpoint login in the same way, with no host, as [Logins](#logins)
+  says. A message on
+  the own login of the viewer shows no name. When the login of the member who
   started a session is not available, a message of another member starts
   a new session. The notice over the composer of the first session says
   so, and its chat stays as it was, as `app/sessions/no-starter-login`
@@ -78,9 +80,10 @@ plan limits.
 - The menu of a workspace row follows the same roles, as
   `app/workspace-menu/roles` shows. Every member moves and renames a
   workspace that is not archived. Only an admin sees Reassign to, and only
-  the owner and the admins see Archive, which archives at once. The
-  archived row of an admin offers only Reassign to. An archived row of a
-  member and every row of a suspended org have no menu. The menu has no
+  the owner and the admins see Archive, which archives at once. Every row
+  offers Copy link. The archived row of an admin offers only Reassign to
+  and Copy link. An archived row of a member and every row of a suspended
+  org offer only Copy link. The menu has no
   Restore: the row keeps it, for every member of an org that is not
   suspended.
 - No stopped workspace shows as expiring. Near day 14 of a stop, the app
@@ -92,13 +95,25 @@ plan limits.
   one is added, as `app/orgs/new/no-repository` shows. When the GitHub App
   reaches no repository, the list asks the person to give it access, with
   Manage access, as `app/orgs/new/no-access` shows.
-- Delete org asks for the org name. The deleted org stays faded in the rail
-  of its admins until the date when everything is deleted, and its page
-  offers Restore.
+- Delete org asks for the org name. The deleted org leaves the rail. Until
+  the date when everything is deleted, the General tab of the Account page
+  lists it for its admins with Restore, as `app/account/deleted-orgs`
+  shows. Its page still offers Restore at its address.
+- Each person keeps their own order of their orgs, from decision 515 C of
+  11 November 2026, as `app/orgs/reorder` shows. The server saves it with
+  their memberships, so the rail, the org switcher of a phone, and the org
+  rows of the command palette show it on every device. A drag on the rail,
+  or Move up and Move down in the menu of a tile, change it. Alt and Up or
+  Down move a focused tile, from decision 517 B. On a phone, a long press
+  lifts an org in the org switcher and opens no menu. A new org goes at the
+  end of the rail. Create org, Operator, and the account stay where they
+  are.
 - The operator can suspend an org, from decision 129. Its members still
   open it and read its chats, and its notice gives the abuse address.
   Nothing in it can change, so its screens show no action that it refuses,
-  also for an admin. No notice promises its files. An archived workspace
+  also for an admin. Its tile in the rail still moves, because the order of the rail belongs to the person,
+  from decision 516 A, as `app/orgs/reorder/suspended` shows. No notice
+  promises its files. An archived workspace
   offers no Restore, as `app/orgs/suspended/workspace/archived` shows. A
   deleted org that is also suspended shows the notice above its page, keeps
   the date when everything is deleted, and offers no Restore, as
@@ -123,9 +138,11 @@ plan limits.
   from decision 175. `AgentConnectForm` opens under the row of the agent,
   as `app/account/connect-claude` and `app/account/connect-codex` show. Its
   switch chooses the kind of the login, and the first kind starts
-  selected: Subscription token, then API key, for Claude, and API key, then
-  ChatGPT plan, for Codex. For a token or a key, the words above the field
+  selected: Subscription token, API key, and Own endpoint for Claude, and
+  API key, ChatGPT plan, and Own endpoint for Codex. For a token or a key, the words above the field
   say what to paste and where to make it.
+- [Own endpoint login mockups](own-endpoint-logins.md) describes the fields,
+  connected host, model list, and address refusal for both agents.
 - ChatGPT plan has no field. Its words say that Codex then runs on the
   plan, and that device code sign-in must be on first in the ChatGPT
   security settings, as `app/account/connect-codex/chatgpt` shows. They
@@ -163,7 +180,7 @@ plan limits.
 - Under each connected login, the switch "Let other members use this
   login" says whether the messages of other members in the sessions of the
   user run on it, from decision 116. The switch starts off for a Claude
-  subscription token and on for an API key, as `app/account` shows. A
+  subscription token and on for an API key or own endpoint, as `app/account` shows. A
   ChatGPT plan of Codex starts off too, from decisions 171 and 175, as
   `app/account/codex-token` shows. The switch saves at once. A
   change that the app did not save shows its cause beside the switch, as
@@ -172,7 +189,10 @@ plan limits.
 - Get started has three steps: install the GitHub App, create an org, and
   connect Claude or Codex, from decision 33. The next step opens its form.
   It opens only after app access, so a person who waits sees the
-  waitlist instead.
+  waitlist instead. The agent step offers the kinds of the account, also
+  the own endpoint, and it shows no share switch. Its text says that the
+  agents run on the own Claude or OpenAI account of the person, or on
+  their own endpoint (decision 7 B of the own endpoint plan).
 - Create org starts the first build of the cloud computer of the org, from
   decision 150. The org step shows that build under the org: preparing
   with its time, then ready, or the failure with its saved message, Try
@@ -197,6 +217,10 @@ plan limits.
 - A login belongs to the person, so the agent step has its own state. A
   person who leaves the last org returns to Get started with the agent
   still connected, as `app/sign-in/get-started/no-org` shows.
+- A person whose orgs are all deleted counts as a person with no org.
+  While a deleted org exists, Get started shows the Deleted orgs list with
+  Restore before its steps, as `app/sign-in/get-started/deleted-orgs`
+  shows. Otherwise it shows no list.
 - The app and the mockups take the words of Get started from
   `src/screens/getStartedCopy.ts`. The words make no claim about earlier
   use.

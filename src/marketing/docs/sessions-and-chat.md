@@ -37,6 +37,9 @@ Select **Resume** if the restored workspace is already open.
 On a computer, **Enter** sends the message.
 Use **Shift+Enter** to add a line.
 On a phone, **Enter** adds a line.
+Your message appears in the chat at once.
+The chat scrolls down to it, also when you read an earlier part of the chat.
+If it cannot send, it goes back to the message box, and the chat shows the cause.
 
 You can send a message while the workspace's computer starts.
 The chat shows the steps of that start.
@@ -48,21 +51,27 @@ That first build is separate from the start of an existing workspace's computer.
 ## Attach files
 
 Use **Attach files** to pick files, or drop files into the message box.
+In a workspace chat, you can drop files anywhere on the chat, also on the transcript or the session tabs.
 The chat, **New workspace** page, and **New workspace** dialog all accept files.
 Each file appears as a file chip, a small box in the text.
 The chip shows the file's name and upload state.
 
 A picked file goes at the text cursor, or at the end if the field has no cursor.
 A file dropped on the text goes where you drop it.
-A drop on the rest of the box uses the text cursor or the end.
+A drop elsewhere uses the text cursor or the end.
 The text cursor then moves after the new chips.
 
-Each file can be up to 25 MB.
+Each file can be up to 100 MB.
 Wait for uploads to finish before you send.
 If an upload fails, use **Try again** or remove its chip.
 Removing a chip takes its file off the draft.
 Undo brings back the chip and its file.
-To attach a folder's contents, select its files.
+
+To attach a folder, drop it into the message box.
+Your browser zips the folder before the upload, so the folder becomes one `.zip` file chip.
+The zip holds every file and folder in it, also hidden files.
+The zip can be up to 100 MB, as each file can.
+If the browser cannot read the folder, use **Attach files** in the notice to pick its files.
 
 Each chip keeps its place in the sent message.
 When the message reaches the agent, select its file chip to open the copy.
@@ -74,8 +83,8 @@ Attached files arrive in `.context/attachments/` in the workspace's repository f
 Each file keeps the same path when you retry its message.
 New workspaces from a new computer build also get a `.context/` folder for agent notes, screenshots, and files for other sessions.
 Git ignores the folder's files unless your repository already tracks them.
-Use **Terminal** to find the ignored files.
-**All files** and **Changes** do not list them.
+After a new computer build, **All files** lists them, so you can open them there.
+**Changes** does not list them.
 
 - [Read files and pictures](/docs/files-and-changes#read-a-file)
 
@@ -126,13 +135,21 @@ Use **Stop** in each affected session if agents keep replying to each other with
 Each session has its own model and effort picker.
 A different model of the same agent keeps the conversation in that session.
 
-A model of the other agent opens a new session.
+A model of the other agent opens a new session when the session has messages.
 Your draft moves to it.
 The earlier conversation stays in its original session.
 The new session starts without a copy of that conversation.
+In a session with no messages, a model of the other agent stays in that session.
 
 If the chosen agent has no usable login, the message box offers **Connect** for that agent.
 Connect the login in **Account** before you send.
+
+For your own endpoint login, your pickers hide app models that its last successful model list does not name.
+They show all app models for the agent before the first successful read, or when the list names none of them.
+The session keeps its current model.
+Other members' pickers still show all app models.
+
+- [Refresh an endpoint's model list](/docs/agent-logins#keep-the-model-list-current)
 
 ## Guide or stop a running agent
 
@@ -169,18 +186,22 @@ The answer stays visible beside it.
 Agent replies can contain headings, paragraphs, lists, code, and tables.
 A wide table scrolls sideways inside the message.
 The text around it keeps the width of the chat.
+To copy a code block, select **Copy code** in its top corner.
+With a mouse, the button shows when you point at the block.
+**Code copied** confirms the copy.
 
 While a reply arrives, the chat shows its headings, text, and table rows as they arrive.
 In the folded work of a turn, open a message line to read its table.
 
 ## Manage session tabs
 
-Use a tab's menu to rename or move it.
+Use a tab's menu to rename or move it, or to copy its link.
 Open the menu with a right click on a computer.
 You can also use **Shift+F10** while the tab has focus.
 On a phone, use a long press.
 
 - **Rename session** changes the tab's title.
+- **Copy link** copies a link that opens the workspace with that session shown.
 - **Move left** and **Move right** move it one place.
 - Drag a tab to place it elsewhere in the row.
 
@@ -228,10 +249,14 @@ Select the same copy option within one minute to retry.
 ## Know whose account a session uses
 
 The member who starts a session supplies its agent login.
-Model use in that session goes to that member's connected account.
+A subscription token or provider API key bills model use to that member's connected account.
+On an own endpoint login, model use bills where the endpoint's owner runs it.
+The endpoint gets the messages, files, and command results of each turn on that login, whoever sent the message.
 
 If that member shares the login, other members' messages use it too.
 The message box names that member's login when you use it.
+It uses the same login label for an own endpoint.
+The chat does not show the endpoint's host.
 
 If the login is private or unavailable, your message starts a new session on your own login.
 That session links back to the earlier conversation.

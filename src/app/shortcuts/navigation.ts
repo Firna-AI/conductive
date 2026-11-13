@@ -72,20 +72,34 @@ export function workspaceRowMove(press: ShortcutPress): 'up' | 'down' | null {
   return null
 }
 
+/**
+ * The keys of a focused divider. `back` moves it left, or up for a divider
+ * that lies across, and `forward` moves it right, or down. `first` and
+ * `last` move it to the ends of the range of its panel.
+ */
 export type DividerKey =
-  'left' | 'right' | 'large-left' | 'large-right' | 'first' | 'last'
+  'back' | 'forward' | 'large-back' | 'large-forward' | 'first' | 'last'
 
-export function dividerKey(press: ShortcutPress): DividerKey | null {
-  const keys = {
-    ArrowLeft: 'left',
-    ArrowRight: 'right',
-    'Shift+ArrowLeft': 'large-left',
-    'Shift+ArrowRight': 'large-right',
-    Home: 'first',
-    End: 'last',
-  } as const
-  return (
-    Object.entries(keys).find(([key]) => matchesControlKey(key, press))?.[1] ??
-    null
-  )
+/**
+ * The key of a divider that stands up, between columns, with Left and
+ * Right, or of a divider that lies across, between parts of a column, with
+ * Up and Down.
+ */
+export function dividerKey(
+  press: ShortcutPress,
+  orientation: 'vertical' | 'horizontal' = 'vertical',
+): DividerKey | null {
+  const [back, forward] =
+    orientation === 'vertical'
+      ? ['ArrowLeft', 'ArrowRight']
+      : ['ArrowUp', 'ArrowDown']
+  const keys: readonly (readonly [string, DividerKey])[] = [
+    [back, 'back'],
+    [forward, 'forward'],
+    [`Shift+${back}`, 'large-back'],
+    [`Shift+${forward}`, 'large-forward'],
+    ['Home', 'first'],
+    ['End', 'last'],
+  ]
+  return keys.find(([key]) => matchesControlKey(key, press))?.[1] ?? null
 }

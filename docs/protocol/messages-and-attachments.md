@@ -8,6 +8,8 @@ sessions, what the chat shows, and the events.
 message carries. The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
+says. An own endpoint decision number names a decision of the change that
+adds the own endpoint logins, as [Tokens and secrets](tokens-and-secrets.md)
 says.
 
 ## Messages
@@ -18,6 +20,11 @@ says.
   (decision 51).
 - A model of the other agent opens a new session with that agent, and the
   draft moves there with its files, each at its place in the text.
+- A session with no message yet keeps a model of the other agent. The
+  session then changes its agent, and keeps its starter. The login check
+  runs again for the new agent. The user asked for this change, so that an
+  empty session opens no second tab. Reason: no agent conversation exists
+  before the first message, so no history stays behind.
 - Reason: neither SDK can switch agents inside one session. A hand-over of
   the transcript to the other agent was rejected. The user chose the way
   that Conductor works.
@@ -56,6 +63,10 @@ says.
 - When a message runs on the login of another member, the composer names
   that member inside the message box, such as "Priya's login". A line under
   the box was rejected, because the box then moved between sessions.
+- The label names an own endpoint login in the same way, such as "Priya's
+  login". A label that names the host of the endpoint was rejected, because
+  the members of an org trust each other with their logins (own endpoint
+  decision 5).
 - The composer names no login when a message runs on the user's own login.
   A name for the own login was rejected, because it tells the user nothing
   new.
@@ -63,6 +74,12 @@ says.
   says.
 - [The send key](create-a-workspace.md#the-send-key) gives the key that
   sends a message from the composer (decision 143 of PR #73).
+- A message shows in the chat at once when the user sends it, and the
+  composer clears at once. A message that the Worker refuses leaves the
+  chat and goes back to the composer with its files, before any text that
+  the user typed during the send. A notice says that it did not send.
+  Reason: a message that stayed in the composer until the reply made each
+  send feel slow.
 - The composer shows a notice when the user has no login for the agent of
   the chosen model (decision 33). It shows no such notice when the message
   runs on the login of another member.

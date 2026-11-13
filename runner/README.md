@@ -44,6 +44,10 @@ These facts belong to this implementation, not to the protocol docs.
   carries a turn token for the model gateway, as [Agent logins](agent-logins.md)
   says. [GitHub tokens](../docs/protocol/github-tokens.md)
   states how a sandbox gets GitHub access.
+- `src/commands.ts` reads the optional `promptCacheTtl: '1h'` of a turn credential.
+  It ignores unknown cache values and keeps the credential's existing kind.
+  `src/providers/claude.ts` sets `CLAUDE_CODE_PROMPT_CACHE_TTL=1h` for that value or a gateway subscription token.
+  An API-key credential without the field keeps the default cache.
 - Each agent process gets the commit author of its turn as `GIT_AUTHOR_NAME`,
   `GIT_AUTHOR_EMAIL`, `GIT_COMMITTER_NAME`, and `GIT_COMMITTER_EMAIL`.
   A message during the turn keeps that author, also when a new agent process
@@ -207,8 +211,8 @@ at run time. The build links `dist/runner/node_modules` to
 
 The complete gate, the root `npm run check`, runs the runner typecheck and
 the runner tests. Run `npm ci --prefix runner` once before the gate, as CI
-does. The root lint, format, and file-length checks also cover the runner
-files.
+does. The root lint and format checks also cover the runner files. Lint
+includes the file-length limit.
 
 ## Service
 

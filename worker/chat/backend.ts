@@ -11,14 +11,12 @@ import type {
 import type { FirstWorkspaceMessage } from '../lifecycle/workspace-runtime'
 import type { RunnerFileCommand } from '../../src/shared/runner-files'
 import type { AppEnv } from '../env'
-import { HttpError } from '../http'
 import { WorkspaceTurnTokens } from '../model-gateway/workspace'
 import { chatDependencies } from './dependencies'
 import {
   authorizeChatBrowser,
   type BrowserAccess,
 } from './browser-authorization'
-import { afterNumber } from './http-routes'
 import { fetchWorkspaceChat } from './backend-fetch'
 import {
   BrowserConnections,
@@ -38,6 +36,7 @@ import {
   runWorkspaceOperation,
   type WorkspaceOperation,
 } from './workspace-operation'
+import { openBrowser } from './sockets'
 import type {
   BrowserPeer,
   ChatDependencies,
@@ -116,7 +115,12 @@ export class WorkspaceChat {
     this.binding = new ChatWorkspaceBinding(
       overrides.matchesObject ?? (() => true),
     )
-    this.dependencies = chatDependencies(env, () => this.binding.id, overrides)
+    this.dependencies = chatDependencies(
+      env,
+      () => this.binding.id,
+      overrides,
+      () => this.runner?.connections.current?.protocolVersion ?? null,
+    )
     this.store = createWorkspaceChatStore(
       storage,
       env,
@@ -265,10 +269,7 @@ export class WorkspaceChat {
   }
 
   async openBrowser(request: Request, peer: BrowserPeer): Promise<() => void> {
-    const access = await this.authorizeBrowser(request)
-    if (access.suffix !== '/events')
-      throw new HttpError(404, 'not_found', 'The page is not available.')
-    return this.subscribe(access, afterNumber(new URL(request.url)), peer)
+    return openBrowser(this, request, peer)
   }
 
   subscribe(

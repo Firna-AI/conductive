@@ -17,6 +17,7 @@ import { ExternalLink } from '../common/ExternalLink'
 import { ScreenLink } from '../common/ScreenLink'
 import { useControlSizes } from '../common/touch'
 import { ChatGptSignIn } from './ChatGptSignIn'
+import { EndpointFields, type EndpointEntry } from './EndpointFields'
 import type { SignInStep } from './chatGptSignInCopy'
 import styles from './AgentConnectForm.module.css'
 
@@ -34,13 +35,14 @@ type SecretAsk = {
 }
 
 /** What a form asks for: a secret, or the ChatGPT sign-in, with no field. */
-type Ask = SecretAsk | { type: 'chatgpt-sign-in' }
+type Ask = SecretAsk | { type: 'chatgpt-sign-in' } | { type: 'endpoint' }
 
 /** What each agent asks for, by the kind that the switch selects. */
 type AgentAsks = Readonly<Record<AgentKey, Readonly<Record<LoginKind, Ask>>>>
 
 const asks: AgentAsks = {
   claude: {
+    endpoint: { type: 'endpoint' },
     token: {
       type: 'secret',
       text: (
@@ -67,6 +69,7 @@ const asks: AgentAsks = {
     },
   },
   codex: {
+    endpoint: { type: 'endpoint' },
     'api-key': {
       type: 'secret',
       text: (
@@ -117,7 +120,8 @@ function SecretFields(props: {
 
 /**
  * The form that connects an agent, open under its row. Its switch chooses
- * the kind of the login: a subscription token or an API key for Claude,
+ * the kind of the login, including an own endpoint for either agent.
+ * It offers a subscription token or an API key for Claude,
  * and an API key or the ChatGPT plan for Codex. `kind` is the kind that the
  * switch selects, by default the first kind of the agent. A secret has its
  * field and Connect. The ChatGPT plan has the steps of its sign-in, from
@@ -131,10 +135,11 @@ export function AgentConnectForm(props: {
   connectTo: string
   cancel: boolean
   signIn?: SignInStep
+  endpoint?: EndpointEntry
 }) {
   const { field } = useControlSizes()
   const kinds = connectKinds[props.agent]
-  const kind = props.kind ?? kinds[0]
+  const kind = props.endpoint ? 'endpoint' : (props.kind ?? kinds[0])
   const ask = asks[props.agent][kind]
   return (
     <div className={styles.form}>
@@ -147,8 +152,23 @@ export function AgentConnectForm(props: {
         }))}
         size={field}
         value={kind}
+        wrap
       />
-      {ask.type === 'secret' ? (
+      {ask.type === 'endpoint' ? (
+        <>
+          <EndpointFields
+            agent={props.agent}
+            entry={props.endpoint ?? 'empty'}
+            keyHint={`${productName} keeps it encrypted, and never shows it again.`}
+          />
+          <div className={styles.actions}>
+            {props.cancel ? <ActionButton>Cancel</ActionButton> : null}
+            <ScreenLink asChild to={props.connectTo}>
+              <ActionButton tone="primary">Connect</ActionButton>
+            </ScreenLink>
+          </div>
+        </>
+      ) : ask.type === 'secret' ? (
         <SecretFields
           ask={ask}
           cancel={props.cancel}
