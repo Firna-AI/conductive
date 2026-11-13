@@ -1,7 +1,7 @@
 import type { BridgeSize } from '../shared/terminal-bridge'
 
 /** The smallest font that fits a larger shared size into the panel. */
-export const MIN_SHARED_FONT_SIZE = 6
+const MIN_SHARED_FONT_SIZE = 6
 
 /**
  * The font size that fits the shared size into the panel. The cell grows

@@ -96,7 +96,7 @@ chmod 600 "$password_file"
  * private Node or the bridge is missing, or the bridge exits with code 3
  * before it attached, it runs the plain tmux client.
  */
-export function attachScript(
+function attachScript(
   options: TerminalScriptOptions = terminalScriptDefaults,
 ): string {
   const [node = '', bridge = ''] = options.bridgeCommand

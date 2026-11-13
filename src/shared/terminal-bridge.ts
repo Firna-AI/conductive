@@ -18,8 +18,8 @@ export const BRIDGE_OSC = 7717
 export const BRIDGE_VERSION = 1
 
 /** The largest shared size that either side accepts. */
-export const BRIDGE_MAX_COLUMNS = 500
-export const BRIDGE_MAX_ROWS = 200
+const BRIDGE_MAX_COLUMNS = 500
+const BRIDGE_MAX_ROWS = 200
 
 /** The lines of output history that tmux and the screen each keep. */
 export const TERMINAL_HISTORY_LINES = 2_000
@@ -69,7 +69,7 @@ export const BRIDGE_MESSAGE_START = `\x1b]${BRIDGE_OSC};`
 export const BRIDGE_MESSAGE_END = '\x07'
 
 /** A nonce as the bridge makes it: 16 random bytes in lowercase hex. */
-export function isBridgeNonce(value: string): boolean {
+function isBridgeNonce(value: string): boolean {
   return noncePattern.test(value)
 }
 

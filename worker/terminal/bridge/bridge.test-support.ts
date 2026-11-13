@@ -106,7 +106,7 @@ export async function tmuxServer() {
 }
 
 /** One connection: the bridge in its own terminal device. */
-export class Viewer {
+class Viewer {
   readonly rows: number
   readonly columns: number
   private readonly process: ChildProcess
