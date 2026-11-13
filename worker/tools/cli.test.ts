@@ -221,6 +221,27 @@ it('rejects incomplete CLI choices and missing runtime login before any request'
     'Choose Claude or Codex for the workspace.\n',
   ])
 
+  for (const [options, error] of [
+    [['--removed', 'yes'], 'Choose true or false for removed workspaces.\n'],
+    [
+      ['--removed-only', 'true'],
+      'Check the command options. Use --help for details.\n',
+    ],
+  ] as const) {
+    const filtered = toolOutput()
+    expect(
+      await runToolProcess(
+        ['workspaces', 'list', ...options],
+        TOOL_TEST_ENVIRONMENT,
+        inputLines(),
+        filtered.output,
+        fixture.send,
+      ),
+    ).toBe(1)
+    expect(filtered.stdout).toEqual([])
+    expect(filtered.stderr).toEqual([error])
+  }
+
   const missing = toolOutput()
   expect(
     await runToolProcess(

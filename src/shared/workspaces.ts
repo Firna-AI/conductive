@@ -5,6 +5,15 @@ import type { MessageSender, SendMessageRequest, UserMessage } from './messages'
 
 export const WORKSPACE_RESTORE_MS = 14 * 24 * 60 * 60 * 1_000
 
+export function workspaceRemovedAt(
+  archivedAt: number | null,
+  now: number,
+): number | null {
+  if (archivedAt === null) return null
+  const removedAt = archivedAt + WORKSPACE_RESTORE_MS
+  return removedAt <= now ? removedAt : null
+}
+
 export function workspaceRestoreUntil(
   archivedAt: number | null,
   sandboxId: string | null,

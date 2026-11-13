@@ -226,6 +226,10 @@ The git credential payload is not defined yet.
 
 ### Key Code
 
+- [Workspace lifecycle helpers](workspaces.ts) share `WORKSPACE_RESTORE_MS`,
+  `workspaceRestoreUntil`, and `workspaceRemovedAt` between the Worker and
+  the app. `workspaceRemovedAt(archivedAt, now)` returns the removal time
+  when it is at or before `now`, else null. It needs no cloud computer ID.
 - [Workspace views](workspace-view.ts) define the saved view and its
   `temporaryTab` field. The field names one file or diff by kind and path,
   without a display mode, or is null. The Worker and browser readers use

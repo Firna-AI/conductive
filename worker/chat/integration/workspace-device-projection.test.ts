@@ -12,6 +12,7 @@ import {
 import { TOOL_TURN_HEADER } from '../../../tools/context'
 import { deleteOrgPath } from '../../../src/shared/orgs'
 import { listToolWorkspaces } from '../../tools/workspace-data'
+import { DEVICE_TEST_NOW } from '../../devices/clock.test-support'
 import { closeSockets } from '../adapter-sockets.test-support'
 import { array } from '../agent-events'
 import { record } from '../inputs'
@@ -109,6 +110,7 @@ it('keeps current Mac input across lifecycle activity, heartbeat, retained retur
         OUTER_ORG,
         active.env.APP_ORIGIN,
         {},
+        DEVICE_TEST_NOW,
       )
     ).workspaces.find((workspace) => workspace.id === OUTER_WORKSPACE)?.state,
   ).toBe('input')

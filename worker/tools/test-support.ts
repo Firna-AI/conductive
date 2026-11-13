@@ -3,6 +3,7 @@ import { routes } from '../../src/app/router'
 
 import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 import { sessionLink } from '../../src/shared/session-link'
+import { WORKSPACE_RESTORE_MS } from '../../src/shared/workspaces'
 import type { AgentChoice, AgentModel } from '../../src/shared/agents'
 import { createWorkspaceToolClient } from '../../tools/client'
 import { TOOL_ENV, TOOL_TURN_HEADER } from '../../tools/context'
@@ -108,6 +109,17 @@ export async function toolFixture(harness: TestHarness) {
         TEST_TIME,
       ],
       [
+        'removed-workspace',
+        'org-a',
+        'repo-a',
+        'owner',
+        'general-a',
+        'Madrid',
+        'owner-login/madrid-kl12',
+        'archived',
+        TEST_TIME - WORKSPACE_RESTORE_MS,
+      ],
+      [
         'outside-workspace',
         'org-b',
         'repo-b',
@@ -197,7 +209,10 @@ export async function toolFixture(harness: TestHarness) {
     writeSession: vi.fn<AgentToolServices['writeSession']>(),
   }
   const env = { ...harness.env, MACHINE_ORIGIN: TOOL_TEST_ORIGIN }
-  const entry = requestBodyEntry(createAgentToolsHandler(env, services))
+  let now = TEST_TIME
+  const entry = requestBodyEntry(
+    createAgentToolsHandler(env, services, () => now),
+  )
   const handler = (request: Request) => entry(request, env)
   const requests: Request[] = []
   const send = async (request: Request) => {
@@ -227,7 +242,19 @@ export async function toolFixture(harness: TestHarness) {
   }
   const create = (body: unknown, headers?: HeadersInit) =>
     request({ method: 'POST', body: JSON.stringify(body), headers })
-  return { db, handler, client, send, request, create, requests, services }
+  return {
+    db,
+    handler,
+    client,
+    send,
+    request,
+    create,
+    requests,
+    services,
+    setTime: (at: number) => {
+      now = at
+    },
+  }
 }
 
 export type ToolFixture = Awaited<ReturnType<typeof toolFixture>>

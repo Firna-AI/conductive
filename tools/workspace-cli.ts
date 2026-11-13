@@ -29,14 +29,16 @@ export async function runWorkspaceCommand(
     case 'archive':
       return client.archiveWorkspace(workspaceId)
     case 'list': {
-      if (
-        values.archived !== undefined &&
-        values.archived !== 'true' &&
-        values.archived !== 'false'
-      )
-        throw new ToolInputError(
-          'Choose true or false for archived workspaces.',
+      for (const filter of ['archived', 'removed'] as const) {
+        if (
+          values[filter] !== undefined &&
+          values[filter] !== 'true' &&
+          values[filter] !== 'false'
         )
+          throw new ToolInputError(
+            `Choose true or false for ${filter} workspaces.`,
+          )
+      }
       return client.list(
         listWorkspacesInput({
           ownerId: values.owner,
@@ -46,6 +48,9 @@ export async function runWorkspaceCommand(
           updatedSince: cliNumber(values['updated-since']),
           ...(values.archived !== undefined && {
             archived: values.archived === 'true',
+          }),
+          ...(values.removed !== undefined && {
+            removed: values.removed === 'true',
           }),
           limit: cliNumber(values.limit),
           offset: cliNumber(values.offset),

@@ -34,6 +34,7 @@ export interface AgentListWorkspacesRequest {
   query?: string
   updatedSince?: number
   archived?: boolean
+  removed?: boolean
   limit?: number
   offset?: number
 }
@@ -51,6 +52,7 @@ export interface AgentWorkspaceDetail extends AgentWorkspaceListEntry {
   lastActivityAt: number
   archivedAt: number | null
   restoreUntil: number | null
+  removedAt: number | null
 }
 
 export interface AgentWorkspaceResponse {

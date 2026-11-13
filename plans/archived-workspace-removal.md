@@ -312,23 +312,23 @@ Depends on: 1
 
 Depends on: 2
 
-- [ ] Add the shared removal helper to `src/shared/workspaces.ts`, with
+- [x] Add the shared removal helper to `src/shared/workspaces.ts`, with
       its tests.
-- [ ] `list_workspaces`: leave out removed workspaces by default, and add
+- [x] `list_workspaces`: leave out removed workspaces by default, and add
       the `removed` filter (`worker/tools/workspace-data.ts`,
       `worker/tools/workspace-input.ts`,
       `src/shared/agent-workspaces.ts`).
-- [ ] Add the filter to the MCP schema, the CLI, and their help
+- [x] Add the filter to the MCP schema, the CLI, and their help
       (`tools/workspace-mcp-tools.ts`, `tools/list-input.ts`,
       `tools/workspace-cli.ts`, `tools/cli-help.ts`,
       `tools/cli-options.ts`).
-- [ ] `get_workspace`: add the removal time (`worker/tools/workspace-data.ts`,
+- [x] `get_workspace`: add the removal time (`worker/tools/workspace-data.ts`,
       `tools/responses.ts`).
-- [ ] Operator counts: add the Removed group
+- [x] Operator counts: add the Removed group
       (`worker/operator/workspace-counts.ts` and its readers).
-- [ ] Tests: list default and filter, read by ID of a removed workspace,
+- [x] Tests: list default and filter, read by ID of a removed workspace,
       session reads, operator counts.
-- [ ] Update `worker/operator/overview.md` and `worker/operator/README.md`
+- [x] Update `worker/operator/overview.md` and `worker/operator/README.md`
       (five state counts), the Tests and Key code parts of
       `worker/tools/workspaces.md`, and the README entry of the shared
       removal helper.

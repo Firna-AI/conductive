@@ -54,7 +54,7 @@ Both searches treat `%`, `_`, and backslash as literal name text.
 Each D1 query binds its input values.
 
 Org entries give `id`, `name`, `initials`, `createdAt`, `members`, `workspaces`, `running`, `status`, and `match`.
-The workspace count includes archived workspaces.
+The workspace count includes every workspace, also archived and removed workspaces.
 Running counts only workspaces, not builds.
 Status is `deleted`, `suspended`, or `active`, in that priority.
 Match is `org-id`, `cloud-computer-id`, or `preview-address` for a resource match.
@@ -86,7 +86,8 @@ It also gives `suspension` and `deletion`, each null when absent.
 The deletion gives `deletedAt` and `purgeAt`.
 The purge time is null when no time is stored.
 
-The state buckets match the overview.
+The five state counts match the overview: Running, Stopped, Failed, Archived, and Removed.
+Archived leaves out removed workspaces.
 Running separates workspaces from unfinished builds and refreshes.
 
 The user page gives their identity, name, join time, and owned workspace counts.
@@ -249,7 +250,7 @@ The [operator test guide](tests.md) gives the commands and native provider setup
 - [`user-access-data.ts`](user-access-data.ts): user grant sources, email state, and referral recipients.
 - [`org-directory.ts`](org-directory.ts) and [`user-directory.ts`](user-directory.ts): list queries and cursors.
 - [`org-detail.ts`](org-detail.ts) and [`user-detail.ts`](user-detail.ts): page queries and reply mapping.
-- [`workspace-counts.ts`](workspace-counts.ts): the state buckets shared by the overview and org page.
+- [`workspace-counts.ts`](workspace-counts.ts): the five state counts shared by the overview and org page, with removal computed at the read time.
 - [`lift.ts`](lift.ts): the lifts and the checks of affected workspaces.
 - [`repair.ts`](../lifecycle/repair.ts): bounded Cron repair of overdue disk and image alarms.
 - [`events-data.ts`](events-data.ts): the shared atomic writer for suspension state, events, and access revocations.

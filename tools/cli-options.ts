@@ -37,6 +37,7 @@ function commandOptions(args: readonly string[]): Options {
           query: string,
           'updated-since': string,
           archived: string,
+          removed: string,
         }
       case 'rename':
         return { ...workspace, name: string }

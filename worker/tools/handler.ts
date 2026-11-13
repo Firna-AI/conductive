@@ -36,6 +36,7 @@ export interface AgentToolsEnvironment {
 export function createAgentToolsHandler(
   env: AgentToolsEnvironment,
   services: AgentToolServices,
+  now: () => number,
 ) {
   return async (request: Request): Promise<Response> => {
     try {
@@ -87,6 +88,7 @@ export function createAgentToolsHandler(
           env.DB,
           caller,
           env.APP_ORIGIN,
+          now(),
         )
         if (workspace) return privateResponse(Response.json(workspace))
         const sessions = await readSessionsFromTool(
@@ -99,7 +101,14 @@ export function createAgentToolsHandler(
         if (sessions !== null) return privateResponse(Response.json(sessions))
         return privateResponse(
           Response.json(
-            await listFromTool(url, env.DB, caller, services, env.APP_ORIGIN),
+            await listFromTool(
+              url,
+              env.DB,
+              caller,
+              services,
+              env.APP_ORIGIN,
+              now(),
+            ),
           ),
         )
       }
@@ -127,6 +136,7 @@ export function createAgentToolsHandler(
         caller,
         services,
         env.APP_ORIGIN,
+        now(),
       )
       if (workspace) return privateResponse(workspace)
       const written = await writeSessionsFromTool(

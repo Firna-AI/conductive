@@ -83,14 +83,15 @@ export async function seedWorkspace(
     state?: WorkspaceState
     createdAt?: number
     archivedAt?: number
+    sandboxId?: string
   },
 ): Promise<void> {
   const createdAt = workspace.createdAt ?? TEST_TIME
   await harness.env.DB.prepare(
     `INSERT INTO workspaces
      (id, org_id, repository_id, owner_user_id, name, branch, state,
-      created_at, updated_at, archived_at)
-     SELECT ?, ?, ?, id, ?, 'main', ?, ?, ?, ? FROM users WHERE github_id = 7`,
+      created_at, updated_at, archived_at, sandbox_id)
+     SELECT ?, ?, ?, id, ?, 'main', ?, ?, ?, ?, ? FROM users WHERE github_id = 7`,
   )
     .bind(
       workspace.id,
@@ -101,6 +102,7 @@ export async function seedWorkspace(
       createdAt,
       createdAt,
       workspace.archivedAt ?? null,
+      workspace.sandboxId ?? null,
     )
     .run()
 }

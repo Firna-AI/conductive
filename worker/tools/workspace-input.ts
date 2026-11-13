@@ -30,9 +30,12 @@ export function workspaceListInput(
   const name = query.get('query')
   const updatedSince = query.get('updatedSince')
   const archived = query.get('archived')
+  const removed = query.get('removed')
   const limit = query.get('limit')
   const offset = query.get('offset')
   if (archived !== null && archived !== 'true' && archived !== 'false')
+    return invalid()
+  if (removed !== null && removed !== 'true' && removed !== 'false')
     return invalid()
   if (limit !== null && (counter(limit) < 1 || counter(limit) > 100))
     return invalid()
@@ -45,6 +48,7 @@ export function workspaceListInput(
       ...(name?.trim() && { query: name.trim() }),
       ...(updatedSince !== null && { updatedSince: timestamp(updatedSince) }),
       ...(archived !== null && { archived: archived === 'true' }),
+      ...(removed !== null && { removed: removed === 'true' }),
       ...(limit !== null && { limit: counter(limit) }),
       ...(offset !== null && { offset: counter(offset) }),
     }

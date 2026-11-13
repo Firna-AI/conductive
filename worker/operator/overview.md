@@ -24,18 +24,20 @@ The reply is an `OperatorOverview` from
   The user counts and daily user counts still include every account.
 - `running` gives separate counts for `workspaces` and unfinished image `builds`.
   Builds include both builds and refreshes whose job phase is not `done`.
-- `workspaceStates` gives `running`, `stopped`, `failed`, and `archived`.
+- `workspaceStates` gives `running`, `stopped`, `failed`, `archived`, and `removed`.
   Running includes starting, ready, working, unread, and input.
-  An archived workspace contributes only to Archived.
+  Archived counts archived workspaces before their removal.
+  Removed counts archived workspaces from the end of their 14 days of Restore.
+  This count does not depend on a kept cloud computer or its deletion.
   Failed counts the error state.
-  The four counts add up to the workspace total.
+  The five counts add up to the workspace total.
 - `newWorkspacesByDay` and `newUsersByDay` each give 30 `{ date, count }` entries.
   Dates use `YYYY-MM-DD` in UTC, from oldest to newest.
   The last entry covers the current UTC day through `readAt`.
   A day without a record has a zero count.
 - `largestOrgs` gives up to five orgs with `id`, `name`, `initials`, `members`, `workspaces`, and `running`.
   Initials are null when the org has no custom initials.
-  The workspace count includes archived workspaces.
+  The workspace count includes every workspace, also archived and removed workspaces.
   The order is workspace count first, largest first, then org name.
   This list leaves out deleted orgs.
 

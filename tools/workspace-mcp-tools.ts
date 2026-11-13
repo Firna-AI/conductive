@@ -47,7 +47,7 @@ export const WORKSPACE_CALLS = [
   },
   {
     name: 'list_workspaces',
-    description: `List workspaces with their number, link, name, branch, state, and owner ID, login, and display name. Needs only the workspace token. Without filters or paging, returns every workspace, including archives. Use the actual message sender's member ID for their workspaces. Find another owner's ID in returned owner fields. Do not infer the owner from the token or active turn. ${toolContext}`,
+    description: `List workspaces with their number, link, name, branch, state, and owner ID, login, and display name. Needs only the workspace token. Without filters or paging, returns every workspace that is not removed, including archives. Set removed true to list only removed workspaces. Each filter must match. Use the actual message sender's member ID for their workspaces. Find another owner's ID in returned owner fields. Do not infer the owner from the token or active turn. ${toolContext}`,
     inputSchema: {
       type: 'object',
       properties: {
@@ -80,7 +80,12 @@ export const WORKSPACE_CALLS = [
         archived: {
           type: 'boolean',
           description:
-            'Select archived workspaces with true, or other workspaces with false.',
+            'Select archived workspaces with true, or other workspaces with false. Removed workspaces need removed true.',
+        },
+        removed: {
+          type: 'boolean',
+          description:
+            'Select only removed workspaces with true. False or omission leaves them out.',
         },
         ...paging,
       },
@@ -89,7 +94,7 @@ export const WORKSPACE_CALLS = [
   },
   {
     name: 'get_workspace',
-    description: `Get workspace details, including owner, repository, base branch, section, activity, and restore times. Needs only the workspace token. ${toolContext}`,
+    description: `Get workspace details, including owner, repository, base branch, section, activity, archive, restore, and removal times. Reads removed workspaces too. Needs only the workspace token. ${toolContext}`,
     inputSchema: { type: 'object', properties: { workspaceId } },
     annotations: readAnnotations,
   },
@@ -130,7 +135,7 @@ export const WORKSPACE_CALLS = [
   },
   {
     name: 'archive_workspace',
-    description: `Archive a workspace. Only its owner or an org admin can archive it. Archiving the calling workspace ends this turn. A member can restore it for 14 days. ${writeAccess} ${toolContext}`,
+    description: `Archive a workspace. Only its owner or an org admin can archive it. Archiving the calling workspace ends this turn. A member can restore it for 14 days. Then it leaves the workspace list. ${writeAccess} ${toolContext}`,
     inputSchema: { type: 'object', properties: { workspaceId } },
     annotations: { ...writeAnnotations, destructiveHint: true },
   },

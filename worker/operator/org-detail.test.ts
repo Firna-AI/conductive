@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
+import { WORKSPACE_RESTORE_MS } from '../../src/shared/workspaces'
 import {
   createHarness,
   TEST_TIME,
@@ -62,6 +63,23 @@ it('reads org state buckets, builds, named and unnamed members, suspension, and 
     state: 'error',
     archivedAt: TEST_TIME,
   })
+  for (const [id, boundaryOffset, sandboxId] of [
+    ['archive-near-removal', 1, undefined],
+    ['removed-at-boundary', 0, 'kept-disk'],
+    ['removed-earlier', -1, undefined],
+  ] as const)
+    await seedWorkspace(harness, {
+      id,
+      orgId: 'org/with%id',
+      state: 'archived',
+      archivedAt: TEST_TIME - WORKSPACE_RESTORE_MS + boundaryOffset,
+      sandboxId,
+    })
+  await seedWorkspace(harness, {
+    id: 'archived-without-time',
+    orgId: 'org/with%id',
+    state: 'archived',
+  })
   await seedWorkspace(harness, { id: 'outside', orgId: 'other' })
   for (const build of [
     {
@@ -101,7 +119,13 @@ it('reads org state buckets, builds, named and unnamed members, suspension, and 
     initials: 'HW',
     createdAt: TEST_TIME,
     repositories: 2,
-    workspaceStates: { running: 5, stopped: 1, failed: 1, archived: 2 },
+    workspaceStates: {
+      running: 5,
+      stopped: 1,
+      failed: 1,
+      archived: 4,
+      removed: 2,
+    },
     running: { workspaces: 5, builds: 2 },
     members: [
       {

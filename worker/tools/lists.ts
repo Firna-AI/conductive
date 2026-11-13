@@ -61,6 +61,7 @@ export async function listFromTool(
   caller: CallingWorkspace,
   services: AgentToolServices,
   origin: string,
+  now: number,
 ): Promise<
   | AgentListWorkspacesResponse
   | AgentListRepositoriesResponse
@@ -98,6 +99,7 @@ export async function listFromTool(
         caller.orgId,
         origin,
         workspaceListInput(url.searchParams),
+        now,
       )
   }
 }

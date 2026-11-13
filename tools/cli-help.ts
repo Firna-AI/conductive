@@ -1,7 +1,7 @@
 export const CLI_HELP = `Conductive workspace tools
 
 conductive workspaces list [--owner MEMBER_ID] [--state STATE] [--repository ID]
-  [--query TEXT] [--updated-since MILLISECONDS] [--archived true|false]
+  [--query TEXT] [--updated-since MILLISECONDS] [--archived true|false] [--removed true|false]
   [--limit NUMBER] [--offset NUMBER]
 conductive workspaces get [--workspace ID]
 conductive workspaces create --repository ID --message TEXT
@@ -40,6 +40,7 @@ Reads need only the workspace token. Writes need an active calling turn.
 Writes act for the member whose message started that turn.
 Only a workspace owner or an org admin can archive that workspace.
 Archiving the calling workspace ends this turn. A member can restore it for 14 days.
+Then the workspace leaves the list. Get can still read it by ID.
 Stopping or closing the calling session can end this turn.
 Close refuses a running turn unless --stop-running-turn is given.
 Stop with no running turn succeeds and reports idle.
@@ -56,7 +57,9 @@ Keep --request-id to retry a create or send. Omission generates an ID.
 --name, --title, and --first-session-title: Use plain words separated by spaces.
 Avoid underscores unless the user tells you to add them.
 
-List returns every entry unless filters or paging are given. Limit is 1 to 100.
+Workspace lists leave out removed workspaces by default. Use --removed true to list only them.
+--removed false keeps that default. Each workspace filter must match.
+Lists support a limit of 1 to 100.
 A limited list gives hasMore. Use offset to read the next page.
 --updated-since is a signed epoch timestamp in milliseconds.
 --owner takes a stable member ID. Each workspace row gives its owner's ID, login, and display name.

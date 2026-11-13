@@ -197,6 +197,7 @@ export function workspaceDetail(value: unknown): AgentWorkspaceResponse {
         fields.archivedAt === null ? null : timestamp(fields.archivedAt),
       restoreUntil:
         fields.restoreUntil === null ? null : timestamp(fields.restoreUntil),
+      removedAt: fields.removedAt === null ? null : timestamp(fields.removedAt),
     },
   }
 }

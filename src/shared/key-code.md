@@ -81,7 +81,8 @@ page.
   Run history returns up to 50 runs and a `nextCursor` for `routinePaths.runs`.
   Each run carries its own `agent` and `owner`, independent of later routine edits or owner moves.
   An unknown historical agent or owner is null.
-  Removed workspaces have a null run workspace ID, while first-turn failures keep their workspace link.
+  A run has a null workspace ID when its workspace record is absent.
+  Archived and removed workspaces keep their links, as do first-turn failures.
   A pull request trigger can carry `skipLogin`, the account login of an author or sender skip.
   Older runs and skips without an account omit it.
 - [Workspace views](workspace-view.ts) add the routine ID and name of a run, or null, in backend replies.

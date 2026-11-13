@@ -4,8 +4,12 @@ import type {
   AgentWorkspaceDetail,
   AgentWorkspaceListEntry,
 } from '../../src/shared/agent-workspaces'
-import type { WorkspaceState } from '../../src/shared/workspaces'
-import { workspaceRestoreUntil } from '../../src/shared/workspaces'
+import {
+  WORKSPACE_RESTORE_MS,
+  workspaceRemovedAt,
+  workspaceRestoreUntil,
+  type WorkspaceState,
+} from '../../src/shared/workspaces'
 import { requireActiveOrg } from '../data/user-access'
 import { workspaceLink } from '../data/workspace-link'
 import { workspaceNameColumn } from '../data/workspace-name'
@@ -68,9 +72,11 @@ export async function listToolWorkspaces(
   orgId: string,
   origin: string,
   input: AgentListWorkspacesRequest,
+  now: number,
 ): Promise<AgentListWorkspacesResponse> {
-  const filters: string[] = []
-  const values: (string | number)[] = [orgId]
+  const removed = '(w.archived_at IS NOT NULL AND w.archived_at <= ?)'
+  const filters = [input.removed ? removed : `NOT ${removed}`]
+  const values: (string | number)[] = [orgId, now - WORKSPACE_RESTORE_MS]
   for (const [column, value] of [
     ['w.owner_user_id', input.ownerId],
     ['w.state', input.state],
@@ -93,7 +99,7 @@ export async function listToolWorkspaces(
     )
   const { results } = await db
     .prepare(
-      `${source}${filters.length ? ` AND ${filters.join(' AND ')}` : ''}
+      `${source} AND ${filters.join(' AND ')}
      ORDER BY w.created_at, w.id LIMIT ? OFFSET ?`,
     )
     .bind(
@@ -126,6 +132,7 @@ export async function toolWorkspaceDetail(
   orgId: string,
   workspaceId: string,
   origin: string,
+  now: number,
 ): Promise<AgentWorkspaceDetail> {
   await requireActiveOrg(db, orgId)
   const row = await db
@@ -151,5 +158,6 @@ export async function toolWorkspaceDetail(
     lastActivityAt: row.lastActivityAt,
     archivedAt: row.archivedAt,
     restoreUntil: workspaceRestoreUntil(row.archivedAt, row.sandboxId),
+    removedAt: workspaceRemovedAt(row.archivedAt, now),
   }
 }

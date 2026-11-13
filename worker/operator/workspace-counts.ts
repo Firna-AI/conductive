@@ -1,8 +1,16 @@
+import { WORKSPACE_RESTORE_MS } from '../../src/shared/workspaces'
+
 export const runningWorkspacePredicate = `w.archived_at IS NULL
   AND w.state IN ('starting', 'ready', 'working', 'unread', 'input')`
 
-export const workspaceStateCounts = `
+export function workspaceStateCounts(nowParameter: string): string {
+  const removed = `w.archived_at IS NOT NULL
+    AND w.archived_at + ${WORKSPACE_RESTORE_MS} <= ${nowParameter}`
+  return `
   COUNT(CASE WHEN ${runningWorkspacePredicate} THEN 1 END) AS running,
   COUNT(CASE WHEN w.archived_at IS NULL AND w.state = 'stopped' THEN 1 END) AS stopped,
   COUNT(CASE WHEN w.archived_at IS NULL AND w.state = 'error' THEN 1 END) AS failed,
-  COUNT(CASE WHEN w.archived_at IS NOT NULL OR w.state = 'archived' THEN 1 END) AS archived`
+  COUNT(CASE WHEN (w.archived_at IS NOT NULL OR w.state = 'archived')
+    AND NOT (${removed}) THEN 1 END) AS archived,
+  COUNT(CASE WHEN ${removed} THEN 1 END) AS removed`
+}

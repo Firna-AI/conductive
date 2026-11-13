@@ -28,6 +28,8 @@ export function listWorkspacesInput(
   const fields = record(value)
   if (fields.archived !== undefined && typeof fields.archived !== 'boolean')
     throw new ToolInputError('Choose true or false for archived workspaces.')
+  if (fields.removed !== undefined && typeof fields.removed !== 'boolean')
+    throw new ToolInputError('Choose true or false for removed workspaces.')
   if (fields.query !== undefined && typeof fields.query !== 'string')
     throw new ToolInputError('Use text for the workspace name filter.')
   return {
@@ -42,5 +44,6 @@ export function listWorkspacesInput(
       updatedSince: integer(fields.updatedSince),
     }),
     ...(fields.archived !== undefined && { archived: fields.archived }),
+    ...(fields.removed !== undefined && { removed: fields.removed }),
   }
 }

@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
+import { WORKSPACE_RESTORE_MS } from '../../src/shared/workspaces'
 import {
   createHarness,
   TEST_TIME,
@@ -50,7 +51,7 @@ it('reads only owned workspace counts, all org roles, the name, and the suspensi
   await seedWorkspace(harness, {
     id: 'archived-ready',
     orgId: 'deleted',
-    archivedAt: TEST_TIME,
+    archivedAt: TEST_TIME - WORKSPACE_RESTORE_MS,
   })
   await harness.env.DB.prepare(
     `UPDATE workspaces SET owner_user_id = (SELECT id FROM users WHERE github_id = 8)`,

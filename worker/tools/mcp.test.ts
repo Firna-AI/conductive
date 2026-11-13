@@ -88,7 +88,10 @@ it('serves MCP discovery, create, and list over JSON lines with the calling turn
             name: 'create_workspace',
             inputSchema: { required: ['repositoryId', 'firstMessage'] },
           },
-          { name: 'list_workspaces' },
+          {
+            name: 'list_workspaces',
+            inputSchema: { properties: { removed: { type: 'boolean' } } },
+          },
           { name: 'get_workspace' },
           { name: 'rename_workspace' },
           { name: 'move_workspace' },
@@ -177,6 +180,7 @@ it('separates MCP parse, protocol, and tool failures while ignoring notification
       call(5, 'create_workspace', {}),
       call(6, 'list_workspaces'),
       rpc(7, 'tools/list', 'invalid-params'),
+      call(8, 'list_workspaces', { removed: 'true' }),
       JSON.stringify({
         jsonrpc: '2.0',
         method: 'notifications/cancelled',
@@ -189,7 +193,7 @@ it('separates MCP parse, protocol, and tool failures while ignoring notification
 
   expect(status).toBe(0)
   expect(output.stderr).toEqual([])
-  expect(output.stdout).toHaveLength(9)
+  expect(output.stdout).toHaveLength(10)
   expect(mcpRepliesById(output.stdout)).toMatchObject({
     null: { id: null, error: { code: -32700 } },
     1: { id: 1, error: { code: -32600 } },
@@ -219,6 +223,18 @@ it('separates MCP parse, protocol, and tool failures while ignoring notification
       },
     },
     7: { id: 7, error: { code: -32602 } },
+    8: {
+      id: 8,
+      result: {
+        isError: true,
+        content: [
+          {
+            type: 'text',
+            text: 'Choose true or false for removed workspaces.',
+          },
+        ],
+      },
+    },
   })
   expect(fixture.services.createWorkspace).not.toHaveBeenCalled()
 })

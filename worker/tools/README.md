@@ -22,7 +22,8 @@ Direct handler tests also use the shared entry policy before dispatch.
 
 ## Handler
 
-`createAgentToolsHandler` takes the database, the machine origin, the app origin, and `AgentToolServices`.
+`createAgentToolsHandler` takes the database, the machine origin, the app origin, `AgentToolServices`, and an injected clock.
+Workspace lists and details use that clock to compute removal at the time of the read.
 It accepts GET and POST at `MACHINE_PATHS.workspaces`, which is `/v1/tools/workspaces`, on that origin only.
 It also accepts GET at `/v1/tools/repositories`, `/v1/tools/sections`, and `/v1/tools/models`.
 It accepts the section writes and the preview routes, as [Routes](sections-and-previews.md#routes) says.
@@ -241,7 +242,7 @@ The real-object route tests live in [worker/features](../features/).
 - [store.ts](store.ts) reads the token's workspace, members, owner defaults, sections, and repository admission in D1.
 - [workspace-routes.ts](workspace-routes.ts) matches the workspace routes and runs their reads and writes.
 - [workspace-input.ts](workspace-input.ts) reads the options of the workspace list.
-- [workspace-data.ts](workspace-data.ts) queries the workspace list and the details of one workspace.
+- [workspace-data.ts](workspace-data.ts) queries the workspace list with its default removal filter and builds details with the removal time.
 - [workspace-write-composition.ts](workspace-write-composition.ts) runs a rename, a move, or an archive as the sender.
 - [workspace-create-composition.ts](workspace-create-composition.ts) completes a create and its replay.
 - [agent-workspaces.ts](../../src/shared/agent-workspaces.ts) holds the workspace request and reply types and their paths.

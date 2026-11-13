@@ -20,6 +20,7 @@ interface Totals {
   stopped: number
   failed: number
   archived: number
+  removed: number
   builds: number
 }
 type OverviewRow = Totals | DailyCount | LargestOrg
@@ -61,7 +62,7 @@ export async function readOperatorOverview(
          ) CROSS JOIN (
            SELECT COUNT(*) AS workspacesTotal,
              COUNT(CASE WHEN w.created_at BETWEEN ?1 AND ?2 THEN 1 END) AS workspacesLastWeek,
-             ${workspaceStateCounts}
+             ${workspaceStateCounts('?2')}
            FROM workspaces w
          ) CROSS JOIN (
            SELECT COUNT(*) AS builds FROM image_builds b
@@ -115,6 +116,7 @@ export async function readOperatorOverview(
       stopped: totals.stopped,
       failed: totals.failed,
       archived: totals.archived,
+      removed: totals.removed,
     },
     newWorkspacesByDay: dailyCounts(workspaceDays.results, firstDay),
     newUsersByDay: dailyCounts(userDays.results, firstDay),

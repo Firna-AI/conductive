@@ -2,6 +2,7 @@ import { afterEach, beforeAll, expect, it } from 'vitest'
 
 import { agentWorkspacePath } from '../../src/shared/agent-workspaces'
 import { WORKSPACE_RESTORE_MS } from '../../src/shared/workspaces'
+import { DEVICE_TEST_NOW } from '../devices/clock.test-support'
 import {
   outerWorkerBundle,
   OUTER_MACHINE_ORIGIN,
@@ -39,9 +40,9 @@ function get(active: AgentWriteFixture, workspaceId?: string) {
 it('reads archived workspace facts with only its token and excludes another org', async () => {
   const active = (fixture = await agentWriteFixture(bundle))
   await active.env.DB.prepare(
-    "UPDATE workspaces SET base_branch = 'release', updated_at = 17, archived_at = 12, state = 'archived', sandbox_id = 'kept-disk' WHERE id = ?",
+    "UPDATE workspaces SET base_branch = 'release', updated_at = 17, archived_at = ?, state = 'archived', sandbox_id = 'kept-disk' WHERE id = ?",
   )
-    .bind(OTHER_WORKSPACE)
+    .bind(DEVICE_TEST_NOW, OTHER_WORKSPACE)
     .run()
   const response = await get(active, OTHER_WORKSPACE)
   expect(response.status).toBe(200)
@@ -62,8 +63,9 @@ it('reads archived workspace facts with only its token and excludes another org'
     section: { id: 'chat-section', name: 'General' },
     createdAt: 1,
     lastActivityAt: 17,
-    archivedAt: 12,
-    restoreUntil: 12 + WORKSPACE_RESTORE_MS,
+    archivedAt: DEVICE_TEST_NOW,
+    restoreUntil: DEVICE_TEST_NOW + WORKSPACE_RESTORE_MS,
+    removedAt: null,
   })
   expect(response.headers.get('Cache-Control')).toBe('no-store')
   await active.env.DB.batch([
@@ -89,4 +91,27 @@ it('reads archived workspace facts with only its token and excludes another org'
   expect(record(record(await current.json()).workspace).id).toBe(
     OUTER_WORKSPACE,
   )
+})
+
+it('reads a removed workspace by ID with its exact removal time, with or without a kept sandbox', async () => {
+  const active = (fixture = await agentWriteFixture(bundle))
+  for (const [archivedAt, sandboxId, removedAt] of [
+    [2_998_790_400_001, null, null],
+    [2_998_790_400_000, 'kept-disk', 3_000_000_000_000],
+    [2_998_790_399_999, null, 2_999_999_999_999],
+  ] as const) {
+    await active.env.DB.prepare(
+      "UPDATE workspaces SET archived_at = ?, state = 'archived', sandbox_id = ? WHERE id = ?",
+    )
+      .bind(archivedAt, sandboxId, OTHER_WORKSPACE)
+      .run()
+    const response = await get(active, OTHER_WORKSPACE)
+    expect(response.status).toBe(200)
+    expect(record(await response.json()).workspace).toMatchObject({
+      id: OTHER_WORKSPACE,
+      state: 'archived',
+      archivedAt,
+      removedAt,
+    })
+  }
 })

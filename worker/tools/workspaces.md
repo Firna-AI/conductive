@@ -143,14 +143,33 @@ the first session title, and the create request ID, as
 
 ## Tests
 
-- `workspace-reads.test.ts`: token-only reads of archived workspace facts,
-  and the refusal of another org.
+- `workspace-reads.test.ts`: token-only reads of archived and removed
+  workspace facts, the removal time, and the refusal of another org.
 - `workspace-actions.test.ts`: a rename that automatic naming keeps, stale
   and archived writes, moves to a section top, unchanged same-section moves,
   stored-sender archive rights, and a self-archive that stops its turn and
   revokes its token.
-- `workspace-lists.test.ts`: each filter alone and together, paging edges
-  and `hasMore`, and malformed options.
+- `workspace-lists.test.ts`: each filter alone and together, removal at
+  the 14-day boundary, default lists without removed workspaces, paging
+  edges and `hasMore`, and malformed options.
+- `session-management-reads.test.ts`: session lists, session and message
+  reads, and transcripts by ID after workspace removal.
+- `cli.test.ts` and `mcp.test.ts`, with `adapter-cases.test-support.ts`:
+  the list filter and removal time through both tool adapters.
 - `workspace-creation.test.ts`, with `workspace-creation.test-support.ts`:
   overlapping creates, a lost reply after a restart or changed defaults, a
   titled first session, and the replay of a failed first start.
+
+## Key code
+
+- [workspace-input.ts](workspace-input.ts) reads and validates each list filter.
+- [workspace-data.ts](workspace-data.ts) applies the filters before paging
+  and builds workspace details with `removedAt`.
+- [lists.ts](lists.ts) and [workspace-routes.ts](workspace-routes.ts) pass
+  the injected clock to list and detail reads.
+- [workspaces.ts](../../src/shared/workspaces.ts) owns the Restore interval
+  and the shared `workspaceRemovedAt` helper.
+- [agent-workspaces.ts](../../src/shared/agent-workspaces.ts) defines the
+  list filters and workspace reply fields.
+- [Workspace tool adapters](../../tools/README.md) expose the same calls
+  through CLI and MCP.

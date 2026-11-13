@@ -36,6 +36,7 @@ export async function readWorkspaceFromTool(
   db: D1Database,
   caller: CallingWorkspace,
   origin: string,
+  now: number,
 ): Promise<AgentWorkspaceResponse | null> {
   const match = url.pathname.match(WORKSPACE_ROUTE)
   if (!match || match[2] !== undefined) return null
@@ -45,6 +46,7 @@ export async function readWorkspaceFromTool(
       caller.orgId,
       target(match[1], caller),
       origin,
+      now,
     ),
   }
 }
@@ -56,6 +58,7 @@ export async function writeWorkspaceFromTool(
   caller: CallingWorkspace,
   services: AgentToolServices,
   origin: string,
+  now: number,
 ): Promise<Response | null> {
   const match = url.pathname.match(WORKSPACE_ROUTE)
   if (!match || !match[2]) return null
@@ -66,7 +69,7 @@ export async function writeWorkspaceFromTool(
     services,
   )
   const workspaceId = target(match[1], caller)
-  await toolWorkspaceDetail(db, caller.orgId, workspaceId, origin)
+  await toolWorkspaceDetail(db, caller.orgId, workspaceId, origin, now)
   const body: Record<string, unknown> =
     match[2] === 'archive' ? {} : await readJsonObject(request)
   const input =
@@ -85,6 +88,12 @@ export async function writeWorkspaceFromTool(
     senderUserId: sender.id,
   })
   return Response.json({
-    workspace: await toolWorkspaceDetail(db, caller.orgId, workspaceId, origin),
+    workspace: await toolWorkspaceDetail(
+      db,
+      caller.orgId,
+      workspaceId,
+      origin,
+      now,
+    ),
   })
 }
