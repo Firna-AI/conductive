@@ -4,7 +4,6 @@ import { MessageSquarePlus } from 'lucide-react'
 import { ChatPane } from '../components/chat/ChatPane'
 import { ChatWorkspaces } from '../components/chat/chatWorkspaces'
 import { EmptyState } from '../components/common/EmptyState'
-import { FilePage } from '../components/files/FilePage'
 import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
 import { acmeRail } from '../components/layout/OrgRail'
 import { useMacApp } from '../components/mac/MacApp'
@@ -29,14 +28,13 @@ import { suspendedOwner } from '../fixtures/startRefusals'
 import { paths } from '../paths'
 import { composerFor } from './composerFor'
 import { composerNotice } from './composerNotice'
+import { centreOf } from './workspaceCentre'
 import { placeLostUpdate } from './lostUpdates'
 import { changedWorkspaces, chatWorkspacesOf } from './orgWorkspaces'
 import { viewerOf } from './sessionStarter'
 import { barOf, branchOf } from './workspaceBar'
 import {
   FilesContent,
-  filesPlaceholder,
-  openFile,
   startingLogFor,
   ToolContent,
   workspaceSidebar,
@@ -242,7 +240,6 @@ export function WorkspaceScreen(props: {
       </MobileFrame>
     )
   }
-  const file = openFile(state)
   return (
     <AppFrame
       overlay={
@@ -271,13 +268,7 @@ export function WorkspaceScreen(props: {
       })}
     >
       <WorkspaceBody
-        center={
-          file ? (
-            <FilePage placeholder={filesPlaceholder(state, true)} view={file} />
-          ) : (
-            chat
-          )
-        }
+        center={centreOf(state, chat)}
         files={files}
         filesShare={state.resize === 'split' ? raisedSplit : undefined}
         header={header}

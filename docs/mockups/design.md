@@ -25,13 +25,14 @@ workspace and its number, such as `W-395`, the repository, and
 the owner of the workspace, and ends with the toggle of the
 right column. The toggle hides the right column, so the centre column
 takes its width, and shows it again. Then come a tab for each agent
-session and each open file or diff, in the order that the user gives them
-by drag, + for a new session, and a clock that opens the session history.
+session, each open file or diff, and the one Preview tab of a port
+preview, in the order that the user gives them by drag, + for a new
+session, and a clock that opens the session history.
 The file or diff of the last press shows in the temporary tab, with its
 title in italics, until the next press replaces it.
 The right column has the pull request bar on top, the All files, Changes,
 and Checks lists below it, and the Terminal and Preview tabs at the bottom.
-It shows no file content. A phone shows an org switcher at the top of the list,
+It shows no file content, and on desktop no page of a preview. A phone shows an org switcher at the top of the list,
 then New workspace, Routines, and Search. It shows the
 workspace with its number under its name, a compact pull request row, the
 sessions as tabs above the chat, and four tabs at the bottom.

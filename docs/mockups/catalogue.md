@@ -39,7 +39,7 @@ how a screen is built, and links to the other pages.
 | `app/files`         | All files, Changes with its summary, a file, Markdown, diff, and image tab, and the temporary tab that the next press replaces |
 | `app/tabs`          | A dragged tab, the moved row, a full row, the tab menu, and the rename field  |
 | `app/transcripts`   | Copy a transcript from the tab menu: the toast after a copy, a failed copy, and the menu of an archived workspace |
-| `app/tools`         | The terminal tabs and their states, then the Preview tool with its detected servers and its failed list repair, and the hidden Desktop, kept for its return |
+| `app/tools`         | The terminal tabs and their states, then the Preview tool with its detected servers, the Preview tab of the centre row, and its failed list repair, and the hidden Desktop, kept for its return |
 | `app/panels`        | The right column, widened by the handle on its inner edge, and then hidden    |
 | `mac-app`           | The Mac app: its window, the waitlist, its device commands, This Mac, Keyboard shortcuts, and the palette with keys |
 | `user-flows`        | Sign up, sign up during open sign-up, join with an invite link, create a workspace, create one in the dialog, reopen it, open one from the palette, send feedback, archive one from its row, create an org, run a Mac command, create a routine, link a workspace, open a session link, merge and continue, mention a file, drop a file |

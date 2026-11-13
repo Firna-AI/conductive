@@ -100,8 +100,9 @@ export const workspaceStateSchema = {
      */
     terminals: { enum: terminalStates },
     /**
-     * The Preview tool: a preview in its frame, or "+" beside the tabs of
-     * the open previews. With no preview open, the port form lists the
+     * The Preview tool: open previews, or on a phone "+" beside their tabs.
+     * The desktop shows the page in the Preview tab of `tab`, and a phone
+     * in a frame of the tool. With no preview open, the port form lists the
      * detected servers, says that the runner reports none, or reads as
      * before when the app has no report, as for an older image. After a
      * failed repair of the list (decision 96), it keeps its last list under

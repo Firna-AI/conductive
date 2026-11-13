@@ -6,6 +6,11 @@
  * the branch shows as its picture, or with the state of an image that the
  * browser cannot draw. `attachment` is the copy of an attached screenshot,
  * which a press on its sent chip opens. A phone shows a file in Files.
+ *
+ * `preview` shows the page of the open preview in the one Preview tab of
+ * the row (decision 288). `preview-behind` shows the first session, and
+ * the Preview tab stays in the row with its page loaded. A phone row shows
+ * no Preview tab, so a phone shows the page on its Preview page.
  */
 export const tabStates = [
   'session',
@@ -19,6 +24,8 @@ export const tabStates = [
   'image',
   'image-not-drawn',
   'attachment',
+  'preview',
+  'preview-behind',
 ] as const
 
 /**

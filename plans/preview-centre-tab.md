@@ -101,6 +101,16 @@ covers them.
   its accessible name give the full name and the folder. The tab moves by
   drag and by its tab menu, as a file tab does. The mockup milestone
   confirms the drawing. My call.
+- **No Preview tab in the row.** After a Close of the centre tab, no tab
+  of the panel is current, and Reload and Open do not show, because no
+  centre tab holds a preview. The mockups showed this case at
+  `app/tools/preview-tab/closed`. A click on a panel tab or on a server
+  opens the centre tab again at the end of the row. My call.
+- **Other screens with the panel.** The pull request bar pages of the
+  mockups show the Preview tool with no Preview tab in the row. Their
+  panel now shows the list of servers in place of the frame. No picture
+  of the marketing site shows the Preview tool, so no new capture is
+  needed.
 - **Close.** Close on the centre tab removes the tab from the view, and
   ends no preview (decision 289). When the tab shows, the next tab of the
   row shows after the close, as for a file tab. The key of Close tab does
@@ -126,17 +136,18 @@ Summary: the workspace screen on desktop shows the Preview tab in the
 centre row with the page, and the panel with its preview tabs and the port
 form. The phone Preview page does not change.
 
-- [ ] Add the Preview tab kind to the centre tab row of the mockups, with
+- [x] Add the Preview tab kind to the centre tab row of the mockups, with
       its globe icon, label, tooltip, Close, and tab menu.
-- [ ] Show the page of the preview in the centre when that tab shows.
-- [ ] Change the desktop Preview panel states: tabs, Reload, and Open, then
+- [x] Show the page of the preview in the centre when that tab shows.
+- [x] Change the desktop Preview panel states: tabs, Reload, and Open, then
       the port form. Remove "+" on desktop only. Keep the phone states.
-- [ ] Add a mockup state with the centre Preview tab shown, and one with a
+- [x] Add a mockup state with the centre Preview tab shown, and one with a
       session shown while the Preview tab stays in the row.
-- [ ] Record decisions 288, 289, and 290 in the rationale of the changed
+- [x] Record decisions 288, 289, and 290 in the rationale of the changed
       mockup pages.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
-- [ ] Update the design and the TODOs of this plan for each problem that the
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages.
+      Screenshots: `.context/preview-centre-tab/shots/`.
+- [x] Update the design and the TODOs of this plan for each problem that the
       mockups show.
 
 ## Milestone 2: Documentation and protocol

@@ -1,0 +1,17 @@
+/*
+ * The Preview tab of the centre column. The page of the previewed app fills
+ * the tab from edge to edge, as a browser tab does.
+ */
+.page {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.frame {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}

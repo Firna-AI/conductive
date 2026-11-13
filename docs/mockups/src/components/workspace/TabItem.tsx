@@ -5,6 +5,7 @@ import {
   FileCode,
   FileDiff,
   FileText,
+  Globe,
   MessageSquare,
   SquareTerminal,
   X,
@@ -21,10 +22,11 @@ import styles from './WorkspaceTabs.module.css'
 /**
  * The kind of a tab, which sets its icon: a session, or the icon that All
  * files gives a code file, a Markdown file, or another file, or a diff, or
- * a terminal of the Terminal tool.
+ * a terminal of the Terminal tool, or the one Preview tab of the centre
+ * row (decision 288).
  */
 export type TabKind =
-  'session' | 'code' | 'markdown' | 'file' | 'diff' | 'terminal'
+  'session' | 'code' | 'markdown' | 'file' | 'diff' | 'terminal' | 'preview'
 
 export type WorkspaceTab = {
   key: string
@@ -50,6 +52,7 @@ const icons: Readonly<Record<TabKind, LucideIcon>> = {
   file: File,
   diff: FileDiff,
   terminal: SquareTerminal,
+  preview: Globe,
 }
 
 /**

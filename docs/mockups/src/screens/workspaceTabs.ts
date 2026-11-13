@@ -8,6 +8,8 @@ import {
   workspaceSessions,
 } from '../fixtures/sessions'
 import { screenshotCopy } from '../fixtures/attachments'
+import { detectedServers, openPort } from '../fixtures/previews'
+import { previewTabLabel } from '../components/tools/previewCopy'
 import { branchPictures, splitPath } from '../fixtures/files'
 import { maskedDiffPath } from '../fixtures/maskedFiles'
 import type { Workspace } from '../fixtures/workspaces'
@@ -86,6 +88,25 @@ function pictureTab(state: WorkspaceState): WorkspaceTab | undefined {
 }
 
 /**
+ * The one Preview tab of the row, while the state keeps it (decision 288).
+ * It shows the label of its preview, as the tab of the Preview tool does,
+ * and it opened after the code file.
+ */
+function previewTab(state: WorkspaceState): WorkspaceTab | undefined {
+  if (state.tab !== 'preview' && state.tab !== 'preview-behind') {
+    return undefined
+  }
+  const server = detectedServers.find((each) => each.port === openPort)
+  return {
+    key: 'preview',
+    kind: 'preview',
+    title: previewTabLabel(openPort, server),
+    to: paths.preview,
+    selected: state.tab === 'preview',
+  }
+}
+
+/**
  * The tabs of the centre column: the sessions, the code file that stays
  * open, and the file, the diff, or the new session that the state opens.
  * Each new tab opens at the end of the row, as the linked session does. A
@@ -100,7 +121,7 @@ function pictureTab(state: WorkspaceState): WorkspaceTab | undefined {
  * to that view. After the second session sent its messages, the second
  * session can show, and each session tab leads to its chat of that time.
  * The file or the diff that the state opens can be the temporary tab, as
- * `withTemporaryTab` draws it.
+ * `withTemporaryTab` draws it. The Preview tab shows after the code file.
  */
 export function tabsFor(
   state: WorkspaceState,
@@ -123,7 +144,7 @@ export function tabsFor(
       kind: 'session',
       title: nameLabel(first.title),
       to: firstPath,
-      selected: state.tab === 'session',
+      selected: state.tab === 'session' || state.tab === 'preview-behind',
     },
     {
       key: second.key,
@@ -163,6 +184,8 @@ export function tabsFor(
   }
   const picture = pictureTab(state)
   if (picture) tabs.push(picture)
+  const preview = previewTab(state)
+  if (preview) tabs.push(preview)
   if (state.tab === 'unnamed-file') {
     tabs.push({
       key: 'unnamed',
