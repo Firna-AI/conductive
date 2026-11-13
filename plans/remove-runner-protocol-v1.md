@@ -1,6 +1,6 @@
 # Remove agent runner protocol version 1
 
-Status: Active. On branch `calummoore/oslo-o65g`, no pull request yet.
+Status: Active. [PR #339](https://github.com/Firna-AI/conductive/pull/339) is open.
 The pull request that completes this work deletes this plan.
 
 Conductive will refuse unsupported runners before it sends any command.
@@ -109,7 +109,7 @@ Depends on: 2
   Evidence: `.context/remove-runner-protocol-v1/implementation-audit-before.txt` and `.context/remove-runner-protocol-v1/combined-links.txt`.
   Merge record: `.context/remove-runner-protocol-v1/merge-decisions.md`.
 - [ ] Run `npm run check` with Node 24 after desktop and runner dependency installation.
-- [ ] Commit with Conventional Commits and push the branch. Record Cal's deletion approval.
+- [x] Commit with Conventional Commits and push the branch. Record Cal's deletion approval.
 - [ ] Review the complete diff against `origin/main` with the `implementation-review` skill after the push.
   Fix confirmed `fix now` findings, record other findings as follow-ups, and re-review once.
 - [ ] Delete this plan after the other tasks pass.
