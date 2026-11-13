@@ -14,8 +14,8 @@ Cmd+click on a Mac, or Ctrl+click on Windows and Linux, opens it. A local
 address opens the port preview of its port in the Preview tool. Every
 other address opens in a new tab, or in the default browser from the Mac
 app. The user chose this approach in a brainstorm on 13 November 2026:
-terminal links decisions 1 B and 2 A. Decisions 3 and 4 are open. The
-brainstorm notes are in `.context/terminal-links/brainstorm.md`.
+terminal links decisions 1 B and 2 A. The user chose decisions 3 D and
+4 B on the same day. The brainstorm notes are in `.context/terminal-links/brainstorm.md`.
 
 The change does not cover the path of a local address in the preview,
 which `plans/follow-ups/local-address-path-in-preview.md` records. It does
@@ -119,7 +119,8 @@ options check of 13 November 2026 changed decision 3 and added decision
 
 ### 3. A touch press has no Cmd or Ctrl key
 
-- **Answer:** Open.
+- **Answer:** D, on 13 November 2026. The user added: "on hover underline
+  it, so they can see its clickable".
 - **Changed after the options check:** the check found that "phone" in the
   code is a window width, not the input. It wrote a better root question,
   added D, E, and F, and brought back the long press as F. The
@@ -169,7 +170,7 @@ options check of 13 November 2026 changed decision 3 and added decision
 
 ### 4. An OSC 8 link can hide where it leads
 
-- **Answer:** Open.
+- **Answer:** B, on 13 November 2026.
 - **Severity:** High. **Effort:** Small.
 - **Source:** Design. From the options check of this plan.
 - **Category:** Security.
@@ -240,9 +241,12 @@ These calls are mine, made on 13 November 2026 under the decision test.
 - OSC 8 links use the same key and the same kinds, through the
   `linkHandler` option of xterm.js. Decision 4 says what the user sees
   first.
-- The hint is a tooltip with the key in the form of the app's shortcut
-  hints, such as "⌘-click to open" on a Mac and "Ctrl+click to open"
-  elsewhere. It shows while a mouse pointer is on a link.
+- The hint is a small box below the link, with the key in the form of the
+  app's shortcut hints: "⌘-click to open" on a Mac and "Ctrl+click to
+  open" elsewhere. It shows at once while a mouse pointer is on a link. A
+  native `title` was rejected, because it shows only after a wait. The
+  underline and the hint show only under a mouse pointer, as the user
+  asked with decision 3.
 - A Cmd+click on a link does not reach a program that has the mouse.
   xterm.js sends it to the program and also opens the link, so the
   terminal stops the press itself.
@@ -256,39 +260,43 @@ Depends on: none
 Draw a terminal link with its hint, and the flow from a local address to
 its preview.
 
-- [ ] Draw a link part in `docs/mockups/src/components/tools/TerminalView.tsx`,
-      with a link tone for the terminal lines of
-      `docs/mockups/src/fixtures/terminal.ts`.
-- [ ] Add the variant `link` to `app/tools/terminals`: the dev server
-      output with its local address under the pointer, the underline, and
-      the hint.
-- [ ] Add the user flow `user-flows/open-a-terminal-link`: the hint, then
+- [x] Draw a link under the pointer in
+      `docs/mockups/src/components/tools/TerminalView.tsx`, with a hovered
+      mark for the terminal lines of `docs/mockups/src/fixtures/terminal.ts`.
+- [x] Add the page `app/tools/terminal-links`, beside `app/tools/terminals`,
+      because that page holds five screens: the dev server output with its
+      local address under the pointer, the underline, and the hint.
+- [x] Add the user flow `user-flows/open-a-terminal-link`: the hint, then
       the Preview tool with the preview of the port.
-- [ ] Draw the answers of decisions 3 and 4, when they change a screen.
-- [ ] Update `docs/mockups/catalogue.md`.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages on both
+- [x] Draw the answers of decisions 3 and 4: the variant `labelled` with
+      the host in the hint, and a phone with no underline and no hint.
+- [x] Update `docs/mockups/catalogue.md`.
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages on both
       sizes.
-- [ ] Update the design and the TODOs of this plan for each problem that
-      the mockups show.
+- [x] Update the design and the TODOs of this plan for each problem that
+      the mockups show. The mockups showed no problem. The screenshots are
+      in `.context/terminal-links/`.
 
 ## Milestone 2: Documentation and protocol
 
 Depends on: 1
 
-- [ ] `docs/protocol/workspace-tools.md`: add the link rules of decisions 1
+- [x] `docs/protocol/workspace-tools.md`: add the link rules of decisions 1
       and 2 to the Terminal section, and the answers of decisions 3 and 4.
       Change the text of decision 246: a held Cmd or Ctrl gives a click to
       the program, except on a link.
-- [ ] `docs/protocol/port-previews.md`: a Cmd+click on a local address in
+- [x] `docs/protocol/port-previews.md`: a Cmd+click on a local address in
       the terminal opens the preview of its port.
-- [ ] Narrow `plans/follow-ups/terminal-and-tool-call-links.md` to the tool
+- [x] Narrow `plans/follow-ups/terminal-and-tool-call-links.md` to the tool
       call lines, its option C, because this change does its option B.
-- [ ] Read both legal pages in full, `src/marketing/terms.ts` and
+- [x] Read both legal pages in full, `src/marketing/terms.ts` and
       `src/marketing/privacy.ts`. Update each sentence that restates a
-      changed fact.
-- [ ] Read each public guide in `src/marketing/docs/` in full. Update each
-      sentence that restates a changed fact.
-- [ ] Check the rows of `src/marketing/from-conductor/` for a feature that
+      changed fact. No sentence restates a changed fact.
+- [x] Read each public guide in `src/marketing/docs/` in full. Update each
+      sentence that restates a changed fact. No sentence is wrong. The
+      guide `terminal-and-previews.md` gets the new rules in Milestone 3,
+      when they ship.
+- [x] Check the rows of `src/marketing/from-conductor/` for a feature that
       this change ships.
 
 ## Milestone 3: Links in the terminal
@@ -315,6 +323,9 @@ on `main`
       `openInNewTab`.
 - [ ] Test the key, the kinds, a refused address, OSC 8 links, a touch
       tap, and a Cmd+click while a program has the mouse.
+- [ ] Add the link rules to the public guide
+      `src/marketing/docs/terminal-and-previews.md`: in "Open Terminal",
+      and beside the steps that open a server by its port.
 - [ ] Update the [terminal README](../src/terminal/README.md) and the
       [tools part](../src/shell/workspace/screen-parts.md#the-tools-part).
 - [ ] Smoke-test in `npm run dev`: a dev server address, a public link, an

@@ -31,6 +31,12 @@
   rejected, because it can hold a token or a password.
 - The title of the page of each server was rejected, because the runner
   then sends each server a request that the user did not make.
+- A link to a local address in the terminal opens the preview of its port
+  with the same request and checks as a typed port. A preview of that port
+  that is open already shows with no new request. The path, the query,
+  and the hash of the address do not carry over, as
+  [Terminal](workspace-tools.md#terminal) says (terminal links decision
+  1 B).
 - A click on a server opens its preview with the same request and checks
   as a typed port. A port that has an open preview leaves the list,
   because its tab shows it.
