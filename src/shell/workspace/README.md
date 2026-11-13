@@ -199,9 +199,11 @@ fake API, with its address options, its controls, and the test command.
   the routine of a run workspace, which the chat reads with the view.
 - `tools/ToolsPart.tsx`, `tools/tool-navigation.ts`, and
   `tools/tool-address.ts`: the tools panel and its `placeholder`, which
-  takes the place of the tools inside the tabs, the tool and preview of the
-  address or the saved view, and their addresses. `useToolSelect` is the
-  select of a tool tab, which the Go to rows of the command palette share.
+  takes the place of the tools inside the tabs, the tool of the address or
+  the saved view, the preview or the port of the address, and their
+  addresses. `previewPortHref` gives the address of the Preview tool with a
+  port. `useToolSelect` is the select of a tool tab, which the Go to rows
+  of the command palette share.
 - `WorkspacePaletteActions.tsx`: the actions that the screen offers to the
   command palette, as `workspaceActionIds` chooses them. Each one runs the
   control of the screen: +, the clock of the history, a tab of the right
@@ -233,9 +235,9 @@ fake API, with its address options, its controls, and the test command.
   the whole app over the fake API. They check the terminal socket across
   tool switches, the saved tool, the tabs and the state of a stopped
   sandbox with no tool mounted, a revoke before the Preview tool shows, a
-  preview address on a phone, one GitHub read for the bar and Checks with a
-  live event, the Checks row of a phone, an archived phone, and the key of
-  Open PR on GitHub.
+  preview address on a phone, a port address on desktop and on a phone,
+  one GitHub read for the bar and Checks with a live event, the Checks row
+  of a phone, an archived phone, and the key of Open PR on GitHub.
   `wiring-test-kit.tsx` holds their helpers.
 - `header-notices.ts`: `HeaderNotices`, the failed repairs of the name and
   the start steps. `follow` reads a stream, `dismiss` hides a notice in

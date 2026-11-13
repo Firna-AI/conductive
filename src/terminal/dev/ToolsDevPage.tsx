@@ -71,11 +71,14 @@ export function ToolsDevPage() {
     queueMicrotask(() => terminal.emit(mockupSessionOutput))
     return terminal
   }, [])
+  // The page names no port, so the tool never replaces its address.
   const route = useMemo<PreviewRoute>(
     () => ({
       previewId: params.preview,
+      port: null,
       href: (preview) => devHref(params, { preview }),
       navigate: (preview) => go(devHref(params, { preview })),
+      replace: (preview) => go(devHref(params, { preview })),
     }),
     [params],
   )

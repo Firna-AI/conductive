@@ -53,7 +53,13 @@ describe('the Close button of a preview tab', () => {
     await mount(
       <PreviewTool
         now={() => FAKE_TIME}
-        route={{ previewId: null, href: (id) => `#${id}`, navigate: vi.fn() }}
+        route={{
+          previewId: null,
+          port: null,
+          href: (id) => `#${id}`,
+          navigate: vi.fn(),
+          replace: vi.fn(),
+        }}
         touch={false}
         workspace={{
           orgId: org,

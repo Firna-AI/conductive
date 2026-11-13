@@ -381,7 +381,7 @@ These calls are mine, made on 10 November 2026 under the decision test.
 - An app address is the raw segments of the path, without decoding,
   joined with one slash, then the query and the hash of the link. Chips
   use it too. This applies option D of
-  `plans/follow-ups/chip-leading-slashes-wrong-host.md` to every page.
+  [plans/follow-ups/chip-leading-slashes-wrong-host.md](https://github.com/Firna-AI/conductive/blob/e31da6c90/plans/follow-ups/chip-leading-slashes-wrong-host.md) to every page.
 - The reader checks the app origin before the local hosts, because the
   app origin of `npm run dev`, `http://127.0.0.1:5173`, is a local address.
 - Every other link opens in a new tab with `noopener noreferrer`, so other
@@ -539,20 +539,20 @@ Depends on: 2
 Add the one reader of addresses, and build each app address from the
 route.
 
-- [ ] Add `src/markdown/web-links.ts` with the kinds of the design and
+- [x] Add `src/markdown/web-links.ts` with the kinds of the design and
       the end rule of a bare address.
-- [ ] Move `chatParts` and `textParts` to its bare address reader. Delete
+- [x] Move `chatParts` and `textParts` to its bare address reader. Delete
       `bareLinkAt` and `bareLink` of `src/chat/links/workspace-links.ts`.
-- [ ] Move `docs/mockups/src/components/chat/workspaceLinks.ts` to the
+- [x] Move `docs/mockups/src/components/chat/workspaceLinks.ts` to the
       shared reader. Run `npm run mockups:check`. No screen changes.
-- [ ] Build the address of each chip with the app address builder. Add
+- [x] Build the address of each chip with the app address builder. Add
       the doubled-slash case of
-      `plans/follow-ups/chip-leading-slashes-wrong-host.md` to
+      [plans/follow-ups/chip-leading-slashes-wrong-host.md](https://github.com/Firna-AI/conductive/blob/e31da6c90/plans/follow-ups/chip-leading-slashes-wrong-host.md) to
       `src/chat/links/workspace-links.test.ts`. Delete that item.
-- [ ] Add `src/markdown/web-links.test.ts`: each kind, the refused schemes
+- [x] Add `src/markdown/web-links.test.ts`: each kind, the refused schemes
       and credentials, the end rule, the local hosts with and without a
       port, and an app origin on a local host.
-- [ ] Name the reader in [Agent text](../src/chat/agent-text.md).
+- [x] Name the reader in [Agent text](../src/chat/agent-text.md).
 
 ## Milestone 4: The Preview tool opens a port from its address
 
@@ -560,14 +560,14 @@ Tags: ui
 
 Depends on: 2
 
-- [ ] Read a port from the address of the Preview tool in
+- [x] Read a port from the address of the Preview tool in
       `src/shell/workspace/tools/tool-address.ts`, and build that address.
-- [ ] In `src/previews/PreviewTool.tsx`, open the port of the address with
+- [x] In `src/previews/PreviewTool.tsx`, open the port of the address with
       the same request and checks as a typed port. An open port shows its
       preview with no request. Then the address names the preview.
-- [ ] Test the open of a port from the address, the open port, and a
+- [x] Test the open of a port from the address, the open port, and a
       failed open.
-- [ ] Update the [previews README](../src/previews/README.md).
+- [x] Update the [previews README](../src/previews/README.md).
 
 ## Milestone 5: Links in chat text
 
