@@ -166,7 +166,9 @@ is relative to `src/chat/`, the folder of this guide.
   without one, or "Stopped from" and the chip of the stopping session,
   then the notes of the turn. `components/TurnEnd.tsx` draws the
   end of a finished turn: the line of its end reason, from the mockups'
-  `EndReasonLine.tsx`, above its duration and its files. `UserBubble` reads
+  `EndReasonLine.tsx`, above its duration and its files. The mockups'
+  `TurnFileList.tsx` limits the files that show before its Show more
+  button, with the app's chips. `UserBubble` reads
   the parts of a sent message once, with `useChatParts`. It draws them with
   `ChatText`, and it lists under the message only the files that no part
   shows as a chip. It sets `opens` only when the message state is `sent`.
