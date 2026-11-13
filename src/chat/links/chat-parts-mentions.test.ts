@@ -20,7 +20,7 @@ const lookup: EntryLookup = (path, folder) =>
 
 function shapes(parts: readonly ChatPart[]) {
   return parts.map((part) =>
-    part.kind === 'file'
+    part.kind === 'file' || part.kind === 'file-link'
       ? { file: part.entry.path }
       : part.kind === 'attachment'
         ? { attachment: part.attachment.id, path: part.path }

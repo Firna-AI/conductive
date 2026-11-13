@@ -1,5 +1,6 @@
 import {
   codeTarget as appCodeTarget,
+  fileLinkTarget,
   mentionTarget,
   type EntryLookup,
   type FileTarget,
@@ -83,6 +84,14 @@ export function pathTarget(path: string): PathTarget | undefined {
  */
 export function codeTarget(code: string): PathTarget | undefined {
   return pathTargetOf(appCodeTarget(code, find, repositoryFolder))
+}
+
+/**
+ * The entry that the target of a Markdown link or image of an answer
+ * names, as the app reads it (answer chip decision 4).
+ */
+export function linkTarget(target: string): PathTarget | undefined {
+  return pathTargetOf(fileLinkTarget(target, find, repositoryFolder))
 }
 
 /** The line target as the name of a chip shows it: `:42` or `:42-50`. */

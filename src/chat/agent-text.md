@@ -118,6 +118,11 @@ state the requirements.
   end mark of a sentence after it. `codeTarget` finds the entry of inline
   code, inside the repository or under its folder. The line targets come
   from `splitLineTarget` in `src/shared/line-target.ts`.
+- A Markdown link or image of an answer whose target is an entry of the
+  tree gives a `file-link` part: `fileLinkTarget` reads the target, and
+  `FileTextLink` draws a normal link with the label, which opens the file.
+  `chat-tokens.ts` reads a target that is not a web address only where
+  paths count, as in an answer.
 - Code in the label of a Markdown link stays code. Where `**` marks bold, a
   mention ends before the mark.
 - A text follows the tree only when it holds `@`, or a backtick in an

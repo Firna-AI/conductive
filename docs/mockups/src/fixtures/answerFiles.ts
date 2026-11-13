@@ -6,13 +6,14 @@ const answerAsk =
 
 /**
  * The answer of the agent. A mention, an absolute path under the repository
- * folder, and a relative path with a line target show as file chips. A path
- * in another repository and the code block stay code.
+ * folder, and a relative path with a line target show as file chips. A
+ * Markdown image of the screenshot shows as a normal link. A path in
+ * another repository and the code block stay code.
  */
 const fileAnswer = [
   'I moved the list of suggestions under the postcode field in @src/app/checkout/AddressForm.tsx, so it no longer covers the field. The phone view after the fix is in `/home/user/code/storefront/.context/shots/after.png`.',
   'The hook skips a query under three characters in `src/app/checkout/useAddressAutocomplete.ts:19-22`. The billing service checks postcodes in `/home/user/code/billing-service/src/postcode.ts`, which I left as it is.',
-  'I took the screenshot with:',
+  'The screenshot: ![Postcode field on a phone](/home/user/code/storefront/.context/shots/after.png). I took it with:',
   {
     kind: 'code',
     text: 'npx playwright screenshot --device="iPhone 13" http://localhost:3000/checkout .context/shots/after.png',

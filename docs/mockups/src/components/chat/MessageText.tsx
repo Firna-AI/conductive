@@ -8,7 +8,7 @@ import { workspaceLabel } from '../workspaces/label'
 import type { WorkspaceRow } from '../workspaces/sections'
 import type { ChipRemoval } from './ChipRemove'
 import { useChatWorkspaces } from './chatWorkspaces'
-import { MentionChip } from './MentionChip'
+import { FileLinkText, MentionChip } from './MentionChip'
 import { SentFileChip } from './SentFileChip'
 import { SessionChip, type ChipSession } from './SessionChip'
 import { strongRuns } from './strongText'
@@ -112,6 +112,7 @@ function Part(props: { part: TextPart; waits?: boolean }) {
     )
   }
   if (part.kind === 'mention') return <MentionChip part={part} />
+  if (part.kind === 'file-link') return <FileLinkText part={part} />
   return <LinkText href={part.href} source={part.source} />
 }
 

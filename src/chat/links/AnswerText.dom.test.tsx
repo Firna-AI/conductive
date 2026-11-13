@@ -91,4 +91,25 @@ describe('file chips in an answer', () => {
       code: view.container.querySelector('code')?.textContent,
     }).toEqual({ links: 0, code: `${root}/shots/after.png` })
   })
+
+  test('a Markdown image of a file is a normal link with its label, which opens the file', async () => {
+    const view = await mountAnswer(
+      `Done. ![Phone view](${root}/shots/after.png) and [the form](src/app.ts#L4).`,
+    )
+    const links = [...view.container.querySelectorAll('a')]
+    for (const link of links) await press(link)
+    expect({
+      text: links.map((link) => link.textContent),
+      hrefs: links.map((link) => link.getAttribute('href')),
+      chips: view.container.querySelectorAll('[data-mention]').length,
+      opened: view.opened,
+      copy: copyAll(view.container).text,
+    }).toEqual({
+      text: ['Phone view', 'the form'],
+      hrefs: ['/files/shots/after.png', '/files/src/app.ts?line=4'],
+      chips: 0,
+      opened: ['shots/after.png', 'src/app.ts?line=4'],
+      copy: 'Done. Phone view and the form.',
+    })
+  })
 })

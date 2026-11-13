@@ -19,18 +19,24 @@ const root = '/home/user/code/checkout'
 
 function shapes(parts: readonly ChatPart[]) {
   return parts.map((part) =>
-    part.kind === 'file'
+    part.kind === 'file-link'
       ? {
-          file: part.entry.path,
-          source: part.source,
+          link: part.entry.path,
+          label: part.label.map((item) => item.text).join(''),
           ...(part.lines ? { lines: part.lines } : {}),
-          ...(part.strong ? { strong: true } : {}),
         }
-      : part.kind === 'text'
-        ? { text: part.text, ...(part.strong ? { strong: true } : {}) }
-        : part.kind === 'code'
-          ? { code: part.text }
-          : { [part.kind]: part.source },
+      : part.kind === 'file'
+        ? {
+            file: part.entry.path,
+            source: part.source,
+            ...(part.lines ? { lines: part.lines } : {}),
+            ...(part.strong ? { strong: true } : {}),
+          }
+        : part.kind === 'text'
+          ? { text: part.text, ...(part.strong ? { strong: true } : {}) }
+          : part.kind === 'code'
+            ? { code: part.text }
+            : { [part.kind]: part.source },
   )
 }
 
@@ -125,6 +131,35 @@ describe('file chips in an answer', () => {
       { code: 'src/app.ts' },
       { text: ' and ' },
       { file: 'src/app.ts', source: '@src/app.ts' },
+    ])
+  })
+
+  test('a Markdown link or image to a file of the tree is a link with its label', () => {
+    expect(
+      answer(
+        `See ![Phone view](${root}/shots/after.png) and [the \`form\`](src/app/../app.ts) or [line 4](./src/app.ts#L4-L6).`,
+      ),
+    ).toEqual([
+      { text: 'See ' },
+      { link: 'shots/after.png', label: 'Phone view' },
+      { text: ' and [the ' },
+      { code: 'form' },
+      { text: '](src/app/../app.ts) or ' },
+      { link: 'src/app.ts', label: 'line 4', lines: { start: 4, end: 6 } },
+      { text: '.' },
+    ])
+  })
+
+  test('an image with no label shows the name of the file, and other targets stay text', () => {
+    expect(
+      answer(
+        `![](shots/after.png) ![x](https://a.test/x.png) [gone](src/gone.ts) [s](src/my%20app.ts)`,
+      ),
+    ).toEqual([
+      { link: 'shots/after.png', label: 'after.png' },
+      {
+        text: ' ![x](https://a.test/x.png) [gone](src/gone.ts) [s](src/my%20app.ts)',
+      },
     ])
   })
 })

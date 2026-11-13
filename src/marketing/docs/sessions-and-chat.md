@@ -205,6 +205,8 @@ Agents name the files of your repository as `@` and a path, such as `@src/app.ts
 Each one shows as a file chip.
 Code that holds only the path of a file of the workspace also shows as a file chip.
 Select a chip to open its file.
+A Markdown link or image to a file of the workspace shows as a link with its label.
+Select the link to open the file.
 A path can end with a line or a range of lines, such as `@src/app.ts:42` or `src/app.ts:42-50`.
 Its chip opens the file as text, with those lines in view and marked.
 To copy a code block, select **Copy code** in its top corner.

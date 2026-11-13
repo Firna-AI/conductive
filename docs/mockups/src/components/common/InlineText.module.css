@@ -7,3 +7,13 @@
   font-family: var(--ui-font-mono);
   font-size: 0.86em;
 }
+
+/*
+ * A link in chat text, such as a Markdown link of an answer to a file of
+ * the workspace. It looks as a link of the file preview does.
+ */
+.link {
+  color: var(--ui-link);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}

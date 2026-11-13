@@ -30,8 +30,12 @@ open work of a turn at `app/chat/headings/work`.
   chip. Inline code whose whole text is the path of such an entry shows
   as a file chip too, as [Files in answers](file-mentions.md#files-in-answers)
   says. A code block stays code.
+- A Markdown link or image whose target is a file of the workspace shows
+  as a link with its label, which opens the file, as
+  [Files in answers](file-mentions.md#files-in-answers) says.
 - Other Markdown shows as the text that the agent wrote, such as a link
-  that is not a workspace link, a quote, or emphasis with one `*`.
+  that is not a workspace link or a file, a quote, or emphasis with one
+  `*`.
 - Inline code, strong text, workspace chips, and file chips also show in
   headings, list items, and table cells. A code block shows its text with no
   formatting.

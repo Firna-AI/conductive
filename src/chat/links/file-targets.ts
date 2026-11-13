@@ -43,11 +43,30 @@ function entryAt(find: EntryLookup, path: string): FileEntry | undefined {
 }
 
 /**
+ * The entry that a path with an optional line target names, or null. The
+ * path is inside the repository, optionally after `./`, or absolute under
+ * `root`, the folder of the repository.
+ */
+function pathTarget(
+  text: string,
+  find: EntryLookup,
+  root: string | null,
+): FileTarget | null {
+  const { path, lines } = splitLineTarget(text)
+  let inside: string
+  if (path.startsWith('/')) {
+    if (root === null || !path.startsWith(`${root}/`)) return null
+    inside = path.slice(root.length + 1)
+  } else inside = path.startsWith('./') ? path.slice(2) : path
+  const entry = entryAt(find, inside)
+  return entry ? targetOf(entry, lines) : null
+}
+
+/**
  * The entry that inline code of an answer names, or null. The whole code is
- * the path, with an optional line target. The path is inside the
- * repository, optionally after `./`, or absolute under `root`, the folder of
- * the repository. One word with no `/`, no `.`, and no lines stays code,
- * because such words name ideas as often as top-level folders.
+ * the path, with an optional line target, as `pathTarget` reads it. One
+ * word with no `/`, no `.`, and no lines stays code, because such words
+ * name ideas as often as top-level folders.
  */
 export function codeTarget(
   code: string,
@@ -57,13 +76,28 @@ export function codeTarget(
   if (code.trim() !== code || /[\r\n]/u.test(code)) return null
   const { path, lines } = splitLineTarget(code)
   if (!lines && !/[./]/u.test(path)) return null
-  let inside: string
-  if (path.startsWith('/')) {
-    if (root === null || !path.startsWith(`${root}/`)) return null
-    inside = path.slice(root.length + 1)
-  } else inside = path.startsWith('./') ? path.slice(2) : path
-  const entry = entryAt(find, inside)
-  return entry ? targetOf(entry, lines) : null
+  return pathTarget(code, find, root)
+}
+
+/**
+ * The entry that the target of a Markdown link of an answer names, or
+ * null, such as `src/app.ts#L42` in `[the form](src/app.ts#L42)`. The
+ * target can hold `%` escapes, such as `%20` for a space. A link names its
+ * target on purpose, so one word counts too.
+ */
+export function fileLinkTarget(
+  target: string,
+  find: EntryLookup,
+  root: string | null,
+): FileTarget | null {
+  let path: string
+  try {
+    path = decodeURI(target)
+  } catch {
+    return null
+  }
+  if (path === '' || /[\r\n]/u.test(path)) return null
+  return pathTarget(path, find, root)
 }
 
 /** The entry of a mention as written, or with a line target at its end. */

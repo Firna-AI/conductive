@@ -90,7 +90,8 @@ says.
   the app hides, such as Desktop. [Desktop](workspace-tools.md#desktop)
   says why the app hides it.
 - The instructions do not ask the agent to show a screenshot in a reply.
-  Reason: the chat shows the Markdown of an image as text, as
+  Reason: the chat shows no picture in an answer. The Markdown of an image
+  of a file of the workspace shows as a link that opens the file, as
   [Chat Markdown](chat-markdown.md#formatting) says.
 - The instructions hold no secret, such as the workspace token or an agent
   login.

@@ -184,8 +184,22 @@ names a decision of the change that added file chips to answers.
   - It stands in a code block.
 - Reason: agents name the files that they write, such as screenshots in
   the context folder, as absolute paths in inline code. A member then
-  opens each file from the answer. Paths in plain text and in Markdown
-  links were rejected, because plain words can become chips by mistake.
+  opens each file from the answer. Paths in plain text were rejected,
+  because plain words can become chips by mistake.
+- A Markdown link of an answer whose target is the path of an entry of the
+  tree shows as a normal link with its label, not as a chip (answer chip
+  decision 4). A Markdown image, such as `![Phone view](.context/a.png)`,
+  shows the same way. An image with no label shows the name of the file.
+- A press on such a link opens the file, as a press on its file chip does.
+  The target reads as a path of inline code does, with its line target,
+  and one word counts too. A `%` escape in the target, such as `%20`, reads
+  as its character. A target in angle brackets can hold a space.
+- A Markdown link whose target names no entry stays the text that the
+  agent wrote. A Markdown image of a web address stays text too.
+- Reason: agents write screenshots as Markdown images, and the label reads
+  better as a link than as a chip. The user asked for normal links on
+  13 November 2026.
+- A copy of such a link gives its label, as for each other link.
 - The agent instructions ask agents to name files as mentions, as
   [Agent instructions](agent-instructions.md#what-the-instructions-hold)
   says. Reason: one form is the form that agents use, and the chat reads

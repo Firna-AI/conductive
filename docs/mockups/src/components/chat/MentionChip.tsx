@@ -1,5 +1,6 @@
 import type { MentionEntry } from '../../fixtures/fileMentions'
 import { paths } from '../../paths'
+import inline from '../common/InlineText.module.css'
 import { ScreenLink } from '../common/ScreenLink'
 import { EntryIcon } from '../files/fileIcons'
 import { previewPaths } from '../files/previewPaths'
@@ -7,6 +8,7 @@ import { lineLabel } from './answerPaths'
 import { entryName } from './entryPaths'
 import { FileChip } from './FileChip'
 import type { MentionPart } from './fileMentions'
+import type { FileLinkPart } from './workspaceLinks'
 
 /** The icon of an entry, as the All files of the mockups draws it. */
 export function iconOf(entry: MentionEntry) {
@@ -50,5 +52,25 @@ export function MentionChip(props: { part: MentionPart }) {
       opener={to ? (chip) => <ScreenLink {...chip} to={to} /> : undefined}
       title={line ? `${entry.path}${label}` : undefined}
     />
+  )
+}
+
+/**
+ * A Markdown link or image of an answer to a file of the tree: a normal
+ * link with its label, which opens the file as its chip does, when the
+ * mockups draw that page (answer chip decision 4).
+ */
+export function FileLinkText(props: { part: FileLinkPart }) {
+  const { entry, line, label } = props.part
+  const to = line ? linePage(entry) : filePage(entry)
+  const title = `${entry.path}${lineLabel(line)}`
+  return to ? (
+    <ScreenLink className={inline.link} title={title} to={to}>
+      {label}
+    </ScreenLink>
+  ) : (
+    <span className={inline.link} title={title}>
+      {label}
+    </span>
   )
 }

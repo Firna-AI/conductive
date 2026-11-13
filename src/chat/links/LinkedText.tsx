@@ -27,6 +27,7 @@ import {
   type EntryLookup,
   type FilePart,
 } from './chat-parts'
+import { FileTextLink } from './FileTextLink'
 import { chipOf, useChatLinks } from './LinksContext'
 import { sessionChipOf, useLinkedSession } from './session-links'
 import { sessionTarget, type LinkTarget } from './workspace-links'
@@ -168,6 +169,7 @@ function Part(props: { part: ChatPart; opens: boolean }) {
     return <code className={inline.code}>{part.text}</code>
   }
   if (part.kind === 'file') return <FileLink part={part} />
+  if (part.kind === 'file-link') return <FileTextLink part={part} />
   if (part.kind === 'attachment') {
     return <AttachmentLink opens={props.opens} part={part} />
   }
@@ -198,13 +200,15 @@ function useEntryLookup(read: boolean): EntryLookup | undefined {
 }
 
 /**
- * Whether a text can hold a chip of a file, so that it follows the tree. A
- * mention needs `@`, and a path in code needs a backtick. So a change of
- * the tree draws only the texts that can change.
+ * Whether a text can hold a chip or a link of a file, so that it follows
+ * the tree. A mention needs `@`, a path in code needs a backtick, and a
+ * Markdown link needs `](`. So a change of the tree draws only the texts
+ * that can change.
  */
 function namesFiles(text: string, reading: TextReading): boolean {
   if (!reading.mentions) return false
-  return text.includes('@') || (reading.paths === true && text.includes('`'))
+  if (text.includes('@')) return true
+  return reading.paths === true && (text.includes('`') || text.includes(']('))
 }
 
 /** How the chat reads a text: as an answer, or as a message of a member. */

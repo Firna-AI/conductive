@@ -1,5 +1,10 @@
 import type { Attachment } from '../../fixtures/attachments'
-import { codeTarget } from './answerPaths'
+import {
+  codeTarget,
+  linkTarget as fileTarget,
+  type PathTarget,
+} from './answerPaths'
+import { entryName } from './entryPaths'
 import type { ChatRow, ChatSession } from './chatWorkspaces'
 import {
   mentionParts,
@@ -22,6 +27,17 @@ export type TextPart =
     }
   | MentionPart
   | AttachedPart
+  | FileLinkPart
+
+/**
+ * A Markdown link or image of an answer to an entry of the tree. It shows
+ * as a normal link with its label, which opens the file.
+ */
+export type FileLinkPart = {
+  kind: 'file-link'
+  label: string
+  source: string
+} & PathTarget
 
 /**
  * A Markdown link to a web address, or a bare web address. A bare address
@@ -42,6 +58,30 @@ function linkParts(text: string): TextPart[] {
   }
   if (end < text.length) parts.push({ kind: 'text', text: text.slice(end) })
   return parts
+}
+
+/** A Markdown link or image whose target is not a web address. */
+const pathLinkPattern = /!?\[([^\]\n]*)\]\((?:<([^<>\n]+)>|([^\s()<>]+))\)/g
+
+/**
+ * Plain text of an answer with its links to files of the tree. Each other
+ * part reads as `rest` says.
+ */
+function fileLinkParts(
+  text: string,
+  rest: (text: string) => TextPart[],
+): TextPart[] {
+  const parts: TextPart[] = []
+  let end = 0
+  for (const match of text.matchAll(pathLinkPattern)) {
+    const target = fileTarget(match[2] ?? match[3] ?? '')
+    if (!target) continue
+    parts.push(...rest(text.slice(end, match.index)))
+    const label = match[1].trim() === '' ? entryName(target.entry) : match[1]
+    parts.push({ kind: 'file-link', label, source: match[0], ...target })
+    end = match.index + match[0].length
+  }
+  return [...parts, ...rest(text.slice(end))]
 }
 
 /** Plain text with its links, and with its mentions when `mentions` asks. */
@@ -90,7 +130,9 @@ export function textParts(
     .flatMap((part, index): TextPart[] =>
       index % 2 === 1
         ? [codePart(part, answer)]
-        : plainParts(part, mentions || answer, files),
+        : answer
+          ? fileLinkParts(part, (rest) => plainParts(rest, true, files))
+          : plainParts(part, mentions, files),
     )
 }
 
