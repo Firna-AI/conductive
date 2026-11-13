@@ -145,10 +145,19 @@ at `app/attachments`, in New workspace, and in the flow
 - Each of these composers takes a drop of files on its whole message box:
   the text, the bar, and the padding. In the New workspace dialog, the
   message box is the whole dialog card.
+- The chat of a workspace also takes a drop of files anywhere on its
+  column: the session tabs, the transcript, the notices, and the message
+  box. The files go to the message box of the open session, and the box
+  shows its drop state while files are over the column. Reason: the user
+  asked for this, because a drop that must hit the box is hard to aim.
+- An overlay over the chat, such as a menu or a dialog, takes no drop for
+  the message box. Reason: a drop on a menu or on a question that attaches
+  a file would surprise the user.
 - A drop on the text puts the files at the place under the pointer. A drop
-  on the rest of the box puts them at the caret, or at the end of the text
-  when the field has no caret. Reason: the user asked for the files at the
-  cursor, which can mean the pointer or the caret.
+  on the rest of the box, or elsewhere on the chat, puts them at the caret,
+  or at the end of the text when the field has no caret. Reason: the user
+  asked for the files at the cursor, which can mean the pointer or the
+  caret.
 - During a drag of files over the text, the field draws a drop caret at
   the place under the pointer. The caret and the selection of the field
   move only at the drop. Reason: a cancelled drag then leaves the selection
@@ -157,7 +166,8 @@ at `app/attachments`, in New workspace, and in the flow
   box adds no hint text, so the draft keeps its room.
 - While the composer takes no change, such as during a create, its box
   takes no drop. The pointer then shows that a drop does nothing.
-- A drop of files outside each message box does nothing. Reason: the
+- A drop of files elsewhere does nothing: outside the chat and each
+  message box, and on the chat while it shows no message box. Reason: the
   browser would open the file in place of the app, and each draft lives
   only in the memory of its tab. The Feedback dialog still takes a drop
   and a paste of screenshots.

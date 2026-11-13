@@ -51,13 +51,14 @@ That first build is separate from the start of an existing workspace's computer.
 ## Attach files
 
 Use **Attach files** to pick files, or drop files into the message box.
+In a workspace chat, you can drop files anywhere on the chat, also on the transcript or the session tabs.
 The chat, **New workspace** page, and **New workspace** dialog all accept files.
 Each file appears as a file chip, a small box in the text.
 The chip shows the file's name and upload state.
 
 A picked file goes at the text cursor, or at the end if the field has no cursor.
 A file dropped on the text goes where you drop it.
-A drop on the rest of the box uses the text cursor or the end.
+A drop elsewhere uses the text cursor or the end.
 The text cursor then moves after the new chips.
 
 Each file can be up to 25 MB.

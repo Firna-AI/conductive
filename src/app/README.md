@@ -50,7 +50,7 @@ pull request bar, and the owner picker. A host can give its own parts, as
 | `features`   | `WorkspaceFeatures` from `../shell/workspace/features.ts`: the workspace parts |
 
 `App` also mounts `useFileDropGuard` of `file-drags.ts`, so a drop of files
-outside each message box does nothing, as
+outside each message box and the chat around it does nothing, as
 [Drops](../../docs/protocol/message-attachments.md#drops) says. The guard
 hears each drag last, on the window. It leaves each drag that a part took,
 such as a message box or the Feedback dialog, and it never stops an event.
