@@ -28,7 +28,7 @@ export const ownEndpoint = defineScreen({
       title: 'Codex on an own endpoint',
       description: `Claude runs on Cal's proxy, and Connect opened the form of Codex on its own endpoint kind. The form says that the endpoint must serve the OpenAI Responses API and the Codex models that the picker offers: GPT-6.1 Sol and GPT-6 Astra. The example address ends with /v1, and the hint says "Requests go through ${productName} to https://gateway.example.com/v1/responses".`,
       rationale:
-        'Codex sends its requests to the address with /responses added, and it refuses the Chat Completions API. So the endpoint must serve the Responses API, and the address ends with /v1, as the design calls of the own endpoint plan say. The shared rule keeps the /v1 of a Codex address.',
+        'Codex sends its requests to the address with /responses added, and it refuses the Chat Completions API. So the endpoint must serve the Responses API, and the address ends with /v1, as the design calls of the own endpoint plan say. The shared rule keeps the /v1 of a Codex address. When the typed address gives no model list and the same address with /v1 gives one, the save stores the address with /v1, and a note under the Codex row says so, as app/account/endpoint-models/v1-added shows. That is decision 1 C of the plan codex-endpoint-v1-base, which Cal chose on 13 November 2026.',
       props: { form: 'codex' },
     },
     {

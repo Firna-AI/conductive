@@ -1,6 +1,10 @@
 import { chatGptSignInCopy } from '../components/settings/chatGptSignInCopy'
 import type { AgentKey } from './agents'
-import { proxyModelCheck, type ModelListCheck } from './endpointModels'
+import {
+  keptModelCheck,
+  proxyModelCheck,
+  type ModelListCheck,
+} from './endpointModels'
 
 /**
  * How a user connects an agent: Claude with a subscription token from
@@ -46,14 +50,25 @@ export const connectKinds: Readonly<
 }
 
 /**
- * A connected login, as the account shows it: its kind, and the host of an
- * own endpoint. The key and the full address never go back to the browser.
- * `models` is the last read of the model list of an own endpoint, when that
- * list lacks models of the app.
+ * A connected own endpoint login, as the account shows it: the host of its
+ * endpoint. The key and the full address never go back to the browser.
  */
-export type AgentLogin =
-  | { kind: 'token' | 'api-key' }
-  | { kind: 'endpoint'; host: string; models?: ModelListCheck }
+export type EndpointLogin = {
+  kind: 'endpoint'
+  host: string
+  /** The last model list that the app read, when it lacks models of the app. */
+  models?: ModelListCheck
+  /** The read of the model list at a save or a Refresh failed. The app keeps the last list. */
+  readFailed?: boolean
+  /**
+   * The save added `/v1` to the typed address, because only that address
+   * lists the models. The page keeps the note until it reloads.
+   */
+  addedV1?: boolean
+}
+
+/** A connected login, as the account shows it: its kind, or an own endpoint. */
+export type AgentLogin = { kind: 'token' | 'api-key' } | EndpointLogin
 
 /** The agents that a user connected, and how. */
 export type AgentLogins = Readonly<Partial<Record<AgentKey, AgentLogin>>>
@@ -80,6 +95,36 @@ export const endpointLogins: AgentLogins = {
 export const unlistedModelLogins: AgentLogins = {
   claude: { kind: 'endpoint', host: endpointHost, models: proxyModelCheck },
   codex: { kind: 'endpoint', host: endpointHost },
+}
+
+/**
+ * The logins after Cal connected Codex with the address of the Claude
+ * login, `https://proxy.example.com`. The proxy lists its models only
+ * under `/v1`, so the save stored that address with `/v1` added.
+ */
+export const addedV1Logins: AgentLogins = {
+  claude: { kind: 'endpoint', host: endpointHost },
+  codex: { kind: 'endpoint', host: endpointHost, addedV1: true },
+}
+
+/** The logins after the proxy refused the key at a Refresh of each list. */
+export const readFailedLogins: AgentLogins = {
+  claude: { kind: 'endpoint', host: endpointHost, readFailed: true },
+  codex: { kind: 'endpoint', host: endpointHost, readFailed: true },
+}
+
+/**
+ * The same failed reads, when the last Claude list that the app read lacks
+ * a Claude model of the app. A failed read keeps that list.
+ */
+export const keptListLogins: AgentLogins = {
+  claude: {
+    kind: 'endpoint',
+    host: endpointHost,
+    models: keptModelCheck,
+    readFailed: true,
+  },
+  codex: { kind: 'endpoint', host: endpointHost, readFailed: true },
 }
 
 /**

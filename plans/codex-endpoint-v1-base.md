@@ -116,9 +116,9 @@ choice. Cal can override any agent call.
 - **Before the store.** The reads run before the save encrypts and stores
   the login, because the stored address depends on them. A read that
   fails never fails the save. The store writes the login, its model list,
-  the attempt time, and the failure mark in one statement, so that the
-  first turn does not read the list again at once. Claude takes the same
-  path, so that one save path writes the list and the mark. Agent call.
+  and the attempt time in one statement, so that the first turn does not
+  read the list again at once. Claude takes the same path, so that one
+  save path writes the list. Agent call.
 - **Only the save.** Refresh and the background read never change the
   stored address. Agent call. Reason: a smaller change. Option G would
   let Refresh repair a login saved before this change. Without it, such a
@@ -137,22 +137,54 @@ choice. Cal can override any agent call.
   API".
   Reason: the user must see that the saved address differs from the typed
   one.
-- **The warning.** When the last model list read of an own endpoint login
-  failed, the account page shows a warning under the row of that agent:
+  The note sits under the kind and the host of the Codex row, before the
+  share setting, with an info icon, as the mockup
+  `app/account/endpoint-models/v1-added` shows. `EndpointAddressNote` in
+  `docs/mockups/src/components/settings/EndpointRead.tsx` draws it.
+  `endpointReadCopy.ts` beside it holds its words, with the product name
+  from `brand.ts`. Agent call of the mockups, 13 November 2026. Reason:
+  the kind and the host also say where the requests go.
+- **The warning.** When the model list read of a save or of a Refresh
+  fails, the account page shows a warning under the row of that agent:
   "Conductive couldn't read the model list of this endpoint. Check the
-  address and the key." It keeps Refresh. A later read that succeeds
-  removes the warning. The warning shows for both agents, because a failed
-  read means the same for each. When the row also shows models that the
-  list leaves out, the row shows one Refresh, not two. Agent call. Cal's
-  choice C asked for the warning for Codex at the save. A Claude warning
-  and a warning after a later read cost no call, but only that width
-  needs the migration below.
-- **The failure mark.** A new nullable column of `agent_logins` holds the
-  time of the last failed read. A read that succeeds clears it. Each
-  write checks the ciphertext and the attempt ID, as `saveEndpointModels`
-  does, so that a late failed read of a replaced login cannot mark the
-  new login. Agent call. Reason: the attempt time is written before each
-  read, so it cannot tell a running read from a failed one.
+  address and the key." It keeps Refresh. A later Refresh that succeeds,
+  a new save, a Remove, or a reload of the page removes the warning. The
+  save and the Refresh responses carry a flag for it. The warning shows
+  for both agents, because a failed read means the same for each. When
+  the row also shows models that the list leaves out, the row shows one
+  Refresh, not two. Agent call. Cal's choice C asked for the warning for
+  Codex at the save. A Claude warning and a warning after Refresh cost no
+  call.
+  The warning sits under the kind and the host, after the note, with a
+  warning icon. Refresh beside it lines up with Remove, as the mockup
+  `app/account/endpoint-models/read-failed` shows. When the row also
+  shows the models that the list leaves out, Refresh stays beside the
+  warning, and the line of those models below it has no Refresh, as
+  `app/account/endpoint-models/read-failed-unlisted` shows. That line
+  keeps the time of the last list that the app read. `EndpointReadFailed`
+  in the same file as the note draws the warning. Its caller gives it the
+  Refresh button, so that the app gives the button its action. Agent call
+  of the mockups, 13 November 2026. Reason: one read changes both lines,
+  and the failed read is the line that a new read can change.
+  An endpoint that serves its API but no model list that the app can read
+  fails each read. Its row shows the warning after each save and Refresh,
+  but a reload removes it, and its turns still work.
+- **Get started.** The agent step of Get started shows the same list of
+  the agents as the account page, so it shows the note and the warning
+  too. The browser keeps the flags of the save and of Refresh beside the
+  account data, so that the note and the warning stay when that step
+  draws the list again. Agent call of
+  the mockups, 13 November 2026. Reason: a user who connects Codex in Get
+  started needs the note as much, and one list keeps one behaviour.
+- **No stored failure mark.** The app stores no mark of a failed read, and
+  a failed background read shows nothing, as today. Agent call of 13
+  November 2026, which replaces the earlier agent call of the same day for
+  a new nullable column of `agent_logins`. Reason: the Milestone 1 check
+  showed that a stored mark keeps a warning that Refresh cannot remove on
+  an endpoint that serves no model list. The warning after the reads that
+  the owner starts matches Cal's choice C, and the change needs no
+  migration. Cost: a key that stops working later shows no warning on the
+  account page. Its turns fail with their own cause.
 
 ## Milestone 1: Mockups
 
@@ -164,12 +196,16 @@ The account page gets two states of a Codex own endpoint row: the note
 after a save that added `/v1`, and the warning after a failed model list
 read.
 
-- [ ] Add the note state to the mockups of `app/account/own-endpoint`, or
-      add a child page, with the text of the design.
-- [ ] Add the warning state, with Refresh, for an own endpoint row of each
-      agent.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Add the note state to the mockups of `app/account/own-endpoint`, or
+      add a child page, with the text of the design. It is the state
+      `v1-added` of `app/account/endpoint-models`, because
+      `app/account/own-endpoint` already shows five screens, the limit of
+      a page.
+- [x] Add the warning state, with Refresh, for an own endpoint row of each
+      agent. It is the states `read-failed` and `read-failed-unlisted` of
+      `app/account/endpoint-models`.
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages.
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
 
 ## Milestone 2: Documentation and protocol
@@ -191,25 +227,21 @@ Depends on: 1
       `src/app/account-screens.md`. Lines 36 to 38 of the account screens
       doc say that the hint shows the saved address, which changes.
 
-## Milestone 3: Save, read, and failure mark
+## Milestone 3: Save and read flags
 
 Depends on: 2
 
-- [ ] Add a migration with the nullable failure column of `agent_logins`.
-- [ ] Write the failure time after a failed read, and clear it after a
-      read that succeeds, in `worker/model-gateway/endpoint-model-refresh.ts`
-      and its data module.
 - [ ] Add the second Codex read to the save in `worker/app-api/boot.ts`,
       before the encryption, and save the read list as the model list.
-- [ ] Add the flag to `SaveAgentLoginResponse` and the failure state to
-      the account login status in `src/shared/account.ts`, and update the
-      fake API and the seeds.
+- [ ] Add the flag for an added `/v1` and the flag for a failed read to
+      `SaveAgentLoginResponse`, and the flag for a failed read to the
+      Refresh response, in `src/shared/account.ts`. Update the fake API
+      and the seeds.
 - [ ] Add Worker tests: a base without `/v1` that only serves `/v1`, a
       base that serves both, a base that serves neither, a base that ends
       with `/v1`, a query on the base, a first read with no HTTP answer,
-      Claude unchanged, Refresh that never changes the address, the
-      failure mark set and cleared, and a late failed read of a replaced
-      login.
+      Claude unchanged, Refresh that never changes the address, and the
+      failed-read flag of the save and of Refresh.
 
 ## Milestone 4: Account page
 
@@ -217,9 +249,19 @@ Tags: ui
 
 Depends on: 1, 3
 
-- [ ] Show the note under the Codex row after a save with the flag.
-- [ ] Show the warning under each own endpoint row whose last read failed,
-      with Refresh.
+- [ ] Show the note under the Codex row after a save with the flag, with
+      `EndpointAddressNote` from
+      `docs/mockups/src/components/settings/EndpointRead.tsx`, as
+      `app/account/endpoint-models/v1-added` shows. Keep the flag beside
+      the account data, so that the agent step of Get started shows it
+      too.
+- [ ] Show the warning under each own endpoint row whose save or Refresh
+      returned the failed-read flag, until a reload, with Refresh, with `EndpointReadFailed` from the same file. Give it
+      the Refresh button of the row, and take the words of Refresh from
+      `endpointReadCopy.ts`, also in `src/shell/account/EndpointModels.tsx`.
+      When the row also shows the models that the list leaves out,
+      `EndpointModels` shows no Refresh, as
+      `app/account/endpoint-models/read-failed-unlisted` shows.
 - [ ] Add component tests for the note and the warning.
 - [ ] Check the page in a browser with `npm run dev`.
 

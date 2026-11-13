@@ -208,7 +208,15 @@ owner of a login hide each model that its endpoint does not list. Both
 agents run on Cal's proxy, whose model list does not name Fable 5.1. The
 Claude row says that Fable 5.1 is hidden from Cal's model pickers, and
 why, with the model ID, the time of the last read of the list, and
-Refresh.
+Refresh. Its other states come from decision 1 C of the plan
+codex-endpoint-v1-base, which Cal chose on 13 November 2026:
+
+- `v1-added` has the note under the Codex row after a save that added
+  `/v1` to the typed address, because only that address lists the models.
+- `read-failed` has the warning under each row after a Refresh whose
+  model list read failed, each with Refresh.
+- `read-failed-unlisted` has the same warning above the models that the
+  last Claude list leaves out, with one Refresh beside the warning.
 
 `app/new-workspace/dialog` draws New workspace as a dialog over the ready
 workspace of `app`, for a new account or a user who chose the dialog.

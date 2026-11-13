@@ -1,7 +1,8 @@
 /*
  * The models that the model list of an own endpoint does not name, under
  * the kind and the host of its login, at the inset of the share setting
- * below: the words, then Refresh, which lines up with Remove.
+ * below: the words, then Refresh, which lines up with Remove. After a read
+ * that failed, the warning above holds Refresh, and the words take the row.
  */
 .models {
   display: flex;

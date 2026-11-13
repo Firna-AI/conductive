@@ -44,6 +44,29 @@
     that a phone shows both in full. It never shows the key or the full
     address, as `app/account/own-endpoint/connected` shows. The part lives
     in `src/components/settings/LoginEndpoint.tsx`.
+  - When the typed address of a Codex endpoint gives no model list and the
+    same address with `/v1` gives one, the save stores the address with
+    `/v1` (decision 1 C of the plan codex-endpoint-v1-base, which Cal chose
+    on 13 November 2026). A note under the host then says "Conductive added
+    /v1 to the address, because the endpoint lists its models there." The
+    page keeps it until it reloads, as
+    `app/account/endpoint-models/v1-added` shows.
+  - When the model list read of a save or of a Refresh fails, a warning
+    under the host says "Conductive couldn't read the model list of this
+    endpoint. Check the address and the key." It has Refresh, and it shows
+    for both agents, as `app/account/endpoint-models/read-failed` shows.
+    The page keeps it until a read works or the page reloads. A failed
+    read in the background shows nothing. A failed read keeps the last list, so the row can also name the
+    models that the list leaves out. The row then has one Refresh, beside
+    the warning, as `app/account/endpoint-models/read-failed-unlisted`
+    shows.
+  - `EndpointRead.tsx` in `src/components/settings/` draws the note and the
+    warning. The caller gives the warning its Refresh button, so that the
+    app can give the button its own action. `endpointReadCopy.ts` beside it
+    holds the words of both and of Refresh, with the product name from
+    `brand.ts`. Neither imports a fixture, so the app can import them.
+    `EndpointDetails.tsx` puts the lines under an own endpoint login in
+    order, and gives the row its one Refresh.
   - In a session on the own endpoint of another member, the bar of the
     composer names the login as for every login, such as "Cal's login".
     It names no host, because the members of an org trust each other with
