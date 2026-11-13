@@ -45,6 +45,11 @@ export interface PaletteBase {
   openWorkspaceId: string | null
   /** Where Create org leads, as the org rail says. */
   createOrgHref: string
+  /**
+   * Where the Switch to row of an org leads, as its tile in the org rail
+   * does: the last workspace of the org, or else its list page.
+   */
+  orgHref: (orgId: string) => string
   /** What the parts of the page offer. */
   offers: readonly PaletteOffer[]
   /** The window is the Mac app, whose Account page has This Mac. */

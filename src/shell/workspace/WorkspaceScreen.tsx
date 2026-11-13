@@ -29,6 +29,7 @@ import { WorkspaceGitHub } from './github/WorkspaceGitHub'
 import { HeaderNoticeBars } from './HeaderNoticeBars'
 import { archivedRestore, contentState, sandboxView } from './sandbox-view'
 import { SandboxPanel } from './SandboxNotice'
+import { useRememberWorkspace } from './remember-workspace'
 import { OpenSessionAddress } from './session-address'
 import { shownWorkspaces } from './tab-memory'
 import { ToolsPart } from './tools/ToolsPart'
@@ -90,6 +91,15 @@ export function WorkspaceScreen(props: {
   const theme = useSharedUiTheme()
   const resume = useAction(() => model.resume(), "The sandbox didn't start.")
   const lifecycle = useArchiveActions(props.org.id, props.viewer)
+  useRememberWorkspace(
+    {
+      orgId: props.org.id,
+      workspaceId: props.workspaceId,
+      view: props.view,
+      session: props.session,
+    },
+    detail,
+  )
   // Restore ends at its last day while the page shows, with no other event.
   const passed = usePassedDeadlines([
     detail.state === 'ready' ? detail.value.workspace.restoreUntil : null,

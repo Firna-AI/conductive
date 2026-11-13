@@ -134,9 +134,12 @@ the Help row of the palette opens.
 - A secret goes out once, through `SecretForm`, and the field is empty after
   the save. No answer brings a stored secret back.
 - The browser keeps only the panel sizes (`panels.ts` and
-  `column-split.ts`): the widths of the sidebar and the right column, and
-  the split of the right column. A browser that refuses its storage keeps
-  them until the page closes.
+  `column-split.ts`) and the last workspaces (`last-workspaces.ts`). The
+  panel sizes are the widths of the sidebar and the right column, and the
+  split of the right column. The last workspaces hold the address of the
+  last workspace page that the person opened in each org, under a key of
+  the person. A browser that refuses its storage keeps them until the page
+  closes.
 - The open of a workspace and the settings reads of the Cloud computer
   tab count a generation. An answer that arrives after their screen
   closed or the user cancelled starts no stream, writes no older state,

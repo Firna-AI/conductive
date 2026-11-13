@@ -63,9 +63,13 @@ Each call is my call, made on 13 November 2026.
   opens the first org, as before.
 - The storage key holds the person's id, so another person in the same
   browser gets no address of the first person.
-- The legal pages need no change. The Privacy page describes cookies,
-  and this memory is not a cookie. No sentence of the Terms or Privacy
-  page restates where the app opens.
+- The Privacy page lists what the browser keeps: the panel sizes. So it
+  now also lists the last workspaces, in `privacy.ts` and
+  `privacy-uses.ts`. The first plan said that the legal pages needed no
+  change. A full read of the legal pages found the list.
+- A switch to an org can now open a stopped workspace, and that open
+  starts its computer, as an open from the list does. The guide says so.
+  Reason: decision 1 B chose to open the last workspace.
 - The change has no mockup work. No screen changes. Only the page that a
   click opens changes, and the catalogue does not draw that.
 
@@ -81,18 +85,18 @@ Depends on: none
 
 State the new requirements before the code changes.
 
-- [ ] Update `docs/protocol/org-rail-order.md`: a tile, Switch to org 1
+- [x] Update `docs/protocol/org-rail-order.md`: a tile, Switch to org 1
       to 9, and the Switch to rows open the last workspace of the org;
       the org switcher of a phone opens the list; `/` opens the last
       workspace when its org is open. Record decision 1 by its date.
-- [ ] Check `docs/protocol/keyboard-shortcuts.md` and
+- [x] Check `docs/protocol/keyboard-shortcuts.md` and
       `docs/protocol/command-palette-actions.md`. Update each sentence
       that says where Switch to org opens.
-- [ ] Read each public guide in `src/marketing/docs/` in full. Update
+- [x] Read each public guide in `src/marketing/docs/` in full. Update
       the sentence in `orgs-and-members.md` on where Conductive opens,
       and each other sentence that restates the fact.
-- [ ] Read the Terms and Privacy pages in full. Confirm that no sentence
-      restates the fact.
+- [x] Read the Terms and Privacy pages in full. Update each sentence
+      that lists what the browser keeps.
 
 ## Milestone 2: The memory of the last workspaces
 
@@ -101,13 +105,13 @@ Depends on: 1
 A model in `src/app/` that keeps the last workspace of each org in the
 browser storage of `AppServices`.
 
-- [ ] Add `src/app/last-workspaces.ts`: a store of the last workspace
+- [x] Add `src/app/last-workspaces.ts`: a store of the last workspace
       address of each org, and the org opened last, for the signed-in
       person. It reads and writes `localStorage` through
       `KeyValueStorage`. It ignores bad values and a refused storage.
-- [ ] Give it `remember`, `forget`, `address(orgId)`, and `latest()`.
-- [ ] Add it to `AppModel`.
-- [ ] Add `src/app/last-workspaces.test.ts`: a remember and a read, a
+- [x] Give it `remember`, `forget`, `address(orgId)`, and `latest()`.
+- [x] Add it to `AppModel`.
+- [x] Add `src/app/last-workspaces.test.ts`: a remember and a read, a
       reload from storage, a forget, another person, bad values, and a
       refused storage.
 
@@ -117,16 +121,16 @@ Tags: ui
 
 Depends on: 2
 
-- [ ] Remember the workspace when `WorkspaceScreen` shows it. Forget it
+- [x] Remember the workspace when `WorkspaceScreen` shows it. Forget it
       when the screen shows `Unavailable`.
-- [ ] Use the remembered address in the org tile and in Switch to org 1
+- [x] Use the remembered address in the org tile and in Switch to org 1
       to 9 (`src/shell/layout/OrgRail.tsx`).
-- [ ] Use it in the Switch to rows of the palette
+- [x] Use it in the Switch to rows of the palette
       (`src/app/palette/palette-rows.ts`).
-- [ ] Use it at `/` (`src/shell/Shell.tsx`).
-- [ ] Add tests for the rail link, the palette row, and `/`.
-- [ ] Update `src/app/README.md` and the key code notes.
-- [ ] Check the change in a browser: switch between two orgs, reload, and
+- [x] Use it at `/` (`src/shell/Shell.tsx`).
+- [x] Add tests for the rail link, the palette row, and `/`.
+- [x] Update `src/app/README.md` and the key code notes.
+- [x] Check the change in a browser: switch between two orgs, reload, and
       open `/`.
 
 ## Milestone 4: Verification, commit, review, and pull request

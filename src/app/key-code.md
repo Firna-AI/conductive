@@ -300,6 +300,15 @@ Each path is relative to `src/app/`, the folder of this page.
 - `kept-org.ts`: `keptOrg`, the org of a page without one: the org that
   the tab opened last, from `AppModel.lastOrg`, or else the first org that
   is not deleted.
+- `last-workspaces.ts`: `LastWorkspaces`, the last workspace page of each
+  org of the person, which the browser keeps, as
+  [Opening an org](../../docs/protocol/org-rail-order.md#opening-an-org)
+  says. `AppModel.lastWorkspaces` follows the person signed in.
+  `orgEntry` gives the page that opens an org: the org tile and its keys
+  (`../shell/orgs/useOrgEntry.ts`) and the palette's Switch to rows use
+  it. `startAddress` gives the page of `/`. The workspace screen
+  remembers and forgets its workspace through
+  `../shell/workspace/remember-workspace.ts`.
 - [Key code: the palette, the layers, and the dialogs](key-code-layers.md)
   names the entry points of the command palette, the layers of each
   frame, New workspace as a dialog, and feedback with its screenshots.

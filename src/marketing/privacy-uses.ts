@@ -164,6 +164,10 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         on GitHub, when available.`,
       text`Panel sizes: your browser keeps the sizes of the panels of the
         app. They stay in your browser.`,
+      text`Last workspaces: your browser keeps the address of the last
+        workspace that you opened in each org, with the IDs of the org,
+        the workspace, and the session. A switch to the org opens that
+        workspace again. They stay in your browser.`,
     ),
     paragraph`Where data protection law requires a lawful basis, the
       operator relies on performance of a contract to provide the

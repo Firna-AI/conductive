@@ -2,6 +2,7 @@ import { useEffect, type ReactNode } from 'react'
 import { CircleAlert } from 'lucide-react'
 import { EmptyState } from '../../docs/mockups/src/components/common/EmptyState'
 import { inFirstRun } from '../app/get-started'
+import { startAddress } from '../app/last-workspaces'
 import { setupOrg } from '../app/setup-steps'
 import { useNavigation, useRoute } from '../app/navigation'
 import { routes, type Route } from '../app/router'
@@ -26,19 +27,21 @@ import { useViewport } from './ui/viewport'
 import { Waiting } from './waitlist/Waiting'
 
 /**
- * The app opens as usual: Get started, or the org of Get started. That is
- * the first org that is not deleted.
+ * The app opens as usual: Get started, or else the workspace that the
+ * person opened last, as `startAddress` says. Without one, it opens the
+ * org of Get started. That is the first org that is not deleted.
  */
 function OpenApp() {
   const app = useApp()
   const navigation = useNavigation()
   const orgs = useStore(app.orgs)
   const getStarted = useStore(app.getStarted)
+  const last = useStore(app.lastWorkspaces.state)
   const first = setupOrg(orgs)
   const target =
     inFirstRun(getStarted) || !first
       ? routes.getStarted()
-      : routes.org(first.id)
+      : (startAddress(last, orgs) ?? routes.org(first.id))
   useEffect(() => navigation.replace(target), [navigation, target])
   return null
 }

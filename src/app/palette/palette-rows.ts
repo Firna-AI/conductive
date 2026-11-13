@@ -169,12 +169,14 @@ export function feedbackRow(): CommandRow {
 }
 
 /**
- * Switch to another org of the person. It opens the list of the org.
+ * Switch to another org of the person. It opens `href`: the last workspace
+ * of the org, or else its list page, as the tile of the org does.
  * `command` is Switch to org 1 to 9 of the place of the org in the rail.
  */
 export function switchRow(
   org: OrgSummary,
   command: ShortcutCommandId | null,
+  href: string,
 ): CommandRow {
   const text = actionTexts['switch-org']
   return {
@@ -183,7 +185,7 @@ export function switchRow(
     lead: { kind: 'org', org },
     label: `${text.label} ${org.name}`,
     words: text.words,
-    href: routes.org(org.id),
+    href,
     ...commandOf(command),
   }
 }
