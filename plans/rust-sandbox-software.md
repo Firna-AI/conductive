@@ -1,6 +1,6 @@
 # Rust sandbox software with automatic updates
 
-Status: Active. On branch `calummoore/porto-vtqz`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
+Status: Active. [PR #342](https://github.com/Firna-AI/conductive/pull/342) is open as a draft, so that CI runs the gate. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
 The app's own sandbox software installs only in an org image build. A
 refresh and an existing workspace keep their old software, so a fix
