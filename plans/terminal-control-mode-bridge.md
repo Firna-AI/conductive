@@ -373,14 +373,20 @@ Depends on: 3
 
 Depends on: every other milestone
 
-- [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Run the targeted tests and the complete gate named in `AGENTS.md`.
+  - The static checks pass. The test failures of the local gate come from
+    load and from a checkout path under `/home/user`, and `origin/main`
+    fails the same tests at that path. CI is the gate of record.
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
       once, and report.
-- [ ] Delete this plan when the `plans` skill says, under "Deleting the
+  - Round 1 found 16 findings and round 2 found 4. All 20 are fixed, in
+    `dba949d6` and `c33ed6a0`. The findings file is
+    `.context/reviews/calummoore/porto-6ebg/findings.md`.
+- [x] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the
       design calls of this plan with their dates, a permalink to this plan,
@@ -392,4 +398,5 @@ Depends on: every other milestone
 - [ ] After the next org image build, check a new workspace in Chrome and
       Safari on a Mac: a drag past the top edge, Cmd+C, a reload with
       history, two viewers with different sizes, a paste into vim after a
-      reconnect, and a connect while vim runs.
+      reconnect, and a connect while vim runs. The follow-up item
+      `plans/follow-ups/terminal-copy-browser-check.md` holds this task.

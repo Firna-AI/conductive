@@ -151,8 +151,8 @@ only the requirements, in Milestone 2.
   - Each new session starts a login Bash in the repository folder. The
     tmux server gives it the workspace variables and the prompt hook, as
     today.
-  - The attach program is the terminal bridge of the
-    [terminal control-mode bridge](terminal-control-mode-bridge.md) change,
+  - The attach program is the
+    [terminal bridge](../worker/terminal/README.md#the-terminal-bridge),
     which takes the name of a tmux session. The bridge attaches in tmux
     control mode and passes the raw output to the browser. Its hidden tabs
     stay connected, so each one gets every byte and keeps its own history
