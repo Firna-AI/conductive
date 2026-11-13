@@ -609,19 +609,19 @@ Depends on: every other milestone
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
       once, and report.
-- [ ] Record a follow-up item under `plans/follow-ups/` for the tab row
+- [x] Record a follow-up item under `plans/follow-ups/` for the tab row
       of the mockups in a narrow catalogue frame. A static view shows the
       start of a row that does not fit, so the shown tab and an open tab
       menu at the end of the row are cut off, as in the `kept` and `menu`
       variants of `app/files/temporary`. The fix draws the row in
       `WorkspaceTabs` of the mockups as the app scrolls it.
-- [ ] Record a follow-up item under `plans/follow-ups/` for the name of
+- [x] Record a follow-up item under `plans/follow-ups/` for the name of
       the temporary tab in the mockups. `TabItem` of the mockups adds
       ", temporary" as hidden text after the title, and Chrome reads
       "README.md , temporary", with a space before the comma. The app
       names the tab with the `aria-label` of its link, which gives
       "README.md, temporary".
-- [ ] Record a follow-up item under `plans/follow-ups/` to move The tab
+- [x] Record a follow-up item under `plans/follow-ups/` to move The tab
       row out of `docs/protocol/agents-and-sessions.md` to its own page.
       This change takes that doc to 282 lines, over the 250-line target
       of the `documentation` skill. The move waits, because The tab row
