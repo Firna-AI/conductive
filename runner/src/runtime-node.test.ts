@@ -16,6 +16,14 @@ it('uses the private Node for npm and the service after sandbox env loading', as
       '--omit=dev',
       '--ignore-scripts',
       '--prefix',
+      `${fixture.prefix}/sdk-helper`,
+    ]),
+    'private Node',
+    JSON.stringify([
+      'ci',
+      '--omit=dev',
+      '--ignore-scripts',
+      '--prefix',
       fixture.prefix,
     ]),
     'systemctl daemon-reload',
@@ -37,6 +45,7 @@ it('uses the private Node for npm and the service after sandbox env loading', as
     marker: 'loaded',
     envNode: `${fixture.commands}/node`,
     path: `${fixture.commands}:/usr/bin:/bin`,
+    helper: `${fixture.prefix}/sdk-helper/sdk-helper.mjs`,
   })
   expect((await fixture.calls()).at(-1)).toBe('private Node')
 })

@@ -5,7 +5,10 @@ import { turn } from '../test-support/harness'
 import { FakeProvider } from '../test-support/providers'
 import { deferred, sessionTurn, stop } from '../test-support/runtime'
 import { wireFixture } from '../test-support/wire'
-import type { ProviderOptions, ProviderProcess } from './providers/types'
+import type {
+  ProviderOptions,
+  ProviderProcess,
+} from '../sdk-helper/src/providers/types'
 
 const files: ChangedFile[] = [
   { path: 'changed.txt', change: 'modified', added: 1, removed: 0 },

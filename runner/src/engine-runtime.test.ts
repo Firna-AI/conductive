@@ -4,7 +4,10 @@ import { engineFixture } from '../test-support/engine'
 import { FakeProvider } from '../test-support/providers'
 import { deferred, sessionTurn, stop } from '../test-support/runtime'
 import type { Checkpoint } from './checkpoint'
-import type { ProviderOptions, ProviderProcess } from './providers/types'
+import type {
+  ProviderOptions,
+  ProviderProcess,
+} from '../sdk-helper/src/providers/types'
 
 it('keeps another session live while one provider start waits and disposes a canceled late provider', async () => {
   const entered = deferred<ProviderOptions>()

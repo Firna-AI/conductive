@@ -96,7 +96,7 @@ guide gives the exact instruction and the metadata source.
   of saved branches, and the reader of the branches of older saved text.
 - `src/engine-input.ts`: the instructions and the saved pair of a session
   at its first input.
-- `src/providers/message.ts`: `providerMessage`, the sender line and the
+- `sdk-helper/src/providers/message.ts`: `providerMessage`, the sender line and the
   branch line.
-- `src/providers/instructions.test.ts` and `src/providers/branches.test.ts`:
+- `sdk-helper/src/providers/instructions.test.ts` and `sdk-helper/src/providers/branches.test.ts`:
   the saved text, the sender line, and the branch line of both agents.

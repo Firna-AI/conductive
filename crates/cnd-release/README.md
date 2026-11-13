@@ -26,6 +26,12 @@ the parts filename hold the SHA-256 digest of their bytes.
 The deploy also runs `bash image/package-system.sh OUTPUT`. That command
 writes the digest-named system archive and prints its digest. The system
 part carries the sandbox scripts, units, GitHub CLI wrapper, and udev rule.
+The deploy also runs `node runner/sdk-helper/scripts/package.mjs OUTPUT`.
+That command writes `sdk-helper-<sha256>.tar.gz` and prints its digest.
+The helper part holds its Node bundle, runtime npm packages, and agent programs.
+Its Node runtime stays in the separate `node` part.
+The `runner` part starts the helper from the same pinned release folder.
+
 The updater reads the parts embedded in the checked new executable.
 
 The `parts` command writes an input file for the program build. Repeat
@@ -36,12 +42,13 @@ command. These commands upload nothing.
 
 ## Quick Start
 
-Run from the repository root. Supply the real runner, Node, and system URLs and digests:
+Run from the repository root. Supply the real runner, SDK helper, Node, and system URLs and digests:
 
 ```sh
 cargo run -p cnd-release -- parts \
   --part runner "$RUNNER_URL" "$RUNNER_SHA256" \
   --part node "$NODE_URL" "$NODE_SHA256" \
+  --part sdk-helper "$SDK_HELPER_URL" "$SDK_HELPER_SHA256" \
   --part system "$SYSTEM_URL" "$SYSTEM_SHA256" \
   --output "$PWD/.context/release-input/parts.json"
 CONDUCTIVE_RELEASE_VERSION=0.0.42 \

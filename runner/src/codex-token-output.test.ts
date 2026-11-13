@@ -2,12 +2,23 @@ import { expect, it } from 'vitest'
 
 import { turn } from '../test-support/harness'
 import { fakeCodexAccount } from '../test-support/providers'
+import { MemoryHelper } from '../test-support/helper'
+import { Runner } from './runner'
+import { createHelperFactory } from './sdk-helper'
 import { wireFixture } from '../test-support/wire'
 
 it('hides a Codex turn token split across output before sending or saving it', async () => {
   const h = await wireFixture()
   h.endpoint.confirmEvents = false
-  await h.runner.start(false)
+  const factory = createHelperFactory(
+    () =>
+      new MemoryHelper({ claude: h.providers.open, codex: h.providers.open }),
+  )
+  const runner = new Runner({
+    ...h.options,
+    providers: { claude: factory, codex: factory },
+  })
+  await runner.start(false)
   const command = turn('1', 'alice', 'codex')
   command.credential = {
     agent: 'codex',
@@ -16,10 +27,10 @@ it('hides a Codex turn token split across output before sending or saving it', a
     account: fakeCodexAccount,
   }
   h.endpoint.send(command)
-  await h.runner.idle()
+  await runner.idle()
   const provider = h.providers.latest
   provider.emit({ type: 'delta', messageId: 'answer', text: 'Login: sk-fake-' })
-  await h.runner.idle()
+  await runner.idle()
   provider.emit({
     type: 'delta',
     messageId: 'answer',
@@ -36,7 +47,7 @@ it('hides a Codex turn token split across output before sending or saving it', a
     state: 'finished',
     userMessageIds: ['message-1'],
   })
-  await h.runner.idle()
+  await runner.idle()
   expect(h.endpoint.runnerEvents.map(({ event }) => event)).toContainEqual({
     type: 'assistant.completed',
     sessionId: 'session-1',
@@ -58,4 +69,5 @@ it('hides a Codex turn token split across output before sending or saving it', a
   expect(JSON.stringify(await h.storage.read())).not.toContain(
     command.credential.token,
   )
+  await runner.close()
 })

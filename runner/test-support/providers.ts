@@ -1,12 +1,12 @@
 import type { AgentChoice } from '../../src/shared/generated/AgentChoice'
 import type { RunnerCodexAccount } from '../../src/shared/generated/RunnerCodexAccount'
 import type {
-  ProviderEvent,
   ProviderFactory,
-  ProviderInput,
   ProviderOptions,
   ProviderProcess,
-} from '../src/providers/types'
+} from '../sdk-helper/src/providers/types'
+import type { ProviderEvent } from '../sdk-helper/src/generated/ProviderEvent'
+import type { ProviderInput } from '../sdk-helper/src/generated/ProviderInput'
 
 export const fakeToolContext = {
   machineOrigin: 'https://machines.conductive.test',
@@ -19,14 +19,6 @@ export const fakeCodexAccount: RunnerCodexAccount = {
   email: 'alice@example.test',
   planType: 'plus',
   userId: 'chatgpt-user-alice',
-}
-
-export async function fakeClaudeProfile(home: string) {
-  return {
-    directory: `${home}/.conductive/anthropic`,
-    name: 'test-profile',
-    remove: async () => {},
-  }
 }
 
 export class FakeProvider implements ProviderProcess {

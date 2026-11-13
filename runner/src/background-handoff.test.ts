@@ -4,7 +4,7 @@ import { engineFixture } from '../test-support/engine'
 import { duringTurn, turn } from '../test-support/harness'
 import type { FakeProvider } from '../test-support/providers'
 import { BACKGROUND_WORK_LIMIT_MS as LIMIT } from './engine-background'
-import type { ProviderProcess } from './providers/types'
+import type { ProviderProcess } from '../sdk-helper/src/providers/types'
 
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] })

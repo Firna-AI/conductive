@@ -6,7 +6,8 @@ import {
   type SessionRuntime,
   type ActiveTurn,
 } from './engine-session'
-import type { ProviderEvent, ProviderInput } from './providers/types'
+import type { ProviderEvent } from '../sdk-helper/src/generated/ProviderEvent'
+import type { ProviderInput } from '../sdk-helper/src/generated/ProviderInput'
 import { TurnOutput } from './turn-output'
 import { legacyInstructionBranches } from './instruction-state'
 import { BackgroundWait } from './engine-background'

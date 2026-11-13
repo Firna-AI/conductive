@@ -6,7 +6,7 @@ import { turn } from '../test-support/harness'
 import { emptySnapshot, wireFixture } from '../test-support/wire'
 import { RunnerLink } from './link'
 import { Runner } from './runner'
-import { mapTool } from './providers/tool'
+import { mapTool } from '../sdk-helper/src/providers/tool'
 import { EventStore } from './state'
 
 it('bounds the exact complete JSON envelope and continues without a number gap after oversize input', async () => {

@@ -1,7 +1,8 @@
 import type { AgentChatEvent } from '../../src/shared/generated/AgentChatEvent'
 import type { RunnerChangeModel } from '../../src/shared/generated/RunnerChangeModel'
 import type { RunnerInterrupt } from '../../src/shared/generated/RunnerInterrupt'
-import type { ProviderEvent, ProviderInput } from './providers/types'
+import type { ProviderEvent } from '../sdk-helper/src/generated/ProviderEvent'
+import type { ProviderInput } from '../sdk-helper/src/generated/ProviderInput'
 import { cancelable } from './engine-cancel'
 import { disposeProvider } from './engine-disposal'
 import { providerEvent } from './engine-events'
@@ -15,7 +16,7 @@ import {
   type EngineOptions,
   type SessionRuntime,
 } from './engine-session'
-import { failureCause } from './providers/failure'
+import { failureCause } from '../sdk-helper/src/providers/failure'
 
 type Command = ProviderInput | RunnerChangeModel | RunnerInterrupt
 

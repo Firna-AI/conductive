@@ -40,10 +40,13 @@ part.
   ends, Stop, and shutdown.
 - `src/engine-pending.ts`: accepted turn saves and the ends of pending starts.
 - [Background work](background-work.md#key-code): `src/engine-background.ts`,
-  the wait clock of a Claude turn, `src/providers/claude-background.ts`, the
+  the wait clock of a Claude turn, `sdk-helper/src/providers/claude-background.ts`, the
   live work and idle state of its process, and
-  `src/providers/claude-background-note.ts`, the note at the end of a reply.
-- `src/providers/`: the Claude and Codex adapters, their event mapping, and
+  `sdk-helper/src/providers/claude-background-note.ts`, the note at the end of a reply.
+- `src/sdk-helper.ts`, `src/helper-connection.ts`, and `src/helper-port.ts`:
+  the helper client, request replies, child process, and pinned release path.
+- `sdk-helper/src/session.ts`: ordered requests and cancelable adapter setup.
+- `sdk-helper/src/providers/`: the Claude and Codex adapters, their event mapping, and
   each agent environment. `claude-message.ts` joins whole Claude messages.
   `tool.ts` maps each tool call to its chat line, and each adapter names
   the tool of an MCP call for it.
@@ -54,6 +57,6 @@ part.
   `attachment-description.ts` describes each attached file to both agents.
   The [tool entry points](agent-tools.md#key-code) cover both MCP servers,
   and the [login entry points](agent-logins.md#key-code) cover the credentials.
-- `src/measure.ts`, `src/compare.ts`, `scripts/`, and `service/`: the
+- `sdk-helper/src/measure.ts`, `sdk-helper/src/compare.ts`, `sdk-helper/scripts/`, `scripts/build.mjs`, and `service/`: the
   first-start measurement and its comparison, the build, the install
   script, the Codex check, and the systemd unit.

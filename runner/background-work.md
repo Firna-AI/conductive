@@ -55,7 +55,7 @@ only from an org image built with this runner. Codex turns do not wait.
 - Completed and ambient work does not enter the set of named IDs. Such work
   still gets its note when it becomes live later.
 - The Stop hook of a closed agent process gives no note and adds no named ID.
-- `src/providers/claude-background-note.ts` holds the text of the note. The
+- `sdk-helper/src/providers/claude-background-note.ts` holds the text of the note. The
   text follows the naming rules of the
   [agent instructions](../docs/protocol/agent-instructions.md#what-the-instructions-hold).
 
@@ -87,15 +87,15 @@ only from an org image built with this runner. Codex turns do not wait.
 - `src/engine-background.ts`: `BackgroundWait`, the wait clock of one turn,
   with its deadline, its reset at a member message, and its timer. It also
   holds `BACKGROUND_WORK_LIMIT_MS` and `MAX_TIMER_MS`.
-- `src/providers/claude-background.ts`: `ClaudeBackground`, the live tasks,
+- `sdk-helper/src/providers/claude-background.ts`: `ClaudeBackground`, the live tasks,
   the ambient task IDs, the scheduled wake-ups, and the idle state of one
   Claude process.
-- `src/providers/claude-background-note.ts`: `ClaudeBackgroundNote`, the
+- `sdk-helper/src/providers/claude-background-note.ts`: `ClaudeBackgroundNote`, the
   text of the note and the work IDs that the turn named.
-- `src/providers/claude.ts`: the state flag, the root Stop hook with its
+- `sdk-helper/src/providers/claude.ts`: the state flag, the root Stop hook with its
   note, and the rule that member input stops wake-up results until the next
   wait.
-- `src/providers/claude-events.ts`: the level signals and the wake-up
+- `sdk-helper/src/providers/claude-events.ts`: the level signals and the wake-up
   results.
 - `src/engine-input.ts` and `src/engine-runtime.ts`: the wait clock of each
   Claude turn, the receipt time of each message, and deferred input from an
@@ -112,8 +112,8 @@ only from an org image built with this runner. Codex turns do not wait.
 - `src/background-turn.test.ts`, `src/background-limit.test.ts`,
   `src/background-input.test.ts`, and `src/background-handoff.test.ts`
   check the wait, the limit, member input, and new agent processes.
-- `src/providers/claude-background-note.test.ts` and
-  `src/providers/claude-background-note-handoff.test.ts` check the note.
+- `sdk-helper/src/providers/claude-background-note.test.ts` and
+  `sdk-helper/src/providers/claude-background-note-handoff.test.ts` check the note.
 - `src/end-reason.test.ts` checks the end reason in saved events.
 - The fake SDK follows the order of the events that the pinned program
   sends. After a change of the SDK pin, check that order again with the

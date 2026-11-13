@@ -5,7 +5,8 @@ import {
   type EngineOptions,
   type SessionRuntime,
 } from './engine-session'
-import type { ProviderEvent, ProviderInput } from './providers/types'
+import type { ProviderEvent } from '../sdk-helper/src/generated/ProviderEvent'
+import type { ProviderInput } from '../sdk-helper/src/generated/ProviderInput'
 
 interface EventActions {
   start: (command: ProviderInput) => Promise<void>

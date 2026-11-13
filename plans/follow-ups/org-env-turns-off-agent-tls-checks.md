@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-08, from the options check of the own endpoint plan on branch `calummoore/cli-proxy-setup`.
-- **Location:** `providerEnvironment` in `runner/src/providers/environment.ts:20`, and `image/runner-start.sh:3`.
+- **Location:** `providerEnvironment` in `runner/sdk-helper/src/providers/environment.ts:20`, and `image/runner-start.sh:3`.
 - **Reason:** the own endpoint change does not touch the org env vars, and the fix changes what an org's setup can do, so the user decides it.
 
 - **Terms:**

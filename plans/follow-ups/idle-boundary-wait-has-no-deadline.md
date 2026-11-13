@@ -39,7 +39,7 @@
 
 ## Related cases to verify during future work
 
-- Location: `runner/src/providers/claude-background.ts:22`, `runner/src/providers/claude-events.ts:41`, and `runner/src/engine-background.ts:34`.
+- Location: `runner/sdk-helper/src/providers/claude-background.ts:22`, `runner/sdk-helper/src/providers/claude-events.ts:41`, and `runner/src/engine-background.ts:34`.
   A static reading suggests a queued notification reply can follow the result after a task ended inside that first reply.
   If so, `waited` is false, its result is ignored, its Stop hook clears `replied`, and final idle cannot end the hold.
   No real run reproduced this order. Do not treat it as a confirmed defect without that evidence.

@@ -2,7 +2,7 @@ import { expect, it, vi } from 'vitest'
 
 import { engineFixture } from '../test-support/engine'
 import { duringTurn, turn } from '../test-support/harness'
-import type { ProviderProcess } from './providers/types'
+import type { ProviderProcess } from '../sdk-helper/src/providers/types'
 
 it('keeps the turn login and member order when a model change needs a new provider', async () => {
   const h = await engineFixture()

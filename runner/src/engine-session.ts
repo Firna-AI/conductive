@@ -7,17 +7,17 @@ import type { RunnerBranches } from '../../src/shared/generated/RunnerBranches'
 import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 import type { Checkpoint } from './checkpoint'
 import type {
-  ProviderEvent,
   ProviderFactory,
-  ProviderInput,
   ProviderProcess,
-} from './providers/types'
+} from '../sdk-helper/src/providers/types'
+import type { ProviderEvent } from '../sdk-helper/src/generated/ProviderEvent'
+import type { ProviderInput } from '../sdk-helper/src/generated/ProviderInput'
 import type { EventStore } from './state'
 import type { TurnOutput } from './turn-output'
-import { failureCause } from './providers/failure'
+import { failureCause } from '../sdk-helper/src/providers/failure'
 import { cancelable } from './engine-cancel'
-import { ProviderLifetime } from './providers/lifetime'
-import type { WorkspaceToolRuntime } from './providers/workspace-tools'
+import { ProviderLifetime } from '../sdk-helper/src/providers/lifetime'
+import type { WorkspaceToolRuntime } from '../sdk-helper/src/providers/workspace-tools'
 import type { BuiltInstructions } from './instruction-state'
 import type { BackgroundWait } from './engine-background'
 

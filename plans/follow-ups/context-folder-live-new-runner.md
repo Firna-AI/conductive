@@ -26,7 +26,7 @@
   - The agent instructions of a new session give the absolute path of the context folder. They say that Git ignores it, and that attached files arrive in its attachments folder. They tell agents to keep notes, screenshots, and files for other sessions there.
   - A session keeps the instructions that it started with. So only a new session shows this text.
   - After the words of the member, each message with files gets one read line, then one line for each file (decision 244). The user chose the read line "The sender attached these files. Read each file before you answer."
-  - Each file line holds one JSON object with `name`, `mediaType`, `path`, and `sizeBytes`. The path is absolute. `runner/src/providers/instructions.test.ts` holds the exact text that the runner sends.
+  - Each file line holds one JSON object with `name`, `mediaType`, `path`, and `sizeBytes`. The path is absolute. `runner/sdk-helper/src/providers/instructions.test.ts` holds the exact text that the runner sends.
   - Codex also gets each image as image input. For a message with an image, its read line adds "Each image is also in this message."
   - Changes leaves out each file that Git ignores. All files still lists each file of the context folder, also the ignored ones.
   - The Worker tests use fake upload servers that model no folders. So they do not prove that the real provider makes the missing digest folder, or that it can write into the folders of the runner.

@@ -3,7 +3,7 @@ import { expect, it, vi } from 'vitest'
 import { turn } from '../test-support/harness'
 import { stop } from '../test-support/runtime'
 import { wireFixture } from '../test-support/wire'
-import { mapTool } from './providers/tool'
+import { mapTool } from '../sdk-helper/src/providers/tool'
 import { EventStore } from './state'
 
 it.each([1, 2])(

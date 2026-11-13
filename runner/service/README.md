@@ -19,9 +19,10 @@ install script needs root, because it writes a systemd unit.
 The install script does these steps:
 
 - It requires the service user and the explicit private Node path.
-- It copies the three bundles, `runner/package.json`,
+- It copies the runner and measurement bundles, `runner/package.json`,
   `runner/package-lock.json`, and `runner/service/start.sh` into the
   folder.
+- It also installs the SDK helper bundle and its runtime packages in `sdk-helper/`.
 - It runs the adjacent npm command with the configured Node and
   `ci --omit=dev --ignore-scripts`. The runtime packages sit beside the
   bundles.

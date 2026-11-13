@@ -15,7 +15,7 @@
   - The browser's create request checks only that the model is text, so it also accepts a blank model.
   - The routes that send a message, change the model of a session, and save a default choice check only the shape of the choice, with `choice` in `worker/chat/inputs.ts`.
   - When a create call names a model but no effort, the Worker takes the effort of the owner's default choice, which can belong to another model.
-  - The agent runner ends a turn with a clear error when the agent's service rejects the model, in `runner/src/providers/failure.ts`.
+  - The agent runner ends a turn with a clear error when the agent's service rejects the model, in `runner/sdk-helper/src/providers/failure.ts`.
   - The branch `calummoore/mcps-for-agents` adds the agent tool `list_models`, which returns the model list. So an agent can find a valid model before a create call.
 - **Problem:** A choice from a create call, a message, a model change, or a saved default can name a model that the model list does not offer, or an effort that the model does not list. The app then starts a turn with that choice.
 - **Impact if no action:** The first turn of a new workspace can fail after its cloud computer starts, or a session can run a model that the app does not offer. A person must then change the model and send the message again.

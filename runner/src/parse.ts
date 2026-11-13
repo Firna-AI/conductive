@@ -14,7 +14,7 @@ export function string(value: unknown): string {
   return value
 }
 
-export function number(value: unknown): number {
+function number(value: unknown): number {
   if (typeof value !== 'number' || !Number.isFinite(value)) {
     throw new Error('Expected a finite number.')
   }

@@ -305,20 +305,20 @@ Depends on: 4, 5
 
 Depends on: 3, 4, 5
 
-- [ ] Define the helper messages in `cnd-runner-interface`, and generate their TypeScript into the helper package.
-- [ ] Move the Claude and Codex adapters of `runner/src/providers/` into a helper package that speaks JSON lines over stdin and stdout.
-- [ ] Make the Node runner use the helper as a child process, so the helper works before the Rust runner exists.
-- [ ] Ship the helper with its packages and agent programs as one release part.
-- [ ] Move the first-start measurement tools into the helper package.
+- [x] Define the helper messages in `cnd-runner-interface`, and generate their TypeScript into the helper package.
+- [x] Move the Claude and Codex adapters of `runner/src/providers/` into a helper package that speaks JSON lines over stdin and stdout.
+- [x] Make the Node runner use the helper as a child process, so the helper works before the Rust runner exists.
+- [x] Ship the helper with its packages and agent programs as one release part.
+- [x] Move the first-start measurement tools into the helper package.
 
 ## Milestone 9: Rust runner: connection, events, and saved state
 
 Depends on: 5
 
-- [ ] Port the connection, the `hello`, the numbered events, the resends, and the state file with its recovery rules of `runner/README.md`.
-- [ ] Port the event limits of `runner/event-limits.md`.
-- [ ] Read a lone surrogate in a command, such as `\ud800` in user text from `src/shared/messages.ts`, without refusing the command. Replace it with U+FFFD, as the runner does for tool details. `serde_json` refuses such a string by default.
-- [ ] Port the matching tests against a fake workspace endpoint.
+- [x] Port the connection, the `hello`, the numbered events, the resends, and the state file with its recovery rules of `runner/README.md`.
+- [x] Port the event limits of `runner/event-limits.md`.
+- [x] Read a lone surrogate in a command, such as `\ud800` in user text from `src/shared/messages.ts`, without refusing the command. Replace it with U+FFFD, as the runner does for tool details. `serde_json` refuses such a string by default.
+- [x] Port the matching tests against a fake workspace endpoint.
 
 ## Milestone 10: Rust runner: files, Git, reports, and ports
 

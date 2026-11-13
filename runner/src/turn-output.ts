@@ -1,7 +1,7 @@
 import type { AgentChatEvent } from '../../src/shared/generated/AgentChatEvent'
 import type { ToolCall } from '../../src/shared/generated/ToolCall'
 import type { TurnEventContext } from '../../src/shared/generated/TurnEventContext'
-import type { ProviderEvent } from './providers/types'
+import type { ProviderEvent } from '../sdk-helper/src/generated/ProviderEvent'
 
 export class TurnOutput {
   private readonly context: TurnEventContext

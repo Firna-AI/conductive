@@ -6,7 +6,8 @@ use ts_rs::{Config, TS};
 
 use cnd_runner_interface::{
     agents, api, chat_events, commit_author, file_changes, file_tree, files, messages, ports,
-    runner, runner_commands, runner_credentials, runner_files, runner_handshake, workspaces,
+    provider_events, runner, runner_commands, runner_credentials, runner_files, runner_handshake,
+    sdk_helper, sdk_helper_options, workspaces,
 };
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -79,9 +80,25 @@ fn main() -> Result<(), Box<dyn Error>> {
     runner_handshake::WorkspaceToRunner::export_all(&cfg)?;
     workspaces::StartStep::export_all(&cfg)?;
     workspaces::WorkspaceStart::export_all(&cfg)?;
+    let helper_output = root.join("runner/sdk-helper/src/generated");
+    if helper_output.exists() {
+        fs::remove_dir_all(&helper_output)?;
+    }
+    let helper_cfg = Config::new()
+        .with_out_dir(helper_output)
+        .with_large_int("number")
+        .with_import_extension(Some("js"));
+    sdk_helper::HelperRequest::export_all(&helper_cfg)?;
+    sdk_helper::HelperOutput::export_all(&helper_cfg)?;
+    sdk_helper_options::ProviderInput::export_all(&helper_cfg)?;
+    provider_events::ProviderEvent::export_all(&helper_cfg)?;
     let status = Command::new("node")
         .arg(root.join("node_modules/prettier/bin/prettier.cjs"))
-        .args(["--write", "src/shared/generated"])
+        .args([
+            "--write",
+            "src/shared/generated",
+            "runner/sdk-helper/src/generated",
+        ])
         .current_dir(root)
         .status()?;
     if !status.success() {

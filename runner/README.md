@@ -23,17 +23,21 @@ A login kind that a runner does not advertise gets no command, and the turn fail
 This folder is a separate Node 24 package with its own lockfile. The root
 `npm install` does not install it. Tests inject the fake workspace endpoint.
 The package also holds the sandbox's preview relay.
+Its [SDK helper](sdk-helper/README.md) is a separate Node package.
+The runner starts one helper child for each agent start.
+Only the helper starts the Claude and Codex adapters.
+Private pipes carry JSON lines between the two processes.
 
 ## What it does
 
 These facts belong to this implementation, not to the protocol docs.
 
 - Claude runs through the Claude Agent SDK, with the `claude` program from
-  the platform package of the SDK. The SDK version in `package.json` pins
+  the platform package of the SDK. The SDK version in `sdk-helper/package.json` pins
   that program. The runner turns off its automatic updates. It starts the
-  program through the SDK option `spawnClaudeCodeProcess`, so the runner
+  program through the SDK option `spawnClaudeCodeProcess`, so the helper
   owns the child process.
-- The Claude Agent SDK has no `ultra` effort. `src/providers/claude-effort.ts`
+- The Claude Agent SDK has no `ultra` effort. `sdk-helper/src/providers/claude-effort.ts`
   starts and changes Ultra as the `max` level with the `ultracode` flag
   setting on. Each other effort sends `ultracode: false`. Codex takes each
   effort under its own name.
@@ -54,7 +58,7 @@ These facts belong to this implementation, not to the protocol docs.
   states how a sandbox gets GitHub access.
 - `src/commands.ts` reads the optional `promptCacheTtl: '1h'` of a turn credential.
   It ignores unknown cache values and keeps the credential's existing kind.
-  `src/providers/claude.ts` sets `CLAUDE_CODE_PROMPT_CACHE_TTL=1h` for that value or a gateway subscription token.
+  `sdk-helper/src/providers/claude.ts` sets `CLAUDE_CODE_PROMPT_CACHE_TTL=1h` for that value or a gateway subscription token.
   An API-key credential without the field keeps the default cache.
 - Each agent process gets the commit author of its turn as `GIT_AUTHOR_NAME`,
   `GIT_AUTHOR_EMAIL`, `GIT_COMMITTER_NAME`, and `GIT_COMMITTER_EMAIL`.
@@ -71,10 +75,11 @@ These facts belong to this implementation, not to the protocol docs.
   process then takes the waiting input on the same conversation and turn
   token. If that process fails, the turn fails. Its retry names the first
   message of that process, and the input that still waits does not run.
-- To close an agent process, the runner sends `SIGTERM` and waits until the
+- To close an agent process, the helper sends `SIGTERM` and waits until the
   process exits. A process that still runs 5 seconds after `SIGTERM` gets
   `SIGKILL`. The end of a turn goes out only after its agent process exits,
   also when Stop or a shutdown cancels the start of that process.
+  The runner also waits for the helper process to exit.
 - Each session owns its agent start, requests, scans, and shutdown. Stop
   closes the agent process of that session, discards its unread input, and
   cancels its pending work. Other sessions keep streaming and can stop. A
@@ -92,7 +97,8 @@ These facts belong to this implementation, not to the protocol docs.
   input. Only a `turn` command starts a turn. A `message` command reaches
   only the running turn that it names. Others get only a local warning. An
   idle `model` command only saves the choice, and the next turn applies it.
-- The shared output filter replaces the workspace token and the turn
+- The shared output filter stays in the runner, before saved and sent events.
+  It replaces the workspace token and the turn
   tokens in displayed text with `[redacted]`. It holds possible secret
   prefixes across answer events. After a completion or a turn end, it
   keeps the shown end of each answer that can still start a secret. Later
@@ -204,10 +210,10 @@ Run these commands from the repository root, with Node 24 from `.nvmrc`.
 
 | Command                                  | What it does                                                 |
 | ---------------------------------------- | ------------------------------------------------------------ |
-| `npm ci --prefix runner`                  | Install the runner packages into `runner/node_modules`        |
-| `npm --prefix runner run build`           | Bundle the runner, relay, and two measurement tools           |
-| `npm --prefix runner run typecheck`       | Check the runner, its fakes, and the shared contracts it uses  |
-| `npm --prefix runner test`                | Run the runner tests with Vitest                             |
+| `npm ci --prefix runner`                  | Install the runner and SDK helper packages        |
+| `npm --prefix runner run build`           | Bundle the runner, relay, SDK helper, and measurement tools           |
+| `npm --prefix runner run typecheck`       | Check the runner, SDK helper, fakes, and shared contracts  |
+| `npm --prefix runner test`                | Run the SDK helper and runner tests with Vitest                             |
 | `npm --prefix runner test -- src/relay`    | Run the relay tests against local servers                     |
 | `npm --prefix runner start`               | Run the runner bundle with the variables of the current shell |
 | `node dist/runner/relay.mjs`               | Run the relay bundle                                         |
@@ -216,6 +222,10 @@ The build writes `runner.mjs`, `relay.mjs`, `measure.mjs`, and `compare.mjs`
 into `dist/runner/`. The runner and measurement bundles load npm packages
 at run time. The build links `dist/runner/node_modules` to
 `runner/node_modules`, so that the bundles find them.
+The helper build writes `sdk-helper.mjs`, `measure.mjs`, and `compare.mjs`
+into `dist/sdk-helper/`, with its own package link.
+The runner build keeps measurement copies for its existing archive.
+The SDK helper release part carries its own runtime packages and agent programs.
 
 The complete gate, the root `npm run check`, runs the runner typecheck and
 the runner tests. Run `npm ci --prefix runner` once before the gate, as CI
@@ -239,14 +249,13 @@ their defaults, and the startup failure message.
   [backend and runner fakes](../worker/test-support/README.md). It joins
   file parts, refuses an event with a marker when `refuseEvent` is set, and
   checks no event sizes.
-- `test-support/` holds the runner fakes: a fake Claude SDK query, a fake
-  Codex App Server, fake agent processes, and a temporary Git repository.
+- `test-support/` holds the runner fakes: a fake agent processes, and a temporary Git repository.
   `harness.ts` starts a `Runner` with them. The session fixture in
   `engine.ts` and the wire fixture in `wire.ts` use the production
   `DiskStorage` in a temporary folder. `disk.ts` supplies the controlled
   disk fixture for the recovery tests, and it can hold one chosen write.
-  `mockComputerServer` in `computer-mcp.ts` makes `readComputerServer` give
-  the fixed test entry `fakeComputerServer`.
+  `sdk-helper/test-support/` holds the fake SDK query, App Server, and computer server.
+  `test-support/helper.ts` joins the real helper readers and session over memory pipes.
 - The relay tests use real local HTTP and WebSocket servers on free ports.
   They check IPv4, IPv6, streams, headers, and disconnects.
   The inherited-descriptor test uses `systemd-socket-activate` with a temporary Unix socket.
@@ -255,12 +264,12 @@ their defaults, and the startup failure message.
   account, and no cloud computer. No test starts a real agent program, a
   real Worker, or a real sandbox. So a passing run does not show that the
   gateway path, a real login, or the `computer` MCP server works.
-- `scripts/codex-capabilities.mjs` checks what the Codex SDK streams and
+- `sdk-helper/scripts/codex-capabilities.mjs` checks what the Codex SDK streams and
   whether an abort stops it. Each model request goes to a local fake server.
 
 ## First-start measurements
 
-The [first-start measurement guide](scripts/README.md) describes the two
+The [first-start measurement guide](sdk-helper/scripts/README.md) describes the two
 tools that time the first agent start after a resume.
 
 ## Key code

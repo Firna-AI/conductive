@@ -87,15 +87,15 @@ A member without a display name gets
 
 ## Key code
 
-- [message.ts](src/providers/message.ts) gives `providerMessage`, which
+- [message.ts](sdk-helper/src/providers/message.ts) gives `providerMessage`, which
   puts the sender line with the member ID of each message before its
   text. The stored message and the chat never hold that line.
 - [instructions.ts](src/instructions.ts) gives `agentInstructions`, which
   holds the workspace tool guidance of each new session: the call names,
   the access rules, and the choice of an owner ID.
-- [workspace-tools.ts](src/providers/workspace-tools.ts) binds runtime tool
+- [workspace-tools.ts](sdk-helper/src/providers/workspace-tools.ts) binds runtime tool
   credentials to the runner connection. Each provider start adds the
   current turn ID in its environment.
-- [computer-mcp.ts](src/providers/computer-mcp.ts) gives `readComputerServer`,
+- [computer-mcp.ts](sdk-helper/src/providers/computer-mcp.ts) gives `readComputerServer`,
   which reads the sandbox's `computer` entry at each agent start.
   It sends warnings through `ProviderOptions.warn`.

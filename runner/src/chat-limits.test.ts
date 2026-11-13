@@ -2,7 +2,7 @@ import { expect, it } from 'vitest'
 import type { ChangedFile } from '../../src/shared/generated/ChangedFile'
 import { turn } from '../test-support/harness'
 import { wireFixture } from '../test-support/wire'
-import { mapTool } from './providers/tool'
+import { mapTool } from '../sdk-helper/src/providers/tool'
 
 it('bounds normalized and escaped tool detail after filtering each full update', async () => {
   const h = await wireFixture()

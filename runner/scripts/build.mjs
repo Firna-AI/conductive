@@ -3,14 +3,16 @@ import { fileURLToPath } from 'node:url'
 
 import { build } from 'esbuild'
 
+import '../sdk-helper/scripts/build.mjs'
+
 const root = fileURLToPath(new URL('..', import.meta.url))
 await build({
   absWorkingDir: root,
   entryPoints: {
     runner: 'src/main.ts',
     relay: 'src/relay/main.ts',
-    measure: 'src/measure.ts',
-    compare: 'src/compare.ts',
+    measure: 'sdk-helper/src/measure.ts',
+    compare: 'sdk-helper/src/compare.ts',
   },
   outdir: '../dist/runner',
   outExtension: { '.js': '.mjs' },

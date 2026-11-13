@@ -43,6 +43,8 @@ export async function runtimeNodeFixture() {
     join(source, 'scripts'),
     join(source, 'service'),
     join(root, 'dist', 'runner'),
+    join(root, 'dist', 'sdk-helper'),
+    join(source, 'sdk-helper'),
     runtime,
     commands,
   ]) {
@@ -104,11 +106,18 @@ appendFileSync(${JSON.stringify(calls)}, JSON.stringify(process.argv.slice(2)) +
   )
   await writeFile(join(source, 'package.json'), '{"type":"module"}\n')
   await writeFile(join(source, 'package-lock.json'), '{}\n')
+  await writeFile(
+    join(source, 'sdk-helper', 'package.json'),
+    '{"type":"module"}\n',
+  )
+  await writeFile(join(source, 'sdk-helper', 'package-lock.json'), '{}\n')
+  await writeFile(join(root, 'dist', 'sdk-helper', 'sdk-helper.mjs'), '')
   const program = `process.stdout.write(JSON.stringify({
   node: process.execPath,
   marker: process.env.RUNTIME_TEST_MARKER,
   envNode: process.env.CONDUCTIVE_NODE,
   path: process.env.PATH,
+  helper: process.env.CONDUCTIVE_SDK_HELPER,
 }))\n`
   for (const name of ['runner.mjs', 'measure.mjs', 'compare.mjs']) {
     await writeFile(join(root, 'dist', 'runner', name), program)

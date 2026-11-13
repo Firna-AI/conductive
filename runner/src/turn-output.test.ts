@@ -1,6 +1,6 @@
 import { expect, it, onTestFinished, vi } from 'vitest'
 import type { AgentChatEvent } from '../../src/shared/generated/AgentChatEvent'
-import { mapTool } from './providers/tool'
+import { mapTool } from '../sdk-helper/src/providers/tool'
 import { TurnOutput } from './turn-output'
 
 const context = { sessionId: 'session', turnId: 'turn' }

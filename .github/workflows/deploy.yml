@@ -181,6 +181,10 @@ jobs:
           ' > "$input/node.json"
           node_url=$(jq -er '.url' "$input/node.json")
           node_sha256=$(jq -er '.sha256' "$input/node.json")
+          sdk_helper_sha256=$(node runner/sdk-helper/scripts/package.mjs "$input")
+          sdk_helper_key="releases/download/sdk-helper/sdk-helper-$sdk_helper_sha256.tar.gz"
+          mkdir -p ".context/release-artifact/$(dirname "$sdk_helper_key")"
+          cp "$input/sdk-helper-$sdk_helper_sha256.tar.gz" ".context/release-artifact/$sdk_helper_key"
           system_sha256=$(bash image/package-system.sh "$input")
           system_key="releases/download/system/system-$system_sha256.tar.gz"
           mkdir -p ".context/release-artifact/$(dirname "$system_key")"
@@ -188,6 +192,7 @@ jobs:
           cargo run --locked -p cnd-release -- parts \
             --part runner "$ARCHIVE_URL" "$ARCHIVE_SHA256" \
             --part node "$node_url" "$node_sha256" \
+            --part sdk-helper "${RUNNER_BASE_URL}${sdk_helper_key}" "$sdk_helper_sha256" \
             --part system "${RUNNER_BASE_URL}${system_key}" "$system_sha256" \
             --output "$input/parts.json"
           CONDUCTIVE_RELEASE_VERSION="$version" CONDUCTIVE_PARTS_FILE="$input/parts.json" \
