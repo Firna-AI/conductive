@@ -12,7 +12,11 @@ Every member and admin manages secrets in a settings screen. Admins can
 view values. Members see each secret with its value hidden, also a secret
 that they created. Later on the same day, Cal added temporary requests: an
 agent can ask for a secret that no one stored, and the person who answers
-gives a value for one use or saves it as a new secret.
+gives a value for one use or saves it as a new secret. Cal then added a
+time limit: a request that a tool call makes waits only for a limited
+time. After that time, the request stays in the chat as a widget that a
+member answers later. That answer sends a message to the agent, which
+says that the secret is now available.
 
 The chosen approach is secrets decision 1 B. A value goes only into one
 command that the CLI starts. The agent and the model see only the name of
@@ -60,8 +64,9 @@ design call of 13 November 2026 under the decision test of the
   gives data that each member already sees.
 - The run call is a write. It names its turn. The Worker finds the
   session from its own record of that turn. When the session may not use
-  a secret, the Worker makes a request and the call waits for its answer.
-  After approval, the Worker returns the values to the CLI. The CLI starts
+  a secret, the Worker makes a request and the call waits for its answer,
+  up to the time limit of a request. After approval, the Worker returns
+  the values to the CLI. The CLI starts
   the command with the values in its environment, and nowhere else. My
   call: secrets decision 1 B chose one command.
 - The MCP call runs the command in the process of the MCP server and
@@ -75,9 +80,31 @@ design call of 13 November 2026 under the decision test of the
   answer covers the request. The card shows each name, description, and
   the reason, never a value. My call: one task then shows one card, as a
   Mac command request shows its reason.
-- A waiting request shows as a card above the composer, and its workspace
-  shows needs input. My call: decisions 62 and 68 set this for a Mac
-  command request.
+- While the tool call waits, the request shows as a card above the
+  composer, and its workspace shows needs input. My call: decisions 62
+  and 68 set this for a Mac command request.
+- The time limit of a request. Each request that a tool call makes waits
+  at most 90 seconds (Cal's requirement of 13 November 2026, my call for
+  the number). Then the call ends without a run. Its result tells the
+  agent that the request stays open, that a member can answer it later,
+  and that a message will then follow. My call for 90 seconds: Claude
+  stops a shell command after 2 minutes by default, so the call must end
+  first.
+- A late request. After the time limit, the card leaves the composer and
+  stays as a widget at its place in the chat. It does not fold into the
+  work of its turn. The workspace keeps needs input while the widget is
+  open. My call: decision 68 keeps needs input while any request waits.
+- A late answer. When a member allows the request, gives a value, or saves
+  a secret in the widget, the app sends a message in the session in the
+  name of that member. The message names each secret and says that it is
+  now available. It never holds a value. It starts a new turn, or joins a
+  running turn as other messages do (Cal's requirement, my call for the
+  sender and the join). Reason: the member who answers acts in the
+  session, as a typed message does.
+- A late deny sends no message. The widget shows denied. My call: the
+  agent waits for nothing, because its call already ended.
+- A request that its turn ends while the tool call waits becomes a late
+  request in the same way.
 - Any member who sees the session answers a request, in any browser or in
   the Mac app (secrets decision 4 B).
 - Temporary requests. When a run names a secret that the org does not
@@ -96,11 +123,6 @@ design call of 13 November 2026 under the decision test of the
 - The tool descriptions tell the agent to keep values out of output, files,
   and answers. My call: decision 255 chose such advice for Mac command
   output.
-- A request has a stable ID, as a Mac command request has. When the shell
-  of the agent stops the CLI before the answer, the request waits until
-  its turn ends. A new run call with the same ID gets the answer. My
-  call: Claude stops a shell command after 2 minutes by default, and a
-  person can answer later.
 - The exact-copy filter reads the values of the stored secrets that the
   workspace used. It does not keep the old value of a replaced or deleted
   secret. My call: the filter of the org env vars does the same, and the
@@ -254,7 +276,8 @@ because the value has no stored record. The options:
 - A. One run. The value reaches only the command of the run that asked.
   A retry asks again. Effort: Small.
 - B. The rest of the turn. The Durable Object keeps the value encrypted
-  for the turn, and each run of that turn can use it. The filter keeps
+  for the turn, and each run of that turn can use it. For a late answer,
+  the turn is the turn that the message of the answer starts or joins. The filter keeps
   its copy for the same time. Effort: Medium.
 - C. The rest of the session, as an approval does. A session can last for
   weeks, because it survives Continue and can reopen. Effort: Medium.
@@ -297,6 +320,8 @@ The mockups show each new screen and flow before any code changes.
 - [ ] Add the request card above the composer: a stored secret, and a
       temporary request with a value field, Use once, and Save. Show the
       card without choices for a member who cannot answer, if any.
+- [ ] Add the late request widget in the chat, for a stored secret and
+      for a temporary request, and the message that a late answer sends.
 - [ ] Add the results in the chat: allowed, denied, and the run of a
       command with its output.
 - [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
@@ -343,6 +368,8 @@ Depends on: 3
 - [ ] Keep each waiting request in the Durable Object of the workspace.
       Send it to the browsers, set needs input, and end it with its turn.
 - [ ] Add the answer route for members: allow, deny, Use once, and Save.
+- [ ] End the tool call at the time limit of a request. Keep the request
+      open as a late request. Send the message of a late answer.
 - [ ] Return values only to a run call of an approved session whose turn
       runs. Add each used value to the exact-copy filter.
 - [ ] Add tests beside the code.
@@ -374,7 +401,8 @@ Tags: ui
 
 Depends on: 4, 6
 
-- [ ] Build the request card and the chat results from the mockup.
+- [ ] Build the request card, the late request widget, and the chat
+      results from the mockup.
 - [ ] Add tests beside the code. Check the flow in a browser.
 
 ## Milestone 8: Verification, commit, review, and pull request
