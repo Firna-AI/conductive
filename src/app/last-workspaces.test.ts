@@ -1,7 +1,9 @@
 import { describe, expect, test } from 'vitest'
+import type { OrgSummary } from '../shared/orgs'
 import {
   LastWorkspaces,
   orgEntry,
+  startPage,
   type WorkspaceRoute,
 } from './last-workspaces'
 import type { KeyValueStorage } from './services'
@@ -141,5 +143,40 @@ describe('LastWorkspaces', () => {
     last.remember(workspace('acme', 'ws-1'))
     last.follow('ana')
     expect(last.state.get().addresses.size).toBe(0)
+  })
+})
+
+describe('startPage', () => {
+  const acme: OrgSummary = { id: 'acme', name: 'Acme', role: 'admin' }
+  const firna: OrgSummary = { id: 'firna', name: 'Firna', role: 'member' }
+  const deleted = { deletedAt: 1, deletesAt: 2 }
+  const remembered = () => {
+    const last = memory(new MemoryStorage())
+    last.remember(workspace('firna', 'ws-2'))
+    return last.state.get()
+  }
+
+  test('opens the workspace that the person opened last', () => {
+    expect(startPage(remembered(), [acme, firna], false)).toBe(
+      '/orgs/firna/workspaces/ws-2',
+    )
+  })
+
+  test('opens Get started in the first run and without an open org', () => {
+    expect(startPage(remembered(), [acme, firna], true)).toBe('/get-started')
+    expect(
+      startPage(remembered(), [{ ...acme, deletion: deleted }], false),
+    ).toBe('/get-started')
+  })
+
+  test('opens the first org when the last org is deleted, gone, or unknown', () => {
+    const state = remembered()
+    expect(
+      startPage(state, [acme, { ...firna, deletion: deleted }], false),
+    ).toBe('/orgs/acme')
+    expect(startPage(state, [acme], false)).toBe('/orgs/acme')
+    expect(startPage(memory(null).state.get(), [acme, firna], false)).toBe(
+      '/orgs/acme',
+    )
   })
 })

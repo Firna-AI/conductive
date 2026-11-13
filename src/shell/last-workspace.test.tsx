@@ -155,6 +155,20 @@ describe('the last workspace of each org', () => {
     )
   })
 
+  test('an address of the hidden Desktop tool is remembered without the tool', async () => {
+    holdAnimationFrames()
+    const app = await startedApp(new FakeApiServer())
+    const shown = routes.workspace(FAKE_IDS.org, FAKE_IDS.workspace)
+    openShell(
+      app,
+      routes.workspace(FAKE_IDS.org, FAKE_IDS.workspace, 'desktop'),
+    )
+    await waitFor(
+      () => orgEntry(app.lastWorkspaces.state.get(), FAKE_IDS.org) === shown,
+      'the workspace without the Desktop tool',
+    )
+  })
+
   test('a workspace that is not available is forgotten', async () => {
     holdAnimationFrames()
     const app = await startedApp(new FakeApiServer())

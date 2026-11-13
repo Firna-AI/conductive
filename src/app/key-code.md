@@ -306,9 +306,9 @@ Each path is relative to `src/app/`, the folder of this page.
   says. `AppModel.lastWorkspaces` follows the person signed in.
   `orgEntry` gives the page that opens an org: the org tile and its keys
   (`../shell/orgs/useOrgEntry.ts`) and the palette's Switch to rows use
-  it. `startAddress` gives the page of `/`. The workspace screen
+  it. `startPage` gives the page of `/`. The workspace screen
   remembers and forgets its workspace through
-  `../shell/workspace/remember-workspace.ts`.
+  `../shell/workspace/remember-workspace.tsx`.
 - [Key code: the palette, the layers, and the dialogs](key-code-layers.md)
   names the entry points of the command palette, the layers of each
   frame, New workspace as a dialog, and feedback with its screenshots.

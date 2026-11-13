@@ -40,6 +40,9 @@ Each call is my call, made on 13 November 2026.
 - The memory keeps the full workspace address: the workspace, the
   session, and the view. Reason: the switch returns the person to where
   they were.
+- An address of a hidden tool, such as Desktop, shows Terminal. The
+  memory then keeps the workspace without the view. Reason: no link of
+  the app may name a hidden tool, as `ToolsWiring.test.tsx` checks.
 - The org tile in the rail, Switch to org 1 to 9, and the Switch to rows
   of the command palette open the remembered workspace. Without one,
   they open the org as before.
@@ -137,9 +140,9 @@ Depends on: 2
 
 Depends on: 1, 2, 3
 
-- [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Run the targeted tests and the complete gate named in `AGENTS.md`.
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review

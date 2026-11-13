@@ -1,5 +1,6 @@
 import type { OrgSummary } from '../shared/orgs'
 import { parseRoute, routes, type Route } from './router'
+import { setupOrg } from './setup-steps'
 import type { KeyValueStorage } from './services'
 import { Store, type Readable } from './store'
 
@@ -174,17 +175,20 @@ export function orgEntry(state: LastWorkspaceState, orgId: string): string {
 }
 
 /**
- * The page that the address `/` opens, when Get started does not show: the
- * workspace that the person opened last, while its org is in the list and
- * not deleted. Otherwise there is none, and `/` opens the first org.
+ * The page that the address `/` opens: Get started in the first run or
+ * without an org that is not deleted. Otherwise the workspace that the
+ * person opened last, while its org is in the list and not deleted. Else
+ * the first org that is not deleted, which is the org of Get started.
  */
-export function startAddress(
+export function startPage(
   state: LastWorkspaceState,
   orgs: readonly OrgSummary[],
-): string | null {
-  const latest = state.latest
-  if (latest === null) return null
-  const org = orgs.find((item) => item.id === latest)
-  if (!org || org.deletion) return null
-  return state.addresses.get(latest) ?? null
+  firstRun: boolean,
+): string {
+  const first = setupOrg(orgs)
+  if (firstRun || !first) return routes.getStarted()
+  const latest = orgs.find((org) => org.id === state.latest)
+  const address =
+    latest && !latest.deletion ? state.addresses.get(latest.id) : undefined
+  return address ?? routes.org(first.id)
 }
