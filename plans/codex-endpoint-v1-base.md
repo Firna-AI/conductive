@@ -106,7 +106,9 @@ choice. Cal can override any agent call.
   `worker/model-gateway/endpoint-models.ts` returns a list. Cal's choice C.
   Gap: a base that lists models at its own path but serves the Responses
   API only under `/v1` gets no second read and no warning. Option E covers
-  it.
+  it. Gap, rare: a base that serves the Responses API at its own path but
+  lists its models only under `/v1` gets `/v1` added, and its turns then
+  fail. Each new save adds `/v1` again. Option E covers it too.
 - **A second read at most.** The save makes at most two reads. The read
   that succeeded becomes the model list of the login, so the save makes no
   third read. The save skips the second read when the first read got no
@@ -176,6 +178,10 @@ choice. Cal can override any agent call.
   draws the list again. Agent call of
   the mockups, 13 November 2026. Reason: a user who connects Codex in Get
   started needs the note as much, and one list keeps one behaviour.
+- **The Privacy date.** The change updates the effective date of the
+  Privacy page to 13 November 2026, because its paragraph "Endpoint
+  models" changed and the page says that a change updates its date. The
+  Terms and `TERMS_VERSION` do not change. Agent call of 13 November 2026.
 - **No stored failure mark.** The app stores no mark of a failed read, and
   a failed background read shows nothing, as today. Agent call of 13
   November 2026, which replaces the earlier agent call of the same day for
@@ -212,18 +218,18 @@ read.
 
 Depends on: 1
 
-- [ ] Update `docs/protocol/own-endpoint-logins.md`: the second read at
+- [x] Update `docs/protocol/own-endpoint-logins.md`: the second read at
       the save of a Codex endpoint, the stored `/v1` base, the note, the
       warning, and the exception to the rule that the form shows the saved
       address. Keep the list of calls to the endpoint complete.
-- [ ] Update the public guide `src/marketing/docs/agent-logins.md` under
+- [x] Update the public guide `src/marketing/docs/agent-logins.md` under
       "Connect an own endpoint". Read every public guide in full, and
       update each sentence that restates the changed facts. Line 123
       says that the hint shows the saved address, which changes.
-- [ ] Read the Terms page `src/marketing/terms.ts` and the Privacy page
+- [x] Read the Terms page `src/marketing/terms.ts` and the Privacy page
       `src/marketing/privacy.ts` in full. Update each sentence that
       restates the calls to an endpoint.
-- [ ] Update `worker/model-gateway/README.md` and
+- [x] Update `worker/model-gateway/README.md` and
       `src/app/account-screens.md`. Lines 36 to 38 of the account screens
       doc say that the hint shows the saved address, which changes.
 
@@ -237,6 +243,11 @@ Depends on: 2
       `SaveAgentLoginResponse`, and the flag for a failed read to the
       Refresh response, in `src/shared/account.ts`. Update the fake API
       and the seeds.
+- [ ] Update the docs that describe the save and Refresh replies:
+      `worker/app-api/README.md`, `src/shared/key-code.md`,
+      `src/app/README.md`, and `src/app/dev-fake.md`. Check the save
+      sentences of `worker/model-gateway/README.md` against the code. That
+      README has 299 lines, so split it before it grows.
 - [ ] Add Worker tests: a base without `/v1` that only serves `/v1`, a
       base that serves both, a base that serves neither, a base that ends
       with `/v1`, a query on the base, a first read with no HTTP answer,

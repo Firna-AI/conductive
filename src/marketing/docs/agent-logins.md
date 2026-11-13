@@ -119,10 +119,12 @@ An IP address alone does not work as the host.
 A host name that points to your public IP address works when the server has a certificate for that name.
 For example, the free name `<IP address>.sslip.io` points to that IP address.
 
-The hint shows where requests go through Conductive.
-If Conductive changes the address format, the hint also shows the address that saves.
-For Claude, Conductive adds routes such as `/v1/messages` to the endpoint.
-For Codex, it adds `/responses` to the endpoint.
+The hint shows the request address from the address you type.
+For Claude, Conductive drops a final `/v1` before saving the address.
+The hint also shows the saved Claude address when its format changes.
+Conductive adds routes such as `/v1/messages` for Claude.
+For Codex, it adds `/responses` to the saved address.
+The saved Codex address can differ from the hint after Conductive checks the model list.
 
 After you connect, the account page shows **Connected** and **Own endpoint**, with the host below the agent.
 It includes the port when the port is not the default.
@@ -137,9 +139,30 @@ Check the endpoint's support and charges for that cache.
 ### Keep the model list current
 
 Conductive reads the endpoint's model list with its key when you save the login.
+For Codex, it first reads `<address>/models` at the address you type.
+If that read fails, it also tries `<address>/v1/models` unless the address already ends with `/v1`.
+It makes no second read if the endpoint gives no HTTP response.
+If only the second read works, Conductive saves the address with `/v1` added.
+
+The account page then shows this note under the Codex row:
+
+> Conductive added /v1 to the address, because the endpoint lists its models there.
+
+The note stays until you reload the page.
+A new save or **Remove** also clears it.
+
 When that list omits an app model, the account page names the missing models, their IDs, and the last successful read.
 Select **Refresh** there to read the list again.
 Conductive also reads the list in the background when a turn on the login starts, at most once in 10 minutes.
+Refresh and background reads keep the saved address.
+
+For Claude and Codex, a failed model list read during a save or **Refresh** shows this warning under the agent's row:
+
+> Conductive couldn't read the model list of this endpoint. Check the address and the key.
+
+Select **Refresh** beside the warning to try again.
+A successful **Refresh**, a new save, **Remove**, or a page reload clears the warning.
+A failed background read shows no warning.
 
 Your model pickers hide app models that the last successful list does not name.
 A failed read keeps the last successful list.

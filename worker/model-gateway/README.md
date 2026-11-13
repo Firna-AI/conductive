@@ -35,17 +35,25 @@ Claude drops a final `/v1` from the base before its route is added.
 Codex keeps its API base, including `/v1` when present.
 The builder also supports model-list addresses, but this gateway exposes no model-list route.
 
-The Worker reads an own endpoint's model list through
-[`endpoint-model-refresh.ts`](endpoint-model-refresh.ts).
-Save and account Refresh request a read immediately.
-Runner delivery schedules a background read after it sends a turn.
-[`endpoint-model-data.ts`](endpoint-model-data.ts) claims each attempt in D1.
-The claim limits background reads to once in ten minutes, including failed reads.
-[`endpoint-models.ts`](endpoint-models.ts) builds the agent's GET address and key headers.
+[`endpoint-models.ts`](endpoint-models.ts) reads an own endpoint's model list.
+It builds the agent's GET address and key headers.
 It follows no redirect and allows ten seconds and 1 MiB for the complete response.
 Claude requests `limit=1000` after the saved endpoint query.
 A Claude reply with `has_more: true` fails the read, so a partial list never replaces the cached list.
 It reads only `data[].id` and keeps no error body or diagnostic text.
+A read succeeds only when it returns a list.
+[Own endpoint logins](../../docs/protocol/own-endpoint-logins.md) states when the Worker reads, also the second read of a Codex save.
+
+The account save reads the list before it encrypts and stores the login, because a Codex save can store `<base>/v1` in place of the typed base.
+One statement stores the login, the list of the read that worked, if any, and the attempt time.
+So the first turn does not read the list again at once.
+The save reply flags an added `/v1` and a failed read, and never holds the address.
+
+[`endpoint-model-refresh.ts`](endpoint-model-refresh.ts) runs the account Refresh and the background read.
+Neither changes the stored address, and the Refresh reply flags a failed read.
+Runner delivery schedules a background read after it sends a turn.
+[`endpoint-model-data.ts`](endpoint-model-data.ts) claims each attempt in D1.
+The claim limits background reads to once in ten minutes, including failed reads.
 A failure keeps the previous IDs and successful read time.
 Writes check the login ciphertext and attempt ID, so an old response cannot replace a newer read or login.
 The account API compares those IDs with the app catalogue.
