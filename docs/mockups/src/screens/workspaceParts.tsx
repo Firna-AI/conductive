@@ -202,13 +202,7 @@ export function ToolContent(props: {
     case 'terminal':
       return <TerminalContent state={state} viewport={props.viewport} />
     case 'preview':
-      return (
-        <PreviewTool
-          centreTab={state.tab === 'preview' || state.tab === 'preview-behind'}
-          frame={mobile}
-          state={state.ports}
-        />
-      )
+      return <PreviewTool frame={mobile} state={state.ports} />
     case 'desktop':
       return <DesktopView />
   }

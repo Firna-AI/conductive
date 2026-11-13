@@ -58,20 +58,19 @@ Desktop:
 - `app/tools/older-software` has the one terminal of a cloud computer with
   older software, without tabs.
 - `app/tools/preview` has an open port preview in the Preview tab of the
-  centre row, from decisions 288 and 290. The page fills the tab, and the
-  tab shows a globe icon and the label of its preview. The Preview tool
-  in the tools panel keeps its tabs, with the tab of the preview in the
-  centre tab as the current one, then Reload and Open, then the port form
-  with the servers that have no preview yet. The desktop tool has no "+",
-  because the form always shows. A phone has no Preview tab in its row,
-  so its Preview page keeps the page in a frame, with "+". Each tab of the
-  tool shows the port and the program name of its server, cut to 10
-  characters, such as `6006 storybook…`. Its tooltip and its spoken name
-  give the port, the full name, and the folder. Each tab has its Close
-  button after its label, as the tabs of the centre tab row have: it shows
-  on the current tab, on hover, and while the focus is in the tab, and a
-  hidden one keeps its place. The bar has no Close of its own. On a phone,
-  two named tabs do not fit beside the actions of the frame, so the end of
+  centre row, from decisions 288 and 290. The tab shows a globe icon and
+  the label of its preview. A bar over the page holds Reload and Open.
+  Only the Preview tab has this bar. The Preview tool in the tools panel
+  has no bar on desktop. It shows the port form with the servers that
+  have no preview yet. A phone has no Preview tab in its row, so its
+  Preview page keeps the page in a frame, with the tabs of the open
+  previews, "+", Reload, and Open. Each tab there shows the port and the
+  program name of its server, cut to 10 characters, such as
+  `6006 storybook…`. Its tooltip and its spoken name give the port, the
+  full name, and the folder. Each tab has its Close button after its
+  label, as the tabs of the centre tab row have: it shows on the current
+  tab, on hover, and while the focus is in the tab, and a hidden one keeps
+  its place. Two named tabs do not fit beside the actions, so the end of
   the tab row fades, as the centre tab row does. Its variants:
   - `detected` has the port form with no preview open. Each server that
     the runner detects is a button with its port, its name, and its
@@ -86,12 +85,11 @@ Desktop:
     the open previews. The ports of the open previews leave the list. The
     desktop shows the same screen as the open preview.
 - `app/tools/preview-tab` has the first session shown, with the Preview
-  tab behind it in the row, from decision 288. The tool keeps the current
-  tab, Reload, and Open. The page stands beside `app/tools/preview`, which
-  already shows five screens. Its variant:
+  tab behind it in the row, from decision 288. Its page stays loaded. The
+  page stands beside `app/tools/preview`, which already shows five
+  screens. Its variant:
   - `closed` has the row after Close of the Preview tab, from decision
-    289. The previews stay open in the tool. No tab of the tool is
-    current, and Reload and Open do not show.
+    289. The previews stay open.
 - `app/tools/preview-repair` has the port form after a failed repair of
   the list, from decision 96. The form keeps its last list and the Other
   port row. Under them, the row of a file list that is not the latest one

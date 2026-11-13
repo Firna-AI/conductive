@@ -55,7 +55,7 @@ function previewTabs(current: number | null) {
 }
 
 /** Reload and Open of the preview that shows. */
-function PreviewActions() {
+export function PreviewActions() {
   return (
     <>
       <IconButton icon={RotateCw} label="Reload" />
@@ -107,23 +107,14 @@ function PhonePreview(props: { adding: boolean }) {
 
 /**
  * The open previews in the tools panel of the desktop (decision 290). The
- * page shows in the Preview tab of the centre row, so the panel always
- * shows the tabs of the previews, then the port form with the servers that
- * have no preview yet. A click on a tab or on a server loads its preview
- * into the centre tab. The tab of the preview in the centre tab is the
- * current one, with Reload and Open. Without a Preview tab in the row, no
- * tab is current, and Reload and Open do not show. The form always shows,
- * so the panel has no "+".
+ * page shows in the Preview tab of the centre row, with Reload and Open in
+ * the bar of that tab, so the tool has no bar of its own. It always shows
+ * the port form with the servers that have no preview yet. A click on a
+ * server loads its preview into the centre tab.
  */
-function PanelPreview(props: { centreTab: boolean }) {
-  const { centreTab } = props
+function PanelPreview() {
   return (
     <div className={styles.preview}>
-      <div className={styles.toolbar}>
-        <PreviewTabs tabs={previewTabs(centreTab ? openPort : null)} />
-        <span className={styles.spacer} />
-        {centreTab ? <PreviewActions /> : null}
-      </div>
       <ServerList servers={unopened()} />
     </div>
   )
@@ -137,19 +128,14 @@ function unopened() {
 /**
  * The Preview tool in one of its states. `frame` draws the page in the
  * tool, as a phone does. Without it, the page shows in the Preview tab of
- * the centre row, and `centreTab` says whether the row holds that tab. On
- * desktop, "+" and its `adding` state do not exist, so `adding` draws the
- * open previews.
+ * the centre row. On desktop, "+" and its `adding` state do not exist, so
+ * `adding` draws the open previews.
  */
-export function PreviewTool(props: {
-  state: PreviewState
-  frame: boolean
-  centreTab: boolean
-}) {
+export function PreviewTool(props: { state: PreviewState; frame: boolean }) {
   const open = props.frame ? (
     <PhonePreview adding={props.state === 'adding'} />
   ) : (
-    <PanelPreview centreTab={props.centreTab} />
+    <PanelPreview />
   )
   switch (props.state) {
     case 'open':

@@ -1,6 +1,6 @@
 /*
- * The Preview tab of the centre column. The page of the previewed app fills
- * the tab from edge to edge, as a browser tab does.
+ * The Preview tab of the centre column: its bar, then the page of the
+ * previewed app from edge to edge, as a browser tab shows it.
  */
 .page {
   display: flex;
@@ -8,6 +8,19 @@
   flex-direction: column;
   min-width: 0;
   min-height: 0;
+}
+
+/* The actions of the preview sit at the end, as on the header of a file. */
+.bar {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  min-height: calc(var(--ui-bar-height) + 6px);
+  padding: 4px 8px 4px var(--ui-pad-x);
+  border-bottom: 1px solid var(--ui-border);
+  box-sizing: border-box;
 }
 
 .frame {
