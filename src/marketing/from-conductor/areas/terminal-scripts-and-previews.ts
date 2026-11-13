@@ -6,7 +6,7 @@ export const terminalScriptsAndPreviewsFeatures: readonly ParityFeature[] = [
     area: 'terminal-scripts-and-previews',
     name: 'Workspace terminal',
     status: 'available',
-    note: 'One cloud terminal keeps running through disconnects, with text selection and copying while programs use the mouse.',
+    note: 'One cloud terminal keeps running through disconnects, with text selection and copying while programs use the mouse. Selecting output beyond one screen is in progress.',
   },
   {
     id: 'terminal-links',
