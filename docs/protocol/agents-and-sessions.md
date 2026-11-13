@@ -28,7 +28,7 @@ says.
   changes, so a session never moves to the login of another member.
 - A member starts a session in one of these ways:
   - with "+"
-  - with a model of the other agent
+  - with a model of the other agent, in a session that has a message
   - with the first message of a new workspace
   - with a message that starts a new session, as
     [Messages](messages-and-attachments.md#messages) says

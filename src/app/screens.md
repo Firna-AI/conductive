@@ -152,9 +152,10 @@ the Help row of the command palette opens.
   says. Each of its places opens it through `useNewWorkspace`: the row at
   the top of the list, the button of the main area of an org, the item in
   the menu of a section, and the command palette. The dialog opens on a
-  computer when the user chose it. The place opens the page on a phone,
-  without that choice, while the account loads, and while a New workspace
-  form shows. A New workspace form marks itself with `useShownForm`. The
+  computer when the account's view is the dialog. The server gives the
+  dialog to an account without a saved view. The place opens the page on
+  a phone, when the account's view is the page, while the account loads,
+  and while a New workspace form shows. A New workspace form marks itself with `useShownForm`. The
   row stays a link, so a click with a modifier key opens the page in a
   new tab.
 - Every desktop frame hosts the dialog, over the whole frame

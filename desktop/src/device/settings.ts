@@ -23,6 +23,8 @@ export function applyDeviceSettings(
       outcome = dependencies.permissions.removeCommand(operation.command)
     if (operation.action === 'stop-workspace')
       outcome = dependencies.permissions.stopWorkspace(operation.workspaceId)
+    if (operation.action === 'keep-workspace')
+      outcome = dependencies.permissions.keepWorkspace(operation.workspaceId)
   } catch {
     dependencies.warn()
     outcome = {

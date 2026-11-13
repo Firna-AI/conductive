@@ -1,4 +1,5 @@
 import { Square } from 'lucide-react'
+import { classes } from '../../../docs/mockups/src/components/common/classes'
 import type { DeviceSettings } from '../../shared/device'
 import { nameLabel } from '../../shared/name-label'
 import { ChangeOutcome } from '../../../docs/mockups/src/components/mac/ChangeOutcome'
@@ -11,8 +12,9 @@ import { LiteralText } from './LiteralText'
 import local from './device.module.css'
 import type { MacSettingsController } from './mac-settings'
 import {
-  controlGone,
   controlOf,
+  grantRuns,
+  repeatable,
   repeatLabel,
   resultMessage,
   resultTitle,
@@ -41,8 +43,7 @@ export function ChangeResults(props: {
       {results.map((result) => {
         const command = result.change.action === 'remove-command'
         const key = controlOf(result.change)
-        const repeat =
-          result.outcome.status !== 'done' && controlGone(result, settings, now)
+        const repeat = repeatable(result, settings, now)
         return (
           <ChangeOutcome
             action={
@@ -76,7 +77,10 @@ export function ChangeResults(props: {
   )
 }
 
-/** The saved choices of this Mac: the exact commands, then the 15 minutes. */
+/**
+ * The saved choices of this Mac: the exact commands, then the grants of the
+ * workspaces, each with the time left of its 15 minutes or Until you stop.
+ */
 export function SavedChoices(props: {
   settings: DeviceSettings
   busy: readonly string[]
@@ -84,8 +88,8 @@ export function SavedChoices(props: {
   controller: MacSettingsController
 }) {
   const { settings, busy, now, controller } = props
-  const windows = settings.workspaceWindows.filter(
-    (grant) => grant.expiresAt > now,
+  const windows = settings.workspaceWindows.filter((grant) =>
+    grantRuns(grant, now),
   )
   const control = (change: SettingsChange) => ({
     busy: busy.includes(controlOf(change)),
@@ -115,17 +119,26 @@ export function SavedChoices(props: {
           Always allow in a request adds its command here.
         </p>
       )}
-      <span className={mac.label}>Allowed for 15 minutes</span>
+      <span className={mac.label}>All commands allowed</span>
       {windows.length > 0 ? (
-        <ul aria-label="Workspaces allowed for 15 minutes" className={mac.list}>
+        <ul
+          aria-label="Workspaces with all commands allowed"
+          className={mac.list}
+        >
           {windows.map((grant) => (
             <li className={mac.row} key={grant.workspaceId}>
-              <span className={local.window}>
+              <span className={mac.workspace}>
                 {nameLabel(grant.workspaceName)}
               </span>
-              <span className={local.left}>
-                {timeLeft(grant.expiresAt, now)} left
-              </span>
+              {grant.expiresAt === null ? (
+                <span className={classes(mac.left, mac.open)}>
+                  Until you stop
+                </span>
+              ) : (
+                <span className={mac.left}>
+                  {timeLeft(grant.expiresAt, now)} left
+                </span>
+              )}
               <ActionButton
                 accessibilityLabel={`Stop ${nameLabel(grant.workspaceName)}`}
                 {...control({
@@ -141,8 +154,7 @@ export function SavedChoices(props: {
         </ul>
       ) : (
         <p className={local.empty}>
-          Allow all commands for 15 minutes in a request adds its workspace
-          here.
+          Allow all commands in a request adds its workspace here.
         </p>
       )}
     </>

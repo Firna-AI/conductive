@@ -51,13 +51,14 @@ That first build is separate from the start of an existing workspace's computer.
 ## Attach files
 
 Use **Attach files** to pick files, or drop files into the message box.
+In a workspace chat, you can drop files anywhere on the chat, also on the transcript or the session tabs.
 The chat, **New workspace** page, and **New workspace** dialog all accept files.
 Each file appears as a file chip, a small box in the text.
 The chip shows the file's name and upload state.
 
 A picked file goes at the text cursor, or at the end if the field has no cursor.
 A file dropped on the text goes where you drop it.
-A drop on the rest of the box uses the text cursor or the end.
+A drop elsewhere uses the text cursor or the end.
 The text cursor then moves after the new chips.
 
 Each file can be up to 25 MB.
@@ -134,10 +135,11 @@ Use **Stop** in each affected session if agents keep replying to each other with
 Each session has its own model and effort picker.
 A different model of the same agent keeps the conversation in that session.
 
-A model of the other agent opens a new session.
+A model of the other agent opens a new session when the session has messages.
 Your draft moves to it.
 The earlier conversation stays in its original session.
 The new session starts without a copy of that conversation.
+In a session with no messages, a model of the other agent stays in that session.
 
 If the chosen agent has no usable login, the message box offers **Connect** for that agent.
 Connect the login in **Account** before you send.
@@ -184,6 +186,9 @@ The answer stays visible beside it.
 Agent replies can contain headings, paragraphs, lists, code, and tables.
 A wide table scrolls sideways inside the message.
 The text around it keeps the width of the chat.
+To copy a code block, select **Copy code** in its top corner.
+With a mouse, the button shows when you point at the block.
+**Code copied** confirms the copy.
 
 While a reply arrives, the chat shows its headings, text, and table rows as they arrive.
 In the folded work of a turn, open a message line to read its table.

@@ -85,7 +85,7 @@ export function isolationAccountStates(
   const empty: AccountState = {
     operator: false,
     defaultChoice: choice,
-    newWorkspaceView: 'page',
+    newWorkspaceView: 'dialog',
     shortcuts: { mac: [], other: [] },
     githubAppUrl: harnessGitHubAppUrl,
     agentLogins: noLogins,
@@ -94,7 +94,7 @@ export function isolationAccountStates(
   const firstConnected: AccountState = {
     operator: false,
     defaultChoice: choice,
-    newWorkspaceView: 'page',
+    newWorkspaceView: 'dialog',
     shortcuts: { mac: [], other: [] },
     githubAppUrl: harnessGitHubAppUrl,
     agentLogins: firstLogins,
@@ -107,7 +107,7 @@ export function isolationAccountStates(
   const otherConnected: AccountState = {
     operator: false,
     defaultChoice: choice,
-    newWorkspaceView: 'page',
+    newWorkspaceView: 'dialog',
     shortcuts: { mac: [], other: [] },
     githubAppUrl: harnessGitHubAppUrl,
     agentLogins: otherClaudeLogin,
@@ -185,23 +185,23 @@ export async function expectIndependentPreferences(
   const cookie = await harness.login()
   const saved = await harness.request(ACCOUNT_PATHS.newWorkspaceView, cookie, {
     method: 'PUT',
-    body: JSON.stringify({ view: 'dialog' }),
+    body: JSON.stringify({ view: 'page' }),
   })
   expect(saved.status).toBe(200)
-  expect(await saved.json()).toEqual({ view: 'dialog' })
+  expect(await saved.json()).toEqual({ view: 'page' })
   const account = async () =>
     readAccount(
       await (await harness.request(ACCOUNT_PATHS.account, cookie)).json(),
     )
   expect(await account()).toMatchObject({
     defaultChoice: configuredChoice,
-    newWorkspaceView: 'dialog',
+    newWorkspaceView: 'page',
   })
 
   harness.env.CONDUCTIVE_DEFAULT_CHOICE = JSON.stringify(otherChoice)
   expect(await account()).toMatchObject({
     defaultChoice: otherChoice,
-    newWorkspaceView: 'dialog',
+    newWorkspaceView: 'page',
   })
 
   await putAccountValue(harness, cookie, ACCOUNT_PATHS.defaultModel, {
@@ -209,14 +209,14 @@ export async function expectIndependentPreferences(
   })
   expect(await account()).toMatchObject({
     defaultChoice: configuredChoice,
-    newWorkspaceView: 'dialog',
+    newWorkspaceView: 'page',
   })
   await putAccountValue(harness, cookie, ACCOUNT_PATHS.newWorkspaceView, {
-    view: 'page',
+    view: 'dialog',
   })
   expect(await account()).toMatchObject({
     defaultChoice: configuredChoice,
-    newWorkspaceView: 'page',
+    newWorkspaceView: 'dialog',
   })
 }
 

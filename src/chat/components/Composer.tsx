@@ -23,6 +23,7 @@ import type { FieldFiles } from './chip-field/attached-files'
 import { ChipTextField } from './chip-field/ChipTextField'
 import type { FieldHandle } from './chip-field/focus-plugins'
 import local from './chat.module.css'
+import { useDropAreaHandlers } from './chat-drop-area'
 import { useComposerDrop } from './composer-drop'
 import { ModelPicker } from './ModelPicker'
 import { useSendKey } from './send-key'
@@ -120,9 +121,11 @@ function useComposerKeys(props: {
  * files of a pick go into the text at the caret, or at the end when the text
  * has no caret, and a chip that leaves the text takes its file off the
  * draft. The whole box takes a drop of files, as `useComposerDrop` says,
- * also while a message sends or a file uploads. Send waits while a file
- * uploads or failed. Files over the size limit and a folder that could not
- * be read get a notice over the box, which can open the file picker again.
+ * also while a message sends or a file uploads. In the chat, the whole
+ * column takes it for the box, as `useChatDropArea` says. Send waits while
+ * a file uploads or failed. Files over the size limit and a folder that
+ * could not be read get a notice over the box, which can open the file
+ * picker again.
  * While a turn runs, a message steers the turn, and Stop sits beside Send.
  * While the sandbox is not ready, Send still sends, and the workspace queues
  * the message. When a message spends the agent login of another member, a
@@ -159,6 +162,7 @@ export function Composer(props: ComposerProps) {
     editable: true,
     attach: props.onAttach,
   })
+  const boxDrops = useDropAreaHandlers(drop.handlers)
   const pick = () => picker.current?.click()
   return (
     <>
@@ -171,7 +175,7 @@ export function Composer(props: ComposerProps) {
               styles.composer,
               drop.dropping && styles.dropping,
             )}
-            {...drop.handlers}
+            {...boxDrops}
           >
             <ChipTextField
               files={props.files}

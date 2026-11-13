@@ -57,6 +57,8 @@ Each path is relative to `src/app/`, the folder of this page.
 - `org-list.ts`: `OrgList`, the orgs of the person in their own order, as
   `AppModel.orgs` gives them: the list that the server confirmed, then the
   moves that wait for their answer.
+- `org-writes.ts`: the requests of `AppModel.createOrg` and
+  `AppModel.renameOrg`, each of which reads the org record from its answer.
 - `waitlist-model.ts`: `WaitlistModel`, the screen of a person who waits:
   the use of a code from the field or a join link, the invitations with
   Accept, and the read of the app access at each return to the page.

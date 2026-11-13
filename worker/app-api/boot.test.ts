@@ -48,7 +48,7 @@ it('boots from operator models and persists account preferences and encrypted se
   const initial = readAccount(await account.json())
   expect(initial).toMatchObject({
     defaultChoice: choice,
-    newWorkspaceView: 'page',
+    newWorkspaceView: 'dialog',
     agentLogins: [
       { agent: 'claude', connected: false },
       { agent: 'codex', connected: false },
