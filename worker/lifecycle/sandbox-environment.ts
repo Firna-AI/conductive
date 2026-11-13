@@ -13,7 +13,7 @@ import {
   type RepositoryLocation,
 } from './repository-locations'
 import { readWorkspaceToken } from './tokens'
-import type { WorkspaceRow } from './workspace-data'
+import type { WorkspaceRow } from './workspace-row'
 
 /**
  * The runner gives each agent process the turn ID and the turn's author. A

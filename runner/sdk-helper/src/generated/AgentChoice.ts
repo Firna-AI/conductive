@@ -18,4 +18,8 @@ export type AgentChoice = {
    * effort.
    */
   effort: Effort
+  /**
+   * Whether the choice requests fast mode. Older choices default to standard speed.
+   */
+  fast: boolean
 }

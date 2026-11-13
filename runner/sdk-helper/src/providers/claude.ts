@@ -13,7 +13,7 @@ import { ClaudeBackground } from './claude-background'
 import { ClaudeBackgroundNote } from './claude-background-note'
 import {
   claudeEffortSettings,
-  claudeStartOptions,
+  claudeStart,
   type ClaudeEffortSettings,
 } from './claude-effort'
 import { ClaudeInputWindow } from './claude-input-window'
@@ -30,7 +30,9 @@ export interface ClaudeQuery extends AsyncIterable<unknown> {
   interrupt(): Promise<unknown>
   setModel(model?: string): Promise<void>
   setMaxThinkingTokens(tokens: number | null): Promise<void>
-  applyFlagSettings(settings: ClaudeEffortSettings): Promise<void>
+  applyFlagSettings(
+    settings: ClaudeEffortSettings & { fastMode: boolean },
+  ): Promise<void>
   close(): void
 }
 
@@ -98,6 +100,7 @@ export function createClaudeFactory(
       },
       (uuid) => input.hasOutstanding(uuid),
       background,
+      options.choice.fast,
     )
     let closed = false
     let stream: ClaudeQuery
@@ -141,7 +144,7 @@ export function createClaudeFactory(
           },
           pathToClaudeCodeExecutable: binary(),
           model: options.choice.model,
-          ...claudeStartOptions(options.choice.effort),
+          ...claudeStart(options.choice),
           ...(options.conversationId ? { resume: options.conversationId } : {}),
           permissionMode: 'bypassPermissions',
           allowDangerouslySkipPermissions: true,
@@ -242,7 +245,11 @@ export function createClaudeFactory(
       },
       model: async (choice) => {
         await stream.setModel(choice.model)
-        await stream.applyFlagSettings(claudeEffortSettings(choice.effort))
+        await stream.applyFlagSettings({
+          ...claudeEffortSettings(choice.effort),
+          fastMode: choice.fast,
+        })
+        mapper.speed.mode(choice.fast)
         await stream.setMaxThinkingTokens(choice.effort === 'none' ? 0 : null)
         return 'applied'
       },

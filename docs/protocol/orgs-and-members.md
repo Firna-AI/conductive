@@ -61,7 +61,8 @@ decision number names a dated record, as
 
 - [Org rail order](org-rail-order.md) holds the requirements of the order
   of the orgs in the rail that each person keeps: the drag, the tile menu,
-  the keys, and the long press on a phone.
+  the keys, and the long press on a phone. It also says which page opens
+  when the person opens an org.
 
 ## Get started
 

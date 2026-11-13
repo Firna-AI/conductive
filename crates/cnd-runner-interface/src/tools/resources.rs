@@ -29,6 +29,10 @@ pub struct AgentModel {
     /// efforts.
     #[ts(as = "ReadonlyVec<Effort>")]
     pub efforts: Vec<Effort>,
+    /// Whether this model offers fast mode.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub fast: Option<bool>,
 }
 
 /// A repository that workspace creation accepts.

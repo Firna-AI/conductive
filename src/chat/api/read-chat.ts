@@ -9,6 +9,7 @@ import type { UserMessage } from '../../shared/generated/UserMessage'
 import type { ChatEvent, RunnerEventRefused } from '../../shared/chat-events'
 import type { MessageDraft } from '../../shared/messages'
 
+import { readTurnSpeed } from '../../shared/chat-events'
 import { readStopRequester } from './read-stop'
 import { readChangedFile } from './read-changed-file'
 import { readContinued } from './read-continued'
@@ -81,6 +82,7 @@ export function readChoice(value: unknown): AgentChoice {
     agent: readAgent(source.agent),
     model: text(source.model),
     effort: readEffort(source.effort),
+    fast: source.fast === true,
   }
 }
 
@@ -234,7 +236,9 @@ export function readChatEvent(source: Record<string, unknown>): ChatEvent {
       }
     case 'tool.updated':
       return { ...turn, type: source.type, tool: readTool(source.tool) }
-    case 'turn.completed':
+    case 'turn.completed': {
+      // An end with no speed, or with a speed that it cannot read, has none.
+      const speed = readTurnSpeed(source.speed)
       return {
         ...turn,
         type: source.type,
@@ -243,12 +247,14 @@ export function readChatEvent(source: Record<string, unknown>): ChatEvent {
         ...(source.endReason === 'background_work_limit'
           ? { endReason: source.endReason }
           : {}),
+        ...(speed === undefined ? {} : { speed }),
         files: list(readChangedFile)(source.files),
         // Only the value true marks files that the runner could not read.
         ...(source.filesUnavailable === true ? { filesUnavailable: true } : {}),
         omittedFileCount: safeCount(source.omittedFileCount),
         userMessageIds: list(text)(source.userMessageIds),
       }
+    }
     case 'turn.failed':
       return {
         ...turn,

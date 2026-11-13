@@ -1,3 +1,4 @@
+import type { TurnSpeed } from './generated/TurnSpeed'
 import type { Session } from './generated/Session'
 import type { MessageSender } from './generated/MessageSender'
 import type { UserMessage } from './generated/UserMessage'
@@ -19,6 +20,22 @@ export const TURN_COMPLETED_MAX_FILES = 200
  * brackets, commas, and escapes. This bounds lists with very long file paths.
  */
 export const TURN_COMPLETED_FILES_MAX_BYTES = 262_144
+
+/** Causes are machine codes. Unknown codes have no display text. */
+export function readTurnSpeed(value: unknown): TurnSpeed | undefined {
+  if (typeof value !== 'object' || value === null || !('state' in value))
+    return undefined
+  if (value.state === 'fast') return { state: 'fast' }
+  if (value.state !== 'standard') return undefined
+  if (!('cause' in value) || value.cause === undefined)
+    return { state: 'standard' }
+  if (
+    typeof value.cause !== 'string' ||
+    !/^[a-z][a-z0-9_]{0,63}$/.test(value.cause)
+  )
+    return undefined
+  return { state: 'standard', cause: value.cause }
+}
 
 export type RunnerEventRefusalReason =
   'too_large' | 'invalid' | 'turn_not_active'

@@ -1,6 +1,5 @@
 ---
 source: crates/cnd-runner-interface/tests/wire_3.rs
-assertion_line: 41
 description: Current protocol JSON. Optional fields stay absent; nullable fields stay null.
 expression: message
 ---
@@ -17,7 +16,8 @@ expression: message
     "choice": {
       "agent": "claude",
       "model": "test-model",
-      "effort": "high"
+      "effort": "high",
+      "fast": false
     },
     "startedAt": 1730000000000,
     "messageIds": [

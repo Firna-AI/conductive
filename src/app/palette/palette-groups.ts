@@ -109,7 +109,11 @@ export function actionGroups(source: PaletteBase): PaletteGroup[] {
       rows: [
         linkRow('create-org', source.createOrgHref),
         ...others.map((other) =>
-          switchRow(other, switchCommand(source.orgs, other, org)),
+          switchRow(
+            other,
+            switchCommand(source.orgs, other, org),
+            source.orgHref(other.id),
+          ),
         ),
       ],
     },

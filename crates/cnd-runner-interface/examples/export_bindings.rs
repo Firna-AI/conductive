@@ -27,6 +27,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     chat_events::AgentChatEvent::export_all(&cfg)?;
     chat_events::ToolCall::export_all(&cfg)?;
     chat_events::TurnEndReason::export_all(&cfg)?;
+    chat_events::TurnSpeed::export_all(&cfg)?;
     chat_events::TurnEventContext::export_all(&cfg)?;
     commit_author::CommitAuthor::export_all(&cfg)?;
     file_changes::BranchChangedFile::export_all(&cfg)?;

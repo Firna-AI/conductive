@@ -51,14 +51,14 @@ fn preserves_exact_write_text_and_generates_only_missing_request_ids() -> Result
             Name::CreateWorkspace,
             json!({"repositoryId":"repo", "firstMessage":"  -Work\nNext  ",
             "firstSessionTitle":"", "name":"", "model":{"agent":"claude", "model":"model", "secret":"ignored"},
-            "effort":"max", "sectionId":"section", "sender":"ignored"}),
+            "effort":"max", "fast":true, "sectionId":"section", "sender":"ignored"}),
             json!({"repositoryId":"repo", "firstMessage":"  -Work\nNext  ", "firstSessionTitle":"", "name":"",
-                "model":{"agent":"claude", "model":"model"}, "effort":"max", "sectionId":"section", "requestId":"generated-id"}),
+                "model":{"agent":"claude", "model":"model"}, "effort":"max", "fast":true, "sectionId":"section", "requestId":"generated-id"}),
         ),
         (
             Name::CreateSession,
-            json!({"workspaceId":"other", "title":"", "firstMessage":"  Hi  ", "requestId":"retry"}),
-            json!({"title":"", "firstMessage":"  Hi  ", "requestId":"retry"}),
+            json!({"workspaceId":"other", "title":"", "firstMessage":"  Hi  ", "fast":false, "requestId":"retry"}),
+            json!({"title":"", "firstMessage":"  Hi  ", "fast":false, "requestId":"retry"}),
         ),
         (
             Name::SendMessage,

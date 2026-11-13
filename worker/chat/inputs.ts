@@ -64,6 +64,7 @@ export function choice(value: unknown): AgentChoice {
     agent: input.agent,
     model: identifier(input.model),
     effort: effort(input.effort),
+    fast: input.fast === true,
   }
 }
 

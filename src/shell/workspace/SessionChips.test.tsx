@@ -59,7 +59,7 @@ const message: UserMessage = {
   sender: senderSnapshot(fakeUser),
   text: `Ask ${link(id, 'debounce')}, then ${link(other.id, 'plan')}, ${link(other.id, 'notes')}, and ${link(other.id, 'missing')}.`,
   attachments: [],
-  choice: { agent: 'claude', model: 'Opus 5.5', effort: 'high' },
+  choice: { agent: 'claude', model: 'Opus 5.5', effort: 'high', fast: false },
   createdAt: FAKE_TIME,
   state: 'sent',
 }

@@ -8,12 +8,13 @@
 
 - **Terms:**
   - **Model list:** the models that the app offers, with the efforts of each. The Worker reads it from its `CONDUCTIVE_MODELS` setting, and the model picker shows it.
-  - **Choice:** an agent, a model, and an effort, which together say how a session runs.
+  - **Choice:** an agent, a model, an effort, and fast mode, which together say how a session runs.
 - **Background:**
   - The model picker of the app offers only the models of the model list. When a person changes the model, the picker keeps the effort when the new model has it, else the nearest lower level, else the lowest level. `effortFor` in `src/chat/state/format.ts` holds that rule.
   - The agent tool `create_workspace` takes any model text for the agent `claude` or `codex`. It checks only that the text is not blank and that the effort is a known level.
   - The browser's create request checks only that the model is text, so it also accepts a blank model.
   - The routes that send a message, change the model of a session, and save a default choice check only the shape of the choice, with `choice` in `worker/chat/inputs.ts`.
+  - The choice also holds fast mode. Each route that takes a choice stores fast mode as off for a model that the model list does not mark as fast, as [Fast mode](../../docs/protocol/fast-mode.md#the-models-with-fast-mode) says. So a choice with a model outside the list runs at standard speed, and fast mode adds no case of its own to this item.
   - When a create call names a model but no effort, the Worker takes the effort of the owner's default choice, which can belong to another model.
   - The agent runner ends a turn with a clear error when the agent's service rejects the model, in `runner/sdk-helper/src/providers/failure.ts`.
   - The branch `calummoore/mcps-for-agents` adds the agent tool `list_models`, which returns the model list. So an agent can find a valid model before a create call.

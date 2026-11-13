@@ -22,6 +22,10 @@ pub struct AgentCreateSessionRequest {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub effort: Option<Effort>,
+    /// Explicit fast override. Omission creates at standard speed.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub fast: Option<bool>,
     /// request id.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
@@ -48,6 +52,10 @@ pub struct AgentSendMessageRequest {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub effort: Option<Effort>,
+    /// Explicit fast override. Omission preserves the session speed.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub fast: Option<bool>,
     /// request id.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ts(optional)]

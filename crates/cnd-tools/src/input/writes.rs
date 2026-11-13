@@ -42,6 +42,9 @@ fn choices(fields: &Map<String, Value>, request_id: &str) -> Result<Map<String, 
         }
         parsed.insert("effort".into(), value.clone());
     }
+    if let Some(value) = fields.get("fast") {
+        parsed.insert("fast".into(), Value::Bool(value == &Value::Bool(true)));
+    }
     Ok(parsed)
 }
 

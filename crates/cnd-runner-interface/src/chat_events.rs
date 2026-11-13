@@ -105,6 +105,10 @@ pub enum AgentChatEvent {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[ts(optional)]
         end_reason: Option<TurnEndReason>,
+        /// Reported speed of a turn that requested fast mode.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[ts(optional)]
+        speed: Option<TurnSpeed>,
         /// Keep a prefix of the full unique-path list. Entries stay whole.
         /// Apply both TURN_COMPLETED_MAX_FILES and TURN_COMPLETED_FILES_MAX_BYTES.
         #[ts(as = "ReadonlyVec<ChangedFile>")]
@@ -222,6 +226,21 @@ pub enum TurnEndReason {
     /// background_work_limit.
     #[serde(rename = "background_work_limit")]
     BackgroundWorkLimit,
+}
+
+/// Speed of a turn that requested fast mode.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
+#[serde(tag = "state", rename_all = "lowercase")]
+pub enum TurnSpeed {
+    /// The turn used fast mode.
+    Fast,
+    /// The turn used standard speed, with an optional machine-readable cause.
+    Standard {
+        /// Known causes include fast_limit and older_runner.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[ts(optional)]
+        cause: Option<String>,
+    },
 }
 
 /// Shared tool detail max bytes.

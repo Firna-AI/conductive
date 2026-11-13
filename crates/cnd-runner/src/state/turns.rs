@@ -104,6 +104,7 @@ pub(super) fn recovered_end(turn: &SavedTurn, now: i64) -> RunnerEvent {
         state: AgentChatEventTurnCompletedState::Stopped,
         duration_ms: (now as u64).saturating_sub(turn.started_at),
         end_reason: None,
+        speed: None,
         files: vec![],
         files_unavailable: turn.start_event_number.map(|_| WireTrue),
         omitted_file_count: 0,

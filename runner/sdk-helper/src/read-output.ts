@@ -1,3 +1,4 @@
+import { readTurnSpeed } from '../../../src/shared/chat-events'
 import type { HelperOutput } from './generated/HelperOutput'
 import type { ProviderEvent } from './generated/ProviderEvent'
 import {
@@ -17,6 +18,11 @@ function event(value: unknown): ProviderEvent {
       return { type: input.type, id: string(input.id) }
     case 'thinking':
       return { type: input.type }
+    case 'speed': {
+      const speed = readTurnSpeed(input.speed)
+      if (!speed) throw new Error('The helper speed is invalid.')
+      return { type: input.type, speed }
+    }
     case 'delta':
       return {
         type: input.type,

@@ -27,7 +27,7 @@ conductive sections list
 conductive models list
 conductive workspaces create --repository repo-id --message 'Build this feature.'
 conductive workspaces create --repository repo-id --message-file task.md \
-  --agent codex --model model-name --effort high --section section-id \
+  --agent codex --model model-name --effort high --fast true --section section-id \
   --name 'Review the change' --first-session-title 'First review' --request-id review-1
 conductive workspaces archive --workspace workspace-id
 conductive sections create --name 'Reviews'
@@ -53,6 +53,11 @@ The CLI returns status 0 for it, and MCP returns `isError: false`.
 `conductive --help` works without runtime credentials.
 A session option's string value can start with a dash.
 For example, `--message '--help'` sends that exact text.
+
+Each command that takes a model also takes `--fast true` or `--fast false`, and MCP takes the boolean `fast`.
+A create runs at standard speed without `--fast true`.
+A send without `--fast` keeps the fast mode of the session.
+[Fast mode](../docs/protocol/fast-mode.md#agent-tools) gives the rules.
 
 The runner supplies these values in the process environment:
 

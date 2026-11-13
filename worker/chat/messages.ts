@@ -28,6 +28,7 @@ export async function existingMessage(
     existing.choice.agent !== input.choice.agent ||
     existing.choice.model !== input.choice.model ||
     existing.choice.effort !== input.choice.effort ||
+    (existing.choice.fast ?? false) !== input.choice.fast ||
     JSON.stringify(existing.attachments.map((attachment) => attachment.id)) !==
       JSON.stringify(input.attachmentIds)
   ) {
@@ -99,7 +100,8 @@ export async function acceptMessage(
   await transaction.saveMessage(message)
   const changed =
     session.choice.model !== input.choice.model ||
-    session.choice.effort !== input.choice.effort
+    session.choice.effort !== input.choice.effort ||
+    session.choice.fast !== input.choice.fast
   session.choice = input.choice
   if (changed) await queueModel(transaction, session, randomId())
   const turn = await new TurnLifecycle(transaction, session).select(

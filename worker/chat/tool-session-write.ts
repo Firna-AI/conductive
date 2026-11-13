@@ -86,7 +86,13 @@ export async function acceptToolSessionWrite(
       'default_model_unavailable',
       'The default model is not available. Choose a model and effort.',
     )
-  const choice: AgentChoice = { ...model, effort }
+  const choice: AgentChoice = dependencies.normalizeChoice({
+    ...model,
+    effort,
+    fast:
+      input.input.fast ??
+      (input.kind === 'send' ? (defaults?.fast ?? false) : false),
+  })
   const text =
     input.kind === 'send' ? input.input.text : input.input.firstMessage
   const message =

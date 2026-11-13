@@ -150,6 +150,13 @@ async fn separates_protocol_errors_from_tool_errors_and_ignores_notifications() 
         .as_array()
         .ok_or(Error::Input(InputError::Object))?;
     assert_eq!(tools.len(), 24);
+    for name in ["create_workspace", "create_session", "send_message"] {
+        let tool = tools
+            .iter()
+            .find(|tool| tool["name"] == name)
+            .ok_or(Error::Reply { mac: false })?;
+        assert_eq!(tool["inputSchema"]["properties"]["fast"]["type"], "boolean");
+    }
     let mac = tools
         .iter()
         .find(|tool| tool["name"] == "run_mac_command")

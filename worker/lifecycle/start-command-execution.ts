@@ -20,7 +20,7 @@ import type {
   WorkspaceMachinePhase,
   WorkspaceRunningStartJob,
 } from './start-types'
-import type { WorkspaceRow } from './workspace-data'
+import type { WorkspaceRow } from './workspace-row'
 import type { WorkspaceLifecycleEndpoint } from './workspace-runtime'
 import { WorkspaceStartError } from './workspace-start'
 import { JobTimeLimit } from './job-time-limit'

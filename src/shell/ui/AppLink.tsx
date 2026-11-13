@@ -20,8 +20,9 @@ export function isPlainClick(event: MouseEvent): boolean {
 
 /**
  * A link to a screen of the app. A plain click changes the address without
- * a page load. A click with a modifier key opens the address as the browser
- * does, such as in a new tab.
+ * a page load. A click on a link to the current address replaces it, as a
+ * browser does, so Back does not stay on the same page. A click with a
+ * modifier key opens the address as the browser does, such as in a new tab.
  */
 export function AppLink({
   ref,
@@ -51,8 +52,9 @@ export function AppLink({
     props.onClick?.(event)
     if (event.defaultPrevented || !isPlainClick(event)) return
     event.preventDefault()
-    if (props.replace) navigation.replace(props.to)
-    else navigation.push(props.to)
+    if (props.replace || navigation.href() === props.to) {
+      navigation.replace(props.to)
+    } else navigation.push(props.to)
   }
   return (
     <a

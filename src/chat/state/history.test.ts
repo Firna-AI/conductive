@@ -11,7 +11,12 @@ import { chatFor, shown } from './test-kit'
 
 const org = FAKE_IDS.org
 const ws = FAKE_IDS.workspace
-const opus: AgentChoice = { agent: 'claude', model: 'Opus 5.5', effort: 'high' }
+const opus: AgentChoice = {
+  agent: 'claude',
+  model: 'Opus 5.5',
+  effort: 'high',
+  fast: false,
+}
 const recordedHistory = [
   'user: Add address autocomplete to the checkout form. Keep the manual fields as a fallback.',
   'agent: The checkout form now suggests addresses. Manual entry still works.',

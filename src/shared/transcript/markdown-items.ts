@@ -36,6 +36,7 @@ import {
   continuedBy,
   filesUnread,
   omittedFiles,
+  standardSpeedLine,
   stoppedSummary,
   stoppedAttribution,
   stoppedNotes,
@@ -117,8 +118,11 @@ export function itemMarkdown(
       ]
       const unread =
         item.files.length === 0 && filesUnread(transcript, item.turnId)
+      // The standard speed follows the duration, which it explains, as the
+      // note stands beside the duration in the chat.
+      const speed = standardSpeedLine(transcript, item.turnId)
       const summary = note(
-        `${turnCopy.finished} ${formatDuration(item.durationMs)}${files.length > 0 ? `. ${turnCopy.changedFiles}: ${files.join(' · ')}` : ''}${unread ? ` · ${turnFilesUnavailable}` : ''}`,
+        `${turnCopy.finished} ${formatDuration(item.durationMs)}${speed === undefined ? '' : ` · ${speed}`}${files.length > 0 ? `. ${turnCopy.changedFiles}: ${files.join(' · ')}` : ''}${unread ? ` · ${turnFilesUnavailable}` : ''}`,
       )
       return [
         ...(reason === undefined ? [] : [note(endReasonText(reason))]),

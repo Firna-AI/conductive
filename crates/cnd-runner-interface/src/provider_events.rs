@@ -3,7 +3,7 @@
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
-use crate::chat_events::{ToolCall, TurnEndReason};
+use crate::chat_events::{ToolCall, TurnEndReason, TurnSpeed};
 use crate::wire::ReadonlyVec;
 
 /// Completion state of an agent reply.
@@ -29,6 +29,12 @@ pub enum ProviderEvent {
     /// The agent started thinking.
     #[serde(rename = "thinking")]
     Thinking,
+    /// Speed reported by the agent for the visible turn.
+    #[serde(rename = "speed")]
+    Speed {
+        /// Fast speed or a standard-speed fallback.
+        speed: TurnSpeed,
+    },
     /// Partial answer text.
     #[serde(rename = "delta")]
     Delta {

@@ -24,7 +24,8 @@ expression: request
     "choice": {
       "agent": "claude",
       "model": "test-model",
-      "effort": "ultra"
+      "effort": "ultra",
+      "fast": false
     },
     "conversationId": null,
     "instructions": "Saved instructions",

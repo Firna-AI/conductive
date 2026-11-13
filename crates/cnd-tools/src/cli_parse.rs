@@ -68,7 +68,7 @@ fn name(group: &str, verb: &str) -> Result<Name> {
 fn options(name: Name) -> Vec<&'static str> {
     let options = match name {
         Name::CreateWorkspace => {
-            "repository message message-file agent model effort section name first-session-title request-id"
+            "repository message message-file agent model effort fast section name first-session-title request-id"
         }
         Name::ListWorkspaces => "owner state repository query updated-since archived limit offset",
         Name::GetWorkspace | Name::ArchiveWorkspace | Name::ListPreviews => "workspace",
@@ -76,8 +76,12 @@ fn options(name: Name) -> Vec<&'static str> {
         Name::MoveWorkspace => "workspace section",
         Name::ListSessions => "workspace limit offset",
         Name::ReadSession => "workspace session detail start-line start-offset",
-        Name::CreateSession => "workspace message message-file title agent model effort request-id",
-        Name::SendMessage => "workspace session message message-file agent model effort request-id",
+        Name::CreateSession => {
+            "workspace message message-file title agent model effort fast request-id"
+        }
+        Name::SendMessage => {
+            "workspace session message message-file agent model effort fast request-id"
+        }
         Name::GetSession | Name::StopSession => "workspace session",
         Name::RenameSession => "workspace session title",
         Name::CloseSession => "workspace session stop-running-turn",
@@ -212,6 +216,14 @@ pub(crate) fn parse(args: &[String]) -> Result<Arguments> {
             let number = number(value);
             fields.insert(key.into(), number);
         }
+    }
+    if let Some(Value::String(value)) = fields.get("fast") {
+        let value = match value.as_str() {
+            "true" => true,
+            "false" => false,
+            _ => return Err(Error::Input(InputError::Fast)),
+        };
+        fields.insert("fast".into(), Value::Bool(value));
     }
     if let Some(Value::String(value)) = fields.get("archived") {
         let value = match value.as_str() {

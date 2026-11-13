@@ -7,6 +7,7 @@ import type { RunnerEventEnvelope } from '../../src/shared/generated/RunnerEvent
 import type { WorkspaceStart } from '../../src/shared/generated/WorkspaceStart'
 import type { ListeningPort } from '../../src/shared/generated/ListeningPort'
 import { PORT_REPORT_MAX_PORTS } from '../../src/shared/ports'
+import { readTurnSpeed } from '../../src/shared/chat-events'
 import { parseChoice } from './commands'
 import {
   array,
@@ -228,6 +229,9 @@ export function parseEvent(value: unknown): RunnerEvent {
       ...(input.endReason === 'background_work_limit'
         ? { endReason: input.endReason }
         : {}),
+      ...(input.speed === undefined
+        ? {}
+        : { speed: readTurnSpeed(input.speed) }),
       files: array(input.files, changed),
       ...(input.filesUnavailable === true ? { filesUnavailable: true } : {}),
       omittedFileCount: integer(input.omittedFileCount),

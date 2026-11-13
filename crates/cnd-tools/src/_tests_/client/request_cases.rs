@@ -52,10 +52,10 @@ pub(super) fn cases() -> Result<Vec<Case>> {
         write(
             Name::CreateWorkspace,
             json!({"repositoryId":"repository","firstMessage":" Work\n ","name":"Project",
-            "firstSessionTitle":"First title","model":{"agent":"claude","model":"chosen-model"},"effort":"max","sectionId":"section"}),
+            "firstSessionTitle":"First title","model":{"agent":"claude","model":"chosen-model"},"effort":"max","fast":true,"sectionId":"section"}),
             &["workspaces"],
             json!({"repositoryId":"repository","firstMessage":" Work\n ","name":"Project","firstSessionTitle":"First title",
-                "model":{"agent":"claude","model":"chosen-model"},"effort":"max","sectionId":"section","requestId":"retry"}),
+                "model":{"agent":"claude","model":"chosen-model"},"effort":"max","fast":true,"sectionId":"section","requestId":"retry"}),
         )?,
         read(
             Name::ListWorkspaces,
@@ -116,9 +116,9 @@ pub(super) fn cases() -> Result<Vec<Case>> {
         )?,
         write(
             Name::CreateSession,
-            json!({"title":"New session","firstMessage":"  Work  ","model":{"agent":"codex","model":"model"},"effort":"high"}),
+            json!({"title":"New session","firstMessage":"  Work  ","model":{"agent":"codex","model":"model"},"effort":"high","fast":false}),
             &["workspaces", "current", "sessions"],
-            json!({"title":"New session","firstMessage":"  Work  ","model":{"agent":"codex","model":"model"},"effort":"high","requestId":"retry"}),
+            json!({"title":"New session","firstMessage":"  Work  ","model":{"agent":"codex","model":"model"},"effort":"high","fast":false,"requestId":"retry"}),
         )?,
         write(
             Name::SendMessage,

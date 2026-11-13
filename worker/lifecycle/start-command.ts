@@ -4,7 +4,7 @@ import { defaultBranchCommand } from './default-branch-command'
 import { repositoryLocation } from './repository-locations'
 import type { StartupBootstrap } from './software-bootstrap'
 import { workspaceStartupCommand } from './image-software'
-import type { WorkspaceRow } from './workspace-data'
+import type { WorkspaceRow } from './workspace-row'
 import type { WorkspaceStartJob } from './start-types'
 
 /** Startup and repository commands share the same detached output journal. */

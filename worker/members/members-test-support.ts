@@ -232,7 +232,12 @@ async function readWorkspace(
     updatedAt: row.updatedAt,
     archivedAt: row.archivedAt,
     restoreUntil: workspaceRestoreUntil(row.archivedAt, row.sandboxId),
-    choice: { agent: 'codex', model: 'test-model', effort: 'medium' },
+    choice: {
+      agent: 'codex',
+      model: 'test-model',
+      effort: 'medium',
+      fast: false,
+    },
     owner: {
       id: row.userId,
       githubLogin: row.githubLogin,

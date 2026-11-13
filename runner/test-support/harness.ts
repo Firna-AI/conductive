@@ -30,7 +30,7 @@ export function turn(
       },
       text: 'Change the file.',
       attachments: [],
-      choice: { agent, model: 'test-model', effort: 'high' },
+      choice: { agent, model: 'test-model', effort: 'high', fast: false },
       createdAt: 100,
       state: 'sent',
     },

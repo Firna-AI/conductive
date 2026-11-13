@@ -23,6 +23,10 @@ export type AgentCreateWorkspaceRequest = {
    */
   effort?: Effort
   /**
+   * Explicit fast override. Omission creates at standard speed.
+   */
+  fast?: boolean
+  /**
    * section id.
    */
   sectionId?: string

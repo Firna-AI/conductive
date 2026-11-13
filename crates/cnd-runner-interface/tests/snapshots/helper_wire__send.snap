@@ -24,7 +24,8 @@ expression: request
       "choice": {
         "agent": "claude",
         "model": "test-model",
-        "effort": "high"
+        "effort": "high",
+        "fast": false
       },
       "createdAt": 1730000000000,
       "state": "sent"

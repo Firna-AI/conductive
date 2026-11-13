@@ -13,6 +13,7 @@ export function parseChoice(value: unknown): AgentChoice {
   return {
     agent: oneOf(input.agent, ['claude', 'codex']),
     model: string(input.model),
+    fast: input.fast === true,
     effort: oneOf(input.effort, [
       'none',
       'low',

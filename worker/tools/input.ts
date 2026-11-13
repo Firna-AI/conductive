@@ -49,6 +49,7 @@ export function choice(value: unknown): AgentChoice {
     agent: agent(fields.agent),
     model: text(fields.model),
     effort: effort(fields.effort),
+    fast: fields.fast === true,
   }
 }
 
@@ -76,6 +77,7 @@ export function createWorkspaceInput(
       model: { agent: agent(model.agent), model: text(model.model) },
     }),
     ...(fields.effort !== undefined && { effort: effort(fields.effort) }),
+    ...(fields.fast !== undefined && { fast: fields.fast === true }),
     ...(fields.sectionId !== undefined && {
       sectionId: text(fields.sectionId),
     }),

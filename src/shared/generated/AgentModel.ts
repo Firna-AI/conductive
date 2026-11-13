@@ -23,4 +23,8 @@ export type AgentModel = {
    * efforts.
    */
   efforts: ReadonlyVec<Effort>
+  /**
+   * Whether this model offers fast mode.
+   */
+  fast?: boolean
 }

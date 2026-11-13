@@ -60,7 +60,7 @@ export function workspaceFixtures(
           fakeUsers.find((user) => user.id === workspace.owner) ?? fakeUser,
         name: workspace.name,
         branch: workspace.branch,
-        choice: workspace.choice,
+        choice: { ...workspace.choice, fast: workspace.choice.fast ?? false },
         state: open ? state : workspace.status,
         github: open && github !== undefined ? github : workspace.github,
         createdAt: FAKE_TIME - (index + 1) * 86_400_000,
@@ -114,7 +114,7 @@ export function workspaceFixtures(
       id: session.key,
       workspaceId: workspace.id,
       title: session.title,
-      choice: defaultChoice,
+      choice: { ...defaultChoice, fast: defaultChoice.fast ?? false },
       createdAt: FAKE_TIME - (index + 1) * 60_000,
       closedAt: null,
       activeTurnId: state === 'working' ? 'turn-1' : null,
@@ -131,8 +131,13 @@ export function workspaceFixtures(
       title: session.title,
       choice:
         session.agent === 'codex'
-          ? { agent: 'codex', model: 'GPT-6.1 Sol', effort: 'medium' }
-          : defaultChoice,
+          ? {
+              agent: 'codex',
+              model: 'GPT-6.1 Sol',
+              effort: 'medium',
+              fast: false,
+            }
+          : { ...defaultChoice, fast: defaultChoice.fast ?? false },
       createdAt: FAKE_TIME - (index + 2) * 86_400_000,
       closedAt: FAKE_TIME - (index + 1) * 86_400_000,
       activeTurnId: null,
@@ -151,7 +156,7 @@ export function workspaceFixtures(
     sender: fakeUser,
     text: 'Add address autocomplete to the checkout form. Keep the manual fields as a fallback.',
     attachments: [],
-    choice: defaultChoice,
+    choice: { ...defaultChoice, fast: defaultChoice.fast ?? false },
     createdAt: FAKE_TIME,
     state: 'sent',
   }

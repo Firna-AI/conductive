@@ -66,6 +66,10 @@ the change that keeps a turn open for background work.
   then mean an unknown list. Without the mark, the same values mean that
   the turn changed no files.
 - The mark never changes the state of the end, `finished` or `stopped`.
+- A `turn.completed` event of a turn with fast mode on carries its speed
+  when known, with the cause of a standard speed, as
+  [The speed of a turn](fast-mode.md#the-speed-of-a-turn) says. The speed
+  never changes the state of the end either.
 - A permanent refusal has one of three reasons: too large, invalid, or turn not active.
   The workspace stores one small refusal marker before it confirms that runner event.
 - The marker names the runner stream, runner event number, event type, and reason.
@@ -88,7 +92,8 @@ the change that keeps a turn open for background work.
 - A storage or network failure closes the connection without a confirmation.
   It remains retryable. It never becomes a permanent refusal.
 - The Durable Object forwards each message, each message during a turn,
-  each interrupt, and each change of the model or the effort to the runner.
+  each interrupt, and each change of the model, the effort, or the fast
+  mode to the runner.
 - Each turn also brings a turn token for the agent login of the starter of
   its session, as [The turn token](model-gateway.md#the-turn-token) says.
   No command carries the agent login itself, as
@@ -99,6 +104,9 @@ the change that keeps a turn open for background work.
   [How the agents reach the gateway](model-gateway.md#how-the-agents-reach-the-gateway)
   says. A runner that does not support this request ignores it. Claude
   then asks for the default cache of about 5 minutes.
+- Each turn also asks the runner for the fast mode of its choice. A runner
+  that does not support fast mode ignores it, and the turn runs at standard
+  speed, as [Fast mode](fast-mode.md#the-requests-of-the-agents) says.
 - Each turn that the runner accepts gets exactly one end: `turn.completed`
   or `turn.failed`. This holds also when Stop, a shutdown, or a crash of
   the runner comes before the agent starts.

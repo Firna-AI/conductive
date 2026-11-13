@@ -89,6 +89,9 @@ pub enum InputError {
     /// Choose a valid effort for the workspace.
     #[error("Choose a valid effort for the workspace.")]
     Effort,
+    /// Choose true or false for fast mode.
+    #[error("Choose true or false for fast mode.")]
+    Fast,
     /// Use a nonempty request ID.
     #[error("Use a nonempty request ID.")]
     RequestId,

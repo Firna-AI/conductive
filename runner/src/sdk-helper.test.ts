@@ -26,7 +26,7 @@ function fixture() {
     endpoint: 'https://machine.test/v1/model/claude',
     credential: { type: 'gateway', ...command.credential },
     commitAuthor: { name: 'Alice', email: 'alice@example.test' },
-    choice: command.message.choice,
+    choice: { ...command.message.choice, fast: true },
     conversationId: 'saved-conversation',
     instructions: 'Saved instructions',
     tools: fakeToolContext,
@@ -54,6 +54,7 @@ it('streams events, exact result lists, controls, and background notes over the 
       agent: 'claude',
       model: 'new-model',
       effort: 'ultra',
+      fast: true,
     }),
   ).toBe('applied')
   await provider.interrupt()
@@ -63,6 +64,10 @@ it('streams events, exact result lists, controls, and background notes over the 
   expect(await provider.model(h.options.choice)).toBe('deferred')
   agent.options.backgroundNoteIds?.add('cron:new')
   agent.options.backgroundNotes?.([...(agent.options.backgroundNoteIds ?? [])])
+  agent.emit({
+    type: 'speed',
+    speed: { state: 'standard', cause: 'fast_limit' },
+  })
   agent.emit({ type: 'background', live: true, idle: true })
   agent.emit({
     type: 'result',
@@ -79,13 +84,15 @@ it('streams events, exact result lists, controls, and background notes over the 
   })
   expect(agent.options.conversationId).toBe('saved-conversation')
   expect(agent.options.instructions).toBe('Saved instructions')
+  expect(agent.options.choice.fast).toBe(true)
   expect(agent.choices).toEqual([
-    { agent: 'claude', model: 'new-model', effort: 'ultra' },
+    { agent: 'claude', model: 'new-model', effort: 'ultra', fast: true },
   ])
   expect(agent.interrupts).toBe(1)
   expect(h.options.backgroundNoteIds).toEqual(new Set(['task:old', 'cron:new']))
   expect(h.events).toEqual([
     { type: 'conversation', id: 'saved-conversation' },
+    { type: 'speed', speed: { state: 'standard', cause: 'fast_limit' } },
     { type: 'background', live: true, idle: true },
     { type: 'result', state: 'finished', userMessageIds: ['message-2'] },
   ])

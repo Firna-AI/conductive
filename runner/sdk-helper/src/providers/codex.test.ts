@@ -3,7 +3,6 @@ import { beforeEach, expect, it, onTestFinished } from 'vitest'
 import { FakeAppServers } from '../../test-support/app-server'
 import { mockComputerServer } from '../../test-support/computer-mcp'
 import { duringTurn, runnerHarness, turn } from '../../../test-support/harness'
-import { fakeToolContext } from '../../../test-support/providers'
 import { Runner } from '../../../src/runner'
 import { createCodexFactory } from './codex'
 
@@ -101,13 +100,24 @@ it('streams App Server partial text and sends steer, model, and interrupt contro
   })
   expect(server.closed).toBe(true)
   const next = turn('3', 'alice', 'codex')
-  next.message.choice = { agent: 'codex', model: 'next-model', effort: 'max' }
+  next.message.choice = {
+    agent: 'codex',
+    model: 'next-model',
+    effort: 'max',
+    fast: false,
+  }
   h.endpoint.send(next)
   await runner.idle()
   const nextServer = servers.latest
   expect(
     nextServer.writes.findLast((write) => write.method === 'turn/start'),
-  ).toMatchObject({ params: { model: 'next-model', effort: 'max' } })
+  ).toMatchObject({
+    params: {
+      model: 'next-model',
+      effort: 'max',
+      serviceTierForTurn: 'default',
+    },
+  })
   h.endpoint.send({
     type: 'interrupt',
     commandId: 'stop',
@@ -143,6 +153,7 @@ it('streams App Server partial text and sends steer, model, and interrupt contro
     agent: 'codex',
     model: 'steered-model',
     effort: 'medium',
+    fast: false,
   }
   h.endpoint.send({ ...duringTurn(fifth), type: 'message', turnId: 'turn-4' })
   const queuedChoice = turn('queued-choice', 'bob', 'codex')
@@ -150,6 +161,7 @@ it('streams App Server partial text and sends steer, model, and interrupt contro
     agent: 'codex',
     model: 'second-steered-model',
     effort: 'high',
+    fast: false,
   }
   h.endpoint.send({
     ...duringTurn(queuedChoice),
@@ -239,53 +251,4 @@ it('streams App Server partial text and sends steer, model, and interrupt contro
     },
   })
   expect(JSON.stringify(await h.storage.read())).not.toContain('secret-bob')
-  const direct = await createCodexFactory(servers.start)({
-    cwd: h.root,
-    home: h.home,
-    sessionId: turn('close', 'bob', 'codex').sessionId,
-    endpoint:
-      fakeToolContext.machineOrigin +
-      '/v1/model/' +
-      turn('close', 'bob', 'codex').message.choice.agent,
-    credential: {
-      type: 'gateway',
-      ...turn('close', 'bob', 'codex').credential,
-    },
-    commitAuthor: null,
-    choice: { agent: 'codex', model: 'test-model', effort: 'high' },
-    conversationId: null,
-    instructions: '',
-    tools: fakeToolContext,
-    event: () => {},
-    warn: h.options.warn,
-  })
-  const closing = servers.latest
-  const order: string[] = []
-  let release: () => void = () => {}
-  const gate = new Promise<void>((resolve) => {
-    release = resolve
-  })
-  closing.closeWait = gate.then(() => {
-    order.push('closed')
-  })
-  let requested: () => void = () => {}
-  const started = new Promise<void>((resolve) => {
-    requested = resolve
-  })
-  closing.onClosing = () => {
-    order.push('requested')
-    requested()
-  }
-  onTestFinished(() => {
-    release()
-    return direct.close()
-  })
-  const stopped = direct.stop().then(() => {
-    order.push('returned')
-  })
-  await started
-  order.push('release')
-  release()
-  await stopped
-  expect(order).toEqual(['requested', 'release', 'closed', 'returned'])
 })

@@ -37,6 +37,7 @@ export function source(overrides: Partial<PaletteSource> = {}): PaletteSource {
     repositories: ready(repositories),
     openWorkspaceId: null,
     createOrgHref: routes.createOrg(),
+    orgHref: routes.org,
     offers: [],
     mac: false,
     ...overrides,

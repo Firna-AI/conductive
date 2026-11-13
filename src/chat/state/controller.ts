@@ -77,6 +77,8 @@ export class ChatController {
   readonly workspaceList: WorkspaceList
   private readonly options: ChatControllerOptions
   private readonly store = new ChatStore()
+  /** The reader's place in each session tab, while the app keeps the chat. */
+  readonly places = this.store.places
   private context: ChatContext
   private run = 0
   private started = false

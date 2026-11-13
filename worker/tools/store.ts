@@ -87,12 +87,14 @@ export async function ownerPreference(
   const row = await db
     .prepare(
       `SELECT default_agent AS agent, default_model AS model,
-       default_effort AS effort FROM user_preferences
+       default_effort AS effort, default_fast AS fast FROM user_preferences
        WHERE user_id = ? AND default_agent IS NOT NULL`,
     )
     .bind(userId)
     .first<unknown>()
-  return row === null ? null : choice(row)
+  return row === null
+    ? null
+    : choice({ ...record(row), fast: record(row).fast === 1 })
 }
 
 export async function creationSection(

@@ -58,7 +58,7 @@ const workspace: Workspace = {
   owner: cal,
   name: 'Checkout address autocomplete',
   branch: 'calummoore/checkout',
-  choice: { agent: 'claude', model: 'Opus 5.5', effort: 'high' },
+  choice: { agent: 'claude', model: 'Opus 5.5', effort: 'high', fast: false },
   state: 'ready',
   createdAt: 0,
   updatedAt: 0,

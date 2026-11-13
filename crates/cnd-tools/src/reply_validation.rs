@@ -5,6 +5,7 @@ use serde_json::Value;
 use crate::reply::Reply;
 
 pub(crate) fn normalize_paths(value: &mut Value) {
+    normalize_choices(value);
     if let Some(attachments) = value
         .get_mut("message")
         .and_then(|message| message.get_mut("attachments"))
@@ -17,6 +18,29 @@ pub(crate) fn normalize_paths(value: &mut Value) {
                 fields.insert("path".into(), Value::Null);
             }
         }
+    }
+}
+
+fn normalize_choices(value: &mut Value) {
+    match value {
+        Value::Object(fields) => {
+            if fields.contains_key("agent")
+                && fields.contains_key("model")
+                && (fields.contains_key("effort") || fields.contains_key("efforts"))
+            {
+                let fast = fields.get("fast") == Some(&Value::Bool(true));
+                fields.insert("fast".into(), Value::Bool(fast));
+            }
+            for value in fields.values_mut() {
+                normalize_choices(value);
+            }
+        }
+        Value::Array(values) => {
+            for value in values {
+                normalize_choices(value);
+            }
+        }
+        _ => {}
     }
 }
 

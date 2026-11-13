@@ -31,6 +31,7 @@ and the separate preview domain.
 | The prepared repositories and the installed software                         | The org image, in the app's Boat account |
 | The releases of the [sandbox software](sandbox-software.md) | An R2 bucket, public at `runner.conductive.build` |
 | Panel sizes                                                                  | The browser, or the Mac app              |
+| The address of the last workspace page of each org                           | The browser, or the Mac app              |
 
 ## Trust boundaries
 

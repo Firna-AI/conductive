@@ -3,6 +3,7 @@ import type { ProviderResultState } from './ProviderResultState.js'
 import type { ReadonlyVec } from './ReadonlyVec.js'
 import type { ToolCall } from './ToolCall.js'
 import type { TurnEndReason } from './TurnEndReason.js'
+import type { TurnSpeed } from './TurnSpeed.js'
 
 /**
  * Output of one SDK agent process, before the runner output filter.
@@ -16,6 +17,13 @@ export type ProviderEvent =
       id: string
     }
   | { type: 'thinking' }
+  | {
+      type: 'speed'
+      /**
+       * Fast speed or a standard-speed fallback.
+       */
+      speed: TurnSpeed
+    }
   | {
       type: 'delta'
       /**

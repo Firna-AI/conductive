@@ -142,3 +142,26 @@ async fn keeps_transcript_continuation_and_drops_unknown_fields() -> Result<()> 
     assert_eq!(serde_json::to_value(reply).internal()?, transcript());
     Ok(())
 }
+
+#[tokio::test]
+async fn lists_model_fast_marks_and_defaults_older_choices_to_standard() -> Result<()> {
+    let raw = json!({
+        "models":[
+            {"agent":"claude","model":"fast-model","label":"Fast model","efforts":["high"],"fast":true},
+            {"agent":"codex","model":"standard-model","label":"Standard model","efforts":["high"]}
+        ],
+        "defaultChoice":{"agent":"codex","model":"standard-model","effort":"high"}
+    });
+    let reply = client(Ok(response(raw)))?.execute(Call::ListModels).await?;
+    assert_eq!(
+        serde_json::to_value(reply).internal()?,
+        json!({
+            "models":[
+                {"agent":"claude","model":"fast-model","label":"Fast model","efforts":["high"],"fast":true},
+                {"agent":"codex","model":"standard-model","label":"Standard model","efforts":["high"],"fast":false}
+            ],
+            "defaultChoice":{"agent":"codex","model":"standard-model","effort":"high","fast":false}
+        })
+    );
+    Ok(())
+}

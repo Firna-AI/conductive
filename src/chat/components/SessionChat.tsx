@@ -20,6 +20,7 @@ import {
   sessionLoginOf,
 } from '../state/session-login'
 import { ChatPane } from './ChatPane'
+import { placeMemory } from './chat-place'
 import { ActionNotice, BlockNotice, LinkedSessionNotice } from './ChatNotices'
 import { Composer, type ComposerFocus } from './Composer'
 import { SandboxBar, StartingCard, type SandboxProblem } from './SandboxState'
@@ -153,6 +154,10 @@ export function SessionChat(props: SessionChatProps) {
     () => state.pending.map((message) => message.id),
     [state.pending],
   )
+  const place = useMemo(
+    () => (id ? placeMemory(controller.places, id) : null),
+    [controller, id],
+  )
   const status = historyStatus(state)
   const content = showsContent(state, starting !== null)
   const viewerId = snapshot.account?.user.id ?? null
@@ -246,6 +251,7 @@ export function SessionChat(props: SessionChatProps) {
       })}
       footer={footer}
       mobile={props.mobile}
+      place={place}
       sent={sent}
     >
       {content && status === 'loading' ? <EarlierLoading /> : null}

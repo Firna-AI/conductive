@@ -4,6 +4,7 @@ import type { AgentChatEvent } from '../../src/shared/generated/AgentChatEvent'
 import type { ChangedFile } from '../../src/shared/generated/ChangedFile'
 import type { RunnerTurn } from '../../src/shared/generated/RunnerTurn'
 import type { RunnerBranches } from '../../src/shared/generated/RunnerBranches'
+import type { TurnSpeed } from '../../src/shared/generated/TurnSpeed'
 import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 import type { Checkpoint } from './checkpoint'
 import type {
@@ -30,6 +31,7 @@ export interface ActiveTurn {
   resolvedMessageIds: Set<string>
   waiting: ProviderInput[]
   output: TurnOutput
+  speed?: TurnSpeed
   stopped: boolean
   provider: ProviderProcess | null
   lifetime: ProviderLifetime | null

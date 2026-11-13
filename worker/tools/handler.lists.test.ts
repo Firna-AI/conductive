@@ -160,6 +160,7 @@ it('lists configured models in order with owner, app, or unavailable defaults', 
     agent: 'claude',
     model: 'app-model',
     effort: 'max',
+    fast: false,
   } as const
   fixture.services.ownerDefaultChoice.mockResolvedValue(appChoice)
   response = await list(MACHINE_PATHS.models)

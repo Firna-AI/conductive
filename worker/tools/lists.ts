@@ -41,9 +41,10 @@ async function defaultChoice(
   services: AgentToolServices,
 ): Promise<AgentChoice | null> {
   const preference = await ownerPreference(db, caller.ownerUserId)
-  if (preference) return preference
+  if (preference) return { ...preference, fast: false }
   try {
-    return (await services.ownerDefaultChoice?.(caller.ownerUserId)) ?? null
+    const selected = await services.ownerDefaultChoice?.(caller.ownerUserId)
+    return selected ? { ...selected, fast: false } : null
   } catch (error) {
     if (
       error instanceof HttpError &&
@@ -88,7 +89,10 @@ export async function listFromTool(
       return { sections: await orgSections(db, caller.orgId) }
     case MACHINE_PATHS.models:
       return {
-        models: await services.models(),
+        models: (await services.models()).map((model) => ({
+          ...model,
+          fast: model.fast === true,
+        })),
         defaultChoice: await defaultChoice(db, caller, services),
       }
     default:

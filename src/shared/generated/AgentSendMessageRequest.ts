@@ -15,6 +15,10 @@ export type AgentSendMessageRequest = {
    */
   effort?: Effort
   /**
+   * Explicit fast override. Omission preserves the session speed.
+   */
+  fast?: boolean
+  /**
    * request id.
    */
   requestId?: string

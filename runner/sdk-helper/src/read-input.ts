@@ -9,6 +9,7 @@ export function parseChoice(value: unknown): AgentChoice {
   const input = object(value)
   return {
     agent: oneOf(input.agent, ['claude', 'codex']),
+    fast: input.fast === true,
     model: string(input.model),
     effort: oneOf(input.effort, [
       'none',

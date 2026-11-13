@@ -7,7 +7,7 @@ use unimock::{MockFn, Unimock, matching};
 
 use crate::cli::{HELP, Program, ToolProgram, help_requested};
 use crate::client::Configuration;
-use crate::error::{Error, InputError, Result};
+use crate::error::{Error, ErrorResultExt, InputError, Result};
 use crate::ports::{HttpMock, HttpResponse, RuntimeMock, StreamsMock};
 
 fn arguments(values: &[&str]) -> Vec<String> {
@@ -180,6 +180,61 @@ async fn dash_prefixed_session_values_are_sent_exactly() -> Result<()> {
                 "--message",
                 "--help"
             ]))
+            .await?,
+        1
+    );
+    Ok(())
+}
+
+#[tokio::test]
+async fn fast_overrides_are_boolean_and_invalid_values_send_no_request() -> Result<()> {
+    for (extra, expected) in [
+        (vec!["--fast", "true"], Some(true)),
+        (vec!["--fast=false"], Some(false)),
+        (vec![], None),
+    ] {
+        let mock = Arc::new(Unimock::new((
+            RuntimeMock::request_id
+                .some_call(matching!())
+                .returns(String::from("retry")),
+            HttpMock::send
+                .some_call(matching!(_))
+                .answers_arc(Arc::new(move |_, request| {
+                    let body: Value = serde_json::from_str(
+                        request.body.as_deref().ok_or(Error::Reply { mac: false })?,
+                    )
+                    .internal()?;
+                    assert_eq!(body.get("fast").and_then(Value::as_bool), expected);
+                    Ok(HttpResponse {
+                        status: 403,
+                        body: json!({"error":{"code":"stopped","message":"Stop"}}).to_string(),
+                    })
+                })),
+            StreamsMock::stderr
+                .some_call(matching!("stopped: Stop\n"))
+                .answers(&|_, _| Ok(())),
+        )));
+        let program = ToolProgram::new(config()?, mock.clone(), mock.clone(), mock.clone());
+        let mut args = vec![
+            "sessions",
+            "send",
+            "--session",
+            "session",
+            "--message",
+            "Work",
+        ];
+        args.extend(extra);
+        assert_eq!(program.cli(&arguments(&args)).await?, 1);
+    }
+    let mock = Arc::new(Unimock::new(
+        StreamsMock::stderr
+            .some_call(matching!("Choose true or false for fast mode.\n"))
+            .answers(&|_, _| Ok(())),
+    ));
+    let program = ToolProgram::new(config()?, mock.clone(), mock.clone(), mock.clone());
+    assert_eq!(
+        program
+            .cli(&arguments(&["sessions", "create", "--fast", "yes"]))
             .await?,
         1
     );

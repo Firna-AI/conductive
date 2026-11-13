@@ -21,6 +21,7 @@ export const OWNER_CHOICE = {
   agent: 'codex',
   model: 'owner-default-model',
   effort: 'high',
+  fast: false,
 } satisfies AgentChoice
 
 export async function toolFixture(harness: TestHarness) {

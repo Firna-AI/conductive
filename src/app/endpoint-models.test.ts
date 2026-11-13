@@ -33,6 +33,7 @@ const choice = (target: AgentModel): AgentChoice => ({
   agent: target.agent,
   model: target.model,
   effort: 'high',
+  fast: false,
 })
 
 /** The IDs of the models that a picker offers, in their order. */

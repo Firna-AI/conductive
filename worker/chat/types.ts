@@ -69,6 +69,8 @@ export interface StoredTurn {
   /** Retained dispatch evidence. Older records may have no evidence. */
   started?: boolean
   startedAt?: number
+  /** Fast was requested but absent from the runner's started choice. */
+  olderRunner?: true
   closeAfterStop: boolean
   stopRequest?: TurnStopRequester
   /** Internal waiting work. Older records have no successor. */
@@ -151,6 +153,7 @@ export type ChatCallbackPublisher = (
 ) => Promise<void>
 
 export interface ChatDependencies {
+  normalizeChoice(choice: AgentChoice): AgentChoice
   refreshEndpointModels(userId: string, agent: Agent): Promise<void>
   readBranches(
     workspaceId: string,

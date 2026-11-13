@@ -7,6 +7,7 @@ import type { ReadonlyVec } from './ReadonlyVec.js'
 import type { Timestamp } from './Timestamp.js'
 import type { ToolCall } from './ToolCall.js'
 import type { TurnEndReason } from './TurnEndReason.js'
+import type { TurnSpeed } from './TurnSpeed.js'
 import type { WireTrue } from './WireTrue.js'
 
 /**
@@ -122,6 +123,10 @@ export type AgentChatEvent =
        * endReason.
        */
       endReason?: TurnEndReason
+      /**
+       * Reported speed of a turn that requested fast mode.
+       */
+      speed?: TurnSpeed
       /**
        * Keep a prefix of the full unique-path list. Entries stay whole.
        * Apply both TURN_COMPLETED_MAX_FILES and TURN_COMPLETED_FILES_MAX_BYTES.

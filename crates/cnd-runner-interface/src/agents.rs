@@ -13,6 +13,9 @@ pub struct AgentChoice {
     pub model: String,
     /// effort.
     pub effort: Effort,
+    /// Whether the choice requests fast mode. Older choices default to standard speed.
+    #[serde(default)]
+    pub fast: bool,
 }
 
 /// Agent wire values.

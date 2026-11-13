@@ -2,6 +2,8 @@ import type { AgentChatEvent } from '../../src/shared/generated/AgentChatEvent'
 import type { ToolCall } from '../../src/shared/generated/ToolCall'
 import type { ChangedFile } from '../../src/shared/generated/ChangedFile'
 import type { ChangeKind } from '../../src/shared/generated/ChangeKind'
+import { readTurnSpeed } from '../../src/shared/chat-events'
+import { warnWorker } from '../warnings'
 import {
   choice,
   counter,
@@ -117,6 +119,13 @@ export function parseAgentEvent(value: unknown): AgentChatEvent {
     case 'tool.updated':
       return { ...context, type: input.type, tool: tool(input.tool) }
     case 'turn.completed': {
+      let speed = readTurnSpeed(input.speed)
+      // A turn end is never lost for its speed. An unknown speed counts as
+      // standard speed with no known cause.
+      if (input.speed !== undefined && !speed) {
+        warnWorker({ kind: 'turn_speed_invalid' })
+        speed = { state: 'standard' }
+      }
       if (input.state !== 'finished' && input.state !== 'stopped')
         return invalidInput()
       return {
@@ -124,6 +133,7 @@ export function parseAgentEvent(value: unknown): AgentChatEvent {
         type: input.type,
         state: input.state,
         durationMs: number(input.durationMs),
+        ...(speed ? { speed } : {}),
         ...(input.endReason === 'background_work_limit'
           ? { endReason: input.endReason }
           : {}),

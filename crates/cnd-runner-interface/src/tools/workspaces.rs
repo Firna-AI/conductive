@@ -44,6 +44,10 @@ pub struct AgentCreateWorkspaceRequest {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub effort: Option<Effort>,
+    /// Explicit fast override. Omission creates at standard speed.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub fast: Option<bool>,
     /// section id.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ts(optional)]

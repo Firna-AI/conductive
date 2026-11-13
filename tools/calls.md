@@ -15,7 +15,7 @@ with `conductive`.
 | --- | --- | --- |
 | `list_workspaces` | `workspaces list [--owner MEMBER_ID] [--state STATE] [--repository ID] [--query TEXT] [--updated-since MILLISECONDS] [--archived true\|false] [--limit NUMBER] [--offset NUMBER]` | Read |
 | `get_workspace` | `workspaces get [--workspace ID]` | Read |
-| `create_workspace` | `workspaces create --repository ID --message TEXT [--agent claude\|codex --model NAME] [--effort LEVEL] [--section ID] [--name TEXT] [--first-session-title TEXT] [--request-id ID]` | Write |
+| `create_workspace` | `workspaces create --repository ID --message TEXT [--agent claude\|codex --model NAME] [--effort LEVEL] [--fast true\|false] [--section ID] [--name TEXT] [--first-session-title TEXT] [--request-id ID]` | Write |
 | `rename_workspace` | `workspaces rename --name TEXT [--workspace ID]` | Write |
 | `move_workspace` | `workspaces move --section ID [--workspace ID]` | Write |
 | `archive_workspace` | `workspaces archive [--workspace ID]` | Write |
@@ -27,8 +27,8 @@ with `conductive`.
 | `list_sessions` | `sessions list [--workspace ID] [--limit NUMBER] [--offset NUMBER]` | Read |
 | `get_session` | `sessions get --session ID [--workspace ID]` | Read |
 | `read_session` | `sessions read --session ID [--workspace ID] [--detail concise\|full] [--start-line NUMBER] [--start-offset NUMBER]` | Read |
-| `create_session` | `sessions create [--workspace ID] [--title TEXT] [--message TEXT] [--agent claude\|codex --model NAME] [--effort LEVEL] [--request-id ID]` | Write |
-| `send_message` | `sessions send --session ID --message TEXT [--workspace ID] [--agent claude\|codex --model NAME] [--effort LEVEL] [--request-id ID]` | Write |
+| `create_session` | `sessions create [--workspace ID] [--title TEXT] [--message TEXT] [--agent claude\|codex --model NAME] [--effort LEVEL] [--fast true\|false] [--request-id ID]` | Write |
+| `send_message` | `sessions send --session ID --message TEXT [--workspace ID] [--agent claude\|codex --model NAME] [--effort LEVEL] [--fast true\|false] [--request-id ID]` | Write |
 | `rename_session` | `sessions rename --session ID --title TEXT [--workspace ID]` | Write |
 | `close_session` | `sessions close --session ID [--workspace ID] [--stop-running-turn]` | Write |
 | `stop_session` | `sessions stop --session ID [--workspace ID]` | Write |
@@ -82,6 +82,7 @@ rules.
 
 Create inherits the calling workspace's org and owner.
 An omitted model or effort uses the owner's default.
+Create uses fast mode only with `--fast true`, for a marked model.
 An omitted section uses the org's default section.
 The first message runs as the sender of the calling turn.
 `--name` gives an optional workspace name, and `--first-session-title` an optional title of the first session.
@@ -138,7 +139,8 @@ A workspace link in an answer shows as a chip.
 The number is a display label. Links keep the workspace ID.
 `repositories list` returns the repositories that a create accepts, with IDs and the current repository mark.
 `sections list` returns the org's sections in sidebar order, with IDs and the default section mark.
-`models list` returns the app's models, their agents and efforts, and the owner's default choice.
+`models list` returns the app's models, their agents, efforts, and boolean `fast` marks.
+It gives the owner's default choice with fast mode off.
 The default choice falls back to the app default, then to `null`.
 [Repository, section, and model lists](../docs/protocol/workspace-calls.md#repository-section-and-model-lists) gives the list rules and errors.
 
@@ -154,9 +156,12 @@ A session link in an answer shows as a session chip.
 `sessions create` accepts an optional `--title`, message, choice, and `--request-id`.
 The title follows the same Worker rule and underscore guidance as `--name`.
 Omitted model or effort uses the calling turn sender's saved default, then the app default.
+Session create uses fast mode only with `--fast true`, for a marked model.
 Without a message, creation returns an empty session with null `message` and `turnId`.
 `sessions send` requires nonblank message text and keeps its exact spacing.
-An omitted choice keeps the session's model and effort.
+An omitted choice keeps the session's model, effort, and fast mode.
+`--fast true` turns fast mode on for a marked model.
+`--fast false` turns it off.
 The reply gives the actual receiving session with its link, the accepted message, and its turn ID.
 A message can join a running turn or open a linked session on its sender's login.
 Each tool message ends with `---` and `Sent by:` followed by the sending session link.

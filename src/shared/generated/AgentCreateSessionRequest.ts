@@ -15,6 +15,10 @@ export type AgentCreateSessionRequest = {
    */
   effort?: Effort
   /**
+   * Explicit fast override. Omission creates at standard speed.
+   */
+  fast?: boolean
+  /**
    * request id.
    */
   requestId?: string

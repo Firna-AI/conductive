@@ -45,11 +45,18 @@ export async function postMessage(
   }
 }
 
+/**
+ * Shows a message of this tab as waiting in its session, and puts the kept
+ * place of the session at the bottom. So the message shows when the session
+ * shows again, also when the send came while a file tab showed, such as a
+ * fixed prompt of the pull request bar.
+ */
 function showWaiting(
   context: ChatContext,
   sessionId: string,
   message: PendingMessage,
 ): void {
+  context.store.places.set(sessionId, { kind: 'bottom' })
   if (!context.live()) return
   context.store.update((snapshot) =>
     withSession(snapshot, sessionId, (state) => {

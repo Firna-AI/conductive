@@ -8,6 +8,7 @@ expression: request
   "choice": {
     "agent": "codex",
     "model": "test-model",
-    "effort": "xhigh"
+    "effort": "xhigh",
+    "fast": false
   }
 }
