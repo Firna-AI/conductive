@@ -11,13 +11,15 @@ messages of members, for each `@` mention of an entry of the file tree.
 [File mentions](../docs/protocol/file-mentions.md#chips-of-files-and-folders)
 says today that "the answers of the agents keep their text".
 
-This change shows inline code of an answer as a file chip when the whole
-code is the path of an entry of the file tree. The path can be relative to
+This change shows a `@` mention in an answer as a file chip, as in the
+messages of members. It also shows inline code of an answer as a file
+chip when the whole code is the path of an entry of the file tree. The
+agent instructions ask agents to name files as `@` mentions. The path can be relative to
 the repository or absolute under the repository folder. A path can end
 with a line number or a range of lines. Then the chip shows the line, and
 a press opens the file tab with the line in view and marked. The change
-does not cover code blocks, plain text, Markdown links, tool call lines,
-the messages of members, or paths in other repositories of the workspace.
+does not cover code blocks, paths in plain text without `@`, Markdown links, tool
+call lines, or paths in other repositories of the workspace.
 
 Contract owners:
 
@@ -26,17 +28,15 @@ Contract owners:
   for the file tab at a line.
 - [Chat Markdown](../docs/protocol/chat-markdown.md) and
   [Chat tables](../docs/protocol/chat-tables.md).
-- [Agent instructions](../docs/protocol/agent-instructions.md), when
-  decision 1 is E.
+- [Agent instructions](../docs/protocol/agent-instructions.md).
 - The [chat README](../src/chat/README.md),
   [Agent text](../src/chat/agent-text.md), and the
   [Files README](../src/files/README.md).
 - The [mockup catalogue](../docs/mockups/catalogue.md).
 
-Open decisions: decision 1 asks again whether A stays, after the options
-check added E. Decision 3 is open. Milestones 1 to 5 do not wait for
-them, except the copy TODO of Milestone 4. Milestones 6 and 7 run only
-for options 1 E and 3 B.
+Open decisions: decision 3 is open. Milestones 1 to 6 do not wait for
+it, except the copy TODO of Milestone 4. Milestone 7 runs only for
+option 3 B.
 
 Related work: [Pressable links in the chat](pressable-chat-links.md) is an
 active plan that also changes `src/chat/links/chat-parts.ts`. It makes an
@@ -70,7 +70,10 @@ decisions, and found the problem of decision 3. Its report is in
 ### 1. How answers show the files they name
 
 - **Answer:** A, on 13 November 2026. The options check then added E, F,
-  and G. The user is asked again whether A stays.
+  and G. On 13 November 2026 the user changed the answer to A and C
+  together: the chat reads both `@` mentions and paths in inline code in
+  answers, and the instructions ask agents to write `@` mentions. Reason
+  of the user: both forms work, and one form is the one that agents use.
 - **Severity:** Medium. **Effort:** Small.
 - **Source:** Design.
 - **Category:** Docs or spec.
@@ -213,7 +216,7 @@ decisions, and found the problem of decision 3. Its report is in
 Each item below is my call, made on 13 November 2026, unless it names a
 decision.
 
-- **Which code:** only inline code of an answer, in a paragraph, a
+- **Which code:** inline code of an answer, in a paragraph, a
   heading, a list, or a table cell. The whole code must be the path, with
   an optional line target. A code block stays code. Reason: code blocks
   hold commands and output, not names of files.
@@ -278,9 +281,28 @@ decision.
   the address of the browser tab only. The workspace view on the Worker
   keeps the file tab without the line. Reason: the view follows the member
   across browser tabs, and another tab must not jump.
-- **Members' messages:** they keep their rules. Inline code in a message
-  of a member stays code. A `@` mention with a line target is not part of
-  this change.
+- **Mentions in answers (decision 1):** a `@` mention in an answer reads
+  as in a message of a member. It gives a chip when it names an entry of
+  the tree, and it stays text otherwise. A mention in code stays code, so
+  `` `@src/app.ts` `` is code. A mention can also be an absolute path
+  under the repository folder.
+- **Mentions with a line target:** a mention can end with a line target,
+  such as `@src/app.ts:42`. This holds also in the messages of members,
+  because one reader serves both. Today such a mention names no entry and
+  stays text, so no chip of today changes.
+- **End marks:** agents end sentences after a mention, as in "See
+  @src/app.ts." When the mention names no entry, the reader drops one
+  `.`, `,`, `;`, `:`, `!`, `?`, or `)` at its end and tries again. The
+  mark stays text after the chip.
+- **The instructions line:** "Name a file or a folder of the repository in
+  your chat replies as `@` and its path from the repository folder, such
+  as @src/app.ts, @src/app.ts:42, or @docs/. Put a path with a space in
+  double quotes. It shows as a file chip. In commits, pull requests,
+  issues, and files, write paths in backticks." Reason for the last
+  sentence: GitHub reads `@src/app.ts` as a mention of a user or a team,
+  and notifies them. The exact words can change in Milestone 6.
+- **Inline code in members' messages:** it stays code, as the protocol
+  says today.
 
 ## Milestone 1: Mockups
 
@@ -293,8 +315,8 @@ chips get a new child page. The file tab at a line is a new screen of
 `app/files/code`, or a child page when that page is full.
 
 - [ ] Add the child page `app/file-mentions/answers`: an answer with a
-      chip for an absolute path, a chip for a relative path with a line
-      target, a path in another repository that stays code, and a code
+      chip for a `@` mention, a chip for an absolute path in code, a chip
+      for a relative path with a line target, a path in another repository that stays code, and a code
       block that stays code. Give the desktop and the phone variants.
 - [ ] Add the file tab at a line to `app/files/code`: a source file with
       a range of lines in view and marked, on desktop and on a phone.
@@ -322,8 +344,8 @@ Depends on: 1
       file. [The context folder](../docs/protocol/repository-folders.md#the-context-folder)
       says that All files lists every file of `.context/`. The options
       check found this.
-- [ ] When decision 1 is E: `docs/protocol/agent-instructions.md` gives
-      the new line of the instructions.
+- [ ] `docs/protocol/agent-instructions.md` gives the new line of the
+      instructions about `@` mentions.
 - [ ] When decision 3 is B: the copy rule of `docs/protocol/file-mentions.md`
       says that the browser's own copy runs, with the source of each chip.
 - [ ] Read both legal pages and every public guide in full. Update each
@@ -360,6 +382,9 @@ Depends on: 3, 5, and the answer to decision 3 for the copy TODO
 - [ ] `chatParts` gives a `file` part, with its line target, for inline
       code of an answer whose text the reader matches. Each other code
       stays a `code` part.
+- [ ] `chatParts` reads `@` mentions in answers with the same lookup as
+      in the messages of members. A mention reads a line target and
+      drops an end mark of a sentence, as the design says.
 - [ ] `AgentText` and `MessageLine` read answers with the tree. Only
       text with a backtick follows the tree. The messages of members keep
       their reading.
@@ -397,12 +422,14 @@ target, so this milestone can run before Milestone 4.
 
 ## Milestone 6: The agent instructions
 
-Depends on: 2, and decision 1 E
+Depends on: 2
 
-This milestone runs only when the user chooses decision 1 E.
+Run this milestone after Milestone 4 lands, or in the same pull request,
+so that no agent writes mentions that the chat cannot show.
 
-- [ ] Add the line about paths in inline code to the instructions in
-      `runner/src/instructions.ts`, beside the line about workspace links.
+- [ ] Add the line about `@` mentions to the workspace text of both
+      agents in `runner/src/instructions.ts`, beside the line about
+      workspace links.
 - [ ] Update the test of the instructions.
 
 ## Milestone 7: The browser's own copy
