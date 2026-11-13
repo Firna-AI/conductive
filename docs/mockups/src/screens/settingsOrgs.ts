@@ -32,6 +32,7 @@ import {
   type Membership,
 } from '../fixtures/members'
 import { type Org, orgs } from '../fixtures/orgs'
+import { acmeSecrets, type OrgSecret } from '../fixtures/secrets'
 import {
   acmeRepositories,
   changedAcmeRepositories,
@@ -62,6 +63,8 @@ export type SettingsOrg = {
   /** The workspaces of the org, with their owners. */
   workspaces: readonly Workspace[]
   computer: OrgComputer
+  /** The secrets of the org, which agents use after approval. */
+  secrets: readonly OrgSecret[]
   /** The workspace list of the org, and its sections in the sidebar. */
   list: string
   sections: readonly SidebarSection[]
@@ -91,6 +94,7 @@ const acme: SettingsOrg = {
     startupScript,
     envVars,
   },
+  secrets: acmeSecrets,
   list: paths.shell,
   sections: workspaceSections(),
   newWorkspace: paths.newWorkspace,
@@ -118,7 +122,8 @@ function firnaBuilds(build: BuildState): Omit<OrgBuilds, 'logs'> {
 
 /**
  * Firna, which Cal created in Get started. Its scripts are empty and it
- * has no env vars, as for every new org, until an admin adds them.
+ * has no env vars and no secrets, as for every new org, until someone adds
+ * them.
  */
 function firna(build: BuildState): SettingsOrg {
   return {
@@ -139,10 +144,15 @@ function firna(build: BuildState): SettingsOrg {
       startupScript: '',
       envVars: [],
     },
+    secrets: [],
     list: paths.newOrg,
     sections: newOrgSections(),
     newWorkspace: paths.firstBuildWorkspace,
-    links: { ...settingsLinks, computer: paths.firstBuildComputer },
+    links: {
+      ...settingsLinks,
+      computer: paths.firstBuildComputer,
+      secrets: paths.secretsEmpty,
+    },
   }
 }
 

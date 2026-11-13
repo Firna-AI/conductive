@@ -141,7 +141,9 @@ background work.
     with the icons of the tool kinds and the left-out output. `FoldLine` in
     `ToolGroup.tsx` draws the line of both kinds of fold. A Mac command
     card and a lost line fold at their place, with no count and no mark,
-    from decision 151.
+    from decision 151. The card of a run with secrets folds in the same way.
+    A late request for secrets is not work, so it stays at its place, as
+    [secrets and Capabilities](design-secrets.md) gives.
   - The open fold lists its steps in order, in the indented list of an
     open run of tool calls: the call line that `ToolGroup` shares, a
     message as its first words on one line, the Mac command card, and the

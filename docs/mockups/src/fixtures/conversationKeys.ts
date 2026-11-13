@@ -1,4 +1,6 @@
 import { barConversationKeys } from './barConversations'
+import { secretConversationKeys } from './secretConversations'
+import { secretValueConversationKeys } from './secretValueConversations'
 
 /**
  * The keys of the chat transcripts of `conversations.ts`, one for each
@@ -24,6 +26,7 @@ export const conversationKeys = [
   'mac-denied',
   'mac-done',
   'mac-unavailable',
+  'mac-access-off',
   'output-left-out',
   'output-left-out-running',
   'files-left-out',
@@ -57,4 +60,6 @@ export const conversationKeys = [
   'headings',
   'headings-in-work',
   ...barConversationKeys,
+  ...secretConversationKeys,
+  ...secretValueConversationKeys,
 ] as const

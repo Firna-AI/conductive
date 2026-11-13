@@ -31,6 +31,9 @@ import { macConversations } from './macConversations'
 import type { PersonKey } from './members'
 import { linkedSession } from './sessions'
 import { newWorkspaceConversations } from './newWorkspaceConversations'
+import { secretConversations } from './secretConversations'
+import type { SecretRunItem } from './secretRequests'
+import { secretValueConversations } from './secretValueConversations'
 import { tableConversations } from './tableConversations'
 import { unavailableConversations } from './unavailableConversations'
 import { workConversations } from './workConversations'
@@ -140,6 +143,7 @@ export type ChatItem =
       from: string
     }
   | ContinuedItem
+  | SecretRunItem
 
 /** One tool call of an agent turn. */
 export type ToolCallItem = Extract<ChatItem, { kind: 'tool' }>
@@ -187,6 +191,8 @@ export const conversations: Readonly<
   ...endpointConversations({ history, followUp: followUpDraft }),
   ...newWorkspaceConversations,
   ...macConversations(history),
+  ...secretConversations(history),
+  ...secretValueConversations(history),
   ...lostConversations(history),
   ...unavailableConversations({ history, cutOff: cutOffTurn }),
   ...agentStopConversations(cutOffTurn),

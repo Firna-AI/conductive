@@ -13,6 +13,7 @@
     "archive-from-list",
     "create-org",
     "mac-command",
+    "secret-request",
     "create-routine",
     "link-a-workspace",
     "merge-and-continue",

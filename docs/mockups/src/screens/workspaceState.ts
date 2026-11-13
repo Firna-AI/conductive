@@ -137,7 +137,8 @@ export const workspaceStateSchema = {
      * before a running session closes, the owner of the workspace, the tab
      * menu of the first session, or the question of Continue with work that
      * is not pushed. Or the question before a terminal closes, or the toast
-     * of a terminal that did not open or close.
+     * of a terminal that did not open or close. Or the sheet of the values
+     * of a request, which Give a value opens on a phone.
      */
     overlay: {
       enum: [
@@ -150,6 +151,7 @@ export const workspaceStateSchema = {
         'close-terminal',
         'terminal-open-failed',
         'terminal-close-failed',
+        'value-sheet',
       ],
     },
     /**

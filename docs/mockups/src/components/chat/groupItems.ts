@@ -1,12 +1,14 @@
 import type { ChatItem, ToolCallItem } from '../../fixtures/conversations'
+import { isLateRequest } from './requests'
 
 /**
  * The work of a turn: its agent messages and its tool calls, with the Mac
- * command cards and the lost lines among them.
+ * command cards, the cards of runs with secrets, and the lost lines among
+ * them. A late request is not work, so it stays at its place.
  */
 export type WorkItem = Extract<
   ChatItem,
-  { kind: 'agent' | 'tool' | 'mac-command' | 'lost' }
+  { kind: 'agent' | 'tool' | 'mac-command' | 'secret-run' | 'lost' }
 >
 
 /** An item that the chat draws on its own: a tool call joins a run instead. */
@@ -46,6 +48,8 @@ function isWork(item: ChatItem): item is WorkItem {
     case 'tool':
     case 'mac-command':
       return true
+    case 'secret-run':
+      return !isLateRequest(item)
     case 'lost':
       return !isEnd(item) && item.reason !== 'turn_not_active'
     default:

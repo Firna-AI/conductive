@@ -1,4 +1,4 @@
-import { isPendingCommand } from '../components/chat/PendingCommand'
+import { waitsForAnswer } from '../components/chat/requests'
 import type {
   ArchiveRestore,
   SandboxNoticeState,
@@ -32,7 +32,7 @@ export function activityOf(state: WorkspaceState): ActivityStatus {
   // A refused start leaves the sandbox stopped.
   if (state.sandbox === 'refused') return 'stopped'
   if (state.sandbox !== 'ready') return state.sandbox
-  if (conversations[state.conversation].some(isPendingCommand)) return 'input'
+  if (conversations[state.conversation].some(waitsForAnswer)) return 'input'
   const works = isRunning(state) || otherSessionWorks.has(state.conversation)
   return works ? 'working' : 'ready'
 }

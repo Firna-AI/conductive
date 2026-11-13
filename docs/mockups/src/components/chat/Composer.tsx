@@ -3,6 +3,10 @@ import { ArrowUp, Paperclip, Square } from 'lucide-react'
 import type { AgentChoice, AgentKey } from '../../fixtures/agents'
 import type { Attachment } from '../../fixtures/attachments'
 import { noop } from '../../noop'
+import {
+  CapabilitiesButton,
+  type CapabilitiesControl,
+} from '../capabilities/CapabilitiesButton'
 import { ScreenLink } from '../common/ScreenLink'
 import { ActionButton, IconButton } from '../common/actions'
 import { classes } from '../common/classes'
@@ -85,6 +89,11 @@ export type ComposerState = {
    * of the text.
    */
   pointer?: boolean
+  /**
+   * The Capabilities icon beside the attach button, and its control when
+   * it is open (secrets decisions 6 and 8).
+   */
+  capabilities?: CapabilitiesControl
 }
 
 /** The query of the list of `@`: the text after the last `@` of the draft. */
@@ -111,7 +120,9 @@ function SendButton(props: { draft: string; blocked?: boolean }) {
 
 /**
  * The message box: the text, with a chip for each attached file at its
- * place, then a bar with the attach button, the model picker, and Send.
+ * place, then a bar with the attach button, the Capabilities icon, the
+ * model picker, and Send. The Capabilities icon opens what the agents of
+ * the workspace can use.
  * The attach button puts each picked file at the caret, or at the end. The
  * whole box takes a drop of files, and shows the drop state while files
  * hover over it. While a turn runs, a message steers the turn unless it
@@ -162,6 +173,12 @@ export function Composer(props: ComposerState & { lines?: number }) {
             ) : (
               attach
             )}
+            {props.capabilities ? (
+              <CapabilitiesButton
+                {...props.capabilities}
+                placement="above-start"
+              />
+            ) : null}
             <ModelPicker
               choice={props.choice}
               hiddenModels={props.hiddenModels}

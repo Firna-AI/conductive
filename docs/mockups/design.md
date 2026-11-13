@@ -171,8 +171,8 @@ sessions as tabs above the chat, and four tabs at the bottom.
   org and the section of the new workspace, in plain text, at the top
   right. The message and its files fill the middle, and the notices of the
   New workspace page follow them. The model picker sits at the bottom left,
-  and the attach button and Create, with the hint of the Enter key, at the
-  bottom right. A phone always opens the page, so the dialog has no phone
+  and the Capabilities icon, the attach button, and Create, with the hint
+  of the Enter key, at the bottom right. A phone always opens the page, so the dialog has no phone
   layout.
 - The account has three tabs, General, Preferences, and Keyboard
   shortcuts, as links, as the org settings have. On a phone, a tab that
@@ -317,6 +317,9 @@ sessions as tabs above the chat, and four tabs at the bottom.
   Markdown tables and headings of a reply and of a file preview, and the
   fold of the work of a turn. It also gives the data that the chat does
   not have, and the files that the cloud computer could not read.
+- [Secrets and Capabilities](design-secrets.md) gives the Secrets tab of
+  the org settings, the Capabilities icon beside every message box with
+  its control, and the requests and results of the secrets in the chat.
 - The app frame is a size container (`app-frame`), so the layout follows the
   width of the frame, not of the window. In the app the two are the same. A
   screen is as high as `--ui-screen-height`, which is the window, or the
@@ -325,7 +328,7 @@ sessions as tabs above the chat, and four tabs at the bottom.
   the Waitlist tab, the codes, and the approval email. It also gives
   Suspend, Lift, and Approve, the daily chart, the notice of a pause, and
   the waitlist switch.
-- On a phone the org settings put their four tabs in three columns, so every
-  tab shows. The session tabs all shrink, and the current one keeps the start
+- On a phone the org settings put their five tabs in three columns, on two
+  lines, so every tab shows. The session tabs all shrink, and the current one keeps the start
   of its title beside its close button. When the session tabs still do not
   fit, their row scrolls sideways.

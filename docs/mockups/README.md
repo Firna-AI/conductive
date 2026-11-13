@@ -53,7 +53,8 @@ desktop and the phone, the design tokens, and the parts that the screens
 share. Its linked pages give the parts of
 [the workspace](design-workspace.md), of [the chat](design-chat.md),
 of [the operator section](design-operator.md), and of
-[the pull request bar](design-bar.md). They also give [the marks](design-marks.md).
+[the pull request bar](design-bar.md). They also give [the marks](design-marks.md),
+and [secrets and Capabilities](design-secrets.md).
 
 ## The catalogue
 
@@ -76,7 +77,10 @@ pages of `app/command-palette` and `app/feedback`, the Feedback dialog,
 and the flow that sends feedback.
 The [attachments and files](catalogue-attachments-and-files.md) page
 gives the child pages of `app/attachments` and `app/files`, and the flow
-`user-flows/drop-a-file`.
+`user-flows/drop-a-file`. The [secrets and Capabilities](catalogue-secrets.md)
+page gives the Secrets tab of the org settings, the Capabilities pages, the
+child pages of `app/secret-requests`, and the flow
+`user-flows/secret-request`.
 
 `app/attachments` shows each attached file as a chip at its place in the
 text of the message box. `app/attachments/drop` shows a drop of files into
@@ -159,6 +163,14 @@ and `envVarCopy.ts` beside it gives the note under the list. The app shares
 both.
 `app/org-settings/cloud-computer`, its `add-variable` and `change-value`
 pages, and its `member` page show them.
+
+A secret of an org differs from an env var. An env var reaches every cloud
+computer at each start. A secret reaches only one command that an agent
+runs after a member allows it, and the agent gets only its name. Every
+member adds secrets on the Secrets tab, and only an admin reveals a value,
+one at a time, as `app/org-settings/secrets` shows.
+[Secrets and Capabilities](design-secrets.md) gives the tab, the
+Capabilities control, and the requests in the chat.
 
 A file path can hold a secret value. The lists, the tabs, the page
 headers, and the files of a finished turn then show "[redacted]" in place

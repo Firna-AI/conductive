@@ -46,6 +46,11 @@ export const tabStates = [
  * place after the drop, and a drop with a folder, which the box does not
  * attach. A phone shows a pick at the caret in place of the drag: the caret
  * where the pick goes, then the picked file at the caret.
+ *
+ * The `capabilities` states open the Capabilities control of the icon
+ * beside the attach button (secrets decision 8): with Mac access on, and
+ * after a member turned it off. A computer draws it above the icon, and a
+ * phone as a sheet.
  */
 export const composerStates = [
   'empty',
@@ -74,4 +79,6 @@ export const composerStates = [
   'dropped',
   'dropped-folder',
   'unreadable-folder',
+  'capabilities',
+  'capabilities-mac-off',
 ] as const

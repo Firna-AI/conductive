@@ -21,6 +21,8 @@ import { workspaceSessions } from '../fixtures/sessions'
 import { closedTerminal, cloudComputerSilent } from '../fixtures/terminals'
 import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
+import { valueSheet } from './requestSheets'
+import { capabilitiesSheet } from './workspaceCapabilities'
 import type { WorkspaceState } from './workspaceState'
 import { historyFor } from './workspaceTabs'
 
@@ -139,9 +141,10 @@ export function transcriptToast(
 /**
  * What lies open over a workspace. Desktop draws the menus beside their
  * buttons, and the tab menu below its tab, so only the dialog lies over the
- * app. A phone draws each one as a sheet. `row` holds the tabs that the
- * viewport shows, the tab whose menu is open, if any, and whether the
- * workspace is read-only, which leaves items out of that menu.
+ * app. A phone draws each one as a sheet, and the open Capabilities
+ * control too. `row` holds the tabs that the viewport shows, the tab whose
+ * menu is open, if any, and whether the workspace is read-only, which
+ * leaves items out of that menu.
  */
 export function workspaceOverlay(
   state: WorkspaceState,
@@ -152,7 +155,7 @@ export function workspaceOverlay(
   const mobile = viewport === 'mobile'
   switch (state.overlay) {
     case 'none':
-      return null
+      return capabilitiesSheet(state, viewport)
     case 'close-session':
       return <CloseSessionDialog viewport={viewport} />
     case 'continue-unpushed':
@@ -201,6 +204,8 @@ export function workspaceOverlay(
           viewport={viewport}
         />
       )
+    case 'value-sheet':
+      return valueSheet(state, viewport)
   }
 }
 

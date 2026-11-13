@@ -16,6 +16,9 @@ import { LostLine } from './LostLine'
 import { turnFilesUnavailable, unlistedFiles } from './lostCopy'
 import { MacCommand } from './MacCommand'
 import { filesWithoutPlace, LinkText, MessageText } from './MessageText'
+import { isLateRequest } from './requests'
+import { SecretRequest } from './SecretRequest'
+import { SecretRun } from './SecretRun'
 import { SentFiles } from './SentFiles'
 import { StopLine, type StopSource } from './StopLine'
 import { memberStopped, stoppedUnnamed } from './stopCopy'
@@ -80,6 +83,12 @@ export function ChatItemView(props: { item: SingleItem; viewer: PersonKey }) {
       )
     case 'mac-command':
       return <MacCommand request={item.request} state={item.state} />
+    case 'secret-run':
+      return isLateRequest(item) ? (
+        <SecretRequest item={item} viewer={viewer} />
+      ) : (
+        <SecretRun item={item} viewer={viewer} />
+      )
     case 'turn-end':
       return (
         <TurnEnd

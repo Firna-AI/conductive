@@ -24,8 +24,13 @@ export type MacCommandRequest = {
   longerBecause?: string
 }
 
-/** What happened to a command on the Mac, as the chat shows it. */
-export type MacCommandState = 'waiting' | 'denied' | 'done' | 'unavailable'
+/**
+ * What happened to a command on the Mac, as the chat shows it.
+ * `mac-access-off` is a request that the workspace refused, because a
+ * member turned Mac access off in its Capabilities (secrets decision 8).
+ */
+export type MacCommandState =
+  'waiting' | 'denied' | 'done' | 'unavailable' | 'mac-access-off'
 
 export const safariTest: MacCommandRequest = {
   command: 'npm run test:safari -- checkout',

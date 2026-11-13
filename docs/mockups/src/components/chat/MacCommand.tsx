@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
-import { Ban, CircleCheck, Laptop, MonitorOff } from 'lucide-react'
+import { Ban, CircleCheck, Laptop, MonitorOff, ShieldOff } from 'lucide-react'
 import {
   safariDuration,
   safariOutput,
@@ -33,6 +33,7 @@ const states: Readonly<Record<MacCommandState, StatePresentation>> = {
     tone: 'warning',
     icon: MonitorOff,
   },
+  'mac-access-off': { label: 'Mac access off', tone: 'muted', icon: ShieldOff },
 }
 
 /**
@@ -42,6 +43,7 @@ const states: Readonly<Record<MacCommandState, StatePresentation>> = {
 const notes: Readonly<Partial<Record<MacCommandState, string>>> = {
   denied: `${sender} denied it in the Mac app.`,
   unavailable: 'The Mac is asleep, or the Mac app is closed.',
+  'mac-access-off': 'Mac access is off in the Capabilities of this workspace.',
 }
 
 /** The exact command, after a muted shell prompt. Long commands wrap. */

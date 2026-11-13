@@ -1,0 +1,193 @@
+/* The Capabilities icon, which its open control hangs from. */
+.anchor {
+  display: flex;
+  position: relative;
+  flex-shrink: 0;
+}
+
+/*
+ * The control drawn open above the icon, as a menu of the app is: a raised
+ * card with a full hairline outline. A long control scrolls inside it.
+ */
+.popover {
+  position: absolute;
+  z-index: 20;
+  bottom: calc(100% + 6px);
+  width: 360px;
+  max-width: calc(100vw - 48px);
+  max-height: 70dvh;
+  overflow-y: auto;
+  border: 1px solid var(--ui-border2);
+  border-radius: var(--ui-radius-lg);
+  background: var(--ui-composer);
+  box-shadow: 0 10px 28px var(--ui-shadow);
+  box-sizing: border-box;
+  text-align: left;
+}
+
+.above-start {
+  left: 0;
+}
+
+.above-end {
+  right: 0;
+}
+
+/* The parts of the control, one under the other, with a line between. */
+.panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px 8px;
+}
+
+.title {
+  margin: 0;
+  color: var(--ui-ink);
+  font-size: var(--ui-text-md);
+  font-weight: var(--ui-weight-strong);
+}
+
+.intro {
+  margin: 0;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  line-height: 1.45;
+}
+
+/* A sheet has its own title, so the line under it starts the body. */
+.inSheet .header {
+  padding: 0 12px 8px;
+}
+
+.part {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px 12px;
+  border-top: 1px solid var(--ui-border);
+}
+
+/* The title of a part, and its switch or its link at the end. */
+.partHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 24px;
+}
+
+.partTitle {
+  margin: 0;
+  color: var(--ui-muted);
+  font-family: var(--ui-font-label);
+  font-size: var(--ui-text-label);
+  font-weight: 500;
+  letter-spacing: var(--ui-tracking-label);
+  text-transform: var(--ui-label-case);
+}
+
+.hint {
+  margin: 0;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  line-height: 1.45;
+}
+
+.link {
+  min-height: var(--ui-touch-min);
+  display: inline-flex;
+  align-items: center;
+  color: var(--ui-link);
+  font-size: var(--ui-text-sm);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+/* The secrets of the org, each with its checkbox. */
+.checks {
+  display: flex;
+  flex-direction: column;
+  margin-top: 2px;
+}
+
+.secretName {
+  overflow: hidden;
+  color: var(--ui-ink);
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-text-sm);
+  font-weight: 500;
+  line-height: 1.45;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The mark of a secret for all agents, at the end of its row. */
+.tag {
+  flex-shrink: 0;
+  margin: 1px 0 0 auto;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-xs);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.empty {
+  margin: 2px 0 0;
+  color: var(--ui-ink2);
+  font-size: var(--ui-text-sm);
+  line-height: 1.45;
+}
+
+/* The approvals of the sessions, and the values for the workspace. */
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 8px;
+}
+
+.groupTitle {
+  margin: 0;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  font-weight: 500;
+}
+
+.grants {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.grant {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--ui-touch-min);
+  padding: 2px 0;
+}
+
+.grantText {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* What a grant covers, who gave it, and when. A long session title wraps. */
+.grantDetail {
+  color: var(--ui-muted);
+  font-size: var(--ui-text-xs);
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}

@@ -59,6 +59,12 @@ export const newWorkspaceFormProperties = {
    * a build runs, or no build runs, such as after a start that failed.
    */
   waitingBuild: { enum: repositoryWaits },
+  /**
+   * The Capabilities control of the icon beside the attach button, closed
+   * or drawn open (secrets decision 6). It holds the secrets that the new
+   * workspace pre-approves, and Mac access.
+   */
+  capabilities: { enum: ['closed', 'open'] },
 } as const
 
 type FormProperty = keyof typeof newWorkspaceFormProperties

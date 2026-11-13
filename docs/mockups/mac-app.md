@@ -44,7 +44,8 @@ screens live under `mac-app`, and their parts in `src/components/mac/`.
   opens the workspace when the app is in the background. The 15 minutes
   show as an amber bar with the time left and Stop.
 - The requests that wait share one region above the composer, from
-  `ChatPane.module.css`. It takes at most 40% of the window, so a long
+  `ChatPane.module.css`, with the requests for secrets, as
+  [secrets and Capabilities](design-secrets.md) gives. It takes at most 40% of the window, so a long
   command or many requests scroll inside it, and an edge that cuts a
   request fades. `mac-app/requests` draws four requests with a long script.
   A view cannot open a popover, so the chat draws an open menu with
@@ -60,7 +61,9 @@ screens live under `mac-app`, and their parts in `src/components/mac/`.
 - The web app shows a waiting request without the choices, because only
   the Mac app can allow a command on the Mac. Once answered, the command
   shows as a card at its place in the chat: denied, done with its output,
-  or Mac not available. When its turn ends, the card folds with the work
+  or Mac not available. A workspace with Mac access off refuses a request
+  at once, and its card says Mac access off, as
+  `app/mac-commands/mac-access-off` shows. When its turn ends, the card folds with the work
   of the turn at its place, from decision 151, as
   `app/chat/work/mac-command` shows.
 - The Mac app gives the page every key, so its Keyboard shortcuts tab,
