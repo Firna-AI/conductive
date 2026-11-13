@@ -134,8 +134,9 @@ export const privacyDocument: LegalDocument = {
           text`An env var is secret until an admin clears its mark. Before
             ${productName} puts agent output in the chat history or on a
             screen, it hides each exact copy of a secret value in it. It also
-            hides such a copy in each start log that it shows, and in the
-            names and folders of the servers that it lists. It does not hide
+            hides such a copy in each start log that it shows, in the
+            names and folders of the servers that it lists, and in the names
+            and descriptions of the skills that it lists. It does not hide
             a changed or encoded value. A change of the mark applies at
             the next start of a cloud computer.`,
           text`${productName} keeps the real path of each file, because it
@@ -145,7 +146,7 @@ export const privacyDocument: LegalDocument = {
             of a secret value in these paths and names. Your browser still gets
             the real values, so a secret value can show in the data that your
             browser gets and sends (decision 145).`,
-          text`Agent output, start logs, and the lists of servers can show
+          text`Agent output, start logs, and the lists of servers and skills can show
             the value of an env var that is not secret. Each member who reads
             them then sees that value. The agents and each member with a terminal can read every
             env var value in the cloud computers. Secret values can also stay

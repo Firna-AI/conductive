@@ -3,8 +3,8 @@
 This doc holds the requirements and the decisions in force for the agent
 runner, our program in each sandbox. It covers the connection of the
 runner, its events and their limits, its turns, the background work of
-Claude turns, its report of the listening ports, and the repair of lost
-workspace updates. It belongs to
+Claude turns, its reports of the listening ports and of the skills, and
+the repair of lost workspace updates. It belongs to
 [Chat and events](chat-and-events.md), which covers the agents, the
 sessions, what the chat shows, and the events. The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
@@ -226,6 +226,12 @@ the change that keeps a turn open for background work.
 
 The [listening-port requirements](listening-ports.md) give the scanner,
 its labels, its limits, and its full reports.
+
+## Skills report
+
+[The skills report](skill-mentions.md#the-skills-report) gives the skill
+folders of each agent, the limits of the report, the filter of
+credentials, and when the runner sends the report.
 
 ## Lost workspace updates
 

@@ -163,8 +163,12 @@ Each call below is my call, made on 2026-11-13.
   such a name, as for a path with a line break in the list of files. A
   stricter rule on names was rejected, because the list then hides skills
   that the agent runs.
-- The runner cuts each description to 300 characters and reports at most
-  200 skills, in name order. It filters known credentials out of each
+- The runner reports at most 200 skills, in name order. It never cuts a
+  description. It sends a description of more than 4096 characters as
+  empty text, and it warns. The Worker cuts each description to 300
+  characters after its filter of secret values. Changed on 2026-11-13 from
+  a cut in the runner, because a cut before that filter can split a secret
+  value, as the rule for port labels says. It filters known credentials out of each
   description, as it does for port labels. Reason: the report has a size
   limit, and a description is repository text.
 - The Worker keeps the latest list for each workspace, as it keeps the
@@ -224,6 +228,33 @@ Milestone 1 (`app/skill-mentions` and `user-flows/use-a-skill`).
   the list of skills sets to "Skills". Milestone 6 uses both, and the list
   of files stays as it is.
 
+#### Design calls from the docs
+
+Each call below is my call, made on 2026-11-13, while Milestone 2 wrote
+`docs/protocol/skill-mentions.md`.
+
+- The skills report holds the name and the description of each skill, and
+  no path. The runner keeps the path of each Codex skill for the skill
+  input. Reason: the app needs no path.
+- Each list holds each name once. Of two skills with one name, the list
+  keeps the one that the agent gives first.
+- The runner sends the first skills report of each connect before
+  `runner.ready`, as it does for the file reports and the port report. So
+  a `runner.ready` with no skills report since the connect marks the list
+  unavailable.
+- The kind `skills.updated` joins the kinds of `report.refresh` in
+  `docs/protocol/lost-workspace-updates.md`. When a repair of the report
+  fails, the list shows "The list of skills is unavailable".
+- The workspace hides secret values in the names and the descriptions, as
+  for each runner event. A skill whose name holds a hidden value does not
+  show, as for a file whose label hides a secret value.
+- A sent message shows a skill chip for a skill text that names a skill of
+  the current list of either agent. Reason: a chip of the composer stays a
+  chip after a change of the model, so its sent message keeps it too.
+- `docs/protocol/agent-instructions.md` passed 250 lines. Its sections on
+  the life of the text and on how each agent gets it moved to
+  `docs/protocol/session-instructions.md`.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -254,21 +285,21 @@ message, and the flow of a pick.
 
 Depends on: 1
 
-- [ ] Write `docs/protocol/skill-mentions.md`: the list, the rows, the
+- [x] Write `docs/protocol/skill-mentions.md`: the list, the rows, the
       sources of the skills, the chip, the stored text, the sent chips, and
       the text that each agent gets. Link it from
       `docs/protocol/README.md`.
-- [ ] Add the skills report to
+- [x] Add the skills report to
       [Agent runner](../docs/protocol/agent-runner.md): the folders, the
       limits, the filter of credentials, and the refresh.
-- [ ] Add the skill form of each agent to
+- [x] Add the skill form of each agent to
       [Agent instructions](../docs/protocol/agent-instructions.md).
-- [ ] Update [File mentions](../docs/protocol/file-mentions.md) where it
+- [x] Update [File mentions](../docs/protocol/file-mentions.md) where it
       states a rule of the list that the skill list shares.
-- [ ] Read both legal pages and each public guide in
+- [x] Read both legal pages and each public guide in
       `src/marketing/docs/` in full. Update each sentence that restates a
       changed fact.
-- [ ] Set the `slash-commands` row in
+- [x] Set the `slash-commands` row in
       `src/marketing/from-conductor/areas/agents-and-chat.ts` to
       `in-progress`, with a note that the list shows skills.
 
@@ -356,6 +387,8 @@ Depends on: every other milestone
 
 - [ ] Set the `slash-commands` row to `available`, with a note that the
       list shows the skills of the repository.
+- [ ] Set the effective date of the Privacy page to the merge day, as
+      earlier changes of that page did.
 - [ ] Run the targeted tests and `npm run check`.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the

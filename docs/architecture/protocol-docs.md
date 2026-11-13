@@ -37,10 +37,13 @@ This page lists each protocol doc and what it covers.
   - [File mentions](../protocol/file-mentions.md): the list of `@` in the
     composer, the chips of files and folders, the sent chips of attached
     files, and the removal of each chip of the composer.
+  - [Skill mentions](../protocol/skill-mentions.md): the list of `/` in the
+    composer, the skill chips and their text, and the skills report of the
+    runner that fills the list.
   - [Agent runner](../protocol/agent-runner.md): the connection of the runner,
     its events and their limits, its turns, the background work of Claude
-    turns with its note and its time limit, its port reports, and the repair
-    of lost workspace updates.
+    turns with its note and its time limit, its port reports, its skills
+    report, and the repair of lost workspace updates.
     - [Listening ports](../protocol/listening-ports.md): the scanner's
       eligibility, labels, limits, and full reports.
     - [Lost workspace updates](../protocol/lost-workspace-updates.md): the
@@ -138,8 +141,10 @@ This page lists each protocol doc and what it covers.
   scope of a cloud computer, the author of each commit in a sandbox, and the
   GitHub actions of the Worker as a member.
 - [Agent instructions](../protocol/agent-instructions.md): the text that each
-  agent session gets, and the sender line and the branch line of each
-  message.
+  agent session gets, the sender line and the branch line of each message,
+  and the skills of a message.
+  - [Session instructions](../protocol/session-instructions.md): the same
+    instructions for the life of a session, and how each agent gets them.
   - [Base prompts](../protocol/base-prompts.md): the base prompt of Claude
     agents and the base instructions of Codex agents.
 - [Waitlist](../protocol/waitlist.md): app access, the waitlist screen, the

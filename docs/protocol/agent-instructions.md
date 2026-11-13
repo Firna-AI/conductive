@@ -2,8 +2,11 @@
 
 This doc holds the requirements and the decisions in force for the
 instructions that the app gives each agent session. It covers the facts
-and the guidance in them, and the sender line and the branch line of each
-message. [Base prompts](base-prompts.md) states the base prompt of Claude
+and the guidance in them, the sender line and the branch line of each
+message, and the skills of a message.
+[Session instructions](session-instructions.md) states how a session keeps
+its instructions and how each agent gets them.
+[Base prompts](base-prompts.md) states the base prompt of Claude
 agents. [Agents and sessions](agents-and-sessions.md#agents) states the
 agents and their sessions. [Agent tools](agent-tools.md) states the tools
 of the agents. The other terms are those of the
@@ -188,68 +191,40 @@ says.
   - Only the note of Continue in the chat. The instructions then keep the
     earlier branch.
 
-## The same text for the life of a session
+## Skills of a message
 
-- A session keeps the same agent instructions for its whole life. A Claude
-  session also keeps the same base prompt.
-- This holds across each turn, each stop and resume of the sandbox, and
-  each restart of the agent runner.
-- This holds also when a fact, the wording of the instructions, or the
-  base prompt changes later. An example is a new default branch of the
-  repository at a later resume.
-- A new session gets the instructions with the current facts and wording.
-- A session that started without agent instructions can get them once, at
-  a later turn. It then keeps that text.
-- Apart from the branches, the instructions hold no fact that changes
-  during the work, such as the date, the Git state, or the pull request
-  state. The agent reads such facts with its tools.
-- Reason: a change of the text rewrites the prompt cache of the
-  conversation. An agent can also keep the first instructions of a session
-  until it summarizes the conversation.
-- The workspace branch and the target branch can change, by Continue or
-  by a new default branch. The instructions keep the branches of the start
-  of the session, and [the branch line](#the-branch-line) names the
-  current branches.
-- A tool that returns facts that change, such as the pull request state,
-  was rejected. It widens what the workspace token allows, and agents still
-  need instructions to call it.
-  [The workspace token](tokens-and-secrets.md#the-workspace-token) states
-  what the token allows.
+- A message can hold skill texts, such as `/plans`, as
+  [The stored text](skill-mentions.md#the-stored-text) says. The runner
+  gives each skill of the message in the form of the agent that runs the
+  message (skill list decision 2).
+- A skill of the message is a skill text that names a skill of the list of
+  that agent. Every other `/` text, and a skill text in inline code or in
+  a code block, reaches the agent as text only.
+- Claude gets the text of the message unchanged. Claude runs a skill that
+  the text names as `/name`, also after the sender line and the branch
+  line.
+- Codex gets the text of the message unchanged too. Beside the text, it
+  gets one skill input for each skill of the message. The skill input
+  gives the name of the skill and the absolute path of its `SKILL.md`, as
+  the Codex list of the runner gives it.
+- Reason: the skill input names the exact skill, and the text of each
+  agent stays the stored text. The text `$name` for Codex was not chosen,
+  because the text that Codex gets would then differ from the stored text.
+- A skill chip whose skill is not in the list of the agent of the send
+  reaches that agent as the text `/name`, with no skill input.
+- Risk: Codex drops a skill input whose path names no skill, with no
+  error. So a skill that moves after the latest list does not run.
+- How Claude runs a manual-only skill, whose `SKILL.md` sets
+  `disable-model-invocation: true`, is not decided yet.
+- The skill inputs exist only in the input of the agent, as the sender
+  line does. The stored message, the chat, and the titles from messages
+  hold the stored text.
 
-## How each agent gets them
+## Session instructions
 
-- Claude and Codex get the same agent instructions, each as its own system
-  instructions. Reason: the app offers both agents (decision 19), and each
-  agent takes system instructions.
-- An agent without system instructions gets the agent instructions at the
-  start of its first message.
-- Reason: system instructions keep their weight for the whole session,
-  also after the agent summarizes a long conversation.
-- The agent runner in the sandbox builds the agent instructions.
-- These ways were rejected:
-  - A block in the first message of each session. A summary of a long
-    conversation can shorten or drop it, and it has less weight than
-    system instructions.
-  - Instruction files in the home folder of the agents. They have less
-    weight than system instructions, and Claude must then load the user
-    settings.
-  - An instruction file in the repository folder. Codex reads one such
-    file in each folder, so the file would hide the repository's own agent
-    rules.
-  - Hooks that add the text at the start of a session and after a summary.
-    The agent gives such text the weight of a user message, and each hook
-    must skip the resume at each turn.
-  - Instructions that the Worker builds and sends with each turn. The text
-    of a session would then change with each fact. Each message carries
-    only the current branches, for the branch line.
-  - Text that a model gateway adds to each model request. No such gateway
-    exists yet.
-  - Text for Claude only. It leaves out Codex, which also takes system
-    instructions.
-- A subagent of a Claude agent gets neither the base prompt nor the agent
-  instructions. Reason: the agent SDK sets the system instructions of the
-  main agent only.
-- Risk: such a subagent does not know the rule that keeps the branch name.
+[Session instructions](session-instructions.md) states that a session
+keeps the same agent instructions for its whole life, and how Claude and
+Codex each get them.
 
 ## Base prompts
 

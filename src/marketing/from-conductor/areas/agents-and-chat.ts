@@ -103,8 +103,9 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     id: 'slash-commands',
     area: 'agents-and-chat',
     name: 'Slash commands',
-    status: 'considering',
-    note: 'A command menu in the message box is under consideration.',
+    status: 'in-progress',
+    note: 'A list of skills that / opens in the message box is in progress for agents powered by Claude and Codex.',
+    due: null,
   },
   {
     id: 'skills',

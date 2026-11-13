@@ -126,7 +126,7 @@ In a workspace with older cloud computer software, agent commits name the worksp
 A Git command can still set its own author, for example with `--author`.
 The author of a commit does not prove who made it.
 
-The **Secret** mark hides exact copies of a value in displayed agent output, start logs, and program names and folders in **Preview**.
+The **Secret** mark hides exact copies of a value in displayed agent output, start logs, program names and folders in **Preview**, and skill names and descriptions in the message box.
 It does not hide values in file content, diffs, or Terminal.
 
 ## Apply setup changes
