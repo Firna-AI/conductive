@@ -5,6 +5,7 @@ import {
   TintedTheme,
   type ButtonTint,
 } from '../../docs/mockups/src/components/common/tint'
+import { actionStyle } from '../../docs/mockups/src/components/common/outlineTone'
 import { control, touchControl } from '../../docs/mockups/src/design/metrics'
 import styles from './ActionButton.module.css'
 
@@ -23,7 +24,8 @@ export interface CommandKey {
  * A compact labelled Firna button, as the mockups draw it: 26 px high in the
  * dense desktop layout, and 44 px high with `touch` on a phone. The `tint`
  * of a tinted bar fills the button in the tone of that bar. Without a tint,
- * the button takes the outline tone. `busy` shows that its write runs: the
+ * the button takes the outline tone without a fill, so the colour of the
+ * bar shows through it. `busy` shows that its write runs: the
  * button shows a spinner in place of its icon, and takes no press.
  * A button with `commandKey` shows that key in its tooltip and names it to
  * a screen reader. A Firna button takes neither, so a wrapper without a box
@@ -40,6 +42,7 @@ export function ActionButton(props: {
   disabled?: boolean
 }) {
   const size = props.touch ? touchControl : control
+  const outline = !props.tint
   const aria = props.commandKey?.aria
   const nameKey = useCallback(
     (element: unknown) => {
@@ -64,8 +67,8 @@ export function ActionButton(props: {
         numberOfLines={1}
         onPress={props.onPress}
         size="sm"
-        style={{ height: size.height, paddingHorizontal: 10 }}
-        tone={props.tint ? 'primary' : 'secondary'}
+        style={actionStyle(size.height, outline)}
+        tone={outline ? 'secondary' : 'primary'}
       >
         {props.children}
       </Button>

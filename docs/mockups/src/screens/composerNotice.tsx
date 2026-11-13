@@ -56,9 +56,10 @@ function tooLargeNotice() {
 }
 
 /**
- * The notice for a dropped folder. The composer does not attach a folder,
- * and the files of the same drop stay. The notice names the folder and
- * says to attach its files. Its action opens the file picker.
+ * The notice for a dropped folder that the browser cannot read, so the
+ * composer cannot zip it. The files of the same drop stay. The notice names
+ * the folder and says to attach its files. Its action opens the file
+ * picker.
  */
 function folderNotice() {
   return (
@@ -80,7 +81,8 @@ function folderNotice() {
 /**
  * The notice over the composer when the agent of the chosen model is not
  * connected. Its action opens the Connect form of that agent in the account.
- * A file over the size limit and a dropped folder have their own notices.
+ * A file over the size limit and an unreadable folder have their own
+ * notices.
  *
  * A message in the session of another member runs on the login of that
  * starter, so the own login of the viewer does not matter there. When the
@@ -93,7 +95,7 @@ export function composerNotice(state: WorkspaceState, workspace: Workspace) {
   if (state.composer === 'too-large' && state.tab !== 'new-session') {
     return tooLargeNotice()
   }
-  if (state.composer === 'dropped-folder' && state.tab !== 'new-session') {
+  if (state.composer === 'unreadable-folder' && state.tab !== 'new-session') {
     return folderNotice()
   }
   const { choice } = workspace

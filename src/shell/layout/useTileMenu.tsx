@@ -45,7 +45,7 @@ class TileLinks {
  * no tile that a move passes. A move that the place of the tile rules out
  * is off. The menu opens no org, and it gives the focus back to the link of
  * the tile as it closes, also after a move. Every org tile has it, also the
- * tile of a suspended or deleted org (decision 516 A). A finger that holds
+ * tile of a suspended org (decision 516 A). A deleted org has no tile. A finger that holds
  * a tile lifts it for a drag and opens no menu.
  */
 export function useTileMenu(props: {

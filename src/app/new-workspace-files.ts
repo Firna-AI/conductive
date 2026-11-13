@@ -4,13 +4,16 @@ import { uploadAttachment } from './attachment-upload'
 import type { Lifetime } from './creations'
 import {
   changeFile,
+  emptyIntake,
   hasFile,
+  noRefusals,
   runFileJob,
   runFileQueue,
   splitPick,
   uploadingFile,
   stopFile,
   type DraftFile,
+  type IntakeRefusals,
 } from './draft-files'
 import { reconcileFiles, withoutFileMarks } from './draft-file-state'
 import type { Draft } from './new-workspace-model'
@@ -49,12 +52,15 @@ export class DraftUploads {
    * uploads, and its name goes to the notice, which the next pick replaces.
    * Each other file shows at once and uploads, one after another. The new
    * IDs return immediately so the field can insert the chips in this event.
-   * Folder names stay refusal data and start no upload.
+   * The refusals of a drop go to the notices too and start no upload.
    */
-  attach(files: readonly File[], folders: readonly string[] = []): string[] {
-    if (files.length === 0 && folders.length === 0) return []
+  attach(
+    files: readonly File[],
+    refusals: IntakeRefusals = noRefusals,
+  ): string[] {
+    if (emptyIntake(files, refusals)) return []
     const life = this.follow()
-    const { uploads, refused, refusedFolders } = splitPick(files, folders)
+    const { uploads, refused, refusedFolders } = splitPick(files, refusals)
     const added = uploads.map((file) => uploadingFile(this.host.newId(), file))
     const queued = added.map((item) => this.reserve(life, item))
     this.host.draft.change((draft) => ({

@@ -7,7 +7,7 @@ The runner keeps each event within the limits that
 [Agent runner](../docs/protocol/agent-runner.md) and
 [Files and changes](../docs/protocol/workspace-tools.md#files-and-changes)
 state. The [shared contracts](../src/shared/README.md) hold the constants.
-No variable changes them, and the runner protocol stays at version 1.
+No variable changes them.
 Runner byte budgets apply after its known-credential filter. Displayed
 port-label limits apply later, after the workspace's marked-env filter.
 

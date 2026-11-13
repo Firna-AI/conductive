@@ -104,7 +104,7 @@ The default org is `acme`. The default workspace is `checkout-autocomplete`.
 `FAKE_IDS` in `fixtures/core.ts` names the shared sample IDs.
 Options select the org role, workspace state, conversation, and GitHub banner state.
 `github` sets the GitHub summary of the default workspace record, and `null` gives none.
-Without it, `fakeGitHubSummary` gives the summary of the banner and its checks, as the Worker copies it.
+Without it, `fakeGitHubSummary` gives the summary of the banner, as the Worker copies it.
 `workspaceFixtures(state, github)` takes that summary for the default workspace.
 The dev fake of `../app/dev/` uses `fakeGitHubSummary` too.
 Its seed makes `email-dark-mode` work without GitHub state, so its grey mark moves.
@@ -162,11 +162,13 @@ await view.rerender(<OwnerPicker {...props} workspace={next} />)
   `pressKey(key)` sends a keydown and a keyup to the focused element. Each runs inside `act`.
   Each fails with a named error when a person cannot use the target. `pressKey` checks the focused element.
 - `file-picker.ts`: `pickFiles(root, files)` picks files with the first Attach files button in `root`, as a member does.
-  The paperclip of a composer and the notice of a dropped folder both offer that button, and both open the same picker.
+  The paperclip of a composer and the notice of a dropped folder that could not be read both offer that button, and both open the same picker.
   It focuses and presses the button, so the focus leaves the message field for the button, as in Chrome.
   It then gives the file input of `root` the files and fires its change event, as a browser does after a pick.
 - `file-drop.ts`: `draggedFiles(items, text?)` gives a drag of files and folders from the desktop, with optional plain text beside them.
   Each item has kind file and an entry, and the types hold `Files`, as in Chrome. A folder comes as an empty file whose entry is a directory.
+  A folder can hold files and folders, which its entry gives in batches of two, or it can be unreadable.
+- `folder-entries.ts`: `folderEntry(folder)` gives the entry of a dropped folder, as `webkitGetAsEntry` gives it, for `draggedFiles` and for the tests of the zip.
   `draggedText(text, type?)` gives a drag of text or of a link.
   `fireDrag(target, type, data, { point, to })` fires one drag event, with a `copy` offer at `dragenter` and `dragover`.
   `dropOn(target, data, point?)` drags over the target and drops.

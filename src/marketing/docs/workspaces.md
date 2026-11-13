@@ -28,7 +28,7 @@ If you joined an org, its admin manages the repositories and shared setup.
 3. Choose the repository for the task.
 4. Choose a model and effort.
 5. Describe the task in the message box.
-6. Select **Send**.
+6. Select **Send** on the page, or **Create** in the dialog.
 
 For example:
 
@@ -45,14 +45,18 @@ Your message waits until the agent can begin.
 You can send more messages while that computer starts.
 The workspace keeps its accepted messages after a failed first start.
 
-Before the org's first successful build, **Send** stays off.
+Before the org's first successful build, the send button stays off.
 You can keep a draft in **New workspace** while that build runs.
 
 A newly added repository shows as unavailable in the repository menu until its build succeeds.
 Its note says when it will be ready.
-**Send** stays off while the selected repository waits for its build.
+The send button stays off while the selected repository waits for its build.
 
 ## Choose the page or dialog
+
+**New workspace** opens as a page or as a dialog over the current screen.
+On a computer, a new account opens the dialog.
+Older accounts keep the page.
 
 1. Open **Account**.
 2. Open **Preferences**.
@@ -87,18 +91,17 @@ Renaming it can stop the pull request bar from following the work.
 Use **Continue** after a merge to start a new branch that the bar follows.
 
 Open another workspace while an agent works.
-The list mark shows the pull request's GitHub state:
+The list mark shows the state of the pull request bar, in the colour of the bar:
 
 | Colour | Meaning |
 | --- | --- |
 | Red | Checks failed. |
-| Amber | Checks are running. |
-| Green | Checks passed. |
+| Green | Ready to merge. |
 | Purple | The pull request merged. |
-| Dim grey | No pull request, no checks, or closed without a merge. |
+| Amber | A merge conflict, requested changes, or a block. |
+| Grey | Checks are running, or the pull request is a draft. |
+| Dim grey | No pull request, or closed without a merge. |
 
-Failed checks take priority over checks that still run.
-A merge takes priority over all checks.
 Archived workspaces keep a faint grey mark.
 
 A light runs around the mark while the agent works or the checks run.

@@ -274,7 +274,7 @@ GitHub CLI wrapper, their token rules, and their tests.
 - The workspace object filters runner events with the marked env values
   from the actual start capture before it checks their meaning, stores
   them, or sends them. This applies to older installed runners too.
-  The runner masks workspace tokens and logins. It receives no separate
+  The runner masks workspace tokens and turn tokens. It receives no separate
   org-value list, so its local state can keep raw org values. Real paths
   and base refs stay available for operations. Separate labels are masked.
 - The terminal password stays in `/run/conductive-terminal/password`, with

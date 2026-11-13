@@ -96,15 +96,15 @@ model address. It runs Codex through the Codex SDK or the Codex App Server
 The runner finds the listening ports in the sandbox itself, with no Boat
 call (decision 220).
 
-A runner of protocol version 2 or later makes both agent programs send
-their model requests to the [model gateway](../protocol/model-gateway.md). It
-gives each agent program the turn token of its turn, and no agent login. A
-settings file in the repository can send the requests of Claude to another
-address, as
+The runner makes both agent programs send their model requests to the
+[model gateway](../protocol/model-gateway.md). It gives each agent program
+the turn token of its turn, and no agent login. A settings file in the
+repository can send the requests of Claude to another address, as
 [How the agents reach the gateway](../protocol/model-gateway.md#how-the-agents-reach-the-gateway)
-says. A runner of protocol version 1 gives the agent programs the agent
-login itself. A sandbox runs an older runner until an update applies, as
-[Updates](../protocol/sandbox-software.md#updates) says.
+says. A sandbox runs an older runner until an update applies, as
+[Updates](../protocol/sandbox-software.md#updates) says. The workspace
+refuses a runner of an unsupported protocol version, as
+[Runner versions](../protocol/version-pins.md#runner-versions) says.
 
 ## Previews and commits
 

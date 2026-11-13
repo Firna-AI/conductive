@@ -47,7 +47,8 @@ sessions as tabs above the chat, and four tabs at the bottom.
 - `ActionButton` and `IconButton` in `src/components/common/actions.tsx` give
   the Firna button the dense size and a lighter label. The `outline` tone of
   `ActionButton` keeps the border of the secondary tone without its fill, so
-  the tint of a bar shows through, as on Stop of the 15 minutes bar.
+  the tint of a bar shows through, as on Stop of the 15 minutes bar and on
+  Archive of the pull request bar.
 - On a phone every touch target is at least 44 px high. `MobileFrame` gives
   the Firna controls the touch sizes through `useControlSizes` in
   `src/components/common/touch.tsx`, and local controls read the

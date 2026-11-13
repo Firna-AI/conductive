@@ -25,7 +25,7 @@ describe('WorkspaceRow', () => {
         workspace={{ ...workspace, name: null, updatedAt: FAKE_TIME }}
       />,
     )
-    expect(textOf(html)).toBe('Untitled now , Checks passed, Ready')
+    expect(textOf(html)).toBe('Untitled now , Ready to merge, Ready')
   })
 
   test('shows the name of an unread row in bold, and the name of a ready row with the same GitHub state in the normal weight', async () => {

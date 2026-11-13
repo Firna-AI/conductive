@@ -13,6 +13,7 @@ import {
   isMissingFile,
   readyIds,
   type DraftFile,
+  type IntakeRefusals,
 } from './draft-files'
 import {
   failSentDraft,
@@ -204,9 +205,9 @@ export class NewWorkspaceModel {
    * While the create runs, it uploads nothing, because the create already
    * sent the files of the draft.
    */
-  attach(files: readonly File[], folders: readonly string[] = []): string[] {
+  attach(files: readonly File[], refusals?: IntakeRefusals): string[] {
     if (this.create.get().state === 'sending') return []
-    const uploads = this.uploads.attach(files, folders)
+    const uploads = this.uploads.attach(files, refusals)
     // The files show at once, before they upload, so the draft has them now.
     this.keepShownRepository()
     return uploads

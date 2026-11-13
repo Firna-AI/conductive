@@ -1,5 +1,4 @@
 import type { Agent } from '../../src/shared/agents'
-import type { RunnerProtocolVersion } from '../../src/shared/runner'
 import type { AppEnv } from '../env'
 import { HttpError } from '../http'
 import { readAgentLogin, senderLoginAccess } from './queries'
@@ -27,14 +26,12 @@ export async function readLogin(
   agent: Agent,
   runnerTokenHash?: string,
   senderId?: string,
-  protocolVersion?: RunnerProtocolVersion,
 ) {
   const login = await dependencies.resolveLogin(
     userId,
     agent,
     runnerTokenHash,
     senderId,
-    protocolVersion ?? dependencies.currentRunnerProtocolVersion() ?? undefined,
   )
   return login?.agent === agent ? login : null
 }
@@ -50,7 +47,7 @@ export function loginResolver(
       userId === null
         ? Promise.resolve(null)
         : readAgentLogin(env, userId, agent))
-  return async (userId, agent, runnerTokenHash, senderId, protocolVersion) => {
+  return async (userId, agent, runnerTokenHash, senderId) => {
     const id = workspaceId()
     if (!id) return null
     const access = await senderLoginAccess(
@@ -67,14 +64,7 @@ export function loginResolver(
       throw new SenderAccessDenied()
     if (!access.loginOwnerAllowed || userId === null) return null
     if (!access.reuseAllowed) throw new LoginReuseDenied()
-    const login = await read(
-      userId,
-      agent,
-      runnerTokenHash,
-      senderId,
-      protocolVersion,
-    )
-    if (login?.kind === 'endpoint' && protocolVersion === 1) return null
+    const login = await read(userId, agent, runnerTokenHash, senderId)
     return login
   }
 }

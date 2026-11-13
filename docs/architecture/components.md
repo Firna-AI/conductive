@@ -164,19 +164,16 @@ the software image.
   webhooks of every org.
 - **Anthropic and OpenAI:** the model use of each turn on a subscription
   token or an API key bills to the own Claude or OpenAI account of the
-  starter of its session. With a runner of protocol version 2 or later,
-  the model requests of a turn reach them through the model gateway of the
-  Worker. A settings file in the repository can send the requests of
-  Claude to another address instead. The gateway keeps no copy of a
-  request or an answer. With a runner of version 1, the agent programs
-  send their model requests from the sandbox to the provider.
+  starter of its session. The model requests of a turn reach them through
+  the model gateway of the Worker. A settings file in the repository can
+  send the requests of Claude to another address instead. The gateway
+  keeps no copy of a request or an answer.
 - **Own endpoints:** an own endpoint is a gateway or a proxy that a user
   chose, such as a proxy that pools subscriptions. A user can connect one
   as the agent login of Claude or of Codex. For each turn on such a login,
   the model gateway forwards the model requests of the turn to the
   endpoint, with the key that the user saved. So the endpoint gets the
-  messages, the files, and the command results of those turns. Only a
-  runner of protocol version 2 or later runs such a turn, and no sandbox
+  messages, the files, and the command results of those turns. No sandbox
   gets the address or the key.
   [Own endpoint logins](../protocol/own-endpoint-logins.md)
   and [Own endpoints](../protocol/model-gateway-requests.md#own-endpoints)

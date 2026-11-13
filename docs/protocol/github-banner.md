@@ -246,8 +246,8 @@ continues, and archives.
   action-required check is a failure. A queued or running check runs. Each
   other check counts as passed.
 - The list mark of the workspace shows its
-  [GitHub state](#the-github-state) in one colour, as
-  [The list mark](workspace-life.md#the-list-mark) says.
+  [GitHub state](#the-github-state), the state of the bar, in the colour of
+  the bar, as [The list mark](workspace-life.md#the-list-mark) says.
 
 ## The GitHub state
 

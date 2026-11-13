@@ -57,7 +57,7 @@ it('restores confirmed parts and complete reports larger than one SQLite value a
     socket.send(
       JSON.stringify({
         type: 'hello',
-        protocolVersion: 1,
+        protocolVersion: 2,
         workspaceId: WORKSPACE_ID,
         streamId: 'large',
       }),

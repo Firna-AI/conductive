@@ -3,6 +3,7 @@ import { Check, Gauge, Plus } from 'lucide-react'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import orgDrag from '../../../docs/mockups/src/components/orgs/OrgDrag.module.css'
 import styles from '../../../docs/mockups/src/screens/WorkspaceListScreen.module.css'
+import { activeOrgs } from '../../app/kept-org'
 import { routes } from '../../app/router'
 import { useStore } from '../../app/store'
 import type { User } from '../../shared/api'
@@ -23,9 +24,7 @@ function OrgRowContent(props: { org: OrgSummary; current: boolean }) {
   return (
     <>
       <OrgTile current={current} org={org} size={26} />
-      <span className={styles.sheetLabel}>
-        {org.deletion ? `${org.name}, deleted` : org.name}
-      </span>
+      <span className={styles.sheetLabel}>{org.name}</span>
       {current ? (
         <Check aria-hidden className={styles.check} size={15} />
       ) : null}
@@ -35,7 +34,7 @@ function OrgRowContent(props: { org: OrgSummary; current: boolean }) {
 
 /**
  * The org switcher of a phone, which has no rail: every org in the order of
- * the person, Create org, and the account. An operator also gets Operator
+ * the person, without deleted orgs, Create org, and the account. An operator also gets Operator
  * under the account. A long press on an org lifts it, and the finger drops
  * it at a new place, as the rail does (decision 515 C). The long press opens
  * no menu, also when it ends without a move, and a drop keeps the sheet
@@ -47,7 +46,7 @@ export function OrgSwitcherSheet(props: {
   close: () => void
 }) {
   const app = useApp()
-  const orgs = useStore(app.orgs)
+  const orgs = activeOrgs(useStore(app.orgs))
   const operator = useStore(app.account.account)?.operator === true
   const drag = useOrgDrag(orgs, useOrgMove())
   return (

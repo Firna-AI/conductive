@@ -33,7 +33,7 @@ it('checks sign-in, Origin, and org access before pulling a raw upload body', as
     [fixture.ownerCookie, 'https://elsewhere.test', 403],
     [fixture.ownerCookie, TEST_ORIGIN, 404],
   ] as const) {
-    const body = streamedBody([new Uint8Array(25000001)])
+    const body = streamedBody([new Uint8Array(100000001)])
     const url =
       status === 404 ? path.replace(fixture.org.id, 'another-org') : path
     const response = await app.fetch(
@@ -41,7 +41,7 @@ it('checks sign-in, Origin, and org access before pulling a raw upload body', as
         Cookie: cookie,
         Origin: origin,
         'Content-Type': 'application/octet-stream',
-        'Content-Length': '25000001',
+        'Content-Length': '100000001',
       }),
       harness.env,
     )
@@ -101,7 +101,7 @@ it('requires explicit octet-stream and valid known length while leaving authoriz
     },
     {
       type: 'application/octet-stream',
-      length: '25000001',
+      length: '100000001',
       status: 413,
       code: 'attachment_too_large',
     },

@@ -2,7 +2,7 @@ import { expect, it, onTestFinished } from 'vitest'
 
 import type {
   RunnerEventEnvelope,
-  WorkspaceToRunnerV2 as WorkspaceToRunner,
+  WorkspaceToRunner,
 } from '../../src/shared/runner'
 import type { RunnerConnector as TransportRunnerConnector } from '../../src/shared/runner-transport'
 import { FakeDurableObjectEndpoint } from '../../worker/test-support/fake-durable-object'

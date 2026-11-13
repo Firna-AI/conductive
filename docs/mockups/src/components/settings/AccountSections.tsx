@@ -246,11 +246,12 @@ export function AgentsSection(props: {
 }
 
 /** The pages of the account. */
-export type AccountTab = 'general' | 'preferences' | 'shortcuts'
+export type AccountTab = 'general' | 'agents' | 'preferences' | 'shortcuts'
 
 /**
  * The pages of the account, as tabs that link to each one: General, with
- * the sign-in and the connections, Preferences, and Keyboard shortcuts.
+ * the sign-in, GitHub, and the invite code, Agents, with the logins of
+ * Claude and Codex, Preferences, and Keyboard shortcuts.
  * The Mac app's General tab links to its own page, which has This Mac, and
  * Keyboard shortcuts links to the tab of the host. `flow` moves a tab that
  * does not fit to a second line, for a phone.
@@ -265,6 +266,11 @@ export function AccountTabs(props: {
       label: 'General',
       to: props.host === 'mac-app' ? paths.thisMac : paths.account,
       selected: props.tab === 'general',
+    },
+    {
+      label: 'Agents',
+      to: paths.accountAgents,
+      selected: props.tab === 'agents',
     },
     {
       label: 'Preferences',

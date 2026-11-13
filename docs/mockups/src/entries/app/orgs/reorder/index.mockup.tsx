@@ -53,9 +53,9 @@ export const reorderOrgs = defineScreen({
       slug: 'suspended',
       title: 'A suspended org',
       description:
-        'Acme after the operator suspended it. Its notice says that its workspaces and settings are read-only, and its tile still moves like any tile. A right click on the tile of Acme opens the same menu. Acme sits between Firna and Futex, so both items are on. On a phone, a long press lifts Acme in the org switcher, and the finger moves it like any org. The faded tile of a deleted org, which its admins still see, moves in the same way.',
+        'Acme after the operator suspended it. Its notice says that its workspaces and settings are read-only, and its tile still moves like any tile. A right click on the tile of Acme opens the same menu. Acme sits between Firna and Futex, so both items are on. On a phone, a long press lifts Acme in the org switcher, and the finger moves it like any org. Deleted orgs appear in Account settings with Restore.',
       rationale:
-        'Decision 515 C gives each org tile the drag and the tile menu. The user chose option A of decision 516 on 11 November 2026: every tile moves, also the tile of a suspended or deleted org. The order of the rail belongs to the person and is not a change in the org, so the rule that nothing in a suspended org can change does not cover it, and other members see no change. The tile of a suspended org looks the same as before, so it also acts the same. The tab order and the read marks of a suspended org stay as they are, because each of them belongs to one org, while the rail order spans the orgs of the person.',
+        'Decision 515 C gives each org tile the drag and the tile menu. The user chose option A of decision 516 on 11 November 2026: every visible tile moves, also the tile of a suspended org. The order of the rail belongs to the person and is not a change in the org, so the rule that nothing in a suspended org can change does not cover it, and other members see no change. The tile of a suspended org looks the same as before, so it also acts the same. The tab order and the read marks of a suspended org stay as they are, because each of them belongs to one org, while the rail order spans the orgs of the person.',
       props: { list: 'suspended', orgOrder: 'current' },
     },
   ],

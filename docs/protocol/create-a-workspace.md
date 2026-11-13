@@ -24,13 +24,14 @@ decision number names a dated record, as
 
 ### The preference
 
-- The Account page has three tabs, General, Preferences, and Keyboard
-  shortcuts, each with its own address. Preferences holds the New
-  workspaces section, with Model and effort and the choice of how New
-  workspace opens (decision 142 of PR #73). General holds the other
-  sections of the account.
+- The Account page has four tabs, General, Agents, Preferences, and
+  Keyboard shortcuts, each with its own address. Agents holds the logins
+  of Claude and Codex (the user asked on 13 November 2026). Preferences
+  holds the New workspaces section, with Model and effort and the choice
+  of how New workspace opens (decision 142 of PR #73). General holds the
+  other sections of the account.
   [Keyboard shortcuts: the settings tab](keyboard-shortcuts-tab.md) gives
-  the third tab.
+  the fourth tab.
 - Reason: all the settings of new workspaces then sit together. The
   section on General, with only the new choice on Preferences, was
   rejected, because the user then looks in two places.
@@ -45,8 +46,12 @@ decision number names a dated record, as
   would surprise the user. A choice in the storage of the browser was
   rejected for that reason.
 - Without a saved choice, such as for a new account, New workspace opens
-  as the page. Reason: the user asked for the dialog as an option beside
-  the page.
+  as the dialog. The user asked for the dialog as the default for new
+  users on 12 November 2026.
+- Each account that existed before that change keeps the page, as its
+  saved choice. Reason: the user asked for the new default for new users
+  only. A default that also moved the existing accounts to the dialog was
+  rejected, because their New workspace would change without their choice.
 - A save of the choice saves no model. A user who never chose Model and
   effort keeps the default model and effort of the app.
 - An open app uses a choice that the user saved in another browser or in
@@ -64,10 +69,10 @@ decision number names a dated record, as
 - The dialog has no address. The address of New workspace always shows
   the page.
 - Reason: links, a reload, and a new tab then keep working.
-- On a computer, with the dialog chosen, New workspace opens the dialog
-  from each of its places: the row at the top of the list, the button of
-  an org without workspaces, the item in the menu of a section, and the
-  command palette.
+- On a computer, when the choice is the dialog, New workspace opens the
+  dialog from each of its places: the row at the top of the list, the
+  button of an org without workspaces, the item in the menu of a section,
+  and the command palette.
 - A click with a modifier key on the row at the top of the list opens the
   page in a new tab, as a click on a link does.
 - While the screen shows a New workspace form, New workspace opens the

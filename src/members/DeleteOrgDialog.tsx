@@ -51,7 +51,7 @@ export function DeleteOrgDialog(props: {
         Every cloud computer of {props.orgName} stops now, and its members can
         no longer open it. Everything is deleted on{' '}
         {deletionDay(props.deletesAt, props.timeZone)}, unless an admin restores{' '}
-        {props.orgName} before then.
+        {props.orgName} from Account settings before then.
       </DialogText>
       <Input
         autoCapitalize="none"

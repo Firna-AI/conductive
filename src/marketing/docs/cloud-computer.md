@@ -33,7 +33,7 @@ The org step in **Get started** shows the result:
 | No build yet | Select **Build computer**. |
 
 Only an admin gets the build actions.
-**New workspace** keeps **Send** off until the org has a successful build.
+**New workspace** keeps its send button off until the org has a successful build.
 You can keep a draft there while you wait.
 
 ## Choose repositories

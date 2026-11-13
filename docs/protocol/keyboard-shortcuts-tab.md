@@ -11,8 +11,8 @@ app.
 
 ## Where the tab shows
 
-- The Account page has a third tab, Keyboard shortcuts, after General and
-  Preferences. Its address is `/account/shortcuts`.
+- The Account page has a fourth tab, Keyboard shortcuts, after General,
+  Agents, and Preferences. Its address is `/account/shortcuts`.
 - The tab shows in every host and in every layout. Reason: the phone
   layout also serves a narrow desktop window, which has a keyboard. A tab
   that hides on a phone was rejected for that reason.

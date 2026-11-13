@@ -114,7 +114,7 @@ describe('the line of a stop by an agent', () => {
       () => stopLines(container).length === 4,
       'the lines of the four stopped turns',
     )
-    const ownChip = `W-${listed(own).number} Session Debounce the address lookups to 250 ms, Checks passed, Ready`
+    const ownChip = `W-${listed(own).number} Session Debounce the address lookups to 250 ms, Ready to merge, Ready`
     const otherChip = `W-${other.number} ${other.name}, Checks running, Working`
     const unknown = sessionLink(FAKE_ORIGIN, org, 'gone', 'old')
     // The read of the other workspace waits, so its sessions keep the chip

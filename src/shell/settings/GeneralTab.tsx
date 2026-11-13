@@ -3,6 +3,7 @@ import { Section } from '../../../docs/mockups/src/components/settings/Section'
 import { mayChangeSettings } from '../../app/permissions'
 import { routes } from '../../app/router'
 import { useServices } from '../../app/services'
+import { setupOrg } from '../../app/setup-steps'
 import { useNow } from '../../app/time'
 import { DeleteOrgSection } from '../../members/DeleteOrgSection'
 import type { User } from '../../shared/api'
@@ -77,8 +78,9 @@ function NameSection(props: { org: OrgSummary }) {
 /**
  * Delete org of the members UI, as the user decided in decision 30: every
  * cloud computer stops and the org hides at once, and everything is
- * deleted after 7 days unless an admin restores it. The answer keeps the
- * org faded in the rail of its admins, and the org opens its restore page.
+ * deleted after 7 days unless an admin restores it. The answer takes the
+ * org out of the rail, and the app opens the next org that is not deleted,
+ * else Get started. The Account page lists the org, with Restore.
  */
 function DeleteSection(props: { org: OrgSummary }) {
   const app = useApp()
@@ -91,7 +93,8 @@ function DeleteSection(props: { org: OrgSummary }) {
       now={now}
       onDeleted={(deleted) => {
         app.putOrg(deleted)
-        go(routes.org(props.org.id))
+        const next = setupOrg(app.orgs.get())
+        go(next ? routes.org(next.id) : routes.getStarted())
       }}
       org={props.org}
       timeZone={timeZone}
