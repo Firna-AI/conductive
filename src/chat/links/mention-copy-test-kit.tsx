@@ -1,8 +1,5 @@
 import type { ReactNode } from 'react'
-import {
-  COPY_TEXT_CLASS,
-  COPYING_CLASS,
-} from '../../../docs/mockups/src/components/chat/ChipCopyText'
+import { COPYING_CLASS } from '../../../docs/mockups/src/components/chat/ChipCopyText'
 import { useMentionCopy } from './mention-copy'
 
 /** Makes each copy of the chat text inside it give the text of each chip. */
@@ -12,15 +9,14 @@ export function Copying(props: { children: ReactNode }) {
 }
 
 /**
- * Whether the copy state shows a text node, by the rule of
- * `ChipCopyText.module.css`: in a chip, the copy state hides each element
- * child but the copy text, and it keeps the bare text of the chip. The test
- * page loads no style sheet, so this follows the rule by hand.
+ * Whether the page shows a text node: no element around it, up to `block`,
+ * has `display: none`. The test page loads the style sheet of
+ * `ChipCopyText.module.css`, so this reads the real rule of the copy state.
  */
-function shownWhileCopying(node: Node): boolean {
-  for (let at: Node | null = node; at?.parentElement; at = at.parentElement) {
-    if (!at.parentElement.hasAttribute('data-mention')) continue
-    return !(at instanceof Element) || at.classList.contains(COPY_TEXT_CLASS)
+function shown(node: Node, block: Element): boolean {
+  for (let at = node.parentElement; at; at = at.parentElement) {
+    if (getComputedStyle(at).display === 'none') return false
+    if (at === block) break
   }
   return true
 }
@@ -30,7 +26,7 @@ function copyModeText(block: Element): string {
   const walker = document.createTreeWalker(block, NodeFilter.SHOW_TEXT)
   let text = ''
   for (let node = walker.nextNode(); node; node = walker.nextNode()) {
-    if (shownWhileCopying(node)) text += node.textContent ?? ''
+    if (shown(node, block)) text += node.textContent ?? ''
   }
   return text
 }

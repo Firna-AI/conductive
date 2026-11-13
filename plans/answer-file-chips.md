@@ -173,8 +173,9 @@ decisions, and found the problem of decision 3. Its report is in
 
 ### 3. Copies of answers with a file chip lose their formatting
 
-- **Answer:** B, on 13 November 2026, with a check in Chrome only. The
-  user dropped the checks in Firefox and Safari.
+- **Answer:** B, on 13 November 2026, in the user's words "3 = B, just
+  check in chrome". The agent read this as a check in Chrome only, with
+  no checks in Firefox and Safari.
 - **Severity:** Medium. **Likelihood:** Common. **Effort:** Medium.
 - **Source:** Design. Found by the options check.
 - **Category:** Product bug.

@@ -5,7 +5,7 @@ import styles from './ChipCopyText.module.css'
  * chips then show the text that a copy gives in place of their look, so the
  * browser's own copy gives that text, in plain text and in HTML.
  */
-export const COPYING_CLASS = 'chat-copying'
+export const COPYING_CLASS = styles.copying
 
 /** The class of the text that a copy of a chip gives. */
 export const COPY_TEXT_CLASS = styles.copyText

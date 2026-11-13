@@ -102,9 +102,11 @@ the screens, with a `FilesNavigation`:
   makes the tab of that file or diff a kept tab when it is the temporary
   tab, and moves no address. Keep open in the tab menu calls it too.
 
-The shell reads the lines of the address with `addressLines` and gives
-them to `FilePage`. `CodeView` then scrolls the first line to the middle of
-its view and marks each line of the range, as
+The shell reads the lines of the address with `useAddressLines`, which
+also counts each visit of an address with lines, and gives them to
+`FilePage`. So a second press on the same chip shows the lines again.
+`CodeView` then scrolls the first line to the middle of its view and
+marks each line of the range, as
 [Files and changes](../../docs/protocol/workspace-tools.md#files-and-changes)
 says. A file chip of an answer with a line target opens such an address.
 
@@ -183,6 +185,10 @@ the context, such as a file page on a phone, keeps nothing. Content that
 grows after the mount gets the offset again at each change of size, until
 the box reaches it or the reader scrolls. When a tab leaves the saved view,
 such as at a close, it forgets its offsets, so it opens at the top again.
+A view can give `useKeptScroll` an aim, a place that the address names,
+such as the lines of a file chip. The aim wins over the kept offset, and
+only a new key of the aim scrolls again, so a change of the file keeps the
+place of the reader. The hook is the one owner of the scroll of its box.
 The offsets live in a `TabPlaces` store of the web app, in
 `src/app/tab-places.ts`, and the chat files of the workspace screen give it
 each list of the file and diff tabs through `useFollowTabs`.

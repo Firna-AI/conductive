@@ -1,6 +1,5 @@
 import { useMemo, type ReactNode } from 'react'
 import { replacesLists } from '../../../../docs/mockups/src/components/workspace/sandboxNoticeState'
-import { useHref } from '../../../app/navigation'
 import { useServices } from '../../../app/services'
 import type { WorkspaceFiles } from '../../../files/model/files-store'
 import type {
@@ -23,7 +22,8 @@ import { useGitHubFeed, useScreenBar } from '../github/WorkspaceGitHub'
 import { SandboxPanel } from '../SandboxNotice'
 import { contentState } from '../sandbox-view'
 import { useSavedView } from '../saved-view'
-import { addressLines, filesPlace, tabOf } from './files-address'
+import { useAddressLines } from './address-lines'
+import { filesPlace, tabOf } from './files-address'
 import {
   useAddressList,
   useFilesNavigation,
@@ -66,7 +66,7 @@ function TabPage(props: {
 }) {
   const { tab, context } = props
   useOpenTab(context.savedView, tab)
-  const lines = addressLines(new URL(useHref(), 'https://app.invalid').search)
+  const lines = useAddressLines()
   const targets = useFileTargets(context.org.id)
   const common = {
     files: props.files,

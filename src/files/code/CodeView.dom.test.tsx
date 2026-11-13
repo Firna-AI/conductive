@@ -35,7 +35,7 @@ describe('CodeView with marked lines', () => {
     )
     const view = await mount(
       <CodeView
-        marked={{ start: 30, end: 32 }}
+        marked={{ range: { start: 30, end: 32 }, visit: 0 }}
         name="a.ts"
         text={text.join('\n')}
       />,
@@ -50,14 +50,14 @@ describe('CodeView with marked lines', () => {
   it('stops a range at the end of the file, and marks nothing past it', async () => {
     const short = await mount(
       <CodeView
-        marked={{ start: 39, end: 60 }}
+        marked={{ range: { start: 39, end: 60 }, visit: 0 }}
         name="a.ts"
         text={text.join('\n')}
       />,
     )
     const past = await mount(
       <CodeView
-        marked={{ start: 41, end: 41 }}
+        marked={{ range: { start: 41, end: 41 }, visit: 0 }}
         name="a.ts"
         text={text.join('\n')}
       />,

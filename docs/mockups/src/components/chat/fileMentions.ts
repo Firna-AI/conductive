@@ -51,7 +51,7 @@ function mentionOf(
 ): MentionPart | AttachedPart | undefined {
   const file = files.find((item) => item.path === path)
   if (file) return { kind: 'attached', file, source }
-  const target = pathTarget(path, true)
+  const target = pathTarget(path)
   return target ? { kind: 'mention', ...target, source } : undefined
 }
 

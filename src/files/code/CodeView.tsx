@@ -44,14 +44,26 @@ function shownLines(
 }
 
 /**
- * The aim of the scroll at the lines of the address: the first marked line
- * in the middle of the view. Its key is the range of the address, not the
- * lines that the file holds now, so a change of the file never scrolls.
+ * The lines that the address of a file tab names, and the number of the
+ * visit of that address. Each visit, such as a second press on the same
+ * chip, shows the lines again.
  */
-function lineAim(marked: LineRange | null | undefined): ScrollAim | null {
+export interface MarkedLines {
+  range: LineRange
+  visit: number
+}
+
+/**
+ * The aim of the scroll at the lines of the address: the first marked line
+ * in the middle of the view. Its key is the visit and the range of the
+ * address, not the lines that the file holds now, so a change of the file
+ * never scrolls, and each visit does.
+ */
+function lineAim(marked: MarkedLines | null | undefined): ScrollAim | null {
   if (!marked) return null
+  const { range, visit } = marked
   return {
-    key: `${marked.start}-${marked.end}`,
+    key: `${visit}:${range.start}-${range.end}`,
     offset: (box) => {
       const line = box.querySelector<HTMLElement>('[data-marked]')
       if (!line) return null
@@ -74,14 +86,14 @@ function lineAim(marked: LineRange | null | undefined): ScrollAim | null {
 export function CodeView(props: {
   text: string
   name: string
-  marked?: LineRange | null
+  marked?: MarkedLines | null
 }) {
   const box = useKeptScroll('code', lineAim(props.marked))
   const lines = useMemo(
     () => highlightLines(splitLines(props.text), languageOf(props.name)),
     [props.text, props.name],
   )
-  const marked = shownLines(props.marked, lines.length)
+  const marked = shownLines(props.marked?.range, lines.length)
   const start = marked?.start ?? null
   const end = marked?.end ?? null
   const isMarked = (number: number) =>

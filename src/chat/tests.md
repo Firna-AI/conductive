@@ -222,9 +222,10 @@ waits, and in a chat without the files of its workspace, the chip shows
 and opens nothing. A copy of the messages gives the mention of each
 chip, also of a chip that opens nothing.
 `links/mention-copy-test-kit.tsx` holds the copy helpers of the DOM
-tests. The test page loads no style sheet, so `copyAll` gives the text of
-the page in the copy state by the rule of `ChipCopyText.module.css`. A
-real copy in Chrome is a manual check. `components/AttachmentChips.test.tsx` renders the notice of the
+tests. The Vitest configuration loads the style sheet of
+`ChipCopyText.module.css` into the test page, so `copyAll` reads the real
+rule of the copy state: the text of each block whose elements show. A
+real copy in Chrome was a manual check. `components/AttachmentChips.test.tsx` renders the notice of the
 files over the size limit, with one name or the count and the limit. It
 also renders the files under a sent message, with their sizes and no
 Remove.

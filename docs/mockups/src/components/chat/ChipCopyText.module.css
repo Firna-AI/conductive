@@ -8,14 +8,14 @@
  * in its line, so the plain text keeps the line whole. The app removes the
  * class before the next paint, so no person sees this state.
  */
-:global(.chat-copying) [data-mention] {
+.copying [data-mention] {
   display: inline !important;
 }
 
-:global(.chat-copying) [data-mention] > :not(.copyText) {
+.copying [data-mention] > :not(.copyText) {
   display: none !important;
 }
 
-:global(.chat-copying) [data-mention] > .copyText {
+.copying [data-mention] > .copyText {
   display: inline;
 }

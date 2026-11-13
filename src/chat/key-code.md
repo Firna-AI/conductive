@@ -89,7 +89,8 @@ is relative to `src/chat/`, the folder of this guide.
   the browser's own copy of chat text give the text of each chip that has
   a `data-mention` mark: each file chip and each `SentFileChip`. Each such
   chip holds its copy text in a `ChipCopyText`, which shows only while the
-  root of the page has `COPYING_CLASS`. The copy sets the class, moves an
+  root of the page has `COPYING_CLASS`. The style sheet of `ChipCopyText`
+  gives that class, so the class name has one source. The copy sets the class, moves an
   edge of the selection inside a chip to the edge of the chip, and the
   next animation frame removes the class before the page paints.
   `chipOf` in `LinksContext.tsx` gives what a chip shows of its workspace.

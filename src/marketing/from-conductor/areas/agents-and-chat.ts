@@ -20,7 +20,7 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     area: 'agents-and-chat',
     name: 'Mentions',
     status: 'available',
-    note: 'Use @ for workspace files and folders. File chips in agent answers are planned, while teammate and pull request mentions remain under consideration.',
+    note: 'Use @ for workspace files and folders. Agent answers show file chips too, while teammate and pull request mentions remain under consideration.',
   },
   {
     id: 'attachments',
