@@ -296,6 +296,13 @@ dialog, and feedback with its screenshots.
   `?login=endpoint` seeds shared
   own endpoint logins for both agents. `dev/endpoint-logins.ts` seeds them,
   with the model lists of `?modelList`.
+- `tab-places.ts`: `TabPlaces`, the places of the tabs of one workspace in
+  memory, by tab and view, such as the reader's place in a session tab and
+  the scroll offset of a file tab. `useFollowTabs` gives it each known list
+  of the open tabs, and a tab that leaves the list forgets its places. The
+  [tab row](../chat/tab-row.md) and the
+  [Files README](../files/README.md#kept-scroll-offsets) say how the chat
+  and the files use it.
 - `endpoint-models.ts`: the one rule of the model lists of own endpoints.
   `unlistedModels` gives the app models that the last list of a login does
   not name, for the account page. `offeredModels` gives the models that a

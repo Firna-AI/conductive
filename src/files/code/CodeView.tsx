@@ -2,6 +2,7 @@ import { useMemo, type CSSProperties } from 'react'
 import { splitLines } from '../model/file-text'
 import { highlightLines, type Token, type TokenKind } from './highlight'
 import { languageOf } from './languages'
+import { useKeptScroll } from '../ui/kept-scroll'
 import styles from './code.module.css'
 
 const tokenClass: Readonly<Record<TokenKind, string | undefined>> = {
@@ -29,14 +30,18 @@ export function TokenSpans(props: { tokens: readonly Token[] }) {
   ))
 }
 
-/** A text file with line numbers, and syntax colours for known languages. */
+/**
+ * A text file with line numbers, and syntax colours for known languages. A
+ * file tab keeps its scroll offset.
+ */
 export function CodeView(props: { text: string; name: string }) {
+  const box = useKeptScroll('code')
   const lines = useMemo(
     () => highlightLines(splitLines(props.text), languageOf(props.name)),
     [props.text, props.name],
   )
   return (
-    <div className={styles.scroll}>
+    <div className={styles.scroll} ref={box}>
       <pre className={styles.code} style={digitStyle(lines.length)}>
         {lines.map((tokens, index) => (
           <div className={styles.line} key={index}>

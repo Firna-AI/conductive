@@ -192,7 +192,12 @@ is relative to `src/chat/`, the folder of this guide.
   keeps the top row in view in place for every change of size of the
   transcript. When that row folds away, the fold that took it keeps its
   place. A new message that the user sends from the chat, which shows as a
-  pending message of the session, takes the chat to its bottom.
+  pending message of the session, takes the chat to its bottom. At each
+  note it writes the place of the shown session, and a new keeper shows the
+  place that the session kept.
+- `components/chat-place.ts`: the place of a session tab, at the bottom or
+  at a row by its `data-row` key, which `TranscriptView` gives each row.
+  `ChatController.places` keeps the place of each session tab.
 - `components/useFold.ts`: `useFold` opens and closes a fold on a click on
   its line, and gives the line to the keeper, also at the bottom of the
   chat, so the line keeps its place.
