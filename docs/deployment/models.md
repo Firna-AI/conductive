@@ -22,7 +22,9 @@ for local development.
   - `model`: the model ID that the agent gets, as a non-empty string.
   - `label`: the name that the app shows, as a non-empty string.
   - `efforts`: a non-empty array. Each effort is `none`, `low`, `medium`,
-    `high`, `xhigh`, or `max`.
+    `high`, `xhigh`, `max`, or `ultra`. List only the efforts that the
+    model accepts. Claude runs `ultra` as `max` with Ultracode on, as
+    [Efforts](../protocol/agents-and-sessions.md#efforts) says.
 - `CONDUCTIVE_DEFAULT_CHOICE` is one JSON object with `agent`, `model`, and
   `effort`. The saved default of a user comes before it.
 - An own endpoint login uses the same list. The owner's pickers hide each

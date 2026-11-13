@@ -2,8 +2,8 @@
 
 This doc holds the requirements and the decisions in force for the agents
 and the sessions of a workspace. It covers the agents and their logins,
-the names of the agents in the product, the sessions and their links, and
-the names of workspaces and sessions. It belongs to
+their efforts, the names of the agents in the product, the sessions and
+their links, and the names of workspaces and sessions. It belongs to
 [Chat and events](chat-and-events.md). The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
@@ -59,6 +59,22 @@ says.
   also after a restart of the runner.
 - A refused resume for another cause, or a refused fork, fails the turn
   with that cause.
+
+## Efforts
+
+- Each message runs at one effort of its model. The model list of the
+  deployment gives the efforts of each model, from the lowest:
+  None, Low, Medium, High, Extra high, Max, and Ultra.
+- Codex runs each effort at the reasoning level of the same name. Codex
+  Ultra is its maximum reasoning with automatic task delegation.
+- Claude runs Ultra at the Max level, with Ultracode on. Ultracode is the
+  mode of Claude that hands substantive work to multi-agent workflows.
+  Every other effort turns Ultracode off. Claude runs None with thinking
+  off.
+- The model list offers an effort only on models that support it. Reason:
+  on a model without a level, Claude runs a lower level without a sign.
+  It also ignores Ultracode on a model without it, and then runs Ultra as
+  Max.
 
 ## Names in the product
 

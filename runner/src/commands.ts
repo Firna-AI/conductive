@@ -21,6 +21,7 @@ export function parseChoice(value: unknown): AgentChoice {
       'high',
       'xhigh',
       'max',
+      'ultra',
     ]),
   }
 }

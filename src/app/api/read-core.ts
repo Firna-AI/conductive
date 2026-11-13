@@ -44,6 +44,7 @@ export const EFFORTS = [
   'high',
   'xhigh',
   'max',
+  'ultra',
 ] as const satisfies readonly Effort[]
 export const ROLES = ['admin', 'member'] as const satisfies readonly OrgRole[]
 
