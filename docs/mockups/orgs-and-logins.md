@@ -95,9 +95,10 @@ plan limits.
   one is added, as `app/orgs/new/no-repository` shows. When the GitHub App
   reaches no repository, the list asks the person to give it access, with
   Manage access, as `app/orgs/new/no-access` shows.
-- Delete org asks for the org name. The deleted org stays faded in the rail
-  of its admins until the date when everything is deleted, and its page
-  offers Restore.
+- Delete org asks for the org name. The deleted org leaves the rail. Until
+  the date when everything is deleted, the General tab of the Account page
+  lists it for its admins with Restore, as `app/account/deleted-orgs`
+  shows. Its page still offers Restore at its address.
 - Each person keeps their own order of their orgs, from decision 515 C of
   11 November 2026, as `app/orgs/reorder` shows. The server saves it with
   their memberships, so the rail, the org switcher of a phone, and the org
@@ -110,8 +111,7 @@ plan limits.
 - The operator can suspend an org, from decision 129. Its members still
   open it and read its chats, and its notice gives the abuse address.
   Nothing in it can change, so its screens show no action that it refuses,
-  also for an admin. Its tile in the rail still moves, also the faded tile
-  of a deleted org, because the order of the rail belongs to the person,
+  also for an admin. Its tile in the rail still moves, because the order of the rail belongs to the person,
   from decision 516 A, as `app/orgs/reorder/suspended` shows. No notice
   promises its files. An archived workspace
   offers no Restore, as `app/orgs/suspended/workspace/archived` shows. A
@@ -217,6 +217,10 @@ plan limits.
 - A login belongs to the person, so the agent step has its own state. A
   person who leaves the last org returns to Get started with the agent
   still connected, as `app/sign-in/get-started/no-org` shows.
+- A person whose orgs are all deleted counts as a person with no org.
+  While a deleted org exists, Get started shows the Deleted orgs list with
+  Restore before its steps, as `app/sign-in/get-started/deleted-orgs`
+  shows. Otherwise it shows no list.
 - The app and the mockups take the words of Get started from
   `src/screens/getStartedCopy.ts`. The words make no claim about earlier
   use.

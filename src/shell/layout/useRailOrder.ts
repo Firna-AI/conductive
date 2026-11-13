@@ -15,7 +15,7 @@ export type TileProps = PointerDragProps &
 /**
  * The order of the org tiles of the rail, from decision 515 C: the drag,
  * the tile menu, and Alt and Up or Down (decision 517 B). Every org tile
- * moves, also the tile of a suspended or deleted org (decision 516 A).
+ * moves, also the tile of a suspended org. Deleted orgs have no tile.
  * Create org, Operator, and the account take none of it. `status` is what
  * the rail tells a screen reader: the place of a drag, or the new place
  * after a move by the menu or the keys.

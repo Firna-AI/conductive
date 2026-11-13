@@ -89,7 +89,7 @@ feature leaves its place empty.
 
 The org settings mount the members UI of `../members/`: `MembersSettings`
 for the Members tab, Delete org in the General tab of an admin, the restore
-page of a deleted org, and the read-only Repositories and Cloud computer
+page at the address of a deleted org, and the read-only Repositories and Cloud computer
 tabs of a member. The Cloud computer tab of a member gets the live builds,
 log, and settings of `ComputerModel`. The Repositories tab of a member gets
 the live builds of `OrgModel`, for its repository notice.

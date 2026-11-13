@@ -112,8 +112,8 @@ function useHeaderWorkspace(org: DevOrgId) {
  * The dev page of the members UI, against the fake API. It draws each part
  * in a stand-in of the app shell, with its scope in the address, so Back and
  * Forward give the mounted parts new props. It follows each callback as the
- * shell will: a deleted org shows its restore page, and a new owner shows in
- * the header.
+ * shell does: a deleted org shows its restore page, as its address does in
+ * the shell, and a new owner shows in the header.
  */
 export function DevHost() {
   const [options, navigate] = useDevOptions()

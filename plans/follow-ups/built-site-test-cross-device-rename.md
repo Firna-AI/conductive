@@ -24,6 +24,13 @@
 
   - That commit got no rerun. Then `main` added `--force` to the build command, in "feat(marketing): add Markdown product documentation" (#133). After that change, the test passed in two CI runs and in two local runs of the full suite.
   - The local runs cannot show the failure, because the repository and `/tmp` were on one file system there.
+  - Updated 2026-11-12, from branch `calummoore/porto-a8k1`: a Conductive workspace reproduced the failure with `--force` in the command. The repository was at `/home/user/code/remote-code`, on another file system than `/tmp`. The same tree passed the test from a copy under `/tmp`. So `--force` does not remove the case, and the two file systems are the cause:
+
+    ```text
+    Error: Command failed: node_modules/.bin/astro build --force --outDir /tmp/conductive-site-jGBQ6N
+    EXDEV: cross-device link not permitted, rename '/home/user/code/remote-code/.astro/.prerender/_astro/agents-desktop-light.CIVfhA5L.webp' -> '/tmp/conductive-site-jGBQ6N/_astro/agents-desktop-light.CIVfhA5L.webp'
+    ```
+
 - **Task:**
   - Find out when the build moves an asset out of the prerender folder, and why the first run did not fail. A cold image cache and two builds that share the prerender folder are suspected sources. Neither is confirmed.
   - Find out whether `--force` removes the case.

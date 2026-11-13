@@ -34,6 +34,24 @@
   After the heavy checks ended, the existing CLI test passed its single rerun in 3,235 ms.
   All 20 selected tests passed that rerun, with no assertion or timeout change in the existing test.
   Machine contention is the suspected source, but the rerun does not prove the cause.
+- On 12 November 2026, the merge of `origin/main` at `b1d68cd38` into
+  `calummoore/porto-a8k1` met Worker timeouts in two complete gate attempts.
+  The first checkout was under `/home/user/code/remote-code`.
+  The second checkout was under `/tmp`, with the same tracked tree.
+  Both attempts were interrupted after repeated Worker timeouts.
+  The second attempt reported 31 failed cases before interruption.
+  The affected areas included Continue, native browser access, Mac input,
+  workspace publication, creation, archives, session reads, and model requests.
+  No Worker, shared-type, package, or lockfile change differs from that main commit.
+  A baseline checkout of `b1d68cd38` then ran
+  `npm run test -- worker/features/continue-routes.test.ts` alone.
+  Its only case, "resumes Continue through real routes and socket wake, fences sends and Archive, expires recovered credentials, and routes new-branch GitHub events",
+  failed with `Error: Test timed out in 15000ms.`
+  It also failed in both merged-tree gate attempts.
+  The baseline took 18.13 seconds in total.
+  This reproduces the failure outside the merge diff and outside the home folder.
+  The blocked await and the cause remain unknown.
+  Machine load is not established as the cause of these failures.
 - **Problem:** These tests depend on wall-clock time limits, so a busy machine can fail them with no defect in the code.
 - **Impact if no action:** A slow CI runner or a busy developer machine can fail the gate now and then, and a person must rerun it.
 - **Root question:** How do these tests stay correct on a slow or busy machine?

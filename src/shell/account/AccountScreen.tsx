@@ -9,6 +9,7 @@ import { useMacApp } from '../mac/mac-app'
 import { LinkTabs } from '../ui/links'
 import { useViewport } from '../ui/viewport'
 import { AgentsSection, SignInSection } from './AccountSections'
+import { DeletedOrgsSection } from './DeletedOrgsSection'
 import { GitHubSection } from './GitHubSection'
 import { InviteCodeSection } from './InviteCodeSection'
 import { DefaultsSection } from './PreferencesSections'
@@ -59,9 +60,10 @@ function ThisMac() {
 
 /**
  * The General tab: the GitHub sign-in, and what every org shares, the
- * GitHub App and the agents. The invite code of the user comes last, so
- * that a phone shows the form of an agent near the top. The Mac app adds
- * This Mac. `connect` opens the Connect form of an agent at first, as the
+ * GitHub App and the agents. The invite code of the user comes next, so
+ * that a phone shows the form of an agent near the top. The deleted orgs
+ * of the user come last, with Restore, only while one exists. The Mac app
+ * adds This Mac. `connect` opens the Connect form of an agent at first, as the
  * link of a missing login does.
  */
 function GeneralTab(props: { user: User; connect: Agent | null }) {
@@ -72,6 +74,7 @@ function GeneralTab(props: { user: User; connect: Agent | null }) {
       <GitHubSection />
       <AgentsSection connect={props.connect} />
       <InviteCodeSection />
+      <DeletedOrgsSection />
     </>
   )
 }
