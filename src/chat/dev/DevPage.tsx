@@ -90,7 +90,7 @@ export function DevPage(props: {
     (line: string) => setLog((lines) => [line, ...lines].slice(0, 6)),
     [],
   )
-  const [mentions] = useState(() => devMentions(note))
+  const [mentions] = useState(() => devMentions(note, options.skills))
   const mobile = options.viewport === 'mobile'
   useFileDropGuard()
   const chat = (

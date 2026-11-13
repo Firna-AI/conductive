@@ -135,7 +135,9 @@ function useComposerKeys(props: {
  * adds a line, so Enter never adds a line to a message that it sends. A
  * pasted workspace link shows as a chip, and the draft keeps the plain link.
  * In a chat with the files of its workspace, `@` opens the list of the files
- * and folders just above the box, and a pick shows as a file chip. A focus
+ * and folders just above the box, and a pick shows as a file chip. There,
+ * `/` opens the list of the skills of the agent of the chosen model, and a
+ * pick shows as a skill chip. A focus
  * request, such as from a click on the workspace in the sidebar, puts the
  * caret in the field when it shows.
  */
@@ -178,6 +180,7 @@ export function Composer(props: ComposerProps) {
             {...boxDrops}
           >
             <ChipTextField
+              agent={props.choice.agent}
               files={props.files}
               handle={field}
               label="Message"

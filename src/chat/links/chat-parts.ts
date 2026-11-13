@@ -2,6 +2,8 @@ import { attachmentForMention } from '../../shared/attachment-mentions'
 import type { FileEntry } from '../../shared/files'
 import type { Attachment } from '../../shared/messages'
 import { mentionAt, type Mention } from '../../shared/mention-text'
+import type { AgentSkill } from '../../shared/skills'
+import { skillTextAt } from '../../shared/skill-text'
 import {
   bareLinkAt,
   linkTarget,
@@ -16,6 +18,7 @@ export type ChatPart =
   | { kind: 'code'; text: string }
   | { kind: 'chip'; source: string; target: LinkTarget; strong: boolean }
   | { kind: 'file'; source: string; entry: FileEntry; strong: boolean }
+  | { kind: 'skill'; source: string; skill: AgentSkill; strong: boolean }
   | AttachmentPart
 
 /**
@@ -37,6 +40,7 @@ type Token =
   | { kind: 'mark' }
   | { kind: 'link'; href: string; source: string; markdown: boolean }
   | { kind: 'mention'; mention: Mention }
+  | { kind: 'skill'; source: string; skill: AgentSkill }
 
 /** What a reading of chat text looks for, besides code. */
 interface Reading {
@@ -49,10 +53,15 @@ interface Reading {
    * other mention reads as plain text.
    */
   mentions: (mention: Mention) => boolean
+  /** Finds the skill of a skill text, as in a message of a member. */
+  skills?: SkillLookup
 }
 
 /** Finds the entry of the file tree that a mention names. */
 export type MentionLookup = (mention: Mention) => FileEntry | undefined
+
+/** Finds the skill of either agent that the name of a skill text names. */
+export type SkillLookup = (name: string) => AgentSkill | undefined
 
 /**
  * The Markdown link whose `[` stands at `at`, or null. Its label ends at the
@@ -122,6 +131,13 @@ function tokens(text: string, reading: Reading): Token[] {
       index += add({ kind: 'mention', mention }, mention.source.length)
       continue
     }
+    const skillText = reading.skills ? skillTextAt(text, index) : null
+    const skill = skillText ? reading.skills?.(skillText.name) : undefined
+    if (skillText && skill) {
+      const { source } = skillText
+      index += add({ kind: 'skill', source, skill }, source.length)
+      continue
+    }
     const link = !reading.links
       ? null
       : text[index] === '['
@@ -150,7 +166,10 @@ function tokens(text: string, reading: Reading): Token[] {
  * as in an answer, `**` marks bold around text and chips. Bold ends at
  * code, as it did before. With `mentions`, as in a message of a member,
  * each mention of an entry of the file tree is a file chip, and each other
- * mention stays text. `attachments` are the files of a sent message: each
+ * mention stays text. With `skills`, also in a message of a member, each
+ * skill text that names a skill of either agent is a skill chip, as the
+ * shared `skillTextAt` reads it, and each other skill text stays text. A
+ * skill text in code stays code. `attachments` are the files of a sent message: each
  * mention of the copy path of one of them is the chip of that file, before
  * an entry of the tree, also in a chat without a tree.
  */
@@ -160,6 +179,7 @@ export function chatParts(
   options: {
     strong: boolean
     mentions?: MentionLookup
+    skills?: SkillLookup
     attachments?: readonly Attachment[]
   },
 ): ChatPart[] {
@@ -196,6 +216,7 @@ export function chatParts(
         strong = false
         parts.push(token)
       } else if (token.kind === 'mention') addMention(token.mention)
+      else if (token.kind === 'skill') parts.push({ ...token, strong })
       else {
         const target = linkTarget(token.href, links)
         if (target) {
@@ -217,6 +238,7 @@ export function chatParts(
       marks: options.strong,
       links: true,
       mentions: counts,
+      skills: options.skills,
     }),
   )
   return parts

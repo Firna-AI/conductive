@@ -6,7 +6,9 @@ import { PlainTextPlugin } from '@lexical/react/LexicalPlainTextPlugin'
 import fieldStyles from '../../../../docs/mockups/src/components/chat/ChipTextField.module.css'
 import { classes } from '../../../../docs/mockups/src/components/common/classes'
 import { useControlSizes } from '../../../../docs/mockups/src/components/common/touch'
+import type { Agent } from '../../../shared/agents'
 import { useChatLinks } from '../../links/LinksContext'
+import { useMentionSkills } from '../../mentions/mention-skills'
 import { useMentionTree } from '../../mentions/MentionsContext'
 import { AttachedFileNode } from './attached-file-node'
 import { FieldFilesProvider, type FieldFiles } from './attached-files'
@@ -18,6 +20,8 @@ import { $setFieldText } from './field-nodes'
 import { FileMentionNode, MentionTextNode } from './file-mention-nodes'
 import { MentionPlugin, MentionReconcilePlugin } from './mention-plugins'
 import { OwnedFilesPlugin } from './owned-files'
+import { FieldAgentProvider, SkillMentionNode } from './skill-mention-nodes'
+import { SkillMentionPlugin } from './skill-plugins'
 import { UndoPlugin } from './undo-plugin'
 import {
   EditablePlugin,
@@ -80,10 +84,17 @@ export interface ChipTextFieldProps {
    */
   caretAtEnd?: boolean
   /**
-   * Where the list of `@` opens, just above the message box. A field inside
-   * the files of a chat, as `MentionsProvider` gives them, offers the list.
+   * Where the list of `@` and the list of `/` open, just above the message
+   * box. A field inside the files of a chat, as `MentionsProvider` gives
+   * them, offers the list of `@`.
    */
   mentionHost?: HTMLElement | null
+  /**
+   * The agent of the model chosen now in the composer. A field inside the
+   * mentions of a chat with an agent offers the list of `/` with the skills
+   * of that agent.
+   */
+  agent?: Agent
 }
 
 /**
@@ -92,10 +103,13 @@ export interface ChipTextFieldProps {
  * draft that comes back turn each workspace link into a chip, and typed
  * text stays text. Inside the files of a chat, `@` also opens the list of
  * the files and folders of the workspace, and a pick, a paste, or a draft
- * shows each mention of an entry as a file chip. With `files`, the field
+ * shows each mention of an entry as a file chip. There, with an `agent`,
+ * `/` opens the list of the skills of that agent. A pick, a paste, or a
+ * draft shows each skill text that a skill list of either agent names as a
+ * skill chip. With `files`, the field
  * also shows a chip for each attached file of the draft, with its upload.
- * The draft stays text, with the link of each chip and the mention of each
- * file chip. With `files`, it also holds the mark of each attached file, and
+ * The draft stays text, with the link of each chip, the mention of each
+ * file chip, and the skill text of each skill chip. With `files`, it also holds the mark of each attached file, and
  * its literal text is escaped.
  * The field has the type and the line heights of the plain text field, and
  * it grows from `lines` to `maxLines`, then scrolls. On a phone its text is
@@ -105,6 +119,7 @@ export interface ChipTextFieldProps {
 export function ChipTextField(props: ChipTextFieldProps) {
   const { links } = useChatLinks()
   const tree = useMentionTree()
+  const skills = useMentionSkills()
   const files = props.files ?? null
   const touch = useControlSizes().field === 'lg'
   const editable = props.editable ?? true
@@ -115,68 +130,81 @@ export function ChipTextField(props: ChipTextFieldProps) {
       WorkspaceChipNode,
       LinkTextNode,
       FileMentionNode,
+      SkillMentionNode,
       MentionTextNode,
       AttachedFileNode,
     ],
     theme: { paragraph: local.paragraph },
     editable,
-    editorState: () => $setFieldText(props.value, { links, tree, files }),
+    editorState: () =>
+      $setFieldText(props.value, { links, tree, skills, files }),
     onError: (error: Error) => {
       throw error
     },
   }))
   return (
     <FieldFilesProvider files={files}>
-      <LexicalComposer initialConfig={initialConfig}>
-        <div className={local.frame}>
-          <PlainTextPlugin
-            ErrorBoundary={LexicalErrorBoundary}
-            contentEditable={
-              <ContentEditable
-                aria-label={props.label}
-                aria-multiline
-                aria-placeholder={props.placeholder}
-                className={classes(
-                  fieldStyles.field,
-                  touch && fieldStyles.touch,
-                )}
-                placeholder={
-                  <div
-                    className={classes(local.placeholder, touch && local.touch)}
-                  >
-                    {props.placeholder}
-                  </div>
-                }
-                style={{
-                  minHeight: `${props.lines}lh`,
-                  maxHeight: `${props.maxLines}lh`,
-                }}
-                tabIndex={0}
-              />
-            }
+      <FieldAgentProvider agent={props.agent ?? null}>
+        <LexicalComposer initialConfig={initialConfig}>
+          <div className={local.frame}>
+            <PlainTextPlugin
+              ErrorBoundary={LexicalErrorBoundary}
+              contentEditable={
+                <ContentEditable
+                  aria-label={props.label}
+                  aria-multiline
+                  aria-placeholder={props.placeholder}
+                  className={classes(
+                    fieldStyles.field,
+                    touch && fieldStyles.touch,
+                  )}
+                  placeholder={
+                    <div
+                      className={classes(
+                        local.placeholder,
+                        touch && local.touch,
+                      )}
+                    >
+                      {props.placeholder}
+                    </div>
+                  }
+                  style={{
+                    minHeight: `${props.lines}lh`,
+                    maxHeight: `${props.maxLines}lh`,
+                  }}
+                  tabIndex={0}
+                />
+              }
+            />
+            <DropCaretLayer control={dropCaret} />
+          </div>
+          <UndoPlugin />
+          <ValuePlugin
+            onChangeText={props.onChangeText}
+            owner={props.owner}
+            value={props.value}
           />
-          <DropCaretLayer control={dropCaret} />
-        </div>
-        <UndoPlugin />
-        <ValuePlugin
-          onChangeText={props.onChangeText}
-          owner={props.owner}
-          value={props.value}
-        />
-        {files ? <OwnedFilesPlugin files={files} /> : null}
-        <ClipboardPlugin owner={props.owner} />
-        <EnterPlugin onEnter={props.onEnter} />
-        <EditablePlugin editable={editable} />
-        <ReconcilePlugin />
-        <HandlePlugin dropCaret={dropCaret} handle={props.handle} />
-        {props.caretAtEnd ? <CaretAtEndPlugin /> : null}
-        {tree ? (
-          <>
-            <MentionPlugin host={props.mentionHost ?? null} />
-            <MentionReconcilePlugin />
-          </>
-        ) : null}
-      </LexicalComposer>
+          {files ? <OwnedFilesPlugin files={files} /> : null}
+          <ClipboardPlugin owner={props.owner} />
+          <EnterPlugin onEnter={props.onEnter} />
+          <EditablePlugin editable={editable} />
+          <ReconcilePlugin />
+          <HandlePlugin dropCaret={dropCaret} handle={props.handle} />
+          {props.caretAtEnd ? <CaretAtEndPlugin /> : null}
+          {tree ? (
+            <>
+              <MentionPlugin host={props.mentionHost ?? null} />
+              <MentionReconcilePlugin />
+            </>
+          ) : null}
+          {skills && props.agent ? (
+            <SkillMentionPlugin
+              agent={props.agent}
+              host={props.mentionHost ?? null}
+            />
+          ) : null}
+        </LexicalComposer>
+      </FieldAgentProvider>
     </FieldFilesProvider>
   )
 }

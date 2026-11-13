@@ -12,6 +12,7 @@ import type { Workspace } from '../../shared/workspaces'
 import { createWorkspaceFiles } from './files/files-store'
 import { HeaderNotices } from './header-notices'
 import { ToolEvents } from './tools/tool-events'
+import { WorkspaceSkills } from './workspace-skills'
 import { WorkspaceView } from './workspace-view'
 
 /**
@@ -25,6 +26,8 @@ export interface ShownWorkspace {
   readonly chat: ChatController
   /** The events that the tools read, with the revokes that they keep. */
   readonly toolEvents: ToolEvents
+  /** The latest skill lists, for the list of `/` of the chat. */
+  readonly skills: WorkspaceSkills
 }
 
 interface KeptWorkspace extends ShownWorkspace {
@@ -133,6 +136,7 @@ export class ShownWorkspaces {
       model: new WorkspaceModel(org, workspaceId),
       notices: new HeaderNotices(),
       toolEvents: new ToolEvents(),
+      skills: new WorkspaceSkills(),
       chat: new ChatController({
         target: { orgId, workspaceId },
         // The client of the org takes each `org_suspended` refusal of the

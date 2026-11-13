@@ -73,11 +73,16 @@ is relative to `src/chat/`, the folder of this guide.
   tree. Its `filesWithoutChip` gives the files of a message that no part
   shows as a chip. `LinksContext.tsx` gives the workspaces that chips find
   the open of a chip, and the origin of the chat's workspace link.
+  In a message of a member, each skill text that names a skill of either
+  agent is a skill part, as the shared `skillTextAt` reads it, so the
+  runner and the chat keep one rule.
   `LinkedText.tsx` holds `useChatParts` and
-  `ChatText`. `useChatParts` reads the parts of a text with the workspaces
-  and the tree of the chat, and the files of a sent message. `ChatText`
-  draws the parts with their workspace, session, and file chips, and each
-  `AttachmentPart` as the mockups' `SentFileChip`.
+  `ChatText`. `useChatParts` reads the parts of a text with the workspaces,
+  the tree, and the skill lists of the chat, and the files of a sent
+  message. `ChatText` draws the parts with their workspace, session, file,
+  and skill chips, and each `AttachmentPart` as the mockups'
+  `SentFileChip`. A skill chip opens nothing. `file-links.tsx` holds the
+  file chip and the chip of an attached file of a sent message.
   `SessionLinkText` draws a session that the chat names by its IDs, such
   as the session whose agent stopped a turn, with the same session chip.
   [Chips of attached files](../../docs/protocol/file-mentions.md#chips-of-attached-files)
@@ -86,7 +91,8 @@ is relative to `src/chat/`, the folder of this guide.
   `ChatText` gets no `opens`, or in a chat without `ChatMentions`.
   `LinkedText` reads and draws a text in one step. `mention-copy.ts` gives
   the copy of chat text with the mention of each chip that has a
-  `data-mention` mark: each file chip and each `SentFileChip`. It leaves
+  `data-mention` mark: each file chip, each skill chip, and each
+  `SentFileChip`. It leaves
   out text that the browser leaves out of a copy.
   `chipOf` in `LinksContext.tsx` gives what a chip shows of its workspace.
 - `links/session-links.ts`: `useLinkedSession`, the session that a chip
@@ -98,6 +104,12 @@ is relative to `src/chat/`, the folder of this guide.
   their order. `MentionsContext.tsx` gives the files that the chat gets and
   the tree that the list and the chips find, with one value for each tree.
   `MentionIcon.tsx` gives the icon of All files for an entry.
+  `mention-skills.ts` gives `MentionSkills`, the skill lists that the
+  chat gets as a store in `ChatMentions.skills`, and the lookup of a
+  skill of either agent. `skill-rows.ts` gives the rows of the list of `/`
+  and their order.
+  [`skill-text.ts`](../shared/skill-text.ts) in the shared contracts owns
+  the rule of a skill text, which the chat shares with the runner.
   [`mention-text.ts`](../shared/mention-text.ts) in the shared contracts
   owns the text of a mention, which the chat shares with the Worker.
 - `state/workspace-list.ts`: `WorkspaceList`, the list that the chips

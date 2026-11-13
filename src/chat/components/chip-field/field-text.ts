@@ -3,6 +3,8 @@ import { textParts } from '../../links/workspace-links'
 /**
  * A part of the plain text of the field: text, or the exact source of a
  * chip: the link of a workspace chip, or the mention of a file chip.
+ * `mention` marks each source that needs a space or a line break, or the
+ * end of the text, on each side, such as a mention or a skill text.
  */
 export type FieldPart =
   | { kind: 'text'; text: string }
@@ -33,7 +35,7 @@ function staysLink(before: string, source: string, after: string): boolean {
 }
 
 /**
- * Whether the mention `source` stays one mention between `before` and
+ * Whether a mention or a skill text stays one between `before` and
  * `after`: it needs a space or a line break, or the end of the text, on
  * each side.
  */

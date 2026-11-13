@@ -9,6 +9,7 @@ import {
   MentionsProvider,
   type ChatMentions,
 } from '../mentions/MentionsContext'
+import { FakeSkills } from '../mentions/skills-test-kit'
 import { LinkedText } from './LinkedText'
 import { Copying, copyAll } from './mention-copy-test-kit'
 import { LinksProvider } from './LinksContext'
@@ -31,6 +32,7 @@ async function mountText(text: string | string[], mentions: boolean) {
     openFile: (path) => opened.push(path),
     showFolder: (path) => shown.push(path),
     href: (item) => `/files/${item.path}`,
+    skills: new FakeSkills({ claude: [], codex: [] }),
   }
   const texts = Array.isArray(text) ? text : [text]
   const { container } = await mount(

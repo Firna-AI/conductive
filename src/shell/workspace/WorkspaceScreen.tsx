@@ -82,7 +82,7 @@ export function WorkspaceScreen(props: {
     { orgId: props.org.id, workspaceId: props.workspaceId },
     { create, connect: connectView },
   )
-  const { model, notices, chat, toolEvents } = shown
+  const { model, notices, chat, toolEvents, skills } = shown
   const startError = useStore(model.startError)
   const opened = useStore(model.opened)
   const features = useFeatures()
@@ -158,6 +158,7 @@ export function WorkspaceScreen(props: {
     savedView: chat,
     chat,
     toolEvents: toolEvents.subscribe,
+    skills,
     archive: mayArchive(access, workspace, props.viewer)
       ? () => lifecycle.archive(workspace)
       : null,

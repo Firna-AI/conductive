@@ -44,6 +44,11 @@ export interface DevOptions {
    * under a heading.
    */
   answer: 'text' | 'tables' | 'headings'
+  /**
+   * The skill lists of the list of `/`: the sample lists, no report yet, an
+   * unavailable list, or a repository without skills.
+   */
+  skills: 'listed' | 'loading' | 'unavailable' | 'none'
 }
 
 export const choices = {
@@ -96,6 +101,7 @@ export const choices = {
   page: ['chat', 'this-mac'],
   files: ['listed', 'unread'],
   answer: ['text', 'tables', 'headings'],
+  skills: ['listed', 'loading', 'unavailable', 'none'],
 } as const satisfies Record<keyof DevOptions, readonly string[]>
 
 /** The options in the order that the page lists them. */
@@ -116,6 +122,7 @@ export const optionNames = [
   'page',
   'files',
   'answer',
+  'skills',
 ] as const satisfies readonly (keyof DevOptions)[]
 
 function pick<T extends string>(
@@ -145,6 +152,7 @@ export function readOptions(search: string): DevOptions {
     page: pick(choices.page, get('page')),
     files: pick(choices.files, get('files')),
     answer: pick(choices.answer, get('answer')),
+    skills: pick(choices.skills, get('skills')),
   }
 }
 

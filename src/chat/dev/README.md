@@ -16,7 +16,8 @@ serves the page with React on the fake API alone, without the Worker and its
 sign-in gate.
 
 The composer lists the files of the Files development page after `@`, and
-a press on a file chip notes what the app opens. The page has no file tab,
+a press on a file chip notes what the app opens. It lists the skills of
+the `skills` option after `/`, for the agent of the chosen model. The page has no file tab,
 so a press on the chip of a sent attached file also only notes its path.
 As in the app, the chat takes a drop of files anywhere on its column for
 its message box, and a drop of files elsewhere on the page does nothing.
@@ -49,6 +50,7 @@ The address chooses the state. The first value of each option is the default:
 | `page` | `chat`, `this-mac` (the This Mac section of the account) |
 | `files` | `listed`, `unread` (each end of a turn of the chat says that the cloud computer could not read its changed files) |
 | `answer` | `text`, `tables` (each scripted turn answers with three tables: the resources of the machine, bundle sizes with a short row, and a wide table of test runs), `headings` (each scripted turn writes its plan under a heading, and answers with a review under headings at levels 2 to 4) |
+| `skills` | `listed` (Claude has the skills of the mockups, and Codex has two of them and one of its own), `loading` (no report yet), `unavailable`, `none` (a repository without skills) |
 
 ## What the page does
 

@@ -22,6 +22,7 @@ function shapes(parts: readonly ChatPart[]) {
       return { chip: part.target.workspace.id, to: part.target.to }
     }
     if (part.kind === 'attachment') return { attachment: part.attachment.id }
+    if (part.kind === 'skill') return { skill: part.source }
     return part.kind === 'file'
       ? { file: part.entry.path }
       : { [part.kind]: part.text }

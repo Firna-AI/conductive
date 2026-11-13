@@ -14,6 +14,7 @@ import {
   type WorkspaceLinks,
 } from '../../links/workspace-links'
 import { mentionParts, type Mention } from '../../../shared/mention-text'
+import type { MentionSkills } from '../../mentions/mention-skills'
 import { findMentioned, type MentionTree } from '../../mentions/MentionsContext'
 import { $createAttachedFileNode } from './attached-file-node'
 import { fileOfMention, heldFile, type FieldFiles } from './attached-files'
@@ -22,16 +23,19 @@ import {
   $createFileMentionNode,
   $createMentionTextNode,
 } from './file-mention-nodes'
+import { $skillNode, skillTextParts } from './skill-content'
 
 /**
  * What the field finds its chips in: the workspaces of the org, the file
- * tree of the workspace, and the attached files of the draft. `tree` is null
- * in a field that takes no mentions, such as the message of New workspace.
- * `files` is null in a field that takes no files, such as that of Feedback.
+ * tree and the skill lists of the workspace, and the attached files of the
+ * draft. `tree` and `skills` are null in a field that takes no mentions,
+ * such as the message of New workspace. `files` is null in a field that
+ * takes no files, such as that of Feedback.
  */
 export interface FieldSources {
   links: WorkspaceLinks
   tree: MentionTree | null
+  skills: MentionSkills | null
   files: FieldFiles | null
 }
 
@@ -74,18 +78,34 @@ function $mentionNode(mention: Mention, tree: MentionTree): LexicalNode {
 }
 
 /**
+ * The nodes of plain text outside mentions. A skill text that a skill list
+ * of either agent names becomes a skill chip, and every other skill text
+ * stays text that can become a chip later. The rest gives its links.
+ */
+function $skillNodes(text: string, sources: FieldSources): LexicalNode[] {
+  const { skills } = sources
+  if (!skills) return $linkNodes(text, sources.links)
+  return skillTextParts(text).flatMap((part): LexicalNode[] =>
+    part.kind === 'text'
+      ? $linkNodes(part.text, sources.links)
+      : [$skillNode(part, skills)],
+  )
+}
+
+/**
  * The nodes of plain text. A link to a workspace of the list becomes a chip.
  * A link to a page of a workspace of the org that the list does not hold yet
  * stays text that can become a chip later. Every other link stays text.
  * Where the field takes mentions, a mention of an entry of the tree becomes
  * a chip, and every other mention stays text that can become a chip later.
+ * There, skill texts give their chips as `$skillNodes` says.
  */
 function $textNodes(text: string, sources: FieldSources): LexicalNode[] {
   const { tree } = sources
   if (!tree) return $linkNodes(text, sources.links)
   return mentionParts(text).flatMap((part): LexicalNode[] =>
     part.kind === 'text'
-      ? $linkNodes(part.text, sources.links)
+      ? $skillNodes(part.text, sources)
       : [$mentionNode(part, tree)],
   )
 }

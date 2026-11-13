@@ -85,6 +85,10 @@ this guide.
   ordered stream. It keeps the revokes of previews, the latest report of the
   listening ports, and the first failed repair of that report since it. A
   tool that shows later gets them first, in event order.
+- `workspace-skills.ts`: `WorkspaceSkills`, the latest skill lists of the
+  workspace from the ordered stream, as a store that the chat reads for
+  the list of `/` and the skill chips. The context gives it as `skills`,
+  and `files/chat-files.tsx` puts it into `ChatMentions`.
 - `github/WorkspaceGitHub.tsx` and `github/github-events.ts`: the one
   GitHub store of the screen, the bar or the row, and the GitHub events of
   the ordered stream. `github/bar-controls.ts` gives the one action state of

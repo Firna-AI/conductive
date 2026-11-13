@@ -294,6 +294,27 @@ Each call below is my call, made on 2026-11-13, in Milestone 5.
   that belongs to no session, and a new label needs a change of the
   mockup copy in `docs/mockups/src/components/chat/lostCopy.ts`.
 
+#### Design calls from the app
+
+Each call below is my call, made on 2026-11-13, in Milestone 6.
+
+- A paste, a draft that comes back, and a list that loads later make a
+  skill chip of each skill text that a list of either agent names. Typed
+  text stays text. Reason: a chip of the composer stays a chip after a
+  change of the model, so its draft must give it back, and the sent
+  message uses the same rule.
+- Each other skill text of a paste or a draft waits as text, as a mention
+  does, so a list that loads later makes its chip. Typing that continues
+  it makes it plain text.
+- The title of a chip in the field is the description of the skill of the
+  agent of the composer, else of the other agent. A sent chip takes the
+  Claude description first.
+- The query of `/` runs to the caret with no space, as the name of a skill
+  text does. The field reads no code in a paste or a draft, as for
+  mentions. A sent message reads code, as the runner does.
+- A skills report that the app cannot read keeps the last lists, as a
+  report of the listening ports does.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -419,19 +440,27 @@ Tags: ui
 
 Depends on: 1, 5
 
-- [ ] Give the composer the skills through a store, beside the files of
+- [x] Give the composer the skills through a store, beside the files of
       `src/chat/mentions/MentionsContext.tsx`.
-- [ ] Share the keyboard and the open state of `MentionPlugin` between the
+      `ChatMentions.skills` is the store. The shell gives
+      `WorkspaceSkills` (`src/shell/workspace/workspace-skills.ts`).
+- [x] Share the keyboard and the open state of `MentionPlugin` between the
       list of files and the list of skills. Keep each file under 300 lines.
-- [ ] Add the skill chip node, its paste and copy, and its return in a
+      `MentionListPlugin` in
+      `src/chat/components/chip-field/mention-list-plugin.tsx`.
+- [x] Add the skill chip node, its paste and copy, and its return in a
       draft (`src/chat/components/chip-field/`).
-- [ ] Show a skill chip in a sent message (`src/chat/links/`).
-- [ ] DOM tests beside `MentionList.dom.test.tsx`: open, filter, pick,
+- [x] Show a skill chip in a sent message (`src/chat/links/`).
+- [x] DOM tests beside `MentionList.dom.test.tsx`: open, filter, pick,
       Esc, Enter with no match, the model of the other agent, and a sent
       chip.
-- [ ] Check the list and the chip in a browser on the local app, against
+- [x] Check the list and the chip in a browser on the local app, against
       the mockups of Milestone 1.
-- [ ] Update the READMEs of `src/chat/`.
+      On the chat development page in headless Chrome, with screenshots in
+      `.context/skill-list/m6/`. Headless Chrome reports no hover, so the
+      × in the icon cell under a pointer was not seen. The chip uses the
+      shared `ChipIconCell` of the file chips.
+- [x] Update the READMEs of `src/chat/`.
 
 ## Milestone 7: Verification, commit, review, and pull request
 

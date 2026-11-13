@@ -11,6 +11,7 @@ import {
   MentionsProvider,
   type ChatMentions,
 } from '../../mentions/MentionsContext'
+import { FakeSkills } from '../../mentions/skills-test-kit'
 import type { FieldFiles } from './attached-files'
 import { ChipTextField } from './ChipTextField'
 import type { FieldHandle } from './focus-plugins'
@@ -110,6 +111,7 @@ function mentionsOf(tree: readonly FileEntry[] | undefined) {
     openFile: () => undefined,
     showFolder: () => undefined,
     href: (item) => `/files/${item.path}`,
+    skills: new FakeSkills({ claude: [], codex: [] }),
   }
   return mentions
 }

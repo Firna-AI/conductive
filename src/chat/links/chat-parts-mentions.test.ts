@@ -26,8 +26,8 @@ function shapes(parts: readonly ChatPart[]) {
       ? { file: part.entry.path }
       : part.kind === 'attachment'
         ? { attachment: part.attachment.id, path: part.path }
-        : part.kind === 'chip'
-          ? { chip: part.source }
+        : part.kind === 'chip' || part.kind === 'skill'
+          ? { [part.kind]: part.source }
           : { [part.kind]: part.text },
   )
 }

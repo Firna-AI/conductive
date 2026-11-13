@@ -135,9 +135,10 @@ function chipTarget(entry: FileEntry): FilesTarget {
 }
 
 /**
- * The files that the composer lists after `@`, and the pages of the chips.
- * A file opens as a press in All files opens it. A folder shows All files
- * with the folder open, in the right column on desktop, which then shows.
+ * The files that the composer lists after `@`, the skills that it lists
+ * after `/`, and the pages of the chips. A file opens as a press in All
+ * files opens it. A folder shows All files with the folder open, in the
+ * right column on desktop, which then shows.
  */
 function useMentions(
   context: WorkspaceContext,
@@ -146,10 +147,12 @@ function useMentions(
 ): ChatMentions | undefined {
   const panels = useContext(PanelContext)
   const phone = context.viewport === 'phone'
+  const { skills } = context
   return useMemo(() => {
     if (!files) return undefined
     return {
       files,
+      skills,
       openFile: (path) =>
         navigation.navigate({ kind: 'file', path, mode: 'preview' }),
       showFolder: (path) => {
@@ -159,7 +162,7 @@ function useMentions(
       },
       href: (entry) => navigation.href(chipTarget(entry)),
     }
-  }, [files, navigation, panels, phone])
+  }, [files, skills, navigation, panels, phone])
 }
 
 /**
@@ -174,7 +177,8 @@ function useMentions(
  * `content` shows a file, the address goes back to the chat. The chat reads
  * the kept files for the list of `@` and the file chips, also on a phone
  * before a visit to Files: `KeptFilesConnection` of the screen keeps them
- * connected. An archived workspace has no files.
+ * connected. It reads the skill lists of the workspace for the list of `/`
+ * and the skill chips. An archived workspace has no files and no skills.
  */
 export function useChatFiles(
   context: WorkspaceContext,

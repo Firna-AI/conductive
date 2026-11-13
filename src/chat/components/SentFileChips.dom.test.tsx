@@ -11,6 +11,7 @@ import { senderSnapshot } from '../../test-support/fixtures/workspaces'
 import { mount, press } from '../../test-support/mount'
 import { LinksProvider } from '../links/LinksContext'
 import { Copying, copyAll } from '../links/mention-copy-test-kit'
+import { FakeSkills } from '../mentions/skills-test-kit'
 import {
   MentionsProvider,
   type ChatMentions,
@@ -95,6 +96,7 @@ async function mountMessages(
     openFile: (path) => opened.push(path),
     showFolder: () => undefined,
     href: (entry) => `/files/${entry.path}`,
+    skills: new FakeSkills({ claude: [], codex: [] }),
   }
   const { container } = await mount(
     <LinksProvider value={{ links: { orgId: FAKE_IDS.org, workspaces: [] } }}>

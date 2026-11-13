@@ -118,7 +118,7 @@ shows the chat, in the whole app, with the limits that
 
 ## Tests
 
-Run `npm run test -- src/chat src/shared/transcript src/shared/mention-text src/shared/attachment-mentions src/app/draft-marks.test.ts src/app/draft-files.test.ts`.
+Run `npm run test -- src/chat src/shared/transcript src/shared/mention-text src/shared/skill-text src/shared/attachment-mentions src/app/draft-marks.test.ts src/app/draft-files.test.ts src/shell/workspace/workspace-skills.test.ts`.
 The tests drive the controller and the stream
 on `FakeApiServer` and the recorded events, and render the chat with
 `react-dom/server`. `state/test-kit.ts` holds their helpers.

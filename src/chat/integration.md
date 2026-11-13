@@ -81,7 +81,13 @@ mount the chat.
   tree: the `WorkspaceFiles` of the Files screens fits it. `openFile`
   opens a file as a press in All files does, `showFolder` shows All files
   with a folder open, and `href` gives the address of the page of a chip.
-  Without `mentions`, the composer has no list. A message then shows each
+  `skills` is a store of the latest skill lists of the workspace, for the
+  list of `/` and the skill chips. Its snapshot is `MentionSkills` of
+  `mentions/mention-skills.ts`: loading, unavailable, or the list of each
+  agent. The shell gives `WorkspaceSkills`, which follows the
+  `skills.updated` events of the workspace stream.
+  Without `mentions`, the composer has no list of `@` and no list of `/`,
+  and a message shows each skill text as text. A message then shows each
   mention of a file or a folder of the workspace as text, as
   [Chips of files and folders](../../docs/protocol/file-mentions.md#chips-of-files-and-folders)
   says. The chip of each attached file of the message still shows, but it
