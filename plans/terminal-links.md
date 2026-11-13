@@ -341,14 +341,18 @@ on `main`
 
 Depends on: every other milestone
 
-- [ ] Run the targeted tests. Run `npm --prefix desktop ci` and
+- [x] Run the targeted tests. Run `npm --prefix desktop ci` and
       `npm ci --prefix runner`, then the complete gate, `npm run check`.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+      The static checks passed. The Worker tests time out at 15 seconds in
+      this sandbox, also on `origin/main`, so CI proves the tests.
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
-      once, and report.
+      once, and report. Two rounds ran. Finding 4 was fixed. Findings 1,
+      2, 5, and 6 have follow-up items. Finding 3 waits for the user, in
+      `plans/follow-ups/terminal-links-to-the-app.md`.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the
