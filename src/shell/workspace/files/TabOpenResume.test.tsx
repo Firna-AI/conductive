@@ -70,41 +70,46 @@ test('resume a stopped sandbox at each open of a diff, also of the one that show
   expect(resumes(server)).toBe(3)
 })
 
-test('keep the file that a tab shows when the sandbox stops, and start nothing, also at a switch of its view', async () => {
-  holdAnimationFrames()
-  const server = new FakeApiServer()
-  const tab: FilesTab = { kind: 'file', path: FAKE_FILE_PATH, mode: 'source' }
-  const { view, navigation } = await openTab(server, filesHref(org, id, tab))
-  const page = () => byRole('region', 'AddressForm.tsx', view)
-  const route = filePaths.content(org, id, FAKE_FILE_PATH)
-  const text = 'return <form aria-label="Address" />'
-  expect(page().textContent).toContain(text)
-  const reads = sent(server, 'GET', route)
+test.each([
+  { state: 'stopped' as const, notice: 'Sandbox stopped' },
+  { state: 'starting' as const, notice: 'Waiting for the sandbox' },
+])(
+  'keep the file that a tab shows when the sandbox is $state, and start nothing, also at a switch of its view',
+  async ({ state, notice }) => {
+    holdAnimationFrames()
+    const server = new FakeApiServer()
+    const tab: FilesTab = { kind: 'file', path: FAKE_FILE_PATH, mode: 'source' }
+    const { view, navigation } = await openTab(server, filesHref(org, id, tab))
+    const page = () => byRole('region', 'AddressForm.tsx', view)
+    const route = filePaths.content(org, id, FAKE_FILE_PATH)
+    const text = 'return <form aria-label="Address" />'
+    expect(page().textContent).toContain(text)
+    const reads = sent(server, 'GET', route)
 
-  const { workspace } = workspaceFixtures().detail
-  const stopped = { ...workspace, state: 'stopped' as const }
-  act(() =>
-    server.events.emit(
-      nextEnvelope(
-        server.events,
-        { type: 'workspace.updated', workspace: stopped },
-        FAKE_TIME,
+    const { workspace } = workspaceFixtures().detail
+    act(() =>
+      server.events.emit(
+        nextEnvelope(
+          server.events,
+          { type: 'workspace.updated', workspace: { ...workspace, state } },
+          FAKE_TIME,
+        ),
       ),
-    ),
-  )
-  await settle()
+    )
+    await settle()
 
-  expect(page().textContent).toContain(text)
-  expect(page().textContent).not.toContain('Sandbox stopped')
-  expect(sent(server, 'GET', route)).toBe(reads)
-  expect(resumes(server)).toBe(0)
+    expect(page().textContent).toContain(text)
+    expect(page().textContent).not.toContain(notice)
+    expect(sent(server, 'GET', route)).toBe(reads)
+    expect(resumes(server)).toBe(0)
 
-  // A switch between the source and the preview keeps the tab open.
-  act(() => navigation.push(filesHref(org, id, { ...tab, mode: 'preview' })))
-  await settle()
+    // A switch between the source and the preview keeps the tab open.
+    act(() => navigation.push(filesHref(org, id, { ...tab, mode: 'preview' })))
+    await settle()
 
-  expect(resumes(server)).toBe(0)
-})
+    expect(resumes(server)).toBe(0)
+  },
+)
 
 test.each([
   { name: 'ready', state: 'ready', refused: false, resumes: 0 },

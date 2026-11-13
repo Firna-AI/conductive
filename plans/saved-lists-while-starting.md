@@ -42,6 +42,11 @@ Design calls, all made by the agent on 13 November 2026:
   starts. Reason: the lists keep their copy, and the stopped state already
   keeps the tab's file. A tab that loses its file when the start begins
   was the old behaviour.
+- The shared rule splits in two: `replacesShownFile` for a file that a
+  tab shows, and `replacesList` with a `saved` flag for a list. The app
+  gives `FilesPanel` a `waiting` prop for a list without a saved copy, and
+  the mockups mark a new workspace with `isNew`. Reason: the app knows
+  which list is saved only from the files store.
 - File contents are not stored outside the sandbox. Reason: the request
   accepts the wait for a file, and a stored copy of the repository needs
   new storage and new secret rules.
@@ -65,39 +70,39 @@ Depends on: none
 The `app/shell/starting` screen shows the saved lists of a resumed
 workspace. The new-workspace screens keep the wait in place of the lists.
 
-- [ ] Change `replacesLists` so that `starting` keeps the lists. Add the
+- [x] Change `replacesLists` so that `starting` keeps the lists. Add the
       rule that a list without a saved copy shows the wait in its place.
-- [ ] Make `filesPlaceholder` and `FilesContent` in
+- [x] Make `filesPlaceholder` and `FilesContent` in
       `docs/mockups/src/screens/workspaceParts.tsx` show the wait only for
       a new workspace, which `isNew` marks.
-- [ ] Update the description and the rationale of `app/shell/starting`,
+- [x] Update the description and the rationale of `app/shell/starting`,
       its `diff` variant, and the `reopen-stopped-workspace` user flow.
-- [ ] Check `app/new-workspace/creating`, `waiting`, `retrying`,
+- [x] Check `app/new-workspace/creating`, `waiting`, `retrying`,
       `app/attachments/queued`, and `app/routines/run-workspace`. Each
       keeps the wait.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages on desktop
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages on desktop
       and on a phone.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
 
 ## Milestone 2: Documentation and protocol
 
 Depends on: 1
 
-- [ ] In `docs/protocol/workspace-life.md`, Start steps: the files lists
+- [x] In `docs/protocol/workspace-life.md`, Start steps: the files lists
       show their saved copy while a sandbox starts. A file or diff tab
       without content and the tools wait. A list without a saved copy
       waits.
-- [ ] In Stop and resume: extend the rule for the open to each start, with
+- [x] In Stop and resume: extend the rule for the open to each start, with
       the reason and the date of Cal's request.
-- [ ] In `docs/protocol/workspace-tools.md`, Files and changes: a tab keeps
+- [x] In `docs/protocol/workspace-tools.md`, Files and changes: a tab keeps
       the file that it shows also while the sandbox starts.
-- [ ] Read both legal pages and each public guide in full. Update each
+- [x] Read both legal pages and each public guide in full. Update each
       sentence that restates these facts. `files-and-changes.md` says that
       the lists show their last saved copy only while the computer is
       stopped.
-- [ ] Update `src/files/README.md` when the panel props change.
-- [ ] Check each relative link of each changed Markdown file.
+- [x] Update `src/files/README.md` when the panel props change.
+- [x] Check each relative link of each changed Markdown file.
 
 ## Milestone 3: App
 
@@ -105,19 +110,19 @@ Tags: ui
 
 Depends on: 2
 
-- [ ] In `src/shell/workspace/files/files-features.tsx`, stop replacing
+- [x] In `src/shell/workspace/files/files-features.tsx`, stop replacing
       the lists while the sandbox starts. Pass the wait to `FilesPanel`
       for a list without a saved copy.
-- [ ] In `src/files/panel/FilesPanel.tsx`, show that wait in place of
+- [x] In `src/files/panel/FilesPanel.tsx`, show that wait in place of
       Loading or the unavailable state of a list without a saved copy.
-- [ ] Keep `keepShown` true while the sandbox starts, so that a tab keeps
+- [x] Keep `keepShown` true while the sandbox starts, so that a tab keeps
       its file. Keep `pagePlaceholder` as it is.
-- [ ] Update `StartingPages.test.tsx`, `FilesWiring.test.tsx`, and
+- [x] Update `StartingPages.test.tsx`, `FilesWiring.test.tsx`, and
       `SandboxNotice.test.tsx`. Add tests: a resumed workspace shows its
       saved lists while it starts, a new workspace shows the wait, a
       shown file stays while the sandbox starts, and a file opened during
       the start shows "Waiting for the sandbox".
-- [ ] Check the change in a browser with `npm run dev`, on desktop and on
+- [x] Check the change in a browser with `npm run dev`, on desktop and on
       a phone width.
 
 ## Milestone 4: Verification, commit, review, and pull request

@@ -120,14 +120,15 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the tools at
 - The runner reads one file or one diff on request. When the runner is not
   connected, a file read falls back to Boat's file read.
 - The Durable Object keeps the last tree and the last changes, so both tabs
-  still show them while the sandbox sleeps.
+  still show them while the sandbox sleeps and while it starts again.
 - Reason: Boat's API can run `git` and read files only while the sandbox
   runs, one request at a time, and with no live updates.
 - While the sandbox does not run, a file or diff tab reads nothing. While
-  the sandbox is stopped, or after its later start failed, a tab keeps the
-  file that it already shows, as the lists keep their copy.
+  the sandbox is stopped or starts, or after its later start failed, a tab
+  keeps the file that it already shows, as the lists keep their copy.
 - Otherwise the tab shows the state of the sandbox in place of the file,
-  with the Resume or Try again of that state.
+  with the Resume or Try again of that state. While the sandbox starts, the
+  tab shows that it waits for the sandbox.
 - Opening a file or diff tab resumes a stopped sandbox, as
   [Stop and resume](workspace-life.md#stop-and-resume) says.
 - When the runner cannot read the repository, it sends `files.unavailable`

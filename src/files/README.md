@@ -106,7 +106,10 @@ The screens:
   for the right column on desktop and the Files tab on a phone. The
   `checks` prop takes the Checks list of the GitHub banner screens. The
   `placeholder` prop replaces All files and Changes, for example with a
-  sandbox state. Under the lists, the panel shows one notice for each
+  sandbox state. The `waiting` prop replaces only a list without a saved
+  copy, in place of its load or its failed read. The workspace screen gives
+  it the wait of a sandbox that starts, so a resume shows the saved lists
+  and the first start of a new workspace shows the wait. Under the lists, the panel shows one notice for each
   failed repair, in the order of the tabs, with its age. A saved tree that
   the cloud computer could not read shows the notice of All files, with no
   age. The notices show under each of the three tabs, and they have no

@@ -4,7 +4,11 @@ import { act } from 'react'
 import { expect, test, vi } from 'vitest'
 import type { FilesTab } from '../../../files/navigation'
 import { filePaths } from '../../../shared/files'
-import { byRole } from '../../../test-support/dom-queries'
+import {
+  byLabel,
+  byRole,
+  queryByLabel,
+} from '../../../test-support/dom-queries'
 import { FakeApiServer } from '../../../test-support/fake-api'
 import {
   FAKE_IDS,
@@ -90,3 +94,26 @@ test.each(pages)(
     expect(reads()).toBe(1)
   },
 )
+
+test('show the wait in place of each list that the workspace has not saved while the sandbox starts', async () => {
+  holdAnimationFrames()
+  const server = new FakeApiServer({
+    workspaceState: 'starting',
+    savedLists: false,
+  })
+  server.json('GET', filePaths.tree(org, id), notReady, 503)
+  server.json('GET', filePaths.changes(org, id), notReady, 503)
+
+  for (const list of ['all', 'changes'] as const) {
+    const { view } = await openTab(
+      server,
+      filesHref(org, id, { kind: 'list', list }),
+    )
+    const column = byLabel('Files and tools', view)
+
+    expect(queryByLabel('All files', column)).toBeNull()
+    expect(queryByLabel('Changed files', column)).toBeNull()
+    expect(column.textContent).toContain('Waiting for the sandbox')
+    expect(column.textContent).not.toContain("didn't load")
+  }
+})

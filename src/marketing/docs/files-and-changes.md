@@ -9,7 +9,7 @@ order: 30
 
 Open a workspace that belongs to one of your orgs.
 Its file tools use the workspace's selected repository.
-If its computer is stopped, the file lists show their last saved copy.
+If its computer is stopped or starts again, the file lists show their last saved copy.
 Opening a file or a change starts the computer again.
 
 On a computer, the file lists sit beside the chat.

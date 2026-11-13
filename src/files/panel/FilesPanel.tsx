@@ -46,6 +46,8 @@ interface ListProps {
   snapshot: FilesSnapshot
   open: FilesTab | null
   navigation: FilesNavigation
+  /** Shows in place of a list without a saved copy, as `FilesPanel` says. */
+  waiting?: ReactNode
 }
 
 function AllFiles(props: ListProps) {
@@ -56,6 +58,14 @@ function AllFiles(props: ListProps) {
     () => (tree ? treeRows(tree, folders, openPath) : []),
     [tree, folders, openPath],
   )
+  // Without a saved tree, the wait shows in place of the load or of a failed
+  // read. A tree with no entries under the mark is an unknown tree, not a
+  // saved copy, so the wait shows in its place too.
+  if (
+    props.waiting &&
+    (!tree || (rows.length === 0 && snapshot.treeUnavailable))
+  )
+    return props.waiting
   // With no saved tree to show, the mark wins over a read that still waits
   // or failed, and over an empty list, which would say that the branch has
   // no files. A saved tree stays visible under its notice.
@@ -100,6 +110,7 @@ function AllFiles(props: ListProps) {
 function Changes(props: ListProps) {
   const { files, snapshot, open } = props
   const { changes } = snapshot
+  if (!changes && props.waiting) return props.waiting
   if (!changes) {
     if (!snapshot.changesError) return <Loading label="Loading changes" />
     return (
@@ -143,6 +154,12 @@ export function FilesPanel(props: {
   /** Shows in place of All files and Changes, such as a sandbox state. */
   placeholder?: ReactNode
   /**
+   * Shows in place of a list that has no saved copy, in place of its load
+   * and of its failed read, such as the wait of a sandbox that starts for
+   * the first time. A list with a saved copy shows it.
+   */
+  waiting?: ReactNode
+  /**
    * The time now, for the age of a notice under the lists. Give a stable
    * function. The default is the clock of the browser.
    */
@@ -178,7 +195,13 @@ export function FilesPanel(props: {
       commandKey: listKeys?.checks,
     },
   ]
-  const listProps = { files, snapshot, open, navigation }
+  const listProps = {
+    files,
+    snapshot,
+    open,
+    navigation,
+    waiting: props.waiting,
+  }
   let body: ReactNode = props.placeholder
   if (list === 'checks') body = props.checks
   else if (!body) {
