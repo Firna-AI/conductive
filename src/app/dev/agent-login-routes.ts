@@ -3,6 +3,7 @@ import {
   refreshAgentLoginModelsPath,
   defaultAgentLoginNoReuse,
   type AgentLoginStatus,
+  type RefreshAgentLoginModelsResponse,
   type SaveAgentLoginRequest,
   type SaveAgentLoginResponse,
   type UpdateAgentLoginResponse,
@@ -15,6 +16,7 @@ import {
 import { choice, flag, record } from '../api/parse'
 import { AGENTS } from '../api/read-core'
 import type { DevBackend } from './backend'
+import { devEndpointHosts } from './endpoint-logins'
 import { json, noContent, requiredText, RouteError, type Route } from './router'
 import { completeStep } from './state'
 
@@ -74,6 +76,10 @@ function saveLogin(backend: DevBackend, agent: Agent, body: unknown): Response {
       'Start the ChatGPT sign-in to connect Codex.',
     )
   let login: AgentLoginStatus
+  let flags: Pick<
+    SaveAgentLoginResponse,
+    'endpointV1Added' | 'modelListReadFailed'
+  > = {}
   if (fields.kind === 'endpoint') {
     const address = readEndpointAddress(fields.endpoint, agent)
     if (!address)
@@ -82,6 +88,13 @@ function saveLogin(backend: DevBackend, agent: Agent, body: unknown): Response {
         ENDPOINT_ADDRESS_ERROR.code,
         ENDPOINT_ADDRESS_ERROR.message,
       )
+    flags = {
+      endpointV1Added:
+        agent === 'codex' &&
+        address.host === devEndpointHosts.v1Only &&
+        !new URL(address.endpoint).pathname.endsWith('/v1'),
+      modelListReadFailed: address.host === devEndpointHosts.noModels,
+    }
     login = {
       agent,
       connected: true,
@@ -101,7 +114,7 @@ function saveLogin(backend: DevBackend, agent: Agent, body: unknown): Response {
   }
   putLogin(
     backend,
-    login.connected && login.kind === 'endpoint'
+    login.connected && login.kind === 'endpoint' && !flags.modelListReadFailed
       ? {
           ...login,
           modelList: { missing: [], checkedAt: updatedAt },
@@ -109,7 +122,7 @@ function saveLogin(backend: DevBackend, agent: Agent, body: unknown): Response {
       : login,
   )
   completeStep(backend.state, 'agent-login')
-  return json(login satisfies SaveAgentLoginResponse)
+  return json({ ...login, ...flags } satisfies SaveAgentLoginResponse)
 }
 
 /**
@@ -139,12 +152,23 @@ export function loginRoutes(backend: DevBackend, agent: Agent): Route[] {
       path: refreshAgentLoginModelsPath(agent),
       answer: () => {
         const login = savedLogin(backend, agent)
-        if (login.connected && login.kind === 'endpoint')
+        const modelListReadFailed = !(
+          login.connected &&
+          login.kind === 'endpoint' &&
+          login.host !== devEndpointHosts.noModels
+        )
+        if (
+          login.connected &&
+          login.kind === 'endpoint' &&
+          !modelListReadFailed
+        )
           putLogin(backend, {
             ...login,
             modelList: { missing: [], checkedAt: backend.now() },
           })
-        return noContent()
+        return json({
+          modelListReadFailed,
+        } satisfies RefreshAgentLoginModelsResponse)
       },
     },
     {

@@ -282,8 +282,8 @@ dialog, and feedback with its screenshots.
 - `api/read-core.ts`: `readLogin` reads own endpoint metadata for both agents.
   It keeps the host, kind, share choice, update time, and optional `modelList`.
   The list has missing app model IDs and the last successful read time.
-  `dev/agent-login-routes.ts` simulates save and Refresh as successful lists with no missing models.
-  It changes neither another login nor the secret-save time.
+  `dev/agent-login-routes.ts` returns the endpoint save and Refresh flags from the shared account types.
+  [The development fake](dev-fake.md) gives its successful and failed list hosts and seeds.
   `dev/agent-login-routes.ts` uses the shared address rule and keeps no secret
   or full endpoint in development state. Its save uses the same public HTTPS
   address builder and agent-specific normalization as the Worker.

@@ -40,7 +40,9 @@ it.each(['claude', 'codex'] as const)(
     api.setTime(TEST_TIME + 1)
     api.upstream.response = () =>
       Response.json({ data: [{ id: `other-${agent}` }] })
-    expect((await api.refresh(cookie, agent)).status).toBe(204)
+    const refreshed = await api.refresh(cookie, agent)
+    expect(refreshed.status).toBe(200)
+    expect(await refreshed.json()).toEqual({ modelListReadFailed: false })
     expect(
       (await api.account(cookie)).agentLogins.find(
         (login) => login.agent === agent,
@@ -72,7 +74,9 @@ it('keeps the last successful list and time after a failed, malformed, or incomp
   ]) {
     api.setTime(TEST_TIME + 10)
     api.upstream.response = response
-    expect((await api.refresh(cookie)).status).toBe(204)
+    const refreshed = await api.refresh(cookie)
+    expect(refreshed.status).toBe(200)
+    expect(await refreshed.json()).toEqual({ modelListReadFailed: true })
     expect((await api.account(cookie)).agentLogins[0]).toMatchObject({
       modelList: { missing: ['other-claude'], checkedAt: TEST_TIME },
     })
@@ -83,7 +87,12 @@ it('omits the list before success and reports every absent app ID when none matc
   const cookie = await harness.login()
   const api = endpointModelApi(harness)
   api.upstream.response = () => new Response(null, { status: 503 })
-  expect((await api.save(cookie)).status).toBe(200)
+  const saved = await api.save(cookie)
+  expect(saved.status).toBe(200)
+  expect(await saved.json()).toMatchObject({
+    endpointV1Added: false,
+    modelListReadFailed: true,
+  })
   expect((await api.account(cookie)).agentLogins[0]).not.toHaveProperty(
     'modelList',
   )
@@ -116,7 +125,9 @@ it('returns discovery only to its owner and Refresh touches only that account', 
     { agent: 'claude', connected: false },
     { agent: 'codex', connected: false },
   ])
-  expect((await api.refresh(member)).status).toBe(204)
+  const refreshed = await api.refresh(member)
+  expect(refreshed.status).toBe(200)
+  expect(await refreshed.json()).toEqual({ modelListReadFailed: true })
   expect(api.upstream.requests).toHaveLength(1)
   const sharing = await api.request(agentLoginPath('claude'), owner, {
     method: 'PATCH',
@@ -153,7 +164,7 @@ it('drops a replaced login list and refuses a late read of the old key', async (
     'modelList',
   )
   pending.resolve(Response.json({ data: [{ id: 'test-claude' }] }))
-  expect((await refreshing).status).toBe(204)
+  expect((await refreshing).status).toBe(200)
   expect((await api.account(cookie)).agentLogins[0]).not.toHaveProperty(
     'modelList',
   )
@@ -226,9 +237,9 @@ it('keeps a newer Refresh when an older response finishes last', async () => {
   api.setTime(TEST_TIME + 20)
   api.upstream.response = () =>
     Response.json({ data: [{ id: 'other-claude' }] })
-  expect((await api.refresh(cookie)).status).toBe(204)
+  expect((await api.refresh(cookie)).status).toBe(200)
   pending.resolve(Response.json({ data: [{ id: 'test-claude' }] }))
-  expect((await older).status).toBe(204)
+  expect((await older).status).toBe(200)
   expect((await api.account(cookie)).agentLogins[0]).toMatchObject({
     modelList: { missing: ['test-claude'], checkedAt: TEST_TIME + 20 },
   })

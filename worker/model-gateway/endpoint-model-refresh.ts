@@ -7,7 +7,7 @@ import {
 } from './endpoint-model-data'
 import { readEndpointModels } from './endpoint-models'
 
-/** Save, Refresh, and dispatch share the same private, best-effort read. */
+/** Refresh and dispatch read the saved base without changing the login. */
 export async function refreshEndpointModels(
   env: AppEnv,
   userId: string,
@@ -17,7 +17,8 @@ export async function refreshEndpointModels(
     background = false,
     ciphertext,
   }: { background?: boolean; ciphertext?: string } = {},
-): Promise<void> {
+): Promise<boolean> {
+  let modelListRead = false
   try {
     const read = await claimEndpointModelRead(
       env.DB,
@@ -27,22 +28,24 @@ export async function refreshEndpointModels(
       background,
       ciphertext,
     )
-    if (!read) return
+    if (!read) return false
     const login = await decryptAgentLogin(
       env,
       userId,
       { agent, kind: 'endpoint' },
       read.ciphertext,
     )
-    if (login?.kind !== 'endpoint') return
-    const ids = await readEndpointModels(
+    if (login?.kind !== 'endpoint') return false
+    const result = await readEndpointModels(
       login,
       dependencies.fetch,
       env.PREVIEW_DOMAIN ? [env.PREVIEW_DOMAIN] : [],
     )
-    if (ids !== null)
-      await saveEndpointModels(env.DB, read, ids, dependencies.now())
+    if (result.status !== 'ok') return false
+    modelListRead = true
+    await saveEndpointModels(env.DB, read, result.ids, dependencies.now())
   } catch {
-    // A discovery failure never fails a login save or a turn.
+    // A discovery failure never fails a Refresh or a turn.
   }
+  return modelListRead
 }

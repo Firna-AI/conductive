@@ -192,6 +192,38 @@ choice. Cal can override any agent call.
   migration. Cost: a key that stops working later shows no warning on the
   account page. Its turns fail with their own cause.
 
+
+- **Reader result.** `EndpointModelsResult` has `ok`, with IDs,
+  `http-error`, and `unreachable` states. A response with unreadable JSON,
+  an incomplete list, or a failed body read counts as an HTTP answer.
+  Agent call of the Milestone 3 implementation, 13 November 2026.
+  Reason: the save needs to distinguish a failed HTTP answer from no
+  answer, without keeping upstream error text.
+- **Reply fields.** Endpoint saves return boolean `endpointV1Added` and
+  `modelListReadFailed`. Native saves omit both. Refresh returns HTTP 200
+  with `RefreshAgentLoginModelsResponse.modelListReadFailed`. It is true
+  when no list was read, including a removed or native login.
+  Agent call of the Milestone 3 implementation, 13 November 2026.
+  Reason: one failed-read field serves both owner actions, and the save
+  keeps returning only the host of the address.
+- **Atomic save.** The existing login insert writes the new IDs, successful
+  read time, attempt time, and a new attempt ID. It clears the old list
+  when no read worked. The times use the save time after the reads.
+  Agent call of the Milestone 3 implementation, 13 November 2026.
+  Reason: the login and discovery metadata must become visible together,
+  and the background claim must wait ten minutes after this attempt.
+- **Fake hosts.** `v1-only.example.test` simulates a list only under `/v1`.
+  `no-models.example.test` simulates failed reads for both agents.
+  `modelList=v1-only` and `modelList=read-failed`, with `login=endpoint`,
+  seed those hosts. Flags stay in replies, outside saved account data.
+  Agent call of the Milestone 3 implementation, 13 November 2026.
+  Reason: the next UI milestone can exercise both replies in development
+  without storing a secret or a full address in the fake.
+- **Gateway guide split.** The own endpoint details move from the gateway
+  README into its linked `own-endpoints.md` page.
+  Agent call of the Milestone 3 implementation, 13 November 2026.
+  Reason: the README was at 299 lines before this implementation.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -237,18 +269,18 @@ Depends on: 1
 
 Depends on: 2
 
-- [ ] Add the second Codex read to the save in `worker/app-api/boot.ts`,
+- [x] Add the second Codex read to the save in `worker/app-api/boot.ts`,
       before the encryption, and save the read list as the model list.
-- [ ] Add the flag for an added `/v1` and the flag for a failed read to
+- [x] Add the flag for an added `/v1` and the flag for a failed read to
       `SaveAgentLoginResponse`, and the flag for a failed read to the
       Refresh response, in `src/shared/account.ts`. Update the fake API
       and the seeds.
-- [ ] Update the docs that describe the save and Refresh replies:
+- [x] Update the docs that describe the save and Refresh replies:
       `worker/app-api/README.md`, `src/shared/key-code.md`,
       `src/app/README.md`, and `src/app/dev-fake.md`. Check the save
       sentences of `worker/model-gateway/README.md` against the code. That
       README has 299 lines, so split it before it grows.
-- [ ] Add Worker tests: a base without `/v1` that only serves `/v1`, a
+- [x] Add Worker tests: a base without `/v1` that only serves `/v1`, a
       base that serves both, a base that serves neither, a base that ends
       with `/v1`, a query on the base, a first read with no HTTP answer,
       Claude unchanged, Refresh that never changes the address, and the
