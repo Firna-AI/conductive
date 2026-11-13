@@ -9,9 +9,10 @@ list of Acme. Send feedback comes last among its actions. Its child pages:
 
 - `app/command-palette/workspaces` has the Workspaces tab. Its
   `repository` variant has the menu of the repository filter, and its
-  `archived` variant has the archived workspaces. Its `empty` variant has
-  the Archived filter of `acme/marketing-site`, which holds no archived
-  workspace, and the line that says where they show. Its `unavailable`
+  `archived` variant has the archived workspaces of the last 14 days, as
+  the Archived group has them. Its `empty` variant has the Archived filter
+  of `acme/marketing-site`, which holds no archived workspace, and the
+  line that says where they show and for how long. Its `unavailable`
   variant has a workspace list that did not load: the notice with Try
   again fills the tab.
 - `app/command-palette/actions` has the Actions tab over the list. The

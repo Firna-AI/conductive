@@ -25,18 +25,31 @@ export const operatorUpdatedAt = '14:32'
  */
 export const runningComputers = { workspaces: 37, builds: 2 } as const
 
-/** The states that the page counts the workspaces in. */
-export type WorkspaceStateKey = 'running' | 'stopped' | 'failed' | 'archived'
+/**
+ * The states that the page counts the workspaces in. `archived` counts the
+ * archived workspaces in the list, those of the last 14 days. `removed`
+ * counts the archived workspaces whose 14 days ended, which left the list.
+ * The app keeps the data of both.
+ */
+export type WorkspaceStateKey =
+  'running' | 'stopped' | 'failed' | 'archived' | 'removed'
 
-/** The workspaces of one scope in each state. */
-export type StateCounts = Readonly<Record<WorkspaceStateKey, number>>
+/**
+ * The workspaces of one scope in each state. The counts of the app have no
+ * `removed` until its API counts removed workspaces, so the page then
+ * shows the other four states.
+ */
+export type StateCounts = Readonly<
+  Record<Exclude<WorkspaceStateKey, 'removed'>, number> & { removed?: number }
+>
 
 /** The workspaces of every org in each state. They add up to the total. */
 export const workspaceStates: StateCounts = {
   running: runningComputers.workspaces,
   stopped: 1604,
   failed: 12,
-  archived: 828,
+  archived: 203,
+  removed: 625,
 }
 
 /**

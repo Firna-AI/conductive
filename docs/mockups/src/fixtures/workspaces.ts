@@ -25,10 +25,14 @@ export type ActivityStatus =
   | 'error'
   | 'archived'
 
-/** The workspaces that a screen can show open. */
+/**
+ * The workspaces that a screen can show open. Postcode lookup for the
+ * shipping and billing forms is removed: a chip opens its read-only chat.
+ */
 export const openableWorkspaces = [
   'checkout-autocomplete',
   'saved-carts',
+  'postcode-lookup',
 ] as const
 
 export type OpenableWorkspace = (typeof openableWorkspaces)[number]
@@ -143,13 +147,6 @@ export const savedCarts: Workspace = {
   github: null,
   updated: 'now',
   owner: 'cal',
-}
-
-export const openableWorkspaceRecords: Readonly<
-  Record<OpenableWorkspace, Workspace>
-> = {
-  'checkout-autocomplete': checkoutAutocomplete,
-  'saved-carts': savedCarts,
 }
 
 /** The Codex model and effort of the workspaces that use Codex. */

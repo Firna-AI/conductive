@@ -11,19 +11,20 @@ export const archiveSchema = {
     /**
      * The archived workspace with Restore on its bar, the same workspace
      * just after Archive with its toast, the list with its Archived group
-     * open, the archived workspace after the app deleted its cloud
-     * computer, the workspace back in its section after Restore, or the
-     * archived workspace after its last day of Restore, while the delete
-     * of its cloud computer tries again.
+     * open, the workspace back in its section after Restore, or the
+     * archived workspace without a kept cloud computer. Or a removed
+     * workspace, whose 14 days ended, which a chip opens: after the app
+     * deleted its cloud computer, or while that delete still tries again.
      */
     view: {
       enum: [
         'archived',
         'just-archived',
         'group',
-        'deleted',
         'restored',
-        'restore-ended',
+        'no-computer',
+        'removed',
+        'removed-deleting',
       ],
     },
   },
@@ -41,18 +42,33 @@ const archived: WorkspaceState = {
   banner: 'merged',
 }
 
+/**
+ * Postcode lookup for the shipping and billing forms, archived 3 weeks ago
+ * without a pull request. Its 14 days ended, so it left the list.
+ */
+const removed: WorkspaceState = {
+  ...readyWorkspace,
+  workspace: 'postcode-lookup',
+  sandbox: 'archived',
+  archive: 'removed',
+  conversation: 'postcode-history',
+  banner: 'none',
+}
+
 const workspaceStates: Readonly<Record<WorkspaceView, WorkspaceState>> = {
   archived,
   'just-archived': { ...archived, toast: 'archived' },
-  deleted: { ...archived, archive: 'deleted' },
   restored: { ...archived, sandbox: 'stopped' },
-  'restore-ended': { ...archived, archive: 'ended' },
+  'no-computer': { ...archived, archive: 'none' },
+  removed,
+  'removed-deleting': { ...removed, archive: 'removed-deleting' },
 }
 
 /**
- * Archive and Restore of Checkout address autocomplete, as Cal sees them.
- * The workspace screen draws the workspace. The list screen draws the
- * Archived group, which a phone shows on its list page.
+ * Archive and Restore of Checkout address autocomplete, as Cal sees them,
+ * and a workspace that left the list after its 14 days. The workspace
+ * screen draws the workspace. The list screen draws the Archived group,
+ * which a phone shows on its list page.
  */
 export function ArchiveScreen(props: {
   state: ArchiveState

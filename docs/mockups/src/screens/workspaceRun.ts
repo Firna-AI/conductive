@@ -3,8 +3,11 @@ import { conversations, type ChatItem } from '../fixtures/conversations'
 import { freshSessionPrompt } from '../fixtures/terminal'
 import { runWorkspaces, type RunWorkspaceKey } from '../fixtures/runWorkspaces'
 import type { StartingLog } from '../fixtures/starting'
+import { postcodeLookup } from '../fixtures/archivedWorkspaces'
 import {
-  openableWorkspaceRecords,
+  checkoutAutocomplete,
+  savedCarts,
+  type OpenableWorkspace,
   type Workspace,
 } from '../fixtures/workspaces'
 import { paths } from '../paths'
@@ -19,6 +22,13 @@ const routinePaths: Readonly<Record<RunWorkspaceKey, string>> = {
   'run-now': paths.routineRunNow,
   'start-failed': paths.routineFailedRuns,
   'turn-failed': paths.routineFailedRuns,
+}
+
+/** The record of each workspace that a screen can show open. */
+const openableRecords: Readonly<Record<OpenableWorkspace, Workspace>> = {
+  'checkout-autocomplete': checkoutAutocomplete,
+  'saved-carts': savedCarts,
+  'postcode-lookup': postcodeLookup,
 }
 
 /** The open workspace, its chat, and the routine of its run, if any. */
@@ -36,7 +46,7 @@ export type OpenWorkspace = {
 export function openWorkspace(state: WorkspaceState): OpenWorkspace {
   if (state.run === undefined) {
     return {
-      record: openableWorkspaceRecords[state.workspace],
+      record: openableRecords[state.workspace],
       items: conversations[state.conversation],
     }
   }

@@ -30,7 +30,7 @@ how a screen is built, and links to the other pages.
 | `app/mac-commands`  | A command that an agent runs on the Mac of the sender, in the chat            |
 | `app/sessions`      | A new session, the history, closing one while it works, and a linked session  |
 | `app/reassign`      | The owner of a workspace, its reassign menu, a member's view, a stopped turn  |
-| `app/archive`       | An archived workspace with Restore, the toast after Archive, the Archived group, the restored workspace, the end of Restore, and the bar after the delete |
+| `app/archive`       | An archived workspace with Restore, the toast after Archive, the Archived group, the restored workspace, an archive without a kept cloud computer, and a workspace that left the list after its 14 days |
 | `app/composer`      | Two uploaded files in a sentence, the picker, another member's login, and a missing agent |
 | `app/attachments`   | A file that uploads in the text, then a drop, a failed upload, a file over 100 MB, sent files, the file tab of a sent screenshot, and a first message with files |
 | `app/workspace-links` | Chips in a message and an answer, then Copy link and its failure, a pasted link, a link of another org, session chips, and messages that an agent sent |
@@ -41,7 +41,7 @@ how a screen is built, and links to the other pages.
 | `app/tools`         | The terminal tabs and their states, then the Preview tool with its detected servers and its failed list repair, and the hidden Desktop, kept for its return |
 | `app/panels`        | The right column, widened by the handle on its inner edge, and then hidden    |
 | `mac-app`           | The Mac app: its window, the waitlist, its device commands, This Mac, Keyboard shortcuts, and the palette with keys |
-| `user-flows`        | Sign up, sign up during open sign-up, join with an invite link, create a workspace, create one in the dialog, reopen it, open one from the palette, send feedback, archive one from its row, create an org, run a Mac command, create a routine, link a workspace, open a session link, merge and continue, mention a file, drop a file |
+| `user-flows`        | Sign up, sign up during open sign-up, join with an invite link, create a workspace, create one in the dialog, reopen it, open one from the palette, send feedback, archive one from its row, open a removed workspace, create an org, run a Mac command, create a routine, link a workspace, open a session link, merge and continue, mention a file, drop a file |
 
 A folder page shows at most five screens, saved states included. A folder
 with child folders shows only its canonical screen, as `marketing`, `marketing/docs`, `app`,
@@ -56,7 +56,9 @@ index document, `index.md`, gives the notes of the page and where its
 content comes from, and links to `marketing/from-conductor/one-table`,
 which links back to it. `app/org-settings/cloud-computer` and its building
 and build-failed states moved from `app/repository-settings` and its updating
-and update-failed states, and declare `movedFrom`. The states of `app/shell`,
+and update-failed states, and declare `movedFrom`. `app/archive/removed` moved
+from `app/archive/deleted`, and its `deleting` variant moved from
+`app/archive/restore-ended`, and both declare `movedFrom`. The states of `app/shell`,
 `app/account`, `app/sign-in/waitlist`, `app/new-workspace`,
 `app/new-workspace/dialog`, `app/org-settings/cloud-computer`,
 `app/operator/user/access`, `app/archive`, `app/command-palette/search`, `app/attachments`, and
@@ -267,7 +269,9 @@ The user chose the four actions that change the workspace on 9 November
   the toast of the list that names the failure.
 - `app/workspace-menu/archive` has the list just after Archive from the
   menu, with no check and no question: the row in the collapsed Archived
-  group, and the toast with Restore. Its `stopped` variant archives a
+  group, whose count holds the three workspaces of the last 14 days, and
+  the toast with the day when the workspace leaves the list and Restore.
+  Its `stopped` variant archives a
   stopped workspace at once too. Its `restored` variant has the list after
   Restore from the toast, with the workspace back in its section, stopped.
   `user-flows/archive-from-list` goes from the list through the menu and
@@ -357,22 +361,32 @@ workspace with its actions, its child pages, and the flow
 `user-flows/merge-and-continue`.
 
 `app/archive` draws Archive and Restore of Checkout address autocomplete,
-from decisions 1 and 2 of PR #138. Its canonical screen has the archived
-workspace, whose bar gives the last day of Restore, with Restore. Its child
-pages:
+from decisions 1 and 2 of PR #138, and the removal of an archived workspace
+after its 14 days, from decisions 518 D, 519 B, and 520 A of 13 November
+2026. Its canonical screen has the archived workspace, whose bar gives the
+last day of Restore, with Restore, and says that the workspace leaves the
+list on that day. Its child pages:
 
 - `app/archive/just-archived` has the workspace just after Archive from the
-  pull request bar, with the toast and its Restore. Archive on a row and in
-  the palette leads there too.
+  pull request bar, with the toast, the day when the workspace leaves the
+  list, and Restore. Archive on a row and in the palette leads there too.
 - `app/archive/group` has the list with the Archived group open, and
-  Restore on the hover of a row.
+  Restore on the hover of a row. The group holds only the workspaces of the
+  last 14 days, so it has no row for Postcode lookup for the shipping and
+  billing forms.
 - `app/archive/restored` has the workspace back in its section, stopped,
   where each Restore leads.
-- `app/archive/restore-ended` has the archived workspace after its last day
-  of Restore, while a failed delete of its cloud computer tries again. The
-  bar gives the day when Restore ended, and offers no Restore.
-- `app/archive/deleted` has the archived workspace after the app deleted
-  its cloud computer, with no Restore.
+- `app/archive/no-computer` has the archived workspace when the app keeps
+  no cloud computer for it, as after a failed first start. The bar offers
+  no Restore, and it still gives the day when the workspace leaves the
+  list.
+- `app/archive/removed` has Postcode lookup for the shipping and billing
+  forms, `W-372`, after its 14 days, as its chip in `app/workspace-links`
+  opens it. The list has no row for it, the bar gives the day of the
+  removal, and the cloud computer is deleted. Its `deleting` variant has the
+  same workspace on that day, while a failed delete of its cloud computer
+  tries again. The flow `user-flows/open-a-removed-workspace` goes from the
+  chip to this page.
 
 [Chat and routines](catalogue-chat-and-routines.md) gives those catalogue
 pages, their child pages, and their related flows.

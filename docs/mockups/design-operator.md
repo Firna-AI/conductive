@@ -13,7 +13,9 @@ chart, the notice of a pause, and the waitlist switch.
   so that every tab shows. The overview uses
   the stat tiles, the line chart, the table, and the skeletons of
   `@firna/ui`. A view runs no script, so the chart keeps the width that the
-  page column gives it. The workspaces by state reuse `StatusGlyph`, the mark of the header. A line
+  page column gives it. The workspaces by state reuse `StatusGlyph`, the mark of the header.
+  Removed follows Archived with the same mark, because a removed workspace
+  stays archived. A line
   under the users tile counts the people on the waitlist and opens the
   Waitlist tab.
 - A table of the operator keeps fewer columns on a phone, so that each

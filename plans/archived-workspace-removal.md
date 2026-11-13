@@ -183,6 +183,66 @@ Each item is my call unless it names a decision. The date of each call is
   change to section delete, which moves removed rows to General with the
   other archived rows.
 
+The items below come from the mockups of Milestone 1. Each is the agent's
+call of 13 November 2026.
+
+- **The words.** The app copies them from the mockups:
+  `components/workspace/SandboxNotice.tsx`,
+  `components/workspace/ArchivedToast.tsx`, and
+  `components/palette/paletteFilters.ts` under `docs/mockups/src/`.
+  - With Restore: "Archived on <day>", then "Restore it until <day> to
+    bring back its files and sessions. It leaves the list on that day."
+  - In a suspended org: "Your chat history is available. It leaves the
+    list on <day>."
+  - Without a kept cloud computer: "Its cloud computer is deleted, and the
+    chat is read-only. It leaves the list on <day>."
+  - Removed: "Removed on <day>", then "It left the list. Its cloud
+    computer is deleted, and the chat is read-only." While a failed delete
+    tries again, the body says "is being deleted" in place of "is
+    deleted".
+  - The panel of a removed workspace has the title "Removed". While the
+    delete tries again, its body is "The files and the tools go with the
+    cloud computer."
+  - The toast after Archive keeps its title and adds the line "It leaves
+    the list on <day>."
+  - The empty line of the Archived filter of the palette says "Archived
+    workspaces of <place> show here for 14 days". Reason: it says where an
+    older archive went.
+  - The operator row is "Removed". It follows Archived, with the mark of
+    Archived.
+- **The header and the chip keep Archived.** A removed workspace stays in
+  the state `archived`, so the header and the chip keep the word and the
+  mark of Archived. Only the bar and the panel say Removed. Reason: the
+  agent tools keep the state `archived` too, and `StatusGlyph` and
+  `WorkspaceMark`, which the app shares, need no new state.
+- **The list beside a removed workspace.** No row is selected. The
+  Archived group does not open by itself, because it does not hold the
+  workspace, and its count leaves the workspace out. The app opens the
+  group by itself only for an open workspace that the group holds
+  (`useArchivedOpen` in `src/shell/list/ArchivedGroup.tsx`), so this
+  follows when `groupWorkspaces` leaves the removed workspace out.
+- **The shared notice type gets an optional `removed` mark.**
+  `SandboxNoticeState` in
+  `docs/mockups/src/components/workspace/sandboxNoticeState.ts`, which the
+  app imports, adds `removed?: boolean` to the archived notice. `ended`
+  now means removed too. The mark is optional, so the app compiles until
+  Milestone 4 sets it from `archivedAt`.
+- **The operator count type gets an optional `removed`.** `StateCounts`
+  in `docs/mockups/src/fixtures/operator.ts`, and `WorkspaceStates`
+  beside it, which the app shares, draw the Removed row only for a count
+  with `removed`. The fixture splits the 828 archived workspaces into 203
+  archived and 625 removed. The operator fixture of the app tests
+  (`src/test-support/fixtures/operator.ts`) reads that fixture, and
+  `readWorkspaceStates` in `src/app/api/read-operator.ts` drops
+  `removed`. So `src/shell/operator/OverviewTab.test.tsx` fails until the
+  app reads `removed` and the test expects the Removed row. Then
+  `removed` becomes required, and `OverviewLoading` gets a fifth row.
+- **The deletion words keep their follow-up.** "Its cloud computer is
+  deleted" can still name a delete that the app did not confirm, as
+  `plans/follow-ups/archived-computer-certainty.md` says. This change
+  keeps those words before and after day 14, so that follow-up stays
+  open.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -191,22 +251,29 @@ Depends on: none
 
 Update the Archive flow and the Archived group in the catalogue.
 
-- [ ] Take the fixtures older than 14 days out of the Archived group
+- [x] Take the fixtures older than 14 days out of the Archived group
       (`docs/mockups/src/fixtures/archivedWorkspaces.ts`). Keep
       `postcodeLookup` as a removed workspace for the chip fixtures.
-- [ ] Bar: add the line on the day that the workspace leaves the list to
+- [x] Bar: add the line on the day that the workspace leaves the list to
       the Restore text. Change the title of the states after Restore to
       "Removed on <day>" (`components/workspace/SandboxNotice.tsx`).
-- [ ] Toast after Archive: give the day that the workspace leaves the list
+- [x] Toast after Archive: give the day that the workspace leaves the list
       (`components/workspace/ArchivedToast.tsx`).
-- [ ] Archive screens: rename "Restore ended" and "Cloud computer
+- [x] Archive screens: rename "Restore ended" and "Cloud computer
       deleted" to Removed states. Show that the Archived group holds no
       removed row, and that the chip of a removed workspace opens it.
       Update the decision note of `entries/app/archive/index.mockup.tsx`.
-- [ ] Operator overview: add the Removed count.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Operator overview: add the Removed count.
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages.
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
+
+The catalogue now has `app/archive/no-computer`, and `app/archive/removed`
+with its `deleting` variant, which moved from `app/archive/deleted` and
+`app/archive/restore-ended`. The removed workspace of the mockups is
+Postcode lookup for the shipping and billing forms, `W-372`, removed on
+29 October. Its chip in `app/workspace-links` opens it, as
+`user-flows/open-a-removed-workspace` shows.
 
 ## Milestone 2: Documentation and protocol
 
@@ -280,7 +347,13 @@ Depends on: 1, 3
       `src/chat/components/SandboxState.tsx`).
 - [ ] The toast after Archive gives the day that the workspace leaves the
       list (`src/shell/workspace/useArchiveActions.ts`).
-- [ ] The operator overview shows the Removed count.
+- [ ] The operator overview shows the Removed count. Read `removed` in
+      `readWorkspaceStates` (`src/app/api/read-operator.ts`), make
+      `StateCounts.removed` required, add a fifth row to
+      `OverviewLoading`, and update `OverviewTab.test.tsx`, which fails
+      since Milestone 1 split the shared operator fixture.
+- [ ] Copy the Milestone 1 words into the palette empty line of the
+      Archived filter and its tests in `src/app/palette`.
 - [ ] Keep the removed rows in the dev and test fakes of the list, as
       the Worker does (`src/app/dev/workspace-routes.ts`,
       `src/test-support/fake-workspace-routes.ts`). Add a removed row to

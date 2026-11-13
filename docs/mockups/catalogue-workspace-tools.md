@@ -5,7 +5,10 @@ These pages are part of [the mockup catalogue](catalogue.md).
 `app/workspace-links` draws the workspace numbers and the chips of
 decisions 211 and 212, and the session chips and the messages from agent
 tools of decisions 259 and 261. Its canonical screen has a message and an
-answer with chips in Checkout address autocomplete, `W-395`. Its child
+answer with chips in Checkout address autocomplete, `W-395`. The answer
+links Postcode lookup for the shipping and billing forms, `W-372`, which
+left the list after its 14 days. Its chip still shows, with the archived
+mark, and a press on it opens `app/archive/removed`. Its child
 pages:
 
 - `app/workspace-links/copy-link` has the header of Saved carts, `W-402`,
@@ -35,7 +38,9 @@ The message box of New workspace shows a pasted link as a chip in
 and in the `workspace-link` child page of `app/new-workspace/dialog`.
 The flow `user-flows/link-a-workspace` goes from the copy to the answer,
 and ends with a press on the chip, which opens
-`app/new-workspace/first-turn`. The flow `user-flows/open-a-session-link`
+`app/new-workspace/first-turn`. The flow
+`user-flows/open-a-removed-workspace` goes from the answer, through a press
+on the chip of `W-372`, to its read-only chat. The flow `user-flows/open-a-session-link`
 starts at the message in Saved carts. A press on the chip of the closed
 session opens `W-395` on its workspace page, at its first session, and a
 press on the chip of the `Sent by:` line there shows the second session.

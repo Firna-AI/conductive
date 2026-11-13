@@ -73,10 +73,19 @@ the screens show no plans, no billing, no seats, and no plan limits.
   days after the Archive. The bar gives that last day. Every member of an
   org that is not suspended sees Restore, from decision 2 of PR #138, as
   `app/command-palette/actions/archived` shows. After the last day, nothing
-  offers Restore. The bar gives the day when Restore ended while a failed
-  delete of the cloud computer tries again, as `app/archive/restore-ended`
-  shows. After the delete, the bar says that the cloud computer is deleted,
-  as `app/archive/deleted` shows.
+  offers Restore.
+- On the last day of Restore, the workspace also leaves the list, from
+  decision 518 D of 13 November 2026: the Archived group, its count, and
+  the palette leave it out. The app keeps all its data, so a direct link
+  and a chip still open its read-only chat, from decision 519 B. The words
+  say "removed", never "deleted", for the workspace, from decision 520 A.
+  Until that day, the bar and the toast after Archive give the day when
+  the workspace leaves the list, also when the bar offers no Restore, as
+  `app/archive/no-computer` shows. A removed workspace shows the bar
+  "Removed on" and the day. The bar says that the workspace left the list,
+  that its cloud computer is being deleted while a failed delete tries
+  again, or is deleted, and that the chat is read-only, as
+  `app/archive/removed` and its `deleting` variant show.
 - The menu of a workspace row follows the same roles, as
   `app/workspace-menu/roles` shows. Every member moves and renames a
   workspace that is not archived. Only an admin sees Reassign to, and only
@@ -114,7 +123,8 @@ the screens show no plans, no billing, no seats, and no plan limits.
   also for an admin. Its tile in the rail still moves, because the order of the rail belongs to the person,
   from decision 516 A, as `app/orgs/reorder/suspended` shows. No notice
   promises its files. An archived workspace
-  offers no Restore, as `app/orgs/suspended/workspace/archived` shows. A
+  offers no Restore, and its bar still gives the day when it leaves the
+  list, as `app/orgs/suspended/workspace/archived` shows. A
   deleted org that is also suspended shows the notice above its page, keeps
   the date when everything is deleted, and offers no Restore, as
   `app/orgs/suspended/deleted` shows.

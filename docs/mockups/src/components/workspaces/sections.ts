@@ -5,10 +5,7 @@ import {
   type Section,
   type SectionKey,
 } from '../../fixtures/sections'
-import {
-  archivedWorkspaceList,
-  keptArchives,
-} from '../../fixtures/archivedWorkspaces'
+import { archivedWorkspaceList } from '../../fixtures/archivedWorkspaces'
 import type { GitHubSummary } from '../../fixtures/pullRequests'
 import {
   checkoutAutocomplete,
@@ -183,10 +180,26 @@ export function suspendedSections(open?: Workspace): SidebarSection[] {
   }))
 }
 
-/** The sections of a list and the rows of its open Archived group. */
+/** The sections of a list and the rows of its Archived group. */
 export type ArchivedList = {
   sections: SidebarSection[]
   archived: WorkspaceRow[]
+}
+
+/**
+ * The rows of the Archived group: the archived workspaces of the last 14
+ * days, the last archived first. The app keeps the cloud computer of each,
+ * so each row offers Restore. A workspace whose 14 days ended is removed:
+ * the group, its count, and the palette leave it out.
+ */
+export function archivedRows(): WorkspaceRow[] {
+  return archivedWorkspaceList.map((workspace) => ({
+    workspace,
+    status: 'archived',
+    github: workspace.github,
+    selected: false,
+    restoreOpen: true,
+  }))
 }
 
 /**
@@ -226,6 +239,22 @@ export function archivedSections(
 }
 
 /**
+ * The list beside a removed workspace, which a link opened. Its 14 days
+ * ended, so neither a section nor the Archived group holds it, and no row
+ * is selected. The Archived group holds the archived workspaces of the last
+ * 14 days.
+ */
+export function removedSections(
+  open: Workspace,
+  suspended = false,
+): ArchivedList {
+  return {
+    sections: sectionsWithout(open.key, suspended),
+    archived: archivedRows(),
+  }
+}
+
+/**
  * The list of Acme after the archive of Checkout address autocomplete, with
  * the Archived group open and no workspace open. The last archived workspace
  * comes first and opens its archived screen.
@@ -239,15 +268,8 @@ export function archivedGroup(): ArchivedList {
     to: paths.archive,
     restoreOpen: true,
   }
-  const older = archivedWorkspaceList.map((workspace): WorkspaceRow => ({
-    workspace,
-    status: 'archived',
-    github: workspace.github,
-    selected: false,
-    restoreOpen: keptArchives.has(workspace.key),
-  }))
   return {
     sections: sectionsWithout(checkoutAutocomplete.key, false),
-    archived: [last, ...older],
+    archived: [last, ...archivedRows()],
   }
 }

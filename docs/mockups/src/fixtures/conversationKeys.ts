@@ -56,5 +56,6 @@ export const conversationKeys = [
   'nested-lists-in-work',
   'headings',
   'headings-in-work',
+  'postcode-history',
   ...barConversationKeys,
 ] as const

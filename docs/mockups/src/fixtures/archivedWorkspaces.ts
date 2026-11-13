@@ -1,9 +1,10 @@
-import { codex, workspace, type Workspace } from './workspaces'
+import { workspace, type Workspace } from './workspaces'
 
 /**
- * A workspace of Acme that a member archived weeks ago. The app keeps it in
- * the Archived group of the list, and a chip still finds it, with the
- * archived state. A member gave it a long name.
+ * A workspace of Acme that a member archived 3 weeks ago. Its 14 days
+ * ended, so it left the list: no section and no Archived group holds it.
+ * The app keeps its chat, so a chip still finds it, with the archived
+ * state, and opens its read-only chat. A member gave it a long name.
  */
 export const postcodeLookup = workspace(
   'postcode-lookup',
@@ -20,10 +21,11 @@ export const postcodeLookup = workspace(
 )
 
 /**
- * The archived workspaces of Acme, the last archived first. Their chats
- * stay read-only. The list keeps them in its Archived group, which stays
- * closed until the user opens it, and a chip still finds each of them,
- * with the archived state.
+ * The archived workspaces of Acme in the list, the last archived first.
+ * Each was archived less than 14 days ago, and the app keeps its cloud
+ * computer, so Restore brings it back. Their chats stay read-only. The list
+ * keeps them in its Archived group, which stays closed until the user opens
+ * it, and a chip still finds each of them, with the archived state.
  */
 export const archivedWorkspaceList: readonly Workspace[] = [
   workspace('checkout-redesign', 'Checkout page redesign', {
@@ -45,30 +47,4 @@ export const archivedWorkspaceList: readonly Workspace[] = [
     updated: '9d',
     owner: 'priya',
   }),
-  workspace(
-    'stripe-sdk',
-    'Stripe SDK upgrade',
-    {
-      number: 381,
-      id: 'uiKwnn39JBDqjqP6QZYJKHN-GY0x_FegD8AgNtcySvo',
-      repository: 'billing-service',
-      section: 'infra',
-      status: 'archived',
-      github: 'checks-failed',
-      updated: '16d',
-      owner: 'jonas',
-    },
-    codex,
-  ),
-  postcodeLookup,
 ]
-
-/**
- * The archived workspaces whose cloud computers the app still keeps: each
- * was archived less than 14 days ago, so Restore brings it back. The app
- * deleted the cloud computers of the older ones.
- */
-export const keptArchives: ReadonlySet<string> = new Set([
-  'checkout-redesign',
-  'black-friday-banner',
-])

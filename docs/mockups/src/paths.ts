@@ -182,6 +182,7 @@ export const paths = {
   archive: 'app/archive',
   justArchived: 'app/archive/just-archived',
   restored: 'app/archive/restored',
+  removed: 'app/archive/removed',
   attachments: 'app/attachments',
   attachmentsSent: 'app/attachments/sent',
   attachmentsQueued: 'app/attachments/queued',

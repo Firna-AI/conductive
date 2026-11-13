@@ -1,14 +1,19 @@
 import { isPendingCommand } from '../components/chat/PendingCommand'
 import type {
-  ArchiveRestore,
-  SandboxNoticeState,
-  SandboxPanelState,
-} from '../components/workspace/sandboxNoticeState'
+  BarNotice,
+  PanelNotice,
+} from '../components/workspace/SandboxNotice'
+import type { ArchiveRestore } from '../components/workspace/sandboxNoticeState'
 import { orgSuspendedReason } from '../components/orgs/suspension'
+import {
+  archivedNow,
+  postcodeArchive,
+  type ArchiveDays,
+} from '../fixtures/archive'
 import { conversations, type ConversationKey } from '../fixtures/conversations'
 import { startErrors } from '../fixtures/starting'
 import { ownerSuspendedRefusal } from '../fixtures/startRefusals'
-import type { ActivityStatus } from '../fixtures/workspaces'
+import type { ActivityStatus, OpenableWorkspace } from '../fixtures/workspaces'
 import { isRunning } from './composerFor'
 import { isNew } from './workspaceTabs'
 import type { WorkspaceState } from './workspaceState'
@@ -50,21 +55,41 @@ export function drawnState(state: WorkspaceState): WorkspaceState {
  * What an archived workspace can get back: Restore until its last day, for
  * every member, except in a suspended org, which refuses it. After that
  * day, Restore ended, also while the delete of the cloud computer tries
- * again. A workspace that is not archived, or whose cloud computer the app
- * deleted, has none.
+ * again. A workspace that is not archived, or that has no kept cloud
+ * computer, has none.
  */
 export function archiveRestore(
   state: WorkspaceState,
 ): ArchiveRestore | undefined {
   if (state.sandbox !== 'archived') return undefined
   switch (state.archive) {
-    case 'deleted':
+    case 'none':
+    case 'removed':
       return undefined
-    case 'ended':
+    case 'removed-deleting':
       return 'ended'
     case 'kept':
       return state.org === 'suspended' ? 'refused' : 'available'
   }
+}
+
+/**
+ * Whether the 14 days of an archived workspace ended, so that it left the
+ * list. Only a link opens it then.
+ */
+export function isRemoved(archive: WorkspaceState['archive']): boolean {
+  return archive === 'removed' || archive === 'removed-deleting'
+}
+
+/**
+ * The days that the bar of each workspace gives when a screen opens it
+ * archived: the Archive of now, or the earlier Archive of the removed
+ * workspace that a chip opens.
+ */
+const archiveDays: Readonly<Record<OpenableWorkspace, ArchiveDays>> = {
+  'checkout-autocomplete': archivedNow,
+  'saved-carts': archivedNow,
+  'postcode-lookup': postcodeArchive,
 }
 
 /**
@@ -86,11 +111,9 @@ function beforeFirstStart(state: WorkspaceState): boolean {
  * shows the words of its cause: the org or the owner. A failed start
  * carries the message that the app saved for it. A failed first start
  * keeps the composer under its bar. An archived workspace says what it can
- * get back.
+ * get back, and when it leaves the list or when it left it.
  */
-export function sandboxNotice(
-  state: WorkspaceState,
-): SandboxNoticeState | undefined {
+export function sandboxNotice(state: WorkspaceState): BarNotice | undefined {
   switch (state.sandbox) {
     case 'refused':
       return {
@@ -109,7 +132,12 @@ export function sandboxNotice(
     case 'stopped':
       return { problem: 'stopped' }
     case 'archived':
-      return { problem: 'archived', restore: archiveRestore(state) }
+      return {
+        problem: 'archived',
+        restore: archiveRestore(state),
+        removed: isRemoved(state.archive),
+        days: archiveDays[state.workspace],
+      }
     case 'ready':
     case 'starting':
       return undefined
@@ -121,9 +149,7 @@ export function sandboxNotice(
  * content: the notice of the bar, with the words of a refusal, or the wait
  * of a start. A ready sandbox shows its content.
  */
-export function panelState(
-  state: WorkspaceState,
-): SandboxPanelState | undefined {
+export function panelState(state: WorkspaceState): PanelNotice | undefined {
   if (state.sandbox === 'starting') return { problem: 'starting' }
   return sandboxNotice(state)
 }

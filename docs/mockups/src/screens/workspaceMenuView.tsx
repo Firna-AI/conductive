@@ -8,15 +8,12 @@ import {
   type RowFocus,
 } from '../components/workspaces/rowControls'
 import {
+  archivedRows,
   suspendedSections,
   workspaceSections,
   type SidebarSection,
   type WorkspaceRow,
 } from '../components/workspaces/sections'
-import {
-  archivedWorkspaceList,
-  keptArchives,
-} from '../fixtures/archivedWorkspaces'
 import {
   memberViewer,
   people,
@@ -52,20 +49,6 @@ export type MenuListView = {
 }
 
 /**
- * The archived workspaces of Acme. Those of the last 14 days offer Restore
- * on their rows.
- */
-const archivedRows: readonly WorkspaceRow[] = archivedWorkspaceList.map(
-  (workspace) => ({
-    workspace,
-    status: 'archived',
-    github: workspace.github,
-    selected: false,
-    restoreOpen: keptArchives.has(workspace.key),
-  }),
-)
-
-/**
  * An org whose only section is General: Acme after an admin deleted
  * Checkout and Infra, which moved their workspaces to General.
  */
@@ -95,7 +78,7 @@ function rowsOf(
   if (list === 'suspended') return { sections: suspendedSections() }
   if (list === 'general-only') return { sections: generalOnlySections() }
   if (scenario.archived === 'open') {
-    return { sections: workspaceSections(), archived: archivedRows }
+    return { sections: workspaceSections(), archived: archivedRows() }
   }
   const target = scenario.target ?? menuTarget
   const isTarget = (row: WorkspaceRow) => row.workspace.key === target
@@ -113,18 +96,22 @@ function rowsOf(
     }
   }
   if (scenario.archived !== 'after-archive') return { sections: all }
-  // The archive took the workspace from its section to the Archived group,
-  // which stays collapsed, because the workspace is not open.
+  // The archive took the workspace from its section to the top of the
+  // Archived group, which stays collapsed, because the workspace is not
+  // open. Its count holds only the archived workspaces of the last 14 days.
   const gone = all.flatMap((item) => item.rows).filter(isTarget)
   return {
     sections: all.map((item) => ({
       ...item,
       rows: item.rows.filter((row) => !isTarget(row)),
     })),
-    archived: gone.map((row): WorkspaceRow => ({
-      ...changedNow(row, 'archived'),
-      restoreOpen: true,
-    })),
+    archived: [
+      ...gone.map((row): WorkspaceRow => ({
+        ...changedNow(row, 'archived'),
+        restoreOpen: true,
+      })),
+      ...archivedRows(),
+    ],
     archivedCollapsed: true,
   }
 }

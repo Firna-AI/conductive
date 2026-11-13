@@ -52,11 +52,11 @@ const hexwave = {
 export const orgPages: Readonly<Record<TargetStatus, OrgPage>> = {
   active: {
     ...hexwave,
-    states: { running: 3, stopped: 6, failed: 1, archived: 0 },
+    states: { running: 3, stopped: 6, failed: 1, archived: 0, removed: 0 },
   },
   suspended: {
     ...hexwave,
-    states: { running: 2, stopped: 7, failed: 1, archived: 0 },
+    states: { running: 2, stopped: 7, failed: 1, archived: 0, removed: 0 },
     suspension: { since: '8 Nov at 14:35', by: account.login, stopping: 2 },
   },
   deleted: {
@@ -66,7 +66,7 @@ export const orgPages: Readonly<Record<TargetStatus, OrgPage>> = {
     created: '3 Nov 2026',
     repositories: 1,
     builds: 0,
-    states: { running: 0, stopped: 4, failed: 0, archived: 0 },
+    states: { running: 0, stopped: 4, failed: 0, archived: 0, removed: 0 },
     members: [
       { login: 'ana-p', name: 'Ana Pereira', initials: 'AP', role: 'Admin' },
       { login: 'joe-q', name: 'Joe Quinn', initials: 'JQ', role: 'Member' },

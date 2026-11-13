@@ -25,6 +25,15 @@ export function isNew(state: WorkspaceState): boolean {
 }
 
 /**
+ * A workspace with one session, whose tab takes the title of the
+ * workspace: a new one, and the removed Postcode lookup for the shipping
+ * and billing forms, which kept the one session that made it.
+ */
+function oneSession(state: WorkspaceState): boolean {
+  return isNew(state) || state.workspace === 'postcode-lookup'
+}
+
+/**
  * The states after the second session sent a message to the first session
  * and to Saved carts. Each session tab then leads to the chat of its session
  * at that time.
@@ -93,20 +102,20 @@ function pictureTab(state: WorkspaceState): WorkspaceTab | undefined {
  * opens, and a move puts the code file between the two sessions. A tab
  * whose file name the app does not know shows "File". The one session of a
  * new workspace takes the title of the workspace, so its tab shows the same
- * name as the header, Untitled before the title comes. While the login of
- * the starter of the first session is not available, that first session
- * leads to its view for the member, beside the linked session. While the
- * starter keeps the login for their own messages, the first session leads
- * to that view. After the second session sent its messages, the second
- * session can show, and each session tab leads to its chat of that time.
- * The file or the diff that the state opens can be the temporary tab, as
- * `withTemporaryTab` draws it.
+ * name as the header, Untitled before the title comes, as `oneSession`
+ * says. While the login of the starter of the first session is not
+ * available, that first session leads to its view for the member, beside
+ * the linked session. While the starter keeps the login for their own
+ * messages, the first session leads to that view. After the second session
+ * sent its messages, the second session can show, and each session tab
+ * leads to its chat of that time. The file or the diff that the state opens
+ * can be the temporary tab, as `withTemporaryTab` draws it.
  */
 export function tabsFor(
   state: WorkspaceState,
   workspace: Workspace,
 ): WorkspaceTab[] {
-  if (isNew(state)) {
+  if (oneSession(state)) {
     const title = workspaceName(state, workspace)
     return [{ key: 'session', kind: 'session', title, selected: true }]
   }

@@ -1,9 +1,9 @@
-import { archivedWorkspaceList } from '../../fixtures/archivedWorkspaces'
 import { orgs } from '../../fixtures/orgs'
 import type { RepositoryKey } from '../../fixtures/repositories'
 import type { ShortcutChanges } from '../../fixtures/shortcutChanges'
 import { helpGroupLabel } from '../feedback/feedbackCopy'
 import {
+  archivedRows,
   workspaceSections,
   type OpenWorkspace,
   type WorkspaceRow,
@@ -98,14 +98,11 @@ const recentKeys = [
 
 const recentLimit = 5
 
-const archivedRows: readonly WorkspaceRow[] = archivedWorkspaceList.map(
-  (workspace) => ({
-    workspace,
-    status: 'archived',
-    github: workspace.github,
-    selected: false,
-  }),
-)
+/**
+ * The archived workspaces of the last 14 days, as the Archived group has
+ * them. A removed workspace shows in no group of the palette.
+ */
+const archived: readonly WorkspaceRow[] = archivedRows()
 
 function workspaceRows(rows: readonly WorkspaceRow[]): PaletteRow[] {
   return rows.map((row) => ({ kind: 'workspace', row }))
@@ -147,8 +144,9 @@ function settingRows(context: PaletteContext): PaletteRow[] {
 
 /**
  * The results of a query on the All tab: the workspaces, the actions, and
- * the settings that match, then the archived workspaces that match. Without
- * the workspace data, only the actions and the settings can match.
+ * the settings that match, then the archived workspaces of the last 14 days
+ * that match. Without the workspace data, only the actions and the settings
+ * can match.
  */
 function searchGroups(
   query: string,
@@ -160,7 +158,7 @@ function searchGroups(
     { label: 'Workspaces', rows: loaded ? workspaceRows(active) : [] },
     { label: 'Actions', rows: commandRows(actionsOf(context)) },
     { label: 'Settings', rows: settingRows(context) },
-    { label: 'Archived', rows: loaded ? workspaceRows(archivedRows) : [] },
+    { label: 'Archived', rows: loaded ? workspaceRows(archived) : [] },
   ]
   return groups
     .map((group) => ({
@@ -172,7 +170,7 @@ function searchGroups(
 
 /** The archived workspaces of one repository, or of all, in one group. */
 function archivedGroups(repository?: RepositoryKey): PaletteGroup[] {
-  const rows = archivedRows.filter(
+  const rows = archived.filter(
     (row) =>
       repository === undefined || row.workspace.repository === repository,
   )

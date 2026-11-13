@@ -9,7 +9,7 @@ const flow = ['user-flows/archive-from-list']
 export const workspaceMenuArchive = defineScreen({
   title: 'Archive from the list',
   description:
-    'Archive in the menu of Apple Pay button archived it at once, with no check and no question. Its row left Checkout for the Archived group at the end of the list, which stays collapsed, with its count, because the workspace did not open. A toast names the workspace and offers Restore. The list stays where it was. On a phone the toast spans the bottom of the screen.',
+    'Archive in the menu of Apple Pay button archived it at once, with no check and no question. Its row left Checkout for the Archived group at the end of the list, which stays collapsed because the workspace did not open. Its count holds the three workspaces of the last 14 days. A toast names the workspace, gives the day when it leaves the list, and offers Restore. The list stays where it was. On a phone the toast spans the bottom of the screen.',
   rationale:
     'The menu runs the same Archive as the row and the pull request bar, from decision 1 of PR #138: it stops the cloud computer and keeps it for 14 days, so the toast can offer Restore. Only the owner and the admins see Archive, from decision 42. The workspace does not open, so Archive from the list starts no cloud computer. The menu keeps its four actions, and Restore stays on the row, the bar, the toast, and the palette.',
   relatedDocs: [],

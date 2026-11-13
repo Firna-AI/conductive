@@ -89,10 +89,13 @@ link, and the bars of the cloud computer.
   cloud computer: stopped, error, archived, and refused. A refused start
   shows "The sandbox can't start" with the words of its cause and no
   action. The notice takes any refusal reason. An archived workspace
-  offers Restore until its last day, and the bar gives that day. After
-  it, the bar gives the day when Restore ended while a failed delete of
-  the cloud computer tries again, and it says that the cloud computer is
-  deleted only after the delete. `sandboxNoticeState.ts` beside it owns
+  offers Restore until its last day, and the bar gives that day and says
+  that the workspace leaves the list then. A bar without Restore gives
+  that day too. After it, the workspace is removed: the bar says "Removed
+  on" and the day, that the workspace left the list, and that the chat is
+  read-only. It says that the cloud computer is being deleted while a
+  failed delete tries again, and that it is deleted only after the
+  delete. Its panels say Removed. `sandboxNoticeState.ts` beside it owns
   the types of the bar and the panels, which the app imports too.
   - For a suspended workspace owner, the history, the tabs, the header, and
     the owner picker stay, as `app/shell/refused` and its `reassign`

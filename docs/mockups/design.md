@@ -17,7 +17,8 @@ the sections that the user made. Each workspace is one line: a dot-matrix
 mark in the colour of its GitHub state, the name, and the time, and it
 moves to another section by drag and drop. Archive covers the time on
 hover only, without moving the row content, and Restore does so in the
-Archived group. Selection and
+Archived group, which holds the archived workspaces of the last 14 days.
+Selection and
 keyboard focus alone keep the time visible. A right click on a row opens
 the menu of the workspace. The centre column has a slim header that names
 the
@@ -162,7 +163,8 @@ sessions as tabs above the chat, and four tabs at the bottom.
   across the bottom of a phone. An action that a user can undo, such as
   Archive, asks no question and offers the undo in its toast.
   `ArchivedToast` in `src/components/workspace/` gives the toast after
-  Archive, over the workspace and over the list.
+  Archive, over the workspace and over the list. Its second line gives the
+  day when the workspace leaves the list.
 - [The pull request bar](design-bar.md) gives its one main action in each
   state, the line under the bar, the actions on top of the Checks tab of a
   phone, and the question and the note of Continue.

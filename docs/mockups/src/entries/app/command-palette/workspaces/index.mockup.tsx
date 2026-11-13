@@ -28,14 +28,14 @@ export const paletteWorkspaces = defineScreen({
       slug: 'archived',
       title: 'Archived workspaces',
       description:
-        'The state filter shows the archived workspaces of Acme, the last archived first. An archived workspace opens with its chat read-only.',
+        'The state filter shows the archived workspaces of Acme of the last 14 days, the last archived first, as the Archived group of the list does. An archived workspace opens with its chat read-only. When its 14 days end, a workspace leaves this filter and the search, and only a link opens it.',
       props: { view: 'workspaces-archived' },
     },
     {
       slug: 'empty',
       title: 'No workspace to show',
       description:
-        'The filters choose acme/marketing-site and Archived. Acme has no archived workspace in that repository, so one line says where they show. With the Active filter, the line says "Workspaces of" and the repository, or the org while the filter shows all repositories.',
+        'The filters choose acme/marketing-site and Archived. Acme has no archived workspace of the last 14 days in that repository, so one line says where they show and for how long. With the Active filter, the line says "Workspaces of" and the repository, or the org while the filter shows all repositories.',
       props: { view: 'workspaces-empty' },
     },
     {

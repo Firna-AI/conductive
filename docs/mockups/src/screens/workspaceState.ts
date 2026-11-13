@@ -160,13 +160,16 @@ export const workspaceStateSchema = {
       ],
     },
     /**
-     * The cloud computer of an archived workspace: kept, until the app
-     * deletes it 14 days after the Archive, kept past the last day of
-     * Restore while its delete tries again, or deleted. Until that last day,
-     * every member of an org that is not suspended may restore the
-     * workspace.
+     * An archived workspace and its cloud computer. For 14 days after the
+     * Archive, the workspace stays in the Archived group: `kept`, while the
+     * app keeps its cloud computer, so every member of an org that is not
+     * suspended may restore it, or `none`, without a kept cloud computer,
+     * as after a failed first start. When the 14 days end, Restore ends and
+     * the workspace leaves the list, and only a link opens it:
+     * `removed-deleting`, while a failed delete of its cloud computer tries
+     * again, or `removed`, after the delete.
      */
-    archive: { enum: ['kept', 'ended', 'deleted'] },
+    archive: { enum: ['kept', 'none', 'removed-deleting', 'removed'] },
     /** The person signed in: an admin of the org, or a member who is not. */
     viewer: { enum: ['admin', 'member'] },
     /**
