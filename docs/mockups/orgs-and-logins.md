@@ -217,6 +217,10 @@ plan limits.
 - A login belongs to the person, so the agent step has its own state. A
   person who leaves the last org returns to Get started with the agent
   still connected, as `app/sign-in/get-started/no-org` shows.
+- A person whose orgs are all deleted counts as a person with no org.
+  While a deleted org exists, Get started shows the Deleted orgs list with
+  Restore before its steps, as `app/sign-in/get-started/deleted-orgs`
+  shows. Otherwise it shows no list.
 - The app and the mockups take the words of Get started from
   `src/screens/getStartedCopy.ts`. The words make no claim about earlier
   use.

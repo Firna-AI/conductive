@@ -186,6 +186,9 @@ To restore a deleted org:
 3. Select **Restore** beside the org.
 
 The org returns to the org list.
+
+If all your orgs are deleted, **Get started** opens instead of an org.
+It lists each deleted org with **Restore** above its steps.
 Restoring brings back its workspaces, chats, and settings.
 Archived workspaces stay archived after the org returns.
 Their existing Restore deadlines continue to apply.

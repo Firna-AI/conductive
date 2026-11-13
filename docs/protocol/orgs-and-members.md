@@ -96,6 +96,8 @@ decision number names a dated record, as
 - A member who is not an admin sees each state with no action. Reason:
   only an admin builds (decision 57).
 - The person can connect an agent while the build runs.
+- While the person has a deleted org, Get started lists it before the
+  steps, with Restore, as [Delete org](#delete-org) says.
 - When every step is done, Get started shows its finish: a line about the
   org, and an Open button for the org, such as "Open Acme".
 - The Open button stays on in every state of the build (decision 150 of PR #92).
@@ -268,7 +270,17 @@ decision number names a dated record, as
   started. Its question says that an admin restores the org from Account
   settings.
 - A person whose orgs are all deleted counts as a person without an org.
-  So the app opens Get started, as for a new person.
+  So the app opens Get started, as for a new person, and its org step
+  offers Create org.
+- While the person has a deleted org, Get started also lists it before
+  its steps, with Restore, as the Account page does. Restore there opens
+  the org. Without a deleted org, Get started shows no such list.
+- Reason: a phone shows Get started without the rail, so it has no other
+  way to the Account page. The user chose this on 13 November 2026.
+  Opening the page of a deleted org, as before, was rejected, because a
+  person who wants a new org then meets the deleted org first. A link to
+  the Account page on the phone layout of Get started was rejected,
+  because Restore then sits one page away from where the person lands.
 - A suspended deleted org offers no Restore, in the Account page or on
   its page, because a suspended org refuses a restore.
 - Restore brings the org back as it was. Its workspaces start again when

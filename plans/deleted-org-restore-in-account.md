@@ -63,21 +63,26 @@ Each call below is my call, made on 12 November 2026. The user said
   Create org step is not complete. Reason: the rail then shows no org,
   and Get started is the page for a user without one.
   The review of 12 November 2026 found that a phone shows no way from
-  Get started to the Account page. So this call waits for the user, as
-  the open decision below says.
+  Get started to the Account page. The user's decision of 13 November
+  2026 below settles that.
 - **Command palette:** the Account group of the palette Settings tab gets
   no row for Deleted orgs. Reason: the section shows only sometimes, and
   the palette already treats a deleted org as absent.
 
-## Open decision
+## Restore from Get started
 
-- **Restore from Get started on a phone.** A person whose orgs are all
-  deleted lands on Get started, which has no link to the Account page on
-  a phone. The options are: A, open the page of a deleted org as before;
-  B, a link to the Account page on the phone layout of Get started; C,
-  the Deleted orgs list with Restore on Get started. The recommendation
-  is C. `plans/follow-ups/deleted-org-completes-get-started.md` holds the
-  full item.
+- 13 November 2026, the user chose option C: while the person has a
+  deleted org, Get started lists it before its steps, with Restore, and
+  shows nothing when no org is deleted. Restore there opens the org.
+- The question: a person whose orgs are all deleted lands on Get started,
+  and a phone shows that page without a link to the Account page.
+- Rejected: A, open the page of a deleted org as before, because a person
+  who wants a new org then meets the deleted org first. B, a link to the
+  Account page on the phone layout of Get started, because Restore then
+  sits one page away from where the person lands.
+- This also settles the older follow-up item about load failures on Get
+  started for a deleted org, which this change deletes. Option B of that
+  item, a deleted org counts as no org, is now in force.
 
 Contract owners:
 
@@ -174,7 +179,7 @@ Depends on: every other milestone
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
       once, and report.
-- [ ] Apply the answer of the open decision: the mockups, the protocol
+- [x] Apply the answer of the open decision: the mockups, the protocol
       line, the code, and the tests.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".

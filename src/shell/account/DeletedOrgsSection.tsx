@@ -22,13 +22,17 @@ import { OrgTile } from '../ui/Avatars'
 type Restore = { busy: true } | { busy: false; error: string }
 
 /**
- * Deleted orgs, the last section of the General tab: each deleted org that
- * the user can see, which only its admins can. The rail leaves these orgs
- * out. An admin restores an org until everything of it is deleted, and the
- * org goes back to the rail. A suspended org refuses a restore, so its row
- * offers none. The section shows only while the user has a deleted org.
+ * Deleted orgs: each deleted org that the user can see, which only its
+ * admins can. The last section of the General tab shows it, and Get
+ * started shows it before its steps. The rail leaves these orgs out. An
+ * admin restores an org until everything of it is deleted, and the org
+ * goes back to the rail. `onRestored` then gets the org, after the org
+ * list has it. A suspended org refuses a restore, so its row offers none.
+ * The section shows only while the user has a deleted org.
  */
-export function DeletedOrgsSection() {
+export function DeletedOrgsSection(props: {
+  onRestored?: (org: OrgSummary) => void
+}) {
   const app = useApp()
   const orgs = useStore(app.orgs)
   const refused = useStore(app.refusedOrgs)
@@ -55,7 +59,10 @@ export function DeletedOrgsSection() {
       // The org is back on the server, so the list takes it also after an
       // unmount of the page.
       app.putOrg(restored)
-      if (mounted.current) put(org.id, null)
+      if (mounted.current) {
+        put(org.id, null)
+        props.onRestored?.(restored)
+      }
     } catch (reason) {
       if (mounted.current) {
         put(org.id, { busy: false, error: errorMessage(reason) })

@@ -23,10 +23,14 @@ export const deletedOrgStates = [
 export type DeletedOrgState = (typeof deletedOrgStates)[number]
 
 /**
- * The Deleted orgs section of the mockups, with Acme Labs. Restore leads
- * to the account without the section, because the org is back in the rail.
+ * The Deleted orgs section of the mockups, with Acme Labs. Restore leads to
+ * `restoredTo`: by default the account without the section, because the
+ * org is back in the rail.
  */
-export function DeletedOrgsSection(props: { state: DeletedOrgState }) {
+export function DeletedOrgsSection(props: {
+  state: DeletedOrgState
+  restoredTo?: string
+}) {
   if (props.state === 'none') return null
   const org = orgs[accountDeletedOrg.org]
   const suspended = props.state === 'suspended'
@@ -40,7 +44,7 @@ export function DeletedOrgsSection(props: { state: DeletedOrgState }) {
           name: org.name,
           detail: suspended ? copy.suspended(day) : copy.deletes(day),
           action: suspended ? undefined : (
-            <ScreenLink asChild to={paths.account}>
+            <ScreenLink asChild to={props.restoredTo ?? paths.account}>
               <ActionButton
                 accessibilityLabel={copy.restoreLabel(org.name)}
                 icon={ArchiveRestore}
