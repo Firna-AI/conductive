@@ -74,7 +74,7 @@ function RailLink({
   )
 }
 
-/** The name of an item of the rail, which shows on hover and on focus. */
+/** The name of an item of the rail, which shows on hover and on keyboard focus. */
 function RailHint(props: { name: string; hint?: ShortcutHint }) {
   return (
     <span aria-hidden className={classes(styles.hint, layout.railHint)}>
