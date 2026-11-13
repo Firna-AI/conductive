@@ -13,7 +13,7 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     area: 'agents-and-chat',
     name: 'Chat tabs',
     status: 'available',
-    note: 'Open several agent sessions on one branch, with closed sessions in history. Keeping each tab’s scroll position is in progress.',
+    note: 'Open several agent sessions on one branch, with closed sessions in history. Each tab keeps your reading position across tabs and workspaces.',
   },
   {
     id: 'mentions',

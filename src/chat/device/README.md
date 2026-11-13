@@ -53,6 +53,8 @@ const { controller, state } = useMacSettings(services.api)
   is isolated in its mark. A copy of a selection inside the literal gives
   the original text, because a native copy changes U+00A0 into a space.
   Any other copy stays native.
+  Command cards and approval requests use shell syntax colours from the file viewer.
+  Folder paths stay plain.
 - Only a window whose pairing names the connection of the request gets Deny,
   Allow, and the menu of the other ways to allow. A browser, the Mac app of
   another Mac, and a replaced connection show the state only. The pairing

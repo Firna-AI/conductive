@@ -1,5 +1,38 @@
 # Changelog
 
+## [0.17.0](https://github.com/Firna-AI/conductive/compare/v0.16.0...v0.17.0) (2026-11-13)
+
+
+### ⚠ BREAKING CHANGES
+
+* **runner:** remove protocol version 1 ([#339](https://github.com/Firna-AI/conductive/issues/339))
+
+### Features
+
+* **account:** move the agents to their own Account tab ([#333](https://github.com/Firna-AI/conductive/issues/333)) ([b52b9bb](https://github.com/Firna-AI/conductive/commit/b52b9bbdd3c12d443cea452e44d40f85b59d54d6))
+* **desktop:** extend the 15 minutes of Allow all on the Mac ([#326](https://github.com/Firna-AI/conductive/issues/326)) ([36c32f3](https://github.com/Firna-AI/conductive/commit/36c32f3256120260181580bab871b92a71e072f7))
+* **fast-mode:** add a Fast switch to the model menu ([#349](https://github.com/Firna-AI/conductive/issues/349)) ([e81823c](https://github.com/Firna-AI/conductive/commit/e81823c5c013e485e5c5254ffc579df0917bb596))
+* **files:** open files in one temporary tab ([#345](https://github.com/Firna-AI/conductive/issues/345)) ([f935c84](https://github.com/Firna-AI/conductive/commit/f935c84c4b1f404450a49a1bc0f2e2d00ffc3d73))
+* **github:** show Push when only unpushed commits are left ([#341](https://github.com/Firna-AI/conductive/issues/341)) ([e44c3e6](https://github.com/Firna-AI/conductive/commit/e44c3e69138f5bdaa24a32e7e7df521ffd98822e))
+* **list:** reorder sections by drag and by the section menu ([#351](https://github.com/Firna-AI/conductive/issues/351)) ([f9c0804](https://github.com/Firna-AI/conductive/commit/f9c0804659fe06094bf398c47e1bb3bbd12b0c62))
+* **mac:** move This Mac to its own tab and cut long commands short ([#337](https://github.com/Firna-AI/conductive/issues/337)) ([787a9a8](https://github.com/Firna-AI/conductive/commit/787a9a87999f44f814804acb82e0ddeddfdc980f))
+* **marketing:** remove the pricing page and the billing plans ([#343](https://github.com/Firna-AI/conductive/issues/343)) ([c194159](https://github.com/Firna-AI/conductive/commit/c194159bf1b4410f74d3a37f1bf6b0b04e1a8c0d))
+* **models:** offer Max and Ultra on Codex, Ultra and Extra high on Claude ([#344](https://github.com/Firna-AI/conductive/issues/344)) ([0692f4e](https://github.com/Firna-AI/conductive/commit/0692f4ef25bc16ebef04d055ac3a2a8be00f92bf))
+* **orgs:** open the last workspace of each org ([#353](https://github.com/Firna-AI/conductive/issues/353)) ([4fb7633](https://github.com/Firna-AI/conductive/commit/4fb76331fdc4e2722d814f722767f7baf8af3714))
+* **tabs:** keep the reader's place in each tab ([#350](https://github.com/Firna-AI/conductive/issues/350)) ([974690b](https://github.com/Firna-AI/conductive/commit/974690bf00719dbc018c0357fe854f874b4fe188))
+
+
+### Bug Fixes
+
+* **marketing:** reflect shipped tab and section controls ([#355](https://github.com/Firna-AI/conductive/issues/355)) ([e20d431](https://github.com/Firna-AI/conductive/commit/e20d431a352962063e3a3e9bc1348f4b13aa0f30))
+* **marketing:** refresh Conductor feature progress ([#352](https://github.com/Firna-AI/conductive/issues/352)) ([6fed65e](https://github.com/Firna-AI/conductive/commit/6fed65e6f38c5e1b88f7c2e0cc32fa5f61d977d3))
+* **shell:** show the rail org name on hover, not after a click ([#346](https://github.com/Firna-AI/conductive/issues/346)) ([ce9313b](https://github.com/Firna-AI/conductive/commit/ce9313bba01ce3ae9723d391566a6c55a82f7eb3))
+
+
+### Code Refactoring
+
+* **runner:** remove protocol version 1 ([#339](https://github.com/Firna-AI/conductive/issues/339)) ([b409ef7](https://github.com/Firna-AI/conductive/commit/b409ef7f2a63de3065ed756e66871a3a3491aa85))
+
 ## [0.16.0](https://github.com/Firna-AI/conductive/compare/v0.15.0...v0.16.0) (2026-11-13)
 
 
