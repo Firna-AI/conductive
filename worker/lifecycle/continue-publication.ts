@@ -19,8 +19,8 @@ export async function publishContinue(
   const binding = {
     ...job.binding,
     branch: job.branch,
-    defaultBranch: job.baseBranch,
-    baseBranch: job.baseBranch,
+    defaultBranch: job.defaultBranch,
+    baseBranch: job.baseBranch === job.defaultBranch ? null : job.baseBranch,
   }
   await options.chat.authorizedWorkspaceOperation(
     job.binding.id,

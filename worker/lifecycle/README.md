@@ -59,6 +59,9 @@ The branch phase uses the event commit when it exists, or the start branch's exp
 It sets the branch's `gh-merge-base` Git setting to the workspace base.
 Create, resume, and disk retention pass that base through `CONDUCTIVE_DEFAULT_BRANCH`.
 A null stored base uses the repository default branch.
+Each startup command tries to set `gh-merge-base` and `origin/HEAD` from the current stored base before the startup script and runner run.
+The metadata command does not depend on the current HEAD, and a failed update does not block startup.
+The GitHub refresh also uses [`workspace-base.ts`](workspace-base.ts) to apply a deleted-base move while the computer runs.
 Try again keeps the saved start and base branches with its new allocation.
 
 ### Input activity

@@ -49,6 +49,8 @@ export type BannerState =
 export type GitHubBanner = {
   branch: string
   baseBranch: string
+  /** The deleted base, until this branch has a pull request. */
+  baseMoved?: string
   updatedAt: Timestamp
 } & (
   | {

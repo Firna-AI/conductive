@@ -23,6 +23,8 @@ export interface GitHubSnapshot {
   banner: GitHubBanner
   checks: GitHubChecksResponse
   headSha: string | null
+  pullBaseBranch?: string
+  baseChange?: { from: string; to: string }
 }
 
 /** The current branch, comparison base, and commit used by one read. */
@@ -68,6 +70,7 @@ export interface GitHubReadDependencies {
   fetch: HttpFetch
   token: GitHubTokenProvider
   now: () => number
+  syncBase?(workspace: GitHubWorkspace): Promise<void>
 }
 
 export interface GitHubStateTransaction {

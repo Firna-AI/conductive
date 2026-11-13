@@ -11,6 +11,7 @@ import { activeWorkspace } from './data'
 import { saveWorkspaceGitHubSummary } from './summary-data'
 import { readMergeWorkspace } from './merge-access'
 import type { WorkspaceGitHubState } from './workspace-state'
+import { moveWorkspaceBase } from './base-data'
 
 // Three fresh reads, one second apart, bound GitHub's merge-state retry work.
 const MERGE_STATE_RETRY_LIMIT = 3
@@ -38,6 +39,11 @@ async function needsRead(
     banner.state !== 'merged' &&
     banner.state !== 'closed'
   if (!otherPush) return open
+  if (
+    workspace.baseBranch != null &&
+    signal.pushBranch === workspace.baseBranch
+  )
+    return true
   return (
     open && signal.pushBranch === (workspace.baseBranch ?? banner.baseBranch)
   )
@@ -88,6 +94,7 @@ async function readAndCommit(
   state: WorkspaceGitHubState,
   dependencies: GitHubReadDependencies,
 ): Promise<GitHubSnapshot | null> {
+  let binding = workspace
   const authorize = async () => {
     const current =
       signal.requireWritable && signal.userId !== undefined
@@ -115,6 +122,27 @@ async function readAndCommit(
         'The workspace is not available.',
       )
     }
+    binding = current
+  }
+  const copy = async (snapshot: GitHubSnapshot) => {
+    if (snapshot.baseChange && snapshot.banner.branch === binding.branch) {
+      const moved = await moveWorkspaceBase(db, binding, snapshot.baseChange)
+      if (moved) {
+        binding = moved
+        await authorize()
+        try {
+          await dependencies.syncBase?.(moved)
+        } catch (error) {
+          await state.scheduleRefresh({ workspace: moved, signal: {} }, 1000)
+          throw error
+        }
+      }
+    }
+    await saveWorkspaceGitHubSummary(
+      db,
+      { ...binding, branch: snapshot.banner.branch },
+      githubSummary(snapshot.banner),
+    )
   }
   const schedule = async () => {
     const attempt = signal.retryAttempt ?? 0
@@ -122,7 +150,7 @@ async function readAndCommit(
     await authorize()
     await state.scheduleRefresh(
       {
-        workspace,
+        workspace: binding,
         signal: {
           retryAttempt: attempt + 1,
           ...(signal.userId === undefined ? {} : { userId: signal.userId }),
@@ -134,8 +162,10 @@ async function readAndCommit(
   }
   return state.refresh(
     async () => {
-      if (!(await needsRead(workspace, signal, state))) return null
-      const token = await dependencies.token(workspace)
+      const previous = await state.stored()
+      if (previous?.baseChange) await copy(previous)
+      if (!(await needsRead(binding, signal, state))) return null
+      const token = await dependencies.token(binding)
       await authorize()
       const reader = new GitHubReader(
         {
@@ -145,7 +175,7 @@ async function readAndCommit(
             return dependencies.fetch(request)
           },
         },
-        workspace,
+        binding,
         token,
       )
       try {
@@ -157,6 +187,14 @@ async function readAndCommit(
         )
           return null
         const snapshot = await reader.read(branches)
+        if (
+          !snapshot.banner.pullRequest &&
+          !snapshot.banner.baseMoved &&
+          previous?.banner.branch === binding.branch &&
+          binding.baseBranch == null &&
+          previous.banner.baseMoved
+        )
+          snapshot.banner.baseMoved = previous.banner.baseMoved
         if (signal.pushBranch === branches.baseBranch) await schedule()
         return snapshot
       } catch (error) {
@@ -169,11 +207,6 @@ async function readAndCommit(
     authorize,
     signal,
     // A receipt can replay committed state from before Continue.
-    (snapshot) =>
-      saveWorkspaceGitHubSummary(
-        db,
-        { ...workspace, branch: snapshot.banner.branch },
-        githubSummary(snapshot.banner),
-      ),
+    copy,
   )
 }

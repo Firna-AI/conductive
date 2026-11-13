@@ -16,6 +16,8 @@ import { authorizeMerge } from '../github/merge-access'
 import { GitHubReader } from '../github/client'
 import type { WorkspaceAlarms } from './alarms'
 import type { ReceiverStorage } from '../members/receiver-storage'
+import { freshGitHubUserToken } from '../security/github-tokens'
+import { syncWorkspaceBase } from '../lifecycle/workspace-base'
 
 interface ScheduledRead {
   at: number
@@ -48,6 +50,7 @@ export class WorkspaceGitHub {
   }
 
   async refresh(workspace: GitHubWorkspace, signal: GitHubRefresh) {
+    const userId = signal.userId
     return refreshWorkspace(
       this.env.DB,
       workspace,
@@ -55,14 +58,19 @@ export class WorkspaceGitHub {
       this.stateOf(workspace),
       {
         ...this.dependencies,
-        token: installationTokenProvider(
-          {
-            ...this.env,
-            GITHUB_APP_PRIVATE_KEY: this.env.GITHUB_APP_PRIVATE_KEY ?? '',
-          },
-          this.dependencies.fetch,
-          this.dependencies.now,
-        ),
+        syncBase: (binding) =>
+          syncWorkspaceBase(this.env, this.dependencies, binding),
+        token:
+          signal.requireWritable && userId !== undefined
+            ? () => freshGitHubUserToken(this.env, userId, this.dependencies)
+            : installationTokenProvider(
+                {
+                  ...this.env,
+                  GITHUB_APP_PRIVATE_KEY: this.env.GITHUB_APP_PRIVATE_KEY ?? '',
+                },
+                this.dependencies.fetch,
+                this.dependencies.now,
+              ),
       },
     )
   }
@@ -114,14 +122,11 @@ export class WorkspaceGitHub {
   ): Promise<string> {
     const authorize = () => authorizeMerge(this.env.DB, workspace, userId)
     await authorize()
-    const token = await installationTokenProvider(
-      {
-        ...this.env,
-        GITHUB_APP_PRIVATE_KEY: this.env.GITHUB_APP_PRIVATE_KEY ?? '',
-      },
-      this.dependencies.fetch,
-      this.dependencies.now,
-    )(workspace)
+    const token = await freshGitHubUserToken(
+      this.env,
+      userId,
+      this.dependencies,
+    )
     const branch = await new GitHubReader(
       {
         ...this.dependencies,

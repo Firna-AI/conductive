@@ -12,7 +12,10 @@ import { repositoryPull, HEAD_SHA } from '../github/fake-pull'
 import { refreshWorkspace } from '../github/refresh'
 import { WorkspaceGitHubState } from '../github/workspace-state'
 import type { GitHubWorkspace } from '../github/contracts'
-import { saveGitHubTokens } from '../security/github-tokens'
+import {
+  freshGitHubUserToken,
+  saveGitHubTokens,
+} from '../security/github-tokens'
 import {
   TEST_ORIGIN,
   TEST_TIME,
@@ -125,9 +128,23 @@ export async function continueFixture(harness: TestHarness) {
       scheduled.push(at)
     },
     refresh: (binding, signal) =>
-      refreshWorkspace(chat.env.DB, binding, signal, state, reads),
-    defaultBranch: (binding) =>
-      new GitHubReader(reads, binding, 'server-read-token').defaultBranch(),
+      refreshWorkspace(chat.env.DB, binding, signal, state, {
+        ...reads,
+        token: async () =>
+          signal.userId === undefined
+            ? reads.token()
+            : freshGitHubUserToken(
+                chat.env,
+                signal.userId,
+                options.dependencies,
+              ),
+      }),
+    defaultBranch: async (binding, userId) =>
+      new GitHubReader(
+        reads,
+        binding,
+        await freshGitHubUserToken(chat.env, userId, options.dependencies),
+      ).defaultBranch(),
     scheduleRefresh: async (binding) => {
       refreshed.push(binding)
     },

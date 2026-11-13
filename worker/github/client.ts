@@ -17,11 +17,15 @@ import {
 } from './parsers'
 import { CHECKS, COMPARE, LOOKUP, PULL, REVIEWS } from './queries'
 import { graphql } from './transport'
+import { checkRepositoryBranch } from './branch-check'
+import { requireGitBranchName } from './branch-name'
+import { HttpError } from '../http'
 
 export class GitHubReader {
   private readonly dependencies: GitHubReadDependencies
   private readonly workspace: GitHubWorkspace
   private readonly token: string
+  private liveDefaultBranch: string
   private branchPull: {
     dependencies: GitHubBranchDependencies
     pull: Record<string, unknown>
@@ -35,6 +39,7 @@ export class GitHubReader {
     this.dependencies = dependencies
     this.workspace = workspace
     this.token = token
+    this.liveDefaultBranch = workspace.defaultBranch
   }
 
   private async repository(query: string, variables: Record<string, unknown>) {
@@ -64,8 +69,17 @@ export class GitHubReader {
 
   async read(branches?: GitHubBranchDependencies): Promise<GitHubSnapshot> {
     const lookup = branches ?? (await this.dependenciesForBranch())
+    const baseChange = await this.baseChange()
     if (lookup.pullNumber === null) {
-      return this.withoutPull(lookup.headSha, lookup.baseBranch)
+      const snapshot = await this.withoutPull(
+        lookup.headSha,
+        baseChange?.to ?? lookup.baseBranch,
+      )
+      if (baseChange) {
+        snapshot.banner.baseMoved = baseChange.from
+        snapshot.baseChange = baseChange
+      }
+      return snapshot
     }
     const firstPage =
       this.branchPull?.dependencies === lookup
@@ -85,7 +99,9 @@ export class GitHubReader {
     )
     return {
       banner: pullBanner(
-        this.workspace,
+        baseChange
+          ? { ...this.workspace, baseBranch: baseChange.to }
+          : this.workspace,
         pull,
         checks,
         reviewers,
@@ -93,6 +109,8 @@ export class GitHubReader {
       ),
       checks: { state: 'available', checks },
       headSha: pull.headSha,
+      pullBaseBranch: pull.baseBranch,
+      ...(baseChange ? { baseChange } : {}),
     }
   }
 
@@ -111,6 +129,10 @@ export class GitHubReader {
           after,
         })
         fullName = text(repository.nameWithOwner)
+        this.liveDefaultBranch =
+          repository.defaultBranchRef === null
+            ? this.workspace.defaultBranch
+            : text(object(repository.defaultBranchRef).name)
         baseBranch =
           this.workspace.baseBranch != null ||
           repository.defaultBranchRef === null
@@ -149,6 +171,31 @@ export class GitHubReader {
       headSha,
       fullName,
       baseBranch,
+    }
+  }
+
+  private async baseChange(): Promise<GitHubSnapshot['baseChange']> {
+    const from = this.workspace.baseBranch
+    if (from == null) return undefined
+    requireGitBranchName(from)
+    try {
+      await checkRepositoryBranch(
+        this.dependencies.fetch,
+        this.token,
+        {
+          githubId: this.workspace.repositoryId,
+          fullName: this.workspace.fullName,
+          defaultBranch: this.liveDefaultBranch,
+        },
+        from,
+      )
+      return undefined
+    } catch (error) {
+      if (!(error instanceof HttpError) || error.code !== 'branch_not_found')
+        throw error
+      requireGitBranchName(this.liveDefaultBranch)
+      if (from === this.liveDefaultBranch) throw githubFailure()
+      return { from, to: this.liveDefaultBranch }
     }
   }
 

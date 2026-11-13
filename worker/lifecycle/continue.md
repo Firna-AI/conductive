@@ -1,7 +1,9 @@
 # Continue
 
-Continue moves a workspace to a new branch from the latest default branch
-of its repository, after its pull request merged. The workspace keeps its
+Continue moves a workspace to a new branch after its pull request merged.
+It starts from the latest commit of the pull request's current base when
+GitHub still has that branch. Otherwise, it uses the repository default.
+The workspace keeps its
 owner, name, sandbox, installed software, files, and sessions. The old
 branch stays in the sandbox and on GitHub.
 [Continue](../../docs/protocol/continue.md) and
@@ -80,7 +82,10 @@ same.
 
 1. `verify` refreshes the GitHub state as the member, and needs a merged
    pull request, or the job ends with 409 `workspace_not_merged`. It reads
-   the current default branch of the repository.
+   the current default branch separately from the pull request's real base.
+   `continueBase` in [`continue-base.ts`](continue-base.ts) checks that base
+   with the member's fresh GitHub user token. Only a missing branch falls
+   back to the default. A failed GitHub read ends the job before any move.
 2. `resume` starts a stopped computer through the normal resume as the
    member. That resume renews a revoked workspace token and runs the normal
    startup and readiness steps. Continue waits outside the chat queue until
@@ -105,7 +110,7 @@ an earlier branch still shows.
 ## The fetch
 
 `continueFetchCommand` in [`continue-commands.ts`](continue-commands.ts)
-fetches the default branch into a bare staging repository under
+fetches the selected base branch into a bare staging repository under
 `/tmp/conductive-continue/`, never into the working repository.
 
 - It runs through the isolated source command: an empty environment,
@@ -156,8 +161,9 @@ runs after a good move. It never runs Git again.
 - `storeContinuedBranch` writes the new branch to D1 only while the row
   still names the old branch, the same sandbox, and the same provider
   account, in an active org and a workspace that is not archived. The
-  fetched default branch becomes the base branch of the workspace. It also
-  records the fetched default branch on the repository.
+  selected branch becomes the base branch of the workspace. A base equal
+  to the live default is stored as null. It records only the live default
+  branch on the repository.
 - One chat transaction then commits `workspace.updated`, one
   `workspace.continued` note for each stored session, open or closed, the
   saved `continued` reply with the range of its event numbers, and the
@@ -230,7 +236,8 @@ refusal.
 - [`continue-publication.ts`](continue-publication.ts): `publishContinue`.
 - [`continue-types.ts`](continue-types.ts): the stored job, its keys, and
   `readContinueJob`, which reads an older job without a provider account
-  as the `boat` account.
+  as the `boat` account. For a job without a separate default branch, its
+  saved base supplies the default, as that job fetched the default branch.
 - [`local-work.ts`](local-work.ts): the local-work command and its reader
   of NUL-separated records.
 - [`workspace-branch.ts`](workspace-branch.ts): the branch name of a
@@ -262,6 +269,9 @@ results.
   fake Boat.
 - [`continue-access.test.ts`](continue-access.test.ts): the admission
   checks, and a member removed while Continue waits for the chat queue.
+- [`continue-base.test.ts`](continue-base.test.ts): the live merged base,
+  a deleted base, a default base stored as null, a failed branch read, and
+  recovery of a job saved without a separate default branch.
 - [`continue-concurrency.test.ts`](continue-concurrency.test.ts): the hold
   of dispatch and of a second Continue, a move after a member removal, and a
   saved resume.

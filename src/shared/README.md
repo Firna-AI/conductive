@@ -12,6 +12,8 @@ Dates use Unix milliseconds. IDs and model names are opaque strings.
 `Workspace.github` is the GitHub summary of its pull request, or null.
 `GitHubSummary` and `githubSummary` in `github.ts` give it from a banner: the state of the bar, or null without a pull request and for a closed pull request.
 `checksSummary` gives the checks of a pull request as one value, for the bar.
+`GitHubBanner.baseMoved` optionally names the deleted base that the repository default replaced.
+The Worker keeps it until a pull request opens, for the status message of the bar.
 [The GitHub state](../../docs/protocol/github-banner.md#the-github-state) states their order.
 `readGitHubSummary` in `github-read.ts` keeps a known summary and reads an absent or unknown value as null.
 The browser readers and the sandbox tools use it, so an older reply still reads.

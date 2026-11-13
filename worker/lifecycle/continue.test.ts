@@ -72,7 +72,7 @@ it('continues as another member, keeps workspace identity, and publishes one not
     {
       id: WORKSPACE_ID,
       branch: result.workspace.branch,
-      baseBranch: 'main',
+      baseBranch: null,
       defaultBranch: 'main',
     },
   ])
@@ -208,7 +208,7 @@ it('repairs publication after a committed transaction loses its reply without a 
   expect(await readWorkspace(f.env.DB, f.org.id, WORKSPACE_ID)).toMatchObject({
     baseBranch: 'main',
   })
-  expect(f.refreshed).toMatchObject([{ baseBranch: 'main' }])
+  expect(f.refreshed).toMatchObject([{ baseBranch: null }])
   expect(
     (await f.history(session.id)).events.filter(
       ({ event }) => event.type === 'workspace.continued',

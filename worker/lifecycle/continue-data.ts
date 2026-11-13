@@ -59,7 +59,7 @@ export async function storeContinuedBranch(
       )
       .bind(
         job.branch,
-        job.baseBranch,
+        job.baseBranch === job.defaultBranch ? null : job.baseBranch,
         options.dependencies.now(),
         job.binding.id,
         job.binding.orgId,
@@ -74,7 +74,7 @@ export async function storeContinuedBranch(
       AND EXISTS (SELECT 1 FROM workspaces WHERE id = ? AND branch = ? AND sandbox_id = ? AND provider_account = ?)`,
       )
       .bind(
-        job.baseBranch,
+        job.defaultBranch,
         job.repositoryId,
         job.binding.orgId,
         job.binding.id,

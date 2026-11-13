@@ -40,6 +40,7 @@ export interface ContinueJob {
   request: ContinueWorkspaceRequest
   branch: string
   baseBranch: string
+  defaultBranch: string
   directory: string
   phase: 'verify' | 'resume' | 'check' | 'fetch' | 'move' | 'publish'
   processId: number | null
@@ -75,12 +76,17 @@ export async function readContinueJob(
   key = CONTINUE_JOB_KEY,
 ): Promise<ContinueJob | null | undefined> {
   const job = await storage.get<
-    (Omit<ContinueJob, 'providerAccount'> & { providerAccount?: string }) | null
+    | (Omit<ContinueJob, 'providerAccount' | 'defaultBranch'> & {
+        providerAccount?: string
+        defaultBranch?: string
+      })
+    | null
   >(key)
   return job
     ? {
         ...job,
         providerAccount: job.providerAccount ?? DEFAULT_PROVIDER_ACCOUNT,
+        defaultBranch: job.defaultBranch ?? job.baseBranch,
       }
     : job
 }

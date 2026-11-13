@@ -5,19 +5,28 @@ import { repositoryLocation } from './repository-locations'
 import { workspaceStartupCommand } from './image-software'
 import type { WorkspaceRow } from './workspace-data'
 import type { WorkspaceStartJob } from './start-types'
+import { workspaceBaseCommand } from './workspace-base-command'
 
 /** Startup and repository commands share the same detached output journal. */
 export function workspacePhaseCommand(
-  row: WorkspaceRow,
+  row: Pick<WorkspaceRow, 'repositoryId' | 'branch' | 'baseBranch'>,
   job: WorkspaceStartJob,
   owner: CommitAuthor | null,
 ): string {
-  if (job.phase === 'startup')
-    return workspaceStartupCommand(job.startupScript, owner)
   const directory = repositoryLocation(
     job.repositoryLocations,
     row.repositoryId,
   )
+  if (job.phase === 'startup')
+    return [
+      'set -eu',
+      `${workspaceBaseCommand({
+        directory,
+        branch: row.branch,
+        baseBranch: row.baseBranch ?? job.baseBranch ?? job.defaultBranch,
+      })} || :`,
+      workspaceStartupCommand(job.startupScript, owner),
+    ].join('\n')
   const startBranch = job.startBranch ?? job.baseBranch ?? job.defaultBranch
   if (job.phase === 'fetch') {
     if (!job.creation) throw new Error('Missing trusted creation sender')

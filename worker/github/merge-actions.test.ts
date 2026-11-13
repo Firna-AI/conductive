@@ -62,6 +62,7 @@ it('reads the clicking member capability without publishing it', async () => {
 
 it('starts and polls a direct member merge with the displayed head and publishes the completed state', async () => {
   const { orgId, session } = await fixture.seed()
+  fixture.harness.api.branches.set('refs/heads/feature/review', 'review-base')
   await fixture.env.DB.prepare(
     'UPDATE workspaces SET base_branch = ? WHERE id = ?',
   )

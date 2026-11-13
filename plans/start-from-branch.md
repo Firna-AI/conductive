@@ -318,6 +318,24 @@ Design calls from the docs of Milestone 2, made on 13 November 2026:
   new revision. Reason: users agree to the current revision at their next
   sign-in (decision 126).
 
+Design calls from the backend implementation, made on 13 November 2026:
+
+- The private GitHub snapshot keeps the pull request's real base in
+  `pullBaseBranch`. The banner still uses the stored workspace base.
+  Reason: Continue follows the merged pull request without adding the
+  deferred feature of a workspace base that follows an open pull request.
+- The public `GitHubBanner.baseMoved` field holds the deleted branch name.
+  Its presence supplies the mockup's boolean fact and its message names.
+  Reason: the app needs the old name as well as the new target.
+- A private `baseChange` marker in the committed GitHub snapshot keeps
+  the D1 move and cloud command repairable without a new schema field.
+  The next refresh repairs that marker before it replaces the snapshot.
+  Reason: a lost D1 or provider reply must not lose the moved base name.
+- The trusted metadata command writes `gh-merge-base` and `origin/HEAD`.
+  Each startup also applies the current stored base before the startup
+  script and runner. Reason: a stopped computer must follow a base move,
+  and the retained runner already reads the setting for each scan and diff.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -444,31 +462,35 @@ Final checks and repeated test runs are in `.context/start-from-branch/final-rep
 
 Depends on: 2
 
-- [ ] Choose the base of Continue with decision 290, in
+- [x] Choose the base of Continue with decision 290, in
       `worker/lifecycle/continue-progress.ts` and
       `worker/lifecycle/continue-admission.ts`.
-- [ ] Split the default branch and the base in the Continue job, in
+- [x] Split the default branch and the base in the Continue job, in
       `worker/lifecycle/continue-types.ts`,
       `worker/lifecycle/continue-data.ts`, and
       `worker/lifecycle/continue-publication.ts`. Read a job that was saved
       before the change.
-- [ ] Test a merge into a branch that still exists, a merge into a deleted
+- [x] Test a merge into a branch that still exists, a merge into a deleted
       branch, a merge into the default branch, and an old saved job.
-- [ ] Update `worker/lifecycle/continue.md`.
+- [x] Update `worker/lifecycle/continue.md`.
+
+Evidence: `.context/start-from-branch/m6-red.log`, `m6-green-final.log`, and `m6-native-green.log`.
 
 ## Milestone 7: A gone base branch
 
 Depends on: 2
 
-- [ ] Apply decision 294 in `worker/github/client.ts`, the bar, and a
+- [x] Apply decision 294 in `worker/github/client.ts`, the bar, and a
       command that updates `gh-merge-base` in the cloud computer.
-- [ ] Keep the name of the base that moved until a pull request opens, so
+- [x] Keep the name of the base that moved until a pull request opens, so
       the bar and the top of the Checks tab of a phone show its line, as
       `app/new-workspace/start-branch/stacked/base-moved` shows. Take the
       words from `barCopy.ts` and the rule from the `baseMoved` fact of
       `barModel.ts`.
-- [ ] Test a base that GitHub deleted before the pull request opens.
-- [ ] Update `worker/github/README.md`.
+- [x] Test a base that GitHub deleted before the pull request opens.
+- [x] Update `worker/github/README.md`.
+
+Evidence: `.context/start-from-branch/m7-red.log`, `m7-command-red.log`, `m7-mutation-red.log`, `m6-7-targeted-final.log`, and `m6-7-report.md`.
 
 ## Milestone 8: Branch picker and target choice
 
