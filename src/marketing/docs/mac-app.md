@@ -91,6 +91,8 @@ It shows the Mac's name and **Available** or **Not available**.
 - Under **All commands allowed**, use **Stop** to end that workspace's permission.
 - While that permission runs, the workspace also shows a bar with **Stop**.
 - During the 15 minutes, use **Keep until I stop** in the bar to keep that permission until you stop it.
+- While timed permission runs, **Extend** resets the time left to 15 minutes from now.
+  It works only while the 15 minutes run and never starts permission.
 
 Saved permissions belong to your signed-in account on that Mac.
 They do not give an agent general access to every Mac you use.

@@ -147,6 +147,10 @@ export const termsDocument: LegalDocument = {
           it does on your Mac and to your data.`,
         paragraph`You can remove an always-allowed command, or stop the
           permission of a workspace, in the Mac app at any time.`,
+        paragraph`While the 15 minutes run, the workspace bar shows the
+          time left, Extend, Keep until I stop, and Stop. Extend resets
+          the time left to 15 minutes from now. Keep until I stop changes
+          the permission to last until you stop it. Stop ends it.`,
       ],
     },
     {

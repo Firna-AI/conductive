@@ -219,6 +219,8 @@ Only the connected Mac that receives a request can approve it.
 **Always allow** covers the exact command text in any requested folder on that Mac.
 Workspace permission covers every command from one workspace for 15 minutes, or until you stop it.
 Permission until you stop also ends when you quit the Mac app or sign out.
+While the 15 minutes run, the workspace bar offers **Extend**, **Keep until I stop**, and **Stop**.
+**Extend** resets their time left to 15 minutes from now.
 
 Use **Remove** or **Stop** in **This Mac** to change those saved permissions.
 Keep the app open and retry if a permission change takes effect but cannot save.

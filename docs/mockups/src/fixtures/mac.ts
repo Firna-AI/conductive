@@ -118,6 +118,12 @@ export const alwaysAllowed = ['git status', 'npm run lint', 'sw_vers'] as const
 /** The time left in the window that allows every command, as mm:ss. */
 export const allowAllLeft = '14:32'
 
+/**
+ * The time left just after a done Extend, which sets the end of the window
+ * to 15 minutes from the time of the Mac.
+ */
+export const extendedLeft = '15:00'
+
 /** What a grant until Stop shows in place of the time left. */
 export const untilStop = 'Until you stop'
 

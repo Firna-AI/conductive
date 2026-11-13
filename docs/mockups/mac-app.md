@@ -36,13 +36,18 @@ screens live under `mac-app`, and their parts in `src/components/mac/`.
   from `PendingCommand` in `src/components/chat/`: the exact command, the
   time limit, Deny, and Allow. A longer time limit shows its reason.
   Details opens the folder, the reason, the workspace, and the sender. The
-  arrow beside Allow opens Always allow and Allow all commands for 15
-  minutes. A view runs no script, so Details is a native disclosure, the
+  arrow beside Allow opens Always allow, Allow all commands for 15
+  minutes, and Allow all commands until I stop. A view runs no script, so
+  Details is a native disclosure, the
   arrow opens a native popover in the top layer, and each choice is a
   link. The header and the workspace list mark the workspace with Needs
   input, so the request shows from every page. A notification of macOS
   opens the workspace when the app is in the background. The 15 minutes
-  show as an amber bar with the time left and Stop.
+  show as an amber bar with the time left, Extend, Keep until I stop, and
+  Stop. Extend sets their end to 15 minutes from now, only while they run. It sits between
+  the time left and Stop, so Stop keeps its place at the end of the bar.
+  Each button of the bar links to the page of its result.
+  A grant until Stop shows Until you stop and Stop, with no Extend or Keep.
 - The requests that wait share one region above the composer, from
   `ChatPane.module.css`. It takes at most 40% of the window, so a long
   command or many requests scroll inside it, and an edge that cuts a
@@ -57,6 +62,12 @@ screens live under `mac-app`, and their parts in `src/components/mac/`.
   Stop, also after the 15 minutes end. A change that the Mac made but did
   not save took its row or its 15 minutes away, so its result offers Try
   again. `mac-app/this-mac` and `mac-app/stop` draw them.
+- An Extend is done or failed, never done but not saved, because the Mac
+  saves the new end first. A done Extend shows no result, because the
+  time left shows the change. A failed Extend shows Not extended and its
+  cause beside the time left, Extend, and Stop. It has no Try again,
+  because Extend stays in the bar. An Extend result shows only while the
+  15 minutes run. `mac-app/extend` draws both.
 - The web app shows a waiting request without the choices, because only
   the Mac app can allow a command on the Mac. Once answered, the command
   shows as a card at its place in the chat: denied, done with its output,
