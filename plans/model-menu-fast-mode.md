@@ -648,7 +648,7 @@ Implementation and verification evidence: `.context/fast-mode/m3/report.md`.
 - [x] Read `fast` in the browser readers: `src/app/api/read-core.ts`,
       `src/chat/api/read-chat.ts`, `src/chat/api/read-responses.ts`,
       `src/members/api/parseCore.ts`, and `src/app/boot.ts`.
-- [ ] Test each route that carries fast, the rule for a model without fast,
+- [x] Test each route that carries fast, the rule for a model without fast,
       and the default of an old row. See each new test fail first.
 
 ## Milestone 4: Runner
@@ -764,7 +764,12 @@ Depends on: 5 and 6
 
 Depends on: every other milestone
 
-- [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
+- [x] Run the targeted tests and the complete gate named in `AGENTS.md`.
+      On 2026-11-13 the gate passed from a copy of the branch under `/tmp`:
+      1052 test files, 260 runner tests, the build, and the mockups. From
+      the workspace folder under `/home/user`, 14 native shell test files
+      fail on main too, because their commands must not name `/home/user`.
+      Under parallel agent load, the Worker harness setup timed out.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
