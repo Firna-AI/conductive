@@ -252,13 +252,13 @@ Depends on: 3
 
 Depends on: 2, and the merged removal of runner protocol version 1
 
-- [ ] Add the `cnd-runner-interface` crate. Define the runner handshake, commands, numbered events, and chat events of protocol version 2 in it, with serde attributes that keep the current JSON.
-- [ ] Generate their TypeScript with `ts-rs` into `src/shared/generated/`. Mark each field that serde leaves out as optional in TypeScript, and give each 64-bit number the TypeScript type `number`, so the generated types match the JSON.
-- [ ] Keep the byte limits and other constants in `src/shared/`, because `ts-rs` writes no constants.
-- [ ] Point each importer in `worker/`, `src/`, `desktop/`, and `runner/` at the generated types, and delete the hand-written types. Use no converter.
-- [ ] Add the generator, the regenerate command, the generated folder, and the wire form of 64-bit numbers to `AGENTS.md`, as the `shared-types` skill says.
+- [x] Add the `cnd-runner-interface` crate. Define the runner handshake, commands, numbered events, and chat events of protocol version 2 in it, with serde attributes that keep the current JSON.
+- [x] Generate their TypeScript with `ts-rs` into `src/shared/generated/`. Mark each field that serde leaves out as optional in TypeScript, and give each 64-bit number the TypeScript type `number`, so the generated types match the JSON.
+- [x] Keep the byte limits and other constants in `src/shared/`, because `ts-rs` writes no constants.
+- [x] Point each importer in `worker/`, `src/`, `desktop/`, and `runner/` at the generated types, and delete the hand-written types. Use no converter.
+- [x] Add the generator, the regenerate command, the generated folder, and the wire form of 64-bit numbers to `AGENTS.md`, as the `shared-types` skill says.
 - [ ] Ask the user before a check that fails on a diff of the generated files, because it is a new gate.
-- [ ] Update `src/shared/README.md` and `src/shared/runner-contracts.md`.
+- [x] Update `src/shared/README.md` and `src/shared/runner-contracts.md`.
 
 ## Milestone 6: Workspace tools in Rust
 
