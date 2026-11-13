@@ -30,6 +30,7 @@ describe('the Connect notice of New workspace', () => {
           agent: 'codex',
           model: 'GPT-6.1 Sol',
           effort: 'medium',
+          fast: false,
         },
         agentLogins: account.agentLogins.map((login) =>
           login.agent === 'codex'

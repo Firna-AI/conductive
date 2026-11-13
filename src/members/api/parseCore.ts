@@ -40,6 +40,7 @@ const efforts: Readonly<Record<Effort, Effort>> = {
   high: 'high',
   xhigh: 'xhigh',
   max: 'max',
+  ultra: 'ultra',
 }
 const workspaceStates: Readonly<Record<WorkspaceState, WorkspaceState>> = {
   working: 'working',
@@ -116,6 +117,7 @@ function agentChoice(source: JsonObject): AgentChoice {
     agent: oneOf(source, 'agent', agents),
     model: text(source, 'model'),
     effort: oneOf(source, 'effort', efforts),
+    fast: source.fast === true,
   }
 }
 

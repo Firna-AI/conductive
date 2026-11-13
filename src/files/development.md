@@ -32,6 +32,12 @@ as the Worker does. Download saves the reply of the fake API, through
 the recorded updates, edit the open file, and switch the layout, the
 theme, and the data. The product build does not include the page.
 
+The page keeps its open tabs in memory, with no saved view. So each tab
+that a press opens stays open, and the page draws no temporary tab. The
+app opens a press in the temporary tab, as
+[Temporary tabs](../../docs/protocol/temporary-tabs.md) says. Run
+`npm run dev` to see it.
+
 `?list=changes&repair=all-files,changes` draws the notice of each list
 under the lists. The clock of the page stands still at `FAKE_TIME`, so
 each stored age stays as drawn. For All files and for Changes, the

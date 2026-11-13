@@ -8,7 +8,12 @@ import { chatFor, shown } from './test-kit'
 const org = FAKE_IDS.org
 const ws = FAKE_IDS.workspace
 const id = FAKE_IDS.session
-const opus: AgentChoice = { agent: 'claude', model: 'Opus 5.5', effort: 'high' }
+const opus: AgentChoice = {
+  agent: 'claude',
+  model: 'Opus 5.5',
+  effort: 'high',
+  fast: false,
+}
 const shortly = { timeout: 10_000 }
 
 describe('session records', () => {

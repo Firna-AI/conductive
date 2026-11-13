@@ -5,6 +5,7 @@ import { testNavigation } from '../../files/files-test-kit'
 import {
   byRole,
   queryAllByRole,
+  queryByRole,
   queryByText,
 } from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
@@ -28,6 +29,8 @@ import {
   second,
   settle,
   shownTab,
+  temporaryFile,
+  viewSaves,
 } from './tab-drag-test-kit'
 import { focused, menuItems, pressOn, rightClick } from './tab-row-test-kit'
 
@@ -154,6 +157,78 @@ describe('the tab menu', () => {
       closed: [],
       shown: 'Address autocomplete',
     })
+  })
+
+  it('leads the menu of the temporary tab with Keep open and a line, and Keep open asks the host to keep the tab in its place, says that it stays open, and gives the focus back to the tab', async () => {
+    const server = new FakeApiServer()
+    const navigation = testNavigation()
+    await mountChat({
+      server,
+      tabs: [first, file, second],
+      temporaryTab: temporaryFile,
+      viewport: 'desktop',
+      renderTab: fileTabs(navigation, temporaryFile),
+    })
+    const fileTab = await waitFor(
+      () => queryByText('app-[redacted].ts'),
+      'the file tab',
+    )
+
+    rightClick(fileTab, { clientX: 150, clientY: 12 })
+    const menu = queryByRole('menu', 'app-[redacted].ts')
+    const opened = {
+      items: menuItems('app-[redacted].ts'),
+      lines: menu?.querySelectorAll('hr').length,
+    }
+    await press(byRole('menuitem', 'Keep open'))
+    await settle()
+
+    // The host of the test keeps nothing, so the tab stays temporary.
+    expect({
+      opened,
+      kept: navigation.kept,
+      saves: viewSaves(server).length,
+      row: rowTitles(),
+      status: rowStatus(),
+      focus: focused(),
+      closed: menuItems('app-[redacted].ts'),
+    }).toEqual({
+      opened: {
+        items: [
+          { name: 'Keep open', off: false },
+          { name: 'Move left', off: false },
+          { name: 'Move right', off: false },
+        ],
+        lines: 1,
+      },
+      kept: [file],
+      saves: 0,
+      row: ['Address autocomplete', 'app-[redacted].ts', debounce],
+      status: 'app-[redacted].ts stays open',
+      focus: 'app-[redacted].ts, temporary',
+      closed: [],
+    })
+  })
+
+  it('leaves Keep open out of a read-only row, so the temporary tab opens no menu, and the browser shows its own', async () => {
+    await mountChat({
+      server: new FakeApiServer(),
+      tabs: [first, file, second],
+      temporaryTab: temporaryFile,
+      viewport: 'desktop',
+      renderTab: fileTabs(testNavigation(), temporaryFile),
+      readOnly: true,
+    })
+    const fileTab = await waitFor(
+      () => queryByText('app-[redacted].ts'),
+      'the file tab',
+    )
+
+    expect({
+      browserMenu: rightClick(fileTab, { clientX: 150, clientY: 12 }),
+      keyReachesBrowser: pressOn(fileTab, 'F10', { shiftKey: true }),
+      menus: queryAllByRole('menu', 'app-[redacted].ts').length,
+    }).toEqual({ browserMenu: true, keyReachesBrowser: true, menus: 0 })
   })
 
   it('opens the rename field from Rename session in a tab that does not show, keeps the shown tab, and lets that tab neither drag nor open its menu', async () => {

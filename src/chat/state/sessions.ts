@@ -49,6 +49,7 @@ export function viewShowing(
   const base = view ?? {
     tabs: [],
     activeTab: null,
+    temporaryTab: null,
     fileList: 'all',
     tool: 'terminal',
   }

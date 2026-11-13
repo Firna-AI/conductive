@@ -213,6 +213,8 @@ export function createCodexFactory(
           } else {
             userIds = [command.message.id]
             activeChoice = choice
+            if (choice.fast)
+              options.event({ type: 'speed', speed: { state: 'fast' } })
             const result = object(
               await rpc.request('turn/start', {
                 threadId,
@@ -220,6 +222,7 @@ export function createCodexFactory(
                 clientUserMessageId: command.message.id,
                 model: choice.model,
                 effort: choice.effort === 'none' ? 'none' : choice.effort,
+                serviceTierForTurn: choice.fast ? 'priority' : 'default',
               }),
             )
             activeTurn = string(object(result.turn).id)
@@ -229,7 +232,8 @@ export function createCodexFactory(
           choice = next
           return activeTurn &&
             (activeChoice.model !== choice.model ||
-              activeChoice.effort !== choice.effort)
+              activeChoice.effort !== choice.effort ||
+              activeChoice.fast !== choice.fast)
             ? 'deferred'
             : 'applied'
         },

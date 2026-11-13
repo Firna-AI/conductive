@@ -1,7 +1,6 @@
 /** The catalogue paths that screens link to. */
 export const paths = {
   marketing: 'marketing',
-  pricing: 'marketing/pricing',
   docs: 'marketing/docs',
   docsGetStarted: 'marketing/docs/get-started',
   terms: 'marketing/terms',
@@ -206,6 +205,8 @@ export const paths = {
   desktop: 'app/tools/desktop',
   macPrompt: 'mac-app/commands',
   macAllowAll: 'mac-app/commands/allow-all',
+  macStop: 'mac-app/stop',
+  macExtend: 'mac-app/extend',
   macAllowUntilStop: 'mac-app/commands/allow-until-stop',
   thisMac: 'mac-app/this-mac',
   macShortcuts: 'mac-app/shortcuts',

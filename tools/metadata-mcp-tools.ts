@@ -52,7 +52,7 @@ export const METADATA_MCP_TOOLS = [
   {
     name: 'list_models',
     description:
-      'Needs only the workspace token. List the models that the app offers, with their agents and efforts, and the default choice that create_workspace uses when it names no model.',
+      'Needs only the workspace token. List the models that the app offers, with their agents, efforts, and boolean fast marks, and the standard-speed default choice that create_workspace uses when it names no model.',
     inputSchema: { type: 'object', properties: {} },
     annotations: {
       readOnlyHint: true,

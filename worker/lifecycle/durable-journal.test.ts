@@ -30,7 +30,12 @@ it.each([{ kind: 'resume' }, { kind: 'create' }] as const)(
         },
         name: 'Saved work',
         branch: 'octocat/saved-work',
-        choice: { agent: 'codex', model: 'gpt-5.5', effort: 'high' },
+        choice: {
+          agent: 'codex',
+          model: 'gpt-5.5',
+          effort: 'high',
+          fast: false,
+        },
         state: 'error',
         createdAt: TEST_TIME - 1_200_000,
         updatedAt: TEST_TIME,

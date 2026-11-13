@@ -65,7 +65,7 @@ const message: UserMessage = {
   sender: senderSnapshot(fakeUser),
   text: `Compare ${linked.link} with ${archived.link} and ${elsewhere}.`,
   attachments: [],
-  choice: { agent: 'claude', model: 'Opus 5.5', effort: 'high' },
+  choice: { agent: 'claude', model: 'Opus 5.5', effort: 'high', fast: false },
   createdAt: FAKE_TIME,
   state: 'sent',
 }

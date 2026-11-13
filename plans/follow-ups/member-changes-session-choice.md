@@ -1,0 +1,33 @@
+# Any member can change the choice of a session
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-10, from the options check of the plan for the fast mode switch, branch `calummoore/model-menu-fast-option`.
+- **Location:** `worker/chat/http-routes.ts:149`, `worker/chat/model-changes.ts:18`, `src/chat/state/model-actions.ts:69`, and `src/chat/state/message-actions.ts:62`.
+- **Reason:** The rule for a change of the model by another member is existing behaviour, and the branch that found it adds only fast mode.
+
+- **Source:** Review. **Category:** Product bug.
+- **Terms:**
+  - **Choice:** the agent, the model, and the effort that say how a session runs. The session record keeps it in `choice`.
+  - **Starter:** the member who started a session. The session runs on the agent login of the starter.
+  - **Share switch:** the switch "Let other members use this login" under a connected login in Account.
+- **Background:**
+  - Each session runs on the agent login of its starter. The user chose this on 7 November 2026.
+  - While the share switch is on, the messages of other members run on the starter's login. When it is off, a message of another member starts a new session on that member's own login. The user chose this on 7 November 2026, and `docs/protocol/messages-and-attachments.md` states it.
+  - The model route `PUT .../sessions/<id>/model` lets any member who can reach the workspace change the model and the effort of a session. The route is in `worker/chat/http-routes.ts:149`. `changeModel` in `worker/chat/model-changes.ts:18` saves the new choice for a model of the same agent. It checks neither the starter nor the share switch.
+  - The composer never turns the model picker off for another member. A change to a model of the same agent calls the route at once, in `src/chat/state/model-actions.ts:69`.
+  - Each send carries the choice of the session, in `src/chat/state/message-actions.ts:62`. So the next message of the starter runs with the choice that another member set.
+- **Problem:** A member who may not use the starter's login can still choose the model and the effort of the starter's own messages.
+- **Impact if no action:** The starter's login can pay for a costlier model or effort, such as the highest effort of the largest model, that another member chose. The starter sees the choice in the picker only when they look before they send.
+- **Root question:** Who may change the model and the effort of a session that runs on another member's login?
+- **Options:**
+  - **A.** Change nothing. The picker of the starter shows the current choice before each send. Effort: Small.
+  - **B.** When the share switch of the starter is off, a change of the model by another member opens a new session on that member's own login, with the draft, as a send of that member already does. It adds a new restriction. Effort: Medium.
+  - **C.** Only the starter changes the model and the effort of a session. Another member's change always opens a new session on that member's own login. It adds a new restriction, also for shared logins. Effort: Medium.
+  - **D.** Keep the route, and show in the composer of the starter who changed the choice last, such as "Priya chose Opus 5.5 Max". Effort: Medium.
+- **Left out:** A check in the model gateway. The gateway forwards each request body unchanged, and a check of the model there would need a new parse of each request body.
+- **Wider fix:** C. One rule for every field of the choice also covers a later field, such as a speed setting.
+- **Previous examples:** None found.
+- **Related:** The plan for a fast mode switch in the model menu adds fast mode to the choice. On 2026-11-10 the user chose that any member who may send in a session may turn fast mode on or off, as for the model and the effort. A rule from this item then applies to fast mode too, unless the user says otherwise.
+- **Recommendation:** B. It applies the rule that a send already follows when the share switch is off, so the starter's switch stays the one consent. C best protects the starter's account.
+- **Action:** ask the user, because B and C add a new restriction to the model route, and the user approves each new restriction.

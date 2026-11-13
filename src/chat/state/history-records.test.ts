@@ -12,7 +12,12 @@ import { chatFor, newSessionRecord } from './test-kit'
 const org = FAKE_IDS.org
 const ws = FAKE_IDS.workspace
 const id = 'debounce'
-const opus: AgentChoice = { agent: 'claude', model: 'Opus 5.5', effort: 'high' }
+const opus: AgentChoice = {
+  agent: 'claude',
+  model: 'Opus 5.5',
+  effort: 'high',
+  fast: false,
+}
 
 describe('session records from stored history', () => {
   it('keeps current tabs and selection while first-load history brings an older close and reopen', async () => {
@@ -31,6 +36,7 @@ describe('session records from stored history', () => {
       ],
       activeTab: { kind: 'session', sessionId: first.id },
       fileList: 'changes',
+      temporaryTab: null,
       tool: 'terminal',
     }
     chat.server.json('GET', workspaceViewPath(org, ws), { view })

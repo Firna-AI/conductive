@@ -58,11 +58,15 @@ chips.
 ## Rules for this code
 
 - [The tab row](tab-row.md) gives the rules of the one order of the
-  tabs, the drag, the tab menu, and the scroll of the row.
+  tabs, the mark of the temporary tab, the drag, the tab menu, and the
+  scroll of the row, and the reader's place that each tab keeps. A move of
+  the temporary tab to another place keeps it, and so does Keep open in its tab menu, through the `keep` that the
+  host gives that tab.
 - [Transcript rules](transcript.md) give the rules of the stream cursor,
   the session logs, the transcript items and their counts, the changed
   files that the cloud computer could not read, the end reason of a
-  finished turn, the lost lines, the turns, the open run of tool calls of
+  finished turn, the standard speed of a fast turn, the lost lines, the
+  turns, the open run of tool calls of
   a running turn, the work fold of each ended turn, and Try again.
 - [The work of a turn](../../docs/protocol/chat-and-events.md#the-work-of-a-turn)
   says what folds when a turn ends. It also says that the line of each fold
@@ -129,7 +133,7 @@ on `FakeApiServer` and the recorded events, and render the chat with
 [`draft-files.test-support.ts`](../app/draft-files.test-support.ts) of the
 app attach files and write their marks as the field does, with uploads
 that wait for the test. The
-[workspace screen](../shell/workspace/README.md#key-code) tests the kept
+[workspace screen](../shell/workspace/key-code.md) tests the kept
 chat in the whole app.
 [Chat tests](tests.md) says what each test file checks.
 

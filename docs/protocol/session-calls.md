@@ -99,7 +99,7 @@ at `app/workspace-links/sent-by`.
 - Each entry gives these facts of its session:
   - the session ID and the session link
   - the title
-  - the agent, the model, and the effort
+  - the agent, the model, the effort, and fast mode
   - the starter
   - the state
   - whether the session is closed
@@ -142,14 +142,17 @@ at `app/workspace-links/sent-by`.
 
 ## Start a session
 
-- `create_session` takes the workspace, an optional model with its effort,
-  an optional title, an optional first message, and an optional request
-  ID.
+- `create_session` takes the workspace, an optional model with its effort
+  and its [fast mode](fast-mode.md), an optional title, an optional first
+  message, and an optional request ID.
 - The model chooses the agent of the session, as in a create call.
 - Without a model or an effort, the call uses the saved default of the
   sender. Without a saved default, it uses the default choice of the app.
 - Reason: the new session runs on the agent login of the sender, and "+"
   also uses the own choice of the member.
+- Fast mode is off unless the call turns it on, also with the saved
+  default. Reason: an agent then spends a login at the higher price of fast
+  mode only when its call asks for it.
 - The sender is the starter of the new session (decision 105).
 - The title follows the name rule of a create call, as
   [Names from the workspace tools](tool-names.md) says. A title that is
@@ -164,10 +167,12 @@ at `app/workspace-links/sent-by`.
 ## Send a message
 
 - `send_message` takes the workspace, the session, the text, an optional
-  model with its effort, and an optional request ID.
+  model with its effort, an optional fast mode, and an optional request ID.
 - Without a model, the message keeps the current model and effort of the
   session. A model of the other agent gets the refusal of the session
   route, because a session keeps its agent.
+- Without fast mode in the call, the message keeps the fast mode of the
+  session. A model without fast mode turns it off, as in the model menu.
 - A tool message carries no files, so its text must hold more than white
   space. Reason: a file needs an upload from a device.
 - A tool message follows the rules of

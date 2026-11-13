@@ -6,8 +6,8 @@ session, and file chips with the list of `@`, and attached files with their
 drops. [Links in text](design-links.md) gives the other links of the chat. It gives the picture of an image file, the Markdown tables and
 headings of a reply and of a file preview, the work fold of a turn, and the
 line of a stopped turn. It also gives the data that the chat does not
-have, the files that the cloud computer could not read, and the end of a turn at the time limit of
-background work.
+have, the files that the cloud computer could not read, the end of a turn at the time limit of
+background work, and the end of a fast turn that ran at standard speed.
 
 - `DraftFileChip` in `src/components/chat/` draws each attached file of a
   draft as a chip at its place in the text of the message box. It is one
@@ -52,8 +52,8 @@ background work.
 - `SentFileChip` draws each attached file of a sent message as a chip at
   the place of its mention: the icon of its kind, its name, and its size in
   a muted colour. A sent message holds `@` and the copy path of each file,
-  and the chip finds its file by that path. A press opens the file tab of
-  the copy, as `app/attachments/open` shows. The chip of a message that
+  and the chip finds its file by that path. A press opens the copy in the
+  temporary tab, as `app/attachments/open` shows. The chip of a message that
   waits for the cloud computer opens nothing. `SentFiles` lists the files
   that the text does not show under the message, at the right, with
   `AttachmentChips.module.css` and `AttachmentStates.module.css`.
@@ -217,6 +217,24 @@ background work.
     such as "Changed files unavailable".
   - The words name what stopped, not the number of the limit, because the
     member cannot change it.
+- A fast turn that ran at standard speed still ends as finished, with its
+  duration and its files, from fast mode decision 257. A note beside the
+  duration names the speed and the cause, such as "Standard speed · Fast
+  limit reached", and the files go under the note.
+  - `StandardSpeedNote` in `src/components/chat/` draws the note: muted
+    text with a gauge icon. One line has the height of a chip. A narrow
+    chat wraps the note, and the icon stays on its first line. It takes no
+    fixtures, so the app can use it too.
+  - `speedCopy.ts` beside it holds the words of each cause: "Fast limit
+    reached" for the fast limit of Claude, and "Older cloud computer
+    software" for a cloud computer whose software ignores fast mode.
+  - The words name no time until a limit resets, because the note stays in
+    the chat after the reset.
+  - A stopped turn ends its line with the same words after a dot, before
+    the notes of its files, such as "You stopped the agent · Standard speed
+    · Fast limit reached".
+  - A fast turn that ran at fast speed, and a turn without fast mode, show
+    no note.
 
 ## Workspace, session, and file chips
 

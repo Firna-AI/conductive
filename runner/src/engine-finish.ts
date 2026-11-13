@@ -100,6 +100,7 @@ export async function finishTurn(
         state: stopped ? 'stopped' : 'finished',
         durationMs,
         files: turn.files ?? [],
+        ...(turn.speed ? { speed: turn.speed } : {}),
         ...(!stopped && result.type === 'result' && result.endReason
           ? { endReason: result.endReason }
           : {}),

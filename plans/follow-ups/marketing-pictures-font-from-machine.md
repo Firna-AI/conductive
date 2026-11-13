@@ -15,7 +15,7 @@
   - **B.** Make the capture command refuse to run when the font is missing. It adds a rejection, so it needs the user. Effort: Small.
 - **Left out:** A note in the docs, because a person can miss it.
 - **Wider fix:** A, because the font then comes with the repository.
-- **Previous examples:** None found.
+- **Previous examples:** On 2026-11-12 the fast mode branch `calummoore/bern-mapm` found that the committed pictures draw a box in place of ⌘, for example in the Search row of the hero picture. A capture on that machine drew ⌘, but moved other text by about 2 px in all 29 pictures. That branch kept only its four `agents` pictures. A fresh capture of all pictures on a machine with the right fonts fixes the box.
 - **Related:** `plans/follow-ups/marketing-pictures-unstable-capture.md` records a digit shift between two runs on one machine. Its cause is unknown.
 - **Recommendation:** A.
 - **Action:** fix after merge, apply A, because the branch that found it changed no font.

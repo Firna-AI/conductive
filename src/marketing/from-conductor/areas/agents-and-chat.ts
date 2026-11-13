@@ -13,14 +13,14 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     area: 'agents-and-chat',
     name: 'Chat tabs',
     status: 'available',
-    note: 'Open several agent sessions on the same branch. Closed sessions remain in session history.',
+    note: 'Open several agent sessions on one branch, with closed sessions in history. Each tab keeps your reading position across tabs and workspaces.',
   },
   {
     id: 'mentions',
     area: 'agents-and-chat',
     name: 'Mentions',
     status: 'available',
-    note: 'Type @ to mention workspace files or folders in chat. Teammate and pull request mentions remain under consideration.',
+    note: 'Use @ for workspace files and folders. File chips in agent answers are planned, while teammate and pull request mentions remain under consideration.',
   },
   {
     id: 'attachments',
@@ -69,7 +69,7 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     area: 'agents-and-chat',
     name: 'Stop, retry, and background tasks',
     status: 'available',
-    note: 'Stop ends a turn, and Try again retries failures. Agents powered by Claude keep turns open for background work.',
+    note: 'Stop ends turns and Try again retries failures. Agents powered by Claude wait up to 30 days for background work, and messages extend the wait.',
   },
   {
     id: 'plan-mode',
@@ -111,7 +111,7 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     area: 'agents-and-chat',
     name: 'Skills',
     status: 'available',
-    note: 'Agents powered by Claude load repository skills. Personal Mac skills are not copied.',
+    note: 'Agents powered by Claude load repository skills. A shared org skills repository for Claude and Codex is planned.',
   },
   {
     id: 'skill-use-indicators',

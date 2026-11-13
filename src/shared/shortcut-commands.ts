@@ -56,6 +56,7 @@ export const shortcutCommandIds = [
   'attach-files',
   'model-picker',
   'next-effort',
+  'fast-mode',
   'stop-agent',
   'copy-concise-transcript',
   'copy-full-transcript',

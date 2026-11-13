@@ -55,9 +55,6 @@ Each path is relative to `src/marketing/` unless the link names another folder.
 - `access-copy.ts`: the words of the two actions of the site, and the
   sentence under the last call to action, which fits each state of
   sign-ups.
-- `pricing.ts` and `pages/pricing.astro`: the one source of the plans and
-  words of the pricing page and its mockup, and the page. Its
-  [key code](pricing-page.md#key-code) names each part.
 - `links.ts`: the source repository address, the Mac app download
   addresses, `docsPath` for the docs, site paths, the section that the
   header marks, and `pageHrefs` for links from another origin.

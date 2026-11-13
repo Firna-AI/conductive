@@ -30,9 +30,8 @@ deployment needs.
 Conductive has these features. The protocol docs state each one. A
 feature that is not complete yet says so.
 
-- Sign in with GitHub. The product is free until billing starts.
-  [Pricing](docs/protocol/pricing.md) states the coming plans, which the
-  pricing page of the marketing site shows. Billing is not built yet.
+- Sign in with GitHub. The product is free, with no plans or billing, as
+  [Orgs and members](docs/protocol/orgs-and-members.md#orgs) says.
 - A waitlist. A new account waits until an operator approves it, or an
   invite code, a referral code, or an org invitation lets the person in.
   An operator can turn the waitlist off. Each new person then gets in at
