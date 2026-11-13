@@ -10,6 +10,7 @@ import {
 } from './build-data'
 import { savedScriptCommand } from './saved-script'
 import { installImageSoftware } from './image-software'
+import { latestSoftwareRelease } from './software-release'
 import { imageIsLeased } from './image-leases'
 import { scheduleIdleImage } from './image-schedule'
 import type { ImageRuntime } from './image-builds'
@@ -20,7 +21,7 @@ import { recordBuildCommand } from './build-command-data'
 import { completeBuildPhase } from './build-phase-data'
 import { installWorkspaceTools } from '../tools/image'
 import { WORKSPACE_TOOL_SOURCES } from '../tools/image-assets'
-import { privilegedCommand } from '../terminal/privileged'
+import { imageToolsCommand } from './image-tools'
 import { recoverImageBuildAllocation } from './image-allocation'
 import { liveBuildComputers } from './computer-ledger'
 import { startAddedImageBuild } from './first-image-build'
@@ -34,13 +35,19 @@ export async function advanceBuildCommand(
   const sandboxId = job.sandboxId
   if (!sandboxId) throw new Error('Missing build sandbox')
   if (job.processId === null) {
-    if (job.phase === 'software')
+    if (
+      job.phase === 'software' &&
+      job.kind === 'build' &&
+      !job.softwareImageName
+    )
       await installWorkspaceTools(WORKSPACE_TOOL_SOURCES, (command) =>
-        provider.runCommand(sandboxId, privilegedCommand(command)),
+        provider.runCommand(sandboxId, imageToolsCommand(command)),
       )
     let command: string
     if (job.phase === 'software')
-      command = installImageSoftware(jobSoftware(job))
+      command = installImageSoftware(
+        await latestSoftwareRelease(runtime.env, runtime.dependencies.fetch),
+      )
     else
       command = `set -eu\n${savedScriptCommand('/tmp/conductive-install.sh', job.installScript, ['set -a', '. /run/ascii-secrets/env.sh', 'set +a'])}\nrm -f /tmp/conductive-install.sh`
     if (job.phase !== 'software' && job.phase !== 'install')
@@ -75,7 +82,8 @@ export async function advanceBuildCommand(
       status.exitCode,
       status.timedOut === true,
     )
-  const next: BuildPhase = job.phase === 'software' ? 'install' : 'snapshot'
+  const next: BuildPhase =
+    job.phase === 'software' && job.kind !== 'refresh' ? 'install' : 'snapshot'
   await completeBuildPhase(runtime.env.DB, job.buildId, next)
   return false
 }

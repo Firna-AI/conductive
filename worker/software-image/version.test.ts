@@ -1,15 +1,16 @@
 import { expect, it } from 'vitest'
 
-import { SOFTWARE } from '../lifecycle/backend-test-support'
+import { SOFTWARE_RELEASE as SOFTWARE } from '../lifecycle/software-release-test-support'
 import { installImageSoftware } from '../lifecycle/image-software'
 import { WORKSPACE_TOOL_SOURCES } from '../tools/image-assets'
 import { workspaceToolsCommands } from '../tools/image'
-import { privilegedCommand } from '../terminal/privileged'
+import { imageToolsCommand } from '../lifecycle/image-tools'
 import { softwareVersion } from './version'
 
-it('versions the exact install commands and changes with archives and tool sources', async () => {
+it('versions the release and exact install commands and changes with tool sources', async () => {
   const commands = [
-    ...workspaceToolsCommands(WORKSPACE_TOOL_SOURCES).map(privilegedCommand),
+    ...workspaceToolsCommands(WORKSPACE_TOOL_SOURCES).map(imageToolsCommand),
+    SOFTWARE.version,
     installImageSoftware(SOFTWARE),
   ].join('\n')
   const digest = await crypto.subtle.digest(
@@ -29,6 +30,9 @@ it('versions the exact install commands and changes with archives and tool sourc
       sha256: 'b'.repeat(64),
     }),
   ).not.toBe(version)
+  expect(await softwareVersion({ ...SOFTWARE, version: '0.0.43' })).not.toBe(
+    version,
+  )
   const sources = WORKSPACE_TOOL_SOURCES.map((source) => ({
     ...source,
     contents: `${source.contents}\n`,

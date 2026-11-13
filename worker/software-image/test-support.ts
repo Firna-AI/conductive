@@ -1,4 +1,4 @@
-import { SOFTWARE } from '../lifecycle/backend-test-support'
+import { SOFTWARE_RELEASE as SOFTWARE } from '../lifecycle/software-release-test-support'
 import { softwareImageName } from '../lifecycle/image-names'
 import { TEST_TIME } from '../test-support/harness'
 import { TOOLS_COMMAND_COUNT } from '../tools/image-commands.test-support'

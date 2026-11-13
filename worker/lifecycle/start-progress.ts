@@ -48,6 +48,7 @@ export async function advanceStartSteps(
       job,
       label,
       call,
+      dependencies.fetch,
     ))
   )
     return false

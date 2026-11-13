@@ -242,9 +242,9 @@ Depends on: 3
 - [x] Keep the previous version folder, and go back to it when the new version fails its start check.
 - [x] Point the runner, relay, and terminal units at `/opt/conductive/current`.
 - [x] Make the `gh` wrapper, the git credential setting, and the udev rule `60-conductive-disk-cache.rules` release parts, so that no part of `image/install.sh` is left without an owner.
-- [ ] Make the org image build and the software image build install the newest release through the program.
-- [ ] Add the one-time install of the program to `workspaceStartupCommand` in `worker/lifecycle/image-software.ts`, for a sandbox without it.
-- [ ] Update the READMEs that say only an image build installs the sandbox software, and that an existing workspace keeps it: `image/install.md`, `worker/terminal/README.md`, and `worker/previews/README.md`.
+- [x] Make the org image build and the software image build install the newest release through the program.
+- [x] Add the one-time install of the program to `workspaceStartupCommand` in `worker/lifecycle/image-software.ts`, for a sandbox without it.
+- [x] Update the READMEs that say only an image build installs the sandbox software, and that an existing workspace keeps it: `image/install.md`, `worker/terminal/README.md`, and `worker/previews/README.md`.
 - [x] Test the update logic with mocks of the `cli-updater` traits and of the disk, as the `rust` skill says.
 - [ ] Run the live check in a real sandbox: an existing workspace gets the program at its next start, downloads a newer release, and applies it at the next restart. Save the evidence under `.context/rust-sandbox-software/`.
 

@@ -3,9 +3,7 @@ import { expect, it } from 'vitest'
 import { SOFTWARE } from './backend-test-support'
 import { setupBackendTests } from './backend-test-hooks'
 import { readBuild, readBuildJob } from './build-data'
-import { shellQuote } from './commands'
 import { advanceImageBuild, startImageBuild } from './image-builds'
-import { IMAGE_NODE_RUNTIME } from './image-runtime'
 import { lifecycleCommandBody } from './command-test-support'
 import { TOOLS_COMMAND_COUNT } from '../tools/image-commands.test-support'
 
@@ -38,23 +36,14 @@ it('runs terminal installation inside the detached software command and streams 
     {
       sandboxId: 'bx_1',
       detached: true,
-      command: expect.stringContaining(
-        '/usr/local/lib/conductive/terminal-password',
-      ),
+      command: expect.stringContaining('apt-get install -y ttyd tmux'),
     },
   ])
   const software = boat.commands[TOOLS_COMMAND_COUNT]
-  expect(lifecycleCommandBody(software)).toContain(
-    'RuntimeDirectoryPreserve=yes',
-  )
-  expect(lifecycleCommandBody(software)).toContain(
-    [
-      IMAGE_NODE_RUNTIME.url,
-      IMAGE_NODE_RUNTIME.sha256,
-      IMAGE_NODE_RUNTIME.directory,
-    ]
-      .map(shellQuote)
-      .join(' '),
+  expect(lifecycleCommandBody(software)).toContain('update check --bootstrap')
+  expect(lifecycleCommandBody(software)).toContain('update apply')
+  expect(lifecycleCommandBody(software)).not.toContain(
+    '/etc/systemd/system/conductive-terminal',
   )
   expect(lifecycleCommandBody(software)).not.toContain(
     'systemctl start conductive-terminal.service',

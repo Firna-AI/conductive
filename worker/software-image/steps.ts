@@ -1,7 +1,5 @@
-import {
-  readImageSoftware,
-  installImageSoftware,
-} from '../lifecycle/image-software'
+import { installImageSoftware } from '../lifecycle/image-software'
+import { readSoftwareRelease } from '../lifecycle/software-release'
 import {
   clearImageCommands,
   lifecycleCommand,
@@ -12,7 +10,7 @@ import {
   JobTimeLimit,
 } from '../lifecycle/job-time-limit'
 import type { SandboxProvider } from '../sandbox/provider'
-import { privilegedCommand } from '../terminal/privileged'
+import { imageToolsCommand } from '../lifecycle/image-tools'
 import { workspaceToolsCommands } from '../tools/image'
 import { WORKSPACE_TOOL_SOURCES } from '../tools/image-assets'
 import { readSoftwareImage, saveSoftwareImage } from './data'
@@ -56,7 +54,7 @@ export async function advanceSoftwareImageStep(
     for (const command of workspaceToolsCommands(WORKSPACE_TOOL_SOURCES)) {
       const status = await provider.runCommand(
         image.sandboxId,
-        privilegedCommand(command),
+        imageToolsCommand(command),
       )
       output += status.stdout + status.stderr
       failed = status.exitCode !== 0 || status.timedOut
@@ -86,7 +84,7 @@ export async function advanceSoftwareImageStep(
           { kind: 'software-image', id: image.id },
           'software',
           installImageSoftware(
-            readImageSoftware(JSON.parse(image.softwareJson)),
+            readSoftwareRelease(JSON.parse(image.softwareJson)),
           ),
         ),
       )

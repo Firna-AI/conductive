@@ -1,10 +1,20 @@
-import { Buffer } from 'node:buffer'
 import { join, posix } from 'node:path'
 
 import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 import { shellQuote } from './commands'
 import { imageNodeExecutable } from './image-runtime'
-import { installImageSoftware } from './image-software'
+import installScript from '../../image/install.sh?raw'
+import runtimeInstall from '../../image/install-runtime.sh?raw'
+import runnerStart from '../../image/runner-start.sh?raw'
+import credentialStart from '../../image/git-credential-helper.sh?raw'
+import credentialScript from '../../image/git-credential-helper.mjs?raw'
+import githubCli from '../../image/github-cli.sh?raw'
+import runnerService from '../../image/conductive-runner.service?raw'
+import previewRelayStart from '../../image/preview-relay-start.sh?raw'
+import previewRelayService from '../../image/conductive-preview-relay.service?raw'
+import previewRelaySocket from '../../image/conductive-preview-relay.socket?raw'
+import diskCacheRule from '../../image/60-conductive-disk-cache.rules?raw'
+import { imageRuntimeScript } from './image-runtime'
 
 const credentialRoots = ['/opt/conductive', '/run/ascii-secrets']
 const softwareRoots = [
@@ -52,22 +62,30 @@ function rootedScript(source: string, name: string, root: string): string {
     .replaceAll(runnerUrlMarker, runnerUrl)
 }
 
-/** Read the files that the production image command stages for installation. */
+/** Stage the legacy installer fixtures while older sandboxes still use them. */
 export function stagedImageSoftware(root: string): ReadonlyMap<string, string> {
-  const command = installImageSoftware({
-    url: 'https://software.example.test/runner.tar.gz',
-    sha256: '0'.repeat(64),
-  })
-  const writes = command.matchAll(
-    /^printf %s '([A-Za-z0-9+/=]*)' \| base64 -d > '\/opt\/conductive\/staged\/([\w.-]+)'$/gm,
-  )
-  const files = new Map<string, string>()
-  for (const [, encoded, name] of writes) {
-    const source = Buffer.from(encoded, 'base64').toString('utf8')
-    files.set(
-      name,
-      name.endsWith('.sh') ? rootedScript(source, name, root) : source,
-    )
+  const sources: Record<string, string> = {
+    'install.sh': installScript,
+    'install-runtime.sh': runtimeInstall,
+    'runner-start.sh': runnerStart.replaceAll(
+      '@RUNNER_PATH@',
+      MACHINE_PATHS.runner,
+    ),
+    'git-credential-helper.sh': credentialStart,
+    'git-credential-helper.mjs': credentialScript,
+    'github-cli.sh': githubCli,
+    'conductive-runner.service': runnerService,
+    'preview-relay-start.sh': previewRelayStart,
+    'conductive-preview-relay.service': previewRelayService,
+    'conductive-preview-relay.socket': previewRelaySocket,
+    '60-conductive-disk-cache.rules': diskCacheRule,
   }
-  return files
+  return new Map(
+    Object.entries(sources).map(([name, source]) => [
+      name,
+      name.endsWith('.sh')
+        ? rootedScript(imageRuntimeScript(source), name, root)
+        : source,
+    ]),
+  )
 }

@@ -15,14 +15,18 @@ import {
   TERMINAL_RESTORE_MARKER,
 } from './scripts'
 
-export function terminalInstallCommand(): string {
+export function terminalPackagesCommand(): string {
   return privilegedCommand(`set -eu
 apt-get update
 apt-get install -y ttyd tmux
 # The ttyd package enables its own service on port 7681, which the
 # workspace terminal needs. Stop it and keep it from starting.
 systemctl disable --now ttyd.service 2>/dev/null || true
-systemctl mask ttyd.service
+systemctl mask ttyd.service`)
+}
+
+export function terminalInstallCommand(): string {
+  return `${terminalPackagesCommand()}\n${privilegedCommand(`set -eu
 install -d -m 755 /usr/local/lib/conductive
 cat > /usr/local/lib/conductive/terminal <<'CONDUCTIVE_TERMINAL'
 ${launcherScript()}
@@ -79,7 +83,7 @@ KillMode=control-group
 WantedBy=multi-user.target
 CONDUCTIVE_SERVICE
 systemctl daemon-reload
-systemctl enable conductive-terminal.service`)
+systemctl enable conductive-terminal.service`)}`
 }
 
 /** Call during each org image build. It enables the service without a credential. */

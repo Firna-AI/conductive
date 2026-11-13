@@ -1,14 +1,14 @@
 # Install in a build
 
 This guide belongs to the [sandbox software](README.md). It describes the
-legacy software step of each image build and the release installer interface.
+software step of each image build and the release installer interface.
 
 Before this step, Git in the build sandbox copies each chosen repository
 into its folder, as the
 [source loader](../worker/lifecycle/repository-layout.md#the-source-loader)
 says. That Git comes from the image that the build sandbox starts from.
 A first build starts from a ready software image of the app software
-version in its provider account. It skips the software step after the copy.
+version in its provider account. It installs the newest release after the copy.
 Without that image, it starts from the provider's base image and runs the
 full software step. Each later build or refresh starts from the last org
 image, which holds everything that earlier builds installed. The copy uses no part of this folder's software.
@@ -24,51 +24,48 @@ The [software image build](../worker/software-image/README.md) runs the same
 agent tools and image software commands as an org build. It has no
 repository or environment variable.
 
-The software step of a build calls `installImageSoftware`. It writes the
-scripts, both service units, and the relay socket unit to `/opt/conductive/staged/`.
-Each staged script holds the quoted full path of the private Node in place
-of `@CONDUCTIVE_NODE@`. Then the step runs these commands, in this order:
+The software step calls `installImageSoftware`. The Worker reads the newest
+release JSON before it composes that command. `CONDUCTIVE_RELEASE_SERVER`
+sets its base URL. The default is `https://runner.conductive.build`.
+The Worker checks the binary, target, version, HTTPS URL, and SHA-256 digest.
+A failed read fails the build with a software-release error.
 
-```sh
-sudo -n sh /opt/conductive/staged/install-runtime.sh '<Node URL>' '<Node digest>' '<version folder>'
-sudo -n sh /opt/conductive/staged/install.sh '<archive URL>' '<SHA-256 digest>'
-```
+The Worker writes the legacy tools launcher to `/opt/conductive/agent-tools/conductive`.
+It uses the active release's private Node runtime.
+The release command dispatcher sends `update` to the Rust program and other commands to that launcher.
+The tools writer never follows the public command link into a release file.
+When the separate launcher is absent, builds and first startup bootstrap migrate an existing launcher before apply.
 
-Boat runs commands as `user`, with passwordless sudo. The installers need
-system permissions. The installed runner and relay services run as `user`.
+The command installs `gh`, `ttyd`, and `tmux` with apt.
+It disables and masks the package's own ttyd service.
+It downloads the program archive with curl, checks its digest with
+`sha256sum`, and extracts `conductive` into a temporary folder.
+The root command uses `umask 022`, so services that run as `user` can read the release files.
+It then runs the root commands in [Release installation](#release-installation).
+A failure stops the build. The temporary folder is removed on exit.
+The release owns the terminal scripts and units. The build never overwrites
+them with the legacy terminal installer.
 
-`install.sh` does these steps. A failure stops it, and the build fails.
+Every org build and refresh installs the newest release.
+A first build still uses a matching software image when one is ready.
+That build also runs the release install, so a newer release can apply.
+A refresh then snapshots the result without running the org install script.
 
-1. It downloads the archive with `curl`, and checks the digest with
-   `sha256sum`.
-2. It unpacks the archive into a new folder.
-   It checks `runner/main.mjs` and `runner/relay.mjs`.
-   It writes the version of the private Node to the build log.
-3. It replaces `/opt/conductive/software` with the new folder, so no file
-   of an older archive stays.
-4. It installs the GitHub CLI package when needed.
-   It installs the runner and relay start scripts.
-   It installs the git credential helper and the GitHub CLI wrapper.
-   It installs `conductive-runner.service` and `conductive-preview-relay.service`.
-   It installs `conductive-preview-relay.socket`.
-   It installs the udev rule `60-conductive-disk-cache.rules`.
-5. It makes `conductive-git-credential` the system credential helper of
-   git, and sets `credential.useHttpPath`.
-6. It enables the runner service, the relay socket, and the relay service.
-   It starts no unit.
+A workspace without `/opt/conductive/current/conductive` bootstraps at its
+next normal start. The Worker reads the release JSON when it composes the
+startup command. A failed read prints a warning and leaves startup running.
+The command launches a root `nohup setsid` job. Its output goes to
+`/run/conductive/bootstrap.log`. Neither startup nor the runner restart waits
+for its download. Disk retention starts do not bootstrap software.
 
-Boat starts the enabled relay socket and service after each resume and fork.
-The service requires the socket to start first.
-systemd keeps `127.0.0.1:7682` open while the relay service restarts.
-The service stays enabled, so the relay starts without waiting for a preview request.
-The relay uses the private Node.
-Its start script reads no workspace variable or workspace marker.
-
-A refresh and a first build from a software image skip this legacy step
-and the terminal installer with it. A workspace without the updater keeps
-its installed software. Changes then reach later workspaces through a new
-image build. A workspace with the release layout can download new parts
-and apply them at its next runner start. See [Release installation](#release-installation).
+The background job checks the program again under a download lock.
+It verifies and extracts the bootstrap archive, then runs `update check --bootstrap`.
+Activation takes `/run/conductive/bootstrap-activate.lock`.
+The runner restart takes the same lock. The download never holds this lock.
+Activation checks again that the program is missing, applies the release,
+and confirms the initial installation with `update started`.
+This confirmation clears the first pending marker, which has no previous release.
+The new units take effect at the next runner start. Bootstrap starts no unit.
 
 ## Disk flushes
 
@@ -77,18 +74,16 @@ the requirement. The udev rule `60-conductive-disk-cache.rules` sets
 `queue/write_cache` to `write through` on each whole virtio disk, at each
 boot. The kernel then sends no flush to the host, and `fsync` returns once
 the host has the data. Installation changes no disk setting, so the build
-sandbox keeps its flushes. A workspace without the updater gets the rule
-through an image build.
-The updater installs the rule from the system part.
+sandbox keeps its flushes. The updater installs the rule from the system part.
+A workspace without the updater receives it through the background bootstrap.
 
 To check a sandbox, read `/sys/block/vda/queue/write_cache`. It reads
 `write through` with the rule and `write back` without it.
 
 ## Release installation
 
-The release installer is available in `conductive`. The current Worker
-installer above does not call it yet. A caller that installs a first
-release runs these commands as root with a verified bootstrap executable:
+The Worker installs releases through `conductive`. It runs these commands
+as root with a verified bootstrap executable:
 
 ```sh
 /path/to/bootstrap/conductive update check --bootstrap
@@ -135,7 +130,9 @@ folders never qualify for apply. A later check replaces them.
 Apply calls `current/system/install-system.sh`. That script installs all
 release units into `/etc/systemd/system`, copies the udev rule, sets the
 system Git credential helper, and links the `gh` wrapper. It also links
-`/usr/local/bin/conductive` to the active program. It runs
+`/usr/local/bin/conductive` to the release's [command dispatcher](conductive.sh).
+The dispatcher keeps the legacy workspace tools available until their Rust implementation replaces them.
+It runs
 `systemctl daemon-reload` and enables the runner, relay, terminal, and
 check timer. It starts no service and changes no package.
 

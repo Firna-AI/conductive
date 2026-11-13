@@ -2,7 +2,7 @@ import { expect, it } from 'vitest'
 
 import { setupBackendTests } from '../lifecycle/backend-test-hooks'
 import { isRecord } from '../http'
-import { SOFTWARE } from '../lifecycle/backend-test-support'
+import { SOFTWARE_RELEASE as SOFTWARE } from '../lifecycle/software-release-test-support'
 import { TOOLS_OUTPUT } from './test-support'
 import { boatRoute } from '../sandbox/routes'
 import { heldOperation } from '../test-support/held-operation'

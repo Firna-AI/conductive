@@ -3,8 +3,8 @@
 This folder holds the app's own sandbox software. Each image build installs
 it before it runs the org's install script. A software image build installs
 it once for each app software version. A first org build from that image
-skips the software step. Without a matching ready software image, the first
-build installs it itself. Later builds still install the software. The org
+also checks and installs the newest release. Without a matching ready software image,
+the first build installs it itself. Later builds and refreshes install the newest release. The org
 image is the saved snapshot that every new sandbox of an org starts from.
 In a workspace sandbox, this software starts the agent runner and the
 preview relay. It also
@@ -17,7 +17,7 @@ archive packager and the live check.
 
 - Install the pinned private Node after a check of its SHA-256 digest, or
   reuse it when the image already holds it.
-- Install the runner archive after a check of its SHA-256 digest.
+- Install the newest release through a verified bootstrap program.
 - Install and enable the systemd services of the agent runner and preview relay.
 - Install and enable the preview relay's socket unit.
 - Install the udev rule that stops disk flushes at each boot, as
@@ -31,17 +31,15 @@ archive packager and the live check.
   the deploy workflow.
 - Check the chat path and time the first agent start in a real sandbox.
 
-The [terminal backend](../worker/terminal/README.md) owns ttyd, tmux, their
-services, the terminal launcher, and the local password. It also owns the
-shell server, which keeps the workspace shell in tmux. The software step of
-each software image build and each org build that needs it runs that area's `terminalInstallCommand()` after
-`install.sh`. The build log shows the output of both. The terminal
-installer installs the `ttyd` and `tmux` packages with `apt-get`. It
-enables the terminal service and starts nothing.
+The [terminal backend](../worker/terminal/README.md) supplies the terminal
+script sources. The release packages those scripts and their units.
+The build calls `terminalPackagesCommand()` for `ttyd` and `tmux`.
+The release installer owns the installed scripts and units.
+It enables services and starts none.
 
 ## The runner archive
 
-Each build takes one input, an `ImageSoftwareArtifact`. It is the public
+The lifecycle admission still captures an `ImageSoftwareArtifact`. It is the public
 HTTPS URL of a `.tar.gz` archive, with the SHA-256 digest of the archive.
 The caller of the lifecycle routes supplies it as the `software` option, as
 the [lifecycle README](../worker/lifecycle/README.md#browser-routes) says.
@@ -79,11 +77,11 @@ says. To supply an archive by hand:
    as [Deployment inputs](../docs/deployment.md#the-runner-archive) says.
    `<archive>.json` holds both.
 
-A build fails when the file at the URL does not match the digest. So a
-versioned URL for each archive is a good choice.
+The runner archive is now a release part. The release program verifies its digest.
 
-The Worker does not serve the archive. Image builds and refreshes read the
-two variables.
+The Worker does not serve the archive. Admission and refresh scheduling still
+read the two variables as stored job metadata. Installation reads the newest
+release JSON instead.
 
 ## Conductive release files
 
@@ -98,9 +96,10 @@ newest-version JSON at
 holds the absolute program archive URL and its digest. Its cache time is
 60 seconds. The deploy replaces it only for a higher version, after the
 release files pass their public size checks. The release version is
-`0.0.<commit count of main>`. The updater can stage and apply these releases. The current Worker image
-installer still uses the runner archive variables. It does not install
-the updater or its units.
+`0.0.<commit count of main>`. The Worker fetches this JSON when it composes a build or startup command.
+`CONDUCTIVE_RELEASE_SERVER` overrides the base URL. Builds install through
+the verified program. A workspace without it receives a background bootstrap
+at its next normal start. A failed startup lookup warns and keeps startup running.
 
 [The archive in each deploy](../docs/deployment/runner-archive.md#the-archive-in-each-deploy)
 gives the exact keys and publication order. The
@@ -112,12 +111,15 @@ gives the exact keys and publication order. The
 sequence and the version layout. `conductive update check` stages a newer
 release. `conductive update apply` activates a complete release locally.
 The runner remains the Node program from the runner part.
+The [command dispatcher](conductive.sh) sends `update` to the Rust program.
+Other commands use `/opt/conductive/agent-tools/conductive` with the release's private Node runtime.
+Builds write that legacy launcher separately from the public command link.
+The first startup bootstrap copies an existing launcher before apply replaces the link.
 
 `package-system.sh` builds a reproducible archive with the release units
 from `release/`. It renders the start scripts with paths under
 `/opt/conductive/current`. It generates terminal scripts from the existing
-terminal module. The legacy units in this folder still serve the current
-Worker installer.
+terminal module. The legacy units remain for tests of older installed software.
 
 The root oneshot `conductive-update-apply.service` runs before the runner
 and relay. Its workspace-ready condition prevents a boot without workspace
@@ -138,14 +140,12 @@ paths, and its update steps.
 
 ## Install
 
-[Install in a build](install.md) describes the software step of each image
-build: the staged scripts, the private Node, and the steps of `install.sh`.
-A refresh and a first build from a software image skip that step.
-The [software image backend](../worker/software-image/README.md) builds the shared image.
-The legacy installer gives a workspace the relay through an image build.
-A workspace without the updater keeps its image software after a resume.
-A workspace with the release layout downloads updates in the background.
-It applies them before the next runner start.
+[Install in a build](install.md) describes the verified bootstrap, release
+layout, apt packages, and startup locking. Every org build and refresh uses
+the release installer. The [software image backend](../worker/software-image/README.md)
+uses the same command. A workspace downloads updates in the background and
+applies them before a later runner start. A workspace without the program
+gets it through the background startup bootstrap.
 
 ## Start in a workspace
 
@@ -199,8 +199,8 @@ runs the command of `workspaceStartupCommand`:
    mode 600.
 3. It runs the script with Bash in the repository folder, with the
    variables.
-4. When the script succeeds, it writes the marker
-   `/run/conductive/workspace-ready`, and restarts the runner service.
+4. When the script succeeds, it starts a background bootstrap if the program is missing.
+5. It writes `/run/conductive/workspace-ready` and restarts the runner service under the activation lock.
 
 After that command succeeds, the Worker calls the terminal backend's start
 hook. That hook starts the terminal service and its shell server. It caches
@@ -292,23 +292,19 @@ Run the installer tests with
 They run the shipped scripts with local archives and a fake `curl`.
 
 Run the start script test with
-`npm run test -- worker/chat/integration/runner-launcher.test.ts`. It stages
-the software with `installImageSoftware` in a temporary folder under
-`.context/`, and runs the staged `runner-start.sh` with `/bin/sh`. It checks
+`npm run test -- worker/chat/integration/runner-launcher.test.ts`. It renders the shared start template in a temporary folder under
+`.context/`, and runs `runner-start.sh` with `/bin/sh`. It checks
 the settings that the runner configuration reads, and that the script uses
 the private Node, not a `node` on the path. It also checks that a
 build, a disk retention restart, and an unfinished start start no runner.
 
-- The Worker imports each file with Vite's `?raw` suffix. When you add a
-  file that the sandbox needs, also add it to `installImageSoftware`.
-  Add it to `install.sh` too when a sandbox uses it after the build. The
-  developer scripts stay out of the sandbox.
-- Start Node in shared templates as `@CONDUCTIVE_NODE@`. The release
-  packager renders this path under the version folder.
-- `runner-start.sh` holds the placeholder `@RUNNER_PATH@`.
-  `installImageSoftware` replaces it with `MACHINE_PATHS.runner` when it
-  stages the script, so the runner path has one source. Run only the rendered
-  copy.
+- Add release system files to `package-system.sh` and `install-system.sh`.
+  The Worker downloads the release instead of staging individual files.
+- Start Node in shared templates as `@CONDUCTIVE_NODE@`.
+  The release packager renders the path under the version folder.
+- `runner-start.sh` holds `@RUNNER_PATH@`.
+  The release packager replaces it with `MACHINE_PATHS.runner`.
+  Run only a rendered copy.
 - Keep each start script safe to run in a build sandbox. Of the variables
   in the table, a build sandbox has only the folder variables.
   The relay needs none of them.
@@ -333,8 +329,7 @@ build, a disk retention restart, and an unfinished start start no runner.
   start the preview relay with the private Node.
 - [`conductive-preview-relay.socket`](conductive-preview-relay.socket):
   holds the relay port and passes its listener to the relay service.
-- [The terminal backend](../worker/terminal/service.ts): owns the terminal
-  install command, its two services, and its workspace start hook.
+- [The terminal backend](../worker/terminal/service.ts): owns apt package installation and the workspace start hook.
 - [`git-credential-helper.sh`](git-credential-helper.sh) and
   [`git-credential-helper.mjs`](git-credential-helper.mjs): the git
   credential helper.
@@ -343,9 +338,9 @@ build, a disk retention restart, and an unfinished start start no runner.
   Node release, its digest, and its paths.
 - [Release crate](../crates/cnd-release/README.md): the shared parts format
   and the program release packager.
-- [`image-software.ts`](../worker/lifecycle/image-software.ts): stages these
-  files for a build, adds the terminal install command, and makes the
-  startup command for a workspace start or a disk retention restart.
+- [`image-software.ts`](../worker/lifecycle/image-software.ts): composes the release install and workspace startup commands.
+- [`software-release.ts`](../worker/lifecycle/software-release.ts): reads and validates release metadata.
+- [`software-bootstrap.ts`](../worker/lifecycle/software-bootstrap.ts): verifies the bootstrap archive and separates background download from activation.
 - [`saved-script.ts`](../worker/lifecycle/saved-script.ts):
   `savedScriptCommand`, which writes the org's install or startup script to
   a file and runs it with Bash.

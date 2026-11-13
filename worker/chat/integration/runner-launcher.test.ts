@@ -1,5 +1,5 @@
 import { execFile } from 'node:child_process'
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
 import { promisify } from 'node:util'
 
@@ -7,8 +7,11 @@ import { expect, it } from 'vitest'
 
 import { MACHINE_PATHS } from '../../../src/shared/agent-tools'
 import { shellQuote } from '../../lifecycle/commands'
-import { installImageSoftware } from '../../lifecycle/image-software'
-import { imageNodeExecutable } from '../../lifecycle/image-runtime'
+import runnerStart from '../../../image/runner-start.sh?raw'
+import {
+  imageNodeExecutable,
+  imageRuntimeScript,
+} from '../../lifecycle/image-runtime'
 import { isolatedProcessEnvironment } from '../../test-support/process-environment'
 
 const execute = promisify(execFile)
@@ -48,18 +51,8 @@ async function runnerLauncher() {
     await writeFile(join(binaryDirectory, 'node'), '#!/bin/sh\nexit 71\n', {
       mode: 0o755,
     })
-    const staged = installImageSoftware({
-      url: 'https://artifacts.conductive.test/runner.tar.gz',
-      sha256: 'a'.repeat(64),
-    })
-    await execute(
-      '/bin/sh',
-      ['-c', staged.replaceAll('/opt/conductive', installation)],
-      { cwd: root, env: environment },
-    )
-    const source = await readFile(
-      join(installation, 'staged/runner-start.sh'),
-      'utf8',
+    const source = imageRuntimeScript(
+      runnerStart.replaceAll('@RUNNER_PATH@', MACHINE_PATHS.runner),
     )
     const launcher = join(root, 'runner-start.sh')
     await writeFile(

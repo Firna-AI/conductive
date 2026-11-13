@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest'
 
 import { setupBackendTests } from '../lifecycle/backend-test-hooks'
-import { SOFTWARE } from '../lifecycle/backend-test-support'
+import { SOFTWARE_RELEASE as SOFTWARE } from '../lifecycle/software-release-test-support'
 import { TOOLS_OUTPUT } from './test-support'
 import { SAVED_IMAGE_NAME } from '../lifecycle/image-names'
 import { requestSoftwareImage } from './build'

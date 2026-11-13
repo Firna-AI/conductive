@@ -1,4 +1,4 @@
-import type { AppDependencies, AppEnv } from '../env'
+import type { AppDependencies, AppEnv, HttpFetch } from '../env'
 import type { SandboxProvider } from '../sandbox/provider'
 import {
   startWorkspaceTerminal,
@@ -7,6 +7,8 @@ import {
 import { warnWorker } from '../warnings'
 import { WarningId } from '../warning-values'
 import { lifecycleCommand } from './command-intents'
+import { latestSoftwareRelease } from './software-release'
+import type { StartupBootstrap } from './software-bootstrap'
 import { workspacePhaseCommand } from './start-command'
 import { workspaceEnvironmentSettings } from './settings-data'
 import { environmentSecrets } from './org-environment'
@@ -34,6 +36,7 @@ export async function advanceStartCommand(
   job: WorkspaceStartJob,
   label: string,
   call: StartCall,
+  releaseFetch: HttpFetch,
 ): Promise<boolean> {
   const sandboxId = row.sandboxId
   if (!sandboxId) throw new WorkspaceStartError(null)
@@ -61,6 +64,17 @@ export async function advanceStartCommand(
     await storage.secrets(secrets)
     if (job.phase !== 'terminal')
       await endpoint.lifecycleStep(job.phase, label, 'running')
+    let bootstrap: StartupBootstrap | undefined
+    if (job.phase === 'startup') {
+      try {
+        bootstrap = { release: await latestSoftwareRelease(env, releaseFetch) }
+      } catch {
+        bootstrap = {
+          warning:
+            'Warning: the cloud computer software release is not available. Bootstrap will retry at the next start.',
+        }
+      }
+    }
     const started = await call(async () =>
       provider.startCommand(
         sandboxId,
@@ -79,6 +93,7 @@ export async function advanceStartCommand(
                 job.phase === 'startup'
                   ? await ownerCommitAuthor(env.DB, row.ownerUserId)
                   : null,
+                bootstrap,
               ),
         ),
       ),
