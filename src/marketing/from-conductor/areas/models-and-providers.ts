@@ -62,7 +62,7 @@ export const modelsAndProvidersFeatures: readonly ParityFeature[] = [
     area: 'models-and-providers',
     name: 'Model picker',
     status: 'available',
-    note: 'One picker lists Claude and Codex models, with agent changes opening another session. Switching agents within an empty session is in progress.',
+    note: 'One picker lists Claude and Codex models. Choosing the other agent switches an empty session, and opens another session from a chat with messages.',
   },
   {
     id: 'loadouts',
@@ -76,14 +76,14 @@ export const modelsAndProvidersFeatures: readonly ParityFeature[] = [
     area: 'models-and-providers',
     name: 'Effort levels',
     status: 'available',
-    note: 'Choose the reasoning effort from the options offered for each model.',
+    note: 'Choose the reasoning effort offered for each model, including Ultra and Max on supported models.',
   },
   {
     id: 'fast-mode',
     area: 'models-and-providers',
     name: 'Fast mode',
-    status: 'planned',
-    note: 'A Fast switch in the model menu is planned for supported models.',
+    status: 'in-progress',
+    note: 'A Fast switch in the model menu is in progress for supported models.',
     due: null,
   },
   {
@@ -111,7 +111,8 @@ export const modelsAndProvidersFeatures: readonly ParityFeature[] = [
     id: 'sync-agent-configs',
     area: 'models-and-providers',
     name: 'Sync agent configs',
-    status: 'considering',
-    note: 'Copying skills, commands, and MCP servers between Claude and Codex is under consideration. Keep shared instructions in the repository.',
+    status: 'planned',
+    note: 'Shared skills for Claude and Codex are planned through one org repository. Syncing commands and MCP servers remains under consideration.',
+    due: null,
   },
 ]

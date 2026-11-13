@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { expectGatewayLogin } from './runner-credential.test-support'
 import type { SendMessageResponse } from '../../src/shared/messages'
 import { sessionPaths } from '../../src/shared/sessions'
 import {
@@ -79,11 +80,12 @@ describe('workspace chat queue', () => {
       name: 'Octocat',
       email: '7+octocat@users.noreply.github.com',
     })
-    expect(command.login).toEqual({
-      agent: 'claude',
-      kind: 'api-key',
-      secret: `secret-${fixture.owner.id}-claude`,
-    })
+    await expectGatewayLogin(
+      fixture,
+      command,
+      `secret-${fixture.owner.id}-claude`,
+      { agent: 'claude', kind: 'api-key' },
+    )
     const sent = await fixture.history(session.id)
     expect(
       sent.events.filter(({ event }) => event.type === 'message.accepted'),
@@ -162,11 +164,12 @@ describe('workspace chat queue', () => {
     expect(steer.turnId).toBe(initial.turnId)
     expect(steer.message.sender.id).toBe(fixture.member.id)
     expect(steer).not.toHaveProperty('commitAuthor')
-    expect(steer.login).toEqual({
-      agent: 'claude',
-      kind: 'api-key',
-      secret: `secret-${fixture.owner.id}-claude`,
-    })
+    await expectGatewayLogin(
+      fixture,
+      steer,
+      `secret-${fixture.owner.id}-claude`,
+      { agent: 'claude', kind: 'api-key' },
+    )
     runner.emit({
       type: 'turn.completed',
       sessionId: session.id,
@@ -184,8 +187,7 @@ describe('workspace chat queue', () => {
     if (next?.type !== 'turn') throw new Error('Expected the next turn.')
     expect(next.sessionId).toBe(session.id)
     expect(next.turnId).not.toBe(initial.turnId)
-    if (!next.login) throw new Error('The version 1 turn has no login.')
-    expect(next.login.secret).toBe(`secret-${fixture.owner.id}-claude`)
+    await expectGatewayLogin(fixture, next, `secret-${fixture.owner.id}-claude`)
     expect(next.commitAuthor).toEqual({
       name: 'Teammate',
       email: '8+teammate@users.noreply.github.com',

@@ -92,7 +92,7 @@ it('copies webhook failures and later read successes into list records without c
     ).status,
   ).toBe(200)
   expect(await list(fixture)).toMatchObject({
-    workspaces: [{ github: 'checks-passed' }],
+    workspaces: [{ github: 'ready-to-merge' }],
   })
   expect(await metadata()).toEqual(original)
   expect(await metadata()).toEqual(persisted)
@@ -117,7 +117,7 @@ it('replays an older delivery event without replacing the newer workspace summar
   })
   expect(replay?.banner.state).toBe('checks-failed')
   expect(await list(fixture)).toMatchObject({
-    workspaces: [{ github: 'checks-passed' }],
+    workspaces: [{ github: 'ready-to-merge' }],
   })
   expect(harness.api.requests).toHaveLength(reads)
   expect(
@@ -154,7 +154,7 @@ it('repairs a missing summary on an unchanged read and skips a matching copy', a
     .run()
   await harness.refresh(fixture.workspace, {})
   expect(await list(fixture)).toMatchObject({
-    workspaces: [{ github: 'checks-passed' }],
+    workspaces: [{ github: 'ready-to-merge' }],
   })
   await harness.env.DB.prepare(
     `CREATE TRIGGER forbid_matching_github_summary BEFORE UPDATE OF github_summary ON workspaces
@@ -196,7 +196,7 @@ it('fails a refresh on a failed copy and retries its receipt without a fresh eve
     (await harness.webhook('status', recordedStatus, 'copy-failure')).status,
   ).toBe(204)
   expect(await list(fixture)).toMatchObject({
-    workspaces: [{ github: 'checks-passed' }],
+    workspaces: [{ github: 'ready-to-merge' }],
   })
   expect(harness.api.requests).toHaveLength(reads)
   expect(

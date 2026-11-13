@@ -4,10 +4,12 @@ import { act } from 'react'
 import { describe, expect, test, vi } from 'vitest'
 import { routes } from '../../../app/router'
 import type { FilesTab } from '../../../files/navigation'
+import { workspaceViewPath } from '../../../shared/workspace-view'
 import { byRole, queryByRole } from '../../../test-support/dom-queries'
 import { FakeApiServer } from '../../../test-support/fake-api'
 import { FAKE_IDS } from '../../../test-support/fixtures/core'
 import { FAKE_FILE_PATH } from '../../../test-support/fixtures/tools'
+import { workspaceFixtures } from '../../../test-support/fixtures/workspaces'
 import {
   holdAnimationFrames,
   MOUNTED_TEST_TIMEOUT,
@@ -49,6 +51,10 @@ describe('the scroll offset of the file and diff tabs of the workspace', () => {
   test('each tab gives back its offset after the other tab and the chat showed', async () => {
     holdAnimationFrames()
     const server = new FakeApiServer()
+    const { view: saved } = workspaceFixtures().view
+    server.json('GET', workspaceViewPath(org, id), {
+      view: { ...saved, tabs: [...saved.tabs, fileTab, diffTab] },
+    })
     const file = filesHref(org, id, fileTab)
     const diff = filesHref(org, id, diffTab)
     const { view, navigation } = await openTab(server, file)
@@ -76,6 +82,10 @@ describe('the scroll offset of the file and diff tabs of the workspace', () => {
   test('a tab that the user closes forgets its offset, so it opens at the top again', async () => {
     holdAnimationFrames()
     const server = new FakeApiServer()
+    const { view: saved } = workspaceFixtures().view
+    server.json('GET', workspaceViewPath(org, id), {
+      view: { ...saved, tabs: [...saved.tabs, fileTab, diffTab] },
+    })
     const file = filesHref(org, id, fileTab)
     const { view, navigation } = await openTab(server, file)
     await settle()

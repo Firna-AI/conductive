@@ -1,4 +1,9 @@
 import type { WorkspaceEventEnvelope } from './workspace-events'
+import {
+  isSupportedRunnerVersion,
+  RUNNER_PROTOCOL_VERSION,
+  type RunnerProtocolVersion,
+} from '../../src/shared/runner'
 import type {
   WorkspaceSockets,
   NativeSocketAttachment,
@@ -10,6 +15,7 @@ import {
   type StoredRunnerConnection,
 } from './runner-connection-store'
 import type { ChatStore } from './store'
+import { failUnsupportedRunner } from './runner-unsupported'
 import type {
   ActiveRunner,
   ChatDependencies,
@@ -101,19 +107,23 @@ export class RunnerConnections {
         })
         this.peers.set(socket, peer)
       } else this.record = record
-      this.activate(peer, this.record)
+      this.activate(peer, this.record, null)
       await this.arm()
     })
   }
 
-  private activate(source: RunnerPeer, record: StoredRunnerConnection): void {
+  private activate(
+    source: RunnerPeer,
+    record: StoredRunnerConnection,
+    protocolVersion: RunnerProtocolVersion | null,
+  ): void {
     this.record = record
     const saved = this.retained ? this.saved : undefined
     const active: ActiveRunner = {
       id: record.id,
       workspace: record.workspace,
       streamId: record.streamId,
-      protocolVersion: record.protocolVersion,
+      protocolVersion,
       loginKinds: record.loginKinds,
       ready: record.ready,
       peer: new AuthenticatedRunner(
@@ -168,13 +178,30 @@ export class RunnerConnections {
     )
       return false
     this.bind(record.workspace.id)
+    const protocolVersion = record.protocolVersion
+    if (
+      !isSupportedRunnerVersion(protocolVersion) &&
+      (protocolVersion !== null || record.streamId !== null)
+    ) {
+      await this.saved?.save(null, record.generation)
+      if (protocolVersion === null || protocolVersion < RUNNER_PROTOCOL_VERSION)
+        await this.store.run(() =>
+          failUnsupportedRunner(
+            this.store,
+            this.dependencies,
+            this.publish,
+            record.workspace.id,
+          ),
+        )
+      return false
+    }
     const peer: RunnerPeer = {
       send: (message) => socket.send(JSON.stringify(message)),
       close: () => socket.close(1000, 'Connection closed.'),
     }
     this.peers.set(socket, peer)
     this.retained = true
-    this.activate(peer, record)
+    this.activate(peer, record, protocolVersion)
     await this.arm()
     return true
   }

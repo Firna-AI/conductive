@@ -84,15 +84,16 @@ export interface GitHubCheck {
   durationMs: number | null
 }
 
-export type GitHubSummary =
-  'checks-running' | 'checks-failed' | 'checks-passed' | 'merged'
+/** The checks of a pull request, as one value. */
+export type ChecksSummary = 'checks-running' | 'checks-failed' | 'checks-passed'
 
-export function githubSummary(
-  banner: GitHubBanner,
+/**
+ * The checks as one value, or null without a check: a failure wins over a
+ * check that runs. Checks passed means that each check counts as passed.
+ */
+export function checksSummary(
   checks: readonly GitHubCheck[],
-): GitHubSummary | null {
-  if (banner.state === 'merged') return 'merged'
-  if (banner.pullRequest === null || banner.state === 'closed') return null
+): ChecksSummary | null {
   if (
     checks.some((check) =>
       ['failed', 'cancelled', 'timed-out', 'action-required'].includes(
@@ -108,6 +109,23 @@ export function githubSummary(
   )
     return 'checks-running'
   return checks.length > 0 ? 'checks-passed' : null
+}
+
+/**
+ * The GitHub state of a workspace, which its list mark shows: the state of
+ * the pull request bar of its branch. A branch without a pull request, and
+ * a pull request closed without a merge, have none.
+ */
+export type GitHubSummary = Exclude<
+  BannerState,
+  'none' | 'no-commits' | 'closed'
+>
+
+export function githubSummary(banner: GitHubBanner): GitHubSummary | null {
+  const { state } = banner
+  return state === 'none' || state === 'no-commits' || state === 'closed'
+    ? null
+    : state
 }
 
 export interface GitHubBannerResponse {

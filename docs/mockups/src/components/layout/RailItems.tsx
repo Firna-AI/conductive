@@ -36,8 +36,11 @@ export function RailLink(props: {
   )
 }
 
-/** An org of the rail that an admin deleted or the operator suspended. */
-export type OrgState = 'deleted' | 'suspended'
+/**
+ * An org of the rail that the operator suspended. A deleted org has no
+ * tile: the Account page lists it, with Restore.
+ */
+export type OrgState = 'suspended'
 
 /** The page that an org of the rail opens, and the name of its link. */
 function orgLink(
@@ -45,8 +48,6 @@ function orgLink(
   state: OrgState | undefined,
 ): { to?: string; label: string } {
   switch (state) {
-    case 'deleted':
-      return { to: paths.deletedOrg, label: `${org.name}, deleted` }
     case 'suspended':
       return { to: paths.suspendedOrg, label: `${org.name}, suspended` }
     case undefined:
@@ -54,15 +55,9 @@ function orgLink(
   }
 }
 
-/** The square of an org in the rail. A deleted org fades. */
-export function RailTile(props: {
-  org: Org
-  current: boolean
-  state?: OrgState
-}) {
-  const avatar = <OrgTile current={props.current} org={props.org} size={26} />
-  if (props.state !== 'deleted') return avatar
-  return <span className={styles.deleted}>{avatar}</span>
+/** The square of an org in the rail. */
+export function RailTile(props: { org: Org; current: boolean }) {
+  return <OrgTile current={props.current} org={props.org} size={26} />
 }
 
 /**
@@ -82,9 +77,7 @@ export function OrgItem(props: {
 }) {
   const { org, menu } = props
   const { to, label } = orgLink(org, props.state)
-  const tile = (
-    <RailTile current={props.current} org={org} state={props.state} />
-  )
+  const tile = <RailTile current={props.current} org={org} />
   return (
     <li className={styles.item}>
       {to && !props.placeholder ? (

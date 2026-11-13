@@ -9,9 +9,14 @@ import type { WorkspaceView } from '../shared/workspace-view'
 import type { Workspace } from '../shared/workspaces'
 import { TouchScreen } from '../../docs/mockups/src/components/common/touch'
 import { useFollowTabs } from '../app/tab-places'
+import {
+  ChatDropAreaProvider,
+  useChatDropArea,
+} from './components/chat-drop-area'
 import { ChatOverlays, historyEntries } from './components/ChatOverlays'
 import type { ComposerFocus } from './components/Composer'
 import { SessionChat, type ChatHost } from './components/SessionChat'
+import { CodeCopyProvider, useCodeCopyAction } from './components/code-copy'
 import { useSessionLinkCopy } from './components/session-link-copy'
 import { SessionTabs } from './components/SessionTabs'
 import { useTabKeys } from './components/tab-keys'
@@ -112,7 +117,11 @@ function permittedOverlay(overlay: Overlay, readOnly: boolean): Overlay {
   return readOnly && overlay.kind !== 'history' ? { kind: 'none' } : overlay
 }
 
-/** The session tabs, the chat of the open session, and the overlays. */
+/**
+ * The session tabs, the chat of the open session, and the overlays. The
+ * whole column is the drop area of the message box, so a drop of files
+ * anywhere on the chat attaches them, as `useChatDropArea` says.
+ */
 function ChatBody(
   props: ChatViewProps & { controller: ChatController; snapshot: ChatSnapshot },
 ) {
@@ -137,6 +146,7 @@ function ChatBody(
     links.origin,
     copyServices,
   )
+  const copyCode = useCodeCopyAction(copyServices)
   useMentionCopy()
   useReport(snapshot.workspace, props.onWorkspaceChange)
   useReport(snapshot.view, props.onViewChange)
@@ -163,8 +173,9 @@ function ChatBody(
     props.renderTab,
   )
   useTabKeys({ tabs, controller, history, copy })
+  const drops = useChatDropArea()
   const body = (
-    <>
+    <ChatDropAreaProvider value={drops.slot}>
       <SessionTabs
         historyEntries={history}
         historyOpen={overlay.kind === 'history'}
@@ -184,17 +195,19 @@ function ChatBody(
         tabs={tabs}
       />
       {content ?? (
-        <SessionChat
-          composerFocus={props.composerFocus}
-          controller={controller}
-          host={props.host}
-          mobile={mobile}
-          now={now}
-          onConnectAgent={props.onConnectAgent}
-          onOpenDiff={props.onOpenDiff}
-          readOnly={readOnly}
-          snapshot={snapshot}
-        />
+        <CodeCopyProvider value={copyCode}>
+          <SessionChat
+            composerFocus={props.composerFocus}
+            controller={controller}
+            host={props.host}
+            mobile={mobile}
+            now={now}
+            onConnectAgent={props.onConnectAgent}
+            onOpenDiff={props.onOpenDiff}
+            readOnly={readOnly}
+            snapshot={snapshot}
+          />
+        </CodeCopyProvider>
       )}
       <ChatOverlays
         history={history}
@@ -204,14 +217,16 @@ function ChatBody(
         overlay={overlay}
         sessions={snapshot.sessions}
       />
-    </>
+    </ChatDropAreaProvider>
   )
   const mentions = props.mentions ?? null
   if (!mobile) {
     return (
       <LinksProvider value={links}>
         <MentionsProvider value={mentions}>
-          <div className={styles.column}>{body}</div>
+          <div className={styles.column} {...drops.handlers}>
+            {body}
+          </div>
         </MentionsProvider>
       </LinksProvider>
     )
@@ -220,7 +235,9 @@ function ChatBody(
     <LinksProvider value={links}>
       <MentionsProvider value={mentions}>
         <TouchScreen>
-          <div className={styles.phone}>{body}</div>
+          <div className={styles.phone} {...drops.handlers}>
+            {body}
+          </div>
         </TouchScreen>
       </MentionsProvider>
     </LinksProvider>

@@ -28,10 +28,14 @@ export const activityPresentation: Readonly<
 
 /** The GitHub state in words, which only the colour of the list mark shows. */
 const githubLabels: Readonly<Record<GitHubSummary, string>> = {
-  'checks-failed': 'Checks failed',
   'checks-running': 'Checks running',
-  'checks-passed': 'Checks passed',
+  'checks-failed': 'Checks failed',
+  'ready-to-merge': 'Ready to merge',
   merged: 'Merged',
+  conflict: 'Merge conflict',
+  'changes-requested': 'Changes requested',
+  draft: 'Draft',
+  blocked: 'Blocked',
 }
 
 /**

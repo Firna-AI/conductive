@@ -1,7 +1,6 @@
 import {
   RUNNER_SUPPORTED_LOGIN_KINDS,
   type RunnerEventEnvelope,
-  type RunnerHello,
   type RunnerLoginKind,
 } from '../../src/shared/runner'
 import { parseAgentEvent } from './agent-events'
@@ -22,21 +21,29 @@ export interface IncomingRunnerEnvelope {
   raw: unknown
 }
 
+export interface IncomingRunnerHello {
+  type: 'hello'
+  protocolVersion: number
+  workspaceId: string
+  streamId: string
+  loginKinds?: readonly RunnerLoginKind[]
+}
+
 /** Validate identity before payload checks, so duplicates and gaps remain harmless. */
 export function parseRunnerTransport(
   value: unknown,
 ):
-  | RunnerHello
+  | IncomingRunnerHello
   | IncomingRunnerEnvelope
   | { type: 'file.read.result'; value: unknown }
   | { type: 'file.diff.result'; value: unknown } {
   const input = record(value)
   if (input.type === 'hello') {
-    if (input.protocolVersion !== 1 && input.protocolVersion !== 2)
-      return invalidInput()
+    const protocolVersion = counter(input.protocolVersion)
+    if (protocolVersion === 0) return invalidInput()
     return {
       type: input.type,
-      protocolVersion: input.protocolVersion,
+      protocolVersion,
       workspaceId: identifier(input.workspaceId),
       streamId: identifier(input.streamId),
       ...(input.loginKinds === undefined

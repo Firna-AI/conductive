@@ -10,7 +10,8 @@ Dates use Unix milliseconds. IDs and model names are opaque strings.
 `Workspace.link` is its absolute web link, with org and workspace IDs.
 `AgentWorkspaceSummary` gives the same number and link.
 `Workspace.github` is the GitHub summary of its pull request, or null.
-`GitHubSummary` and `githubSummary` in `github.ts` give its four values from a banner and its checks.
+`GitHubSummary` and `githubSummary` in `github.ts` give it from a banner: the state of the bar, or null without a pull request and for a closed pull request.
+`checksSummary` gives the checks of a pull request as one value, for the bar.
 [The GitHub state](../../docs/protocol/github-banner.md#the-github-state) states their order.
 `readGitHubSummary` in `github-read.ts` keeps a known summary and reads an absent or unknown value as null.
 The browser readers and the sandbox tools use it, so an older reply still reads.
@@ -225,6 +226,12 @@ The git credential payload is not defined yet.
 
 ### Key Code
 
+- [Workspace views](workspace-view.ts) define the saved view and its
+  `temporaryTab` field. The field names one file or diff by kind and path,
+  without a display mode, or is null. The Worker and browser readers use
+  null for an absent or invalid mark, or one that names no open tab.
+  [The saved view](../../docs/protocol/temporary-tabs.md#the-saved-view)
+  gives the requirements.
 - [Shortcut commands](shortcut-commands.ts) define the stable command IDs.
   The app and Worker share this list, including Copy link, pull request
   actions, and both transcript copies. Account reads and saves accept

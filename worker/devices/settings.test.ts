@@ -88,13 +88,17 @@ it('relays local settings only to the paired Mac without applying permission rul
       )
     ).status,
   ).toBe(409)
-  for (const [operation, outcome] of [
+  const untilStop = [
+    { workspaceId: WID, workspaceName: 'Checkout', expiresAt: null },
+  ]
+  for (const [operation, outcome, workspaceWindows] of [
     [
       { action: 'remove-command', command: ' exact command ' },
       {
         status: 'done-not-saved',
         message: 'The settings file could not be saved.',
       },
+      [],
     ],
     [
       { action: 'stop-workspace', workspaceId: WID },
@@ -102,6 +106,17 @@ it('relays local settings only to the paired Mac without applying permission rul
         status: 'failed',
         message: 'The workspace permission could not be changed.',
       },
+      [],
+    ],
+    [
+      { action: 'keep-workspace', workspaceId: WID },
+      { status: 'done' },
+      untilStop,
+    ],
+    [
+      { action: 'extend-workspace', workspaceId: WID },
+      { status: 'done' },
+      settings.workspaceWindows,
     ],
   ] as const) {
     const pending = fixture.app(
@@ -119,7 +134,7 @@ it('relays local settings only to the paired Mac without applying permission rul
         settings: {
           ...settings,
           alwaysAllowedCommands: [],
-          workspaceWindows: [],
+          workspaceWindows,
         },
         outcome,
       }),
@@ -131,11 +146,29 @@ it('relays local settings only to the paired Mac without applying permission rul
       settings: {
         ...settings,
         alwaysAllowedCommands: [],
-        workspaceWindows: [],
+        workspaceWindows,
       },
       outcome,
     })
   }
+})
+
+it('rejects Extend without a workspace ID before relaying it to the Mac', async () => {
+  const mac = await connected(fixture)
+  const response = await fixture.app(
+    DEVICE_SETTINGS_PATH,
+    { ...mac.device, operation: { action: 'extend-workspace' } },
+    fixture.senderToken,
+    true,
+  )
+  expect(response.status).toBe(400)
+  expect(await response.json()).toEqual({
+    error: {
+      code: 'invalid_input',
+      message: 'Complete the Mac request fields.',
+    },
+  })
+  await sendFrame(mac, { type: 'device.ping' })
 })
 
 it('rejects only the oversized settings waiter and keeps commands and other settings operations alive', async () => {

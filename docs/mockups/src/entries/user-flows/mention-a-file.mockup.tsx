@@ -28,7 +28,7 @@ export const mentionAFile = defineUseCase({
       screenPath: 'app/files/code',
       title: 'Open the file',
       description:
-        'A press on the file chip opens the file in a tab, as a press in All files does.',
+        'The file has a kept tab, so a press on the file chip shows that tab, as a press in All files does.',
     },
   ],
 })

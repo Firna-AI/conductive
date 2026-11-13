@@ -1,6 +1,6 @@
 import WebSocket from 'ws'
 
-import type { WorkspaceToRunnerV2 as WorkspaceToRunner } from '../../src/shared/runner'
+import type { WorkspaceToRunner } from '../../src/shared/runner'
 import type {
   RunnerConnection,
   RunnerConnectionRequest,

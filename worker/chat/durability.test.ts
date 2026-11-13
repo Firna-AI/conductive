@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { expectGatewayLogin } from './runner-credential.test-support'
 import { createHarness, type TestHarness } from '../test-support/harness'
 import { CLAUDE, createChatFixture, WORKSPACE_ID } from './harness.test-support'
 import { retryRequest, sessionRecord } from './retry.test-support'
@@ -44,8 +45,7 @@ describe('workspace chat durability', () => {
     if (next?.type !== 'turn') throw new Error('Expected a continuation turn.')
     expect(next.turnId).not.toBe(initial.turnId)
     expect(next.message.id).toBe('waiting')
-    if (!next.login) throw new Error('The version 1 turn has no login.')
-    expect(next.login.secret).toBe(`secret-${fixture.owner.id}-claude`)
+    await expectGatewayLogin(fixture, next, `secret-${fixture.owner.id}-claude`)
     expect(next.message.sender.id).toBe(fixture.member.id)
     runner.emit(terminalEvent(next, 'failed'))
     await fixture.drain()

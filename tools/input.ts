@@ -17,6 +17,7 @@ export const TOOL_EFFORTS = [
   'high',
   'xhigh',
   'max',
+  'ultra',
 ] as const satisfies readonly Effort[]
 
 export class ToolInputError extends Error {}
@@ -52,6 +53,7 @@ export function effort(value: unknown): Effort {
     case 'high':
     case 'xhigh':
     case 'max':
+    case 'ultra':
       return value
     default:
       throw new ToolInputError('Choose a valid effort for the workspace.')

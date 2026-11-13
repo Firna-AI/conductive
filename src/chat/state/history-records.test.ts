@@ -31,6 +31,7 @@ describe('session records from stored history', () => {
       ],
       activeTab: { kind: 'session', sessionId: first.id },
       fileList: 'changes',
+      temporaryTab: null,
       tool: 'terminal',
     }
     chat.server.json('GET', workspaceViewPath(org, ws), { view })

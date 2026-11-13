@@ -5,7 +5,10 @@ import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 import { chatHistoryPath, workspaceEventsPath } from '../../src/shared/events'
 import { retryMessagePath, sessionsPath } from '../../src/shared/sessions'
 import { TEST_ORIGIN } from '../test-support/harness'
-import { closeBrowserPeers } from './browser-native.test-support'
+import {
+  browserControls,
+  closeBrowserPeers,
+} from './browser-native.test-support'
 import { closeSockets, SocketInbox } from './adapter-sockets.test-support'
 import {
   MACHINE_ORIGIN,
@@ -63,14 +66,14 @@ export async function verifyAdapterRestart(
   resumedRunner.send(
     JSON.stringify({
       type: 'hello',
-      protocolVersion: 1,
+      protocolVersion: 2,
       workspaceId: WORKSPACE_ID,
       streamId: 'adapter-stream',
     }),
   )
   expect(await resumedRunnerInbox.next()).toEqual({
     type: 'welcome',
-    protocolVersion: 1,
+    protocolVersion: 2,
     streamId: 'adapter-stream',
     confirmedThrough: 3,
   })
@@ -79,8 +82,14 @@ export async function verifyAdapterRestart(
     type: 'turn',
     sessionId,
     message: { id: 'offline-ask', state: 'sent' },
-    login: { secret: 'adapter-secret' },
+    credential: { token: expect.stringMatching(/^sk-/) },
   })
+  expect(resumedTurn).not.toHaveProperty('login')
+  expect(
+    await browserControls(runtime, headers).request('turn-token', {
+      token: string(record(resumedTurn.credential).token),
+    }),
+  ).toMatchObject({ ok: true, login: { secret: 'adapter-secret' } })
   const sent = await resumedBrowserInbox.next()
   expect(sent).toMatchObject({
     type: 'event',

@@ -21,6 +21,7 @@ export const barConversationKeys = [
   'sent-fix-checks',
   'sent-create-pull-request',
   'sent-commit-and-push',
+  'sent-push',
   'sent-resolve-conflicts',
   'sent-address-review',
   'after-merge-running',
@@ -35,6 +36,7 @@ export const barRunningConversations: readonly BarConversationKey[] = [
   'sent-fix-checks',
   'sent-create-pull-request',
   'sent-commit-and-push',
+  'sent-push',
   'sent-resolve-conflicts',
   'sent-address-review',
   'after-merge-running',
@@ -81,6 +83,7 @@ export function barConversations(turns: {
       ...sent('create-pull-request'),
     ],
     'sent-commit-and-push': [...history, ...sent('commit-and-push')],
+    'sent-push': [...history, ...sent('push')],
     'sent-resolve-conflicts': [...history, ...sent('resolve-conflicts')],
     'sent-address-review': [...history, ...sent('address-review')],
     'after-merge-running': [

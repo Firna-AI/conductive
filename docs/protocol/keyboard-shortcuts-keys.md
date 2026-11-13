@@ -84,6 +84,10 @@ gives the rules and the terms. A decision number names a dated record, as
 | Chat | Copy full transcript | – | – | Session tab |
 
 - No two commands share a default key on the same keyboard.
+- The command Commit and push also presses Push, which the bar shows in
+  its place when the local work is only commits, as
+  [Actions](github-banner.md#actions) says. The tooltip of each button
+  names its own label.
 - No default key is a text key of its system, except Ctrl+U on Linux, as
   [Keys chosen by hand](#keys-chosen-by-hand) says.
 - No default key on a Mac is a key that macOS takes first in its default

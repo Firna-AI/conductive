@@ -2,9 +2,9 @@ import itemStyles from '../../../docs/mockups/src/components/chat/ChatItemView.m
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import headingStyles from '../../../docs/mockups/src/components/common/MarkdownHeadings.module.css'
 import { MarkdownTable } from '../../../docs/mockups/src/components/common/MarkdownTable'
-import markdownStyles from '../../../docs/mockups/src/components/files/MarkdownView.module.css'
 import { LinkedText } from '../links/LinkedText'
 import { textBlocks, type TextBlock, type TextItem } from './agent-text'
+import { CodeBlock } from './CodeBlock'
 
 /** A cell of a table in an answer, with the formatting of a paragraph. */
 function tableCell(text: string) {
@@ -66,7 +66,7 @@ function Block(props: { block: TextBlock }) {
         </ol>
       )
     case 'code':
-      return <pre className={markdownStyles.block}>{block.text}</pre>
+      return <CodeBlock text={block.text} />
     case 'table':
       return (
         <MarkdownTable

@@ -1,5 +1,6 @@
 import type { WebSocket } from 'miniflare'
 import { afterEach, beforeAll, expect, it } from 'vitest'
+import { expectSocketGatewayLogin } from '../runner-credential.test-support'
 
 import { ACCOUNT_PATHS } from '../../../src/shared/account'
 import { MODELS_PATH } from '../../../src/shared/agents'
@@ -132,8 +133,14 @@ it('boots the production shell and delivers the durable first message through st
       text: 'Keep the first request',
       sender: { id: 'member' },
     },
-    login: { secret: 'outer-secret-member' },
+    credential: { token: expect.stringMatching(/^sk-/) },
   })
+  await expectSocketGatewayLogin(
+    active.runtime,
+    created.workspace.id,
+    command,
+    'outer-secret-member',
+  )
   runner.emit({
     type: 'assistant.delta',
     sessionId: created.sessionId,
@@ -240,11 +247,18 @@ it('boots the production shell and delivers the durable first message through st
     },
   )
   expect(sent.status).toBe(202)
-  expect(await again.inbox.next()).toMatchObject({
+  const second = await again.inbox.next()
+  expect(second).toMatchObject({
     type: 'turn',
     message: { id: 'http-second-message' },
-    login: { secret: 'outer-secret-member' },
+    credential: { token: expect.stringMatching(/^sk-/) },
   })
+  await expectSocketGatewayLogin(
+    active.runtime,
+    created.workspace.id,
+    second,
+    'outer-secret-member',
+  )
   const body = await readChatHistoryPages(
     active.request,
     OUTER_ORG,

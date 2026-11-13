@@ -34,6 +34,31 @@
   After the heavy checks ended, the existing CLI test passed its single rerun in 3,235 ms.
   All 20 selected tests passed that rerun, with no assertion or timeout change in the existing test.
   Machine contention is the suspected source, but the rerun does not prove the cause.
+- On 12 November 2026, the merge of `origin/main` at `b1d68cd38` into
+  `calummoore/porto-a8k1` met Worker timeouts in two complete gate attempts.
+  The first checkout was under `/home/user/code/remote-code`.
+  The second checkout was under `/tmp`, with the same tracked tree.
+  Both attempts were interrupted after repeated Worker timeouts.
+  The second attempt reported 31 failed cases before interruption.
+  The affected areas included Continue, native browser access, Mac input,
+  workspace publication, creation, archives, session reads, and model requests.
+  No Worker, shared-type, package, or lockfile change differs from that main commit.
+  A baseline checkout of `b1d68cd38` then ran
+  `npm run test -- worker/features/continue-routes.test.ts` alone.
+  Its only case, "resumes Continue through real routes and socket wake, fences sends and Archive, expires recovered credentials, and routes new-branch GitHub events",
+  failed with `Error: Test timed out in 15000ms.`
+  It also failed in both merged-tree gate attempts.
+  The baseline took 18.13 seconds in total.
+  This reproduces the failure outside the merge diff and outside the home folder.
+  The blocked await and the cause remain unknown.
+  Machine load is not established as the cause of these failures.
+- On 13 November 2026, a selected device suite on `calummoore/porto-4ubu` timed out in two unchanged Worker cases:
+  - `worker/devices/lifecycle.test.ts`, "relays all four approval choices only from the paired desktop session": `Error: Test timed out in 15000ms.`
+  - `worker/devices/request-key.test.ts`, "uses hashed URL keys for dot retry IDs while device frames keep their exact IDs": `Error: Test timed out in 15000ms.`
+  The files match main at `b409ef7f2a63de3065ed756e66871a3a3491aa85`.
+  Both files then passed unchanged together: 9 tests, no failures or skips, in 59.72 seconds.
+  Machine contention during native fixture work is suspected. The blocked await and the cause are not established.
+  The selected suite also found a malformed Extend result in the branch's settings relay test data. That test data was corrected separately.
 - **Problem:** These tests depend on wall-clock time limits, so a busy machine can fail them with no defect in the code.
 - **Impact if no action:** A slow CI runner or a busy developer machine can fail the gate now and then, and a person must rerun it.
 - **Root question:** How do these tests stay correct on a slow or busy machine?

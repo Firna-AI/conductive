@@ -28,6 +28,8 @@ describe('client-selected model session IDs', () => {
     const fixture = await createChatFixture(harness)
     const source = await fixture.createSession()
     const occupied = await fixture.createSession(CODEX)
+    // A session with no message keeps another agent, so the source has one.
+    await fixture.send(source.id, 'source-message')
     const path = sessionPaths.model(fixture.org.id, WORKSPACE_ID, source.id)
     const draft = {
       text: 'Move this unchanged draft',
@@ -96,7 +98,7 @@ describe('client-selected model session IDs', () => {
     )
     expect(retry.status).toBe(200)
     expect(await retry.json()).toEqual({
-      eventNumber: 8,
+      eventNumber: 10,
       created: true,
       session,
       draft,

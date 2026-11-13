@@ -15,7 +15,7 @@
   - The runner then closed its Claude process and killed the watch, so the agent never merged the pull request.
   - Five earlier routine runs had the same outcome: PRs #209, #214, #217, #218, and #224.
   - On 11 November 2026, the user chose to keep Claude turns open for live background work, with one note and native notifications.
-  - The limit is 120 minutes from the first wait. Agent work after a wake-up counts.
+  - The limit is 120 minutes from the first wait. On 13 November 2026, the user raised it to 30 days. Agent work after a wake-up counts.
   - A member message during a wait restarts that count. The limit applies after a reply that runs past it.
   - At the limit, the turn finishes with duration, files, and the line "Background work stopped at the time limit".
   - Codex turns keep their existing behavior. The Worker lifecycle, idle stop, and turn-token rules stay the same.

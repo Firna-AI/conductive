@@ -80,7 +80,8 @@ export async function intakeOf(
 }
 
 /**
- * Keeps a drop of files outside each message box from leaving the page. A
+ * Keeps a drop of files outside each message box and its drop area from
+ * leaving the page. A
  * browser opens a file that the page does not take in place of the page,
  * and the drafts live only in memory. The guard hears each drag last, when
  * it bubbles to the window. A part that takes a drop of files, such as a

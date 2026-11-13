@@ -89,7 +89,13 @@ scrolls toward each end, and the drop goes to a place that the scroll
 showed. A second drag scrolls by the same step, so the first drag left no
 frame loop running. `components/TabMenu.dom.test.tsx` opens the tab menu
 with Shift and F10 and with a right click, moves a file tab with Move
-left, and opens the rename field in a tab that does not show.
+left, and opens the rename field in a tab that does not show. The menu of
+the temporary tab leads with Keep open and a line. Keep open calls the
+`keep` of the host, and the focus and the status follow. A read-only row
+opens no menu on that tab. `state/tab-order.test.ts` moves tabs through
+the controller and checks the saved order. A move that changes the place
+of the temporary tab drops its mark in the same save. A move of another
+tab, and a move to its own place, keep the mark.
 `components/TranscriptCopy.dom.test.tsx` copies the transcript of a tab
 that never showed, through the real controller, client, and menu, with
 the copy of the app's test services. Copy full transcript asks for the

@@ -2,8 +2,8 @@
 
 This doc holds the requirements and the decisions in force for the agents
 and the sessions of a workspace. It covers the agents and their logins,
-the names of the agents in the product, the sessions and their links, and
-the names of workspaces and sessions. It belongs to
+their efforts, the names of the agents in the product, the sessions and
+their links, and the names of workspaces and sessions. It belongs to
 [Chat and events](chat-and-events.md). The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
@@ -28,7 +28,7 @@ says.
   changes, so a session never moves to the login of another member.
 - A member starts a session in one of these ways:
   - with "+"
-  - with a model of the other agent
+  - with a model of the other agent, in a session that has a message
   - with the first message of a new workspace
   - with a message that starts a new session, as
     [Messages](messages-and-attachments.md#messages) says
@@ -47,7 +47,7 @@ says.
 - The login of the workspace owner for all sessions was rejected. Reason:
   each member who starts a session spends their own login.
 - [Access and security](isolation.md#agent-logins-in-a-sandbox)
-  states how a login reaches the sandbox, its share setting, and its risk.
+  states how a turn uses a login, its share setting, and its risk.
 - A session keeps its memory across a stop and a resume of the sandbox.
 - A Codex session keeps its conversation when its starter changes between
   an OpenAI API key and a ChatGPT sign-in.
@@ -59,6 +59,22 @@ says.
   also after a restart of the runner.
 - A refused resume for another cause, or a refused fork, fails the turn
   with that cause.
+
+## Efforts
+
+- Each message runs at one effort of its model. The model list of the
+  deployment gives the efforts of each model, from the lowest:
+  None, Low, Medium, High, Extra high, Max, and Ultra.
+- Codex runs each effort at the reasoning level of the same name. Codex
+  Ultra is its maximum reasoning with automatic task delegation.
+- Claude runs Ultra at the Max level, with Ultracode on. Ultracode is the
+  mode of Claude that hands substantive work to multi-agent workflows.
+  Every other effort turns Ultracode off. Claude runs None with thinking
+  off.
+- The model list offers an effort only on models that support it. Reason:
+  on a model without a level, Claude runs a lower level without a sign.
+  It also ignores Ultracode on a model without it, and then runs Ultra as
+  Max.
 
 ## Names in the product
 
@@ -78,7 +94,7 @@ says.
 - "+" starts a new session on the same branch and in the same sandbox.
 - The tab of a session shows the title of the session.
 - A new session has no title, and its tab shows "Untitled".
-  [Workspace and session names](#workspace-and-session-names) says when
+  [Workspace and session names](workspace-and-session-names.md) says when
   the app gives it a title.
 - A `create_session` call of the agent tools can give a new session a
   title, as [Start a session](session-calls.md#start-a-session) says.
@@ -132,7 +148,11 @@ says.
 - Each member has their own order in each workspace. The order stays after
   a reload. The other devices of that member load the same order.
 - A new tab of any kind opens at the end of the row. This holds also for a
-  session that the history reopens.
+  session that the history reopens, and for a new
+  [temporary tab](temporary-tabs.md).
+- A press that replaces the file or the diff of the temporary tab leaves
+  the tab in its place. This holds also when later tabs stand after it. A
+  keep does not move the tab either.
 - The user can drag any tab to any place in the row.
 - A row that keeps the sessions and the files in two groups was rejected,
   because a file could then never go before a session.
@@ -173,11 +193,13 @@ says.
   a sheet.
 - The tab menu of a session tab holds three groups, with a line between
   them: Rename session, then Copy link, Copy concise transcript, and Copy
-  full transcript, then Move left and Move right. The tab menu of a file or
-  diff tab holds Move left and Move right.
+  full transcript, then Move left and Move right. The tab menu of a kept
+  file or diff tab holds Move left and Move right.
 - Copy link copies the link of the session of its tab, as
   [Session links](#session-links) says. The user added it on 12 November
   2026.
+- The tab menu of the temporary tab holds two groups, with a line between
+  them: Keep open, then Move left and Move right (decision 286 B).
 - Reason: the tab menu groups its items by kind (decision 188).
 - [Session transcripts](session-transcripts.md) states what each copy item
   copies (decisions 213 and 215).
@@ -186,6 +208,19 @@ says.
 - After a move from the tab menu, a screen reader user hears the name of
   the tab and its new place, such as "Address autocomplete moves to place
   2 of 4". The focus then goes back to the tab.
+- Keep open keeps the temporary tab, and the tab stays in its place. The
+  focus then goes back to the tab. A screen reader user hears that the tab
+  stays open, such as "README.md stays open".
+- [Keep a tab](temporary-tabs.md#keep-a-tab) says why the menu holds Keep
+  open.
+- A move of the temporary tab to another place keeps it (decision
+  287 B). A move of another tab leaves it temporary. This holds for a drag, Move left, and Move right. A drag that
+  Escape cancels, or that ends in the same place, leaves the tab temporary.
+- Reason: a move shows that the user wants the file at that place. A
+  temporary tab that stays temporary after a move was rejected. The next
+  press would then replace the file at that place.
+- A drag that keeps the tab while Move left and Move right do not was
+  rejected. Two ways to make one move would then act differently.
 - Rename session opens a field for the title in that tab. The shown tab
   does not change.
 - In the app, the tab menu is the one way to rename a session. A Rename
@@ -206,6 +241,9 @@ says.
   copy there, as
   [Read-only workspaces](session-transcripts.md#read-only-workspaces)
   says. The rule also covers each item that the menu gets later.
+- So a read-only workspace also leaves out Keep open. The temporary tab
+  there opens no tab menu either, and only a double-click keeps a tab
+  (decision 286 B).
 - The tab menu opens there in the same ways as in other workspaces. A long
   press on a phone opens it, but lifts no tab.
 - An item that the place of a tab rules out, such as Move left on the
@@ -249,35 +287,5 @@ says.
 
 ## Workspace and session names
 
-- In this section, a name is the name of a workspace or the title of a
-  session.
-- A new workspace has no name (decision 182). Each new session has no name
-  either (decision 185).
-- The app shows "Untitled" in place of a missing name.
-- In the workspace record, a missing name is null in `name`. In the session
-  record, a missing name is null in `title`.
-- An automatic name is a name that the app gives on its own. These names
-  are automatic:
-  - the title of a workspace, as [Messages](messages-and-attachments.md#messages) says
-  - a workspace name that the agent runner reports, as
-    [Lost workspace updates](agent-runner.md#lost-workspace-updates) says
-  - the title that a session takes, as [Sessions](#sessions) says
-- The app gives an automatic name only to a workspace or a session that has
-  no name (decision 182). So no automatic name replaces a name that a
-  member or the app gave.
-- A member names a workspace with Rename in the
-  [menu of its row](workspace-menu.md#rename), or with a double click on
-  its row in the sidebar.
-- The app gives no automatic name in an archived workspace, or in a
-  workspace of a deleted org.
-- Reason: a missing name shows that no one named the workspace or the
-  session yet. A text comparison with "New session" or the city name of
-  the branch was rejected. A member can type the same text and then lose
-  that name.
-- Reason: an archived workspace shows its chat read-only (decision 16).
-
-### The title of a new workspace
-
-- [Messages](messages-and-attachments.md#messages) holds how a small model
-  of Workers AI names a new workspace from its first message
-  (decision 184).
+[Workspace and session names](workspace-and-session-names.md) holds these
+requirements, with the title of a new workspace.

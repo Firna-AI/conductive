@@ -96,21 +96,12 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         exception is that ${productName} reads an own endpoint's model list
         with its key, at the times in Endpoint models below.
         The messages of other members in those sessions use it only when
-        you let other members use that login. A newer cloud computer starts
-        from an org image that requires ${productName} to keep agent logins
-        outside the cloud computer. ${productName} enforces this requirement
-        for computers that start from that image. Each turn of your sessions
-        there gets only a credential that works through ${productName}
-        while that turn runs. An older cloud computer starts from an earlier
-        org image. ${productName} still permits older software there that
-        receives supported agent logins themselves. A ChatGPT sign-in never
-        enters a cloud computer. ${productName} stores its tokens encrypted
-        and renews them alone. Installing newer software in that cloud
-        computer does not remove this risk. A new image build gives the
-        protection to each cloud computer that starts from it.
+        you let other members use that login. ${productName} keeps agent
+        logins outside cloud computers. Each turn gets only a temporary
+        credential for model requests through ${productName} while that
+        turn runs. ${productName} renews your saved ChatGPT sign-in itself.
         An own endpoint's address and key never reach a cloud computer.
-        A turn on that login needs agent software that supports temporary
-        credentials.`,
+        ${productName} starts turns only with supported agent software.`,
       text`Endpoint models: ${productName} reads the endpoint's model list
         with its key when you save the login or press Refresh on your account
         page. It also reads the list in the background when a turn on that
@@ -142,13 +133,15 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         They record the command, its folder, its reason, its time limit,
         and the output. A request also names the Mac that gets it.
         The result says how the command ended. They let you and the
-        agent follow the command. Always-allowed commands and 15-minute
-        permissions stay only on your Mac.`,
+        agent follow the command. Always-allowed commands and workspace
+        permissions stay only on your Mac. The Mac saves timed permissions,
+        including the end time set by Extend. Permission until you stop
+        stays only in memory and ends when you quit the Mac app or sign out.`,
       text`Your code: your repositories and files live in the cloud
         computers that ${productName} runs for your org. ${productName}
-        reads a file or a diff when you open it, to show it to you. In a
-        newer cloud computer, the agents send their model requests through
-        ${productName} to Anthropic, OpenAI, or the chosen endpoint.
+        reads a file or a diff when you open it, to show it to you. The
+        agents send their model requests through ${productName} to
+        Anthropic, OpenAI, or the chosen endpoint.
         Agent settings in the repository can send them to another address
         instead. These model requests can hold your messages, files, code,
         and command results.

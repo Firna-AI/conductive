@@ -82,9 +82,9 @@ gives the child pages of `app/attachments` and `app/files`, and the flow
 text of the message box. `app/attachments/drop` shows a drop of files into
 the text, a dropped folder that attaches as its zip, and a folder that the
 browser cannot read, which the box does not attach.
-`app/attachments/open` shows the file tab that a press on a sent chip
+`app/attachments/open` shows the temporary tab that a press on a sent chip
 opens, with the picture of the screenshot. The other child pages show a
-failed upload, a file over 25 MB, the sent message, and the files of a
+failed upload, a file over 100 MB, the sent message, and the files of a
 queued first message. `app/files/image` shows the picture of an image file
 in its tab, and an image that the browser cannot draw. The flow
 `user-flows/drop-a-file` goes from the drop of a screenshot, through Send,
@@ -100,7 +100,7 @@ file in the text of a message box, in each state of its upload.
 a sent message. `ImageView` in `src/components/files/` draws the picture of
 an image file in its tab. These three parts take no fixtures, so the app
 can draw them too. [attachmentCopy.ts](src/components/chat/attachmentCopy.ts)
-holds the words of the chips, and of the notices for a file over 25 MB and
+holds the words of the chips, and of the notices for a file over 100 MB and
 a dropped folder that the browser cannot read. [The chat](design-chat.md) gives the design of each part.
 
 ## Folder layout
@@ -130,8 +130,10 @@ a dropped folder that the browser cannot read. [The chat](design-chat.md) gives 
   screen declares its states in `src/screens/routineState.ts` in the same
   way. The tab and composer states of the workspace screen live in
   `src/screens/chatStates.ts`. `tabStates` covers the session, file, and
-  image tabs of the centre column. `composerStates` covers the composer,
-  with its links, mentions, attached files, and drops.
+  image tabs of the centre column. `temporaryTabStates` covers the
+  temporary tab, which `src/screens/workspaceTemporaryTab.ts` draws in the
+  row. `composerStates` covers the composer, with its links, mentions,
+  attached files, and drops.
 - A flow (`defineUseCase`) lists the paths of existing screens. Each screen
   that a flow uses names the flow in `useCasePaths`.
 - Screens link to each other with `ScreenLink` from
@@ -186,8 +188,7 @@ waitlist, the commands that an agent runs on the Mac, and This Mac.
 ## The marketing site
 
 [The marketing site](marketing-site.md) gives the home page and its
-pictures, the header and the footer, [the docs pages](marketing-site.md#the-docs),
-and [the pricing page](marketing-site.md#the-pricing-page).
+pictures, the header and the footer, and [the docs pages](marketing-site.md#the-docs).
 It also gives the Terms, Privacy, and not-found pages, the comparison page,
 and the page before GitHub. The comparison page is the chosen design at
 `marketing/from-conductor/one-table`.
@@ -196,8 +197,7 @@ states its requirements. It draws the real rows: its rows, statuses, dates,
 and words come from `src/marketing/from-conductor/`, the modules that the
 site also reads, as
 [the marketing site README](../../src/marketing/README.md#the-comparison-page)
-says. The pricing page reads its plans, its prices, and its words from
-`src/marketing/pricing.ts` in the same way. The pictures are captures of
+says. The pictures are captures of
 real screens, such as the workspace
 screen with its chat and composer. A change to a screen or a shared part
 that a picture shows needs a new capture, with the
