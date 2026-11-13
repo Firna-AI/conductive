@@ -52,6 +52,10 @@
   This reproduces the failure outside the merge diff and outside the home folder.
   The blocked await and the cause remain unknown.
   Machine load is not established as the cause of these failures.
+- On 13 November 2026, the branch `calummoore/milan-ofz5` ran test files on 4 CPUs that other sessions shared, with a load near 5.
+  `worker/lifecycle/workspace-runtime.test.ts:47` timed out at its own 20-second limit, at about 21 s.
+  It did so in 2 of 2 runs on the branch, and in 1 of 1 run on its merge base `c194159bf`.
+  The branch changes no line of that test. Machine load is the suspected source.
 - **Problem:** These tests depend on wall-clock time limits, so a busy machine can fail them with no defect in the code.
 - **Impact if no action:** A slow CI runner or a busy developer machine can fail the gate now and then, and a person must rerun it.
 - **Root question:** How do these tests stay correct on a slow or busy machine?

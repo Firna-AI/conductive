@@ -83,7 +83,7 @@ export async function finishRuntimeStart(fixture: RuntimeFixture, id: string) {
   for (let step = 0; step < 16 && (await actor.checkpoint()); step++) {
     if ((await actor.checkpoint())?.phase === 'runner')
       await actor.reportRunnerLifecycle({ type: 'runner.ready' })
-    await actor.tickStart()
+    await actor.tick()
   }
   return actor.waitLifecycleStart()
 }

@@ -27,8 +27,13 @@ import { advanceScheduledAlarms } from './scheduled-alarms.test-support'
 import { exerciseRepairBudget } from './repair-budget-native-test-support'
 import { fakeAttachments } from '../test-support/attachments'
 
-/** The longest clock step of one start loop turn, far below the start limit. */
-const START_TICK_MS = 60_000
+/**
+ * The manual clock starts this far ahead of the real clock. The real
+ * runtime runs each alarm that is due on the real clock by itself, beside
+ * the manual ticks of a test. With this lead, no alarm on the manual clock
+ * is due in real time while a test runs, as `tests.md` asks.
+ */
+const CLOCK_LEAD_MS = 10 * 60 * 1_000
 
 /** Test transport only. Every start and stop runs the actual Workspace implementation. */
 export class WorkspaceRuntimeFixture extends Workspace {
@@ -39,7 +44,7 @@ export class WorkspaceRuntimeFixture extends Workspace {
   private readonly chatIds: string[]
 
   constructor(context: DurableObjectState, env: LifecycleEnvironment) {
-    const clock = new ManualChatClock(Date.now())
+    const clock = new ManualChatClock(Date.now() + CLOCK_LEAD_MS)
     const chatIds: string[] = []
     super(context, env, clock.now, {
       randomId: () => chatIds.shift() ?? crypto.randomUUID(),
@@ -119,16 +124,6 @@ export class WorkspaceRuntimeFixture extends Workspace {
         },
       ],
     )
-  }
-  /**
-   * One turn of a start loop. The real runtime also runs due alarms on its
-   * own, so a start can reach the runner phase during the turn. The clock
-   * then moves at most one minute, and never to the start deadline.
-   */
-  async tickStart(): Promise<void> {
-    const now = this.clock.now()
-    const next = (await this.ctx.storage.getAlarm()) ?? now
-    await this.tick(Math.max(now, Math.min(next, now + START_TICK_MS)))
   }
   async fireScheduledAlarm(): Promise<boolean> {
     if ((await this.ctx.storage.getAlarm()) === null) return false

@@ -92,6 +92,18 @@ These are my calls, made on 13 November 2026.
 - **No protocol doc change.** The behaviour stays, so only the READMEs
   change.
 - **No mockup work.** No screen changes.
+- **One write of the first start alarm.** `begin` sets the start alarm to
+  now, in the transaction that saves the start job. The later
+  `storage.schedule()` call of `enqueueWorkspaceStart` goes. Reason: it
+  only moved the alarm 1 s later (review item 5).
+- **`requireOrgMember` reads together.** Its user read and its membership
+  read run together, and a suspended user still wins. Reason: one trip
+  less for each of its callers (review item 3).
+- **The real-runtime fixture clock starts 10 minutes ahead.** Reason: the
+  real runtime ran overdue alarms beside the manual ticks.
+  `runtime-state.test.ts` failed in 4 of 10 runs on `main`, 9 of 10 on
+  the branch, and 0 of 5 with the lead (review items 1 and 6). The move to
+  `TEST_TIME` waits for a follow-up item.
 
 ## Milestone 1: Timing of the create
 
@@ -147,13 +159,17 @@ Depends on: 1
 
 Depends on: 1, 2, 3
 
-- [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Run the targeted tests and the complete gate named in `AGENTS.md`.
+      The static gate passed. The full suite on 4 shared CPUs failed only
+      in tests that also fail on the merge base. The logs are in
+      `.context/create-speed/`.
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
-      once, and report.
+      once, and report. Two rounds found items 1 to 7. Item 2, the
+      requirement of the timing header, waits for the user.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the

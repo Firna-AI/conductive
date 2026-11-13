@@ -15,7 +15,7 @@
   - The user chose "add timing" as part of option A of create-speed decision 1, on 13 November 2026. The header itself was a design call of the agent.
   - The header holds fixed step names and whole milliseconds, and no ID. A refused create gets no header.
   - Each preview reply carries the same kind of header. `docs/protocol/terminal-previews-and-desktop.md` states it as a requirement (preview timing decision 1), with its reason, its limits, and its risk.
-  - For the create, only `worker/lifecycle/routes.md` and a code comment state the header.
+  - For the create, only `worker/lifecycle/routes.md`, `worker/README.md`, and a code comment state the header.
 - **Problem:** The create reply has new behaviour at the HTTP boundary, but no protocol doc states it or its limits.
 - **Impact if no action:** A later change can add an ID to the header, or send it with a refusal, and no requirement shows that this is wrong.
 - **Root question:** How do the requirements record what the create reply tells the browser about its timing?
