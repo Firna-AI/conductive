@@ -54,7 +54,7 @@ Scheduled and pull request runs also need an active routine.
 `startRoutineRun` checks access again before a new create and skips a queued run that cannot start.
 It checks the owner's agent login and fresh GitHub access before the create.
 The first session uses the owner's own login, independent of its share setting.
-A version 2 runner gets only a turn token for that login through the model gateway.
+The runner gets only a turn token for that login through the model gateway.
 It calls the existing workspace create and first-message admission paths.
 It does not wait for cloud computer startup.
 A repeat with a creation attempt uses its original sender and bypasses the routine access and login checks.

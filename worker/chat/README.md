@@ -160,7 +160,7 @@ The workspace title request removes only the canonical final tool footer from it
 [Chat backend access and open connections](access.md) gives the gates
 that the Durable Object runs itself. It covers the browser gate and its
 second check in the queue, the grants of open tabs, the runner token
-checks, the workspace version pin, the binding of the object, the login
+checks, the runner version, the binding of the object, the login
 lookups and checks, and an org suspension. It also gives the native state
 of the tab and runner sockets across a wake.
 
@@ -241,10 +241,9 @@ functions of the chat backend that a reader opens first.
 It selects no ciphertext and decrypts no login.
 The shared builder refuses every IPv4 and IPv6 address, the product domain, and the configured `PREVIEW_DOMAIN`.
 Dispatch still decrypts and checks the full saved address before it sends a turn.
-It also marks an endpoint unavailable while the connected runner uses protocol 1.
 `session-login.ts` treats a refused endpoint as an unusable login for linked-session admission and dispatch.
 Its failed-turn cause requires a public HTTPS endpoint with a host name, names the starter and agent, and points to the account page.
-Runner delivery maps a valid endpoint to an API-key turn-token credential for protocol 2.
+Runner delivery maps a valid endpoint to an API-key turn-token credential.
 `runner-gateway-command.ts` adds `promptCacheTtl: '1h'` only for a Claude own endpoint turn.
 No endpoint address or key enters a runner command or chat record.
 `delivery-state.ts` schedules an own endpoint model-list read after dispatch.
@@ -257,11 +256,11 @@ Claude uses the dispatched endpoint model ID, which also supplies the fallback f
 The public cause names the missing model and no host.
 Native logins keep their existing cause text.
 `endpoint-models.test.ts` checks background dispatch, owner privacy, and both agents' failure text.
-`endpoint-logins.test.ts` checks queued turns, session metadata, and refused sends for invalid addresses and protocol 1.
+`endpoint-logins.test.ts` checks queued turns, session metadata, and refused sends for invalid addresses.
 
 `runner-command-preparation.ts` owns the login and runner capability checks
-before dispatch. Own endpoints require protocol 2 and support for the
-agent's API-key mode. `runner-delivery.ts` owns the prepared command's send.
+before dispatch. Own endpoints require support for the agent's API-key
+mode. `runner-delivery.ts` owns the prepared command's send.
 
 ## Related docs
 

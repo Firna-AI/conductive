@@ -44,7 +44,7 @@ export async function createRunnerLimitsFixture(
     })
     await actor.api.peers.receiveRunner(peer, {
       type: 'hello',
-      protocolVersion: 1,
+      protocolVersion: 2,
       workspaceId: 'workspace',
       streamId,
     })

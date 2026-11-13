@@ -103,7 +103,7 @@ function warningFields(warning: WorkerWarning) {
       return {
         kind: warning.kind,
         message:
-          'The runner closes because its protocol version does not meet the workspace version pin.',
+          'The runner closes because its protocol version is not supported or does not meet the workspace version pin.',
         workspaceId: warning.workspaceId.text,
       }
     case 'lifecycle_repair_limited':
