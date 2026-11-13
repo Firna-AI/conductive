@@ -83,6 +83,11 @@ export class LastWorkspaces {
   private readonly store = new Store<LastWorkspaceState>(empty)
   readonly state: Readable<LastWorkspaceState> = this.store
   private person: string | null = null
+  /**
+   * The last write failed, such as on a full storage. Until a write works,
+   * the memory holds changes that the storage lacks, so changes read it.
+   */
+  private unsaved = false
   private readonly storage: KeyValueStorage | null
 
   constructor(storage: KeyValueStorage | null) {
@@ -93,6 +98,7 @@ export class LastWorkspaces {
   follow(person: string | null): void {
     if (person === this.person) return
     this.person = person
+    this.unsaved = false
     this.store.set(person === null ? empty : this.read(person, empty))
   }
 
@@ -131,7 +137,8 @@ export class LastWorkspaces {
   ): void {
     const person = this.person
     if (person === null) return
-    const current = this.read(person, this.store.get())
+    const kept = this.store.get()
+    const current = this.unsaved ? kept : this.read(person, kept)
     const next = change(current)
     if (next !== current) this.write(person, next)
     this.store.set(next)
@@ -153,8 +160,10 @@ export class LastWorkspaces {
   private write(person: string, state: LastWorkspaceState): void {
     try {
       this.storage?.setItem(keyPrefix + person, serialize(state))
+      this.unsaved = false
     } catch {
       // A full or refused storage keeps the memory until the page closes.
+      this.unsaved = true
     }
   }
 }

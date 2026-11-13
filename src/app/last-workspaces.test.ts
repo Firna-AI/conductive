@@ -122,6 +122,20 @@ describe('LastWorkspaces', () => {
     )
   })
 
+  test('a full storage keeps each change of the page in memory', () => {
+    const storage = new MemoryStorage()
+    const full: KeyValueStorage = {
+      getItem: (item) => storage.getItem(item),
+      setItem: () => {
+        throw new Error('The storage is full.')
+      },
+    }
+    const last = memory(full)
+    last.remember(workspace('acme', 'ws-1'))
+    last.remember(workspace('firna', 'ws-2'))
+    expect([...last.state.get().addresses.keys()]).toEqual(['acme', 'firna'])
+  })
+
   test('without a storage, another person gets no memory of the first', () => {
     const last = memory(null)
     last.remember(workspace('acme', 'ws-1'))

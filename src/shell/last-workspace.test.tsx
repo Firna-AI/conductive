@@ -20,6 +20,9 @@ import {
   waitFor,
 } from '../test-support/mount'
 import { OrgRail } from './layout/OrgRail'
+import { openPaletteTab, options } from './palette/palette-test-kit'
+import { pressCommand, pressHintKey } from './shortcuts/shortcut-test-kit'
+import { settle } from './test-mount'
 import { Shell } from './Shell'
 import { mountScreen } from './test-mount'
 import { startedApp } from './test-render'
@@ -83,6 +86,28 @@ describe('the last workspace of each org', () => {
       '/orgs/futex/workspaces/ws-1/files',
       routes.org('firna'),
     ])
+  })
+
+  test('Switch to org 2 opens the last workspace of the second org', async () => {
+    holdAnimationFrames()
+    const { app, navigation } = await openPaletteTab(routes.org('acme'))
+    app.lastWorkspaces.remember(workspace('futex', 'ws-1'))
+    await settle()
+    pressHintKey(app, 'org-2', document.body)
+    await settle()
+    expect(navigation.href()).toBe('/orgs/futex/workspaces/ws-1/files')
+  })
+
+  test('the Switch to row of the open palette leads to the last workspace', async () => {
+    holdAnimationFrames()
+    const { app } = await openPaletteTab(routes.org('acme'))
+    app.lastWorkspaces.remember(workspace('futex', 'ws-1'))
+    await settle()
+    pressCommand('command-palette', 'other', document.body)
+    await settle()
+    const hrefs = options().map((option) => option.getAttribute('href'))
+    expect(hrefs).toContain('/orgs/futex/workspaces/ws-1/files')
+    expect(hrefs).toContain(routes.org('firna'))
   })
 
   test('the address / opens the workspace that the person opened last', async () => {
