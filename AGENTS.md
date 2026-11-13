@@ -184,7 +184,8 @@ Apple silicon Mac jobs on Blacksmith.
   `crates/cnd-runner-interface/`. `ts-rs` writes their TypeScript into
   `src/shared/generated/`. Import each generated type directly. Commit
   generated files. Never edit them by hand. Runtime constants and readers
-  stay in `src/shared/`. The generator adds no check to the gate.
+  stay in `src/shared/`. The `Rust gate` job runs the generator and fails
+  when `src/shared/generated/` then differs from Git.
 - Wire 64-bit integers use JSON numbers and TypeScript `number`. Values
   must stay within JavaScript's safe integer range, from -(2^53 - 1) to
   2^53 - 1. Counts are non-negative. Wire dates use Unix milliseconds.

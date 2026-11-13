@@ -38,6 +38,18 @@ update itself.
 - The newest release never goes back to an older version. A deploy of an
   older commit does not change it.
 - The other files of a release never change after the deploy writes them.
+- Each sandbox trusts each writer of the bucket `conductive-runner` as it
+  trusts the Worker deploy, because a release from the bucket becomes the
+  software of each sandbox at its next start (sandbox software decision
+  10). Today the only writer is the deploy token, which can also deploy
+  the Worker. So a writer of the bucket gets no access that the deploy did
+  not already give.
+- Reason: a write to the bucket then adds no new attacker. A signature of
+  each release, with a key that the deploy holds and a public key in the
+  program, was not chosen for now. It becomes the better guard if any key
+  other than the deploy token can write to the bucket.
+- A digest that the Worker gives to each sandbox was rejected, because it
+  needs a Worker route, as the rejected Worker routes above do.
 
 ## Updates
 

@@ -81,6 +81,26 @@ are in `.context/rust-sandbox-software/notes.md`.
   and pull request, on branch `calummoore/oslo-o65g`. Milestone 5 waits for that pull request to merge, so
   that Rust models no version 1 message.
 
+- **10. Trust in the release bucket.** Chosen by the user on 13 November
+  2026: A. Each writer of the R2 bucket `conductive-runner` is as trusted
+  as the Worker deploy, and the docs say so. Rejected for now: B, a
+  signature of each release with a public key in the program, which
+  becomes the better guard if any other key can write to the bucket, and
+  C, a digest from a Worker route.
+- **11. The stopped removal of protocol version 1.** Answered by the user
+  on 13 November 2026: the removal merged as PR #339, and its workspace is
+  archived.
+- **12. Where the complete gate runs.** Chosen by the user on 13 November
+  2026: A. A draft pull request, #342, opens early, so that CI runs the
+  gate. Reason: this sandbox's own agent runner used about 200% CPU, and
+  Worker tests timed out in unrelated files.
+- **13. A check that the generated types are current.** Chosen by the user
+  on 13 November 2026: B. The `Rust gate` job runs the generator and fails
+  when `src/shared/generated/` differs from Git. Rejected: no check.
+- **14. The Codex login was not available.** Answered by the user on 13
+  November 2026: the login is available again, and the Codex
+  implementors run again.
+
 ## Design calls
 
 These are the agent's calls of 12 November 2026. The user can change
@@ -257,7 +277,7 @@ Depends on: 2, and the merged removal of runner protocol version 1
 - [x] Keep the byte limits and other constants in `src/shared/`, because `ts-rs` writes no constants.
 - [x] Point each importer in `worker/`, `src/`, `desktop/`, and `runner/` at the generated types, and delete the hand-written types. Use no converter.
 - [x] Add the generator, the regenerate command, the generated folder, and the wire form of 64-bit numbers to `AGENTS.md`, as the `shared-types` skill says.
-- [ ] Ask the user before a check that fails on a diff of the generated files, because it is a new gate.
+- [x] Ask the user before a check that fails on a diff of the generated files, because it is a new gate. The user chose decision 13 B.
 - [x] Update `src/shared/README.md` and `src/shared/runner-contracts.md`.
 
 ## Milestone 6: Workspace tools in Rust

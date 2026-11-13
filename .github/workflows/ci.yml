@@ -117,3 +117,24 @@ jobs:
 
       - name: Build static program
         run: cargo build --release --target x86_64-unknown-linux-musl -p cnd-cli
+
+      # The generator formats its output with the root Prettier.
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install root dependencies
+        run: npm ci
+
+      # Fail when a Rust type changed without a new run of the generator.
+      - name: Check the generated types
+        run: |
+          set -euo pipefail
+          cargo run --locked -p cnd-runner-interface --example export_bindings
+          git add -N src/shared/generated
+          if ! git diff --exit-code -- src/shared/generated; then
+            echo '::error::src/shared/generated is out of date. Run cargo run -p cnd-runner-interface --example export_bindings and commit the result.'
+            exit 1
+          fi

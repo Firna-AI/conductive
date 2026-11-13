@@ -46,6 +46,10 @@ and the separate preview domain.
   into a saved snapshot.
 - Sandbox code is untrusted. Agents write and run it, and previews show it
   only on the preview domain.
+- Each writer of the R2 bucket of the sandbox software releases is as
+  trusted as the Worker deploy, because each sandbox installs the newest
+  release from it. Today only the deploy token writes it, as
+  [Releases](../protocol/sandbox-software.md#releases) says.
 - A sandbox gets none of the secrets of the app's Boat account. At a
   start, it gets only the secrets of its workspace and its org.
 - The model gateway is the boundary between each sandbox and the model
