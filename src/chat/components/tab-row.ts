@@ -6,6 +6,7 @@ import type {
 } from 'react'
 import { nameLabel } from '../../shared/name-label'
 import type { Session } from '../../shared/sessions'
+import { startedTurn } from '../../shared/transcript/turn-records'
 import type { WorkspaceTab, WorkspaceView } from '../../shared/workspace-view'
 import { rowTabs, tabKey } from '../state/tab-order'
 
@@ -74,6 +75,7 @@ export interface SessionTab {
   title: string
   /** The title of the session, or null while it has none. */
   name: Session['title']
+  running: boolean
   /** The tab shows as the current one. */
   selected: boolean
 }
@@ -132,16 +134,26 @@ export function rowOf(
   shown: WorkspaceTab | null,
   renderTab: RenderTab | undefined,
 ): RowTab[] {
-  const titles = new Map(sessions.map((item) => [item.id, item.title]))
+  const records = new Map(sessions.map((item) => [item.id, item]))
   const current = shown === null ? null : tabKey(shown)
   const host = renderTab !== undefined
   return rowTabs(view, sessions, host).flatMap((tab): RowTab[] => {
     const selected = tabKey(tab) === current
     if (tab.kind === 'session') {
-      if (!titles.has(tab.sessionId)) return []
-      const name = titles.get(tab.sessionId) ?? null
+      const session = records.get(tab.sessionId)
+      if (!session) return []
+      const name = session.title
       const title = nameLabel(name)
-      return [{ kind: 'session', id: tab.sessionId, title, name, selected }]
+      return [
+        {
+          kind: 'session',
+          id: tab.sessionId,
+          title,
+          name,
+          selected,
+          running: startedTurn(session) !== null,
+        },
+      ]
     }
     // Without a host, `rowTabs` gives no file or diff tab.
     return renderTab ? [{ kind: 'host', tab, selected, ...renderTab(tab) }] : []

@@ -102,10 +102,11 @@ function pictureTab(state: WorkspaceState): WorkspaceTab | undefined {
 export function tabsFor(
   state: WorkspaceState,
   workspace: Workspace,
+  running = false,
 ): WorkspaceTab[] {
   if (isNew(state)) {
     const title = workspaceName(state, workspace)
-    return [{ key: 'session', kind: 'session', title, selected: true }]
+    return [{ key: 'session', kind: 'session', title, selected: true, running }]
   }
   const [first, second] = workspaceSessions
   const linked =
@@ -189,5 +190,17 @@ export function tabsFor(
       selected: true,
     })
   }
-  return state.tabRow === 'moved' ? withCodeMoved(tabs) : tabs
+  const background = state.conversation === 'session-links'
+  const active =
+    (background ? tabs[0] : undefined) ??
+    tabs.find(
+      (tab) =>
+        tab.kind === 'session' && tab.selected && tab.key !== newSession.key,
+    ) ??
+    tabs[0]
+  const states = tabs.map((tab) => ({
+    ...tab,
+    running: tab === active && (running || background),
+  }))
+  return state.tabRow === 'moved' ? withCodeMoved(states) : states
 }

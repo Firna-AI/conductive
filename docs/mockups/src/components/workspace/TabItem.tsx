@@ -15,6 +15,7 @@ import { IconButton } from '../common/actions'
 import a11y from '../common/a11y.module.css'
 import { classes } from '../common/classes'
 import { RenameField } from './RenameField'
+import { SessionTabIcon } from './SessionTabIcon'
 import tabDrag from './TabDrag.module.css'
 import styles from './WorkspaceTabs.module.css'
 
@@ -33,6 +34,7 @@ export type WorkspaceTab = {
   /** The screen that the tab shows, when the mockups draw it. */
   to?: string
   selected: boolean
+  running?: boolean
 }
 
 /** The open menu of a tab: beside it, or in a sheet that the screen draws. */
@@ -51,7 +53,11 @@ function TabContent(props: { tab: WorkspaceTab }) {
   const Icon = icons[props.tab.kind]
   return (
     <>
-      <Icon aria-hidden className={styles.icon} size={13} />
+      {props.tab.kind === 'session' ? (
+        <SessionTabIcon running={props.tab.running ?? false} />
+      ) : (
+        <Icon aria-hidden className={styles.icon} size={13} />
+      )}
       <span className={styles.title}>{props.tab.title}</span>
     </>
   )
