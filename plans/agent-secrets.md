@@ -129,8 +129,9 @@ design call of 13 November 2026 under the decision test of the
   secrets. My call for the Secrets tab: Cal chose the icon for the create
   only, and secrets still need a place to be managed.
 - Mac access. A workspace with Mac access off refuses each Mac command
-  request of its agents, with a reason. The default and the change after
-  the create wait for secrets decisions 8 and 9. When a member turns Mac
+  request of its agents, with a reason. Mac access is on by default
+  (secrets decision 9 A), and every member changes it after the create
+  (secrets decision 8 B). When a member turns Mac
   access off, each waiting Mac request of the workspace ends with that
   reason, and a running command runs to its end. My call: the Mac app
   owns a running command, and a stop there is a separate choice.
@@ -400,7 +401,16 @@ access rule that no requirement covers.
 
 ### Secrets decision 9: Mac access by default
 
-Open. Root question: may agents of a new workspace ask for Mac commands
+Cal chose A on 13 November 2026: Mac access is on by default for each
+workspace, and a member can turn it off in Capabilities. Reason: the Mac
+app still asks before each command, so the switch is an extra stop and
+today's behaviour stays. The gap of always-allowed commands in routine
+runs stays with the open follow-up
+`plans/follow-ups/routine-turns-mac-commands.md`.
+
+The record of the options as they were asked:
+
+Root question: may agents of a new workspace ask for Mac commands
 before a member chooses? Today each workspace can ask, and the Mac app
 on the Mac of the sender asks its user before each command, unless a
 saved choice covers it (decision 62). Mac access in Capabilities adds a
@@ -467,8 +477,8 @@ The mockups show each new screen and flow before any code changes.
       secrets decision 3 B.
 - [ ] Add the Capabilities icon and its control to the New workspace page
       and dialog mockups, with the secrets part and the Mac access part.
-- [ ] Add the Capabilities control of an existing workspace, if secrets
-      decision 8 keeps it.
+- [ ] Add the Capabilities icon and control of an existing workspace,
+      beside the message box (secrets decision 8 B).
 - [ ] Add the request card above the composer: a stored secret, and a
       temporary request with a value field, 15 minutes, This workspace,
       and Save. Show the
@@ -550,7 +560,7 @@ Depends on: 3
 
 - [ ] Build the Secrets tab of the org settings from the mockup.
 - [ ] Build the Capabilities icon and control of New workspace from the
-      mockup, and of an existing workspace if secrets decision 8 keeps it.
+      mockup, and of an existing workspace.
 - [ ] Add tests beside the code.
 
 ## Milestone 7: Request card and chat results
