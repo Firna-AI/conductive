@@ -144,7 +144,7 @@ describe('section actions', () => {
     )
   })
 
-  test('a failed collapse takes back only the collapse, and keeps a move and an update from its wait', async () => {
+  test('a failed collapse takes back only the collapse, and keeps a move and an update from its wait, which goes out after it', async () => {
     const server = new FakeApiServer()
     const held = new HeldRequests(server)
     const collapse = sectionPath(org, 'checkout')
@@ -158,10 +158,18 @@ describe('section actions', () => {
     const collapsing = setSectionCollapsed(model, 'checkout', true).catch(
       caught,
     )
-    await moveToSection(model, 'email-dark-mode', 'checkout', 0)
+    const moving = moveToSection(model, 'email-dark-mode', 'checkout', 0)
     model.putWorkspace({ ...fixture(FAKE_IDS.workspace), state: 'working' })
+    const sentBefore = server.requests.length
     held.release('PATCH', collapse)
     expect(await collapsing).toMatchObject({ code: 'server_error' })
+    await moving
+    expect(
+      server.requests.slice(sentBefore).map((request) => request.url),
+    ).toEqual([
+      expect.stringContaining(collapse),
+      expect.stringContaining(workspacePath(org, 'email-dark-mode')),
+    ])
     expect({
       checkout: rows(model).checkout,
       collapsed: sectionOf(model, 'checkout')?.collapsed,
