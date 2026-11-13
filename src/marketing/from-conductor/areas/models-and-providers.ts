@@ -76,7 +76,7 @@ export const modelsAndProvidersFeatures: readonly ParityFeature[] = [
     area: 'models-and-providers',
     name: 'Effort levels',
     status: 'available',
-    note: 'Choose the reasoning effort from the options offered for each model.',
+    note: 'Choose the reasoning effort offered for each model, including Ultra and Max on supported models.',
   },
   {
     id: 'fast-mode',
@@ -110,7 +110,8 @@ export const modelsAndProvidersFeatures: readonly ParityFeature[] = [
     id: 'sync-agent-configs',
     area: 'models-and-providers',
     name: 'Sync agent configs',
-    status: 'considering',
-    note: 'Copying skills, commands, and MCP servers between Claude and Codex is under consideration. Keep shared instructions in the repository.',
+    status: 'planned',
+    note: 'Shared skills for Claude and Codex are planned through one org repository. Syncing commands and MCP servers remains under consideration.',
+    due: null,
   },
 ]
