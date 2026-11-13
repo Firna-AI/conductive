@@ -151,10 +151,15 @@ limits, their results, and what the chat shows.
 - A saved end of the 15 minutes includes an end that Extend set.
 - Reason: the Mac then decides what runs on it, and no record on the
   server can allow a command.
-- The account page of the Mac app has a This Mac section. It shows the
-  name of the Mac, whether the Mac is available, and each always-allowed
-  command by its exact text, with Remove. It also shows each workspace
-  with a grant, with the time left or Until you stop, and Stop.
+- The account page of the Mac app has a This Mac tab, after Keyboard
+  shortcuts. It shows the name of the Mac, whether the Mac is available,
+  and each always-allowed command by its exact text, with Remove. It also
+  shows each workspace with a grant, with the time left or Until you stop, and Stop.
+- A long always-allowed command shows its first three lines, and its last
+  shown line fades out. Show all shows the whole command, and Show less
+  makes it short again. A command that fits shows no button.
+- Reason: the user asked on 12 November 2026 for the list in its own tab,
+  and for short long commands, so that more commands show at once.
 - After Remove, the next request with that command text asks again.
 - Remove and Stop revoke their permission in the current Mac app even if
   saving the change fails.
@@ -164,7 +169,8 @@ limits, their results, and what the chat shows.
 - A failed save does not keep the revoked permission active in memory.
   Reason: a disk error must not leave a permission active after the user
   revokes it.
-- The web app in a browser has no This Mac section.
+- The web app in a browser has no This Mac tab. Its address shows General
+  there.
 
 ### Settings results
 

@@ -38,11 +38,18 @@ export const macAppSchema = {
     window: { enum: ['window', 'full-screen'] },
     /**
      * The page of the app: a workspace, the empty New workspace, the
-     * account, its Keyboard shortcuts tab, or the waitlist of a person
-     * without app access.
+     * account, its Keyboard shortcuts tab, its This Mac tab, or the
+     * waitlist of a person without app access.
      */
     page: {
-      enum: ['workspace', 'new-workspace', 'account', 'shortcuts', 'waitlist'],
+      enum: [
+        'workspace',
+        'new-workspace',
+        'account',
+        'shortcuts',
+        'this-mac',
+        'waitlist',
+      ],
     },
     /**
      * A command that an agent asks to run on this Mac: none, the request
@@ -176,6 +183,17 @@ function pageFor(state: MacAppState): ReactNode {
             tab: 'shortcuts',
             keyChange: state.keyChange,
             shortcutSearch: state.shortcutSearch,
+            shortcuts: state.shortcuts,
+          }}
+          viewport="desktop"
+        />
+      )
+    case 'this-mac':
+      return (
+        <AccountScreen
+          state={{
+            ...accountGeneral,
+            tab: 'this-mac',
             shortcuts: state.shortcuts,
           }}
           viewport="desktop"

@@ -31,7 +31,8 @@ decision number names a dated record, as
   of how New workspace opens (decision 142 of PR #73). General holds the
   other sections of the account.
   [Keyboard shortcuts: the settings tab](keyboard-shortcuts-tab.md) gives
-  the fourth tab.
+  the fourth tab. The Mac app adds [This Mac](desktop-commands.md#saved-choices)
+  as the fifth tab.
 - Reason: all the settings of new workspaces then sit together. The
   section on General, with only the new choice on Preferences, was
   rejected, because the user then looks in two places.
