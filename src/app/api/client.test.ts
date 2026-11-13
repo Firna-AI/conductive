@@ -30,7 +30,7 @@ describe('createApiClient', () => {
         body: {
           error: {
             code: 'attachment_too_large',
-            message: 'Each file can be up to 25 MB.',
+            message: 'Each file can be up to 100 MB.',
           },
         },
       },

@@ -64,6 +64,7 @@ export interface WorkspaceController extends WorkspaceLifecycleEndpoint {
     publish?: LifecyclePublisher,
   ): Promise<void>
   runnerLifecycleDisconnected(publish?: LifecyclePublisher): Promise<void>
+  runnerProtocolUnsupported(reason: string): Promise<void>
   scheduleImage(state: ImageCoordinatorState): Promise<void>
   alarm(turn?: QueueTurn): Promise<void>
 }

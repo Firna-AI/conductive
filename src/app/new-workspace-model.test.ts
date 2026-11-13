@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import { attachmentPath } from '../shared/attachment-paths'
-import { pickWorkspaceFiles } from './draft-files.test-support'
+import { pickWorkspaceFiles, unreadable } from './draft-files.test-support'
 import { mentionText } from '../shared/mention-text'
 import { fileMark } from './draft-marks'
 import { attachmentUploadPath } from '../shared/messages'
@@ -229,7 +229,7 @@ describe('NewWorkspaceModel', () => {
     held.hold('POST', createPath)
     const creating = draft.send(defaults)
     await pickWorkspaceFiles(draft, [notes()])
-    expect(draft.attach([], ['Ignored folder'])).toEqual([])
+    expect(draft.attach([], unreadable('Ignored folder'))).toEqual([])
     expect(draft.draft.get()).toMatchObject({ refused: [], refusedFolders: [] })
     held.release('POST', createPath)
     const created = await creating

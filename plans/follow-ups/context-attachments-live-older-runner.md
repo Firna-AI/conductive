@@ -10,7 +10,7 @@
   - **Context folder:** the folder `.context` at the top of the workspace's repository folder. Attached files go to its folder `attachments`.
   - **Runner:** the agent runner, the program of the app in each cloud computer. It runs the agents and reports the files of the workspace.
   - **Org image:** the prepared cloud computer image of an org. Each build installs the newest runner. A refresh keeps the installed runner.
-  - **Older runner:** a runner from an org image that a build made before the deploy of the merge. It does not know the context folder.
+  - **Older runner:** a runner from an org image that a build made before the deploy of the merge. It does not know the context folder. It must use runner protocol version 2, because a workspace refuses each other version, as `docs/protocol/version-pins.md` says. So the build must come after the runner moved to version 2 on 10 November 2026.
 - **Background:**
   - On 10 November 2026, the user chose that the Worker copies each attached file into the repository folder of the workspace (decision 242).
     [Attachments](../../docs/protocol/messages-and-attachments.md#attachments)

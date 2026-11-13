@@ -5,6 +5,7 @@ import { CODEX, createChatFixture } from './harness.test-support'
 import { readAgentLogin } from './queries'
 import { retryRequest, sessionRecord } from './retry.test-support'
 import { messageCommands, startTurn } from './turn-lifecycle.test-support'
+import { expectGatewayLogin } from './runner-credential.test-support'
 let harness: TestHarness
 beforeAll(async () => {
   harness = await createHarness()
@@ -63,9 +64,13 @@ it('keeps the starter login available and sends another member to an empty linke
     {
       type: 'turn',
       sessionId: linked.session.id,
-      login: { secret: `secret-${fixture.member.id}-claude` },
     },
   ])
+  await expectGatewayLogin(
+    fixture,
+    messageCommands(runner, 'member')[0],
+    `secret-${fixture.member.id}-claude`,
+  )
   expect(
     JSON.stringify(await fixture.history(linked.session.id)),
   ).not.toContain('Private source conversation')
@@ -104,8 +109,13 @@ it('keeps the starter login available and sends another member to an empty linke
   )
   expect(shared.session.id).toBe(codex.id)
   expect(messageCommands(runner, 'codex-member')).toMatchObject([
-    { login: { secret: `secret-${fixture.owner.id}-codex` } },
+    { type: 'turn' },
   ])
+  await expectGatewayLogin(
+    fixture,
+    messageCommands(runner, 'codex-member')[0],
+    `secret-${fixture.owner.id}-codex`,
+  )
 })
 it('checks a changed reuse preference before queued dispatch and permits a linked retry on the sender login', async () => {
   const fixture = await createChatFixture(harness)
@@ -171,6 +181,11 @@ it('checks a changed reuse preference before queued dispatch and permits a linke
     loginShared: true,
   })
   expect(messageCommands(runner, 'shared-again')).toMatchObject([
-    { login: { secret: `secret-${fixture.owner.id}-claude` } },
+    { type: 'turn' },
   ])
+  await expectGatewayLogin(
+    fixture,
+    messageCommands(runner, 'shared-again')[0],
+    `secret-${fixture.owner.id}-claude`,
+  )
 })

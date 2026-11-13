@@ -186,10 +186,8 @@ decision number names a dated record, as
 - Risk: such text can steer the agent. The run uses the owner's agent
   login and GitHub token, and the env vars of the org. The agent can copy
   the GitHub token and the env vars, or push them to a branch.
-- The run's access to the agent login follows the sandbox's version pin.
-  With a pin of 2 or later, the sandbox holds only a turn token that
-  spends the owner's login through the gateway. With a pin of 1, an
-  older runner can receive the agent login itself.
+- The sandbox of the run holds only a turn token, which spends the
+  owner's login through the gateway while the turn runs.
 - The owner's GitHub token reaches each repository where the owner
   installed the GitHub App and has access, as
   [GitHub tokens](github-tokens.md) says
@@ -211,9 +209,7 @@ decision number names a dated record, as
   owner. When the owner is an admin, such text can archive each workspace
   of the org. A member can restore each one for 14 days.
 - Risk: a member with a terminal in a run workspace can read the owner's
-  GitHub token and the credential of a running turn, as in each workspace.
-  That credential is a turn token on a newer runner, or the agent login
-  itself on an older runner.
+  GitHub token and the turn token of a running turn, as in each workspace.
   [Agent logins in a sandbox](isolation.md#agent-logins-in-a-sandbox)
   states that risk (decision 105).
 - An instruction or a classifier that makes the agent ignore commands in a

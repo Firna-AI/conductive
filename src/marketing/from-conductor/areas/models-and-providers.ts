@@ -62,7 +62,7 @@ export const modelsAndProvidersFeatures: readonly ParityFeature[] = [
     area: 'models-and-providers',
     name: 'Model picker',
     status: 'available',
-    note: 'One picker lists Claude and Codex models, with agent changes opening another session. Switching agents within an empty session is in progress.',
+    note: 'One picker lists Claude and Codex models. Choosing the other agent switches an empty session, and opens another session from a chat with messages.',
   },
   {
     id: 'loadouts',

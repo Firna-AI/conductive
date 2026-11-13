@@ -22,6 +22,9 @@ This page lists each protocol doc and what it covers.
   - [Workspace menu](../protocol/workspace-menu.md): the menu of a workspace
     row, which moves, reassigns, renames, and archives the workspace.
   - [Workspace tools](../protocol/workspace-tools.md)
+    - [Temporary tabs](../protocol/temporary-tabs.md): the one file or diff
+      tab that the next press replaces, what opens and keeps it, and its
+      mark in the saved view.
     - [Port previews](../protocol/port-previews.md): detected servers, manual
       opening, preview tabs, and the relay requirement.
 - [Chat and events](../protocol/chat-and-events.md): sessions, messages, what
@@ -55,8 +58,9 @@ This page lists each protocol doc and what it covers.
 - [Access and security](../protocol/access-and-security.md): sign-in, the
   gates, the secrets, and the isolation of sandboxes and previews.
   - [Isolation of orgs and sandboxes](../protocol/isolation.md)
-    - [Version pins](../protocol/version-pins.md): the login rules and the
-      risks of each version pin.
+    - [Version pins](../protocol/version-pins.md): the runner version that
+      a workspace accepts, the version pin, and the risks of the turn
+      token in a sandbox.
   - [Tokens and secrets](../protocol/tokens-and-secrets.md)
     - [Own endpoint logins](../protocol/own-endpoint-logins.md): the
       endpoint and the key of each agent, the model list of the endpoint,
@@ -91,9 +95,6 @@ This page lists each protocol doc and what it covers.
   roles, the first run, and the end of an org.
   - [Org rail order](../protocol/org-rail-order.md): the order of the orgs
     in the rail that each person keeps, and how the person changes it.
-- [Pricing](../protocol/pricing.md): the plans and their cloud hours, the
-  extra hours, the seller and the tax, the pricing page, and the planned
-  billing changes. Use is free until billing starts.
 - [Mac app](../protocol/desktop-app.md): the shell for macOS, its sign-in, and
   Mac commands.
   - [Mac packages and updates](../protocol/desktop-packages-and-updates.md)
@@ -126,6 +127,8 @@ This page lists each protocol doc and what it covers.
   refreshes, and the first build of a new org.
 - [Agents and sessions](../protocol/agents-and-sessions.md): the agents and
   their logins, the sessions, and the names of workspaces and sessions.
+  - [Workspace and session names](../protocol/workspace-and-session-names.md):
+    the missing and the automatic names of workspaces and sessions.
 - [Workspace links](../protocol/workspace-links.md): Copy link, and the chips
   that show workspace links in chat.
 - [Chat Markdown](../protocol/chat-markdown.md): the formatting of agent

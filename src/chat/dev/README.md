@@ -18,8 +18,8 @@ sign-in gate.
 The composer lists the files of the Files development page after `@`, and
 a press on a file chip notes what the app opens. The page has no file tab,
 so a press on the chip of a sent attached file also only notes its path.
-As in the app, its message box takes a drop of files, and a drop of files
-elsewhere on the page does nothing.
+As in the app, the chat takes a drop of files anywhere on its column for
+its message box, and a drop of files elsewhere on the page does nothing.
 
 `npm run dev` also shows the chat, in the workspace screen of the whole
 app, over the fake API of the app. That fake has limits for the chat, as
@@ -71,8 +71,9 @@ the chat chose. Stop and the close of a running tab
 record the member of the `role` option as the one who pressed Stop. Stop
 the sandbox ends a running turn with no Stop request. With `app=mac`, the
 page's Mac acts on each answer: Deny ends the request, and the other choices
-run the command and keep the choice. The bar of the 15 minutes shows above
-the header while they run. The Mac refuses a change of an older pairing, as
+run the command and keep the choice. The bar of a grant shows above the
+header while it runs. Keep until I stop in the bar of the 15 minutes turns
+them into a grant until Stop. The Mac refuses a change of an older pairing, as
 the Worker does.
 
 Uploads keep their bytes in memory. While the sandbox runs, an accepted

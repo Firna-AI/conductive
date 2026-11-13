@@ -101,6 +101,28 @@ const lintControl = controlOf(removeLint)
 const stopControl = controlOf(stop)
 
 describe('MacSettingsController', () => {
+  it('records which change waits on a control that Stop and Keep share', async () => {
+    const mac = gatedMac()
+    const controller = new MacSettingsController(
+      createDeviceApi(createApiClient(mac.fetch)),
+    )
+    await controller.start()
+    mac.hold()
+    const keep = {
+      action: 'keep-workspace',
+      workspaceId: FAKE_IDS.workspace,
+    } as const
+    expect(controlOf(keep)).toBe(stopControl)
+    const kept = controller.change(keep)
+    expect(controller.get()).toMatchObject({
+      busy: [stopControl],
+      waiting: { [stopControl]: 'keep-workspace' },
+    })
+    mac.free()
+    await kept
+    expect(controller.get()).toMatchObject({ busy: [], waiting: {} })
+  })
+
   it('sends one read or change at a time, so the reply of the last one holds every change', async () => {
     const mac = gatedMac()
     const controller = new MacSettingsController(
@@ -127,7 +149,11 @@ describe('MacSettingsController', () => {
     expect(controller.get()).toMatchObject({
       kind: 'ready',
       busy: [],
-      settings: { alwaysAllowedCommands: ['npm run lint'] },
+      settings: {
+        alwaysAllowedCommands: fakeMacSettings().alwaysAllowedCommands.filter(
+          (command) => command !== 'git status' && command !== 'sw_vers',
+        ),
+      },
     })
   })
 

@@ -98,7 +98,8 @@ export function readDeviceSettings(value: unknown): DeviceSettings {
       return {
         workspaceId: deviceRequired(window.workspaceId),
         workspaceName: nullableText(window.workspaceName),
-        expiresAt: deviceNumber(window.expiresAt),
+        expiresAt:
+          window.expiresAt === null ? null : deviceNumber(window.expiresAt),
       }
     }),
   }

@@ -35,12 +35,15 @@ export async function createHarness(
     BOAT_ORG_ID: 'app-org',
     BOAT_KEY_ENCRYPTION_KEY: btoa('e'.repeat(32)),
   }
-  const native = await createNativeRuntime(variables, (request) =>
-    send(request),
+  const native = await createNativeRuntime(
+    variables,
+    (request) => send(request),
+    { migrated: options.migrationsBefore === undefined },
   )
   const db = native.bindings.DB
   const attachments = native.bindings.CHAT_ATTACHMENTS
-  await applyMigrations(db, { before: options.migrationsBefore })
+  if (!native.migrated)
+    await applyMigrations(db, { before: options.migrationsBefore })
   const env: AppEnv = {
     DB: db,
     CHAT_ATTACHMENTS: attachments,

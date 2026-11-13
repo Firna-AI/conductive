@@ -81,6 +81,7 @@ export async function accountDefault(
   return row ? { ...row, fast: row.fast === 1 } : null
 }
 
+/** The saved New workspace view. A new account has none and gets the dialog. */
 export async function accountNewWorkspaceView(
   db: D1Database,
   userId: string,
@@ -91,7 +92,7 @@ export async function accountNewWorkspaceView(
     )
     .bind(userId)
     .first<{ view: NewWorkspaceView | null }>()
-  return row?.view ?? 'page'
+  return row?.view ?? 'dialog'
 }
 
 export async function saveAccountNewWorkspaceView(

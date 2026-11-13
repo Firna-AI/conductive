@@ -8,8 +8,8 @@ import type { CommitAuthor } from '../../../src/shared/commit-author'
 import type {
   RunnerLogin,
   RunnerTurnCredential,
-  RunnerMessageDuringTurnV2 as RunnerMessageDuringTurn,
-  RunnerTurnV2 as RunnerTurn,
+  RunnerMessageDuringTurn,
+  RunnerTurn,
   RunnerBranches,
 } from '../../../src/shared/runner'
 import type { ProviderLifetime } from './lifetime'

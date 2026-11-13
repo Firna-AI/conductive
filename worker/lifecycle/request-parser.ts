@@ -33,7 +33,8 @@ export function createWorkspaceInput(value: unknown): CreateWorkspaceRequest {
     effort !== 'medium' &&
     effort !== 'high' &&
     effort !== 'xhigh' &&
-    effort !== 'max'
+    effort !== 'max' &&
+    effort !== 'ultra'
   )
     throw invalid()
   if (value.sectionId !== undefined && typeof value.sectionId !== 'string')

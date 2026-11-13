@@ -4,6 +4,7 @@ import { accountLogins, loginKinds } from '../fixtures/logins'
 import { inviteStates } from '../components/settings/inviteCodeCopy'
 import { shortcutSearches } from '../components/settings/shortcutSearch'
 import { keyChanges } from '../components/settings/ShortcutsSections'
+import { deletedOrgStates } from '../components/settings/DeletedOrgsSection'
 import { browserHosts } from '../fixtures/shortcutHosts'
 
 export const accountSchema = {
@@ -27,13 +28,15 @@ export const accountSchema = {
     'shortcuts',
     'host',
     'modelMenu',
+    'deletedOrgs',
   ],
   properties: {
     /**
-     * The tab: General, with the sign-in and the connections, Preferences,
-     * or Keyboard shortcuts. Each tab has its own address.
+     * The tab: General, with the sign-in and GitHub, Agents, with the
+     * logins of Claude and Codex, Preferences, or Keyboard shortcuts. Each
+     * tab has its own address.
      */
-    tab: { enum: ['general', 'preferences', 'shortcuts'] },
+    tab: { enum: ['general', 'agents', 'preferences', 'shortcuts'] },
     /** GitHub and the agents are connected, or not yet, as at the first run. */
     connections: { enum: ['connected', 'not-connected'] },
     /** The kind of the Codex login while Codex is connected. */
@@ -125,10 +128,25 @@ export const accountSchema = {
      * fast mode on.
      */
     modelMenu: { enum: ['closed', 'open-fast'] },
+    /**
+     * The orgs that the user deleted and can still restore: none, so the
+     * General tab has no Deleted orgs section, Acme Labs with Restore, Acme
+     * Labs after the operator suspended it, or a Restore that failed.
+     */
+    deletedOrgs: { enum: deletedOrgStates },
   },
 } as const
 
 export type AccountState = SchemaProps<typeof accountSchema>
+
+/**
+ * A state of the account with any of its tabs. Only the Mac app has the
+ * This Mac tab, so the Mac app's pages choose it, and the schema of the
+ * browser's pages does not offer it.
+ */
+export type AccountView = Omit<AccountState, 'tab'> & {
+  tab: AccountState['tab'] | 'this-mac'
+}
 
 /** The General tab of a connected account, in Chrome on a Mac. */
 export const accountGeneral: AccountState = {
@@ -149,6 +167,13 @@ export const accountGeneral: AccountState = {
   shortcuts: 'default',
   host: 'chrome-mac',
   modelMenu: 'closed',
+  deletedOrgs: 'none',
+}
+
+/** The Agents tab of a connected account, in Chrome on a Mac. */
+export const accountAgents: AccountState = {
+  ...accountGeneral,
+  tab: 'agents',
 }
 
 /** The Keyboard shortcuts tab in a normal Chrome tab on a Mac. */

@@ -50,9 +50,17 @@ it('starts and changes Claude fast mode through flag settings without bypassing 
     'CLAUDE_CODE_SKIP_FAST_MODE_ORG_CHECK',
   )
   await provider.model({ ...input.choice, fast: false })
-  expect(sdk.efforts.at(-1)).toEqual({ effortLevel: 'high', fastMode: false })
+  expect(sdk.efforts.at(-1)).toEqual({
+    effortLevel: 'high',
+    ultracode: false,
+    fastMode: false,
+  })
   await provider.model(input.choice)
-  expect(sdk.efforts.at(-1)).toEqual({ effortLevel: 'high', fastMode: true })
+  expect(sdk.efforts.at(-1)).toEqual({
+    effortLevel: 'high',
+    ultracode: false,
+    fastMode: true,
+  })
   await provider.close()
   const standard = new FakeClaudeQuery()
   const next = await createClaudeFactory(

@@ -12,7 +12,7 @@ import { startErrorKeys } from '../fixtures/starting'
 import { terminalStates } from '../fixtures/terminals'
 import { openableWorkspaces } from '../fixtures/workspaces'
 import { barStateDefaults, barStateKeys, barStateProperties } from './barState'
-import { composerStates, tabStates } from './chatStates'
+import { composerStates, tabStates, temporaryTabStates } from './chatStates'
 import {
   feedbackStateDefaults,
   feedbackStateKeys,
@@ -41,6 +41,7 @@ export const workspaceStateSchema = {
     'focus',
     'tab',
     'tabRow',
+    'temporary',
     'composer',
     'modelChoice',
     'resize',
@@ -116,11 +117,17 @@ export const workspaceStateSchema = {
      * drag of a tab, the code file after its move between the two
      * sessions, a full row with more tabs than fit, scrolled to the shown
      * tab, or the rename field in the first session tab after Rename
-     * session in its tab menu. The drag lifts the code file on desktop,
-     * and on a phone the second session, because a phone shows only the
-     * sessions.
+     * session in its tab menu. The drag lifts the temporary tab or else
+     * the code file on desktop, and on a phone the second session, because
+     * a phone shows only the sessions.
      */
     tabRow: { enum: ['opened', 'drag', 'moved', 'full', 'rename'] },
+    /**
+     * The temporary tab, as `temporaryTabStates` says. With a temporary
+     * tab, the drag of `tabRow` lifts it on desktop, and the tab menu of
+     * `overlay` opens on it.
+     */
+    temporary: { enum: temporaryTabStates },
     /** The composer, as `composerStates` says. */
     composer: { enum: composerStates },
     /**
@@ -142,9 +149,9 @@ export const workspaceStateSchema = {
     /**
      * What lies open over the workspace: the session history, the question
      * before a running session closes, the owner of the workspace, the tab
-     * menu of the first session, or the question of Continue with work that
-     * is not pushed. Or the question before a terminal closes, or the toast
-     * of a terminal that did not open or close.
+     * menu of the first session or of the temporary tab, or the question of
+     * Continue with work that is not pushed. Or the question before a
+     * terminal closes, or the toast of a terminal that did not open or close.
      */
     overlay: {
       enum: [
@@ -237,6 +244,7 @@ export const readyWorkspace: WorkspaceState = {
   focus: 'chat',
   tab: 'session',
   tabRow: 'opened',
+  temporary: 'none',
   composer: 'empty',
   modelChoice: 'workspace',
   resize: 'none',

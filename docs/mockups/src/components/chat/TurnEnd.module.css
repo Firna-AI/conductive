@@ -117,3 +117,34 @@ a.chip:hover {
   font-size: var(--ui-text-sm);
   white-space: nowrap;
 }
+
+/*
+ * The button that shows the chips past the limit of the row. It keeps the
+ * height of a chip, and the touch size on a phone, as the row of chips does.
+ */
+.showMore {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  min-height: var(--ui-touch-min);
+  margin: 0;
+  padding: 0 8px;
+  border: 1px solid transparent;
+  border-radius: var(--ui-radius-md);
+  background: none;
+  color: var(--ui-ink2);
+  font: inherit;
+  font-size: var(--ui-text-sm);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.showMore:hover {
+  background: var(--ui-soft);
+}
+
+.showMore:focus-visible {
+  outline: 2px solid var(--ui-primary);
+  outline-offset: -2px;
+}

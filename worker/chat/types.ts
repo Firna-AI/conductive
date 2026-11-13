@@ -7,11 +7,10 @@ import type { Attachment, MessageDraft } from '../../src/shared/messages'
 import type {
   RunnerAttachment,
   RunnerChangeModel,
-  RunnerCommandV1,
+  RunnerCommand,
   RunnerInterrupt,
   RunnerLoginKind,
-  WorkspaceToRunnerV1,
-  WorkspaceToRunnerV2,
+  WorkspaceToRunner,
   RunnerEventEnvelope,
   RunnerProtocolVersion,
 } from '../../src/shared/runner'
@@ -96,8 +95,8 @@ export interface StoredAttachment {
 }
 
 export type PreparedMessageCommand = (
-  | Omit<Extract<RunnerCommandV1, { type: 'turn' }>, 'attachments' | 'login'>
-  | Omit<Extract<RunnerCommandV1, { type: 'message' }>, 'attachments' | 'login'>
+  | Omit<Extract<RunnerCommand, { type: 'turn' }>, 'attachments' | 'credential'>
+  | Omit<Extract<RunnerCommand, { type: 'message' }>, 'attachments'>
 ) & { attachments: readonly StoredAttachment[]; login: AgentLogin }
 
 export type PreparedCommand =
@@ -123,7 +122,7 @@ type ResolveCommand<Command> = Command extends PreparedMessageCommand
 export type ResolvedCommand = ResolveCommand<PreparedCommand>
 
 export interface RunnerPeer {
-  send(message: WorkspaceToRunnerV1 | WorkspaceToRunnerV2): void
+  send(message: WorkspaceToRunner): void
   close(): void
 }
 
@@ -182,6 +181,10 @@ export interface ChatDependencies {
     workspaceId: string,
     publish: ChatCallbackPublisher,
   ): Promise<void>
+  runnerUnsupported(
+    workspaceId: string,
+    publish: ChatCallbackPublisher,
+  ): Promise<void>
   turnDispatching(
     workspaceId: string,
     turn: PendingTurn,
@@ -213,18 +216,15 @@ export interface ChatDependencies {
   ) => Promise<readonly ConnectionGrant[]>
   randomId: () => string
   randomConnectionId: () => string
-  currentRunnerProtocolVersion: () => RunnerProtocolVersion | null
   refusedEndpointDomains: () => readonly string[]
   readLoginMetadata: (
     targets: readonly SessionLoginTarget[],
-    protocolVersion?: RunnerProtocolVersion | null,
   ) => Promise<ReadonlyMap<string, SessionLoginMetadata>>
   resolveLogin: (
     userId: string | null,
     agent: Agent,
     runnerTokenHash?: string,
     senderId?: string,
-    protocolVersion?: RunnerProtocolVersion,
   ) => Promise<AgentLogin | null>
   resolveAttachments: (
     userId: string,

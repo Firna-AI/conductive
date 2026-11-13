@@ -1,3 +1,4 @@
+import type { IntakeRefusals } from '../../app/draft-files'
 import type { AgentChoice } from '../../shared/agents'
 import type { DeviceApprovalAction } from '../../shared/device'
 import type { TranscriptDetail } from '../../shared/sessions'
@@ -233,9 +234,9 @@ export class ChatController {
   readonly attachFiles = (
     sessionId: string,
     files: readonly File[],
-    folders: readonly string[] = [],
+    refusals?: IntakeRefusals,
   ) =>
-    this.readOnly() ? [] : attachFiles(this.context, sessionId, files, folders)
+    this.readOnly() ? [] : attachFiles(this.context, sessionId, files, refusals)
   /** A field follows its draft identity, also during a move before React renders. */
   readonly draftFiles = (draftId: string) =>
     draftFileSource(

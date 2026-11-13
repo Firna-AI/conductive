@@ -27,14 +27,21 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     area: 'agents-and-chat',
     name: 'Attachments',
     status: 'available',
-    note: 'Attach files up to 25 MB each, or attach a smaller file. A 1 GB limit is planned.',
+    note: 'Attach files up to 100 MB each.',
   },
   {
     id: 'drag-and-drop-attachments',
     area: 'agents-and-chat',
     name: 'Drag and drop attachments',
     status: 'available',
-    note: 'Drop files into chat or New workspace as inline chips at the pointer or caret. Sent chips open their copies in file tabs after delivery.',
+    note: 'Drop files into chat or New workspace as inline chips at the pointer or caret. A dropped folder attaches as one zip. Sent chips open their copies in file tabs after delivery.',
+  },
+  {
+    id: 'folder-attachments',
+    area: 'agents-and-chat',
+    name: 'Folder attachments',
+    status: 'available',
+    note: 'Drop a folder into chat or New workspace to attach it as one zip.',
   },
   {
     id: 'large-text-pastes',
@@ -133,7 +140,7 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     area: 'agents-and-chat',
     name: 'Rich chat rendering',
     status: 'available',
-    note: 'Chat shows Markdown, headings, tables, lists, and code, with Copy code buttons in progress. Diagrams, maths, media, and Run buttons remain under consideration.',
+    note: 'Chat shows Markdown, headings, tables, lists, and code, with Copy code buttons. Diagrams, maths, media, and Run buttons remain under consideration.',
   },
   {
     id: 'chat-links',

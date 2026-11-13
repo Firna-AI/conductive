@@ -1,4 +1,5 @@
 import { useToast } from '@firna/ui/toast'
+import { activeOrgs } from '../../app/kept-org'
 import { errorMessage } from '../../app/api/client'
 import { useApp } from '../context'
 
@@ -11,12 +12,16 @@ import { useApp } from '../context'
 export function useOrgMove(): (orgId: string, index: number) => void {
   const app = useApp()
   const { toast } = useToast()
-  return (orgId, index) =>
-    void app.moveOrg(orgId, index).catch((error: unknown) =>
+  return (orgId, index) => {
+    const others = app.orgs.get().filter((org) => org.id !== orgId)
+    const before = activeOrgs(others)[index]
+    const place = before ? others.indexOf(before) : others.length
+    void app.moveOrg(orgId, place).catch((error: unknown) =>
       toast({
         title: "The org didn't move.",
         description: errorMessage(error),
         tone: 'error',
       }),
     )
+  }
 }

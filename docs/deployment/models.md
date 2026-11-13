@@ -22,7 +22,9 @@ for local development.
   - `model`: the model ID that the agent gets, as a non-empty string.
   - `label`: the name that the app shows, as a non-empty string.
   - `efforts`: a non-empty array. Each effort is `none`, `low`, `medium`,
-    `high`, `xhigh`, or `max`.
+    `high`, `xhigh`, `max`, or `ultra`. List only the efforts that the
+    model accepts. Claude runs `ultra` as `max` with Ultracode on, as
+    [Efforts](../protocol/agents-and-sessions.md#efforts) says.
   - `fast`: optional, `true` when the model has fast mode. A missing field
     means `false`. The model menu shows the Fast switch only for a marked
     model, as [Fast mode](../protocol/fast-mode.md#the-models-with-fast-mode)

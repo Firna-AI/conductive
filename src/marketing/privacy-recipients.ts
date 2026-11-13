@@ -14,8 +14,8 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         write a short name from the text of its first message.
         For that request, ${productName} replaces each path mention of a file
         attached to that message with the file's original name. The model
-        requests of the agents in a newer cloud computer, and their
-        answers, pass through ${productName} on Cloudflare. Agent settings
+        requests and answers of the agents pass through ${productName} on
+        Cloudflare. Agent settings
         in the repository can send these requests to another address
         instead.`,
       text`GitHub signs you in, and gives ${productName} access to your
@@ -62,13 +62,10 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         names of the workspace branch and the branch that a pull request
         targets. Later messages give the current names when either branch
         changes. Each workspace branch starts with the GitHub login of the
-        workspace owner when that branch is created. From a newer cloud
-        computer, the agents send them through ${productName}, which adds
-        the agent login. For a subscription token or provider API key,
-        older software in an older cloud computer sends them directly,
-        with the agent login. In
-        both kinds of cloud computer, agent settings in the repository can
-        send them to another address instead. Each session uses the
+        workspace owner when that branch is created. The agents send them
+        through ${productName}, which adds the agent login.
+        Agent settings in the repository can send them to another address
+        instead. Each session uses the
         login of the member who started it. Each run of a routine sends
         its prompt on the login of the member who owns the routine.
         Your messages in another
@@ -86,8 +83,8 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         the GitHub CLI uses the workspace owner's account. Each member with
         a terminal can get that owner's GitHub token without a running
         turn.`,
-      text`In a newer cloud computer, a member with a terminal or a program
-        in it can read the credential of a turn that runs there. Through
+      text`A member with a terminal or a program in a cloud computer can
+        read the temporary credential of a turn that runs there. Through
         ${productName}, that credential can use the login of the member who
         started the session. It works while the turn runs, also from
         outside the cloud computer. A program that keeps running, such as a
@@ -102,15 +99,6 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         seconds after the turn ends. If the member who started the session
         removes or changes the login, or loses access to the org, the turn
         ends at its next model request.`,
-      text`For a subscription token or provider API key, a member with a
-        terminal or a program in an older cloud computer can read the
-        agent login of a turn that runs there. A program
-        that a tool of the agent starts, such as a dev server, can keep the
-        agent login after the turn ends. A member with a terminal can read
-        it there too. Agent settings in the repository can make the agent
-        send that login to another address. A commit, the agent, or other
-        code can change those settings. The setting that lets other members
-        use a login does not change this.`,
       text`The run of your routine for a pull request reads the comments,
         reviews, and descriptions of other GitHub accounts. Such text can
         steer the agent while the run uses your agent login and GitHub

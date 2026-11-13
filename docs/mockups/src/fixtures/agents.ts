@@ -32,7 +32,7 @@ export const agents: Readonly<Record<AgentKey, Agent>> = {
     models: [
       {
         name: 'Opus 5.5',
-        efforts: ['low', 'medium', 'high', 'xhigh', 'max'],
+        efforts: ['low', 'medium', 'high', 'xhigh', 'max', 'ultra'],
         fast: true,
       },
       { name: 'Sonnet 5.5', efforts: ['low', 'medium', 'high', 'max'] },
@@ -45,7 +45,7 @@ export const agents: Readonly<Record<AgentKey, Agent>> = {
     models: [
       {
         name: 'GPT-6.1 Sol',
-        efforts: ['none', 'low', 'medium', 'high', 'xhigh'],
+        efforts: ['none', 'low', 'medium', 'high', 'xhigh', 'max', 'ultra'],
         fast: true,
       },
       { name: 'GPT-6 Astra', efforts: ['low', 'medium', 'high'], fast: true },

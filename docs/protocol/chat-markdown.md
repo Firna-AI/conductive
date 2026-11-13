@@ -31,6 +31,18 @@ open work of a turn at `app/chat/headings/work`.
 - Inline code, strong text, and workspace chips also show in headings,
   list items, and table cells. A code block shows its text with no
   formatting.
+- Each code block of an agent message has a Copy code button in its top
+  corner. The button copies the text of the code block exactly as the
+  agent wrote it, with its tabs and blank lines, and without the fence
+  lines. A toast says whether the copy worked, as for Copy link.
+- With a mouse, the button shows while the pointer is on the code block,
+  or while the button has the focus. On a touch screen, it always shows.
+- Reason: a reader copies a command or a file from an answer often. A
+  selection by hand can miss a line or take text around the block.
+- A code block in the line of a message in the work of a turn has no Copy
+  code button. That line is a button that opens and closes, and a button
+  cannot hold another button. A code block under an open line, after a
+  table, has the button.
 - HTML in an agent message shows as text, also in a table.
 - Reason: sandbox code is untrusted, as
   [Trust boundaries](../architecture/data-and-trust.md#trust-boundaries) says, and it can

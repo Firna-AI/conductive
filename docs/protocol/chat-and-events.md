@@ -80,6 +80,12 @@ holds how an agent action of the pull request bar sends its fixed prompt.
   work decision 3). A line in the running turn that names the work, and a
   workspace state such as "waiting", were not chosen.
 - A finished turn ends with its duration and the files that it changed.
+- The end shows at most 8 files on desktop and 5 on a phone. A
+  "Show N more" button after them shows all the listed files. The count of
+  files that the runner left out shows only after that button.
+- Reason: a turn that changes many files pushed its reply out of view
+  (Cal, 12 November 2026). A list of all files without a button was
+  rejected for that reason.
 - A turn that ended at the time limit of background work shows
   "Background work stopped at the time limit" in its end, above its
   duration and its files (background work decision 3). The

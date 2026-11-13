@@ -38,6 +38,7 @@ export function AppLink({
   /** Replaces the current address, as a redirect does. */
   replace?: boolean
   onClick?: (event: MouseEvent<HTMLAnchorElement>) => void
+  onDoubleClick?: (event: MouseEvent<HTMLAnchorElement>) => void
   /** The anchor takes the focus, or loses it. */
   onFocus?: (event: FocusEvent<HTMLAnchorElement>) => void
   onBlur?: (event: FocusEvent<HTMLAnchorElement>) => void
@@ -62,6 +63,7 @@ export function AppLink({
       href={props.to}
       onBlur={props.onBlur}
       onClick={onClick}
+      onDoubleClick={props.onDoubleClick}
       onFocus={props.onFocus}
       ref={ref}
       style={props.style}

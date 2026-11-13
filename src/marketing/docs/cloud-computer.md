@@ -33,7 +33,7 @@ The org step in **Get started** shows the result:
 | No build yet | Select **Build computer**. |
 
 Only an admin gets the build actions.
-**New workspace** keeps **Send** off until the org has a successful build.
+**New workspace** keeps its send button off until the org has a successful build.
 You can keep a draft there while you wait.
 
 ## Choose repositories
@@ -140,10 +140,9 @@ A build includes the current Conductive cloud computer software.
 An existing workspace keeps its software after a resume.
 **Continue** keeps that same computer and software for the workspace's next task.
 A new build does not replace the existing computer.
-Installing updated agent software in an older computer does not change its protection for saved agent logins.
 
 Ask an admin to run **Build computer**.
-After it succeeds, create a new workspace for newer software and the new protection.
+After it succeeds, create a new workspace to use the updated software.
 This also gives the new workspace the server list in **Preview**.
 The same steps give it the current workspace tools for managing workspaces, sessions, sections, and private previews across the org.
 The tools also read chats and messages there.

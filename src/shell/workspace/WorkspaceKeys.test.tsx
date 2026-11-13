@@ -127,15 +127,15 @@ describe('the keys of the workspace', () => {
 
   test('the composer focuses its message field, attaches files, opens the model picker, chooses the next effort with a wrap, and stops the agent', async () => {
     const server = new FakeApiServer({ conversation: 'running' })
-    // The session starts on Max, the last effort of Opus 5.5.
+    // The session starts on Ultra, the last effort of Opus 5.5.
     const sessions = workspaceFixtures().sessions
-    const onMax: Session = {
+    const onUltra: Session = {
       ...autocomplete,
-      choice: { ...autocomplete.choice, effort: 'max' },
+      choice: { ...autocomplete.choice, effort: 'ultra' },
     }
     server.json('GET', sessionsPath(org, id), {
       ...sessions,
-      sessions: [onMax, debounce],
+      sessions: [onUltra, debounce],
     })
     const { view, press } = await openWorkspace(server)
     const field = messageField(view)

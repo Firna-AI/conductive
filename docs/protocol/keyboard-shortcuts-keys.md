@@ -91,6 +91,10 @@ decision number names a decision of the change that adds
   Conductor press that key. No key, a row of the palette, and a key that
   opens the model menu were rejected for that reason.
 - No two commands share a default key on the same keyboard.
+- The command Commit and push also presses Push, which the bar shows in
+  its place when the local work is only commits, as
+  [Actions](github-banner.md#actions) says. The tooltip of each button
+  names its own label.
 - No default key is a text key of its system, except Ctrl+U on Linux, as
   [Keys chosen by hand](#keys-chosen-by-hand) says.
 - No default key on a Mac is a key that macOS takes first in its default

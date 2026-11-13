@@ -82,8 +82,8 @@ View writes cannot change this branch.
   The save also passes `env.PREVIEW_DOMAIN` to refuse that deployment's preview domain and its subdomains.
   It preserves the query and drops the fragment and trailing slash.
   For Claude, it also drops a final `/v1`.
-  A valid own endpoint can run through the model gateway on protocol 2.
-  An invalid saved address or a protocol 1 runner makes it unavailable in chat.
+  A valid own endpoint runs through the model gateway.
+  An invalid saved address makes it unavailable in chat.
 - `PUT /api/account/shortcuts` takes `SaveShortcutsRequest` and returns
   `SaveShortcutsResponse` from the shared shortcut contracts. The shared
   reader checks the whole request before any write. A contract error

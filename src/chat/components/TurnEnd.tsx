@@ -4,13 +4,11 @@ import type { ChangedFile } from '../../shared/files'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import { DiffStat } from '../../../docs/mockups/src/components/files/DiffStat'
 import { EndReasonLine } from '../../../docs/mockups/src/components/chat/EndReasonLine'
-import {
-  moreFiles,
-  turnFilesUnavailable,
-} from '../../../docs/mockups/src/components/chat/lostCopy'
+import { turnFilesUnavailable } from '../../../docs/mockups/src/components/chat/lostCopy'
 import type { StandardSpeedCause } from '../../../docs/mockups/src/components/chat/speedCopy'
 import { StandardSpeedNote } from '../../../docs/mockups/src/components/chat/StandardSpeedNote'
 import styles from '../../../docs/mockups/src/components/chat/TurnEnd.module.css'
+import { TurnFileList } from '../../../docs/mockups/src/components/chat/TurnFileList'
 import { formatDuration } from '../../shared/transcript/duration'
 import { turnCopy } from '../../shared/transcript/turn-words'
 import controls from '../ui/controls.module.css'
@@ -53,10 +51,11 @@ function FileChip(props: {
 
 /**
  * The end of a finished turn: how long it ran, and the files that it changed.
- * Each file opens its diff when the app gives `onOpenDiff`. The runner lists
- * at most 200 files of a turn, and `omittedFiles` counts the rest as plain
- * text after the list. `filesUnavailable` says that the cloud computer could
- * not read the changed files, in place of the list. The turn still finished.
+ * Each file opens its diff when the app gives `onOpenDiff`. `TurnFileList`
+ * shows the first chips and a button for the rest. The runner lists at most
+ * 200 files of a turn, and `omittedFiles` counts the rest. `filesUnavailable`
+ * says that the cloud computer could not read the changed files, in place of
+ * the list. The turn still finished.
  * `endReason` names a cause other than the end of the reply, such as the
  * time limit of background work. Its line sits above the row, as in the
  * mockups. `standardSpeed` marks a fast turn that ran at standard speed,
@@ -82,14 +81,14 @@ export function TurnEnd(props: {
         </span>
       ) : null}
       {props.files.length > 0 || more > 0 ? (
-        <ul aria-label={turnCopy.files} className={styles.chips}>
-          {props.files.map((file) => (
-            <li key={file.path}>
-              <FileChip file={file} onOpenDiff={props.onOpenDiff} />
-            </li>
-          ))}
-          {more > 0 ? <li className={styles.more}>{moreFiles(more)}</li> : null}
-        </ul>
+        <TurnFileList
+          files={props.files}
+          label={turnCopy.files}
+          omittedFiles={more}
+          renderChip={(file) => (
+            <FileChip file={file} onOpenDiff={props.onOpenDiff} />
+          )}
+        />
       ) : null}
     </>
   )

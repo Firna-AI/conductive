@@ -3,7 +3,7 @@ import { workspacesPath } from '../shared/workspaces'
 import { FakeApiServer } from '../test-support/fake-api'
 import { FAKE_IDS } from '../test-support/fixtures/core'
 import { createApiClient } from './api/client'
-import { controlledUploads, note } from './draft-files.test-support'
+import { controlledUploads, note, unreadable } from './draft-files.test-support'
 import { fileMark } from './draft-marks'
 import { OrgModel } from './org-model'
 import { testServices } from './test-kit'
@@ -34,7 +34,7 @@ async function newForm() {
 
 function oversized(name: string): File {
   const file = note(name)
-  Object.defineProperty(file, 'size', { value: 25_000_001 })
+  Object.defineProperty(file, 'size', { value: 100_000_001 })
   return file
 }
 
@@ -43,7 +43,7 @@ describe('refused folders of a New workspace draft', () => {
     const { form, server, jobs, finish } = await newForm()
     const messageId = form.draft.get().messageId
     const names = ['Pictures', 'Design notes']
-    expect(form.attach([], names)).toEqual([])
+    expect(form.attach([], unreadable(...names))).toEqual([])
     names.push('Later mutation')
     expect(form.draft.get()).toMatchObject({
       text: '',
@@ -57,7 +57,9 @@ describe('refused folders of a New workspace draft', () => {
     expect(form.attach([])).toEqual([])
     expect(form.draft.get()).toBe(beforeCancel)
     const zero = new File([], 'empty.txt', { type: 'text/plain' })
-    expect(form.attach([zero], ['Empty directory'])).toEqual(['client-2'])
+    expect(form.attach([zero], unreadable('Empty directory'))).toEqual([
+      'client-2',
+    ])
     expect(form.draft.get()).toMatchObject({
       refused: [],
       refusedFolders: ['Empty directory'],
@@ -97,11 +99,11 @@ describe('refused folders of a New workspace draft', () => {
 
   it('ends folder-only data at sign-out and keeps a failed create notice until the next pick', async () => {
     const { form, model, server, jobs } = await newForm()
-    form.attach([], ['Private directory'])
+    form.attach([], unreadable('Private directory'))
     model.creations.clear()
     expect(form.draft.get()).toMatchObject({ refused: [], refusedFolders: [] })
     form.setText('Create this task')
-    form.attach([oversized('archive.zip')], ['Failed directory'])
+    form.attach([oversized('archive.zip')], unreadable('Failed directory'))
     const messageId = form.draft.get().messageId
     server.json(
       'POST',

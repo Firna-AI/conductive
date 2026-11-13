@@ -1,6 +1,6 @@
 import { defineScreen } from '@mokly/mokly'
 import { AccountScreen } from '../../../../screens/AccountScreen'
-import { accountGeneral, accountSchema } from '../../../../screens/accountState'
+import { accountAgents, accountSchema } from '../../../../screens/accountState'
 
 export const connectClaude = defineScreen({
   title: 'Connect Claude',
@@ -10,7 +10,7 @@ export const connectClaude = defineScreen({
     'Decisions 24 and 37 allow a Claude subscription token or an Anthropic API key, and decision 1 of the own endpoint plan adds the own endpoint. The app tests a token or an API key once when the user connects it, as decision 33 notes. On a phone the three kinds wrap onto two lines. Moved here from a saved state of the Account page, with the same path, so that page shows only its canonical screen.',
   relatedDocs: [],
   propSchema: accountSchema,
-  props: { ...accountGeneral, form: 'claude' },
+  props: { ...accountAgents, form: 'claude' },
   render: (props, context) => (
     <AccountScreen state={props} viewport={context.viewport} />
   ),

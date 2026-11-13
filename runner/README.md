@@ -12,9 +12,13 @@ requests. [Agent runner](../docs/protocol/agent-runner.md) and
 [Model gateway](../docs/protocol/model-gateway.md) state its requirements,
 and the [shared contracts](../src/shared/README.md) define its messages.
 
+The workspace refuses a runner of any other protocol version before any
+command, as [Runner versions](../docs/protocol/version-pins.md#runner-versions)
+says.
+
 The `hello` advertises every login kind that this runner can run.
 The Worker checks that list before dispatching a turn or message.
-An older runner receives no unsupported login and the turn fails with recovery steps.
+A login kind that a runner does not advertise gets no command, and the turn fails with recovery steps.
 
 This folder is a separate Node 24 package with its own lockfile. The root
 `npm install` does not install it. Tests inject the fake workspace endpoint.
@@ -29,6 +33,10 @@ These facts belong to this implementation, not to the protocol docs.
   that program. The runner turns off its automatic updates. It starts the
   program through the SDK option `spawnClaudeCodeProcess`, so the runner
   owns the child process.
+- The Claude Agent SDK has no `ultra` effort. `src/providers/claude-effort.ts`
+  starts and changes Ultra as the `max` level with the `ultracode` flag
+  setting on. Each other effort sends `ultracode: false`. Codex takes each
+  effort under its own name.
 - Codex uses the pinned Codex App Server, through `@openai/codex-sdk`.
   API keys use its private login request. ChatGPT sign-ins use a temporary
   login file with a turn token and public account identity.
@@ -179,7 +187,7 @@ These facts belong to this implementation, not to the protocol docs.
 
 [Background work](background-work.md) gives how a Claude turn waits for the
 background work of its agent, the note at the end of a reply, the time
-limit of 120 minutes, the end reason, and their key code. A workspace gets
+limit of 30 days, the end reason, and their key code. A workspace gets
 this behaviour only from an org image built with this runner.
 
 ## Event limits

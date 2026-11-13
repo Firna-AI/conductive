@@ -14,7 +14,8 @@ is relative to `src/chat/`, the folder of this guide.
   holds the local IDs of drafts and files, the upload generations, the
   devices, and the event stream. Each draft ID holds the run.
 - `state/tab-order.ts`: the pure row order, the places of the open
-  sessions, and the move before or after a neighbour.
+  sessions, and the move before or after a neighbour, which keeps a
+  temporary tab whose place it changes.
 - `components/SessionTabs.tsx`: the tab row, with the session tabs of
   `components/SessionTab.tsx` and the tabs of `renderTab`.
   `components/tab-row.ts`: `RenderTab`, `TabDraw`, and `rowOf`, the tabs of
@@ -28,8 +29,8 @@ is relative to `src/chat/`, the folder of this guide.
   its items with the mark of each item that changes the workspace, the
   items of a read-only row, the long press that opens that row's menu, and
   its drawing at a point or in a sheet.
-  `components/useTabMoves.ts`: the moves of the row, the focus after a move
-  from the menu, and the words of the status.
+  `components/useTabMoves.ts`: the moves of the row and Keep open, the
+  focus after a move or a keep from the menu, and the words of the status.
 - `components/TranscriptCopy.tsx`: `useTranscriptCopy`, the copy of a
   transcript from the tab menu with the toast of its result, and
   `ChatToasts`, the toasts of the host, else the chat's own.
@@ -48,7 +49,8 @@ is relative to `src/chat/`, the folder of this guide.
   states. It gives its field the `files` of the draft, and it holds the
   handle of the field. So a pick puts the chips of its files at the caret.
   Its whole box takes a drop of files. `components/SessionChat.tsx` gives
-  the folder names of a drop to `controller.attachFiles`, and keeps one
+  the zips and the refused folders of a drop to `controller.attachFiles`,
+  and keeps one
   source for each `Draft.id`, in `useDraftFiles`.
 - `components/composer-drop.ts`: `useComposerDrop`, the drop of files on a
   message box, which the chat and both New workspace composers share.
@@ -136,8 +138,8 @@ is relative to `src/chat/`, the folder of this guide.
 - `components/AttachmentChips.tsx`: `SentFiles`, `OversizeNotice`, and
   `FolderNotice`. `SentFiles` lists under a sent message the files without
   a chip in its text. `OversizeNotice` is the notice of the files of a pick
-  or a drop over the size limit. `FolderNotice` is the notice of the one
-  folder that `noticedFolder` gives. Both use the words of the mockups'
+  or a drop over the size limit, also a zip of a folder. `FolderNotice` is
+  the notice of the one unreadable folder that `noticedFolder` gives. Both use the words of the mockups'
   `attachmentCopy.ts`. A file of a draft is a chip in the message field,
   which `components/chip-field/attached-file-chip.tsx` draws.
 - `state/archive-view.ts`: the tabs and the session history of a
@@ -167,7 +169,9 @@ is relative to `src/chat/`, the folder of this guide.
   end of a finished turn: the line of its end reason, from the mockups'
   `EndReasonLine.tsx`, above its duration and its files, and the note of a
   fast turn at standard speed, from the mockups' `StandardSpeedNote.tsx`,
-  beside its duration. `UserBubble` reads
+  beside its duration. The mockups' `TurnFileList.tsx` limits the files
+  that show before its Show more button, with the app's chips. `UserBubble`
+  reads
   the parts of a sent message once, with `useChatParts`. It draws them with
   `ChatText`, and it lists under the message only the files that no part
   shows as a chip. It sets `opens` only when the message state is `sent`.

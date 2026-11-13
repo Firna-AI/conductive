@@ -1,0 +1,58 @@
+.list {
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-md);
+  list-style: none;
+}
+
+.list > li + li {
+  border-top: 1px solid var(--ui-border);
+}
+
+.item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 8px 8px 12px;
+}
+
+/* The tile, the name with its day, and Restore at the end. */
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* A deleted org fades, as its tile did in the rail. */
+.tile {
+  display: flex;
+  flex-shrink: 0;
+  opacity: 0.45;
+}
+
+.text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.name {
+  overflow: hidden;
+  color: var(--ui-ink);
+  font-size: var(--ui-text-md);
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.detail {
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+}
+
+.action {
+  flex-shrink: 0;
+}

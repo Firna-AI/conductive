@@ -26,14 +26,14 @@ function liftedTile(initials: string): boolean {
 }
 
 describe('the drag of an org tile', () => {
-  test('moves the faded tile of a deleted org to the place under the pointer, names no org during the drag, and opens nothing with the click at its end', async () => {
+  test('moves a tile past a hidden deleted org to the place under the pointer, names no org during the drag, and opens nothing with the click at its end', async () => {
     const server = new FakeApiServer()
-    // An admin still sees Firna, which an admin deleted, as a faded tile.
-    serveOrgChange(server, 'firna', {
+    // Futex stays in Account settings while the other orgs move.
+    serveOrgChange(server, 'futex', {
       deletion: { deletedAt: FAKE_TIME, deletesAt: FAKE_TIME + 604_800_000 },
     })
     const { navigation, view } = await mountRail(server)
-    layOutTiles(view, ['acme', 'futex', 'firna'])
+    layOutTiles(view, ['acme', 'firna'])
     const names = railNames(view)
     const firna = tileLink(view, 'firna')
 
@@ -57,14 +57,14 @@ describe('the drag of an org tile', () => {
       status: railStatus(view),
       address: navigation.href(),
     }).toEqual({
-      names: ['Acme', 'Futex', 'Firna'],
+      names: ['Acme', 'Firna'],
       during: {
-        status: 'Moving Firna to place 1 of 3',
+        status: 'Moving Firna to place 1 of 2',
         names: [],
         lifted: true,
       },
       moves: [{ orgId: 'firna', index: 0 }],
-      order: ['firna', 'acme', 'futex'],
+      order: ['firna', 'acme'],
       status: '',
       address: routes.org('acme'),
     })

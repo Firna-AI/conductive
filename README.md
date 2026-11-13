@@ -30,9 +30,8 @@ deployment needs.
 Conductive has these features. The protocol docs state each one. A
 feature that is not complete yet says so.
 
-- Sign in with GitHub. The product is free until billing starts.
-  [Pricing](docs/protocol/pricing.md) states the coming plans, which the
-  pricing page of the marketing site shows. Billing is not built yet.
+- Sign in with GitHub. The product is free, with no plans or billing, as
+  [Orgs and members](docs/protocol/orgs-and-members.md#orgs) says.
 - A waitlist. A new account waits until an operator approves it, or an
   invite code, a referral code, or an org invitation lets the person in.
   An operator can turn the waitlist off. Each new person then gets in at
@@ -44,7 +43,7 @@ feature that is not complete yet says so.
 - Chat with agents powered by Claude and Codex. A workspace holds several
   sessions, and one picker sets the model and the effort.
 - Send a message during a turn, or stop the turn.
-- Attach files of up to 25 MB each to a message.
+- Attach files of up to 100 MB each to a message.
 - Each user connects a Claude subscription token, a ChatGPT plan through
   device code sign-in, an API key, or an own endpoint in Account or Get started.
 - Files and Changes, a terminal, and port previews. The live desktop is
@@ -201,7 +200,8 @@ under `.wrangler/`, which Git also ignores.
 | `npm run db:migrate`        | Apply the D1 migrations to local storage                       |
 | `npm run site:dev`          | Serve the marketing site from Astro at `http://localhost:4321`, and reload on edits |
 | `npm run site:build`        | Build the marketing site into `public/_site/`, with its file list |
-| `npm run check`             | Run every check, including the app build, the mockup checks, and the runner checks |
+| `npm run check`             | Run every check: `npm run check:static`, then the Vitest tests |
+| `npm run check:static`      | Run every check except the root Vitest tests, including the app build, the mockup checks, and the runner checks |
 | `npm run mockups:serve`     | Serve the catalogue at `http://127.0.0.1:4173`, and watch edits |
 | `npm run mockups:check`     | Check mockup types, then build the catalogue in strict mode     |
 | `npm run lint`              | Run ESLint, including the 300-line limit of JavaScript, TypeScript, and Astro files |
@@ -210,8 +210,10 @@ under `.wrangler/`, which Git also ignores.
 
 GitHub Actions uses `.nvmrc`. It installs with `npm ci`,
 `npm --prefix desktop ci`, and `npm ci --prefix runner`. Then it runs
-`npm run check` on pull requests, and on pushes to `main` and to the primary
-branch of the plan. CI does not deploy, as
+the complete gate on pull requests, and on pushes to `main` and to the
+primary branch of the plan. One job runs `npm run check:static`. Four jobs
+each run one quarter of the Vitest files at the same time. The job
+`Complete gate` passes only when all of them pass. CI does not deploy, as
 [Automatic deploys](docs/automatic-deploys.md) says.
 
 ## Mac app

@@ -12,13 +12,15 @@ import type { WorkspaceTab } from '../../../shared/workspace-view'
 import type { SavedView, WorkspaceContext } from '../features'
 import { saveView, useSavedView, useViewKnown } from '../saved-view'
 import { filesHref, filesPlace } from './files-address'
-import { withActiveTab, withFileList } from './view-tabs'
+import { withActiveTab, withFileList, withKeptTab } from './view-tabs'
 
 /**
  * The navigation of the Files screens of the open workspace. A plain click
- * saves the change in the workspace view, then moves the address. On
- * desktop a list belongs to the right column, so the address keeps the tab
- * of the centre, and only a list address follows the new list.
+ * saves the change in the workspace view, then moves the address. A file or
+ * a diff with no tab opens in the temporary tab. On desktop a list belongs
+ * to the right column, so the address keeps the tab of the centre, and only
+ * a list address follows the new list. A keep saves the view with the tab
+ * kept, and moves no address.
  */
 export function useFilesNavigation(context: WorkspaceContext): FilesNavigation {
   const navigation = useNavigation()
@@ -39,6 +41,7 @@ export function useFilesNavigation(context: WorkspaceContext): FilesNavigation {
         if (viewport === 'phone') navigation.push(href(target))
         else if (onList) navigation.replace(href(target))
       },
+      keep: (tab) => saveView(savedView, (view) => withKeptTab(view, tab)),
     }
   }, [navigation, org.id, workspace.id, viewport, savedView, onList])
 }
@@ -56,7 +59,9 @@ export function useAddressList(
 
 /**
  * A file or diff page that shows keeps its tab open and active in the saved
- * view, also when its address came from a link or the browser history.
+ * view, also when its address came from a link or the browser history. A
+ * file or a diff with no tab opens in the temporary tab, as a press opens
+ * it. After a press, the view shows the tab already, so this saves nothing.
  */
 export function useOpenTab(saved: SavedView, tab: FilesTab): void {
   const known = useViewKnown(saved)

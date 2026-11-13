@@ -5,7 +5,7 @@ import {
 } from '../components/feedback/feedbackCopy'
 import {
   agentActionLabels,
-  type AgentAction,
+  type CommandAgentAction,
 } from '../components/workspace/barCopy'
 import { transcriptItems } from '../components/workspace/transcriptCopy'
 import {
@@ -149,7 +149,7 @@ function macAppCommand(
 }
 
 /** An agent action of the pull request bar, with the label of its button. */
-function agentCommand(id: AgentAction, ...mac: Shortcut[]): CommandSpec {
+function agentCommand(id: CommandAgentAction, ...mac: Shortcut[]): CommandSpec {
   return command(id, agentActionLabels[id], ...mac)
 }
 

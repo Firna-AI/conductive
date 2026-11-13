@@ -1,5 +1,6 @@
 export type Agent = 'claude' | 'codex'
-export type Effort = 'none' | 'low' | 'medium' | 'high' | 'xhigh' | 'max'
+export type Effort =
+  'none' | 'low' | 'medium' | 'high' | 'xhigh' | 'max' | 'ultra'
 
 export interface AgentChoice {
   agent: Agent
@@ -29,6 +30,7 @@ export const effortLabels: Readonly<Record<Effort, string>> = {
   high: 'High',
   xhigh: 'Extra high',
   max: 'Max',
+  ultra: 'Ultra',
 }
 
 export function findModel(

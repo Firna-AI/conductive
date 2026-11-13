@@ -19,7 +19,7 @@ describe('routes', () => {
       [routes.home(), { screen: 'home' }],
       [
         routes.account('codex'),
-        { screen: 'account', tab: 'general', connect: 'codex' },
+        { screen: 'account', tab: 'agents', connect: 'codex' },
       ],
       ...ACCOUNT_TABS.map((tab): [string, Route] => [
         routes.accountTab(tab),
@@ -73,6 +73,13 @@ describe('routes', () => {
     expect(parse('/orgs/acme/routines/review-prs/runs/older')).toEqual({
       screen: 'not-found',
     })
+  })
+
+  test('an older connect link on General opens the Agents tab with its form', () => {
+    expect([parse('/account?connect=claude'), parse('/account')]).toEqual([
+      { screen: 'account', tab: 'agents', connect: 'claude' },
+      { screen: 'account', tab: 'general', connect: null },
+    ])
   })
 
   test('a session address names its workspace and session, and a longer path stays a page of the workspace', () => {

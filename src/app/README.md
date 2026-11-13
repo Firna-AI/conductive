@@ -50,7 +50,7 @@ pull request bar, and the owner picker. A host can give its own parts, as
 | `features`   | `WorkspaceFeatures` from `../shell/workspace/features.ts`: the workspace parts |
 
 `App` also mounts `useFileDropGuard` of `file-drags.ts`, so a drop of files
-outside each message box does nothing, as
+outside each message box and the chat around it does nothing, as
 [Drops](../../docs/protocol/message-attachments.md#drops) says. The guard
 hears each drag last, on the window. It leaves each drag that a part took,
 such as a message box or the Feedback dialog, and it never stops an event.
@@ -89,7 +89,7 @@ feature leaves its place empty.
 
 The org settings mount the members UI of `../members/`: `MembersSettings`
 for the Members tab, Delete org in the General tab of an admin, the restore
-page of a deleted org, and the read-only Repositories and Cloud computer
+page at the address of a deleted org, and the read-only Repositories and Cloud computer
 tabs of a member. The Cloud computer tab of a member gets the live builds,
 log, and settings of `ComputerModel`. The Repositories tab of a member gets
 the live builds of `OrgModel`, for its repository notice.
@@ -252,8 +252,11 @@ Its `markOf` gives the mark of a file of the draft by the name of the file.
 page and on the dialog card. A drop on the text of the page puts the files
 at the point. While a create runs, the box shows no drop state or drop
 caret, also for files that hovered as it began, and takes no drop. Files
-over the card show its drop state, and a dropped folder gets its notice in
-the dialog. `../App.dom.test.tsx` mounts `App` and checks the guard
+over the card show its drop state, a dropped folder attaches as its zip,
+and a folder that cannot be read gets its notice in the dialog.
+`folder-zip.test.ts` zips a folder with nested, empty, and hidden entries,
+gives the name of a zip over the size limit and of a folder that cannot be
+read, and stops with its drop. `../App.dom.test.tsx` mounts `App` and checks the guard
 outside each box, the browser's own drag of text and links, and the copy
 offer of a box. It also checks that the Feedback dialog still takes a
 dropped screenshot.

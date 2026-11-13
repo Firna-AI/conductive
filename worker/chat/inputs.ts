@@ -49,7 +49,8 @@ export function effort(value: unknown): Effort {
     value === 'medium' ||
     value === 'high' ||
     value === 'xhigh' ||
-    value === 'max'
+    value === 'max' ||
+    value === 'ultra'
   )
     return value
   return invalidInput()
