@@ -10,7 +10,8 @@ Dates use Unix milliseconds. IDs and model names are opaque strings.
 `Workspace.link` is its absolute web link, with org and workspace IDs.
 `AgentWorkspaceSummary` gives the same number and link.
 `Workspace.github` is the GitHub summary of its pull request, or null.
-`GitHubSummary` and `githubSummary` in `github.ts` give its four values from a banner and its checks.
+`GitHubSummary` and `githubSummary` in `github.ts` give it from a banner: the state of the bar, or null without a pull request and for a closed pull request.
+`checksSummary` gives the checks of a pull request as one value, for the bar.
 [The GitHub state](../../docs/protocol/github-banner.md#the-github-state) states their order.
 `readGitHubSummary` in `github-read.ts` keeps a known summary and reads an absent or unknown value as null.
 The browser readers and the sandbox tools use it, so an older reply still reads.

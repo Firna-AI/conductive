@@ -215,7 +215,7 @@ describe('the rows of the command palette', () => {
         names: [
           'Fix flaky cart testacme/storefront3m, Checks running, Working',
           'Apple Pay buttonacme/storefront5m, Checks failed, Ready',
-          'Upgrade to Next.js 16acme/storefront7m, Ready',
+          'Upgrade to Next.js 16acme/storefront7m, Merge conflict, Ready',
           'Checkout address autocompleteacme/storefrontnow, Archived',
         ],
       },

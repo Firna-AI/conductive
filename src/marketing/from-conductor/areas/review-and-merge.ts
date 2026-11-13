@@ -146,6 +146,6 @@ export const reviewAndMergeFeatures: readonly ParityFeature[] = [
     area: 'review-and-merge',
     name: 'PR links',
     status: 'considering',
-    note: 'Open pull requests from the workspace bar. The workspace list shows check and merge colours, with pull request numbers under consideration.',
+    note: 'Open pull requests from the workspace bar. The workspace list shows the colour of each pull request state, with pull request numbers under consideration.',
   },
 ]

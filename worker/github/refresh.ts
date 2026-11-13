@@ -173,7 +173,7 @@ async function readAndCommit(
       saveWorkspaceGitHubSummary(
         db,
         { ...workspace, branch: snapshot.banner.branch },
-        githubSummary(snapshot.banner, snapshot.checks.checks),
+        githubSummary(snapshot.banner),
       ),
   )
 }
