@@ -145,9 +145,11 @@ export async function continueNativeFixture(trackIgnored = false) {
       installationId: 1,
     },
   }
+  // Only the HOME of the command is the home of the cloud computer. The
+  // fixture folders can also start with /home/user, in a checkout there.
   const map = (command: string) =>
     command
-      .replaceAll('/home/user', home)
+      .replaceAll('HOME=/home/user ', `HOME=${home} `)
       .replaceAll('/tmp/conductive-continue', join(root, 'continuations'))
       .replaceAll('/usr/local/bin/conductive-git-credential', helper)
       .replaceAll(

@@ -18,7 +18,12 @@ import {
 import { textOf } from './render-kit'
 import { UserBubble } from './TranscriptItem'
 
-const opus: AgentChoice = { agent: 'claude', model: 'Opus 5.5', effort: 'high' }
+const opus: AgentChoice = {
+  agent: 'claude',
+  model: 'Opus 5.5',
+  effort: 'high',
+  fast: false,
+}
 
 const readme: FileEntry = {
   path: 'README.md',

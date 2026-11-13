@@ -11,6 +11,21 @@ import { INSTALLATION_TOKEN, SOURCE_BRANCH } from './native-github-test-support'
 const privateKey = generateKeyPairSync('rsa', { modulusLength: 2048 })
   .privateKey.export({ type: 'pkcs1', format: 'pem' })
   .toString()
+
+/**
+ * The commands that the local builder ran, with the fixture home hidden.
+ * The fixture home can itself start with /home/user, in a checkout of a
+ * cloud computer, so only a path of the image that no map reached counts.
+ */
+function unmappedCommands(fixture: {
+  home: string
+  provider: { mappedCommands: readonly string[] }
+}): string {
+  return fixture.provider.mappedCommands
+    .join('\n')
+    .replaceAll(fixture.home, '<fixture home>')
+}
+
 let harness: TestHarness
 beforeAll(async () => {
   harness = await createHarness()
@@ -137,9 +152,7 @@ it('clones default history and tags natively and refreshes captured clean folder
       'revoke',
       'finalize',
     ])
-    expect(fixture.provider.mappedCommands.join('\n')).not.toContain(
-      '/home/user',
-    )
+    expect(unmappedCommands(fixture)).not.toContain('/home/user')
     for (const secret of [
       INSTALLATION_TOKEN,
       privateKey,
@@ -186,9 +199,7 @@ it('clones an empty repository as a clean unborn default branch and revokes its 
     expect((await fixture.git('remote', 'get-url', 'origin')).toString()).toBe(
       'https://github.com/example/source-repository.git\n',
     )
-    expect(fixture.provider.mappedCommands.join('\n')).not.toContain(
-      '/home/user',
-    )
+    expect(unmappedCommands(fixture)).not.toContain('/home/user')
     expect(fixture.access.requests.map((request) => request.method)).toEqual([
       'POST',
       'DELETE',

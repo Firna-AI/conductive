@@ -1,6 +1,8 @@
 import { useRef, useState } from 'react'
 import { InputFrame } from '@firna/ui/input'
 import {
+  ArrowDown,
+  ArrowUp,
   ChevronDown,
   ChevronRight,
   FolderPlus,
@@ -11,15 +13,22 @@ import {
 } from 'lucide-react'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import styles from '../../../docs/mockups/src/components/workspaces/SectionList.module.css'
+import type { PointerDragProps } from '../../app/pointer-drag'
 import type { Section } from '../../shared/sections'
 import { IconButton } from '../ui/actions'
 import { MenuButton, type MenuEntry } from '../ui/Menu'
 import type { RowVariant } from './WorkspaceRow'
+import list from './list.module.css'
 
 /** The actions that a section's menu runs. */
 export interface SectionActions {
   toggle: (section: Section) => void
   rename: (section: Section, name: string) => void
+  /**
+   * Moves the section to `index` of the list, which counts the sections
+   * without the moved one.
+   */
+  moveTo: (section: Section, index: number) => void
   newWorkspace: (section: Section) => void
   newSection: () => void
   remove: (section: Section) => void
@@ -59,18 +68,55 @@ function RenameField(props: {
   )
 }
 
+/** Where a section is in the list: its index, and the number of sections. */
+export interface SectionPlace {
+  index: number
+  total: number
+}
+
+/** The items of the menu that move a section one place up or down. */
+function moveEntries(
+  section: Section,
+  place: SectionPlace,
+  moveTo: SectionActions['moveTo'],
+): MenuEntry[] {
+  const entries: MenuEntry[] = []
+  if (place.index > 0) {
+    entries.push({
+      kind: 'item',
+      label: 'Move section up',
+      icon: ArrowUp,
+      onSelect: () => moveTo(section, place.index - 1),
+    })
+  }
+  if (place.index < place.total - 1) {
+    entries.push({
+      kind: 'item',
+      label: 'Move section down',
+      icon: ArrowDown,
+      onSelect: () => moveTo(section, place.index + 1),
+    })
+  }
+  return entries
+}
+
 /**
  * The header of a section: its name, which collapses it, its count while
- * collapsed, and its menu with New workspace, Rename section, New section, and
- * Delete section. General, the default section, cannot be deleted. A
- * read-only list, as in a suspended org, shows no menu.
+ * collapsed, and its menu with New workspace, Rename section, Move section
+ * up, Move section down, New section, and Delete section. The first
+ * section has no Move section up, and the last has no Move section down.
+ * General, the default section, cannot be deleted. `bind` lets a drag of
+ * the name move the section. A read-only list, as in a suspended org,
+ * shows no menu and takes no drag.
  */
 export function SectionHeader(props: {
   section: Section
   count: number
+  place: SectionPlace
   variant: RowVariant
   actions: SectionActions
   readOnly: boolean
+  bind?: PointerDragProps
 }) {
   const { section, actions } = props
   const [renaming, setRenaming] = useState(false)
@@ -88,6 +134,7 @@ export function SectionHeader(props: {
       icon: Pencil,
       onSelect: () => setRenaming(true),
     },
+    ...moveEntries(section, props.place, actions.moveTo),
     {
       kind: 'item',
       label: 'New section',
@@ -127,8 +174,9 @@ export function SectionHeader(props: {
           />
         ) : (
           <button
+            {...props.bind}
             aria-expanded={!section.collapsed}
-            className={styles.toggle}
+            className={classes(styles.toggle, props.bind && list.headerDrag)}
             onClick={() => actions.toggle(section)}
             type="button"
           >

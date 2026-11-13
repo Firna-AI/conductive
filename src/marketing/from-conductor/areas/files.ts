@@ -27,7 +27,7 @@ export const filesFeatures: readonly ParityFeature[] = [
     area: 'files',
     name: 'File tabs and editor',
     status: 'different',
-    note: 'Files open in tabs with line numbers and syntax colours. Temporary preview tabs are planned, with editing and file search under consideration.',
+    note: 'Temporary file tabs keep scroll positions, line numbers, and syntax colours, and double-clicking keeps them. Editing and file search are under consideration.',
   },
   {
     id: 'markdown-and-html-previews',

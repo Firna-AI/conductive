@@ -82,7 +82,7 @@ gives the child pages of `app/attachments` and `app/files`, and the flow
 text of the message box. `app/attachments/drop` shows a drop of files into
 the text, a dropped folder that attaches as its zip, and a folder that the
 browser cannot read, which the box does not attach.
-`app/attachments/open` shows the file tab that a press on a sent chip
+`app/attachments/open` shows the temporary tab that a press on a sent chip
 opens, with the picture of the screenshot. The other child pages show a
 failed upload, a file over 100 MB, the sent message, and the files of a
 queued first message. `app/files/image` shows the picture of an image file
@@ -130,8 +130,10 @@ a dropped folder that the browser cannot read. [The chat](design-chat.md) gives 
   screen declares its states in `src/screens/routineState.ts` in the same
   way. The tab and composer states of the workspace screen live in
   `src/screens/chatStates.ts`. `tabStates` covers the session, file, and
-  image tabs of the centre column. `composerStates` covers the composer,
-  with its links, mentions, attached files, and drops.
+  image tabs of the centre column. `temporaryTabStates` covers the
+  temporary tab, which `src/screens/workspaceTemporaryTab.ts` draws in the
+  row. `composerStates` covers the composer, with its links, mentions,
+  attached files, and drops.
 - A flow (`defineUseCase`) lists the paths of existing screens. Each screen
   that a flow uses names the flow in `useCasePaths`.
 - Screens link to each other with `ScreenLink` from
@@ -143,6 +145,10 @@ a dropped folder that the browser cannot read. [The chat](design-chat.md) gives 
   tokens through the `--ui-*` variables that the renderer writes.
 - Controls come from `@firna/ui`. A control without a handler renders as
   disabled, so the screens pass `noop` from `src/noop.ts`.
+- A switch at the end of a menu row, such as Fast in the model menu, is a
+  picture, not a control. `SwitchPicture` in `src/components/common/` draws
+  it with the switch styles of `@firna/ui`, and the row owns the
+  `menuitemcheckbox` role.
 
 ## Orgs and members
 

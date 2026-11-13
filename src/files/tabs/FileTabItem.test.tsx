@@ -1,7 +1,9 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { expect, it } from 'vitest'
+import styles from '../../../docs/mockups/src/components/workspace/WorkspaceTabs.module.css'
 import { testNavigation } from '../files-test-kit'
-import { FileTabItem } from './FileTabItem'
+import type { FilesTab } from '../navigation'
+import { FileTabItem, LiftedFileTab } from './FileTabItem'
 
 const path = 'scripts/seed-acme-7f3k.sql'
 const label = 'scripts/seed-[redacted].sql'
@@ -61,5 +63,50 @@ it('names a tab by the label of its path, links it to the real path, and offers 
       text: 'File',
       leaks: false,
     },
+  })
+})
+
+it('draws the title of the temporary tab in italics and names it with "temporary" after its name, while its text, Close, and the lifted copy keep the name alone', () => {
+  const draw = (tab: FilesTab) =>
+    renderToStaticMarkup(
+      <FileTabItem
+        label={label}
+        navigation={testNavigation()}
+        onClose={() => {}}
+        selected={false}
+        tab={tab}
+        temporary
+      />,
+    )
+  const file = draw({ kind: 'file', path, mode: 'preview' })
+  const diff = draw({ kind: 'diff', path })
+  const lifted = renderToStaticMarkup(
+    <LiftedFileTab label={label} tab={{ kind: 'diff', path }} temporary />,
+  )
+  const italic = `<span class="${styles.title} ${styles.temporary}">seed-[redacted].sql</span>`
+  const names = (html: string) =>
+    [...html.matchAll(/aria-label="([^"]*)"/g)].map((m) => m[1])
+  expect({
+    file: {
+      italic: file.includes(italic),
+      text: file.replace(/<[^>]+>/g, ''),
+      names: names(file),
+    },
+    diff: { italic: diff.includes(italic), names: names(diff) },
+    lifted: lifted.includes(italic),
+  }).toEqual({
+    file: {
+      italic: true,
+      text: 'seed-[redacted].sql',
+      names: ['seed-[redacted].sql, temporary', 'Close seed-[redacted].sql'],
+    },
+    diff: {
+      italic: true,
+      names: [
+        'seed-[redacted].sql changes, temporary',
+        'Close seed-[redacted].sql changes',
+      ],
+    },
+    lifted: true,
   })
 })

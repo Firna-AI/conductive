@@ -1,1 +1,1 @@
-{ "order": ["changes", "code", "markdown", "diff", "image"] }
+{ "order": ["changes", "code", "markdown", "diff", "image", "temporary"] }

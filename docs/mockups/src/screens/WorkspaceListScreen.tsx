@@ -69,15 +69,17 @@ export const workspaceListSchema = {
       ],
     },
     /**
-     * The menu of a section, a workspace dragged, the org switcher, or
-     * the org switcher of an operator, which adds Operator. Or a state of
-     * the menu of a workspace row, which the lists of Acme draw.
+     * The menu of a section, a workspace dragged, a section dragged, the
+     * org switcher, or the org switcher of an operator, which adds
+     * Operator. Or a state of the menu of a workspace row, which the lists
+     * of Acme draw.
      */
     menu: {
       enum: [
         'none',
         'section',
         'drag',
+        'drag-section',
         'orgs',
         'operator',
         ...workspaceMenuStates,

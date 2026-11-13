@@ -13,6 +13,7 @@ const codex: AgentChoice = {
   agent: 'codex',
   model: 'GPT-6.1 Sol',
   effort: 'medium',
+  fast: false,
 }
 
 /** Answers each model change in turn: the first answer gets lost on the way. */

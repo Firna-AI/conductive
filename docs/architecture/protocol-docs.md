@@ -22,6 +22,9 @@ This page lists each protocol doc and what it covers.
   - [Workspace menu](../protocol/workspace-menu.md): the menu of a workspace
     row, which moves, reassigns, renames, and archives the workspace.
   - [Workspace tools](../protocol/workspace-tools.md)
+    - [Temporary tabs](../protocol/temporary-tabs.md): the one file or diff
+      tab that the next press replaces, what opens and keeps it, and its
+      mark in the saved view.
     - [Port previews](../protocol/port-previews.md): detected servers, manual
       opening, preview tabs, and the relay requirement.
 - [Chat and events](../protocol/chat-and-events.md): sessions, messages, what
@@ -31,6 +34,9 @@ This page lists each protocol doc and what it covers.
       limit, the upload, the storage, the copy into the cloud computer, and
       the deletion of the files of a message, and their chips and their
       drop in the message field.
+    - [Fast mode](../protocol/fast-mode.md): the Fast switch of the model
+      menu, the models that show it, who may turn it on, and the speed of a
+      turn that cannot run fast.
   - [File mentions](../protocol/file-mentions.md): the list of `@` in the
     composer, the chips of files and folders, the sent chips of attached
     files, and the removal of each chip of the composer.

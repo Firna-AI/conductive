@@ -33,6 +33,11 @@ export type WorkspaceTab = {
   /** The screen that the tab shows, when the mockups draw it. */
   to?: string
   selected: boolean
+  /**
+   * The temporary tab, from decision 284: the next press on a file or a
+   * diff replaces its file. Only its title changes, in italics.
+   */
+  temporary?: boolean
 }
 
 /** The open menu of a tab: beside it, or in a sheet that the screen draws. */
@@ -47,12 +52,24 @@ const icons: Readonly<Record<TabKind, LucideIcon>> = {
   terminal: SquareTerminal,
 }
 
+/**
+ * The icon and the title of a tab, in the row and on the lifted copy of a
+ * drag. The title of the temporary tab shows in italics, and a screen
+ * reader hears "temporary" after it, because the italics carry the state
+ * only for the eye. The tab menu and the move messages keep the title.
+ */
 function TabContent(props: { tab: WorkspaceTab }) {
-  const Icon = icons[props.tab.kind]
+  const { tab } = props
+  const Icon = icons[tab.kind]
   return (
     <>
       <Icon aria-hidden className={styles.icon} size={13} />
-      <span className={styles.title}>{props.tab.title}</span>
+      <span
+        className={classes(styles.title, tab.temporary && styles.temporary)}
+      >
+        {tab.title}
+      </span>
+      {tab.temporary ? <span className={a11y.hidden}>, temporary</span> : null}
     </>
   )
 }
@@ -75,7 +92,8 @@ function TabLabel(props: { tab: WorkspaceTab; children: ReactNode }) {
 /**
  * One tab of the row: its icon, its title, and its close button. While a
  * drag lasts, the dragged tab stays at its place as a faint copy, which
- * links nowhere. A tab with an open menu shows the menu below it. A tab
+ * links nowhere. The temporary tab keeps its italics in both copies of a
+ * drag. A tab with an open menu shows the menu below it. A tab
  * that renames its session shows the rename field in place of its label
  * and its close button. The field marks the tab, so the tab keeps a fill
  * only when it is the shown tab. A tab that cannot close, such as the last

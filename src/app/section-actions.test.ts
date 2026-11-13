@@ -7,6 +7,7 @@ import { workspaceFixtures } from '../test-support/fixtures/workspaces'
 import { OrgModel } from './org-model'
 import {
   deleteSection,
+  moveSection,
   moveToSection,
   setSectionCollapsed,
 } from './section-actions'
@@ -37,6 +38,14 @@ function rows(model: OrgModel) {
       group.workspaces.map((workspace) => workspace.id),
     ]),
   )
+}
+
+/** The sections of the list, in the order that it shows them. */
+function order(model: OrgModel) {
+  return groupWorkspaces(
+    valueOf(model.sections.get()) ?? [],
+    valueOf(model.workspaces.get()) ?? [],
+  ).sections.map((group) => group.section.id)
 }
 
 function sectionOf(model: OrgModel, sectionId: string) {
@@ -89,6 +98,36 @@ describe('section actions', () => {
     })
   })
 
+  test('a section move sends its index, and the list shows the new order before the answer', async () => {
+    const server = new FakeApiServer()
+    const held = new HeldRequests(server)
+    const path = sectionPath(org, 'infra')
+    const infra = coreFixtures().sectionList.sections[2]
+    server.json('PATCH', path, { section: { ...infra, position: 0 } })
+    const model = await loaded(server, held)
+    held.hold('PATCH', path)
+    const moving = moveSection(model, 'infra', 0)
+    expect(order(model)).toEqual(['infra', 'general', 'checkout'])
+    held.release('PATCH', path)
+    await moving
+    expect(await server.requests.at(-1)?.json()).toEqual({ position: 0 })
+    expect(order(model)).toEqual(['infra', 'general', 'checkout'])
+  })
+
+  test('a section move that the server refuses puts the order back', async () => {
+    const server = new FakeApiServer()
+    const held = new HeldRequests(server)
+    const path = sectionPath(org, 'general')
+    server.json('PATCH', path, refused, 500)
+    const model = await loaded(server, held)
+    held.hold('PATCH', path)
+    const moving = moveSection(model, 'general', 1).catch(caught)
+    expect(order(model)).toEqual(['checkout', 'general', 'infra'])
+    held.release('PATCH', path)
+    expect(await moving).toMatchObject({ code: 'server_error' })
+    expect(order(model)).toEqual(['general', 'checkout', 'infra'])
+  })
+
   test('a collapse that the server refuses comes back', async () => {
     const server = new FakeApiServer()
     server.json('PATCH', sectionPath(org, 'checkout'), refused, 500)
@@ -105,7 +144,7 @@ describe('section actions', () => {
     )
   })
 
-  test('a failed collapse takes back only the collapse, and keeps a move and an update from its wait', async () => {
+  test('a failed collapse takes back only the collapse, and keeps a move and an update from its wait, which goes out after it', async () => {
     const server = new FakeApiServer()
     const held = new HeldRequests(server)
     const collapse = sectionPath(org, 'checkout')
@@ -119,10 +158,18 @@ describe('section actions', () => {
     const collapsing = setSectionCollapsed(model, 'checkout', true).catch(
       caught,
     )
-    await moveToSection(model, 'email-dark-mode', 'checkout', 0)
+    const moving = moveToSection(model, 'email-dark-mode', 'checkout', 0)
     model.putWorkspace({ ...fixture(FAKE_IDS.workspace), state: 'working' })
+    const sentBefore = server.requests.length
     held.release('PATCH', collapse)
     expect(await collapsing).toMatchObject({ code: 'server_error' })
+    await moving
+    expect(
+      server.requests.slice(sentBefore).map((request) => request.url),
+    ).toEqual([
+      expect.stringContaining(collapse),
+      expect.stringContaining(workspacePath(org, 'email-dark-mode')),
+    ])
     expect({
       checkout: rows(model).checkout,
       collapsed: sectionOf(model, 'checkout')?.collapsed,

@@ -8,6 +8,7 @@ import mac from '../../../docs/mockups/src/components/settings/ThisMacSection.mo
 import { ActionButton } from '../ui/actions'
 import { timeLeft } from '../../shared/transcript/command-words'
 import type { SettingsChange } from './device-api'
+import { AllowedCommand } from './AllowedCommand'
 import { LiteralText } from './LiteralText'
 import local from './device.module.css'
 import type { MacSettingsController } from './mac-settings'
@@ -103,7 +104,7 @@ export function SavedChoices(props: {
         <ul aria-label="Always allowed commands" className={mac.list}>
           {settings.alwaysAllowedCommands.map((command) => (
             <li className={mac.row} key={command}>
-              <LiteralText className={local.command} text={command} />
+              <AllowedCommand command={command} />
               <ActionButton
                 accessibilityLabel={`Remove ${command}`}
                 {...control({ action: 'remove-command', command })}

@@ -18,6 +18,7 @@ it('waits for a deferred model close before Stop or shutdown ends the turn', asy
       agent: 'claude',
       model: 'next-model',
       effort: 'max',
+      fast: false,
     }
     await h.engine.command({
       ...duringTurn(next),
@@ -75,7 +76,12 @@ it('waits for a deferred model close before Stop or shutdown ends the turn', asy
         sessionId: 'session-1',
         turnId: 'turn-1',
         senderId: 'alice',
-        choice: { agent: 'claude', model: 'test-model', effort: 'high' },
+        choice: {
+          agent: 'claude',
+          model: 'test-model',
+          effort: 'high',
+          fast: false,
+        },
         startedAt: 100,
         messageIds: ['message-1'],
       },

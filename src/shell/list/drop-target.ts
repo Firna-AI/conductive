@@ -8,9 +8,9 @@ export interface DropTarget {
 type ElementRef = (node: HTMLElement | null) => void
 
 /**
- * The boxes of one list that a drag measures. The list gives each section
- * and each row to the layout through a callback ref, so the drag reads only
- * the elements of its own list.
+ * The boxes of one list that a drag of a row or of a section measures.
+ * The list gives each section and each row to the layout through a
+ * callback ref, so the drag reads only the elements of its own list.
  */
 export class DropLayout {
   private readonly sections = new Map<string, HTMLElement>()
@@ -33,6 +33,23 @@ export class DropLayout {
         this.rows.delete(workspaceId)
       }
     }
+  }
+
+  /**
+   * The place of a dragged section under the pointer: the index before the
+   * first other section whose middle is below it. The index counts the
+   * sections without the dragged one.
+   */
+  sectionIndexAt(sectionId: string, y: number): number {
+    const middles = [...this.sections]
+      .filter(([id]) => id !== sectionId)
+      .map(([, element]) => {
+        const box = element.getBoundingClientRect()
+        return box.top + box.height / 2
+      })
+      .sort((a, b) => a - b)
+    const index = middles.findIndex((middle) => y < middle)
+    return index === -1 ? middles.length : index
   }
 
   /**
