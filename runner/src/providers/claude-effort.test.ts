@@ -1,6 +1,10 @@
 import { expect, it } from 'vitest'
 
-import { claudeEffortSettings, claudeStartOptions } from './claude-effort'
+import {
+  claudeEffortSettings,
+  claudeStart,
+  claudeStartOptions,
+} from './claude-effort'
 
 it('starts Ultra at the max level with Ultracode on', () => {
   expect(claudeStartOptions('ultra')).toEqual({
@@ -26,4 +30,23 @@ it('names Ultracode in each effort change', () => {
     effortLevel: null,
     ultracode: false,
   })
+})
+
+it('starts Claude with fast mode beside the settings of its effort', () => {
+  expect(
+    claudeStart({
+      agent: 'claude',
+      model: 'opus',
+      effort: 'ultra',
+      fast: true,
+    }),
+  ).toEqual({ effort: 'max', settings: { ultracode: true, fastMode: true } })
+  expect(
+    claudeStart({
+      agent: 'claude',
+      model: 'opus',
+      effort: 'none',
+      fast: false,
+    }),
+  ).toEqual({ thinking: { type: 'disabled' }, settings: { fastMode: false } })
 })

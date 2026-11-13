@@ -29,10 +29,10 @@ import { WorkspaceGitHub } from './github/WorkspaceGitHub'
 import { HeaderNoticeBars } from './HeaderNoticeBars'
 import { archivedRestore, contentState, sandboxView } from './sandbox-view'
 import { SandboxPanel } from './SandboxNotice'
+import { MissingWorkspace, useRememberWorkspace } from './remember-workspace'
 import { OpenSessionAddress } from './session-address'
 import { shownWorkspaces } from './tab-memory'
 import { ToolsPart } from './tools/ToolsPart'
-import { Unavailable } from './Unavailable'
 import { useArchiveActions } from './useArchiveActions'
 import { PhoneTabBar, phoneView, RightColumn } from './WorkspaceColumns'
 import { WorkspaceHeader } from './WorkspaceHeader'
@@ -90,6 +90,15 @@ export function WorkspaceScreen(props: {
   const theme = useSharedUiTheme()
   const resume = useAction(() => model.resume(), "The sandbox didn't start.")
   const lifecycle = useArchiveActions(props.org.id, props.viewer)
+  useRememberWorkspace(
+    {
+      orgId: props.org.id,
+      workspaceId: props.workspaceId,
+      view: props.view,
+      session: props.session,
+    },
+    detail,
+  )
   // Restore ends at its last day while the page shows, with no other event.
   const passed = usePassedDeadlines([
     detail.state === 'ready' ? detail.value.workspace.restoreUntil : null,
@@ -108,9 +117,9 @@ export function WorkspaceScreen(props: {
   if (detail.state === 'failed') {
     if (detail.error.status === 404) {
       return (
-        <Unavailable
-          body="It may have moved to another org."
+        <MissingWorkspace
           orgId={props.org.id}
+          workspaceId={props.workspaceId}
         />
       )
     }

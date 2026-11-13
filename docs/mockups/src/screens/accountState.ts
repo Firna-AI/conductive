@@ -27,6 +27,7 @@ export const accountSchema = {
     'shortcutSearch',
     'shortcuts',
     'host',
+    'modelMenu',
     'deletedOrgs',
   ],
   properties: {
@@ -123,6 +124,11 @@ export const accountSchema = {
      */
     host: { enum: browserHosts },
     /**
+     * The Model and effort picker of Preferences: closed, or open with
+     * fast mode on.
+     */
+    modelMenu: { enum: ['closed', 'open-fast'] },
+    /**
      * The orgs that the user deleted and can still restore: none, so the
      * General tab has no Deleted orgs section, Acme Labs with Restore, Acme
      * Labs after the operator suspended it, or a Restore that failed.
@@ -160,6 +166,7 @@ export const accountGeneral: AccountState = {
   shortcutSearch: 'none',
   shortcuts: 'default',
   host: 'chrome-mac',
+  modelMenu: 'closed',
   deletedOrgs: 'none',
 }
 

@@ -12,7 +12,7 @@ import {
 export const WORKSPACE_CALLS = [
   {
     name: 'create_workspace',
-    description: `Create a workspace with this workspace's owner and start its first message. ${writeAccess} Omitted choices use the owner's defaults. The reply gives the workspace number and link, and the first session link. ${toolContext}`,
+    description: `Create a workspace with this workspace's owner and start its first message. ${writeAccess} Omitted model and effort use the owner's defaults. Fast mode requires explicit fast: true for a marked model. The reply gives the workspace number and link, and the first session link. ${toolContext}`,
     inputSchema: {
       type: 'object',
       properties: {

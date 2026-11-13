@@ -7,7 +7,8 @@ import {
   type AgentModel,
   type Effort,
 } from '../../shared/agents'
-import { effortFor } from '../state/format'
+import type { ShortcutHint } from '../../shell/shortcuts/shortcut-hints'
+import { effortFor, fastFor } from '../state/format'
 import type { MenuEntry } from '../ui/Menu'
 
 const agentOrder: readonly Agent[] = ['claude', 'codex']
@@ -25,20 +26,30 @@ export function effortsOf(
   )
 }
 
+/** The Fast row of the menu: what a change of it does, and its key. */
+export interface FastRow {
+  /** Turns fast mode on or off. The menu stays open. */
+  readonly toggle: () => void
+  /** The key of Fast mode, which the row shows at its end, if any. */
+  readonly hint?: ShortcutHint
+}
+
 /**
  * The menu of the model picker: the models of each agent as a group, with
- * no brand name, then the effort levels of the chosen model. The menu marks
- * the current model and effort. When the session has messages, each model of
+ * no brand name, then the effort levels of the chosen model, then the Fast
+ * switch of a model that the model list marks as fast. The menu marks the
+ * current model and effort. When the session has messages, each model of
  * the other agent opens a new session, and the draft moves there
  * (decision 51). The external link icon marks each of those models, and a
  * screen reader says "New session" for it. A model of the session's own
- * agent stays in it.
+ * agent stays in it. A model keeps fast mode only when it has fast mode.
  */
 export function modelMenu(
   models: readonly AgentModel[],
   choice: AgentChoice,
   sessionAgent: Agent | undefined,
   choose: (choice: AgentChoice) => void,
+  fast: FastRow,
 ): MenuEntry[] {
   const entries: MenuEntry[] = []
   const groups = agentOrder
@@ -61,6 +72,7 @@ export function modelMenu(
             agent,
             model: model.model,
             effort: effortFor(model, choice.effort),
+            fast: fastFor(model, choice.fast),
           }),
       })
     }
@@ -74,6 +86,16 @@ export function modelMenu(
       label: effortLabels[effort],
       checked: effort === choice.effort,
       onSelect: () => choose({ ...choice, effort }),
+    })
+  }
+  if (findModel(models, choice)?.fast === true) {
+    entries.push(divider, {
+      kind: 'switch',
+      key: 'fast',
+      label: 'Fast',
+      on: choice.fast,
+      onToggle: fast.toggle,
+      shortcut: fast.hint,
     })
   }
   return entries

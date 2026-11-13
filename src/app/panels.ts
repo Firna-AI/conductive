@@ -45,8 +45,8 @@ function readWidth(storage: KeyValueStorage | null, panel: Panel) {
  * The layout of the panels that the user chooses: the widths of the
  * sidebar and the right column, the split of the right column between the
  * file lists and the tools, and whether the right column shows. The
- * browser keeps the widths and the split, as the only state that does not
- * come from the Worker. When the browser refuses its storage, they last
+ * browser keeps the widths and the split, as it keeps the last workspaces
+ * of `last-workspaces.ts`. When the browser refuses its storage, they last
  * until the page closes. Whether the right column shows always lasts until
  * the page closes.
  */

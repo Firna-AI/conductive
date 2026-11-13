@@ -120,7 +120,12 @@ test('page returns share one account read and keep login and preference changes 
       (line) => line === `GET ${ACCOUNT_PATHS.account}`,
     ),
   ).toHaveLength(2)
-  const choice = { agent: 'codex', model: 'new-model', effort: 'high' } as const
+  const choice = {
+    agent: 'codex',
+    model: 'new-model',
+    effort: 'high',
+    fast: false,
+  } as const
   server.json('PUT', ACCOUNT_PATHS.defaultModel, { choice })
   await app.account.setDefaultChoice(choice)
   await app.account.removeLogin('claude')

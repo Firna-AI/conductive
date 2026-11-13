@@ -35,6 +35,7 @@ export interface WorkspaceRow {
   agent: Workspace['choice']['agent']
   model: string
   effort: Workspace['choice']['effort']
+  fast: number
   sessionId: string
   firstTurnId: string
 }
@@ -48,7 +49,7 @@ const columns = `w.id, w.number, w.org_id AS orgId, w.repository_id AS repositor
   w.provider_account AS providerAccount, w.state, w.github_summary AS github,
   w.created_at AS createdAt, w.updated_at AS updatedAt, w.archived_at AS archivedAt,
   w.stopped_at AS stoppedAt, w.next_disk_keepalive_at AS nextDiskKeepaliveAt,
-  r.agent, r.model, r.effort, r.session_id AS sessionId, r.first_turn_id AS firstTurnId`
+  r.agent, r.model, r.effort, r.fast, r.session_id AS sessionId, r.first_turn_id AS firstTurnId`
 
 export async function readWorkspace(
   db: D1Database,
@@ -97,7 +98,12 @@ export function workspaceRecord(row: WorkspaceRow): Omit<Workspace, 'link'> {
     },
     name: row.name,
     branch: row.branch,
-    choice: { agent: row.agent, model: row.model, effort: row.effort },
+    choice: {
+      agent: row.agent,
+      model: row.model,
+      effort: row.effort,
+      fast: row.fast === 1,
+    },
     state: row.state,
     github: row.github,
     createdAt: row.createdAt,
@@ -178,8 +184,8 @@ export async function insertWorkspace(
       ),
     db
       .prepare(
-        `INSERT INTO workspace_runtime (workspace_id, org_id, created_by_user_id, session_id, first_turn_id, agent, model, effort, first_message_id, repository_locations_json)
-       SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ? WHERE EXISTS (SELECT 1 FROM workspaces WHERE id = ?)`,
+        `INSERT INTO workspace_runtime (workspace_id, org_id, created_by_user_id, session_id, first_turn_id, agent, model, effort, fast, first_message_id, repository_locations_json)
+       SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? WHERE EXISTS (SELECT 1 FROM workspaces WHERE id = ?)`,
       )
       .bind(
         input.id,
@@ -190,6 +196,7 @@ export async function insertWorkspace(
         input.message.choice.agent,
         input.message.choice.model,
         input.message.choice.effort,
+        input.message.choice.fast ? 1 : 0,
         input.message.id,
         input.repositoryLocations
           ? JSON.stringify(input.repositoryLocations)

@@ -193,6 +193,7 @@ export const shortcutCommands: readonly ShortcutCommand[] = [
   command('attach-files', 'Chat', 'workspace', 'Attach files', ['upload']),
   command('model-picker', 'Chat', 'workspace', 'Model picker'),
   command('next-effort', 'Chat', 'workspace', 'Next effort level'),
+  command('fast-mode', 'Chat', 'workspace', 'Fast mode'),
   command('stop-agent', 'Chat', 'workspace', 'Stop the agent', ['cancel']),
   command(
     'copy-concise-transcript',

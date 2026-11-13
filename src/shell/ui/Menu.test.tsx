@@ -69,3 +69,59 @@ describe('menus', () => {
     })
   })
 })
+
+/** Opens a busy menu, presses its first row, and reports what happened. */
+async function pressBusyRow(viewport: Viewport) {
+  const selected: string[] = []
+  const app = await startedApp(new FakeApiServer())
+  const view = mountScreen(
+    app,
+    <OverlayHost>
+      <MenuButton
+        busy
+        entries={[
+          {
+            kind: 'item',
+            label: 'Rename',
+            onSelect: () => selected.push('Rename'),
+          },
+        ]}
+        label="Checkout menu"
+        trigger={(state) => (
+          <button onClick={state.toggle} type="button">
+            More
+          </button>
+        )}
+      />
+    </OverlayHost>,
+    { viewport },
+  )
+  const trigger = view.querySelector('button')
+  if (!trigger) throw new Error('The menu has no trigger.')
+  click(trigger)
+  // The menu of an earlier case can still be open, so take the newest row.
+  const row = [...document.querySelectorAll('[role="menuitem"]')]
+    .filter((element) => element.textContent === 'Rename')
+    .at(-1)
+  if (!(row instanceof HTMLButtonElement)) throw new Error('No Rename row.')
+  click(row)
+  return {
+    ariaDisabled: row.getAttribute('aria-disabled'),
+    disabled: row.disabled,
+    selected,
+    open: row.isConnected,
+  }
+}
+
+test('a busy menu keeps its rows focusable but ignores a press, on desktop and on the phone sheet', async () => {
+  const busy = {
+    ariaDisabled: 'true',
+    disabled: false,
+    selected: [],
+    open: true,
+  }
+  expect({
+    desktop: await pressBusyRow('desktop'),
+    phone: await pressBusyRow('phone'),
+  }).toEqual({ desktop: busy, phone: busy })
+})

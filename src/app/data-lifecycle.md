@@ -79,10 +79,13 @@ of the data that the screens read and write.
 - A save can answer with the whole value, such as the repositories or
   computer settings. Its answer counts from its arrival. A read that
   started before it changes nothing.
-- The saves of one value go out one at a time. The next save starts after
-  the answer of the one before, because an answer carries no order of its
-  own. A failed save rejects only its own caller, and the next save goes.
-  List writes do not wait for each other.
+- The writes and saves of one value go out one at a time. The next one
+  starts after the answer of the one before, because an answer carries no
+  order of its own. So two quick list writes of one field, such as two
+  moves of a section or a collapse and then an open, reach the server in
+  the order that the page shows them. Each write still shows at once. A
+  failed write or save rejects only its own caller, and the next one goes.
+  A request that does not answer holds the later ones of its value.
 - A repository save adds or removes that repository only. It keeps the
   choices from other saves and other clients. The save queue keeps an add
   before a later remove of the same repository.

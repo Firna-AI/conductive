@@ -102,6 +102,10 @@ holds how an agent action of the pull request bar sends its fixed prompt.
   missing. An empty list was rejected, because it says that the turn
   changed no files. A failed turn was rejected, because it shows a failure
   for finished work.
+- When a turn with fast mode on ran at standard speed, its end shows
+  "Standard speed" and the cause, as
+  [The speed of a turn](fast-mode.md#the-speed-of-a-turn) says. The turn
+  still shows as finished or stopped.
 - A tool detail and a turn file list give a count of data that their limits omit.
 - A refused runner event shows one chat line that names the lost data, unless
   it is a [lost workspace update](agent-runner.md#lost-workspace-updates).
@@ -128,6 +132,23 @@ holds how an agent action of the pull request bar sends its fixed prompt.
 - Reason: the user who sends a message wants to see it and its answer. A
   scroll for each message of the workspace was rejected, because it takes
   the place of a reader who reads an earlier part of the chat.
+- Each session tab keeps the reader's place while another tab, another
+  workspace, or another page of the app shows. When the tab shows again, the
+  row that the user read is at the same place. A chat that was at the bottom
+  shows the bottom again, with the output that came in the meantime. When
+  the read row is gone, the chat shows the bottom.
+- The places stay while the browser tab keeps the workspace. A reload
+  forgets them, and each chat then opens at the bottom.
+- Reason: the user who looks at another tab comes back to read on. A saved
+  scroll offset was rejected, because output that comes in the meantime
+  moves the read row. A place that stays after a reload was rejected,
+  because it needs browser storage that each sign-out must clear. The user
+  chose both on 13 November 2026.
+- A session tab that closes forgets its place, also when another member
+  closes its session. When the session opens again, such as from the
+  session history, it shows the bottom.
+- Reason: a reopened tab is a new tab to the user. The user chose this on
+  13 November 2026.
 
 ### The work of a turn
 

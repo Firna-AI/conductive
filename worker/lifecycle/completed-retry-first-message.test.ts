@@ -72,7 +72,12 @@ it('retries a completed create with the admitted first message after initial cha
     id: original.id,
     text: 'Changed retry instructions.',
     attachmentIds: ['attachment-edited'],
-    choice: { agent: 'claude', model: 'claude-sonnet-4-6', effort: 'medium' },
+    choice: {
+      agent: 'claude',
+      model: 'claude-sonnet-4-6',
+      effort: 'medium',
+      fast: false,
+    },
   }
   const response = await fixture.run(create)
   expect(response?.status).toBe(201)
