@@ -18,9 +18,11 @@ to `github.com` gets a credential. Git needs a current turn. The `token`
 mode reads no stdin and permits an empty turn for the GitHub CLI.
 Other operations and hosts succeed without credentials or a request.
 
-The native environment reader loads `/run/ascii-secrets/env.sh` in a child
-shell. It reads the machine origin and `WORKSPACE_TOKEN` from that shell.
-It reads `CONDUCTIVE_TURN_ID` from the caller before it loads the file.
+The executable supplies the `Environment` boundary through its shared
+saved-settings reader. That reader loads `/run/ascii-secrets/env.sh` in a
+child shell and reads the machine origin and `WORKSPACE_TOKEN`.
+The credential policy reads `CONDUCTIVE_TURN_ID` from the caller before
+it loads the file. A saved turn never replaces the caller's turn.
 
 The native HTTP transport requires an HTTPS origin without credentials,
 path, query, or fragment. It posts to `/v1/git/credential` with a bearer
@@ -59,7 +61,7 @@ use a local HTTPS server and a temporary certificate. No GitHub login is needed.
 
 - [service.rs](src/service.rs): `Credential` and `CredentialService` own credential policy.
 - [ports.rs](src/ports.rs): settings, HTTP, and protocol stream boundaries.
-- [environment.rs](src/environment.rs): `NativeEnvironment` loads saved settings.
+- [Shared settings](../cnd-cli/src/environment.rs): the executable's `NativeEnvironment` implements the settings boundary.
 - [http.rs](src/http.rs): `NativeHttp` enforces the endpoint and transport rules.
 - [streams.rs](src/streams.rs): native protocol input and output.
 

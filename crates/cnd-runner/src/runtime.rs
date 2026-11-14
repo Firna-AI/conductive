@@ -14,6 +14,7 @@ use crate::link::ports::{LinkUpdate, RunnerLink};
 use crate::state::store::EventStore;
 
 /// File and turn owners receive commands without blocking socket confirmations.
+#[cfg_attr(test, unimock::unimock(api = CommandHandlerMock))]
 #[async_trait]
 pub trait CommandHandler: Send + Sync {
     /// Start warm-up and offline report schedules before the first connection attempt.
@@ -65,6 +66,7 @@ impl RunnerCore {
         jobs: &mut JoinSet<(u64, Result<()>)>,
         round: u64,
     ) {
+        let mut step = self.link.step();
         loop {
             tokio::select! {
                 biased;
@@ -73,22 +75,29 @@ impl RunnerCore {
                     match finished {
                         Some(Ok((job_round, Err(_)))) => {
                             tracing::warn!("The runner command could not finish.");
-                            if job_round == round { let _ = self.link.close().await; return; }
+                            if job_round == round {
+                                drop(step);
+                                let _ = self.link.close().await;
+                                return;
+                            }
                         },
                         Some(Err(_)) => tracing::warn!("The runner command task could not finish."),
                         _ => {},
                     }
                 },
-                update = self.link.step() => match update {
-                    Ok(LinkUpdate::Connected) => {
-                        let connected = self.handler.connected();
-                        jobs.spawn(async move { (round, connected.await) });
-                    },
-                    Ok(LinkUpdate::Command(command)) => {
-                        if self.handler.command(*command).is_err() { tracing::warn!("The runner command could not finish."); }
-                    },
-                    Ok(LinkUpdate::Progress) => {},
-                    Ok(LinkUpdate::Disconnected) | Err(_) => return,
+                update = &mut step => {
+                    match update {
+                        Ok(LinkUpdate::Connected) => {
+                            let connected = self.handler.connected();
+                            jobs.spawn(async move { (round, connected.await) });
+                        },
+                        Ok(LinkUpdate::Command(command)) => {
+                            if self.handler.command(*command).is_err() { tracing::warn!("The runner command could not finish."); }
+                        },
+                        Ok(LinkUpdate::Progress) => {},
+                        Ok(LinkUpdate::Disconnected) | Err(_) => return,
+                    }
+                    step = self.link.step();
                 },
             }
         }

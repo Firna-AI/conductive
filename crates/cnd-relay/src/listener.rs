@@ -12,6 +12,7 @@ pub trait Socket: AsyncRead + AsyncWrite + Unpin + Send {}
 impl<T: AsyncRead + AsyncWrite + Unpin + Send> Socket for T {}
 
 /// Listening socket boundary.
+#[cfg_attr(test, unimock::unimock(api = ListenerMock))]
 #[async_trait]
 pub trait Listener: Send + Sync {
     /// Port checked against the request's private hostname.

@@ -1,3 +1,4 @@
-//! Sandbox software update engine used by the Conductive command.
+//! Shared sandbox settings and update engine for the Conductive command.
 
+pub mod environment;
 pub mod update;

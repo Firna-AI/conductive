@@ -1,11 +1,13 @@
 //! Staged downloads and restart-time activation of sandbox releases.
 
 pub mod disk;
+mod download;
 pub mod engine;
 pub mod error;
+pub mod http;
 pub mod ports;
 pub mod process;
-mod staging;
+pub mod staging;
 mod state;
 
 #[cfg(test)]
@@ -14,6 +16,9 @@ mod apply_tests;
 #[cfg(test)]
 #[path = "_tests_/check_tests.rs"]
 mod check_tests;
+#[cfg(test)]
+#[path = "_tests_/parts_tests.rs"]
+mod parts_tests;
 
 #[cfg(test)]
 #[path = "_tests_/support.rs"]

@@ -9,9 +9,8 @@ use crate::error::{Error, Result};
 
 /// One independently downloaded release part, besides the program itself.
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
-#[serde(deny_unknown_fields)]
 pub struct Part {
-    /// Stable installation role, for example `runner` or `node`.
+    /// Stable installation role, for example `sdk-helper` or `node`.
     pub name: String,
     /// Absolute HTTPS URL of the unchanged archive.
     pub url: String,
@@ -25,7 +24,6 @@ mod parts_tests;
 
 /// Version 1 of the embedded and published parts file.
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
-#[serde(deny_unknown_fields)]
 pub struct PartsList {
     /// Format version. Readers refuse versions they do not support.
     pub schema_version: u32,
@@ -34,6 +32,18 @@ pub struct PartsList {
 }
 
 impl PartsList {
+    /// Check the roles required by the release that will use these parts.
+    pub fn require(&self, names: &[&str]) -> Result<()> {
+        for name in names {
+            if !self.parts.iter().any(|part| part.name == *name) {
+                return Err(Error::MissingPart {
+                    name: (*name).to_owned(),
+                });
+            }
+        }
+        Ok(())
+    }
+
     /// Construct a parts list and check all entries.
     pub fn new(parts: Vec<Part>) -> Result<Self> {
         let list = Self {

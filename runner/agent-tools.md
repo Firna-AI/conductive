@@ -94,9 +94,9 @@ A member without a display name gets
 - [instructions.rs](../crates/cnd-runner/src/engine/instructions.rs) builds the session instructions, which
   holds the workspace tool guidance of each new session: the call names,
   the access rules, and the choice of an owner ID.
-- [workspace-tools.ts](sdk-helper/src/providers/workspace-tools.ts) binds runtime tool
-  credentials to the runner connection. Each provider start adds the
-  current turn ID in its environment.
+- [provider.rs](../crates/cnd-runner/src/engine/provider.rs) derives the workspace tool
+  context from the runner connection and the active turn.
+  [environment.ts](sdk-helper/src/providers/environment.ts) puts that context in each agent environment.
 - [computer-mcp.ts](sdk-helper/src/providers/computer-mcp.ts) gives `readComputerServer`,
   which reads the sandbox's `computer` entry at each agent start.
   It sends warnings through `ProviderOptions.warn`.

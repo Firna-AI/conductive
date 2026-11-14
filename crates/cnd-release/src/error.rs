@@ -8,6 +8,12 @@ use thiserror::Error;
 /// A release cannot be built or read.
 #[derive(Debug, Error, internal_error::ErrorContract)]
 pub enum Error {
+    /// A release lacks a role that its own program needs.
+    #[error("[cnd-release] missing release part: {name}")]
+    MissingPart {
+        /// The absent role.
+        name: String,
+    },
     /// Release versions must use the commit-count version rule.
     #[error("[cnd-release] invalid release version: {version}")]
     InvalidVersion {

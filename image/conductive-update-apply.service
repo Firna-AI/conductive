@@ -1,9 +1,0 @@
-[Unit]
-Description=Apply downloaded Conductive software
-Before=conductive-runner.service conductive-preview-relay.service
-ConditionPathExists=/run/conductive/workspace-ready
-
-[Service]
-Type=oneshot
-User=root
-ExecStart=/opt/conductive/current/conductive update apply

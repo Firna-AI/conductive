@@ -58,7 +58,7 @@ filter. The module owns those limits and the shared count limit.
 and the terminal backend.
 [Listening ports](../../docs/protocol/agent-runner.md#listening-ports) states
 that report, its limits, and its refresh kind.
-`runner-transport.ts` defines the injectable socket boundary.
+`runner-transport.ts` defines the Worker's in-memory runner test socket boundary.
 `RunnerConnection` and `RunnerConnector` take the type of the Worker's
 messages.
 Browser response types carry no login and no turn token.

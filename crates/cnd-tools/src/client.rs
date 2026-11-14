@@ -5,6 +5,8 @@ use std::sync::Arc;
 use async_trait::async_trait;
 use serde::Deserialize;
 
+use cnd_runner_interface::json::decoder;
+
 use crate::call::{Call, Name};
 use crate::error::{Error, InputError, Result};
 use crate::ports::{Http, HttpRequest, Runtime};
@@ -123,7 +125,7 @@ impl Client {
             Err(_) => return Err(Error::Network { mac }),
         };
         if !(200..300).contains(&response.status) {
-            if let Ok(failure) = serde_json::from_str::<Failure>(&response.body)
+            if let Ok(failure) = decoder::decode::<Failure>(response.body.as_bytes())
                 && !failure.error.code.is_empty()
             {
                 let code = failure

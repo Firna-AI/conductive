@@ -1,9 +1,7 @@
 //! Runtime context keeps explicit values ahead of saved shell variables.
 
-use std::process::Command;
-
 use crate::client::Configuration;
-use crate::error::{Error, ErrorResultExt, InputError, Result};
+use crate::error::Result;
 
 const NAMES: [&str; 3] = [
     "CONDUCTIVE_MACHINE_ORIGIN",
@@ -30,34 +28,6 @@ pub trait Environment: Send + Sync {
         }
         let [origin, token, turn] = values;
         Configuration::new(origin, token, turn)
-    }
-}
-
-/// Native process environment. Saved context never changes the parent process.
-pub struct NativeEnvironment;
-
-impl Environment for NativeEnvironment {
-    fn variable(&self, name: &str) -> Option<String> {
-        std::env::var(name).ok()
-    }
-    fn saved(&self) -> Result<[Option<String>; 3]> {
-        let output = Command::new("/bin/sh").args(["-c",r#"set -e
-if [ -r /run/ascii-secrets/env.sh ]; then
-  set -a
-  . /run/ascii-secrets/env.sh
-fi
-printf '%s\000%s\000%s\000' "${CONDUCTIVE_MACHINE_ORIGIN-}" "${CONDUCTIVE_WORKSPACE_TOKEN-}" "${CONDUCTIVE_TURN_ID-}"
-"#]).output().internal()?;
-        if !output.status.success() {
-            return Err(Error::Input(InputError::Credentials));
-        }
-        let mut values = output.stdout.split(|byte| *byte == 0);
-        Ok(std::array::from_fn(|_| {
-            values
-                .next()
-                .filter(|bytes| !bytes.is_empty())
-                .map(|bytes| String::from_utf8_lossy(bytes).into_owned())
-        }))
     }
 }
 

@@ -33,8 +33,9 @@ the [model gateway](model-gateway.md), as that doc says.
   also fails at once with the same cause. It fails in the same way as
   after any other error.
 - These failures do not mark the login of a session as unusable.
-- Reason: each new cloud computer starts with the runner of its org image,
-  and only a build installs the newest runner.
+- Reason: a new cloud computer from a rebuilt org image starts with the
+  newest runner at once. Existing computers follow the
+  [sandbox software update rules](sandbox-software.md#updates).
 - The refusal of a runner above version 2 changes no turn and no start.
   Reason: only a later release of the app accepts such a runner, so the
   cause above does not help.

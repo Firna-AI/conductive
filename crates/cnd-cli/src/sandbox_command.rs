@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use cnd_credential::environment::NativeEnvironment;
+use cnd_cli::environment::NativeEnvironment;
 use cnd_credential::http::NativeHttp;
 use cnd_credential::service::{Credential, CredentialService};
 use cnd_credential::streams::NativeStreams;
@@ -22,7 +22,7 @@ pub(crate) async fn credential(mode: &str) -> u8 {
         }
     };
     let command: Arc<dyn Credential> = Arc::new(CredentialService {
-        environment: Arc::new(NativeEnvironment),
+        environment: Arc::new(NativeEnvironment::default()),
         http: Arc::new(http),
         streams: Arc::new(NativeStreams),
     });

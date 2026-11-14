@@ -7,6 +7,7 @@ pub mod commit_author;
 pub mod file_changes;
 pub mod file_tree;
 pub mod files;
+pub mod json;
 pub mod messages;
 pub mod ports;
 pub mod provider_events;

@@ -8,6 +8,9 @@ use cnd_release::parts::PartsList;
 use super::error::{Error, ErrorResultExt, Result};
 use super::ports::Processes;
 
+/// Role containing the root-owned system installer and service units.
+pub const SYSTEM_PART: &str = "system";
+
 /// Run checked release programs with no shell expansion.
 pub struct SystemProcesses;
 
@@ -33,7 +36,7 @@ impl Processes for SystemProcesses {
 
     fn install_system(&self, folder: &Path) -> Result<()> {
         let status = Command::new("/bin/sh")
-            .arg(folder.join("system/install-system.sh"))
+            .arg(folder.join(SYSTEM_PART).join("install-system.sh"))
             .status()
             .internal()?;
         if !status.success() {

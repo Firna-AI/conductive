@@ -73,10 +73,10 @@ from `release/`. It renders the start scripts with paths under
 `/opt/conductive/current`. It generates terminal scripts from the existing
 terminal module. The previous release keeps its own system part for fallback.
 
-The root oneshot `conductive-update-apply.service` runs before the runner
-and relay. Its workspace-ready condition prevents a boot without workspace
-settings from consuming a pending update. The runner requests a background
-check after each start. `conductive-update-check.timer` also checks after
+The runner service applies a staged release in its root pre-start step.
+It applies only when `/run/conductive/workspace-ready` exists.
+Relay and terminal restarts do not apply or roll back releases.
+The runner requests a background check after each start. `conductive-update-check.timer` also checks after
 30 seconds of boot and every hour. The root check service runs the program
 and then exits. No separate updater process remains resident.
 

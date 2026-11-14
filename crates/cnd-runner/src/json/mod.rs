@@ -2,4 +2,3 @@
 
 pub mod codec;
 pub mod commands;
-mod surrogates;

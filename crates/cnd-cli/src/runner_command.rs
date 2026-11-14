@@ -5,6 +5,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Duration;
 
+use cnd_cli::update::staging::NODE_PART;
 use cnd_runner::clock::SystemClock;
 use cnd_runner::config::Configuration;
 use cnd_runner::disk::AtomicDisk;
@@ -32,6 +33,9 @@ use uuid::Uuid;
 
 use crate::error::{ErrorResultExt, Result};
 
+/// Role containing the SDK helper and its runtime packages.
+pub(crate) const SDK_HELPER_PART: &str = "sdk-helper";
+
 pub(crate) async fn execute() -> Result<()> {
     let environment: BTreeMap<String, String> = std::env::vars().collect();
     let cwd = std::env::current_dir().internal()?;
@@ -55,7 +59,7 @@ pub(crate) async fn execute() -> Result<()> {
             if development {
                 PathBuf::from("node")
             } else {
-                release.join("node/bin/node")
+                release.join(NODE_PART).join("bin/node")
             }
         });
     let program = environment
@@ -65,7 +69,7 @@ pub(crate) async fn execute() -> Result<()> {
             if development {
                 cwd.join("dist/sdk-helper/sdk-helper.mjs")
             } else {
-                release.join("sdk-helper/sdk-helper.mjs")
+                release.join(SDK_HELPER_PART).join("sdk-helper.mjs")
             }
         });
     let helpers = Arc::new(NodeHelpers { node, program });

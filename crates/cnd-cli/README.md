@@ -30,6 +30,10 @@ refusal codes. `relay` serves previews through [cnd-relay](../cnd-relay/README.m
 `git-credential` supplies fresh GitHub tokens through
 [cnd-credential](../cnd-credential/README.md). The installed
 `conductive-git-credential` executable name selects that subcommand.
+Workspace tools and Git credentials use one native saved-settings reader. It reads the saved
+`WORKSPACE_TOKEN` and supplies each crate's `Environment` boundary.
+Workspace tools keep explicit runtime values ahead of saved values.
+The credential helper keeps the caller's turn ID even when the file has another turn.
 `runner` starts the full [Rust runner](../cnd-runner/README.md). It uses the
 [runner configuration](../../runner/configuration.md), plus optional
 `CONDUCTIVE_NODE` and `CONDUCTIVE_SDK_HELPER` path overrides. Installed builds
@@ -44,20 +48,27 @@ It downloads into a private version folder. It checks the program digest
 through `cli-updater` and checks every part digest before extraction.
 It reuses complete parts with the same digest. A failed check logs a
 warning and returns failure. The independent background unit cannot block a start.
-It leaves no complete version on failure. A concurrent check returns a
-busy error, so a build cannot mistake it for a completed download.
+It leaves no complete version on failure. A concurrent background check returns a busy error.
+An installation check with `--bootstrap` waits for the download lock.
+Downloads have a one-hour total timeout and a ten-second connect timeout.
 
 `update apply` uses no network. It switches to the newest complete version
 and installs its system files. It leaves a pending marker until
-`update started` confirms the runner start. A later apply with that marker
-restores the previous version and its system files. Collection runs after
-confirmation and retains current and previous. It waits for no download.
+`update started` confirms the runner start. Confirmation checks this executable's
+version against current and pending. A different version changes nothing.
+A later apply with that marker restores the previous version and its system files. A persistent rejection
+record prevents that version from downloading or applying again after collection.
+Collection runs after confirmation and retains current, previous, and the release that the next apply selects.
+It reads that set under the download lock. It waits for no download.
 Collection defers when a check holds the download lock.
 
 All update operations accept `--root PATH` and `--server URL`.
 The defaults are `/opt/conductive` and `https://runner.conductive.build`.
 Checks, apply, and confirmation run as root in an installed sandbox.
 `update parts` prints this program's embedded parts as JSON.
+`update parts` fails for a release build whose list lacks Node, the SDK helper, or system files.
+Development builds keep their empty list. Older updaters use the new program's
+check and accept added JSON fields.
 `update check --bootstrap` stages the first release when the bootstrap
 program already has the newest version. An existing active release still
 prevents a downgrade. See [the install guide](../../image/install.md#release-installation)
@@ -107,6 +118,8 @@ The musl build needs a C compiler for musl. On Ubuntu, install the
 - [runner_command.rs](src/runner_command.rs) composes the full runner and graceful shutdown.
 - [sandbox_command.rs](src/sandbox_command.rs) composes the relay and credential runtimes.
 - [tool_command.rs](src/tool_command.rs) composes the workspace CLI and MCP runtime.
+- [environment.rs](src/environment.rs) reads saved shell settings for tools and credentials.
+- [relay_start_tests.rs](tests/relay_start_tests.rs) executes the relay start script with a fake program.
 - [cli_tests.rs](src/_tests_/cli_tests.rs) checks relay argument parsing.
 
 ### Related Docs

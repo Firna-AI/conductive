@@ -6,3 +6,4 @@ mod http_tests;
 mod mac_tests;
 mod request_cases;
 mod session_tests;
+mod text_tests;

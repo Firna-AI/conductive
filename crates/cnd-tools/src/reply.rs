@@ -3,6 +3,7 @@
 use serde::Serialize;
 use serde_json::Value;
 
+use cnd_runner_interface::json::decoder;
 use cnd_runner_interface::tools::device::{DeviceCommandResponse, DeviceCommandState};
 use cnd_runner_interface::tools::previews::{
     AgentClosePreviewResponse, AgentListPreviewsResponse, AgentOpenPreviewResponse,
@@ -86,7 +87,7 @@ impl Reply {
 
 pub(crate) fn parse(name: Name, body: &str) -> Result<Reply> {
     let mac = name == Name::RunMacCommand;
-    let mut value: Value = match serde_json::from_str(body) {
+    let mut value: Value = match decoder::decode(body.as_bytes()) {
         Ok(value) => value,
         Err(_) => return Err(Error::Reply { mac }),
     };

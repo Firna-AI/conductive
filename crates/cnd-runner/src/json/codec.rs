@@ -3,7 +3,7 @@
 use serde::{Serialize, de::DeserializeOwned};
 use serde_json::Value;
 
-use super::surrogates;
+use cnd_runner_interface::json::decoder;
 
 use crate::error::{Error, ErrorResultExt, Result};
 
@@ -18,7 +18,7 @@ pub fn decode<T: DeserializeOwned + Serialize>(bytes: &[u8]) -> Result<T> {
 }
 
 pub(super) fn decode_value(bytes: &[u8]) -> Result<Value> {
-    let mut value = serde_json::from_slice(&surrogates::repair(bytes)).internal()?;
+    let mut value = decoder::decode(bytes).internal()?;
     normalize_numbers(&mut value);
     Ok(value)
 }

@@ -19,14 +19,18 @@ impl DiskStore {
         Self { root }
     }
 
-    fn named_lock(&self, name: &str) -> Result<Option<Box<dyn UpdateLock>>> {
+    fn lock_file(&self, name: &str) -> Result<File> {
         fs::create_dir_all(&self.root).internal()?;
-        let file = File::options()
+        File::options()
             .create(true)
             .truncate(false)
             .write(true)
             .open(self.root.join(name))
-            .internal()?;
+            .internal()
+    }
+
+    fn named_lock(&self, name: &str) -> Result<Option<Box<dyn UpdateLock>>> {
+        let file = self.lock_file(name)?;
         match file.try_lock() {
             Ok(()) => Ok(Some(Box::new(file))),
             Err(TryLockError::WouldBlock) => Ok(None),
@@ -75,6 +79,12 @@ impl DiskStore {
 impl UpdateLock for File {}
 
 impl Store for DiskStore {
+    fn installation_lock(&self) -> Result<Box<dyn UpdateLock>> {
+        let file = self.lock_file("update.lock")?;
+        file.lock().internal()?;
+        Ok(Box::new(file))
+    }
+
     fn lock(&self) -> Result<Option<Box<dyn UpdateLock>>> {
         self.named_lock("update.lock")
     }
@@ -89,6 +99,14 @@ impl Store for DiskStore {
 
     fn versions(&self) -> Result<Vec<String>> {
         self.complete_versions()
+    }
+
+    fn rejected(&self, version: &str) -> Result<bool> {
+        self.root
+            .join("rejected")
+            .join(version)
+            .try_exists()
+            .internal()
     }
 
     fn version_path(&self, version: &str) -> PathBuf {
@@ -119,13 +137,12 @@ impl Store for DiskStore {
     }
 
     fn reject(&self, version: &str) -> Result<()> {
-        fs::write(self.version_path(version).join("rejected"), []).internal()
+        let rejected = self.root.join("rejected");
+        fs::create_dir_all(&rejected).internal()?;
+        fs::write(rejected.join(version), []).internal()
     }
 
-    fn collect(&self) -> Result<()> {
-        let Some(_lock) = self.lock()? else {
-            return Ok(());
-        };
-        self.collect_unused()
+    fn collect(&self, keep: &[String]) -> Result<()> {
+        self.collect_unused(keep)
     }
 }

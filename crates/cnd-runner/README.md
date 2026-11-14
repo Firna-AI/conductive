@@ -48,6 +48,8 @@ The runtime retries a dropped or failed connection after one second.
 Its command handler owns full reports, readiness, commands, and live-turn
 shutdown. These operations can run while the socket handles confirmations.
 The handler queues commands in wire order. It must stop its work when shutdown starts.
+The runtime keeps each socket step across report completions.
+A failed report releases that step before closing the socket.
 
 The repository runs Git child processes with literal paths and cancellation.
 Comparisons preserve the real index and object store. Reads check the opened
@@ -119,6 +121,7 @@ cargo build --release --target x86_64-unknown-linux-musl -p cnd-cli
 ```
 
 Unit tests use unimock at the disk, Git, process, watch, scan, and link boundaries.
+Connection-loop tests hold message processing after receipt and control report completion.
 Timer tests use paused Tokio time. Integration tests use temporary real Git
 repositories, native watches, a controlled disk, and an in-memory endpoint.
 Turn tests use controlled helper and repository boundaries. Helper transport

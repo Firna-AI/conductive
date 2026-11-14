@@ -20,8 +20,8 @@ with `git ls-files --others` and no ignore rules. The changes report
 does not take them, so Changes leaves them out.
 
 [The context folder](../docs/protocol/repository-folders.md#the-context-folder)
-states its use and limits. A new org image build installs the runner with this
-startup step and the instruction text below.
+states its use and limits. The runner and its instruction text follow the
+[sandbox software update rules](../docs/protocol/sandbox-software.md#updates).
 
 ## Agent instructions
 
@@ -73,8 +73,9 @@ chat never shows the sender line.
 - The branch line exists only in the text that reaches the agent. The
   stored message, its events, and the titles from messages use only the
   text that the member wrote.
-- Each sandbox keeps the runner of the org image that it starts from. An
-  older runner reads no `branches`, so its sessions get no branch line.
+- Until an update applies, an older runner reads no `branches`, so its
+  sessions get no branch line. Existing sessions keep their saved instructions
+  after an update.
 
 A message with attached files adds one read instruction after the
 member's text, then one JSON line per file. Each line gives its original

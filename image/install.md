@@ -89,8 +89,10 @@ as root with a verified bootstrap executable:
 ```
 
 The check command logs a warning and returns failure after a failed
-download. A concurrent check also returns a busy error. A build must stop
-when any command fails. A build must verify that `current/conductive` and
+download. The installation check waits for a running background check.
+Background checks still return a busy error when the download lock is held.
+Downloads have a one-hour total timeout and a ten-second connect timeout.
+A build must stop when any command fails. A build must verify that `current/conductive` and
 `current/complete` exist after apply. A build confirms the initial
 installation with `update started`, because it starts no runner.
 The image build still installs `gh`, `ttyd`, and `tmux` through apt.
@@ -109,7 +111,7 @@ versions/<version>/sdk-helper -> /opt/conductive/parts/<sdk-helper-sha256>
 versions/<version>/node -> /opt/conductive/parts/<node-sha256>
 versions/<version>/system -> /opt/conductive/parts/<system-sha256>
 versions/<version>/complete
-versions/<failed-version>/rejected
+rejected/<failed-version>       # persistent rejection record
 parts/<sha256>/complete
 parts/<sdk-helper-sha256>/sdk-helper.mjs
 parts/<node-sha256>/bin/node
@@ -136,23 +138,30 @@ check timer. It starts no service and changes no package.
 
 The release units are:
 
-- `conductive-update-apply.service`: root activation before runner and relay.
 - `conductive-update-check.service`: root background download.
 - `conductive-update-check.timer`: boot and hourly checks.
-- `conductive-runner.service`: Rust runner as `user`.
+- `conductive-runner.service`: root activation in pre-start, then the Rust runner as `user`.
 - `conductive-preview-relay.service` and `.socket`: Rust relay as `user`.
 - `conductive-terminal.service` and `conductive-terminal-sessions.service`: terminal services as `user`.
 
+The runner pre-start step runs apply only when `/run/conductive/workspace-ready` exists.
+Relay and terminal restarts do not change the selected release.
 The runner, relay, and terminal entry points use `current/system/`.
 The runner executes `/opt/conductive/current/conductive runner`. It resolves
 its private Node and SDK helper beside that executable. The relay executes
 the active Rust program too. The system installer removes a stale process-start
 confirmation unit. The Rust runner confirms the release only after its first
-valid Worker `welcome`. It reads the saved Node state file without conversion.
+valid Worker `welcome`. Confirmation changes nothing unless the executable's
+version matches current and pending. It reads the saved Node state file without conversion.
 The next apply restores `previous` when a new release still has its pending
 marker. That fallback runs the previous system installer, which restores its
-units and can start the previous Node runner. Collection after confirmation
-retains current and previous and removes other versions and unused parts.
+units and starts the previous Rust runner on the next service attempt.
+The first published Rust release uses this pre-start layout too, so its
+fallback never pulls in a second activation unit. Collection after confirmation
+retains current, previous, and the release that the next apply selects.
+It reads the retained set under the download lock and removes other
+version payloads and unused parts. Rejection records survive collection,
+so a failed version cannot download or apply again.
 A running download defers collection without delaying the runner.
 
 For a separate install root or a local release server, use:

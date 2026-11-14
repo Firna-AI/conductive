@@ -40,7 +40,7 @@ impl DiskStore {
             let name = entry.file_name().to_string_lossy().into_owned();
             if release_version(&name).is_ok()
                 && entry.path().join("complete").try_exists().internal()?
-                && !entry.path().join("rejected").try_exists().internal()?
+                && !self.rejected(&name)?
             {
                 versions.push(name);
             }
@@ -79,12 +79,8 @@ impl DiskStore {
         Ok(())
     }
 
-    pub(super) fn collect_unused(&self) -> Result<()> {
-        let state = self.read_state()?;
-        let keep: HashSet<_> = [state.current, state.previous]
-            .into_iter()
-            .flatten()
-            .collect();
+    pub(super) fn collect_unused(&self, versions: &[String]) -> Result<()> {
+        let keep: HashSet<_> = versions.iter().cloned().collect();
         let mut digests = HashSet::new();
         for version in &keep {
             let parts: PartsList = serde_json::from_slice(

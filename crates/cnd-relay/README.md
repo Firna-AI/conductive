@@ -18,6 +18,8 @@ The native listener consumes systemd descriptor 3 when `LISTEN_FDS=1` and
 `LISTEN_PID` names this process. Otherwise, it binds `127.0.0.1:7682`.
 Inherited TCP listeners must use a loopback address. Unix activation is also
 supported for local integration environments.
+An accept error logs a warning and waits briefly before accepting again.
+The listening service and existing connections keep running.
 
 A request must name the private provider hostname of the listening port.
 Exactly one `X-Conductive-Preview-Port` header selects a decimal port from
@@ -55,6 +57,9 @@ cargo clippy -p cnd-relay --all-targets -- -D warnings
 Tests use real local servers on free ports. The address fallback test needs
 an assigned nonloopback IPv4 address. The activation test needs
 `systemd-socket-activate`, but no running systemd manager.
+The accept-error regression test uses a mocked listener and a paused clock.
+The relay start script accepts an optional executable path for isolated checks.
+The installed service uses the default executable path.
 
 ### Key Code
 

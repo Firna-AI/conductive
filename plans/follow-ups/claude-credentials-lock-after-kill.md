@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-10, from finding 70 of round 3 of the final review of branch `conductor/model-gateway-worker-model-proxy-decision-120`, option C of its check.
-- **Location:** `writeClaudeProfile` and `clearClaudeCredentials` in `runner/sdk-helper/src/providers/claude-profile.ts:11-67`. The profile and its cleanup in `createClaudeFactory` of `runner/sdk-helper/src/providers/claude.ts:45-70`. The removal before the first connection in `runner/src/runner.ts:151`. The stop of an agent program in `runner/sdk-helper/src/providers/lifetime.ts:3` and `:30-40`. The test "removes stale credentials before connecting and preserves live credentials on reconnect" in `runner/sdk-helper/src/providers/claude-profile.test.ts:118`. The section "Claude" of `runner/agent-logins.md`.
+- **Location:** `writeClaudeProfile` and `clearClaudeCredentials` in `runner/sdk-helper/src/providers/claude-profile.ts:11-67`. The profile and its cleanup in `createClaudeFactory` of `runner/sdk-helper/src/providers/claude.ts:45-70`. The removal before the first connection in `crates/cnd-runner/src/helper/startup.rs`. The stop of an agent program in `runner/sdk-helper/src/providers/lifetime.ts:3` and `:30-40`. The test "removes stale credentials before connecting and preserves live credentials on reconnect" in `runner/sdk-helper/src/providers/claude-profile.test.ts:118`. The section "Claude" of `runner/agent-logins.md`.
 - **Reason:** The lock stays only after a hard kill of Claude while it reads its token, which normal use does not meet, and the fix costs the same later.
 
 - **Terms:**
@@ -14,7 +14,7 @@
 - **Background:**
   - Before each Claude agent process starts, the runner writes a profile pair into `<home>/.conductive/anthropic`. The name of the pair is `session-` and the SHA-256 hash of the session ID. So all sessions share one `credentials` folder.
   - The runner starts the program with `ANTHROPIC_CONFIG_DIR` set to that folder and `ANTHROPIC_PROFILE` set to the name.
-  - The pinned `claude` program 2.1.318 comes from Claude Agent SDK 0.3.318, which `runner/package.json` pins. Before it reads the token, it locks the folder that holds the credentials file, with `proper-lockfile`.
+  - The pinned `claude` program 2.1.318 comes from Claude Agent SDK 0.3.318, which `runner/sdk-helper/package.json` pins. Before it reads the token, it locks the folder that holds the credentials file, with `proper-lockfile`.
   - So the lock is the folder `<home>/.conductive/anthropic/credentials.lock`, beside the `credentials` folder. A read of the program's code and a probe of 10 November 2026 showed this place.
   - The program refreshes its lock every 5 seconds. It treats a lock as stale when the lock is older than 60 seconds.
   - When it finds a fresh lock, the program tries 5 more times, 1 to 2 seconds apart. Then it fails with `Could not acquire credentials lock at <folder> after 5 retries`.

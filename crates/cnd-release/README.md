@@ -15,7 +15,10 @@ write that format.
 
 `PartsList` schema version 1 holds a list of parts. Each part has a stable
 `name`, an absolute HTTPS `url`, and a `sha256` digest. A new part needs one
-entry. Unknown schema versions, duplicate names, and invalid downloads fail.
+entry. Readers accept added JSON fields. Incompatible schema versions,
+duplicate names, and invalid downloads fail. Each release program checks
+that its embedded list contains the roles that it needs. Older updaters
+keep no fixed list of required roles.
 
 `ReleaseFiles` owns the filesystem boundary. `DiskReleaseFiles` writes
 files below the supplied output folder, with paths that match their R2

@@ -42,5 +42,5 @@ workspace = true
 
 [dev-dependencies]
 tempfile = "3.27.0"
-tokio = { version = "1.54.1", features = ["process", "io-util", "net"] }
+tokio = { version = "1.54.1", features = ["process", "io-util", "net", "test-util"] }
 unimock = "0.6.8"

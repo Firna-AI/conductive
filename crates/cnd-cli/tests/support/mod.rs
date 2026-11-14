@@ -1,23 +1,25 @@
 //! Local HTTP fixture and deterministic release archives.
 
-#![expect(
-    clippy::unwrap_used,
-    reason = "A failed test setup must stop the test."
-)]
-
 use std::collections::HashMap;
 use std::io::{Read, Write};
-use std::net::TcpListener;
+use std::net::{SocketAddr, TcpListener, TcpStream};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::thread::{self, JoinHandle};
 
 use async_trait::async_trait;
 use cli_release_interface::ReleaseAssetInfo;
 use cli_updater::{HttpReleaseClient, ReleaseClient};
+use cnd_cli::update::http::release_client;
 use flate2::{Compression, GzBuilder};
 use tar::{Builder, Header};
 
-pub(super) fn archive(files: &[(&str, &[u8])]) -> Vec<u8> {
+pub(crate) mod download;
+pub(crate) mod locking;
+
+type TestResult<T = ()> = Result<T, Box<dyn std::error::Error + Send + Sync>>;
+
+pub(super) fn archive(files: &[(&str, &[u8])]) -> std::io::Result<Vec<u8>> {
     let mut archive = Builder::new(
         GzBuilder::new()
             .mtime(0)
@@ -28,52 +30,75 @@ pub(super) fn archive(files: &[(&str, &[u8])]) -> Vec<u8> {
         header.set_size(bytes.len() as u64);
         header.set_mode(0o755);
         header.set_cksum();
-        archive.append_data(&mut header, name, *bytes).unwrap();
+        archive.append_data(&mut header, name, *bytes)?;
     }
-    archive.into_inner().unwrap().finish().unwrap()
+    archive.into_inner()?.finish()
 }
 
 pub(super) struct Server {
     pub(super) client: LocalClient,
     pub(super) requests: Arc<Mutex<Vec<String>>>,
-    thread: Option<JoinHandle<()>>,
+    thread: JoinHandle<TestResult>,
+    stopped: Arc<AtomicBool>,
+    address: SocketAddr,
 }
 
 impl Server {
-    pub(super) fn start(responses: HashMap<String, Vec<u8>>, count: usize) -> Self {
-        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
-        let base = format!("http://{}", listener.local_addr().unwrap());
+    pub(super) fn start(responses: HashMap<String, Vec<u8>>) -> TestResult<Self> {
+        let listener = TcpListener::bind("127.0.0.1:0")?;
+        let address = listener.local_addr()?;
+        let base = format!("http://{address}");
         let requests = Arc::new(Mutex::new(Vec::new()));
         let captured = requests.clone();
+        let stopped = Arc::new(AtomicBool::new(false));
+        let stop = stopped.clone();
         let thread = thread::spawn(move || {
-            for stream in listener.incoming().take(count) {
-                let mut stream = stream.unwrap();
+            for stream in listener.incoming() {
+                let mut stream = stream?;
+                if stop.load(Ordering::Acquire) {
+                    break;
+                }
                 let mut request = Vec::new();
                 while !request.ends_with(b"\r\n\r\n") {
                     let mut byte = [0];
-                    assert_eq!(stream.read(&mut byte).unwrap(), 1);
+                    assert_eq!(stream.read(&mut byte)?, 1);
                     request.push(byte[0]);
                 }
-                let line = String::from_utf8(request).unwrap();
-                let path = line.split_whitespace().nth(1).unwrap().to_owned();
-                captured.lock().unwrap().push(path.clone());
-                let bytes = &responses[&path];
-                write!(stream, "HTTP/1.1 200 OK\r\nContent-Length: {}\r\nContent-Type: application/json\r\nConnection: close\r\n\r\n", bytes.len()).unwrap();
-                stream.write_all(bytes).unwrap();
+                let line = String::from_utf8(request)?;
+                let path = line
+                    .split_whitespace()
+                    .nth(1)
+                    .ok_or("missing request path")?;
+                captured
+                    .lock()
+                    .map_err(|_| "request lock poisoned")?
+                    .push(path.to_owned());
+                let bytes = responses.get(path).ok_or("unexpected request")?;
+                write!(
+                    stream,
+                    "HTTP/1.1 200 OK\r\nContent-Length: {}\r\nContent-Type: application/json\r\nConnection: close\r\n\r\n",
+                    bytes.len()
+                )?;
+                stream.write_all(bytes)?;
             }
+            Ok(())
         });
-        Self {
+        Ok(Self {
             client: LocalClient {
-                inner: HttpReleaseClient::new(&base).unwrap(),
+                inner: release_client(&base)?,
                 base,
             },
             requests,
-            thread: Some(thread),
-        }
+            thread,
+            stopped,
+            address,
+        })
     }
 
-    pub(super) fn finish(mut self) {
-        self.thread.take().unwrap().join().unwrap();
+    pub(super) fn finish(self) -> TestResult {
+        self.stopped.store(true, Ordering::Release);
+        let _wake = TcpStream::connect(self.address);
+        self.thread.join().map_err(|_| "HTTP server panicked")?
     }
 }
 

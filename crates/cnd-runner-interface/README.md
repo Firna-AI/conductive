@@ -26,6 +26,9 @@ Literal booleans and the protocol version preserve their exact JSON values.
 Wire integers use JSON numbers within JavaScript's safe integer range.
 Dates use Unix milliseconds. Arrays have read-only TypeScript views.
 Runtime validation remains the caller's responsibility.
+The shared JSON text decoder replaces lone UTF-16 surrogate escapes with
+U+FFFD. Valid pairs and literal escape text remain unchanged.
+The runner and workspace tools keep their own number and domain validation.
 
 ## Quick Start
 
@@ -71,6 +74,7 @@ One test compares the TypeScript runtime limits with their Rust constants.
 - [Provider events](src/provider_events.rs) defines adapter results and background state.
 - [Workspace tools](src/tools/mod.rs) defines tool payloads and the records that their replies use.
 - [Wire helpers](src/wire.rs) preserves literal booleans and read-only array views.
+- [JSON decoder](src/json/decoder.rs) reads JavaScript JSON strings for the runner and workspace tools.
 - [Export example](examples/export_bindings.rs) registers and formats every shared type.
 - [Wire snapshots](tests/wire_1.rs) starts the message serialization cases.
 

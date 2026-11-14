@@ -27,12 +27,16 @@ pub struct State {
 pub trait Store: Send + Sync {
     /// Try the exclusive download lock without waiting for another check.
     fn lock(&self) -> Result<Option<Box<dyn UpdateLock>>>;
+    /// Wait for a background check before an installation reads or stages files.
+    fn installation_lock(&self) -> Result<Box<dyn UpdateLock>>;
     /// Serialize activation and start confirmation independently of downloads.
     fn apply_lock(&self) -> Result<Option<Box<dyn UpdateLock>>>;
     /// Read active links and the pending marker.
     fn state(&self) -> Result<State>;
     /// Return only complete, non-rejected release versions.
     fn versions(&self) -> Result<Vec<String>>;
+    /// Check the persistent rejection record, even after payload collection.
+    fn rejected(&self, version: &str) -> Result<bool>;
     /// Return the path of a version folder.
     fn version_path(&self, version: &str) -> PathBuf;
     /// Prepare an incomplete folder with an executable seed for cli-updater.
@@ -47,8 +51,8 @@ pub trait Store: Send + Sync {
     fn transition(&self, state: &State) -> Result<()>;
     /// Exclude a failed release from later apply attempts.
     fn reject(&self, version: &str) -> Result<()>;
-    /// Remove versions and parts unused by current and previous.
-    fn collect(&self) -> Result<()>;
+    /// Remove versions and parts outside the retained set under the download lock.
+    fn collect(&self, keep: &[String]) -> Result<()>;
 }
 
 /// Execution of the downloaded executable and the root-owned installer.
@@ -65,8 +69,10 @@ pub trait Processes: Send + Sync {
 pub trait UpdateEngine: Send + Sync {
     /// Download in isolation. Warn and retain the active release on any failure.
     async fn check(&self, running_version: &str) -> Result<()>;
+    /// Stage an image installation after any running background check finishes.
+    async fn install(&self, running_version: &str) -> Result<()>;
     /// Activate the newest complete release or restore a failed start.
     fn apply(&self) -> Result<()>;
-    /// Clear pending after systemd observes a running runner.
-    fn started(&self) -> Result<()>;
+    /// Confirm only the running release after its first valid Worker welcome.
+    fn started(&self, running_version: &str) -> Result<()>;
 }

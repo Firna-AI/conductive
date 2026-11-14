@@ -6,7 +6,7 @@ use thiserror::Error;
 /// An update could not finish safely.
 #[derive(Debug, Error, internal_error::ErrorContract)]
 pub enum Error {
-    /// Another check owns the download lock. A build must try again later.
+    /// Another background check owns the download lock. Installation checks wait.
     #[error("[cnd-cli/update] another update check is running. Try again later.")]
     Busy,
     /// Releases and parts require a valid digest.

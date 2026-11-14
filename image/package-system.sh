@@ -4,7 +4,7 @@ output=$1
 staging=$(mktemp -d)
 trap 'rm -rf "$staging"' EXIT
 mkdir -p "$output"
-for file in runner-start.sh preview-relay-start.sh github-cli.sh 60-conductive-disk-cache.rules install-system.sh conductive-preview-relay.socket conductive-update-apply.service conductive-update-check.service conductive-update-check.timer; do
+for file in runner-start.sh preview-relay-start.sh github-cli.sh 60-conductive-disk-cache.rules install-system.sh conductive-preview-relay.socket conductive-update-check.service conductive-update-check.timer; do
   cp "image/$file" "$staging/$file"
 done
 cp image/release/* "$staging/"

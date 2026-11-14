@@ -1,7 +1,7 @@
 [Unit]
 Description=Conductive preview relay
-Requires=conductive-preview-relay.socket conductive-update-apply.service
-After=network-online.target conductive-preview-relay.socket conductive-update-apply.service
+Requires=conductive-preview-relay.socket
+After=network-online.target conductive-preview-relay.socket
 Wants=network-online.target
 
 [Service]

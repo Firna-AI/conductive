@@ -92,7 +92,7 @@ Boat starts its enabled socket and service after each resume and fork.
 The service requires `conductive-preview-relay.socket` to start first.
 The socket holds `127.0.0.1:7682` while the service restarts.
 Both units stay enabled, so the relay starts without waiting for a preview request.
-Its start script runs `/opt/conductive/current/conductive preview-relay`.
+The [preview relay guide](../runner/preview-relay.md) gives its start command.
 It reads no workspace variable or workspace marker.
 Its service restarts it after each exit.
 A restart of the runner service does not restart the relay service.
@@ -137,4 +137,3 @@ reads it, as [What it does](../runner/README.md#what-it-does) says.
 - The helper never writes a token to its error output. From a Worker
   response, it writes only a safe error message, as
   [GitHub access](github.md#git-credential-helper) says.
-

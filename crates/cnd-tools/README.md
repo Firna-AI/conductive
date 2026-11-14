@@ -6,7 +6,7 @@ Use `cnd-runner-interface` for the shared wire types.
 
 ## Responsibilities
 
-Parse tool options. Preserve message text. Authenticate fixed-route HTTP
+Parse tool options. Preserve valid Unicode message text. Authenticate fixed-route HTTP
 requests. Validate replies. Serve the same 24 calls through CLI and MCP.
 
 ## What This Crate Does
@@ -22,10 +22,14 @@ and finishes outstanding replies before it exits at EOF.
 
 The runtime uses `CONDUCTIVE_MACHINE_ORIGIN`,
 `CONDUCTIVE_WORKSPACE_TOKEN`, and optional `CONDUCTIVE_TURN_ID`.
-Explicit values take precedence over `/run/ascii-secrets/env.sh`.
+Explicit values take precedence over saved settings supplied through `Environment`.
+The executable's shared reader loads `/run/ascii-secrets/env.sh` and maps
+saved `WORKSPACE_TOKEN` to the runtime token field.
 Help needs no credential. HTTP never follows redirects.
 Worker refusal codes and messages keep their meaning, with the known
 credential removed. Malformed replies and network errors use fixed text.
+The shared JSON decoder replaces lone UTF-16 surrogate escapes with U+FFFD
+in Worker replies and MCP requests. Valid surrogate pairs remain unchanged.
 
 ## Quick Start
 
@@ -60,6 +64,7 @@ Unit tests replace HTTP, file/stdin reads, UUIDs, polling, and output with
 - [mcp](src/mcp/mod.rs) runs concurrent protocol requests and drains them at EOF.
 - [mcp-tools.json](src/mcp-tools.json) holds the MCP descriptors and input schemas.
 - [ports.rs](src/ports.rs) defines replaceable runtime and transport effects.
+- [environment.rs](src/environment.rs) keeps runtime values ahead of injected saved settings.
 - [runtime.rs](src/runtime.rs) implements native HTTP, input, polling, and stdio.
 
 ### Related Docs

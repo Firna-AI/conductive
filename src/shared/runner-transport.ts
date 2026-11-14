@@ -1,4 +1,4 @@
-/** An adapter can use a native WebSocket, Node, or the in-memory test endpoint. */
+/** Socket contracts for the Worker's in-memory runner test endpoint. */
 
 import type { RunnerToWorkspace } from './generated/RunnerToWorkspace'
 import type { WorkspaceToRunner } from './generated/WorkspaceToRunner'

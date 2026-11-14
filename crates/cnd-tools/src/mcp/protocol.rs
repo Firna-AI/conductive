@@ -2,6 +2,8 @@
 
 use serde_json::{Map, Value};
 
+use cnd_runner_interface::json::decoder;
+
 use crate::call::Name;
 use crate::schema;
 
@@ -31,7 +33,7 @@ fn success(id: Id, result: Success) -> Action {
 }
 
 pub(super) fn prepare(line: &str, phase: &mut Phase) -> Action {
-    let value: Value = match serde_json::from_str(line) {
+    let value: Value = match decoder::decode(line.as_bytes()) {
         Ok(value) => value,
         Err(_) => return error(None, -32700, "Invalid JSON."),
     };

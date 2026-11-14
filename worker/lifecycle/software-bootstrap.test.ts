@@ -14,6 +14,9 @@ it('installs verified release software and apt packages without the legacy insta
   expect(command).toContain('apt-get install -y gh')
   expect(command).toContain('apt-get install -y ttyd tmux')
   expect(command).toContain('systemctl mask ttyd.service')
+  expect(command.indexOf('systemctl mask ttyd.service')).toBeLessThan(
+    command.indexOf('update apply'),
+  )
   expect(command).toContain('sha256sum --check --status')
   expect(command.indexOf('sha256sum')).toBeLessThan(command.indexOf('tar -xzf'))
   expect(command).toContain(

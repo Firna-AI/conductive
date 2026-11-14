@@ -11,6 +11,9 @@ use super::disk::DiskStore;
 use super::error::{Error, ErrorResultExt, Result};
 use super::ports::Store;
 
+/// Role whose archive contains the Node distribution's top directory.
+pub const NODE_PART: &str = "node";
+
 impl DiskStore {
     pub(super) fn prepare_version(&self, version: &str) -> Result<()> {
         let folder = self.version_path(version);
@@ -43,7 +46,7 @@ impl DiskStore {
             {
                 return Err(Error::InvalidRelease);
             }
-            let path: PathBuf = if part.name == "node" {
+            let path: PathBuf = if part.name == NODE_PART {
                 path.components().skip(1).collect()
             } else {
                 path
@@ -55,7 +58,7 @@ impl DiskStore {
                 return Err(Error::InvalidRelease);
             }
         }
-        if part.name == "node" {
+        if part.name == NODE_PART {
             let entries = fs::read_dir(&temporary)
                 .internal()?
                 .collect::<std::io::Result<Vec<_>>>()

@@ -231,3 +231,30 @@ async fn output_failure_sets_exit_one_and_keeps_other_replies() -> Result<()> {
     );
     Ok(())
 }
+
+#[tokio::test]
+async fn accepts_lone_surrogates_in_mcp_arguments_and_preserves_the_request_id() -> Result<()> {
+    let (status, replies, errors) = serve(
+        vec![
+            initialize(),
+            initialized(),
+            call("control", "list_workspaces", json!({})),
+            r#"{"jsonrpc":"2.0","id":"surrogate","method":"tools/call","params":{"name":"list_workspaces","arguments":{"query":"before\ud800after"}}}"#.into(),
+        ],
+        false,
+    )
+    .await?;
+    assert_eq!(status, 0);
+    assert_eq!(errors, Vec::<String>::new());
+    assert_eq!(replies.len(), 3);
+    assert_eq!(
+        replies
+            .iter()
+            .find(|reply| reply["id"] == "surrogate")
+            .map(|reply| reply["result"].clone()),
+        Some(
+            json!({"isError":false,"structuredContent":{"workspaces":[]},"content":[{"type":"text","text":"{\"workspaces\":[]}"}]})
+        )
+    );
+    Ok(())
+}

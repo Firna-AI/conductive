@@ -2,6 +2,7 @@
 
 use std::convert::Infallible;
 use std::sync::Arc;
+use std::time::Duration;
 
 use async_trait::async_trait;
 use hyper::{StatusCode, server::conn::http1, service::service_fn};
@@ -32,7 +33,14 @@ impl Server for RelayServer {
     async fn run(&self) -> Result<()> {
         let port = self.listener.port()?;
         loop {
-            let socket = self.listener.accept().await?;
+            let socket = match self.listener.accept().await {
+                Ok(socket) => socket,
+                Err(error) => {
+                    tracing::warn!(%error, "preview relay could not accept a connection");
+                    tokio::time::sleep(Duration::from_millis(100)).await;
+                    continue;
+                }
+            };
             let proxy = self.proxy.clone();
             tokio::spawn(async move {
                 let closed = CancellationToken::new();
@@ -59,3 +67,7 @@ impl Server for RelayServer {
         }
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/server_tests.rs"]
+mod server_tests;

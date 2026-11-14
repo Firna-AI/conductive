@@ -1,3 +1,3 @@
 #!/bin/sh
 set -eu
-exec /opt/conductive/current/conductive relay
+exec "${1:-/opt/conductive/current/conductive}" relay

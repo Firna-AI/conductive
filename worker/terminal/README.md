@@ -27,15 +27,14 @@ The software command of each org image build, refresh, and software image
 build runs `terminalPackagesCommand()`. It installs `ttyd` and `tmux` with apt.
 It stops and masks the package's ttyd service, which uses the terminal port.
 The detached build command streams its output to the build log.
-The release installer supplies and enables both terminal units and their scripts.
+The release installer supplies both terminal units and their scripts.
+It enables the ttyd unit, which requires the shell server unit.
 It starts nothing and puts no password in the image.
 
 Release updates bring terminal script and unit changes to existing workspaces.
 The program downloads them in the background and applies them at a later
 runner start. A workspace without the program receives the background
 bootstrap at its next normal start. Apt packages remain part of image builds.
-The legacy `terminalInstallCommand()` and `installTerminalService()` remain
-for tests of the earlier installer. Production builds use only the package command.
 
 For an existing shell, `tmux set-option -g mouse on` enables scrolling
 immediately. Run it inside that workspace's Terminal tab. The setting lasts
@@ -201,10 +200,11 @@ runtime folders. One test runs the folder hook in a real interactive Bash.
 It moves the folder of the shell as a restore does, and it writes the
 marker later. It checks that the shell stays in the old view until the
 marker exists, moves once, keeps `OLDPWD`, and stays at a later move of
-the folder. It also checks that the hook exports no variable. The install
-test runs `terminalInstallCommand()` with fake `sudo`, `apt-get`, and
-`systemctl` commands. The
-[restore watch tests](../lifecycle/restore-watch.test.ts) of the lifecycle
+the folder. It also checks that the hook exports no variable. The package
+test runs `terminalPackagesCommand()` with fake `sudo`, `apt-get`, and
+`systemctl` commands. The unit tests read the release units and system installer.
+The lifecycle tests check that the package service is masked before release activation.
+The [restore watch tests](../lifecycle/restore-watch.test.ts) of the lifecycle
 check when the Worker writes the marker. Run the tests of this area with
 `npm run test -- worker/terminal`.
 
@@ -217,17 +217,17 @@ Terminal status reads remain available.
 - [handler.ts](handler.ts) exports `createTerminalHandler`.
 - [connections.ts](connections.ts) owns terminal registration, expiry, and scheduled access checks.
 - [The shared connection reader](../security/connection-access.ts) reads each session, membership, and sandbox identity in one batch.
-- [service.ts](service.ts) exports `terminalPackagesCommand`, which installs the apt packages without replacing release files. Its legacy `terminalInstallCommand` installs scripts and units for installer tests. It also exports the legacy hook `installTerminalService`, the setup command `terminalStartCommand`, the password read `startWorkspaceTerminal`, the marker writer `markTerminalRestoreEnded`.
+- [service.ts](service.ts) exports `terminalPackagesCommand`, which installs the apt packages without replacing release files. It also exports the setup command `terminalStartCommand`, the password read `startWorkspaceTerminal`, the marker writer `markTerminalRestoreEnded`.
 - [The shared terminal contract](../../src/shared/terminal.ts) owns `TERMINAL_PORT`.
 - [scripts.ts](scripts.ts) builds the password program, the launcher, and the shell server with `credentialScript`, `launcherScript`, and `sessionServerScript`. It also holds the marker path `TERMINAL_RESTORE_MARKER`, and it builds the folder hook with `terminalPromptCommand`.
 - [credentials.ts](credentials.ts) encrypts the locally generated workspace password.
 - [store.ts](store.ts) binds each cached password to its current sandbox ID and provider account.
 - [privileged.ts](privileged.ts) quotes installation and service control commands.
 - [protocol.ts](protocol.ts) adds server authentication to ttyd's first JSON message. It passes each later frame through unchanged.
-- [scripts.test.ts](scripts.test.ts) and [install.test.ts](install.test.ts) run the programs and the install command with fakes.
+- [scripts.test.ts](scripts.test.ts) and [install.test.ts](install.test.ts) run the scripts and package command with fakes. They also read the release units.
 - [The tools adapter](../previews/provider.ts) exposes the private port.
 - [The sandbox provider](../sandbox/README.md) owns credentials, the port credential, fixed routes, and bounded file reads.
-- [The workspace lifecycle](../lifecycle/README.md) runs the install command in each build. After the startup script of each create and resume, it runs the setup command and then the password read. Its restore watch calls `markTerminalRestoreEnded`.
+- [The workspace lifecycle](../lifecycle/README.md) runs the package command in each build. After the startup script of each create and resume, it runs the setup command and then the password read. Its restore watch calls `markTerminalRestoreEnded`.
 
 See [terminal, previews, and desktop](../../docs/protocol/terminal-previews-and-desktop.md#terminal) and
 [workspace tools](../../docs/protocol/workspace-tools.md#terminal).

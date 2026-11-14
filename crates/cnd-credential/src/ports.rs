@@ -58,3 +58,7 @@ pub trait Streams: Send + Sync {
     /// Write the only permitted token output.
     async fn output(&self, value: String) -> Result<()>;
 }
+
+#[cfg(test)]
+#[path = "_tests_/environment_tests.rs"]
+mod environment_tests;

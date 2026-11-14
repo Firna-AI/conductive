@@ -48,6 +48,8 @@ A local package link lets each bundle find the SDK packages.
 The parent install command installs the helper. Root `runner:typecheck` and
 `runner:test` scripts check only this package.
 The root lint and format commands cover both packages.
+Session tests call the shipped `HelperSession` with fake providers.
+They control setup, process exit, and credential cleanup with explicit signals.
 
 The [measurement guide](scripts/README.md) describes the first-start tools.
 They start adapters directly with developer credentials. They do not measure the runner or the gateway.

@@ -1,6 +1,6 @@
 [Unit]
 Description=Conductive terminal
-After=network.target conductive-terminal-sessions.service conductive-update-apply.service
+After=network.target conductive-terminal-sessions.service
 Requires=conductive-terminal-sessions.service
 ConditionPathExists=/run/conductive-terminal/enabled
 

@@ -48,6 +48,8 @@ It writes a failure message to stderr and returns exit status 1.
 Both tools preserve the Worker's error code and message, such as `session_closed: Reopen the session to send a message.`
 They give a generic failure for malformed replies and network failures.
 Error text never includes the known workspace credential.
+The shared JSON decoder replaces lone UTF-16 surrogate escapes with U+FFFD
+in Worker replies and MCP requests. Valid Unicode text stays unchanged.
 A successful reply can report no change, such as `deleted: false` or `closed: false`.
 The CLI returns status 0 for it, and MCP returns `isError: false`.
 `conductive --help` works without runtime credentials.
@@ -69,6 +71,8 @@ The runner supplies these values in the process environment:
 
 An explicitly supplied runtime value takes precedence over the saved
 `/run/ascii-secrets/env.sh` value. Only an absent value uses that file.
+The executable shares its saved-settings reader with the Git credential helper.
+The saved token name is `WORKSPACE_TOKEN`.
 The tools send the token as a bearer credential.
 They send the turn ID in `X-Conductive-Turn-Id`.
 The turn ID selects context.

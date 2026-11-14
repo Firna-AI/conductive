@@ -27,6 +27,7 @@ pub trait RunnerLink: Send + Sync {
     /// Replace any prior connection and send hello before other messages.
     async fn connect(&self) -> Result<()>;
     /// Process one message. A single runtime owner drives this method.
+    /// Keep this future until it finishes or the connection ends: receipt precedes processing.
     async fn step(&self) -> Result<LinkUpdate>;
     /// Bound, number, and save an already filtered event before sending it.
     async fn emit(&self, event: RunnerEvent, report_command_id: Option<String>) -> Result<()>;

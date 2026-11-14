@@ -1,6 +1,5 @@
 [Unit]
 Description=Conductive terminal shell server
-After=conductive-update-apply.service
 ConditionPathExists=/run/conductive-terminal/enabled
 
 [Service]

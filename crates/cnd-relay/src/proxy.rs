@@ -20,6 +20,7 @@ use crate::error::{ErrorResultExt, Result};
 use crate::headers;
 
 /// Preview request boundary shared by each accepted connection.
+#[cfg_attr(test, unimock::unimock(api = ProxyMock))]
 #[async_trait]
 pub trait Proxy: Send + Sync {
     /// Validate and forward a preview request.

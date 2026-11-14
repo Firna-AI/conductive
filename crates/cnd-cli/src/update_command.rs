@@ -4,15 +4,18 @@ use std::path::{PathBuf, absolute};
 use std::sync::Arc;
 
 use clap::{Args, Subcommand};
-use cli_updater::{HttpReleaseClient, TarGzBinaryInstaller};
+use cli_updater::TarGzBinaryInstaller;
 use cnd_cli::update::disk::DiskStore;
 use cnd_cli::update::engine::Engine;
+use cnd_cli::update::http::release_client;
 use cnd_cli::update::ports::UpdateEngine;
-use cnd_cli::update::process::SystemProcesses;
+use cnd_cli::update::process::{SYSTEM_PART, SystemProcesses};
+use cnd_cli::update::staging::NODE_PART;
 use cnd_release::version::{BASE_URL, DEVELOPMENT_VERSION};
 
 use crate::error::{ErrorResultExt, Result};
 use crate::release;
+use crate::runner_command::SDK_HELPER_PART;
 
 /// Options shared by the software update operations.
 #[derive(Debug, Args)]
@@ -45,12 +48,18 @@ enum Operation {
 
 pub(crate) async fn execute(args: UpdateArgs) -> Result<()> {
     if matches!(args.operation, Operation::Parts) {
-        println!("{}", serde_json::to_string(&release::parts()?).internal()?);
+        let parts = release::parts()?;
+        if release::VERSION != DEVELOPMENT_VERSION {
+            parts
+                .require(&[NODE_PART, SDK_HELPER_PART, SYSTEM_PART])
+                .internal()?;
+        }
+        println!("{}", serde_json::to_string(&parts).internal()?);
         return Ok(());
     }
     let engine = Engine {
         store: Arc::new(DiskStore::new(absolute(args.root).internal()?)),
-        client: Arc::new(HttpReleaseClient::new(args.server).internal()?),
+        client: Arc::new(release_client(&args.server).internal()?),
         installer: Arc::new(TarGzBinaryInstaller::new()),
         processes: Arc::new(SystemProcesses),
     };
@@ -62,10 +71,14 @@ pub(crate) async fn execute(args: UpdateArgs) -> Result<()> {
             } else {
                 release::VERSION
             };
-            engine.check(version).await.internal()
+            if bootstrap {
+                engine.install(version).await.internal()
+            } else {
+                engine.check(version).await.internal()
+            }
         }
         Operation::Apply => engine.apply().internal(),
-        Operation::Started => engine.started().internal(),
+        Operation::Started => engine.started(release::VERSION).internal(),
         Operation::Parts => Ok(()),
     }
 }

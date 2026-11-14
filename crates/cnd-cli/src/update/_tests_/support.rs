@@ -1,10 +1,5 @@
 //! Mock release clients, installers, and shared test data.
 
-#![expect(
-    clippy::unwrap_used,
-    reason = "A failed test setup must stop the test."
-)]
-
 use std::path::Path;
 use std::sync::Arc;
 
@@ -55,9 +50,9 @@ pub(super) fn release(version: &str) -> ReleaseAssetInfo {
     }
 }
 
-pub(super) fn parts() -> PartsList {
+pub(super) fn parts() -> cnd_release::error::Result<PartsList> {
     PartsList::new(
-        ["runner", "node", "system"]
+        ["sdk-helper", "node", "system"]
             .into_iter()
             .map(|name| Part {
                 name: name.into(),
@@ -66,7 +61,6 @@ pub(super) fn parts() -> PartsList {
             })
             .collect(),
     )
-    .unwrap()
 }
 
 pub(super) fn engine(
