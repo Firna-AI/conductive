@@ -8,7 +8,8 @@ import { Check, ChevronRight } from 'lucide-react'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import type { MenuPlacement } from '../../../docs/mockups/src/components/common/Menu'
 import menu from '../../../docs/mockups/src/components/common/Menu.module.css'
-import type { MenuAction, MenuEntry, MenuSubmenu } from './Menu'
+import { SwitchPicture } from '../../../docs/mockups/src/components/common/SwitchPicture'
+import type { MenuAction, MenuEntry, MenuSubmenu, MenuSwitch } from './Menu'
 import { useLayerFocus } from './Overlay'
 import ui from './ui.module.css'
 
@@ -62,8 +63,8 @@ function moveFocus(
   items[target]?.focus()
 }
 
-function Item(props: { entry: MenuAction; close: () => void }) {
-  const { entry } = props
+function Item(props: { entry: MenuAction; close: () => void; busy: boolean }) {
+  const { entry, busy } = props
   const Icon = entry.icon
   const choice = entry.checked !== undefined
   let lead: ReactNode = null
@@ -72,15 +73,17 @@ function Item(props: { entry: MenuAction; close: () => void }) {
   return (
     <button
       aria-checked={choice ? entry.checked : undefined}
+      aria-disabled={busy || undefined}
       className={classes(
         menu.item,
         ui.plainButton,
         ui.menuItem,
         entry.tone === 'danger' && menu.danger,
-        entry.disabled && menu.disabled,
+        (entry.disabled || busy) && menu.disabled,
       )}
       disabled={entry.disabled}
       onClick={() => {
+        if (busy) return
         props.close()
         entry.onSelect()
       }}
@@ -96,6 +99,35 @@ function Item(props: { entry: MenuAction; close: () => void }) {
       {entry.checked ? (
         <Check aria-hidden className={menu.check} size={14} />
       ) : null}
+    </button>
+  )
+}
+
+/**
+ * The row of a switch: its label and the switch, as the mockup draws it. A
+ * press changes it, and the menu stays open.
+ */
+function SwitchItem(props: { entry: MenuSwitch; busy: boolean }) {
+  const { entry, busy } = props
+  return (
+    <button
+      aria-checked={entry.on}
+      aria-disabled={busy || undefined}
+      className={classes(
+        menu.item,
+        ui.plainButton,
+        ui.menuItem,
+        busy && menu.disabled,
+      )}
+      onClick={() => {
+        if (!busy) entry.onToggle()
+      }}
+      role="menuitemcheckbox"
+      tabIndex={-1}
+      type="button"
+    >
+      <span className={menu.label}>{entry.label}</span>
+      <SwitchPicture on={entry.on} />
     </button>
   )
 }
@@ -148,6 +180,10 @@ function itemAt(event: PointerEvent<HTMLDivElement>): HTMLElement | null {
  * With `focus`, the list moves the focus into itself as it opens and back
  * as it closes. A list in a sheet leaves the focus to the sheet, which is
  * modal, and a menu at a point moves the focus itself.
+ *
+ * While `busy`, each item and each switch is off: it fades, a screen reader
+ * hears it as off, and a press does nothing. It can still take the focus,
+ * so the focus stays in the list, and the arrow keys still move it.
  */
 export function MenuList(props: {
   label: string
@@ -157,9 +193,11 @@ export function MenuList(props: {
   wide?: boolean
   submenus?: SubmenuControl
   focus?: boolean
+  busy?: boolean
 }) {
   const list = useRef<HTMLDivElement>(null)
   const { placement, submenus } = props
+  const busy = props.busy ?? false
   const point = placement === 'point'
   useLayerFocus(list, {
     modal: false,
@@ -201,6 +239,7 @@ export function MenuList(props: {
           case 'item':
             return (
               <Item
+                busy={busy}
                 close={props.close}
                 entry={entry}
                 key={entry.id ?? entry.label}
@@ -210,6 +249,8 @@ export function MenuList(props: {
             return (
               <SubmenuItem entry={entry} key={entry.id} submenus={submenus} />
             )
+          case 'switch':
+            return <SwitchItem busy={busy} entry={entry} key={entry.label} />
           case 'label':
             return (
               <div className={menu.group} key={entry.label} role="none">

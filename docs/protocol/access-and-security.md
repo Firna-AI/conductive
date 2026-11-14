@@ -23,6 +23,8 @@ These docs belong to this doc:
   desktop.
 - [Attachment uploads](attachment-uploads.md): the upload of an attached
   file in parts, with the gate rules and the body limit of its routes.
+- [Step timing](step-timing.md): the `Server-Timing` header of a reply,
+  and what it may hold.
 
 ## Sign-in
 

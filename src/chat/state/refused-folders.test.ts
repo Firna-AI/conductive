@@ -21,6 +21,7 @@ const codex = {
   agent: 'codex',
   model: 'GPT-6.1 Sol',
   effort: 'medium',
+  fast: false,
 } as const
 const startPath = attachmentUploadStartPath(FAKE_IDS.org, {
   type: 'workspace',

@@ -26,7 +26,12 @@ const partPath = attachmentUploadPartPath(org, draft, FAKE_IDS.upload, 1)
 const completePath = attachmentUploadCompletePath(org, draft, FAKE_IDS.upload)
 const defaults = {
   repositoryId: 'storefront',
-  choice: { agent: 'claude', model: 'Opus 5.5', effort: 'high' } as const,
+  choice: {
+    agent: 'claude',
+    model: 'Opus 5.5',
+    effort: 'high',
+    fast: false,
+  } as const,
 }
 const shortly = { timeout: 10_000 }
 

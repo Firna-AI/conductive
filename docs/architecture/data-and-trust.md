@@ -30,6 +30,7 @@ and the separate preview domain.
 | The repository, the files, and the agent sessions                            | The home folder of the sandbox           |
 | The prepared repositories and the installed software                         | The org image, in the app's Boat account |
 | Panel sizes                                                                  | The browser, or the Mac app              |
+| The address of the last workspace page of each org                           | The browser, or the Mac app              |
 
 ## Trust boundaries
 

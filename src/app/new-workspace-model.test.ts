@@ -23,10 +23,16 @@ const choice = {
   agent: 'codex',
   model: 'GPT-6.1 Sol',
   effort: 'medium',
+  fast: false,
 } as const
 const defaults = {
   repositoryId: 'storefront',
-  choice: { agent: 'claude', model: 'Opus 5.5', effort: 'high' } as const,
+  choice: {
+    agent: 'claude',
+    model: 'Opus 5.5',
+    effort: 'high',
+    fast: false,
+  } as const,
 }
 
 async function loaded(server: FakeApiServer, held?: HeldRequests) {

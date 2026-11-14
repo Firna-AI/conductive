@@ -10,6 +10,10 @@ decision number names a dated record, as
 until-stop decision names a decision of the change that added Allow all
 commands until I stop.
 
+An Extend decision names a decision of the change that adds [Extend](#extend).
+Its plan keeps the dated record while the change is open. Its pull request
+keeps it after the merge.
+
 ## Permissions
 
 - The page runs in a sandbox, with context isolation and without Node. It
@@ -18,8 +22,16 @@ commands until I stop.
   tab.
 - Mac commands add no bridge and no permission to the page. The page has
   no direct access to the commands of the Mac.
-- The page can only answer a request that waits. The answer goes through
-  the Worker to the Mac app on the Mac that got the request.
+- The page can only answer a request that waits, remove an always-allowed
+  command, and stop a [grant](#the-choices) that runs. It can extend the
+  running 15 minutes, or keep them until Stop. The answer goes through the
+  Worker to the Mac app on the Mac that got the
+  request. Each change goes through the Worker to the Mac app that shows
+  the page.
+- Only the answers Allow all commands for 15 minutes and Allow all
+  commands until I stop start a grant. The Mac app decides each change,
+  and the Worker stores no grant, as
+  [Saved choices](#saved-choices) says.
 - Only the main frame on the desktop origin can use a sanitized clipboard
   write. Reason: the copy actions of the web app need it.
 - The Mac app denies every other permission to the page and its frames.
@@ -98,10 +110,36 @@ limits, their results, and what the chat shows.
 - Reason: while a grant runs, no request asks, so the menu of the choices
   does not show. The user needs more time at the moment the 15 minutes
   run out.
+- The bar of the 15 minutes also offers Extend beside the time left. It
+  sets their end to 15 minutes from now, as [Extend](#extend) says.
 - The command runs with the permissions of the user on the Mac, in the
   folder of the request.
 - Risk: Always allow does not cover the folder. So an always-allowed
   command runs in any folder that a later request names.
+
+### Extend
+
+- Extend sets the end of the running 15 minutes to 15 minutes after the
+  moment that the Mac app applies it (Extend decision 1). The Mac app reads that moment
+  from the clock of the Mac. Extend does not add 15 minutes to the time
+  left.
+- Reason: the Mac then decides each end, and a timed grant never has more
+  than 15 minutes left.
+- Extend acts only on 15 minutes that still run, by the clock of the Mac. It
+  never starts a grant. When the grant ended before the Mac app applies
+  Extend, Extend fails. It leaves a grant until Stop unchanged.
+- Reason: a grant then starts only when the user answers a request.
+- Extend takes effect only when the Mac app saves the new end. When the
+  save fails, the grant stays as it was and Extend fails. So Extend
+  reports done or failed, never done but not saved.
+- Reason: a disk error must not give more permission than the Mac saved.
+- Each Extend needs a click of the user. An end that moves with each
+  command that runs was rejected. Reason: a busy agent would then keep the
+  grant going while nobody watches.
+- The user can extend a grant any number of times. Reason: a limit adds no
+  safety, because whoever can send an Extend can also answer a request.
+- A longer choice, such as 1 hour, was rejected. Reason: it does not
+  extend the running 15 minutes, and it changes the fixed timed choice.
 
 ### Saved choices
 
@@ -110,12 +148,18 @@ limits, their results, and what the chat shows.
 - The Mac app saves the always-allowed commands and the 15 minutes. It
   keeps a grant until Stop only in memory and never saves it (Mac
   until-stop decision 1).
+- A saved end of the 15 minutes includes an end that Extend set.
 - Reason: the Mac then decides what runs on it, and no record on the
   server can allow a command.
-- The account page of the Mac app has a This Mac section. It shows the
-  name of the Mac, whether the Mac is available, and each always-allowed
-  command by its exact text, with Remove. It also shows each workspace
-  with a grant, with the time left or Until you stop, and Stop.
+- The account page of the Mac app has a This Mac tab, after Keyboard
+  shortcuts. It shows the name of the Mac, whether the Mac is available,
+  and each always-allowed command by its exact text, with Remove. It also
+  shows each workspace with a grant, with the time left or Until you stop, and Stop.
+- A long always-allowed command shows its first three lines, and its last
+  shown line fades out. Show all shows the whole command, and Show less
+  makes it short again. A command that fits shows no button.
+- Reason: the user asked on 12 November 2026 for the list in its own tab,
+  and for short long commands, so that more commands show at once.
 - After Remove, the next request with that command text asks again.
 - Remove and Stop revoke their permission in the current Mac app even if
   saving the change fails.
@@ -125,7 +169,8 @@ limits, their results, and what the chat shows.
 - A failed save does not keep the revoked permission active in memory.
   Reason: a disk error must not leave a permission active after the user
   revokes it.
-- The web app in a browser has no This Mac section.
+- The web app in a browser has no This Mac tab. Its address shows General
+  there.
 
 ### Settings results
 
@@ -143,6 +188,11 @@ limits, their results, and what the chat shows.
 - This Mac shows the result of each control. The bar shows the result of
   Stop even when the grant no longer runs. It shows the result of a Keep
   that failed while the grant runs.
+- Stop and Extend are separate controls of the bar. While a change of one
+  waits, the user can still press the other.
+- Reason: a waiting Extend must not keep the user from Stop.
+- A failed Extend shows its cause on the bar. A done Extend shows no
+  result, because the time left shows the change.
 - A failure stays until the next change of that control, also after a
   read or a new device connection.
 - When the original control is gone, Try again can repeat that change.

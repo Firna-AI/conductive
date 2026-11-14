@@ -159,6 +159,8 @@ They count omitted files. The complete Changes response has no summary cap.
 A `turn.completed` event can carry `endReason`, of the type `TurnEndReason`.
 The runner, the Worker, and the browser use that one type.
 Its one value is `background_work_limit`.
+The end of a fast turn can carry `speed`, of the type `TurnSpeed`, which
+`readTurnSpeed` reads: fast, or standard with a cause code.
 `runner.event-refused` belongs only to workspace chat events.
 It identifies the lost runner event without copying its data.
 Its `repairFailed: true` flag marks a refused replacement of a lost workspace update.
@@ -237,6 +239,12 @@ The git credential payload is not defined yet.
 
 ### Key Code
 
+- [Workspace views](workspace-view.ts) define the saved view and its
+  `temporaryTab` field. The field names one file or diff by kind and path,
+  without a display mode, or is null. The Worker and browser readers use
+  null for an absent or invalid mark, or one that names no open tab.
+  [The saved view](../../docs/protocol/temporary-tabs.md#the-saved-view)
+  gives the requirements.
 - [Shortcut commands](shortcut-commands.ts) define the stable command IDs.
   The app and Worker share this list, including Copy link, pull request
   actions, and both transcript copies. Account reads and saves accept

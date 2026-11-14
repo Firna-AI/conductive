@@ -125,20 +125,20 @@ export const orgSettings: readonly (CommandText & { tab: SettingsTab })[] = [
 /**
  * The rows of the Account group of the Settings tab, in the order of the
  * Account page: tab by tab, and in each tab in the order of its sections.
- * So This Mac, which only the Mac app shows, follows Sign-in on the General
- * tab, and the Keyboard shortcuts tab ends the list. A section that the
- * page adds or moves takes the same place here.
+ * So the Keyboard shortcuts tab follows New workspaces, and the This Mac
+ * tab, which only the Mac app shows, ends the list. A section that the page
+ * adds or moves takes the same place here.
  */
 export const accountSettingIds = [
   'sign-in',
-  'this-mac',
   'github',
   'agents',
   'new-workspaces',
   'keyboard-shortcuts',
+  'this-mac',
 ] as const
 
-/** A section of the Account page, or its Keyboard shortcuts tab. */
+/** A section of the Account page, or its Keyboard shortcuts or This Mac tab. */
 export type AccountSettingId = (typeof accountSettingIds)[number]
 
 export const accountSettings: Readonly<Record<AccountSettingId, CommandText>> =

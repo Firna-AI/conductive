@@ -8,6 +8,7 @@ import {
   type Session,
 } from '../fixtures/sessions'
 import type { WorkspaceState } from './workspaceState'
+import { hasTemporaryTab } from './workspaceTemporaryTab'
 
 const [firstSession, secondSession] = workspaceSessions
 
@@ -45,11 +46,16 @@ export function withCodeMoved(tabs: readonly WorkspaceTab[]): WorkspaceTab[] {
   return tabs.filter((tab) => tab !== code).toSpliced(1, 0, code)
 }
 
+/** The key of the temporary tab of the row, if the row shows one. */
+function temporaryKey(tabs: readonly WorkspaceTab[]): string | undefined {
+  return tabs.find((tab) => tab.temporary)?.key
+}
+
 /**
  * The drag of each viewport, with the line between the two sessions. On
- * desktop the code file lands there. A phone shows only the sessions, so a
- * long press lifts the second session, and the line marks its place until
- * the finger moves.
+ * desktop the temporary tab lands there, or else the code file. A phone
+ * shows only the sessions, so a long press lifts the second session, and
+ * the line marks its place until the finger moves.
  */
 function dragOf(
   tabs: readonly WorkspaceTab[],
@@ -57,8 +63,24 @@ function dragOf(
 ): TabDrag | undefined {
   const index = tabs.findIndex((tab) => tab.key === secondSession.key)
   if (index < 0) return undefined
-  const tab = viewport === 'mobile' ? secondSession.key : codeTabKey
+  const tab =
+    viewport === 'mobile'
+      ? secondSession.key
+      : (temporaryKey(tabs) ?? codeTabKey)
   return { tab, index }
+}
+
+/**
+ * The tab whose menu is open: the temporary tab when the state draws one,
+ * or else the first session. A phone row shows no file tabs, so a phone
+ * opens no menu for the temporary tab.
+ */
+function menuTabOf(
+  state: WorkspaceState,
+  tabs: readonly WorkspaceTab[],
+): string | undefined {
+  if (state.overlay !== 'tab-menu') return undefined
+  return hasTemporaryTab(state) ? temporaryKey(tabs) : firstSession.key
 }
 
 /**
@@ -67,7 +89,7 @@ function dragOf(
  */
 export type TabRow = {
   drag?: TabDrag
-  /** The tab whose menu is open: the first session. */
+  /** The tab whose menu is open: the first session, or the temporary tab. */
   menuTab?: string
   /** The tab that shows the rename field: the first session too. */
   renaming?: string
@@ -89,7 +111,7 @@ export function tabRowOf(
   viewport: Viewport,
   readOnly: boolean,
 ): TabRow {
-  const menuTab = state.overlay === 'tab-menu' ? firstSession.key : undefined
+  const menuTab = menuTabOf(state, tabs)
   if (readOnly) return { menuTab, full: state.tabRow === 'full' }
   const renaming = state.tabRow === 'rename' ? firstSession.key : undefined
   return {

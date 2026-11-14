@@ -49,7 +49,8 @@ export function effort(value: unknown): Effort {
     value === 'medium' ||
     value === 'high' ||
     value === 'xhigh' ||
-    value === 'max'
+    value === 'max' ||
+    value === 'ultra'
   )
     return value
   return invalidInput()
@@ -62,6 +63,7 @@ export function choice(value: unknown): AgentChoice {
     agent: input.agent,
     model: identifier(input.model),
     effort: effort(input.effort),
+    fast: input.fast === true,
   }
 }
 

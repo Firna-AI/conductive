@@ -4,6 +4,8 @@ Use these modules only in development and tests.
 The production Worker does not import them.
 They use the same contracts as the real API.
 The fixtures reuse the mockup data and keep all dates deterministic.
+The model list copies the fast mark of each mockup model, so the menus of
+Opus 5.5, GPT-6.1 Sol, and GPT-6 Astra show the Fast switch.
 Workspace records include their number and canonical link on `FAKE_ORIGIN`.
 Each record also gives the GitHub summary of its mockup workspace.
 The default workspace takes the summary of the chosen banner instead, `ready-to-merge` by default, so its list mark and its bar agree.
@@ -66,6 +68,10 @@ The development pages of the Files screens and of the workspace screen use them 
 paths hold a fake secret value, and their records carry the labels of the
 mockups as display paths, in the file lists, the reads of the seed script,
 and the end of each finished turn. `fixtures/masked-paths.ts` holds them.
+
+`savedLists: false` leaves the recorded file reports out of the event
+history, as for a new workspace whose runner has not reported its lists.
+Override the tree and changes routes too, such as with a 503 reply.
 
 Writes return recorded replies, except org moves.
 `fake-org-order-routes.ts` serves `PUT /api/org-order` and saves its order for later org list reads.

@@ -169,12 +169,14 @@ export function feedbackRow(): CommandRow {
 }
 
 /**
- * Switch to another org of the person. It opens the list of the org.
+ * Switch to another org of the person. It opens `href`: the last workspace
+ * of the org, or else its list page, as the tile of the org does.
  * `command` is Switch to org 1 to 9 of the place of the org in the rail.
  */
 export function switchRow(
   org: OrgSummary,
   command: ShortcutCommandId | null,
+  href: string,
 ): CommandRow {
   const text = actionTexts['switch-org']
   return {
@@ -183,7 +185,7 @@ export function switchRow(
     lead: { kind: 'org', org },
     label: `${text.label} ${org.name}`,
     words: text.words,
-    href: routes.org(org.id),
+    href,
     ...commandOf(command),
   }
 }
@@ -220,13 +222,15 @@ function accountTabOf(id: AccountSettingId): AccountTab {
   if (id === 'agents') return 'agents'
   if (id === 'new-workspaces') return 'preferences'
   if (id === 'keyboard-shortcuts') return 'shortcuts'
+  if (id === 'this-mac') return 'this-mac'
   return 'general'
 }
 
 /**
- * The sections of the Account page, then its Keyboard shortcuts tab. Each
- * row opens the tab that holds it. Keyboard shortcuts runs the command of
- * the keys that opens the tab, whose key it shows.
+ * The sections of the Account page, then its Keyboard shortcuts tab, then
+ * its This Mac tab in the Mac app. Each row opens the tab that holds it.
+ * Keyboard shortcuts runs the command of the keys that opens the tab, whose
+ * key it shows.
  */
 export function accountRows(mac: boolean, withDetail: boolean): CommandRow[] {
   return accountSettingIds

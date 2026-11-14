@@ -22,6 +22,9 @@ This page lists each protocol doc and what it covers.
   - [Workspace menu](../protocol/workspace-menu.md): the menu of a workspace
     row, which moves, reassigns, renames, and archives the workspace.
   - [Workspace tools](../protocol/workspace-tools.md)
+    - [Temporary tabs](../protocol/temporary-tabs.md): the one file or diff
+      tab that the next press replaces, what opens and keeps it, and its
+      mark in the saved view.
     - [Port previews](../protocol/port-previews.md): detected servers, manual
       opening, preview tabs, and the relay requirement.
 - [Chat and events](../protocol/chat-and-events.md): sessions, messages, what
@@ -33,6 +36,9 @@ This page lists each protocol doc and what it covers.
       - [Attachment transfers](../protocol/attachment-transfers.md): the
         transfer of each file into the cloud computer, the deletion of its
         stored copy, the check of a later message, and what the agent gets.
+    - [Fast mode](../protocol/fast-mode.md): the Fast switch of the model
+      menu, the models that show it, who may turn it on, and the speed of a
+      turn that cannot run fast.
   - [File mentions](../protocol/file-mentions.md): the list of `@` in the
     composer, the chips of files and folders, the sent chips of attached
     files, and the removal of each chip of the composer.
@@ -65,6 +71,8 @@ This page lists each protocol doc and what it covers.
   - [Attachment uploads](../protocol/attachment-uploads.md): the upload of
     an attached file in parts, with the gate rules and the body limit of
     its routes.
+  - [Step timing](../protocol/step-timing.md): the `Server-Timing` header of
+    the preview replies and of the create reply, and what it may hold.
 - [Model gateway](../protocol/model-gateway.md): the turn token, and the
   Worker routes that add the agent login to each model request.
   - [Model gateway: requests and answers](../protocol/model-gateway-requests.md):
@@ -94,9 +102,6 @@ This page lists each protocol doc and what it covers.
   roles, the first run, and the end of an org.
   - [Org rail order](../protocol/org-rail-order.md): the order of the orgs
     in the rail that each person keeps, and how the person changes it.
-- [Pricing](../protocol/pricing.md): the plans and their cloud hours, the
-  extra hours, the seller and the tax, the pricing page, and the planned
-  billing changes. Use is free until billing starts.
 - [Mac app](../protocol/desktop-app.md): the shell for macOS, its sign-in, and
   Mac commands.
   - [Mac packages and updates](../protocol/desktop-packages-and-updates.md)

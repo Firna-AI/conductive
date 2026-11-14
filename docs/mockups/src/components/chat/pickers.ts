@@ -4,27 +4,32 @@ import {
   agentKeys,
   agents,
   effortsFor,
+  offersFast,
   type AgentChoice,
   type AgentKey,
 } from '../../fixtures/agents'
+import type { Shortcut } from '../common/KeyChips'
 import type { MenuEntry } from '../common/Menu'
 
 const divider: MenuEntry = { kind: 'divider' }
 
 /**
  * The menu of the model picker: the models of each agent as a group, with
- * no brand name, then the effort levels of the chosen model. The menu marks
- * the current model and the current effort. In a session with messages,
+ * no brand name, then the effort levels of the chosen model, then the Fast
+ * switch of a model that offers fast mode. The menu marks the current model
+ * and the current effort. In a session with messages,
  * each model of the other agent opens a new session, and the draft moves
  * there (decision 51). The external link icon marks each of those models,
  * and a screen reader says "New session" for it. A model of the session's
- * own agent stays in it.
+ * own agent stays in it. `fastKey` is the key of Fast mode, which the Fast
+ * row shows before its switch where the key runs (fast mode decision 258).
  */
 export function pickerMenu(
   choice: AgentChoice,
   sessionAgent?: AgentKey,
   /** The labels of the models that the menu leaves out. */
   hiddenModels: readonly string[] = [],
+  fastKey?: Shortcut,
 ): MenuEntry[] {
   const models = agentKeys.flatMap((key, index): MenuEntry[] => {
     const opensSession = sessionAgent !== undefined && key !== sessionAgent
@@ -42,6 +47,17 @@ export function pickerMenu(
       })),
     ]
   })
+  const fast: MenuEntry[] = offersFast(choice)
+    ? [
+        divider,
+        {
+          kind: 'switch',
+          label: 'Fast',
+          on: choice.fast === true,
+          shortcut: fastKey,
+        },
+      ]
+    : []
   return [
     ...models,
     divider,
@@ -51,5 +67,6 @@ export function pickerMenu(
       label: effortLabels[effort],
       checked: effort === choice.effort,
     })),
+    ...fast,
   ]
 }

@@ -25,9 +25,12 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
   disables codes, pauses sign-ups, and turns the waitlist off and on.
   [Operator section](../protocol/operator-section.md) states its rules.
 - Tabs are links, so each tool and each file view has its own address.
-- The browser stores only the panel sizes: the widths of the sidebar and
-  the right column, and the split of the right column. All other state
-  comes from the Worker. A tab keeps the chats that it showed in memory, as
+- The browser stores only the panel sizes and the last workspaces. The
+  panel sizes are the widths of the sidebar and the right column, and the
+  split of the right column. The last workspaces are the address of the
+  last workspace page of each org, as
+  [Opening an org](../protocol/org-rail-order.md#opening-an-org) says. All
+  other state comes from the Worker. A tab keeps the chats that it showed in memory, as
   [Chat and events](../protocol/chat-and-events.md#events) says.
 
 ## Mac app
@@ -230,8 +233,8 @@ the rules.
   workspace that has no name, from its first message. Its use bills to the
   Cloudflare account of the app (decision 184).
 - **Boat:** the app's Boat account pays for every sandbox and every saved
-  snapshot. Use of the app is free until billing starts, as
-  [Pricing](../protocol/pricing.md) says.
+  snapshot. Use of the app is free, as
+  [Orgs and members](../protocol/orgs-and-members.md#orgs) says.
 - **Resend:** the email service sends every email of the app, from
   `mail.conductive.build`. These are the org invitations, the approval
   emails, and the feedback emails. The Worker sends each feedback email,

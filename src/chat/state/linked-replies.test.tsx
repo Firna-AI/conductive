@@ -178,6 +178,7 @@ const codex: AgentChoice = {
   agent: 'codex',
   model: 'GPT-6.1 Sol',
   effort: 'medium',
+  fast: false,
 }
 const target = { type: 'workspace', workspaceId: ws } as const
 /** The start call of an upload, which comes before its parts. */

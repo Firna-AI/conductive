@@ -7,6 +7,7 @@ export const SQLITE_CHOICE: AgentChoice = {
   agent: 'claude',
   model: 'test-claude',
   effort: 'high',
+  fast: false,
 }
 
 export function sqliteSnapshot(large = false): GitHubSnapshot {

@@ -27,6 +27,14 @@ import { advanceScheduledAlarms } from './scheduled-alarms.test-support'
 import { exerciseRepairBudget } from './repair-budget-native-test-support'
 import { fakeAttachments } from '../test-support/attachments'
 
+/**
+ * The manual clock starts this far ahead of the real clock. The real
+ * runtime runs each alarm that is due on the real clock by itself, beside
+ * the manual ticks of a test. With this lead, no alarm on the manual clock
+ * is due in real time while a test runs, as `tests.md` asks.
+ */
+const CLOCK_LEAD_MS = 10 * 60 * 1_000
+
 /** Test transport only. Every start and stop runs the actual Workspace implementation. */
 export class WorkspaceRuntimeFixture extends Workspace {
   private heldMachine: ReturnType<typeof holdMachineCheckpoint> | undefined
@@ -36,7 +44,7 @@ export class WorkspaceRuntimeFixture extends Workspace {
   private readonly chatIds: string[]
 
   constructor(context: DurableObjectState, env: LifecycleEnvironment) {
-    const clock = new ManualChatClock(Date.now())
+    const clock = new ManualChatClock(Date.now() + CLOCK_LEAD_MS)
     const chatIds: string[] = []
     super(context, env, clock.now, {
       randomId: () => chatIds.shift() ?? crypto.randomUUID(),

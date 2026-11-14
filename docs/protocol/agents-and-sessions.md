@@ -2,8 +2,8 @@
 
 This doc holds the requirements and the decisions in force for the agents
 and the sessions of a workspace. It covers the agents and their logins,
-the names of the agents in the product, the sessions and their links, and
-the names of workspaces and sessions. It belongs to
+their efforts, the names of the agents in the product, the sessions and
+their links, and the names of workspaces and sessions. It belongs to
 [Chat and events](chat-and-events.md). The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
@@ -60,6 +60,22 @@ says.
 - A refused resume for another cause, or a refused fork, fails the turn
   with that cause.
 
+## Efforts
+
+- Each message runs at one effort of its model. The model list of the
+  deployment gives the efforts of each model, from the lowest:
+  None, Low, Medium, High, Extra high, Max, and Ultra.
+- Codex runs each effort at the reasoning level of the same name. Codex
+  Ultra is its maximum reasoning with automatic task delegation.
+- Claude runs Ultra at the Max level, with Ultracode on. Ultracode is the
+  mode of Claude that hands substantive work to multi-agent workflows.
+  Every other effort turns Ultracode off. Claude runs None with thinking
+  off.
+- The model list offers an effort only on models that support it. Reason:
+  on a model without a level, Claude runs a lower level without a sign.
+  It also ignores Ultracode on a model without it, and then runs Ultra as
+  Max.
+
 ## Names in the product
 
 - User-facing text calls the agents "agents powered by Claude and Codex".
@@ -67,7 +83,9 @@ says.
   its features. Reason: Anthropic forbids that use for a product that builds
   on its Agent SDK.
 - The model picker names the model and the effort, such as "Opus 5.5 Max".
-  It does not show the words Claude or Codex.
+  While [fast mode](fast-mode.md) is on, it adds Fast, such as "Opus 5.5
+  Max Fast". A screen reader hears Fast too. The picker does not show the
+  words Claude or Codex.
 - The app marks each agent with a small mark of its own. It shows no brand
   logo of an agent.
 
@@ -132,7 +150,11 @@ says.
 - Each member has their own order in each workspace. The order stays after
   a reload. The other devices of that member load the same order.
 - A new tab of any kind opens at the end of the row. This holds also for a
-  session that the history reopens.
+  session that the history reopens, and for a new
+  [temporary tab](temporary-tabs.md).
+- A press that replaces the file or the diff of the temporary tab leaves
+  the tab in its place. This holds also when later tabs stand after it. A
+  keep does not move the tab either.
 - The user can drag any tab to any place in the row.
 - A row that keeps the sessions and the files in two groups was rejected,
   because a file could then never go before a session.
@@ -157,6 +179,15 @@ says.
 - A menu of the hidden tabs was rejected, because the shown tab and the
   drop places could still hide. A row that wraps onto more lines was
   rejected, because the chat would move down when a tab opens.
+- Each tab of the row keeps the reader's place while another tab or another
+  workspace shows. A session tab keeps the row that the user read, as
+  [The scroll of the chat](chat-and-events.md#the-scroll-of-the-chat)
+  says. A file or diff tab keeps its scroll offset, one for each of its
+  views, such as the code and the preview of a Markdown file. A reload
+  forgets the places. The user chose this on 13 November 2026.
+- A tab that closes forgets its place, also when another member closes its
+  session. When it opens again, a session tab shows the bottom, and a file
+  or diff tab shows the top. The user chose this on 13 November 2026.
 - A right click on a tab opens its tab menu (decision 188).
 - On a focused tab, Shift and F10, or the Menu key, also opens the tab
   menu. This holds on every system.
@@ -164,11 +195,13 @@ says.
   a sheet.
 - The tab menu of a session tab holds three groups, with a line between
   them: Rename session, then Copy link, Copy concise transcript, and Copy
-  full transcript, then Move left and Move right. The tab menu of a file or
-  diff tab holds Move left and Move right.
+  full transcript, then Move left and Move right. The tab menu of a kept
+  file or diff tab holds Move left and Move right.
 - Copy link copies the link of the session of its tab, as
   [Session links](#session-links) says. The user added it on 12 November
   2026.
+- The tab menu of the temporary tab holds two groups, with a line between
+  them: Keep open, then Move left and Move right (decision 286 B).
 - Reason: the tab menu groups its items by kind (decision 188).
 - [Session transcripts](session-transcripts.md) states what each copy item
   copies (decisions 213 and 215).
@@ -177,6 +210,19 @@ says.
 - After a move from the tab menu, a screen reader user hears the name of
   the tab and its new place, such as "Address autocomplete moves to place
   2 of 4". The focus then goes back to the tab.
+- Keep open keeps the temporary tab, and the tab stays in its place. The
+  focus then goes back to the tab. A screen reader user hears that the tab
+  stays open, such as "README.md stays open".
+- [Keep a tab](temporary-tabs.md#keep-a-tab) says why the menu holds Keep
+  open.
+- A move of the temporary tab to another place keeps it (decision
+  287 B). A move of another tab leaves it temporary. This holds for a drag, Move left, and Move right. A drag that
+  Escape cancels, or that ends in the same place, leaves the tab temporary.
+- Reason: a move shows that the user wants the file at that place. A
+  temporary tab that stays temporary after a move was rejected. The next
+  press would then replace the file at that place.
+- A drag that keeps the tab while Move left and Move right do not was
+  rejected. Two ways to make one move would then act differently.
 - Rename session opens a field for the title in that tab. The shown tab
   does not change.
 - In the app, the tab menu is the one way to rename a session. A Rename
@@ -197,6 +243,9 @@ says.
   copy there, as
   [Read-only workspaces](session-transcripts.md#read-only-workspaces)
   says. The rule also covers each item that the menu gets later.
+- So a read-only workspace also leaves out Keep open. The temporary tab
+  there opens no tab menu either, and only a double-click keeps a tab
+  (decision 286 B).
 - The tab menu opens there in the same ways as in other workspaces. A long
   press on a phone opens it, but lifts no tab.
 - An item that the place of a tab rules out, such as Move left on the

@@ -251,6 +251,7 @@ Call other parts of the app through a binding or an RPC method, not a global `fe
 - [marketing/site.ts](marketing/site.ts) serves the built root-domain site.
 - [marketing/consent.ts](marketing/consent.ts) serves the built agreement page before GitHub.
 - [routes.ts](routes.ts) dispatches protected app routes.
+- [server-timing.ts](server-timing.ts): `ServerTiming` records the steps of one request for its `Server-Timing` header. The preview proxy and the create of a workspace use it.
 - [codex-auth/README.md](codex-auth/README.md) owns device authorization,
   encrypted ChatGPT sign-ins, and serialized refresh-token renewal.
 - [http.ts](http.ts) serializes `HttpError` as the shared API error body, with optional structured details.
