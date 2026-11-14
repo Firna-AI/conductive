@@ -2,6 +2,7 @@
 
 import { act, type ReactNode } from 'react'
 import { describe, expect, test } from 'vitest'
+import { memoryNavigation, NavigationContext } from '../../app/navigation'
 import { routes } from '../../app/router'
 import {
   LinkOpeningProvider,
@@ -28,14 +29,15 @@ const answer = [
 ].join('\n\n')
 
 /**
- * Mounts `content` in a screen that opens links, and records each page and
- * each port that it opens. Without `ports`, the workspace runs no server.
+ * Mounts `content` at the home page, in a screen that opens links, and
+ * records each port that it opens. `navigation` holds the pages that the
+ * links of the app open. Without `ports`, the workspace runs no server.
  */
 async function mountOpening(content: ReactNode, ports = true) {
-  const opened: (string | number)[] = []
+  const opened: number[] = []
+  const navigation = memoryNavigation(routes.home())
   const opening: LinkOpening = {
     ...appLinks,
-    open: (to) => opened.push(to),
     ports: ports
       ? {
           href: (port) => `/preview/port/${port}`,
@@ -44,9 +46,11 @@ async function mountOpening(content: ReactNode, ports = true) {
       : null,
   }
   const { container } = await mount(
-    <LinkOpeningProvider value={opening}>{content}</LinkOpeningProvider>,
+    <NavigationContext.Provider value={navigation}>
+      <LinkOpeningProvider value={opening}>{content}</LinkOpeningProvider>
+    </NavigationContext.Provider>,
   )
-  return { container, opened }
+  return { container, opened, navigation }
 }
 
 /** Each link of `root`, as a reader and the browser see it. */
@@ -152,7 +156,7 @@ describe('links in the text of an answer', () => {
   })
 
   test('a plain press opens a page of the app and the preview of a port in the app, and leaves a press on another link and a press with a modifier key to the browser', async () => {
-    const { container, opened } = await mountOpening(
+    const { container, opened, navigation } = await mountOpening(
       <AgentText text={answer} />,
     )
     expect({
@@ -163,10 +167,12 @@ describe('links in the text of an answer', () => {
         appTakes(linkNamed(container, settings), { ctrlKey: true }),
         appTakes(linkNamed(container, local), { metaKey: true }),
       ],
+      pages: navigation.history,
       opened,
     }).toEqual({
       taken: [true, true, false, false, false],
-      opened: [agents, 3000],
+      pages: [routes.home(), agents],
+      opened: [3000],
     })
   })
 
@@ -204,7 +210,7 @@ describe('links in the text of an answer', () => {
   // link is the target of the press. happy-dom toggles the line on each
   // click in it, so this test checks only that the link gets the press.
   test('a message line shows the links of the answer, and a press on a link in the line goes to the link', async () => {
-    const { container, opened } = await mountOpening(
+    const { container, navigation } = await mountOpening(
       <MessageLine
         text={`[The agents](${settings}) need a login. See ${pull}.`}
       />,
@@ -216,14 +222,14 @@ describe('links in the text of an answer', () => {
         appTakes(linkNamed(container, 'The agents')),
         appTakes(linkNamed(container, pull)),
       ],
-      opened,
+      pages: navigation.history,
     }).toEqual({
       links: [
         ['The agents', ' '],
         [pull, `_blank ${newTab}`],
       ],
       taken: [true, false],
-      opened: [agents],
+      pages: [routes.home(), agents],
     })
   })
 })

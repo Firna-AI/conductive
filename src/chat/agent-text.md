@@ -113,19 +113,21 @@ text. These parts read and draw them:
   that shows as typed holds no link.
 - `useChatParts` gives `chatParts` the `linkOf` of `useTextLinks`, from
   `src/shell/ui/text-links.tsx`. The workspace screen gives that module
-  the app origin, the page check, the navigation of the app, and the port
-  previews of the workspace, as
+  the app origin, the page check, and the port previews of the workspace,
+  as
   [The chat of the workspace](../shell/workspace/screen-parts.md#the-chat-of-the-workspace)
   says. Without them, as on the development page, each link opens a new
   tab. Where no server runs, such as in a read-only workspace, a local
   address stays text, so a Markdown link to it shows as typed.
 - `WebLinkText` and `CodeText` in `links/WebLinkText.tsx` draw the parts
   with the mockups' `TextLink` and the `opener` of `useTextLinks`. A link
-  of the app and a local address are anchors of the app: a plain click
-  opens the page or the port preview in the same window, and a click with
-  a modifier key stays with the browser. Every other link opens a new tab
-  with `noopener noreferrer`. In the plain mode of `PlainLinks`, a link
-  draws its words alone.
+  of the app is an `AppLink` of `src/shell/ui/AppLink.tsx`: a plain click
+  opens its page in the same window, and replaces the address when that
+  page already shows. A local address is an anchor of the app: a plain
+  click opens the port preview in the same window. A click with a
+  modifier key on either stays with the browser. Every other link opens a
+  new tab with `noopener noreferrer`. In the plain mode of `PlainLinks`, a
+  link draws its words alone.
 - A link in a message line is an anchor, so `useFold` leaves a press on it
   to the link, and the line stays open or closed.
 - A copy of chat text gives the words of each link, as the browser copies

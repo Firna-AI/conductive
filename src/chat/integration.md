@@ -96,9 +96,10 @@ mount the chat.
 - The other links of sent messages and answers open through the link
   opener of the app shell, `LinkOpeningProvider` of
   `../shell/ui/text-links.tsx`, around the chat. It gives the origin of the
-  app host, the check for a page of the app, the navigation of the app,
-  and the port previews of the workspace, or none where no server runs.
-  The workspace screen gives it, as
+  app host, the check for a page of the app, and the port previews of the
+  workspace, or none where no server runs. A link of the app opens its
+  page as an `AppLink` does, through the navigation of the app. The
+  workspace screen gives it, as
   [The chat of the workspace](../shell/workspace/screen-parts.md#the-chat-of-the-workspace)
   says. Without it, as on the development page, each link opens a new
   tab.

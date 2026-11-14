@@ -1,6 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { expect, it } from 'vitest'
 import textLink from '../../../docs/mockups/src/components/common/TextLink.module.css'
+import { memoryNavigation, NavigationContext } from '../../app/navigation'
 import { parseRoute, routes } from '../../app/router'
 import { orgPath } from '../../shared/api'
 import {
@@ -26,16 +27,17 @@ const opening: LinkOpening = {
   appOrigin: FAKE_ORIGIN,
   isAppPage: (url) =>
     parseRoute(url.pathname, url.search).screen !== 'not-found',
-  open: () => {},
   ports: { href: (port) => `/preview/${port}`, open: () => {} },
 }
 
 /** A static render in a workspace screen, which opens the links. */
 function renderInScreen(text: string): string {
   return renderToStaticMarkup(
-    <LinkOpeningProvider value={opening}>
-      <MarkdownView parser={parseMarkdown} text={text} />
-    </LinkOpeningProvider>,
+    <NavigationContext.Provider value={memoryNavigation(routes.home())}>
+      <LinkOpeningProvider value={opening}>
+        <MarkdownView parser={parseMarkdown} text={text} />
+      </LinkOpeningProvider>
+    </NavigationContext.Provider>,
   )
 }
 
@@ -138,9 +140,10 @@ it('links only absolute http, https, and mailto addresses, with the shared link 
       `<a ${drawn('https://dev:secret@example.com/')} href="https://dev:secret@example.com/" ${newTab}>login</a>`,
     ],
     [`[api](${api})`, `<a ${drawn(api)} href="${api}" ${newTab}>api</a>`],
+    // A link of the app is an `AppLink`, which writes its `href` first.
     [
       `[agents](${FAKE_ORIGIN}${agents})`,
-      `<a ${drawn(`${FAKE_ORIGIN}${agents}`)} href="${agents}">agents</a>`,
+      `<a class="${textLink.link}" href="${agents}" title="${FAKE_ORIGIN}${agents}">agents</a>`,
     ],
     ['[run](javascript:alert(1))', '<p>run</p>'],
     ['[run](JaVaScRiPt:alert(1))', '<p>run</p>'],

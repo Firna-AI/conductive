@@ -26,8 +26,9 @@ this guide.
   screen the link opener of its untrusted text: the pages of the app, and
   the port previews of the workspace. `TextLinks.test.tsx` mounts the
   whole app. It presses a local address and a link of the app in the chat
-  on desktop, checks that an archived workspace keeps a local address as
-  text, and presses a link of the app in a Markdown file on a phone.
+  on desktop, and a link of the app to the address that shows. It checks
+  that an archived workspace keeps a local address as text, and presses a
+  link of the app in a Markdown file on a phone.
 - `files/files-features.tsx`: the Files part, which reads the kept files
   that the screen connects, and the file or diff page of the centre. The
   page gives its tab to `KeptScroll`, so each file and diff tab keeps its

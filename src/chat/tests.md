@@ -253,8 +253,9 @@ workspace got one request. The last stop keeps the session link as text.
 list while it shows, and not while it is hidden. The workspace screen's
 `LinkChips.test.tsx` checks the chips of a kept chat on a phone, and a
 link of another origin there. Its `TextLinks.test.tsx` presses a local
-address and a link of the app on desktop, and checks that an archived
-workspace keeps a local address as text. Its
+address and a link of the app on desktop, and a link of the app to the
+address that shows, which replaces that address. It checks that an
+archived workspace keeps a local address as text. Its
 `FileMentions.test.tsx` lists the files on a phone before a visit to
 Files, and opens a file and a folder from their chips, also into a hidden
 right column.

@@ -15,7 +15,7 @@
   - The file preview reads a link title, and shows the link as its label.
   - Chat text reads no title. So in an answer, `[docs](https://example.com/a "Docs")` shows as typed, with its brackets.
 - **Problem:** The same Markdown shows as a label in the file preview and as raw text in the chat. No protocol line says which is right for the chat.
-- **Impact if no action:** Agents that write a link title show raw Markdown in an answer.
+- **Impact if no action:** Agents that write a link title show raw Markdown in an answer. The address then reads as a bare address that keeps its backslash escapes, so `[docs](https://example.com/a\(b\) "Docs")` opens `https://example.com/a/(b/)`.
 - **Root question:** How does chat text show a Markdown link that has a title?
 - **Options:**
   - **A.** Keep it as typed. Its address stays a link as a bare address. Effort: Small.

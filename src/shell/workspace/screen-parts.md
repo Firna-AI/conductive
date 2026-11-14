@@ -59,12 +59,13 @@ says.
   [Chat links](../../../docs/protocol/chat-links.md) says, and the links
   of the file preview, also in the Files tab of a phone, as
   [Files and changes](../../../docs/protocol/workspace-tools.md#files-and-changes)
-  says. A link of the app opens its page in the same window. A local
-  address of chat text opens the address of the Preview tool with its
-  port, from `previewPortHref`. On desktop the right column then shows, as
-  for a folder chip, and a phone shows the Preview tab. A read-only
-  workspace gives no port previews, so a local address of chat text stays
-  text there. A local address of a file opens a new tab.
+  says. A link of the app opens its page in the same window, as an
+  `AppLink` does, so a press on a link to the address that shows replaces
+  that address. A local address of chat text opens the address of the
+  Preview tool with its port, from `previewPortHref`. On desktop the right
+  column then shows, as for a folder chip, and a phone shows the Preview
+  tab. A read-only workspace gives no port previews, so a local address of
+  chat text stays text there. A local address of a file opens a new tab.
 - A `center` part of the host takes the place of the whole chat, also of
   its tabs.
 - When the features give the `tabs`, `transcript`, or `composer` slot, the

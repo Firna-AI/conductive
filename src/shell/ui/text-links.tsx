@@ -5,7 +5,7 @@ import {
   type WebLink,
   type WebLinkContext,
 } from '../../markdown/web-links'
-import { isPlainClick } from './AppLink'
+import { AppLink, isPlainClick } from './AppLink'
 
 /** The port previews of a workspace, which a local address opens. */
 interface PortPreviews {
@@ -17,12 +17,11 @@ interface PortPreviews {
 
 /**
  * What a screen gives the links of untrusted text, such as chat text: the
- * origin of the app host with the check for a page of the app, the
- * navigation of the app, and the port previews of its workspace.
+ * origin of the app host with the check for a page of the app, and the
+ * port previews of its workspace. A link of the app opens its page through
+ * the navigation of the app, as `AppLink` does.
  */
 export interface LinkOpening extends WebLinkContext {
-  /** Opens a page of the app in the same window. */
-  open: (to: string) => void
   /**
    * The port previews of the workspace, or null where no server runs, such
    * as in a read-only workspace. A local address then stays text.
@@ -102,16 +101,17 @@ function appAnchor(href: string, open: () => void) {
 }
 
 /**
- * The element that opens a link. A link of the app opens its page in the
- * app, and a local address opens the preview of its port. Every other
- * link, and every link outside a screen that opens links, opens a new tab
- * with no opener and no referrer, so the other site gets no address of
- * the app. The Mac app opens such a tab in the default browser.
+ * The element that opens a link. A link of the app is an `AppLink` to its
+ * page, so a press on a link to the address that shows replaces it. A
+ * local address opens the preview of its port. Every other link, and every
+ * link outside a screen that opens links, opens a new tab with no opener
+ * and no referrer, so the other site gets no address of the app. The Mac
+ * app opens such a tab in the default browser.
  */
 function openerOf(link: WebLink, opening: LinkOpening | null) {
   if (opening && link.kind === 'app') {
     const { to } = link
-    return appAnchor(to, () => opening.open(to))
+    return (anchor: LinkOpener) => <AppLink {...anchor} to={to} />
   }
   const ports = opening?.ports
   if (ports && link.kind === 'local') {

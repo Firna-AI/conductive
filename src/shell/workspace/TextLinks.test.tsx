@@ -9,6 +9,7 @@ import type { UserMessage } from '../../shared/messages'
 import { previewsPath } from '../../shared/previews'
 import {
   byRole,
+  byText,
   queryByLabel,
   queryByText,
 } from '../../test-support/dom-queries'
@@ -110,6 +111,27 @@ describe('links of chat text in the workspace screen', () => {
         opens: [{ port: 8080 }],
       },
       page: agents,
+    })
+  })
+
+  test('a press on a link of the app to the address that shows replaces that address, and a press on another page of the app adds an entry', async () => {
+    const server = new FakeApiServer()
+    const { view, navigation } = await openChat('desktop', server)
+    // A workspace link alone in code is a link of the app, not a chip.
+    const shown = `${FAKE_ORIGIN}${here}`
+    emit(server, {
+      type: 'message.accepted',
+      message: { ...message, id: 'shown', text: `Open \`${shown}\` again.` },
+    })
+    await settle()
+    click(byText(shown, view))
+    await settle()
+    const same = [...navigation.history]
+    click(linkTo(view, agents))
+    await settle()
+    expect({ same, other: navigation.history }).toEqual({
+      same: [here],
+      other: [here, agents],
     })
   })
 
