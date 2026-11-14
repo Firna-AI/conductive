@@ -809,5 +809,6 @@ Depends on: every other milestone
 
 ## Post-merge follow-up (non-blocking)
 
-- [x] On the test deployment, attach a file of about 1 GB, send it, and
-      check that the agent gets it, and that the R2 object is gone.
+- [ ] On the test deployment, attach a file of about 1 GB, send it, and
+      check that the agent gets it, and that the R2 object is gone. It is
+      the follow-up item `plans/follow-ups/smoke-test-1gb-attachment.md`.
