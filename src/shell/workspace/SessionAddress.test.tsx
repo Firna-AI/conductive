@@ -8,13 +8,20 @@ import { HeldRequests, requestLines } from '../../app/test-kit'
 import { chatHistoryPath } from '../../shared/events'
 import { sessionPaths, sessionsPath } from '../../shared/sessions'
 import { byLabel } from '../../test-support/dom-queries'
-import { FakeApiServer } from '../../test-support/fake-api'
+import { FakeApiServer, type FakeApiOptions } from '../../test-support/fake-api'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
 import { MOUNTED_TEST_TIMEOUT } from '../../test-support/mount'
 import { Shell } from '../Shell'
 import { click, mountScreen, settle } from '../test-mount'
 import { startedApp } from '../test-render'
-import { emit, here, id, org, recordingSocket } from './kept-test-kit'
+import {
+  emit,
+  here,
+  id,
+  lastEvent,
+  org,
+  recordingSocket,
+} from './kept-test-kit'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
@@ -49,9 +56,20 @@ function tabNamed(root: HTMLElement, title: string): HTMLElement {
   return tab
 }
 
-/** The whole app in a tab at `href`, over the fake API, with held requests. */
-async function openAt(href: string) {
-  const server = new FakeApiServer()
+/**
+ * The whole app in a tab at `href`, over the fake API, with held requests.
+ * `fake` gives the options of the fake, and `setup` changes its routes
+ * before the app loads.
+ */
+async function openAt(
+  href: string,
+  options: {
+    fake?: FakeApiOptions
+    setup?: (server: FakeApiServer) => void
+  } = {},
+) {
+  const server = new FakeApiServer(options.fake)
+  options.setup?.(server)
   const held = new HeldRequests(server)
   const app = await startedApp(server, {
     events: recordingSocket(server).source,
@@ -101,20 +119,60 @@ describe('session addresses', () => {
     })
   })
 
-  test('an address of a closed or unknown session keeps the shown tab and reopens nothing', async () => {
-    for (const session of ['postcode', 'missing']) {
-      const { server, navigation, view } = await openAt(
-        routes.session(org, id, session),
-      )
-      const reopens = requestLines(server).filter(
-        (line) => line === `POST ${sessionPaths.reopen(org, id, session)}`,
-      )
-      expect(
-        { shown: currentTabs(view), at: navigation.href(), reopens },
-        session,
-      ).toEqual({ shown: [saved], at: here, reopens: [] })
-      view.remove()
-    }
+  test('an address of a closed session reopens it and shows it, and the workspace address takes its place', async () => {
+    const { sessions } = workspaceFixtures()
+    const closed = sessions.history.find((item) => item.id === 'postcode')
+    if (!closed) throw new Error('Expected the closed postcode session.')
+    const { server, navigation, view } = await openAt(
+      routes.session(org, id, closed.id),
+      {
+        setup: (fake) =>
+          fake.json('POST', sessionPaths.reopen(org, id, closed.id), {
+            session: { ...closed, closedAt: null },
+            eventNumber: lastEvent(fake) + 1,
+          }),
+      },
+    )
+    const reopens = requestLines(server).filter(
+      (line) => line === `POST ${sessionPaths.reopen(org, id, closed.id)}`,
+    )
+    expect({
+      shown: currentTabs(view),
+      at: navigation.href(),
+      reopens: reopens.length,
+    }).toEqual({ shown: [closed.title], at: here, reopens: 1 })
+  })
+
+  test('an address of a closed session of an archived workspace shows it in this browser only and reopens nothing', async () => {
+    const { sessions } = workspaceFixtures('archived')
+    const closed = sessions.history.find((item) => item.id === 'postcode')
+    if (!closed) throw new Error('Expected the closed postcode session.')
+    const { server, navigation, view } = await openAt(
+      routes.session(org, id, closed.id),
+      { fake: { workspaceState: 'archived' } },
+    )
+    const reopens = requestLines(server).filter((line) =>
+      line.endsWith('/reopen'),
+    )
+    expect({
+      shown: currentTabs(view),
+      at: navigation.href(),
+      reopens,
+    }).toEqual({ shown: [closed.title], at: here, reopens: [] })
+  })
+
+  test('an address of an unknown session keeps the shown tab and reopens nothing', async () => {
+    const { server, navigation, view } = await openAt(
+      routes.session(org, id, 'missing'),
+    )
+    const reopens = requestLines(server).filter((line) =>
+      line.endsWith('/reopen'),
+    )
+    expect({
+      shown: currentTabs(view),
+      at: navigation.href(),
+      reopens,
+    }).toEqual({ shown: [saved], at: here, reopens: [] })
   })
 
   test('a session that started while the kept chat was hidden shows from its address', async () => {

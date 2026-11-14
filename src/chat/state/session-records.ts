@@ -141,7 +141,12 @@ export function confirmSessions(
     // and drops the places of sessions that are not open.
     const view = withSessionPlaces(current.view, openRecords)
     const open = orderSessions(openRecords, view)
-    const shown = open.some((item) => item.id === current.activeSessionId)
+    // A local tab of a read-only workspace can show a closed session, as
+    // `showLocally` says. That session stays shown too.
+    const active = current.activeSessionId
+    const shown =
+      open.some((item) => item.id === active) ||
+      (active !== null && (current.archiveTabs ?? []).includes(active))
     let next: ChatSnapshot = {
       ...current,
       view,

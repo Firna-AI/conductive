@@ -110,8 +110,8 @@ number names a dated record, as
 - The chip of a closed session looks like the chip of an open session.
 - A link to a session that its workspace does not hold shows the chip of
   that workspace. Reason: the link still opens that workspace.
-- A press on a session chip opens its session, as
-  [Session links](agents-and-sessions.md#session-links) says.
+- A press on a session chip opens its session, and reopens it when it is
+  closed, as [Session links](agents-and-sessions.md#session-links) says.
 - In the message field, a session chip works as the chip of a workspace
   does.
 - Reason: a `Sent by:` line must name the session that sent its message,
