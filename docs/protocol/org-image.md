@@ -68,7 +68,8 @@ decision number names a dated record, as
   [Operator actions](operator-actions.md#starts-stops-and-builds) says.
 - A refresh fetches the new commits of each repository that the org image
   holds. It does not run the install script, and it adds or removes no
-  repository.
+  repository. It installs the newest release of the sandbox software, as
+  [Installs in a build](sandbox-software.md#installs-in-a-build) says.
 - Reason: a new workspace then needs only a small fetch. The limit of one
   refresh in 30 minutes saves starts, because each refresh is a start.
 

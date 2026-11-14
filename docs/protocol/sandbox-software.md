@@ -101,6 +101,14 @@ update itself.
 - Each build of an org image installs the newest release. A software image
   build does the same. Reason: each build and each sandbox then install the
   software in the same way.
+- Each refresh of an org image also installs the newest release, through
+  the same software step (sandbox software decision 15). It still runs no
+  install script. Reason: each refreshed image then holds current
+  software, so a new workspace needs no first update.
+- When no release is available, the refresh fails, and the org keeps its
+  last good image. A refresh that keeps the installed release was
+  rejected, because a new workspace then runs older software until an
+  update applies at a later start.
 - The terminal scripts and their units are parts of each release (sandbox
   software decision 1). So an update brings a fix of the terminal to each
   sandbox.

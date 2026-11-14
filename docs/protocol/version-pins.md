@@ -48,9 +48,9 @@ the [model gateway](model-gateway.md), as that doc says.
 - The version pin of a workspace is the lowest runner protocol version
   that it accepts. The version pin of a sandbox is the version pin of its
   workspace.
-- Each build of the org image records the runner protocol version that it
-  installs. A refresh keeps the version of the image that it refreshes,
-  because a refresh keeps the installed runner.
+- Each build and each refresh of the org image records the runner protocol
+  version that it installs. A refresh also installs the newest release, as
+  [Installs in a build](sandbox-software.md#installs-in-a-build) says.
 - Each cloud computer of a workspace takes the runner version of the org
   image that it starts from as the version pin of the workspace, before it
   can connect. So a Try again that starts a new cloud computer from a

@@ -191,6 +191,7 @@ Other members must ask an admin to change the setup or retry a build.
 Conductive refreshes the prepared repositories after default-branch pushes and with a daily timer.
 Push refreshes run at most once per 30 minutes.
 A refresh fetches repository commits without running the install script.
+A refresh also installs the newest release of Conductive's own cloud computer software.
 
 Use a new build when changed dependencies need the install script again.
 Existing workspaces keep their own files and branch.
