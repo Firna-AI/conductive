@@ -5,7 +5,7 @@ import styles from '../../../docs/mockups/src/components/common/CheckOption.modu
  * A checkbox with its label and a muted hint, for an option of a question,
  * such as an extra step of an action. `@firna/ui` has no checkbox, so this
  * is the one of the browser in the accent colour, as the mockups draw it.
- * The whole row takes the click, and on a phone it is 44 px high.
+ * The whole row takes the click, and on a phone it is 40 px high.
  */
 export function CheckOption(props: {
   label: string

@@ -45,7 +45,7 @@ export const metrics = {
   sidebarWidth: '232px',
   railWidth: '48px',
   rightWidth: '440px',
-  /** The least height of a local control; a phone screen raises it to 44px. */
+  /** The least height of a local control; a phone screen raises it to 40px. */
   touchMin: '0px',
   /**
    * The height of the lockup of the brand on the marketing site and the
@@ -54,10 +54,13 @@ export const metrics = {
    */
   lockupHeight: '25px',
   /**
-   * The height of a screen: the window. A picture of a screen on the
-   * marketing site sets it to the height of its frame.
+   * The height of a screen: the visible part of the window. On a phone,
+   * `100vh` is the height with the browser bars hidden, so the page would
+   * scroll behind the app while they show. `100dvh` follows the bars. A
+   * picture of a screen on the marketing site sets it to the height of its
+   * frame.
    */
-  screenHeight: '100vh',
+  screenHeight: '100dvh',
 } as const
 
 export type ControlSizes = {
@@ -77,9 +80,9 @@ export const control: ControlSizes = {
   field: 'sm',
 }
 
-/** On a phone every control is at least 44px high, so a finger can hit it. */
+/** On a phone every control is at least 40px high, so a finger can hit it. */
 export const touchControl: ControlSizes = {
-  height: 44,
+  height: 40,
   labelSize: 14,
   labelWeight: 500,
   field: 'lg',

@@ -12,7 +12,7 @@ const LayoutContext = createContext<FilesLayout>('desktop')
 
 /**
  * Gives the parts inside it the layout. On a phone the controls take the
- * touch sizes, and the local rows and buttons are at least 44 px high.
+ * touch sizes, and the local rows and buttons are at least 40 px high.
  */
 export function LayoutRoot(props: {
   layout: FilesLayout

@@ -125,7 +125,7 @@
   padding-left: 16px;
 }
 
-/* On a phone the tab bar grows with its 44 px tabs, and with a second line. */
+/* On a phone the tab bar grows with its 40 px tabs, and with a second line. */
 .mobileTabs {
   display: flex;
   flex-shrink: 0;

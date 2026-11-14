@@ -10,7 +10,7 @@ const TouchContext = createContext(false)
 
 /**
  * The root of a tool. It fills the panel or the phone page that holds it. On
- * a phone, `touch` makes every control of the tool at least 44px high.
+ * a phone, `touch` makes every control of the tool at least 40px high.
  */
 export function ToolRoot(props: { touch: boolean; children: ReactNode }) {
   return (

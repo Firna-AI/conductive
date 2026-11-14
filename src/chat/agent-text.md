@@ -42,7 +42,7 @@ requirements.
   Its copy uses the `copy` services of the chat and shows a toast with the
   result. Outside a provider, a code block has no button. The size of the
   button comes from the control sizes, so the block keeps room for the
-  44 px button on a phone.
+  40 px button on a phone.
 - `MessageLine` draws the code blocks of its summary as spans, with no
   button, because a summary is a button. A code block under an open line
   draws through `AgentBlocks`, so it has the button.

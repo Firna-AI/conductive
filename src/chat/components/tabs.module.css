@@ -26,5 +26,5 @@
 
 /* On a phone, the lifted tab keeps the touch size of the tabs of the row. */
 .touch {
-  --ui-touch-min: 44px;
+  --ui-touch-min: 40px;
 }

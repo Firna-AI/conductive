@@ -141,7 +141,7 @@ export function StandaloneFrame(props: {
 }
 
 /**
- * The phone app: one full-height column with touch targets of 44 px. The
+ * The phone app: one full-height column with touch targets of 40 px. The
  * Mac app shows it only when a zoom makes the page narrow, so the window
  * controls top it there.
  */

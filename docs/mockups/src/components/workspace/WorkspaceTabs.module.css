@@ -105,16 +105,16 @@
 /*
  * A phone has no room to keep the current tab whole. Every tab shrinks:
  * the current one keeps the start of its title, and the others can shrink
- * to their icon, which stays 44 px wide to touch.
+ * to their icon, which stays 40 px wide to touch.
  */
 .phone .tabs > .tab {
-  min-width: 44px;
+  min-width: 40px;
 }
 
-/* The icon, 48 px of the title, and the 44 px Close button. */
+/* The icon, 48 px of the title, and the 40 px Close button. */
 .phone .tabs > .selected {
   flex-shrink: 1;
-  min-width: 124px;
+  min-width: 120px;
 }
 
 /*
@@ -135,6 +135,39 @@
 .phone .tabs > .tab .title {
   flex: 1 1 0;
   min-width: 24px;
+}
+
+/*
+ * A phone tab stays 40 px high to touch, but its fill is 32 px high, with
+ * 4 px of the row above and below it. The fill is a layer behind the tab,
+ * so a press on that room still opens the tab.
+ */
+.phone .tabs > .tab {
+  position: relative;
+  isolation: isolate;
+  background: none;
+}
+
+.phone .tabs > .tab::before {
+  position: absolute;
+  z-index: -1;
+  inset: 4px 0;
+  border-radius: var(--ui-radius-md);
+  content: '';
+}
+
+.phone .tabs > .tab:hover::before,
+.phone .tabs > .menuOpen:not(.selected)::before {
+  background: var(--ui-soft);
+}
+
+.phone .tabs > .selected::before,
+.phone .tabs > .selected:hover::before {
+  background: var(--ui-selected);
+}
+
+.phone .tabs > .renaming:not(.selected):hover::before {
+  background: none;
 }
 
 /*

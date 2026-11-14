@@ -3,7 +3,7 @@
   display: contents;
 }
 
-/* A phone raises every local touch target to 44 px. */
+/* A phone raises every local touch target to 40 px. */
 .touch {
-  --ui-touch-min: 44px;
+  --ui-touch-min: 40px;
 }

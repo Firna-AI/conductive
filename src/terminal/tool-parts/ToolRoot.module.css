@@ -6,7 +6,7 @@
   min-height: 0;
 }
 
-/* A phone raises every local touch target of the tool to 44px. */
+/* A phone raises every local touch target of the tool to 40px. */
 .touch {
-  --ui-touch-min: 44px;
+  --ui-touch-min: 40px;
 }
