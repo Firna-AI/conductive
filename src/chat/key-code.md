@@ -167,9 +167,11 @@ is relative to `src/chat/`, the folder of this guide.
   without one, or "Stopped from" and the chip of the stopping session,
   then the notes of the turn. `components/TurnEnd.tsx` draws the
   end of a finished turn: the line of its end reason, from the mockups'
-  `EndReasonLine.tsx`, above its duration and its files. The mockups'
-  `TurnFileList.tsx` limits the files that show before its Show more
-  button, with the app's chips. `UserBubble` reads
+  `EndReasonLine.tsx`, above its duration and its files, and the note of a
+  fast turn at standard speed, from the mockups' `StandardSpeedNote.tsx`,
+  beside its duration. The mockups' `TurnFileList.tsx` limits the files
+  that show before its Show more button, with the app's chips. `UserBubble`
+  reads
   the parts of a sent message once, with `useChatParts`. It draws them with
   `ChatText`, and it lists under the message only the files that no part
   shows as a chip. It sets `opens` only when the message state is `sent`.
@@ -190,7 +192,12 @@ is relative to `src/chat/`, the folder of this guide.
   keeps the top row in view in place for every change of size of the
   transcript. When that row folds away, the fold that took it keeps its
   place. A new message that the user sends from the chat, which shows as a
-  pending message of the session, takes the chat to its bottom.
+  pending message of the session, takes the chat to its bottom. At each
+  note it writes the place of the shown session, and a new keeper shows the
+  place that the session kept.
+- `components/chat-place.ts`: the place of a session tab, at the bottom or
+  at a row by its `data-row` key, which `TranscriptView` gives each row.
+  `ChatController.places` keeps the place of each session tab.
 - `components/useFold.ts`: `useFold` opens and closes a fold on a click on
   its line, and gives the line to the keeper, also at the bottom of the
   chat, so the line keeps its place.
@@ -206,7 +213,8 @@ is relative to `src/chat/`, the folder of this guide.
 - `api/client.ts` and `api/read-*.ts`: the chat routes, through the shared
   route builders and the app's `ApiClient`, and the readers of their
   responses. `api/read-chat.ts` copies a known `endReason` of a turn end,
-  and drops an unknown value. `api/read-changed-file.ts` reads the changed
+  and drops an unknown value. It keeps a speed that `readTurnSpeed` reads,
+  and drops any other value. `api/read-changed-file.ts` reads the changed
   files of a turn end, with their real paths and display labels.
 - `components/`: the tabs, the chat, the composer, the model picker, and the
   overlays. `ui/`: interactive buttons, menus, sheets, and dialogs.

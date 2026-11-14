@@ -90,6 +90,15 @@ describe('a fixed prompt of the member', () => {
     expect({ outcome, texts }).toEqual({ outcome: 'sent', texts: [prompt] })
   })
 
+  it('puts the kept place of its session at the bottom, so the prompt shows when the chat shows again after a file tab', async () => {
+    const chat = chatFor()
+    await chat.controller.start()
+    chat.controller.places.set(first, { kind: 'row', row: 'item:x', offset: 0 })
+
+    expect(await chat.controller.sendPrompt(prompt)).toBe('sent')
+    expect(chat.controller.places.get(first)).toEqual({ kind: 'bottom' })
+  })
+
   it('sends nothing for a session whose own login is missing, so the composer names it', async () => {
     const chat = chatFor()
     withSessions(chat.server, loginGone)

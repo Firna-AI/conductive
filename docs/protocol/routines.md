@@ -18,8 +18,9 @@ decision number names a dated record, as
 ## A routine
 
 - A routine belongs to one org. It has a name, a prompt, one repository of
-  the org, and a section. It also has a model with its effort, an Active
-  switch, one time zone, and its triggers.
+  the org, and a section. It also has a model with its effort and its
+  [fast mode](fast-mode.md), an Active switch, one time zone, and its
+  triggers.
 - Each trigger starts a run. Each run creates a new workspace, with its own
   cloud computer and branch (decision 501 A).
 - One workspace for each routine, with a new session for each run, was
@@ -36,7 +37,8 @@ decision number names a dated record, as
 - Reason: a run without a prompt has no task, but it still spends a start.
   A routine without a prompt was rejected, also as a draft that stays off.
 - A new routine starts active. It gets the first repository of the org, the
-  General section, and the default model of its owner.
+  General section, and the default model of its owner, with its effort and
+  its fast mode.
 - A routine can have no trigger. Then only Run now starts it.
 - Deleting a section moves its routines to General, as it moves its
   workspaces.

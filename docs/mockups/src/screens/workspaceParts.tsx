@@ -7,7 +7,10 @@ import { DesktopView } from '../components/tools/DesktopView'
 import { PreviewTool } from '../components/tools/PortPreview'
 import { TerminalTool } from '../components/tools/TerminalTool'
 import { SandboxPanel } from '../components/workspace/SandboxNotice'
-import { replacesLists } from '../components/workspace/sandboxNoticeState'
+import {
+  replacesList,
+  replacesShownFile,
+} from '../components/workspace/sandboxNoticeState'
 import {
   archivedSections,
   suspendedSections,
@@ -98,30 +101,46 @@ function changedPaths(state: WorkspaceState): readonly string[] | undefined {
 }
 
 /**
- * The sandbox state in place of All files, Changes, and the content of an
- * open file: while the sandbox starts, while its start is refused, and
- * after a failed first start. A stopped sandbox, and one whose later start
- * failed, keep them. `withAction` adds the action and the words of a
- * refusal, as a phone shows them, and as a file page shows them on desktop,
- * where the page hides the bar of the chat.
+ * The sandbox state in place of the content of an open file: while the
+ * sandbox starts, because the tab opened then and shows no content yet,
+ * while its start is refused, and after a failed first start. A stopped
+ * sandbox, and one whose later start failed, keep the file. `withAction`
+ * adds the action and the words of a refusal, as a phone shows them, and as
+ * a file page shows them on desktop, where the page hides the bar of the
+ * chat.
  */
-export function filesPlaceholder(
+export function filePlaceholder(
   state: WorkspaceState,
   withAction: boolean,
 ): ReactNode {
   const panel = panelState(state)
-  return panel && replacesLists(panel) ? (
+  return panel && (panel.problem === 'starting' || replacesShownFile(panel)) ? (
     <SandboxPanel phone={withAction} state={panel} />
   ) : undefined
 }
 
 /**
- * The files panel. After a stop or a failed resume, All files and Changes
- * keep the lists that the workspace saved. Otherwise, while the sandbox is
- * not running, the sandbox state takes the place of the lists. On a phone,
- * an open file shows as a page of the Files tab, with the same sandbox
- * state in place of its content. An archived workspace has no file lists:
- * its files went with the cloud computer.
+ * The sandbox state in place of All files and Changes: while the start is
+ * refused, after a failed first start, and while a new workspace starts,
+ * because it has no saved lists yet. Another start, a stop, and a failed
+ * resume keep the lists that the workspace saved.
+ */
+function listsPlaceholder(state: WorkspaceState, phone: boolean): ReactNode {
+  const panel = panelState(state)
+  return panel && replacesList(panel, !isNew(state)) ? (
+    <SandboxPanel phone={phone} state={panel} />
+  ) : undefined
+}
+
+/**
+ * The files panel. While the sandbox starts, after a stop, and after a
+ * failed resume, All files and Changes keep the lists that the workspace
+ * saved. A new workspace has none, so the wait of its first start takes
+ * their place, and so does the sandbox state of a refused start or a failed
+ * first start. On a phone, an open file shows as a page of the Files tab,
+ * with the sandbox state in place of its content, as on desktop. An
+ * archived workspace has no file lists: its files went with the cloud
+ * computer.
  */
 export function FilesContent(props: {
   state: WorkspaceState
@@ -136,10 +155,13 @@ export function FilesContent(props: {
     return <SandboxPanel phone={phone} state={panel} />
   }
   const open = openFile(state)
-  const placeholder = filesPlaceholder(state, phone)
   if (phone && open) {
     return (
-      <FilePage back={backFrom(open)} placeholder={placeholder} view={open} />
+      <FilePage
+        back={backFrom(open)}
+        placeholder={filePlaceholder(state, true)}
+        view={open}
+      />
     )
   }
   return (
@@ -150,7 +172,7 @@ export function FilesContent(props: {
       only={changedPaths(state)}
       open={open}
       paths={state.paths}
-      placeholder={placeholder}
+      placeholder={listsPlaceholder(state, phone)}
       tree={state.tree}
       view={state.files}
     />

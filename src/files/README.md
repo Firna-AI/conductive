@@ -106,8 +106,13 @@ The screens:
   for the right column on desktop and the Files tab on a phone. The
   `checks` prop takes the Checks list of the GitHub banner screens. The
   `placeholder` prop replaces All files and Changes, for example with a
-  sandbox state. Under the lists, the panel shows one notice for each
-  failed repair, in the order of the tabs, with its age. A saved tree that
+  sandbox state. The `waiting` prop replaces only a list without a saved
+  copy, when its read fails with `file_unavailable`, or an unknown tree
+  under the unavailable mark. A read that runs still shows its load, and
+  any other failed read shows Try again. The workspace screen gives it the
+  wait of a sandbox that starts, so a resume shows the saved lists and the
+  first start of a new workspace shows the wait. Under the lists, the
+  panel shows one notice for each failed repair, in the order of the tabs, with its age. A saved tree that
   the cloud computer could not read shows the notice of All files, with no
   age. The notices show under each of the three tabs, and they have no
   Dismiss. The `now` prop
@@ -160,6 +165,28 @@ the app's `ApiClient`, so the Mac app reads the file from its own Worker.
 
 The shell supplies the design tokens as `--ui-*` CSS variables and the
 `@firna/ui` theme provider, as `docs/mockups/src/theme.ts` builds them.
+
+### Kept scroll offsets
+
+Each file and diff tab of the centre keeps its scroll offset, down and
+sideways, while another tab or workspace shows, as
+[The tab row](../../docs/protocol/agents-and-sessions.md#the-tab-row) says.
+`WorkspaceFiles.scrollPlaces` holds the offsets, by tab and view, for as
+long as the app keeps the store. The desktop tab page gives the shown tab
+through the `KeptScroll` context of `ui/kept-scroll.ts`. `CodeView`,
+`DiffView`, and the Markdown preview take their scroll box from
+`useKeptScroll`, with the view `code`, `diff`, or `preview`. A view outside
+the context, such as a file page on a phone, keeps nothing. Content that
+grows after the mount gets the offset again at each change of size, until
+the box reaches it or the reader scrolls. When a tab leaves the saved view,
+such as at a close, it forgets its offsets, so it opens at the top again.
+The offsets live in a `TabPlaces` store of the web app, in
+`src/app/tab-places.ts`, and the chat files of the workspace screen give it
+each list of the file and diff tabs through `useFollowTabs`.
+`ui/kept-scroll.dom.test.tsx`
+tests the hook, and `TabScroll.test.tsx` of the
+[workspace files](../shell/workspace/files/) tests the tabs of the
+workspace screen.
 
 ## Labels of paths
 

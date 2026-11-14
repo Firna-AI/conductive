@@ -64,6 +64,10 @@ request keeps them after the merge.
 - The pickers of other members show every model of the app. A turn on a
   model that the endpoint does not serve fails with a cause that names the
   model ID, and no host (own endpoint decision 5).
+- Risk: a turn with fast mode on asks the endpoint for fast mode too. An
+  endpoint that refuses it fails each such turn on the login, as
+  [The requests of the agents](fast-mode.md#the-requests-of-the-agents)
+  says.
 - When a save or a Refresh reads no model list, the account page shows a
   warning under the login, with Refresh (Codex base decision 1). The
   warning says "Conductive couldn't read the model list of this endpoint.

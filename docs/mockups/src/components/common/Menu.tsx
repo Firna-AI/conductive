@@ -3,6 +3,8 @@ import type { LucideIcon } from 'lucide-react'
 import { Check, ChevronRight } from 'lucide-react'
 import a11y from './a11y.module.css'
 import { classes } from './classes'
+import { KeyChips, type Shortcut } from './KeyChips'
+import { SwitchPicture } from './SwitchPicture'
 import styles from './Menu.module.css'
 
 type MenuItem = {
@@ -40,6 +42,13 @@ export type MenuEntry =
   | { kind: 'label'; label: string }
   /** A short line that explains the choices, under them. */
   | { kind: 'note'; text: string }
+  /**
+   * A setting that is on or off, with a switch at the end of its row.
+   * `shortcut` is the key of the command that changes the setting, which
+   * stands before the switch where the key runs, as a palette row ends with
+   * the key of its command.
+   */
+  | { kind: 'switch'; label: string; on: boolean; shortcut?: Shortcut }
   | { kind: 'divider' }
 
 /**
@@ -131,6 +140,23 @@ export function Menu(props: {
               <p className={styles.note} key={`note-${index}`} role="none">
                 {entry.text}
               </p>
+            )
+          case 'switch':
+            return (
+              <div
+                aria-checked={entry.on}
+                className={styles.item}
+                key={entry.label}
+                role="menuitemcheckbox"
+              >
+                <span className={styles.label}>{entry.label}</span>
+                {entry.shortcut ? (
+                  <span className={styles.keys}>
+                    <KeyChips shortcut={entry.shortcut} />
+                  </span>
+                ) : null}
+                <SwitchPicture on={entry.on} />
+              </div>
             )
           case 'divider':
             return <hr className={styles.divider} key={`divider-${index}`} />

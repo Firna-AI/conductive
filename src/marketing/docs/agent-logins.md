@@ -135,6 +135,9 @@ The endpoint gets the messages, files, and command results of each turn on the l
 Its owner is responsible for the endpoint and its terms.
 Claude asks for a one-hour prompt cache on every turn with an own endpoint login.
 Check the endpoint's support and charges for that cache.
+A turn with **Fast** on also asks the endpoint for fast output.
+If the endpoint refuses it, the turn fails with the endpoint's cause.
+Turn **Fast** off in that session to continue.
 
 ### Keep the model list current
 

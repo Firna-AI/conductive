@@ -15,23 +15,24 @@ how a screen is built, and links to the other pages.
 | `app`               | A ready workspace: two sessions and a file tab, and a pull request to merge   |
 | `app/sign-in`       | GitHub sign-in with the agreement to the Terms, the page before GitHub, the waitlist, the sign-in of an invite link, and the invitations that wait after it. Get started, the only first run, in three steps, with the first build of the new org. The return page after a GitHub App install in the Mac app. |
 | `app/shell`         | The workspace list, and the sandbox starting, also with a diff tab open, stopped, with an error, and with a refused start |
-| `app/sections`      | The menu of a section, and a workspace dragged to another section             |
+| `app/sections`      | The menu of a section with its move items, a workspace dragged to another section, and a section dragged to another place |
 | `app/workspace-menu` | The menu of a workspace row from a right click: its section and owner choices, Rename, Copy link, Archive from the list with its toast and Restore, and the menus of each role |
 | `app/command-palette` | The command palette over the list, with the keys of a browser tab: the All tab, then the other tabs with the Help group, searches and their states, and a search by number |
 | `app/feedback`      | The Feedback dialog that Send feedback opens over the list, then its states, the toast after a send, and the files that it does not add |
 | `app/orgs`          | The org switcher of a phone, Create org, the first org, new orgs, deleted, suspended, and the order of the orgs |
-| `app/account`       | General with the GitHub sign-in, the GitHub App, and the invite code, then Agents with the agent logins and own endpoints, Preferences with the model and how New workspace opens, Keyboard shortcuts in a browser, the first run, the Connect forms with the ChatGPT sign-in of Codex, Codex on a ChatGPT plan and its sign-in that stopped working, and a share not saved |
+| `app/account`       | General with the GitHub sign-in, the GitHub App, and the invite code, then Agents with the agent logins and own endpoints, Preferences with the model, its menu with Fast on, and how New workspace opens, Keyboard shortcuts in a browser, the first run, the Connect forms with the ChatGPT sign-in of Codex, Codex on a ChatGPT plan and its sign-in that stopped working, and a share not saved |
 | `app/operator`      | The operator's Overview, Orgs, Users, Waitlist, and Invite codes tabs, the page of an org and of a user with Suspend, Lift, and Approve, the pause of sign-ups, the waitlist switch, and where an operator opens the section |
 | `app/banner`        | The pull request bar and Checks: no pull request, its other states, Merge, local work, the agent actions in the chat, and Continue |
-| `app/new-workspace` | An empty chat, the first build of a new org, a repository that waits for its build, its error, files on the first message, the dialog, a pasted workspace link, the start, a queued second message, the first turn, a failed start, Try again |
+| `app/new-workspace` | An empty chat, the first build of a new org, a repository that waits for its build, its error, files on the first message, the model menu with Fast on, the dialog, a pasted workspace link, the start, a queued second message, the first turn, a failed start, Try again |
 | `app/routines` | The routines of the org, a routine, its triggers, its runs, and a run workspace |
 | `app/org-settings`  | General with Delete org, then Repositories and Cloud computer with the notice of a repository change, the first build of a new org, and Members |
-| `app/chat`          | A finished turn with its work folded, then running turns, turns that an agent stopped, open work, tables in replies, lists in replies, headings in replies, lost data, lost updates, unread files, and the time limit of background work |
+| `app/chat`          | A finished turn with its work folded, then running turns, turns that an agent stopped, open work, tables in replies, lists in replies, headings in replies, lost data, lost updates, unread files, the time limit of background work, and a fast turn at standard speed |
 | `app/mac-commands`  | A command that an agent runs on the Mac of the sender, in the chat            |
 | `app/sessions`      | A new session, the history, closing one while it works, and a linked session  |
 | `app/reassign`      | The owner of a workspace, its reassign menu, a member's view, a stopped turn  |
 | `app/archive`       | An archived workspace with Restore, the toast after Archive, the Archived group, the restored workspace, the end of Restore, and the bar after the delete |
 | `app/composer`      | Two uploaded files in a sentence, the picker, another member's login, and a missing agent |
+| `app/fast-mode`     | The Fast switch of the model menu on and off, with its key, the trigger with Fast, and a model without fast mode |
 | `app/attachments`   | A file that uploads in the text, then a drop, a failed upload, a file over 100 MB, sent files, the file tab of a sent screenshot, and a first message with files |
 | `app/workspace-links` | Chips in a message and an answer, then Copy link and its failure, a pasted link, a link of another org, session chips, and messages that an agent sent |
 | `app/file-mentions` | The list of `@` with a query, then the list without one, its other states, and the file chips of the composer and of a sent message |
@@ -161,7 +162,8 @@ settings are. Its child pages:
   of PR #73: the New workspaces section with Model and effort, and the
   choice of how New workspace opens on a computer, the page or a dialog.
   Its `not-saved` variant shows a save that failed, which keeps the saved
-  choice.
+  choice. Its `model-menu` variant shows the menu of the picker open, with
+  Fast on.
 - `app/account/setup` shows General at the first run, with nothing
   connected. Its `agents` variant shows the Agents tab at the first run,
   with neither agent connected.
@@ -291,7 +293,11 @@ that sends feedback.
 The catalogue draws the Keyboard shortcuts tab in the Mac app and in a
 browser, from decisions 190 to 196. The pages of
 `app/account` and `mac-app/this-mac` show it as the fourth tab of the
-account. In the Mac app, the This Mac tab follows it.
+account. In the Mac app, the This Mac tab follows it. Fast mode decision
+258 adds Fast mode to the Chat group, after Next effort level, with ⇧⌘E on
+a Mac and Ctrl+Shift+E on Windows and Linux. On desktop, the Fast row of
+the model menu of a session shows the same key before its switch, as
+`app/fast-mode` shows.
 
 - `app/account/shortcuts` shows the tab in a normal Chrome tab on a Mac.
   The search field of decision 195 stands at the top. The lines under it

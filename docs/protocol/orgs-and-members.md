@@ -61,7 +61,8 @@ decision number names a dated record, as
 
 - [Org rail order](org-rail-order.md) holds the requirements of the order
   of the orgs in the rail that each person keeps: the drag, the tile menu,
-  the keys, and the long press on a phone.
+  the keys, and the long press on a phone. It also says which page opens
+  when the person opens an org.
 
 ## Get started
 
@@ -114,7 +115,19 @@ decision number names a dated record, as
 - Sections are groupings of workspaces that the people of the org define.
   A section is not tied to a repository.
 - Each section collapses, and has a menu with New workspace, Rename section,
-  New section, and Delete section, in that order.
+  Move section up, Move section down, New section, and Delete section, in
+  that order. The first section has no Move section up, and the last
+  section has no Move section down.
+- The order of the sections is the same for each member of the org. A
+  collapse is for the member only. Reason: a section is a grouping that
+  the people of the org define, as its name is.
+- A section moves to another place in the list by a drag of its header,
+  or by Move section up and Move section down. On a phone, a long press
+  lifts the header. A click on the header that drags nothing still
+  collapses the section. General moves like any other section. The
+  Archived group stays at the end of the list.
+- A member sees the order that another member changed at the next read
+  of the list, as for a rename.
 - New workspace at the top of the list puts the workspace in General, the
   default section. New workspace in the menu of a section puts it in that
   section. The New workspace dialog can pick another section, as
@@ -144,6 +157,11 @@ decision number names a dated record, as
   Reason: the message box never takes the focus from a later choice of the
   user. The list page of a phone opens a workspace without that focus, so
   that no keyboard opens on its own.
+- When the message box of a workspace takes the focus without a press of
+  the pointer, the caret goes back where it was in that box. Without such
+  a caret, as for a kept draft, it goes to the end of the text, not to the
+  start. Reason: a person who comes back to a draft most often adds to its
+  end, as in the message box of New workspace.
 
 ## Members and roles
 
@@ -181,6 +199,8 @@ decision number names a dated record, as
   [Agents and sessions](agents-and-sessions.md#agents) says.
 - Every member can move a workspace to another section and rename it,
   while the workspace is not archived.
+- Every member can move a section to another place in the list, as each
+  member can create, rename, and delete a section.
 - A member who is not an admin sees the Members tab and the owner of each
   workspace, without the actions of an admin.
 - Only the workspace owner and the admins can archive a workspace

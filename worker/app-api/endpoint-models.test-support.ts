@@ -51,6 +51,7 @@ export function endpointModelApi(harness: TestHarness) {
     agent: 'claude',
     model: 'test-claude',
     effort: 'high',
+    fast: false,
   })
   const app = createApp({
     now: () => now,
