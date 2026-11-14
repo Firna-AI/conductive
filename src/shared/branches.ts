@@ -14,6 +14,5 @@ export interface RepositoryBranch {
 }
 
 export interface RepositoryBranchesResponse {
-  defaultBranch: string
   branches: readonly RepositoryBranch[]
 }

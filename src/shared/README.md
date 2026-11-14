@@ -44,9 +44,9 @@ Errors without details keep the code and message only.
 `repositoryPath` names one repository of an org. PUT adds it and DELETE
 removes it. Each request sends `EmptyRequest` and returns the current list.
 `branches.ts` owns `repositoryBranchesPath` and `RepositoryBranchesResponse`.
-The live branch reply names the default branch and gives ordered branch names
-with Unix millisecond commit dates. A known default without a commit has a null date.
-The optional `search` query filters branch names.
+The live branch reply holds only branches that GitHub lists, newest commit first.
+Commit dates use Unix milliseconds, or null when GitHub gives no date.
+The browser adds its default row from the saved repository record and filters the list for search.
 
 [Runner contracts](runner-contracts.md) gives the handshake, commands, events,
 confirmations, reports, and credentials.

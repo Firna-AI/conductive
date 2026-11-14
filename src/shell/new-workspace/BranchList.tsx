@@ -134,8 +134,10 @@ function Status(props: {
  * the list. The search field keeps the focus: it is a combobox of the
  * rows. A search highlights its first match, Up and Down move the
  * highlight with a wrap at each end, and Enter picks the highlighted
- * branch. Tab closes a picker beside its control. A phone draws it in a
- * sheet, with rows of touch size, and the sheet holds the focus.
+ * branch. Tab goes on to the other controls of the picker, such as Try
+ * again after a failed read. A picker beside its control closes when the
+ * focus leaves it, as `BranchControl` says. A phone draws it in a sheet,
+ * with rows of touch size, and the sheet holds the focus.
  */
 export function BranchList(props: {
   list: Loadable<RepositoryBranchesResponse>
@@ -145,7 +147,6 @@ export function BranchList(props: {
   pick: (name: string) => void
   /** Reads the list again, after a failed read. */
   retry: () => void
-  close: () => void
   sheet: boolean
 }) {
   const { field } = useControlSizes()
@@ -173,7 +174,6 @@ export function BranchList(props: {
   }
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (!(event.target instanceof HTMLInputElement)) return
-    if (event.key === 'Tab' && !props.sheet) props.close()
     if (rows.length === 0) return
     if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
       event.preventDefault()

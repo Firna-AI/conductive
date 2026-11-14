@@ -11,11 +11,14 @@ export function workspaceBaseCommand(input: {
 }): string {
   requireGitBranchName(input.branch)
   requireGitBranchName(input.baseBranch)
+  const remoteRef = shellQuote(`refs/remotes/origin/${input.baseBranch}`)
   return isolatedSourceCommand(
     [
       `cd ${shellQuote(input.directory)}`,
-      `${GIT} config --local ${shellQuote(`branch.${input.branch}.gh-merge-base`)} ${shellQuote(input.baseBranch)}`,
-      `${GIT} symbolic-ref refs/remotes/origin/HEAD ${shellQuote(`refs/remotes/origin/${input.baseBranch}`)}`,
+      `if ${GIT} show-ref --verify --quiet ${remoteRef}; then`,
+      `  ${GIT} config --local ${shellQuote(`branch.${input.branch}.gh-merge-base`)} ${shellQuote(input.baseBranch)}`,
+      `  ${GIT} symbolic-ref refs/remotes/origin/HEAD ${remoteRef}`,
+      'fi',
     ].join('\n'),
   )
 }

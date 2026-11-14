@@ -32,7 +32,7 @@ afterAll(async () => {
   await fixture.base.dispose()
 })
 
-it('lists the default first and all other branches by commit date, with live search across pages', async () => {
+it('lists all GitHub branches by newest commit across pages', async () => {
   fixture.api.pageSize = 1
   fixture.api.branches.set('refs/heads/feature/old', 'old')
   fixture.api.branches.set('refs/heads/feature/new', 'new')
@@ -41,39 +41,37 @@ it('lists the default first and all other branches by commit date, with live sea
   const response = await fixture.base.request(path, session)
   expect(response.status).toBe(200)
   expect(await response.json()).toEqual({
-    defaultBranch: 'main',
     branches: [
-      { name: 'main', committedAt: Date.parse('2026-11-01T00:00:00Z') },
       { name: 'feature/new', committedAt: Date.parse('2026-11-12T00:00:00Z') },
       { name: 'feature/old', committedAt: Date.parse('2026-11-02T00:00:00Z') },
       { name: 'changes', committedAt: Date.parse('2026-11-01T00:00:00Z') },
+      { name: 'main', committedAt: Date.parse('2026-11-01T00:00:00Z') },
     ],
   })
   expect(
     fixture.api.requests.map((request) => request.headers.get('Authorization')),
   ).toEqual(Array(4).fill('Bearer github-test-token'))
-  fixture.api.branches.delete('refs/heads/feature/old')
-  const searched = await fixture.base.request(
-    `${path}?search=feature%2F`,
-    session,
-  )
-  expect(await searched.json()).toEqual({
-    defaultBranch: 'main',
-    branches: [
-      { name: 'feature/new', committedAt: Date.parse('2026-11-12T00:00:00Z') },
-    ],
-  })
-  expect(
-    await (await fixture.base.request(`${path}?search=absent`, session)).json(),
-  ).toEqual({ defaultBranch: 'main', branches: [] })
 })
 
-it('lists only the known default for an empty repository', async () => {
+it('returns no branches for an empty repository', async () => {
   fixture.api.branches.clear()
   const response = await fixture.base.request(path, session)
   expect(await response.json()).toEqual({
-    defaultBranch: 'main',
-    branches: [{ name: 'main', committedAt: null }],
+    branches: [],
+  })
+})
+
+it('does not invent the saved default after GitHub renames it', async () => {
+  fixture.api.branches.delete('refs/heads/main')
+  fixture.api.branches.set('refs/heads/trunk', 'renamed-default')
+  fixture.api.commitDates.set('renamed-default', '2026-11-12T00:00:00Z')
+  const response = await fixture.base.request(path, session)
+  expect(response.status).toBe(200)
+  expect(await response.json()).toEqual({
+    branches: [
+      { name: 'trunk', committedAt: Date.parse('2026-11-12T00:00:00Z') },
+      { name: 'changes', committedAt: Date.parse('2026-11-01T00:00:00Z') },
+    ],
   })
 })
 

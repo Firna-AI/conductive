@@ -19,7 +19,7 @@ The [shared contracts](../../src/shared/github.ts) define the response bodies.
 
 ## Public boundaries
 
-- [readRepositoryBranches](branches.ts) reads every branch page and sorts and filters the result for the [browser route](../app-api/branches.ts).
+- [readRepositoryBranches](branches.ts) reads every branch page and sorts the result by newest commit for the [browser route](../app-api/branches.ts).
   [checkRepositoryBranch](branch-check.ts) checks a named branch for the [shared creation path](../lifecycle/create-branches.ts).
   Both use [branch-query.ts](branch-query.ts) for bounded reads, repository identity checks, and safe access errors.
   Neither stores branch data or returns a token.
@@ -257,9 +257,10 @@ A pull request keeps its real GitHub base separately in the private `pullBaseBra
 [syncWorkspaceBase](../lifecycle/workspace-base.ts) applies the current base to a running cloud computer through its saved provider account.
 Its trusted [workspaceBaseCommand](../lifecycle/workspace-base-command.ts) sets the branch's `gh-merge-base` and `origin/HEAD` without a token or a checkout.
 The command does not depend on the current HEAD.
+It leaves both settings unchanged when the new base has no remote-tracking reference.
 The runner reads that setting again for each Changes report and diff.
 A failed command keeps the repair marker and schedules a fresh read after one second.
-A stopped computer gets both settings in its next startup command, before its startup script and runner start.
+A stopped computer tries to apply both settings in its next startup command, before its startup script and runner start.
 Startup continues if that metadata command fails, so a failed update cannot block resume.
 
 ## The summary copy

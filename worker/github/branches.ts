@@ -21,7 +21,6 @@ export async function readRepositoryBranches(
   fetch: HttpFetch,
   token: string,
   repository: BranchRepository,
-  search: string,
 ): Promise<RepositoryBranchesResponse> {
   const branches = new Map<string, RepositoryBranch>()
   let after: string | null = null
@@ -40,24 +39,11 @@ export async function readRepositoryBranches(
     }
     after = nextPage(refs.pageInfo, after)
   } while (after !== null)
-  if (!branches.has(repository.defaultBranch))
-    branches.set(repository.defaultBranch, {
-      name: repository.defaultBranch,
-      committedAt: null,
-    })
   return {
-    defaultBranch: repository.defaultBranch,
-    branches: [...branches.values()]
-      .filter((branch) =>
-        branch.name.toLowerCase().includes(search.toLowerCase()),
-      )
-      .sort((a, b) => {
-        if (a.name === repository.defaultBranch) return -1
-        if (b.name === repository.defaultBranch) return 1
-        return (
-          (b.committedAt ?? 0) - (a.committedAt ?? 0) ||
-          a.name.localeCompare(b.name)
-        )
-      }),
+    branches: [...branches.values()].sort(
+      (a, b) =>
+        (b.committedAt ?? 0) - (a.committedAt ?? 0) ||
+        a.name.localeCompare(b.name),
+    ),
   }
 }

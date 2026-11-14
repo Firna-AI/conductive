@@ -14,7 +14,7 @@ Each handler returns `null` for a path that it does not own. The
 | `endpointModelsRoute` in [`endpoint-models.ts`](endpoint-models.ts) | `POST /api/account/agent-logins/:agent/models/refresh` |
 | `codexDeviceRoute` in [`codex-device.ts`](codex-device.ts) | `POST /api/account/agent-logins/codex/device` starts a ChatGPT sign-in. `POST` of its `/:handle` polls and exchanges it |
 | `shellRoute` in [`shell.ts`](shell.ts) | `GET` of the sections, the repositories, the members, and the workspace list of an org. `GET` and `PUT` of the view of a workspace, and `PUT` of its read mark |
-| `branchesRoute` in [`branches.ts`](branches.ts) | `GET /api/orgs/:orgId/repositories/:repositoryId/branches`, with optional `search`, reads live branches with the member's fresh GitHub user token |
+| `branchesRoute` in [`branches.ts`](branches.ts) | `GET /api/orgs/:orgId/repositories/:repositoryId/branches` reads live branches with the member's fresh GitHub user token |
 | `featureShellRoute` in [`feature-shell.ts`](feature-shell.ts) | GitHub installations and available repositories of the account; Create org with initials and repositories; settings reads and writes; repository choices; section writes; workspace names and moves |
 | `archiveRoute` in [`archive.ts`](archive.ts) | `POST` of a workspace’s `archive` and `restore` |
 | `chatLifecycleRoute` in [`lifecycle.ts`](lifecycle.ts) | `POST` of the workspace list, which creates a workspace. `GET` of a workspace, `POST` of its `resume` and `activity`, and image build, refresh, and log routes |
@@ -279,9 +279,9 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
 ### Branch lists
 
 The branch list uses [the shared branch contract](../../src/shared/branches.ts).
-It returns the default branch first, then branches by commit date.
-It follows all GitHub pages before it applies the name search.
-An empty repository returns its known default branch with no commit date.
+It returns only branches that GitHub lists, newest commit first.
+It follows all GitHub pages. An empty repository returns an empty list.
+The browser adds its default row from the saved repository record and filters the list for search.
 The route checks org membership and the org's repository before and after the read.
 It stores no branch list and returns no GitHub token or upstream error text.
 Missing GitHub access returns `github_access_required`; a failed read returns `github_unavailable`.

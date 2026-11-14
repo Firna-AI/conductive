@@ -37,7 +37,6 @@ const stacks = 'The pull request holds only the new work.'
 /** The branches of acme/storefront, as the Worker lists them. */
 function serveBranches(server: FakeApiServer): void {
   server.json('GET', branchesPath, {
-    defaultBranch: 'main',
     branches: [
       { name: 'main', committedAt: FAKE_TIME - 9 * hour },
       { name: 'priyaraman/checkout-tax-rates', committedAt: FAKE_TIME - hour },

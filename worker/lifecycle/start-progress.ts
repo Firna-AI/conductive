@@ -35,7 +35,9 @@ export async function advanceStartSteps(
     return true
   }
   const label =
-    job.phase === 'fetch' && job.baseBranch
+    job.phase === 'fetch' &&
+    (job.baseBranch ||
+      (job.startBranch ?? job.defaultBranch) !== job.defaultBranch)
       ? await call(() => creationFetchLabel(env.DB, job))
       : stepLabel(job.phase)
   if (

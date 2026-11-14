@@ -13,17 +13,15 @@ function readBranch(value: unknown): RepositoryBranch {
 }
 
 /**
- * The branches of a repository, from `RepositoryBranchesResponse`: the
- * default branch first, then the others by their newest commit. A branch
- * without a commit date, such as the default branch of an empty repository,
- * has none.
+ * The branches that GitHub lists, newest commit first. A branch without a
+ * commit date has none. The picker adds its default row from the saved
+ * repository record.
  */
 export function readRepositoryBranches(
   value: unknown,
 ): RepositoryBranchesResponse {
   const list = record(value, 'branches')
   return {
-    defaultBranch: text(list, 'defaultBranch'),
     branches: items(list, 'branches', readBranch),
   }
 }

@@ -36,9 +36,11 @@ const SURFACE_OPTIONS = {
  *
  * A press opens the picker, which reads the branches of the repository
  * again. On a computer the picker opens below the control, in the top
- * layer, so no box clips it, and Escape and a press outside close it. A
- * phone opens it as a sheet. A pick closes it, and the focus goes back to
- * the control.
+ * layer, so no box clips it, and Escape and a press outside close it. The
+ * focus on an element outside the control and the picker closes it too.
+ * So Tab reaches each control of the picker, such as Try again, and the
+ * picker closes as Tab leaves it. A phone opens it as a sheet. A pick
+ * closes it, and the focus goes back to the control.
  */
 export function BranchControl(props: {
   orgId: string
@@ -54,7 +56,9 @@ export function BranchControl(props: {
   const [open, setOpen] = useState(false)
   const anchor = useRef<HTMLSpanElement>(null)
   const close = () => setOpen(false)
-  useDismiss(open && !phone, anchor, close)
+  // The anchor holds the control and the open picker, so the focus of a
+  // press on the control leaves the picker open, and its click closes it.
+  useDismiss(open && !phone, anchor, close, { focusOutside: true })
   // The palette key closes the picker beside the control, as it closes a
   // menu. A phone sheet holds the key.
   useMenuLayer(open && !phone, () => {
@@ -72,7 +76,6 @@ export function BranchControl(props: {
   const picker = (sheet: boolean) => (
     <BranchList
       branch={branch}
-      close={close}
       list={shown}
       pick={pick}
       repository={repository.fullName}

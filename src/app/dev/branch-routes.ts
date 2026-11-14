@@ -36,10 +36,9 @@ function ageOf(updated: string): number {
 }
 
 /**
- * The branches of a repository, as the Worker lists them: the default
- * branch first, then the others by their newest commit. acme/storefront
- * has the branches of the mockups. Each other repository has its default
- * branch only, as an empty repository does.
+ * The branches of a repository, as the Worker lists them: newest commit
+ * first. acme/storefront has the branches of the mockups. Each other
+ * repository has its default branch only.
  */
 function branchesOf(
   repository: Repository,
@@ -53,11 +52,12 @@ function branchesOf(
         }))
       : []
   return {
-    defaultBranch: repository.defaultBranch,
     branches: [
       { name: repository.defaultBranch, committedAt: now - 3_600_000 },
       ...others,
-    ],
+    ].sort(
+      (a, b) => b.committedAt - a.committedAt || a.name.localeCompare(b.name),
+    ),
   }
 }
 

@@ -74,11 +74,12 @@ branches that the create call of an agent takes.
 - A search keeps only the branches whose names hold the query. The row of
   the default branch follows the same rule.
 - A search highlights its first match, and Enter picks that branch.
-- A search finds each branch of the repository, also a branch that the
-  list without a search does not show.
+- A search filters the full branch list without another GitHub read.
 - The Worker reads the list live from GitHub with the GitHub token of the
   member, as [Branch reads](github-tokens.md#branch-reads) says. It stores
   no list.
+- The live reply holds only branches that GitHub lists, newest commit
+  first. The picker adds its default row from the saved repository record.
 - The default branch needs no read of GitHub. So its row shows while the
   list loads, after a failed read, and without access to the repository.
 - A failed read stops no start from the default branch.

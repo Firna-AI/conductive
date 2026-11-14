@@ -70,7 +70,9 @@ the folder of this page.
   `useDismiss`, the layer of sheets and dialogs, and `useModalLayer`, which
   every sheet and dialog uses. Escape closes only the newest layer. Its
   optional `returnFocus` names a trigger that a render can replace, such as
-  the row of a phone menu sheet.
+  the row of a phone menu sheet. The option `focusOutside` of `useDismiss`
+  also closes a layer when an element outside it takes the focus. The
+  branch picker of New workspace turns it on, so Tab reaches its Try again.
   `../shell/ui/screen-focus.ts`: `requestScreenFocus`, the focus of a new
   screen after a layer closes with a move, which the main area of a
   desktop frame takes through `useScreenFocus`.

@@ -100,6 +100,34 @@ export function usePressOutside(
 }
 
 /**
+ * Closes an open layer when an element outside `inside` takes the focus,
+ * such as at Tab from the last control of the layer. A focus that goes to
+ * no element, such as to another window, fires no `focusin`, so the layer
+ * stays open then. The focus counts in the capture phase, so a part that
+ * stops the event still closes the layer.
+ */
+function useFocusOutside(
+  open: boolean,
+  inside: RefObject<HTMLElement | null>,
+  close: () => void,
+): void {
+  const closeRef = useRef(close)
+  useEffect(() => {
+    closeRef.current = close
+  })
+  useEffect(() => {
+    if (!open) return
+    const onFocus = (event: FocusEvent) => {
+      const target = event.target
+      if (target instanceof Node && inside.current?.contains(target)) return
+      closeRef.current()
+    }
+    document.addEventListener('focusin', onFocus, true)
+    return () => document.removeEventListener('focusin', onFocus, true)
+  }, [open, inside])
+}
+
+/**
  * Closes an open layer on Escape. Escape counts in the capture phase,
  * because a text field stops its key events. Escape closes only the newest
  * open layer, such as a menu in a dialog, or the choices of a menu before
@@ -131,16 +159,22 @@ export function useEscapeLayer(open: boolean, close: () => void): void {
  * Closes an open layer on Escape and on a press outside `inside`, as
  * `useEscapeLayer` and `usePressOutside` do. With `modal`, a press outside
  * does not move the focus, which a browser does at each press, so the focus
- * goes back to the trigger of the layer.
+ * goes back to the trigger of the layer. With `focusOutside`, the focus on
+ * an element outside `inside` closes the layer too, as `useFocusOutside`
+ * says. So Tab moves through each control of the layer, and the layer
+ * closes as Tab leaves it. A menu closes at Tab, and a modal layer keeps
+ * Tab inside, so they do not use it.
  */
 export function useDismiss(
   open: boolean,
   inside: RefObject<HTMLElement | null>,
   close: () => void,
-  options: { modal?: boolean } = {},
+  options: { modal?: boolean; focusOutside?: boolean } = {},
 ): void {
   const modal = options.modal ?? false
+  const focusOutside = options.focusOutside ?? false
   usePressOutside(open, inside, close, { modal })
+  useFocusOutside(open && focusOutside, inside, close)
   useEscapeLayer(open, close)
 }
 

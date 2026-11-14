@@ -6,12 +6,11 @@ import { loading, ready, type Loadable } from './store'
 
 const hour = 3_600_000
 const list: RepositoryBranchesResponse = {
-  defaultBranch: 'main',
   branches: [
-    { name: 'main', committedAt: 9 * hour },
     { name: 'calummoore/fix-cart-flake', committedAt: 8 * hour },
     { name: 'priyaraman/Checkout-tax-rates', committedAt: 7 * hour },
     { name: 'calummoore/checkout-autocomplete', committedAt: 6 * hour },
+    { name: 'main', committedAt: 5 * hour },
     { name: 'develop', committedAt: null },
   ],
 }
@@ -82,8 +81,7 @@ describe('the rows of the branch picker', () => {
       empty: shown(
         branchRows(
           ready({
-            defaultBranch: 'main',
-            branches: [{ name: 'main', committedAt: null }],
+            branches: [],
           }),
           onMain,
           '',

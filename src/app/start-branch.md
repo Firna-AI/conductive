@@ -61,8 +61,16 @@ parts reuse their CSS modules.
   keeps its key events from the elements around it, so the list hears them
   in the capture phase.
 - A pick, Escape, and a press outside close the picker, and the focus goes
-  back to the control. Tab closes a picker beside its control. The key of
-  the command palette closes it, as it closes a menu.
+  back to the control. The focus on an element outside the control and
+  the picker also closes a picker beside its control, through the option
+  `focusOutside` of `useDismiss` in `../shell/ui/Overlay.tsx`. So Tab goes
+  from the search field to Try again after a failed read, and the picker
+  closes as Tab leaves it. The control counts as part of the picker. So
+  Shift+Tab from the search field moves the focus to the control and
+  leaves the picker open, and a press of the control closes the picker at
+  its click. A focus that goes to no element, such as to another window,
+  leaves the picker open. The key of the command palette closes it, as it
+  closes a menu.
 - On a computer the picker hangs below the control, in the top layer of a
   `PopoverSurface`, so no box clips it. A phone opens it as a sheet.
 
@@ -104,6 +112,10 @@ parts reuse their CSS modules.
 - `../shell/new-workspace/BranchPicker.test.tsx` checks the picker on the
   page, in the dialog, and on a phone, the keys, the target choice, the
   create, and both refusals.
+- `../shell/new-workspace/BranchPickerFocus.test.tsx` checks the focus of
+  the picker on a computer: Tab to Try again after a failed read, the close
+  as Tab leaves the picker, and a press of the control that closes the open
+  picker.
 
 ## Development
 

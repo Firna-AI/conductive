@@ -49,7 +49,6 @@ export async function branchesRoute(
     dependencies.fetch,
     token,
     repository,
-    url.searchParams.get('search') ?? '',
   )
   const current = await access()
   if (

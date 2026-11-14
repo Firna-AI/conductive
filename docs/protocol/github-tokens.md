@@ -201,6 +201,8 @@ rules. A decision number names a dated record, as
 - The picker of New workspace lists the branches of one repository of the
   org. The Worker reads them live from GitHub with the GitHub user token of
   the member who opens the picker. It stores no list.
+- The live branch reply holds only branches that GitHub lists, newest
+  commit first. The picker gets its default row from the saved repository.
 - The Worker answers only a member of the org, and only for a repository
   of that org. The answer goes only to that member.
 - Reason: the browser gets no GitHub token, and each member sees only the

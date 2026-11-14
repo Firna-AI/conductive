@@ -1,0 +1,31 @@
+# Saved default branch stays old after a rename
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Large. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-14, from the review of branch `calummoore/delft-39rk` (workspace starts from another branch), the check of review item 102.
+- **Location:** `worker/app-api/feature-repositories-data.ts:43`, `worker/lifecycle/continue-data.ts:73`, `worker/github/base-data.ts:13`, `worker/lifecycle/create-branches.ts:45`, `src/app/branch-rows.ts:53`.
+- **Reason:** The cause is older than the branch that found it, and a fix changes when the saved default follows GitHub, which needs a protocol decision.
+
+- **Source:** Review.
+- **Category:** Product bug.
+- **Terms:**
+  - **Saved default branch:** the column `repositories.default_branch` in D1. New workspace, the branch check, the create, and the start read it.
+  - **Base branch:** the branch that the work of a workspace targets. A stored null base follows the saved default branch, as `docs/protocol/base-branches.md` says.
+- **Background:**
+  - Only three paths write the saved default branch: a save of the repositories of an org, a Continue, and the move of a deleted base. No subscribed GitHub webhook writes it.
+  - New workspace names the default branch from the saved record, and the branch picker shows it first.
+  - A create from the default branch sends no branch, so the Worker starts from the saved default branch.
+  - The start fetches that branch by name.
+- **Problem:** After GitHub renames the default branch, for example from `main` to `trunk`, New workspace still names `main`. A start from it fails with "The branch `main` is no longer on GitHub." until one of the three paths writes the new name.
+- **Impact if no action:** In a repository whose default branch was renamed, each new workspace from the default branch fails to start until an admin saves the repositories or a member presses Continue.
+- **Root question:** When does Conductive learn that GitHub changed the default branch of a repository?
+- **Options:**
+  - **A.** No change. An admin saves the repositories after a rename. Effort: Small.
+  - **B.** A live GitHub read that sees another default branch, such as the branch list or the banner read, writes it to the saved record. The browser then reloads the repository record. Cost: it moves the base of each workspace whose base follows the default branch, so those cloud computers must move too. Effort: Large.
+  - **C.** Subscribe to the GitHub `repository` webhook and write the new default branch on its `edited` event. Cost: a new webhook, the same base moves as B, and a protocol decision. Effort: Large.
+- **Left out:** A fix in the browser alone, because a create from the default branch sends no branch and the Worker starts from the saved record.
+- **Wider fix:** B or C. Both keep one saved record current for every reader.
+- **Previous examples:** `plans/follow-ups/retained-diff-base-after-default-rename.md` records another effect of a stale saved default: retained diffs fail after a rename.
+- **Related:** `plans/follow-ups/retained-diff-base-after-default-rename.md`: B and C change the saved default more often, so that item's fix should come first.
+- **Recommendation:** B. It reuses reads that already run, with the member's own token.
+- **Action:** ask the user, because B and C change when the saved default follows GitHub, and no requirement covers that.

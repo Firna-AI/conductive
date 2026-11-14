@@ -77,10 +77,10 @@ it('syncs the workspace base while another branch is checked out', async () => {
   expect(await f.git('branch', '--show-current')).toBe('agent/work\n')
 })
 
-async function resumeStartupFixture() {
+async function resumeStartupFixture(baseBranch = 'main') {
   const f = await continueNativeFixture()
   const command = workspacePhaseCommand(
-    { repositoryId: 'repository', branch: 'owner/old', baseBranch: 'main' },
+    { repositoryId: 'repository', branch: 'owner/old', baseBranch },
     {
       workspaceId: 'workspace',
       orgId: 'org',
@@ -88,7 +88,7 @@ async function resumeStartupFixture() {
       imageName: null,
       startupScript: readSavedScript("printf '%s\\n' 'startup ran'"),
       environmentCiphertext: null,
-      defaultBranch: 'main',
+      defaultBranch: baseBranch,
       repositoryLocations: [
         {
           repositoryId: 'repository',
@@ -125,6 +125,54 @@ async function resumeStartupFixture() {
       ),
   }
 }
+
+it.each([
+  { mode: 'live', stdout: '' },
+  { mode: 'resume', stdout: 'startup ran\nrunner restarted\n' },
+])(
+  'keeps both base settings and file reports on $mode when the new remote ref is missing',
+  async ({ mode, stdout }) => {
+    const f = await resumeStartupFixture('trunk')
+    await f.git('config', 'branch.owner/old.gh-merge-base', 'main')
+    await f.git(
+      'symbolic-ref',
+      'refs/remotes/origin/HEAD',
+      'refs/remotes/origin/main',
+    )
+    const repository = new Repository(f.directory)
+    const events: RunnerFileEvent[] = []
+    const reporter = new FileReporter(repository, 'trunk', async (event) => {
+      events.push(event)
+    })
+    await reporter.refresh(true)
+    await f.write('carry.txt', 'kept work\n')
+    const head = await f.git('rev-parse', 'HEAD')
+    const result = await (mode === 'resume'
+      ? f.startup()
+      : f.execute(
+          workspaceBaseCommand({
+            directory: f.directory,
+            branch: 'owner/old',
+            baseBranch: 'trunk',
+          }),
+        ))
+    expect(result.exitCode, result.stderr).toBe(0)
+    expect(result.stdout).toBe(stdout)
+    expect(await f.git('config', 'branch.owner/old.gh-merge-base')).toBe(
+      'main\n',
+    )
+    expect(await f.git('symbolic-ref', 'refs/remotes/origin/HEAD')).toBe(
+      'refs/remotes/origin/main\n',
+    )
+    expect(await f.git('branch', '--show-current')).toBe('owner/old\n')
+    expect(await f.git('rev-parse', 'HEAD')).toBe(head)
+    await reporter.refresh()
+    expect(events.at(-1)).toMatchObject({
+      type: 'changes.updated',
+      changes: { baseBranch: 'main', files: [{ path: 'carry.txt' }] },
+    })
+  },
+)
 
 it.each([
   {

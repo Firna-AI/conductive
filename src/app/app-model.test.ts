@@ -201,7 +201,6 @@ describe('AppModel', () => {
   test('another person who signs in gets no branch list of the person before', async () => {
     const server = new FakeApiServer()
     server.json('GET', repositoryBranchesPath(FAKE_IDS.org, 'storefront'), {
-      defaultBranch: 'main',
       branches: [{ name: 'calummoore/private-work', committedAt: null }],
     })
     const app = new AppModel(testServices(server))

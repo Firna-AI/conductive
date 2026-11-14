@@ -13,7 +13,6 @@ const path = repositoryBranchesPath(FAKE_IDS.org, 'storefront')
 
 function listOf(...names: string[]): RepositoryBranchesResponse {
   return {
-    defaultBranch: 'main',
     branches: names.map((name) => ({ name, committedAt: null })),
   }
 }

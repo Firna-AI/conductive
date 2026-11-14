@@ -59,7 +59,7 @@ it('replays a saved branch after Restore with a new journal and preserves the ex
       "printf 'committed\\n' > tracked",
       'git add tracked',
       'git -c user.name=Fixture -c user.email=fixture@example.test -c commit.gpgsign=false commit -m initial',
-      'git fetch . main',
+      'git fetch . +refs/heads/main:refs/remotes/origin/main',
     ].join('\n'),
   )
   expect(initialized.exitCode, JSON.stringify(initialized)).toBe(0)
