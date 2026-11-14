@@ -22,7 +22,8 @@ the dev wiring in `dev/`, and what its fake routes do.
   `dev/attachment-parts.ts`. With `?upload=wait` no part gets an answer,
   so each upload keeps running. With `?upload=fail` the first part of the
   page fails at its first send and at each of its retries, so its chip
-  fails once, and Try again sends that part again. `?sent=<percent>` makes
+  fails once, and Try again sends that part again. The retries wait 1, 2,
+  and 4 seconds, so the chip fails after about 7 seconds. `?sent=<percent>` makes
   the dev fixture `dev/progress-fixture.ts` report that share of each part
   as sent, so `?upload=wait&sent=64` shows the measured state of a file of
   one part. Create org of the dev fake

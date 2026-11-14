@@ -2,6 +2,7 @@ import type { AttachmentUploadTarget } from '../shared/messages'
 import type { ApiClient } from './api/client'
 import { uploadAttachment } from './attachment-upload'
 import type { Lifetime } from './creations'
+import type { Delay } from './events'
 import {
   changeFile,
   emptyIntake,
@@ -28,6 +29,8 @@ interface DraftUploadsHost {
   readonly newId: () => string
   /** The life of the creates of the person who is signed in now. */
   readonly lifetime: () => Lifetime
+  /** The timer of the waits before a failed part goes again. */
+  readonly delay: Delay
 }
 
 /**
@@ -175,6 +178,7 @@ export class DraftUploads {
           draft.get().messageId === messageId &&
           hasFile(draft.get().files, item.id),
         signal: job.signal,
+        delay: this.host.delay,
         change: (change) =>
           draft.change((current) => ({
             ...current,

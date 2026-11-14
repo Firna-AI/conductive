@@ -237,7 +237,8 @@ of the chip removes it. Each removal takes the file off the draft and
 stops its upload.
 `state/attachment-actions.test.ts` attaches files to a chat draft over
 the fake API, which uploads in parts. A part that fails at its first send
-and at its three retries fails the upload, which keeps its file and its
+and at its three retries, after the waits of 1, 2, and 4 seconds on the
+timers of the chat, fails the upload, which keeps its file and its
 receipts, and Send waits. Try again through the files source of the draft
 sends only the part with no receipt, in the same upload. It also checks
 the measured bytes of an upload. A pick with two files over the 1 GB
@@ -246,6 +247,8 @@ keeps the names of each kind in their order, and Send clears them. A
 removed file and a stopped chat abort their uploads. An expired file that
 Send finds gone turns failed, and Try again uploads its kept `File` as a
 new upload.
+`state/attachment-waits.test.ts` checks that a failed part waits on the
+timers of the chat, and that a Remove during the wait stops the upload.
 `state/draft-file-lifecycle.test.ts` attaches files through the controller
 and gets their IDs before the uploads end, with the queue of the pick. It
 keeps a ready file for undo, and it detaches a file only when its last

@@ -255,8 +255,9 @@ caret, also for files that hovered as it began, and takes no drop. Files
 over the card show its drop state, a dropped folder attaches as its zip,
 and a folder that cannot be read gets its notice in the dialog.
 `folder-zip.test.ts` zips a folder with nested, empty, and hidden entries,
-gives the name of a zip over the size limit and of a folder that cannot be
-read, and stops with its drop. `../App.dom.test.tsx` mounts `App` and checks the guard
+moves the compressed bytes into a blob each time that they reach the flush
+size, gives the name of a zip over the size limit and of a folder that
+cannot be read, and stops with its drop. `../App.dom.test.tsx` mounts `App` and checks the guard
 outside each box, the browser's own drag of text and links, and the copy
 offer of a box. It also checks that the Feedback dialog still takes a
 dropped screenshot.
@@ -265,10 +266,13 @@ dropped screenshot.
 over a fake Worker with small parts, from
 `attachment-upload.test-support.ts`. It checks the parts in their order
 with the progress of all parts, a part that goes again alone up to three
-times, a refusal that goes once, a resumed upload, a new upload when the
+times, the waits of 1, 2, and 4 seconds before these retries, a stop during
+a wait, a refusal that goes once, a resumed upload, a new upload when the
 kept one is gone, the end of an upload by its complete call, a draft file
 and an empty file, and a stop by the signal. `api/xhr-files.test.ts`
-checks the `PUT` of each part.
+checks the `PUT` of each part. `new-workspace-waits.test.ts` checks that
+New workspace waits on the timer of the app services, and that a Remove
+during the wait stops the upload.
 
 Run `npm run test -- src/app/dev/attachment-files.test.ts src/chat/dev/dev-attachment-files.test.ts`
 for the API tests of the uploaded bytes and their copies in both

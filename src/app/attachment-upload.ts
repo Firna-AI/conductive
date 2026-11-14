@@ -11,12 +11,15 @@ import {
 import { ApiError, type ApiClient } from './api/client'
 import { nested, record } from './api/parse'
 import { readAttachment } from './api/read-workspaces'
+import type { Delay } from './events'
 import {
   canRetry,
   COMPLETE_ENDS,
   keptBytes,
   PART_ENDS,
+  PART_RETRY_WAITS_MS,
   partBytes,
+  pause,
   readReceipt,
   readStart,
   withReceipt,
@@ -25,8 +28,8 @@ import {
 
 /**
  * What an upload reports, the upload that it resumes, the check that it
- * makes before each request, and the signal that stops the request that
- * runs.
+ * makes before each request, the signal that stops the request that runs,
+ * and the timer of its waits.
  */
 export interface UploadHooks {
   /** The upload that an earlier try of the file kept, or null for a new one. */
@@ -45,6 +48,11 @@ export interface UploadHooks {
   live: () => boolean
   /** Stops the request that runs, such as after Remove or a sign-out. */
   signal: AbortSignal
+  /**
+   * The timer of the composer, for the waits before a failed part goes
+   * again. A test gives a timer that runs only when the test says so.
+   */
+  delay: Delay
 }
 
 /** One upload of a file, to a workspace or to the first message of a new one. */
@@ -54,9 +62,6 @@ interface AttachmentUploadJob extends UploadHooks {
   target: AttachmentUploadTarget
   file: File
 }
-
-/** The number of times that a failed part goes again after its first send. */
-export const PART_RETRIES = 3
 
 /** The upload stopped before a request, because `live` or `signal` said so. */
 class UploadStopped extends Error {}
@@ -79,12 +84,15 @@ class UploadEnded extends Error {
  * slice of the file, and the complete call sends the receipts.
  *
  * A part that got no answer, a server error, or a broken body goes again
- * alone, up to `PART_RETRIES` times. `resume` gives the upload of an
- * earlier try, so only its parts with no receipt go. When the Worker no
- * longer has that upload, a new one starts. `keep` gets each change of the
- * upload, and `progress` the bytes of all parts that the browser sent. No
- * request starts when `live` says no, and `signal` stops the one that runs.
- * A failure throws the client's `ApiError`.
+ * alone, after the waits of `PART_RETRY_WAITS_MS` on the timer `delay`. A
+ * stop of `signal` during a wait ends the upload at once.
+ *
+ * `resume` gives the upload of an earlier try, so only its parts with no
+ * receipt go. When the Worker no longer has that upload, a new one starts.
+ * `keep` gets each change of the upload, and `progress` the bytes of all
+ * parts that the browser sent. No request starts when `live` says no, and
+ * `signal` stops the one that runs. A failure throws the client's
+ * `ApiError`.
  */
 export async function uploadAttachment(
   job: AttachmentUploadJob,
@@ -170,8 +178,11 @@ async function sendPart(
         },
       )
     } catch (error) {
-      if (retries < PART_RETRIES && canRetry(error) && going(job)) continue
-      throw ended(job, error, PART_ENDS)
+      const wait = PART_RETRY_WAITS_MS.at(retries)
+      if (wait === undefined || !canRetry(error) || !going(job)) {
+        throw ended(job, error, PART_ENDS)
+      }
+      await pause(job.delay, wait, job.signal)
     }
   }
 }

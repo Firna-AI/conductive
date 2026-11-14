@@ -10,11 +10,11 @@ that shows their chips.
 
 - `attachment-upload.ts`: `uploadAttachment`, the one upload of a file for
   every composer: the start call, each part in its order, and the complete
-  call. A failed part goes again alone, and a try resumes the kept upload
-  of an earlier try. `upload-parts.ts`: `PartedUpload`, an upload that the
+  call. A failed part goes again alone, after a wait on the timer of the
+  composer, and a try resumes the kept upload of an earlier try. `upload-parts.ts`: `PartedUpload`, an upload that the
   Worker started, with its receipts, the bytes of each part, the readers
-  of the replies, and the failures that a part can survive or that end the
-  upload. `draft-files.ts`: `DraftFile`, the upload state of each file of a
+  of the replies, the waits before the retries of a part, and the failures
+  that a part can survive or that end the upload. `draft-files.ts`: `DraftFile`, the upload state of each file of a
   draft, with its kept upload, and `runFileJob`, the upload of one file in
   its generation. `runFileQueue` starts the reserved uploads of a pick, or of
   a text that brings files back, one at a time, and `stopFile` ends a

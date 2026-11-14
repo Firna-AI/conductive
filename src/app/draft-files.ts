@@ -1,6 +1,7 @@
 import { ATTACHMENT_MAX_BYTES, type Attachment } from '../shared/messages'
 import { ApiError } from './api/client'
 import type { UploadHooks } from './attachment-upload'
+import type { Delay } from './events'
 import type { PartedUpload } from './upload-parts'
 import { asApiError } from './store'
 
@@ -170,6 +171,8 @@ interface FileJob {
   change: (change: (item: DraftFile) => DraftFile) => void
   /** Stops the request of the upload after detachment or sign-out. */
   signal: AbortSignal
+  /** The timer of the owner, for the waits before a failed part goes again. */
+  delay: Delay
   /** Uploads the file, as `uploadAttachment` does, with these hooks. */
   upload: (file: File, hooks: UploadHooks) => Promise<Attachment>
 }
@@ -195,6 +198,7 @@ export async function runFileJob(job: FileJob): Promise<void> {
       resume: job.resume,
       live: job.live,
       signal: job.signal,
+      delay: job.delay,
       progress: (sentBytes) =>
         update((item) =>
           item.state === 'uploading' ? { ...item, sentBytes } : item,

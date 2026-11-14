@@ -86,7 +86,8 @@ type DevInviteCode = (typeof INVITE_CODES)[number]
  *   opens, as a sandbox does that stops while its workspace is open.
  * - `upload=wait|fail`: no part of an upload gets an answer, so each file
  *   keeps uploading, or the first part of the page fails at each of its
- *   sends, so its chip fails once and Try again works.
+ *   sends, so its chip fails once, after the waits of its retries of about
+ *   7 seconds, and Try again works.
  * - `shareSave=fail`: each change of the share setting of an agent login
  *   fails, so the account shows that the change was not saved.
  * - `runs=failed|skipped`: the Runs list of Review pull requests holds a

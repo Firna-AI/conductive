@@ -51,6 +51,7 @@ async function upload(
         !job.signal.aborted &&
         fileOf(context, draftId, item.id) !== undefined,
       signal: job.signal,
+      delay: context.delay,
       change: (change) =>
         changeDraft(context, draftId, (draft) => ({
           ...draft,

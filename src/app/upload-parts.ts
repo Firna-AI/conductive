@@ -4,9 +4,11 @@ import type {
 } from '../shared/messages'
 import { ApiError } from './api/client'
 import { count, record, text } from './api/parse'
+import type { Delay } from './events'
 
 // The parts of an upload in parts: their bytes, their receipts, the replies
-// of the Worker, and the failures that a part can survive.
+// of the Worker, the failures that a part can survive, and the waits before
+// it goes again.
 
 /**
  * An upload in parts that the Worker started for one file, with the receipt
@@ -41,6 +43,40 @@ export const COMPLETE_ENDS = [
   'attachment_upload_failed',
   'invalid_input',
 ]
+
+/**
+ * The waits before the retries of a failed part, in ms: 1, 2, and 4
+ * seconds. Reason: a short outage, such as a change of network, then
+ * passes before the last retry.
+ */
+export const PART_RETRY_WAITS_MS: readonly number[] = [1_000, 2_000, 4_000]
+
+/** The number of times that a failed part goes again after its first send. */
+export const PART_RETRIES = PART_RETRY_WAITS_MS.length
+
+/**
+ * Waits `ms` on the timer of the composer. A stop of `signal`, such as a
+ * Remove of the chip, ends the wait at once and cancels its timer.
+ */
+export function pause(
+  delay: Delay,
+  ms: number,
+  signal: AbortSignal,
+): Promise<void> {
+  return new Promise((resolve) => {
+    let cancel: () => void = () => {}
+    const stop = () => {
+      cancel()
+      resolve()
+    }
+    signal.addEventListener('abort', stop, { once: true })
+    cancel = delay(ms, () => {
+      signal.removeEventListener('abort', stop)
+      resolve()
+    })
+    if (signal.aborted) stop()
+  })
+}
 
 /** A part can go again: no answer came, the server failed, or its body broke off. */
 export function canRetry(error: unknown): boolean {

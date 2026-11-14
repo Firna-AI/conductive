@@ -279,6 +279,8 @@ Each path is relative to `src/app/`, the folder of this page.
   the entry of each item, and `intakeOf`, which turns each folder into its
   zip. `folder-zip.ts`: `zipFolder`, the zip of one dropped folder in the
   browser, with `fflate`, which stops at the size limit of an attachment.
+  It moves the compressed bytes into blobs of about 8 MiB, so the page
+  never holds the whole zip.
   `folder-entries.ts`: the parts of a dropped entry that the zip reads. `useFileDropGuard` cancels each drag of files that no part
   took, so the browser opens no file in place of the page. `App` and the
   chat development page mount it. The composer drop and the

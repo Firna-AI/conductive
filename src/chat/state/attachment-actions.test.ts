@@ -50,6 +50,15 @@ async function parts(requests: readonly Request[]) {
   return (await sentParts(requests)).map(({ path, text }) => `${path} ${text}`)
 }
 
+/**
+ * Runs the wait of `ms` before a retry, once the upload waits that long on
+ * the timers of the chat. Other timers of the chat keep waiting.
+ */
+async function runWait(chat: ReturnType<typeof chatFor>, ms: number) {
+  await vi.waitFor(() => expect(chat.timers.waits()).toContain(ms), shortly)
+  chat.timers.run(ms)
+}
+
 /** A chat whose first part waits, and whose held requests keep their signals. */
 function chatThatHolds() {
   const uploads: Request[] = []
@@ -82,7 +91,9 @@ describe('the files of a chat draft', () => {
     })
     await chat.controller.start()
     chat.controller.setDraft(id, 'See the screenshot.')
-    await pickChatFiles(chat, id, [file()])
+    const picking = pickChatFiles(chat, id, [file()])
+    for (const ms of [1_000, 2_000, 4_000]) await runWait(chat, ms)
+    await picking
     const [failed] = chat.draftOf(id)?.files ?? []
     await chat.controller.send(id)
     const whileFailed = chat.requests('POST', messages).length

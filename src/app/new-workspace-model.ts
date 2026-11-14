@@ -133,6 +133,7 @@ export class NewWorkspaceModel {
       orgId: org.orgId,
       newId: () => org.services.newId(),
       lifetime: () => org.creations.lifetime,
+      delay: org.services.delay,
     })
     this.create = new Store<CreateState>({ state: 'idle' })
     // A draft that got its text before the repositories and the builds

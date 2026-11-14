@@ -1,6 +1,6 @@
 import type { Attachment } from '../../shared/messages'
 import { attachmentPath } from '../../shared/attachment-paths'
-import { PART_RETRIES } from '../attachment-upload'
+import { PART_RETRIES } from '../upload-parts'
 import type { DevBackend } from './backend'
 import { attachmentFiles } from './attachment-files'
 import {

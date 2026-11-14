@@ -13,6 +13,9 @@ import {
   uploaded,
   worker,
 } from './attachment-upload.test-support'
+import { flushMicrotasks, ManualDelay } from './test-kit'
+
+const shortly = { timeout: 10_000 }
 
 describe('uploadAttachment', () => {
   test('starts with the size, sends each slice of the file in its order, counts the bytes of all parts, and completes with every receipt', async () => {
@@ -87,6 +90,58 @@ describe('uploadAttachment', () => {
         'part 2: 4567',
       ],
       kept: upload([1]),
+    })
+  })
+
+  test('waits 1, 2, and 4 seconds on the timer of the composer before the three retries of a part, and sends no retry before its wait ends', async () => {
+    const setup = worker({ parts: { 2: ['offline', 'offline', 'offline'] } })
+    const timer = new ManualDelay()
+    const running = run(setup, { delay: timer.delay })
+    const sends = () =>
+      setup.calls.filter((call) => call.startsWith('part 2')).length
+    const steps: { waits: number[]; sends: number }[] = []
+    for (let retry = 0; retry < 3; retry += 1) {
+      await vi.waitFor(() => expect(timer.pending).toBe(1), shortly)
+      steps.push({ waits: timer.waits, sends: sends() })
+      await timer.runAll()
+    }
+    const { result } = await running
+    expect({ steps, result, sends: sends() }).toEqual({
+      steps: [
+        { waits: [1_000], sends: 1 },
+        { waits: [2_000], sends: 2 },
+        { waits: [4_000], sends: 3 },
+      ],
+      result: uploaded,
+      sends: 4,
+    })
+  })
+
+  test('a stop during the wait before a retry ends the upload at once and cancels the timer', async () => {
+    const setup = worker({ parts: { 2: ['offline'] } })
+    const timer = new ManualDelay()
+    const stop = new AbortController()
+    let ended = false
+    const running = run(setup, { delay: timer.delay, signal: stop.signal })
+    void running.then(() => {
+      ended = true
+    })
+    await vi.waitFor(() => expect(timer.pending).toBe(1), shortly)
+    stop.abort()
+    // The upload ends with no run of the timer.
+    await flushMicrotasks()
+    expect(ended).toBe(true)
+    const { result, last } = await running
+    expect({
+      result,
+      pending: timer.pending,
+      calls: setup.calls,
+      last,
+    }).toMatchObject({
+      result: { message: 'The upload stopped.' },
+      pending: 0,
+      calls: ['start', 'part 1: 0123', 'part 2: 4567'],
+      last: upload([1]),
     })
   })
 

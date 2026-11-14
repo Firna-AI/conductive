@@ -701,10 +701,13 @@ Depends on: 1, 5
 
 These are the implementor's calls of 14 November 2026.
 
-- A failed part goes again at once, with no wait, up to three times after
-  its first send. Reason: a cut connection or a server error of one part
-  often passes at once, and Try again sends only the missing parts after a
-  longer outage. A wait needs a timer service in both composers.
+- A failed part goes again up to three times, after waits of 1, 2, and 4
+  seconds on the timer of its composer: the timers of the chat, or the
+  `delay` of the app services. A Remove during a wait stops the upload at
+  once. Reason: a short outage, such as a change of network, then passes
+  with no action of the member, and the tests run the timers by hand. The
+  first version sent the part again at once. The coordinator chose the
+  waits on 14 November 2026.
 - Only a part with no answer, a server error, or
   `attachment_upload_interrupted` goes again. Another refusal fails the
   file at once. The start call and the complete call do not go again.

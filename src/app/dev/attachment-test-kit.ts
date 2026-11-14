@@ -23,6 +23,7 @@ export function resetDevWindow(): void {
   vi.unstubAllGlobals()
 }
 
+/** The hooks of an upload that nothing stops. Its waits end at once. */
 export function uploadHooks() {
   return {
     resume: null,
@@ -30,6 +31,10 @@ export function uploadHooks() {
     live: () => true,
     progress: () => {},
     keep: () => {},
+    delay: (_ms: number, run: () => unknown) => {
+      run()
+      return () => {}
+    },
   }
 }
 

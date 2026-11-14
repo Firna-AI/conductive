@@ -12,6 +12,7 @@ import {
   type FileTransport,
 } from './api/client'
 import { uploadAttachment } from './attachment-upload'
+import type { Delay } from './events'
 import type { PartedUpload } from './upload-parts'
 
 // The fake Worker of the tests of `uploadAttachment`: one upload of a file
@@ -101,17 +102,27 @@ export function worker(
   return { api: createApiClient(fetch, files), calls, bodies, target }
 }
 
-/** Runs one upload, and keeps what it reported. */
+/**
+ * Runs one upload, and keeps what it reported. Each wait before a retry
+ * ends at once, unless the test gives the timer `delay`.
+ */
 export async function run(
   setup: ReturnType<typeof worker>,
   options: {
     file?: File
     resume?: PartedUpload | null
     signal?: AbortSignal
+    delay?: Delay
   } = {},
 ) {
   const progress: number[] = []
   const kept: (PartedUpload | null)[] = []
+  const waits: number[] = []
+  const atOnce: Delay = (ms, done) => {
+    waits.push(ms)
+    done()
+    return () => {}
+  }
   const result = await uploadAttachment({
     api: setup.api,
     orgId: org,
@@ -122,8 +133,9 @@ export async function run(
     keep: (upload) => kept.push(upload),
     live: () => true,
     signal: options.signal ?? new AbortController().signal,
+    delay: options.delay ?? atOnce,
   }).catch((error: unknown) => error)
-  return { result, progress, kept, last: kept.at(-1) }
+  return { result, progress, kept, last: kept.at(-1), waits }
 }
 
 export const upload = (receipts: number[]): PartedUpload => ({
