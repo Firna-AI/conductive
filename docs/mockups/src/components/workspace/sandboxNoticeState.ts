@@ -53,20 +53,35 @@ export function replacesComposer(state: SandboxNoticeState): boolean {
 }
 
 /**
- * Whether the panel takes the place of All files and Changes: while the
- * sandbox starts, while its start is refused, and after a failed first
- * start, which leaves no saved lists. A stopped sandbox, and one whose
- * later start failed, keep the lists that the workspace saved.
+ * Whether the panel takes the place of a file or a diff that a tab already
+ * shows: while the start is refused, with the words of the refusal, and
+ * after a failed first start, with Try again. While the sandbox starts, and
+ * while it is stopped or after a later failed start, the tab keeps it.
  */
-export function replacesLists(panel: SandboxPanelState): boolean {
+export function replacesShownFile(panel: SandboxPanelState): boolean {
   switch (panel.problem) {
-    case 'starting':
     case 'refused':
       return true
     case 'error':
       return panel.firstStart === true
+    case 'starting':
     case 'stopped':
     case 'archived':
       return false
   }
+}
+
+/**
+ * Whether the panel takes the place of All files or Changes. `saved` says
+ * that the workspace keeps a copy of the list. While the sandbox starts, a
+ * list shows its saved copy, and the wait takes the place of a list without
+ * one, as on the first start of a new workspace. A refused start and a
+ * failed first start take the place of the list, as of a shown file. A
+ * stopped sandbox, and one whose later start failed, keep the list.
+ */
+export function replacesList(
+  panel: SandboxPanelState,
+  saved: boolean,
+): boolean {
+  return panel.problem === 'starting' ? !saved : replacesShownFile(panel)
 }

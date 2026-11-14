@@ -9,7 +9,7 @@ order: 30
 
 Open a workspace that belongs to one of your orgs.
 Its file tools use the workspace's selected repository.
-If its computer is stopped, the file lists show their last saved copy.
+If its computer is stopped or starts again, the file lists show their last saved copy.
 Opening a file or a change starts the computer again.
 
 On a computer, the file lists sit beside the chat.
@@ -127,8 +127,9 @@ Before the first successful list, the view can show an unavailable state.
 
 An unavailable list does not prove that the repository is empty.
 Use **Try again** when a file read fails.
-An open file or change waits while the workspace's computer starts.
+A file or change that you open while the workspace's computer starts waits for it.
 It opens when the computer is ready.
+A file or change that already shows stays open.
 
 If a turn says **Changed files unavailable**, open **Changes** to inspect the branch.
 That notice describes a missing turn summary.

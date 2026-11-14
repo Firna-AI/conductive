@@ -46,6 +46,11 @@ export interface FakeApiOptions {
    * the labels of the mockups, to the file lists and to each finished turn.
    */
   paths?: PathState
+  /**
+   * `false` leaves the file reports out of the event history, as a new
+   * workspace whose runner has not reported its lists yet.
+   */
+  savedLists?: boolean
 }
 
 /**
@@ -92,7 +97,9 @@ export class FakeApiServer implements FakeRouteWriter {
         : recorded
     this.events = new FakeWorkspaceEvents([
       ...chat,
-      ...recordedFileEvents(FAKE_IDS.workspace, chat.length + 1, paths),
+      ...(options.savedLists === false
+        ? []
+        : recordedFileEvents(FAKE_IDS.workspace, chat.length + 1, paths)),
     ])
     fakeCoreRoutes(this, options.role ?? 'admin')
     fakeWorkspaceRoutes(
