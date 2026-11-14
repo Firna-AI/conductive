@@ -7,9 +7,9 @@ import {
 export const sections = defineScreen({
   title: 'Sections',
   description:
-    'The menu of a section, open from its button with three dots: New workspace, Rename section, New section, and Delete section. New workspace creates the workspace in this section. On a phone the menu opens as a sheet.',
+    'The menu of a section, open from its button with three dots: New workspace, Rename section, Move section up, Move section down, New section, and Delete section. New workspace creates the workspace in this section. The first section has no Move section up, and the last has no Move section down. On a phone the menu opens as a sheet.',
   rationale:
-    'A section collapses from its header, and a collapsed section shows how many workspaces it holds. New workspaces from the top of the list join General, the default section. Deleting a section moves its workspaces to General, so no workspace gets lost.',
+    'A section collapses from its header, and a collapsed section shows how many workspaces it holds. New workspaces from the top of the list join General, the default section. The order of the sections is the same for each member of the org, and General moves like any other section. Deleting a section moves its workspaces to General, so no workspace gets lost.',
   relatedDocs: [],
   propSchema: workspaceListSchema,
   props: { list: 'workspaces', menu: 'section', palette: 'closed' },
@@ -23,6 +23,13 @@ export const sections = defineScreen({
       description:
         'A workspace moves to another section by drag and drop. The row lifts under the pointer, a faint copy stays where it was, and a line shows where it lands, here between two rows of General. On a phone a long press lifts the row.',
       props: { menu: 'drag' },
+    },
+    {
+      slug: 'drag-section',
+      title: 'Drag a section',
+      description:
+        'A section moves to another place in the list by a drag of its header. The header lifts under the pointer with the count of its workspaces, the section stays faint in its place, and a line shows where it lands, here Infra between General and Checkout. A click with no drag still collapses the section. On a phone a long press lifts the header.',
+      props: { menu: 'drag-section' },
     },
   ],
 })

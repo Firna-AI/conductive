@@ -33,6 +33,7 @@ const closedMenu: RowMenu = {
 const noActions: SectionActions = {
   toggle: () => {},
   rename: () => {},
+  moveTo: () => {},
   newWorkspace: () => {},
   newSection: () => {},
   remove: () => {},

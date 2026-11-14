@@ -1,15 +1,19 @@
+/*
+ * The cog that opens the settings of the org. It is square, and it grows to
+ * the touch size on a touch screen.
+ */
 .settings {
+  position: relative;
   display: inline-flex;
   flex-shrink: 0;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+  width: calc(var(--ui-control-height) - 4px);
+  min-width: var(--ui-touch-min);
   height: calc(var(--ui-control-height) - 4px);
   min-height: var(--ui-touch-min);
-  padding: 0 8px;
   border-radius: var(--ui-radius-md);
   color: var(--ui-muted);
-  font-size: var(--ui-text-sm);
-  font-weight: 500;
   text-decoration: none;
 }
 
@@ -24,7 +28,11 @@
   color: var(--ui-ink);
 }
 
+/* The dot sits on the top right corner of the cog. */
 .alert {
+  position: absolute;
+  top: calc(50% - 9px);
+  right: calc(50% - 9px);
   width: 6px;
   height: 6px;
   border-radius: 50%;

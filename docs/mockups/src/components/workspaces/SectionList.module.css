@@ -144,3 +144,57 @@
   left: 16px;
   transform: rotate(-1.5deg);
 }
+
+/*
+ * A section in a drag. It stays faint in its place, so the list does not
+ * jump. The line sits in the middle of the gap between two sections and
+ * takes no room: its negative margins give back the extra gap.
+ */
+.faint {
+  opacity: 0.35;
+}
+
+.sectionDrop {
+  position: relative;
+  height: 0;
+  margin: -6px 0;
+}
+
+.sectionLine {
+  display: block;
+  position: absolute;
+  top: -1px;
+  right: 6px;
+  left: 10px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--ui-primary);
+}
+
+/*
+ * The header under the pointer floats over the section below the line,
+ * after the name of that section, so the line stays readable.
+ */
+.sectionLift {
+  display: block;
+  position: absolute;
+  z-index: 10;
+  top: 6px;
+  left: 88px;
+  min-width: 112px;
+  transform: rotate(-1.5deg);
+}
+
+.liftedSection {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  height: var(--ui-control-height);
+  padding: 0 8px 0 6px;
+  border: 1px solid var(--ui-border2);
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-composer);
+  box-shadow: 0 8px 22px var(--ui-shadow);
+  color: var(--ui-ink2);
+  cursor: grabbing;
+}

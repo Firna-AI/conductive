@@ -35,6 +35,7 @@ const [first, second, , kept] = start as Workspace[]
 const noActions = {
   toggle: () => undefined,
   rename: () => undefined,
+  moveTo: () => undefined,
   newWorkspace: () => undefined,
   newSection: () => undefined,
   remove: () => undefined,
