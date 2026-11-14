@@ -795,8 +795,8 @@ Depends on: every other milestone
 - [ ] Confirm in CI that
       `worker/chat/integration/failed-first-start-retry.test.ts` passes. It
       times out on this machine, also without this change.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
@@ -809,5 +809,5 @@ Depends on: every other milestone
 
 ## Post-merge follow-up (non-blocking)
 
-- [ ] On the test deployment, attach a file of about 1 GB, send it, and
+- [x] On the test deployment, attach a file of about 1 GB, send it, and
       check that the agent gets it, and that the R2 object is gone.
