@@ -36,8 +36,10 @@ marks of a draft text.
   the draft, and it does nothing in a read-only workspace. In New
   workspace, it runs `NewWorkspaceModel.retryFile`, which does nothing
   while a create runs. Try again uploads the kept `File` of a failed
-  attached file again, with the same ID. A detached file that failed stays
-  failed until its chip comes back.
+  attached file again, with the same ID. It resumes the kept upload of the
+  file, so it sends only the parts that the Worker did not confirm, as
+  [Uploads](#uploads) says. A detached file that failed stays failed until
+  its chip comes back.
 
 ## The attach
 
@@ -121,7 +123,8 @@ composer shows for a folder and for a file over the size limit.
 - A detached file whose mark comes back, such as from undo or from a paste
   of its copy, is attached again. A ready file comes back as it was, with
   its attachment and its path, and it uploads nothing. A file whose upload
-  stopped uploads again from the start. A failed file comes back failed.
+  stopped starts again from its kept upload, so it sends only the parts
+  with no receipt. A failed file comes back failed.
 
 ## Uploads
 
@@ -140,6 +143,27 @@ composer shows for a folder and for a file over the size limit.
   chat, it finds its draft by the draft ID, so its progress and its outcome
   land on the draft also after a move. New workspace also checks the
   message ID of the draft and the life of the person who is signed in.
+- Each file uploads in parts through `uploadAttachment` of
+  [`attachment-upload.ts`](../app/attachment-upload.ts), as
+  [Attachment uploads](../../docs/protocol/attachment-uploads.md) says:
+  the start call, each part in its order as a slice of the `File`, and the
+  complete call. Also a small or an empty file has one part.
+- A file that uploads or failed keeps its upload in `DraftFile.upload`:
+  the upload ID, the part size, the part count, and the receipt of each
+  part that the Worker confirmed. The upload gives each change through
+  `keep`, also when the file moved with its draft. Try again and undo
+  resume this upload.
+- The progress of a file counts the bytes of the confirmed parts and the
+  measured bytes of the part that goes now. A part that goes again counts
+  from its start again.
+- A part that got no answer, a server error, or a broken body goes again
+  alone, at once, up to three times. Another refusal of a part fails the
+  file at once. The start call and the complete call do not go again.
+- After an error that ends the upload, the file keeps no upload, so Try
+  again starts a new one. Such errors are a lost upload
+  (`attachment_not_found`), a part that does not fit the upload, and a
+  complete call that the Worker ended or refused. A try that finds its
+  kept upload gone starts a new upload at once.
 
 ## The send
 
@@ -165,7 +189,7 @@ composer shows for a folder and for a file over the size limit.
   member added during the send. When the Worker no longer has a sent file,
   each sent file turns failed, attached or detached, through
   `failSentDraft`. So undo cannot bring back such a file as ready. Try
-  again uploads its kept `File`.
+  again uploads its kept `File` as a new upload.
 - A create of New workspace that succeeds ends the upload generations. It
   starts a new draft with a new message ID, which keeps the model choice
   and a picked repository. A text that changed during the create stays,

@@ -14,7 +14,7 @@ function draftAttachmentsPath(orgId: string): string {
   return `${orgPath(orgId)}/attachments`
 }
 
-export function attachmentUploadPath(
+function attachmentUploadPath(
   orgId: string,
   target: AttachmentUploadTarget,
 ): string {

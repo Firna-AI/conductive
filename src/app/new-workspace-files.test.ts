@@ -3,31 +3,48 @@ import { attachmentPath } from '../shared/attachment-paths'
 import { pickWorkspaceFiles, unreadable } from './draft-files.test-support'
 import { mentionText } from '../shared/mention-text'
 import { fileMark } from './draft-marks'
-import { attachmentUploadPath } from '../shared/messages'
+import {
+  attachmentUploadCompletePath,
+  attachmentUploadPartPath,
+  attachmentUploadStartPath,
+} from '../shared/messages'
 import { workspacesPath } from '../shared/workspaces'
 import { FakeApiServer } from '../test-support/fake-api'
-import { sentFiles } from '../test-support/fake-files'
+import { sentParts } from '../test-support/fake-files'
 import { FAKE_IDS } from '../test-support/fixtures/core'
+import { record } from './api/parse'
+import type { FetchLike } from './api/client'
 import { readyIds } from './draft-files'
 import { OrgModel } from './org-model'
 import { HeldRequests, testServices } from './test-kit'
 
 const org = FAKE_IDS.org
 const createPath = workspacesPath(org)
-const uploadPath = attachmentUploadPath(org, {
-  type: 'new-workspace',
-  messageId: '',
-})
+const draft = { type: 'new-workspace', messageId: '' } as const
+const startPath = attachmentUploadStartPath(org, draft)
+const partPath = attachmentUploadPartPath(org, draft, FAKE_IDS.upload, 1)
+const completePath = attachmentUploadCompletePath(org, draft, FAKE_IDS.upload)
 const defaults = {
   repositoryId: 'storefront',
   choice: { agent: 'claude', model: 'Opus 5.5', effort: 'high' } as const,
 }
 const shortly = { timeout: 10_000 }
 
+/**
+ * A New workspace form. Its fetch keeps the signal that the app gives each
+ * part, because the copy of a request that the fake server keeps can lose
+ * the abort of its signal.
+ */
 async function newForm(server: FakeApiServer, held?: HeldRequests) {
-  const model = new OrgModel(testServices(server, { fetch: held?.fetch }), org)
+  const signals: AbortSignal[] = []
+  const next = held?.fetch ?? server.fetch
+  const fetch: FetchLike = (input, init) => {
+    if (init?.method === 'PUT' && init.signal) signals.push(init.signal)
+    return next(input, init)
+  }
+  const model = new OrgModel(testServices(server, { fetch }), org)
   await model.reload('list')
-  return { model, form: model.newWorkspace(null) }
+  return { model, form: model.newWorkspace(null), signals }
 }
 
 function notes(name = 'notes.txt'): File {
@@ -39,6 +56,23 @@ function sized(name: string, size: number): File {
   const file = new File(['x'], name)
   Object.defineProperty(file, 'size', { value: size })
   return file
+}
+
+/** The JSON bodies of the requests with this method and path, in order. */
+function bodies(server: FakeApiServer, method: string, path: string) {
+  return Promise.all(
+    server.requests
+      .filter(
+        (request) =>
+          request.method === method && new URL(request.url).pathname === path,
+      )
+      .map(async (request): Promise<unknown> => request.clone().json()),
+  )
+}
+
+/** The bytes of each part that the server got, in order. */
+async function partTexts(server: FakeApiServer): Promise<string[]> {
+  return (await sentParts(server.requests)).map(({ text }) => text)
 }
 
 /** The JSON body of the last create request. */
@@ -59,20 +93,20 @@ describe('the files of a New workspace draft', () => {
     await pickWorkspaceFiles(
       form,
       [
-        sized('recording.mov', 100_000_001),
-        sized('limit.bin', 100_000_000),
+        sized('recording.mov', 1_000_000_001),
+        sized('limit.bin', 1_000_000_000),
         notes(),
-        sized('archive.zip', 100_000_001),
+        sized('archive.zip', 1_000_000_001),
       ],
       unreadable('Pictures', 'Design notes'),
     )
     const picked = form.draft.get()
-    const uploaded = await sentFiles(server.requests)
+    const uploaded = await bodies(server, 'POST', startPath)
     await form.send(defaults)
     expect({
       refused: picked.refused,
       folders: picked.refusedFolders,
-      uploaded: uploaded.map((file) => file.query.name),
+      uploaded: uploaded.map((body) => record(body).name),
       ready: picked.files.map((item) => item.state),
       sent: await lastCreate(server),
       foldersAfterSend: form.draft.get().refusedFolders,
@@ -90,29 +124,30 @@ describe('the files of a New workspace draft', () => {
     })
   })
 
-  test('Try again uploads the kept File of a failed upload, and the message keeps its ID and its text', async () => {
+  test('Try again of a failed upload sends only what the Worker did not confirm, and the message keeps its ID and its text', async () => {
     const server = new FakeApiServer()
     const { form } = await newForm(server)
     form.setText('Fix the flaky cart test.')
     const { messageId } = form.draft.get()
     server.json(
       'POST',
-      uploadPath,
+      completePath,
       { error: { code: 'internal_error', message: 'The request failed.' } },
       502,
     )
     await pickWorkspaceFiles(form, [notes()])
     const [failed] = form.draft.get().files
+    const path = await attachmentPath({
+      id: 'draft-attachment-2',
+      name: 'notes.txt',
+    })
     server.json(
       'POST',
-      uploadPath,
+      completePath,
       {
         attachment: {
           id: 'draft-attachment-2',
-          path: await attachmentPath({
-            id: 'draft-attachment-2',
-            name: 'notes.txt',
-          }),
+          path,
           name: 'notes.txt',
           kind: 'file',
           mediaType: 'text/plain',
@@ -122,19 +157,30 @@ describe('the files of a New workspace draft', () => {
       201,
     )
     await form.retryFile(failed?.id ?? 'missing')
-    const [first, second] = await sentFiles(server.requests)
     await form.send(defaults)
-    expect(second).toEqual(first)
     expect({
       failed: failed?.state,
+      starts: await bodies(server, 'POST', startPath),
+      parts: await partTexts(server),
+      completes: (await bodies(server, 'POST', completePath)).length,
       sent: await lastCreate(server),
     }).toEqual({
       failed: 'failed',
+      starts: [
+        {
+          name: 'notes.txt',
+          mediaType: 'text/plain',
+          sizeBytes: 10,
+          messageId,
+        },
+      ],
+      parts: ['Cart notes'],
+      completes: 2,
       sent: {
         repositoryId: 'storefront',
         firstMessage: {
           id: messageId,
-          text: `Fix the flaky cart test. ${mentionText(await attachmentPath({ id: 'draft-attachment-2', name: 'notes.txt' }), false)} `,
+          text: `Fix the flaky cart test. ${mentionText(path, false)} `,
           attachmentIds: ['draft-attachment-2'],
           choice: defaults.choice,
         },
@@ -145,48 +191,50 @@ describe('the files of a New workspace draft', () => {
   test('a change of person aborts the upload that runs, drops the files, and starts no later upload', async () => {
     const server = new FakeApiServer()
     const held = new HeldRequests(server)
-    const { model, form } = await newForm(server, held)
-    held.holdAnswer('POST', uploadPath)
+    const { model, form, signals } = await newForm(server, held)
+    held.holdAnswer('PUT', partPath)
     const attaching = pickWorkspaceFiles(form, [notes(), notes('later.txt')])
     await vi.waitFor(async () => {
-      expect(await sentFiles(server.requests)).toHaveLength(1)
+      expect(await partTexts(server)).toHaveLength(1)
     }, shortly)
     model.creations.clear()
     const dropped = form.draft.get().files
-    held.release('POST', uploadPath)
+    held.release('PUT', partPath)
     await attaching
     expect({
-      aborted: server.requests.at(-1)?.signal.aborted,
+      aborted: signals.map((signal) => signal.aborted),
       dropped,
       late: form.draft.get().files,
-      uploaded: (await sentFiles(server.requests)).map((file) => file.text),
+      uploaded: await partTexts(server),
+      starts: (await bodies(server, 'POST', startPath)).length,
     }).toEqual({
-      aborted: true,
+      aborted: [true],
       dropped: [],
       late: [],
       uploaded: ['Cart notes'],
+      starts: 1,
     })
   })
 
   test('Remove aborts the upload of its file, and the late reply brings back nothing', async () => {
     const server = new FakeApiServer()
     const held = new HeldRequests(server)
-    const { form } = await newForm(server, held)
-    held.holdAnswer('POST', uploadPath)
+    const { form, signals } = await newForm(server, held)
+    held.holdAnswer('PUT', partPath)
     const attaching = pickWorkspaceFiles(form, [notes()])
     await vi.waitFor(async () => {
-      expect(await sentFiles(server.requests)).toHaveLength(1)
+      expect(await partTexts(server)).toHaveLength(1)
     }, shortly)
     form.setText('')
-    held.release('POST', uploadPath)
+    held.release('PUT', partPath)
     await attaching
     expect({
-      aborted: server.requests.at(-1)?.signal.aborted,
+      aborted: signals.map((signal) => signal.aborted),
       files: form.draft.get().files,
-    }).toEqual({ aborted: true, files: [] })
+    }).toEqual({ aborted: [true], files: [] })
   })
 
-  test('a create that finds an expired file turns it failed, keeps the text, and Try again uploads the kept File', async () => {
+  test('a create that finds an expired file turns it failed, keeps the text, and Try again uploads the kept File as a new upload', async () => {
     const server = new FakeApiServer()
     const { form } = await newForm(server)
     form.setText('Let shoppers save their cart.')
@@ -205,15 +253,17 @@ describe('the files of a New workspace draft', () => {
     expect(await form.send(defaults)).toBeNull()
     const expired = form.draft.get()
     await form.retryFile(expired.files[0]?.id ?? 'missing')
-    const [first, second] = await sentFiles(server.requests)
-    expect(second).toEqual(first)
     expect({
       expired: expired.files.map((item) => item.state),
       text: expired.text,
+      starts: (await bodies(server, 'POST', startPath)).length,
+      parts: await partTexts(server),
       again: readyIds(form.draft.get().files),
     }).toEqual({
       expired: ['failed'],
       text: `Let shoppers save their cart. ${fileMark('client-2')} `,
+      starts: 2,
+      parts: ['Cart notes', 'Cart notes'],
       again: ['draft-attachment-1'],
     })
   })

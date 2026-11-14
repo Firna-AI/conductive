@@ -30,7 +30,7 @@ export function pickChatFiles(
 
 export async function readyChat() {
   const upload = controlledUploads()
-  const chat = chatFor({ conversation: 'history', files: upload.files })
+  const chat = chatFor({ conversation: 'history', uploads: upload })
   await chat.controller.start()
   return { ...chat, ...upload }
 }

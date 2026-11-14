@@ -31,9 +31,10 @@ Each path is relative to `src/app/`, the folder of this page.
   the chat API, and the file client.
 - `api/client.ts`: the JSON client and `ApiError`. The client also gives
   its `fetch`, for a feature client that reads its own replies, so the web
-  app and the Mac app keep their transport. Its `sendFile` sends a raw file
-  through the file transport of the services: `api/xhr-files.ts` in the
-  browser and in the Mac app. `api/read-*.ts`: the readers.
+  app and the Mac app keep their transport. Its `sendPart` sends a raw part
+  of a file with `PUT` through the file transport of the services:
+  `api/xhr-files.ts` in the browser and in the Mac app.
+  `api/read-*.ts`: the readers.
   [api/read-shortcuts.ts](api/read-shortcuts.ts) reads both shortcut keyboards and
   the reply of a shortcut save with the shared reply readers. A malformed
   account structure remains an `invalid_response` error from the API

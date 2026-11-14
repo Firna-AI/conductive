@@ -25,9 +25,11 @@ export function resetDevWindow(): void {
 
 export function uploadHooks() {
   return {
+    resume: null,
     signal: new AbortController().signal,
     live: () => true,
     progress: () => {},
+    keep: () => {},
   }
 }
 

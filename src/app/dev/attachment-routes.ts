@@ -1,78 +1,92 @@
-import {
-  ATTACHMENT_MAX_BYTES,
-  attachmentUploadPath,
-  type Attachment,
-  type UploadAttachmentResponse,
-} from '../../shared/messages'
+import type { Attachment } from '../../shared/messages'
 import { attachmentPath } from '../../shared/attachment-paths'
-import { ParseError } from '../api/parse'
+import { PART_RETRIES } from '../attachment-upload'
 import type { DevBackend } from './backend'
 import { attachmentFiles } from './attachment-files'
-import { ID, json, RouteError, type Route } from './router'
+import {
+  DevPartUploads,
+  uploadRoutes,
+  type DevUploadedFile,
+} from './attachment-parts'
+import { ID, type Route } from './router'
 
 /**
  * What an upload of the dev fake does: `ready` answers at once, `wait`
- * never answers, so the file keeps uploading, and `fail` refuses the first
- * upload of the page once, so Try again then works.
+ * never answers a part, so the file keeps uploading, and `fail` refuses the
+ * first part of the page at each of its sends, so its chip fails once and
+ * Try again then works.
  */
 export type DevUploadMode = 'ready' | 'wait' | 'fail'
 
-/** A query value that holds more than spaces, as the Worker requires. */
-function required(query: URLSearchParams, key: string): string {
-  const value = query.get(key)?.trim() ?? ''
-  if (value === '') throw new ParseError(`${key} is empty.`)
-  return value
+/** The refusal of a part that storage could not keep, as the Worker's. */
+function failedPart(): Response {
+  return Response.json(
+    {
+      error: {
+        code: 'attachment_upload_failed',
+        message: 'The file upload did not finish. Try again.',
+      },
+    },
+    { status: 503 },
+  )
 }
 
 /**
  * The upload routes of the dev fake, for the files of a workspace message
- * and of the first message of a new workspace. Each takes the raw file of
- * the app's upload operation, with its name and its media type in the
- * query. The state keeps each upload, so a create can name its files.
+ * and of the first message of a new workspace: the start call, each part,
+ * and the complete call, with the checks of the Worker. The state keeps
+ * each completed upload, so a create or a send can name its files.
  */
 export function attachmentRoutes(
   backend: DevBackend,
   mode: DevUploadMode,
 ): Route[] {
-  let failed = false
-  const upload = async (
-    query: URLSearchParams,
-    body: unknown,
-  ): Promise<Response> => {
-    if (!(body instanceof ArrayBuffer)) throw new ParseError('No file.')
-    const name = required(query, 'name')
-    const mediaType = required(query, 'mediaType')
-    if (body.byteLength > ATTACHMENT_MAX_BYTES) {
-      throw new RouteError(
-        413,
-        'attachment_too_large',
-        'Each file can be up to 100 MB.',
-      )
-    }
-    if (mode === 'wait') return new Promise<Response>(() => {})
-    if (mode === 'fail' && !failed) {
-      failed = true
-      throw new RouteError(502, 'upload_failed', 'The upload failed.')
-    }
+  const uploads = new DevPartUploads()
+  let failures = 0
+  const publish = async (uploaded: DevUploadedFile): Promise<Attachment> => {
+    const { name, mediaType, bytes } = uploaded
     const file = { id: backend.newId(), name }
     const attachment: Attachment = {
       ...file,
       path: await attachmentPath(file),
       kind: mediaType.startsWith('image/') ? 'image' : 'file',
       mediaType,
-      sizeBytes: body.byteLength,
+      sizeBytes: bytes.byteLength,
     }
     backend.state.attachments.set(attachment.id, attachment)
-    attachmentFiles(backend).retain(attachment, body)
-    return json({ attachment } satisfies UploadAttachmentResponse, 201)
+    attachmentFiles(backend).retain(attachment, bytes)
+    return attachment
   }
   const targets = [
     { type: 'workspace', workspaceId: ID.workspace },
     { type: 'new-workspace', messageId: '' },
   ] as const
-  return targets.map((target): Route => ({
-    method: 'POST',
-    path: attachmentUploadPath(ID.org, target),
-    answer: ({ query, body }) => upload(query, body),
-  }))
+  return targets.flatMap((target): Route[] => {
+    const paths = uploadRoutes(ID.org, target)
+    return [
+      {
+        method: 'POST',
+        path: paths.start,
+        answer: ({ body }) => uploads.start(target.type, body),
+      },
+      {
+        method: 'PUT',
+        path: paths.part,
+        answer: ({ params, body }) => {
+          if (mode === 'wait') return new Promise<Response>(() => {})
+          if (mode === 'fail' && failures <= PART_RETRIES) {
+            failures += 1
+            return failedPart()
+          }
+          return uploads.part(target.type, params.upload, params.part, body)
+        },
+      },
+      {
+        method: 'POST',
+        path: paths.complete,
+        answer: ({ params, body }) =>
+          uploads.complete(target.type, params.upload, body, publish),
+      },
+    ]
+  })
 }

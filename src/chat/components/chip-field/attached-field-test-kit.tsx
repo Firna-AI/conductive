@@ -82,13 +82,19 @@ export function uploadingFile(
   sentBytes: number | null,
   size = 2048,
 ): DraftFile {
-  return { state: 'uploading', id, file: bytes(name, size), sentBytes }
+  return {
+    state: 'uploading',
+    id,
+    file: bytes(name, size),
+    sentBytes,
+    upload: null,
+  }
 }
 
 /** A file of a draft whose upload failed. */
 export function failedFile(id: string, name: string, size = 2048): DraftFile {
   const error = new ApiError(500, 'upload_failed', 'The upload failed.')
-  return { state: 'failed', id, file: bytes(name, size), error }
+  return { state: 'failed', id, file: bytes(name, size), error, upload: null }
 }
 
 /**

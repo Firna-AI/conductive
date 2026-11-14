@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { pickChatFiles } from './draft-files.test-support'
 import type { AgentChoice } from '../../shared/agents'
-import { filePaths } from '../../shared/files'
+import { attachmentUploadStartPath } from '../../shared/messages'
 import { retryMessagePath, sessionPaths } from '../../shared/sessions'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
 import { record, text } from '../api/json'
@@ -195,11 +195,15 @@ describe('ChatController actions', () => {
   })
 
   it('waits for a file that uploads before it sends, so the message carries the file', async () => {
+    const startPath = attachmentUploadStartPath(org, {
+      type: 'workspace',
+      workspaceId: ws,
+    })
     const chat = chatFor({
       conversation: 'history',
       hold: (request) =>
         request.method === 'POST' &&
-        new URL(request.url).pathname === filePaths.attachments(org, ws),
+        new URL(request.url).pathname === startPath,
     })
     await chat.controller.start()
     chat.controller.setDraft(id, 'The suggestions cover the postcode.')
@@ -216,8 +220,6 @@ describe('ChatController actions', () => {
     await chat.controller.send(id)
     const [sent] = await chat.bodies('POST', messages)
     expect(sent).toMatchObject({ attachmentIds: ['attachment-1'] })
-    expect(chat.requests('POST', filePaths.attachments(org, ws))).toHaveLength(
-      1,
-    )
+    expect(chat.requests('POST', startPath)).toHaveLength(1)
   })
 })

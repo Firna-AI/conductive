@@ -1,9 +1,14 @@
 import { describe, expect, it, vi } from 'vitest'
 import { fileMark, literalText } from '../../app/draft-marks'
 import { flushMicrotasks } from '../../app/test-kit'
+import { attachmentUploadStartPath } from '../../shared/messages'
 import { sessionPaths } from '../../shared/sessions'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
-import { controlledUploads, note } from '../../app/draft-files.test-support'
+import {
+  controlledUploads,
+  note,
+  refusedPart,
+} from '../../app/draft-files.test-support'
 import { chatFor, opensSession } from './test-kit'
 
 const session = FAKE_IDS.session
@@ -13,12 +18,16 @@ const codex = {
   effort: 'medium',
 } as const
 const modelPath = sessionPaths.model(FAKE_IDS.org, FAKE_IDS.workspace, session)
+const startPath = attachmentUploadStartPath(FAKE_IDS.org, {
+  type: 'workspace',
+  workspaceId: FAKE_IDS.workspace,
+})
 
 describe('marked files when a draft moves or ends', () => {
   it('keeps its source during store notifications before React rebinds the moved session', async () => {
     const uploads = controlledUploads()
     const chat = chatFor({
-      files: uploads.files,
+      uploads,
       conversation: 'history',
       answer: opensSession(codex),
     })
@@ -28,7 +37,9 @@ describe('marked files when a draft moves or ends', () => {
       session,
       `${fileMark('file-1')} ${fileMark('file-2')}`,
     )
+    await uploads.started(1)
     await uploads.finish(0, 'one')
+    await uploads.started(2)
     await uploads.finish(1, 'two')
     chat.controller.setDraft(session, fileMark('file-1'))
     const source = chat.controller.draftFiles(chat.draftOf(session)?.id ?? '')
@@ -55,9 +66,11 @@ describe('marked files when a draft moves or ends', () => {
       moved,
       `${chat.draftOf(moved)?.text} ${fileMark('file-3')}`,
     )
-    uploads.jobs[2].reject(new Error('offline'))
+    await uploads.started(3)
+    uploads.jobs[2].resolve(refusedPart)
     await flushMicrotasks()
     source.retry('file-3')
+    await uploads.started(4)
     expect(uploads.jobs).toHaveLength(4)
     await uploads.finish(3, 'three')
     expect(source.files()[2]).toMatchObject({
@@ -70,7 +83,7 @@ describe('marked files when a draft moves or ends', () => {
   it('moves encoded text unchanged and removes every unkept mark including a now detached file', async () => {
     const uploads = controlledUploads()
     const chat = chatFor({
-      files: uploads.files,
+      uploads,
       conversation: 'history',
       answer: opensSession(codex, (id) => id === 'one'),
       hold: (request) => request.url.endsWith('/model'),
@@ -84,8 +97,11 @@ describe('marked files when a draft moves or ends', () => {
     const literal = literalText('Read \uE000literal\uE001-\uE0020 ')
     const text = `${literal}${fileMark('file-2')} ${fileMark('file-1')} ${fileMark('file-2')}`
     chat.controller.setDraft(session, `${text} ${fileMark('file-3')}`)
+    await uploads.started(1)
     await uploads.finish(0, 'one')
+    await uploads.started(2)
     await uploads.finish(1, 'two')
+    await uploads.started(3)
     await uploads.finish(2, 'three')
     const picking = chat.controller.chooseModel(session, codex)
     await vi.waitFor(() => expect(chat.held).toHaveLength(1), {
@@ -114,7 +130,7 @@ describe('marked files when a draft moves or ends', () => {
 
   it('ends attached and detached files with a stopped chat and ignores late uploads', async () => {
     const uploads = controlledUploads()
-    const chat = chatFor({ files: uploads.files, conversation: 'history' })
+    const chat = chatFor({ uploads, conversation: 'history' })
     await chat.controller.start()
     chat.controller.attachFiles(session, [note(), note('queued.txt')])
     const literal = literalText('Read \uE000literal\uE001-\uE0020 ')
@@ -122,6 +138,7 @@ describe('marked files when a draft moves or ends', () => {
       session,
       `${literal}${fileMark('file-1')} ${fileMark('file-2')}`,
     )
+    await uploads.started(1)
     chat.controller.setDraft(session, `${literal}${fileMark('file-1')}`)
     const source = chat.controller.draftFiles(chat.draftOf(session)?.id ?? '')
     chat.controller.stop()
@@ -133,7 +150,10 @@ describe('marked files when a draft moves or ends', () => {
     expect(source.files()).toEqual([])
     expect(uploads.jobs[0].signal.aborted).toBe(true)
     await uploads.finish(0, 'stale')
-    expect(uploads.jobs).toHaveLength(1)
+    expect({
+      parts: uploads.jobs.length,
+      uploads: chat.requests('POST', startPath).length,
+    }).toEqual({ parts: 1, uploads: 1 })
     expect(source.files()).toEqual([])
   })
 })

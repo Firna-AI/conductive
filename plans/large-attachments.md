@@ -690,12 +690,62 @@ Tags: ui
 
 Depends on: 1, 5
 
-- [ ] Move `src/app/api/xhr-files.ts` and `src/app/attachment-upload.ts`
+- [x] Move `src/app/api/xhr-files.ts` and `src/app/attachment-upload.ts`
       to the part routes, with one progress value for each file.
-- [ ] Retry a failed part alone. Try again sends only the parts with no
+- [x] Retry a failed part alone. Try again sends only the parts with no
       receipt.
-- [ ] Move the dev routes in `src/app/dev/attachment-routes.ts`.
-- [ ] Update every text in the app and its tests that names 100 MB.
+- [x] Move the dev routes in `src/app/dev/attachment-routes.ts`.
+- [x] Update every text in the app and its tests that names 100 MB.
+
+### Design calls of Milestone 6
+
+These are the implementor's calls of 14 November 2026.
+
+- A failed part goes again at once, with no wait, up to three times after
+  its first send. Reason: a cut connection or a server error of one part
+  often passes at once, and Try again sends only the missing parts after a
+  longer outage. A wait needs a timer service in both composers.
+- Only a part with no answer, a server error, or
+  `attachment_upload_interrupted` goes again. Another refusal fails the
+  file at once. The start call and the complete call do not go again.
+  Reason: a refusal comes back the same for the same request.
+- Some errors end the upload, so the file keeps no upload and Try again
+  starts a new one: `attachment_not_found`, `attachment_part_invalid`, and
+  `attachment_part_size_mismatch` of a part, and `attachment_not_found`,
+  `attachment_size_mismatch`, `attachment_upload_failed`, and
+  `invalid_input` of the complete call. Reason: after each of them, no
+  receipts of the tab can complete the upload. The Worker removes the
+  upload after each failure of a complete call that began.
+- A try that resumes a kept upload and gets one of these errors starts a
+  new upload at once, in the same try. Reason: one Try again then recovers
+  the file also when the Worker lost the upload, such as after its expiry
+  or after a complete call whose reply did not come back.
+- The browser cuts the parts with the part size and the part count of the
+  start reply. Reason: the Worker owns the part size, so the browser sends
+  no part that the Worker refuses. The tests use small parts.
+- The progress of a file counts the bytes of the confirmed parts and the
+  measured bytes of the part that goes now. A part that goes again counts
+  from its start again, so the share can go down. Reason: the chip shows
+  the share of the file that the Worker will have.
+- `DraftFile.upload` keeps the upload of a file that uploads or failed:
+  its ID, the part size, the part count, and the receipts. Undo of a
+  stopped upload resumes it too. Reason: the upload then goes with its file
+  at a move, a send, and a sign-out, and needs no cleanup of its own.
+- `ApiClient.sendFile` became `sendPart`, which sends a `Blob` slice with
+  `PUT`. The start and complete calls are JSON writes of `ApiClient.send`,
+  so the org watchers see their refusals. A Remove does not abort these
+  two calls, and the `live` check of the upload drops their late replies.
+- Each part request stops listening to the signal of its upload when it
+  ends. Reason: one upload sends up to 15 parts and their retries with one
+  signal.
+- `attachmentUploadPath` is no longer exported. `attachmentUploadUrl`
+  stays for the raw routes of the Worker and their tests until Milestone
+  7. Reason: the export check refuses an export that no code uses.
+- Both dev fakes share the parts store of `src/app/dev/attachment-parts.ts`,
+  with the checks of the Worker. `?upload=fail` fails the first part of
+  the page at each of its four sends, so its chip fails and Try again sends
+  that part again. Reason: one failed send would go again at once, and the
+  chip would never fail.
 
 ## Milestone 7: Delete the raw upload routes
 

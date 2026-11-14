@@ -66,7 +66,7 @@ export function noteOrgRefusals(api: ApiClient, note: () => void): ApiClient {
     get: (path, read) => watch(api.get(path, read)),
     send: (method, path, body, read) =>
       watch(api.send(method, path, body, read)),
-    sendFile: (path, file, read, hooks) =>
-      watch(api.sendFile(path, file, read, hooks)),
+    sendPart: (path, part, read, hooks) =>
+      watch(api.sendPart(path, part, read, hooks)),
   }
 }

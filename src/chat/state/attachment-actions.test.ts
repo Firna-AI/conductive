@@ -4,11 +4,11 @@ import { fileMark } from '../../app/draft-marks'
 import { pickChatFiles } from './draft-files.test-support'
 import type { FileReply, FileTransport } from '../../app/api/client'
 import {
-  attachmentUploadPath,
-  attachmentUploadUrl,
+  attachmentUploadPartPath,
+  attachmentUploadStartPath,
 } from '../../shared/messages'
 import { sessionPaths } from '../../shared/sessions'
-import { sentFiles } from '../../test-support/fake-files'
+import { sentParts } from '../../test-support/fake-files'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
 import { deferred } from '../../test-support/mount'
 import { record } from '../api/json'
@@ -17,16 +17,19 @@ import { chatFor } from './test-kit'
 const org = FAKE_IDS.org
 const ws = FAKE_IDS.workspace
 const id = FAKE_IDS.session
-const uploadPath = attachmentUploadPath(org, {
-  type: 'workspace',
-  workspaceId: ws,
-})
+const target = { type: 'workspace', workspaceId: ws } as const
+const startPath = attachmentUploadStartPath(org, target)
+const partPath = (partNumber: number) =>
+  attachmentUploadPartPath(org, target, FAKE_IDS.upload, partNumber)
 const messages = sessionPaths.messages(org, ws, id)
 const shortly = { timeout: 10_000 }
 const file = (name = 'overlap.png') =>
   new File(['png'], name, { type: 'image/png' })
-const isUpload = (request: Request) =>
-  request.method === 'POST' && new URL(request.url).pathname === uploadPath
+const isPart = (request: Request, partNumber: number) =>
+  request.method === 'PUT' &&
+  new URL(request.url).pathname === partPath(partNumber)
+const isStart = (request: Request) =>
+  request.method === 'POST' && new URL(request.url).pathname === startPath
 const isSend = (request: Request) =>
   request.method === 'POST' && new URL(request.url).pathname === messages
 
@@ -42,25 +45,40 @@ function sized(name: string, size: number): File {
   return big
 }
 
-/** A chat whose uploads wait, and whose held requests keep their signals. */
+/** Each raw part that the fake got, as its path and its bytes. */
+async function parts(requests: readonly Request[]) {
+  return (await sentParts(requests)).map(({ path, text }) => `${path} ${text}`)
+}
+
+/** A chat whose first part waits, and whose held requests keep their signals. */
 function chatThatHolds() {
   const uploads: Request[] = []
   const chat = chatFor({
     conversation: 'history',
-    hold: (request) => isUpload(request) && uploads.push(request) === 1,
+    hold: (request) => isPart(request, 1) && uploads.push(request) === 1,
   })
   return { chat, uploads }
 }
 
 describe('the files of a chat draft', () => {
-  it('keeps a failed upload with its file, Send waits, and Try again uploads the same file', async () => {
-    let uploads = 0
+  it('keeps a failed upload with its receipts, Send waits, and Try again sends only the part with no receipt', async () => {
+    let failures = 0
     const chat = chatFor({
       conversation: 'history',
-      answer: async (request) =>
-        isUpload(request) && (uploads += 1) === 1
-          ? refusal('internal_error', 'The request failed.', 502)
-          : null,
+      answer: async (request) => {
+        // The file of three bytes goes in parts of two bytes. Its second
+        // part fails at its first send and at each of its three retries.
+        if (isStart(request)) {
+          const parts = { partSizeBytes: 2, partCount: 2 }
+          const uploadId = FAKE_IDS.upload
+          return Response.json({ uploadId, ...parts }, { status: 201 })
+        }
+        if (!isPart(request, 2)) return null
+        if ((failures += 1) <= 4) {
+          return refusal('attachment_upload_failed', 'Try again.', 503)
+        }
+        return Response.json({ partNumber: 2, etag: 'etag-2' })
+      },
     })
     await chat.controller.start()
     chat.controller.setDraft(id, 'See the screenshot.')
@@ -72,36 +90,42 @@ describe('the files of a chat draft', () => {
     source.retry(failed?.id ?? 'missing')
     await uploadsSettled(source.files, source.subscribe)
     await chat.controller.send(id)
-    const [first, second] = await sentFiles(chat.server.requests)
     const sent = await chat.bodies('POST', messages)
-    expect(second).toEqual(first)
     expect({
-      first,
       failed: failed?.state,
       whileFailed,
+      starts: chat.requests('POST', startPath).length,
+      parts: await parts(chat.server.requests),
       sent: sent.map((body) => record(body).attachmentIds),
     }).toEqual({
-      first: {
-        path: uploadPath,
-        query: { name: 'overlap.png', mediaType: 'image/png' },
-        text: 'png',
-      },
       failed: 'failed',
       whileFailed: 0,
+      starts: 1,
+      // Part 2 failed at its first send and at its three retries. Try
+      // again sent it once more, in the same upload.
+      parts: [
+        `${partPath(1)} pn`,
+        `${partPath(2)} g`,
+        `${partPath(2)} g`,
+        `${partPath(2)} g`,
+        `${partPath(2)} g`,
+        `${partPath(2)} g`,
+      ],
       sent: [['attachment-1']],
     })
   })
 
   it('shows the bytes that the browser measured while a file uploads', async () => {
     const reply = deferred<FileReply>()
-    let measure: (sentBytes: number) => void = () => {}
+    const started = deferred<(sentBytes: number) => void>()
     const files: FileTransport = ({ progress }) => {
-      measure = progress
+      started.resolve(progress)
       return reply.promise
     }
     const chat = chatFor({ conversation: 'history', files })
     await chat.controller.start()
     const uploading = pickChatFiles(chat, id, [file()])
+    const measure = await started.promise
     const sentBytes = () =>
       chat
         .draftOf(id)
@@ -111,14 +135,7 @@ describe('the files of a chat draft', () => {
     const before = sentBytes()
     measure(2)
     const measured = sentBytes()
-    const attachment = {
-      id: 'attachment-7',
-      name: 'overlap.png',
-      kind: 'image',
-      mediaType: 'image/png',
-      sizeBytes: 3,
-    }
-    reply.resolve({ status: 201, body: { attachment } })
+    reply.resolve({ status: 200, body: { partNumber: 1, etag: 'etag-1' } })
     await uploading
     expect({ before, measured, done: sentBytes() }).toEqual({
       before: [null],
@@ -135,20 +152,20 @@ describe('the files of a chat draft', () => {
       chat,
       id,
       [
-        sized('recording.mov', 100_000_001),
+        sized('recording.mov', 1_000_000_001),
         file(),
-        sized('archive.zip', 100_000_001),
+        sized('archive.zip', 1_000_000_001),
       ],
       unreadable('Pictures', 'Design notes'),
     )
     const picked = chat.draftOf(id)
-    const uploaded = await sentFiles(chat.server.requests)
+    const uploaded = await chat.bodies('POST', startPath)
     await chat.controller.send(id)
     const [sent] = await chat.bodies('POST', messages)
     expect({
       refused: picked?.refused,
       folders: picked?.refusedFolders,
-      uploaded: uploaded.map((item) => item.query.name),
+      uploaded: uploaded.map((body) => record(body).name),
       sent: record(sent).attachmentIds,
       afterSend: chat.draftOf(id)?.refused,
       foldersAfterSend: chat.draftOf(id)?.refusedFolders,
@@ -191,27 +208,20 @@ describe('the files of a chat draft', () => {
     const aborted = uploads[0]?.signal.aborted
     chat.held.splice(0, 1)[0]()
     await uploading
-    const target = { type: 'workspace', workspaceId: ws } as const
     expect({
       aborted,
       states: chat.draftOf(id)?.files.map((item) => item.state),
-      requests: uploads.map(({ url }) => {
-        const { pathname, search } = new URL(url)
-        return `${pathname}${search}`
-      }),
+      parts: uploads.map(({ url }) => new URL(url).pathname),
+      starts: await chat.bodies('POST', startPath),
     }).toEqual({
       aborted: true,
       states: [],
-      requests: [
-        attachmentUploadUrl(org, target, {
-          name: 'overlap.png',
-          mediaType: 'image/png',
-        }),
-      ],
+      parts: [partPath(1)],
+      starts: [{ name: 'overlap.png', mediaType: 'image/png', sizeBytes: 3 }],
     })
   })
 
-  it('turns an expired file failed when Send finds it gone, keeps the text, and Try again uploads the kept File', async () => {
+  it('turns an expired file failed when Send finds it gone, keeps the text, and Try again uploads the kept File as a new upload', async () => {
     let sends = 0
     const gone = 'The attached file is not available. Upload it again.'
     const chat = chatFor({
@@ -230,18 +240,20 @@ describe('the files of a chat draft', () => {
     source.retry(expired?.files[0]?.id ?? 'missing')
     await uploadsSettled(source.files, source.subscribe)
     await chat.controller.send(id)
-    const [first, second] = await sentFiles(chat.server.requests)
     const sent = await chat.bodies('POST', messages)
-    expect(second).toEqual(first)
     expect({
       expired: expired?.files.map((item) =>
         item.state === 'failed' ? item.error.message : item.state,
       ),
       text: expired?.text,
+      starts: chat.requests('POST', startPath).length,
+      parts: await parts(chat.server.requests),
       sent: sent.map((body) => record(body).attachmentIds),
     }).toEqual({
       expired: [gone],
       text: `See the screenshot. ${fileMark('file-1')} `,
+      starts: 2,
+      parts: [`${partPath(1)} png`, `${partPath(1)} png`],
       sent: [['attachment-1'], ['attachment-1']],
     })
   })

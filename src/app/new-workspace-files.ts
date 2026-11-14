@@ -6,6 +6,7 @@ import {
   changeFile,
   emptyIntake,
   hasFile,
+  keptUpload,
   noRefusals,
   runFileJob,
   runFileQueue,
@@ -61,7 +62,9 @@ export class DraftUploads {
     if (emptyIntake(files, refusals)) return []
     const life = this.follow()
     const { uploads, refused, refusedFolders } = splitPick(files, refusals)
-    const added = uploads.map((file) => uploadingFile(this.host.newId(), file))
+    const added = uploads.map((file) =>
+      uploadingFile(this.host.newId(), file, null),
+    )
     const queued = added.map((item) => this.reserve(life, item))
     this.host.draft.change((draft) => ({
       ...draft,
@@ -105,7 +108,10 @@ export class DraftUploads {
     return () => this.upload(life, item, job, messageId)
   }
 
-  /** Try again uploads the kept `File` of a failed file again. */
+  /**
+   * Try again uploads the kept `File` of a failed file again. It resumes
+   * the kept upload of the file, so only the parts with no receipt go.
+   */
   async retry(fileId: string): Promise<void> {
     const item = this.host.draft.get().files.find(({ id }) => id === fileId)
     if (item?.state !== 'failed') return
@@ -114,7 +120,7 @@ export class DraftUploads {
     this.host.draft.change((draft) => ({
       ...draft,
       files: changeFile(draft.files, fileId, () =>
-        uploadingFile(fileId, item.file),
+        uploadingFile(fileId, item.file, item.upload),
       ),
     }))
     await start()
@@ -148,7 +154,7 @@ export class DraftUploads {
 
   private async upload(
     life: Lifetime,
-    item: { id: string; file: File },
+    item: DraftFile,
     job: AbortController,
     messageId: string,
   ): Promise<void> {
@@ -161,6 +167,7 @@ export class DraftUploads {
       await runFileJob({
         id: item.id,
         file: item.file,
+        resume: keptUpload(item),
         live: () =>
           life.live &&
           !job.signal.aborted &&

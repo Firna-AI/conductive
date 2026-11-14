@@ -47,7 +47,7 @@ confirmations, reports, and credentials.
 
 `messages.ts` owns the attachment metadata and target identity.
 `AttachmentUploadTarget` names a workspace or stable first-message ID.
-`attachmentUploadPath` selects the workspace or org-scoped draft base path.
+Each upload path starts at the base of its target: a workspace, or the drafts of the org.
 `ATTACHMENT_MAX_BYTES` is the decoded file limit of 1,000,000,000 bytes.
 `ATTACHMENT_PART_BYTES` is the part size of 67,108,864 bytes.
 `attachmentUploadUrl` appends the filename, media type, and first-message target as URL data.
@@ -62,7 +62,7 @@ Its reply is `AttachmentUploadPart`, with `partNumber` and `etag`.
 `CompleteAttachmentUploadRequest.parts` carries the confirmed receipts.
 A complete reply uses `UploadAttachmentResponse`, including the attachment's copy path.
 Both targets use these builders and types.
-The raw file POST path and URL builders also remain available, with a separate Worker limit of 100,000,000 bytes.
+The app uploads each file in parts. The raw file POST URL builder remains only for the Worker's raw routes and their tests, with a separate Worker limit of 100,000,000 bytes.
 `Attachment.path` is the copy path of the file, relative to the workspace repository.
 The upload reply gives it, so each upload has its path before Send.
 Each file of an accepted message gives it too, and the browser builds no path.

@@ -8,10 +8,11 @@ import {
   textNode,
 } from '../../chat/components/chip-field/attached-field-events'
 import { attachmentPath } from '../../shared/attachment-paths'
-import { attachmentUploadPath } from '../../shared/messages'
+import { attachmentUploadCompletePath } from '../../shared/messages'
 import { workspacesPath } from '../../shared/workspaces'
 import { byRole } from '../../test-support/dom-queries'
 import { draggedFiles, dropOn, fireDrag } from '../../test-support/file-drop'
+import { FAKE_IDS } from '../../test-support/fixtures/core'
 import { MOUNTED_TEST_TIMEOUT } from '../../test-support/mount'
 import composerStyles from '../../../docs/mockups/src/components/chat/Composer.module.css'
 import dialogStyles from '../../../docs/mockups/src/components/new-workspace/NewWorkspaceDialog.module.css'
@@ -53,10 +54,11 @@ describe('a drop of files on New workspace', () => {
     const field = messageIn(root)
     typeText(field, task)
     const draft = tab.app.org(org).newWorkspace(null)
-    const uploadPath = attachmentUploadPath(org, {
-      type: 'new-workspace',
-      messageId: draft.draft.get().messageId,
-    })
+    const completePath = attachmentUploadCompletePath(
+      org,
+      { type: 'new-workspace', messageId: draft.draft.get().messageId },
+      FAKE_IDS.upload,
+    )
     const uploaded = { id: 'draft-attachment-1', name: 'cart.png' }
     const attachment = {
       ...uploaded,
@@ -65,7 +67,7 @@ describe('a drop of files on New workspace', () => {
       mediaType: 'image/png',
       sizeBytes: 3,
     }
-    server.json('POST', uploadPath, { attachment }, 201)
+    server.json('POST', completePath, { attachment }, 201)
     const point = layOutPoint({
       over: field,
       node: textNode(field, task),

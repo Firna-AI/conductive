@@ -1,7 +1,6 @@
 import type { ApiClient } from '../../app/api/client'
 import { readWorkspaces } from '../../app/api/read-workspaces'
-import { uploadAttachment } from '../../app/attachment-upload'
-import type { UploadHooks } from '../../app/draft-files'
+import { uploadAttachment, type UploadHooks } from '../../app/attachment-upload'
 import { ACCOUNT_PATHS } from '../../shared/account'
 import { MODELS_PATH, type AgentChoice } from '../../shared/agents'
 import { orgPath, type EmptyRequest } from '../../shared/api'

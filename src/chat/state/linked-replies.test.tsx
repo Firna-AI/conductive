@@ -5,7 +5,10 @@ import { pickChatFiles } from './draft-files.test-support'
 import { readyIds } from '../../app/draft-files'
 import type { AgentChoice } from '../../shared/agents'
 import { chatHistoryPath } from '../../shared/events'
-import { filePaths } from '../../shared/files'
+import {
+  attachmentUploadCompletePath,
+  attachmentUploadStartPath,
+} from '../../shared/messages'
 import { retryMessagePath, sessionPaths } from '../../shared/sessions'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
@@ -176,9 +179,11 @@ const codex: AgentChoice = {
   model: 'GPT-6.1 Sol',
   effort: 'medium',
 }
+const target = { type: 'workspace', workspaceId: ws } as const
+/** The start call of an upload, which comes before its parts. */
 const isUpload = (request: Request) =>
   request.method === 'POST' &&
-  new URL(request.url).pathname === filePaths.attachments(org, ws)
+  new URL(request.url).pathname === attachmentUploadStartPath(org, target)
 const isRetry = (request: Request) =>
   request.method === 'POST' && request.url.endsWith('/retry')
 
@@ -186,7 +191,7 @@ const isRetry = (request: Request) =>
 function attachThatWaits(chat: Chat) {
   chat.server.json(
     'POST',
-    filePaths.attachments(org, ws),
+    attachmentUploadCompletePath(org, target, FAKE_IDS.upload),
     {
       attachment: {
         id: 'late-file',

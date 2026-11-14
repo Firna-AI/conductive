@@ -17,7 +17,7 @@ async function attached(hold = false, fail: boolean | 'missing' = false) {
   const uploads = controlledUploads()
   const chat = chatFor({
     conversation: 'history',
-    files: uploads.files,
+    uploads,
     hold: (request) => hold && request.url.endsWith('/messages'),
     answer: async (request) =>
       fail && request.url.endsWith('/messages')
@@ -38,7 +38,9 @@ async function attached(hold = false, fail: boolean | 'missing' = false) {
     session,
     `${fileMark('file-1')} ${fileMark('file-2')}`,
   )
+  await uploads.started(1)
   await uploads.finish(0, 'first', 'returned/first.txt')
+  await uploads.started(2)
   await uploads.finish(1, 'second', 'returned/second file.txt')
   return { ...chat, ...uploads }
 }
@@ -102,6 +104,7 @@ describe('sending draft marks', () => {
       files: [{ id: 'file-3', state: 'uploading' }],
       detached: [],
     })
+    await chat.started(3)
     await chat.finish(2, 'new')
   })
 
