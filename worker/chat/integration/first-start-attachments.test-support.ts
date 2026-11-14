@@ -10,6 +10,7 @@ import {
 import type { HttpFetch } from '../../env'
 import { readAttachment } from '../attachment-data'
 import { attachmentBucket } from '../attachment-record'
+import { cleanupTransferredAttachments } from '../attachment-transfer-cleanup'
 import { record } from '../inputs'
 import type { Workspace } from './journey-entry.test-support'
 import type { OuterRuntime } from './outer-runtime.test-support'
@@ -117,4 +118,51 @@ export async function expireAndReadFirstStartFile(
     claim,
     bytes: object ? new Uint8Array(await object.arrayBuffer()) : null,
   }
+}
+
+/** Runs the scheduled sweep of transferred files, then reads the record and its stored bytes. */
+async function sweepAndReadFirstStartFile(
+  fixture: OuterRuntime,
+  attachmentId: string,
+) {
+  await cleanupTransferredAttachments(fixture.env, Date.now())
+  const claim = await readAttachment(fixture.env.DB, attachmentId)
+  const object = claim
+    ? await attachmentBucket(fixture.env).get(claim.objectKey)
+    : null
+  return {
+    claim,
+    bytes: object ? new Uint8Array(await object.arrayBuffer()) : null,
+  }
+}
+
+/**
+ * After a good first start, the expiry keeps the accepted file, and the sweep
+ * deletes its stored copy while the record stays.
+ */
+export async function expectTransferredFirstStartFile(
+  fixture: OuterRuntime,
+  workspaceId: string,
+  attachmentId: string,
+) {
+  const expired = await expireAndReadFirstStartFile(
+    fixture,
+    workspaceId,
+    attachmentId,
+  )
+  expect(expired.claim).toMatchObject({
+    state: 'claimed',
+    claimedWorkspaceId: workspaceId,
+  })
+  expect(await sweepAndReadFirstStartFile(fixture, attachmentId)).toMatchObject(
+    {
+      claim: {
+        state: 'claimed',
+        claimedWorkspaceId: workspaceId,
+        transferredSandboxId: expect.any(String),
+        bytesDeletedAt: expect.any(Number),
+      },
+      bytes: null,
+    },
+  )
 }

@@ -32,11 +32,14 @@ npm run test -- worker/chat/integration
   after a restart, and a repeat adds no history.
 - `failed-first-start-retry.test.ts` checks a kept first-start failure through
   restart, a retry by another member, fresh credentials, and ordered queued delivery.
-  Its first message carries a raw file that a member uploads through the
-  production route. After the failure and after the retry, the native
-  expiry RPC keeps the expired claim and its bytes. The retry copies the
-  exact bytes once. `first-start-attachments.test-support.ts` gives the
-  upload, a fake detached command that calls the machine download route, and that expiry call.
+  Its first message carries a file that a member uploads through the
+  production part routes. After the failure, the native expiry RPC keeps
+  the expired claim and its bytes. The retry copies the exact bytes once.
+  After the good first start of the retry, the expiry RPC keeps the claim,
+  and the transferred-bytes sweep deletes the stored copy.
+  `first-start-attachments.test-support.ts` gives the upload, a fake
+  detached command that calls the machine download route, the expiry
+  call, and the sweep.
 - `failed-creation-replay.test.ts` checks all history pages of a kept failed
   workspace through the normal member event socket, which stays live.
 - `workspace-lifecycle.test.ts` joins runner readiness, a reconnect, a

@@ -27,7 +27,7 @@ It also checks that a restart sends the stored interrupts again, and that each l
 `integration/attachment-raw.test.ts` checks native fixed-length R2 writes, raw metadata and ownership, interrupted transfers, and desktop admission.
 `integration/attachment-cleanup.test.ts` runs the production scheduled handler through `/__test/scheduled`, with the native workspace object, D1, and R2.
 An expired claim without an accepted message loses its record and its object. An accepted file keeps both.
-`integration/failed-first-start-retry.test.ts` keeps the first-message file of a failed first start through the native `expireChatAttachment` RPC, a restart, and Try again in the same workspace.
+`integration/failed-first-start-retry.test.ts` keeps the first-message file of a failed first start through the native `expireChatAttachment` RPC, a restart, and Try again in the same workspace. After the good first start of the retry, it runs the transferred-bytes sweep and checks that the stored copy is gone while the record stays.
 Try again copies its exact bytes once, as [Outer Worker tests](integration/outer-worker-tests.md) says.
 The HTTP and security raw-upload tests check shared route budgets and admission before body reads.
 `attachment-multipart-storage.test.ts` checks membership and suspension changes during completion before publication.

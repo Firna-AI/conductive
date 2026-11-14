@@ -262,7 +262,7 @@ The retention and cleanup tests cover proof order, failed first starts, retryabl
 The legacy-path tests store an old absolute or message-derived relative path with a proof, and check that the turn fails.
 The fixture never sends a request to a real provider.
 The cleanup integration test runs the production scheduled handler through `/__test/scheduled`, with the native workspace object, D1, and R2.
-The failed first start integration test keeps a first-message file through the native expiry RPC, a restart, and Try again, with one exact copy.
+The failed first start integration test keeps a first-message file through the native expiry RPC, a restart, and Try again, with one exact copy. After the good first start of the retry, the transferred-bytes sweep deletes the stored copy, and the record stays.
 The claim race and rollback tests call `expireClaimedAttachment` in the chat queue.
 The runner provider tests check the description and the image input of each adapter.
 See [the test guide](tests.md) for the groups.
