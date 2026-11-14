@@ -12,7 +12,7 @@ import { attachmentBucket, type AttachmentRecord } from './attachment-record'
 import type { ChatStore } from './store'
 import { attachmentWorkspaceSurvives } from './attachment-claim-data'
 
-async function removeAttachmentBytes(
+export async function removeAttachmentBytes(
   env: AppEnv,
   record: AttachmentRecord,
 ): Promise<void> {

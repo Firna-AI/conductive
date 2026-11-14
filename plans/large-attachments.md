@@ -639,15 +639,50 @@ Depends on: 2
 The Worker adds the part routes. The raw `POST` routes stay, with their
 100 MB limit, until the app moves.
 
-- [ ] Add the start, part, and complete routes for a draft file and for a
+- [x] Add the start, part, and complete routes for a draft file and for a
       file of a workspace, with the checks of the design.
-- [ ] Register the part routes with a body limit of one part. Keep the
+- [x] Register the part routes with a body limit of one part. Keep the
       raw `POST` routes at 100,000,000 bytes under their own constant.
-- [ ] Set `ATTACHMENT_MAX_BYTES` to 1,000,000,000 for the part routes,
+- [x] Set `ATTACHMENT_MAX_BYTES` to 1,000,000,000 for the part routes,
       and the Worker's notice text to "Each file can be up to 1 GB."
-- [ ] Add tests: a part beyond the size, a part of the wrong length, a
+- [x] Add tests: a part beyond the size, a part of the wrong length, a
       retried part, a complete call with a wrong size, and the gate rules.
-- [ ] Update `worker/chat/attachments.md` and `src/shared/README.md`.
+- [x] Update `worker/chat/attachments.md` and `src/shared/README.md`.
+
+Verification evidence is in `.context/large-attachments/reports/m5.md`.
+
+### Design calls of Milestone 5
+
+These are the implementor's calls of 13 November 2026.
+
+- A zero-byte file uses one empty part. Reason: empty files remain valid,
+  and R2 needs at least one part. Its source must end before the R2 call.
+- The public upload ID is the attachment record ID. The private R2 upload
+  ID stays in `multipart_id`. Reason: each call can check the same owner
+  and target without exposing storage keys.
+- `attachmentUploadStartPath`, `attachmentUploadPartPath`, and
+  `attachmentUploadCompletePath` extend each existing attachment base.
+  The start and complete replies use HTTP 201. A part gives its receipt
+  directly with HTTP 200. Reason: the shared contract gives both targets
+  one request and reply shape.
+- A part number outside the upload gives HTTP 400 with
+  `attachment_part_invalid`. A wrong declared part length gives HTTP 400
+  with `attachment_part_size_mismatch`. Reason: each error describes an
+  invalid request within the required part limit.
+- A completed object with a wrong size gives HTTP 400 with
+  `attachment_size_mismatch`, and cleanup removes the upload. Malformed,
+  missing, duplicate, or out-of-range receipts give `invalid_input`
+  before completion. Reason: a valid complete call must name every part
+  once. The Worker sorts valid receipts before it calls R2.
+- Completion conditionally moves revision zero to revision one while the
+  state stays `uploading`. Parts and other complete calls require revision
+  zero. Reason: one completion owns publication and cleanup. The multipart
+  ID remains stored, so expiry can still abort a stopped completion.
+- The fixed-length adapter holds one final byte until the counted source
+  ends. Reason: native R2 can otherwise finish a part before a late source
+  error. The adapter streams all other bytes without collecting a part.
+- `ATTACHMENT_RAW_MAX_BYTES` lives in the raw route registry. Reason:
+  the temporary raw POST cap stays independent of the 1 GB file limit.
 
 ## Milestone 6: The composer uploads in parts
 

@@ -2,7 +2,8 @@
 
 The Worker stores attachment bytes in the private `CHAT_ATTACHMENTS` R2 bucket.
 D1 keeps the owner, target, upload deadline, claim revision, and deletion journal.
-The browser posts one raw file through the shared upload URL builder.
+The browser can start an upload, send raw parts, and complete it with the confirmed receipts.
+The shared path builders select draft or workspace routes.
 The route registry gives the entry and gate the same method, matcher, and byte limit.
 The storage API also accepts decoded bytes independently of the browser transport.
 [Attachments](../../docs/protocol/messages-and-attachments.md#attachments) gives the requirements.
@@ -12,13 +13,52 @@ The storage API also accepts decoded bytes independently of the browser transpor
 `storeAttachment` in [attachment-storage.ts](attachment-storage.ts) takes authenticated metadata and decoded bytes or a stream.
 It checks current membership and the named target before it creates a record.
 It measures the bytes and refuses a decoded total above `ATTACHMENT_MAX_BYTES`.
-The byte limit is shared with the composer.
+The decoded file limit is 1,000,000,000 bytes.
+The raw file POST routes keep a separate limit of 100,000,000 bytes.
 Raw uploads pass the entry-counted source through native `FixedLengthStream` into R2.
 The declared length and stream completion must agree before readiness can publish.
-Internal callers without a known length use bounded R2 parts without browser part routes or a part table.
+Internal callers without a known length use bounded R2 parts.
+Neither transport needs a stored part table.
 Readiness publishes only after the object completes and the owner and target still permit the write.
 An upload that loses ownership leaves no usable attachment.
 Its failed cleanup keeps a deletion record for another attempt.
+
+## Browser uploads in parts
+
+[attachment-multipart-routes.ts](attachment-multipart-routes.ts) handles the JSON start and complete calls.
+[attachment-part-route.ts](attachment-part-route.ts) streams each raw PUT into native R2.
+Both route sets use the same gate as other app writes.
+The start and complete calls keep the default JSON body limit.
+The raw route registry gives each part a limit of `ATTACHMENT_PART_BYTES`, 67,108,864 bytes.
+A raw file POST keeps `ATTACHMENT_RAW_MAX_BYTES`, 100,000,000 bytes.
+
+[attachment-multipart-storage.ts](attachment-multipart-storage.ts) creates the private multipart upload and saves its ID in `multipart_id`.
+The attachment record keeps the declared file size while its state is `uploading`.
+The start reply gives `uploadId`, `partSizeBytes`, and `partCount`.
+A zero-byte file has one empty part.
+The browser keeps each receipt as `partNumber` and `etag`.
+A repeated part replaces its earlier bytes.
+[attachment-upload-input.ts](attachment-upload-input.ts) checks the uploader, target, expiry, part count, and receipts.
+
+The part stream holds its last byte until the counted source ends.
+So R2 cannot finish a nonempty part before a short, long, or interrupted source fails.
+An empty part waits for source completion before its R2 call.
+The adapter keeps one byte and streams the remaining bytes without collecting a part.
+
+Completion first takes a conditional D1 revision claim.
+Other complete calls cannot delete the winning upload after an R2 error.
+R2 completes from the receipts, and the Worker checks the resulting object size.
+The existing publication query checks membership, suspension, target, and expiry again before it sets `ready`.
+A failed completion uses the same deletion journal as the internal storage boundary.
+Part failures keep the upload available for another attempt.
+
+| Input | HTTP status | Error code |
+| --- | --- | --- |
+| Declared file size above the file limit, or part above its body limit | 413 | `attachment_too_large` |
+| Part number outside the upload | 400 | `attachment_part_invalid` |
+| Declared part length different from its expected length | 400 | `attachment_part_size_mismatch` |
+| Received part length different from Content-Length, or interrupted source | 400 | `attachment_upload_interrupted` |
+| Completed object size different from the declared size | 400 | `attachment_size_mismatch` |
 
 Each generated object key stays private.
 The uploader ID stays as an opaque identity after account deletion.
@@ -192,6 +232,8 @@ A message without attached files gets no read line or file lines.
 The scheduled members cleanup deletes expired download tokens, including consumed tokens.
 It also retries byte deletion for transferred records after a successful first start.
 It also sweeps expired drafts.
+An unfinished upload keeps its multipart ID until completion.
+The sweep aborts that upload before it removes the expired record, also when no part arrived.
 It uses conditional revisions before deleting a ready file.
 For a claim, the sweep calls the trusted `expireChatAttachment` RPC of the claiming workspace object.
 That RPC checks acceptance in the chat queue.
@@ -209,7 +251,9 @@ The sweep also removes completed orphan objects whose upload outlived its record
 
 The attachment tests use local Miniflare R2 and D1.
 Storage tests also call the internal storage boundary.
-The raw route tests use the real Worker and native R2 in Miniflare.
+The raw and multipart route tests use the real Worker and native R2 in Miniflare.
+The multipart tests cover both targets, part replacement, exact body lengths, empty files, and a two-part file with a shorter last part.
+Completion tests check the final size, access changes, competing completion calls, and abort of an expired unfinished upload.
 Copy tests inject detached command responses through `prepareAttachments`.
 The fake command downloads through the real one-use route with local D1 and R2.
 Shell tests execute the generated command with a fake curl boundary to check byte counts and atomic file placement.

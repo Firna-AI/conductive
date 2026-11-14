@@ -11,7 +11,7 @@ import {
   readAttachment,
   saveAttachmentMultipart,
 } from './attachment-data'
-import { deleteAttachment } from './attachment-cleanup'
+import { deleteAttachment, removeAttachmentBytes } from './attachment-cleanup'
 import { writeAttachmentObject } from './attachment-byte-storage'
 import {
   ATTACHMENT_DRAFT_MS,
@@ -46,41 +46,16 @@ export async function storeAttachment(
   },
 ): Promise<Attachment> {
   const bucket = attachmentBucket(env)
-  const id = dependencies.newId()
-  const now = dependencies.now()
-  const record: AttachmentRecord = {
-    id,
-    orgId: input.orgId,
-    uploaderUserId: input.uploaderUserId,
-    targetKind: input.target.type,
-    targetId:
-      input.target.type === 'workspace'
-        ? input.target.workspaceId
-        : input.target.messageId,
-    name: input.name,
-    kind: input.kind,
-    mediaType: input.mediaType,
-    sizeBytes: 0,
-    objectKey: `attachments/${encodeURIComponent(input.orgId)}/${encodeURIComponent(id)}`,
-    multipartId: null,
-    state: 'uploading',
-    createdAt: now,
-    expiresAt: now + ATTACHMENT_DRAFT_MS,
-    claimedWorkspaceId: null,
-    claimedMessageId: null,
-    transferredSandboxId: null,
-    bytesDeletedAt: null,
-    revision: 0,
-  }
-  if (!(await insertAttachment(env.DB, record))) throw attachmentNotFound()
+  const record = await createAttachmentRecord(env, input, 0, dependencies)
   try {
     record.sizeBytes = await writeAttachmentObject(
       bucket,
       record.objectKey,
-      { attachmentId: id, orgId: input.orgId },
+      { attachmentId: record.id, orgId: input.orgId },
       source,
       async (multipartId) => {
-        if (!(await saveAttachmentMultipart(env.DB, id, multipartId)))
+        record.multipartId = multipartId
+        if (!(await saveAttachmentMultipart(env.DB, record.id, multipartId)))
           throw attachmentNotFound()
       },
       dependencies.byteLength,
@@ -97,13 +72,58 @@ export async function storeAttachment(
       throw attachmentNotFound()
     return publicAttachment(record)
   } catch (error) {
-    try {
-      const current = await readAttachment(env.DB, id)
-      if (current) await deleteAttachment(env, current)
-      else await bucket.delete(record.objectKey)
-    } catch {
-      warnWorker({ kind: 'attachment_upload_cleanup_retry' })
-    }
+    await cleanupAttachmentUpload(env, record)
     throw error
+  }
+}
+
+export async function createAttachmentRecord(
+  env: AppEnv,
+  input: AttachmentStorageInput,
+  sizeBytes: number,
+  dependencies: { now: () => number; newId: () => string },
+): Promise<AttachmentRecord> {
+  const id = dependencies.newId()
+  const now = dependencies.now()
+  const record: AttachmentRecord = {
+    id,
+    orgId: input.orgId,
+    uploaderUserId: input.uploaderUserId,
+    targetKind: input.target.type,
+    targetId:
+      input.target.type === 'workspace'
+        ? input.target.workspaceId
+        : input.target.messageId,
+    name: input.name,
+    kind: input.kind,
+    mediaType: input.mediaType,
+    sizeBytes,
+    objectKey: `attachments/${encodeURIComponent(input.orgId)}/${encodeURIComponent(id)}`,
+    multipartId: null,
+    state: 'uploading',
+    createdAt: now,
+    expiresAt: now + ATTACHMENT_DRAFT_MS,
+    claimedWorkspaceId: null,
+    claimedMessageId: null,
+    transferredSandboxId: null,
+    bytesDeletedAt: null,
+    revision: 0,
+  }
+  if (!(await insertAttachment(env.DB, record))) throw attachmentNotFound()
+  return record
+}
+
+export async function cleanupAttachmentUpload(
+  env: AppEnv,
+  record: AttachmentRecord,
+): Promise<void> {
+  try {
+    const current = await readAttachment(env.DB, record.id)
+    if (current) {
+      current.multipartId ??= record.multipartId
+      await deleteAttachment(env, current)
+    } else await removeAttachmentBytes(env, record)
+  } catch {
+    warnWorker({ kind: 'attachment_upload_cleanup_retry' })
   }
 }

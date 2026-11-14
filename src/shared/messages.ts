@@ -3,7 +3,8 @@ import { orgPath, type Timestamp } from './api'
 import type { Session } from './sessions'
 import { filePaths } from './files'
 
-export const ATTACHMENT_MAX_BYTES = 100_000_000
+export const ATTACHMENT_MAX_BYTES = 1_000_000_000
+export const ATTACHMENT_PART_BYTES = 67_108_864
 
 export type AttachmentUploadTarget =
   | { type: 'workspace'; workspaceId: string }
@@ -30,6 +31,52 @@ export function attachmentUploadUrl(
   const query = new URLSearchParams(metadata)
   if (target.type === 'new-workspace') query.set('messageId', target.messageId)
   return `${attachmentUploadPath(orgId, target)}?${query}`
+}
+
+export function attachmentUploadStartPath(
+  orgId: string,
+  target: AttachmentUploadTarget,
+): string {
+  return `${attachmentUploadPath(orgId, target)}/uploads`
+}
+
+export function attachmentUploadPartPath(
+  orgId: string,
+  target: AttachmentUploadTarget,
+  uploadId: string,
+  partNumber: number,
+): string {
+  return `${attachmentUploadStartPath(orgId, target)}/${encodeURIComponent(uploadId)}/parts/${partNumber}`
+}
+
+export function attachmentUploadCompletePath(
+  orgId: string,
+  target: AttachmentUploadTarget,
+  uploadId: string,
+): string {
+  return `${attachmentUploadStartPath(orgId, target)}/${encodeURIComponent(uploadId)}/complete`
+}
+
+export interface StartAttachmentUploadRequest {
+  name: string
+  mediaType: string
+  sizeBytes: number
+  messageId?: string
+}
+
+export interface StartAttachmentUploadResponse {
+  uploadId: string
+  partSizeBytes: number
+  partCount: number
+}
+
+export interface AttachmentUploadPart {
+  partNumber: number
+  etag: string
+}
+
+export interface CompleteAttachmentUploadRequest {
+  parts: readonly AttachmentUploadPart[]
 }
 
 export interface MessageSender {

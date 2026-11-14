@@ -108,6 +108,20 @@ export async function saveAttachmentMultipart(
   return result.meta.changes === 1
 }
 
+export async function beginAttachmentCompletion(
+  db: D1Database,
+  record: AttachmentRecord,
+) {
+  const result = await db
+    .prepare(
+      `UPDATE chat_attachments SET revision = revision + 1
+    WHERE id = ? AND state = 'uploading' AND revision = 0 AND multipart_id = ?`,
+    )
+    .bind(record.id, record.multipartId)
+    .run()
+  return result.meta.changes === 1
+}
+
 export async function attachmentBatch(
   db: D1Database,
   options: {

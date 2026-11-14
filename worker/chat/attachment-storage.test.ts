@@ -41,13 +41,13 @@ it('stores exact binary and empty file bytes with private owned records', async 
   expect(empty.sizeBytes).toBe(0)
   expect(await fixture.bytes(empty.id)).toEqual(new Uint8Array())
 })
-it('streams 100 MB into one object and rejects the first excess decoded byte', async () => {
+it('streams 100 MB into one object and rejects a declared size above 1 GB', async () => {
   const fixture = await attachmentFixture(harness)
   const chunks = Array.from({ length: 20 }, (_, fill) => ({
     sizeBytes: 5_000_000,
     fill,
   }))
-  const upload = (id: string, extra: boolean) =>
+  const upload = (id: string) =>
     fixture.actor.api.controls.storeAttachmentChunks(
       {
         orgId: fixture.org.id,
@@ -58,9 +58,9 @@ it('streams 100 MB into one object and rejects the first excess decoded byte', a
         mediaType: 'application/octet-stream',
       },
       id,
-      extra ? [...chunks, { sizeBytes: 1, fill: 128 }] : chunks,
+      chunks,
     )
-  const attachment = await upload('stored-file-1', false)
+  const attachment = await upload('stored-file-1')
   expect(attachment.sizeBytes).toBe(100_000_000)
   const stored = await fixture.actor.api.controls.attachmentByteSample(
     attachment.id,
@@ -68,7 +68,25 @@ it('streams 100 MB into one object and rejects the first excess decoded byte', a
   )
   expect(stored.byteLength).toBe(100_000_000)
   expect(stored.samples).toEqual([0, 1, 19])
-  await expect(upload('stored-file-2', true)).rejects.toMatchObject({
+  await expect(
+    storeAttachment(
+      harness.env,
+      {
+        orgId: fixture.org.id,
+        uploaderUserId: fixture.owner.id,
+        target: fixture.target,
+        name: 'binary.dat',
+        kind: 'file',
+        mediaType: 'application/octet-stream',
+      },
+      new Uint8Array(),
+      {
+        now: () => TEST_TIME,
+        newId: () => 'stored-file-2',
+        byteLength: 1_000_000_001,
+      },
+    ),
+  ).rejects.toMatchObject({
     status: 413,
     code: 'attachment_too_large',
   })

@@ -3,7 +3,7 @@ import { ATTACHMENT_DOWNLOAD_PATH } from '../chat/attachment-download'
 import { shellQuote } from '../lifecycle/commands'
 import { identifier, record } from '../chat/inputs'
 
-export function readAttachmentCommand(command: string) {
+function readAttachmentCommand(command: string) {
   if (!command.includes(ATTACHMENT_DOWNLOAD_PATH)) return null
   const start = command.indexOf('/bin/sh -c ') + '/bin/sh -c '.length
   const quoted = command.slice(start, command.lastIndexOf(' > /dev/null 2>&1'))
