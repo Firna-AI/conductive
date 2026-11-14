@@ -46,7 +46,7 @@
     in `src/components/settings/LoginEndpoint.tsx`.
   - When the typed address of a Codex endpoint gives no model list and the
     same address with `/v1` gives one, the save stores the address with
-    `/v1` (decision 1 C of the plan codex-endpoint-v1-base, which Cal chose
+    `/v1` (Codex base decision 1 C, which Cal chose
     on 13 November 2026). A note under the host then says "Conductive added
     /v1 to the address, because the endpoint lists its models there." The
     page keeps it until it reloads, as
