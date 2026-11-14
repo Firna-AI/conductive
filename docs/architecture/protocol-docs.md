@@ -66,6 +66,8 @@ This page lists each protocol doc and what it covers.
       endpoint and the key of each agent, the model list of the endpoint,
       and the addresses that the app accepts.
   - [Terminal, previews, and desktop](../protocol/terminal-previews-and-desktop.md)
+  - [Step timing](../protocol/step-timing.md): the `Server-Timing` header of
+    the preview replies and of the create reply, and what it may hold.
 - [Model gateway](../protocol/model-gateway.md): the turn token, and the
   Worker routes that add the agent login to each model request.
   - [Model gateway: requests and answers](../protocol/model-gateway-requests.md):

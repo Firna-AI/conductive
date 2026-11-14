@@ -61,8 +61,9 @@ and the stop cleanup of a failed resume.
   create makes the same check.
 - The 201 reply of a create has a `Server-Timing` header with the
   `create`, `message`, and `project` steps, in milliseconds.
-  `ServerTiming` in [server-timing.ts](../server-timing.ts) writes it. The
-  header holds no ID, so a slow create can be measured from the browser.
+  `ServerTiming` in [server-timing.ts](../server-timing.ts) writes it.
+  [Step timing](../../docs/protocol/step-timing.md)
+  gives its requirements.
 - A failed admitted create keeps its workspace, chat, first message, and
   queued messages. Each current member can read the saved cause and history.
   Failure revokes the token and detaches the failed sandbox after saving cleanup ownership.

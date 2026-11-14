@@ -161,9 +161,9 @@ decision number names a dated record, as
   are the decisions of the change that added this rule.
 - Reason: a preview of a large dev server took 10 seconds or more, and
   only these durations show where a request waits.
-- The header holds fixed step names and whole milliseconds, and no ID,
-  address, or secret. A refused request gets no such header, so a refusal
-  does not show which check failed.
+- The header follows the rules of
+  [Step timing](step-timing.md): fixed step names,
+  whole milliseconds, and no header on a refused request.
 - Risk: the previewed page can read the durations of its own requests.
 - The access checks of the body come after the headers, so the header
   cannot give them.
