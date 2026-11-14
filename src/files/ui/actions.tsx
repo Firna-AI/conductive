@@ -7,7 +7,7 @@ import styles from './actions.module.css'
 
 /**
  * A compact labelled button: a Firna button in the dense control size, with
- * a lighter label than Firna's own sizes. On a phone it is 44 px high.
+ * a lighter label than Firna's own sizes. On a phone it is 40 px high.
  */
 export function ActionButton(props: {
   children: string
@@ -39,7 +39,7 @@ export function ActionButton(props: {
 
 /**
  * A link with the look of a secondary `ActionButton`, for an action that
- * opens another tab or list. On a phone it is 44 px high.
+ * opens another tab or list. On a phone it is 40 px high.
  */
 export function ActionLink(props: {
   children: string
@@ -66,7 +66,7 @@ export function ActionLink(props: {
 /**
  * A compact icon-only button with a muted icon, for bars and headers. A
  * quiet button has a fainter, smaller icon. Without `onPress` it is
- * disabled. On a phone its box is 44 px.
+ * disabled. On a phone its box is 40 px.
  */
 export function IconButton(props: {
   label: string

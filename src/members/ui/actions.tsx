@@ -27,7 +27,7 @@ function triggerProps(props: MenuTrigger) {
 
 /**
  * A compact labelled button: a Firna button in the dense control size, with
- * a lighter label than Firna's own sizes. On a phone it is 44 px high. A
+ * a lighter label than Firna's own sizes. On a phone it is 40 px high. A
  * button without `onPress` is disabled.
  */
 export function ActionButton(
@@ -73,7 +73,7 @@ export function ActionButton(
 
 /**
  * A compact icon-only button with a muted icon, for rows and bars. On a
- * phone its box is 44 px.
+ * phone its box is 40 px.
  */
 export function IconButton(
   props: MenuTrigger & {

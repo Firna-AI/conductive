@@ -5,7 +5,7 @@ import styles from './ToolButtons.module.css'
 
 /**
  * A compact labelled button: a Firna button in the dense control size, with
- * a lighter label than Firna's own sizes. On a phone it is 44px high.
+ * a lighter label than Firna's own sizes. On a phone it is 40px high.
  */
 export function ToolButton(props: {
   children: string
@@ -44,7 +44,7 @@ export function ToolButton(props: {
 /**
  * A compact icon-only button with a muted icon, for tool bars. A quiet
  * button has a fainter, smaller icon, for actions on every tab. On a phone
- * its box is 44px.
+ * its box is 40px.
  */
 export function ToolIconButton(props: {
   label: string

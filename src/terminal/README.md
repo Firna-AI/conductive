@@ -70,7 +70,7 @@ change can move the shared parts to the app's shared components.
   counts no terminal frame as activity.
 - `workspace.fetch` is the app's fetch. `workspace.subscribe` is required.
   It delivers the events of the workspace in order. Keep both stable.
-- `touch` selects the phone layout: 44px controls and the key row.
+- `touch` selects the phone layout: 40px controls and the key row.
 - `screenRef` is optional. It gets the element of the xterm.js screen,
   without the key row and the buttons of the tool, such as Reconnect. The
   workspace screen marks this element for the shortcut layer, so only the

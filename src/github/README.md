@@ -90,8 +90,8 @@ The app shell provides the rest of the design:
   `docs/mockups/src/theme.ts` makes them
 - a right column that is a size container (`container-type: inline-size`), so
   that a narrow column drops the detail and the link labels of the bar
-- `--ui-touch-min: 44px` on a phone, as the mockups set it. The phone row is
-  at least 44 px high also without it.
+- `--ui-touch-min: 40px` on a phone, as the mockups set it. The phone row is
+  at least 40 px high also without it.
 
 ## The action client
 

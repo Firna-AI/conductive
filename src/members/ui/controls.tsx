@@ -25,9 +25,9 @@ const denseControls: ControlSizes = {
   field: 'sm',
 }
 
-/** On a phone every control is at least 44 px high, so a finger can hit it. */
+/** On a phone every control is at least 40 px high, so a finger can hit it. */
 const touchControls: ControlSizes = {
-  height: 44,
+  height: 40,
   labelSize: 14,
   labelWeight: 500,
   field: 'lg',

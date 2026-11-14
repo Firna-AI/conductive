@@ -91,7 +91,7 @@
 
 /* As a phone: 390px wide, with the touch sizes of the mockups. */
 .phone {
-  --ui-touch-min: 44px;
+  --ui-touch-min: 40px;
 
   display: flex;
   flex-direction: column;
