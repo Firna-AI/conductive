@@ -236,7 +236,7 @@ describe('an own endpoint login on the account', () => {
     const before = textOf(claude())
     const refresh = () =>
       byRole('button', 'Refresh the model list of Claude', view)
-    server.empty('POST', refreshPath)
+    server.json('POST', refreshPath, { modelListReadFailed: false })
     server.json('GET', ACCOUNT_PATHS.account, accountWith(endpointLogin([])))
     held.holdAnswer('GET', ACCOUNT_PATHS.account)
     click(refresh())

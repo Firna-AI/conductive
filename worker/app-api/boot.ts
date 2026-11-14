@@ -19,7 +19,7 @@ import { choice, invalidInput } from '../chat/inputs'
 import { agentLoginKind } from '../chat/login-kind'
 import { loginSecret, agentLoginContext } from '../chat/queries'
 import type { AppDependencies, AppEnv } from '../env'
-import { refreshEndpointModels } from '../model-gateway/endpoint-model-refresh'
+import { readEndpointModelsForSave } from '../model-gateway/endpoint-model-save'
 import { HttpError, requiredString } from '../http'
 import { isOperator } from '../operator/access'
 import { encrypt } from '../security/crypto'
@@ -151,8 +151,17 @@ export async function bootRoute(
     return { ...loginKind, host: address.host }
   })()
   const secret = loginSecret(requiredString(body.secret))
+  const modelRead = address
+    ? await readEndpointModelsForSave(
+        { agent, kind: 'endpoint', endpoint: address.endpoint, secret },
+        dependencies.fetch,
+        env.PREVIEW_DOMAIN ? [env.PREVIEW_DOMAIN] : [],
+      )
+    : null
   const ciphertext = await encrypt(
-    address ? JSON.stringify({ endpoint: address.endpoint, secret }) : secret,
+    modelRead
+      ? JSON.stringify({ endpoint: modelRead.endpoint, secret })
+      : secret,
     agentLoginContext(userId, agent),
     env.BOAT_KEY_ENCRYPTION_KEY,
   )
@@ -165,16 +174,19 @@ export async function bootRoute(
     ciphertext,
     updatedAt,
     address?.origin ?? null,
+    modelRead ? { ids: modelRead.ids, attemptedAt: updatedAt } : null,
   )
   const login: SaveAgentLoginResponse = {
     ...publicLogin,
     connected: true,
     noReuse,
     updatedAt,
+    ...(modelRead
+      ? {
+          endpointV1Added: modelRead.endpointV1Added,
+          modelListReadFailed: modelRead.ids === null,
+        }
+      : {}),
   }
-  if (address)
-    await refreshEndpointModels(env, userId, agent, dependencies, {
-      ciphertext,
-    })
   return Response.json(login)
 }

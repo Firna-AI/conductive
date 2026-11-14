@@ -33,10 +33,10 @@ it.each(['claude', 'codex'] as const)(
   'reads %s IDs through the builder with only its key header',
   async (agent) => {
     const fake = upstream()
-    expect(await readEndpointModels(login(agent), fake.fetch)).toEqual([
-      'claude-opus-5-5',
-      'gpt-6.1-sol',
-    ])
+    expect(await readEndpointModels(login(agent), fake.fetch)).toEqual({
+      status: 'ok',
+      ids: ['claude-opus-5-5', 'gpt-6.1-sol'],
+    })
     expect(fake.requests).toHaveLength(1)
     const request = fake.requests[0]
     expect(request.url).toBe(
@@ -66,10 +66,15 @@ it('treats incomplete model entries and invalid JSON as failed reads', async () 
     '{"data":[{"id":" "}]}',
   ]) {
     fake.response = () => new Response(body)
-    expect(await readEndpointModels(login(), fake.fetch), body).toBeNull()
+    expect(await readEndpointModels(login(), fake.fetch), body).toEqual({
+      status: 'http-error',
+    })
   }
   fake.response = () => Response.json({ data: [], has_more: false })
-  expect(await readEndpointModels(login(), fake.fetch)).toEqual([])
+  expect(await readEndpointModels(login(), fake.fetch)).toEqual({
+    status: 'ok',
+    ids: [],
+  })
 })
 
 it('does not follow a redirect or read its body', async () => {
@@ -80,7 +85,9 @@ it('does not follow a redirect or read its body', async () => {
       status: 302,
       headers: { location: 'https://private.example.test/key=fake-key' },
     })
-  expect(await readEndpointModels(login(), fake.fetch)).toBeNull()
+  expect(await readEndpointModels(login(), fake.fetch)).toEqual({
+    status: 'http-error',
+  })
   expect(fake.requests).toHaveLength(1)
   expect(fake.requests[0].redirect).toBe('manual')
   expect(cancel).toHaveBeenCalledOnce()
@@ -97,7 +104,7 @@ it('refuses private and preview addresses before a fetch', async () => {
       await readEndpointModels({ ...login(), endpoint }, fetch, [
         'custom-previews.example.test',
       ]),
-    ).toBeNull()
+    ).toEqual({ status: 'unreachable' })
   expect(fake.requests).toEqual([])
   expect(fetch).not.toHaveBeenCalled()
 })
@@ -125,14 +132,18 @@ it('cancels a response above the byte budget and hides transport errors', async 
         { highWaterMark: 0 },
       ),
     )
-  expect(await readEndpointModels(login(), fake.fetch)).toBeNull()
+  expect(await readEndpointModels(login(), fake.fetch)).toEqual({
+    status: 'http-error',
+  })
   expect(cancel).toHaveBeenCalledOnce()
   fake.responseFactories.push(() => {
     throw new Error(
       'fake-key https://proxy.example.test/edge?key=address-secret',
     )
   })
-  expect(await readEndpointModels(login(), fake.fetch)).toBeNull()
+  expect(await readEndpointModels(login(), fake.fetch)).toEqual({
+    status: 'unreachable',
+  })
 })
 
 it.each(['headers', 'body'] as const)(
@@ -158,7 +169,9 @@ it.each(['headers', 'body'] as const)(
     expect(settled).toBe(false)
     await vi.advanceTimersByTimeAsync(1)
     expect(settled).toBe(true)
-    expect(await result).toBeNull()
+    expect(await result).toEqual({
+      status: phase === 'headers' ? 'unreachable' : 'http-error',
+    })
     expect(fake.requests[0].signal.aborted).toBe(true)
     expect(cancel).toHaveBeenCalledTimes(phase === 'body' ? 1 : 0)
   },

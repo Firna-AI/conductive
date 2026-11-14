@@ -62,8 +62,14 @@ View writes cannot change this branch.
   secret-save time. They never give the full address.
   `accountLogins` requires the app model getter for account reads and share replies.
   Both replies keep the saved `modelList`, including its missing app IDs and read time.
-  Save reads the endpoint model list without making a failed read fail the save.
-  Each replacement drops the old model list and its attempt time.
+  Save reads the endpoint model list before encryption and storage.
+  A Codex save can select a `/v1` base through the bounded reads in
+  [Own endpoints](../model-gateway/own-endpoints.md).
+  A failed read never fails the save.
+  One statement replaces the login and its old model list with the new list, if any, and attempt time.
+  Endpoint save replies include boolean `endpointV1Added` and `modelListReadFailed`.
+  The first says that the second read selected a `/v1` base.
+  The second says that the save read no list. Native login replies omit both.
   [`account-models.ts`](account-models.ts) adds the optional `modelList` to
   an own endpoint login in the signed-in user's account reply.
   Its `missing` array holds app model IDs absent from the last successful list.
@@ -73,8 +79,11 @@ View writes cannot change this branch.
   The browser uses that case to keep every model available.
   An unavailable model configuration leaves discovery metadata out of the account reply.
   The model-list route keeps its existing configuration error.
-  Refresh reads only the signed-in user's login and answers 204, also after a failed read.
-  A removed or native login makes Refresh do nothing.
+  Refresh reads only the signed-in user's login and answers HTTP 200 with
+  `RefreshAgentLoginModelsResponse`: `{ modelListReadFailed: boolean }`.
+  The flag is false when Refresh read a list, and true otherwise.
+  A removed or native login makes Refresh do nothing and sets the flag to true.
+  Refresh never changes the stored address.
   Read the account again after Refresh to obtain the last successful result.
   The builder accepts public HTTPS addresses with host names.
   It refuses every IPv4 and IPv6 address, credentials, and non-public names.

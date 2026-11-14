@@ -138,7 +138,17 @@ export interface AccountResponse {
   githubAppUrl: string
 }
 
-export type SaveAgentLoginResponse = AgentLoginStatus
+export type SaveAgentLoginResponse = AgentLoginStatus & {
+  /** Endpoint saves only: true when a second model read selected a /v1 base. */
+  endpointV1Added?: boolean
+  /** Endpoint saves only: true when neither read produced a readable model list. */
+  modelListReadFailed?: boolean
+}
+
+export interface RefreshAgentLoginModelsResponse {
+  /** True when Refresh read no list, including a missing or native login. */
+  modelListReadFailed: boolean
+}
 export interface UpdateAgentLoginRequest {
   noReuse: boolean
 }

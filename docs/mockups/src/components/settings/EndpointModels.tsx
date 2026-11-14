@@ -1,6 +1,5 @@
-import { RefreshCw } from 'lucide-react'
+import type { ReactNode } from 'react'
 import type { ModelListCheck } from '../../fixtures/endpointModels'
-import { ActionButton } from '../common/actions'
 import formStyles from './AgentConnectForm.module.css'
 import styles from './EndpointModels.module.css'
 
@@ -18,13 +17,14 @@ function hiddenText(labels: string, count: number): string {
  * The models of the app that the model list of an own endpoint does not
  * name, under the host of the login. The pickers of the owner hide them, so
  * the line says so, with their IDs as code that the owner can copy into the
- * setup of the endpoint, and the time of the last read of the list. Refresh
- * reads the list again. `agent` is the name of the agent, for the spoken
- * name of Refresh.
+ * setup of the endpoint, and the time of the last read of the list that
+ * worked. `refresh` is the Refresh button of the login, which reads the
+ * list again. The row has one Refresh, so after a read that failed the
+ * warning above holds it, and the line has none.
  */
 export function EndpointModels(props: {
-  agent: string
   check: ModelListCheck
+  refresh?: ReactNode
 }) {
   const { unlisted, checked } = props.check
   const labels = names.format(unlisted.map((model) => model.label))
@@ -49,12 +49,7 @@ export function EndpointModels(props: {
           {`. Checked ${checked}.`}
         </span>
       </div>
-      <ActionButton
-        accessibilityLabel={`Refresh the model list of ${props.agent}`}
-        icon={RefreshCw}
-      >
-        Refresh
-      </ActionButton>
+      {props.refresh}
     </div>
   )
 }

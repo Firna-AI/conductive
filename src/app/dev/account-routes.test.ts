@@ -129,14 +129,25 @@ it('refuses unsafe dev endpoint saves and seeds connected own endpoint statuses'
       },
     })
   }
+  for (const [modelList, host] of [
+    ['v1-only', 'v1-only.example.test'],
+    ['read-failed', 'no-models.example.test'],
+  ] as const) {
+    const seeded = setup(`?login=endpoint&modelList=${modelList}`)
+    const account = readAccount(
+      await (await seeded.fetch(ACCOUNT_PATHS.account)).json(),
+    )
+    expect(account.agentLogins).toMatchObject([{ host }, { host }])
+  }
 })
 
 it('refreshes the dev endpoint list without changing other logins or the secret-save time', async () => {
   const { fetch } = setup('?login=endpoint')
-  expect(
-    (await fetch(refreshAgentLoginModelsPath('claude'), { method: 'POST' }))
-      .status,
-  ).toBe(204)
+  const refreshed = await fetch(refreshAgentLoginModelsPath('claude'), {
+    method: 'POST',
+  })
+  expect(refreshed.status).toBe(200)
+  expect(await refreshed.json()).toEqual({ modelListReadFailed: false })
   const account = readAccount(await (await fetch(ACCOUNT_PATHS.account)).json())
   expect(account.agentLogins[0]).toMatchObject({
     updatedAt: FAKE_TIME,
@@ -160,4 +171,63 @@ it('refreshes the dev endpoint list without changing other logins or the secret-
     readAccount(await (await fetch(ACCOUNT_PATHS.account)).json())
       .agentLogins[1],
   ).toMatchObject({ modelList: { missing: [], checkedAt: FAKE_TIME } })
+})
+
+it('returns save flags for the fake /v1-only and failed-list hosts without saving the flags', async () => {
+  const { fetch } = setup()
+  for (const [endpoint, flags] of [
+    [
+      'https://v1-only.example.test/private?key=private',
+      { endpointV1Added: true, modelListReadFailed: false },
+    ],
+    [
+      'https://v1-only.example.test/private/v1',
+      { endpointV1Added: false, modelListReadFailed: false },
+    ],
+    [
+      'https://no-models.example.test',
+      { endpointV1Added: false, modelListReadFailed: true },
+    ],
+  ] as const) {
+    const response = await fetch(agentLoginPath('codex'), {
+      method: 'PUT',
+      body: JSON.stringify({
+        agent: 'codex',
+        kind: 'endpoint',
+        endpoint,
+        secret: 'private-key',
+      }),
+    })
+    expect(response.status).toBe(200)
+    expect(await response.json()).toEqual({
+      agent: 'codex',
+      connected: true,
+      kind: 'endpoint',
+      host: new URL(endpoint).host,
+      noReuse: false,
+      updatedAt: FAKE_TIME,
+      ...flags,
+    })
+    const refreshed = await fetch(refreshAgentLoginModelsPath('codex'), {
+      method: 'POST',
+    })
+    expect(refreshed.status).toBe(200)
+    expect(await refreshed.json()).toEqual({
+      modelListReadFailed: flags.modelListReadFailed,
+    })
+    const accountBody = await (await fetch(ACCOUNT_PATHS.account)).text()
+    expect(accountBody).not.toMatch(/endpointV1Added|modelListReadFailed/)
+    const account = readAccount(JSON.parse(accountBody))
+    expect(account.agentLogins[1]).toEqual({
+      agent: 'codex',
+      connected: true,
+      kind: 'endpoint',
+      host: new URL(endpoint).host,
+      noReuse: false,
+      updatedAt: FAKE_TIME,
+      ...(flags.modelListReadFailed
+        ? {}
+        : { modelList: { missing: [], checkedAt: FAKE_TIME } }),
+    })
+  }
 })

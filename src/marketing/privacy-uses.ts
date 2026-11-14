@@ -104,9 +104,13 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         ${productName} starts turns only with supported agent software.`,
       text`Endpoint models: ${productName} reads the endpoint's model list
         with its key when you save the login or press Refresh on your account
-        page. It also reads the list in the background when a turn on that
-        login starts, at most once in 10 minutes. It stores the model IDs
-        from the last list it could read to set the models in your pickers.`,
+        page. When you save a Codex endpoint whose address gives no model
+        list, it can read the list a second time, at that address with /v1
+        added. When only that read gives a list, it saves the address with
+        /v1 added. It also reads the list in the background when a turn on
+        that login starts, at most once in 10 minutes. It stores the model
+        IDs from the last list it could read to set the models in your
+        pickers.`,
       text`Own endpoints: ${productName} sends each model request of a turn
         on an own endpoint login to that endpoint, with its key. The endpoint
         gets the messages, the files, and the command results of each turn

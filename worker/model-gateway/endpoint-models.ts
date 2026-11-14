@@ -8,20 +8,28 @@ import { upstreamHeaders } from './headers'
 const RESPONSE_BYTES = 1_048_576
 const READ_TIMEOUT_MS = 10_000
 
+export type EndpointModelsResult =
+  | { status: 'ok'; ids: readonly string[] }
+  | { status: 'http-error' }
+  | { status: 'unreachable' }
+
 /** Discovery failures carry no upstream text or address to a caller. */
 export async function readEndpointModels(
   login: Extract<AgentLogin, { kind: 'endpoint' }>,
   fetch: HttpFetch,
   refusedDomains: readonly string[] = [],
-): Promise<readonly string[] | null> {
+): Promise<EndpointModelsResult> {
   const address = readEndpointAddress(login.endpoint, login.agent, {
     route: login.agent === 'claude' ? '/v1/models' : '/models',
     search: login.agent === 'claude' ? 'limit=1000' : '',
     refusedDomains,
   })
-  if (!address) return null
+  if (!address) return { status: 'unreachable' }
   const controller = new AbortController()
   let response: Response | undefined
+  const failed = (): EndpointModelsResult => ({
+    status: response ? 'http-error' : 'unreachable',
+  })
   const timer = setTimeout(() => controller.abort(), READ_TIMEOUT_MS)
   const cancelBody = () => {
     void response?.body?.cancel().catch(() => undefined)
@@ -33,7 +41,7 @@ export async function readEndpointModels(
       login,
     )
     if (login.agent === 'claude') headers.set('anthropic-version', '2023-06-01')
-    const read = (async () => {
+    const read = (async (): Promise<EndpointModelsResult> => {
       response = await fetch(
         new Request(address.upstream, {
           method: 'GET',
@@ -44,29 +52,33 @@ export async function readEndpointModels(
       )
       if (controller.signal.aborted) {
         cancelBody()
-        return null
+        return failed()
       }
       if (!response.ok) {
         cancelBody()
-        return null
+        return failed()
       }
       const body =
         response.body?.pipeThrough(
           new TransformStream<Uint8Array, Uint8Array>(),
           { signal: controller.signal },
         ) ?? null
-      return modelIds(await readBoundedJson(body, RESPONSE_BYTES), login.agent)
+      const ids = modelIds(
+        await readBoundedJson(body, RESPONSE_BYTES),
+        login.agent,
+      )
+      return ids === null ? failed() : { status: 'ok', ids }
     })()
     return await Promise.race([
       read,
-      new Promise<null>((resolve) => {
-        controller.signal.addEventListener('abort', () => resolve(null), {
+      new Promise<EndpointModelsResult>((resolve) => {
+        controller.signal.addEventListener('abort', () => resolve(failed()), {
           once: true,
         })
       }),
     ])
   } catch {
-    return null
+    return failed()
   } finally {
     clearTimeout(timer)
     controller.signal.removeEventListener('abort', cancelBody)

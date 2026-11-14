@@ -143,16 +143,23 @@ export async function saveAccountLogin(
   ciphertext: string,
   now: number,
   endpointOrigin: string | null = null,
+  endpointModels: {
+    ids: readonly string[] | null
+    attemptedAt: number
+  } | null = null,
 ): Promise<boolean> {
+  const ids = endpointModels?.ids ?? null
   const noReuse = await db
     .prepare(
-      `INSERT INTO agent_logins (user_id, agent, kind, ciphertext, endpoint_origin, no_reuse, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(user_id, agent) DO UPDATE SET
+      `INSERT INTO agent_logins (user_id, agent, kind, ciphertext, endpoint_origin, no_reuse, created_at, updated_at,
+       endpoint_model_ids, endpoint_models_read_at, endpoint_models_attempted_at, endpoint_models_attempt_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(user_id, agent) DO UPDATE SET
        kind = excluded.kind, ciphertext = excluded.ciphertext, endpoint_origin = excluded.endpoint_origin,
        no_reuse = CASE WHEN agent_logins.kind = excluded.kind
          THEN agent_logins.no_reuse ELSE excluded.no_reuse END,
-       endpoint_model_ids = NULL, endpoint_models_read_at = NULL,
-       endpoint_models_attempted_at = NULL, endpoint_models_attempt_id = NULL,
+       endpoint_model_ids = excluded.endpoint_model_ids, endpoint_models_read_at = excluded.endpoint_models_read_at,
+       endpoint_models_attempted_at = excluded.endpoint_models_attempted_at,
+       endpoint_models_attempt_id = excluded.endpoint_models_attempt_id,
        updated_at = excluded.updated_at, refresh_claim = NULL,
        refresh_claim_until = NULL, failure_cause = NULL RETURNING no_reuse`,
     )
@@ -165,6 +172,10 @@ export async function saveAccountLogin(
       defaultAgentLoginNoReuse(agent, kind) ? 1 : 0,
       now,
       now,
+      ids === null ? null : JSON.stringify(ids),
+      ids === null ? null : now,
+      endpointModels?.attemptedAt ?? null,
+      endpointModels ? crypto.randomUUID() : null,
     )
     .first<number>('no_reuse')
   return noReuse === 1

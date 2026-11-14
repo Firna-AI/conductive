@@ -7,8 +7,11 @@ import type { UnusableLogin } from '../components/settings/LoginNotUsable'
 import { agentKeys, type AgentKey } from '../fixtures/agents'
 import {
   accountLogins,
+  addedV1Logins,
   codexUnusableCause,
   endpointLogins,
+  keptListLogins,
+  readFailedLogins,
   unlistedModelLogins,
   type AgentLogins,
   type AgentLogin,
@@ -17,6 +20,23 @@ import { paths } from '../paths'
 import type { AccountState } from './accountState'
 
 type FormKey = Exclude<AccountState['form'], 'none'>
+
+/**
+ * The logins of each state of the own endpoint, all on Cal's proxy. The
+ * agent of an open form has no login, as `loginsFor` says.
+ */
+const ownEndpointLogins: Readonly<
+  Record<Exclude<AccountState['ownEndpoint'], 'none'>, AgentLogins>
+> = {
+  form: endpointLogins,
+  typed: endpointLogins,
+  refused: endpointLogins,
+  connected: endpointLogins,
+  unlisted: unlistedModelLogins,
+  'v1-added': addedV1Logins,
+  'read-failed': readFailedLogins,
+  'read-failed-unlisted': keptListLogins,
+}
 
 /**
  * The agent of each form and the kind that its switch selects, and where
@@ -78,9 +98,7 @@ function loginsFor(state: AccountState): AgentLogins {
               ? endpointLogins.codex
               : { kind: state.codexLogin },
         }
-      : state.ownEndpoint === 'unlisted'
-        ? unlistedModelLogins
-        : endpointLogins
+      : ownEndpointLogins[state.ownEndpoint]
   const formAgent =
     state.form === 'none' || signingInAgain(state)
       ? null

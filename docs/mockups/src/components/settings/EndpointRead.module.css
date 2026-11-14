@@ -1,0 +1,48 @@
+/*
+ * A line under the kind and the host of an own endpoint login, in the same
+ * box as the rows, at the inset of the share setting below: an icon and the
+ * words, then Refresh for the warning, which lines up with Remove. The icon
+ * gives the kind of the line, so it never depends on colour alone.
+ */
+.line {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 0;
+  padding: 0 8px 10px 12px;
+  color: var(--ui-ink2);
+  font-size: var(--ui-text-md);
+  line-height: 1.45;
+}
+
+/* The warning puts Refresh after its words, at the gap of the other lines. */
+.warning {
+  gap: 12px;
+}
+
+.message {
+  display: flex;
+  flex: 1;
+  align-items: flex-start;
+  gap: 6px;
+  min-width: 0;
+  margin: 0;
+}
+
+.words {
+  min-width: 0;
+}
+
+/* The icon centres on the first line of the words. */
+.icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.note .icon {
+  color: var(--ui-muted);
+}
+
+.warning .icon {
+  color: var(--ui-warning);
+}

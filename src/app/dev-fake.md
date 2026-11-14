@@ -27,6 +27,22 @@ the dev wiring in `dev/`, and what its fake routes do.
   stay through rename, delete, and restore. Settings changes during the
   first good build start one added build. The fake compares settings
   revisions with builds as the Worker does.
+- Own endpoint saves return `endpointV1Added` and `modelListReadFailed`, as
+  the Worker does. Refresh returns HTTP 200 with `modelListReadFailed`.
+  False means the read produced a list. These response flags never enter
+  the saved account. Ordinary fake hosts list every model.
+  `https://v1-only.example.test` lists only under `/v1`. A Codex save of
+  that host without a final `/v1` returns `endpointV1Added: true`.
+  `https://no-models.example.test` lists no models. Its saves and Refresh
+  return `modelListReadFailed: true` for both agents. A failed Refresh
+  keeps the previous list and time. The fake keeps no secret or full address.
+  `?login=endpoint&modelList=v1-only` seeds both logins with the first host.
+  Remove and Connect Codex with that host without `/v1` to get the save flag.
+  `?login=endpoint&modelList=read-failed` seeds both with the second host.
+  Refresh then returns the failed-read flag. The Claude login keeps a list
+  from a day before that does not name the last Claude model, so its row
+  shows Refresh, and a Refresh shows the warning above the line of that
+  list. A reload alone returns neither flag.
 - The upload routes also keep the exact bytes of each upload, in a private
   store of the page. A send that names uploaded files gets a reply with its
   own message ID, text, model choice, and files. An archived workspace,

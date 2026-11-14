@@ -14,27 +14,16 @@ export async function claimEndpointModelRead(
   agent: Agent,
   now: number,
   background: boolean,
-  ciphertext?: string,
 ): Promise<EndpointModelRead | null> {
   const attemptId = crypto.randomUUID()
   const row = await db
     .prepare(
       `UPDATE agent_logins SET endpoint_models_attempted_at = ?,
        endpoint_models_attempt_id = ? WHERE user_id = ? AND agent = ? AND kind = 'endpoint'
-       AND (? IS NULL OR ciphertext = ?)
        AND (? = 0 OR endpoint_models_attempted_at IS NULL OR endpoint_models_attempted_at <= ?)
        RETURNING ciphertext`,
     )
-    .bind(
-      now,
-      attemptId,
-      userId,
-      agent,
-      ciphertext ?? null,
-      ciphertext ?? null,
-      background ? 1 : 0,
-      now - 600_000,
-    )
+    .bind(now, attemptId, userId, agent, background ? 1 : 0, now - 600_000)
     .first<{ ciphertext: string }>()
   return row ? { userId, agent, ciphertext: row.ciphertext, attemptId } : null
 }

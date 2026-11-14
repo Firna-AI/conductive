@@ -6,6 +6,7 @@ import {
 import type { Agent } from '../../src/shared/agents'
 import { readAccount } from '../../src/app/api/read-core'
 import { createApp } from '../application'
+import { decryptAgentLogin } from '../chat/queries'
 import { FakeModelUpstream } from '../test-support/fake-model-upstream'
 import {
   TEST_ORIGIN,
@@ -34,7 +35,7 @@ export function endpointModelApi(harness: TestHarness) {
   let now = TEST_TIME
   const upstream = new FakeModelUpstream(
     'https://proxy.example.test:8443',
-    ['/private/v1/models'],
+    ['/private/models', '/private/v1/models'],
     () =>
       Response.json({
         data: [
@@ -102,4 +103,28 @@ export function endpointModelApi(harness: TestHarness) {
       harness.setTime(value)
     },
   }
+}
+
+export async function savedEndpointLogin(harness: TestHarness, agent: Agent) {
+  const row = await harness.env.DB.prepare(
+    `SELECT user_id AS userId, ciphertext, endpoint_model_ids AS ids,
+     endpoint_models_read_at AS readAt, endpoint_models_attempted_at AS attemptedAt
+     FROM agent_logins WHERE agent = ? AND kind = 'endpoint'`,
+  )
+    .bind(agent)
+    .first<{
+      userId: string
+      ciphertext: string
+      ids: string | null
+      readAt: number | null
+      attemptedAt: number | null
+    }>()
+  if (!row) throw new Error('The endpoint login was not saved.')
+  const login = await decryptAgentLogin(
+    harness.env,
+    row.userId,
+    { agent, kind: 'endpoint' },
+    row.ciphertext,
+  )
+  return { ...row, login }
 }
