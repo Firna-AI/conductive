@@ -20,7 +20,9 @@ function fileName(path: string): string {
 
 /**
  * A changed file of the turn. It shows the label of its path, which hides
- * each secret value, and it opens the diff of its real path. The Worker
+ * each secret value, and it opens the diff of its real path. It shows the
+ * lines that the file adds and removes only when one count is above zero,
+ * so a file without line changes, such as a binary file, has no "+0". The Worker
  * leaves the label out when it equals the real path.
  */
 function FileChip(props: {
@@ -33,7 +35,9 @@ function FileChip(props: {
     <>
       <FileText className={styles.icon} size={12} />
       {fileName(label)}
-      <DiffStat added={file.added} removed={file.removed} />
+      {file.added > 0 || file.removed > 0 ? (
+        <DiffStat added={file.added} removed={file.removed} />
+      ) : null}
     </>
   )
   if (!onOpenDiff) return <span className={styles.chip}>{content}</span>

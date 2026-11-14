@@ -157,6 +157,11 @@ decision number names a dated record, as
   Reason: the message box never takes the focus from a later choice of the
   user. The list page of a phone opens a workspace without that focus, so
   that no keyboard opens on its own.
+- When the message box of a workspace takes the focus without a press of
+  the pointer, the caret goes back where it was in that box. Without such
+  a caret, as for a kept draft, it goes to the end of the text, not to the
+  start. Reason: a person who comes back to a draft most often adds to its
+  end, as in the message box of New workspace.
 
 ## Members and roles
 

@@ -183,7 +183,8 @@ A normal stop keeps its files, sessions, and chat history.
 Open a stopped workspace to start its computer again.
 If it stops while the workspace is open, select **Resume**, or open a file or a change.
 The history remains readable while the computer starts.
-An open file or change waits for the computer, then opens.
+A file or change that you open then waits for the computer, then opens.
+One that already shows stays.
 
 A message from an agent tool also starts a stopped workspace's computer.
 This includes the first message of a session that an agent creates.
