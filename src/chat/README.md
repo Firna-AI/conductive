@@ -75,7 +75,9 @@ chips.
   formatting of agent messages, with their headings and lists.
   [Chat tables](../../docs/protocol/chat-tables.md) states their tables.
   [Workspace links](../../docs/protocol/workspace-links.md) states the
-  chips of sent messages and answers. [Agent text](agent-text.md) gives the
+  chips of sent messages and answers, and
+  [File mentions](../../docs/protocol/file-mentions.md#files-in-answers)
+  states the file chips of answers. [Agent text](agent-text.md) gives the
   rules of the code that formats them: the chips, and the heading, list,
   and table parts that the chat shares with the file preview and the
   mockups.

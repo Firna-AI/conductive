@@ -22,7 +22,7 @@ function shapes(parts: readonly ChatPart[]) {
       return { chip: part.target.workspace.id, to: part.target.to }
     }
     if (part.kind === 'attachment') return { attachment: part.attachment.id }
-    return part.kind === 'file'
+    return part.kind === 'file' || part.kind === 'file-link'
       ? { file: part.entry.path }
       : { [part.kind]: part.text }
   })

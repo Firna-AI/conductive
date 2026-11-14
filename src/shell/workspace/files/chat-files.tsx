@@ -18,6 +18,7 @@ import type {
   FilesTarget,
 } from '../../../files/navigation'
 import type { FileEntry } from '../../../shared/files'
+import type { LineRange } from '../../../shared/line-target'
 import { PanelContext } from '../../layout/panels'
 import {
   FileTabItem,
@@ -129,11 +130,15 @@ export interface ChatFiles {
   mentions?: ChatMentions
 }
 
-/** The page of a chip: the file, or All files for a folder. */
-function chipTarget(entry: FileEntry): FilesTarget {
+/**
+ * The page of a chip: the file, or All files for a folder. A file with
+ * lines opens as text, also a Markdown file, because only the text has
+ * line numbers.
+ */
+function chipTarget(entry: FileEntry, lines?: LineRange): FilesTarget {
   return entry.kind === 'directory'
     ? { kind: 'list', list: 'all' }
-    : { kind: 'file', path: entry.path, mode: 'preview' }
+    : { kind: 'file', path: entry.path, mode: lines ? 'source' : 'preview' }
 }
 
 /**
@@ -152,14 +157,17 @@ function useMentions(
     if (!files) return undefined
     return {
       files,
-      openFile: (path) =>
-        navigation.navigate({ kind: 'file', path, mode: 'preview' }),
+      openFile: (path, lines) =>
+        navigation.navigate(
+          { kind: 'file', path, mode: lines ? 'source' : 'preview' },
+          lines,
+        ),
       showFolder: (path) => {
         files.revealFolder(path)
         if (!phone) panels?.rightShown.set(true)
         navigation.navigate({ kind: 'list', list: 'all' })
       },
-      href: (entry) => navigation.href(chipTarget(entry)),
+      href: (entry, lines) => navigation.href(chipTarget(entry, lines), lines),
     }
   }, [files, navigation, panels, phone])
 }

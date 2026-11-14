@@ -3,7 +3,7 @@ import { attachmentPath } from '../../shared/attachment-paths'
 import type { FileEntry } from '../../shared/files'
 import type { Attachment } from '../../shared/messages'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
-import { chatParts, type ChatPart, type MentionLookup } from './chat-parts'
+import { chatParts, type ChatPart, type EntryLookup } from './chat-parts'
 
 const links = { orgId: FAKE_IDS.org, workspaces: [] }
 
@@ -13,16 +13,14 @@ const entries: FileEntry[] = [
 ]
 
 /** Finds a file by a file mention, and a folder by a folder mention. */
-const lookup: MentionLookup = (mention) =>
+const lookup: EntryLookup = (path, folder) =>
   entries.find(
-    (entry) =>
-      entry.path === mention.path &&
-      (entry.kind === 'directory') === mention.folder,
+    (entry) => entry.path === path && (entry.kind === 'directory') === folder,
   )
 
 function shapes(parts: readonly ChatPart[]) {
   return parts.map((part) =>
-    part.kind === 'file'
+    part.kind === 'file' || part.kind === 'file-link'
       ? { file: part.entry.path }
       : part.kind === 'attachment'
         ? { attachment: part.attachment.id, path: part.path }
@@ -87,10 +85,10 @@ describe('mentions in a sent message', () => {
       kind: 'file',
       change: null,
     }
-    const withCopy: MentionLookup = (mention) =>
-      mention.path === path && !mention.folder ? copy : lookup(mention)
+    const withCopy: EntryLookup = (found, folder) =>
+      found === path && !folder ? copy : lookup(found, folder)
     const text = `Compare @${path} with @src/app.ts and not \`@${path}\` or @${path}/`
-    const read = (mentions?: MentionLookup) =>
+    const read = (mentions?: EntryLookup) =>
       shapes(
         chatParts(text, links, {
           strong: false,

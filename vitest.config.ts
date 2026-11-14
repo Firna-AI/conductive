@@ -19,5 +19,8 @@ export default defineConfig({
     // gate runs many files at once. The guard stays at three times that or
     // more, as the testing rules ask.
     testTimeout: 15_000,
+    // The copy tests of the chat read the real copy-state rule of the chips,
+    // so the test page loads this one style sheet.
+    css: { include: [/ChipCopyText\.module\.css$/] },
   },
 })

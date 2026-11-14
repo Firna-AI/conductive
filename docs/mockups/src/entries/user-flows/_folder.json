@@ -18,6 +18,7 @@
     "merge-and-continue",
     "open-a-session-link",
     "mention-a-file",
+    "open-a-file-from-an-answer",
     "drop-a-file"
   ]
 }

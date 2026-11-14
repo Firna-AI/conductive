@@ -1,11 +1,18 @@
 import { attachmentForMention } from '../../shared/attachment-mentions'
 import type { FileEntry } from '../../shared/files'
+import type { LineRange } from '../../shared/line-target'
 import type { Attachment } from '../../shared/messages'
-import { mentionAt, type Mention } from '../../shared/mention-text'
+import type { Mention } from '../../shared/mention-text'
+import { tokens, type Reading, type Token } from './chat-tokens'
 import {
-  bareLinkAt,
+  codeTarget,
+  fileLinkTarget,
+  mentionTarget,
+  type EntryLookup,
+  type FileTarget,
+} from './file-targets'
+import {
   linkTarget,
-  markdownTargetAt,
   type LinkTarget,
   type WorkspaceLinks,
 } from './workspace-links'
@@ -15,8 +22,39 @@ export type ChatPart =
   | { kind: 'text'; text: string; strong: boolean }
   | { kind: 'code'; text: string }
   | { kind: 'chip'; source: string; target: LinkTarget; strong: boolean }
-  | { kind: 'file'; source: string; entry: FileEntry; strong: boolean }
+  | FilePart
+  | FileLinkPart
   | AttachmentPart
+
+/** A part of the label of a link: text or code. */
+type LabelPart = Extract<ChatPart, { kind: 'text' } | { kind: 'code' }>
+
+/**
+ * A Markdown link or image of an answer whose target is an entry of the
+ * file tree, such as `[the form](src/app.ts#L42)`. It shows as a link with
+ * its label, which opens the file. An image with no label shows the name
+ * of the file.
+ */
+export type FileLinkPart = {
+  kind: 'file-link'
+  source: string
+  entry: FileEntry
+  lines: LineRange | null
+  label: LabelPart[]
+  strong: boolean
+}
+
+/**
+ * An entry of the file tree that the text names: a `@` mention, or inline
+ * code of an answer. `source` is the text that a copy of its chip gives.
+ */
+export type FilePart = {
+  kind: 'file'
+  source: string
+  entry: FileEntry
+  lines: LineRange | null
+  strong: boolean
+}
 
 /**
  * The mention of a file of the message, which shows as the chip of the
@@ -30,113 +68,22 @@ export type AttachmentPart = {
   strong: boolean
 }
 
-/** A token of chat text, before the list of the org names its links. */
-type Token =
-  | { kind: 'text'; text: string }
-  | { kind: 'code'; text: string }
-  | { kind: 'mark' }
-  | { kind: 'link'; href: string; source: string; markdown: boolean }
-  | { kind: 'mention'; mention: Mention }
+export type { EntryLookup }
 
-/** What a reading of chat text looks for, besides code. */
-interface Reading {
-  /** `**` marks bold, as in an answer. */
-  marks: boolean
-  /** Links count. A Markdown link of no workspace reads again without them. */
-  links: boolean
-  /**
-   * Whether a mention counts, as in a message of a member. The `@` of each
-   * other mention reads as plain text.
-   */
-  mentions: (mention: Mention) => boolean
-}
-
-/** Finds the entry of the file tree that a mention names. */
-export type MentionLookup = (mention: Mention) => FileEntry | undefined
-
-/**
- * The Markdown link whose `[` stands at `at`, or null. Its label ends at the
- * first `]` outside code, on the same line, and its target follows at once.
- * So a label can hold code or bold.
- */
-function markdownLinkAt(text: string, at: number): Token | null {
-  let code = false
-  for (let index = at + 1; index < text.length; index += 1) {
-    const char = text[index]
-    if (char === '\n') return null
-    if (char === '`') code = !code
-    else if (char === ']' && !code) {
-      const target = markdownTargetAt(text, index + 1)
-      if (!target) return null
-      const source = text.slice(at, index + 1 + target.length)
-      return { kind: 'link', href: target.href, source, markdown: true }
+/** The parts of the label of a link: text and code, with their bold. */
+function labelParts(label: string, marks: boolean): LabelPart[] {
+  const reading: Reading = { marks, links: false, mentions: () => false }
+  const found: LabelPart[] = []
+  let strong = false
+  for (const token of tokens(label, reading)) {
+    if (token.kind === 'mark') strong = !strong
+    else if (token.kind === 'code') {
+      strong = false
+      found.push(token)
+    } else if (token.kind === 'text') {
+      found.push({ kind: 'text', text: token.text, strong })
     }
   }
-  return null
-}
-
-/**
- * The bare web address at `at`, or null. Where `**` marks bold, the address
- * ends before the next mark, so bold around the address stays bold.
- */
-function bareLinkTokenAt(
-  text: string,
-  at: number,
-  marks: boolean,
-): Token | null {
-  const mark = marks ? text.indexOf('**', at) : -1
-  const href = bareLinkAt(mark === -1 ? text : text.slice(0, mark), at)
-  return href ? { kind: 'link', href, source: href, markdown: false } : null
-}
-
-/**
- * The tokens of a chat text, from left to right. A backtick starts code,
- * which runs to the next backtick, or to the end of the text. Outside code,
- * a Markdown link, a bare web address, and a `**` mark each start where
- * they stand, so code and bold in a link label stay in the link.
- */
-function tokens(text: string, reading: Reading): Token[] {
-  const found: Token[] = []
-  let plain = ''
-  const add = (token: Token, length: number) => {
-    if (plain !== '') found.push({ kind: 'text', text: plain })
-    plain = ''
-    found.push(token)
-    return length
-  }
-  let index = 0
-  while (index < text.length) {
-    if (text[index] === '`') {
-      const end = text.indexOf('`', index + 1)
-      const close = end === -1 ? text.length : end
-      const code = text.slice(index + 1, close)
-      index += add({ kind: 'code', text: code }, close + 1 - index)
-      continue
-    }
-    if (reading.marks && text.startsWith('**', index)) {
-      index += add({ kind: 'mark' }, 2)
-      continue
-    }
-    const mention = mentionAt(text, index)
-    if (mention && reading.mentions(mention)) {
-      index += add({ kind: 'mention', mention }, mention.source.length)
-      continue
-    }
-    const link = !reading.links
-      ? null
-      : text[index] === '['
-        ? markdownLinkAt(text, index)
-        : text.startsWith('http', index)
-          ? bareLinkTokenAt(text, index, reading.marks)
-          : null
-    if (link?.kind === 'link') {
-      index += add(link, link.source.length)
-      continue
-    }
-    plain += text[index]
-    index += 1
-  }
-  if (plain !== '') found.push({ kind: 'text', text: plain })
   return found
 }
 
@@ -150,7 +97,10 @@ function tokens(text: string, reading: Reading): Token[] {
  * as in an answer, `**` marks bold around text and chips. Bold ends at
  * code, as it did before. With `mentions`, as in a message of a member,
  * each mention of an entry of the file tree is a file chip, and each other
- * mention stays text. `attachments` are the files of a sent message: each
+ * mention stays text. A mention can end with a line target, and an end
+ * mark of a sentence right after it stays text. With `code`, as in an
+ * answer, inline code that is the path of an entry is a file chip too, as
+ * `codeTarget` says. `attachments` are the files of a sent message: each
  * mention of the copy path of one of them is the chip of that file, before
  * an entry of the tree, also in a chat without a tree.
  */
@@ -159,7 +109,9 @@ export function chatParts(
   links: WorkspaceLinks,
   options: {
     strong: boolean
-    mentions?: MentionLookup
+    mentions?: EntryLookup
+    /** Inline code can name an entry, under the folder `root` when absolute. */
+    code?: { root: string | null }
     attachments?: readonly Attachment[]
   },
 ): ChatPart[] {
@@ -177,6 +129,9 @@ export function chatParts(
     if (last?.kind === 'text' && last.strong === strong) last.text += value
     else parts.push({ kind: 'text', text: value, strong })
   }
+  const addFile = (source: string, target: FileTarget) => {
+    parts.push({ kind: 'file', source, ...target, strong })
+  }
   const addMention = (mention: Mention) => {
     const { source, path } = mention
     const attachment = attachmentForMention(mention, files)
@@ -184,23 +139,59 @@ export function chatParts(
       parts.push({ kind: 'attachment', source, path, attachment, strong })
       return
     }
-    const entry = options.mentions?.(mention)
-    if (entry) parts.push({ kind: 'file', source, entry, strong })
-    else addText(source)
+    const found = options.mentions && mentionTarget(mention, options.mentions)
+    if (!found) {
+      addText(source)
+      return
+    }
+    addFile(found.source, found.target)
+    if (found.rest !== '') addText(found.rest)
+  }
+  // Code in the label of a Markdown link stays code, so no chip sits in a
+  // link.
+  let label = false
+  const addCode = (text: string) => {
+    strong = false
+    const { mentions, code } = options
+    const target =
+      !label && mentions && code && codeTarget(text, mentions, code.root)
+    if (target) addFile(text, target)
+    else parts.push({ kind: 'code', text })
+  }
+  /** The entry that a Markdown link of an answer names, as a part. */
+  const fileLink = (token: Extract<Token, { kind: 'link' }>) => {
+    const { mentions, code } = options
+    if (!token.markdown || label || !mentions || !code) return null
+    const target = fileLinkTarget(token.href, mentions, code.root)
+    if (!target) return null
+    const text = token.label ?? ''
+    const shown =
+      text.trim() === ''
+        ? [{ kind: 'text' as const, text: target.entry.name, strong: false }]
+        : labelParts(text, options.strong)
+    const part: FileLinkPart = {
+      kind: 'file-link',
+      source: token.source,
+      ...target,
+      label: shown,
+      strong,
+    }
+    return part
   }
   const take = (list: readonly Token[]) => {
     for (const token of list) {
       if (token.kind === 'mark') strong = !strong
       else if (token.kind === 'text') addText(token.text)
-      else if (token.kind === 'code') {
-        strong = false
-        parts.push(token)
-      } else if (token.kind === 'mention') addMention(token.mention)
+      else if (token.kind === 'code') addCode(token.text)
+      else if (token.kind === 'mention') addMention(token.mention)
       else {
         const target = linkTarget(token.href, links)
+        const file = target ? null : fileLink(token)
         if (target) {
           parts.push({ kind: 'chip', source: token.source, target, strong })
-        } else if (token.markdown) {
+        } else if (file) parts.push(file)
+        else if (token.markdown) {
+          label = true
           take(
             tokens(token.source, {
               marks: options.strong,
@@ -208,6 +199,7 @@ export function chatParts(
               mentions: () => false,
             }),
           )
+          label = false
         } else addText(token.source)
       }
     }
@@ -217,6 +209,7 @@ export function chatParts(
       marks: options.strong,
       links: true,
       mentions: counts,
+      paths: options.code !== undefined && options.mentions !== undefined,
     }),
   )
   return parts

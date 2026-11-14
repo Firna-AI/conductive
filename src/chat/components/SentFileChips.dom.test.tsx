@@ -5,6 +5,7 @@ import type { AgentChoice } from '../../shared/agents'
 import { attachmentPath } from '../../shared/attachment-paths'
 import type { FileEntry } from '../../shared/files'
 import type { Attachment, UserMessage } from '../../shared/messages'
+import { COPY_TEXT_CLASS } from '../../../docs/mockups/src/components/chat/ChipCopyText'
 import { queryAllByRole } from '../../test-support/dom-queries'
 import { FAKE_IDS, FAKE_TIME, fakeUser } from '../../test-support/fixtures/core'
 import { senderSnapshot } from '../../test-support/fixtures/workspaces'
@@ -135,13 +136,23 @@ function placesOf(bubble: Element) {
   })
 }
 
-/** Each chip in `root`: its element, its mention, its title, and its words. */
+/** The words of a chip, without its copy text. */
+function shownWords(chip: Element): string {
+  const shown = chip.cloneNode(true) as Element
+  shown.querySelector(`.${COPY_TEXT_CLASS}`)?.remove()
+  return textOf(shown.outerHTML).trim()
+}
+
+/**
+ * Each chip in `root`: its element, its mention, its title, and the words
+ * that it shows, without its copy text, which shows only during a copy.
+ */
 function chipsOf(root: Element) {
   return Array.from(root.querySelectorAll('[data-mention]'), (chip) => ({
     tag: chip.tagName.toLowerCase(),
     mention: chip.getAttribute('data-mention'),
     title: chip.getAttribute('title'),
-    words: textOf(chip.outerHTML).trim(),
+    words: shownWords(chip),
   }))
 }
 
@@ -248,7 +259,8 @@ describe('the chips of attached files in a sent message', () => {
       true,
     )
     expect(copyAll(view.container)).toEqual({
-      kept: true,
+      copying: true,
+      native: true,
       text: `Compare @${shot.path} and @${notes.path}\nThen @${shot.path}`,
     })
   })

@@ -53,6 +53,10 @@ The file view also offers **Download** if the browser cannot draw an image withi
 These views let you read the files.
 Ask the agent to change a file, or use **Terminal**.
 
+You can open a file from its chip in an agent reply.
+A chip with a line, such as `app.ts:42`, opens the file as text with that line in view and marked.
+The address of the tab keeps the line.
+
 You can also open an attached file from its chip in a sent message.
 It opens the copy in the workspace's repository folder after the message reaches the agent.
 Restore an archived workspace before opening its attached files.

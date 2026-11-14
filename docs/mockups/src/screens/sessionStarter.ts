@@ -25,6 +25,7 @@ function starterOf(state: WorkspaceState, workspace: Workspace): PersonKey {
       return workspaceSessions[1].starter
     case 'session':
     case 'code':
+    case 'code-lines':
     case 'markdown':
     case 'diff':
     case 'unnamed-file':

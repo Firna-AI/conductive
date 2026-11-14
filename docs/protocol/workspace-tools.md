@@ -22,6 +22,23 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the tools at
   the temporary tab, as [Temporary tabs](temporary-tabs.md) says.
 - Markdown shows rendered, with a switch to its source. Code shows with line
   numbers and syntax colours.
+- A file tab can open at a line or a range of lines, such as from a file
+  chip of an answer with a line target, as
+  [Line targets](file-mentions.md#line-targets) says (answer chip
+  decision 2). The tab then shows the text of the file, also for a
+  Markdown file. It scrolls the first line to the middle of the view, and
+  marks each line of the range with a background colour.
+- The address of such a tab names the lines in its query, as
+  `?line=42` or `?line=42-50`. So a link opened in a new browser tab
+  shows the same lines. Each new address with lines scrolls again.
+- The lines win over the scroll place that the tab keeps. A later change
+  of the file does not scroll the tab again, so the reader keeps the
+  place.
+- The saved view of the workspace keeps the tab without the lines.
+  Reason: the view follows the member in each browser tab, and another
+  tab must not jump.
+- A range that runs past the end of the file stops at its last line. A
+  first line past the end shows the top of the file and marks nothing.
 - The header of a file tab can copy and download the file.
 - Reading a file has a size limit of 5 MiB, or 5,242,880 bytes.
   Reason: Boat's file read stops at 5 MiB, so a file read that falls back

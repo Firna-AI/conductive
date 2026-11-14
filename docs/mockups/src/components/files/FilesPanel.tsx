@@ -29,13 +29,15 @@ export type TreeState = (typeof treeStates)[number]
 
 /**
  * The kinds of file that open as a tab in the centre column: a code file,
- * a Markdown file, a diff, the diff of a file whose label hides a secret
- * value, and a file whose name the app does not know. Then a picture of
+ * the code file at a range of lines that an answer named, a Markdown file,
+ * a diff, the diff of a file whose label hides a secret value, and a file
+ * whose name the app does not know. Then a picture of
  * the branch, an image whose bytes the browser cannot draw, and the copy
  * of an attached screenshot, which All files does not list.
  */
 export type FileTabView =
   | 'code'
+  | 'code-lines'
   | 'markdown'
   | 'diff'
   | 'masked-diff'
@@ -47,6 +49,8 @@ export type FileTabView =
 /** The open tab whose row All files marks: a file of the tree. */
 function treeTab(open: FileTabView | undefined) {
   switch (open) {
+    case 'code-lines':
+      return 'code'
     case 'code':
     case 'markdown':
     case 'image':

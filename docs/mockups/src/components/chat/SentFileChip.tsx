@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { AttachedName, KindIcon, type ChipFile } from './attachedFileParts'
+import { ChipCopyText } from './ChipCopyText'
 import base from './InlineChip.module.css'
 import { formatSize } from './sizes'
 import type { ChipOpener } from './WorkspaceChip'
@@ -14,7 +15,7 @@ import styles from './AttachedFileChip.module.css'
  * of the file in the cloud computer, such as a link, as a press on a file
  * chip opens its file. Without it, the chip opens nothing, as while its
  * message waits for the cloud computer. `mention` marks the chip with its
- * text, so a copy of the message can give it. It takes no fixtures, so the
+ * text, and a copy of the chip gives that text, as `ChipCopyText` says. It takes no fixtures, so the
  * app can draw it too.
  */
 export function SentFileChip(props: {
@@ -34,6 +35,7 @@ export function SentFileChip(props: {
         </span>
         <AttachedName name={file.name} />
         <span className={styles.label}>{formatSize(file.sizeBytes)}</span>
+        <ChipCopyText text={props.mention} />
       </>
     ),
   }

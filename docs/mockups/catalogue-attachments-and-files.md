@@ -43,6 +43,10 @@ file in the text, where a × takes the place of its icon.
 `app/files` shows All files. The `changes`, `code`, `markdown`, and `diff`
 pages moved from saved states of the page into their own folders, and they
 kept their paths. So the page shows only its canonical screen.
+`app/files/code/at-line` has the code tab that a press on a file chip with
+a line target opens, from answer chip decision 2 of 13 November 2026. The
+lines of the target have a soft amber fill, and the first of them sits in
+the middle of the view, on desktop and on a phone.
 `app/files/markdown` has README.md and `app/files/diff` has the diff of
 AddressForm.tsx, each in the temporary tab that a press opened, beside the
 kept tab of the code file of `app/files/code`.

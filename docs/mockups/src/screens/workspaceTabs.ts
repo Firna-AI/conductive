@@ -136,8 +136,8 @@ export function tabsFor(
       key: codeTabKey,
       kind: 'code',
       title: 'useAddressAutocomplete.ts',
-      to: paths.code,
-      selected: state.tab === 'code',
+      to: state.tab === 'code-lines' ? paths.codeAtLine : paths.code,
+      selected: state.tab === 'code' || state.tab === 'code-lines',
     },
   ]
   if (state.tabRow === 'full') tabs.push(...moreTabs)

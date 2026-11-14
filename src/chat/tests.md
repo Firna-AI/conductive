@@ -209,9 +209,11 @@ them.
 `links/chat-parts-mentions.test.ts` reads mentions in a sent message. A
 mention of a file of the message is its chip, also when the tree holds
 that path, and also without a tree. A folder mention of that path stays
-text, and a mention in code stays code. `links/FileLink.dom.test.tsx`
-opens a file and a folder from its chip, and copies messages with file
-chips, without hidden text. `components/SentFileChips.dom.test.tsx`
+text, and a mention in code stays code.
+`links/MessageFileChips.dom.test.tsx` opens a file and a folder from its
+chip, copies messages with file chips in the copy state, and moves a
+selection edge inside a chip to its edge.
+`components/SentFileChips.dom.test.tsx`
 mounts sent messages with files. It checks the chip of each file of the
 message at its place. Under the message, only the files without a chip
 show, such as a file whose mention stands in code. A press on a chip
@@ -219,11 +221,15 @@ opens the file tab of the copy that its link names. While a message
 waits, and in a chat without the files of its workspace, the chip shows
 and opens nothing. A copy of the messages gives the mention of each
 chip, also of a chip that opens nothing.
-`links/mention-copy-test-kit.tsx` holds the copy helpers of both DOM
-tests. `components/AttachmentChips.test.tsx` renders the notice of the
+`links/mention-copy-test-kit.tsx` holds the copy helpers of the DOM
+tests. The Vitest configuration loads the style sheet of
+`ChipCopyText.module.css` into the test page, so `copyAll` reads the real
+rule of the copy state: the text of each block whose elements show. A
+real copy in Chrome was a manual check. `components/AttachmentChips.test.tsx` renders the notice of the
 files over the size limit, with one name or the count and the limit. It
 also renders the files under a sent message, with their sizes and no
 Remove.
+`links/AnswerText.dom.test.tsx` mounts answers with file chips.
 `links/workspace-links.test.ts` reads links with and without a tab path,
 Markdown links, a code label in a sent message, code, `..`, other origins
 and orgs, unknown workspaces, and punctuation. `links/LinkedText.test.tsx`

@@ -1,4 +1,4 @@
-import { expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 
 import { readViewReply } from './read-responses'
 
@@ -20,6 +20,7 @@ it('reads a temporary file or diff tab without a display mode', () => {
     expect(readViewReply({ view: { ...view, temporaryTab } })).toEqual({
       view: { ...view, temporaryTab },
       routine: null,
+      repositoryFolder: null,
     })
   }
 })
@@ -43,4 +44,28 @@ it('reads missing, invalid, and closed temporary marks as null', () => {
       temporaryTab: null,
     })
   }
+})
+
+describe('readViewReply', () => {
+  it('keeps the absolute folder of the repository', () => {
+    const reply = readViewReply({
+      view,
+      repositoryFolder: '/home/user/code/checkout',
+    })
+    expect(reply.repositoryFolder).toBe('/home/user/code/checkout')
+  })
+
+  it.each([
+    ['no folder', undefined],
+    ['a null folder', null],
+    ['a relative folder', 'code/checkout'],
+    ['a folder with a last slash', '/home/user/code/checkout/'],
+    ['the root', '/'],
+    ['a folder with a line break', '/home/user/code\n/checkout'],
+    ['a number', 7],
+  ])('gives no folder for %s', (_, repositoryFolder) => {
+    expect(readViewReply({ view, repositoryFolder }).repositoryFolder).toBe(
+      null,
+    )
+  })
 })

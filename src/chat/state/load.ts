@@ -84,6 +84,7 @@ export async function loadChat(context: ChatContext): Promise<void> {
     ...read,
     view,
     routine: viewReply?.routine ?? null,
+    repositoryFolder: viewReply?.repositoryFolder ?? null,
     load: { state: 'ready' },
   }))
   const active = store.get().activeSessionId

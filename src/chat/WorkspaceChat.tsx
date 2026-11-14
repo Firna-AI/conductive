@@ -223,7 +223,7 @@ function ChatBody(
   if (!mobile) {
     return (
       <LinksProvider value={links}>
-        <MentionsProvider value={mentions}>
+        <MentionsProvider root={snapshot.repositoryFolder} value={mentions}>
           <div className={styles.column} {...drops.handlers}>
             {body}
           </div>
@@ -233,7 +233,7 @@ function ChatBody(
   }
   return (
     <LinksProvider value={links}>
-      <MentionsProvider value={mentions}>
+      <MentionsProvider root={snapshot.repositoryFolder} value={mentions}>
         <TouchScreen>
           <div className={styles.phone} {...drops.handlers}>
             {body}

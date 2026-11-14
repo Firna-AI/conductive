@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import type { MentionEntry } from '../../fixtures/fileMentions'
 import a11y from '../common/a11y.module.css'
+import { ChipCopyText } from './ChipCopyText'
 import { ChipEndRemove, ChipIconCell, type ChipRemoval } from './ChipRemove'
 import { entryName } from './entryPaths'
 import base from './InlineChip.module.css'
@@ -18,7 +19,8 @@ import styles from './FileChip.module.css'
  * chip the cell of its icon, which a pointer turns into a × that removes
  * the chip, and a press on the name opens the file. The caller gives the
  * icon, so the app draws the icons of its own All files. `mention` marks
- * the chip with its text, so a copy of a sent message can give it.
+ * the chip with its text, and a copy of the chip gives that text, as
+ * `ChipCopyText` says.
  */
 export function FileChip(props: {
   entry: MentionEntry
@@ -30,6 +32,11 @@ export function FileChip(props: {
   name?: string
   /** The label of the whole path, for the title. */
   title?: string
+  /**
+   * The line target after the name, such as `:19-22`. A long name loses
+   * its end first, so the lines stay in view.
+   */
+  lines?: string
   /** In a message box, a press on the name opens the file. */
   onOpen?: () => void
 }) {
@@ -62,7 +69,11 @@ export function FileChip(props: {
             nameText
           )}
         </span>
+        {props.lines ? (
+          <span className={styles.lines}>{props.lines}</span>
+        ) : null}
         {removal ? <ChipEndRemove removal={removal} /> : null}
+        <ChipCopyText text={props.mention} />
       </>
     ),
   }

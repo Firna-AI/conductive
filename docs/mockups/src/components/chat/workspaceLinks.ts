@@ -1,4 +1,10 @@
 import type { Attachment } from '../../fixtures/attachments'
+import {
+  codeTarget,
+  linkTarget as fileTarget,
+  type PathTarget,
+} from './answerPaths'
+import { entryName } from './entryPaths'
 import type { ChatRow, ChatSession } from './chatWorkspaces'
 import {
   mentionParts,
@@ -21,6 +27,17 @@ export type TextPart =
     }
   | MentionPart
   | AttachedPart
+  | FileLinkPart
+
+/**
+ * A Markdown link or image of an answer to an entry of the tree. It shows
+ * as a normal link with its label, which opens the file.
+ */
+export type FileLinkPart = {
+  kind: 'file-link'
+  label: string
+  source: string
+} & PathTarget
 
 /**
  * A Markdown link to a web address, or a bare web address. A bare address
@@ -43,6 +60,30 @@ function linkParts(text: string): TextPart[] {
   return parts
 }
 
+/** A Markdown link or image whose target is not a web address. */
+const pathLinkPattern = /!?\[([^\]\n]*)\]\((?:<([^<>\n]+)>|([^\s()<>]+))\)/g
+
+/**
+ * Plain text of an answer with its links to files of the tree. Each other
+ * part reads as `rest` says.
+ */
+function fileLinkParts(
+  text: string,
+  rest: (text: string) => TextPart[],
+): TextPart[] {
+  const parts: TextPart[] = []
+  let end = 0
+  for (const match of text.matchAll(pathLinkPattern)) {
+    const target = fileTarget(match[2] ?? match[3] ?? '')
+    if (!target) continue
+    parts.push(...rest(text.slice(end, match.index)))
+    const label = match[1].trim() === '' ? entryName(target.entry) : match[1]
+    parts.push({ kind: 'file-link', label, source: match[0], ...target })
+    end = match.index + match[0].length
+  }
+  return [...parts, ...rest(text.slice(end))]
+}
+
 /** Plain text with its links, and with its mentions when `mentions` asks. */
 function plainParts(
   text: string,
@@ -56,27 +97,42 @@ function plainParts(
 }
 
 /**
+ * A part in backticks: code, or in an answer, the file chip of the entry
+ * of the tree that the whole code names.
+ */
+function codePart(text: string, answer: boolean): TextPart {
+  const target = answer ? codeTarget(text) : undefined
+  return target
+    ? { kind: 'mention', ...target, source: text, code: true }
+    : { kind: 'code', text }
+}
+
+/**
  * Splits a text into plain text, code, links, and mentions. In a sent
  * message or an answer, `code` is true: each part in backticks is code,
  * and a link or a mention in it stays code. A message box keeps plain
- * text, so it reads no code. Only the text of a member, in a message box
- * or a sent message, reads mentions, so `mentions` is false in an answer.
- * A mention of the copy path of one of the `files` of a sent message is
- * the mention of that file.
+ * text, so it reads no code. The text of a member reads mentions when
+ * `mentions` asks. An `answer` reads mentions too, and code whose whole
+ * text is a path of the tree is a file chip (answer chip decision 1). A
+ * mention of the copy path of one of the `files` of a sent message is the
+ * mention of that file.
  */
 export function textParts(
   text: string,
   code: boolean,
   mentions = false,
   files: readonly Attachment[] = [],
+  answer = false,
 ): TextPart[] {
   if (!code) return plainParts(text, mentions, files)
   return text
     .split('`')
     .flatMap((part, index): TextPart[] =>
       index % 2 === 1
-        ? [{ kind: 'code', text: part }]
-        : plainParts(part, mentions, files),
+        ? [codePart(part, answer)]
+        : answer
+          ? fileLinkParts(part, (rest) => plainParts(rest, true, files))
+          : plainParts(part, mentions, files),
     )
 }
 

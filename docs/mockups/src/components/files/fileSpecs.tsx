@@ -19,7 +19,7 @@ import { branchPictures, splitPath } from '../../fixtures/files'
 import { CheckoutPicture, screenshotSize } from '../../fixtures/pictures'
 import { ActionButton } from '../common/actions'
 import { EmptyState } from '../common/EmptyState'
-import { CodeView } from './CodeView'
+import { CodeView, type LineRange } from './CodeView'
 import { DiffStat } from './DiffStat'
 import { DiffView } from './DiffView'
 import type { FileTabView } from './FilesPanel'
@@ -76,6 +76,12 @@ function notDrawn(path: string): FileSpec {
   }
 }
 
+/**
+ * The lines that the answer of `file-answer` names in the hook, which a
+ * press on its chip opens: the check that skips a short query.
+ */
+const answerLines: LineRange = { first: 19, last: 22 }
+
 /** The page of each kind of file that the mockups open as a tab. */
 export function specFor(view: FileTabView): FileSpec {
   switch (view) {
@@ -85,6 +91,13 @@ export function specFor(view: FileTabView): FileSpec {
         icon: FileCode,
         meta: `${autocompleteHook.split('\n').length} lines`,
         content: <CodeView code={autocompleteHook} />,
+      }
+    case 'code-lines':
+      return {
+        path: 'src/app/checkout/useAddressAutocomplete.ts',
+        icon: FileCode,
+        meta: `${autocompleteHook.split('\n').length} lines`,
+        content: <CodeView code={autocompleteHook} marked={answerLines} />,
       }
     case 'markdown':
       return {

@@ -3,10 +3,12 @@
 This guide belongs to [the chat](README.md). It gives the rules of the code
 that formats the text of agent messages: in the chat, and in a message line
 of an open work fold. It also gives the workspace chips of sent messages
-and answers. [Chat Markdown](../../docs/protocol/chat-markdown.md),
-[Chat tables](../../docs/protocol/chat-tables.md), and
-[Workspace links](../../docs/protocol/workspace-links.md) state the
-requirements.
+and answers, and the file chips of answers.
+[Chat Markdown](../../docs/protocol/chat-markdown.md),
+[Chat tables](../../docs/protocol/chat-tables.md),
+[Workspace links](../../docs/protocol/workspace-links.md), and
+[File mentions](../../docs/protocol/file-mentions.md#files-in-answers)
+state the requirements.
 
 - `textBlocks` reads the whole text of a message at each update. So a live
   message and the same message from the saved history show the same blocks.
@@ -27,7 +29,7 @@ requirements.
 - `AgentBlocks` draws the blocks of a message in order. `AgentText` and the
   open body of `MessageLine` share it. A table draws through
   `MarkdownTable`. A paragraph, a heading, a list item, and a table cell
-  draw their text through `LinkedText`, with bold, so a workspace link in a
+  draw their text through `AnswerText`, with bold, so a workspace link in a
   cell shows as a chip.
 - A numbered list counts up from the number of its first item, as
   Markdown numbers it. So a list that starts at 2, such as the rest of a
@@ -46,7 +48,7 @@ requirements.
 - `MessageLine` draws the code blocks of its summary as spans, with no
   button, because a summary is a button. A code block under an open line
   draws through `AgentBlocks`, so it has the button.
-- `AgentText`, `LinkedText`, and `MessageLine` draw React text and
+- `AgentText`, `AnswerText`, and `MessageLine` draw React text and
   elements only. So HTML in a message shows as text.
 - A `<summary>` holds only phrasing content and headings, and no
   paragraph, list, or table. So `MessageLine` draws each block as a span,
@@ -66,14 +68,16 @@ requirements.
   its closed text in a visually hidden span. So the open line keeps a name
   for a screen reader. An empty heading before the table counts as no
   text, because it draws nothing. That hidden copy shows no chips, so the
-  keyboard cannot reach a link in it.
+  keyboard cannot reach a link in it. It reads its text with no links and
+  no files, through a `MentionsProvider` without files.
 
 ## Workspace chips
 
 - Sent messages and agent answers show each workspace link as a chip, as
   [Workspace links](../../docs/protocol/workspace-links.md) says. One
-  tokenizer, `chatParts` in `links/chat-parts.ts`, reads both, in one pass
-  from left to right. A backtick starts code first, so a link in code
+  tokenizer, `tokens` in `links/chat-tokens.ts`, reads both, in one pass
+  from left to right, and `chatParts` in `links/chat-parts.ts` turns its
+  tokens into parts. A backtick starts code first, so a link in code
   stays code. A Markdown link whose brackets stand outside code is one
   unit, also when its label holds code or bold, so it shows as its chip
   alone. Then bare links count. In an answer, `**` marks bold around text
@@ -100,6 +104,37 @@ requirements.
   a work fold shows chips too. A click on a chip there stays with the
   chip, so the line does not toggle, and a click with a modifier key opens
   a new tab as on any link.
+
+## File chips in answers
+
+- `AnswerText` in `links/LinkedText.tsx` draws the text of an answer:
+  `AgentText` and `MessageLine` use it for each paragraph, heading, list
+  item, and table cell. It reads bold, workspace links, `@` mentions, and
+  paths in inline code. A message of a member reads its parts with
+  `useChatParts` and draws them with `ChatText`, in `UserBubble` of
+  `components/TranscriptItem.tsx`. It reads mentions but keeps its code.
+- `chatParts` gives a `file` part for a mention or inline code that names
+  an entry of the tree. `links/file-targets.ts` reads both:
+  `mentionTarget` finds the entry of a mention, with a line target and an
+  end mark of a sentence after it. `codeTarget` finds the entry of inline
+  code, inside the repository or under its folder. The line targets come
+  from `splitLineTarget` in `src/shared/line-target.ts`.
+- A Markdown link or image of an answer whose target is an entry of the
+  tree gives a `file-link` part: `fileLinkTarget` reads the target, and
+  `FileTextLink` draws a normal link with the label, which opens the file.
+  `chat-tokens.ts` reads a target that is not a web address only where
+  paths count, as in an answer.
+- Code in the label of a Markdown link stays code. Where `**` marks bold, a
+  mention ends before the mark.
+- A text follows the tree only when it holds `@`, or in an answer a
+  backtick or `](`. So a change of the tree draws only the texts that can
+  change.
+- The folder of the repository comes from the read of the saved view, in
+  `ChatSnapshot.repositoryFolder`. `WorkspaceChat` gives it to
+  `MentionsProvider`, and `useRepositoryFolder` reads it.
+- The chip of a file with lines shows them after its name, and its press
+  calls `openFile` with the lines. The shell opens the file tab as text at
+  the lines.
 
 ## List parts
 
@@ -161,7 +196,7 @@ preview:
   an underline on the last line of a list item counts when a line break
   follows the item.
 - `AgentText` draws a heading as `h1` to `h6`, at its level, with its text
-  through `LinkedText`. A heading with no text draws nothing, so a screen
+  through `AnswerText`. A heading with no text draws nothing, so a screen
   reader meets no empty heading.
 - `MessageLine` draws a heading as a span with the `heading` class of the
   mockups' `ToolGroup.module.css`. That class gives the heading weight,

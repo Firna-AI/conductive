@@ -121,6 +121,12 @@ export interface ChatSnapshot {
    * Null for a workspace that a person created, and until the view reads.
    */
   routine: RunRoutine | null
+  /**
+   * The folder of the workspace repository in the cloud computer, from the
+   * read of the view. The chat reads a path under it as a file of the tree.
+   * Null until the view reads, and when the reply gives no folder.
+   */
+  repositoryFolder: string | null
   activeSessionId: string | null
   sessionStates: Readonly<Record<string, SessionState>>
   overlay: Overlay
@@ -168,6 +174,7 @@ export const initialSnapshot: ChatSnapshot = {
   archiveTabs: null,
   view: null,
   routine: null,
+  repositoryFolder: null,
   activeSessionId: null,
   sessionStates: {},
   overlay: { kind: 'none' },

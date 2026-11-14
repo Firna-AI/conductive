@@ -305,8 +305,25 @@ background work, and the end of a fast turn that ran at standard speed.
   `src/files/code/file-kind.ts` of the app says, so one list of languages
   sets both. The user chose this on 10 November 2026. A sent message shows
   each file chip as a link to the tab of the
-  file, and an answer shows none. It takes no fixtures, so the app can use
-  it too.
+  file. It takes no fixtures, so the app can use it too.
+  - An answer shows a file chip for each `@` mention of an entry of the
+    tree, and for each inline code whose whole text is the path of an
+    entry, from answer chip decisions 1 and 2 of 13 November 2026. The
+    path can be relative, or absolute under the repository folder.
+    `answerPaths.ts` beside it reads the path and its line target. A code
+    block, a path in another repository, and code of one word without a
+    `/` or a `.` stay code. Bold ends at a chip from code, as it ends at
+    code.
+  - A line target, such as `:19-22`, adds `:19-22` to the name and to the
+    title of the chip. A press opens the file tab at the lines, which
+    `CodeView` in `src/components/files/` marks with the soft amber fill
+    and scrolls so that the first line sits in the middle of the view.
+  - `MentionChip` beside it draws the chip of a mention part, with its
+    line target and the page that a press opens.
+- `CodeBlock` in `src/components/chat/` draws a code block of an answer
+  with the look of a code block of a Markdown file. On a phone a Copy code
+  button shows in its top corner. With a mouse the button shows only while
+  the pointer is on the block, so a desktop view draws none.
 - `FileMentionList` in `src/components/chat/` draws the list of `@` above
   the message box: the icon, the name, and the folder of each entry that
   matches the query, with the first row highlighted. One line takes the

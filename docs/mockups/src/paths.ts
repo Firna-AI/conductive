@@ -190,6 +190,7 @@ export const paths = {
   filesChanges: 'app/files/changes',
   markdown: 'app/files/markdown',
   code: 'app/files/code',
+  codeAtLine: 'app/files/code/at-line',
   diff: 'app/files/diff',
   image: 'app/files/image',
   imageNotDrawn: 'app/files/image/cannot-draw',
