@@ -186,6 +186,9 @@ at `app/tabs` and `app/transcripts`.
   the verb of the chat, the target as code, and the detail of the call.
 - Each Mac command in a copy gives its command, its Mac, its state, and
   its output in a code block.
+- Each secret request and each result of a run with secrets in a copy
+  gives what its card shows, with no value and no output, as
+  [What the chat shows](secret-requests.md#what-the-chat-shows) says.
 - Each piece of inline code and each code block takes a fence of backticks
   that is longer than each run of backticks in its text. Reason: the code
   then stays whole when the text shows as Markdown.

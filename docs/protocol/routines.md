@@ -13,7 +13,9 @@ runs. Two linked pages cover the rest:
 
 The terms are those of the [architecture doc](../architecture.md#terms). A
 decision number names a dated record, as
-[Decision numbers](../architecture.md#decision-numbers) says.
+[Decision numbers](../architecture.md#decision-numbers) says. A secrets
+decision number names a decision of the change that adds
+[secrets](secrets.md), as that doc says.
 
 ## A routine
 
@@ -208,6 +210,16 @@ decision number names a dated record, as
   close previews in the whole org. These writes use the rights of the
   owner. When the owner is an admin, such text can archive each workspace
   of the org. A member can restore each one for 14 days.
+- Risk: such text can also make the agent run a command with secrets. A
+  secret request in a run waits for a member, as in each workspace
+  (secrets decision 5 C). But a secret that a grant covers needs no
+  request, such as a secret for all agents. A command of the agent can
+  copy the value of such a secret, or push it to a branch.
+- Through the session calls, such text can also start turns in the other
+  workspaces and sessions of the org. Those turns use the grants of their
+  workspaces and their sessions with no request, as
+  [Turns that no person started](secrets.md#turns-that-no-person-started)
+  says.
 - Risk: a member with a terminal in a run workspace can read the owner's
   GitHub token and the credential of a running turn, as in each workspace.
   That credential is a turn token on a newer runner, or the agent login

@@ -15,18 +15,22 @@ the calls of the workspace tools:
   messages.
 - [Section and preview calls](section-and-preview-calls.md): the calls of
   the sections and of the port previews.
+- [Secret requests](secret-requests.md): the calls that list the secrets
+  of the org and run a command with secrets.
 - [Names from the workspace tools](tool-names.md): the rule for each name
   and title that a call gives.
 
 The terms are those of the [architecture doc](../architecture.md#terms). A
 decision number names a dated record, as
-[Decision numbers](../architecture.md#decision-numbers) says.
+[Decision numbers](../architecture.md#decision-numbers) says. A secrets
+decision number names a decision of the change that adds
+[secrets](secrets.md), as that doc says.
 
 ## Workspace tools
 
 - Every sandbox has two workspace tools: an MCP server and a CLI.
 - Both tools give each call. Reason: the two tools stay equal.
-- The tools have 24 calls:
+- The tools have 26 calls:
   - 9 workspace calls: create, list, get, rename, move, and archive a
     workspace, and list the repositories, the sections, and the models
     that a create call takes
@@ -34,6 +38,8 @@ decision number names a dated record, as
     session, send a message, and get a message
   - 5 section and preview calls: create and delete a section, and list,
     open, and close the previews of a workspace
+  - 2 secret calls: list the secrets of the org, and run a command with
+    secrets, as [Secret requests](secret-requests.md) says
   - 1 call that asks to run a command on a Mac, as
     [Mac commands](#mac-commands) says
 - The calls cover each command of Conductor's CLI whose feature Conductive
@@ -56,8 +62,9 @@ decision number names a dated record, as
   gate checks the workspace token in place of a sign-in.
 - Each call has a fixed route of its own under `/v1/tools/`. The table of
   each linked page gives the routes. Mac command requests use
-  `/v1/tools/mac-command` and the addresses under it. Reason: the token
-  gate of the machine host keeps one list of routes.
+  `/v1/tools/mac-command` and the addresses under it. The secret calls use
+  routes under `/v1/tools/secrets`. Reason: the token gate of the machine
+  host keeps one list of routes.
 - The CLI takes the text of a message from a file, or from stdin with `-`,
   for each call that takes a message. Reason: Conductor's CLI takes a
   message file. The MCP server takes the text only.
@@ -94,6 +101,8 @@ decision number names a dated record, as
   - which links each reply gives
 - [Tool descriptions](session-calls.md#tool-descriptions) states the
   other text of the session calls.
+  [Run a command with secrets](secret-requests.md#run-a-command-with-secrets)
+  states the text of the secret calls.
 
 ## Create and list calls
 
@@ -131,6 +140,10 @@ turn (decision 62). The Mac app on that Mac asks that person first, as
   how the Worker finds the sender.
 - When the sender has no available Mac, the agent gets the answer that the
   Mac is not available.
+- A workspace with [Mac access](secrets.md#mac-access) off sends no
+  request to a Mac (secrets decision 6 G). The Worker refuses each request
+  of that workspace at once. The reason says that Mac access is off in the
+  Capabilities of the workspace.
 - Risk: every process in the sandbox can ask in the name of a turn that
   runs now. So a member with a terminal in the same sandbox can ask for a
   command on the Mac of that sender. The Mac still asks first, unless a
@@ -158,7 +171,11 @@ turn (decision 62). The Mac app on that Mac asks that person first, as
 ### Results
 
 - Each request ends with one result for the agent: the command ran, the
-  user denied it, or the Mac is not available.
+  user denied it, the Mac is not available, or Mac access is off.
+- When a member turns Mac access off, each request of the workspace that
+  waits ends with that result. A command that runs goes on to its end.
+  Reason: the Mac app owns a running command, and a stop there is a
+  separate choice.
 - After a run, the agent gets the output of the command and how it ended:
   its exit code, the end of its time limit, or a failure to start.
 - The command stops at its time limit.
@@ -196,7 +213,10 @@ turn (decision 62). The Mac app on that Mac asks that person first, as
   (decision 68). The workspace keeps needs input while any of its
   requests waits.
 - After its result, the command shows at its place in the chat: denied,
-  done with its output, or Mac not available.
+  done with its output, Mac not available, or Mac access off with its
+  reason.
+- The [requests of secrets](secret-requests.md#the-request) wait in the
+  same place above the composer.
 - When its turn ends, the result folds with the work of the turn, at its
   place, as [The work of a turn](chat-and-events.md#the-work-of-a-turn)
   says (decision 151). A result that stays in view between two folds was

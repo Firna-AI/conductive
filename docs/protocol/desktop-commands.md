@@ -30,7 +30,8 @@ commands until I stop.
 
 This section states the side of the Mac app.
 [Agent tools](agent-tools.md#mac-commands) states the requests, their
-limits, their results, and what the chat shows.
+limits, their results, and what the chat shows. A workspace with
+[Mac access](secrets.md#mac-access) off sends no request to a Mac.
 
 ### The device
 

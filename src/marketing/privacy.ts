@@ -100,10 +100,14 @@ export const privacyDocument: LegalDocument = {
           for its deletion, as every other account does.`,
         paragraph`Account records, the latest Terms acceptance, and
           suspension records do not automatically expire when you stop
-          using ${productName}. Workspace chat history and Mac command records
-          stay while their org exists, including while a cloud computer is
-          stopped. When ${productName} passes on model requests and their
-          answers, it keeps no copy of them.`,
+          using ${productName}. Workspace chat history, Mac command records,
+          and secret request records stay while their org exists, including
+          while a cloud computer is stopped. When ${productName} passes on
+          model requests and their answers, it keeps no copy of them.`,
+        paragraph`A secret in the Secrets settings of an org stays until a
+          member who may delete it deletes it. A value that a member gives
+          an agent for 15 minutes stays for 15 minutes. A value for a
+          workspace stays until the workspace is archived.`,
         paragraph`A connected agent login stays until you remove or replace
           it. Panel sizes stay in your browser until you clear its saved
           data. The providers above can keep their own records under their
@@ -122,15 +126,26 @@ export const privacyDocument: LegalDocument = {
       title: 'Security',
       blocks: [
         list(
-          text`${productName} stores each env var value and agent login
-            encrypted. An own endpoint login includes its address and key.
-            Only its host, with any non-default port, stays in plain text.`,
+          text`${productName} stores each env var value, the value of each
+            secret in the Secrets settings, and each agent login encrypted.
+            An own endpoint login includes its address and key. Only its
+            host, with any non-default port, stays in plain text.`,
           text`It does not send the key of its cloud computer provider to
             your browser or into a cloud computer.`,
           text`The settings never return a stored env var value or agent login
             to your browser. For an own endpoint login, your browser gets
             only its host and any non-default port, without the full address
             or key.`,
+          text`An admin of an org can reveal the value of one secret in its
+            Secrets settings at a time, also of a secret that another member
+            added. ${productName} records each reveal with the admin and the
+            time, and every member sees the last reveal. A member who is not
+            an admin never gets a secret value back.`,
+          text`An agent can ask to run one command with a secret in the
+            Secrets settings. The command gets the value, and the agent gets
+            only the name of the secret. ${productName} hides each exact copy
+            of the value in the output of the command and in the chat. It
+            does not hide a changed or encoded value.`,
           text`An env var is secret until an admin clears its mark. Before
             ${productName} puts agent output in the chat history or on a
             screen, it hides each exact copy of a secret value in it. It also
@@ -151,6 +166,10 @@ export const privacyDocument: LegalDocument = {
             env var value in the cloud computers. Secret values can also stay
             on the disk of a cloud computer, for example in its agent sessions
             and its agent output.`,
+          text`While a command runs with a secret from the Secrets settings,
+            its value is in the cloud computer. Programs there, and each
+            member with a terminal, can read it then. The command can also
+            write it to a file on the disk of the cloud computer.`,
         ),
       ],
     },

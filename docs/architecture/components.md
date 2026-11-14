@@ -63,6 +63,9 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
   uses the GitHub token of the member who clicks, as
   [Merge as the member](../protocol/github-tokens.md#merge-as-the-member)
   says.
+- It keeps the secrets of each org and their grants. It returns the value
+  of a secret only to a run of the agent tools that a grant allows, and to
+  an admin who reveals it, as [Secrets](../protocol/secrets.md) says.
 
 - Two Cron Triggers run the timed work. One runs every 15 minutes for
   deleted orgs, lifecycle repairs, and pending approval emails. One runs
@@ -84,8 +87,9 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
 ## D1
 
 - D1 holds the records of the app: users, orgs, members, sections,
-  repositories, workspaces, routines and their runs, settings, the active preview hostnames, and the
-  records of attached files. D1 also holds app access, codes and their uses,
+  repositories, workspaces, routines and their runs, settings, the active preview hostnames, the
+  records of attached files, and the records of the secrets, their grants,
+  and their reveals. D1 also holds app access, codes and their uses,
   the sign-up pause, the waitlist switch, and the state of approval emails.
 - The record of each workspace holds a copy of its
   [GitHub state](../protocol/github-banner.md#the-github-state).
@@ -100,6 +104,10 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
   Boat's machines.
 - It holds the open tabs, the connection of the agent runner, and the
   messages that wait for the sandbox.
+- It holds the secret requests of its workspace until their end, and each
+  temporary value, encrypted, for its time. It hides each exact copy of
+  each value that a run used, as
+  [Secret requests](../protocol/secret-requests.md) says.
 - It gives each turn its turn token. For each model request, it tells the
   model gateway whether the token still works and which login the turn
   uses.
@@ -161,8 +169,8 @@ Every org image holds the app's own sandbox software:
 - the preview relay, on a private port
 - the agent tools: an MCP server and a CLI that create, list, and change
   the workspaces of the org, start, read, message, close, and stop its
-  sessions, change its sections, open port previews, and ask for Mac
-  commands
+  sessions, change its sections, open port previews, ask for Mac
+  commands, and run commands with the secrets of the org
 - a git credential helper that gets a fresh GitHub token for each git
   operation
 - a udev rule that stops disk flushes at each boot, as

@@ -6,7 +6,9 @@ its access, and its schedules. [Pull request runs](pull-request-runs.md)
 adds the rules of the runs that pull request events start. The terms are
 those of the [architecture doc](../architecture.md#terms). A decision
 number names a dated record, as
-[Decision numbers](../architecture.md#decision-numbers) says.
+[Decision numbers](../architecture.md#decision-numbers) says. A secrets
+decision number names a decision of the change that adds
+[secrets](secrets.md), as that doc says.
 
 ## A run is a workspace
 
@@ -44,6 +46,12 @@ number names a dated record, as
 - A later message of another member follows the share setting, as
   [Agent logins in a sandbox](isolation.md#agent-logins-in-a-sandbox)
   says (decision 116).
+- A run workspace starts with no pre-approved secret, as
+  [Grants](secrets.md#grants) says. Its Mac access is on, as
+  [Mac access](secrets.md#mac-access) says (secrets decision 9 A).
+- A secret request of a run waits for a member, as each request does
+  (secrets decision 5 C). [Turns that no person started](secrets.md#turns-that-no-person-started)
+  gives the reason and the risk.
 
 ## When a run starts
 

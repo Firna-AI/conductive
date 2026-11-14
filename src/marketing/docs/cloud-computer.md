@@ -129,6 +129,30 @@ The author of a commit does not prove who made it.
 The **Secret** mark hides exact copies of a value in displayed agent output, start logs, and program names and folders in **Preview**.
 It does not hide values in file content, diffs, or Terminal.
 
+## Add secrets for agents
+
+Use **Secrets** for a key that an agent should use only with a member's approval.
+Use environment variables for values that every computer needs at each start.
+
+1. Open the org's **Settings**.
+2. Select **Secrets**.
+3. Select **Add secret**.
+4. Enter its **Name**, **Description**, and **Value**.
+5. Select **Save secret**.
+
+Every member can add a secret.
+You can replace or delete the secrets that you added.
+An admin can replace or delete each secret.
+Only an admin can reveal a saved value, or mark a secret for **All agents**.
+Each row shows who revealed its value last.
+
+An agent asks to run one command with a secret.
+The command gets the value, and the agent sees only the secret's name.
+A member allows each session with **Allow for this session**.
+A secret for **All agents**, or one that is pre-approved in the workspace's **Capabilities**, needs no approval.
+
+- [Understand secrets](/docs/security#understand-secrets)
+
 ## Apply setup changes
 
 A successful build updates the starting setup for new workspaces.
@@ -146,7 +170,7 @@ Ask an admin to run **Build computer**.
 After it succeeds, create a new workspace for newer software and the new protection.
 This also gives the new workspace the server list in **Preview**.
 The same steps give it the current workspace tools for managing workspaces, sessions, sections, and private previews across the org.
-The tools also read chats and messages there.
+The tools also read chats and messages there, and run commands with secrets.
 Resuming an existing workspace does not update its installed tools.
 
 - [Understand agent login protection](/docs/security#protect-agent-and-github-logins)

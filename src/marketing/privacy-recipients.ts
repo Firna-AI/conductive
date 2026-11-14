@@ -55,7 +55,10 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         files, code, and command results of turns on the session's login.
         This includes the messages of other members who use that login.
         Each Mac command request and its result also go to the agent and
-        to that provider or endpoint.
+        to that provider or endpoint. So do the names and descriptions of
+        the secrets that the agent lists, and the output of each command
+        that it runs with a secret. That output hides each exact copy of a
+        secret value, but not a changed or encoded value.
         With each message, they also get
         the GitHub login, the display name, and the ${productName} user ID of
         its sender. They get the
@@ -78,9 +81,14 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         terms of that provider or endpoint apply.`,
       text`The members of your orgs see the workspaces of the org,
         their chats, and each Mac command request and result. They also see
-        the routines of the org, with their prompts and their runs.
+        the routines of the org, with their prompts and their runs. They see
+        each secret request and result, without a value. They see the name
+        and the description of each secret, who added it, and who revealed
+        it last. An admin can reveal the value of each secret, also of a
+        secret that you added.
         A member with a terminal in a cloud computer can read
-        the GitHub token of a turn that runs there. During Continue, they
+        the GitHub token of a turn that runs there. They can also read the
+        value of a secret while a command runs with it there. During Continue, they
         can also read the GitHub token of the member who clicked, while the
         branch fetch runs. Outside an agent turn,
         the GitHub CLI uses the workspace owner's account. Each member with
@@ -114,13 +122,16 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
       text`The run of your routine for a pull request reads the comments,
         reviews, and descriptions of other GitHub accounts. Such text can
         steer the agent while the run uses your agent login and GitHub
-        token, and the env vars of the org. Such text can also steer the
+        token, and the env vars of the org. It can also steer the agent to
+        run commands with the secrets that need no new approval, such as a
+        secret that an admin marked for all agents. Such text can also steer the
         agent to read and change work across the org, with your workspace
         tool rights. Messages follow the same session login rules.`,
       text`A workspace token is a credential for the workspace tools.
         Any program with that token can read workspace, session, and
-        message details, list sessions and previews, and read chats across
-        its org without a running turn.
+        message details, list sessions and previews, list the names and
+        descriptions of secrets, and read chats across its org without a
+        running turn.
         A copied token keeps this access after the person who copied it
         leaves the org. This access lasts while the token remains valid
         and the org remains active.`,
@@ -130,7 +141,8 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         messages. They can create and delete sections, and open and close
         private previews. The actions use that turn's sender, who must
         still belong to the org. Each action follows that member's rights
-        in the app.`,
+        in the app. The tools can also run a command with each secret that
+        the session of that turn may use, with no question.`,
       text`Only a workspace owner or org admin can archive it.
         An agent can archive the workspace where it runs, which ends its
         turn. Previews that agents open need sign-in and workspace access.

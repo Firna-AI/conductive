@@ -12,7 +12,9 @@ decision number names a dated record, as
 decision number names a decision of the change that adds the
 [model gateway](model-gateway.md), as that doc says. An own endpoint
 decision number names a decision of the change that adds the own endpoint
-logins, as [Tokens and secrets](tokens-and-secrets.md) says.
+logins, as [Tokens and secrets](tokens-and-secrets.md) says. A secrets
+decision number names a decision of the change that adds
+[secrets](secrets.md), as that doc says.
 
 ## Orgs and workspaces
 
@@ -106,6 +108,10 @@ logins, as [Tokens and secrets](tokens-and-secrets.md) says.
 - A sandbox gets no agent login at a start.
   [Agent logins in a sandbox](#agent-logins-in-a-sandbox) says how each
   turn uses an agent login.
+- A sandbox gets no value of a [secret](secrets.md) at a start. The value
+  of a secret reaches it only in the reply to a run call that a grant
+  allows, while the turn of that call runs (secrets decision 1 B). Builds
+  and refreshes make no run call.
 - GitHub access reaches a workspace sandbox only through the git credential
   helper.
 - A build sandbox gets GitHub access only for the Git command that copies
@@ -146,6 +152,15 @@ logins, as [Tokens and secrets](tokens-and-secrets.md) says.
 - Risk: a read gives each Mac command of a session with its output, as a
   copy does. So sandbox code in each workspace of the org can read output
   from the Mac of a member.
+- With the token, such a process can also list the names and the
+  descriptions of the secrets of the org. The list gives no value.
+- Risk: while a turn of its workspace runs, such a process can also make a
+  run call in the name of that turn. It then gets the value of each secret
+  that the session of that turn may use, with no request.
+- Risk: a turn that such a process starts through the session calls uses
+  the grants of its workspace and its session with no request
+  (secrets decision 5 C). [Secrets](secrets.md#turns-that-no-person-started)
+  states this risk.
 
 ## Agent logins in a sandbox
 

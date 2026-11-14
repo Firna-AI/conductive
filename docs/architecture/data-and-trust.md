@@ -21,6 +21,9 @@ and the separate preview domain.
 | Routines and their runs | D1 |
 | The org and the provider account of each sandbox and each saved snapshot     | D1                                       |
 | Env var values and agent logins                                              | The Worker's storage, encrypted          |
+| The values of the secrets | The Worker's storage, encrypted |
+| The names and descriptions of the secrets, their grants, and their reveals | D1 |
+| The secret requests that wait, and the temporary values | The workspace Durable Object, with each value encrypted |
 | The host of each own endpoint login | D1 |
 | The Boat key and the other keys of the Worker                                | Worker secrets                           |
 | Chat history and banner state                                                | The workspace Durable Object             |
@@ -47,6 +50,10 @@ and the separate preview domain.
   only on the preview domain.
 - A sandbox gets none of the secrets of the app's Boat account. At a
   start, it gets only the secrets of its workspace and its org.
+- The value of a [secret](../protocol/secrets.md) of the Secrets tab
+  reaches a sandbox only for one run of the agent tools that a grant
+  allows. Each process in the sandbox can read the value while its command
+  runs.
 - For a sandbox with a version pin of 2 or later, the model gateway is the
   boundary between the sandbox and the model providers. The version pin of
   a sandbox is the lowest runner protocol version that its workspace
@@ -76,7 +83,8 @@ and the separate preview domain.
   [Access and security](../protocol/isolation.md#agent-logins-in-a-sandbox)
   says.
 - A routine run acts as its owner while no person watches. It uses the
-  owner's agent login and GitHub token, and the org's env vars. Its
-  sandbox follows the same version pin boundary above. Other GitHub accounts
+  owner's agent login and GitHub token, and the org's env vars. It also
+  uses each secret that a grant allows, such as a secret for all agents.
+  Its sandbox follows the same version pin boundary above. Other GitHub accounts
   can write text that its agent reads, as
   [Risks that stay open](../protocol/routines.md#risks-that-stay-open) says.

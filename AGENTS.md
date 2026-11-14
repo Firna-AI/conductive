@@ -177,7 +177,10 @@ Apple silicon Mac jobs on Blacksmith.
   sandboxes that the signed-in user may reach. The Worker calls only a
   fixed list of the sandbox provider's routes.
 - Secrets: a stored secret never goes back to the browser, and no secret
-  goes into a saved snapshot.
+  goes into a saved snapshot. The one exception is Reveal: an admin gets
+  the value of one secret of the Secrets tab at a time, and the app records
+  each reveal. The value of such a secret reaches a sandbox only for a run
+  that a grant allows, as [Secrets](docs/protocol/secrets.md) says.
 - Untrusted sandbox code: port previews stay on the preview domain, and the
   proxies forward only the allowed headers and cookies.
 - Chat events: a dropped connection loses no event, and no tab shows an

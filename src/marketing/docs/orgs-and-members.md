@@ -114,7 +114,11 @@ An org has two roles: **Admin** and **Member**.
 | Send messages | Under the session's login rules | Under the session's login rules |
 | Continue after a merge | All workspaces in the org | All workspaces in the org |
 | Merge from the pull request bar | With GitHub write access or more | With GitHub write access or more |
-| Manage members and org settings | Yes | Read-only |
+| Manage members and org settings, except secrets | Yes | Read-only |
+| Add a secret | Yes | Yes |
+| Replace or delete a secret | Any secret | Their own secrets |
+| Reveal a secret's value or mark it for all agents | Yes | No |
+| Change a workspace's **Capabilities** | Any workspace | Any workspace |
 | Reassign a workspace | Yes | No |
 | Archive a workspace | Any workspace | Their own workspaces |
 | Restore a workspace within its 14 days | Any workspace | Any workspace |

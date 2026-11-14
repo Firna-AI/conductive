@@ -5,7 +5,9 @@ secrets. It covers the workspace token, the GitHub tokens, the secrets that
 users enter, and the agent logins that users connect. It belongs to
 [Access and security](access-and-security.md), which covers sign-in, the
 gates of the Worker, the request bodies, and the content security policy.
-The terms are those of the [architecture doc](../architecture.md#terms). A
+[Secrets](secrets.md) covers the secrets that agents use in one command,
+after a member allows it. The terms are those of the
+[architecture doc](../architecture.md#terms). A
 decision number names a dated record, as
 [Decision numbers](../architecture.md#decision-numbers) says. A gateway
 decision number names a decision of the change that adds the
@@ -13,7 +15,9 @@ decision number names a decision of the change that adds the
 decision number, such as own endpoint decision 9, names the dated record of
 one decision of the change that adds the
 [own endpoint logins](own-endpoint-logins.md). Its plan keeps these records
-while the change is open. Its pull request keeps them after the merge.
+while the change is open. Its pull request keeps them after the merge. A
+secrets decision number names a decision of the change that adds
+[secrets](secrets.md), as that doc says.
 
 ## The workspace token
 
@@ -32,10 +36,16 @@ while the change is open. Its pull request keeps them after the merge.
     sections, and open and close previews (decision 277)
   - ask for a command on the Mac of the sender of a turn that runs now,
     through the agent tools
+  - list the secrets of its org at any time, and run a command with the
+    secrets that a grant allows while a turn of its workspace runs, as
+    [Secret requests](secret-requests.md) says
 - [Agent tool access](agent-tool-access.md) states the reach of these
   calls and the rights that each write uses.
 - The token allows nothing else. It can never answer a request for a Mac
-  command, and it can never choose the Mac that gets the request.
+  command or for a secret, and it can never choose the Mac that gets a
+  request.
+- With the token, the sandbox gets the value of a secret only in the reply
+  to a run call that a grant allows.
 - Each write of the agent tools and each Mac command request acts for a
   sender. The Worker reads the sender of each such request from its own
   record of the turn that runs now.
@@ -55,11 +65,15 @@ while the change is open. Its pull request keeps them after the merge.
 
 ## Secrets that users enter
 
-- The app stores the env var values and the agent logins encrypted. It
-  also keeps the host of an own endpoint in plain text, as
+- The app stores the env var values, the values of the
+  [secrets](secrets.md), and the agent logins encrypted. It also keeps the
+  host of an own endpoint in plain text, as
   [Own endpoint logins](own-endpoint-logins.md) says.
 - The values of env vars are write-only. The settings never return a
   stored value to the browser, whatever the mark of the env var.
+- The value of a secret goes back to the browser only when an admin
+  reveals it, one value at a time, as [Reveal](secrets.md#reveal) says
+  (secrets decision 2 A).
 - An admin marks each env var of the org as secret or not secret
   (decision 133). Each env var is secret until an admin clears its mark.
   The value of a secret env var is a secret value.
@@ -77,6 +91,9 @@ while the change is open. Its pull request keeps them after the merge.
 - Reason: an org image or a saved disk can hold an older runner. A filter
   of secret values in the runner was rejected, because an older runner
   does not have it.
+- The Durable Object also hides each value that a run with secrets used,
+  as [The exact-copy filter](secret-requests.md#the-exact-copy-filter)
+  says.
 - The app keeps the real path of each file, the real name of the default
   branch of each repository, and the real name of the base branch of each
   workspace. Reads, diffs, and the file lists use them. The browser gets

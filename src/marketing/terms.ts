@@ -144,6 +144,9 @@ export const termsDocument: LegalDocument = {
       blocks: [
         paragraph`In the Mac app, an agent can ask to run a command on
           your Mac. The command runs only after you allow it.`,
+        paragraph`Each workspace has a Mac access switch, which starts on.
+          Any member of the org can turn it off or on again. While it is
+          off, the agents of that workspace cannot ask for a command.`,
         paragraph`You decide which commands run. You can allow a command
           once. You can always allow the exact same command text on that
           Mac. You can allow every command of one workspace on that Mac

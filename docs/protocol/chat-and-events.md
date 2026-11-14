@@ -150,8 +150,13 @@ holds how an agent action of the pull request bar sends its fixed prompt.
 - The work of a turn is its agent messages and its tool calls. The results
   of its [Mac commands](agent-tools.md#mac-commands) and the lines of its
   refused events are part of that work, at their place (decision 151).
+  So are the results of its
+  [runs with secrets](secret-requests.md#what-the-chat-shows).
 - Reason: the turn stays as short as in Conductor. A command result or a
   line of a refused event that stays in view between two folds was rejected.
+- A late secret request is not part of that work, and it never folds.
+  Reason: it still waits for a member, as
+  [Late requests](secret-requests.md#late-requests) says.
 - A message that a member sends during a turn stays in view. It starts a
   new part of the turn, with its own answer and its own fold.
 - The answer of a part is its last agent message, with the agent messages

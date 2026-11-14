@@ -187,9 +187,11 @@ The second group settle items that the mockups showed.
 - A late request says "The agent stopped waiting. Allow sends it a
   message." The message of a late answer says "`NAME` is now available
   in this session", with variants for 15 minutes, this workspace, and a
-  saved secret.
+  saved secret. Secrets decision 10 B later replaced this message with an
+  app line that names the member who answered.
 - Run results reuse the look of the Mac command card. Values show as
-  `[redacted]`. Results fold with their turn. A late request never
+  `[redacted]`, which secrets decision 11 D later replaced: no output
+  shows. Results fold with their turn. A late request never
   folds. A waiting request keeps Stop in the composer, because the turn
   runs.
 - A Mac command in a workspace with Mac access off says "Mac access is
@@ -215,6 +217,15 @@ The second group settle items that the mockups showed.
 - No action moves an env var into Secrets. An admin adds the value to
   Secrets again. Reason: env var values are write-only, and the env var
   list stays as it is.
+- When the starter's login is gone, the fallback line of a late answer
+  names the action that gets the agent going again, such as "The agent
+  learns of it when Cal connects Claude again." Reason: another member's
+  next message then opens a new session and does not reach the agent.
+  My call of 14 November 2026.
+- A suspension of the workspace owner ends each open request of that
+  owner's workspaces as "Not answered", as an org suspension does.
+  Reason: no agent waits there, which is the reason of the Archive rule.
+  My call of 14 November 2026.
 - Replace changes the description too, with the rights of secrets
   decision 3 B. Reason: Replace is the existing right to change a
   secret, and a wrong description misleads the members who answer.
@@ -695,6 +706,55 @@ browser without the Mac app. F is the wider fix. The options check kept
 B. Action: ask the user, because it
 adds behaviour that no requirement covers.
 
+### Secrets decision 14: A reveal in a suspended org
+
+Open. Root question: may an admin of a suspended org get a secret value?
+The mockups hide Reveal in a suspended org. An org suspension refuses
+each change but keeps each read, and a reveal is a read. The options:
+
+- A. Hide the button only. The Worker still answers a reveal. Effort:
+  Small.
+- B. The Worker also refuses each reveal in a suspended org, with the
+  refusal of a suspended org. Effort: Small.
+
+Recommendation: B. The screen and the Worker then follow one rule.
+Action: ask the user, because B adds a new refusal.
+
+### Secrets decision 15: How long reveal records stay
+
+Open. Root question: how long does the app keep each reveal record? The
+Privacy page gives how long each kind of personal data stays. The
+options:
+
+- A. Delete the records with their secret. Effort: Small.
+- B. Keep them while the org exists, also after the secret is deleted.
+  Effort: Small.
+
+Recommendation: B. The record shows who read a value, and a delete must
+not hide that. Action: ask the user, because the options trade the
+record of who read a value against keeping less personal data.
+
+### Secrets decision 16: The Capabilities icon on a phone
+
+Open. Root question: how does the phone composer keep the model and the
+login readable with the Capabilities icon? On a phone, the composer bar
+holds attach, Capabilities, the model picker, another member's login
+label, Stop, and Send. In a running turn on another member's login, the
+model shows only "O…" and the login only "C…". The options:
+
+- A. Keep the bar. The picker and the label shrink. Effort: Small.
+- B. On a phone, Stop shows only its icon. It changes an existing screen.
+  Effort: Small.
+- C. On a phone, Capabilities moves into a menu with Attach files.
+  Effort: Medium.
+
+Left out: hiding the login label, because it shows whose login a message
+uses.
+
+Recommendation: B. It frees about 40 px with no new control. Action: ask
+the user, because each option changes an existing screen or hides what
+a message uses.
+
 The options check of decisions 5, 6, and 7 is in
 `.context/agent-secrets/options-check.md`. The check of decisions 8 and 9
 is in `.context/agent-secrets/options-check-8-9.md`. The check of
@@ -739,22 +799,22 @@ The mockups show each new screen and flow before any code changes.
 
 Depends on: 1
 
-- [ ] Write `docs/protocol/secrets.md` with the requirements and secrets
+- [x] Write `docs/protocol/secrets.md` with the requirements and secrets
       decisions 1 to 7. Link it from `docs/protocol/README.md` and from
       `docs/protocol/tokens-and-secrets.md`.
-- [ ] Update `docs/protocol/agent-tools.md` and its count of calls,
+- [x] Update `docs/protocol/agent-tools.md` and its count of calls,
       `docs/protocol/agent-tool-access.md`, `docs/protocol/isolation.md`,
       `docs/protocol/create-a-workspace.md`,
       `docs/protocol/orgs-and-members.md`, `docs/protocol/routines.md`,
       `docs/protocol/workspace-calls.md`,
       `docs/protocol/routine-runs.md`, and the settings tabs in
       `docs/protocol/command-palette-actions.md`.
-- [ ] Update the review focus of `CLAUDE.md` for secrets decision 2 A.
-- [ ] Read `src/marketing/privacy.ts` and `src/marketing/terms.ts` in
+- [x] Update the review focus of `CLAUDE.md` for secrets decision 2 A.
+- [x] Read `src/marketing/privacy.ts` and `src/marketing/terms.ts` in
       full. Update each sentence that restates a changed fact.
-- [ ] Read each guide in `src/marketing/docs/` in full. Update each
+- [x] Read each guide in `src/marketing/docs/` in full. Update each
       sentence that restates a changed fact.
-- [ ] Update the rows `organization-environment-and-secrets` and
+- [x] Update the rows `organization-environment-and-secrets` and
       `keychain-storage` of the comparison page when their status changes.
 
 ## Milestone 3: Storage and the settings API
@@ -779,7 +839,8 @@ Depends on: 3
       token gate of the machine host.
 - [ ] Keep each waiting request in the Durable Object of the workspace.
       Send it to the browsers, set needs input, and end it with its turn.
-- [ ] Add the answer route for members: allow, deny, Use once, and Save.
+- [ ] Add the answer route for members: allow, deny, a value for 15
+      minutes or for this workspace, and Save.
 - [ ] End the tool call at the time limit of a request. Keep the request
       open as a late request. Send the message of a late answer.
 - [ ] Return values only to a run call of an approved session whose turn
@@ -831,6 +892,9 @@ Depends on: every other milestone
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
       once, and report.
+- [ ] Bump `TERMS_VERSION` in `src/shared/terms.ts` and set the
+      effective dates of the Terms and Privacy pages, because Milestone 2
+      changed both pages.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the

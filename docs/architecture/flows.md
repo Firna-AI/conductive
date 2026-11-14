@@ -42,6 +42,28 @@ record, as [Decision numbers](../architecture.md#decision-numbers) says.
 4. The Durable Object stores each event, confirms it to the runner, and
    pushes it to every open tab of the workspace.
 
+## A run with secrets
+
+1. In a turn, the agent runs a command with secrets through the agent
+   tools. The tool sends the names, the reason, the command text, and the
+   turn to the Worker, with the workspace token.
+2. The Worker finds the session of the turn. When grants cover each name,
+   it returns the values to the tool at once.
+3. Otherwise the Durable Object keeps a request and pushes it to every
+   open tab of the workspace. A member allows it in a browser or in the
+   Mac app, and the Worker returns the values to the tool.
+4. The tool starts the command with the values in its environment. It
+   hides each exact copy of a value in the output for the agent.
+5. The Durable Object shows the result in the chat with no value and no
+   output. It also hides each exact copy of each used value in later
+   events.
+6. When no member answers in 90 seconds, the call ends, and the request
+   stays in the chat. A later Allow starts a turn for the sender of the
+   turn that asked.
+
+[Secrets](../protocol/secrets.md) and
+[Secret requests](../protocol/secret-requests.md) state the rules.
+
 ## Terminal, previews, and desktop
 
 - The terminal socket goes from the browser to the Worker on

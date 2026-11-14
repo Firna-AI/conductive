@@ -60,6 +60,9 @@ says.
   route of the app does.
 - The reply gives the session with its link. It says whether the session
   is closed.
+- A close also ends each open secret request of the session, as
+  [The end of a request](secret-requests.md#the-end-of-a-request) says.
+  This holds for a close in the app too.
 - Reason: Conductor's `session archive` closes a session. A close of a
   session whose turn runs asks first in the app, so the call asks for the
   same choice.

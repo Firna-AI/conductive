@@ -8,7 +8,9 @@ create call takes. It belongs to [Agent tools](agent-tools.md).
 which calls need an active turn, and the rights of the sender. The terms
 are those of the [architecture doc](../architecture.md#terms). A decision
 number names a dated record, as
-[Decision numbers](../architecture.md#decision-numbers) says.
+[Decision numbers](../architecture.md#decision-numbers) says. A secrets
+decision number names a decision of the change that adds
+[secrets](secrets.md), as that doc says.
 
 ## The calls
 
@@ -49,6 +51,13 @@ number names a dated record, as
 - The first message ends with a `Sent by:` line, as
   [The `Sent by:` line](session-calls.md#the-sent-by-line) says
   (decision 259).
+- The new workspace starts with no pre-approved secret, as
+  [Grants](secrets.md#grants) says. Its Mac access is on, also when the
+  calling workspace has Mac access off (secrets decision 9 A).
+  [Mac access](secrets.md#mac-access) states the risk.
+- A create call takes no pre-approval and no choice of Mac access.
+  Reason: the task gives the pre-approval to a person who creates a
+  workspace, and Mac access starts on in each workspace.
 - A create call can also give the new workspace a name, and the title of
   its first session. The Worker cleans both with the rule of
   [Names from the workspace tools](tool-names.md).

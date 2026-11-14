@@ -9,7 +9,8 @@ agents and their sessions. [Agent tools](agent-tools.md) states the tools
 of the agents. The other terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
-says.
+says. A secrets decision number names a decision of the change that adds
+[secrets](secrets.md), as that doc says.
 
 ## Terms
 
@@ -63,7 +64,8 @@ says.
     list, get, rename, close, and stop sessions, send and get messages,
     read a chat, and list, open, and close previews. They also create and
     delete the sections of the org, and ask to run a command on the Mac of
-    the sender of the turn.
+    the sender of the turn. They also list the secrets of the org, and run
+    a command with secrets, as [Secret requests](secret-requests.md) says.
   - A message that ends with a `Sent by:` line comes from an agent of the
     session that the line links to, through the workspace tools.
   - Several members can write in one session. The sender line of each
@@ -135,6 +137,10 @@ says.
 - The sender line of a message from the workspace tools names the sender
   of the turn that made the call, as
   [The sender](session-calls.md#the-sender) says.
+- The line of the app that a late answer to a secret request sends is not
+  a message of a member. Its text names the member who answered, in place
+  of a sender line, as [Late answers](secret-requests.md#late-answers)
+  says.
 - The sender line exists only in the text that reaches the agent. The
   stored message, the chat, and the titles from messages never hold it.
 - The chat never shows the sender line or the agent instructions. Reason:
@@ -152,6 +158,10 @@ says.
   member too, as [Commit author](github-tokens.md#commit-author) says.
 - A message that another member sends during the turn changes none of
   them.
+- A turn that a late answer to a secret request starts has the sender of
+  the turn that asked (secrets decision 10 B). So its Mac commands, its
+  GitHub token, and its commits follow that sender, not the member who
+  answered.
 - Each write of the workspace tools acts for the sender of the turn too,
   also while the agent answers a message of another member, as
   [The sender](agent-tool-access.md#the-sender) says.

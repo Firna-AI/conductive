@@ -16,6 +16,9 @@ These docs belong to this doc:
 - [Tokens and secrets](tokens-and-secrets.md): the workspace token, the
   GitHub tokens, the secrets that users enter, and the agent logins that
   users connect.
+  - [Secrets](secrets.md) and [Secret requests](secret-requests.md): the
+    secrets that agents use in one command after a member allows it, and
+    Capabilities with Mac access.
 - [Terminal, previews, and desktop](terminal-previews-and-desktop.md): the
   security of the terminal, the port previews, the proxies, and the
   desktop.

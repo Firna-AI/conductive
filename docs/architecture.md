@@ -51,7 +51,10 @@ each feature.
   commits that no remote branch holds.
 - **Sender:** the person who sent the message of a turn. The GitHub token
   and the Mac requests of the turn belong to its sender. The agent login
-  belongs to the starter of the session, the member who started it.
+  belongs to the starter of the session, the member who started it. A turn
+  that a late answer to a secret request starts has the sender of the turn
+  that asked, as
+  [Late answers](protocol/secret-requests.md#late-answers) says.
 - **Boat key:** the one key of the app's own Boat account, where every
   sandbox and every org image of every org runs. It is a Worker secret.
 - **Provider account:** an account with a sandbox provider. The Worker
@@ -83,6 +86,9 @@ each feature.
   schedules. A wake-up is a prompt for the agent at a later time.
 - **Workspace token:** a secret of one workspace. Its sandbox uses the
   token to call the Worker.
+- **Secret:** a named value of an org that agents use in one command at a
+  time, after a member allows it. It is not an env var.
+  [Secrets](protocol/secrets.md) states the secrets.
 - **Preview hostname:** a random hostname on the preview domain. It shows
   one port of one sandbox.
 - **Start:** each create or resume of a sandbox, also the sandbox of a
@@ -125,8 +131,9 @@ the app (decision 6).
 ## Flows
 
 The [flows page](architecture/flows.md) describes how the components work
-together for a new workspace, chat, the terminal, previews, the desktop,
-GitHub events, a merge, Continue, routine runs, and stops.
+together for a new workspace, chat, a run with secrets, the terminal,
+previews, the desktop, GitHub events, a merge, Continue, routine runs, and
+stops.
 
 ## Where data lives
 

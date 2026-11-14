@@ -91,9 +91,10 @@ actions at `app/command-palette/actions`, and the settings at
 
 ## Settings
 
-- The Settings tab shows two groups. The first group holds the four tabs
-  of the org settings: General, Repositories, Cloud computer, and Members.
-  Its label is the name of the org and "settings", such as "Acme settings".
+- The Settings tab shows two groups. The first group holds the five tabs
+  of the org settings: General, Repositories, Cloud computer, Secrets, and
+  Members. Its label is the name of the org and "settings", such as "Acme
+  settings".
 - The second group, Account, holds four sections of the Account page:
   Sign-in, GitHub, Agents, and New workspaces. It also holds Keyboard
   shortcuts, the third tab of the Account page.

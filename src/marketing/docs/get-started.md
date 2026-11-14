@@ -262,6 +262,7 @@ Use **Startup script** for commands needed when you start or resume a workspace.
 It starts in the workspace's repository folder.
 Use **Environment variables** for values your application needs.
 Changed values apply at the next start of each workspace's cloud computer.
+Use **Secrets** for keys that agents should use only with a member's approval.
 
 - [Read the Overview](/docs)
 - [Configure the cloud computer](/docs/cloud-computer)

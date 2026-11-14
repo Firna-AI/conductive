@@ -8,7 +8,11 @@ This page lists each protocol doc and what it covers.
 - [Workspaces and sandboxes](../protocol/workspaces-and-sandboxes.md): the org
   image, the life of a workspace, and the disk flushes of a sandbox.
   - [Create a workspace](../protocol/create-a-workspace.md): New workspace as a
-    page or as a dialog, the create, the branch, and a failed first start.
+    page or as a dialog, its Capabilities icon, the create, the branch, and
+    a failed first start.
+    - [New workspace notices](../protocol/new-workspace-notices.md): the
+      notice before the first good build, and the notice of a waiting
+      repository.
   - [Repository folders](../protocol/repository-folders.md): the folder and the
     shell variable of each repository in a sandbox, and the context folder
     of each workspace.
@@ -58,6 +62,14 @@ This page lists each protocol doc and what it covers.
     - [Own endpoint logins](../protocol/own-endpoint-logins.md): the
       endpoint and the key of each agent, the model list of the endpoint,
       and the addresses that the app accepts.
+    - [Secrets](../protocol/secrets.md): the secrets of an org that agents
+      use in one command, their storage, the Secrets tab, the rights,
+      Reveal, the mark for all agents, the grants, Capabilities with Mac
+      access, and their risks.
+      - [Secret requests](../protocol/secret-requests.md): the calls that
+        list the secrets and run a command with secrets, the requests and
+        their time limit, late answers, temporary values, and what the
+        chat shows.
   - [Terminal, previews, and desktop](../protocol/terminal-previews-and-desktop.md)
 - [Model gateway](../protocol/model-gateway.md): the turn token, and the
   Worker routes that add the agent login to each model request.
@@ -82,12 +94,16 @@ This page lists each protocol doc and what it covers.
   - [Section and preview calls](../protocol/section-and-preview-calls.md):
     the calls that create and delete sections, and list, open, and close
     port previews.
+  - [Secret requests](../protocol/secret-requests.md): the calls that list
+    the secrets of the org and run a command with secrets.
   - [Names from the workspace tools](../protocol/tool-names.md): the rule
     for the names and titles that the calls give.
 - [Orgs and members](../protocol/orgs-and-members.md): orgs, sections,
-  roles, the first run, and the end of an org.
+  roles, and the first run.
   - [Org rail order](../protocol/org-rail-order.md): the order of the orgs
     in the rail that each person keeps, and how the person changes it.
+  - [Delete org](../protocol/delete-org.md): the end of an org, its restore
+    within 7 days, and the delete of its data.
 - [Pricing](../protocol/pricing.md): the plans and their cloud hours, the
   extra hours, the seller and the tax, the pricing page, and the planned
   billing changes. Use is free until billing starts.
