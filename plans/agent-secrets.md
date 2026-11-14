@@ -522,7 +522,18 @@ C, D, and E change decision 62 behaviour or add a refusal.
 
 ### Secrets decision 10: A late answer from another member
 
-Open. Root question: how does the agent that asked learn of a late
+Cal chose B on 14 November 2026, with the three fixes of the options
+check. The turn that a late answer starts acts for the sender of the
+turn that asked, under that sender's login rules. The chat and the agent
+text name the member who answered. When that turn cannot run, as when
+the starter does not share the login with that sender or the login is
+gone, the app sends nothing, and the widget says that the agent learns
+of the answer at the next message. Reason: B acts as an answer in time
+does and keeps the share rule.
+
+The record of the options as they were asked:
+
+Root question: how does the agent that asked learn of a late
 answer from any member? A late answer sends a message in the name of the
 member who answers. Another member's message runs on the starter's login
 only while the starter shares it (decision 116). Otherwise it opens a
@@ -567,7 +578,16 @@ continues. Action: ask the user, because each option changes decision
 
 ### Secrets decision 11: The command in a request and its result
 
-Open. Root question: where does the chat get the command and the output
+Cal chose D on 14 November 2026. The run call also sends the command
+text. The request card, the late widget, and the result card show it as
+the command that the agent says it will run. No output reaches the
+chat. The exact-copy filter covers the command text. Reason: a member
+sees what the agent says it will run, and no output with a changed form
+of a value reaches the chat.
+
+The record of the options as they were asked:
+
+Root question: where does the chat get the command and the output
 of a run with secrets? The mockups show the command and its output on
 the run card. In the design, the run call sends only its secrets, its
 reason, and its turn, and the output goes back to the agent only. The
@@ -606,7 +626,13 @@ covers.
 
 ### Secrets decision 12: Two features named "secret"
 
-Open. Root question: how does each feature get a name that says what it
+Cal chose A on 14 November 2026, "for now": both names stay. The
+Secrets tab says when to use env vars. A later change can rename the
+env var mark.
+
+The record of the options as they were asked:
+
+Root question: how does each feature get a name that says what it
 does? An env var on the Cloud computer tab can be marked "Secret"
 (decision 133), which only hides its value in the chat. The new Secrets
 tab sits beside it for a different kind of value. An admin can put a
@@ -636,7 +662,12 @@ decision 133, and C changes Cal's name for the feature.
 
 ### Secrets decision 13: A notice of a waiting request
 
-Open. Root question: how does a member learn in time that an agent waits
+Open. Cal's answer of 14 November 2026 named decision 12 twice, the
+second time as "12 = A (for now)". That answer may be meant for this
+decision. This change builds no notice until Cal confirms. A, change
+nothing, needs no work.
+
+Root question: how does a member learn in time that an agent waits
 for a secret? A request waits 90 seconds. A Mac command request gets a
 macOS notification from the Mac app. A secret request gets only the
 Needs input mark, so many requests can turn late. The options:
@@ -700,7 +731,7 @@ The mockups show each new screen and flow before any code changes.
       `.context/agent-secrets/mockups-report.md`.
 - [x] Apply the design calls from the mockups for archive, the phone
       sheet, mixed names, the description on Save, and Replace.
-- [ ] Apply the answers to secrets decisions 10 to 13 to the mockups.
+- [ ] Apply the answers to secrets decisions 10 to 12 to the mockups.
       Show the agent's own tool call line beside each run card, as the
       real chat does.
 
