@@ -82,7 +82,11 @@ requirements.
   raw path segments with one slash, then adds the query and hash.
 - `readsAsAddress` tests a Markdown label as it shows, without code marks,
   bold marks, invisible characters, or spaces at its ends.
-- `chatParts` uses `bareAddressAt` and `markdownTargetAt`, through the
+- `src/markdown/markdown-destination.ts` supplies `readMarkdownAddress`.
+  Chat text, the message field, the mockups, and the file preview share
+  its address boundaries and escape decoding. It returns the decoded
+  address and its source offsets.
+- `chatParts` uses `bareAddressAt` and `readMarkdownAddress`, through the
   tokenizer of `links/chat-tokens.ts`. The message field uses
   `webAddressParts` and reads no code, so its addresses stay text.
 

@@ -1,4 +1,5 @@
-import { bareAddressAt, markdownTargetAt } from '../../markdown/web-links'
+import { readMarkdownAddress } from '../../markdown/markdown-destination'
+import { bareAddressAt } from '../../markdown/web-links'
 import { mentionAt, type Mention } from '../../shared/mention-text'
 
 /** A Markdown link: its label, and the text around its address as typed. */
@@ -54,20 +55,18 @@ function markdownLinkAt(text: string, at: number): LinkToken | null {
     if (char === '\n') return null
     if (char === '`') code = !code
     else if (char === ']' && !code) {
-      const target = markdownTargetAt(text, index + 1)
-      if (!target) return null
-      const end = index + 1 + target.length
-      // The parentheses hold `<` before the address, or nothing.
-      const parens = text.slice(index + 1, end)
-      const start = parens.indexOf(target.href)
+      if (text[index + 1] !== '(') return null
+      const address = readMarkdownAddress(text, index + 2)
+      if (!address || text[address.next] !== ')') return null
+      const end = address.next + 1
       return {
         kind: 'link',
-        href: target.href,
+        href: address.destination,
         source: text.slice(at, end),
         markdown: {
           label: text.slice(at + 1, index),
-          before: text.slice(at, index + 1 + start),
-          after: parens.slice(start + target.href.length),
+          before: text.slice(at, address.start),
+          after: text.slice(address.end, end),
           image: text[at - 1] === '!',
         },
       }

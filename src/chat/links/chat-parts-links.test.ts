@@ -137,4 +137,37 @@ describe('the links of chat text', () => {
       text('.'),
     ])
   })
+
+  test.each([
+    'https://en.wikipedia.org/wiki/Function_(mathematics)',
+    '<https://en.wikipedia.org/wiki/Function_(mathematics)>',
+    String.raw`https://en.wikipedia.org/wiki/Function_\(mathematics\)`,
+  ])(
+    'an answer links the whole decoded destination of [Wiki](%s)',
+    (address) => {
+      expect(answer(`Read [Wiki](${address}).`)).toEqual([
+        text('Read '),
+        web(
+          'https://en.wikipedia.org/wiki/Function_(mathematics)',
+          plain('Wiki'),
+        ),
+        text('.'),
+      ])
+    },
+  )
+
+  test('a sent message keeps Markdown around the complete address as typed', () => {
+    const href = 'https://en.wikipedia.org/wiki/Function_(mathematics)'
+    expect(sent(`[Wiki](<${href}>)`)).toEqual([
+      text('[Wiki](<'),
+      web(href, plain(href)),
+      text('>)'),
+    ])
+  })
+
+  test('an answer links a complete GitHub path with parentheses and a line hash', () => {
+    const href =
+      'https://github.com/acme/app/blob/main/app/(marketing)/page.tsx#L4'
+    expect(answer(`[Page](${href})`)).toEqual([web(href, plain('Page'))])
+  })
 })

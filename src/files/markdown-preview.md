@@ -20,6 +20,12 @@ a new worker. A static render, as in a test, cannot wait for a worker. It
 passes `parseMarkdown` as `markdownParser` of `FileContent`, or as
 `parser` of `MarkdownView`, and the parse runs on the calling thread.
 
+`readMarkdownAddress` in `src/markdown/markdown-destination.ts` reads link
+addresses for the file preview and chat text. It handles balanced
+parentheses, angle bracket syntax, and backslash escapes. The file preview's
+`readDestination` in `markdown/markdown-destination.ts` reads the spaces
+and optional title around that address.
+
 ## Safety limits
 
 Emphasis and strong emphasis pair their `*` and `_` markers by the

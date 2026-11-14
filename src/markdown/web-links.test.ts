@@ -151,4 +151,94 @@ describe('web addresses', () => {
       expect(readsAsAddress(label), label).toBe(false)
     }
   })
+
+  test.each([
+    ['Wiki', 'https://en.wikipedia.org/wiki/Function_(mathematics)'],
+    ['Wiki', '<https://en.wikipedia.org/wiki/Function_(mathematics)>'],
+    [
+      'Wiki',
+      String.raw`https://en.wikipedia.org/wiki/Function_\(mathematics\)`,
+    ],
+    [
+      'Page',
+      'https://github.com/acme/app/blob/main/app/(marketing)/page.tsx#L4',
+    ],
+  ])(
+    'reads the complete Markdown destination in [%s](%s)',
+    (label, address) => {
+      const source = `[${label}](${address})`
+      const href =
+        label === 'Wiki'
+          ? 'https://en.wikipedia.org/wiki/Function_(mathematics)'
+          : 'https://github.com/acme/app/blob/main/app/(marketing)/page.tsx#L4'
+      expect(webAddressParts(`See ${source}.`)).toEqual([
+        { kind: 'text', text: 'See ' },
+        { kind: 'link', href, source, label },
+        { kind: 'text', text: '.' },
+      ])
+      const angle = address.startsWith('<')
+      expect(webAddressParts(source, false)).toEqual([
+        { kind: 'text', text: `[${label}](${angle ? '<' : ''}` },
+        {
+          kind: 'link',
+          href,
+          source: angle ? address.slice(1, -1) : address,
+        },
+        { kind: 'text', text: angle ? '>)' : ')' },
+      ])
+    },
+  )
+
+  test.each([
+    ['https://example.com/a<b', 'https://example.com/a<b'],
+    ['https://example.com/a>b', 'https://example.com/a>b'],
+    ['https://example.com/a`b', 'https://example.com/a`b'],
+    ['<https://example.com/a b>', 'https://example.com/a b'],
+    ['http://[::1]', 'http://[::1]'],
+  ])('leaves address validation to webLink for %s', (address, href) => {
+    const source = `[docs](${address})`
+    expect(webAddressParts(source)).toEqual([
+      { kind: 'link', href, source, label: 'docs' },
+    ])
+    expect(webLink(href, context)).toEqual({
+      kind: href === 'http://[::1]' ? 'local' : 'web',
+      url: new URL(href),
+      ...(href === 'http://[::1]' ? { port: 80 } : {}),
+    })
+  })
+
+  test('keeps titles and spaces around a Markdown address as typed', () => {
+    for (const [before, after] of [
+      ['[docs](', ' "Guide")'],
+      ['[docs]( ', ' )'],
+    ]) {
+      expect(
+        webAddressParts(`${before}https://example.com/docs${after}`),
+      ).toEqual([
+        { kind: 'text', text: before },
+        {
+          kind: 'link',
+          href: 'https://example.com/docs',
+          source: 'https://example.com/docs',
+        },
+        { kind: 'text', text: after },
+      ])
+    }
+  })
+
+  test('keeps Markdown destinations beyond the length and nesting limits as typed', () => {
+    const long = `https://example.com/${'a'.repeat(2001)}`
+    const deep = `https://example.com/${'('.repeat(33)}x${')'.repeat(33)}`
+    for (const [before, href, after] of [
+      ['[docs](', long, ')'],
+      ['[docs](<', long, '>)'],
+      ['[docs](', deep, ')'],
+    ]) {
+      expect(webAddressParts(`${before}${href}${after}`)).toEqual([
+        { kind: 'text', text: before },
+        { kind: 'link', href, source: href },
+        { kind: 'text', text: after },
+      ])
+    }
+  })
 })

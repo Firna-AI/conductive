@@ -172,3 +172,63 @@ it('nests inline content at most 12 levels deep, and shows deeper markers and li
     },
   ])
 })
+
+it.each([
+  [
+    '[Wiki](https://en.wikipedia.org/wiki/Function_(mathematics))',
+    'https://en.wikipedia.org/wiki/Function_(mathematics)',
+    'Wiki',
+  ],
+  [
+    '[Wiki](<https://en.wikipedia.org/wiki/Function_(mathematics)>)',
+    'https://en.wikipedia.org/wiki/Function_(mathematics)',
+    'Wiki',
+  ],
+  [
+    String.raw`[Wiki](https://en.wikipedia.org/wiki/Function_\(mathematics\))`,
+    'https://en.wikipedia.org/wiki/Function_(mathematics)',
+    'Wiki',
+  ],
+  [
+    '[Page](https://github.com/acme/app/blob/main/app/(marketing)/page.tsx#L4)',
+    'https://github.com/acme/app/blob/main/app/(marketing)/page.tsx#L4',
+    'Page',
+  ],
+  ['[local](http://[::1])', 'http://[::1]/', 'local'],
+  [
+    '[docs]( https://example.com/docs "Guide" )',
+    'https://example.com/docs',
+    'docs',
+  ],
+  [
+    "[docs](<https://example.com/docs> 'Guide')",
+    'https://example.com/docs',
+    'docs',
+  ],
+  [
+    '[docs](https://example.com/docs (Guide))',
+    'https://example.com/docs',
+    'docs',
+  ],
+])(
+  'keeps the file preview destination and title handling for %s',
+  (source, href, label) => {
+    expect(parseInline(source, new Map())).toEqual([
+      { kind: 'link', href, children: [{ kind: 'text', text: label }] },
+    ])
+  },
+)
+
+it('keeps file preview destinations beyond the length and nesting limits as text', () => {
+  const long = `https://example.com/${'a'.repeat(2001)}`
+  const deep = `https://example.com/${'('.repeat(33)}x${')'.repeat(33)}`
+  for (const source of [
+    `[docs](${long})`,
+    `[docs](<${long}>)`,
+    `[docs](${deep})`,
+  ]) {
+    const nodes = parseInline(source, new Map())
+    expect(links(nodes)).toBe(0)
+    expect(plainText(nodes)).toBe(source)
+  }
+})

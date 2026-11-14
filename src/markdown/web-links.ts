@@ -1,3 +1,5 @@
+import { readMarkdownAddress } from './markdown-destination'
+
 /** A web address in text, with its source and optional Markdown label. */
 export type WebAddressLink = {
   kind: 'link'
@@ -21,7 +23,7 @@ export type WebLink =
   | { kind: 'web'; url: URL }
 
 const barePattern = /https?:\/\/[^\s<>`]+/y
-const markdownTarget = /\(<?(https?:\/\/[^\s<>)`]+)>?\)/y
+const markdownLabel = /\[([^\]\n]*)\]\(/y
 const endMarks = new Set([...'.,;:!?\'"*_~]'])
 const localHosts = new Set(['localhost', '127.0.0.1', '[::1]', '0.0.0.0'])
 const invisible = /\p{Default_Ignorable_Code_Point}/gu
@@ -81,43 +83,51 @@ export function bareAddressAt(text: string, at: number): string | null {
   return address || null
 }
 
-/** The web target in parentheses at `at`, with optional angle brackets. */
-export function markdownTargetAt(
-  text: string,
-  at: number,
-): { href: string; length: number } | null {
-  markdownTarget.lastIndex = at
-  const match = markdownTarget.exec(text)
-  return match ? { href: match[1] ?? '', length: match[0].length } : null
-}
-
 /** Text and its addresses. With `markdown`, a Markdown link stays one part. */
 export function webAddressParts(
   text: string,
   markdown = true,
 ): WebAddressPart[] {
-  const pattern = new RegExp(
-    markdown
-      ? `\\[([^\\]\\n]*)\\]${markdownTarget.source}|${barePattern.source}`
-      : barePattern.source,
-    'g',
-  )
   const parts: WebAddressPart[] = []
   let end = 0
-  for (const match of text.matchAll(pattern)) {
-    const [whole, label, target] = match
-    const href = target ?? bareAddressAt(whole, 0)
-    if (!href) continue
-    const source = target === undefined ? href : whole
-    if (match.index > end) {
-      parts.push({ kind: 'text', text: text.slice(end, match.index) })
+  for (let index = 0; index < text.length;) {
+    let href: string | null = null
+    let source = ''
+    let label: string | undefined
+    let start = index
+    if (text[index] === '[') {
+      markdownLabel.lastIndex = index
+      const match = markdownLabel.exec(text)
+      const address = match
+        ? readMarkdownAddress(text, index + match[0].length)
+        : null
+      if (address && text[address.next] === ')') {
+        href = address.destination
+        if (markdown) {
+          source = text.slice(index, address.next + 1)
+          label = match?.[1]
+        } else {
+          start = address.start
+          source = text.slice(address.start, address.end)
+        }
+      }
     }
+    if (href === null && text.startsWith('http', index)) {
+      href = bareAddressAt(text, index)
+      source = href ?? ''
+    }
+    if (href === null) {
+      index += 1
+      continue
+    }
+    if (start > end) parts.push({ kind: 'text', text: text.slice(end, start) })
     parts.push(
-      target === undefined
+      label === undefined
         ? { kind: 'link', href, source }
         : { kind: 'link', href, source, label },
     )
-    end = match.index + source.length
+    index = start + source.length
+    end = index
   }
   if (end < text.length) parts.push({ kind: 'text', text: text.slice(end) })
   return parts
