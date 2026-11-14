@@ -27,10 +27,7 @@ afterEach(async () => {
 
 it('mounts build history, logs and admin starts and installs the release in the real image coordinator', async () => {
   const active = (fixture = await featureFixture(bundle, {
-    configuration: {
-      CONDUCTIVE_RUNNER_ARCHIVE_URL: OUTER_SOFTWARE.url,
-      CONDUCTIVE_RUNNER_ARCHIVE_SHA256: OUTER_SOFTWARE.sha256,
-    },
+    configuration: {},
   }))
   const builds = orgSettingsPaths.builds(OUTER_ORG)
   const history = await active.request(builds)

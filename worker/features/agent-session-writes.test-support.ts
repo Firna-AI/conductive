@@ -16,7 +16,6 @@ import {
   OUTER_ORG,
   OUTER_WORKSPACE,
   OUTER_TOKEN,
-  OUTER_SOFTWARE,
 } from '../chat/integration/outer-seed.test-support'
 import {
   requestRunner,
@@ -35,8 +34,6 @@ export async function agentWriteFixture(
     persistencePath: await mkdtemp(directory + 'case-'),
     configuration: {
       CONDUCTIVE_DEFAULT_CHOICE: JSON.stringify(CLAUDE),
-      CONDUCTIVE_RUNNER_ARCHIVE_URL: OUTER_SOFTWARE.url,
-      CONDUCTIVE_RUNNER_ARCHIVE_SHA256: OUTER_SOFTWARE.sha256,
       CONDUCTIVE_MODELS: JSON.stringify([
         { ...CLAUDE, label: 'Test Claude', efforts: ['high', 'max'] },
       ]),

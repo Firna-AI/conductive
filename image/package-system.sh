@@ -4,7 +4,7 @@ output=$1
 staging=$(mktemp -d)
 trap 'rm -rf "$staging"' EXIT
 mkdir -p "$output"
-for file in runner-start.sh preview-relay-start.sh github-cli.sh 60-conductive-disk-cache.rules install-system.sh conductive-preview-relay.socket conductive-update-apply.service conductive-update-check.service conductive-update-check.timer conductive-update-confirm.service; do
+for file in runner-start.sh preview-relay-start.sh github-cli.sh 60-conductive-disk-cache.rules install-system.sh conductive-preview-relay.socket conductive-update-apply.service conductive-update-check.service conductive-update-check.timer; do
   cp "image/$file" "$staging/$file"
 done
 cp image/release/* "$staging/"
@@ -21,10 +21,7 @@ for (const [name, script] of [['terminal', launcherScript()], ['terminal-passwor
 }
 for (const name of ['runner-start.sh']) {
   const text = readFileSync(`${folder}/${name}`, 'utf8')
-    .replaceAll('@CONDUCTIVE_NODE@', '"$release/node/bin/node"')
     .replaceAll('@RUNNER_PATH@', MACHINE_PATHS.runner)
-    .replaceAll('/opt/conductive/software', '"$release/runner"')
-    .replace('set -eu\n', 'set -eu\nrelease=$(readlink -f /opt/conductive/current)\n')
   writeFileSync(`${folder}/${name}`, text)
 }
 unlinkSync(`${folder}/terminal.mjs`)

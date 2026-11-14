@@ -1,7 +1,7 @@
 import type { StopHookInput } from '@anthropic-ai/claude-agent-sdk'
 import { expect, it } from 'vitest'
 
-import { backgroundFixture } from '../../../test-support/background'
+import { backgroundFixture } from '../../test-support/background'
 
 async function fixture() {
   const h = await backgroundFixture()

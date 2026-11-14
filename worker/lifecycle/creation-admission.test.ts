@@ -5,7 +5,6 @@ import {
   type CreateWorkspaceResponse,
 } from '../../src/shared/workspaces'
 import { setupBackendTests } from './backend-test-hooks'
-import { SOFTWARE } from './backend-test-support'
 import { handleLifecycleRequest, type LifecycleBrowserOptions } from './browser'
 import { FIRST_MESSAGE } from './durable-test-support'
 
@@ -20,7 +19,6 @@ it('answers with the stored queued first message before starting a sandbox and p
   }
   const messages = new Map<string, UserMessage>()
   const options: LifecycleBrowserOptions = {
-    software: SOFTWARE,
     waitUntil: (work) => {
       void work.catch(() => {})
     },

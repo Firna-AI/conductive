@@ -13,9 +13,7 @@ import { join } from 'node:path'
 
 import { expect, it, onTestFinished } from 'vitest'
 
-import { wireFixture } from '../../../test-support/wire'
-import { Runner } from '../../../src/runner'
-import { writeClaudeProfile } from './claude-profile'
+import { clearClaudeCredentials, writeClaudeProfile } from './claude-profile'
 
 async function fixture() {
   const home = await mkdtemp(join(tmpdir(), 'conductive-profile-'))
@@ -115,7 +113,7 @@ it('gives concurrent sessions distinct safe names and removes only their own cre
   ).toContain('https://gateway/claude')
 })
 
-it('removes stale credentials before connecting and preserves live credentials on reconnect', async () => {
+it('removes private stale credentials and keeps project credentials', async () => {
   const h = await fixture()
   const stale = join(h.directory, 'credentials')
   await mkdir(stale, { recursive: true })
@@ -124,27 +122,9 @@ it('removes stale credentials before connecting and preserves live credentials o
   const project = join(h.home, '.anthropic', 'credentials')
   await mkdir(project, { recursive: true })
   await writeFile(join(project, 'default.json'), 'project-token')
-  const wire = await wireFixture()
-  let observed: string[] = ['not-connected']
-  const runner = new Runner({
-    ...wire.options,
-    home: h.home,
-    connect: async (request) => {
-      observed = await readdir(stale)
-      return wire.options.connect(request)
-    },
-  })
-  onTestFinished(() => runner.close())
-  await runner.start(false)
-  expect(observed).toEqual([])
+  await clearClaudeCredentials(h.home)
   expect(await readdir(stale)).toEqual([])
   expect(await readFile(join(project, 'default.json'), 'utf8')).toBe(
     'project-token',
-  )
-  await writeFile(join(stale, 'live-session.json'), 'live-token')
-  await runner.connect()
-  expect(observed).toEqual(['live-session.json'])
-  expect(await readFile(join(stale, 'live-session.json'), 'utf8')).toBe(
-    'live-token',
   )
 })

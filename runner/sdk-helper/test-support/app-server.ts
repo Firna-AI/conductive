@@ -1,4 +1,4 @@
-import { object, string } from '../../src/parse'
+import { object, string } from '../src/parse'
 import type {
   ProcessPort,
   ProcessRequest,

@@ -147,7 +147,11 @@ export async function continueNativeFixture(trackIgnored = false) {
   }
   const map = (command: string) =>
     command
-      .replaceAll('/home/user', home)
+      .replaceAll('HOME=/home/user ', `HOME=${shellQuote(home)} `)
+      .replaceAll(
+        'GIT_CEILING_DIRECTORIES=/home/user ',
+        `GIT_CEILING_DIRECTORIES=${shellQuote(home)} `,
+      )
       .replaceAll('/tmp/conductive-continue', join(root, 'continuations'))
       .replaceAll('/usr/local/bin/conductive-git-credential', helper)
       .replaceAll(

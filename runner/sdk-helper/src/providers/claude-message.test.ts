@@ -2,29 +2,23 @@ import { beforeEach, expect, it, onTestFinished } from 'vitest'
 
 import { FakeClaudeQuery } from '../../test-support/claude-query'
 import { mockComputerServer } from '../../test-support/computer-mcp'
-import { runnerHarness, turn } from '../../../test-support/harness'
-import { Runner } from '../../../src/runner'
+import { turn } from '../../test-support/input'
+import { providerFixture } from '../../test-support/fixture'
 import { createClaudeFactory } from './claude'
 import { ClaudeEvents } from './claude-events'
 import type { ProviderEvent } from '../generated/ProviderEvent'
 
 beforeEach(mockComputerServer)
 
-it('completes a whole Claude message after both blocks without storing a split credential', async () => {
-  const h = await runnerHarness()
-  await h.runner.close()
+it('completes a whole Claude message after both blocks with the full SDK text before Rust filters credentials', async () => {
+  const h = await providerFixture()
   const sdk = new FakeClaudeQuery()
-  const runner = new Runner({
-    ...h.options,
-    providers: {
-      ...h.options.providers,
-      claude: createClaudeFactory(sdk.open, () => '/pinned/claude'),
-    },
-  })
-  onTestFinished(() => runner.close())
-  await runner.start(false)
-  h.endpoint.send(turn())
-  await runner.idle()
+  const provider = await createClaudeFactory(
+    sdk.open,
+    () => '/pinned/claude',
+  )({ ...h.options })
+  onTestFinished(() => provider.close())
+  await provider.send(turn())
   const user = await sdk.nextUser()
   const frame = (text: string) => ({
     type: 'assistant',
@@ -34,15 +28,11 @@ it('completes a whole Claude message after both blocks without storing a split c
   const stream = (event: unknown) =>
     sdk.raw({ type: 'stream_event', user_message_uuid: user.uuid, event })
   const answers = () =>
-    h.endpoint.runnerEvents.flatMap(({ event }) =>
-      event.type === 'assistant.completed' ? [event] : [],
-    )
+    h.events.flatMap((event) => (event.type === 'answer' ? [event] : []))
   const publicText = () =>
-    h.endpoint.events
-      .flatMap(({ event }) =>
-        event.type === 'assistant.delta' || event.type === 'assistant.completed'
-          ? [event.text]
-          : [],
+    h.events
+      .flatMap((event) =>
+        event.type === 'delta' || event.type === 'answer' ? [event.text] : [],
       )
       .join('')
   await stream({ type: 'message_start', message: { id: 'whole-message' } })
@@ -58,9 +48,8 @@ it('completes a whole Claude message after both blocks without storing a split c
   })
   await stream({ type: 'content_block_stop', index: 0 })
   await sdk.raw(frame('Login: secret-'))
-  await runner.idle()
   expect(answers()).toEqual([])
-  expect(publicText()).toBe('Login: ')
+  expect(publicText()).toBe('Login: secret-')
   await stream({
     type: 'content_block_start',
     index: 1,
@@ -73,23 +62,19 @@ it('completes a whole Claude message after both blocks without storing a split c
   })
   await sdk.raw(frame('alice. Done.'))
   await stream({ type: 'content_block_stop', index: 1 })
-  await runner.idle()
   expect(answers()).toEqual([])
   await stream({ type: 'message_stop' })
-  await runner.idle()
   expect(answers()).toEqual([
     {
-      type: 'assistant.completed',
-      sessionId: 'session-1',
-      turnId: 'turn-1',
+      type: 'answer',
       messageId: 'whole-message',
-      text: 'Login: [redacted]. Done.',
+      text: 'Login: secret-alice. Done.',
       userMessageIds: ['message-1'],
     },
   ])
-  expect(publicText()).toBe('Login: [redacted]. Done.Login: [redacted]. Done.')
-  expect(JSON.stringify(await h.storage.read())).not.toContain('secret-')
-  expect(JSON.stringify(h.endpoint.events)).not.toContain('secret-')
+  expect(publicText()).toBe(
+    'Login: secret-alice. Done.Login: secret-alice. Done.',
+  )
   expect(h.warnings).toEqual([])
 })
 

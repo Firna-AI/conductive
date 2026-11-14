@@ -4,12 +4,12 @@ import { join } from 'node:path'
 
 import { onTestFinished } from 'vitest'
 
-import { object } from '../../src/parse'
+import { object } from '../src/parse'
 import type { ProcessPort, StartProcess } from '../src/providers/process'
 import type { ProviderOptions } from '../src/providers/types'
 import { FakeAppServers } from './app-server'
-import { turn } from '../../test-support/harness'
-import { fakeCodexAccount, fakeToolContext } from '../../test-support/providers'
+import { turn } from './input'
+import { fakeCodexAccount, fakeToolContext } from './input'
 
 export function codexCredentialFile(directory: string): string {
   return join(directory, 'auth.json')

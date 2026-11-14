@@ -2,9 +2,9 @@ import { beforeEach, expect, it, onTestFinished } from 'vitest'
 
 import { FakeClaudeQuery } from '../../test-support/claude-query'
 import { mockComputerServer } from '../../test-support/computer-mcp'
-import { runnerHarness, turn } from '../../../test-support/harness'
+import { turn } from '../../test-support/input'
 import { string } from '../parse'
-import { Runner } from '../../../src/runner'
+import { providerFixture } from '../../test-support/fixture'
 import { createClaudeFactory } from './claude'
 import { ClaudeEvents } from './claude-events'
 import type { ProviderEvent } from '../generated/ProviderEvent'
@@ -12,27 +12,16 @@ import type { ProviderEvent } from '../generated/ProviderEvent'
 beforeEach(mockComputerServer)
 
 it('keeps a resumed Claude turn open for its real answer after a background result', async () => {
-  const h = await runnerHarness()
-  await h.runner.close()
-  await h.store.remember({
-    sessionId: 'session-1',
-    agent: 'claude',
-    providerSessionId: 'saved-sdk-session',
-  })
+  const h = await providerFixture()
   const sdk = new FakeClaudeQuery()
-  const runner = new Runner({
-    ...h.options,
-    providers: {
-      ...h.options.providers,
-      claude: createClaudeFactory(sdk.open, () => '/pinned/claude'),
-    },
-  })
-  onTestFinished(() => runner.close())
-  await runner.start(false)
+  const provider = await createClaudeFactory(
+    sdk.open,
+    () => '/pinned/claude',
+  )({ ...h.options, conversationId: 'saved-sdk-session' })
+  onTestFinished(() => provider.close())
   const command = turn()
   command.message.text = 'can you reach the internet?'
-  h.endpoint.send(command)
-  await runner.idle()
+  await provider.send(command)
   const uuid = string((await sdk.nextUser()).uuid)
   expect(sdk.parameters?.options?.resume).toBe('saved-sdk-session')
   await sdk.raw({
@@ -51,12 +40,9 @@ it('keeps a resumed Claude turn open for its real answer after a background resu
     origin: { kind: 'task-notification' },
     user_message_uuids: [],
   })
-  await runner.idle()
   const ends = () =>
-    h.endpoint.runnerEvents.flatMap(({ event }) =>
-      event.type === 'turn.completed' || event.type === 'turn.failed'
-        ? [event]
-        : [],
+    h.events.flatMap((event) =>
+      event.type === 'result' || event.type === 'failed' ? [event] : [],
     )
   expect(ends()).toEqual([])
   expect(sdk.closed).toBe(false)
@@ -72,11 +58,8 @@ it('keeps a resumed Claude turn open for its real answer after a background resu
       delta: { type: 'text_delta', text: 'The internet is reachable.' },
     },
   })
-  await runner.idle()
   expect(
-    h.endpoint.runnerEvents.flatMap(({ event }) =>
-      event.type === 'assistant.delta' ? [event.text] : [],
-    ),
+    h.events.flatMap((event) => (event.type === 'delta' ? [event.text] : [])),
   ).toEqual(['The internet is reachable.'])
   expect(ends()).toEqual([])
   expect(sdk.closed).toBe(false)
@@ -86,34 +69,20 @@ it('keeps a resumed Claude turn open for its real answer after a background resu
     is_error: false,
     user_message_uuid: uuid,
   })
-  await runner.idle()
   expect(
-    h.endpoint.runnerEvents.flatMap(({ event }) =>
-      event.type === 'assistant.completed' ? [event] : [],
-    ),
+    h.events.flatMap((event) => (event.type === 'answer' ? [event] : [])),
   ).toEqual([
     {
-      type: 'assistant.completed',
-      sessionId: 'session-1',
-      turnId: 'turn-1',
+      type: 'answer',
       messageId: 'internet-answer',
       text: 'The internet is reachable.',
       userMessageIds: ['message-1'],
     },
   ])
   expect(ends()).toEqual([
-    {
-      type: 'turn.completed',
-      sessionId: 'session-1',
-      turnId: 'turn-1',
-      state: 'finished',
-      durationMs: 0,
-      files: [],
-      omittedFileCount: 0,
-      userMessageIds: ['message-1'],
-    },
+    { type: 'result', state: 'finished', userMessageIds: ['message-1'] },
   ])
-  expect(sdk.closed).toBe(true)
+  expect(sdk.closed).toBe(false)
   expect(h.warnings).toEqual([])
 })
 

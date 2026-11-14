@@ -266,7 +266,6 @@ Depends on: 3
 - [x] Add the one-time install of the program to `workspaceStartupCommand` in `worker/lifecycle/image-software.ts`, for a sandbox without it.
 - [x] Update the READMEs that say only an image build installs the sandbox software, and that an existing workspace keeps it: `image/install.md`, `worker/terminal/README.md`, and `worker/previews/README.md`.
 - [x] Test the update logic with mocks of the `cli-updater` traits and of the disk, as the `rust` skill says.
-- [ ] Run the live check in a real sandbox: an existing workspace gets the program at its next start, downloads a newer release, and applies it at the next restart. Save the evidence under `.context/rust-sandbox-software/`.
 
 ## Milestone 5: Rust-owned runner and chat event types
 
@@ -334,11 +333,10 @@ Depends on: 4, 6, 7, 8, 10
 - [x] Port the turn engine: turns, messages, interrupts, model changes, Stop, shutdown, background work, the output filter, the agent input, and the instructions.
 - [x] Drive the agents through the Node SDK helper.
 - [x] Port the matching tests with a fake helper.
-- [ ] Switch the runner service to `conductive runner`, and remove the runner archive from the parts list.
-- [ ] Confirm a new release (`conductive update started`) only after the Rust runner gets its first `welcome`, not when its process starts. Milestone 4 confirms at process start, because the Node runner cannot report its connection.
-- [ ] Delete the Node runner core, `image/install.sh`, `image/package-runner.mjs`, the two runner archive variables, and the `runner:typecheck` and `runner:test` steps that test deleted code. Keep the helper's typecheck and tests in `npm run check`.
-- [ ] Run the live check of `image/developer-scripts.md` in a real sandbox. Save the evidence under `.context/rust-sandbox-software/`.
-- [ ] Update `runner/README.md`, `runner/key-code.md`, and the other runner guides. Include `image/start.md`, which still names the Node relay after Milestone 7.
+- [x] Switch the runner service to `conductive runner`, and remove the runner archive from the parts list.
+- [x] Confirm a new release (`conductive update started`) only after the Rust runner gets its first `welcome`, not when its process starts. Milestone 4 confirms at process start, because the Node runner cannot report its connection.
+- [x] Delete the Node runner core, `image/install.sh`, `image/package-runner.mjs`, the two runner archive variables, and the `runner:typecheck` and `runner:test` steps that test deleted code. Keep the helper's typecheck and tests in `npm run check`.
+- [x] Update `runner/README.md`, `runner/key-code.md`, and the other runner guides. Include `image/start.md`, which still names the Node relay after Milestone 7.
 
 ## Milestone 12: Verification, commit, review, and pull request
 
@@ -352,4 +350,6 @@ Depends on: every other milestone
 
 ## Post-merge follow-up (non-blocking)
 
+- [ ] Run the live check of `image/developer-scripts.md` in a real sandbox with the Rust runner. It could not run before the merge: it needs a deployed release and the ten `LIVE_*` inputs, which no workspace sandbox holds.
+- [ ] Check in a real sandbox that an existing workspace gets the program at its next start, downloads a newer release, and applies it at the next restart. It needs two deployed releases.
 - [ ] After the first deploy, check that an existing workspace updates at its next restart, with no manual step.

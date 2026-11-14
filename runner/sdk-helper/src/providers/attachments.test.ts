@@ -3,9 +3,8 @@ import type { Agent } from '../generated/Agent'
 import { FakeAppServers } from '../../test-support/app-server'
 import { FakeClaudeQuery } from '../../test-support/claude-query'
 import { mockComputerServer } from '../../test-support/computer-mcp'
-import { turn } from '../../../test-support/harness'
-import { fakeToolContext } from '../../../test-support/providers'
-import { agentInstructions } from '../../../src/instructions'
+import { turn } from '../../test-support/input'
+import { fakeToolContext } from '../../test-support/input'
 import { createClaudeFactory } from './claude'
 import { createCodexFactory } from './codex'
 import * as environment from './environment'
@@ -58,10 +57,7 @@ function attachedTurn(agent: Agent) {
     commitAuthor: null,
     choice: command.message.choice,
     conversationId: null,
-    instructions: agentInstructions({
-      cwd: '/test/repository',
-      defaultBranch: 'main',
-    })[agent],
+    instructions: 'Read each attached file before answering.',
     tools: fakeToolContext,
     event: () => {},
     warn: () => {},

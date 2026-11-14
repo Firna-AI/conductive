@@ -36,7 +36,8 @@ refusal codes. `relay` serves previews through [cnd-relay](../cnd-relay/README.m
 resolve Node and the helper beside the running release executable. Local
 builds use `node` and `dist/sdk-helper/sdk-helper.mjs` in the working folder.
 SIGTERM and SIGINT end live turns, save pending events, and close the connection.
-The installed runner service still uses the Node core.
+The installed service runs this Rust runner. Its first valid welcome confirms
+the release through the pinned executable. It keeps the Node-format state file.
 
 `update check` uses `cli-updater` to read and compare the newest release.
 It downloads into a private version folder. It checks the program digest

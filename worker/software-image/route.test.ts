@@ -3,7 +3,6 @@ import { expect, it } from 'vitest'
 import { createApp } from '../application'
 import type { AppEnv } from '../env'
 import { setupBackendTests } from '../lifecycle/backend-test-hooks'
-import { SOFTWARE_RELEASE as SOFTWARE } from '../lifecycle/software-release-test-support'
 import { TEST_TIME } from '../test-support/harness'
 import { sha256Hex } from './digest'
 
@@ -16,8 +15,6 @@ async function routeFixture() {
   const digest = await sha256Hex(token)
   const env: AppEnv = {
     ...images.env,
-    CONDUCTIVE_RUNNER_ARCHIVE_URL: SOFTWARE.url,
-    CONDUCTIVE_RUNNER_ARCHIVE_SHA256: SOFTWARE.sha256,
     CONDUCTIVE_DEPLOY_TOKEN_SHA256: digest,
     CF_VERSION_METADATA: {
       id: 'worker-version',

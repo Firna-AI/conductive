@@ -45,7 +45,8 @@ cargo run -p cnd-runner-interface --example export_bindings
 
 The build writes `sdk-helper.mjs`, `measure.mjs`, and `compare.mjs` into `dist/sdk-helper/`.
 A local package link lets each bundle find the SDK packages.
-The parent runner's install, typecheck, tests, and build also run the helper steps.
+The parent install command installs the helper. Root `runner:typecheck` and
+`runner:test` scripts check only this package.
 The root lint and format commands cover both packages.
 
 The [measurement guide](scripts/README.md) describes the first-start tools.
@@ -55,14 +56,13 @@ They start adapters directly with developer credentials. They do not measure the
 
 `node runner/sdk-helper/scripts/package.mjs OUTPUT` builds a Linux x64 archive.
 It prints the SHA-256 digest and writes `sdk-helper-<sha256>.tar.gz` into `OUTPUT`.
-The archive holds one helper bundle, npm runtime packages, and their pinned agent programs.
+The archive holds the helper and measurement bundles, npm runtime packages, and their pinned agent programs.
 The deploy publishes it as the `sdk-helper` release part.
 The separate `node` part supplies Node.
 
 The runner selects the helper from its pinned release folder at startup.
 Development builds select `dist/sdk-helper/sdk-helper.mjs`.
-The standalone service installer sets `CONDUCTIVE_SDK_HELPER` to its installed helper path.
-The existing runner archive keeps SDK packages for its measurement bundles.
+The Rust runner drives the helper directly. The release contains no separate runner archive.
 
 ## Key code
 
@@ -73,4 +73,4 @@ The existing runner archive keeps SDK packages for its measurement bundles.
 - [claude.ts](src/providers/claude.ts) and [codex.ts](src/providers/codex.ts) start the two adapters.
 - [lifetime.ts](src/providers/lifetime.ts) waits for agent exit and removes credentials.
 - [test-support](test-support/) holds the fake SDK query, App Server, and provider fixtures.
-- [runner client](../src/sdk-helper.ts) drives helper processes from the Node runner.
+- [Rust driver](../../crates/cnd-runner/src/helper/driver.rs) drives helper processes.

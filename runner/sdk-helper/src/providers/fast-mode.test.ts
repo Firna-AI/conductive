@@ -3,8 +3,9 @@ import { beforeEach, expect, it, onTestFinished } from 'vitest'
 import { FakeAppServers } from '../../test-support/app-server'
 import { FakeClaudeQuery } from '../../test-support/claude-query'
 import { mockComputerServer } from '../../test-support/computer-mcp'
-import { runnerHarness, turn } from '../../../test-support/harness'
-import { fakeToolContext } from '../../../test-support/providers'
+import { turn } from '../../test-support/input'
+import { providerFixture } from '../../test-support/fixture'
+import { fakeToolContext } from '../../test-support/input'
 import { fakeClaudeProfile } from '../../test-support/profile'
 import { createClaudeFactory } from './claude'
 import { createCodexFactory } from './codex'
@@ -14,8 +15,7 @@ import type { ProviderOptions } from './types'
 beforeEach(mockComputerServer)
 
 async function options(agent: 'claude' | 'codex') {
-  const h = await runnerHarness()
-  await h.runner.close()
+  const h = await providerFixture()
   const events: ProviderEvent[] = []
   const command = turn('1', 'alice', agent)
   const input: ProviderOptions = {

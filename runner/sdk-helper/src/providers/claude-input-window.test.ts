@@ -2,38 +2,32 @@ import { beforeEach, expect, it, onTestFinished } from 'vitest'
 
 import { FakeClaudeQuery } from '../../test-support/claude-query'
 import { mockComputerServer } from '../../test-support/computer-mcp'
-import { duringTurn, runnerHarness, turn } from '../../../test-support/harness'
-import { fakeToolContext } from '../../../test-support/providers'
+import { duringTurn, turn } from '../../test-support/input'
+import { fakeToolContext } from '../../test-support/input'
 import { string } from '../parse'
-import { Runner } from '../../../src/runner'
+import { providerFixture } from '../../test-support/fixture'
 import { createClaudeFactory } from './claude'
 
 beforeEach(mockComputerServer)
 
 async function queuedClaudeTurn() {
-  const h = await runnerHarness()
-  await h.runner.close()
+  const h = await providerFixture()
   const sdk = new FakeClaudeQuery()
-  const runner = new Runner({
-    ...h.options,
-    providers: {
-      ...h.options.providers,
-      claude: createClaudeFactory(sdk.open, () => '/pinned/claude'),
-    },
-  })
-  onTestFinished(() => runner.close())
-  await runner.start(false)
+  const provider = await createClaudeFactory(
+    sdk.open,
+    () => '/pinned/claude',
+  )(h.options)
+  onTestFinished(() => provider.close())
   const first = turn()
   first.message.text = 'Message 1.'
-  h.endpoint.send(first)
+  await provider.send(first)
   for (let id = 2; id <= 65; id++)
-    h.endpoint.send({
+    await provider.send({
       ...duringTurn(turn(String(id))),
       type: 'message',
       turnId: 'turn-1',
       message: { ...turn(String(id)).message, text: `Message ${id}.` },
     })
-  await runner.idle()
   const sent: string[] = []
   for (let id = 1; id <= 64; id++) {
     const message = await sdk.nextUser()
@@ -43,10 +37,10 @@ async function queuedClaudeTurn() {
     })
     sent.push(string(message.uuid))
   }
-  return { ...h, runner, sdk, sent }
+  return { ...h, provider, sdk, sent }
 }
 
-it('holds the 65th Claude message until a result frees input and completes the exact turn', async () => {
+it('holds the 65th Claude message until a result frees input and reports exact message IDs', async () => {
   const h = await queuedClaudeTurn()
   let delivered = false
   const pending = h.sdk.nextInput().then((message) => {
@@ -54,7 +48,6 @@ it('holds the 65th Claude message until a result frees input and completes the e
     return message.done ? null : message.value
   })
   await h.sdk.raw({ type: 'system', subtype: 'init', session_id: 'sdk-ready' })
-  await h.runner.idle()
   expect(delivered).toBe(false)
   await h.sdk.raw({
     type: 'result',
@@ -62,20 +55,25 @@ it('holds the 65th Claude message until a result frees input and completes the e
     origin: { kind: 'task-notification' },
     user_message_uuids: h.sent,
   })
-  await h.runner.idle()
-  expect(delivered).toBe(true)
   const last = await pending
+  expect(delivered).toBe(true)
   expect(last?.message).toEqual({
     role: 'user',
     content: 'Sender: @alice [member ID: "alice"]\n\nMessage 65.',
   })
   expect(h.sent).not.toContain(last?.uuid)
-  await h.runner.idle()
   const completed = () =>
-    h.endpoint.runnerEvents.flatMap(({ event }) =>
-      event.type === 'turn.completed' ? [event] : [],
-    )
-  expect(completed()).toEqual([])
+    h.events.flatMap((event) => (event.type === 'result' ? [event] : []))
+  expect(completed()).toEqual([
+    {
+      type: 'result',
+      state: 'finished',
+      userMessageIds: Array.from(
+        { length: 64 },
+        (_, index) => `message-${index + 1}`,
+      ),
+    },
+  ])
   await h.sdk.raw({
     type: 'stream_event',
     user_message_uuid: last?.uuid,
@@ -94,39 +92,36 @@ it('holds the 65th Claude message until a result frees input and completes the e
     origin: { kind: 'task-notification' },
     user_message_uuids: h.sent,
   })
-  await h.runner.idle()
   expect(
-    h.endpoint.runnerEvents.flatMap(({ event }) =>
-      event.type === 'assistant.completed' ? [event] : [],
-    ),
+    h.events.flatMap((event) => (event.type === 'answer' ? [event] : [])),
   ).toEqual([])
-  expect(completed()).toEqual([])
-  await h.sdk.raw({
-    type: 'result',
-    is_error: false,
-  })
-  await h.runner.idle()
   expect(completed()).toEqual([
     {
-      type: 'turn.completed',
-      sessionId: 'session-1',
-      turnId: 'turn-1',
+      type: 'result',
       state: 'finished',
-      durationMs: 0,
-      files: [],
-      omittedFileCount: 0,
       userMessageIds: Array.from(
-        { length: 65 },
+        { length: 64 },
         (_, index) => `message-${index + 1}`,
       ),
     },
+  ])
+  await h.sdk.raw({ type: 'result', is_error: false })
+  expect(completed()).toEqual([
+    {
+      type: 'result',
+      state: 'finished',
+      userMessageIds: Array.from(
+        { length: 64 },
+        (_, index) => `message-${index + 1}`,
+      ),
+    },
+    { type: 'result', state: 'finished', userMessageIds: ['message-65'] },
   ])
   expect(h.warnings).toEqual([])
 })
 
 it('frees Claude input only for explicitly listed outstanding SDK UUIDs on each result', async () => {
-  const h = await runnerHarness()
-  await h.runner.close()
+  const h = await providerFixture()
   const sdk = new FakeClaudeQuery()
   const first = turn()
   const provider = await createClaudeFactory(
@@ -205,21 +200,9 @@ it('discards the held 65th Claude message when Stop closes SDK input', async () 
     return message
   })
   await h.sdk.raw({ type: 'system', subtype: 'init', session_id: 'sdk-ready' })
-  await h.runner.idle()
   expect(delivered).toBe(false)
-  h.endpoint.send({
-    type: 'interrupt',
-    commandId: 'stop',
-    sessionId: 'session-1',
-    turnId: 'turn-1',
-  })
-  await h.runner.idle()
+  await h.provider.stop()
   expect(await pending).toEqual({ done: true, value: undefined })
   expect(h.sdk.closed).toBe(true)
-  expect(h.endpoint.runnerEvents.at(-1)?.event).toMatchObject({
-    type: 'turn.completed',
-    turnId: 'turn-1',
-    state: 'stopped',
-  })
   expect(h.warnings).toEqual([])
 })

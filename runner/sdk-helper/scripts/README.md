@@ -6,10 +6,8 @@ the tools into `dist/sdk-helper/`. Run all commands from the repository root.
 Build them with `npm --prefix runner/sdk-helper run build`.
 Run `node dist/sdk-helper/measure.mjs` or `node dist/sdk-helper/compare.mjs <file>...`.
 
-Two tools measure the time of the first agent start after a resume. The
-install script copies both into the install folder. The install folder is
-an argument of the install script, so a measurement can use a folder
-inside or outside the home folder.
+Two tools measure the time of the first agent start after a resume. The helper part includes both tools. The live check copies that part to
+folders inside and outside the home folder for its placement measurements.
 
 - `measure.mjs` reads the `claude` program once and prints one JSON line.
   By default, it starts no agent, and the line says that it measured no

@@ -8,17 +8,19 @@ import {
 } from 'node:fs/promises'
 import { join } from 'node:path'
 
-import { expect, it, onTestFinished } from 'vitest'
+import { expect, it } from 'vitest'
 
 import {
   codexCredentialFile,
   codexTokenFixture,
 } from '../../test-support/codex-token'
-import { fakeCodexAccount } from '../../../test-support/providers'
-import { wireFixture } from '../../../test-support/wire'
+import { fakeCodexAccount } from '../../test-support/input'
 import { object } from '../parse'
-import { Runner } from '../../../src/runner'
-import { codexStorageHome, writeCodexCredentials } from './codex-credentials'
+import {
+  clearCodexCredentials,
+  codexStorageHome,
+  writeCodexCredentials,
+} from './codex-credentials'
 
 it('isolates session credentials with private permissions and preserves shared conversation data', async () => {
   const h = await codexTokenFixture()
@@ -110,7 +112,7 @@ it('isolates session credentials with private permissions and preserves shared c
   ).toBe('saved conversation')
 })
 
-it('removes stale Codex credentials before connecting and keeps live files on reconnect', async () => {
+it('removes stale Codex credentials and keeps shared session data', async () => {
   const h = await codexTokenFixture()
   const stale = await writeCodexCredentials(
     h.options.home,
@@ -123,23 +125,12 @@ it('removes stale Codex credentials before connecting and keeps live files on re
   const project = join(h.options.home, '.codex')
   await mkdir(project)
   await writeFile(codexCredentialFile(project), 'project-login')
-  const wire = await wireFixture()
-  const observed: (string | null)[] = []
-  const runner = new Runner({
-    ...wire.options,
-    home: h.options.home,
-    connect: async (request) => {
-      observed.push(
-        await readFile(codexCredentialFile(stale.directory), 'utf8').catch(
-          () => null,
-        ),
-      )
-      return wire.options.connect(request)
-    },
-  })
-  onTestFinished(() => runner.close())
-  await runner.start(false)
-  expect(observed).toEqual([null])
+  await clearCodexCredentials(h.options.home)
+  expect(
+    await readFile(codexCredentialFile(stale.directory), 'utf8').catch(
+      () => null,
+    ),
+  ).toBe(null)
   expect(await readdir(stale.directory)).toEqual([
     'archived_sessions',
     'config.toml',
@@ -148,22 +139,4 @@ it('removes stale Codex credentials before connecting and keeps live files on re
   expect(await readFile(codexCredentialFile(project), 'utf8')).toBe(
     'project-login',
   )
-  const live = await writeCodexCredentials(
-    h.options.home,
-    'stale',
-    'sk-live',
-    fakeCodexAccount,
-  )
-  await runner.connect()
-  expect(observed).toEqual([
-    null,
-    await readFile(codexCredentialFile(live.directory), 'utf8'),
-  ])
-  expect(
-    object(
-      object(
-        JSON.parse(await readFile(codexCredentialFile(live.directory), 'utf8')),
-      ).tokens,
-    ).access_token,
-  ).toBe('sk-live')
 })

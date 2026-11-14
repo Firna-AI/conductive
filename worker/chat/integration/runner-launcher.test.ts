@@ -1,6 +1,6 @@
 import { execFile } from 'node:child_process'
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
-import { dirname, join, resolve } from 'node:path'
+import { join, resolve } from 'node:path'
 import { promisify } from 'node:util'
 
 import { expect, it } from 'vitest'
@@ -8,10 +8,6 @@ import { expect, it } from 'vitest'
 import { MACHINE_PATHS } from '../../../src/shared/agent-tools'
 import { shellQuote } from '../../lifecycle/commands'
 import runnerStart from '../../../image/runner-start.sh?raw'
-import {
-  imageNodeExecutable,
-  imageRuntimeScript,
-} from '../../lifecycle/image-runtime'
 import { isolatedProcessEnvironment } from '../../test-support/process-environment'
 
 const execute = promisify(execFile)
@@ -24,7 +20,6 @@ async function runnerLauncher() {
   const secrets = join(root, 'run/ascii-secrets')
   const runtime = join(root, 'run/conductive')
   const repository = join(root, "repository folder's")
-  const node = imageNodeExecutable(root)
   const binaryDirectory = join(root, 'bin')
   const environment = isolatedProcessEnvironment({
     PATH: `${binaryDirectory}:/usr/bin:/bin`,
@@ -37,12 +32,11 @@ async function runnerLauncher() {
     await Promise.all(
       [
         join(installation, 'staged'),
-        dirname(node),
         secrets,
         runtime,
         repository,
         binaryDirectory,
-        join(installation, 'software/runner'),
+        join(installation, 'current'),
       ].map((directory) => mkdir(directory, { recursive: true })),
     )
     await writeFile(join(binaryDirectory, 'sudo'), '#!/bin/sh\nexit 0\n', {
@@ -51,9 +45,7 @@ async function runnerLauncher() {
     await writeFile(join(binaryDirectory, 'node'), '#!/bin/sh\nexit 71\n', {
       mode: 0o755,
     })
-    const source = imageRuntimeScript(
-      runnerStart.replaceAll('@RUNNER_PATH@', MACHINE_PATHS.runner),
-    )
+    const source = runnerStart.replaceAll('@RUNNER_PATH@', MACHINE_PATHS.runner)
     const launcher = join(root, 'runner-start.sh')
     await writeFile(
       launcher,
@@ -63,29 +55,20 @@ async function runnerLauncher() {
         .replaceAll('/run/conductive', runtime),
     )
     await writeFile(
-      node,
-      `#!/bin/sh\nexec ${shellQuote(process.execPath)} "$@"\n`,
-      { mode: 0o755 },
-    )
-    const configuration = new URL(
-      '../../../runner/src/config.ts',
-      import.meta.url,
-    ).href
-    await writeFile(
-      join(installation, 'software/runner/main.mjs'),
-      `
-import { configuration } from ${JSON.stringify(configuration)}
-const config = configuration(process.env)
+      join(installation, 'current/conductive'),
+      `#!${process.execPath}
 process.stdout.write(JSON.stringify({
-  workspaceId: config.workspaceId,
-  workspaceToken: config.request.workspaceToken,
-  runnerUrl: config.request.url,
-  repository: config.cwd,
+  command: process.argv.slice(2),
+  workspaceId: process.env.CONDUCTIVE_WORKSPACE_ID,
+  workspaceToken: process.env.CONDUCTIVE_WORKSPACE_TOKEN,
+  runnerUrl: process.env.CONDUCTIVE_RUNNER_URL,
+  repository: process.env.CONDUCTIVE_REPOSITORY,
   cwd: process.cwd(),
-  defaultBranch: config.defaultBranch,
-  workspaceBranch: config.workspaceBranch,
+  defaultBranch: process.env.CONDUCTIVE_DEFAULT_BRANCH,
+  workspaceBranch: process.env.CONDUCTIVE_WORKSPACE_BRANCH,
 }))
 `,
+      { mode: 0o755 },
     )
     return {
       repository,
@@ -124,7 +107,7 @@ process.stdout.write(JSON.stringify({
   }
 }
 
-it('maps sandbox settings into the runner configuration through its staged private Node launcher', async () => {
+it('maps sandbox settings into the Rust runner through its release launcher', async () => {
   const launcher = await runnerLauncher()
   try {
     const result = await launcher.run({
@@ -141,6 +124,7 @@ it('maps sandbox settings into the runner configuration through its staged priva
     expect(result.exitCode, String(result.stderr)).toBe(0)
     expect(result.stderr).toBe('')
     expect(JSON.parse(String(result.stdout))).toEqual({
+      command: ['runner'],
       workspaceId: 'workspace-launcher',
       workspaceToken: 'workspace-token',
       runnerUrl: new URL(MACHINE_PATHS.runner, 'https://api.conductive.test')

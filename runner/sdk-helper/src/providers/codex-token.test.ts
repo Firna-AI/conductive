@@ -7,7 +7,6 @@ import {
   codexTokenFixture,
 } from '../../test-support/codex-token'
 import { mockComputerServer } from '../../test-support/computer-mcp'
-import { parseWorkspaceMessage } from '../../../src/commands'
 import { object } from '../parse'
 import { createCodexFactory } from './codex'
 import { codexStorageHome } from './codex-credentials'
@@ -36,7 +35,6 @@ it('starts and resumes ChatGPT turns from a credential file through the gateway'
   }
   const directories: string[] = []
   for (const conversationId of [null, 'saved-thread']) {
-    expect(parseWorkspaceMessage(h.command, () => {})).toEqual(h.command)
     const provider = await createCodexFactory(h.start)({
       ...h.options,
       conversationId,

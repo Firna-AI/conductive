@@ -143,31 +143,8 @@ jobs:
           set -euo pipefail
           npm run build
 
-      # Name the archive by the digest of its contents.
-      - name: Package runner
-        id: runner
-        run: |
-          set -euo pipefail
-          node image/package-runner.mjs --base-url "$RUNNER_BASE_URL"
-          metadata=.context/runner-artifact/runner.tar.gz.json
-          url=$(jq -r '.url' "$metadata")
-          sha256=$(jq -r '.sha256' "$metadata")
-          if [[ ! "$sha256" =~ ^[[:xdigit:]]{64}$ ||
-            "$url" != "${RUNNER_BASE_URL}runner-${sha256}.tar.gz" ]]; then
-            echo '::error::Runner archive metadata has an invalid digest or URL.'
-            exit 1
-          fi
-          {
-            echo "url=$url"
-            echo "sha256=$sha256"
-            echo "key=runner-${sha256}.tar.gz"
-          } >> "$GITHUB_OUTPUT"
-
       - name: Package Conductive release
         id: release
-        env:
-          ARCHIVE_URL: ${{ steps.runner.outputs.url }}
-          ARCHIVE_SHA256: ${{ steps.runner.outputs.sha256 }}
         run: |
           set -euo pipefail
           version="0.0.$(git rev-list --count HEAD)"
@@ -190,7 +167,6 @@ jobs:
           mkdir -p ".context/release-artifact/$(dirname "$system_key")"
           cp "$input/system-$system_sha256.tar.gz" ".context/release-artifact/$system_key"
           cargo run --locked -p cnd-release -- parts \
-            --part runner "$ARCHIVE_URL" "$ARCHIVE_SHA256" \
             --part node "$node_url" "$node_sha256" \
             --part sdk-helper "${RUNNER_BASE_URL}${sdk_helper_key}" "$sdk_helper_sha256" \
             --part system "${RUNNER_BASE_URL}${system_key}" "$system_sha256" \
@@ -201,62 +177,6 @@ jobs:
             --program target/x86_64-unknown-linux-musl/release/conductive \
             --parts "$input/parts.json" --output .context/release-artifact
           echo "version=$version" >> "$GITHUB_OUTPUT"
-
-      # Keep the derived S3 credentials in this step only.
-      - name: Publish runner
-        id: publish
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
-          AWS_DEFAULT_REGION: auto
-          AWS_REQUEST_CHECKSUM_CALCULATION: when_required
-          AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
-          ARCHIVE_URL: ${{ steps.runner.outputs.url }}
-          ARCHIVE_KEY: ${{ steps.runner.outputs.key }}
-        run: |
-          set -euo pipefail
-          token_id=$(curl -fsS \
-            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
-            "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/tokens/verify" |
-            jq -r '.result.id // empty') || token_id=''
-          if [[ -z "$token_id" ]]; then
-            token_id=$(curl -fsS \
-              -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
-              'https://api.cloudflare.com/client/v4/user/tokens/verify' |
-              jq -r '.result.id // empty') || token_id=''
-          fi
-          if [[ -z "$token_id" ]]; then
-            echo '::error::Could not read the Cloudflare token ID for the runner upload.'
-            exit 1
-          fi
-          echo "::add-mask::$token_id"
-          secret_key=$(printf '%s' "$CLOUDFLARE_API_TOKEN" | sha256sum)
-          secret_key=${secret_key%% *}
-          echo "::add-mask::$secret_key"
-          export AWS_ACCESS_KEY_ID="$token_id" AWS_SECRET_ACCESS_KEY="$secret_key"
-          endpoint="https://$CLOUDFLARE_ACCOUNT_ID.r2.cloudflarestorage.com"
-          archive=.context/runner-artifact/runner.tar.gz
-          if aws s3api head-object --bucket "$RUNNER_BUCKET" --key "$ARCHIVE_KEY" \
-            --endpoint-url "$endpoint" > /dev/null 2>&1; then
-            echo 'Runner archive already exists.'
-            result=reused
-          else
-            aws s3 cp "$archive" "s3://$RUNNER_BUCKET/$ARCHIVE_KEY" \
-              --endpoint-url "$endpoint" --content-type application/gzip --only-show-errors
-            result=uploaded
-          fi
-          if ! headers=$(curl -fsSI --retry 3 "$ARCHIVE_URL"); then
-            echo "::error::Could not read the public runner archive at $ARCHIVE_URL."
-            exit 1
-          fi
-          remote_size=$(printf '%s\n' "$headers" |
-            awk 'tolower($1) == "content-length:" {gsub("\r", "", $2); size=$2} END {print size}')
-          local_size=$(stat -c %s "$archive")
-          if [[ "$remote_size" != "$local_size" ]]; then
-            echo "::error::Public runner archive size does not match the local archive at $ARCHIVE_URL."
-            exit 1
-          fi
-          echo "result=$result" >> "$GITHUB_OUTPUT"
 
       - name: Upload Conductive release files
         env:
@@ -379,8 +299,6 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
-          ARCHIVE_URL: ${{ steps.runner.outputs.url }}
-          ARCHIVE_SHA256: ${{ steps.runner.outputs.sha256 }}
         run: |
           set -euo pipefail
           umask 077
@@ -391,8 +309,6 @@ jobs:
           deploy_digest=${deploy_digest%% *}
           npx wrangler deploy \
             --var "CONDUCTIVE_DEPLOY_TOKEN_SHA256:$deploy_digest" \
-            --var "CONDUCTIVE_RUNNER_ARCHIVE_URL:$ARCHIVE_URL" \
-            --var "CONDUCTIVE_RUNNER_ARCHIVE_SHA256:$ARCHIVE_SHA256" \
             --tag "${GITHUB_SHA:0:7}" --message "main at $GITHUB_SHA"
 
       - name: Check health
@@ -556,8 +472,6 @@ jobs:
 
       - name: Write deploy summary
         env:
-          ARCHIVE_URL: ${{ steps.runner.outputs.url }}
-          PUBLISH_RESULT: ${{ steps.publish.outputs.result }}
           RELEASE_VERSION: ${{ steps.release.outputs.version }}
           RELEASE_RESULT: ${{ steps.publish_release.outputs.result }}
           EGRESS_RESULT: ${{ steps.egress.outputs.result }}
@@ -565,8 +479,6 @@ jobs:
           set -euo pipefail
           {
             printf 'Commit: %s\n\n' "$GITHUB_SHA"
-            printf 'Runner archive: %s\n\n' "$ARCHIVE_URL"
-            printf 'Archive publish result: %s\n\n' "$PUBLISH_RESULT"
             printf 'Conductive release: %s, %s\n\n' "$RELEASE_VERSION" "$RELEASE_RESULT"
             printf 'ChatGPT egress Worker: %s\n' "$EGRESS_RESULT"
           } >> "$GITHUB_STEP_SUMMARY"

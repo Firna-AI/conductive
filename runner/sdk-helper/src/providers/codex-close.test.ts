@@ -2,15 +2,15 @@ import { beforeEach, expect, it, onTestFinished } from 'vitest'
 
 import { FakeAppServers } from '../../test-support/app-server'
 import { mockComputerServer } from '../../test-support/computer-mcp'
-import { runnerHarness, turn } from '../../../test-support/harness'
-import { fakeToolContext } from '../../../test-support/providers'
+import { turn } from '../../test-support/input'
+import { providerFixture } from '../../test-support/fixture'
+import { fakeToolContext } from '../../test-support/input'
 import { createCodexFactory } from './codex'
 
 beforeEach(mockComputerServer)
 
 it('waits for Codex process exit before stop returns', async () => {
-  const h = await runnerHarness()
-  await h.runner.close()
+  const h = await providerFixture()
   const servers = new FakeAppServers()
   const direct = await createCodexFactory(servers.start)({
     cwd: h.root,

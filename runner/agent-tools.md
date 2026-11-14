@@ -91,7 +91,7 @@ A member without a display name gets
 - [message.ts](sdk-helper/src/providers/message.ts) gives `providerMessage`, which
   puts the sender line with the member ID of each message before its
   text. The stored message and the chat never hold that line.
-- [instructions.ts](src/instructions.ts) gives `agentInstructions`, which
+- [instructions.rs](../crates/cnd-runner/src/engine/instructions.rs) builds the session instructions, which
   holds the workspace tool guidance of each new session: the call names,
   the access rules, and the choice of an owner ID.
 - [workspace-tools.ts](sdk-helper/src/providers/workspace-tools.ts) binds runtime tool

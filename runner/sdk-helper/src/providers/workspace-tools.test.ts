@@ -6,9 +6,8 @@ import {
   fakeComputerServer,
   mockComputerServer,
 } from '../../test-support/computer-mcp'
-import { duringTurn, runnerHarness, turn } from '../../../test-support/harness'
-import { stop } from '../../../test-support/runtime'
-import { Runner } from '../../../src/runner'
+import { providerFixture } from '../../test-support/fixture'
+import { duringTurn, turn } from '../../test-support/input'
 import { createClaudeFactory } from './claude'
 import { createCodexFactory } from './codex'
 
@@ -17,8 +16,7 @@ beforeEach(mockComputerServer)
 it.each(['claude', 'codex'] as const)(
   'registers workspace tools for %s with fresh active turn context and no login in its environment',
   async (agent) => {
-    const h = await runnerHarness()
-    await h.runner.close()
+    const h = await providerFixture(agent)
     for (const name of [
       'CONDUCTIVE_MACHINE_ORIGIN',
       'CONDUCTIVE_WORKSPACE_TOKEN',
@@ -34,29 +32,17 @@ it.each(['claude', 'codex'] as const)(
     })
     const queries: FakeClaudeQuery[] = []
     const servers = new FakeAppServers()
-    const runner = new Runner({
-      ...h.options,
-      providers: {
-        claude: createClaudeFactory(
-          (parameters) => {
-            const sdk = new FakeClaudeQuery()
-            queries.push(sdk)
-            return sdk.open(parameters)
-          },
-          () => '/pinned/claude',
-        ),
-        codex: createCodexFactory(servers.start),
-      },
-    })
-    onTestFinished(() => runner.close())
-    await runner.start(false)
-    const first = turn('first', 'alice', agent)
-    first.commitAuthor = {
-      name: 'Alice Example',
-      email: '1+alice@users.noreply.github.com',
-    }
-    h.endpoint.send(first)
-    await runner.idle()
+    const factory =
+      agent === 'claude'
+        ? createClaudeFactory(
+            (parameters) => {
+              const sdk = new FakeClaudeQuery()
+              queries.push(sdk)
+              return sdk.open(parameters)
+            },
+            () => '/pinned/claude',
+          )
+        : createCodexFactory(servers.start)
     const environment = () =>
       agent === 'claude'
         ? queries.at(-1)?.parameters?.options?.env
@@ -67,15 +53,30 @@ it.each(['claude', 'codex'] as const)(
         : servers.requests
             .at(-1)
             ?.args.filter((value) => value.startsWith('mcp_servers.'))
+    const first = turn('first', 'alice', agent)
+    const author = {
+      name: 'Alice Example',
+      email: '1+alice@users.noreply.github.com',
+    }
+    const provider = await factory({
+      ...h.options,
+      tools: { ...h.options.tools, turnId: first.turnId },
+      commitAuthor: author,
+    })
+    onTestFinished(() => provider.close())
+    await provider.send(first)
     const check = (turnId: string) => {
       expect(environment()).toMatchObject({
         CONDUCTIVE_MACHINE_ORIGIN: 'https://machines.conductive.test',
         CONDUCTIVE_WORKSPACE_TOKEN: 'workspace-secret',
         CONDUCTIVE_TURN_ID: turnId,
       })
-      expect(environment()).not.toHaveProperty('CLAUDE_CODE_OAUTH_TOKEN')
-      expect(environment()).not.toHaveProperty('ANTHROPIC_API_KEY')
-      expect(environment()).not.toHaveProperty('OPENAI_API_KEY')
+      for (const name of [
+        'CLAUDE_CODE_OAUTH_TOKEN',
+        'ANTHROPIC_API_KEY',
+        'OPENAI_API_KEY',
+      ])
+        expect(environment()).not.toHaveProperty(name)
       expect(registration()).toEqual(
         agent === 'claude'
           ? {
@@ -100,52 +101,44 @@ it.each(['claude', 'codex'] as const)(
       expect(JSON.stringify(registration())).not.toContain(turnId)
     }
     check('turn-first')
-    expect.soft(environment()).toMatchObject({
-      GIT_AUTHOR_NAME: 'Alice Example',
-      GIT_AUTHOR_EMAIL: '1+alice@users.noreply.github.com',
-      GIT_COMMITTER_NAME: 'Alice Example',
-      GIT_COMMITTER_EMAIL: '1+alice@users.noreply.github.com',
+    expect(environment()).toMatchObject({
+      GIT_AUTHOR_NAME: author.name,
+      GIT_AUTHOR_EMAIL: author.email,
+      GIT_COMMITTER_NAME: author.name,
+      GIT_COMMITTER_EMAIL: author.email,
     })
-    h.endpoint.send({
+    await provider.send({
       ...duringTurn(turn('during', 'bob', agent)),
-      type: 'message',
-      turnId: 'turn-first',
+      turnId: first.turnId,
     })
-    await runner.idle()
     check('turn-first')
-    expect.soft(environment()).toMatchObject({
-      GIT_AUTHOR_NAME: 'Alice Example',
-      GIT_AUTHOR_EMAIL: '1+alice@users.noreply.github.com',
-      GIT_COMMITTER_NAME: 'Alice Example',
-      GIT_COMMITTER_EMAIL: '1+alice@users.noreply.github.com',
+    expect(environment()).toMatchObject({
+      GIT_AUTHOR_NAME: author.name,
+      GIT_COMMITTER_NAME: author.name,
     })
-    h.endpoint.send(stop('session-1', 'turn-first'))
-    await runner.idle()
-    expect(
-      agent === 'claude' ? queries[0].closed : servers.processes[0].closed,
-    ).toBe(true)
-    const next = turn('second', 'bob', agent)
-    next.credential = first.credential
-    next.commitAuthor = {
-      name: 'Bob Example',
-      email: '2+bob@users.noreply.github.com',
-    }
-    h.endpoint.send(next)
-    await runner.idle()
+    await provider.stop()
+    const next = await factory({
+      ...h.options,
+      tools: { ...h.options.tools, turnId: 'turn-second' },
+      commitAuthor: {
+        name: 'Bob Example',
+        email: '2+bob@users.noreply.github.com',
+      },
+    })
+    onTestFinished(() => next.close())
     check('turn-second')
-    expect.soft(environment()).toMatchObject({
+    expect(environment()).toMatchObject({
       GIT_AUTHOR_NAME: 'Bob Example',
-      GIT_AUTHOR_EMAIL: '2+bob@users.noreply.github.com',
       GIT_COMMITTER_NAME: 'Bob Example',
-      GIT_COMMITTER_EMAIL: '2+bob@users.noreply.github.com',
     })
-    const concurrent = turn('parallel', 'charlie', agent)
-    concurrent.sessionId = 'parallel-session'
-    concurrent.message.sessionId = 'parallel-session'
-    h.endpoint.send(concurrent)
-    await runner.idle()
-    expect(environment()).toMatchObject({ CONDUCTIVE_TURN_ID: 'turn-parallel' })
-    expect.soft(environment()).toMatchObject({
+    const concurrent = await factory({
+      ...h.options,
+      sessionId: 'parallel-session',
+      tools: { ...h.options.tools, turnId: 'turn-parallel' },
+    })
+    onTestFinished(() => concurrent.close())
+    check('turn-parallel')
+    expect(environment()).toMatchObject({
       GIT_AUTHOR_NAME: 'Inherited Author',
       GIT_AUTHOR_EMAIL: 'inherited-author@example.test',
       GIT_COMMITTER_NAME: 'Inherited Committer',
@@ -156,15 +149,12 @@ it.each(['claude', 'codex'] as const)(
         ? queries[1].parameters?.options?.env?.CONDUCTIVE_TURN_ID
         : servers.requests[1].env.CONDUCTIVE_TURN_ID,
     ).toBe('turn-second')
-    await runner.close()
+    await Promise.all([next.close(), concurrent.close()])
     expect(
       agent === 'claude'
         ? queries.map(({ closed }) => closed)
         : servers.processes.map(({ closed }) => closed),
     ).toEqual([true, true, true])
-    expect(JSON.stringify(await h.storage.read())).not.toContain(
-      'workspace-secret',
-    )
     expect(h.warnings).toEqual([])
   },
 )

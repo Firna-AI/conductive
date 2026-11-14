@@ -66,10 +66,11 @@ const stage = await mkdtemp(join(tmpdir(), 'conductive-sdk-helper-'))
 try {
   for (const name of ['package.json', 'package-lock.json'])
     await cp(join(root, name), join(stage, name))
-  await cp(
-    join(root, '../../dist/sdk-helper/sdk-helper.mjs'),
-    join(stage, 'sdk-helper.mjs'),
-  )
+  for (const name of ['sdk-helper', 'measure', 'compare'])
+    await cp(
+      join(root, `../../dist/sdk-helper/${name}.mjs`),
+      join(stage, `${name}.mjs`),
+    )
   await dependencies(stage)
   const archive = join(output, 'sdk-helper.tar.gz')
   const tar = spawnSync(

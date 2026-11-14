@@ -2,43 +2,31 @@ import { beforeEach, expect, it, onTestFinished } from 'vitest'
 
 import { FakeAppServers } from '../../test-support/app-server'
 import { mockComputerServer } from '../../test-support/computer-mcp'
-import { duringTurn, runnerHarness, turn } from '../../../test-support/harness'
-import { Runner } from '../../../src/runner'
+import { providerFixture } from '../../test-support/fixture'
+import { duringTurn, turn } from '../../test-support/input'
 import { createCodexFactory } from './codex'
 
 beforeEach(mockComputerServer)
 
 it('streams App Server partial text and sends steer, model, and interrupt controls', async () => {
-  const h = await runnerHarness()
-  await h.runner.close()
+  const h = await providerFixture('codex')
   const servers = new FakeAppServers()
-  const runner = new Runner({
-    ...h.options,
-    providers: {
-      ...h.options.providers,
-      codex: createCodexFactory(servers.start),
-    },
-  })
-  onTestFinished(() => runner.close())
-  await runner.start(false)
-  h.endpoint.send(turn('1', 'alice', 'codex'))
-  await runner.idle()
+  const factory = createCodexFactory(servers.start)
+  const provider = await factory(h.options)
+  onTestFinished(() => provider.close())
+  await provider.send(h.command)
   const server = servers.latest
-  expect(Object.hasOwn(servers.requests[0].env, 'OPENAI_API_KEY')).toBe(false)
+  expect(servers.requests[0].env).not.toHaveProperty('OPENAI_API_KEY')
   expect(
     server.writes.find((write) => write.method === 'account/login/start'),
   ).toMatchObject({ params: { type: 'apiKey', apiKey: 'secret-alice' } })
-  expect(servers.requests[0].args).toContain(
-    'model_providers.conductive.requires_openai_auth=true',
-  )
-  expect(servers.requests[0].args).toContain(
-    'cli_auth_credentials_store="ephemeral"',
-  )
-  expect(servers.requests[0].args).toContain(
-    'mcp_servers.computer.command="/fake/platform/computer-server"',
-  )
-  expect(servers.requests[0].args).toContain(
-    'mcp_servers.computer.args=["--socket","/run/test-computer.sock"]',
+  expect(servers.requests[0].args).toEqual(
+    expect.arrayContaining([
+      'model_providers.conductive.requires_openai_auth=true',
+      'cli_auth_credentials_store="ephemeral"',
+      'mcp_servers.computer.command="/fake/platform/computer-server"',
+      'mcp_servers.computer.args=["--socket","/run/test-computer.sock"]',
+    ]),
   )
   expect(JSON.stringify(servers.requests[0].args)).not.toContain('secret-alice')
   server.notify('item/agentMessage/delta', {
@@ -49,20 +37,20 @@ it('streams App Server partial text and sends steer, model, and interrupt contro
     itemId: 'codex-answer',
     delta: 'world',
   })
-  await runner.idle()
-  expect(h.endpoint.runnerEvents.map((item) => item.event)).toContainEqual({
-    type: 'assistant.delta',
-    sessionId: 'session-1',
-    turnId: 'turn-1',
+  expect(h.events).toContainEqual({
+    type: 'delta',
     messageId: 'codex-answer',
-    text: 'Hello world',
+    text: 'Hello ',
   })
-  h.endpoint.send({
+  expect(h.events).toContainEqual({
+    type: 'delta',
+    messageId: 'codex-answer',
+    text: 'world',
+  })
+  await provider.send({
     ...duringTurn(turn('2', 'alice', 'codex')),
-    type: 'message',
     turnId: 'turn-1',
   })
-  await runner.idle()
   expect(
     server.writes.find((write) => write.method === 'turn/steer'),
   ).toMatchObject({
@@ -89,28 +77,28 @@ it('streams App Server partial text and sends steer, model, and interrupt contro
   server.notify('turn/completed', {
     turn: { id: 'codex-turn-1', status: 'completed' },
   })
-  await runner.idle()
-  expect(h.endpoint.runnerEvents.map((item) => item.event)).toContainEqual({
-    type: 'assistant.completed',
-    sessionId: 'session-1',
-    turnId: 'turn-1',
+  expect(h.events).toContainEqual({
+    type: 'answer',
     messageId: 'codex-answer',
     text: 'Hello world',
     userMessageIds: ['message-1', 'message-2'],
   })
-  expect(server.closed).toBe(true)
+  expect(h.events).toContainEqual({
+    type: 'result',
+    state: 'finished',
+    userMessageIds: ['message-1', 'message-2'],
+  })
   const next = turn('3', 'alice', 'codex')
-  next.message.choice = {
-    agent: 'codex',
+  const choice = {
+    agent: 'codex' as const,
     model: 'next-model',
-    effort: 'max',
+    effort: 'max' as const,
     fast: false,
   }
-  h.endpoint.send(next)
-  await runner.idle()
-  const nextServer = servers.latest
+  expect(await provider.model(choice)).toBe('applied')
+  await provider.send(next)
   expect(
-    nextServer.writes.findLast((write) => write.method === 'turn/start'),
+    server.writes.findLast((write) => write.method === 'turn/start'),
   ).toMatchObject({
     params: {
       model: 'next-model',
@@ -118,105 +106,40 @@ it('streams App Server partial text and sends steer, model, and interrupt contro
       serviceTierForTurn: 'default',
     },
   })
-  h.endpoint.send({
-    type: 'interrupt',
-    commandId: 'stop',
-    sessionId: 'session-1',
-    turnId: 'turn-3',
+  expect(await provider.model({ ...choice, model: 'deferred-model' })).toBe(
+    'deferred',
+  )
+  await provider.interrupt()
+  expect(
+    server.writes.findLast((write) => write.method === 'turn/interrupt'),
+  ).toMatchObject({
+    params: { threadId: 'codex-conversation', turnId: 'codex-turn-2' },
   })
-  await runner.idle()
-  expect(nextServer.closed).toBe(true)
-  nextServer.notify('turn/completed', {
-    turn: { id: 'codex-turn-1', status: 'interrupted' },
+  server.notify('turn/completed', {
+    turn: { id: 'codex-turn-2', status: 'interrupted' },
   })
-  await runner.idle()
-  expect(h.endpoint.runnerEvents.at(-1)?.event).toMatchObject({
-    type: 'turn.completed',
+  expect(h.events).toContainEqual({
+    type: 'result',
     state: 'stopped',
+    userMessageIds: ['message-3'],
   })
-  h.endpoint.send(turn('4', 'bob', 'codex'))
-  await runner.idle()
-  expect(servers.processes).toHaveLength(3)
-  expect(Object.hasOwn(servers.requests[2].env, 'OPENAI_API_KEY')).toBe(false)
+  await provider.close()
+  expect(server.closed).toBe(true)
+  const resumed = await factory({
+    ...h.options,
+    conversationId: 'codex-conversation',
+    credential: { type: 'gateway', ...turn('4', 'bob', 'codex').credential },
+  })
+  onTestFinished(() => resumed.close())
+  expect(
+    servers.latest.writes.find((write) => write.method === 'thread/resume'),
+  ).toMatchObject({ params: { threadId: 'codex-conversation' } })
   expect(
     servers.latest.writes.find(
       (write) => write.method === 'account/login/start',
     ),
   ).toMatchObject({ params: { type: 'apiKey', apiKey: 'secret-bob' } })
-  expect(
-    servers.latest.writes.find((write) => write.method === 'thread/resume'),
-  ).toMatchObject({ params: { threadId: 'codex-conversation' } })
-  expect(JSON.stringify(await h.storage.read())).not.toContain('secret-bob')
-  const previous = servers.latest
-  const fifth = turn('5', 'bob', 'codex')
-  fifth.message.choice = {
-    agent: 'codex',
-    model: 'steered-model',
-    effort: 'medium',
-    fast: false,
-  }
-  h.endpoint.send({ ...duringTurn(fifth), type: 'message', turnId: 'turn-4' })
-  const queuedChoice = turn('queued-choice', 'bob', 'codex')
-  queuedChoice.message.choice = {
-    agent: 'codex',
-    model: 'second-steered-model',
-    effort: 'high',
-    fast: false,
-  }
-  h.endpoint.send({
-    ...duringTurn(queuedChoice),
-    type: 'message',
-    turnId: 'turn-4',
-  })
-  await runner.idle()
-  expect(
-    previous.writes.filter((write) => write.method === 'turn/steer'),
-  ).toEqual([])
-  previous.notify('item/started', {
-    item: { id: 'next-tool', type: 'commandExecution', command: 'npm test' },
-  })
-  await runner.idle()
-  expect(
-    previous.writes.find((write) => write.method === 'turn/interrupt'),
-  ).toMatchObject({ params: { turnId: 'codex-turn-1' } })
-  previous.notify('turn/completed', {
-    turn: { id: 'codex-turn-1', status: 'interrupted' },
-  })
-  await runner.idle()
-  expect(servers.processes).toHaveLength(4)
-  expect(
-    servers.latest.writes.find((write) => write.method === 'thread/resume'),
-  ).toMatchObject({ params: { threadId: 'codex-conversation' } })
-  expect(
-    servers.latest.writes.find((write) => write.method === 'turn/start'),
-  ).toMatchObject({
-    params: {
-      model: 'steered-model',
-      effort: 'medium',
-      clientUserMessageId: 'message-5',
-    },
-  })
-  const firstChoice = servers.latest
-  expect(
-    firstChoice.writes.filter((write) => write.method === 'turn/steer'),
-  ).toEqual([])
-  firstChoice.notify('item/started', {
-    item: { id: 'choice-tool', type: 'commandExecution', command: 'npm test' },
-  })
-  await runner.idle()
-  firstChoice.notify('turn/completed', {
-    turn: { id: 'codex-turn-1', status: 'interrupted' },
-  })
-  await runner.idle()
-  expect(
-    servers.latest.writes.find((write) => write.method === 'turn/start'),
-  ).toMatchObject({
-    params: {
-      model: 'second-steered-model',
-      effort: 'high',
-      clientUserMessageId: 'message-queued-choice',
-    },
-  })
+  await resumed.send(turn('4', 'bob', 'codex'))
   servers.latest.notify('turn/completed', {
     turn: {
       id: 'codex-turn-1',
@@ -224,31 +147,22 @@ it('streams App Server partial text and sends steer, model, and interrupt contro
       error: { message: 'Rate limit exceeded: secret-bob' },
     },
   })
-  await runner.idle()
-  expect(h.endpoint.runnerEvents.at(-1)?.event).toMatchObject({
-    type: 'turn.failed',
-    error: {
-      code: 'agent_rate_limited',
-      message: 'The agent reached its rate limit. Try again later.',
-    },
+  expect(h.events).toContainEqual({
+    type: 'failed',
+    code: 'agent_rate_limited',
+    message: 'The agent reached its rate limit. Try again later.',
   })
-  h.endpoint.send(turn('6', 'bob', 'codex'))
-  await runner.idle()
-  h.endpoint.confirmEvents = false
+  await resumed.send(turn('5', 'bob', 'codex'))
   servers.latest.notify('turn/completed', {
     turn: {
-      id: 'codex-turn-1',
+      id: 'codex-turn-2',
       status: 'failed',
       error: { message: 'The service is unavailable for secret-bob.' },
     },
   })
-  await runner.idle()
-  expect(h.endpoint.runnerEvents.at(-1)?.event).toMatchObject({
-    type: 'turn.failed',
-    error: {
-      code: 'agent_failed',
-      message: 'The service is unavailable for [redacted].',
-    },
+  expect(h.events).toContainEqual({
+    type: 'failed',
+    code: 'agent_failed',
+    message: 'The service is unavailable for secret-bob.',
   })
-  expect(JSON.stringify(await h.storage.read())).not.toContain('secret-bob')
 })

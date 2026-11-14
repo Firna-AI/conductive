@@ -30,7 +30,8 @@ The deploy also runs `node runner/sdk-helper/scripts/package.mjs OUTPUT`.
 That command writes `sdk-helper-<sha256>.tar.gz` and prints its digest.
 The helper part holds its Node bundle, runtime npm packages, and agent programs.
 Its Node runtime stays in the separate `node` part.
-The `runner` part starts the helper from the same pinned release folder.
+The Rust executable starts the helper from the same pinned release folder.
+The complete parts list holds `node`, `sdk-helper`, and `system`.
 
 The updater reads the parts embedded in the checked new executable.
 
@@ -42,11 +43,10 @@ command. These commands upload nothing.
 
 ## Quick Start
 
-Run from the repository root. Supply the real runner, SDK helper, Node, and system URLs and digests:
+Run from the repository root. Supply the real SDK helper, Node, and system URLs and digests:
 
 ```sh
 cargo run -p cnd-release -- parts \
-  --part runner "$RUNNER_URL" "$RUNNER_SHA256" \
   --part node "$NODE_URL" "$NODE_SHA256" \
   --part sdk-helper "$SDK_HELPER_URL" "$SDK_HELPER_SHA256" \
   --part system "$SYSTEM_URL" "$SYSTEM_SHA256" \
@@ -80,6 +80,6 @@ and installs its archive through `cli-updater` with the required digest.
 
 ### Related Docs
 
-- [Deployment release files](../../docs/deployment/runner-archive.md#the-archive-in-each-deploy) gives the R2 paths and publication rules.
+- [Deployment release files](../../docs/deployment/runner-archive.md#the-release-in-each-deploy) gives the R2 paths and publication rules.
 - [Sandbox software](../../image/README.md) describes the installed software.
 - [Architecture](../../docs/architecture.md) describes the system.

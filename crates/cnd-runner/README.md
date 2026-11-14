@@ -3,8 +3,7 @@
 This crate provides the runner connection, repository reports, and agent
 turn engine for Conductive. Depend on it to compose a full workspace runner.
 The [interface crate](../cnd-runner-interface/README.md) owns its wire types.
-The `conductive runner` command composes this crate. The installed service
-still uses the Node runner until the separate service switch.
+The `conductive runner` command composes this crate. The installed service runs `/opt/conductive/current/conductive runner`.
 
 ## Responsibilities
 
@@ -106,7 +105,7 @@ helper cleanup and OS exit. A canceled completion scan gets a fresh file
 read with a ten-second limit. Failed saves retain their original event numbers.
 The first valid welcome triggers one noninteractive sudo call to the pinned
 `conductive update started` executable. The runner process remains unprivileged.
-The separate service switch must remove process-start release confirmation.
+The service has no process-start release confirmation.
 
 ## Development
 
@@ -161,7 +160,7 @@ and connection drops. It does not run the Worker.
 - [Lost workspace updates](../../docs/protocol/lost-workspace-updates.md)
 - [Version pins](../../docs/protocol/version-pins.md)
 - [Sandbox architecture](../../docs/architecture/components.md#sandbox-software)
-- [Node runner](../../runner/README.md)
+- [Runner guide](../../runner/README.md)
 - [Event limits](../../runner/event-limits.md)
 - [File reports](../../runner/file-reports.md)
 - [Report requests](../../runner/reports.md)

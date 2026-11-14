@@ -2,10 +2,10 @@ import { beforeEach, expect, it } from 'vitest'
 
 import { FakeAppServers } from '../../test-support/app-server'
 import { mockComputerServer } from '../../test-support/computer-mcp'
-import { turn } from '../../../test-support/harness'
-import { fakeToolContext } from '../../../test-support/providers'
-import { deferred } from '../../../test-support/runtime'
-import { repositoryFixture } from '../../../test-support/repository'
+import { turn } from '../../test-support/input'
+import { fakeToolContext } from '../../test-support/input'
+import { deferred } from '../../test-support/runtime'
+import { providerFixture } from '../../test-support/fixture'
 import { object } from '../parse'
 import { createCodexFactory } from './codex'
 import type { ProcessRequest, StartProcess } from './process'
@@ -14,7 +14,7 @@ import type { ProviderProcess } from './types'
 beforeEach(mockComputerServer)
 
 it('closes Codex startup and in-flight requests when their session signal is canceled', async () => {
-  const h = await repositoryFixture()
+  const h = await providerFixture()
   for (const method of [
     'initialize',
     'account/login/start',

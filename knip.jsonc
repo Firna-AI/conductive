@@ -45,7 +45,7 @@
       ],
       "includeEntryExports": true,
     },
-    "runner": {
+    "runner/sdk-helper": {
       "entry": ["src/{main,measure,compare}.ts", "scripts/*.mjs"],
       "project": [
         "src/**/*.ts",

@@ -2,7 +2,7 @@
 
 This crate owns Conductive's runner, SDK helper, agent chat event, and
 workspace tool types. Depend on it when Rust code sends or reads these messages.
-The Worker, web app, Mac app, and Node runner import its generated TypeScript.
+The Worker, web app, Mac app, and SDK helper import its generated TypeScript.
 
 ## Responsibilities
 

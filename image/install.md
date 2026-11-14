@@ -105,21 +105,21 @@ update.lock                     # exclusive background-check lock
 update-apply.lock               # exclusive apply/confirmation lock
 versions/<version>/conductive
 versions/<version>/parts.json
-versions/<version>/runner -> /opt/conductive/parts/<runner-sha256>
+versions/<version>/sdk-helper -> /opt/conductive/parts/<sdk-helper-sha256>
 versions/<version>/node -> /opt/conductive/parts/<node-sha256>
 versions/<version>/system -> /opt/conductive/parts/<system-sha256>
 versions/<version>/complete
 versions/<failed-version>/rejected
 parts/<sha256>/complete
-parts/<runner-sha256>/runner/main.mjs
+parts/<sdk-helper-sha256>/sdk-helper.mjs
 parts/<node-sha256>/bin/node
 parts/<system-sha256>/install-system.sh
 parts/<system-sha256>/*          # scripts, units, wrapper, and udev rule
 ```
 
 The links use absolute targets under the configured root. The Node part
-removes the archive's top folder. The runner part keeps its `runner/`
-folder. The complete marker is written last. An interrupted check can
+removes the archive's top folder. The SDK helper archive has its entry
+point at the part root. The complete marker is written last. An interrupted check can
 leave incomplete version folders and `.partial` part folders. Those
 folders never qualify for apply. A later check replaces them.
 
@@ -139,15 +139,19 @@ The release units are:
 - `conductive-update-apply.service`: root activation before runner and relay.
 - `conductive-update-check.service`: root background download.
 - `conductive-update-check.timer`: boot and hourly checks.
-- `conductive-update-confirm.service`: root confirmation after a local runner start.
-- `conductive-runner.service`: Node runner as `user`.
+- `conductive-runner.service`: Rust runner as `user`.
 - `conductive-preview-relay.service` and `.socket`: Rust relay as `user`.
 - `conductive-terminal.service` and `conductive-terminal-sessions.service`: terminal services as `user`.
 
 The runner, relay, and terminal entry points use `current/system/`.
-Each runner start resolves `current` once and uses that version's
-private Node and runner part. The relay executes the active Rust program. The next apply restores `previous` when a
-new release still has its pending marker. Collection after confirmation
+The runner executes `/opt/conductive/current/conductive runner`. It resolves
+its private Node and SDK helper beside that executable. The relay executes
+the active Rust program too. The system installer removes a stale process-start
+confirmation unit. The Rust runner confirms the release only after its first
+valid Worker `welcome`. It reads the saved Node state file without conversion.
+The next apply restores `previous` when a new release still has its pending
+marker. That fallback runs the previous system installer, which restores its
+units and can start the previous Node runner. Collection after confirmation
 retains current and previous and removes other versions and unused parts.
 A running download defers collection without delaying the runner.
 

@@ -2,7 +2,7 @@ import { beforeEach, expect, it, onTestFinished } from 'vitest'
 
 import { codexTokenFixture } from '../../test-support/codex-token'
 import { mockComputerServer } from '../../test-support/computer-mcp'
-import { turn } from '../../../test-support/harness'
+import { turn } from '../../test-support/input'
 import { object } from '../parse'
 import { createCodexFactory } from './codex'
 import type { StartProcess } from './process'

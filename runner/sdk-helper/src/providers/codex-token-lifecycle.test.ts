@@ -7,7 +7,7 @@ import {
   codexTokenFixture,
 } from '../../test-support/codex-token'
 import { mockComputerServer } from '../../test-support/computer-mcp'
-import { deferred } from '../../../test-support/runtime'
+import { deferred } from '../../test-support/runtime'
 import { object } from '../parse'
 import { createCodexFactory } from './codex'
 import {

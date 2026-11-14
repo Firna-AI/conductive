@@ -1,65 +1,22 @@
-import { afterEach, beforeEach, expect, it, onTestFinished, vi } from 'vitest'
-
+import { beforeEach, expect, it, onTestFinished } from 'vitest'
 import { mockComputerServer } from '../../test-support/computer-mcp'
-import { duringTurn, turn } from '../../../test-support/harness'
+import { duringTurn, turn } from '../../test-support/input'
 import { instructionProviders } from '../../test-support/instructions'
-import { wireFixture } from '../../../test-support/wire'
-import { configuration } from '../../../src/config'
-import * as instructions from '../../../src/instructions'
-import { string } from '../parse'
-import { Runner } from '../../../src/runner'
-import { EventStore, type SavedSession } from '../../../src/state'
-import * as environment from './environment'
-import type { ProviderOptions } from './types'
+import { providerFixture } from '../../test-support/fixture'
 
-beforeEach(() => {
-  mockComputerServer()
-  vi.spyOn(environment, 'prepareProviderHome').mockResolvedValue()
-})
-
-afterEach(() => vi.restoreAllMocks())
-
+beforeEach(mockComputerServer)
 it.each(['claude', 'codex'] as const)(
-  'keeps %s instructions after a restart and sends each member with the original attachments',
+  'passes %s fixed instructions and each original sender and attachment to the SDK',
   async (agent) => {
-    const h = await wireFixture()
-    await h.runner.close()
-    await h.store.remember({
-      sessionId: 'session-1',
-      agent,
-      providerSessionId: 'legacy-conversation',
-    })
-    let store = await EventStore.open(h.storage)
-    const savedBeforeStart: SavedSession[][] = []
+    const h = await providerFixture(agent)
     const provider = instructionProviders(agent)
-    const settings = {
-      CONDUCTIVE_WORKSPACE_ID: 'workspace-1',
-      CONDUCTIVE_WORKSPACE_TOKEN: h.options.request.workspaceToken,
-      CONDUCTIVE_RUNNER_URL: h.endpoint.url,
-      CONDUCTIVE_REPOSITORY: '/cloud/workspace',
-      CONDUCTIVE_DEFAULT_BRANCH: 'target-main',
-      CONDUCTIVE_WORKSPACE_BRANCH: 'alice/tracked-task',
-      CONDUCTIVE_REPOSITORY_ZETA_DIR: '/cloud/zeta',
-      CONDUCTIVE_REPOSITORY_APP_DIR: '/cloud/workspace',
-      CONDUCTIVE_REPOSITORY_API_DIR: '/cloud/api',
-      CONDUCTIVE_REPOSITORY_API_TOKEN: 'do-not-copy-token',
-      ORG_SECRET: 'do-not-copy-secret',
-    }
-    const options = {
+    const initialPrompt = 'Fixed workspace instructions from Rust.'
+    const process = await provider.open({
       ...h.options,
-      ...configuration(settings),
-      store,
-      providers: {
-        ...h.options.providers,
-        [agent]: async (options: ProviderOptions) => {
-          savedBeforeStart.push(store.snapshot.sessions)
-          return provider.open(options)
-        },
-      },
-    }
-    let runner = new Runner(options)
-    onTestFinished(() => runner.close())
-    await runner.start(false)
+      instructions: initialPrompt,
+      conversationId: 'legacy-conversation',
+    })
+    onTestFinished(() => process.close())
     const first = turn('first', 'alice', agent)
     first.message.sender.id = 'member-alice-id'
     first.message.sender.displayName = ' Alice\r\nExample\u2028 Member '
@@ -87,69 +44,8 @@ it.each(['claude', 'codex'] as const)(
       { attachmentId: 'file', path: '/uploads/notes.txt' },
     ]
     const original = structuredClone(first)
-    await runner.engine.command(first)
-    await runner.idle()
-    expect(provider.prompt()).toEqual(expect.any(String))
-    const initialPrompt = string(provider.prompt())
-    expect(initialPrompt).toContain('Conductive')
-    for (const tool of [
-      'create_session',
-      'list_sessions',
-      'send_message',
-      'read_session',
-      'get_workspace',
-      'rename_workspace',
-      'move_workspace',
-      'archive_workspace',
-      'get_session',
-      'rename_session',
-      'close_session',
-      'stop_session',
-      'get_message',
-      'create_section',
-      'delete_section',
-      'list_previews',
-      'open_preview',
-      'close_preview',
-    ])
-      expect(initialPrompt).toContain(tool)
-    expect(initialPrompt).toContain(
-      'A Sent by: line names the session that sent the message.',
-    )
-    expect(initialPrompt).toContain('Do not reply only to confirm it.')
-    expect(initialPrompt).toContain(
-      'Workspace repository folder: "/cloud/workspace"',
-    )
-    expect(initialPrompt).toContain('Workspace branch: "alice/tracked-task"')
-    expect(initialPrompt).toContain('Target branch: "target-main"')
-    expect(initialPrompt).toContain(
-      'CONDUCTIVE_REPOSITORY_API_DIR: "/cloud/api"',
-    )
-    expect(initialPrompt).toContain(
-      'CONDUCTIVE_REPOSITORY_APP_DIR: "/cloud/workspace"',
-    )
-    expect(initialPrompt).toContain(
-      'CONDUCTIVE_REPOSITORY_ZETA_DIR: "/cloud/zeta"',
-    )
-    expect(initialPrompt).toContain(
-      'Context folder: "/cloud/workspace/.context"',
-    )
-    expect(initialPrompt).toContain(
-      'Git ignores the context folder. Keep notes, screenshots, and files for other sessions of this workspace there. Attached files arrive in its attachments folder.',
-    )
-    expect(initialPrompt).not.toMatch(/do-not-copy|Boat|Claude Code/)
-    expect(savedBeforeStart[0]).toEqual([
-      {
-        sessionId: 'session-1',
-        agent,
-        providerSessionId: 'legacy-conversation',
-        instructions: initialPrompt,
-        instructionBranches: {
-          workspaceBranch: 'alice/tracked-task',
-          targetBranch: 'target-main',
-        },
-      },
-    ])
+    await process.send(first)
+    expect(provider.prompt()).toBe(initialPrompt)
     expect(provider.conversationId()).toBe('legacy-conversation')
     const firstInput = await provider.input()
     expect(firstInput).toMatchObject(
@@ -192,8 +88,7 @@ it.each(['claude', 'codex'] as const)(
     }
     during.message.sender.id = 'member-bob-id'
     const originalDuring = structuredClone(during)
-    await runner.engine.command(during)
-    await runner.idle()
+    await process.send(during)
     const nextInput = await provider.input(true)
     expect(nextInput).toMatchObject(
       agent === 'claude'
@@ -214,71 +109,5 @@ it.each(['claude', 'codex'] as const)(
     )
     expect(first).toEqual(original)
     expect(during).toEqual(originalDuring)
-    await runner.close()
-    const build = instructions.agentInstructions
-    vi.spyOn(instructions, 'agentInstructions').mockImplementation(
-      (context) => {
-        const current = build(context)
-        return {
-          claude: `Changed Claude base guidance.\n\n${current.claude}`,
-          codex: `Changed workspace guidance.\n\n${current.codex}`,
-        }
-      },
-    )
-    store = await EventStore.open(h.storage)
-    runner = new Runner({
-      ...options,
-      ...configuration({
-        ...settings,
-        CONDUCTIVE_REPOSITORY: '/cloud/new-workspace',
-        CONDUCTIVE_DEFAULT_BRANCH: 'new-target',
-        CONDUCTIVE_WORKSPACE_BRANCH: 'bob/new-task',
-        CONDUCTIVE_REPOSITORY_API_DIR: '/cloud/new-api',
-      }),
-      store,
-    })
-    await runner.start(false)
-    await runner.engine.command(turn('resumed', 'bob', agent))
-    await runner.idle()
-    expect(provider.prompt()).toBe(initialPrompt)
-    expect(provider.conversationId()).toBe(
-      agent === 'claude' ? 'legacy-conversation' : 'codex-conversation',
-    )
-    const fresh = turn('fresh', 'bob', agent)
-    fresh.sessionId = 'new-session'
-    fresh.message.sessionId = 'new-session'
-    await runner.engine.command(fresh)
-    await runner.idle()
-    const currentPrompt = provider.prompt()
-    expect(currentPrompt).toContain(
-      agent === 'claude'
-        ? 'Changed Claude base guidance.'
-        : 'Changed workspace guidance.',
-    )
-    expect(currentPrompt).toContain(
-      'Workspace repository folder: "/cloud/new-workspace"',
-    )
-    expect(currentPrompt).toContain(
-      'Context folder: "/cloud/new-workspace/.context"',
-    )
-    expect(currentPrompt).toContain('Workspace branch: "bob/new-task"')
-    expect(currentPrompt).toContain('Target branch: "new-target"')
-    expect(currentPrompt).toContain(
-      'CONDUCTIVE_REPOSITORY_API_DIR: "/cloud/new-api"',
-    )
-    expect(provider.parameters()).not.toHaveProperty(
-      agent === 'claude' ? 'resume' : 'baseInstructions',
-    )
-    expect(savedBeforeStart.at(-1)).toContainEqual({
-      sessionId: 'new-session',
-      agent,
-      providerSessionId: null,
-      instructions: currentPrompt,
-      instructionBranches: {
-        workspaceBranch: 'bob/new-task',
-        targetBranch: 'new-target',
-      },
-    })
-    expect(h.warnings).toEqual([])
   },
 )

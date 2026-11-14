@@ -78,8 +78,10 @@ retention restart runs `workspaceStartupCommand` in its `retention` mode.
 That mode writes the owner's commit author and runs the startup script,
 but it writes no ready marker and does not restart the runner service.
 
-Otherwise, `runner-start.sh` runs `runner/main.mjs` with the private
-Node, in the repository folder. The runner unit restarts its service after
+Otherwise, `runner-start.sh` runs `/opt/conductive/current/conductive runner`
+in the repository folder. The Rust runner starts the SDK helper through
+the private Node part. It confirms a pending release only after its first
+valid Worker `welcome`. The runner unit restarts its service after
 a failure. The terminal backend describes its launcher, its shell server,
 its password, and its automatic restart in its
 [README](../worker/terminal/README.md). That README also says how the
@@ -90,7 +92,7 @@ Boat starts its enabled socket and service after each resume and fork.
 The service requires `conductive-preview-relay.socket` to start first.
 The socket holds `127.0.0.1:7682` while the service restarts.
 Both units stay enabled, so the relay starts without waiting for a preview request.
-Its start script runs `runner/relay.mjs` with the private Node.
+Its start script runs `/opt/conductive/current/conductive preview-relay`.
 It reads no workspace variable or workspace marker.
 Its service restarts it after each exit.
 A restart of the runner service does not restart the relay service.

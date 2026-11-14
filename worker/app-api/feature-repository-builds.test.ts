@@ -50,8 +50,6 @@ async function setup() {
   const env: AppEnv = {
     ...active.env,
     WORKSPACES: bindings.WORKSPACES,
-    CONDUCTIVE_RUNNER_ARCHIVE_URL: SOFTWARE.url,
-    CONDUCTIVE_RUNNER_ARCHIVE_SHA256: SOFTWARE.sha256,
   }
   let sequence = 0
   const dependencies = {
