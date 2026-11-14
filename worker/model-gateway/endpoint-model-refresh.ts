@@ -13,10 +13,7 @@ export async function refreshEndpointModels(
   userId: string,
   agent: Agent,
   dependencies: Pick<AppDependencies, 'fetch' | 'now'>,
-  {
-    background = false,
-    ciphertext,
-  }: { background?: boolean; ciphertext?: string } = {},
+  { background = false }: { background?: boolean } = {},
 ): Promise<boolean> {
   let modelListRead = false
   try {
@@ -26,7 +23,6 @@ export async function refreshEndpointModels(
       agent,
       dependencies.now(),
       background,
-      ciphertext,
     )
     if (!read) return false
     const login = await decryptAgentLogin(

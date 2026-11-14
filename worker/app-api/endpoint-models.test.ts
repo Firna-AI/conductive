@@ -48,6 +48,9 @@ it.each(['claude', 'codex'] as const)(
         (login) => login.agent === agent,
       ),
     ).toMatchObject({
+      // A Refresh keeps the save time, to which the app ties the note of
+      // the save and the warning of the login.
+      updatedAt: TEST_TIME,
       modelList: { missing: [`test-${agent}`], checkedAt: TEST_TIME + 1 },
     })
     expect(api.upstream.requests).toHaveLength(2)

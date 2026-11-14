@@ -50,4 +50,3 @@ A failure keeps the previous IDs and successful read time.
 Writes check the login ciphertext and attempt ID, so an old response cannot replace a newer read or login.
 The account API compares those IDs with the app catalogue.
 No model discovery route becomes available to sandbox code.
-

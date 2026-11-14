@@ -28,6 +28,16 @@ Contract owners:
 - The [model gateway README](../worker/model-gateway/README.md).
 - The [account screens doc](../src/app/account-screens.md).
 
+Replaced ways:
+
+- The model list read of a save through `refreshEndpointModels`, after
+  the store, with a ciphertext selector of the claim → the read of
+  `readEndpointModelsForSave` before the store, which writes the list in
+  the save statement. Consumers: the save route in
+  `worker/app-api/boot.ts`. Moved in Milestone 3. The ciphertext selector
+  of `refreshEndpointModels` and `claimEndpointModelRead` was deleted in
+  the fix of review finding 2, on 14 November 2026.
+
 ## Decisions
 
 ### 1. Tell the user before a turn that a Codex address is wrong

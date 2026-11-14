@@ -10,6 +10,7 @@ import {
   agentLoginPath,
   refreshAgentLoginModelsPath,
   type AgentLoginStatus,
+  type RefreshAgentLoginModelsResponse,
   type SaveAgentLoginResponse,
 } from '../../shared/account'
 import { MODELS_PATH, type Agent, type AgentModel } from '../../shared/agents'
@@ -166,6 +167,46 @@ describe('the reads of the model list of an own endpoint login', () => {
       item: `Claude Connected Remove Own endpoint at proxy.example.com ${warning} Refresh Fable 5.1 is hidden from your model pickers, because this endpoint does not list it. Its model ID is claude-fable-5-1 . Checked 1 minute ago. ${share}`,
       refreshes: 1,
       focused: true,
+    })
+  })
+
+  test('a Refresh keeps the note of a Codex save that added /v1: one that reads no list adds the warning, and one that reads a list removes only the warning', async () => {
+    const server = new FakeApiServer()
+    const models: readonly AgentModel[] = [
+      ['gpt-6-1-sol', 'GPT-6.1 Sol'],
+      ['gpt-6-astra', 'GPT-6 Astra'],
+    ].map(([model, label]) => ({
+      agent: 'codex',
+      model,
+      label,
+      efforts: ['medium'],
+    }))
+    server.json('GET', MODELS_PATH, { models })
+    serveAccount(server)
+    const { view } = await openAccount(server, {}, 'codex')
+    await settle()
+    server.json(
+      'PUT',
+      agentLoginPath('codex'),
+      saveAnswer(endpointLogin('codex'), { endpointV1Added: true }),
+    )
+    // The save answers without the list, which the account then holds.
+    serveAccount(server, [endpointLogin('codex', ['gpt-6-astra'])])
+    await connectEndpoint(view, 'https://proxy.example.com')
+    /** Presses Refresh, which gets `answer`, and gives the row after it. */
+    const refresh = async (answer: RefreshAgentLoginModelsResponse) => {
+      server.json('POST', refreshAgentLoginModelsPath('codex'), answer)
+      click(byRole('button', 'Refresh the model list of Codex', view))
+      await settle()
+      return agentItem(view, 'codex')
+    }
+    const failed = await refresh({ modelListReadFailed: true })
+    // The next read works, and its list names each model of the app.
+    serveAccount(server, [endpointLogin('codex', [])])
+    const read = await refresh({ modelListReadFailed: false })
+    expect({ failed, read }).toEqual({
+      failed: `Codex Connected Remove Own endpoint at proxy.example.com ${note} ${warning} Refresh GPT-6 Astra is hidden from your model pickers, because this endpoint does not list it. Its model ID is gpt-6-astra . Checked 1 minute ago. ${share}`,
+      read: `Codex Connected Remove Own endpoint at proxy.example.com ${note} ${share}`,
     })
   })
 
