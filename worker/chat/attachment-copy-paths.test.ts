@@ -16,7 +16,7 @@ import {
 import { prepareMessageAttachments } from './attachment-copy'
 import { providerCopy } from './attachment-copy.test-support'
 import { ATTACHMENTS_DIRECTORY } from '../../src/shared/attachment-paths'
-import { storeAttachment } from './attachment-storage'
+import { uploadAttachment } from '../test-support/attachment-upload'
 import { WORKSPACE_ID } from './harness.test-support'
 import { messageCommands } from './turn-lifecycle.test-support'
 
@@ -49,7 +49,7 @@ it('copies before delivery and preserves copy proof across reconnects while new 
     .bind('sandbox-one', WORKSPACE_ID)
     .run()
   const upload = (id: string, name: string) =>
-    storeAttachment(
+    uploadAttachment(
       harness.env,
       {
         orgId: fixture.org.id,

@@ -1,10 +1,12 @@
 import { execFile } from 'node:child_process'
 import {
+  lstat,
   mkdtemp,
   mkdir,
   readFile,
   readdir,
   rm,
+  symlink,
   writeFile,
 } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
@@ -110,6 +112,19 @@ it('downloads atomically, rejects the wrong byte count, and clears old temporary
       'https://api.conductive.test/v1/internal/attachments/download',
       '',
     ])
+    await rm(target)
+    await mkdir(target)
+    await expect(run(command(6))).rejects.toMatchObject({ code: 1 })
+    expect(await readdir(target)).toEqual([])
+    expect(await readdir(parent)).toEqual(['a-file.dat'])
+    await rm(target, { recursive: true })
+    const linkedDirectory = join(directory, 'linked-folder')
+    await mkdir(linkedDirectory)
+    await symlink(linkedDirectory, target, 'dir')
+    expect(await run(command(6))).toMatchObject({ stdout: '', stderr: '' })
+    expect((await lstat(target)).isSymbolicLink()).toBe(false)
+    expect(new Uint8Array(await readFile(target))).toEqual(FILE_BYTES)
+    expect(await readdir(linkedDirectory)).toEqual([])
     await writeFile(payload, 'short')
     await expect(run(command(6))).rejects.toMatchObject({ code: 1 })
     expect(new Uint8Array(await readFile(target))).toEqual(FILE_BYTES)

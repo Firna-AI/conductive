@@ -1,6 +1,7 @@
 # Chat backend tests
 
-The `attachment-*.test.ts` files use local R2 and D1 through the internal storage boundary.
+The `attachment-*.test.ts` files use local R2 and D1 through the production multipart storage operations.
+Their fixtures start an upload, write native or Node-compatible R2 parts, and complete it with its receipts.
 They cover exact bytes, ownership, expiry races, the shared copy owner and proof, path extensions, and Stop during a held transfer.
 `attachment-first-message.test.ts` admits a first-message file before a computer exists.
 It also covers the first-message file of a removed workspace: a new attempt can claim it, and it expires at its upload deadline.
@@ -29,9 +30,8 @@ An expired claim without an accepted message loses its record and its object. An
 `integration/failed-first-start-retry.test.ts` keeps the first-message file of a failed first start through the native `expireChatAttachment` RPC, a restart, and Try again in the same workspace.
 Try again copies its exact bytes once, as [Outer Worker tests](integration/outer-worker-tests.md) says.
 The HTTP and security raw-upload tests check shared route budgets and admission before body reads.
-The 100 MB boundary case creates its unknown-length stream inside the native runtime.
-It reads the stored byte count and exact byte samples from real R2 there.
-This keeps large byte arrays out of the test bridge while retaining the exact maximum and first excess byte.
+`attachment-multipart-storage.test.ts` checks membership and suspension changes during completion before publication.
+`integration/attachment-multipart-start.test.ts` checks the 1 GB declared-size limit before storage starts.
 
 This guide belongs to the [chat backend](README.md). Run the tests from
 the repository root:

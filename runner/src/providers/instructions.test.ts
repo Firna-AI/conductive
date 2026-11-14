@@ -168,7 +168,7 @@ it.each(['claude', 'codex'] as const)(
               },
               {
                 type: 'text',
-                text: 'The sender attached these files. Read each file, or the parts of a large file that you need, before you answer. Each image is also in this message.',
+                text: 'The sender attached these files. Read each file, or the parts of a large file that you need, before you answer. Only an image that comes right after its file line is also in this message.',
                 text_elements: [],
               },
               {

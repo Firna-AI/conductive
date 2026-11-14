@@ -25,6 +25,21 @@ function uploadOf(path: string, kind: 'part' | 'complete'): string | null {
   return null
 }
 
+/**
+ * Picks only the first start call, or only the first complete call, of the
+ * uploads at either target, so that a test can hold it. Each later call
+ * goes on.
+ */
+export function firstCall(call: 'start' | 'complete') {
+  let picked = false
+  return (request: Request): boolean => {
+    if (picked || request.method !== 'POST') return false
+    const path = new URL(request.url).pathname
+    picked = routes.some((paths) => match(paths[call], path) !== null)
+    return picked
+  }
+}
+
 /** The reply of a part that the Worker refused, which goes out only once. */
 export const refusedPart: FileReply = {
   status: 400,

@@ -165,11 +165,17 @@ interface FileJob {
   file: File
   /** The upload of an earlier try of the file, which this try resumes. */
   resume: PartedUpload | null
-  /** Its chip is attached, its generation is current, and its owner is live. */
+  /**
+   * Its chip is attached, its generation is current, and its owner is live.
+   * It says no after the abort of `signal`.
+   */
   live: () => boolean
   /** Changes the file in the draft that holds it, wherever that is now. */
   change: (change: (item: DraftFile) => DraftFile) => void
-  /** Stops the request of the upload after detachment or sign-out. */
+  /**
+   * Ends the job after detachment or sign-out, and stops the request of the
+   * upload that takes it.
+   */
   signal: AbortSignal
   /** The timer of the owner, for the waits before a failed part goes again. */
   delay: Delay
@@ -185,9 +191,31 @@ interface FileJob {
  * upload starts no request, as its `live` check says, the owner aborts the
  * request that runs, and a reply or a progress that comes later changes
  * nothing.
+ *
+ * The abort of `signal` ends the job at once, so the queue of its pick
+ * starts the next file. This holds also while the start call or the
+ * complete call waits for its answer: these calls do not take the signal,
+ * so they go on, and their late answers change nothing.
  */
 export async function runFileJob(job: FileJob): Promise<void> {
   if (!job.live() || job.signal.aborted) return
+  let stop = () => {}
+  const stopped = new Promise<void>((resolve) => {
+    stop = () => resolve()
+  })
+  job.signal.addEventListener('abort', stop)
+  try {
+    await Promise.race([uploadFile(job), stopped])
+  } finally {
+    job.signal.removeEventListener('abort', stop)
+  }
+}
+
+/**
+ * Uploads the file of a job. Each report and the outcome change the file
+ * only while the job is live.
+ */
+async function uploadFile(job: FileJob): Promise<void> {
   const { id, file } = job
   let kept = job.resume
   const update = (change: (item: DraftFile) => DraftFile) => {

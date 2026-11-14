@@ -8,7 +8,7 @@ function readAttachmentCommand(command: string) {
   const start = command.indexOf('/bin/sh -c ') + '/bin/sh -c '.length
   const quoted = command.slice(start, command.lastIndexOf(' > /dev/null 2>&1'))
   const body = quoted.slice(1, -1).replaceAll("'\"'\"'", "'")
-  const path = body.match(/\/bin\/mv -f -- "\$temporary" '([^']+)'/)?.[1]
+  const path = body.match(/\/bin\/mv -fT -- "\$temporary" '([^']+)'/)?.[1]
   const token = body.match(/Authorization: Bearer ([A-Za-z0-9_-]+)/)?.[1]
   const url = body
     .match(/'(https:[^']+)'/g)

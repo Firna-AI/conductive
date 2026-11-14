@@ -18,7 +18,7 @@ that shows their chips.
   draft, with its kept upload, and `runFileJob`, the upload of one file in
   its generation. `runFileQueue` starts the reserved uploads of a pick, or of
   a text that brings files back, one at a time, and `stopFile` ends a
-  generation. `splitPick` splits one attach: the files that upload, the
+  generation and its upload job at once. `splitPick` splits one attach: the files that upload, the
   names of the files and the zips over the size limit, and a copy of the
   names of the folders that could not be read, from `IntakeRefusals`.
 - `new-workspace-files.ts`: `DraftUploads`, the uploads of a first message
@@ -56,6 +56,8 @@ that shows their chips.
   part of a file. `started` waits until a part has started, and `finish`
   confirms a part and completes its upload with the file that the test
   names. `refusedPart` is the reply of a part that does not go again.
+  `firstCall` picks the first start call or the first complete call of
+  the uploads, so that a test can hold it.
   `withPickedFiles` writes the marks of new files at the end of a draft
   text, as the field does. `uploadsSettled` waits until no file of a list
   uploads. `pickWorkspaceFiles` attaches files, with optional refusals, to

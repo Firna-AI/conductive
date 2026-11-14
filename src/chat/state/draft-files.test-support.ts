@@ -28,9 +28,13 @@ export function pickChatFiles(
   )
 }
 
-export async function readyChat() {
+/**
+ * A started chat whose uploads wait for the test. Each request that `hold`
+ * picks waits too, until the test lets it go through `held`.
+ */
+export async function readyChat(hold?: (request: Request) => boolean) {
   const upload = controlledUploads()
-  const chat = chatFor({ conversation: 'history', uploads: upload })
+  const chat = chatFor({ conversation: 'history', uploads: upload, hold })
   await chat.controller.start()
   return { ...chat, ...upload }
 }

@@ -5,17 +5,15 @@ D1 keeps the owner, target, upload deadline, claim revision, and deletion journa
 The browser can start an upload, send raw parts, and complete it with the confirmed receipts.
 The shared path builders select draft or workspace routes.
 The route registry gives the entry and gate the same method, matcher, and byte limit.
-The storage API also accepts decoded bytes independently of the browser transport.
 [Attachments](../../docs/protocol/messages-and-attachments.md#attachments) gives the requirements.
 
 ## Storage boundary
 
-`storeAttachment` in [attachment-storage.ts](attachment-storage.ts) takes authenticated metadata and decoded bytes or a stream.
-It checks current membership and the named target before it creates a record.
-It measures the bytes and refuses a decoded total above `ATTACHMENT_MAX_BYTES`.
-The decoded file limit is 1,000,000,000 bytes.
-Internal callers without a known length use bounded R2 parts.
-The internal storage boundary needs no stored part table.
+`startAttachmentUpload` in [attachment-multipart-storage.ts](attachment-multipart-storage.ts) takes authenticated metadata and the declared file size.
+It uses [attachment-storage.ts](attachment-storage.ts) to check current membership and the named target before it creates a record.
+The start route refuses a declared size above `ATTACHMENT_MAX_BYTES`, 1,000,000,000 bytes.
+Callers write parts to the private R2 multipart upload and keep their receipts.
+`completeAttachmentUpload` completes those parts and checks the final size.
 Readiness publishes only after the object completes and the owner and target still permit the write.
 An upload that loses ownership leaves no usable attachment.
 Its failed cleanup keeps a deletion record for another attempt.
@@ -48,7 +46,7 @@ Completion first takes a conditional D1 revision claim.
 Other complete calls cannot delete the winning upload after an R2 error.
 R2 completes from the receipts, and the Worker checks the resulting object size.
 The existing publication query checks membership, suspension, target, and expiry again before it sets `ready`.
-A failed completion uses the same deletion journal as the internal storage boundary.
+A failed completion uses the deletion journal in [attachment-storage.ts](attachment-storage.ts).
 Part failures keep the upload available for another attempt.
 
 | Input | HTTP status | Error code |
@@ -124,6 +122,7 @@ It creates the file's parent folder and writes `*` into `.context/attachments/.g
 It removes older temporary files of that file and downloads to a new random temporary file beside the destination.
 Curl uses a 1 KiB/s low-speed limit for 60 seconds and a one-hour total limit.
 The command checks the byte count before an atomic move to the final path.
+A folder at the final path makes the move fail.
 It removes its temporary file on failure and prints no output.
 The token appears only in the Authorization header of the download.
 `SandboxProvider.startCommand` starts it, and `getCommandStatus` polls it to completion.
@@ -223,7 +222,7 @@ It takes the size from the metadata of the message, with no file read.
 Each description is one line with a JSON object, so a name with quotes or a line break stays inside its value.
 Codex also gets each image of at most `ATTACHMENT_IMAGE_MAX_BYTES`, 25,000,000 bytes, as a local image input after its file line.
 A larger image gets only its file line.
-When at least one image goes as image input, the read line adds "Each image is also in this message."
+When at least one image goes as image input, the read line adds "Only an image that comes right after its file line is also in this message."
 A message without attached files gets no read line or file lines.
 
 ## Cleanup
@@ -249,7 +248,7 @@ The sweep also removes completed orphan objects whose upload outlived its record
 ## Verification
 
 The attachment tests use local Miniflare R2 and D1.
-Storage tests also call the internal storage boundary.
+Storage fixtures use the production start and complete operations with native or Node-compatible R2 part writes.
 The multipart route tests use the real Worker and native R2 in Miniflare.
 The multipart tests cover both targets, part replacement, exact body lengths, empty files, and a two-part file with a shorter last part.
 Completion tests check the final size, access changes, competing completion calls, and abort of an expired unfinished upload.

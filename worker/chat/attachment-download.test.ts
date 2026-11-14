@@ -1,4 +1,12 @@
-import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  expect,
+  it,
+  vi,
+} from 'vitest'
 import { createApp } from '../application'
 import { errorResponse } from '../http'
 import { hash } from '../security/crypto'
@@ -23,6 +31,9 @@ beforeAll(async () => {
 })
 beforeEach(async () => {
   await harness.reset()
+})
+afterEach(() => {
+  vi.restoreAllMocks()
 })
 afterAll(async () => {
   await harness.dispose()
@@ -73,6 +84,7 @@ async function downloadFixture() {
 }
 
 it('claims one private download once and exposes only the file bytes on the machine route', async () => {
+  vi.spyOn(Date, 'now').mockReturnValue(TEST_TIME)
   const fixture = await downloadFixture()
   const token = await fixture.mint()
   const row = await harness.env.DB.prepare(

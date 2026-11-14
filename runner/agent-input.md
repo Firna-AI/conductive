@@ -79,8 +79,9 @@ chat never shows the sender line.
 A message with attached files adds one read instruction after the
 member's text, then one JSON line per file. Each line gives its original
 name, media type, copied absolute path, and `sizeBytes` from message
-metadata. Codex keeps each image input after its file line. Its read
-instruction mentions image input only when the message has an image.
+metadata. Codex keeps each image input right after its file line. When at
+least one image goes as image input, its read instruction adds: "Only an
+image that comes right after its file line is also in this message."
 A message without files gets no extra line.
 
 [Agent input](../worker/chat/attachments.md#agent-input) in the attachment

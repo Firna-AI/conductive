@@ -12,7 +12,7 @@ import {
   downloadedAttachment,
   latestAttachmentFailure,
 } from './attachment-transfer.test-support'
-import { storeAttachment } from './attachment-storage'
+import { uploadAttachment } from '../test-support/attachment-upload'
 import { FILE_BYTES } from './attachment.test-support'
 import { messageCommands } from './turn-lifecycle.test-support'
 
@@ -32,7 +32,7 @@ it('checks all files and names a missing file and changed size in message order'
     await attachmentOwnerFixture(harness)
   await harness.env.DB.prepare("UPDATE workspaces SET state = 'ready'").run()
   const upload = (id: string, name: string) =>
-    storeAttachment(
+    uploadAttachment(
       harness.env,
       {
         orgId: fixture.org.id,

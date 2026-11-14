@@ -212,7 +212,8 @@ Each path is relative to `src/app/`, the folder of this page.
   says.
 - `new-workspace-marks.test.ts` checks the IDs at once, the words outside
   the chips, and the mentions in the order of the chips. It also checks
-  undo of a ready file, stopped and queued uploads, a sign-out, and the
+  undo of a ready file, stopped and queued uploads, a Remove while the
+  start call or the complete call of a file waits, a sign-out, and the
   text that a create took. `new-workspace-refusals.test.ts` checks folder
   names with no files, an empty pick, a file with no bytes, a sign-out,
   and a failed create.

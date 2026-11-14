@@ -25,13 +25,13 @@ afterAll(async () => {
   await harness.dispose()
 })
 
-async function pendingUpload() {
+async function pendingUpload(uploader: 'member' | 'owner' = 'member') {
   const fixture = await attachmentFixture(harness)
   const id = await startAttachmentUpload(
     harness.env,
     {
       orgId: fixture.org.id,
-      uploaderUserId: fixture.member.id,
+      uploaderUserId: fixture[uploader].id,
       target: fixture.target,
       name: 'publication.bin',
       kind: 'file',
@@ -114,6 +114,31 @@ it('checks access again after R2 completion and removes the file when membership
   })
   expect(await readAttachment(harness.env.DB, record.id)).toBeNull()
   expect(await bucket.get(record.objectKey)).toBeNull()
+})
+
+it('removes a late completed upload when its owner loses access before publication', async () => {
+  const { fixture, record, parts, bucket } = await pendingUpload('owner')
+  const entered = held<void>()
+  const release = held<void>()
+  const complete = completeAttachmentUpload(
+    holdCompletion(harness.env, () => entered.resolve(), release.promise),
+    record,
+    parts,
+    () => TEST_TIME,
+  )
+  try {
+    await entered.promise
+    await harness.env.DB.prepare(
+      'UPDATE users SET suspended_at = ? WHERE id = ?',
+    )
+      .bind(TEST_TIME, fixture.owner.id)
+      .run()
+  } finally {
+    release.resolve()
+  }
+  await expect(complete).rejects.toMatchObject({ code: 'attachment_not_found' })
+  expect(await readAttachment(harness.env.DB, record.id)).toBeNull()
+  expect((await bucket.list()).objects).toEqual([])
 })
 
 it('lets one completion publish while a competing completion cannot delete its file', async () => {

@@ -73,6 +73,16 @@ Replaced ways:
   their tests. The Worker adds the part routes in Milestone 5. The app
   moves to them in Milestone 6. Milestone 7 deletes the raw `POST` routes
   and their 100 MB limit.
+  The replaced storage function is `storeAttachment` in
+  `worker/chat/attachment-storage.ts`, with `writeAttachmentObject` in
+  `worker/chat/attachment-byte-storage.ts`. Its remaining consumers were
+  `worker/chat/attachment.test-support.ts`, `attachment-storage.test.ts`,
+  `attachment-copy-paths.test.ts`, `attachment-missing.test.ts`,
+  `worker/members/attachment-purge.test.ts`, and the native attachment
+  controls in `worker/test-support/`. Review fix 102 moves their live
+  assertions to the production multipart operations. It deletes both old
+  storage functions, the old byte-storage file, and the unused native
+  controls with their interface and entry registration.
 
 ## Decisions
 

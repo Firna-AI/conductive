@@ -141,6 +141,11 @@ composer shows for a folder and for a file over the size limit.
   nothing. This holds also for a queued upload that starts after its
   generation ended. `runFileJob` checks the generation before the request
   and at each report.
+- The end of a generation ends the upload job of its file at once, so the
+  queue of the pick starts the next file. A part request and a wait before
+  a retry stop. The start call and the complete call do not stop, because
+  they do not take the signal: each goes on, and its late answer changes
+  nothing.
 - An upload changes its file only while the file is attached. In the
   chat, it finds its draft by the draft ID, so its progress and its outcome
   land on the draft also after a move. New workspace also checks the

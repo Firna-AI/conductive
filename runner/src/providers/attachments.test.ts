@@ -110,7 +110,7 @@ it('gives Codex original metadata and image input at exactly 25 MB', async () =>
         },
         {
           type: 'text',
-          text: 'The sender attached these files. Read each file, or the parts of a large file that you need, before you answer. Each image is also in this message.',
+          text: 'The sender attached these files. Read each file, or the parts of a large file that you need, before you answer. Only an image that comes right after its file line is also in this message.',
           text_elements: [],
         },
         {
@@ -181,7 +181,7 @@ it('gives Codex original metadata and image input at exactly 25 MB', async () =>
         },
         {
           type: 'text',
-          text: 'The sender attached these files. Read each file, or the parts of a large file that you need, before you answer. Each image is also in this message.',
+          text: 'The sender attached these files. Read each file, or the parts of a large file that you need, before you answer. Only an image that comes right after its file line is also in this message.',
           text_elements: [],
         },
         {
@@ -242,7 +242,9 @@ it.each([false, true])(
             type: 'text',
             text:
               'The sender attached these files. Read each file, or the parts of a large file that you need, before you answer.' +
-              (withSmallImage ? ' Each image is also in this message.' : ''),
+              (withSmallImage
+                ? ' Only an image that comes right after its file line is also in this message.'
+                : ''),
             text_elements: [],
           },
           {

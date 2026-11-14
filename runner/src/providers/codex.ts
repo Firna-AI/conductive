@@ -43,7 +43,9 @@ function input(command: ProviderInput, branches?: RunnerBranches | null) {
             type: 'text',
             text:
               attachmentReadInstruction +
-              (images.length ? ' Each image is also in this message.' : ''),
+              (images.length
+                ? ' Only an image that comes right after its file line is also in this message.'
+                : ''),
             text_elements: [],
           },
         ]

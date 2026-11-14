@@ -1,23 +1,11 @@
-import type {
-  Attachment,
-  AttachmentUploadTarget,
-} from '../../src/shared/messages'
+import type { AttachmentUploadTarget } from '../../src/shared/messages'
 import type { AppEnv } from '../env'
-import { randomToken } from '../security/crypto'
 import { warnWorker } from '../warnings'
-import {
-  insertAttachment,
-  publishAttachment,
-  readAttachment,
-  saveAttachmentMultipart,
-} from './attachment-data'
+import { insertAttachment, readAttachment } from './attachment-data'
 import { deleteAttachment, removeAttachmentBytes } from './attachment-cleanup'
-import { writeAttachmentObject } from './attachment-byte-storage'
 import {
   ATTACHMENT_DRAFT_MS,
-  attachmentBucket,
   attachmentNotFound,
-  publicAttachment,
   type AttachmentRecord,
 } from './attachment-record'
 
@@ -28,51 +16,6 @@ export interface AttachmentStorageInput {
   name: string
   kind: 'image' | 'file'
   mediaType: string
-}
-
-/** Internal boundary. A browser adapter must authenticate metadata before calling it. */
-export async function storeAttachment(
-  env: AppEnv,
-  input: AttachmentStorageInput,
-  source: Uint8Array | ReadableStream<Uint8Array>,
-  dependencies: {
-    now: () => number
-    newId: () => string
-    byteLength?: number
-  } = {
-    now: Date.now,
-    newId: randomToken,
-  },
-): Promise<Attachment> {
-  const bucket = attachmentBucket(env)
-  const record = await createAttachmentRecord(env, input, 0, dependencies)
-  try {
-    record.sizeBytes = await writeAttachmentObject(
-      bucket,
-      record.objectKey,
-      { attachmentId: record.id, orgId: input.orgId },
-      source,
-      async (multipartId) => {
-        record.multipartId = multipartId
-        if (!(await saveAttachmentMultipart(env.DB, record.id, multipartId)))
-          throw attachmentNotFound()
-      },
-      dependencies.byteLength,
-    )
-    if (
-      !(await publishAttachment(
-        env.DB,
-        record,
-        record.sizeBytes,
-        dependencies.now(),
-      ))
-    )
-      throw attachmentNotFound()
-    return publicAttachment(record)
-  } catch (error) {
-    await cleanupAttachmentUpload(env, record)
-    throw error
-  }
 }
 
 export async function createAttachmentRecord(

@@ -280,6 +280,8 @@ mark leaves. It aborts the upload of a detached file, and ignores its late
 progress, reply, and failure after undo starts it again in the same
 upload, also from a queued start. Undo of several stopped uploads starts
 them again in one new queue, and the stopped queue starts none of them.
+A Remove while the start call or the complete call of a file waits starts
+the next file of the pick at once, and the late answer changes nothing.
 `state/draft-file-send.test.ts` sends a chat with only chips. It writes
 the returned path at every mark, with each attachment ID once, in the
 order of the first marks. Send clears the sent marks at once, and the
@@ -293,7 +295,8 @@ of a detached one. A stopped chat ends the attached and detached files and
 ignores late uploads. `state/draft-file-identity.test.ts` checks that a
 fresh start clears the old draft, and that the source of the old draft
 never reads the files of the new one. `state/draft-files.test-support.ts`
-gives `readyChat`, a started chat whose uploads wait for the test. Its
+gives `readyChat`, a started chat whose uploads wait for the test. It can
+also hold the requests that a test picks, such as with `firstCall`. Its
 `pickChatFiles` attaches files, with optional refusals, and writes
 the marks of the files as the field does. Both use the helpers of
 `../app/draft-files.test-support.ts`.

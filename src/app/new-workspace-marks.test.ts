@@ -1,14 +1,18 @@
 import { describe, expect, it } from 'vitest'
 import { controlledUploads, note } from './draft-files.test-support'
-import { attachmentUploadStartPath } from '../shared/messages'
+import {
+  attachmentUploadCompletePath,
+  attachmentUploadStartPath,
+} from '../shared/messages'
 import { workspacesPath } from '../shared/workspaces'
 import { FakeApiServer } from '../test-support/fake-api'
 import { FAKE_IDS } from '../test-support/fixtures/core'
 import { createApiClient } from './api/client'
+import { record } from './api/parse'
 import { fileMark, literalText } from './draft-marks'
 import { draftReady } from './new-workspace-model'
 import { OrgModel } from './org-model'
-import { HeldRequests, testServices } from './test-kit'
+import { flushMicrotasks, HeldRequests, testServices } from './test-kit'
 
 const defaults = {
   repositoryId: 'storefront',
@@ -19,17 +23,30 @@ const defaults = {
     fast: false,
   } as const,
 }
-const startPath = attachmentUploadStartPath(FAKE_IDS.org, {
-  type: 'new-workspace',
-  messageId: '',
-})
+const target = { type: 'new-workspace', messageId: '' } as const
+const startPath = attachmentUploadStartPath(FAKE_IDS.org, target)
+
+/** The `POST` requests to `path` that the server got, in their order. */
+function posts(server: FakeApiServer, path: string): Request[] {
+  return server.requests.filter(
+    (request) =>
+      request.method === 'POST' && new URL(request.url).pathname === path,
+  )
+}
 
 /** The uploads that the form started, as their start calls show. */
 function starts(server: FakeApiServer): number {
-  return server.requests.filter(
-    (request) =>
-      request.method === 'POST' && new URL(request.url).pathname === startPath,
-  ).length
+  return posts(server, startPath).length
+}
+
+/** The names of the files whose start calls the server got, in order. */
+function startNames(server: FakeApiServer): Promise<unknown[]> {
+  return Promise.all(
+    posts(server, startPath).map(async (request) => {
+      const body: unknown = await request.clone().json()
+      return record(body).name
+    }),
+  )
 }
 
 async function formWithUploads() {
@@ -183,5 +200,60 @@ describe('marks in a New workspace draft', () => {
       files: [],
       detached: [],
     })
+  })
+
+  it('starts the next file of the pick at once after a Remove while the start call waits, and ignores its late answer', async () => {
+    const { form, server, held, jobs, started, finish } =
+      await formWithUploads()
+    held.holdAnswer('POST', startPath)
+    const [one, two] = form.attach([note('one.txt'), note('two.txt')])
+    form.setText(`${fileMark(one)} ${fileMark(two)}`)
+    form.setText(fileMark(two))
+    await flushMicrotasks()
+    // The answer to the start call of one.txt still waits.
+    expect(await startNames(server)).toEqual(['one.txt', 'two.txt'])
+    await started(1)
+    await finish(0, 'two')
+    const ready = form.draft.get()
+    expect(ready).toMatchObject({
+      files: [{ id: two, state: 'ready', attachment: { id: 'two' } }],
+      detached: [{ id: one, state: 'uploading' }],
+    })
+    held.release('POST', startPath)
+    await flushMicrotasks()
+    expect(form.draft.get()).toBe(ready)
+    expect(jobs.map((job) => job.name)).toEqual(['two.txt'])
+  })
+
+  it('starts the next file of the pick at once after a Remove while the complete call waits, and ignores its late answer', async () => {
+    const { form, server, held, jobs, started, finish } =
+      await formWithUploads()
+    const [one, two] = form.attach([note('one.txt'), note('two.txt')])
+    form.setText(`${fileMark(one)} ${fileMark(two)}`)
+    await started(1)
+    const complete = attachmentUploadCompletePath(
+      FAKE_IDS.org,
+      target,
+      jobs[0].uploadId,
+    )
+    held.holdAnswer('POST', complete)
+    // The part of one.txt gets its receipt, and the answer to its complete
+    // call waits.
+    const late = finish(0, 'one')
+    await flushMicrotasks()
+    expect(posts(server, complete)).toHaveLength(1)
+    form.setText(fileMark(two))
+    await flushMicrotasks()
+    expect(await startNames(server)).toEqual(['one.txt', 'two.txt'])
+    await started(2)
+    await finish(1, 'two')
+    const ready = form.draft.get()
+    expect(ready).toMatchObject({
+      files: [{ id: two, state: 'ready', attachment: { id: 'two' } }],
+      detached: [{ id: one, state: 'uploading' }],
+    })
+    held.release('POST', complete)
+    await late
+    expect(form.draft.get()).toBe(ready)
   })
 })
