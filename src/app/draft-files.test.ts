@@ -2,6 +2,7 @@ import { describe, expect, test } from 'vitest'
 import type { Attachment } from '../shared/messages'
 import { deferred, type Deferred } from '../test-support/mount'
 import { runFileJob, uploadingFile, type DraftFile } from './draft-files'
+import { ManualDelay } from './test-kit'
 
 const file = new File(['png'], 'overlap.png', { type: 'image/png' })
 const attachment: Attachment = {
@@ -24,10 +25,12 @@ async function lateReply(settle: (reply: Deferred<Attachment>) => void) {
   const job = runFileJob({
     id: 'file-1',
     file,
+    resume: null,
     live: () => live,
     signal: new AbortController().signal,
+    delay: new ManualDelay().delay,
     change: (change) =>
-      states.push(change(uploadingFile('file-1', file)).state),
+      states.push(change(uploadingFile('file-1', file, null)).state),
     upload: () => reply.promise,
   })
   live = false

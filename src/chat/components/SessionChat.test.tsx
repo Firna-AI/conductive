@@ -223,10 +223,10 @@ describe('session parts', () => {
     const file = new File(['png'], 'overlap.png', { type: 'image/png' })
     const off = /aria-label="Send" aria-disabled="true"/
     const error = new ApiError(502, 'upload_failed', 'The upload failed.')
-    expect(composer([uploadingFile('file-1', file)])).toMatch(off)
-    expect(composer([{ state: 'failed', id: 'file-1', file, error }])).toMatch(
-      off,
-    )
+    expect(composer([uploadingFile('file-1', file, null)])).toMatch(off)
+    expect(
+      composer([{ state: 'failed', id: 'file-1', file, error, upload: null }]),
+    ).toMatch(off)
     expect(composer([])).not.toMatch(off)
   })
 })

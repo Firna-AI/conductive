@@ -29,12 +29,12 @@ background work, and the end of a fast turn that ran at standard speed.
     at the place of each file, and its other text is escaped, as
     [`draft-marks.ts`](../../src/app/draft-marks.ts) of the app says. The
     mockups and the app share that module. Send waits for each upload.
-- A file over 100 MB never becomes a chip: a notice over the composer names
+- A file over 1 GB never becomes a chip: a notice over the composer names
   it, gives the limit, and offers "Attach a smaller file", as
   `app/attachments/too-large` shows. A dropped folder becomes one zip
   chip, such as `checkout-screens.zip`, at its place among the files of
-  the drop, as `app/attachments/drop/folder` shows. A zip over 100 MB gets
-  the notice of a file over 100 MB. A folder that the browser cannot read
+  the drop, as `app/attachments/drop/folder` shows. A zip over 1 GB gets
+  the notice of a file over 1 GB. A folder that the browser cannot read
   is not attached: its notice names it, says that it could not be read and
   to attach the files in it, and offers "Attach files", as
   `app/attachments/drop/unreadable-folder` shows.
@@ -57,11 +57,19 @@ background work, and the end of a fast turn that ran at standard speed.
   waits for the cloud computer opens nothing. `SentFiles` lists the files
   that the text does not show under the message, at the right, with
   `AttachmentChips.module.css` and `AttachmentStates.module.css`.
+- A later try of a sent message uses the copies of its files in the cloud
+  computer, because the app deletes its stored copy of each file once the
+  cloud computer has it. When a copy is no longer there, the turn fails
+  with the notice of a failed turn: "This turn stopped", the cause, and
+  Try again. The cause names each file that is gone, and asks to attach it
+  again in a new message, as `app/attachments/missing` shows. Only the
+  newest failed turn of a session offers Try again. The `older` mark of an
+  `error` item in `conversations.ts` draws an older failed turn without it.
 - Both chips of an attached file take no fixtures, so the app can use them.
   The New workspace page and dialog use the same chips before the
   workspace exists, as `app/new-workspace/files` and
   `app/new-workspace/dialog/files` show. In the dialog, the notice of a
-  file over 100 MB sits with its other notices, under the message.
+  file over 1 GB sits with its other notices, under the message.
 - `ImageView` in `src/components/files/` draws the picture of a PNG, JPEG,
   GIF, or WebP file in its tab, from decision 265 B. The picture keeps its
   proportions, in the middle of the tab, at its own size or smaller, so

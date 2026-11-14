@@ -6,7 +6,7 @@ import { HeldRequests } from '../../app/test-kit'
 import { attachmentPath } from '../../shared/attachment-paths'
 import type { WorkspaceEvent } from '../../shared/events'
 import { mentionText } from '../../shared/mention-text'
-import { attachmentUploadPath } from '../../shared/messages'
+import { attachmentUploadStartPath } from '../../shared/messages'
 import { sessionPaths } from '../../shared/sessions'
 import {
   workspacePath,
@@ -114,18 +114,18 @@ describe('the chat of a new workspace without a host', () => {
       await waitFor(() => queryByRole('textbox', 'Message'), 'the message box'),
     )
     typeMessage(box, 'Keep a saved cart for 30 days.')
-    const uploadPath = attachmentUploadPath(org, {
+    const startPath = attachmentUploadStartPath(org, {
       type: 'workspace',
       workspaceId: ws,
     })
-    held.holdAnswer('POST', uploadPath)
+    held.holdAnswer('POST', startPath)
     await pickFiles(view.container, [
       new File(['png'], 'postcode-overlap.png', { type: 'image/png' }),
     ])
     expect(blocked(byRole('button', 'Send'))).toBe(true)
     pressInField(box, 'Enter')
     expect(sends()).toHaveLength(0)
-    held.release('POST', uploadPath)
+    held.release('POST', startPath)
     await waitFor(
       () => !blocked(byRole('button', 'Send')),
       'the completed upload',

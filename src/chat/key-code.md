@@ -130,7 +130,8 @@ is relative to `src/chat/`, the folder of this guide.
   says. `resumeFiles` starts again the uploads that a new text brings
   back, such as after undo, and `retryFile` is Try again. Each upload goes
   through the app's `uploadAttachment`, and it ends on its draft after a
-  move. It stops when its chip leaves the text, and when the chat stops.
+  move. A new try resumes the kept upload of the file. It stops when its
+  chip leaves the text, and when the chat stops.
 - `state/draft-file-source.ts`: `draftFileSource`, the `FieldFiles` of one
   draft identity, behind `ChatController.draftFiles`. It reads the session
   that holds the draft at each call, and gives its attached and detached

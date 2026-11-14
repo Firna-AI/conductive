@@ -19,9 +19,10 @@ record, as [Decision numbers](../architecture.md#decision-numbers) says.
 
 1. A tab sends a message to the Worker. The Durable Object forwards it to
    the agent runner, with the turn token of its turn and the current
-   branches of the workspace. The Worker first copies the files of the
-   message from the attachment storage into the sandbox. An action of the
-   pull request bar sends its fixed prompt in the same way.
+   branches of the workspace. The sandbox first downloads each new file of
+   the message from the attachment storage, through a route of the
+   Worker. An action of the pull request bar sends its fixed prompt in the
+   same way.
 2. The runner gives the message to the agent through the SDK. It numbers
    each agent event and sends it to the Durable Object.
 3. The agent sends each model request to the model gateway of the Worker,

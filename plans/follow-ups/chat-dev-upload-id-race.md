@@ -20,7 +20,7 @@
   - On `origin/main` at commit `067e82b6`, the route has the same race. It chooses the ID the same way at line 208, waits for `request.arrayBuffer()` at line 212, and stores the file at line 214.
   - The branch `calummoore/composer-file-drag-and-drop` added the digest wait before the body read. Nobody reproduced the collision in a run.
   - The chat composer uploads the files of one pick one after another, at `src/chat/state/attachment-actions.ts:78`. So a collision needs two uploads at the same time, such as a second pick before the first upload ends.
-- **Impact if no action:** On the chat development page, both overlapping uploads reply with one ID. A send that names that ID gets the metadata of the second file, so the first file is lost from the fake. The product is not affected: `storeAttachment` in `worker/chat/attachment-storage.ts:49` takes a random token as each upload ID before any wait.
+- **Impact if no action:** On the chat development page, both overlapping uploads reply with one ID. A send that names that ID gets the metadata of the second file, so the first file is lost from the fake. The product is not affected. The multipart route supplies a random token to `startAttachmentUpload` in `worker/chat/attachment-multipart-storage.ts` before storage starts.
 - **Root question:** How does the chat development page give each upload its own ID, also when two uploads overlap?
 - **Options:**
   - **A.** Keep a separate counter beside the map, such as `let uploadCount = 0`. Increment it before any wait, and build the ID `` `dev-file-${++uploadCount}` `` from it. The page keeps its short `dev-file-<n>` IDs. Add a regression test that starts two uploads before either one stores its file, and checks two IDs. Effort: Small.

@@ -76,7 +76,8 @@ header while it runs. Keep until I stop in the bar of the 15 minutes turns
 them into a grant until Stop. The Mac refuses a change of an older pairing, as
 the Worker does.
 
-Uploads keep their bytes in memory. While the sandbox runs, an accepted
+Uploads go in parts through `dev-uploads.ts`, with the store and the checks
+of the app's fake, and keep their bytes in memory. While the sandbox runs, an accepted
 message gets copies of its files at their returned paths, before the page
 shows it as sent. A queued message gets them when the sandbox becomes
 ready, such as after Resume, before the agent gets it. The page uses the

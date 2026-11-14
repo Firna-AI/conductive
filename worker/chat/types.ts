@@ -240,6 +240,11 @@ export interface ChatDependencies {
     attachments: readonly StoredAttachment[],
     sandboxId: string | null,
   ) => Promise<string | null>
+  completeAttachments: (
+    workspaceId: string,
+    attachments: readonly StoredAttachment[],
+    sandboxId: string | null,
+  ) => Promise<void>
   resolveAttachmentPaths: (
     workspaceId: string,
     userId: string,

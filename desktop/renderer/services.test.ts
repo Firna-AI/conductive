@@ -3,7 +3,7 @@ import { afterEach, expect, it, vi } from 'vitest'
 
 import { API_PATHS } from '../../src/shared/api'
 import { workspaceEventsPath } from '../../src/shared/events'
-import { attachmentUploadUrl } from '../../src/shared/messages'
+import { attachmentUploadPartPath } from '../../src/shared/messages'
 import { createDesktopServices } from './services'
 
 afterEach(() => {
@@ -52,7 +52,7 @@ it('uses the configured Worker for credentialed API requests and workspace socke
   expect(close).toHaveBeenCalledOnce()
 })
 
-it('uploads a raw file to the configured Worker with the session cookie', async () => {
+it('uploads a raw part to the configured Worker with the session cookie', async () => {
   const opened: string[] = []
   const sent: Blob[] = []
   const seen: { credentials: boolean; headers: [string, string][] }[] = []
@@ -75,8 +75,8 @@ it('uploads a raw file to the configured Worker with the session cookie', async 
     send(body: Blob) {
       sent.push(body)
       seen.push({ credentials: this.withCredentials, headers: this.headers })
-      this.status = 201
-      this.responseText = JSON.stringify({ id: 'upload-1' })
+      this.status = 200
+      this.responseText = JSON.stringify({ partNumber: 1, etag: 'etag-1' })
       this.load()
     }
     abort() {}
@@ -86,20 +86,21 @@ it('uploads a raw file to the configured Worker with the session cookie', async 
     window,
     'https://worker.conductive.test',
   )
-  const file = new File(['png'], 'overlap.png', { type: 'image/png' })
-  const path = attachmentUploadUrl(
+  const part = new File(['png'], 'overlap.png', { type: 'image/png' })
+  const path = attachmentUploadPartPath(
     'org-one',
     { type: 'workspace', workspaceId: 'workspace-one' },
-    { name: file.name, mediaType: file.type },
+    'upload-1',
+    1,
   )
-  const reply = await services.api.sendFile(path, file, (body) => body, {
+  const reply = await services.api.sendPart(path, part, (body) => body, {
     progress: () => {},
     signal: new AbortController().signal,
   })
   expect({ reply, opened, sent, seen }).toEqual({
-    reply: { id: 'upload-1' },
+    reply: { partNumber: 1, etag: 'etag-1' },
     opened: [`https://worker.conductive.test${path}`],
-    sent: [file],
+    sent: [part],
     seen: [
       {
         credentials: true,

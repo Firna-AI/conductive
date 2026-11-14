@@ -1,7 +1,6 @@
 import { afterEach, beforeAll, expect, it } from 'vitest'
 
 import { chatHistoryPath } from '../../../src/shared/events'
-import { attachmentUploadUrl } from '../../../src/shared/messages'
 import { sessionPaths, sessionsPath } from '../../../src/shared/sessions'
 import { claimAttachment } from '../attachment-claim-data'
 import { readAttachment } from '../attachment-data'
@@ -14,6 +13,7 @@ import {
   type OuterRuntime,
 } from './outer-runtime.test-support'
 import { OUTER_ORG, OUTER_WORKSPACE } from './outer-seed.test-support'
+import { uploadSinglePart } from './attachment-multipart.test-support'
 
 const FILE_BYTES = new Uint8Array([0, 255, 128, 13, 10, 65])
 let bundle: string
@@ -27,24 +27,7 @@ afterEach(async () => {
 })
 
 async function upload(fixture: OuterRuntime, name: string) {
-  const path = attachmentUploadUrl(
-    OUTER_ORG,
-    { type: 'workspace', workspaceId: OUTER_WORKSPACE },
-    { name, mediaType: 'application/octet-stream' },
-  )
-  const response = await fixture.runtime.dispatchFetch(
-    `${fixture.env.APP_ORIGIN}${path}`,
-    {
-      method: 'POST',
-      headers: {
-        Cookie: fixture.cookies.ownerCookie,
-        Origin: fixture.env.APP_ORIGIN,
-        'Content-Type': 'application/octet-stream',
-        'Content-Length': String(FILE_BYTES.byteLength),
-      },
-      body: FILE_BYTES,
-    },
-  )
+  const response = await uploadSinglePart(fixture, FILE_BYTES, { name })
   expect(response.status).toBe(201)
   const attachment = record(record(await response.json()).attachment)
   const stored = await readAttachment(fixture.env.DB, identifier(attachment.id))

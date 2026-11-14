@@ -31,9 +31,10 @@ Each path is relative to `src/app/`, the folder of this page.
   the chat API, and the file client.
 - `api/client.ts`: the JSON client and `ApiError`. The client also gives
   its `fetch`, for a feature client that reads its own replies, so the web
-  app and the Mac app keep their transport. Its `sendFile` sends a raw file
-  through the file transport of the services: `api/xhr-files.ts` in the
-  browser and in the Mac app. `api/read-*.ts`: the readers.
+  app and the Mac app keep their transport. Its `sendPart` sends a raw part
+  of a file with `PUT` through the file transport of the services:
+  `api/xhr-files.ts` in the browser and in the Mac app.
+  `api/read-*.ts`: the readers.
   [api/read-shortcuts.ts](api/read-shortcuts.ts) reads both shortcut keyboards and
   the reply of a shortcut save with the shared reply readers. A malformed
   account structure remains an `invalid_response` error from the API
@@ -211,7 +212,8 @@ Each path is relative to `src/app/`, the folder of this page.
   says.
 - `new-workspace-marks.test.ts` checks the IDs at once, the words outside
   the chips, and the mentions in the order of the chips. It also checks
-  undo of a ready file, stopped and queued uploads, a sign-out, and the
+  undo of a ready file, stopped and queued uploads, a Remove while the
+  start call or the complete call of a file waits, a sign-out, and the
   text that a create took. `new-workspace-refusals.test.ts` checks folder
   names with no files, an empty pick, a file with no bytes, a sign-out,
   and a failed create.
@@ -282,6 +284,8 @@ Each path is relative to `src/app/`, the folder of this page.
   the entry of each item, and `intakeOf`, which turns each folder into its
   zip. `folder-zip.ts`: `zipFolder`, the zip of one dropped folder in the
   browser, with `fflate`, which stops at the size limit of an attachment.
+  It moves the compressed bytes into blobs of about 8 MiB, so the page
+  never holds the whole zip.
   `folder-entries.ts`: the parts of a dropped entry that the zip reads. `useFileDropGuard` cancels each drag of files that no part
   took, so the browser opens no file in place of the page. `App` and the
   chat development page mount it. The composer drop and the

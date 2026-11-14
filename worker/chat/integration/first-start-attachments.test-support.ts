@@ -1,7 +1,8 @@
 import { expect } from 'vitest'
 
+import { attachmentCommandTransfer } from '../../test-support/attachment-command'
+
 import { readAttachment as readPublicAttachment } from '../../../src/app/api/read-workspaces'
-import { attachmentUploadUrl } from '../../../src/shared/messages'
 import {
   attachmentPath,
   ATTACHMENTS_DIRECTORY,
@@ -9,10 +10,12 @@ import {
 import type { HttpFetch } from '../../env'
 import { readAttachment } from '../attachment-data'
 import { attachmentBucket } from '../attachment-record'
-import { identifier, record } from '../inputs'
+import { cleanupTransferredAttachments } from '../attachment-transfer-cleanup'
+import { record } from '../inputs'
 import type { Workspace } from './journey-entry.test-support'
 import type { OuterRuntime } from './outer-runtime.test-support'
 import { OUTER_ORG, OUTER_REPOSITORY } from './outer-seed.test-support'
+import { uploadSinglePart } from './attachment-multipart.test-support'
 
 export const FIRST_START_FILE_BYTES = new Uint8Array([0, 255, 128, 13, 10, 65])
 export const REPAIRED_REPOSITORY_LOCATIONS = [
@@ -24,32 +27,31 @@ export const REPAIRED_REPOSITORY_LOCATIONS = [
 ]
 
 export function firstStartAttachmentTransfer() {
-  const copies: Uint8Array[] = []
-  const paths: string[] = []
-  const outbound = async (request: Request, fallback: HttpFetch) => {
-    const url = new URL(request.url)
-    if (
-      url.hostname === 'boat.dev' &&
-      url.pathname.endsWith('/files/upload-url')
-    ) {
-      const path = identifier(record(await request.json()).path)
-      paths.push(path)
-      return Response.json({
-        ok: true,
-        type: 'file.upload_url',
-        method: 'PUT',
-        path,
-        url: 'https://first-start-files.test/copy',
-        expiresAt: '2099-01-01T00:00:00Z',
-      })
-    }
-    if (url.hostname === 'first-start-files.test') {
-      copies.push(new Uint8Array(await request.arrayBuffer()))
-      return new Response(null, { status: 200 })
-    }
-    return fallback(request)
+  let download: HttpFetch | undefined
+  const transfer = attachmentCommandTransfer({
+    download: (request) => {
+      if (!download) throw new Error('The download route is not connected.')
+      return download(request)
+    },
+  })
+  return {
+    ...transfer,
+    connect: (fixture: OuterRuntime) => {
+      download = async (request) => {
+        const response = await fixture.runtime.dispatchFetch(request.url, {
+          method: request.method,
+          headers: [...request.headers.entries()],
+        })
+        return new Response(await response.arrayBuffer(), {
+          status: response.status,
+          headers: [...response.headers.entries()],
+        })
+      }
+      fixture.boat.beforeCommand = async (command) => {
+        await transfer.start('first-start-sandbox', command)
+      }
+    },
   }
-  return { copies, paths, outbound }
 }
 
 export async function expectFirstStartCopies(
@@ -77,24 +79,11 @@ export async function uploadFirstStartFile(
   fixture: OuterRuntime,
   messageId: string,
 ) {
-  const path = attachmentUploadUrl(
-    OUTER_ORG,
-    { type: 'new-workspace', messageId },
-    { name: 'first-task.dat', mediaType: 'application/octet-stream' },
-  )
-  const response = await fixture.runtime.dispatchFetch(
-    `${fixture.env.APP_ORIGIN}${path}`,
-    {
-      method: 'POST',
-      headers: {
-        Cookie: fixture.cookies.memberCookie,
-        Origin: fixture.env.APP_ORIGIN,
-        'Content-Type': 'application/octet-stream',
-        'Content-Length': String(FIRST_START_FILE_BYTES.byteLength),
-      },
-      body: FIRST_START_FILE_BYTES,
-    },
-  )
+  const response = await uploadSinglePart(fixture, FIRST_START_FILE_BYTES, {
+    target: { type: 'new-workspace', messageId },
+    name: 'first-task.dat',
+    headers: { Cookie: fixture.cookies.memberCookie },
+  })
   expect(response.status).toBe(201)
   return readPublicAttachment(record(await response.json()).attachment)
 }
@@ -129,4 +118,51 @@ export async function expireAndReadFirstStartFile(
     claim,
     bytes: object ? new Uint8Array(await object.arrayBuffer()) : null,
   }
+}
+
+/** Runs the scheduled sweep of transferred files, then reads the record and its stored bytes. */
+async function sweepAndReadFirstStartFile(
+  fixture: OuterRuntime,
+  attachmentId: string,
+) {
+  await cleanupTransferredAttachments(fixture.env, Date.now())
+  const claim = await readAttachment(fixture.env.DB, attachmentId)
+  const object = claim
+    ? await attachmentBucket(fixture.env).get(claim.objectKey)
+    : null
+  return {
+    claim,
+    bytes: object ? new Uint8Array(await object.arrayBuffer()) : null,
+  }
+}
+
+/**
+ * After a good first start, the expiry keeps the accepted file, and the sweep
+ * deletes its stored copy while the record stays.
+ */
+export async function expectTransferredFirstStartFile(
+  fixture: OuterRuntime,
+  workspaceId: string,
+  attachmentId: string,
+) {
+  const expired = await expireAndReadFirstStartFile(
+    fixture,
+    workspaceId,
+    attachmentId,
+  )
+  expect(expired.claim).toMatchObject({
+    state: 'claimed',
+    claimedWorkspaceId: workspaceId,
+  })
+  expect(await sweepAndReadFirstStartFile(fixture, attachmentId)).toMatchObject(
+    {
+      claim: {
+        state: 'claimed',
+        claimedWorkspaceId: workspaceId,
+        transferredSandboxId: expect.any(String),
+        bytesDeletedAt: expect.any(Number),
+      },
+      bytes: null,
+    },
+  )
 }

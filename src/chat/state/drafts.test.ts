@@ -3,7 +3,7 @@ import { fileMark } from '../../app/draft-marks'
 import { pickChatFiles } from './draft-files.test-support'
 import { readyIds } from '../../app/draft-files'
 import type { AgentChoice } from '../../shared/agents'
-import { filePaths } from '../../shared/files'
+import { attachmentUploadStartPath } from '../../shared/messages'
 import { sessionPaths } from '../../shared/sessions'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
 import { record, text } from '../api/json'
@@ -20,9 +20,13 @@ const codex: AgentChoice = {
 }
 const shortly = { timeout: 10_000 }
 const file = () => new File(['png'], 'overlap.png', { type: 'image/png' })
+const startPath = attachmentUploadStartPath(org, {
+  type: 'workspace',
+  workspaceId: ws,
+})
+/** The start call of an upload, which comes before its parts. */
 const isUpload = (request: Request) =>
-  request.method === 'POST' &&
-  new URL(request.url).pathname === filePaths.attachments(org, ws)
+  request.method === 'POST' && new URL(request.url).pathname === startPath
 const isSend = (request: Request) =>
   request.method === 'POST' && request.url.endsWith('/messages')
 
@@ -99,7 +103,7 @@ describe('a draft that moves to another session', () => {
     const created = await opened(chat)
     chat.server.json(
       'POST',
-      filePaths.attachments(org, ws),
+      startPath,
       { error: { code: 'file_too_large', message: 'The file is too large.' } },
       413,
     )

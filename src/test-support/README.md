@@ -206,12 +206,14 @@ Replies, timers, and `waitFor` go on.
 
 ## Key code
 
-- `fake-api.ts` handles requests and records them. A reply for the path of
-  an upload route answers each raw file sent there, whatever file the query
-  names.
-- `fake-files.ts`: `fetchFiles`, the raw file upload over a fetch for tests
-  and the dev fakes, which reports no progress, and `sentFiles`, the files
-  that a fake got.
+- `fake-api.ts` handles requests and records them. `fake-tool-routes.ts`
+  gives each start of an upload the same upload of one part,
+  `FAKE_IDS.upload`, and its complete call the file. A test replaces the
+  reply of one of these calls, such as the complete call, to change the
+  file or to make the upload fail.
+- `fake-files.ts`: `fetchFiles`, the transport of the raw parts of uploads
+  over a fetch, for tests and the dev fakes, which reports no progress, and
+  `sentParts`, the parts that a fake got.
 - `mount.ts` mounts React components in DOM tests, acts as a person does, and waits for a state.
 - `dom-queries.ts` finds shown elements in DOM tests, and says whether a person can use them.
 - `message-field.ts` focuses, types into, pastes into, presses keys in, clears, and reads the message field of a composer.

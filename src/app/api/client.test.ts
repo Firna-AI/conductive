@@ -22,42 +22,46 @@ describe('createApiClient', () => {
     expect(failure).toMatchObject({ status: 404, code: 'fake_route_missing' })
   })
 
-  test('a file goes through the file transport, and its answer and errors read as a write does', async () => {
+  test('a part goes through the file transport, and its answer and errors read as a write does', async () => {
     const replies: (FileReply | Error)[] = [
-      { status: 201, body: { attachment: { id: 'upload-1' } } },
+      { status: 200, body: { partNumber: 1, etag: 'etag-1' } },
       {
         status: 413,
         body: {
           error: {
             code: 'attachment_too_large',
-            message: 'Each file can be up to 100 MB.',
+            message: 'Each file can be up to 1 GB.',
           },
         },
       },
       new Error('The upload failed.'),
     ]
-    const paths: string[] = []
+    const sent: [string, string][] = []
     const api = createApiClient(new FakeApiServer().fetch, async (request) => {
-      paths.push(request.path)
+      sent.push([request.path, await request.body.text()])
       const reply = replies.shift() ?? new Error('No reply.')
       if (reply instanceof Error) throw reply
       return reply
     })
-    const file = new File(['png'], 'overlap.png')
+    const part = new File(['png'], 'overlap.png').slice(0, 2)
     const hooks = { progress: ignore, signal: new AbortController().signal }
-    const id = (body: unknown) => text(record(record(body).attachment), 'id')
-    const sent = await api.sendFile('/upload?name=a', file, id, hooks)
+    const etag = (body: unknown) => text(record(body), 'etag')
+    const confirmed = await api.sendPart('/parts/1', part, etag, hooks)
     const refused = await api
-      .sendFile('/upload?name=b', file, id, hooks)
-      .catch((error) => error)
+      .sendPart('/parts/2', part, etag, hooks)
+      .catch((error: unknown) => error)
     const offline = await api
-      .sendFile('/upload?name=c', file, id, hooks)
-      .catch((error) => error)
-    expect({ sent, refused, offline, paths }).toMatchObject({
-      sent: 'upload-1',
+      .sendPart('/parts/3', part, etag, hooks)
+      .catch((error: unknown) => error)
+    expect({ confirmed, refused, offline, sent }).toMatchObject({
+      confirmed: 'etag-1',
       refused: { status: 413, code: 'attachment_too_large' },
       offline: { status: 0, code: 'network' },
-      paths: ['/upload?name=a', '/upload?name=b', '/upload?name=c'],
+      sent: [
+        ['/parts/1', 'pn'],
+        ['/parts/2', 'pn'],
+        ['/parts/3', 'pn'],
+      ],
     })
   })
 

@@ -254,26 +254,34 @@ caret that the field kept while the button had the focus. The chips go in
 order, each with a space, and the field takes the focus. Each chip shows
 the upload of its file: the measured percent, Uploading before a
 measurement, or the size when it is ready. Only a failed chip shows Try
-again, which uploads the same file again. On a computer, the cell of the
+again, which sends the part of the same file again. On a computer, the cell of the
 icon is the one button that removes a chip, and Backspace after a chip
 removes it whole. On a phone, the icon stays, and the button at the end
 of the chip removes it. Each removal takes the file off the draft and
 stops its upload.
 `state/attachment-actions.test.ts` attaches files to a chat draft over
-the fake API. A failed upload keeps its file, Send waits, and Try again
-through the files source of the draft uploads the same file. It also
-checks the measured bytes of an upload. A pick with two files over the
-size limit and two unreadable folders uploads only its other file. The draft
+the fake API, which uploads in parts. A part that fails at its first send
+and at its three retries, after the waits of 1, 2, and 4 seconds on the
+timers of the chat, fails the upload, which keeps its file and its
+receipts, and Send waits. Try again through the files source of the draft
+sends only the part with no receipt, in the same upload. It also checks
+the measured bytes of an upload. A pick with two files over the 1 GB
+limit and two unreadable folders uploads only its other file. The draft
 keeps the names of each kind in their order, and Send clears them. A
 removed file and a stopped chat abort their uploads. An expired file that
-Send finds gone turns failed, and Try again uploads its kept `File`.
+Send finds gone turns failed, and Try again uploads its kept `File` as a
+new upload.
+`state/attachment-waits.test.ts` checks that a failed part waits on the
+timers of the chat, and that a Remove during the wait stops the upload.
 `state/draft-file-lifecycle.test.ts` attaches files through the controller
 and gets their IDs before the uploads end, with the queue of the pick. It
 keeps a ready file for undo, and it detaches a file only when its last
 mark leaves. It aborts the upload of a detached file, and ignores its late
-progress, reply, and failure after undo starts it again, also from a
-queued start. Undo of several stopped uploads starts them again in one
-new queue, and the stopped queue starts none of them.
+progress, reply, and failure after undo starts it again in the same
+upload, also from a queued start. Undo of several stopped uploads starts
+them again in one new queue, and the stopped queue starts none of them.
+A Remove while the start call or the complete call of a file waits starts
+the next file of the pick at once, and the late answer changes nothing.
 `state/draft-file-send.test.ts` sends a chat with only chips. It writes
 the returned path at every mark, with each attachment ID once, in the
 order of the first marks. Send clears the sent marks at once, and the
@@ -287,7 +295,8 @@ of a detached one. A stopped chat ends the attached and detached files and
 ignores late uploads. `state/draft-file-identity.test.ts` checks that a
 fresh start clears the old draft, and that the source of the old draft
 never reads the files of the new one. `state/draft-files.test-support.ts`
-gives `readyChat`, a started chat whose uploads wait for the test. Its
+gives `readyChat`, a started chat whose uploads wait for the test. It can
+also hold the requests that a test picks, such as with `firstCall`. Its
 `pickChatFiles` attaches files, with optional refusals, and writes
 the marks of the files as the field does. Both use the helpers of
 `../app/draft-files.test-support.ts`.

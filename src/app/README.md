@@ -36,8 +36,8 @@ pull request bar, and the owner picker. A host can give its own parts, as
   [chat development page](../chat/dev/README.md) has a fake with state for
   live events and writes.
 - The production build uses `live-services.ts`: the Worker on the origin of
-  the page, its event socket, and an `XMLHttpRequest` for each raw file
-  upload, which measures the bytes that the browser sent.
+  the page, its event socket, and an `XMLHttpRequest` for each raw part of
+  an upload, which measures the bytes that the browser sent.
 
 ## Composition
 
@@ -238,7 +238,7 @@ default. Later polls read the current login without saving it again, until the s
 The fake uses the shared device response types. It sends no request to OpenAI.
 
 Vitest runs in Node without a DOM. `test-kit.ts` gives services over the
-fake API, with raw file uploads through its fetch, requests or answers that
+fake API, with the raw parts of uploads through its fetch, requests or answers that
 wait for the test (also two at one path), a manual timer with the wait of
 each pending timer, which can run only the timers of one wait, a manual page
 focus, visibility, input, and keys, and a recording event source.
@@ -258,11 +258,24 @@ caret, also for files that hovered as it began, and takes no drop. Files
 over the card show its drop state, a dropped folder attaches as its zip,
 and a folder that cannot be read gets its notice in the dialog.
 `folder-zip.test.ts` zips a folder with nested, empty, and hidden entries,
-gives the name of a zip over the size limit and of a folder that cannot be
-read, and stops with its drop. `../App.dom.test.tsx` mounts `App` and checks the guard
+moves the compressed bytes into a blob each time that they reach the flush
+size, gives the name of a zip over the size limit and of a folder that
+cannot be read, and stops with its drop. `../App.dom.test.tsx` mounts `App` and checks the guard
 outside each box, the browser's own drag of text and links, and the copy
 offer of a box. It also checks that the Feedback dialog still takes a
 dropped screenshot.
+
+`attachment-upload.test.ts` checks the upload in parts of both composers
+over a fake Worker with small parts, from
+`attachment-upload.test-support.ts`. It checks the parts in their order
+with the progress of all parts, a part that goes again alone up to three
+times, the waits of 1, 2, and 4 seconds before these retries, a stop during
+a wait, a refusal that goes once, a resumed upload, a new upload when the
+kept one is gone, the end of an upload by its complete call, a draft file
+and an empty file, and a stop by the signal. `api/xhr-files.test.ts`
+checks the `PUT` of each part. `new-workspace-waits.test.ts` checks that
+New workspace waits on the timer of the app services, and that a Remove
+during the wait stops the upload.
 
 Run `npm run test -- src/app/dev/attachment-files.test.ts src/chat/dev/dev-attachment-files.test.ts`
 for the API tests of the uploaded bytes and their copies in both

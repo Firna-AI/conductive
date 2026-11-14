@@ -61,7 +61,7 @@ A file dropped on the text goes where you drop it.
 A drop elsewhere uses the text cursor or the end.
 The text cursor then moves after the new chips.
 
-Each file can be up to 100 MB.
+Each file can be up to 1 GB.
 Wait for uploads to finish before you send.
 If an upload fails, use **Try again** or remove its chip.
 Removing a chip takes its file off the draft.
@@ -70,7 +70,7 @@ Undo brings back the chip and its file.
 To attach a folder, drop it into the message box.
 Your browser zips the folder before the upload, so the folder becomes one `.zip` file chip.
 The zip holds every file and folder in it, also hidden files.
-The zip can be up to 100 MB, as each file can.
+The zip can be up to 1 GB, as each file can.
 If the browser cannot read the folder, use **Attach files** in the notice to pick its files.
 
 Each chip keeps its place in the sent message.
@@ -80,7 +80,16 @@ This can start a stopped cloud computer.
 Restore an archived workspace before opening its attached files.
 
 Attached files arrive in `.context/attachments/` in the workspace's repository folder.
+Conductive keeps each attached file until the workspace's cloud computer has it and its first start succeeds.
+It then deletes its own copy.
+The file stays in the cloud computer.
+Conductive deletes an unsent file 7 days after you upload it.
+
 Each file keeps the same path when you retry its message.
+A later message or **Try again** uses the file already in the cloud computer.
+If a file is missing or its size changed, the turn fails and names it.
+Attach that file again in a new message.
+
 New workspaces from a new computer build also get a `.context/` folder for agent notes, screenshots, and files for other sessions.
 Git ignores the folder's files unless your repository already tracks them.
 After a new computer build, **All files** lists them, so you can open them there.

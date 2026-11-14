@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 
 import { afterEach, describe, expect, test, vi } from 'vitest'
-import { attachmentUploadUrl } from '../shared/messages'
+import { attachmentUploadPartPath } from '../shared/messages'
 import { createLiveServices } from './live-services'
 import {
   windowInput,
@@ -105,17 +105,17 @@ test('window keys hold a layout modifier until its own keyup or blur and share i
 })
 
 describe('createLiveServices', () => {
-  test('uploads a raw file on the page origin with the cookie and measured progress through native XHR', async () => {
+  test('uploads a raw part on the page origin with the cookie and measured progress through native XHR', async () => {
     const fetched = vi
       .spyOn(window, 'fetch')
-      .mockResolvedValue(Response.json({ id: 'upload-1' }))
+      .mockResolvedValue(Response.json({ etag: 'etag-1' }))
     const opened: [string, string][] = []
     const sent: Blob[] = []
     const seen: { credentials: boolean; headers: [string, string][] }[] = []
     class Upload {
       withCredentials = false
-      readonly status = 201
-      readonly responseText = '{"id":"upload-1"}'
+      readonly status = 200
+      readonly responseText = '{"partNumber":1,"etag":"etag-1"}'
       readonly headers: [string, string][] = []
       readonly upload = new EventTarget()
       private load: () => void = () => {}
@@ -137,22 +137,23 @@ describe('createLiveServices', () => {
       abort() {}
     }
     vi.stubGlobal('XMLHttpRequest', Upload)
-    const file = new File(['png'], 'overlap.png', { type: 'image/png' })
-    const path = attachmentUploadUrl(
+    const part = new File(['png'], 'overlap.png', { type: 'image/png' })
+    const path = attachmentUploadPartPath(
       'org-one',
       { type: 'workspace', workspaceId: 'workspace-one' },
-      { name: file.name, mediaType: file.type },
+      'upload-1',
+      1,
     )
     const progress: number[] = []
     const services = createLiveServices(window)
     await expect(
-      services.api.sendFile(path, file, (body) => body, {
+      services.api.sendPart(path, part, (body) => body, {
         progress: (sentBytes) => progress.push(sentBytes),
         signal: new AbortController().signal,
       }),
-    ).resolves.toEqual({ id: 'upload-1' })
+    ).resolves.toEqual({ partNumber: 1, etag: 'etag-1' })
     expect({ opened, seen, progress }).toEqual({
-      opened: [['POST', path]],
+      opened: [['PUT', path]],
       seen: [
         {
           credentials: true,
@@ -162,7 +163,7 @@ describe('createLiveServices', () => {
       progress: [2],
     })
     expect(sent).toHaveLength(1)
-    expect(sent[0]).toBe(file)
+    expect(sent[0]).toBe(part)
     expect(fetched).not.toHaveBeenCalled()
   })
 })

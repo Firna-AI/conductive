@@ -283,6 +283,15 @@ UI and wiring milestones normally need no migration. Their ranges stay reserved.
 | Keyboard shortcuts storage | `202611101600`–`202611101659` |
 | Agent workspace calls | `202611111200`–`202611111259` |
 
+`202611131221_attachment_download_tokens.sql` adds one-use attachment download grants.
+Each row holds a token digest, the file and destination identities, its expiry, and its claim time.
+Deleting an attachment also removes its grants.
+
+`202611131431_attachment_transferred_bytes.sql` adds the nullable transfer destination and byte-deletion time to each attachment.
+Existing rows keep null in both columns.
+The partial index serves the cleanup of transferred bytes.
+The attachment record stays after its R2 object is deleted.
+
 ## Key code
 
 - [The test harness](../worker/test-support/harness.ts) applies every SQL

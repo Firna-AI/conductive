@@ -125,10 +125,12 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         workspace. With the chat history, it keeps each list of the
         servers that run in the cloud computer of a workspace: the port,
         a short program name, and the folder of each server. The files
-        that you attach to a message stay in the
-        storage of ${productName} at Cloudflare. When the agent starts
-        work on the message, ${productName} copies them to the cloud
-        computer of the workspace.`,
+        that you attach to a message stay in the storage of
+        ${productName} at Cloudflare until the agent starts work on the
+        message. The cloud computer of the workspace then downloads them.
+        When the cloud computer has a file and its first start succeeded,
+        ${productName} deletes its own copy. The file stays in the cloud
+        computer.`,
       text`Mac commands: ${productName} keeps each request and its result.
         They record the command, its folder, its reason, its time limit,
         and the output. A request also names the Mac that gets it.

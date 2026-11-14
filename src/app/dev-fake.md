@@ -17,18 +17,25 @@ the dev wiring in `dev/`, and what its fake routes do.
   `?banner=checks-failed`, gives `checkout-autocomplete` that pull request
   bar, and its list mark shows the GitHub state of that bar. The other rows
   keep the GitHub states of the mockups. `dev/attachment-routes.ts`
-  keeps the uploaded files of both composers. With `?upload=wait` each
-  upload keeps running, and with `?upload=fail` the first upload of the
-  page fails once, so Try again works. `?sent=<percent>` makes the dev
-  fixture `dev/progress-fixture.ts` report that share of each file as
-  sent, so `?upload=wait&sent=64` shows the measured state. Create org of the dev fake
+  serves the start call, the parts, and the complete call of the uploads
+  of both composers, with the checks of the Worker, through the store of
+  `dev/attachment-parts.ts`. With `?upload=wait` no part gets an answer,
+  so each upload keeps running. With `?upload=fail` the first part of the
+  page fails at its first send and at each of its retries, so its chip
+  fails once, and Try again sends that part again. The retries wait 1, 2,
+  and 4 seconds, so the chip fails after about 7 seconds. `?sent=<percent>` makes
+  the dev fixture `dev/progress-fixture.ts` report that share of each part
+  as sent, so `?upload=wait&sent=64` shows the measured state of a file of
+  one part. Create org of the dev fake
   requires at least one repository and starts a simulated build. Its
   repository catalogue keeps the saved choices, and its custom initials
   stay through rename, delete, and restore. Settings changes during the
   first good build start one added build. The fake compares settings
   revisions with builds as the Worker does.
 - The upload routes also keep the exact bytes of each upload, in a private
-  store of the page. A send that names uploaded files gets a reply with its
+  store of the page. They keep the bytes of each part until the complete
+  call puts the file together, so a large file takes its size in the
+  memory of the page. A send that names uploaded files gets a reply with its
   own message ID, text, model choice, and files. An archived workspace,
   and each message without uploaded files, keep the recorded reply. In a
   workspace that runs, such as `checkout-autocomplete` by default, the

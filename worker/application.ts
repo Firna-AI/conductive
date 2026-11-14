@@ -26,10 +26,7 @@ import { isDeviceAppPath, isDeviceMachinePath } from './devices/paths'
 import { routeMacCommand } from './tools/mac-command'
 import { appOrigin } from './security/app-origin'
 import { handleGitCredential } from './lifecycle/machine'
-import {
-  handleImageSourceCredential,
-  IMAGE_SOURCE_CREDENTIAL_PATH,
-} from './lifecycle/image-sources/credential'
+import { routeMachineGrant } from './machine-grants'
 import { imageRuntime, workspaceRuntime } from './lifecycle/runtime'
 import { repairLifecycleAlarms } from './lifecycle/repair'
 import { repairSoftwareImages } from './software-image/repair'
@@ -167,8 +164,8 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
             )
             return respond(await handleGitCredential(request, runtime))
           }
-          if (path === IMAGE_SOURCE_CREDENTIAL_PATH)
-            return respond(await handleImageSourceCredential(request, env))
+          const grant = routeMachineGrant(request, env)
+          if (grant) return respond(await grant)
           const gatewayEnv = env
           const gatewayResponse = await routeModelGateway(request, {
             codexTasks,

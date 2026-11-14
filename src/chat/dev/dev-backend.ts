@@ -200,7 +200,7 @@ export class DevBackend {
 
   /**
    * The JSON client of the page, over its fake API, as the app gives one.
-   * Its uploads send raw files through the same fetch.
+   * Its uploads send the raw parts of files through the same fetch.
    */
   readonly client = createApiClient(this.fetch, fetchFiles(this.fetch))
 

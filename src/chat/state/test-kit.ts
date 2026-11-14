@@ -70,22 +70,38 @@ export function opensSession(
   }
 }
 
-/** Timers that run only when a test says so. */
-export function manualTimers(): StreamTimers & { runAll(): void } {
-  const waiting = new Map<number, () => void>()
+/**
+ * Timers that run only when a test says so. `waits` gives the wait of each
+ * timer that waits, in ms, in the order that they started. `run` runs only
+ * the timers of one wait, such as the wait before a retry of an upload.
+ */
+export function manualTimers(): StreamTimers & {
+  runAll(): void
+  run(ms: number): void
+  waits(): number[]
+} {
+  const waiting = new Map<number, { callback: () => void; ms: number }>()
   let next = 0
   return {
-    set: (callback) => {
+    set: (callback, ms) => {
       next += 1
-      waiting.set(next, callback)
+      waiting.set(next, { callback, ms })
       return setTimeout(() => {}, 0)
     },
     clear: () => {},
     runAll: () => {
-      const callbacks = [...waiting.values()]
+      const timers = [...waiting.values()]
       waiting.clear()
-      for (const callback of callbacks) callback()
+      for (const { callback } of timers) callback()
     },
+    run: (ms) => {
+      for (const [key, timer] of [...waiting]) {
+        if (timer.ms !== ms) continue
+        waiting.delete(key)
+        timer.callback()
+      }
+    },
+    waits: () => [...waiting.values()].map(({ ms }) => ms),
   }
 }
 
@@ -109,10 +125,18 @@ export function chatFor(
      */
     stream?: FakeWorkspaceEvents
     /**
-     * Sends the raw files of uploads. By default they go through the fetch
+     * Sends the raw parts of uploads. By default they go through the fetch
      * of the chat, with no progress, as `fetchFiles` says.
      */
     files?: FileTransport
+    /**
+     * Uploads whose parts wait for the test, as `controlledUploads` gives
+     * them. They take the parts, and answer the start and complete calls.
+     */
+    uploads?: {
+      files: FileTransport
+      answer: (request: Request) => Promise<Response | null>
+    }
     readOnly?: () => boolean
   } = {},
 ) {
@@ -127,7 +151,11 @@ export function chatFor(
       await new Promise<void>((resolve) => held.push(resolve))
     }
     const recorded = await server.fetch(input, init)
-    return (await options.answer?.(request)) ?? recorded
+    return (
+      (await options.uploads?.answer(request)) ??
+      (await options.answer?.(request)) ??
+      recorded
+    )
   }
   const after: number[] = []
   const timers = manualTimers()
@@ -137,7 +165,10 @@ export function chatFor(
       orgId: FAKE_IDS.org,
       workspaceId: options.workspaceId ?? FAKE_IDS.workspace,
     },
-    client: createApiClient(fetch, options.files ?? fetchFiles(fetch)),
+    client: createApiClient(
+      fetch,
+      options.uploads?.files ?? options.files ?? fetchFiles(fetch),
+    ),
     subscribe: (_target, from, listener) => {
       after.push(from)
       return (options.stream ?? server.events).subscribe(from, (message) =>

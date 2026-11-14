@@ -77,6 +77,12 @@ export type SandboxFileRead =
   | { kind: 'file'; file: SandboxFile }
   | { kind: 'too_large'; sizeBytes: number; limitBytes: number }
 
+export interface SandboxFileInfo {
+  path: string
+  sizeBytes: number
+  isDirectory: boolean
+}
+
 export type PortMode = 'localhost' | 'network'
 export interface PortCredential {
   readonly headers: Readonly<Record<string, string>>
@@ -100,17 +106,12 @@ export interface SandboxProvider {
     mode: PortMode,
   ): Promise<PrivatePort>
   desktop(sandboxId: string): Promise<SandboxDesktop>
+  fileInfo(sandboxId: string, path: string): Promise<SandboxFileInfo>
   readFile(
     sandboxId: string,
     path: string,
     maxBytes: number,
   ): Promise<SandboxFileRead>
-  writeFile(
-    sandboxId: string,
-    path: string,
-    body: ReadableStream<Uint8Array>,
-    sizeBytes: number,
-  ): Promise<void>
   create(input: SandboxStart): Promise<Sandbox>
   get(sandboxId: string): Promise<Sandbox>
   stop(sandboxId: string): Promise<Sandbox>

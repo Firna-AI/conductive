@@ -75,6 +75,12 @@ These facts belong to this implementation, not to the protocol docs.
 - The [agent input guide](agent-input.md) describes the context folder,
   the instructions that each session keeps with their branches, the sender
   line and the branch line of each message, and attached files.
+- Both adapters use the shared read line and file descriptions in
+  `src/providers/attachment-description.ts`. That helper also owns the
+  image input size limit. Codex uses the same image list for its image
+  inputs and the image sentence after the read line.
+  [What the agent gets](../docs/protocol/attachment-transfers.md#what-the-agent-gets)
+  states the read line and the size rule.
 - When the running agent cannot take the model or the effort of a message
   at once, that message waits for the result of the agent. A new agent
   process then takes the waiting input on the same conversation and turn

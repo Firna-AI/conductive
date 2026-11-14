@@ -3,7 +3,7 @@ import { pickChatFiles } from './draft-files.test-support'
 import { readyIds } from '../../app/draft-files'
 import { fileMark } from '../../app/draft-marks'
 import type { AgentChoice } from '../../shared/agents'
-import { filePaths } from '../../shared/files'
+import { attachmentUploadCompletePath } from '../../shared/messages'
 import { sessionPaths } from '../../shared/sessions'
 import type { WorkspaceTab, WorkspaceView } from '../../shared/workspace-view'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
@@ -42,7 +42,11 @@ type Chat = ReturnType<typeof chatFor>
 async function attach(chat: Chat, sessionId: string, fileId: string) {
   chat.server.json(
     'POST',
-    filePaths.attachments(org, ws),
+    attachmentUploadCompletePath(
+      org,
+      { type: 'workspace', workspaceId: ws },
+      FAKE_IDS.upload,
+    ),
     {
       attachment: {
         id: fileId,

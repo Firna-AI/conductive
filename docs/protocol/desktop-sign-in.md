@@ -88,8 +88,7 @@ says.
   access. It allows the methods of the API, and `Content-Type` as the only
   request header outside the CORS safelist.
 - The gate then needs a JSON body, or raw bytes on the two attachment
-  upload routes, as
-  [Attachment uploads](access-and-security.md#attachment-uploads) says
+  part routes, as [Attachment uploads](attachment-uploads.md) says
   (decision 144).
 - The hostname for machines, `api.conductive.build`, and the preview
   domain, `conductive.page`, never accept the desktop origin.

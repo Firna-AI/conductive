@@ -198,7 +198,7 @@ A callback counts as complete only after the `waitUntil` work that it starts end
 - [app-access.ts](app-access.ts) grants fixture access for users created directly in D1.
 - `native-global-setup.ts` builds and provides the current native bundle, the split migrations, the migrated template, and the bundle folder before tests and watch reruns.
 - `native-chat-record-controls.ts` reads history and file projections inside the native object and calls its real chat writer.
-- `native-attachment-controls.ts` runs streaming attachment storage and reads real R2 byte samples inside the runtime.
+- `attachment-upload.ts` prepares attachment fixtures through the production multipart start and complete operations with Node-compatible R2 part writes.
 - `migrations.ts` splits the migrations and applies them for a harness without the template.
 - [migrated-storage.ts](migrated-storage.ts) builds the migrated template database and copies it into the storage folder of a new runtime.
 - [test-bundles.ts](test-bundles.ts) builds every test Worker bundle with one Vite configuration and saves it for the run. Its `buildWorkerLibrary` also builds the native bundle.
@@ -214,6 +214,7 @@ A callback counts as complete only after the `waitUntil` work that it starts end
 - `fake-runner-files.ts` joins valid file report parts for the endpoint.
 - `runner-connection.ts` supplies the in-memory socket.
 - `process-environment.ts` builds an isolated environment for a Node child process in a test.
+- [attachment-command.ts](attachment-command.ts) fakes detached attachment commands and their status replies. It reads the generated destination and bearer token, calls an injected download route, and records exact copied bytes.
 - `attachments.ts`: `fakeAttachments(ids)`, the attachment metadata of the lifecycle fixtures. Each file gets the `path` of the shared builder in `src/shared/attachment-paths.ts`, as an upload reply and an admitted message give it.
 
 See [the browser fakes](../../src/test-support/README.md),

@@ -111,7 +111,18 @@ export type ChatItem =
       /** Why a fast turn ran at standard speed (fast mode decision 257). */
       standardSpeed?: StandardSpeedCause
     }
-  | { kind: 'error'; id: string; text: string }
+  | {
+      /** A failed turn: the cause, and Try again. */
+      kind: 'error'
+      id: string
+      text: string
+      /**
+       * A failed turn before the newest turn of the session. Try again shows
+       * only on the failed turn whose message the session record names for
+       * a retry, so this one has none.
+       */
+      older?: true
+    }
   | { kind: 'working'; id: string; elapsed: string }
   | {
       kind: 'turn-end'

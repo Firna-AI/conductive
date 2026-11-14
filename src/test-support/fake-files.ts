@@ -2,47 +2,43 @@ import type { FetchLike, FileTransport } from '../app/api/client'
 
 /**
  * A file transport over a fetch, for tests and the dev fakes, where no
- * `XMLHttpRequest` runs. It sends the raw file as the browser does, with
- * only the content type of a file, so the fake records, holds, or answers
- * it as any request. A fetch measures no sent bytes, so it reports no
- * progress, and the composer shows its spinner until the answer.
+ * `XMLHttpRequest` runs. It sends each raw part with `PUT`, as the browser
+ * does, with only the content type of a file, so the fake records, holds,
+ * or answers it as any request. A fetch measures no sent bytes, so it
+ * reports no progress, and the composer shows its spinner until the answer.
  */
 export function fetchFiles(fetch: FetchLike): FileTransport {
-  return async ({ path, file, signal }) => {
+  return async ({ path, body, signal }) => {
     const response = await fetch(path, {
-      method: 'POST',
+      method: 'PUT',
       headers: { 'Content-Type': 'application/octet-stream' },
-      body: file,
+      body,
       signal,
     })
-    let body: unknown
+    let reply: unknown
     try {
-      body = await response.json()
+      reply = await response.json()
     } catch {
-      body = null
+      reply = null
     }
-    return { status: response.status, body }
+    return { status: response.status, body: reply }
   }
 }
 
 /**
- * The raw files that a fake got, in their order: the path of each, the
- * query that names it, and its bytes as text.
+ * The raw parts that a fake got, in their order: the path of each, which
+ * names its upload and its number, and its bytes as text.
  */
-export function sentFiles(requests: readonly Request[]) {
+export function sentParts(requests: readonly Request[]) {
   return Promise.all(
     requests
       .filter(
         (request) =>
           request.headers.get('Content-Type') === 'application/octet-stream',
       )
-      .map(async (request) => {
-        const url = new URL(request.url)
-        return {
-          path: url.pathname,
-          query: Object.fromEntries(url.searchParams),
-          text: await request.clone().text(),
-        }
-      }),
+      .map(async (request) => ({
+        path: new URL(request.url).pathname,
+        text: await request.clone().text(),
+      })),
   )
 }

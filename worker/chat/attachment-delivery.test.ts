@@ -37,7 +37,7 @@ afterAll(async () => {
 
 it('keeps the accepted message and exposes Try again after a copy prevents its turn start', async () => {
   let fail = true
-  const provider = providerCopy({ fail: () => fail })
+  const provider = providerCopy(harness.env, { fail: () => fail })
   const fixture = await attachmentFixture(harness, {
     prepareAttachments: (...args) =>
       prepareMessageAttachments(harness.env, ...args, provider.fetch),
@@ -134,7 +134,7 @@ it('ends a running turn after copy failure and lets Try again copy its message',
 it('answers Stop during a held provider copy and never sends the stopped command', async () => {
   const entered = held<void>()
   const release = held<void>()
-  const provider = providerCopy({
+  const provider = providerCopy(harness.env, {
     entered: () => entered.resolve(),
     hold: release.promise,
   })

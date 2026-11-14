@@ -66,21 +66,15 @@ describe('the files of the chat composer', () => {
     await pickFiles(view.root, [picked('notes.txt', 'notes')])
     await pickFiles(view.root, [picked('overlap.png', 'png')])
     await pickFiles(view.root, [picked('console.log', 'log')])
+    await view.started(4)
     const screenshot = { id: 'attachment-1', name: 'overlap.png' }
     const path = await attachmentPath(screenshot)
     await act(async () => {
       view.jobs[0]?.progress(2)
-      view.jobs[2]?.resolve({
-        status: 201,
-        body: {
-          attachment: {
-            ...screenshot,
-            path,
-            kind: 'image',
-            mediaType: 'image/png',
-            sizeBytes: 290_816,
-          },
-        },
+      await view.finish(2, screenshot.id, path, {
+        kind: 'image',
+        mediaType: 'image/png',
+        sizeBytes: 290_816,
       })
       view.jobs[3]?.resolve(failedUpload)
       await flushMicrotasks()
@@ -124,6 +118,7 @@ describe('the files of the chat composer', () => {
     const caret = 'See'.length
     selectText(view.field, 'See', caret, caret)
     await pickFiles(view.root, [picked('notes.md')])
+    await view.started(1)
     const cells = queryAllByRole('button', 'Remove notes.md', view.field)
     const shown = view.draft().text
     await pressFirst(cells)
@@ -135,6 +130,7 @@ describe('the files of the chat composer', () => {
     }
     selectText(view.field, 'See', caret, caret)
     await pickFiles(view.root, [picked('todo.md')])
+    await view.started(2)
     const keyedFrom = view.draft().text
     pressInField(view.field, 'Backspace')
     expect({
@@ -169,6 +165,7 @@ describe('the files of the chat composer', () => {
   test('a failed chip keeps Try again, which uploads its file again, and the cell of its icon removes it and stops that upload', async () => {
     const view = await mountComposer()
     await pickFiles(view.root, [picked('notes.md')])
+    await view.started(1)
     await act(async () => {
       view.jobs[0]?.resolve(failedUpload)
       await flushMicrotasks()
@@ -181,6 +178,7 @@ describe('the files of the chat composer', () => {
       queryAllByRole('button', 'Upload notes.md again', view.field),
     )
     const retried = view.chips()
+    await view.started(2)
     await pressFirst(queryAllByRole('button', 'Remove notes.md', view.field))
     expect({
       failed,

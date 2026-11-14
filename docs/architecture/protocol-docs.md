@@ -31,9 +31,11 @@ This page lists each protocol doc and what it covers.
   the chat shows, and the events.
   - [Messages and attachments](../protocol/messages-and-attachments.md)
     - [Message attachments](../protocol/message-attachments.md): the size
-      limit, the upload, the storage, the copy into the cloud computer, and
-      the deletion of the files of a message, and their chips and their
-      drop in the message field.
+      limit, the upload, the storage, and the deletion of the files of a
+      message, and their chips and their drop in the message field.
+      - [Attachment transfers](../protocol/attachment-transfers.md): the
+        transfer of each file into the cloud computer, the deletion of its
+        stored copy, the check of a later message, and what the agent gets.
     - [Fast mode](../protocol/fast-mode.md): the Fast switch of the model
       menu, the models that show it, who may turn it on, and the speed of a
       turn that cannot run fast.
@@ -66,6 +68,9 @@ This page lists each protocol doc and what it covers.
       endpoint and the key of each agent, the model list of the endpoint,
       and the addresses that the app accepts.
   - [Terminal, previews, and desktop](../protocol/terminal-previews-and-desktop.md)
+  - [Attachment uploads](../protocol/attachment-uploads.md): the upload of
+    an attached file in parts, with the gate rules and the body limit of
+    its routes.
   - [Step timing](../protocol/step-timing.md): the `Server-Timing` header of
     the preview replies and of the create reply, and what it may hold.
 - [Model gateway](../protocol/model-gateway.md): the turn token, and the

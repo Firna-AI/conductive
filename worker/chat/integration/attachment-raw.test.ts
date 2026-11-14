@@ -1,9 +1,6 @@
-import { afterEach, beforeAll, expect, it } from 'vitest'
+import { expect, it } from 'vitest'
 
-import {
-  attachmentUploadUrl,
-  type AttachmentUploadTarget,
-} from '../../../src/shared/messages'
+import { attachmentUploadPartPath } from '../../../src/shared/messages'
 import { sessionPaths, sessionsPath } from '../../../src/shared/sessions'
 import {
   DESKTOP_ORIGIN,
@@ -15,78 +12,36 @@ import { readAttachment } from '../attachment-data'
 import { identifier, record as jsonRecord } from '../inputs'
 import { CLAUDE } from '../harness.test-support'
 import {
-  createOuterRuntime,
-  outerWorkerBundle,
-  type OuterRuntime,
-} from './outer-runtime.test-support'
+  completeUpload,
+  multipartFixture,
+  partReceipt,
+  sendPart,
+  startedUpload,
+  startUpload,
+  uploadSinglePart,
+  WORKSPACE_TARGET,
+} from './attachment-multipart.test-support'
 import {
   OTHER_WORKSPACE,
   OUTER_ORG,
   OUTER_WORKSPACE,
 } from './outer-seed.test-support'
 
-let bundle: string
-let active: OuterRuntime | undefined
-beforeAll(async () => {
-  bundle = await outerWorkerBundle(
-    'worker/chat/integration/attachment-entry.test-support.ts',
-  )
-})
-afterEach(async () => {
-  await active?.dispose()
-  active = undefined
-})
+const createFixture = multipartFixture()
 
-async function createFixture() {
-  active = await createOuterRuntime(bundle)
-  return active
-}
-
-function upload(
-  fixture: OuterRuntime,
-  bytes: Uint8Array,
-  options: {
-    target?: AttachmentUploadTarget
-    headers?: HeadersInit
-    path?: string
-    length?: string
-    type?: string
-  } = {},
-) {
-  const path =
-    options.path ??
-    attachmentUploadUrl(
-      OUTER_ORG,
-      options.target ?? { type: 'workspace', workspaceId: OUTER_WORKSPACE },
-      { name: 'raw file.bin', mediaType: 'application/octet-stream' },
-    )
-  const headers = new Headers({
-    Cookie: fixture.cookies.ownerCookie,
-    Origin: fixture.env.APP_ORIGIN,
-    'Content-Type': options.type ?? 'application/octet-stream',
-    'Content-Length': options.length ?? String(bytes.byteLength),
-  })
-  new Headers(options.headers).forEach((value, key) => headers.set(key, value))
-  return fixture.runtime.dispatchFetch(`${fixture.env.APP_ORIGIN}${path}`, {
-    method: 'POST',
-    headers: [...headers],
-    body: bytes,
-  })
-}
-
-it('passes the counted raw body through native FixedLengthStream into real R2 with exact binary and empty bytes', async () => {
+it('passes counted parts through native FixedLengthStream into real R2 with exact binary and empty bytes', async () => {
   const fixture = await createFixture()
   for (const bytes of [
     new Uint8Array([0, 255, 128, 13, 10]),
     new Uint8Array(),
   ]) {
-    const response = await upload(fixture, bytes)
+    const response = await uploadSinglePart(fixture, bytes)
     expect(response.status).toBe(201)
     const result = {
       attachment: jsonRecord(jsonRecord(await response.json()).attachment),
     }
     expect(result.attachment).toMatchObject({
-      name: 'raw file.bin',
+      name: 'multipart file.bin',
       kind: 'file',
       mediaType: 'application/octet-stream',
       sizeBytes: bytes.byteLength,
@@ -103,10 +58,10 @@ it('passes the counted raw body through native FixedLengthStream into real R2 wi
   }
 })
 
-it('binds raw drafts to their org and first-message ID and refuses wrong uploader, target, and archived writes', async () => {
+it('binds drafts to their org and first-message ID and refuses wrong uploader, target, and archived writes', async () => {
   const fixture = await createFixture()
-  const response = await upload(fixture, new Uint8Array([1]), {
-    target: { type: 'new-workspace', messageId: 'first-message-raw' },
+  const response = await uploadSinglePart(fixture, new Uint8Array([1]), {
+    target: { type: 'new-workspace', messageId: 'first-message-parts' },
   })
   expect(response.status).toBe(201)
   const result = {
@@ -117,7 +72,7 @@ it('binds raw drafts to their org and first-message ID and refuses wrong uploade
   ).toMatchObject({
     orgId: OUTER_ORG,
     targetKind: 'new-workspace',
-    targetId: 'first-message-raw',
+    targetId: 'first-message-parts',
     uploaderUserId: 'owner',
   })
   const sessionReply = await fixture.request(
@@ -141,7 +96,7 @@ it('binds raw drafts to their org and first-message ID and refuses wrong uploade
     )
   expect((await send(fixture.cookies.memberCookie)).status).toBe(404)
   expect((await send(fixture.cookies.ownerCookie)).status).toBe(404)
-  const wrongOrg = await upload(fixture, new Uint8Array([1]), {
+  const wrongOrg = await uploadSinglePart(fixture, new Uint8Array([1]), {
     headers: { Cookie: fixture.cookies.outsiderCookie },
   })
   expect(wrongOrg.status).toBe(404)
@@ -150,19 +105,17 @@ it('binds raw drafts to their org and first-message ID and refuses wrong uploade
   )
     .bind(OUTER_WORKSPACE)
     .run()
-  expect((await upload(fixture, new Uint8Array([1]))).status).toBe(409)
+  expect((await uploadSinglePart(fixture, new Uint8Array([1]))).status).toBe(
+    409,
+  )
 })
 
-it('cleans a short or interrupted native raw body before it can publish readiness', async () => {
+it('keeps a short or interrupted native part from publishing readiness', async () => {
   const fixture = await createFixture()
-  const base = attachmentUploadUrl(
-    OUTER_ORG,
-    { type: 'workspace', workspaceId: OUTER_WORKSPACE },
-    { name: 'partial.bin', mediaType: 'application/octet-stream' },
-  )
+  const uploadId = await startedUpload(fixture, 6)
   for (const fault of ['short', 'interrupted', 'after-bytes']) {
-    const response = await upload(fixture, new Uint8Array(6), {
-      path: `${base}&fixtureBody=${fault}`,
+    const response = await sendPart(fixture, uploadId, 1, new Uint8Array(6), {
+      query: `?fixtureBody=${fault}`,
     })
     expect(response.status).toBe(400)
     expect(await response.json()).toEqual({
@@ -172,19 +125,37 @@ it('cleans a short or interrupted native raw body before it can publish readines
       },
     })
     expect(
-      (await fixture.env.DB.prepare('SELECT id FROM chat_attachments').all())
-        .results,
-    ).toEqual([])
+      (
+        await fixture.env.DB.prepare(
+          'SELECT id, state FROM chat_attachments',
+        ).all()
+      ).results,
+    ).toEqual([{ id: uploadId, state: 'uploading' }])
     expect((await attachmentBucket(fixture.env).list()).objects).toEqual([])
   }
 })
 
-it('keeps the desktop cookie, origin, and content-type preflight rules for raw uploads', async () => {
+it('keeps the desktop cookie, origin, and content-type preflight rules for part uploads', async () => {
   const fixture = await createFixture()
-  const path = attachmentUploadUrl(
-    OUTER_ORG,
-    { type: 'workspace', workspaceId: OUTER_WORKSPACE },
+  const desktopCookie = fixture.cookies.ownerCookie.replace(
+    `${SESSION_COOKIE}=`,
+    `${DESKTOP_SESSION_COOKIE}=`,
+  )
+  const headers = { Origin: DESKTOP_ORIGIN, Cookie: desktopCookie }
+  const started = await startUpload(
+    fixture,
+    4,
+    WORKSPACE_TARGET,
     { name: 'desktop.png', mediaType: 'image/png' },
+    headers,
+  )
+  expect(started.status).toBe(201)
+  const uploadId = identifier(jsonRecord(await started.json()).uploadId)
+  const path = attachmentUploadPartPath(
+    OUTER_ORG,
+    WORKSPACE_TARGET,
+    uploadId,
+    1,
   )
   const preflight = await fixture.runtime.dispatchFetch(
     `${fixture.env.APP_ORIGIN}${path}`,
@@ -192,7 +163,7 @@ it('keeps the desktop cookie, origin, and content-type preflight rules for raw u
       method: 'OPTIONS',
       headers: {
         Origin: DESKTOP_ORIGIN,
-        'Access-Control-Request-Method': 'POST',
+        'Access-Control-Request-Method': 'PUT',
         'Access-Control-Request-Headers': 'content-type',
       },
     },
@@ -201,14 +172,23 @@ it('keeps the desktop cookie, origin, and content-type preflight rules for raw u
   expect(preflight.headers.get('Access-Control-Allow-Headers')).toBe(
     'Content-Type',
   )
-  const desktopCookie = fixture.cookies.ownerCookie.replace(
-    `${SESSION_COOKIE}=`,
-    `${DESKTOP_SESSION_COOKIE}=`,
+  const part = await sendPart(
+    fixture,
+    uploadId,
+    1,
+    new Uint8Array([137, 80, 78, 71]),
+    { headers },
   )
-  const response = await upload(fixture, new Uint8Array([137, 80, 78, 71]), {
-    path,
-    headers: { Origin: DESKTOP_ORIGIN, Cookie: desktopCookie },
-  })
+  expect(part.status).toBe(200)
+  expect(part.headers.get('Access-Control-Allow-Origin')).toBe(DESKTOP_ORIGIN)
+  expect(part.headers.get('Access-Control-Allow-Credentials')).toBe('true')
+  const response = await completeUpload(
+    fixture,
+    uploadId,
+    [await partReceipt(part)],
+    WORKSPACE_TARGET,
+    headers,
+  )
   expect(response.status).toBe(201)
   expect(response.headers.get('Access-Control-Allow-Origin')).toBe(
     DESKTOP_ORIGIN,
@@ -218,7 +198,7 @@ it('keeps the desktop cookie, origin, and content-type preflight rules for raw u
     attachment: jsonRecord(jsonRecord(await response.json()).attachment),
   }
   expect(result.attachment.kind).toBe('image')
-  const denied = await upload(fixture, new Uint8Array([1]), {
+  const denied = await sendPart(fixture, uploadId, 1, new Uint8Array([1]), {
     headers: { Origin: 'https://another.test' },
   })
   expect(denied.status).toBe(403)

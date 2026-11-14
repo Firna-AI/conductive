@@ -14,9 +14,6 @@ import type {
   WorkspaceEventEnvelope,
 } from '../chat/workspace-events'
 import type { ChangesResponse, FileTreeResponse } from '../../src/shared/files'
-import type { Attachment } from '../../src/shared/messages'
-import type { AttachmentStorageInput } from '../chat/attachment-storage'
-import type { NativeByteChunk } from './native-attachment-controls'
 import type { NativeQuery } from './native-d1'
 import type { NativeLifecycleControls } from './native-lifecycle-controls'
 import type { TurnTokenCheck } from '../model-gateway/types'
@@ -91,15 +88,6 @@ interface NativeWorkspaceControls {
     workspaceId: string,
     event: WorkspaceEvent,
   ): Promise<WorkspaceEventEnvelope>
-  storeAttachmentChunks(
-    input: AttachmentStorageInput,
-    id: string,
-    chunks: readonly NativeByteChunk[],
-  ): Promise<Attachment>
-  attachmentByteSample(
-    id: string,
-    positions: readonly number[],
-  ): Promise<{ byteLength: number; samples: number[] }>
 }
 
 export interface NativeWorkspaceApi {

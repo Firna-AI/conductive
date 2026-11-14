@@ -15,7 +15,6 @@ export type BoatRoute =
         | 'startCommand'
         | 'host'
         | 'desktop'
-        | 'uploadFileUrl'
       sandboxId: string
     }
   | {
@@ -30,11 +29,6 @@ export type BoatRoute =
 
 export function boatRoute(route: BoatRoute): { method: string; path: string } {
   switch (route.operation) {
-    case 'uploadFileUrl':
-      return {
-        method: 'POST',
-        path: `/sandboxes/${segment(route.sandboxId)}/files/upload-url`,
-      }
     case 'readFile':
       return {
         method: 'GET',
