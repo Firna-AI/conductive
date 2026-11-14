@@ -49,17 +49,26 @@ composer, while the tool call waits. Its child pages:
     other two choices.
   - `late` has the request after the turn ended, with no value yet. Its
     `value` variant has the value that Priya types later, and its `given`
-    variant has her answer for this workspace and her message.
-- `results` has the run after Allow for this session, with its output. Its
-  variants have the run while it runs, a denied request, a pre-approved
-  secret, and a value for 15 minutes.
+    variant has her answer for this workspace and the line of the app that
+    names her.
+- `results` has the run after Allow for this session: its card, with no
+  output, and the tool call line of the agent beside it. Its variants have
+  the run while it runs, a denied request, a pre-approved secret, and a
+  value for 15 minutes.
 - `late` has the request that nobody answered in time, in the chat after
-  its turn. Its `answered` variant has the late Allow of Cal and his
-  message, its `ran` variant has the run of the new turn, and its `denied`
-  variant has a late deny, which sends no message. Its `not-answered`
-  variant has the request that ended when Cal archived the workspace.
+  its turn. Its child pages:
+  - `answered` has the late Allow of Priya, the line of the app that names
+    her, and the new turn for Cal. Its `ran` variant has the run of that
+    turn. Its `fallback` variant has a late Allow whose turn cannot run,
+    because Cal stopped sharing his login, so the agent learns of it at the
+    next message. Its `login-gone` variant has the same Allow after Cal
+    removed his login, so the line says that the agent learns of it when
+    Cal connects Claude again.
+  - `denied` has a late deny, which sends nothing.
+  - `not-answered` has the request that ended when Cal archived the
+    workspace.
 - `in-work` has the run in the open fold of its ended turn.
 
 `user-flows/secret-request` goes from the request above the composer,
-through the late request in the chat and its late Allow, to the run of the
-new turn.
+through the late request in the chat and the late Allow of Priya, to the
+run of the new turn for Cal.

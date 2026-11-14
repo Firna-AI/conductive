@@ -1,7 +1,7 @@
 import type { ChatItem } from './conversations'
 import {
   agent,
-  answerMessage,
+  answerLine,
   compareAsk,
   givenForWorkspace,
   outlived,
@@ -74,10 +74,13 @@ export function secretValueConversations(
       ...history,
       ...outlived(
         compareAsk,
-        run(mapboxRequest, 'late-allowed', { grant: givenForWorkspace }),
+        run(mapboxRequest, 'late-allowed', {
+          grant: givenForWorkspace,
+          delivery: { kind: 'turn' },
+        }),
         waitsForMapbox,
       ),
-      answerMessage(mapboxRequest, givenForWorkspace),
+      answerLine(mapboxRequest, givenForWorkspace),
       working('5s'),
     ],
     'secret-waiting-mixed': [

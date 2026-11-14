@@ -75,9 +75,15 @@ except to an admin who reveals one.
 ## Requests and results in the chat
 
 - `SecretRequest` in `src/components/chat/` draws a request: the key icon,
-  the names of the secrets, each description, and the reason of the agent,
-  never a value. A request for one secret shows its description under the
-  name. A request for several shows each name with its description.
+  the names of the secrets, each description, the reason of the agent, and
+  the command that the agent says it will run, never a value. The run call
+  sends the command, and nothing checks that the agent runs it, so
+  `ClaimedCommand` shows it under that label. A request for one secret
+  shows its description under the name. A request for several shows each
+  name with its description.
+- The tool call line of the agent stands beside each request and each run,
+  as the runner sends it: one line with its target, the call of
+  `conductive secrets run`, and its state.
 - While the tool call waits, the request waits just above the composer, in
   the region of the requests of Mac commands, from
   `components/chat/requests.ts`. A secret of the org offers Deny and Allow
@@ -99,21 +105,32 @@ except to an admin who reveals one.
   of the org for this session.
 - After the time limit, or when the turn ends, the request stays at its
   place in the chat with the same choices, and a line says that the agent
-  stopped waiting and that Allow sends it a message. It never folds with
-  the work of its turn. After an answer, it shows the answer at the end of
-  its names, and its line says who answered. An Allow sends a message in
-  the name of the member who answered, from `lateAnswerMessage`, which
-  names each secret and never a value.
+  stopped waiting and that Allow tells it in a new turn. It never folds
+  with the work of its turn. After an answer, it shows the answer at the
+  end of its names, and its line says who answered and what followed.
+- A late Allow starts a turn that acts for the sender of the turn that
+  asked, under the login rules of that sender. `LateAnswerLine` draws the
+  line of the app that starts it, such as "Priya Raman allowed
+  PROD_DATABASE_URL for this session". It is not a message of the member
+  who answered. The agent gets the same sentence with the name of that
+  member, from `lateAnswerWords`, and never a value. When that turn cannot
+  run, the app sends nothing. When the starter does not share the login
+  with that sender, the line of the request says that the agent learns of
+  the answer at the next message. When the login of the starter is gone,
+  the line names the action that gets the agent going again, such as "The
+  agent learns of it when Cal connects Claude again".
 - An Archive of the workspace, or a suspension of its org, ends each open
   request as Not answered, with no choices, and Needs input ends. Its line
   says what ended it.
 - The header and the workspace list show Needs input while a request waits
   above the composer or in the chat.
 - `SecretRun` draws a run with secrets at its place in the chat, with the
-  card of a Mac command: the names, the state, the command, what let it
-  run, and its output. The output shows "[redacted]" in place of each exact
-  copy of a value. A denied run says who denied it and that the command did
-  not run. When its turn ends, the card folds with the work of the turn.
+  card of a Mac command: the names, Allowed or Denied, the command that the
+  agent says it will run, and what let it run. The Worker gets no output
+  and no time of the command, so the card shows neither. The tool call line
+  beside it says whether the command runs or ran. A denied run says who
+  denied it and that the command did not run. When its turn ends, the card
+  folds with the work of the turn.
 - A Mac command that a workspace refused, because a member turned Mac
   access off, shows its card with "Mac access off" and the reason.
 - `secretRunCopy.ts` holds the words of the requests and the results.

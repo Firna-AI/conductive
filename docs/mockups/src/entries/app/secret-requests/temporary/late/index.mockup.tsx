@@ -31,9 +31,9 @@ export const lateTemporary = defineScreen({
       slug: 'given',
       title: 'Given later, by another member',
       description:
-        'Priya allowed the value for this workspace. The request now says Value for this workspace, and its line says that a message from her told the agent. Her message follows in the chat: "MAPBOX_TOKEN is now available in this workspace." It starts a new turn.',
+        'Priya allowed the value for this workspace. The request now says Value for this workspace, and its line says that she answered and that a new turn told the agent. A line of the app follows in the chat: "You gave MAPBOX_TOKEN for this workspace." The new turn runs for Cal, who sent the turn that asked.',
       rationale:
-        'Any member who sees the session answers (secrets decision 4 B). A late answer sends a message in the session in the name of the member who answered, and the message never holds the value.',
+        'Any member who sees the session answers (secrets decision 4 B). A late answer starts a turn that acts for the sender of the turn that asked, and the chat and the text of the agent name the member who answered, never the value (secrets decision 10 B).',
       props: { conversation: 'secret-late-given', viewer: 'member' },
     },
   ],

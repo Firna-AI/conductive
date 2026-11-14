@@ -8,7 +8,7 @@ import type {
 import { useTouch } from '../common/touch'
 import { Answers, endLine, LateEnd, PhoneAnswers } from './RequestActions'
 import { asksValue } from './requests'
-import { runNames } from './SecretRun'
+import { ClaimedCommand, runNames } from './SecretRun'
 import { notInOrg, secretRunWords } from './secretRunCopy'
 import { ValueAnswer } from './ValueAnswer'
 import styles from './SecretRequest.module.css'
@@ -18,7 +18,8 @@ import names from './SecretRun.module.css'
 const org = orgs.acme.name
 
 /**
- * What each secret is, then the reason of the agent. One secret shows its
+ * What each secret is, the reason of the agent, and the command that the
+ * agent says it will run (secrets decision 11 D). One secret shows its
  * description alone. Several show each name with its description.
  */
 function RequestFacts(props: { request: Request }) {
@@ -45,6 +46,7 @@ function RequestFacts(props: { request: Request }) {
           <dd className={styles.text}>{props.request.reason}</dd>
         </div>
       </dl>
+      <ClaimedCommand command={props.request.command} />
     </div>
   )
 }

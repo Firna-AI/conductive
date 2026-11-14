@@ -25,22 +25,20 @@ export function runNames(item: SecretRunItem): string {
   return item.request.secrets.map((secret) => secret.name).join(', ')
 }
 
-/** The state of a run, as a glyph and a word. */
-function RunStatus(props: { item: SecretRunItem }) {
-  const { item } = props
-  if (item.state === 'running') {
-    return <StatusText busy label={secretRunWords.running} tone="active" />
-  }
-  if (item.state === 'done' && item.result) {
-    return (
-      <StatusText
-        icon={CircleCheck}
-        label={`Done in ${item.result.duration}`}
-        tone="success"
-      />
-    )
-  }
-  return <StatusText icon={Ban} label={secretRunWords.denied} tone="muted" />
+/**
+ * The command that the run call sent, under its label (secrets decision
+ * 11 D). The agent names it, and nothing checks that it runs it, so the
+ * label says so.
+ */
+export function ClaimedCommand(props: { command: string }) {
+  return (
+    <span className={styles.claimed}>
+      <span className={styles.claimedLabel}>
+        {secretRunWords.claimedCommand}
+      </span>
+      <CommandLine command={props.command} />
+    </span>
+  )
 }
 
 /** What let the run use its secrets, or who denied it. */
@@ -55,15 +53,18 @@ function runNote(item: SecretRunItem, viewer: PersonKey): string | undefined {
 
 /**
  * A run of a command with secrets at its place in the chat, once the
- * agent may use them or a member denied them: the secrets, the state, the
- * command, what let it run, and its output once it ran. The output hides
- * each value, as the chat does. When its turn ends, the card folds with
- * the work of the turn, as a Mac command card does. `viewer` is the person
- * signed in, who reads "you" for their own answer.
+ * agent may use them or a member denied them: the secrets, Allowed or
+ * Denied, the command that the agent says it will run, and what let it
+ * run. The Worker gets no output and no time of the command, so the card
+ * shows none. The tool call line of the agent beside it shows whether the
+ * command runs or ran. When its turn ends, the card folds with the work of
+ * the turn, as a Mac command card does. `viewer` is the person signed in,
+ * who reads "you" for their own answer.
  */
 export function SecretRun(props: { item: SecretRunItem; viewer: PersonKey }) {
   const { item } = props
   const note = runNote(item, props.viewer)
+  const denied = item.state === 'denied'
   return (
     <section
       aria-label={`Command with ${runNames(item)}`}
@@ -73,13 +74,14 @@ export function SecretRun(props: { item: SecretRunItem; viewer: PersonKey }) {
         <KeyRound aria-hidden className={card.icon} size={14} />
         <span className={styles.names}>{runNames(item)}</span>
         <span className={card.spacer} />
-        <RunStatus item={item} />
+        <StatusText
+          icon={denied ? Ban : CircleCheck}
+          label={denied ? secretRunWords.denied : secretRunWords.allowed}
+          tone={denied ? 'muted' : 'success'}
+        />
       </div>
-      <CommandLine command={item.request.command} />
+      <ClaimedCommand command={item.request.command} />
       {note ? <span className={card.meta}>{note}</span> : null}
-      {item.state === 'done' && item.result ? (
-        <pre className={card.output}>{item.result.output}</pre>
-      ) : null}
     </section>
   )
 }

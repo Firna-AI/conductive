@@ -1,4 +1,8 @@
-import type { SecretGrant, ValueLifetime } from '../../fixtures/secretRequests'
+import type {
+  MemberGrant,
+  SecretGrant,
+  ValueLifetime,
+} from '../../fixtures/secretRequests'
 
 /**
  * The words of a run with secrets: the request card above the composer,
@@ -10,13 +14,18 @@ export const secretRunWords = {
   allow: 'Allow',
   allowSession: 'Allow for this session',
   reason: 'Reason',
-  running: 'Running',
+  /**
+   * The label of the command that the run call sends (secrets decision
+   * 11 D). Nothing checks that the agent runs it.
+   */
+  claimedCommand: 'Command the agent says it will run',
+  allowed: 'Allowed',
   denied: 'Denied',
   notAnswered: 'Not answered',
   /** The phone action that opens the sheet of a value. */
   giveValue: 'Give a value',
   /** The line of a late request: why it is in the chat, and what Allow does. */
-  late: 'The agent stopped waiting. Allow sends it a message.',
+  late: 'The agent stopped waiting. Allow tells it in a new turn.',
   /** The spoken name of the region of the requests above the composer. */
   region: 'Requests that wait for an answer',
 } as const
@@ -110,13 +119,41 @@ export function lateAllowedLabel(grant: SecretGrant): string {
 }
 
 /**
- * The note of a late request after its answer. `who` starts the sentence:
- * "You" for the person who answered, and the name of that member for the
- * others. An Allow sent a message, and a Deny sent none.
+ * What followed the answer of a late request: a turn that told the agent,
+ * nothing until the next message, because that turn cannot run, or a Deny,
+ * which sends nothing (secrets decision 10 B).
  */
-export function lateAnswerNote(who: string, allowed: boolean): string {
-  if (!allowed) return `${who} denied it.`
-  return `A message from ${who === 'You' ? 'you' : who} told the agent.`
+export type LateOutcome = 'turn' | 'next-message' | 'denied'
+
+/**
+ * The line of a late request after its answer. `who` starts the sentence:
+ * "You" for the person who answered, and the name of that member for the
+ * others.
+ */
+export function lateAnswerNote(who: string, outcome: LateOutcome): string {
+  switch (outcome) {
+    case 'turn':
+      return `${who} answered, and a new turn told the agent.`
+    case 'next-message':
+      return `${who} answered. The agent learns of it at the next message.`
+    case 'denied':
+      return `${who} denied it.`
+  }
+}
+
+/**
+ * The line of a late Allow whose turn waits for the login of the starter,
+ * which is gone: who answered, and the action that gets the agent going
+ * again (item 12 C of the mockups). `starter` is "you" for the viewer.
+ */
+export function reconnectNote(
+  who: string,
+  starter: string,
+  agent: string,
+): string {
+  const action =
+    starter === 'you' ? `you connect ${agent}` : `${starter} connects ${agent}`
+  return `${who} answered. The agent learns of it when ${action} again.`
 }
 
 /** The note of a request that a member denied while the agent waited. */
@@ -124,32 +161,31 @@ export function deniedNote(who: string): string {
   return `${who} denied it. The command did not run.`
 }
 
-/** The names of secrets as inline code, such as "`A` and `B`". */
-function namesText(names: readonly string[]): string {
-  const code = names.map((name) => `\`${name}\``)
-  if (code.length < 2) return code.join('')
-  return `${code.slice(0, -1).join(', ')} and ${code.at(-1)}`
-}
-
 /**
- * The message that a late answer sends in the session, in the name of the
- * member who answered. It names each secret and says that it is now
- * available. It never holds a value.
+ * The line of a late Allow in the chat, which is also the text that its
+ * turn gives the agent (secrets decision 10 B): the member who answered,
+ * each secret, and what the answer gives, never a value. The chat names
+ * the viewer "You", and the agent gets the name of the member. The names
+ * of the secrets go between `lead` and `tail`.
  */
-export function lateAnswerMessage(
-  names: readonly string[],
-  grant: SecretGrant,
+export function lateAnswerWords(
+  grant: MemberGrant,
+  who: string,
+  count: number,
   org: string,
-): string {
-  const verb = names.length === 1 ? 'is' : 'are'
-  const lead = `${namesText(names)} ${verb} now available`
-  if (grant.kind !== 'value') return `${lead} in this session.`
+): { lead: string; tail: string } {
+  if (grant.kind === 'session') {
+    return { lead: `${who} allowed`, tail: 'for this session.' }
+  }
   switch (grant.lifetime) {
     case 'minutes':
-      return `${lead} in this session for 15 minutes.`
+      return { lead: `${who} gave`, tail: 'for 15 minutes.' }
     case 'workspace':
-      return `${lead} in this workspace.`
+      return { lead: `${who} gave`, tail: 'for this workspace.' }
     case 'saved':
-      return `${lead}, saved as a secret of ${org}.`
+      return {
+        lead: `${who} saved`,
+        tail: `as ${count === 1 ? 'a secret' : 'secrets'} of ${org}.`,
+      }
   }
 }

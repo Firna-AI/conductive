@@ -2,6 +2,7 @@ import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
 import { CircleAlert } from 'lucide-react'
 import { people, type PersonKey } from '../../fixtures/members'
+import { orgs } from '../../fixtures/orgs'
 import { paths } from '../../paths'
 import { ActionButton } from '../common/actions'
 import { classes } from '../common/classes'
@@ -16,6 +17,7 @@ import { LostLine } from './LostLine'
 import { turnFilesUnavailable, unlistedFiles } from './lostCopy'
 import { MacCommand } from './MacCommand'
 import { filesWithoutPlace, LinkText, MessageText } from './MessageText'
+import { LateAnswerLine } from './LateAnswerLine'
 import { isLateRequest } from './requests'
 import { SecretRequest } from './SecretRequest'
 import { SecretRun } from './SecretRun'
@@ -83,6 +85,15 @@ export function ChatItemView(props: { item: SingleItem; viewer: PersonKey }) {
       )
     case 'mac-command':
       return <MacCommand request={item.request} state={item.state} />
+    case 'late-answer':
+      return (
+        <LateAnswerLine
+          grant={item.grant}
+          names={item.names}
+          org={orgs.acme.name}
+          who={item.grant.by === viewer ? 'You' : people[item.grant.by].name}
+        />
+      )
     case 'secret-run':
       return isLateRequest(item) ? (
         <SecretRequest item={item} viewer={viewer} />

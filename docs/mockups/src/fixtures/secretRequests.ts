@@ -6,6 +6,7 @@
  */
 
 import { nameLabel } from '../../../../src/shared/name-label'
+import type { AgentKey } from './agents'
 import type { PersonKey } from './members'
 import { figmaToken, replicaUrl, vercelToken } from './secrets'
 import { workspaceSessions } from './sessions'
@@ -16,7 +17,11 @@ import { workspaceSessions } from './sessions'
  */
 type RequestedSecret = { name: string; description?: string }
 
-/** One command with secrets, and the reason that the agent gave. */
+/**
+ * One command with secrets, and the reason that the agent gave. The run
+ * call sends the command too (secrets decision 11 D), so the cards show
+ * it as the command that the agent says it will run.
+ */
 export type SecretRequest = {
   secrets: readonly RequestedSecret[]
   reason: string
@@ -45,20 +50,36 @@ export type SecretGrant =
 /**
  * A run as the chat shows it. `waiting` waits above the composer, while
  * the tool call waits. `late` stays in the chat after the call ended
- * without an answer. `running` and `done` run the command, and `denied`
- * did not run it. `late-allowed` and `late-denied` answer a late request.
- * `not-answered` is an open request that ended when its workspace was
- * archived or its org was suspended (item 3 A of the mockups).
+ * without an answer. `allowed` gave the values to the command, and
+ * `denied` gave none. The tool call of the agent beside the card shows
+ * whether the command runs or ran. `late-allowed` and `late-denied`
+ * answer a late request. `not-answered` is an open request that ended
+ * when its workspace was archived or its org was suspended (item 3 A of
+ * the mockups).
  */
 type SecretRunState =
   | 'waiting'
   | 'late'
-  | 'running'
-  | 'done'
+  | 'allowed'
   | 'denied'
   | 'late-allowed'
   | 'late-denied'
   | 'not-answered'
+
+/** A grant that a member gave: an approval of the session, or a value. */
+export type MemberGrant = Extract<SecretGrant, { by: PersonKey }>
+
+/**
+ * How a late Allow reached the agent (secrets decision 10 B): a turn for
+ * the sender of the turn that asked, or nothing when that turn cannot run.
+ * When the starter only stopped sharing the login, the agent learns of it
+ * at the next message. When the login of the starter is gone, it learns of
+ * it when the starter connects that agent again (item 12 C of the mockups).
+ */
+type LateDelivery =
+  | { kind: 'turn' }
+  | { kind: 'next-message' }
+  | { kind: 'reconnect'; starter: PersonKey; agent: AgentKey }
 
 /** A run of a command with secrets, at its place in the chat. */
 export type SecretRunItem = {
@@ -70,8 +91,8 @@ export type SecretRunItem = {
   grant?: SecretGrant
   /** The member who denied the request. */
   deniedBy?: PersonKey
-  /** The end of a run: its time, and its output with each value hidden. */
-  result?: { duration: string; output: string }
+  /** How a late Allow reached the agent, as `LateDelivery` says. */
+  delivery?: LateDelivery
   /**
    * The answer of a temporary request as the card draws it: whether a
    * value is typed, and the chosen lifetime.
@@ -79,6 +100,28 @@ export type SecretRunItem = {
   draft?: { typed: boolean; lifetime: ValueLifetime }
   /** What ended a request with no answer: an Archive or a suspension. */
   endedBy?: 'archive' | 'suspension'
+}
+
+/**
+ * The line in the chat of a late Allow, which starts a turn for the
+ * sender of the turn that asked (secrets decision 10 B). It names the
+ * member who answered and each secret, never a value.
+ */
+export type LateAnswerItem = {
+  kind: 'late-answer'
+  id: string
+  names: readonly string[]
+  grant: MemberGrant
+}
+
+/**
+ * The call of the workspace tools that the agent makes, as its own tool
+ * call line shows it: `conductive secrets run`, each secret, the reason,
+ * and the command.
+ */
+export function cliCall(request: SecretRequest): string {
+  const secrets = request.secrets.map((secret) => `--secret ${secret.name}`)
+  return `conductive secrets run ${secrets.join(' ')} --reason "${request.reason}" -- ${request.command}`
 }
 
 /** A secret of the org as a run names it, with its description. */
@@ -93,13 +136,6 @@ export const replicaRequest: SecretRequest = {
     'Count the saved addresses in production that have no postcode, to size the manual fallback.',
   command: 'node scripts/count-addresses.mjs',
 }
-
-/** The output of that count. The script prints the address of the replica. */
-export const replicaOutput = [
-  'Connecting to [redacted]',
-  'Saved addresses: 41,902',
-  'Without a postcode: 1,284 (3.1%)',
-].join('\n')
 
 /** A preview deploy that needs two secrets of Acme. */
 export const previewRequest: SecretRequest = {
@@ -140,13 +176,6 @@ export const mixedRequest: SecretRequest = {
 
 /** The value that a member types for that name, which shows as dots. */
 export const typedValue = 'pk.demo.Lm4f8Kq2nWx7'
-
-/** The output of that comparison. The script prints the token it uses. */
-export const mapboxOutput = [
-  'Using Mapbox token [redacted]',
-  'Compared 200 checkout addresses',
-  'Same first suggestion: 182 (91%)',
-].join('\n')
 
 /** An approval of one secret in one session of the workspace. */
 type SessionApproval = {

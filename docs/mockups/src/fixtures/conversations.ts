@@ -32,7 +32,7 @@ import type { PersonKey } from './members'
 import { linkedSession } from './sessions'
 import { newWorkspaceConversations } from './newWorkspaceConversations'
 import { secretConversations } from './secretConversations'
-import type { SecretRunItem } from './secretRequests'
+import type { LateAnswerItem, SecretRunItem } from './secretRequests'
 import { secretValueConversations } from './secretValueConversations'
 import { tableConversations } from './tableConversations'
 import { unavailableConversations } from './unavailableConversations'
@@ -144,6 +144,7 @@ export type ChatItem =
     }
   | ContinuedItem
   | SecretRunItem
+  | LateAnswerItem
 
 /** One tool call of an agent turn. */
 export type ToolCallItem = Extract<ChatItem, { kind: 'tool' }>

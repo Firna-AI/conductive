@@ -1,15 +1,15 @@
 /**
  * The parts of the chats of runs with secrets: the messages of Cal and of
- * the agent, the run of a request in a state, and the turn that a request
- * outlived. `secretConversations.ts` puts them together.
+ * the agent, the tool call of the agent and the run of its request in a
+ * state, and the turn that a request outlived. `secretConversations.ts`
+ * puts them together.
  */
 
-import { lateAnswerMessage } from '../components/chat/secretRunCopy'
-import type { ChatItem } from './conversations'
-import { orgs } from './orgs'
+import type { ChatItem, ToolCallItem } from './conversations'
 import {
-  replicaOutput,
-  type SecretGrant,
+  cliCall,
+  type LateAnswerItem,
+  type MemberGrant,
   type SecretRequest,
   type SecretRunItem,
   type ValueLifetime,
@@ -22,6 +22,19 @@ export function run(
   extra: Partial<SecretRunItem> = {},
 ): SecretRunItem {
   return { kind: 'secret-run', id: 'secret-run', request, state, ...extra }
+}
+
+/**
+ * The tool call of the agent that runs a command with secrets, as the
+ * runner reports it: one line with its target and its state, beside the
+ * card of its run.
+ */
+export function call(
+  request: SecretRequest,
+  status: 'running' | 'done',
+  id = 'secret-call',
+): ToolCallItem {
+  return { kind: 'tool', id, tool: 'run', target: cliCall(request), status }
 }
 
 export function agent(id: string, text: string): ChatItem {
@@ -68,9 +81,10 @@ export const compared = agent(
   'Mapbox gives the same first suggestion as the places proxy for 182 of the 200 addresses. The places proxy stays.',
 )
 
-export const allowedByCal: SecretGrant = { kind: 'session', by: 'cal' }
+export const allowedByCal: MemberGrant = { kind: 'session', by: 'cal' }
 
-export const replicaDone = { duration: '4s', output: replicaOutput }
+/** Priya allows a request of Cal later, in the session of Cal. */
+export const allowedByPriya: MemberGrant = { kind: 'session', by: 'priya' }
 
 /** The end of the turn that a request outlived. Nothing changed files. */
 const lateEnd: ChatItem = {
@@ -81,15 +95,22 @@ const lateEnd: ChatItem = {
 }
 
 /**
- * The turn of a request that nobody answered in time: the agent says what
- * it waits for, and its turn ends. The widget stays at its place.
+ * The turn of a request that nobody answered in time: its tool call ended
+ * without a run, the agent says what it waits for, and its turn ends. The
+ * widget stays at its place.
  */
 export function outlived(
   ask: readonly ChatItem[],
   widget: SecretRunItem,
   waits: string,
 ): ChatItem[] {
-  return [...ask, widget, agent('waits', waits), lateEnd]
+  return [
+    ...ask,
+    call(widget.request, 'done'),
+    widget,
+    agent('waits', waits),
+    lateEnd,
+  ]
 }
 
 export const waitsForReplica =
@@ -98,19 +119,19 @@ export const waitsForReplica =
 export const waitsForMapbox =
   'I asked for `MAPBOX_TOKEN`, and no one has answered yet. I will run the comparison when a member gives a value.'
 
-/** The message of a late answer, in the name of the member who answered. */
-export function answerMessage(
+/**
+ * The line of a late Allow, which starts a turn for the sender of the
+ * turn that asked (secrets decision 10 B).
+ */
+export function answerLine(
   request: SecretRequest,
-  grant: SecretGrant,
-): ChatItem {
+  grant: MemberGrant,
+): LateAnswerItem {
   return {
-    kind: 'user',
+    kind: 'late-answer',
     id: 'late-answer',
-    text: lateAnswerMessage(
-      request.secrets.map((secret) => secret.name),
-      grant,
-      orgs.acme.name,
-    ),
+    names: request.secrets.map((secret) => secret.name),
+    grant,
   }
 }
 
@@ -123,11 +144,16 @@ export function valueAsk(
   request: SecretRequest,
   draft: { typed: boolean; lifetime: ValueLifetime },
 ): ChatItem[] {
-  return [...ask, run(request, 'waiting', { draft }), working('31s')]
+  return [
+    ...ask,
+    call(request, 'running'),
+    run(request, 'waiting', { draft }),
+    working('31s'),
+  ]
 }
 
 /** Priya gives the Mapbox token for each session of the workspace. */
-export const givenForWorkspace: SecretGrant = {
+export const givenForWorkspace: MemberGrant = {
   kind: 'value',
   lifetime: 'workspace',
   by: 'priya',

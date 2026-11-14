@@ -1,4 +1,5 @@
 import { Ban, CircleCheck, CircleMinus } from 'lucide-react'
+import { agents } from '../../fixtures/agents'
 import type { PersonKey } from '../../fixtures/members'
 import { orgs } from '../../fixtures/orgs'
 import type { SecretRunItem } from '../../fixtures/secretRequests'
@@ -12,6 +13,7 @@ import {
   endedLine,
   lateAllowedLabel,
   lateAnswerNote,
+  reconnectNote,
   secretRunWords,
 } from './secretRunCopy'
 
@@ -133,7 +135,10 @@ function answeredBy(item: SecretRunItem): PersonKey | undefined {
 
 /**
  * The line under a late request that ended: who answered and what
- * followed, or why it ended with no answer.
+ * followed, or why it ended with no answer. A late Allow starts a turn for
+ * the sender of the turn that asked (secrets decision 10 B). When that
+ * turn cannot run, the line says when the agent learns of the answer: at
+ * the next message, or when the starter connects the agent again.
  */
 export function endLine(
   item: SecretRunItem,
@@ -144,6 +149,10 @@ export function endLine(
   }
   const by = answeredBy(item)
   if (by === undefined) return undefined
-  const allowed = item.state === 'late-allowed'
-  return lateAnswerNote(whoOf(by, viewer).subject, allowed)
+  const who = whoOf(by, viewer).subject
+  if (item.state === 'late-denied') return lateAnswerNote(who, 'denied')
+  const delivery = item.delivery ?? { kind: 'turn' }
+  if (delivery.kind !== 'reconnect') return lateAnswerNote(who, delivery.kind)
+  const starter = whoOf(delivery.starter, viewer).object
+  return reconnectNote(who, starter, agents[delivery.agent].name)
 }
