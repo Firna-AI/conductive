@@ -117,7 +117,9 @@ The link shows the workspace's state, number, a session icon, and the session ti
 A session without a title shows **Untitled**.
 
 Select the link to open that session.
-A closed or unknown session opens the workspace page without reopening the session.
+A closed session reopens, as it does from **Session history**, and its tab shows again for every member.
+In an archived or other read-only workspace, the session shows only in your browser and stays closed.
+An unknown session opens the workspace page.
 If that workspace is already open, its selected tab stays.
 The title of a session in another workspace updates when the chat loads.
 Session links also show as small boxes in agent answers and pasted message drafts.
