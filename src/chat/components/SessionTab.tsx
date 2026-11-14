@@ -1,6 +1,7 @@
-import { MessageSquare, X } from 'lucide-react'
+import { X } from 'lucide-react'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import styles from '../../../docs/mockups/src/components/workspace/WorkspaceTabs.module.css'
+import { SessionTabIcon } from '../../../docs/mockups/src/components/workspace/SessionTabIcon'
 import { IconButton } from '../ui/actions'
 import controls from '../ui/controls.module.css'
 import { RenameField } from './RenameField'
@@ -64,7 +65,7 @@ export function SessionTabItem(props: {
         onClick={() => props.onSelect(tab.id)}
         type="button"
       >
-        <MessageSquare aria-hidden className={styles.icon} size={13} />
+        <SessionTabIcon running={tab.running} />
         <span className={styles.title}>{tab.title}</span>
       </button>
       <span {...close} className={styles.close}>
@@ -83,11 +84,11 @@ export function SessionTabItem(props: {
  * The copy of a session tab that a drag lifts above the page: its icon and
  * its whole title, with no control.
  */
-export function LiftedSessionTab(props: { title: string }) {
+export function LiftedSessionTab(props: { title: string; running: boolean }) {
   return (
     <div className={classes(styles.tab, styles.lifted)}>
       <span className={styles.link}>
-        <MessageSquare aria-hidden className={styles.icon} size={13} />
+        <SessionTabIcon running={props.running} />
         <span className={styles.title}>{props.title}</span>
       </span>
     </div>

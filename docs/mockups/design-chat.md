@@ -9,6 +9,10 @@ line of a stopped turn. It also gives the data that the chat does not
 have, the files that the cloud computer could not read, the end of a turn at the time limit of
 background work, and the end of a fast turn that ran at standard speed.
 
+- A session tab shows a muted spinner in place of its chat icon while its
+  agent works. The spinner keeps the icon's size and stays visible on
+  background tabs and while the user drags a tab. An idle tab shows the
+  chat icon.
 - `DraftFileChip` in `src/components/chat/` draws each attached file of a
   draft as a chip at its place in the text of the message box. It is one
   unit of the text, as a file chip is, with the size of a file chip, from

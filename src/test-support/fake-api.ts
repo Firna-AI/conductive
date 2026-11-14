@@ -29,6 +29,7 @@ import { recordedFileEvents } from './recorded-files'
 export interface FakeApiOptions {
   role?: OrgRole
   workspaceState?: WorkspaceState
+  workspaceStates?: ReadonlyMap<string, WorkspaceState>
   conversation?: RecordedChatScenario
   banner?: BannerState
   /**
@@ -88,7 +89,10 @@ export class FakeApiServer implements FakeRouteWriter {
   >()
 
   constructor(options: FakeApiOptions = {}) {
-    const conversation = options.conversation ?? 'history'
+    const state =
+      options.workspaceStates?.get(FAKE_IDS.workspace) ?? options.workspaceState
+    const conversation =
+      options.conversation ?? (state === 'working' ? 'running' : 'history')
     const paths = options.paths ?? 'plain'
     const recorded = recordedChatEvents(conversation)
     const chat =
@@ -105,9 +109,10 @@ export class FakeApiServer implements FakeRouteWriter {
     fakeWorkspaceRoutes(
       this,
       options.workspaceState ?? 'ready',
-      conversation,
+      options.conversation,
       paths,
       fakeGitHubSummary(options),
+      options.workspaceStates,
     )
     fakeToolRoutes(this, options.banner ?? 'ready-to-merge', paths)
     const { workspaces, created } = workspaceFixtures(options.workspaceState)
