@@ -3,7 +3,6 @@ import { expect } from 'vitest'
 import { attachmentCommandTransfer } from '../../test-support/attachment-command'
 
 import { readAttachment as readPublicAttachment } from '../../../src/app/api/read-workspaces'
-import { attachmentUploadUrl } from '../../../src/shared/messages'
 import {
   attachmentPath,
   ATTACHMENTS_DIRECTORY,
@@ -15,6 +14,7 @@ import { record } from '../inputs'
 import type { Workspace } from './journey-entry.test-support'
 import type { OuterRuntime } from './outer-runtime.test-support'
 import { OUTER_ORG, OUTER_REPOSITORY } from './outer-seed.test-support'
+import { uploadSinglePart } from './attachment-multipart.test-support'
 
 export const FIRST_START_FILE_BYTES = new Uint8Array([0, 255, 128, 13, 10, 65])
 export const REPAIRED_REPOSITORY_LOCATIONS = [
@@ -78,24 +78,11 @@ export async function uploadFirstStartFile(
   fixture: OuterRuntime,
   messageId: string,
 ) {
-  const path = attachmentUploadUrl(
-    OUTER_ORG,
-    { type: 'new-workspace', messageId },
-    { name: 'first-task.dat', mediaType: 'application/octet-stream' },
-  )
-  const response = await fixture.runtime.dispatchFetch(
-    `${fixture.env.APP_ORIGIN}${path}`,
-    {
-      method: 'POST',
-      headers: {
-        Cookie: fixture.cookies.memberCookie,
-        Origin: fixture.env.APP_ORIGIN,
-        'Content-Type': 'application/octet-stream',
-        'Content-Length': String(FIRST_START_FILE_BYTES.byteLength),
-      },
-      body: FIRST_START_FILE_BYTES,
-    },
-  )
+  const response = await uploadSinglePart(fixture, FIRST_START_FILE_BYTES, {
+    target: { type: 'new-workspace', messageId },
+    name: 'first-task.dat',
+    headers: { Cookie: fixture.cookies.memberCookie },
+  })
   expect(response.status).toBe(201)
   return readPublicAttachment(record(await response.json()).attachment)
 }

@@ -2,22 +2,7 @@ import { ATTACHMENT_PART_BYTES } from '../../src/shared/messages'
 import { HttpError } from '../http'
 import { attachmentTooLarge } from '../chat/attachment-record'
 
-const ATTACHMENT_RAW_MAX_BYTES = 100_000_000
-
 const RAW_UPLOAD_ROUTES = [
-  {
-    method: 'POST',
-    kind: 'file',
-    pattern: /^\/api\/orgs\/[^/]+\/attachments$/,
-    maxBytes: ATTACHMENT_RAW_MAX_BYTES,
-  },
-  {
-    method: 'POST',
-    kind: 'file',
-    pattern:
-      /^\/api\/orgs\/[^/]+\/workspaces\/(?<workspaceId>[^/]+)\/attachments$/,
-    maxBytes: ATTACHMENT_RAW_MAX_BYTES,
-  },
   {
     method: 'PUT',
     kind: 'part',
@@ -35,12 +20,12 @@ const RAW_UPLOAD_ROUTES = [
 ] as const
 
 export type RawUploadRoute = {
+  kind: 'part'
   workspaceIdSegment: string | null
   maxBytes: number
-} & (
-  | { kind: 'file' }
-  | { kind: 'part'; uploadIdSegment: string; partNumberSegment: string }
-)
+  uploadIdSegment: string
+  partNumberSegment: string
+}
 
 /** The gate, entry budget, and feature dispatch use this same exact registry. */
 export function rawUploadRoute(
@@ -55,7 +40,6 @@ export function rawUploadRoute(
       workspaceIdSegment: match.groups?.workspaceId ?? null,
       maxBytes: route.maxBytes,
     }
-    if (route.kind === 'file') return { ...base, kind: 'file' }
     if (match.groups?.uploadId && match.groups.partNumber)
       return {
         ...base,

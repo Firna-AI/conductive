@@ -14,11 +14,8 @@ The storage API also accepts decoded bytes independently of the browser transpor
 It checks current membership and the named target before it creates a record.
 It measures the bytes and refuses a decoded total above `ATTACHMENT_MAX_BYTES`.
 The decoded file limit is 1,000,000,000 bytes.
-The raw file POST routes keep a separate limit of 100,000,000 bytes.
-Raw uploads pass the entry-counted source through native `FixedLengthStream` into R2.
-The declared length and stream completion must agree before readiness can publish.
 Internal callers without a known length use bounded R2 parts.
-Neither transport needs a stored part table.
+The internal storage boundary needs no stored part table.
 Readiness publishes only after the object completes and the owner and target still permit the write.
 An upload that loses ownership leaves no usable attachment.
 Its failed cleanup keeps a deletion record for another attempt.
@@ -30,7 +27,9 @@ Its failed cleanup keeps a deletion record for another attempt.
 Both route sets use the same gate as other app writes.
 The start and complete calls keep the default JSON body limit.
 The raw route registry gives each part a limit of `ATTACHMENT_PART_BYTES`, 67,108,864 bytes.
-A raw file POST keeps `ATTACHMENT_RAW_MAX_BYTES`, 100,000,000 bytes.
+Only the two part PUT routes accept raw bytes.
+They pass the entry-counted source through native `FixedLengthStream` into R2.
+The declared length and stream completion must agree before a part receipt can return.
 
 [attachment-multipart-storage.ts](attachment-multipart-storage.ts) creates the private multipart upload and saves its ID in `multipart_id`.
 The attachment record keeps the declared file size while its state is `uploading`.
@@ -251,7 +250,7 @@ The sweep also removes completed orphan objects whose upload outlived its record
 
 The attachment tests use local Miniflare R2 and D1.
 Storage tests also call the internal storage boundary.
-The raw and multipart route tests use the real Worker and native R2 in Miniflare.
+The multipart route tests use the real Worker and native R2 in Miniflare.
 The multipart tests cover both targets, part replacement, exact body lengths, empty files, and a two-part file with a shorter last part.
 Completion tests check the final size, access changes, competing completion calls, and abort of an expired unfinished upload.
 Copy tests inject detached command responses through `prepareAttachments`.

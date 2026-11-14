@@ -23,16 +23,6 @@ function attachmentUploadPath(
     : draftAttachmentsPath(orgId)
 }
 
-export function attachmentUploadUrl(
-  orgId: string,
-  target: AttachmentUploadTarget,
-  metadata: { name: string; mediaType: string },
-): string {
-  const query = new URLSearchParams(metadata)
-  if (target.type === 'new-workspace') query.set('messageId', target.messageId)
-  return `${attachmentUploadPath(orgId, target)}?${query}`
-}
-
 export function attachmentUploadStartPath(
   orgId: string,
   target: AttachmentUploadTarget,

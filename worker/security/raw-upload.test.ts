@@ -1,8 +1,5 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
-import {
-  attachmentUploadPartPath,
-  attachmentUploadUrl,
-} from '../../src/shared/messages'
+import { attachmentUploadPartPath } from '../../src/shared/messages'
 import { createApp } from '../application'
 import {
   streamedBody,
@@ -28,58 +25,38 @@ afterAll(async () => {
 })
 it('checks sign-in, Origin, and org access before pulling a raw upload body', async () => {
   const fixture = await createChatFixture(harness)
-  const path = attachmentUploadUrl(
-    fixture.org.id,
-    { type: 'workspace', workspaceId: WORKSPACE_ID },
-    { name: 'file.bin', mediaType: 'application/octet-stream' },
-  )
-  const app = createApp({ now: () => TEST_TIME })
-  for (const [uploadPath, method] of [
-    [path, 'POST'],
-    [
-      attachmentUploadPartPath(
-        fixture.org.id,
-        { type: 'workspace', workspaceId: WORKSPACE_ID },
-        'upload',
-        1,
-      ),
-      'PUT',
-    ],
-  ]) {
-    for (const [cookie, origin, status] of [
-      ['', TEST_ORIGIN, 401],
-      [fixture.ownerCookie, 'https://elsewhere.test', 403],
-      [fixture.ownerCookie, TEST_ORIGIN, 404],
-    ] as const) {
-      const body = streamedBody([new Uint8Array(100000001)])
-      const url =
-        status === 404
-          ? uploadPath.replace(fixture.org.id, 'another-org')
-          : uploadPath
-      const response = await app.fetch(
-        streamedRequest(
-          `${TEST_ORIGIN}${url}`,
-          body.body,
-          {
-            Cookie: cookie,
-            Origin: origin,
-            'Content-Type': 'application/octet-stream',
-            'Content-Length': '100000001',
-          },
-          method,
-        ),
-        harness.env,
-      )
-      expect(response.status).toBe(status)
-      expect(body.observed).toEqual({ pulled: 0, bytes: 0, cancelled: 0 })
-    }
-  }
-  const partPath = attachmentUploadPartPath(
+  const path = attachmentUploadPartPath(
     fixture.org.id,
     { type: 'workspace', workspaceId: WORKSPACE_ID },
     'upload',
     1,
   )
+  const app = createApp({ now: () => TEST_TIME })
+  for (const [cookie, origin, status] of [
+    ['', TEST_ORIGIN, 401],
+    [fixture.ownerCookie, 'https://elsewhere.test', 403],
+    [fixture.ownerCookie, TEST_ORIGIN, 404],
+  ] as const) {
+    const body = streamedBody([new Uint8Array(67108865)])
+    const url =
+      status === 404 ? path.replace(fixture.org.id, 'another-org') : path
+    const response = await app.fetch(
+      streamedRequest(
+        `${TEST_ORIGIN}${url}`,
+        body.body,
+        {
+          Cookie: cookie,
+          Origin: origin,
+          'Content-Type': 'application/octet-stream',
+          'Content-Length': '67108865',
+        },
+        'PUT',
+      ),
+      harness.env,
+    )
+    expect(response.status).toBe(status)
+    expect(body.observed).toEqual({ pulled: 0, bytes: 0, cancelled: 0 })
+  }
   const checkBlocked = async (
     status: number,
     code: string,
@@ -89,7 +66,7 @@ it('checks sign-in, Origin, and org access before pulling a raw upload body', as
     await expect(
       gate(
         streamedRequest(
-          `${host}${partPath}`,
+          `${host}${path}`,
           stream.body,
           {
             Cookie: fixture.memberCookie,
@@ -127,10 +104,11 @@ it('checks sign-in, Origin, and org access before pulling a raw upload body', as
 it('requires explicit octet-stream and valid known length while leaving authorized bytes unread in the gate', async () => {
   const ownerCookie = await harness.login()
   const org = await harness.createOrg(ownerCookie)
-  const path = attachmentUploadUrl(
+  const path = attachmentUploadPartPath(
     org.id,
-    { type: 'new-workspace', messageId: 'raw-first' },
-    { name: 'image.png', mediaType: 'image/png' },
+    { type: 'new-workspace', messageId: 'part-first' },
+    'upload',
+    1,
   )
   const cases: {
     type: string | null
@@ -176,60 +154,42 @@ it('requires explicit octet-stream and valid known length while leaving authoriz
     },
     {
       type: 'application/octet-stream',
-      length: '100000001',
+      length: '67108865',
       status: 413,
       code: 'attachment_too_large',
     },
   ]
-  for (const [uploadPath, method] of [
-    [path, 'POST'],
-    [
-      attachmentUploadPartPath(
-        org.id,
-        { type: 'new-workspace', messageId: 'raw-first' },
-        'upload',
-        1,
-      ),
-      'PUT',
-    ],
-  ]) {
-    for (const item of cases) {
-      const stream = streamedBody([new Uint8Array(6)])
-      const headers = new Headers({ Cookie: ownerCookie, Origin: TEST_ORIGIN })
-      if (item.type !== null) headers.set('Content-Type', item.type)
-      if (item.length !== null) headers.set('Content-Length', item.length)
-      await expect(
-        gate(
-          streamedRequest(
-            `${TEST_ORIGIN}${uploadPath}`,
-            stream.body,
-            headers,
-            method,
-          ),
-          harness.env,
-          TEST_TIME,
-        ),
-      ).rejects.toMatchObject({ status: item.status, code: item.code })
-      expect(stream.observed.pulled).toBe(0)
-    }
+  for (const item of cases) {
     const stream = streamedBody([new Uint8Array(6)])
-    const context = await gate(
-      streamedRequest(
-        `${TEST_ORIGIN}${uploadPath}`,
-        stream.body,
-        {
-          Cookie: ownerCookie,
-          Origin: TEST_ORIGIN,
-          'Content-Type': 'application/octet-stream',
-          'Content-Length': '6',
-        },
-        method,
+    const headers = new Headers({ Cookie: ownerCookie, Origin: TEST_ORIGIN })
+    if (item.type !== null) headers.set('Content-Type', item.type)
+    if (item.length !== null) headers.set('Content-Length', item.length)
+    await expect(
+      gate(
+        streamedRequest(`${TEST_ORIGIN}${path}`, stream.body, headers, 'PUT'),
+        harness.env,
+        TEST_TIME,
       ),
-      harness.env,
-      TEST_TIME,
-    )
-    expect(context.body).toBeNull()
-    expect(context.rawUploadBytes).toBe(6)
+    ).rejects.toMatchObject({ status: item.status, code: item.code })
     expect(stream.observed.pulled).toBe(0)
   }
+  const stream = streamedBody([new Uint8Array(6)])
+  const context = await gate(
+    streamedRequest(
+      `${TEST_ORIGIN}${path}`,
+      stream.body,
+      {
+        Cookie: ownerCookie,
+        Origin: TEST_ORIGIN,
+        'Content-Type': 'application/octet-stream',
+        'Content-Length': '6',
+      },
+      'PUT',
+    ),
+    harness.env,
+    TEST_TIME,
+  )
+  expect(context.body).toBeNull()
+  expect(context.rawUploadBytes).toBe(6)
+  expect(stream.observed.pulled).toBe(0)
 })

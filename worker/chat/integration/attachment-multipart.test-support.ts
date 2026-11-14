@@ -45,9 +45,11 @@ export function startUpload(
   sizeBytes: number,
   target = WORKSPACE_TARGET,
   extra: Record<string, unknown> = {},
+  headers?: HeadersInit,
 ) {
   return fixture.request(attachmentUploadStartPath(OUTER_ORG, target), {
     method: 'POST',
+    headers,
     body: JSON.stringify({
       name: 'multipart file.bin',
       mediaType: 'application/octet-stream',
@@ -119,6 +121,43 @@ export function completeUpload(
   return fixture.request(
     attachmentUploadCompletePath(OUTER_ORG, target, uploadId),
     { method: 'POST', body: JSON.stringify({ parts }), headers },
+  )
+}
+
+export async function uploadSinglePart(
+  fixture: OuterRuntime,
+  bytes: Uint8Array,
+  options: {
+    target?: AttachmentUploadTarget
+    name?: string
+    mediaType?: string
+    headers?: HeadersInit
+  } = {},
+) {
+  const target = options.target ?? WORKSPACE_TARGET
+  const started = await startUpload(
+    fixture,
+    bytes.byteLength,
+    target,
+    {
+      name: options.name ?? 'multipart file.bin',
+      mediaType: options.mediaType ?? 'application/octet-stream',
+    },
+    options.headers,
+  )
+  if (started.status !== 201) return started
+  const uploadId = identifier(record(await started.json()).uploadId)
+  const part = await sendPart(fixture, uploadId, 1, bytes, {
+    target,
+    headers: options.headers,
+  })
+  if (part.status !== 200) return part
+  return completeUpload(
+    fixture,
+    uploadId,
+    [await partReceipt(part)],
+    target,
+    options.headers,
   )
 }
 

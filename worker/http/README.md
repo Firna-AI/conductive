@@ -29,9 +29,8 @@ A route that a later change adds gets the default without code of its own.
 A machine route that needs a higher limit declares it in `requestBodyBudget`.
 A raw upload route declares its limit in the [raw upload registry](#raw-upload-routes) instead.
 For a matching raw route on the app host, the entry uses that route's `maxBytes`.
-A file POST has a limit of 100,000,000 bytes.
 A part PUT has a limit of 67,108,864 bytes.
-Both give 413 `attachment_too_large` on overflow.
+It gives 413 `attachment_too_large` on overflow.
 Beside that raw upload selection, `requestBodyEntry` selects `FEEDBACK_BODY_MAX_BYTES`, 10,000,000 bytes, for a `POST` to `FEEDBACK_PATH`, which is `/api/feedback`, on the app host.
 Both names come from [`src/shared/feedback.ts`](../../src/shared/feedback.ts).
 That JSON body keeps the 413 `body_too_large` error of the default.
@@ -74,9 +73,7 @@ They pass the machine origin in the environment, so the entry selects the raised
 
 `raw-upload-routes.ts` holds the one registry of the raw upload routes.
 Each entry has a method, a path pattern, and `maxBytes`.
-The two file entries are POSTs to `/api/orgs/{orgId}/attachments` and `/api/orgs/{orgId}/workspaces/{workspaceId}/attachments`.
-They keep `ATTACHMENT_RAW_MAX_BYTES`, 100,000,000 bytes.
-The two part entries are PUTs below the same bases, at `/uploads/{uploadId}/parts/{partNumber}`.
+The two entries are PUTs to `/api/orgs/{orgId}/attachments/uploads/{uploadId}/parts/{partNumber}` and `/api/orgs/{orgId}/workspaces/{workspaceId}/attachments/uploads/{uploadId}/parts/{partNumber}`.
 They use `ATTACHMENT_PART_BYTES`, 67,108,864 bytes, from the shared attachment contract.
 The JSON start and complete calls get no raw exception.
 
@@ -91,9 +88,8 @@ rawUploadLength(request: Request, maxBytes: number): number
 ```
 
 `rawUploadRoute` matches the method and path, then returns the route policy or `null`.
-Its `kind` is `file` or `part`.
-Both kinds give `workspaceIdSegment` and `maxBytes`.
-A part also gives `uploadIdSegment` and `partNumberSegment`.
+Its `kind` is `part`.
+It gives `workspaceIdSegment`, `maxBytes`, `uploadIdSegment`, and `partNumberSegment`.
 The Worker entry, the [request gate](../security/README.md#json-request-bodies), and the feature dispatch use it.
 So a route gets the raw exception only with its own limit, and a route that a later change adds gets neither.
 
@@ -116,9 +112,9 @@ It returns that fixed-length `body`, the `finished` promise of the pipe, `failed
 A body with fewer or more bytes than its declared length fails the stream.
 The adapter holds its final byte until the counted source ends, so R2 cannot finish a nonempty write before a late source error.
 An empty part checks source completion before its R2 call.
-The [attachment routes](../chat/attachment-routes.ts) and [part route](../chat/attachment-part-route.ts) call it.
-They wait for both the R2 write and the end of the source.
-The [access protocol](../../docs/protocol/access-and-security.md#attachment-uploads) states the conditions.
+The [part route](../chat/attachment-part-route.ts) calls it.
+It waits for both the R2 write and the end of the source.
+[Attachment uploads](../../docs/protocol/attachment-uploads.md) states the conditions.
 
 ## JSON request objects
 
@@ -210,7 +206,7 @@ Run `npm run test -- worker/files worker/sandbox worker/http/bounded-body.test.t
 - [request-body.test-support.ts](request-body.test-support.ts) builds streamed requests that count pulls, bytes, and cancellations.
 - [raw-upload-routes.ts](raw-upload-routes.ts) holds the registry of raw upload routes and exports `rawUploadRoute` and `rawUploadLength`.
 - [fixed-upload-body.ts](fixed-upload-body.ts) exports `fixedUploadBody`, which gives R2 a stream of the declared length.
-- [raw-upload-body.test.ts](raw-upload-body.test.ts) checks the raw file and part limits at the entry, and the JSON limit of other methods and routes.
+- [raw-upload-body.test.ts](raw-upload-body.test.ts) checks the part limit at the entry, and the JSON limit of other methods and routes.
 - [../app-api/feedback-body.test.ts](../app-api/feedback-body.test.ts) checks the exact feedback budget, with and without `Content-Length`.
 - [json-body.ts](json-body.ts) exports `readJsonObject` and owns the JSON request policy.
 - [bounded-body.ts](bounded-body.ts) exposes `readBoundedBody`, `readBoundedJson`, and `BodyBudgetExceeded`.
@@ -219,6 +215,6 @@ Run `npm run test -- worker/files worker/sandbox worker/http/bounded-body.test.t
 ### Related Docs
 
 - [Access and security: Request bodies](../../docs/protocol/access-and-security.md#request-bodies)
-- [Access and security: Attachment uploads](../../docs/protocol/access-and-security.md#attachment-uploads)
+- [Attachment uploads](../../docs/protocol/attachment-uploads.md)
 - [Feedback: The routes](../../docs/protocol/feedback.md#the-routes)
 - [Worker backend](../README.md)

@@ -744,17 +744,24 @@ These are the implementor's calls of 14 November 2026.
 - Both dev fakes share the parts store of `src/app/dev/attachment-parts.ts`,
   with the checks of the Worker. `?upload=fail` fails the first part of
   the page at each of its four sends, so its chip fails and Try again sends
-  that part again. Reason: one failed send would go again at once, and the
-  chip would never fail.
+  that part again. Reason: a part that fails once goes again, and the chip
+  would never fail. With the waits, the chip fails after about 7 seconds.
+- The zip of a dropped folder moves its compressed bytes into a `Blob` each
+  time 8 MiB of them wait, and the zip file is made of these blobs. Reason:
+  the browser can keep a blob out of the memory of the page, so a zip of up
+  to 1 GB never sits there whole, and a zip of 1 GB has only about 125
+  blobs. The coordinator chose this fix on 14 November 2026.
 
 ## Milestone 7: Delete the raw upload routes
 
 Depends on: 6
 
-- [ ] Delete the raw `POST` routes, their constant, and their tests.
-- [ ] Link `worker/http/README.md` straight to
+- [x] Delete the raw `POST` routes, their constant, and their tests.
+- [x] Link `worker/http/README.md` straight to
       [Attachment uploads](../docs/protocol/attachment-uploads.md).
-- [ ] Update `worker/chat/attachments.md`.
+- [x] Update `worker/chat/attachments.md`.
+
+Verification evidence is in `.context/large-attachments/reports/m7.md`.
 
 ## Milestone 8: The read line for large files
 

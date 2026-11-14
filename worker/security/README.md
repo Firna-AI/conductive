@@ -35,7 +35,7 @@ The [Worker entry](../http/README.md#request-body-limit) owns the byte limit and
 A body error prevents route dispatch.
 
 For a [raw upload route](../http/README.md#raw-upload-routes), the gate reads no JSON.
-The registry includes raw file POSTs and multipart PUTs.
+Only the two part PUT routes get this raw-body exception.
 The multipart start and complete POSTs remain JSON writes.
 After the session, org access, and org write checks, it calls `rawUploadLength(request, maxBytes)` from the route registry.
 That check needs the content type `application/octet-stream` and a valid `Content-Length` header.

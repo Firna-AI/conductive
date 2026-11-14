@@ -39,7 +39,6 @@ export async function storeAttachment(
     now: () => number
     newId: () => string
     byteLength?: number
-    bodyComplete?: Promise<void>
   } = {
     now: Date.now,
     newId: randomToken,
@@ -60,7 +59,6 @@ export async function storeAttachment(
       },
       dependencies.byteLength,
     )
-    await dependencies.bodyComplete
     if (
       !(await publishAttachment(
         env.DB,
