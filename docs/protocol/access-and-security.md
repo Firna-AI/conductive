@@ -19,6 +19,8 @@ These docs belong to this doc:
 - [Terminal, previews, and desktop](terminal-previews-and-desktop.md): the
   security of the terminal, the port previews, the proxies, and the
   desktop.
+- [Step timing](step-timing.md): the `Server-Timing` header of a reply,
+  and what it may hold.
 
 ## Sign-in
 

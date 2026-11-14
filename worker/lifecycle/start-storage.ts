@@ -101,6 +101,8 @@ export function durableStartStorage(
           startLogContext(job.workspaceId, job.attempt),
         )
         await transaction.put('job', JOB, serializeStartJob(job))
+        // The first step runs at once. A create answers only after its
+        // records step, so a later alarm would add its delay to each create.
         await transaction.setAlarm(now())
         return true
       })
