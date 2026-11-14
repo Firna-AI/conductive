@@ -40,13 +40,9 @@ pub(super) fn prepare(line: &str, phase: &mut Phase) -> Action {
     let Some(fields) = value.as_object() else {
         return error(None, -32600, "Invalid JSON-RPC request.");
     };
-    let id = match fields.get("id") {
-        Some(Value::String(text)) => Some(Id::Text(text.clone())),
-        Some(Value::Number(number)) => number
-            .as_f64()
-            .filter(|value| value.is_finite() && value.fract() == 0.0)
-            .map(|_| Id::Number(number.clone())),
-        _ => None,
+    let id = match Id::from_line(line) {
+        Ok(id) => id,
+        Err(_) => return error(None, -32700, "Invalid JSON."),
     };
     if fields.get("jsonrpc").and_then(Value::as_str) != Some("2.0")
         || !fields.get("method").is_some_and(Value::is_string)

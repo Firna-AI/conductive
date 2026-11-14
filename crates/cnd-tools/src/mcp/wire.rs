@@ -1,16 +1,79 @@
 //! JSON-RPC envelopes and typed MCP result bodies.
 
-use serde::{Deserialize, Serialize};
-use serde_json::Number;
+use std::fmt;
+
+use serde::de::{IgnoredAny, MapAccess, Visitor};
+use serde::{Deserialize, Deserializer, Serialize};
+use serde_json::{Number, value::RawValue};
 
 use crate::reply::Reply;
 use crate::schema::Descriptor;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub(super) enum Id {
-    Text(String),
-    Number(Number),
+/// An accepted request ID, kept as its original JSON token for every reply.
+#[derive(Debug, Clone, Serialize)]
+#[serde(transparent)]
+pub(super) struct Id(Box<RawValue>);
+
+impl Id {
+    pub(super) fn from_line(line: &str) -> serde_json::Result<Option<Self>> {
+        let mut deserializer = serde_json::Deserializer::from_str(line);
+        let raw = deserializer.deserialize_map(RequestId)?;
+        deserializer.end()?;
+        Ok(raw
+            .filter(|raw| {
+                raw.get().starts_with('"')
+                    || serde_json::from_str::<Number>(raw.get())
+                        .ok()
+                        .and_then(|number| number.as_f64())
+                        .is_some_and(|number| number.is_finite() && number.fract() == 0.0)
+            })
+            .map(Self))
+    }
+}
+
+/// Read the last top-level ID without decoding its string value.
+struct RequestId;
+
+impl<'de> Visitor<'de> for RequestId {
+    type Value = Option<Box<RawValue>>;
+
+    fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str("a JSON-RPC request object")
+    }
+
+    fn visit_map<A: MapAccess<'de>>(self, mut map: A) -> Result<Self::Value, A::Error> {
+        let mut id = None;
+        while let Some(key) = map.next_key::<IdKey>()? {
+            if key.0 {
+                id = Some(map.next_value()?);
+            } else {
+                map.next_value::<IgnoredAny>()?;
+            }
+        }
+        Ok(id)
+    }
+}
+
+/// Match the ID key while accepting lone surrogates in unrelated keys.
+struct IdKey(bool);
+struct IdKeyVisitor;
+
+impl<'de> Deserialize<'de> for IdKey {
+    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        deserializer.deserialize_bytes(IdKeyVisitor)
+    }
+}
+
+impl<'de> Visitor<'de> for IdKeyVisitor {
+    type Value = IdKey;
+
+    fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str("an object key")
+    }
+
+    fn visit_bytes<E: serde::de::Error>(self, bytes: &[u8]) -> Result<Self::Value, E> {
+        Ok(IdKey(bytes == b"id"))
+    }
 }
 
 #[derive(Serialize)]

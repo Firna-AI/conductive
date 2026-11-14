@@ -29,6 +29,15 @@ fn call(id: &str, name: &str, arguments: Value) -> String {
 }
 
 async fn serve(lines: Vec<String>, fail_reply: bool) -> Result<(u8, Vec<Value>, Vec<String>)> {
+    let (status, lines, errors) = serve_raw(lines, fail_reply).await?;
+    let replies = lines
+        .iter()
+        .map(|line| serde_json::from_str(line).internal())
+        .collect::<Result<_>>()?;
+    Ok((status, replies, errors))
+}
+
+async fn serve_raw(lines: Vec<String>, fail_reply: bool) -> Result<(u8, Vec<String>, Vec<String>)> {
     let input = Arc::new(Mutex::new(VecDeque::from(lines)));
     let output = Arc::new(Mutex::new(Vec::new()));
     let errors = Arc::new(Mutex::new(Vec::new()));
@@ -45,14 +54,13 @@ async fn serve(lines: Vec<String>, fail_reply: bool) -> Result<(u8, Vec<Value>, 
         StreamsMock::stdout.each_call(matching!(_)).answers_arc({
             let output = output.clone();
             Arc::new(move |_, text| {
-                let value: Value = serde_json::from_str(text).internal()?;
-                if fail_reply && value["id"] == "list" {
+                if fail_reply && serde_json::from_str::<Value>(text).internal()?["id"] == "list" {
                     return Err(Error::Network { mac: false });
                 }
                 output
                     .lock()
                     .map_err(|_| Error::Reply { mac: false })?
-                    .push(value);
+                    .push(text.to_string());
                 Ok(())
             })
         }),
@@ -234,27 +242,39 @@ async fn output_failure_sets_exit_one_and_keeps_other_replies() -> Result<()> {
 
 #[tokio::test]
 async fn accepts_lone_surrogates_in_mcp_arguments_and_preserves_the_request_id() -> Result<()> {
-    let (status, replies, errors) = serve(
+    let (status, replies, errors) = serve_raw(
         vec![
             initialize(),
             initialized(),
             call("control", "list_workspaces", json!({})),
             r#"{"jsonrpc":"2.0","id":"surrogate","method":"tools/call","params":{"name":"list_workspaces","arguments":{"query":"before\ud800after"}}}"#.into(),
+            r#"{"jsonrpc":"2.0","\ud800":null,"id":"discarded","i\u0064":"req-\ud800","method":"tools/call","params":{"name":"list_workspaces","arguments":{"query":"before\ud800after"}}}"#.into(),
+            r#"{"jsonrpc":"2.0","id":"req-\ud801","method":"tools/call","params":{"name":"list_workspaces","arguments":{"query":"before\ud801after"}}}"#.into(),
+            r#"{"jsonrpc":"1.0","id":"req-\ud800","method":"ping"}"#.into(),
+            r#"{"jsonrpc":"2.0","id":"req-\ud801","method":"unknown-method"}"#.into(),
         ],
         false,
     )
     .await?;
     assert_eq!(status, 0);
     assert_eq!(errors, Vec::<String>::new());
-    assert_eq!(replies.len(), 3);
-    assert_eq!(
-        replies
-            .iter()
-            .find(|reply| reply["id"] == "surrogate")
-            .map(|reply| reply["result"].clone()),
-        Some(
-            json!({"isError":false,"structuredContent":{"workspaces":[]},"content":[{"type":"text","text":"{\"workspaces\":[]}"}]})
-        )
-    );
+    assert_eq!(replies.len(), 7);
+    let result = r#"{"content":[{"type":"text","text":"{\"workspaces\":[]}"}],"structuredContent":{"workspaces":[]},"isError":false}"#;
+    let mut expected = [
+        r#""control""#,
+        r#""surrogate""#,
+        r#""req-\ud800""#,
+        r#""req-\ud801""#,
+    ]
+    .map(|id| format!("{{\"jsonrpc\":\"2.0\",\"id\":{id},\"result\":{result}}}\n"))
+    .to_vec();
+    expected.extend([
+        r#"{"jsonrpc":"2.0","id":"req-\ud800","error":{"code":-32600,"message":"Invalid JSON-RPC request."}}"#,
+        r#"{"jsonrpc":"2.0","id":"req-\ud801","error":{"code":-32601,"message":"Method not found."}}"#,
+    ].map(|line| format!("{line}\n")));
+    let mut replies: Vec<_> = replies.into_iter().skip(1).collect();
+    replies.sort();
+    expected.sort();
+    assert_eq!(replies, expected);
     Ok(())
 }

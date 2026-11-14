@@ -29,7 +29,8 @@ Help needs no credential. HTTP never follows redirects.
 Worker refusal codes and messages keep their meaning, with the known
 credential removed. Malformed replies and network errors use fixed text.
 The shared JSON decoder replaces lone UTF-16 surrogate escapes with U+FFFD
-in Worker replies and MCP requests. Valid surrogate pairs remain unchanged.
+in Worker replies and MCP tool text. Valid surrogate pairs remain unchanged.
+Every MCP reply preserves its request ID exactly, including error replies.
 
 ## Quick Start
 

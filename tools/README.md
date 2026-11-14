@@ -49,7 +49,8 @@ Both tools preserve the Worker's error code and message, such as `session_closed
 They give a generic failure for malformed replies and network failures.
 Error text never includes the known workspace credential.
 The shared JSON decoder replaces lone UTF-16 surrogate escapes with U+FFFD
-in Worker replies and MCP requests. Valid Unicode text stays unchanged.
+in Worker replies and MCP tool text. Valid Unicode text stays unchanged.
+Every MCP reply preserves its request ID exactly, including error replies.
 A successful reply can report no change, such as `deleted: false` or `closed: false`.
 The CLI returns status 0 for it, and MCP returns `isError: false`.
 `conductive --help` works without runtime credentials.
