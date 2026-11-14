@@ -24,6 +24,34 @@
   min-height: 1.6em;
 }
 
+/* A shared size: lines break only where the shared size breaks them. */
+.fixed {
+  white-space: pre;
+  overflow-wrap: normal;
+}
+
+/* The shared size is larger than the panel, so the text gets smaller. */
+.larger {
+  font-size: 9px;
+}
+
+/*
+ * The shared size is smaller than the panel, so empty space follows it. The
+ * newest lines stay at the bottom, as on a terminal.
+ */
+.smaller {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  justify-content: flex-end;
+  box-sizing: content-box;
+  width: 36ch;
+  height: calc(1.6em * 12);
+  overflow: hidden;
+  border-right: 1px solid var(--ui-border);
+  border-bottom: 1px solid var(--ui-border);
+}
+
 .prompt {
   color: var(--ui-term-prompt);
   font-weight: 600;

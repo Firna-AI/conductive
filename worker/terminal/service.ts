@@ -4,6 +4,8 @@ import { WorkspaceTools } from '../previews/provider'
 import type { ToolDependencies } from '../previews/types'
 import { ProviderError } from '../sandbox/errors'
 import type { SandboxProvider } from '../sandbox/provider'
+import { writeFileCommand } from '../lifecycle/commands'
+import { BRIDGE_FILES, BRIDGE_ROOT } from './bridge-files'
 import { cacheTerminalPassword } from './credentials'
 import { privilegedCommand, shellArgument } from './privileged'
 import {
@@ -14,6 +16,24 @@ import {
   TERMINAL_RUNTIME_VIEW,
   TERMINAL_RESTORE_MARKER,
 } from './scripts'
+
+/** Writes the bridge files fresh, so no file of an older bridge stays. */
+function bridgeInstallCommand(): string {
+  const folders = new Set(
+    Object.keys(BRIDGE_FILES).map((path) =>
+      `${BRIDGE_ROOT}/${path}`.replace(/\/[^/]+$/, ''),
+    ),
+  )
+  return [
+    `rm -rf ${shellArgument(BRIDGE_ROOT)}`,
+    ...[...folders].map(
+      (folder) => `install -d -m 755 ${shellArgument(folder)}`,
+    ),
+    ...Object.entries(BRIDGE_FILES).map(([path, text]) =>
+      writeFileCommand(`${BRIDGE_ROOT}/${path}`, text, '644'),
+    ),
+  ].join('\n')
+}
 
 export function terminalInstallCommand(): string {
   return privilegedCommand(`set -eu
@@ -36,6 +56,7 @@ cat > /usr/local/lib/conductive/terminal-sessions <<'CONDUCTIVE_SESSIONS'
 ${sessionServerScript()}
 CONDUCTIVE_SESSIONS
 chmod 755 /usr/local/lib/conductive/terminal-sessions
+${bridgeInstallCommand()}
 cat > /etc/systemd/system/conductive-terminal-sessions.service <<'CONDUCTIVE_SESSION_SERVICE'
 [Unit]
 Description=Conductive terminal shell server
