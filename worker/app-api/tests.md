@@ -16,8 +16,8 @@ Run the commands in [Development](README.md#development) from the repository roo
   recovery from unreadable keys and JSON without losing valid keys.
 - `agent-login-secret.test.ts` checks that a saved login keeps no
   whitespace, and that a read removes the whitespace of an older login.
-  It also checks that an older runner gets no ChatGPT login and reports
-  the next steps for a turn that it cannot run.
+  It also checks that a runner without ChatGPT support gets no ChatGPT
+  login and reports the next steps for a turn that it cannot run.
 - `agent-endpoint-login.test.ts` checks both agents, encrypted addresses
   and keys, safe account metadata, the address rule, and share defaults.
 - `endpoint-models.test.ts` checks discovery at save and Refresh, private

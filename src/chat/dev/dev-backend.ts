@@ -32,11 +32,12 @@ import {
   writeReaderLogins,
 } from './dev-logins'
 import { DevMac, handleMacWrite, writeMacReplies } from './dev-mac'
-import { lossEvents, withUnreadFiles } from './dev-loss'
+import { lossEvents } from './dev-loss'
 import type { DevOptions } from './dev-options'
 import { handleWrite } from './dev-routes'
 import { takeState } from './dev-sandbox'
 import { followTitle, setActiveTurn } from './dev-sessions'
+import { changesTurnEnds, withTurnEnds } from './dev-speed'
 import { DevStream } from './dev-stream'
 
 const NEW_WORKSPACE = 'saved-carts'
@@ -134,14 +135,13 @@ export class DevBackend {
       scenario === 'loss'
         ? lossEvents(workspaceId, shown, viewer.id)
         : recordedChatEvents(scenario, workspaceId, shown)
-    const unread = options.files === 'unread'
-    const recorded = unread ? withUnreadFiles(events) : events
+    const recorded = withTurnEnds(events, options)
     const live = options.replay === 'live'
     const files = recordedFileEvents(
       workspaceId,
       live ? 1 : recorded.length + 1,
     )
-    if (live || loss || unread) {
+    if (live || loss || changesTurnEnds(options)) {
       const path = chatHistoryPath(org, workspaceId, shown)
       server.json('GET', path, {
         events: live ? [] : recorded,

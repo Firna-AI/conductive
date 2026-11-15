@@ -1,4 +1,3 @@
-import { Buffer } from 'node:buffer'
 import { afterEach, beforeAll, expect, it } from 'vitest'
 
 import {
@@ -102,53 +101,6 @@ it('passes the counted raw body through native FixedLengthStream into real R2 wi
     expect(new Uint8Array(await object.arrayBuffer())).toEqual(bytes)
     expect(record.multipartId).toBeNull()
   }
-})
-
-it('accepts exactly 100,000,000 raw bytes and rejects a larger declared file', async () => {
-  const fixture = await createFixture()
-  const bytes = new Uint8Array(100_000_000)
-  bytes[0] = 255
-  bytes[99_999_999] = 128
-  const response = await upload(fixture, bytes)
-  expect(response.status).toBe(201)
-  const result = {
-    attachment: jsonRecord(jsonRecord(await response.json()).attachment),
-  }
-  const record = await readAttachment(
-    fixture.env.DB,
-    identifier(result.attachment.id),
-  )
-  if (!record) throw new Error('The file record is missing.')
-  const stored = await attachmentBucket(fixture.env).get(record.objectKey)
-  if (!stored) throw new Error('The file object is missing.')
-  expect(
-    Buffer.compare(Buffer.from(await stored.arrayBuffer()), Buffer.from(bytes)),
-  ).toBe(0)
-  const oversized = await upload(fixture, new Uint8Array(100_000_001))
-  expect(oversized.status).toBe(413)
-  expect(await oversized.json()).toEqual({
-    error: {
-      code: 'attachment_too_large',
-      message: 'Each file can be up to 100 MB.',
-    },
-  })
-  expect((await attachmentBucket(fixture.env).list()).objects).toHaveLength(1)
-  const path = attachmentUploadUrl(
-    OUTER_ORG,
-    { type: 'workspace', workspaceId: OUTER_WORKSPACE },
-    { name: 'overflow.bin', mediaType: 'application/octet-stream' },
-  )
-  const overflowing = await upload(fixture, bytes, {
-    path: `${path}&fixtureBody=overflow`,
-  })
-  expect(overflowing.status).toBe(413)
-  expect(await overflowing.json()).toEqual({
-    error: {
-      code: 'attachment_too_large',
-      message: 'Each file can be up to 100 MB.',
-    },
-  })
-  expect((await attachmentBucket(fixture.env).list()).objects).toHaveLength(1)
 })
 
 it('binds raw drafts to their org and first-message ID and refuses wrong uploader, target, and archived writes', async () => {

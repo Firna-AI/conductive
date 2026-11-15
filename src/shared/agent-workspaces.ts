@@ -7,6 +7,7 @@ export interface AgentCreateWorkspaceRequest {
   firstMessage: string
   model?: { agent: Agent; model: string }
   effort?: Effort
+  fast?: boolean
   sectionId?: string
   name?: string
   firstSessionTitle?: string

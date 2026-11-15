@@ -8,6 +8,7 @@ import {
 } from '../../files/tabs/FileTabItem'
 import {
   workspaceViewPath,
+  type TemporaryTab,
   type WorkspaceTab,
 } from '../../shared/workspace-view'
 import { byLabel, queryByText } from '../../test-support/dom-queries'
@@ -52,18 +53,26 @@ export const file: WorkspaceTab = {
   mode: 'source',
 }
 
+/** The mark of the saved view that makes the file tab the temporary tab. */
+export const temporaryFile: TemporaryTab = {
+  kind: 'file',
+  path: `src/app-${secret}.ts`,
+}
+
 /** The label of a real path, as the Worker sends it: each secret hidden. */
 function labelOf(path: string): string {
   return path.replaceAll(secret, '[redacted]')
 }
 
 /**
- * Mounts the chat of the fake workspace, whose saved view holds `tabs`. A
- * test of a copy gives the services of its clipboard as `copy`.
+ * Mounts the chat of the fake workspace, whose saved view holds `tabs`, and
+ * marks `temporaryTab` as its temporary tab, else none. A test of a copy
+ * gives the services of its clipboard as `copy`.
  */
 export async function mountChat(options: {
   server: FakeApiServer
   tabs: readonly WorkspaceTab[]
+  temporaryTab?: TemporaryTab
   viewport: 'desktop' | 'mobile'
   renderTab?: RenderTab
   copy?: CopyServices
@@ -71,7 +80,11 @@ export async function mountChat(options: {
 }) {
   holdAnimationFrames()
   const { server } = options
-  const view = { tabs: options.tabs, activeTab: first }
+  const view = {
+    tabs: options.tabs,
+    activeTab: first,
+    temporaryTab: options.temporaryTab ?? null,
+  }
   server.json('GET', viewPath, {
     view: { ...view, fileList: 'changes', tool: 'terminal' },
   })
@@ -96,16 +109,25 @@ export async function mountChat(options: {
  * Names and draws the file and diff tabs with the real tab of the Files
  * screens, as the app does. Each tab takes the label that the Worker sends
  * for its path: the path with the fake secret value hidden. So a name that
- * the row takes from a real path shows the secret value.
+ * the row takes from a real path shows the secret value. The tab that
+ * `temporary` names is the temporary tab: it draws in italics, and Keep open
+ * of its tab menu calls `keep` of the navigation, which changes no view.
  */
-export function fileTabs(navigation: FilesNavigation): RenderTab {
+export function fileTabs(
+  navigation: FilesNavigation,
+  temporary: TemporaryTab | null = null,
+): RenderTab {
   return (tab) => {
     const label = labelOf(tab.path)
+    const isTemporary =
+      temporary !== null &&
+      temporary.kind === tab.kind &&
+      temporary.path === tab.path
     return {
       title: fileTabName(tab, label),
       draw: (draw) =>
         draw.kind === 'lifted' ? (
-          <LiftedFileTab label={label} tab={tab} />
+          <LiftedFileTab label={label} tab={tab} temporary={isTemporary} />
         ) : (
           <FileTabItem
             close={draw.close}
@@ -116,9 +138,11 @@ export function fileTabs(navigation: FilesNavigation): RenderTab {
             onClose={() => {}}
             selected={false}
             tab={tab}
+            temporary={isTemporary}
           />
         ),
       show: () => navigation.navigate(tab),
+      keep: isTemporary ? () => navigation.keep(tab) : null,
     }
   }
 }

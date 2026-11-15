@@ -22,6 +22,25 @@ export const tabStates = [
 ] as const
 
 /**
+ * The temporary tab, from decisions 284 to 287: the one file or diff tab
+ * that the next press on a file or a diff replaces. Its title shows in
+ * italics. With `none`, every tab is kept. `opened` draws the file or the
+ * diff of `tab` in the temporary tab, at the end of the row. `replaced`
+ * draws it in the place of the file that the temporary tab held, before
+ * the tab of a new session that opened after that file. `kept` draws the
+ * file that the temporary tab held, which a double-click kept, then the
+ * file of `tab` in a new temporary tab at the end of the row. A session or
+ * the code file in `tab` draws no temporary tab, and a phone row shows no
+ * file tabs.
+ */
+export const temporaryTabStates = [
+  'none',
+  'opened',
+  'replaced',
+  'kept',
+] as const
+
+/**
  * The composer: empty, with a message that is not sent yet, with attached
  * files, with its picker open, or with a message for an agent that is not
  * connected. Or with a message in a session whose starter's login is not

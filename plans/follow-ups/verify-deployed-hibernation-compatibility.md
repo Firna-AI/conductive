@@ -9,7 +9,7 @@
 - **Terms:**
   - **Hibernation:** Cloudflare keeps the accepted client sockets of an idle Durable Object open while the object leaves memory. The next event starts a new instance of the object.
   - **Mac broker:** the Durable Object that relays the Mac commands of one user. It uses the same `Workspace` class as each workspace object.
-  - **Older runner:** the agent runner of a cloud computer that started from an org image built before the deploy. Each build of an org image installs the newest runner.
+  - **Older runner:** the agent runner of a cloud computer that started from an org image built before the deploy. Each build of an org image installs the newest runner. The runner must use runner protocol version 2, because a workspace refuses each other version, as `docs/protocol/version-pins.md` says.
 - **Background:**
   - The workspace object accepts the events socket of each browser tab and the runner socket through the hibernation API. The Mac broker accepts the socket of the Mac app in the same way.
   - At a wake, the object restores each open socket from its saved state. It sends no second history, `welcome`, or `device.connected`.
@@ -36,7 +36,7 @@
   - The merged change on the test deployment. Each push to `main` deploys it, as `docs/automatic-deploys.md` says.
   - A GitHub account with app access, as `docs/protocol/waitlist.md` says, and an org with a test workspace.
   - The Mac app from a published release before this change, such as `0.3.0`, signed in with that account.
-  - A workspace whose cloud computer started from an org image built before the deploy.
+  - A workspace whose cloud computer started from an org image built before the deploy, with a runner of protocol version 2.
   - For the suspension step only, an operator account, which the `OPERATOR_GITHUB_IDS` setting of the deployment names.
 - **Done when:** Each step passes on the deployed app. The record names the browser, the Mac app version, the org image build of the cloud computer, the workspace, each action, and its result. Each defect gets its own follow-up item. The record holds no credential, token, or personal data.
 - **Related:** [measure-deployed-durable-object-idle-usage.md](measure-deployed-durable-object-idle-usage.md): the other post-merge task of the same change. The two tasks need no fixed order.

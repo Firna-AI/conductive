@@ -63,10 +63,20 @@ The Durable Object runs the gates itself.
   commands use it too.
 - The runner sends `hello` first, with `RUNNER_PROTOCOL_VERSION` and its
   workspace ID. A new runner connection closes the previous one.
-- The runner version must meet the workspace's stored minimum version.
-  A missing pin counts as version 1. A lower version closes the connection
-  before the welcome or any command. The Worker logs an operator warning.
-  It adds no app message.
+- The hello parser accepts any positive safe integer version, so the handshake owns
+  each version refusal. The handshake accepts only
+  `RUNNER_PROTOCOL_VERSION`. It closes any other version before the welcome
+  or any command, and the Worker logs an operator warning.
+- A version below `RUNNER_PROTOCOL_VERSION` also fails each queued and
+  running turn with `runner_protocol_unsupported`, through
+  `TurnLifecycle.runnerEnded`. It fails a start that waits in its runner
+  phase through the existing start failure path. It leaves the login
+  metadata of each session as it was. A higher version changes no turn
+  and no start.
+- After that check, the runner version must meet the workspace's stored
+  minimum version. A missing pin counts as version 1. A lower version, or
+  a missing workspace record, closes the connection before the welcome or
+  any command. It changes no turn and no start, and adds no app message.
 - `AuthenticatedRunner` keeps the token hash of its connection. It checks
   the token rule again before each message that it sends or receives, and
   every 15 seconds while the connection is idle, through the `runner`
@@ -78,8 +88,9 @@ The Durable Object runs the gates itself.
   object.
 - Both agents accept the login kinds `token` and `api-key`. A `token` is a
   Claude subscription token or a Codex ChatGPT sign-in.
-- The runner's declared login kinds and the shared protocol rule also
-  govern delivery. An older runner gets no ChatGPT sign-in command.
+- The runner's declared login kinds and the shared rule
+  `runnerSupportsLogin` also govern delivery. A runner without a declared
+  list gets no ChatGPT sign-in command.
 - `SessionLogins` reads the login of each runner command. Its credential
   path uses `readLogin` in `login-access.ts`, which calls `resolveLogin`. It
   reads the agent login of a starter or of a linked-session member, for one
@@ -97,8 +108,8 @@ The Durable Object runs the gates itself.
 - Two other paths read a login without `SessionLogins`. `admitFirstMessage`
   in `first-message.ts` calls `resolveLogin` to require a stored login of
   the sender. The [model gateway](../model-gateway/README.md) reads the
-  starter's login with `gatewayLogin` at each model request of a version 2
-  turn. It checks the access of the starter again first.
+  starter's login with `gatewayLogin` at each model request of a turn. It
+  checks the access of the starter again first.
 - The `SessionLogins` metadata path uses `readLoginMetadata`.
   It reads only each starter's membership, suspension, stored login kind,
   login failure state, and share setting.
@@ -113,8 +124,8 @@ The Durable Object runs the gates itself.
   login or a turn token, and the command stays queued. A sender who left
   the org gets neither. [Session logins](integration/README.md#session-logins)
   says when the workspace checks the starter's login. The storage never
-  holds a login or a turn token. A version 2 turn keeps only a random nonce
-  and the login version. So a resend derives the same turn token, also
+  holds a login or a turn token. A turn keeps only a random nonce and the
+  login version. So a resend derives the same turn token, also
   after a restart of the workspace object.
 
 An org suspension keeps chat history and event subscriptions readable.
@@ -170,15 +181,19 @@ access logic, with the access scheduler that the test injects.
   `native:runner:`. They hold the connection ID, the generation, the
   workspace record with the token hash, the stream ID, the protocol version
   of the runner's `hello`, the readiness, and the next check time. They
-  hold no agent login and no turn token. A record saved before the version
-  field counts as version 1 once it has a stream.
+  hold no agent login and no turn token.
+- A restore retires a saved record whose version is not
+  `RUNNER_PROTOCOL_VERSION`, or that has a stream but no version. It
+  closes that socket, and nothing throws in the constructor of the
+  Durable Object. A lower version or a missing version also fails the
+  queued and running turns, as a refused `hello` does.
 - A new connection raises the generation, and a retired connection leaves
   a tombstone. So a closing older socket cannot take back authority.
 - A restore needs the saved connection ID and generation. It sends no
   `welcome`, and it calls no `runnerHello` or `runnerReady` hook. It
   starts no turn and sends no command.
-- Delivery after a restore uses the saved protocol version. So a version 2
-  runner still gets a turn token in each `turn` command, and no login.
+- Delivery after a restore still sends a turn token in each `turn`
+  command, and no login.
 - A ready restored runner attaches the file channel again with the same
   connection ID. A file request that waits stays live work. It ends with
   its result, or with `file_unavailable` when the connection closes.

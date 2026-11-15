@@ -33,27 +33,25 @@ state the requirements.
 - After a text-only turn, each unanswered message moves to a new turn. So
   one message can come first in a `message` command, then in a new `turn`
   command with a new command ID.
-- A `turn` command carries a credential of the session starter, whoever
-  sent the message. Its shape follows the protocol version of the
-  connection's `hello`:
-  - Version 1: each `turn` and `message` command carries the real agent
-    login. The runner keeps the login of the first command of a turn for
-    the whole turn.
-  - Version 2: the `turn` command carries a turn token, with the agent and
-    the login kind. A `message` command carries no credential. The
-    workspace makes the token after it stores the turn as running.
+- The workspace accepts only a `hello` with `RUNNER_PROTOCOL_VERSION`, as
+  [Runner versions](../../../../docs/protocol/version-pins.md#runner-versions)
+  says. Another version gets no `welcome` and no command.
+- A `turn` command carries a turn token for the login of the session
+  starter, whoever sent the message, with the agent and the login kind. A
+  `message` command carries no credential. The workspace makes the token
+  after it stores the turn as running. No command carries a real login.
 - `hello.loginKinds` advertises supported logins. An absent list keeps
-  Claude tokens, Claude API keys, and Codex API keys. Version 2 requires
-  an advertised Codex `token` kind for ChatGPT. Version 1 cannot add it.
+  Claude tokens, Claude API keys, and Codex API keys. ChatGPT requires an
+  advertised Codex `token` kind.
 - The Worker checks the login kind before each turn or later message.
   An unsupported login gets no command. Its turn ends once with recovery
-  steps. The version 1 wire login type cannot hold a ChatGPT sign-in.
+  steps.
 - Each `turn` and `message` command also carries the current workspace
   branch and target branch in `branches`, as
   [History and event order](../../history.md) says.
 - No stored command holds a login or a turn token. Each send adds the
-  credential again. A resent version 2 `turn` command carries the same
-  token, also after a failed send or a restart of the workspace object.
+  credential again. A resent `turn` command carries the same token, also
+  after a failed send or a restart of the workspace object.
 - An interrupt for a turn that the runner does not run still gets
   `turn.completed` with state `stopped`.
 - A new stream gets each command other than `report.refresh` only after its

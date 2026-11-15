@@ -105,14 +105,14 @@ export class RunnerChannel {
       )
       if (!welcome) return
       active.streamId = message.streamId
-      active.protocolVersion = message.protocolVersion
+      active.protocolVersion = welcome.protocolVersion
       active.loginKinds = message.loginKinds
       active.ready = welcome.ready
       await this.connections.persist(active)
       if (active.ready) this.connections.attachFiles(active)
       await active.peer.send({
         type: 'welcome',
-        protocolVersion: message.protocolVersion,
+        protocolVersion: welcome.protocolVersion,
         streamId: message.streamId,
         confirmedThrough: welcome.cursor,
       })

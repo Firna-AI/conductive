@@ -45,6 +45,14 @@ async function runningFixture() {
   const { message } = await fixture.send(session.id, 'original')
   const turn = messageCommands(runner, 'original')[0]
   if (turn?.type !== 'turn') throw new Error('The original turn is missing.')
+  const gateway = await fixture.chat.store.read(
+    WORKSPACE_ID,
+    async (view) => (await view.turn(turn.turnId))?.gateway,
+  )
+  expect(gateway).toEqual({
+    nonce: expect.stringMatching(/^[A-Za-z0-9_-]{43}$/),
+    loginVersion: TEST_TIME,
+  })
   const failedSession = {
     ...session,
     title: 'Check this code',
@@ -61,6 +69,7 @@ async function runningFixture() {
     nextTurnId: null,
     started: true,
     startedAt: TEST_TIME,
+    gateway,
   }
   const sentMessage = { ...message, state: 'sent' as const }
   return {
@@ -136,7 +145,7 @@ it('keeps the full failed receipt after a crash immediately after its commit', a
   expect(runner.pendingEvents()).toEqual([])
   expect(runner.received.at(-1)).toEqual({
     type: 'welcome',
-    protocolVersion: 1,
+    protocolVersion: 2,
     streamId: 'fake-stream-1',
     confirmedThrough: 2,
   })
@@ -234,11 +243,36 @@ it('keeps the full accepted retry after a crash immediately after its commit', a
       message: { id: 'retry-message', state: 'sent' },
     },
   ])
+  const dispatched = messageCommands(runner, 'retry-message')[0]
+  if (dispatched?.type !== 'turn') throw new Error('The retry turn is missing.')
+  expect(dispatched).not.toHaveProperty('login')
+  expect(
+    await fixture.chat.turnTokens.check(
+      WORKSPACE_ID,
+      dispatched.credential.token,
+    ),
+  ).toEqual({
+    ok: true,
+    login: {
+      agent: 'claude',
+      kind: 'api-key',
+      secret: `secret-${fixture.owner.id}-claude`,
+    },
+  })
   expect(await lifecycleSnapshot(fixture)).toEqual({
     sessions: [{ ...retrySession, activeTurnStartedAt: TEST_TIME }],
     turns: [
       failedTurn,
-      { ...retryTurn, state: 'running', started: true, startedAt: TEST_TIME },
+      {
+        ...retryTurn,
+        state: 'running',
+        started: true,
+        startedAt: TEST_TIME,
+        gateway: {
+          nonce: expect.stringMatching(/^[A-Za-z0-9_-]{43}$/),
+          loginVersion: TEST_TIME,
+        },
+      },
     ],
     commands: [retryCommand],
     messages: [sentMessage, { ...retryMessage, state: 'sent' }],

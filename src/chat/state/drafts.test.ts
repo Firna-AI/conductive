@@ -16,6 +16,7 @@ const codex: AgentChoice = {
   agent: 'codex',
   model: 'GPT-6.1 Sol',
   effort: 'medium',
+  fast: false,
 }
 const shortly = { timeout: 10_000 }
 const file = () => new File(['png'], 'overlap.png', { type: 'image/png' })

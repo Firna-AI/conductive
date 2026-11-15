@@ -27,6 +27,7 @@ export function CommandLine(props: { command: string }) {
           ${' '}
         </span>
       }
+      syntax="shell"
       text={props.command}
     />
   )

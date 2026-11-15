@@ -31,6 +31,8 @@ export function ActionButton(props: {
   tone?: ActionTone
   disabled?: boolean
   busy?: boolean
+  /** Whether the text that the button opens in place shows in full. */
+  expanded?: boolean
   /** The command of the keys that the button runs. */
   shortcut?: ShortcutCommandId
 }) {
@@ -44,6 +46,7 @@ export function ActionButton(props: {
       busy={props.busy}
       buttonRef={props.shortcut === undefined ? undefined : keyRef}
       disabled={props.disabled}
+      expanded={props.expanded}
       icon={props.icon}
       labelStyle={{
         fontSize: control.labelSize,

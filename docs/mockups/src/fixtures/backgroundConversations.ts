@@ -49,7 +49,7 @@ const waitingWork: readonly ChatItem[] = [
 /**
  * The chats of a turn that waits for its background work. The turn stays
  * open after the reply while the watch of the checks runs, and shows as a
- * running turn. The checks still run 120 minutes after the wait started, so
+ * running turn. The checks still run 30 days after the wait started, so
  * the runner stops the work at the time limit. The turn ends as finished,
  * with its duration, its files, and the end reason.
  */

@@ -1,7 +1,7 @@
 import type {
   RunnerEvent,
   RunnerReportRefresh,
-  WorkspaceToRunnerV2 as WorkspaceToRunner,
+  WorkspaceToRunner,
 } from '../../src/shared/runner'
 import type {
   RunnerConnectionRequest,

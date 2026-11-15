@@ -3,6 +3,7 @@ import { mapTool } from './tool'
 import { assistantError, claudeOutcome } from './claude-outcome'
 import { ClaudeMessages } from './claude-message'
 import { ClaudeBackground } from './claude-background'
+import { ClaudeSpeed } from './claude-speed'
 import type { ProviderEvent } from './types'
 
 export function synthetic(text: string): boolean {
@@ -30,6 +31,7 @@ export class ClaudeEvents {
   private readonly emit: (event: ProviderEvent) => void
   private readonly messages: ClaudeMessages
   private readonly background: ClaudeBackground
+  readonly speed: ClaudeSpeed
   stopped = false
 
   constructor(
@@ -37,12 +39,14 @@ export class ClaudeEvents {
     emit: (event: ProviderEvent) => void,
     hasOutstanding: (uuid: string) => boolean,
     background = new ClaudeBackground(emit),
+    fast = false,
   ) {
     this.ids = ids
     this.hasOutstanding = hasOutstanding
     this.emit = emit
     this.background = background
     this.messages = new ClaudeMessages(emit)
+    this.speed = new ClaudeSpeed(emit, fast)
   }
 
   accept(value: unknown): void {
@@ -72,6 +76,7 @@ export class ClaudeEvents {
       this.userIds = [this.ids.get(input.user_message_uuid) ?? '']
     }
     if (input.parent_tool_use_id) return
+    this.speed.accept(input)
     if (input.type === 'stream_event') this.partial(object(input.event))
     if (input.type === 'system' && input.subtype === 'thinking_tokens')
       this.emit({ type: 'thinking' })

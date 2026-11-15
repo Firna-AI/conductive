@@ -124,7 +124,7 @@ describe('AccountScreen', () => {
     const app = await startedApp(server)
     const view = mountScreen(
       app,
-      <AccountScreen connect="codex" tab="general" user={fakeUser} />,
+      <AccountScreen connect="codex" tab="agents" user={fakeUser} />,
     )
     await settle()
     const [claude, codex] = listItems(view.innerHTML, 'Agents')
@@ -151,7 +151,7 @@ describe('AccountScreen', () => {
     serveAccount(server, [{ ...chatGptLogin, unusableCause: cause }])
     const view = mountScreen(
       app,
-      <AccountScreen connect={null} tab="general" user={fakeUser} />,
+      <AccountScreen connect={null} tab="agents" user={fakeUser} />,
     )
     await settle()
     expect(codexItem(view)).toBe(
@@ -186,7 +186,7 @@ describe('AccountScreen', () => {
     }).toEqual({
       general: {
         current: ['General'],
-        sections: ['GitHub', 'Agents', 'Invite code'],
+        sections: ['GitHub', 'Invite code'],
         model: false,
         choice: null,
       },

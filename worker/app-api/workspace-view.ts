@@ -1,4 +1,5 @@
 import type {
+  TemporaryTab,
   WorkspaceTab,
   WorkspaceView,
 } from '../../src/shared/workspace-view'
@@ -25,6 +26,25 @@ function viewTab(value: unknown): WorkspaceTab {
   return invalidView()
 }
 
+function temporaryTab(
+  value: unknown,
+  tabs: readonly WorkspaceTab[],
+): TemporaryTab | null {
+  try {
+    const tab = record(value)
+    if (tab.kind !== 'file' && tab.kind !== 'diff') return null
+    const path = identifier(tab.path)
+    return tabs.some(
+      (open) =>
+        open.kind !== 'session' && open.kind === tab.kind && open.path === path,
+    )
+      ? { kind: tab.kind, path }
+      : null
+  } catch {
+    return null
+  }
+}
+
 export function workspaceViewInput(value: unknown): WorkspaceView {
   const view = record(value)
   if (
@@ -37,9 +57,11 @@ export function workspaceViewInput(value: unknown): WorkspaceView {
       view.tool !== 'desktop')
   )
     return invalidView()
+  const tabs = view.tabs.map(viewTab)
   return {
-    tabs: view.tabs.map(viewTab),
+    tabs,
     activeTab: view.activeTab === null ? null : viewTab(view.activeTab),
+    temporaryTab: temporaryTab(view.temporaryTab, tabs),
     fileList: view.fileList,
     tool: view.tool,
   }
@@ -57,7 +79,13 @@ export async function savedWorkspaceView(
     .bind(workspaceId, userId)
     .first<{ viewJson: string }>()
   if (!row)
-    return { tabs: [], activeTab: null, fileList: 'all', tool: 'terminal' }
+    return {
+      tabs: [],
+      activeTab: null,
+      temporaryTab: null,
+      fileList: 'all',
+      tool: 'terminal',
+    }
   const value: unknown = JSON.parse(row.viewJson)
   return workspaceViewInput(value)
 }

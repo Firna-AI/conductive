@@ -16,6 +16,7 @@ const codex: AgentChoice = {
   agent: 'codex',
   model: 'GPT-6.1 Sol',
   effort: 'medium',
+  fast: false,
 }
 /** The ID of the new session: the first client ID that the chat takes. */
 const created = 'client-1'

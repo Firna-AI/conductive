@@ -1,10 +1,18 @@
 import type { Session } from '../../shared/sessions'
-import type { WorkspaceTab, WorkspaceView } from '../../shared/workspace-view'
+import type {
+  TemporaryTab,
+  WorkspaceTab,
+  WorkspaceView,
+} from '../../shared/workspace-view'
 
 export type TabPlace = { before: WorkspaceTab } | { after: WorkspaceTab }
 
-/** One file or diff keeps its identity when its display mode changes. */
-export function tabKey(tab: WorkspaceTab): string {
+/**
+ * The key of a tab, or of the mark of the temporary tab. One file or diff
+ * keeps its identity when its display mode changes, so the mark, which
+ * names no mode, has the key of its tab.
+ */
+export function tabKey(tab: WorkspaceTab | TemporaryTab): string {
   return tab.kind === 'session'
     ? `session:${tab.sessionId}`
     : `${tab.kind}:${tab.path}`
@@ -78,7 +86,13 @@ function sameOrder(
   )
 }
 
-/** Moves one tab beside a visible neighbour, and keeps the other tabs in place. */
+/**
+ * Moves one tab beside a visible neighbour, and keeps the other tabs in
+ * place. A move that changes the place of the temporary tab keeps it: the
+ * view drops its mark with the new order. The drop of a drag, Move left,
+ * and Move right all move through here. A move that changes no place gives
+ * the same view object, so the mark stays and nothing saves.
+ */
 export function moveTab(
   view: WorkspaceView,
   row: readonly WorkspaceTab[],
@@ -97,5 +111,8 @@ export function moveTab(
   const at = tabs.findIndex((item) => tabKey(item) === neighbour)
   if (at < 0) return view
   tabs.splice(at + ('after' in place ? 1 : 0), 0, moving)
-  return sameOrder(tabs, view.tabs) ? view : { ...view, tabs }
+  if (sameOrder(tabs, view.tabs)) return view
+  const mark = view.temporaryTab
+  const kept = mark !== null && tabKey(mark) === key
+  return { ...view, tabs, temporaryTab: kept ? null : mark }
 }

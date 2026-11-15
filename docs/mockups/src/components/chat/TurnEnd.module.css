@@ -73,6 +73,38 @@ a.chip:hover {
   line-height: 1.4;
 }
 
+/*
+ * A fast turn that ran at standard speed: its note beside the duration, and
+ * the files under the note, 6 px apart, as two lines of chips are.
+ */
+.facts {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  min-width: 0;
+}
+
+/*
+ * The note of the speed: muted text with the gauge icon. One line has the
+ * height of a chip, as the files that the cloud computer could not read
+ * have. A narrow chat wraps it, and the icon stays on its first line.
+ */
+.speed {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  min-width: 0;
+  padding: 3px 0;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  line-height: 18px;
+}
+
+.speed .icon {
+  margin-top: 3px;
+}
+
 /* The files past the list: plain text in the row of the chips. */
 .more {
   display: inline-flex;

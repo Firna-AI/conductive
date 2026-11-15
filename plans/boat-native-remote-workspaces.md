@@ -6729,12 +6729,10 @@ its open checks to the work after the first merge into `main`.
 - [ ] Check that chat survives a restart: send a message before the
       runner connects, deploy again, then check the history, the event
       numbers, and the delivery of the waiting message.
-- [ ] Run the live check of `plans/follow-ups/agent-login-in-tool-processes.md`
-      with a Claude subscription token, an Anthropic API key, and an
-      OpenAI API key: a server that a tool starts cannot read the login
-      during or after the turn. Then delete that item. Moved from
-      Milestone 7x on 8 November 2026, because it needs the deployed test
-      app and the three logins from the user.
+- [x] Close the version 1 tool-process login check. Cal approved removal
+      of protocol version 1 on 12 November 2026. No runner receives a real
+      agent login now. This removal deletes the resolved follow-up item.
+      The three-login live check is no longer applicable.
 
 ## Milestone 9: Files backend
 

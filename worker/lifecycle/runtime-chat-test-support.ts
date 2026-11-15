@@ -13,7 +13,7 @@ export async function connectRuntimeChat(
   let eventNumber = 0
   runner.send({
     type: 'hello',
-    protocolVersion: 1,
+    protocolVersion: 2,
     workspaceId,
     streamId: 'runtime-state-stream',
   })

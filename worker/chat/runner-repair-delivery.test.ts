@@ -147,7 +147,7 @@ it('redelivers one durable repair after restart between marker commit and first 
   expect(runner.received).toEqual([
     {
       type: 'welcome',
-      protocolVersion: 1,
+      protocolVersion: 2,
       streamId: 'fake-stream-1',
       confirmedThrough: 0,
     },
@@ -165,7 +165,7 @@ it('redelivers one durable repair after restart between marker commit and first 
   expect(runner.received.slice(1)).toEqual([
     {
       type: 'welcome',
-      protocolVersion: 1,
+      protocolVersion: 2,
       streamId: 'fake-stream-1',
       confirmedThrough: 0,
     },
@@ -201,7 +201,7 @@ it('bounds welcome only for the stream whose repair has not been sent', async ()
   )
   expect(second.received.at(-1)).toEqual({
     type: 'welcome',
-    protocolVersion: 1,
+    protocolVersion: 2,
     streamId: 'second',
     confirmedThrough: 3,
   })

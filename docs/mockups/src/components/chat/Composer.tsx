@@ -62,6 +62,11 @@ export type ComposerState = {
    */
   sessionAgent?: AgentKey
   /**
+   * The composer of a session tab, where the key of Fast mode runs, so the
+   * Fast row of the picker shows that key (fast mode decision 258).
+   */
+  fastKey?: boolean
+  /**
    * The models that the picker leaves out: in a session of the viewer on an
    * own endpoint login, the models that the model list of the endpoint does
    * not name.
@@ -181,6 +186,7 @@ export function Composer(props: ComposerState & { lines?: number }) {
             ) : null}
             <ModelPicker
               choice={props.choice}
+              fastKey={props.fastKey}
               hiddenModels={props.hiddenModels}
               open={props.picker}
               sessionAgent={props.sessionAgent}

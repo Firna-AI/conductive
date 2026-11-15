@@ -4,6 +4,7 @@ import type {
   Routine,
   RoutineInactiveReason,
 } from '../../src/shared/routines'
+import { modelChoice } from '../app-api/models'
 import { choice } from '../chat/inputs'
 import type { AppDependencies, AppEnv } from '../env'
 import { HttpError } from '../http'
@@ -37,7 +38,10 @@ export async function prepareRoutine(
     (sectionId !== undefined && typeof sectionId !== 'string')
   )
     throw invalidRoutineInput()
-  const selectedChoice = choice(field('choice', previous?.choice))
+  const selectedChoice = modelChoice(
+    env,
+    choice(field('choice', previous?.choice)),
+  )
   await requireRoutineRepository(env.DB, orgId, repositoryId)
   const section = await routineSection(env.DB, orgId, sectionId)
   if (!section) throw sectionNotFound()

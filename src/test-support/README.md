@@ -4,6 +4,8 @@ Use these modules only in development and tests.
 The production Worker does not import them.
 They use the same contracts as the real API.
 The fixtures reuse the mockup data and keep all dates deterministic.
+The model list copies the fast mark of each mockup model, so the menus of
+Opus 5.5, GPT-6.1 Sol, and GPT-6 Astra show the Fast switch.
 Workspace records include their number and canonical link on `FAKE_ORIGIN`.
 Each record also gives the GitHub summary of its mockup workspace.
 The default workspace takes the summary of the chosen banner instead, `ready-to-merge` by default, so its list mark and its bar agree.
@@ -67,6 +69,10 @@ paths hold a fake secret value, and their records carry the labels of the
 mockups as display paths, in the file lists, the reads of the seed script,
 and the end of each finished turn. `fixtures/masked-paths.ts` holds them.
 
+`savedLists: false` leaves the recorded file reports out of the event
+history, as for a new workspace whose runner has not reported its lists.
+Override the tree and changes routes too, such as with a 503 reply.
+
 Writes return recorded replies, except org moves.
 `fake-org-order-routes.ts` serves `PUT /api/org-order` and saves its order for later org list reads.
 It validates the shared move request and returns 204, or the Worker's validation and visibility errors.
@@ -104,7 +110,7 @@ The default org is `acme`. The default workspace is `checkout-autocomplete`.
 `FAKE_IDS` in `fixtures/core.ts` names the shared sample IDs.
 Options select the org role, workspace state, conversation, and GitHub banner state.
 `github` sets the GitHub summary of the default workspace record, and `null` gives none.
-Without it, `fakeGitHubSummary` gives the summary of the banner and its checks, as the Worker copies it.
+Without it, `fakeGitHubSummary` gives the summary of the banner, as the Worker copies it.
 `workspaceFixtures(state, github)` takes that summary for the default workspace.
 The dev fake of `../app/dev/` uses `fakeGitHubSummary` too.
 Its seed makes `email-dark-mode` work without GitHub state, so its grey mark moves.

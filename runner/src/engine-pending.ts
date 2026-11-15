@@ -1,5 +1,5 @@
 import type { AgentChatEvent } from '../../src/shared/chat-events'
-import type { RunnerTurnV2 as RunnerTurn } from '../../src/shared/runner'
+import type { RunnerTurn } from '../../src/shared/runner'
 import { cancelable } from './engine-cancel'
 import type { EngineOptions } from './engine-session'
 

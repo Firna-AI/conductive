@@ -26,7 +26,7 @@ function count(cells: string[][], className: string): number {
 
 describe('WorkspaceMark', () => {
   test('runs a light around the ring while the agent works', () => {
-    const cells = cellClasses('checks-passed', 'working')
+    const cells = cellClasses('ready-to-merge', 'working')
     expect(count(cells, styles.chase)).toBe(8)
     expect(cells[4]).not.toContain(styles.chase)
     expect(cells[4]).not.toContain(styles.litWhenStill)
@@ -49,10 +49,26 @@ describe('WorkspaceMark', () => {
   })
 
   test('keeps the mark still for other GitHub states and for an archive', () => {
-    expect(count(cellClasses('checks-passed', 'ready'), styles.chase)).toBe(0)
+    expect(count(cellClasses('ready-to-merge', 'ready'), styles.chase)).toBe(0)
     expect(count(cellClasses(null, 'ready'), styles.chase)).toBe(0)
     expect(count(cellClasses('checks-running', 'archived'), styles.chase)).toBe(
       0,
     )
+  })
+
+  test.each([
+    ['checks-running', styles.neutral],
+    ['checks-failed', styles.danger],
+    ['ready-to-merge', styles.success],
+    ['merged', styles.merged],
+    ['conflict', styles.warning],
+    ['changes-requested', styles.warning],
+    ['draft', styles.neutral],
+    ['blocked', styles.warning],
+  ] as const)('gives %s the tone of the pull request bar', (github, tone) => {
+    const html = renderToStaticMarkup(
+      <WorkspaceMark github={github} status="ready" />,
+    )
+    expect(html).toContain(tone)
   })
 })

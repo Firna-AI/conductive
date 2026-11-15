@@ -103,6 +103,7 @@ const verbs = {
   'remove-command': 'remove',
   'stop-workspace': 'stop',
   'keep-workspace': 'keep',
+  'extend-workspace': 'extend',
 } as const satisfies Record<SettingsChange['action'], string>
 
 /**
@@ -132,6 +133,11 @@ const titles = {
     done: 'Stopped',
     'done-not-saved': 'Stopped, not saved',
     failed: 'Not stopped',
+  },
+  'extend-workspace': {
+    done: 'Extended',
+    'done-not-saved': 'Extended, not saved',
+    failed: 'Not extended',
   },
   'keep-workspace': {
     done: 'Kept until you stop',

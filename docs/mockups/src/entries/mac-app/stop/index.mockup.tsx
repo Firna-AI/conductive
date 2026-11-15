@@ -34,7 +34,7 @@ export const macStop = defineScreen({
       slug: 'failed',
       title: 'Not stopped',
       description:
-        'The Mac could not stop the 15 minutes. The bar names the cause, and keeps the time left and Stop, so the user can stop them again. A Stop that waited while the Mac reconnected shows the same way: it never goes to the new connection by itself.',
+        'The Mac could not stop the 15 minutes. The bar names the cause, and keeps the time left, Extend, and Stop, so the user can stop them again. A Stop that waited while the Mac reconnected shows the same way: it never goes to the new connection by itself.',
       rationale:
         'A change that failed stays in view until the next Stop of the workspace, and the app does not try again by itself (7 November 2026).',
       props: { change: 'stop-failed' },

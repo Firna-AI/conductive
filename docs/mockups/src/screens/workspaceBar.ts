@@ -15,7 +15,7 @@ export function barOf(
 ): BarModel {
   return barModel({
     banner: state.banner,
-    localWork: state.localWork === 'changes',
+    localWork: state.localWork,
     access: state.access,
     method: viewerMergeMethod,
     appAction: state.appAction,

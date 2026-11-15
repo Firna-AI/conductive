@@ -16,6 +16,6 @@
   - **C.** Create each temporary folder of the Worker test helpers with `fsPromises.mkdtempDisposable()` under `await using`. Start with `buildSiteAssets`, then move the other helpers that call `mkdtemp`. Write the rule in `worker/test-support/README.md`. A helper that gives its folder to a caller needs `AsyncDisposableStack`, and that needs `esnext.disposable` in the `lib` of the test configuration. Effort: Medium.
 - **Left out:** A lint against a plain `mkdtemp`: a new lint needs the user, and C removes the wrong case without one. A custom `withTemporaryFolder` helper: C gets the same result from a Node built-in.
 - **Wider fix:** C.
-- **Previous examples:** Finding 1 of the review of pull request #130. `plans/conductive-desktop-notarization.md` recorded a cancelled release that bypassed the cleanup of its temporary credentials.
+- **Previous examples:** Finding 1 of the review of pull request #130. The plan [`plans/conductive-desktop-notarization.md`](https://github.com/Firna-AI/conductive/blob/0692f4ef2/plans/conductive-desktop-notarization.md), since deleted, recorded a cancelled release that bypassed the cleanup of its temporary credentials.
 - **Recommendation:** C. One built-in ties every removal to its creation.
 - **Action:** fix after merge, apply C, because it changes test helpers outside the diff of pull request #130.

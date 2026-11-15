@@ -5,7 +5,7 @@ import { join } from 'node:path'
 import { onTestFinished, vi } from 'vitest'
 
 import type { ChangedFile } from '../../src/shared/files'
-import type { WorkspaceToRunnerV2 as WorkspaceToRunner } from '../../src/shared/runner'
+import type { WorkspaceToRunner } from '../../src/shared/runner'
 import type { RunnerConnection as TransportRunnerConnection } from '../../src/shared/runner-transport'
 import {
   FakeDurableObjectEndpoint,

@@ -9,7 +9,6 @@ import styles from './SitePage.module.css'
 
 const links: SiteLinks = {
   home: paths.marketing,
-  pricing: paths.pricing,
   docs: paths.docs,
   fromConductor: paths.fromConductor,
   signIn: paths.signIn,
@@ -23,7 +22,7 @@ const year = 2026
  * The content grows, so the footer of a short page stays at the bottom. A
  * bare page, such as the page before GitHub on the host of the app, has
  * only the wordmark in its header and no footer. `current` is the section
- * of the page, which the header marks, such as the docs or the pricing page.
+ * of the page, which the header marks, such as the docs.
  */
 export function SitePage(props: {
   viewport: Viewport

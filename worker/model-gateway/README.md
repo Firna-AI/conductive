@@ -7,16 +7,11 @@ Before it obtains a workspace endpoint, the gateway checks in D1 that the worksp
 An unknown or unavailable workspace gets `turn_token_invalid` without a Durable Object call.
 The gateway calls `checkTurnToken` through the trusted workspace runtime before each upstream request.
 It replaces the token with the starter's real login.
-Runner delivery gives a token in each `turn` command to a runner of protocol version 2.
-A runner of protocol version 1 gets only the real login kinds it supports.
-It never gets a ChatGPT sign-in.
-Own endpoint turns require protocol 2.
-Their runner commands use the existing API-key credential mode with a turn token.
+Runner delivery gives a token in each `turn` command. No runner command carries a real login.
+Own endpoint turns use the API-key credential mode with a turn token.
 Their real address and key stay in Worker-only `AgentLogin` values.
-Protocol 1 uses the existing unusable-login failure before dispatch.
-The packaged runner and new full image builds use version 2.
-The runner also declares its login kinds in `hello.loginKinds`.
-A version 2 runner without ChatGPT support gets no ChatGPT turn credential.
+The runner declares its login kinds in `hello.loginKinds`.
+A runner without ChatGPT support gets no ChatGPT turn credential.
 The [model gateway protocol](../../docs/protocol/model-gateway.md) states the requirements.
 
 ## Model requests
@@ -249,7 +244,7 @@ The `request` helper of `gatewayHttp` in [http.test-support.ts](http.test-suppor
 - [redact.ts](redact.ts): bounded carry bytes for credential removal from error bodies.
 - [errors.ts](errors.ts): stable gateway refusals in each provider's API shape.
 - [workspace.ts](workspace.ts): `WorkspaceTurnTokens.forRunningTurn` derives a stable token from the turn record.
-  Runner delivery calls it for each version 2 `turn` command, after the running state commits.
+  Runner delivery calls it for each `turn` command, after the running state commits.
   Its caller holds the chat queue, as runner dispatch does.
   It fails the turn and gives no token when the login is missing or changed since the first token.
   It does the same for a login of another kind than the dispatch read.
@@ -273,9 +268,9 @@ The `request` helper of `gatewayHttp` in [http.test-support.ts](http.test-suppor
   The common publisher sends one failed end before its session update.
   The runner's own end then stays as late data, with its changed files.
 - [fixture.test-support.ts](fixture.test-support.ts): a running turn whose session starter differs from its message sender.
-- [delivery.test.ts](delivery.test.ts): version 2 `turn` and `message` commands for each login kind, the real login at the upstream, no token in storage, a changed prefix, and Stop.
-- [delivery-runtime.test.ts](delivery-runtime.test.ts): the same version 2 `turn` command after an eviction of the workspace object, with only the nonce and the login version in SQLite.
-- [../chat/gateway-dispatch.test.ts](../chat/gateway-dispatch.test.ts): a failed version 2 send keeps the token state, so the resend carries the same token before the waiting message.
+- [delivery.test.ts](delivery.test.ts): `turn` and `message` commands for each login kind, the real login at the upstream, no token in storage, a changed prefix, and Stop.
+- [delivery-runtime.test.ts](delivery-runtime.test.ts): the same `turn` command after an eviction of the workspace object, with only the nonce and the login version in SQLite.
+- [../chat/gateway-dispatch.test.ts](../chat/gateway-dispatch.test.ts): a failed send keeps the token state, so the resend carries the same token before the waiting message.
 - [workspace.test.ts](workspace.test.ts) and [login.test.ts](login.test.ts): token lifetime, login changes, Stop across a disconnect, event order, late data, and retry.
 - [endpoint-login.test.ts](endpoint-login.test.ts): both agents' endpoint routes and authentication, credential-free runner commands, revalidation, redirects, and unreachable endpoints.
 - [endpoint-errors.test.ts](endpoint-errors.test.ts): split endpoint and key redaction in errors and allowed headers.

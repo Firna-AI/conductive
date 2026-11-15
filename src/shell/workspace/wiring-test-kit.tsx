@@ -1,6 +1,7 @@
 import type { AppServices } from '../../app/services'
 import { memoryNavigation, NavigationContext } from '../../app/navigation'
 import type { TerminalSocket } from '../../app/terminal-transport'
+import { accessibleName, byLabel } from '../../test-support/dom-queries'
 import type { FakeApiServer } from '../../test-support/fake-api'
 import { Shell } from '../Shell'
 import { mountScreen, settle } from '../test-mount'
@@ -59,6 +60,15 @@ export function linkTo(root: ParentNode, href: string): HTMLAnchorElement {
 /** Whether each link to `href` is the current one, as `aria-current` says. */
 export function currents(root: ParentNode, href: string): (string | null)[] {
   return linksTo(root, href).map((link) => link.getAttribute('aria-current'))
+}
+
+/** The name of each tab of the row, as a screen reader reads its control. */
+export function tabNames(view: HTMLElement): string[] {
+  const row = byLabel('Sessions and files', view)
+  return Array.from(row.querySelectorAll('li'), (item) => {
+    const control = item.querySelector('a, button')
+    return control ? accessibleName(control) : ''
+  })
 }
 
 /** A terminal socket that records what the codec sends, and its close. */

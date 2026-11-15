@@ -121,7 +121,12 @@ it('serves MCP discovery, create, and list over JSON lines with the calling turn
           workspace: {
             orgId: 'org-a',
             sectionId: 'chosen-a',
-            choice: { agent: 'claude', model: 'mcp-model', effort: 'max' },
+            choice: {
+              agent: 'claude',
+              model: 'mcp-model',
+              effort: 'max',
+              fast: false,
+            },
           },
           sessionId: 'created-session',
         },

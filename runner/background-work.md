@@ -61,9 +61,9 @@ only from an org image built with this runner. Codex turns do not wait.
 
 ## The time limit
 
-- The turn owns its wait clock. The first wait sets a deadline 120 minutes
+- The turn owns its wait clock. The first wait sets a deadline 30 days
   later. Agent work after a wake-up and each later wait use that deadline.
-- A member message during a wait moves the deadline to 120 minutes after
+- A member message during a wait moves the deadline to 30 days after
   the receipt of that message. The runner takes that time before the
   message waits in the queue of its session. A message during agent work
   keeps the deadline.
@@ -74,6 +74,9 @@ only from an org image built with this runner. Codex turns do not wait.
   its files, and `endReason: background_work_limit`.
 - A timer callback that comes early sets a new timer for the rest of the
   delay. So a clock that moves back cannot lose the deadline.
+- One timer waits for at most `MAX_TIMER_MS`, about 24.8 days. Node fires a
+  longer timer after 1 ms. So the 30-day wait arms a second timer for the
+  rest of the delay.
 - Stop and a shutdown clear the timer. Their stopped end has no end reason.
 - Saved events keep a known `endReason`. So a resend and a restart keep it.
 - Production code uses the fixed limit. `backgroundWorkLimitMs` of
@@ -82,7 +85,8 @@ only from an org image built with this runner. Codex turns do not wait.
 ## Key code
 
 - `src/engine-background.ts`: `BackgroundWait`, the wait clock of one turn,
-  with its deadline, its reset at a member message, and its timer.
+  with its deadline, its reset at a member message, and its timer. It also
+  holds `BACKGROUND_WORK_LIMIT_MS` and `MAX_TIMER_MS`.
 - `src/providers/claude-background.ts`: `ClaudeBackground`, the live tasks,
   the ambient task IDs, the scheduled wake-ups, and the idle state of one
   Claude process.

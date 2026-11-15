@@ -1,8 +1,8 @@
 import type { Agent, AgentChoice } from '../../src/shared/agents'
-import type { AgentChatEvent } from '../../src/shared/chat-events'
+import type { AgentChatEvent, TurnSpeed } from '../../src/shared/chat-events'
 import type { ChangedFile } from '../../src/shared/files'
 import { MACHINE_PATHS } from '../../src/shared/agent-tools'
-import type { RunnerTurnV2 } from '../../src/shared/runner'
+import type { RunnerTurn } from '../../src/shared/runner'
 import type { Checkpoint } from './checkpoint'
 import type {
   ProviderEvent,
@@ -21,7 +21,7 @@ import type { BuiltInstructions } from './instruction-state'
 import type { BackgroundWait } from './engine-background'
 
 export interface ActiveTurn {
-  first: RunnerTurnV2
+  first: RunnerTurn
   retryMessageId: string
   startedAt: number
   messageIds: string[]
@@ -29,6 +29,7 @@ export interface ActiveTurn {
   resolvedMessageIds: Set<string>
   waiting: ProviderInput[]
   output: TurnOutput
+  speed?: TurnSpeed
   stopped: boolean
   provider: ProviderProcess | null
   lifetime: ProviderLifetime | null

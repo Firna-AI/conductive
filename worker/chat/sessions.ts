@@ -16,6 +16,7 @@ export async function createSession(
   dependencies: ChatDependencies,
   sourceSessionId: string | null = null,
 ): Promise<Session> {
+  choice = dependencies.normalizeChoice(choice)
   const metadata = await SessionLogins.initial(
     dependencies,
     id,

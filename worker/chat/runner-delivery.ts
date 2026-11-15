@@ -7,10 +7,7 @@ import {
   type DispatchResult,
   type DispatchState,
 } from './ordered-dispatch'
-import {
-  gatewayRunnerCommand,
-  legacyRunnerCommand,
-} from './runner-gateway-command'
+import { gatewayRunnerCommand } from './runner-gateway-command'
 import type { ChatStore } from './store'
 import type {
   ActiveRunner,
@@ -167,14 +164,11 @@ export class RunnerDelivery {
       outbound,
     )
     try {
-      const outgoing =
-        active.protocolVersion === 2
-          ? await gatewayRunnerCommand(
-              outbound,
-              active.workspace.id,
-              this.forRunningTurn,
-            )
-          : legacyRunnerCommand(outbound)
+      const outgoing = await gatewayRunnerCommand(
+        outbound,
+        active.workspace.id,
+        this.forRunningTurn,
+      )
       if (!outgoing) {
         advance()
         return 'skip'

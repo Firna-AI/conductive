@@ -38,7 +38,7 @@ it('opens the checks from a pull request, and from a branch without one when the
         capabilities: { canWrite: false, mergeMethod: null },
       },
     }),
-    renderRow(branchFeed('no-commits'), { localWork: 'yes' }),
+    renderRow(branchFeed('no-commits'), { localWork: 'changes' }),
     renderRow(branchFeed('no-commits')),
   ]
 

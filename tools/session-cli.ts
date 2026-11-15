@@ -1,5 +1,5 @@
 import type { WorkspaceToolClient } from './client.ts'
-import { cliNumber, parseToolArguments } from './cli-options.ts'
+import { cliFast, cliNumber, parseToolArguments } from './cli-options.ts'
 import {
   createSessionInput,
   readSessionInput,
@@ -64,6 +64,7 @@ export async function runSessionCli(
           model: { agent: values.agent, model: values.model },
         }),
         effort: values.effort,
+        fast: cliFast(values.fast),
         requestId: values['request-id'],
       }
       return args[1] === 'create'

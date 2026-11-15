@@ -18,8 +18,10 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the tools at
   without a mark, as
   [The context folder](repository-folders.md#the-context-folder) says.
   Changes leaves them out.
-- A file opens as a tab in the centre column. Markdown shows rendered, with
-  a switch to its source. Code shows with line numbers and syntax colours.
+- A file opens in a tab of the centre column. A press on a file opens it in
+  the temporary tab, as [Temporary tabs](temporary-tabs.md) says.
+- Markdown shows rendered, with a switch to its source. Code shows with line
+  numbers and syntax colours.
 - The header of a file tab can copy and download the file.
 - Reading a file has a size limit of 5 MiB, or 5,242,880 bytes.
   Reason: Boat's file read stops at 5 MiB, so a file read that falls back
@@ -54,10 +56,12 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the tools at
   from the merge base of the two, as [Base branches](base-branches.md)
   says. Its summary gives the number of changed files and the lines that
   they add and remove.
-- A changed file opens its diff against the base branch as a tab. The
-  diff shows the syntax colours of the file, as code does.
-- Each new file or diff tab opens at the end of the tab row of the centre
-  column, as [The tab row](agents-and-sessions.md#the-tab-row) says.
+- A press on a changed file opens its diff against the base branch. The
+  diff opens in the temporary tab, as a file does. The diff shows the
+  syntax colours of the file, as code does.
+- A new temporary tab opens at the end of the tab row of the centre column.
+  A replaced one keeps its place, as
+  [The tab row](agents-and-sessions.md#the-tab-row) says.
 - The agent runner watches the repository and reports both lists.
   Branch changes count uncommitted and untracked work too.
 - The report of the branch changes also gives the number of commits of
@@ -116,14 +120,15 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the tools at
 - The runner reads one file or one diff on request. When the runner is not
   connected, a file read falls back to Boat's file read.
 - The Durable Object keeps the last tree and the last changes, so both tabs
-  still show them while the sandbox sleeps.
+  still show them while the sandbox sleeps and while it starts again.
 - Reason: Boat's API can run `git` and read files only while the sandbox
   runs, one request at a time, and with no live updates.
 - While the sandbox does not run, a file or diff tab reads nothing. While
-  the sandbox is stopped, or after its later start failed, a tab keeps the
-  file that it already shows, as the lists keep their copy.
+  the sandbox is stopped or starts, or after its later start failed, a tab
+  keeps the file that it already shows, as the lists keep their copy.
 - Otherwise the tab shows the state of the sandbox in place of the file,
-  with the Resume or Try again of that state.
+  with the Resume or Try again of that state. While the sandbox starts, the
+  tab shows that it waits for the sandbox.
 - Opening a file or diff tab resumes a stopped sandbox, as
   [Stop and resume](workspace-life.md#stop-and-resume) says.
 - When the runner cannot read the repository, it sends `files.unavailable`

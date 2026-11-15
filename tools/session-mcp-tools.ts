@@ -48,7 +48,7 @@ export const SESSION_MCP_TOOLS = [
   },
   {
     name: 'create_session',
-    description: `Create a session in this org for the sender of the active calling turn. ${writeAccess} Omitted model or effort uses that sender's saved default, then the app default. Without firstMessage, creates an empty session. A first message can queue a workspace start. The reply keeps acceptance and reports resume status. ${toolContext}`,
+    description: `Create a session in this org for the sender of the active calling turn. ${writeAccess} Omitted model or effort uses that sender's saved default, then the app default. Fast mode requires explicit fast: true for a marked model. Without firstMessage, creates an empty session. A first message can queue a workspace start. The reply keeps acceptance and reports resume status. ${toolContext}`,
     inputSchema: {
       type: 'object',
       properties: {
@@ -67,7 +67,7 @@ export const SESSION_MCP_TOOLS = [
   },
   {
     name: 'send_message',
-    description: `Send text to a session in this org for the sender of the active calling turn. ${writeAccess} An omitted choice keeps the session's model and effort. The message joins a running turn, or opens a linked session when the sender cannot use its starter's login. The reply gives the actual receiving session, message, turn, and resume status. ${toolContext}`,
+    description: `Send text to a session in this org for the sender of the active calling turn. ${writeAccess} An omitted choice keeps the session's model, effort, and fast mode. The message joins a running turn, or opens a linked session when the sender cannot use its starter's login. The reply gives the actual receiving session, message, turn, and resume status. ${toolContext}`,
     inputSchema: {
       type: 'object',
       properties: {

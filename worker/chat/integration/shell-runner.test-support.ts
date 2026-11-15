@@ -31,7 +31,7 @@ export async function connectShellRunner(
   socket.send(
     JSON.stringify({
       type: 'hello',
-      protocolVersion: 1,
+      protocolVersion: 2,
       workspaceId,
       streamId,
     }),

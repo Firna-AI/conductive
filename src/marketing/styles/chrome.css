@@ -202,9 +202,9 @@
 }
 
 /*
- * Below 900 px a desktop header tightens the space around its links, so
- * that Pricing fits too. From 760 px, the links then stay inside the
- * padding of the header. The phone rules below keep their own spacing.
+ * Below 900 px a desktop header tightens the space around its links.
+ * From 760 px, the links then stay inside the padding of the header. The
+ * phone rules below keep their own spacing.
  */
 @media (max-width: 899.98px) {
   .header-nav {

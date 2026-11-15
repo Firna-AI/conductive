@@ -5,7 +5,7 @@ import { FakeApiServer } from '../test-support/fake-api'
 import { FAKE_IDS, FAKE_TIME } from '../test-support/fixtures/core'
 import { createFilesClient, type FetchLike } from './api/files-client'
 import { WorkspaceFiles, type FilesSubscribe } from './model/files-store'
-import type { FilesNavigation, FilesTarget } from './navigation'
+import type { FilesNavigation, FilesTab, FilesTarget } from './navigation'
 
 /** Test kit of the Files screens. Tests only. */
 
@@ -59,11 +59,19 @@ export function envelopeAfter(
   }
 }
 
-/** Addresses that name their target, and the targets of the clicks. */
-export function testNavigation(): FilesNavigation & { visited: FilesTarget[] } {
+/**
+ * Addresses that name their target, the targets of the clicks, and the tabs
+ * of the keeps.
+ */
+export function testNavigation(): FilesNavigation & {
+  visited: FilesTarget[]
+  kept: FilesTab[]
+} {
   const visited: FilesTarget[] = []
+  const kept: FilesTab[] = []
   return {
     visited,
+    kept,
     href: (target) =>
       target.kind === 'list'
         ? `/list/${target.list}`
@@ -71,6 +79,7 @@ export function testNavigation(): FilesNavigation & { visited: FilesTarget[] } {
           ? `/file/${target.mode}/${target.path}`
           : `/diff/${target.path}`,
     navigate: (target) => visited.push(target),
+    keep: (tab) => kept.push(tab),
   }
 }
 

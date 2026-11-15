@@ -5,6 +5,7 @@
 import type { TableCells } from '../../../../src/markdown/table-rows'
 import type { TurnEndReason } from '../../../../src/shared/chat-events'
 import type { LostReason, LostWhat } from '../components/chat/lostCopy'
+import type { StandardSpeedCause } from '../components/chat/speedCopy'
 import { agentStopConversations } from './agentStopConversations'
 import { attachmentConversations } from './attachmentConversations'
 import type { Attachment } from './attachments'
@@ -34,6 +35,7 @@ import { newWorkspaceConversations } from './newWorkspaceConversations'
 import { secretConversations } from './secretConversations'
 import type { LateAnswerItem, SecretRunItem } from './secretRequests'
 import { secretValueConversations } from './secretValueConversations'
+import { speedConversations } from './speedConversations'
 import { tableConversations } from './tableConversations'
 import { unavailableConversations } from './unavailableConversations'
 import { workConversations } from './workConversations'
@@ -109,6 +111,8 @@ export type ChatItem =
       omittedFiles?: number
       /** The cloud computer could not read the changed files. */
       filesUnavailable?: true
+      /** Why a fast turn ran at standard speed (fast mode decision 257). */
+      standardSpeed?: StandardSpeedCause
     }
   | { kind: 'error'; id: string; text: string }
   | { kind: 'working'; id: string; elapsed: string }
@@ -123,6 +127,11 @@ export type ChatItem =
       filesUnavailable?: true
       /** A cause other than the end of the reply ended the turn. */
       endReason?: TurnEndReason
+      /**
+       * Why a fast turn ran at standard speed (fast mode decision 257). A
+       * fast turn at fast speed and a turn without fast mode have none.
+       */
+      standardSpeed?: StandardSpeedCause
     }
   | {
       /** A runner event that the workspace refused (decision 76). */
@@ -196,6 +205,7 @@ export const conversations: Readonly<
   ...secretValueConversations(history),
   ...lostConversations(history),
   ...unavailableConversations({ history, cutOff: cutOffTurn }),
+  ...speedConversations({ history, cutOff: cutOffTurn }),
   ...agentStopConversations(cutOffTurn),
   ...backgroundConversations,
   ...linkedConversations,

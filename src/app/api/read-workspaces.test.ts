@@ -36,8 +36,12 @@ it('preserves each GitHub summary in shell, chat, and member workspace records',
   for (const github of [
     'checks-running',
     'checks-failed',
-    'checks-passed',
+    'ready-to-merge',
     'merged',
+    'conflict',
+    'changes-requested',
+    'draft',
+    'blocked',
     null,
   ]) {
     const workspace = { ...detail.workspace, github }

@@ -21,7 +21,12 @@ it('keeps the turn login and member order when a model change needs a new provid
     name: 'Bob Example',
     email: '2+bob@users.noreply.github.com',
   }
-  next.message.choice = { agent: 'claude', model: 'next-model', effort: 'max' }
+  next.message.choice = {
+    agent: 'claude',
+    model: 'next-model',
+    effort: 'max',
+    fast: false,
+  }
   await h.engine.command({
     ...duringTurn(next),
     type: 'message',
@@ -62,6 +67,7 @@ it('keeps the turn login and member order when a model change needs a new provid
     agent: 'claude',
     model: 'next-model',
     effort: 'max',
+    fast: false,
   })
   expect(
     second.messages.map(({ message }) => [message.id, message.sender.id]),
@@ -85,7 +91,12 @@ it('keeps the turn login and member order when a model change needs a new provid
       sessionId: 'session-1',
       turnId: 'turn-1',
       senderId: 'alice',
-      choice: { agent: 'claude', model: 'test-model', effort: 'high' },
+      choice: {
+        agent: 'claude',
+        model: 'test-model',
+        effort: 'high',
+        fast: false,
+      },
       startedAt: 100,
       messageIds: ['message-1'],
     },

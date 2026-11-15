@@ -75,7 +75,18 @@ export async function createFromTool(
     owner,
     repositoryId: input.repositoryId,
     sectionId,
-    choice: choice({ ...model, effort }),
+    choice: choice({
+      ...model,
+      effort,
+      fast:
+        input.fast === true &&
+        (await services.models()).some(
+          (entry) =>
+            entry.agent === model.agent &&
+            entry.model === model.model &&
+            entry.fast === true,
+        ),
+    }),
     firstMessageId,
     ...(input.firstSessionTitle !== undefined && {
       firstSessionTitle: input.firstSessionTitle,

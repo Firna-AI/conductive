@@ -1,7 +1,7 @@
 import type { Section } from '../shared/sections'
 import type { Workspace } from '../shared/workspaces'
 import type { Change } from './resource'
-import { moveWorkspace, withoutSection } from './sections'
+import { moveWorkspace, reorderSections, withoutSection } from './sections'
 
 /** The list of an org: its sections, and its workspaces in their order. */
 export interface ListData {
@@ -117,6 +117,17 @@ export function sectionCollapsed(
   collapsed: boolean,
 ): ListChange {
   return sectionChanged(sectionId, { collapsed })
+}
+
+/**
+ * A move of a section to `index` of the list, which counts the sections
+ * without the moved one. It applies to the list as it is then.
+ */
+export function sectionMoved(sectionId: string, index: number): ListChange {
+  return (list) => ({
+    ...list,
+    sections: reorderSections(list.sections, sectionId, index),
+  })
 }
 
 /** Deleting a section moves its workspaces to General. */

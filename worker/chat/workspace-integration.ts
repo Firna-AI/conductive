@@ -29,6 +29,7 @@ import {
   type WorkspaceCallbackObservers,
 } from './workspace-callbacks'
 import { QueueGenerations } from './queue-generation'
+import { unsupportedRunnerReason } from './runner-unsupported'
 
 export type WorkspaceCompositionEnv = LifecycleEnvironment
 export type WorkspaceChatResolvers = Partial<
@@ -115,6 +116,8 @@ export function createWorkspaceIntegration(
       runnerDetached: (connectionId) => files.runner.detach(connectionId),
       runnerHello: async (_id, publish) =>
         controller.recoverLifecycle(callbackPublisher(publish)),
+      runnerUnsupported: async () =>
+        controller.runnerProtocolUnsupported(unsupportedRunnerReason),
       ...observeWorkspaceCallbacks(
         {
           turnEnded: async (_id, turnId, publish) => {

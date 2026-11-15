@@ -34,10 +34,8 @@ record of one decision of the change that adds the egress container.
 
 ## No login in the sandbox
 
-- A sandbox with a version pin of 2 or later holds no agent login
-  (decision 120). The version pin of a sandbox is the lowest runner
-  protocol version that its workspace accepts, as
-  [The agent runner](agent-runner.md#the-agent-runner) says.
+- A sandbox holds no agent login (decision 120). This holds whatever the
+  version pin of its workspace.
 - Its agent programs send each model request to the gateway, with the
   turn token of their turn. A settings file in the repository can send
   the requests of Claude to another address, as
@@ -45,12 +43,9 @@ record of one decision of the change that adds the egress container.
   says.
 - The gateway adds the agent login of the turn, and sends the request on
   to the upstream.
-- A runner of protocol version 1 gets the agent login itself with each
-  supported turn, as
-  [Agent logins in a sandbox](isolation.md#agent-logins-in-a-sandbox)
-  says (gateway decision 2).
-  [The agent runner](agent-runner.md#the-agent-runner) states which
-  runner versions a workspace accepts.
+- No runner gets the agent login itself. A workspace accepts only a
+  runner that uses turn tokens, as
+  [Runner versions](version-pins.md#runner-versions) says.
 - A ChatGPT sign-in requires declared runner support. An unsupported turn
   fails before any credential is sent, as
   [Agent logins in a sandbox](isolation.md#agent-logins-in-a-sandbox) says.
@@ -68,7 +63,7 @@ record of one decision of the change that adds the egress container.
 - The runner gives Claude the gateway address and the turn token in a
   profile (gateway decision 11).
 - Only the sandbox user can read the credentials file of the profile.
-  [A sandbox with a version pin of 2 or later](isolation.md#a-sandbox-with-a-version-pin-of-2-or-later)
+  [Turn tokens in a sandbox](isolation.md#turn-tokens-in-a-sandbox)
   states the risk of the file.
 - Each session gets its own profile. So the agent of a session sends only
   the turn token of its own turn.
@@ -200,8 +195,7 @@ record of one decision of the change that adds the egress container.
 - A request carries the turn token only in a header, never in the path or
   the query of its address. Reason: the logs of the Worker keep the
   address of each request.
-- The runner hides the turn token in the text that screens show, as it
-  hides an agent login.
+- The runner hides the turn token in the text that screens show.
 
 ## Checks of each request
 

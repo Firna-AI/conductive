@@ -23,10 +23,9 @@
 - **Options:**
   - **A.** Skip the daily refresh when no workspace of the org was created or started in the last 7 days. A new workspace then fetches the newer commits itself. Effort: Small.
   - **B.** Drop the daily timer. Refresh after a push, at most once in 30 minutes, and before a create when the image is older than a day. A create then waits for the refresh. Effort: Medium.
-  - **C.** Keep the daily timer for paid orgs only, once billing exists. The pricing change of 10 November 2026 offered this for free orgs. Effort: Small.
-  - **D.** Change nothing. Effort: Small.
-- **Left out:** None.
-- **Wider fix:** A. It removes the idle case for every org, paid or free.
+  - **C.** Change nothing. Effort: Small.
+- **Left out:** Keep the daily timer for paid orgs only. On 13 November 2026, the user chose not to release Conductive commercially, so no org will pay.
+- **Wider fix:** A. It removes the idle case for every org.
 - **Previous examples:** Decision 25 D of 5 November 2026 turned off the automatic refresh for free accounts. Decision 45 removed that rule with billing on the same day.
 - **Recommendation:** A. It saves the starts of idle orgs and keeps the image fresh for orgs in use.
 - **Action:** ask the user, because A changes the refresh rule of `docs/protocol/org-image.md`.

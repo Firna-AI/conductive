@@ -95,8 +95,8 @@ describe('OrgModel', () => {
       'fix-cart-flake': 'unread',
     } as const
     const passed = {
-      'fix-cart-flake': 'checks-passed',
-      'retry-queue': 'checks-passed',
+      'fix-cart-flake': 'ready-to-merge',
+      'retry-queue': 'ready-to-merge',
     } as const
     server.json('GET', workspacesPath(org), serverList(ended, passed))
     await delay.runAll()

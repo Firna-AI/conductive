@@ -29,6 +29,25 @@ export interface TurnEventContext {
 /** A cause other than the end of the agent's reply that finished a turn. */
 export type TurnEndReason = 'background_work_limit'
 
+export type TurnSpeed =
+  { state: 'fast' } | { state: 'standard'; cause?: string }
+
+/** Causes are machine codes. Unknown codes have no display text. */
+export function readTurnSpeed(value: unknown): TurnSpeed | undefined {
+  if (typeof value !== 'object' || value === null || !('state' in value))
+    return undefined
+  if (value.state === 'fast') return { state: 'fast' }
+  if (value.state !== 'standard') return undefined
+  if (!('cause' in value) || value.cause === undefined)
+    return { state: 'standard' }
+  if (
+    typeof value.cause !== 'string' ||
+    !/^[a-z][a-z0-9_]{0,63}$/.test(value.cause)
+  )
+    return undefined
+  return { state: 'standard', cause: value.cause }
+}
+
 export interface ToolCall {
   id: string
   kind: 'read' | 'search' | 'create' | 'edit' | 'run' | 'computer' | 'other'
@@ -74,6 +93,8 @@ export type AgentChatEvent = TurnEventContext &
         state: 'finished' | 'stopped'
         durationMs: number
         endReason?: TurnEndReason
+        /** Fast turns only. Known causes include fast_limit and older_runner. */
+        speed?: TurnSpeed
         /**
          * Keep a prefix of the full unique-path list. Entries stay whole.
          * Apply both TURN_COMPLETED_MAX_FILES and TURN_COMPLETED_FILES_MAX_BYTES.

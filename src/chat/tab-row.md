@@ -1,8 +1,9 @@
 # The tab row
 
 This guide belongs to [the chat](README.md). It gives the rules of the one
-order of the session, file, and diff tabs, the drag, the tab menu, and the
-scroll of the row.
+order of the session, file, and diff tabs, the mark of the temporary tab
+and the moves that keep it, the drag, the tab menu with Keep open, and the
+scroll of the row, and the reader's place that each tab keeps.
 [The tab row](../../docs/protocol/agents-and-sessions.md#the-tab-row) states
 the requirements.
 
@@ -10,6 +11,11 @@ the requirements.
   order includes each tab once. A host with no file or diff tabs leaves
   their saved places in the view. In a read-only workspace, the row uses
   the session tabs that the browser keeps.
+- The saved view also marks the temporary tab, which the host opens,
+  keeps, and closes, as
+  [Temporary tabs](../../docs/protocol/temporary-tabs.md) says. A move
+  that changes its place keeps it too, as `moveTab` says below. Each change
+  of the session tabs keeps the mark as it is.
 - The load gives each open session a place and removes the places of
   sessions that are not open. When an open session first arrives, the
   state adds its missing place at the end. It drops no other place.
@@ -30,6 +36,13 @@ the requirements.
   row. It saves through the shared view writer, then sorts the open
   sessions for Close. A new or reopened session opens at the end. A
   read-only workspace moves no tab.
+- A move that changes the place of the temporary tab keeps it, as
+  [The tab row](../../docs/protocol/agents-and-sessions.md#the-tab-row)
+  says: the pure `moveTab` of `state/tab-order.ts` drops the mark with the
+  new order, so one save holds both. The drop of a drag, Move left, and
+  Move right all move through it. A move that changes no place gives the
+  same view, so it saves nothing and the mark stays. A move of another tab
+  keeps the mark too, also when it changes the index of the temporary tab.
 - The tab row draws the tabs in the row order and moves them by drag and
   drop, on the shared `usePointerDrag` of [the web app](../app/README.md).
   A mouse drags a tab after a move of more than 4 px. A finger lifts a tab
@@ -42,7 +55,7 @@ the requirements.
   status of the row tells a screen reader the title and the place, such as
   "Moving Debounce lookups to place 2 of 3". The release calls `moveTab`,
   and a drop at the tab's own place moves nothing. Escape ends a drag with
-  no move.
+  no move. So neither keeps the temporary tab.
 - A drag does not change the shown tab: the click at its end selects
   nothing, also the click that a finger sends after it lets go. A press on
   Close starts no drag. A read-only chat binds no drag, and neither does a
@@ -55,22 +68,30 @@ the requirements.
   browser opens no menu of its own. On a phone, a long press that ends with
   no move opens it as a sheet. A session tab has Rename session, a line,
   Copy link, Copy concise transcript, and Copy full transcript, a line,
-  then Move left and Move right, with the icons of the mockups. A file or diff tab has
-  Move left and Move right. A move that the place of the tab rules out is
-  off: it keeps its place at half opacity, and the arrow keys skip it.
-  Escape or a press outside closes the menu.
-- Each item that changes the workspace carries a mark: Rename session and
-  the moves. A read-only chat leaves out the marked items, and a group
-  with no item left loses its line. So a session tab there has only its
-  three copy items, and a file or diff tab has no item, so it opens no menu and
-  the browser shows its own. A read-only chat binds no drag, so a finger
-  opens the menu with `useLongPress` of the web app: a hold of 450 ms that
-  ends within 8 px. It lifts no tab, sends no write, and selects no tab,
-  because the click after it reaches nothing. A finger that moves first
-  scrolls the row, and the tab takes the touch CSS of a drag.
+  then Move left and Move right, with the icons of the mockups. The
+  temporary tab has Keep open, with the bookmark icon of the mockups, a
+  line, then Move left and Move right. A kept file or diff tab has Move
+  left and Move right. The host tells the row which tab is temporary: only
+  that tab gets a `keep` from `renderTab`. A move that the place of the tab
+  rules out is off: it keeps its place at half opacity, and the arrow keys
+  skip it. Escape or a press outside closes the menu.
+- Each item that changes the workspace carries a mark: Rename session,
+  Keep open, and the moves. A read-only chat leaves out the marked items,
+  and a group with no item left loses its line. So a session tab there has
+  only its three copy items, and a file or diff tab, also the temporary
+  tab, has no item, so it opens no menu and the browser shows its own. A
+  read-only chat binds no drag, so a finger opens the menu with
+  `useLongPress` of the web app: a hold of 450 ms that ends within 8 px. It
+  lifts no tab, sends no write, and selects no tab, because the click after
+  it reaches nothing. A finger that moves first scrolls the row, and the
+  tab takes the touch CSS of a drag.
 - Move left and Move right call `moveTab` with the neighbour of the tab.
   The focus goes back to the link of the tab, and the status of the row
-  says the new place, such as "app.ts moves to place 2 of 3". Rename
+  says the new place, such as "app.ts moves to place 2 of 3". Keep open
+  calls the `keep` of the tab, as a double-click on the tab does, and the
+  chat saves nothing of its own. The tab stays in its place, the focus goes
+  back to its link, and the status says that it stays open, such as
+  "README.md stays open". The row does not scroll for a keep. Rename
   session opens the rename field in that tab, also when the tab does not
   show, and the shown tab does not change. The tab with the field has no
   fill of its own unless it is the shown tab. A tab with its rename field
@@ -106,3 +127,21 @@ the requirements.
   drop place again after each scroll. This scroll starts only after the
   pointer moves, so a long press that holds still scrolls nothing, and its
   release opens the tab menu.
+- Each tab keeps the reader's place while another tab, workspace, or page
+  shows, as
+  [The scroll of the chat](../../docs/protocol/chat-and-events.md#the-scroll-of-the-chat)
+  says. `ChatController.places` keeps the place of each session tab: the
+  bottom, or the key of the top row in view with the distance of its top
+  below the top of the box. `TranscriptView` puts each entry, pending
+  message, and the running turn in one row with a `data-row` key, which
+  lays out its parts as the transcript does. The keeper of the reader's
+  place in `components/reading-place.ts` writes the place at each note, and
+  a new keeper, for another session or a new mount, shows the kept place.
+  A row that left the transcript gives the bottom. Each send of this tab,
+  also a fixed prompt while a file tab shows, puts the place of its session
+  at the bottom. The places live in a `TabPlaces` store of
+  [the web app](../app/tab-places.ts). The chat gives it each list of the
+  session tabs through `useFollowTabs`, and a session that leaves the tabs,
+  such as at a close, forgets its place, so it opens at the bottom again. The kept files of the
+  workspace keep the offset of each file and diff tab, as the
+  [Files README](../files/README.md#kept-scroll-offsets) says.

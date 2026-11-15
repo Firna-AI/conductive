@@ -67,17 +67,18 @@ export async function accountLogins(
   })
 }
 
-export function accountDefault(
+export async function accountDefault(
   db: D1Database,
   userId: string,
 ): Promise<AgentChoice | null> {
-  return db
+  const row = await db
     .prepare(
-      `SELECT default_agent AS agent, default_model AS model, default_effort AS effort
+      `SELECT default_agent AS agent, default_model AS model, default_effort AS effort, default_fast AS fast
        FROM user_preferences WHERE user_id = ? AND default_agent IS NOT NULL`,
     )
     .bind(userId)
-    .first<AgentChoice>()
+    .first<Omit<AgentChoice, 'fast'> & { fast: number }>()
+  return row ? { ...row, fast: row.fast === 1 } : null
 }
 
 /** The saved New workspace view. A new account has none and gets the dialog. */
@@ -118,12 +119,19 @@ export async function saveAccountDefault(
 ): Promise<void> {
   await db
     .prepare(
-      `INSERT INTO user_preferences (user_id, default_agent, default_model, default_effort, updated_at)
-       VALUES (?, ?, ?, ?, ?) ON CONFLICT(user_id) DO UPDATE SET
+      `INSERT INTO user_preferences (user_id, default_agent, default_model, default_effort, default_fast, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(user_id) DO UPDATE SET
        default_agent = excluded.default_agent, default_model = excluded.default_model,
-       default_effort = excluded.default_effort, updated_at = excluded.updated_at`,
+       default_effort = excluded.default_effort, default_fast = excluded.default_fast, updated_at = excluded.updated_at`,
     )
-    .bind(userId, choice.agent, choice.model, choice.effort, now)
+    .bind(
+      userId,
+      choice.agent,
+      choice.model,
+      choice.effort,
+      choice.fast ? 1 : 0,
+      now,
+    )
     .run()
 }
 

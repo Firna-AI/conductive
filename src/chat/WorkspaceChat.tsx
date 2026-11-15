@@ -8,6 +8,7 @@ import type { Agent } from '../shared/agents'
 import type { WorkspaceView } from '../shared/workspace-view'
 import type { Workspace } from '../shared/workspaces'
 import { TouchScreen } from '../../docs/mockups/src/components/common/touch'
+import { useFollowTabs } from '../app/tab-places'
 import {
   ChatDropAreaProvider,
   useChatDropArea,
@@ -149,6 +150,12 @@ function ChatBody(
   useMentionCopy()
   useReport(snapshot.workspace, props.onWorkspaceChange)
   useReport(snapshot.view, props.onViewChange)
+  useFollowTabs(
+    controller.places,
+    snapshot.load.state === 'ready'
+      ? tabSessions(snapshot).map((session) => session.id)
+      : null,
+  )
   const reopen = useCallback(
     (sessionId: string) => void controller.reopen(sessionId),
     [controller],

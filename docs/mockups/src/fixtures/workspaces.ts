@@ -117,7 +117,7 @@ export const checkoutAutocomplete: Workspace = {
   section: 'checkout',
   choice: defaultChoice,
   status: 'stopped',
-  github: 'checks-passed',
+  github: 'ready-to-merge',
   updated: '2h',
   owner: 'cal',
 }
@@ -182,8 +182,8 @@ export function workspace(
 
 /**
  * A workspace whose agent finished a turn that Cal has not read yet. Its
- * checks passed, so its list mark is green and only its bold name shows
- * the unread output.
+ * pull request is ready to merge, so its list mark is green and only its
+ * bold name shows the unread output.
  */
 export const webhookRetries: Workspace = workspace(
   'webhook-retries',
@@ -194,7 +194,7 @@ export const webhookRetries: Workspace = workspace(
     repository: 'billing-service',
     section: 'checkout',
     status: 'unread',
-    github: 'checks-passed',
+    github: 'ready-to-merge',
     updated: '5m',
   },
 )
@@ -266,7 +266,7 @@ export const workspaceList: readonly Workspace[] = [
     repository: 'storefront',
     section: 'infra',
     status: 'ready',
-    github: null,
+    github: 'conflict',
     updated: '20m',
   }),
   workspace('retry-queue', 'Move retries to a queue', {
@@ -283,6 +283,7 @@ export const workspaceList: readonly Workspace[] = [
 
 /** The workspace that the drag state moves, and where it lands. */
 export const workspaceDrag = {
+  kind: 'workspace',
   workspace: 'webhook-retries',
   section: 'general',
   index: 1,

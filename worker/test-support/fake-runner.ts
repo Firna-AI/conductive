@@ -17,7 +17,6 @@ export interface FakeRunnerOptions {
   workspaceId: string
   streamId?: string
   now?: () => number
-  /** Defaults to protocol version 1 for legacy runner fixtures. */
   protocolVersion?: RunnerProtocolVersion
   loginKinds?: readonly RunnerLoginKind[]
 }
@@ -55,7 +54,7 @@ export class FakeRunner {
     })
     connection.send({
       type: 'hello',
-      protocolVersion: this.options.protocolVersion ?? 1,
+      protocolVersion: this.options.protocolVersion ?? 2,
       workspaceId: this.options.workspaceId,
       streamId: this.streamId,
       ...(this.options.loginKinds

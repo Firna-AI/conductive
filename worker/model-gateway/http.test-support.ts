@@ -38,7 +38,7 @@ export async function gatewayHttp(
   harness: TestHarness,
   choice: AgentChoice = CLAUDE,
   kind: 'api-key' | 'token' | 'endpoint' = 'api-key',
-  protocolVersion: RunnerProtocolVersion = 1,
+  protocolVersion: RunnerProtocolVersion = 2,
   upstream?: HttpFetch,
   recovery: {
     wait?: (milliseconds: number) => Promise<void>

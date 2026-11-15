@@ -15,7 +15,7 @@
 - **Root question:** How does a held turn end within a bound when the runner never learns that the agent is idle?
 - **Options:**
   - **A.** Add a short grace, such as 60 seconds, and finish if the hold remains. It adds an end rule not covered by the approved contract. Effort: Small.
-  - **B.** Count this state as a wait under the existing 120-minute rule. Set `waiting`, deadline and timer through a common path. Use the existing limit end reason. Effort: Small.
+  - **B.** Count this state as a wait under the existing 30-day rule. Set `waiting`, deadline and timer through a common path. Use the existing limit end reason. Effort: Small.
   - **C.** Do A and log the missing signal. It has the same new boundary policy and can cut a queued reply that sent no running signal. Effort: Small.
   - **D.** End after a chosen quiet period, with any program output cancelling the timer. It needs adapter progress events and a new approved time value. Effort: Medium.
   - **E.** Add an absolute ceiling after the limit plus a chosen margin, including active replies. It bounds every hold but changes the approved no-cut rule. Effort: Medium.

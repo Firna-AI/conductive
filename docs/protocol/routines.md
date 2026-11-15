@@ -20,8 +20,9 @@ decision number names a decision of the change that adds
 ## A routine
 
 - A routine belongs to one org. It has a name, a prompt, one repository of
-  the org, and a section. It also has a model with its effort, an Active
-  switch, one time zone, and its triggers.
+  the org, and a section. It also has a model with its effort and its
+  [fast mode](fast-mode.md), an Active switch, one time zone, and its
+  triggers.
 - Each trigger starts a run. Each run creates a new workspace, with its own
   cloud computer and branch (decision 501 A).
 - One workspace for each routine, with a new session for each run, was
@@ -38,7 +39,8 @@ decision number names a decision of the change that adds
 - Reason: a run without a prompt has no task, but it still spends a start.
   A routine without a prompt was rejected, also as a draft that stays off.
 - A new routine starts active. It gets the first repository of the org, the
-  General section, and the default model of its owner.
+  General section, and the default model of its owner, with its effort and
+  its fast mode.
 - A routine can have no trigger. Then only Run now starts it.
 - Deleting a section moves its routines to General, as it moves its
   workspaces.
@@ -186,10 +188,8 @@ decision number names a decision of the change that adds
 - Risk: such text can steer the agent. The run uses the owner's agent
   login and GitHub token, and the env vars of the org. The agent can copy
   the GitHub token and the env vars, or push them to a branch.
-- The run's access to the agent login follows the sandbox's version pin.
-  With a pin of 2 or later, the sandbox holds only a turn token that
-  spends the owner's login through the gateway. With a pin of 1, an
-  older runner can receive the agent login itself.
+- The sandbox of the run holds only a turn token, which spends the
+  owner's login through the gateway while the turn runs.
 - The owner's GitHub token reaches each repository where the owner
   installed the GitHub App and has access, as
   [GitHub tokens](github-tokens.md) says
@@ -221,9 +221,7 @@ decision number names a decision of the change that adds
   [Turns that no person started](secrets.md#turns-that-no-person-started)
   says.
 - Risk: a member with a terminal in a run workspace can read the owner's
-  GitHub token and the credential of a running turn, as in each workspace.
-  That credential is a turn token on a newer runner, or the agent login
-  itself on an older runner.
+  GitHub token and the turn token of a running turn, as in each workspace.
   [Agent logins in a sandbox](isolation.md#agent-logins-in-a-sandbox)
   states that risk (decision 105).
 - An instruction or a classifier that makes the agent ignore commands in a

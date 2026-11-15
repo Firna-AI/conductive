@@ -1,6 +1,6 @@
 import type { BranchChangedFile, ChangesResponse } from '../../shared/files'
 import { pathLabel } from '../model/file-labels'
-import { splitPath, type FilesNavigation } from '../navigation'
+import { splitPath, type DiffTab, type FilesNavigation } from '../navigation'
 import { ChangeIcon, changeLabels } from '../ui/ChangeIcon'
 import { DiffStat } from '../ui/DiffStat'
 import { FilesLink } from '../ui/FilesLink'
@@ -18,12 +18,14 @@ function Row(props: {
   const label = previous
     ? `${changeLabels[file.change]} from ${previous}`
     : undefined
+  const tab: DiffTab = { kind: 'diff', path: file.path }
   return (
     <FilesLink
       aria-current={props.open ? 'page' : undefined}
       className={classes(styles.row, props.open && styles.open)}
       navigation={props.navigation}
-      to={{ kind: 'diff', path: file.path }}
+      onDoubleClick={() => props.navigation.keep(tab)}
+      to={tab}
     >
       <span className={styles.path}>
         {folder ? <span className={styles.folder}>{folder}/</span> : null}
@@ -38,8 +40,9 @@ function Row(props: {
 /**
  * The files that the branch changes against the default branch, under the
  * totals of the whole change. A row is a link to the diff of its file, and
- * the row of the open diff is marked. A row shows the label of its path,
- * and its real path stays its key and its target.
+ * the row of the open diff is marked. A double-click on a row keeps the tab
+ * that the row opens. A row shows the label of its path, and its real path
+ * stays its key and its target.
  */
 export function ChangeList(props: {
   changes: ChangesResponse

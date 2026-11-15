@@ -2,6 +2,7 @@ import { expect, it, vi } from 'vitest'
 
 import { backgroundFixture, clearTasks } from '../test-support/background'
 import { stop } from '../test-support/runtime'
+import { BACKGROUND_WORK_LIMIT_MS as LIMIT } from './engine-background'
 
 it('keeps the same turn and credentials until a background notification reply becomes idle', async () => {
   const files = [
@@ -100,7 +101,7 @@ it('finishes with only ambient work without opening a background wait', async ()
       userMessageIds: ['message-1'],
     },
   ])
-  await vi.advanceTimersByTimeAsync(7200000)
+  await vi.advanceTimersByTimeAsync(LIMIT)
   await h.engine.idle()
   expect(h.ends()).toHaveLength(1)
   expect(h.sdk.closed).toBe(true)
@@ -189,7 +190,7 @@ it('stops and shuts down a waiting turn once, after closing its credentials', as
         userMessageIds: ['message-1'],
       },
     ])
-    await vi.advanceTimersByTimeAsync(7200000)
+    await vi.advanceTimersByTimeAsync(LIMIT)
     expect(h.ends()).toHaveLength(1)
   }
 })

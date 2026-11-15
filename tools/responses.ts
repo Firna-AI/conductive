@@ -144,6 +144,7 @@ export function listedModels(value: unknown): AgentListModelsResponse {
         agent: agent(fields.agent),
         model: text(fields.model),
         label: text(fields.label),
+        fast: fields.fast === true,
         efforts: array(fields.efforts).map(effort),
       }
     }),

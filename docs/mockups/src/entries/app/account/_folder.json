@@ -1,5 +1,6 @@
 {
   "order": [
+    "agents",
     "preferences",
     "shortcuts",
     "setup",

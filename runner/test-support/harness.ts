@@ -4,8 +4,8 @@ import { onTestFinished } from 'vitest'
 
 import type { Agent } from '../../src/shared/agents'
 import type {
-  RunnerTurnV2 as RunnerTurn,
-  RunnerMessageDuringTurnV2,
+  RunnerTurn,
+  RunnerMessageDuringTurn,
 } from '../../src/shared/runner'
 import { FakeDurableObjectEndpoint } from '../../worker/test-support/fake-durable-object'
 import { Runner } from '../src/runner'
@@ -34,7 +34,7 @@ export function turn(
       },
       text: 'Change the file.',
       attachments: [],
-      choice: { agent, model: 'test-model', effort: 'high' },
+      choice: { agent, model: 'test-model', effort: 'high', fast: false },
       createdAt: 100,
       state: 'sent',
     },
@@ -47,7 +47,7 @@ export function turn(
   }
 }
 
-export function duringTurn(command: RunnerTurn): RunnerMessageDuringTurnV2 {
+export function duringTurn(command: RunnerTurn): RunnerMessageDuringTurn {
   return {
     type: 'message',
     commandId: command.commandId,

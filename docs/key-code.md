@@ -12,10 +12,9 @@
 - `worker/marketing/`: built marketing pages, the agreement page before
   GitHub, the file list, request markers, and the site's security headers.
 - `src/marketing/`: Astro pages, layouts, parts, styles, pictures, shared
-  legal text, the public guides, the shared rows and words of the
-  Conductor comparison page, and the shared plans and words of the pricing
-  page. Its [README](../src/marketing/README.md) gives the build and preview
-  steps.
+  legal text, the public guides, and the shared rows and words of the
+  Conductor comparison page. Its [README](../src/marketing/README.md) gives
+  the build and preview steps.
 - `src/shared/site-build.ts`: names and types shared by the Astro build
   and the Worker.
 - `worker/security/`: GitHub sign-in, signed sessions, the request gate,

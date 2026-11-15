@@ -178,6 +178,7 @@ export function Composer(props: ComposerProps) {
             {...boxDrops}
           >
             <ChipTextField
+              caretAtEnd
               files={props.files}
               handle={field}
               label="Message"

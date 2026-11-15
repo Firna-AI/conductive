@@ -46,19 +46,23 @@ export interface FakeApiOptions {
    * the labels of the mockups, to the file lists and to each finished turn.
    */
   paths?: PathState
+  /**
+   * `false` leaves the file reports out of the event history, as a new
+   * workspace whose runner has not reported its lists yet.
+   */
+  savedLists?: boolean
 }
 
 /**
  * The GitHub state of the record of the fake workspace: `github` when the
- * options give it, also `null`, or else the state of the bar of `banner` and
- * its checks, as the Worker copies it.
+ * options give it, also `null`, or else the state of the bar of `banner`, as
+ * the Worker copies it.
  */
 export function fakeGitHubSummary(
   options: Pick<FakeApiOptions, 'banner' | 'github'>,
 ): GitHubSummary | null {
   if (options.github !== undefined) return options.github
-  const { banner, checks } = toolFixtures(options.banner)
-  return githubSummary(banner.banner, checks.checks)
+  return githubSummary(toolFixtures(options.banner).banner.banner)
 }
 
 function routeKey(method: string, path: string): string {
@@ -93,7 +97,9 @@ export class FakeApiServer implements FakeRouteWriter {
         : recorded
     this.events = new FakeWorkspaceEvents([
       ...chat,
-      ...recordedFileEvents(FAKE_IDS.workspace, chat.length + 1, paths),
+      ...(options.savedLists === false
+        ? []
+        : recordedFileEvents(FAKE_IDS.workspace, chat.length + 1, paths)),
     ])
     fakeCoreRoutes(this, options.role ?? 'admin')
     fakeWorkspaceRoutes(

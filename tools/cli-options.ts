@@ -13,6 +13,7 @@ const message = {
   agent: string,
   model: string,
   effort: string,
+  fast: string,
   'request-id': string,
 }
 
@@ -140,4 +141,11 @@ export function parseToolArguments(
 
 export function cliNumber(value: unknown): number | undefined {
   return value === undefined ? undefined : Number(value)
+}
+
+export function cliFast(value: unknown): boolean | undefined {
+  if (value === undefined) return undefined
+  if (value === 'true') return true
+  if (value === 'false') return false
+  throw new ToolInputError('Choose true or false for fast mode.')
 }

@@ -39,6 +39,7 @@ function operation(value: unknown): value is DeviceSettingsAction {
       (value.action === 'remove-command' &&
         typeof value.command === 'string') ||
       ((value.action === 'stop-workspace' ||
+        value.action === 'extend-workspace' ||
         value.action === 'keep-workspace') &&
         text(value.workspaceId)))
   )

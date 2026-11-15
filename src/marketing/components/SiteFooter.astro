@@ -5,7 +5,6 @@ import { productSummary } from '../features'
 import { parityLinkCopy } from '../from-conductor/copy'
 import { abuseAddress } from '../legal-text'
 import { docsPath, sitePaths } from '../links'
-import { pricingLinkText } from '../pricing'
 import {
   featuresHref,
   macAppHref,
@@ -16,7 +15,7 @@ import FooterColumn from './FooterColumn.astro'
 import Wordmark from './Wordmark.astro'
 
 /*
- * The foot of each page: the lockup, the sections with the pricing page,
+ * The foot of each page: the lockup, the sections with the features,
  * the docs, and the page for people who move from Conductor, the sign-in,
  * the address for abuse reports, and the legal pages beside the copyright.
  */
@@ -32,11 +31,6 @@ import Wordmark from './Wordmark.astro'
       <li>
         <a class="footer-link" href={featuresHref}>
           Features
-        </a>
-      </li>
-      <li>
-        <a class="footer-link" href={sitePaths.pricing}>
-          {pricingLinkText}
         </a>
       </li>
       <li>

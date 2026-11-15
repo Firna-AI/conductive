@@ -94,7 +94,12 @@ it('runs CLI create and list through workspace auth and forwards the calling tur
     workspace: {
       orgId: 'org-a',
       sectionId: 'chosen-a',
-      choice: { agent: 'claude', model: 'chosen-model', effort: 'max' },
+      choice: {
+        agent: 'claude',
+        model: 'chosen-model',
+        effort: 'max',
+        fast: false,
+      },
     },
     sessionId: 'created-session',
   })
@@ -156,6 +161,7 @@ it('runs CLI create and list through workspace auth and forwards the calling tur
         agent: 'codex',
         model: 'owner-default-model',
         effort: 'high',
+        fast: false,
       },
     },
   ])

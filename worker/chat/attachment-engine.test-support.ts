@@ -19,15 +19,12 @@ export async function connectAttachmentEngine(
   }
   const commands: Promise<void>[] = []
   fixture.observeOutgoing((command) => {
-    if (command.type === 'turn') {
-      if (!command.credential)
-        throw new Error('The attachment engine needs a version 2 turn.')
-      commands.push(harness.engine.command(command))
-    } else if (command.type === 'message') {
-      if (command.login)
-        throw new Error('The attachment engine needs a version 2 message.')
-      commands.push(harness.engine.command(command))
-    } else if (command.type === 'interrupt' || command.type === 'model')
+    if (
+      command.type === 'turn' ||
+      command.type === 'message' ||
+      command.type === 'interrupt' ||
+      command.type === 'model'
+    )
       commands.push(harness.engine.command(command))
   })
   const drain = async () => {

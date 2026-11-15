@@ -16,6 +16,11 @@ export const sessionId = {
   description: 'A session ID from list_sessions or a session link.',
 }
 export const modelChoice = {
+  fast: {
+    type: 'boolean',
+    description:
+      'Use fast mode for a marked model. Creates default to false. Omission on send keeps the session speed.',
+  },
   model: {
     type: 'object',
     properties: {

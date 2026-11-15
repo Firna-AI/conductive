@@ -150,7 +150,12 @@ function sameTriggers(
 }
 
 function sameChoice(a: AgentChoice, b: AgentChoice): boolean {
-  return a.agent === b.agent && a.model === b.model && a.effort === b.effort
+  return (
+    a.agent === b.agent &&
+    a.model === b.model &&
+    a.effort === b.effort &&
+    a.fast === b.fast
+  )
 }
 
 /** The equality of each field of a record. */

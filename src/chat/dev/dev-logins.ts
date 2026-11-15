@@ -133,6 +133,7 @@ export function seedLinked(
     view: {
       tabs: [...(view?.tabs ?? []), tab],
       activeTab: tab,
+      temporaryTab: view?.temporaryTab ?? null,
       fileList: view?.fileList ?? 'changes',
       tool: view?.tool ?? 'terminal',
     },

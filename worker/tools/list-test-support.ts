@@ -10,8 +10,15 @@ export const TOOL_MODELS: readonly AgentModel[] = [
     model: 'model-z',
     label: 'Model Z',
     efforts: ['high', 'low'],
+    fast: false,
   },
-  { agent: 'claude', model: 'model-a', label: 'Model A', efforts: ['max'] },
+  {
+    agent: 'claude',
+    model: 'model-a',
+    label: 'Model A',
+    efforts: ['max'],
+    fast: false,
+  },
 ]
 
 export async function publishToolImage(

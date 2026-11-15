@@ -85,15 +85,20 @@ the folder and each folder that holds it, and All files scrolls the row of
 the folder into view, as
 [File mentions](../../docs/protocol/file-mentions.md) says.
 
-The workspace view on the Worker holds the open tabs, the active tab, and
-the list. The kept chat loads it and saves it, and the shell changes it
+The workspace view on the Worker holds the open tabs, the active tab, the
+mark of the temporary tab, and the list. The kept chat loads it and saves it, and the shell changes it
 through the chat, so the view has one writer. The shell passes the view to
 the screens, with a `FilesNavigation`:
 
 - `href(target)` gives the address of a list, a file tab, or a diff tab.
 - `navigate(target)` handles a plain click. The shell saves the change in
-  the view, then moves the address. A click with a modifier key opens the
-  address in a new browser tab.
+  the view, then moves the address. A file or a diff with no tab opens in
+  the temporary tab, as
+  [Temporary tabs](../../docs/protocol/temporary-tabs.md) says. A click
+  with a modifier key opens the address in a new browser tab.
+- `keep(tab)` handles a double-click on a file row or on a tab. The shell
+  makes the tab of that file or diff a kept tab when it is the temporary
+  tab, and moves no address. Keep open in the tab menu calls it too.
 
 The screens:
 
@@ -101,8 +106,13 @@ The screens:
   for the right column on desktop and the Files tab on a phone. The
   `checks` prop takes the Checks list of the GitHub banner screens. The
   `placeholder` prop replaces All files and Changes, for example with a
-  sandbox state. Under the lists, the panel shows one notice for each
-  failed repair, in the order of the tabs, with its age. A saved tree that
+  sandbox state. The `waiting` prop replaces only a list without a saved
+  copy, when its read fails with `file_unavailable`, or an unknown tree
+  under the unavailable mark. A read that runs still shows its load, and
+  any other failed read shows Try again. The workspace screen gives it the
+  wait of a sandbox that starts, so a resume shows the saved lists and the
+  first start of a new workspace shows the wait. Under the lists, the
+  panel shows one notice for each failed repair, in the order of the tabs, with its age. A saved tree that
   the cloud computer could not read shows the notice of All files, with no
   age. The notices show under each of the three tabs, and they have no
   Dismiss. The `now` prop
@@ -125,22 +135,10 @@ The screens:
   lines from Changes. With `keepShown`, a page that already shows its file
   keeps it, with Copy, and the placeholder shows only in place of a page
   with nothing to show. When the placeholder goes, the page reads at once.
-- `FileTabItem` is the closable tab of a file or a diff, as a list item
-  for the tab row of the centre column on desktop. `onClose` asks the shell
-  to close the tab. It takes the tab styles of the mockups' `WorkspaceTabs`,
-  as the session tabs do. `item` takes more props of its list item, and
-  `close` props of the wrapper of its Close button, such as the handlers,
-  the classes, and the ref of the drag and of the tab menu of the row.
-  `link` takes the ref of its link, which the row uses to give the tab the
-  focus back after a move from the tab menu. `FilesLink` takes that `ref`.
-  They are plain element props, so the Files code imports nothing from the
-  chat.
-  `LiftedFileTab` is the copy of the tab that a drag lifts above the page:
-  its icon and its whole file name, with no link and no Close.
-  `fileTabName(tab, label)` is the name of the tab, as a screen reader
-  reads it: the file name of the label, or "File", with "changes" after
-  the name of a diff. The tab row names the tab by it in its tab menu and
-  its status.
+- `FileTabItem` is the closable tab of a file or a diff, and
+  `LiftedFileTab` is the copy that a drag lifts.
+  [File tabs](file-tabs.md) gives their props, their names, the temporary
+  tab, and the double-click of the links and the rows.
 
 [The Markdown preview](markdown-preview.md#the-worker) gives the worker
 that parses the Markdown of a preview, and what the preview shows while
@@ -167,6 +165,28 @@ the app's `ApiClient`, so the Mac app reads the file from its own Worker.
 
 The shell supplies the design tokens as `--ui-*` CSS variables and the
 `@firna/ui` theme provider, as `docs/mockups/src/theme.ts` builds them.
+
+### Kept scroll offsets
+
+Each file and diff tab of the centre keeps its scroll offset, down and
+sideways, while another tab or workspace shows, as
+[The tab row](../../docs/protocol/agents-and-sessions.md#the-tab-row) says.
+`WorkspaceFiles.scrollPlaces` holds the offsets, by tab and view, for as
+long as the app keeps the store. The desktop tab page gives the shown tab
+through the `KeptScroll` context of `ui/kept-scroll.ts`. `CodeView`,
+`DiffView`, and the Markdown preview take their scroll box from
+`useKeptScroll`, with the view `code`, `diff`, or `preview`. A view outside
+the context, such as a file page on a phone, keeps nothing. Content that
+grows after the mount gets the offset again at each change of size, until
+the box reaches it or the reader scrolls. When a tab leaves the saved view,
+such as at a close, it forgets its offsets, so it opens at the top again.
+The offsets live in a `TabPlaces` store of the web app, in
+`src/app/tab-places.ts`, and the chat files of the workspace screen give it
+each list of the file and diff tabs through `useFollowTabs`.
+`ui/kept-scroll.dom.test.tsx`
+tests the hook, and `TabScroll.test.tsx` of the
+[workspace files](../shell/workspace/files/) tests the tabs of the
+workspace screen.
 
 ## Labels of paths
 

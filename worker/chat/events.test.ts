@@ -131,7 +131,7 @@ describe('workspace chat event delivery', () => {
     await fixture.connect(runner)
     expect(runner.received).toContainEqual({
       type: 'welcome',
-      protocolVersion: 1,
+      protocolVersion: 2,
       streamId: 'fake-stream-1',
       confirmedThrough: 3,
     })

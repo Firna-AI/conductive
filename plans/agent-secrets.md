@@ -880,6 +880,8 @@ Depends on: 1
 
 Depends on: 2
 
+Merge resolutions and preservation evidence: `.context/agent-secrets/merge-main-20261115/resolutions.md`.
+
 - [ ] Add a migration for the secrets, the workspace pre-approvals, the
       session approvals, and the reveal records.
 - [ ] Add the settings routes: list, create, replace, delete, set the

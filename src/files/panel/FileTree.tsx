@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { ChevronDown, ChevronRight, Folder, FolderOpen } from 'lucide-react'
 import type { TreeRow } from '../model/tree-rows'
-import type { FileMode, FilesNavigation } from '../navigation'
+import type { FileMode, FilesNavigation, FileTab } from '../navigation'
 import { ChangeIcon } from '../ui/ChangeIcon'
 import { FilesLink } from '../ui/FilesLink'
 import { classes } from '../ui/classes'
@@ -43,9 +43,9 @@ function RowContent(props: { row: TreeRow }) {
 
 /**
  * Every file of the branch, as a tree. A folder opens and closes. A file
- * row is a link to its file tab, and the row of the open file is marked.
- * The row of `revealed`, a folder that a press on its chip showed, scrolls
- * into view.
+ * row is a link to its file tab, and the row of the open file is marked. A
+ * double-click on a file row keeps the tab that the row opens. The row of
+ * `revealed`, a folder that a press on its chip showed, scrolls into view.
  */
 export function FileTree(props: {
   rows: readonly TreeRow[]
@@ -75,6 +75,11 @@ export function FileTree(props: {
         const { entry } = row
         const indent = { paddingLeft: 6 + row.depth * 14 }
         const open = entry.path === props.openPath
+        const tab: FileTab = {
+          kind: 'file',
+          path: entry.path,
+          mode: open ? props.openMode : 'preview',
+        }
         return (
           <li key={entry.path} ref={keep(entry.path)}>
             {entry.kind === 'directory' ? (
@@ -92,12 +97,9 @@ export function FileTree(props: {
                 aria-current={open ? 'page' : undefined}
                 className={classes(styles.row, open && styles.open)}
                 navigation={props.navigation}
+                onDoubleClick={() => props.navigation.keep(tab)}
                 style={indent}
-                to={{
-                  kind: 'file',
-                  path: entry.path,
-                  mode: open ? props.openMode : 'preview',
-                }}
+                to={tab}
               >
                 <RowContent row={row} />
               </FilesLink>

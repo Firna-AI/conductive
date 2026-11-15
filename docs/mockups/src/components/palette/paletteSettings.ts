@@ -52,7 +52,7 @@ export const orgSettings: readonly Command[] = [
 /** The name of the group of the settings of the current org. */
 export const orgSettingsLabel = `${orgs.acme.name} settings`
 
-/** The This Mac section, which only the Mac app has. */
+/** The This Mac tab, which only the Mac app has. */
 const thisMacSetting: Command = {
   label: 'This Mac',
   lead: icon(Laptop),
@@ -60,7 +60,7 @@ const thisMacSetting: Command = {
   to: paths.thisMac,
 }
 
-/** GitHub and Agents, which follow Sign-in on the General tab. */
+/** GitHub, which follows Sign-in on the General tab, then Agents, its own tab. */
 const generalSettings: readonly Command[] = [
   {
     label: 'GitHub',
@@ -72,7 +72,7 @@ const generalSettings: readonly Command[] = [
     label: 'Agents',
     lead: icon(Bot),
     words: ['claude', 'codex', 'login', 'api key', 'token'],
-    to: paths.account,
+    to: paths.accountAgents,
   },
 ]
 
@@ -92,8 +92,8 @@ function shortcutsSetting(mac: boolean): Command {
 
 /**
  * The sections of the Account page, which every org shares, in the order
- * of its tabs. The Mac app adds This Mac after Sign-in, and Keyboard
- * shortcuts comes last.
+ * of its tabs. Keyboard shortcuts follows New workspaces, and the Mac app
+ * adds the This Mac tab last.
  */
 export function accountSettings(place: { mac?: boolean }): Command[] {
   const mac = place.mac ?? false
@@ -104,7 +104,6 @@ export function accountSettings(place: { mac?: boolean }): Command[] {
       words: ['sign out', 'account'],
       to: paths.account,
     },
-    ...(mac ? [thisMacSetting] : []),
     ...generalSettings,
     {
       label: 'New workspaces',
@@ -113,5 +112,6 @@ export function accountSettings(place: { mac?: boolean }): Command[] {
       to: paths.accountPreferences,
     },
     shortcutsSetting(mac),
+    ...(mac ? [thisMacSetting] : []),
   ]
 }

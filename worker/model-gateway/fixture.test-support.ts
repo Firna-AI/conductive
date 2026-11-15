@@ -69,9 +69,7 @@ export async function runningGatewayTurn(
     new FakeRunner({
       workspaceId: WORKSPACE_ID,
       protocolVersion: options.protocolVersion,
-      ...(options.protocolVersion === 2
-        ? { loginKinds: RUNNER_SUPPORTED_LOGIN_KINDS }
-        : {}),
+      loginKinds: RUNNER_SUPPORTED_LOGIN_KINDS,
     }),
   )
   runner.emit({ type: 'runner.ready' })

@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest'
 import type { Routine } from '../shared/routines'
 import { cronProblem } from './routine-cron'
-import { draftOf, updateRequest } from './routine-draft'
+import { draftOf, sameDraft, updateRequest } from './routine-draft'
 import { addAuthor, removeAuthor, setMembers } from './routine-triggers'
 
 /** A saved routine with a preset schedule and an author filter of accounts. */
@@ -19,7 +19,7 @@ const saved: Routine = {
   repositoryId: 'billing-service',
   sectionId: 'infra',
   prompt: 'Read the errors of the last hour.',
-  choice: { agent: 'claude', model: 'Opus 5.5', effort: 'high' },
+  choice: { agent: 'claude', model: 'Opus 5.5', effort: 'high', fast: false },
   active: false,
   inactiveReason: 'failed_runs',
   failedRunsInARow: 3,
@@ -49,7 +49,12 @@ describe('the draft of a routine', () => {
       repositoryId: 'billing-service',
       sectionId: 'infra',
       prompt: 'Read the errors of the last hour.',
-      choice: { agent: 'claude', model: 'Opus 5.5', effort: 'high' },
+      choice: {
+        agent: 'claude',
+        model: 'Opus 5.5',
+        effort: 'high',
+        fast: false,
+      },
       timeZone: 'Europe/London',
       triggers: [
         { kind: 'hourly', minute: 15 },
@@ -66,8 +71,9 @@ describe('the draft of a routine', () => {
     })
   })
 
-  test('an update sends only the fields that changed, and Active only when the owner changed it', () => {
+  test('an update sends only the fields that changed, also fast mode alone, and Active only when the owner changed it', () => {
     const draft = draftOf(saved)
+    const fast = { ...draft, choice: { ...draft.choice, fast: true } }
     expect({
       unchanged: updateRequest(draft, draft),
       prompt: updateRequest(draft, { ...draft, prompt: 'Group the errors.' }),
@@ -78,15 +84,40 @@ describe('the draft of a routine', () => {
       }),
       model: updateRequest(draft, {
         ...draft,
-        choice: { agent: 'codex', model: 'GPT-6.1 Sol', effort: 'medium' },
+        choice: {
+          agent: 'codex',
+          model: 'GPT-6.1 Sol',
+          effort: 'medium',
+          fast: false,
+        },
       }),
+      fast: {
+        same: sameDraft(fast, draft),
+        update: updateRequest(draft, fast),
+      },
     }).toEqual({
       unchanged: {},
       prompt: { prompt: 'Group the errors.' },
       active: { active: true },
       trigger: { triggers: [{ kind: 'hourly', minute: 30 }] },
       model: {
-        choice: { agent: 'codex', model: 'GPT-6.1 Sol', effort: 'medium' },
+        choice: {
+          agent: 'codex',
+          model: 'GPT-6.1 Sol',
+          effort: 'medium',
+          fast: false,
+        },
+      },
+      fast: {
+        same: false,
+        update: {
+          choice: {
+            agent: 'claude',
+            model: 'Opus 5.5',
+            effort: 'high',
+            fast: true,
+          },
+        },
       },
     })
   })

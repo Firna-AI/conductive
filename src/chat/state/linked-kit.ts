@@ -26,6 +26,7 @@ const opus: AgentChoice = {
   agent: 'claude',
   model: 'Opus 5.5',
   effort: 'high',
+  fast: false,
 }
 
 /** The ID of the linked session that the fake opens. */

@@ -43,10 +43,10 @@ test('keeps the list GitHub summary through title events, older records, and rea
       'checks-running',
     )
     server.json('GET', workspacesPath(orgId), {
-      workspaces: [{ ...initial.detail.workspace, github: 'checks-passed' }],
+      workspaces: [{ ...initial.detail.workspace, github: 'ready-to-merge' }],
     })
     await org.reload('list')
-    expect(org.workspace(id)?.github).toBe('checks-passed')
+    expect(org.workspace(id)?.github).toBe('ready-to-merge')
     expect(valueOf(workspace.detail.get())?.workspace.github).toBe(
       'checks-running',
     )
@@ -58,7 +58,7 @@ test('keeps the list GitHub summary through title events, older records, and rea
     await flushMicrotasks()
     expect(org.workspace(id)).toMatchObject({
       name: 'Current title',
-      github: 'checks-passed',
+      github: 'ready-to-merge',
     })
     expect(valueOf(workspace.detail.get())?.workspace.name).toBe(
       'Current title',
@@ -71,7 +71,7 @@ test('keeps the list GitHub summary through title events, older records, and rea
     expect(org.workspace(id)).toMatchObject({
       name: 'Full record title',
       state: 'unread',
-      github: 'checks-passed',
+      github: 'ready-to-merge',
     })
     visible.set(true)
     await flushMicrotasks()
@@ -85,7 +85,7 @@ test('keeps the list GitHub summary through title events, older records, and rea
     ).toEqual([{ throughEventNumber: 2 }])
     expect(org.workspace(id)).toMatchObject({
       state: 'ready',
-      github: 'checks-passed',
+      github: 'ready-to-merge',
     })
     expect(valueOf(workspace.detail.get())?.workspace.state).toBe('ready')
     server.json('GET', workspacesPath(orgId), {

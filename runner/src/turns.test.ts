@@ -18,7 +18,7 @@ it('combines partial text, steers a turn, and reports actual touched files', asy
     type: 'model',
     commandId: 'model-1',
     sessionId: 'session-1',
-    choice: { agent: 'claude', model: 'new-model', effort: 'max' },
+    choice: { agent: 'claude', model: 'new-model', effort: 'max', fast: false },
   })
   await h.runner.idle()
   expect(provider.messages.map((message) => message.message.id)).toEqual([
@@ -29,6 +29,7 @@ it('combines partial text, steers a turn, and reports actual touched files', asy
     agent: 'claude',
     model: 'new-model',
     effort: 'max',
+    fast: false,
   })
   expect(h.endpoint.runnerEvents.map((item) => item.event)).toContainEqual({
     type: 'assistant.delta',

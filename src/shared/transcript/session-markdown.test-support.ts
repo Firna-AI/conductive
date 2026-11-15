@@ -4,8 +4,18 @@ import type { Session } from '../sessions'
 import { fakeMacRequest } from '../../test-support/fixtures/devices'
 import { SessionMarkdown, type TranscriptDocument } from './session-markdown'
 
-const oldChoice = { agent: 'claude', model: 'old', effort: 'max' } as const
-const choice = { agent: 'codex', model: 'current', effort: 'xhigh' } as const
+const oldChoice = {
+  agent: 'claude',
+  model: 'old',
+  effort: 'max',
+  fast: false,
+} as const
+const choice = {
+  agent: 'codex',
+  model: 'current',
+  effort: 'xhigh',
+  fast: false,
+} as const
 const sender = {
   id: 'cal',
   displayName: 'Cal',

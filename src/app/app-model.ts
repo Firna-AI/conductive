@@ -17,6 +17,7 @@ import type { ComposerFocusRequest } from './composer-focus'
 import { FeedbackModel } from './feedback-model'
 import { failedBoot, readShared, type Boot } from './boot'
 import { InvitationsModel } from './invitations-model'
+import { LastWorkspaces } from './last-workspaces'
 import { OrgList } from './org-list'
 import { OrgModel } from './org-model'
 import { patchOrg, postOrg } from './org-writes'
@@ -50,6 +51,11 @@ export class AppModel {
    */
   readonly lastOrg = new Store<string | null>(null)
   /**
+   * The last workspace of each org of the person signed in, which the
+   * browser keeps, as `LastWorkspaces` says.
+   */
+  readonly lastWorkspaces: LastWorkspaces
+  /**
    * The workspace whose message field takes the focus when its chat shows,
    * as `ComposerFocusRequest` says. The tab keeps it in memory only.
    */
@@ -79,6 +85,7 @@ export class AppModel {
 
   constructor(services: AppServices) {
     this.services = services
+    this.lastWorkspaces = new LastWorkspaces(services.storage)
     this.account = new AccountModel(services, this)
     this.feedback = new FeedbackModel(this)
     this.getStarted = setupSteps({
@@ -95,11 +102,15 @@ export class AppModel {
   /**
    * A sign-out, or a sign-in of another person, ends the create requests
    * of every org that still run, so that their answers change nothing. It
-   * also forgets the GitHub access of the person.
+   * also forgets the GitHub access of the person. The last workspaces
+   * follow the person of each ready boot and each sign-out.
    */
   private followPerson(): void {
     const boot = this.boot.get()
     const person = boot.state === 'ready' ? boot.user.id : null
+    if (boot.state === 'ready' || boot.state === 'signed-out') {
+      this.lastWorkspaces.follow(person)
+    }
     if (
       boot.state !== 'signed-out' &&
       (person === null || person === this.userId)

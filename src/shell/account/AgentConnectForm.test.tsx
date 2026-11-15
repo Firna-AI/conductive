@@ -190,7 +190,7 @@ describe('the Connect form of Codex', () => {
     const app = await startedApp(server, { delay: delay.delay })
     const page = await mount(
       <AppProviders app={app}>
-        <AccountScreen connect="codex" tab="general" user={fakeUser} />
+        <AccountScreen connect="codex" tab="agents" user={fakeUser} />
       </AppProviders>,
     )
     await press(byRole('radio', 'ChatGPT plan', page.container))

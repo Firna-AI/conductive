@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { SegmentedControl, type SegmentOption } from '@firna/ui/segmented'
 import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
 import styles from '../../../docs/mockups/src/components/settings/AccountSections.module.css'
@@ -49,26 +50,35 @@ function NewWorkspaceViewChoice(props: { view: NewWorkspaceView }) {
  * The New workspaces section of Preferences: the model and the effort that
  * new workspaces start with, and how New workspace opens. The picker hides
  * the models that the person's own endpoint does not list, and keeps the
- * saved model. Each change saves at once. A failed save of the model shows
- * a toast, and a failed save of the choice shows its error under the
- * choice.
+ * model that it shows. Each change saves at once. While the model saves,
+ * the picker shows the new choice and takes no other change, so the Fast
+ * switch of its open menu shows its new state. A failed save of the model
+ * shows a toast, and the picker shows the saved choice again. A failed save
+ * of the choice shows its error under the choice.
  */
 export function DefaultsSection() {
   const app = useApp()
   const account = useStore(app.account.account)
-  const models = useOfferedModels(account?.defaultChoice)
+  const [requested, setRequested] = useState<AgentChoice | null>(null)
   const save = useAction(
     (choice: AgentChoice) => app.account.setDefaultChoice(choice),
     "The model wasn't saved.",
   )
+  const saving = save.pending ? requested : null
+  const models = useOfferedModels(saving ?? account?.defaultChoice)
   if (!account) return null
+  const change = (choice: AgentChoice) => {
+    if (save.pending) return
+    setRequested(choice)
+    save.run(choice)
+  }
   return (
     <Section description="How you start new workspaces." title="New workspaces">
       <div className={styles.defaults}>
         <span className={styles.defaultsLabel}>Model and effort</span>
         <ModelPicker
-          change={save.run}
-          choice={account.defaultChoice}
+          change={change}
+          choice={saving ?? account.defaultChoice}
           disabled={save.pending}
           models={models}
           placement="below-start"

@@ -186,6 +186,7 @@ describe('the login of a session', () => {
       agent: 'codex',
       model: 'GPT-6.1 Sol',
       effort: 'medium',
+      fast: false,
     }
     const login = {
       agent: 'codex',

@@ -3,7 +3,9 @@ import { choice, identifier, record } from '../chat/inputs'
 import type { AppEnv } from '../env'
 import { HttpError } from '../http'
 
-export function configuredModels(env: AppEnv): AgentModel[] {
+export function configuredModels(
+  env: Pick<AppEnv, 'CONDUCTIVE_MODELS'>,
+): AgentModel[] {
   try {
     const value: unknown = JSON.parse(env.CONDUCTIVE_MODELS ?? '')
     if (!Array.isArray(value) || value.length === 0) throw unavailable()
@@ -20,6 +22,7 @@ export function configuredModels(env: AppEnv): AgentModel[] {
         agent: agentModel.agent,
         model: agentModel.model,
         label: identifier(input.label),
+        ...(typeof input.fast === 'boolean' && { fast: input.fast }),
         efforts: input.efforts.map(
           (effort: unknown) => choice({ ...agentModel, effort }).effort,
         ),
@@ -30,10 +33,12 @@ export function configuredModels(env: AppEnv): AgentModel[] {
   }
 }
 
-export function configuredDefaultChoice(env: AppEnv): AgentChoice {
+export function configuredDefaultChoice(
+  env: Pick<AppEnv, 'CONDUCTIVE_DEFAULT_CHOICE'>,
+): AgentChoice {
   try {
     const value: unknown = JSON.parse(env.CONDUCTIVE_DEFAULT_CHOICE ?? '')
-    return choice(value)
+    return { ...choice(value), fast: false }
   } catch {
     throw new HttpError(
       503,
@@ -49,4 +54,18 @@ function unavailable(): HttpError {
     'models_unavailable',
     'The models are not available. Ask the app administrator to configure them.',
   )
+}
+
+export function modelChoice(env: AppEnv, selected: AgentChoice): AgentChoice {
+  return {
+    ...selected,
+    fast:
+      selected.fast === true &&
+      configuredModels(env).some(
+        (model) =>
+          model.agent === selected.agent &&
+          model.model === selected.model &&
+          model.fast === true,
+      ),
+  }
 }

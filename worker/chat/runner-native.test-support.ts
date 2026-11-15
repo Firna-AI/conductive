@@ -68,7 +68,7 @@ export function runnerControls(
     connect: async (
       streamId = 'native-runner',
       eventNumber = 0,
-      protocolVersion: RunnerProtocolVersion = 1,
+      protocolVersion: RunnerProtocolVersion = 2,
     ) => {
       const response = await runtime.dispatchFetch(
         `${MACHINE_ORIGIN}${MACHINE_PATHS.runner}`,

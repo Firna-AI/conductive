@@ -70,7 +70,7 @@ export class OuterFakeRunner {
     socket.accept()
     this.send({
       type: 'hello',
-      protocolVersion: options.protocolVersion ?? 1,
+      protocolVersion: options.protocolVersion ?? 2,
       workspaceId,
       streamId: this.streamId,
     })

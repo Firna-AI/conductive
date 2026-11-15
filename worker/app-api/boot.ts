@@ -37,7 +37,11 @@ import {
 import { endpointModelsRoute } from './endpoint-models'
 import { githubInstallUrl } from './feature-github'
 import { getStartedData } from './get-started-data'
-import { configuredDefaultChoice, configuredModels } from './models'
+import {
+  configuredDefaultChoice,
+  configuredModels,
+  modelChoice,
+} from './models'
 import { accountShortcuts, saveAccountShortcuts } from './shortcuts-data'
 
 export async function bootRoute(
@@ -71,7 +75,7 @@ export async function bootRoute(
     }
   }
   if (path === ACCOUNT_PATHS.defaultModel && request.method === 'PUT') {
-    const selected = choice(context.body?.choice)
+    const selected = modelChoice(env, choice(context.body?.choice))
     await saveAccountDefault(env.DB, userId, selected, dependencies.now())
     return Response.json({ choice: selected })
   }

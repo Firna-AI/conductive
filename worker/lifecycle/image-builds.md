@@ -36,6 +36,7 @@ Suspended orgs get no disk retention restart, including after an owner change.
 - Each new computer allocation stores the runner version of its image snapshot before the provider call.
   This includes a first start, Try again, and a restored allocation.
   A missing image version counts as version 1.
+  The chat backend still accepts only the supported runner version, whatever this pin, as [Runner versions](../../docs/protocol/version-pins.md#runner-versions) says.
 
 ## Build jobs
 

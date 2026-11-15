@@ -20,11 +20,14 @@ export type FilesTarget = FilesTab | { kind: 'list'; list: FileListKind }
 /**
  * The navigation of the shell. `href` gives each target its own address, so
  * a link also opens in a new browser tab. `navigate` handles a plain click
- * without a page load, and updates the workspace view on the Worker.
+ * without a page load, and updates the workspace view on the Worker: a file
+ * or a diff with no tab opens in the temporary tab. `keep` makes the tab of
+ * a file or a diff a kept tab, after a double-click on its row or its tab.
  */
 export interface FilesNavigation {
   href(target: FilesTarget): string
   navigate(target: FilesTarget): void
+  keep(tab: FilesTab): void
 }
 
 /** The desktop layout, or the phone layout with 44 px touch targets. */

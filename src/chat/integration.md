@@ -50,7 +50,11 @@ mount the chat.
   it from the tab, with each secret value hidden, such as "app.ts changes"
   for a diff. The tab menu and the status of the row name the tab by it,
   and the chat takes no name from a path. Its `draw(draw)` draws the tab
-  by the same name. For `draw.kind` `row`, it draws the tab at its place
+  by the same name. The host draws the temporary tab of the saved view with
+  its title in italics, and the tab adds "temporary" after its name. The
+  `title` of that tab stays the name alone, as
+  [The title of the tab](../../docs/protocol/temporary-tabs.md#the-title-of-the-tab)
+  says. For `draw.kind` `row`, it draws the tab at its place
   in the row: it spreads `draw.item` on the `<li>` of the tab and
   `draw.close` on the wrapper of its Close button, and gives
   `draw.link.ref` to the link of the tab. These hold the handlers, the
@@ -59,8 +63,12 @@ mount the chat.
   from the tab menu. For `lifted`, it draws the copy that a drag lifts
   above the page: the icon and the whole title, with no link and no Close.
   Its `show()` shows the tab, as a plain click on its link does, for the
-  keys of Previous tab and Next tab. The host gives the key of Close tab
-  to its shown tab itself, as the shell does in `FileTab`.
+  keys of Previous tab and Next tab. Its `keep` keeps the temporary tab in
+  its place, as a double-click on the tab does, for Keep open of its tab
+  menu. The host gives `keep` only to the temporary tab of the saved view,
+  and null to each kept tab, whose menu then has no Keep open. The chat
+  calls it and saves nothing of its own. The host gives the key of Close
+  tab to its shown tab itself, as the shell does in `FileTab`.
   Without `renderTab`, the row shows only the session tabs, as on a phone.
   `components/tab-row.ts` holds these types.
 - `onOpenDiff` gets the real path of a changed file of a finished turn. The

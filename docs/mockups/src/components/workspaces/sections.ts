@@ -60,11 +60,25 @@ export type ListMenu = { section: SectionKey }
  * A workspace that the user drags to another section: the list lifts its
  * row, and a line shows where it lands, before the row at `index`.
  */
-export type ListDrag = {
+type WorkspaceDrag = {
+  kind: 'workspace'
   workspace: string
   section: SectionKey
   index: number
 }
+
+/**
+ * A section that the user drags to another place in the list: the list
+ * lifts its header, and a line shows where it lands, before the section at
+ * `index`. The index counts the sections without the dragged one.
+ */
+type SectionDrag = {
+  kind: 'section'
+  section: SectionKey
+  index: number
+}
+
+export type ListDrag = WorkspaceDrag | SectionDrag
 
 function linkFor(key: string, open: boolean): string | undefined {
   if (key === 'checkout-autocomplete') return open ? paths.app : paths.starting

@@ -3,6 +3,7 @@ import { expect, it, vi } from 'vitest'
 import { backgroundFixture } from '../test-support/background'
 import { duringTurn, turn } from '../test-support/harness'
 import { deferred } from '../test-support/runtime'
+import { BACKGROUND_WORK_LIMIT_MS as LIMIT } from './engine-background'
 
 it('resets a wait from member receipt and keeps notification results separate from member acknowledgements', async () => {
   const h = await backgroundFixture()
@@ -19,7 +20,7 @@ it('resets a wait from member receipt and keeps notification results separate fr
     type: 'model',
     commandId: 'model',
     sessionId: 'session-1',
-    choice: { agent: 'claude', model: 'next', effort: 'max' },
+    choice: { agent: 'claude', model: 'next', effort: 'max', fast: false },
   })
   await entered.promise
   const message = h.engine.command({
@@ -73,7 +74,7 @@ it('resets a wait from member receipt and keeps notification results separate fr
     },
   ])
   await h.state('idle')
-  await vi.advanceTimersByTimeAsync(7198999)
+  await vi.advanceTimersByTimeAsync(LIMIT - 1001)
   await h.engine.idle()
   expect(h.ends()).toEqual([])
   await vi.advanceTimersByTimeAsync(1)
@@ -84,7 +85,7 @@ it('resets a wait from member receipt and keeps notification results separate fr
       sessionId: 'session-1',
       turnId: 'turn-1',
       state: 'finished',
-      durationMs: 7201000,
+      durationMs: LIMIT + 1000,
       files: [],
       endReason: 'background_work_limit',
       omittedFileCount: 0,
@@ -108,7 +109,7 @@ it('does not reset the count for a member message during active wake-up work', a
     user_message_uuids: [next.uuid],
   })
   await h.state('idle')
-  await vi.advanceTimersByTimeAsync(7198999)
+  await vi.advanceTimersByTimeAsync(LIMIT - 1001)
   await h.engine.idle()
   expect(h.ends()).toEqual([])
   await vi.advanceTimersByTimeAsync(1)
@@ -119,7 +120,7 @@ it('does not reset the count for a member message during active wake-up work', a
       sessionId: 'session-1',
       turnId: 'turn-1',
       state: 'finished',
-      durationMs: 7200000,
+      durationMs: LIMIT,
       files: [],
       endReason: 'background_work_limit',
       omittedFileCount: 0,

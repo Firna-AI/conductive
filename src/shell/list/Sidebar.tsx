@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { Plus, Repeat, type LucideIcon } from 'lucide-react'
+import { Plus, Repeat, Settings, type LucideIcon } from 'lucide-react'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import styles from '../../../docs/mockups/src/components/workspaces/Sidebar.module.css'
 import links from '../../../docs/mockups/src/components/workspaces/SidebarLinks.module.css'
@@ -27,8 +27,9 @@ export type ListCurrent =
   | null
 
 /**
- * The link to the settings of the org. A dot says that something there needs
- * the user: the last build of the cloud computer failed.
+ * The cog that links to the settings of the org. Its tooltip and its hidden
+ * text say Settings. A dot says that something there needs the user: the
+ * last build of the cloud computer failed.
  */
 export function SettingsLink(props: { orgId: string; current: boolean }) {
   const org = useOrgModel(props.orgId)
@@ -39,11 +40,14 @@ export function SettingsLink(props: { orgId: string; current: boolean }) {
     <AppLink
       aria-current={props.current ? 'page' : undefined}
       className={classes(links.settings, props.current && links.current)}
+      title="Settings"
       to={routes.settings(props.orgId)}
     >
+      <Settings aria-hidden size={15} />
       {alert ? <span aria-hidden className={links.alert} /> : null}
-      Settings
-      {alert ? <span className={ui.hidden}>, a build failed</span> : null}
+      <span className={ui.hidden}>
+        Settings{alert ? ', a build failed' : null}
+      </span>
     </AppLink>
   )
 }
@@ -129,7 +133,7 @@ export function RoutinesLink(props: {
 
 /**
  * The desktop sidebar beside the org rail: the org name with its Settings
- * link, New workspace, Routines, Search, and the sections of the org. A suspended
+ * cog, New workspace, Routines, Search, and the sections of the org. A suspended
  * org shows its sections read-only, without New workspace. While the
  * sidebar shows, its list offers New section to the command palette.
  */
