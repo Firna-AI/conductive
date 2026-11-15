@@ -227,7 +227,12 @@ The second group settle items that the mockups showed.
   Reason: no agent waits there, which is the reason of the Archive rule.
   My call of 14 November 2026.
 - Replace changes the description too, with the rights of secrets
-  decision 3 B. Reason: Replace is the existing right to change a
+  decision 3 B.
+- The reveal route is a POST with the Origin check, because it writes a
+  record. My call of 14 November 2026.
+- After a Replace of the value, the row no longer shows the last reveal
+  of the old value. Reason: that reveal read a value that is gone. My
+  call of 14 November 2026. Reason: Replace is the existing right to change a
   secret, and a wrong description misleads the members who answer.
 
 ## Decisions
@@ -673,10 +678,8 @@ decision 133, and C changes Cal's name for the feature.
 
 ### Secrets decision 13: A notice of a waiting request
 
-Open. Cal's answer of 14 November 2026 named decision 12 twice, the
-second time as "12 = A (for now)". That answer may be meant for this
-decision. This change builds no notice until Cal confirms. A, change
-nothing, needs no work.
+Cal chose A on 15 November 2026, for now: no notice of a waiting
+request. Only the Needs input mark shows it.
 
 Root question: how does a member learn in time that an agent waits
 for a secret? A request waits 90 seconds. A Mac command request gets a
@@ -708,7 +711,11 @@ adds behaviour that no requirement covers.
 
 ### Secrets decision 14: A reveal in a suspended org
 
-Open. Root question: may an admin of a suspended org get a secret value?
+Cal chose B on 15 November 2026. The Worker refuses each reveal in a
+suspended org, through the write gate of a change, and the screen hides
+Reveal. Reason: a reveal writes a record, so it is a change.
+
+The record of the options as they were asked. Root question: may an admin of a suspended org get a secret value?
 The mockups hide Reveal in a suspended org. An org suspension refuses
 each change but keeps each read, and a reveal is a read. The options:
 
@@ -717,12 +724,28 @@ each change but keeps each read, and a reveal is a read. The options:
 - B. The Worker also refuses each reveal in a suspended org, with the
   refusal of a suspended org. Effort: Small.
 
-Recommendation: B. The screen and the Worker then follow one rule.
-Action: ask the user, because B adds a new refusal.
+- C. Show Reveal in a suspended org. The Worker answers it and writes
+  the record, through an exception in the write gate, as a leave has.
+  An admin of an org that is suspended for abuse can still copy each
+  value. Effort: Small.
+
+Facts from the options check: a reveal writes a record that every member
+sees on the row, so it is a change, not a read. A suspension already
+refuses reads that give access, such as a terminal or a new preview.
+
+Recommendation: B. A reveal is a POST with the Origin check, so the
+write gate already refuses it in a suspended org with no new code. A and
+C each need an exception in the gate. Action: ask the user, because B
+adds a refusal that no requirement names.
 
 ### Secrets decision 15: How long reveal records stay
 
-Open. Root question: how long does the app keep each reveal record? The
+Cal chose B on 15 November 2026. The app keeps each reveal record while
+the org exists, also after its secret is deleted. Each record keeps the
+name of its secret. Reason: after a leak, the operator can still find who
+read a value that may still work.
+
+The record of the options as they were asked. Root question: how long does the app keep each reveal record? The
 Privacy page gives how long each kind of personal data stays. The
 options:
 
@@ -730,13 +753,31 @@ options:
 - B. Keep them while the org exists, also after the secret is deleted.
   Effort: Small.
 
-Recommendation: B. The record shows who read a value, and a delete must
-not hide that. Action: ask the user, because the options trade the
+- C. Keep only the last reveal of each secret. It ends with the secret.
+  A review after a leak sees only the last reader. Effort: Small.
+- D. B, plus a list of reveals in the Secrets tab, also for deleted
+  secrets. Effort: Medium.
+- E. Keep each record for a set time, such as one year, also after the
+  delete. Effort: Medium.
+- F. An org log of each reveal, Replace, delete, change of the mark,
+  and change in Capabilities, with the member and the time. Effort:
+  Large.
+
+Recommendation: B, with the reason of the options check. No screen shows
+a record of a deleted secret, but the secret request records stay while
+their org exists. After a leak, the operator can still find who read a
+value that may still work. Each record keeps the name of its secret. F
+is the wider fix. Action: ask the user, because the options trade the
 record of who read a value against keeping less personal data.
 
 ### Secrets decision 16: The Capabilities icon on a phone
 
-Open. Root question: how does the phone composer keep the model and the
+Cal chose G on 15 November 2026. On a phone, Stop shows only its icon,
+and Attach files and Capabilities move into one menu. Reason: only G keeps
+the model and the login label readable at 360 px, and the menu gives
+later tools a place on a phone.
+
+The record of the options as they were asked. Root question: how does the phone composer keep the model and the
 login readable with the Capabilities icon? On a phone, the composer bar
 holds attach, Capabilities, the model picker, another member's login
 label, Stop, and Send. In a running turn on another member's login, the
@@ -751,14 +792,29 @@ model shows only "O…" and the login only "C…". The options:
 Left out: hiding the login label, because it shows whose login a message
 uses.
 
-Recommendation: B. It frees about 40 px with no new control. Action: ask
-the user, because each option changes an existing screen or hides what
-a message uses.
+- D. On a phone, the label shows only the name after the plug icon, such
+  as "Cal". Effort: Small.
+- E. B plus D. The model is cut at 360 px. Effort: Small.
+- F. On a phone, one button holds Stop and Send. It changes "Stop sits
+  beside Send". Effort: Small.
+- G. B plus C. On a phone, attaching a file takes two taps. Effort:
+  Medium.
+
+Facts from the options check: B frees 29 px, not 40 px. At 360 px, B
+still shows "O…" and "C…". Only F and G keep the model and the name
+readable at 360 px.
+
+Recommendation: G. The plan first recommended B. G keeps the model and
+the name readable at both widths and keeps the words of the label, and
+its menu gives later tools a place on a phone. Action: ask the user,
+because each option changes an existing screen.
 
 The options check of decisions 5, 6, and 7 is in
 `.context/agent-secrets/options-check.md`. The check of decisions 8 and 9
 is in `.context/agent-secrets/options-check-8-9.md`. The check of
 decisions 10 to 13 is in `.context/agent-secrets/options-check-10-13.md`.
+The check of decisions 14 to 16 is in
+`.context/agent-secrets/options-check-14-16.md`.
 
 ## Milestone 1: Mockups
 
@@ -791,9 +847,12 @@ The mockups show each new screen and flow before any code changes.
       `.context/agent-secrets/mockups-report.md`.
 - [x] Apply the design calls from the mockups for archive, the phone
       sheet, mixed names, the description on Save, and Replace.
-- [ ] Apply the answers to secrets decisions 10 to 12 to the mockups.
+- [x] Apply the answers to secrets decisions 10 to 12 to the mockups.
       Show the agent's own tool call line beside each run card, as the
       real chat does.
+- [ ] Apply secrets decision 16 G to the phone composer mockups. Change
+      the rationale of the suspended settings mockup, which says that a
+      reveal changes nothing, for secrets decision 14 B.
 
 ## Milestone 2: Documentation and protocol
 
@@ -826,10 +885,14 @@ Depends on: 2
 - [ ] Add the settings routes: list, create, replace, delete, set the
       mark, and reveal. Check the rights of secrets decision 3 B in the
       Worker. The list never holds a value.
-- [ ] Take the capabilities in the create of a workspace: the
+- [x] Take the capabilities in the create of a workspace: the
       pre-approved secrets and Mac access. Refuse Mac command requests of a
       workspace with Mac access off.
-- [ ] Add tests beside the code.
+- [x] Add tests beside the code.
+- [ ] Add the reveal route and the reveal records under secrets
+      decisions 2 A, 14 B, and 15 B, with tests. State 14 B in
+      `docs/protocol/secrets.md` and `docs/protocol/operator-actions.md`,
+      and 15 B in the Privacy page.
 
 ## Milestone 4: Tool routes and requests
 

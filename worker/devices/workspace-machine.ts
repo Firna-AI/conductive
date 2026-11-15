@@ -17,6 +17,8 @@ import { deviceBrokerName } from './paths'
 import { commandPending } from './records'
 import { deviceWire } from './socket'
 import type { WorkspaceDevices } from './workspace-commands'
+import { workspaceMacAccess } from '../secrets/capabilities-data'
+import { MAC_ACCESS_OFF } from './mac-access'
 
 export async function workspaceMachine(
   devices: WorkspaceDevices,
@@ -40,12 +42,15 @@ export async function workspaceMachine(
   const path = new URL(request.url).pathname
   if (request.method === 'POST' && path === DEVICE_COMMAND_PATH) {
     const input = readDeviceCommandInput(await readJsonObject(request))
-    const target = deviceObject(
-      await deviceCall(devices.env, deviceBrokerName(active.sender.id), {
-        type: 'broker.target',
-        userId: active.sender.id,
-      }),
-    )
+    const macAccess = await workspaceMacAccess(devices.env.DB, workspace.id)
+    const target = macAccess
+      ? deviceObject(
+          await deviceCall(devices.env, deviceBrokerName(active.sender.id), {
+            type: 'broker.target',
+            userId: active.sender.id,
+          }),
+        )
+      : { device: null }
     const device =
       target.device === null ? null : readDevicePairing(target.device)
     const now = devices.now()
@@ -61,14 +66,16 @@ export async function workspaceMachine(
       device,
       deviceName:
         typeof target.deviceName === 'string' ? target.deviceName : null,
-      state: device ? 'waiting' : 'unavailable',
+      state: !macAccess ? 'failed' : device ? 'waiting' : 'unavailable',
       result: null,
-      error: device
-        ? null
-        : {
-            code: 'device_unavailable',
-            message: 'The Mac is not available.',
-          },
+      error: !macAccess
+        ? MAC_ACCESS_OFF
+        : device
+          ? null
+          : {
+              code: 'device_unavailable',
+              message: 'The Mac is not available.',
+            },
       createdAt: now,
       startedAt: null,
       updatedAt: now,
@@ -79,6 +86,8 @@ export async function workspaceMachine(
       workspace.tokenHash,
       typeof target.sessionId === 'string' ? target.sessionId : '',
     )
+    if (!macAccess && stored.state === 'waiting')
+      stored = await devices.fail(stored.requestId, MAC_ACCESS_OFF.code)
     if (stored.state === 'waiting') {
       let sent = false
       try {
@@ -94,7 +103,12 @@ export async function workspaceMachine(
         /* A failed relay must not leave an approval waiting. */
       }
       if (!sent)
-        stored = await devices.fail(stored.requestId, 'device_unavailable')
+        stored = await devices.fail(
+          stored.requestId,
+          (await workspaceMacAccess(devices.env.DB, workspace.id))
+            ? 'device_unavailable'
+            : MAC_ACCESS_OFF.code,
+        )
     }
     return machineResponse(stored)
   }

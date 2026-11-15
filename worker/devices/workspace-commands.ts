@@ -16,6 +16,12 @@ import { deviceBrokerName } from './paths'
 import { commandPending, DeviceRecords } from './records'
 import { workspaceMachine } from './workspace-machine'
 import type { DeviceStateProjection } from './state'
+import { workspaceMacAccess } from '../secrets/capabilities-data'
+import {
+  commandAccessError,
+  commandFailureState,
+  MAC_ACCESS_OFF,
+} from './mac-access'
 
 export class WorkspaceDevices {
   readonly records: DeviceRecords
@@ -43,6 +49,11 @@ export class WorkspaceDevices {
   async validation(record: DeviceCommandRecord, tokenHash: string) {
     if ((await this.records.tokenHash(record.requestId)) !== tokenHash)
       return { valid: false, reason: 'access_revoked' }
+    if (
+      record.state === 'waiting' &&
+      !(await workspaceMacAccess(this.env.DB, record.workspaceId))
+    )
+      return { valid: false, reason: MAC_ACCESS_OFF.code }
     try {
       const active = await activeDeviceSender(
         this.chat,
@@ -69,18 +80,13 @@ export class WorkspaceDevices {
   }
   fail(id: string, reason: string) {
     return this.records.change(id, async (record) =>
-      commandPending(record)
+      commandPending(record) &&
+      !(reason === MAC_ACCESS_OFF.code && record.state === 'running')
         ? {
             ...record,
-            state: reason === 'turn_ended' ? 'failed' : 'unavailable',
+            state: commandFailureState(reason),
             updatedAt: this.now(),
-            error: {
-              code: reason,
-              message:
-                reason === 'turn_ended'
-                  ? 'The agent turn has ended.'
-                  : 'The Mac is not available.',
-            },
+            error: commandAccessError(reason),
           }
         : record,
     )
@@ -92,7 +98,8 @@ export class WorkspaceDevices {
       await this.records.tokenHash(record.requestId),
     )
     if (!check.valid) {
-      await this.fail(record.requestId, check.reason)
+      const ended = await this.fail(record.requestId, check.reason)
+      if (commandPending(ended)) return
       await deviceCall(this.env, deviceBrokerName(record.sender.id), {
         type: 'broker.cancel',
         requestId: record.requestId,
@@ -140,6 +147,10 @@ export class WorkspaceDevices {
   async operation(
     operation: Record<string, unknown>,
   ): Promise<DeviceOperationValue> {
+    if (operation.type === 'workspace.mac-access-changed') {
+      await this.reconcile()
+      return { cancelled: true }
+    }
     const record = await this.records.require(
       deviceRequired(operation.requestId),
     )
@@ -193,6 +204,16 @@ export class WorkspaceDevices {
       record.requestId,
       async (current) => {
         if (!commandPending(current)) return current
+        if (
+          current.state === 'waiting' &&
+          !(await workspaceMacAccess(this.env.DB, current.workspaceId))
+        )
+          return {
+            ...current,
+            state: 'failed',
+            error: MAC_ACCESS_OFF,
+            updatedAt: this.now(),
+          }
         if (state === 'unavailable')
           return {
             ...current,
@@ -216,15 +237,11 @@ export class WorkspaceDevices {
         if (!check.valid || !alive)
           return {
             ...current,
-            state: check.reason === 'turn_ended' ? 'failed' : 'unavailable',
+            state: commandFailureState(check.reason),
             updatedAt: this.now(),
-            error: {
-              code: check.valid ? 'device_unavailable' : check.reason,
-              message:
-                check.reason === 'turn_ended'
-                  ? 'The agent turn has ended.'
-                  : 'The Mac is not available.',
-            },
+            error: commandAccessError(
+              check.valid ? 'device_unavailable' : check.reason,
+            ),
           }
         if (
           state === 'waiting' ||

@@ -50,6 +50,15 @@ It sets the branch's `gh-merge-base` Git setting to the workspace base.
 Create, resume, and disk retention pass that base through `CONDUCTIVE_DEFAULT_BRANCH`.
 A null stored base uses the repository default branch.
 
+The browser create takes optional workspace capabilities.
+`request-parser.ts` reads the pre-approved secret IDs and Mac access.
+`create-request.ts` checks that the selected secrets belong to the org.
+`creation-plan-statements.ts` saves these choices, and `creation-claims.ts`
+reads them for each retry. `workspace-data.ts` writes Mac access and the
+pre-approvals with the workspace records in one D1 batch.
+An omitted choice gives no pre-approval and keeps Mac access on.
+The [secrets backend](../secrets/README.md) owns the capability data.
+
 ### Input activity
 
 [Input activity](routes.md#input-activity) gives how one

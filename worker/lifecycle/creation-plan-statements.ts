@@ -12,10 +12,10 @@ export function planStatement(
       `INSERT OR IGNORE INTO workspace_creation_plans
     (workspace_id, repository_id, owner_user_id, section_id, session_id, turn_id, city, branch,
      start_attempt, startup_script, environment_ciphertext, image_name, default_branch, agent, model, effort, attachment_ids_json,
-     repositories_json, repository_locations_json, message_text, base_branch, start_sha, name, provider_account, first_session_title)
+     repositories_json, repository_locations_json, message_text, base_branch, start_sha, name, provider_account, first_session_title, capabilities_json)
     SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, s.startup_script, s.env_vars_ciphertext,
       b.snapshot_name, json_extract(repository.value, '$.defaultBranch'), ?, ?, ?, ?,
-      j.repositories_json, j.repository_locations_json, ?, ?, ?, ?, b.provider_account, ?
+      j.repositories_json, j.repository_locations_json, ?, ?, ?, ?, b.provider_account, ?, ?
     ${publishedRepositorySource}
     AND EXISTS (SELECT 1 FROM workspace_creation_attempts a
       WHERE a.workspace_id = ? AND a.org_id = s.org_id AND a.state = 'pending')`,
@@ -39,6 +39,9 @@ export function planStatement(
       job.startSha ?? null,
       creation.name ?? null,
       creation.firstSessionTitle ?? null,
+      JSON.stringify(
+        creation.capabilities ?? { preapprovedSecretIds: [], macAccess: true },
+      ),
       job.orgId,
       job.providerAccount,
       creation.repositoryId,

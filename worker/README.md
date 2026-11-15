@@ -54,6 +54,7 @@ On the app hostname, the Worker serves these API routes:
 - Leave org, under the existing last-active-admin rule.
 - The create, read, resume, and activity routes of a workspace.
 - The view and the read mark of a workspace.
+- Org secret settings and workspace capabilities, through the [secrets backend](secrets/README.md).
 - The Mac device routes.
 - `GET /api/feedback`, the reply address of feedback, and `POST /api/feedback`, the send of feedback, as [Feedback routes](app-api/feedback.md) says.
 - `GET /api/operator/overview`, the app-wide numbers for operators.
@@ -256,6 +257,7 @@ Call other parts of the app through a binding or an RPC method, not a global `fe
 - [waitlist/route.ts](waitlist/route.ts) reads the signed-in user's waitlist state and uses invite or referral codes.
 - [waitlist/grant.ts](waitlist/grant.ts) supplies the shared app access grant statements for D1 batches.
 - [app-api/README.md](app-api/README.md) names the entry points of the account, shell, and workspace routes.
+- [secrets/README.md](secrets/README.md) owns encrypted org secrets, their grants, and workspace capabilities.
 - [configuration.ts](configuration.ts): `runnerSoftware` reads the runner archive variables for builds and refreshes.
 - [chat/router.ts](chat/router.ts) forwards the browser chat routes and the runner socket to the Durable Object of their workspace.
 - [workspace.ts](workspace.ts) composes each workspace Durable Object. [workspace-lifecycle.ts](workspace-lifecycle.ts) exposes its lifecycle RPC methods and owns its [input activity](lifecycle/README.md#input-activity). Its constructor restores the native sockets, and it receives their message, close, and error events.

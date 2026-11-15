@@ -231,6 +231,15 @@ It keeps every other preference and every saved view.
 An unset view now uses the dialog, so only accounts made after this migration get the dialog without a choice.
 [The preference](../docs/protocol/create-a-workspace.md#the-preference) gives the requirement.
 
+`202611141345_agent_secrets.sql` adds encrypted org secrets, workspace
+pre-approvals, and session approvals. A name is unique in its org.
+Composite foreign keys keep each grant within its org and delete its rows
+with its secret or workspace. Creator and approver IDs are opaque
+attribution IDs, so account removal keeps the records.
+The migration adds `workspaces.mac_access`, on for each existing and new
+row, and `workspace_creation_plans.capabilities_json` for create recovery.
+The [secrets backend](../worker/secrets/README.md) owns these records.
+
 ## Reserved ranges
 
 Each milestone owns the complete inclusive range below.

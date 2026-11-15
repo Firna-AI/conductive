@@ -3,6 +3,7 @@ import type { AgentChoice } from '../../src/shared/agents'
 import type { User } from '../../src/shared/api'
 import type { WorkspaceStartJob } from './start-types'
 import { HttpError } from '../http'
+import { readCreationCapabilities } from '../secrets/capabilities-input'
 import { leaseStatement, planStatement } from './creation-plan-statements'
 import { readRepositories } from './settings-data'
 import { capturedRepositoryLocations } from './repository-locations'
@@ -98,6 +99,7 @@ export async function claimCreation(
 }
 
 interface PlanRow {
+  capabilitiesJson: string | null
   repositoryId: string
   ownerUserId: string
   sectionId: string | null
@@ -139,7 +141,7 @@ export async function recordedCreationJob(
     p.image_name AS imageName, p.provider_account AS providerAccount,
     p.default_branch AS defaultBranch, p.base_branch AS baseBranch, p.start_sha AS startSha, p.agent, p.model, p.effort,
     p.repositories_json AS repositoriesJson, p.repository_locations_json AS repositoryLocationsJson, p.message_text AS messageText,
-    p.attachment_ids_json AS attachmentIds, a.created_at AS createdAt
+    p.attachment_ids_json AS attachmentIds, a.created_at AS createdAt, p.capabilities_json AS capabilitiesJson
     FROM workspace_creation_plans p JOIN workspace_creation_attempts a ON a.workspace_id = p.workspace_id
     WHERE p.workspace_id = ? AND a.org_id = ? AND a.sender_user_id = ? AND a.first_message_id = ?`,
     )
@@ -178,6 +180,11 @@ export async function recordedCreationJob(
     stdoutOffset: 0,
     stderrOffset: 0,
     creation: {
+      capabilities: readCreationCapabilities(
+        plan.capabilitiesJson === null
+          ? undefined
+          : JSON.parse(plan.capabilitiesJson),
+      ),
       user: await creationUser(db, plan.ownerUserId),
       sender: await creationUser(db, key.senderUserId),
       repositoryId: plan.repositoryId,

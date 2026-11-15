@@ -6,6 +6,8 @@ import { requireOrgMember } from './access'
 import { readCreationImage } from './published-image-data'
 import type { WorkspaceRuntime } from './workspace-runtime'
 import type { WorkspaceStartJob } from './start-types'
+import { readCreationCapabilities } from '../secrets/capabilities-input'
+import { requireOrgSecrets } from '../secrets/capabilities-data'
 
 export interface WorkspaceCreationBase {
   branch: string
@@ -29,6 +31,8 @@ export async function prepareCreationRequest(
 ): Promise<WorkspaceStartJob> {
   const { env, dependencies } = runtime
   await requireOrgMember(env.DB, orgId, user.id)
+  const capabilities = readCreationCapabilities(input.capabilities)
+  await requireOrgSecrets(env.DB, orgId, capabilities.preapprovedSecretIds)
   const image = await readCreationImage(
     env.DB,
     orgId,
@@ -70,6 +74,7 @@ export async function prepareCreationRequest(
       firstSessionTitle: input.firstSessionTitle,
       request: input.firstMessage,
       createdAt: dependencies.now(),
+      capabilities,
     },
     processId: null,
     stdoutOffset: 0,
