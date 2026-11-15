@@ -1,6 +1,6 @@
 # Agent secrets
 
-Status: Active. On branch `calummoore/quito-0ojg`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
+Status: Active. [PR #379](https://github.com/Firna-AI/conductive/pull/379) is open. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
 Today an admin saves org env vars in the org settings, and every cloud
 computer gets all of them at each start, with no approval. Cal asked on
