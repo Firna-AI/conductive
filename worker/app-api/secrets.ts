@@ -2,8 +2,11 @@ import {
   secretAllAgentsPath,
   secretPath,
   secretsPath,
+  type CreateSecretRequest,
+  type ReplaceSecretRequest,
   type SecretResponse,
   type SecretsResponse,
+  type SetSecretAllAgentsRequest,
 } from '../../src/shared/secrets'
 import type { AppDependencies, AppEnv } from '../env'
 import { HttpError, requiredString } from '../http'
@@ -47,14 +50,20 @@ export async function secretsRoute(
     const allAgents = optionalBoolean(body.allAgents) ?? false
     await requireSecretWriter(env.DB, orgId, userId, undefined, allAgents)
     const secretId = dependencies.randomToken()
+    const input: CreateSecretRequest = {
+      name: requiredString(body.name),
+      description: optionalText(body.description) ?? '',
+      value: text(body.value),
+      allAgents,
+    }
     const saved = await insertSecret(env.DB, {
       orgId,
       id: secretId,
       userId,
-      name: requiredString(body.name),
-      description: optionalText(body.description) ?? '',
+      name: input.name,
+      description: input.description,
       ciphertext: await encrypt(
-        text(body.value),
+        input.value,
         secretValueContext(orgId, secretId),
         env.BOAT_KEY_ENCRYPTION_KEY,
       ),
@@ -87,12 +96,16 @@ export async function secretsRoute(
         await requireSecretWriter(env.DB, orgId, userId, id)
       return new Response(null, { status: 204 })
     }
-    const value = optionalText(body.value)
+    const input: ReplaceSecretRequest = {
+      value: optionalText(body.value),
+      description: optionalText(body.description),
+    }
+    const value = input.value
     const saved = await replaceSecret(env.DB, {
       orgId,
       id,
       userId,
-      description: optionalText(body.description),
+      description: input.description,
       ciphertext:
         value === undefined || value === ''
           ? undefined
@@ -111,13 +124,14 @@ export async function secretsRoute(
     await requireSecretWriter(env.DB, orgId, userId, id, true)
     const allAgents = optionalBoolean(body.allAgents)
     if (allAgents === undefined) throw invalidInput()
+    const input: SetSecretAllAgentsRequest = { allAgents }
     if (
       !(await setSecretAllAgents(
         env.DB,
         orgId,
         id,
         userId,
-        allAgents,
+        input.allAgents,
         dependencies.now(),
       ))
     )
