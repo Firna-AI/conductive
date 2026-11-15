@@ -1,9 +1,9 @@
 import { expect, it } from 'vitest'
 
-import { PreviewTiming } from './timing'
+import { ServerTiming } from './server-timing'
 
 it('lists each step in order with a whole number of milliseconds', async () => {
-  const timing = new PreviewTiming()
+  const timing = new ServerTiming()
   expect(await timing.step('access', async () => 'row')).toBe('row')
   timing.add('upstream', 12.6)
   timing.add('check', -1)
@@ -13,7 +13,7 @@ it('lists each step in order with a whole number of milliseconds', async () => {
 })
 
 it('records a step that fails and passes on its error', async () => {
-  const timing = new PreviewTiming()
+  const timing = new ServerTiming()
   const failure = new Error('refused')
   await expect(
     timing.step('access', () => Promise.reject(failure)),

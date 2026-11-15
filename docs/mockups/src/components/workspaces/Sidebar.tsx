@@ -25,7 +25,7 @@ import styles from './Sidebar.module.css'
 
 /**
  * The desktop sidebar beside the org rail: the org name with its Settings
- * link, New workspace, Routines, Search, and the sections of the org.
+ * cog, New workspace, Routines, Search, and the sections of the org.
  * A suspended org keeps Routines and Search, with read-only sections.
  * A list that did not load shows its failure in place of the sections.
  * An open menu of a row may pass the edge of the sidebar.

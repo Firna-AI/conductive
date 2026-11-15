@@ -11,13 +11,20 @@ import { StandardSpeedNote } from './StandardSpeedNote'
 import styles from './TurnEnd.module.css'
 import { TurnFileList } from './TurnFileList'
 
+/**
+ * A changed file of the turn. It shows the lines that the file adds and
+ * removes only when one count is above zero, so a file without line
+ * changes, such as a binary file, has no "+0".
+ */
 function FileChip(props: { file: ChangedFile }) {
   const { file } = props
   const content = (
     <>
       <FileText className={styles.icon} size={12} />
       {splitPath(file.path).name}
-      <DiffStat added={file.added} removed={file.removed} />
+      {file.added > 0 || file.removed > 0 ? (
+        <DiffStat added={file.added} removed={file.removed} />
+      ) : null}
     </>
   )
   if (!file.diff) return <span className={styles.chip}>{content}</span>

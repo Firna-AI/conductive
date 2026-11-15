@@ -76,7 +76,7 @@ export const cloudFeatures: readonly ParityFeature[] = [
     area: 'cloud',
     name: 'Organization environment and secrets',
     status: 'available',
-    note: 'Admins set org environment variables and secrets. Saved values stay hidden in settings. Personal cloud variables are under consideration.',
+    note: 'Admins set org environment values, hidden in settings after saving. Separate secrets for agent commands are planned, while personal cloud variables remain under consideration.',
   },
   {
     id: 'cloud-agent-credentials',

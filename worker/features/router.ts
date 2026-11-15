@@ -3,7 +3,7 @@ import { forwardWorkspaceRequest } from '../chat/router'
 import { HttpError } from '../http'
 import { createPreviewHandler } from '../previews/handler'
 import { previewHostnames } from '../previews/hostname-cache'
-import { PreviewTiming, SERVER_TIMING_HEADER } from '../previews/timing'
+import { ServerTiming, SERVER_TIMING_HEADER } from '../server-timing'
 import { featureWorkspaceId, isFeatureWorkspacePath } from './paths'
 import { sessionGate } from '../security/gate'
 
@@ -27,7 +27,7 @@ export async function routePreview(
   const url = new URL(request.url)
   if (url.hostname === `authorize.${env.PREVIEW_DOMAIN}`)
     return createPreviewHandler(env, dependencies).proxy(request)
-  const timing = new PreviewTiming()
+  const timing = new ServerTiming()
   const now = dependencies.now()
   const cached = previewHostnames.get(url.hostname, now)
   if (cached) timing.add('lookup', 0)

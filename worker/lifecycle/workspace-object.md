@@ -130,6 +130,9 @@ create and resume. The workspace object runs that start:
 
 - A create or a resume queues its start with `queueLifecycleStart`. The
   workspace object runs the start, so a closed browser does not cancel it.
+- The queue sets the start alarm to the current time, so the first step
+  runs at once. A create answers only after its first step, the
+  `records` phase, so a later alarm would delay each create.
 - A create waits only for its admission, with `waitCreationAdmission`.
   Admission makes the workspace, its token, and the first message durable.
   The sandbox can still be starting. `waitCreationLifecycle` waits for the

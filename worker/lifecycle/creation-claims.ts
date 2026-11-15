@@ -132,7 +132,7 @@ export async function recordedCreationJob(
   id: string,
   text: string,
 ): Promise<WorkspaceStartJob | null> {
-  const plan = await db
+  const reading = db
     .prepare(
       `SELECT p.repository_id AS repositoryId, p.owner_user_id AS ownerUserId,
     p.section_id AS sectionId, p.session_id AS sessionId, p.turn_id AS turnId, p.city, p.name, p.first_session_title AS firstSessionTitle, p.branch,
@@ -146,7 +146,16 @@ export async function recordedCreationJob(
     )
     .bind(id, key.orgId, key.senderUserId, key.messageId)
     .first<PlanRow>()
+  // The sender loads with the plan, so the create waits for one trip.
+  const [plan, sender] = await Promise.all([
+    reading,
+    findCreationUser(db, key.senderUserId),
+  ])
   if (!plan) return null
+  const owner =
+    plan.ownerUserId === key.senderUserId
+      ? sender
+      : await findCreationUser(db, plan.ownerUserId)
   const raw: unknown = JSON.parse(plan.attachmentIds)
   if (!Array.isArray(raw))
     throw new Error('Invalid creation attachment metadata')
@@ -179,8 +188,8 @@ export async function recordedCreationJob(
     stdoutOffset: 0,
     stderrOffset: 0,
     creation: {
-      user: await creationUser(db, plan.ownerUserId),
-      sender: await creationUser(db, key.senderUserId),
+      user: availableUser(owner),
+      sender: availableUser(sender),
       repositoryId: plan.repositoryId,
       sectionId: plan.sectionId ?? undefined,
       sessionId: plan.sessionId,
@@ -204,13 +213,16 @@ export async function recordedCreationJob(
   }
 }
 
-async function creationUser(db: D1Database, id: string): Promise<User> {
-  const user = await db
+function findCreationUser(db: D1Database, id: string): Promise<User | null> {
+  return db
     .prepare(
       'SELECT id, github_id AS githubId, github_login AS githubLogin, display_name AS displayName, avatar_url AS avatarUrl FROM users WHERE id = ?',
     )
     .bind(id)
     .first<User>()
+}
+
+function availableUser(user: User | null): User {
   if (!user)
     throw new HttpError(
       404,

@@ -181,6 +181,7 @@ export function Composer(props: ComposerProps) {
           >
             <ChipTextField
               agent={props.choice.agent}
+              caretAtEnd
               files={props.files}
               handle={field}
               label="Message"
