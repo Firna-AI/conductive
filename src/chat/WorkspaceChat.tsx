@@ -40,7 +40,7 @@ import styles from './WorkspaceChat.module.css'
 
 /** How the chat shows, and what it tells the app. */
 export interface ChatViewProps {
-  /** The phone layout takes 44 px touch targets and sheets for menus. */
+  /** The phone layout takes 40 px touch targets and sheets for menus. */
   viewport: 'desktop' | 'mobile'
   /** The time source for durations and relative times. */
   clock?: Clock

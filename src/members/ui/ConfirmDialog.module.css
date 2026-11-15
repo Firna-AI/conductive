@@ -61,7 +61,7 @@
   font-size: var(--ui-text-lg);
 }
 
-/* On a phone the actions share the width, each at least 44 px high. */
+/* On a phone the actions share the width, each at least 40 px high. */
 .sheetActions {
   display: flex;
   gap: 8px;
