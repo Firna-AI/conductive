@@ -117,3 +117,13 @@ it('keeps no version when an earlier start of the step carried another apt part'
   expect(next.software).toContain('apt-get update')
   expect(next.software).not.toContain('dpkg-query')
 })
+
+it('keeps the current version when an earlier start of the step carried the same apt part', async () => {
+  const fixture = fixtureForTest()
+  const current = await imagePackagesVersion()
+  await setOrgImagePackages(fixture, current)
+  const first = await runBuild(fixture, 'build', current)
+  expect(first.recorded).toBe(current)
+  const next = await runBuild(fixture, 'refresh')
+  expect(next.software).toContain('dpkg-query -W')
+})
