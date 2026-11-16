@@ -50,3 +50,13 @@ export const portFormCopy = {
   otherPort: 'Other port',
   open: 'Open preview',
 } as const
+
+/**
+ * The words of the page that shows while a preview opens, in a frame or in
+ * a browser tab. The server sends this page, so it reads the same words.
+ */
+export const previewOpeningCopy = {
+  opening: 'Opening preview',
+  failedTitle: 'Preview not available',
+  failedBody: 'Open it again from the workspace.',
+} as const

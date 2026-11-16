@@ -61,7 +61,7 @@ Its `url` is the authorizer address, with the hostname and a new grant only in
 the fragment. Its `expiresAt` ends that grant. The Mac app fetches it with its
 own session and the desktop Origin. It then opens `url` in the default browser.
 
-The launch page has a nonce-based CSP. Its `form-action` allows only the
+The launch page has a nonce-based CSP for its script and its style. Its `form-action` allows only the
 authorizer and the exact preview origin, because a browser can also check the
 303 target. Its `frame-ancestors` allows only `APP_ORIGIN` and the desktop
 origin. It sends `Referrer-Policy: origin`, because a form POST under
@@ -89,12 +89,21 @@ bodies get the same 404 as an invalid grant. Header mode cancels any body
 without reading or buffering it.
 
 A GET of the exact authorizer address without a query serves the authorizer
-page for a browser launch. Its CSP allows only its nonce script and requests
-to its own origin. Its `frame-ancestors 'none'` keeps it at the browser's top
+page for a browser launch. Its CSP allows only its nonce script and style and
+requests to its own origin. Its `frame-ancestors 'none'` keeps it at the browser's top
 level. Its script removes the fragment from the address before any request.
 It then sends the header mode POST. It follows only the clean address of the
 same preview hostname. On a failure, it asks the user to open the preview
 again from the workspace.
+
+The launch page and the authorizer page share one look from
+[opening-page.ts](opening-page.ts): the logo tile, a turning ring, and
+"Opening preview", in the colours of the app and the scheme of the system.
+`app/tools/preview-opening` of the mockups draws it. The page is one small
+file. Its style and its drawings are inline, and it loads no font, image,
+or script file. So each CSP adds only a `style-src` with the page nonce.
+The words come from `previewOpeningCopy` in the mockups, so the mockup and
+the page read the same.
 
 The `authorize` hostname never serves sandbox content. So no service worker of
 a previewed app can see a grant.
@@ -277,6 +286,7 @@ The shared sandbox predicate refuses old grants, cookies, and each stream batch 
 - [launch.ts](launch.ts) builds the launch replies and the authorizer page response, and handles both authorizer POST modes.
 - [launch-document.ts](launch-document.ts) builds the launch page markup and its CSP.
 - [browser-launch.ts](browser-launch.ts) builds the authorizer page for a browser launch.
+- [opening-page.ts](opening-page.ts) builds the shared look of both pages: the tile, the ring, the status, and the failure.
 - [preview-launch-path.ts](../security/preview-launch-path.ts) matches the exact launch path for the gate and the Mac app.
 - [credentials.ts](credentials.ts) issues grants with `launchGrant`, redeems each grant once with `redeemLaunchGrant`, and checks the credential cookies. Each one seals a `PreviewViewer`.
 - [proxy.ts](proxy.ts) routes the authorizer page and POST, checks the credential cookie, and owns the request flow.

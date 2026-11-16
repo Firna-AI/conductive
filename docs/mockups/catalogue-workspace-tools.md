@@ -82,6 +82,14 @@ Desktop:
   says "The latest list of servers is unavailable", with the time since
   the failure, and no Dismiss. A newer full report clears it. The page
   stands beside `app/tools/preview`, which already shows five screens.
+- `app/tools/preview-opening` has the page that shows while a preview
+  opens: in the frame of the Preview tool, in a new tab from Open, and in
+  the default browser from the Mac app. The logo tile sits above a turning
+  ring and "Opening preview", on the background of the app. The page
+  fades in after 150 ms, so a fast open shows no flash. The server sends
+  it as one small file, from `worker/previews/opening-page.ts`. Its
+  `failed` variant has "Preview not available" and asks the user to open
+  the preview again from the workspace.
 - `app/tools/desktop` has the hidden Desktop. It moved into its own
   folder and kept its path, so that `app/tools` shows only its canonical
   screen.
