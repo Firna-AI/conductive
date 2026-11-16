@@ -71,6 +71,12 @@ interface BarLink {
   href: string
 }
 
+/** The branch of the workspace and its base, the target of Create PR. */
+export interface BarBranches {
+  branch: string
+  base: string
+}
+
 /** What the bar, the phone row, and the top of the phone Checks tab show. */
 export interface BarView {
   actions: readonly BarAction[]
@@ -78,6 +84,12 @@ export interface BarView {
   message: BarMessage | null
   /** The words of a branch without a pull request, with no action or link. */
   note: string | null
+  /**
+   * The branch and its base while the branch has no pull request, also
+   * without an action and in a suspended org. The top of the phone Checks
+   * tab names them (decision 296). Null with a pull request.
+   */
+  branches: BarBranches | null
   /**
    * The tint of the main action: the tone of a tinted bar, so the button
    * matches the bar. Null on a bar without a tint.
@@ -263,5 +275,9 @@ export function barViewOf(input: BarInput): BarView {
         : banner.state === 'no-commits'
           ? barLabels.noCommits
           : null,
+    branches:
+      banner.pullRequest === null
+        ? { branch: banner.branch, base: banner.baseBranch }
+        : null,
   }
 }

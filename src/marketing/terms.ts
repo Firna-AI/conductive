@@ -30,7 +30,7 @@ export const termsDocument: LegalDocument = {
   at ${appDomain}, and in the Mac app. You accept their current version
   each time that you continue with GitHub to sign in. ${productName} keeps
   the latest version that you accepted, and the time when you first
-  accepted it. Effective date: 13 November 2026.`,
+  accepted it. Effective date: 16 November 2026.`,
   sections: [
     {
       title: `Who runs ${productName}`,
@@ -210,6 +210,15 @@ export const termsDocument: LegalDocument = {
           cloud computer and its sessions.
           Changed files move to the new branch. Commits that are not pushed
           stay on their local branches.`,
+        paragraph`When GitHub deletes a workspace's base branch,
+          ${productName} fetches the repository's default branch into its
+          cloud computer. The cloud computer uses the new base only after
+          that fetch succeeds. When no member starts the move, the fetch
+          uses the workspace owner's GitHub token. This includes moves from
+          GitHub events, automatic retries, and resumes of stopped cloud
+          computers. The token enters the cloud computer during the fetch.
+          Programs and members with terminal access can read it while the
+          fetch runs.`,
         paragraph`The agent actions in the pull request bar send messages as
           the member who clicks. The chat history keeps these messages and a
           note that names who used Continue and the branches.`,

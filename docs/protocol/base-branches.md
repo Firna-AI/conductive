@@ -73,8 +73,10 @@ says.
   branch in the same case (decision 290).
 - Only an answer of GitHub that the branch does not exist moves the base
   branch. A failed read of GitHub keeps it.
-- The cloud computer follows the move. Changes, the diffs, and a pull
-  request that the agent opens with `gh` then use the default branch.
+- The cloud computer follows the move, as
+  [The move in the cloud computer](#the-move-in-the-cloud-computer) says.
+  Changes, the diffs, and a pull request that the agent opens with `gh`
+  then use the default branch.
 - The pull request bar then names the default branch, and a message under
   the bar says that the base moved, as
   [Banner states](github-banner.md#banner-states) says.
@@ -85,6 +87,32 @@ says.
   - No move. A normal stack then ends with a bar that cannot read its
     state, and Create PR targets a branch that does not exist.
   - A bar state that turns off Create PR. The app then gives no way back.
+
+## The move in the cloud computer
+
+- The cloud computer first fetches the latest commit of the default branch
+  from GitHub. Only after that fetch does it target the default branch
+  (decision 297).
+- Reason: Changes compare from the merge base. An old copy of the default
+  branch lacks its newer commits, such as a merge commit of the deleted
+  branch. Changes would then show merged work as work of the workspace.
+- [A moved base](github-tokens.md#a-moved-base) says whose GitHub token
+  the fetch uses, and gives the ways that decision 297 rejected.
+- Until the fetch succeeds, the cloud computer keeps its earlier target.
+  Changes and the diffs then still work, against the earlier base branch.
+- One saved retry owns each unfinished move, in the record of the
+  workspace and in the cloud computer (decision 298). After each failure,
+  it tries again. It waits longer each time, up to a fixed longest wait.
+- Each resume of the cloud computer also runs an unfinished move. A
+  failure then does not stop the resume, and the saved retry stays.
+- The GitHub read that finds the deleted branch saves that retry and
+  changes the record of the workspace. It runs no command in the cloud
+  computer. So a failure in the cloud computer does not fail the GitHub
+  read of the pull request bar.
+- Reason: one retry for each move keeps the tries of a long failure few.
+  The pull request bar does not depend on the cloud computer.
+- A retry inside the GitHub read was rejected (decision 298). A failure in
+  the cloud computer then also fails that read.
 
 ## The branch of a pull request run
 

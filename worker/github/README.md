@@ -55,7 +55,7 @@ The [shared contracts](../../src/shared/github.ts) define the response bodies.
   A retry of a committed delivery reads its receipt and does not read GitHub.
   It republishes the event of a changed delivery with the same event number.
   A fresh read with unchanged banner and checks publishes no event.
-  It writes the snapshot only when it clears a completed base repair marker.
+  A pending base move keeps its private repair marker across unchanged reads.
   The comparison ignores `banner.updatedAt` and object-key order.
   After each commit, unchanged read, or receipt replay, it copies the summary in the same queue.
 - [createGitHubStatePort](chat-store.ts) builds that port on the `WorkspaceChat` of the workspace Durable Object.
@@ -241,12 +241,15 @@ Only `branch_not_found` moves the base to GitHub's live default branch.
 A failed read or missing repository access keeps the base.
 [Base branches](../../docs/protocol/base-branches.md#a-base-branch-that-github-deleted) states the requirement.
 
-The snapshot records the private `baseChange` repair marker before D1 changes.
+The snapshot records its private `baseChange` repair marker with one saved `baseChange:job` and its alarm source in the same transaction.
+The native alarm registers before that transaction commits.
 [moveWorkspaceBase](base-data.ts) then writes a null workspace base and records the live repository default in one D1 batch.
 Its guards bind the write to the repository, installation, workspace branch, and earlier base.
 Replaying an applied move does not overwrite a newer repository default.
 Each refresh reads the current stored base, so a saved refresh binding cannot restore the deleted base.
-Before another read replaces that snapshot, the refresh repairs any pending move.
+Before another read replaces that snapshot, the refresh repairs its D1 move.
+The job also repairs D1, so a failed D1 write has a saved retry.
+The snapshot keeps the marker until the cloud move completes.
 
 The public banner's optional `baseMoved` field names the deleted branch.
 The Worker keeps it across reads and object rebuilds until a pull request opens.
@@ -254,14 +257,9 @@ The app can use it with `barMessageText` and the `baseMoved` fact of the mockup 
 The banner names the default branch and compares commits with it.
 A pull request keeps its real GitHub base separately in the private `pullBaseBranch` snapshot field for Continue.
 
-[syncWorkspaceBase](../lifecycle/workspace-base.ts) applies the current base to a running cloud computer through its saved provider account.
-Its trusted [workspaceBaseCommand](../lifecycle/workspace-base-command.ts) sets the branch's `gh-merge-base` and `origin/HEAD` without a token or a checkout.
-The command does not depend on the current HEAD.
-It leaves both settings unchanged when the new base has no remote-tracking reference.
-The runner reads that setting again for each Changes report and diff.
-A failed command keeps the repair marker and schedules a fresh read after one second.
-A stopped computer tries to apply both settings in its next startup command, before its startup script and runner start.
-Startup continues if that metadata command fails, so a failed update cannot block resume.
+The GitHub read runs no cloud command.
+A cloud failure cannot fail a banner read, a merge reply, or the verify read of Continue.
+[Moved bases](../lifecycle/README.md#moved-bases) describes the shared isolated fetch and reference installation, the owner credential, resume, and the one retry job.
 
 ## The summary copy
 
@@ -274,7 +272,7 @@ It checks access once more and calls the copy callback with that snapshot, befor
 So a replay of an older receipt copies the current state, not the snapshot of its receipt.
 The replay still publishes the original event of that receipt.
 An unchanged read publishes no event, but it still repairs a missing or old copy.
-It can replace the private snapshot to clear an applied base repair marker.
+The base-change job clears its private marker when the cloud move completes.
 A read that returns `null`, such as an unrelated push, copies nothing.
 `saveWorkspaceGitHubSummary` updates only `github_summary`, when the value differs and the workspace still has the snapshot's branch.
 Continue clears the summary when it stores the new branch, so an old branch's copy cannot restore its mark.
@@ -302,8 +300,10 @@ The retry of a committed delivery replays its receipt and copies again, without 
 - [delivery-receipt.ts](delivery-receipt.ts) defines the receipt and builds the `github.updated` event from a snapshot, for a commit and a replay.
 - [refresh.ts](refresh.ts) checks dependencies and schedules bounded fresh reads.
 - [client.ts](client.ts) reads current GitHub state and follows pagination. Its `defaultBranch` reads the current default branch for Continue.
-- [base-moved.test.ts](base-moved.test.ts) checks a deleted base, its saved banner, failed reads, and publication repair.
-- [Cloud base tests](../features/base-moved.test.ts) check running and stopped computers and recovery after a failed command.
+- [base-moved.test.ts](base-moved.test.ts) checks a deleted base, its saved banner, and failed reads.
+- [Cloud base tests](../features/base-moved.test.ts) use native storage, saved alarms, and hibernation to check growing retries, resume, and failed D1 publication. The recovery push names an unrelated branch.
+- [Owner credential tests](../features/base-moved-credentials.test.ts) check the trusted fetch scope and keep tokens out of commands, saved state, logs, and banner replies.
+- [Native Git base tests](../lifecycle/base-change-native.test.ts) check an advancing merge commit, Changes, diffs, and a refused owner fetch.
 - [check-rollup.ts](check-rollup.ts) selects and pages one commit's checks while checking commit IDs.
 - [merge-handler.ts](merge-handler.ts) gates and parses the member merge routes.
 - [merge.ts](merge.ts) selects the capability, starts and polls merges, and diagnoses refusals.

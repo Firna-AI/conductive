@@ -70,7 +70,6 @@ export interface GitHubReadDependencies {
   fetch: HttpFetch
   token: GitHubTokenProvider
   now: () => number
-  syncBase?(workspace: GitHubWorkspace): Promise<void>
 }
 
 export interface GitHubStateTransaction {

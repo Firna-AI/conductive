@@ -3,6 +3,8 @@ import { pendingContinue } from '../lifecycle/continue-types'
 import { WorkspaceFiles } from '../files/workspace'
 import { durableFilesStorage } from '../files/storage'
 import { WorkspaceAlarms, nativeAlarmStorage } from '../features/alarms'
+import { WorkspaceBaseChanges } from '../lifecycle/workspace-base'
+import { baseChangeChatStorage } from '../lifecycle/base-change-storage'
 import { nativeWorkspaceStorage } from '../lifecycle/platform-storage'
 import {
   assertReceiverActive,
@@ -83,6 +85,7 @@ export function createWorkspaceIntegration(
     nativeAlarmStorage(storage),
     nativeAlarmStorage(context.storage),
   )
+  const baseChanges = new WorkspaceBaseChanges(env, dependencies, storage)
   const sockets = new WorkspaceSockets(context)
   const stoppedHooks: ((id: string) => Promise<void>)[] = []
   const files = new WorkspaceFiles(
@@ -92,7 +95,7 @@ export function createWorkspaceIntegration(
   const matches = (name: string) =>
     env.WORKSPACES.idFromName(name).equals(context.id)
   const chat: WorkspaceChat = new WorkspaceChat(
-    storage,
+    baseChangeChatStorage(storage),
     env,
     {
       ...resolvers,
@@ -225,6 +228,7 @@ export function createWorkspaceIntegration(
     dependencies,
     {
       ...platform,
+      baseChanges,
       assertStartActive: (turn) =>
         assertReceiverActive(storage, generations.forTurn(turn)),
       hasOutsideTurns: () => chat.store.hasOutsideTurns,
@@ -280,6 +284,7 @@ export function createWorkspaceIntegration(
     controller,
     files,
     alarms,
+    baseChanges,
     sockets,
     withGeneration: generations.withGeneration,
     reconcileStopped: () => devices.reconcile(),

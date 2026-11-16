@@ -43,7 +43,13 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         who requests the workspace. A merge uses the token of the member who
         clicks. Continue fetches the branch that the pull request merged into
         with the token of the member who clicks Continue. If that branch no
-        longer exists, it fetches the default branch.`,
+        longer exists, it fetches the default branch. When GitHub deletes a
+        workspace's base branch, ${productName} fetches the default branch
+        into its cloud computer. The cloud computer uses the new base only
+        after that fetch succeeds. When no member starts the move, the fetch
+        uses the workspace owner's GitHub token. This includes moves from
+        GitHub events, automatic retries, and resumes of stopped cloud
+        computers.`,
       text`The waitlist: a new account without app access waits while the
         waitlist is on or sign-ups are paused. It sees only the waitlist.
         When the waitlist is off and sign-ups are not paused, open sign-up

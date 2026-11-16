@@ -12,6 +12,7 @@ import { saveWorkspaceGitHubSummary } from './summary-data'
 import { readMergeWorkspace } from './merge-access'
 import type { WorkspaceGitHubState } from './workspace-state'
 import { moveWorkspaceBase } from './base-data'
+import { saveBaseChangeJob } from '../lifecycle/base-change-job'
 
 // Three fresh reads, one second apart, bound GitHub's merge-state retry work.
 const MERGE_STATE_RETRY_LIMIT = 3
@@ -130,12 +131,6 @@ async function readAndCommit(
       if (moved) {
         binding = moved
         await authorize()
-        try {
-          await dependencies.syncBase?.(moved)
-        } catch (error) {
-          await state.scheduleRefresh({ workspace: moved, signal: {} }, 1000)
-          throw error
-        }
       }
     }
     await saveWorkspaceGitHubSummary(
@@ -208,5 +203,7 @@ async function readAndCommit(
     signal,
     // A receipt can replay committed state from before Continue.
     copy,
+    (transaction, snapshot) =>
+      saveBaseChangeJob(transaction, snapshot, binding, dependencies.now()),
   )
 }

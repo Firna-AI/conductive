@@ -4,7 +4,8 @@ These parts show the GitHub state of a workspace branch: the pull request bar
 of the right column, the compact pull request row of a phone, and the Checks
 tab. The bar shows the main action of each state beside its links to
 GitHub: a fixed prompt for the agent, Merge, or Continue and Archive. On a
-phone, the actions top the Checks tab. [GitHub banner](../../docs/protocol/github-banner.md)
+phone, the actions top the Checks tab, under the branch and its base while
+the branch has no pull request. [GitHub banner](../../docs/protocol/github-banner.md)
 states the requirements, and the mockups under `app/banner` draw them.
 [The actions of the bar](actions.md) gives their state and their rules.
 
@@ -77,6 +78,12 @@ const controls = useBarControls({ github, actions, localWork, turnRuns, readOnly
   `onOpenChecks` lets the app's router open the tab in place. A branch
   without a pull request opens the tab too, when the bar has an action, so
   Create PR stays one tap away.
+- `ChecksActions` tops the Checks tab of a phone: the message of the bar,
+  then its actions and its link to GitHub. While the branch has no pull
+  request, the branch and its base stand above the actions, also when the
+  bar has none, as
+  [The branch and its base on a phone](../../docs/protocol/github-banner-layouts.md#the-branch-and-its-base-on-a-phone)
+  says. The names wrap, so each name shows in full.
 - A failed load shows one Try again on each screen: in the bar on desktop,
   and in the row on a phone. The Checks tab names the error without its own
   button, so keep the bar or the row on the screen with the Checks tab.

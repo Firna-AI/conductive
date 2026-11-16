@@ -79,6 +79,8 @@ export function createWorkspaceController(
     alarms,
   }))
   const controller: WorkspaceController = {
+    prepareWorkspaceBase: async () =>
+      (await platform.baseChanges?.resume()) ?? false,
     archiveLifecycle: (id) => archive.begin(id),
     reserveArchive: (id) => archive.reserve(id),
     restoreWorkspace: (orgId, id, userId, origin) =>
@@ -213,6 +215,8 @@ export function createWorkspaceController(
       if (turn) await lifecycle.turn(turn.sessionId, false, publish)
     },
     async credentialSender(turnId: string): Promise<string | null> {
+      const baseSender = await platform.baseChanges?.credentialSender(turnId)
+      if (baseSender !== undefined) return baseSender
       const state = await lifecycle.read()
       if (!state || state.state === 'stopped' || state.state === 'archived')
         return null

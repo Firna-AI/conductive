@@ -28,7 +28,8 @@ gives the create, read, resume, and activity routes of a workspace to
 - Repair the running turns, the idle time, and the name of a workspace
   from its committed chat, when a hook or a restart lost an update.
 - Give the git credential helper a fresh GitHub user token of the sender of
-  the current turn, or of the member who pressed Continue during its fetch.
+  the current turn, of the member who pressed Continue during its fetch,
+  or of the workspace owner during a saved base-move fetch.
 - Continue a workspace on a new branch after its merge, with the same
   sandbox and sessions.
 - Give the GitHub CLI the workspace owner's token outside an agent turn.
@@ -62,7 +63,8 @@ A null stored base uses the repository default branch.
 Each startup command tries to set `gh-merge-base` and `origin/HEAD` from the current stored base before the startup script and runner run.
 The metadata command does not depend on the current HEAD, and a failed update does not block startup.
 It leaves both settings unchanged when the new base has no remote-tracking reference.
-The GitHub refresh also uses [`workspace-base.ts`](workspace-base.ts) to apply a deleted-base move while the computer runs.
+An unfinished deleted-base move uses [the saved move job](#moved-bases) before startup.
+That startup skips its ordinary metadata command, so it cannot apply an unfinished move before the fetch.
 Try again keeps the saved start and base branches with its new allocation.
 
 ### Input activity
@@ -93,6 +95,36 @@ its phases, the staged fetch and the branch move, the publication, and the
 recovery. [Continue routes](continue-routes.md) gives its routes and errors.
 [The git credential sender](git-credentials.md#continue) gives the grant
 of its fetch.
+
+### Moved bases
+
+`WorkspaceBaseChanges` in [`workspace-base.ts`](workspace-base.ts) owns each deleted-base move.
+[`saveBaseChangeJob`](base-change-job.ts) saves one `baseChange:job` with the GitHub snapshot marker and alarm source.
+[`baseChangeChatStorage`](base-change-storage.ts) registers the native alarm in that same transaction.
+The job repairs D1 before it changes the cloud computer.
+It retains the same job ID after a D1 failure, a cloud failure, or object hibernation.
+Its retry delay starts at one second, doubles after each failure, and stops growing at 15 minutes.
+A stopped computer keeps the job until it can run again.
+Each resume attempts the same job before startup, even when its retry time is later.
+A failed attempt leaves the job and does not fail the resume.
+
+[`base-change-commands.ts`](base-change-commands.ts) shares the isolated fetch and reference installation with Continue.
+The fetch uses a bare stage outside the working repository.
+Only that fetch exports the trusted job ID for the credential helper.
+`credentialSender` maps that ID to the current workspace owner only while the fetch request runs.
+It rechecks the org, owner, repository, branch, sandbox ID, and provider account.
+A rebuilt object has no credential scope.
+An owner who cannot read the repository leaves the fetch pending under the same retry.
+
+The install command imports staged objects without a credential.
+It updates `refs/remotes/origin/<base>` before `gh-merge-base` and `origin/HEAD`.
+The missing-ref guard keeps both settings when the reference is absent.
+The install keeps HEAD, the workspace branch, the index, and local files.
+A pending Continue defers the move, so the two operations cannot change the target together.
+No token or provider output enters the saved job, command, logs, or reply.
+[Native Git tests](base-change-native.test.ts) check merge-base comparisons after a merge commit and a refused fetch.
+[Native workspace tests](../features/base-moved.test.ts) check D1 repair, retries, hibernation, and resume.
+[Credential tests](../features/base-moved-credentials.test.ts) check the owner scope and secret handling.
 
 ### Builds and refreshes
 

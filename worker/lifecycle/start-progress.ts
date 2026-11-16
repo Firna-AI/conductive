@@ -24,6 +24,7 @@ export async function advanceStartSteps(
   row: WorkspaceRow,
   job: WorkspaceStartJob,
   call: StartCall,
+  preserveBase = false,
 ): Promise<boolean> {
   if (job.phase === 'records') throw new WorkspaceStartError(null)
   if (startTimeLimitReached(job, dependencies.now()))
@@ -50,6 +51,7 @@ export async function advanceStartSteps(
       job,
       label,
       call,
+      preserveBase,
     ))
   )
     return false

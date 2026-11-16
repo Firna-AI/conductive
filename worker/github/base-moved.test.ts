@@ -113,29 +113,3 @@ it('keeps the stored base and last banner when GitHub cannot answer', async () =
     (await h.memory(f.workspace.id).state.stored())?.banner,
   ).not.toHaveProperty('baseMoved')
 })
-
-it('repairs a base publication that failed after its moved banner committed', async () => {
-  const f = await stacked()
-  h.api.branches.delete('refs/heads/feature/review')
-  await h.env.DB.exec(
-    "CREATE TRIGGER reject_base_move BEFORE UPDATE OF base_branch ON workspaces BEGIN SELECT RAISE(ABORT, 'held base publication'); END",
-  )
-  expect((await h.read(f.path, f.session)).status).toBe(500)
-  expect((await h.memory(f.workspace.id).state.stored())?.banner).toMatchObject(
-    { baseMoved: 'feature/review' },
-  )
-  await h.env.DB.exec('DROP TRIGGER reject_base_move')
-  h.memory(f.workspace.id).restart()
-  const repaired = await h.read(f.path, f.session)
-  expect(repaired.status).toBe(200)
-  expect(await repaired.json()).toMatchObject({
-    banner: { baseBranch: 'main', baseMoved: 'feature/review' },
-  })
-  expect(
-    await h.env.DB.prepare(
-      'SELECT base_branch AS base FROM workspaces WHERE id = ?',
-    )
-      .bind(f.workspace.id)
-      .first(),
-  ).toEqual({ base: null })
-})

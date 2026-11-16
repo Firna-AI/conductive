@@ -51,7 +51,7 @@ export async function runWorkspaceAlarms(
         await held.finish(now())
       }
     }
-    if (due.has('github')) await tasks.github()
+    if (due.has('github') || due.has('baseChange')) await tasks.github()
     if (due.has('previews')) await tasks.previews()
     if (!options.securityHandled)
       await alarms.run('devices', startedAt, tasks.devices)

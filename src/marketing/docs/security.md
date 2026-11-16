@@ -37,6 +37,7 @@ Its sender is the person whose message started that turn.
 | GitHub CLI outside a turn | The workspace owner's GitHub account |
 | Merge from the pull request bar | The GitHub account of the member who selects Merge |
 | Continue's repository fetch | The GitHub account of the member who selects Continue |
+| Base branch fetch when no member starts the move | The workspace owner's GitHub account |
 | Commit in an agent turn | The turn sender, as author and committer |
 | Commit outside a turn, including Terminal and scripts | The workspace owner by default, as author and committer |
 | A request to run a Mac command | The turn sender's connected Mac |
@@ -158,7 +159,10 @@ If its turn cannot start, follow the [ChatGPT recovery steps](/docs/agent-logins
 Code on the computer can also obtain the GitHub credential available to that workspace.
 This includes the workspace owner's GitHub credential outside a running agent turn.
 Continue also brings the clicking member's GitHub token into the cloud computer during its branch fetch.
-Code or members with terminal access can read that token during the fetch.
+Conductive also fetches a new base when GitHub deletes a workspace's base branch.
+When no member starts this move, the fetch brings the workspace owner's GitHub token into the cloud computer.
+This includes GitHub events, automatic retries, and resumes of stopped cloud computers.
+Code or members with terminal access can read these GitHub tokens while their fetches run.
 
 Removing a member ends their ordinary access to the org.
 It does not guarantee that credentials they copied stop working.

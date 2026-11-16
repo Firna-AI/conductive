@@ -72,6 +72,10 @@ This can include repositories outside the Conductive org.
 **Merge** and **Continue** in the pull request bar use the GitHub account of the member who selects them.
 The shared Terminal still uses the workspace owner's account.
 
+If GitHub deletes the workspace's base branch, Conductive moves its base to the default branch.
+A move that no member starts fetches with the workspace owner's GitHub account.
+This includes moves from GitHub events, automatic retries, and resumes of stopped cloud computers.
+
 - [Use pull request actions](/docs/pull-requests)
 
 ## Preview a running app

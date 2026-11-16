@@ -1,7 +1,9 @@
 import {
   Archive,
+  ArrowRight,
   CircleAlert,
   Clock,
+  GitBranch,
   GitBranchPlus,
   GitMerge,
   Info,
@@ -19,7 +21,7 @@ import type { ButtonTint } from '../../docs/mockups/src/components/common/tint'
 import { ActionButton } from './ActionButton'
 import { classes, GitHubLink } from './bannerParts'
 import { buttonKey, type CommandKeyOf } from './barKeys'
-import type { BarControls, BarMessage } from './barView'
+import type { BarBranches, BarControls, BarMessage } from './barView'
 
 /**
  * One button of the bar. An agent action sends its fixed prompt, Merge
@@ -175,20 +177,47 @@ export function BarMessageLine(props: {
 }
 
 /**
- * The actions of the bar at the top of the Checks tab of a phone, with the
- * message of the bar and its link to GitHub. The row above opens this tab,
- * because a button cannot sit inside the link of the row.
+ * The branch and its base at the top of the Checks tab of a phone, where
+ * Create PR stands (decision 296). They take the parts of the desktop bar:
+ * the branch icon, the branch, an arrow, and the base. The names wrap, and
+ * the base keeps its arrow on a line of its own, so each name shows in
+ * full: a phone has no tooltip.
+ */
+function ChecksBranches(props: { branches: BarBranches }) {
+  const { branch, base } = props.branches
+  return (
+    <div className={styles.branches}>
+      <GitBranch aria-hidden className={styles.branchIcon} size={13} />
+      <span className={styles.names}>
+        <span className={styles.branch}>{branch}</span>
+        <span className={styles.base}>
+          <ArrowRight aria-hidden className={styles.branchIcon} size={12} />
+          <span className={styles.baseName}>{base}</span>
+        </span>
+      </span>
+    </div>
+  )
+}
+
+/**
+ * The top of the Checks tab of a phone: the message of the bar, then its
+ * actions and its link to GitHub. While the branch has no pull request, the
+ * branch and its base stand above the actions, also when the bar has none.
+ * The row above opens this tab, because a button cannot sit inside the link
+ * of the row.
  */
 export function ChecksActions(props: { controls: BarControls | null }) {
   const { controls } = props
   if (!controls) return null
   const { view } = controls
-  if (!view.message && view.actions.length === 0 && !view.link) return null
+  const buttons = view.actions.length > 0 || view.link !== null
+  if (!view.message && !buttons && !view.branches) return null
   return (
     <div aria-label="Pull request actions" className={styles.top} role="group">
       {view.message ? <BarMessageLine message={view.message} touch /> : null}
-      {view.actions.length > 0 || view.link ? (
+      {buttons || view.branches ? (
         <div className={styles.buttons}>
+          {view.branches ? <ChecksBranches branches={view.branches} /> : null}
           <BarButtons controls={controls} touch />
         </div>
       ) : null}

@@ -67,9 +67,14 @@ record, as [Decision numbers](../architecture.md#decision-numbers) says.
 - A pull request event can also start the runs of routines, as
   [Routine runs](#routine-runs) says.
 - When GitHub no longer has the base branch of a workspace, the Worker
-  moves it to the default branch. The move reaches D1, the Durable Object,
-  and the sandbox, as
+  moves it to the default branch in D1, as
   [A base branch that GitHub deleted](../protocol/base-branches.md#a-base-branch-that-github-deleted)
+  says. The Durable Object keeps one saved retry for the rest of the move.
+- That retry and each resume run a trusted fetch of the default branch in
+  the sandbox. The fetch gets the GitHub token of the workspace owner
+  through the credential helper, only while it runs. Only then does the
+  sandbox compare with the default branch, as
+  [The move in the cloud computer](../protocol/base-branches.md#the-move-in-the-cloud-computer)
   says.
 
 ## Merge

@@ -171,6 +171,8 @@ export async function continueNativeFixture(trackIgnored = false) {
     server,
     credentialIds,
     git,
+    seedGit,
+    pushBase: () => seedGit('push', '--quiet', remote, 'main'),
     remoteGit,
     write: (file: string, content: string) =>
       writeFile(join(directory, file), content),

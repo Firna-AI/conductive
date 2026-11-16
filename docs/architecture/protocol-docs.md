@@ -84,6 +84,9 @@ This page lists each protocol doc and what it covers.
   actions, Merge, and its events.
   - [The GitHub state](../protocol/github-summary.md): the four summary
     values for workspace list marks and their order.
+  - [GitHub banner: checks and layouts](../protocol/github-banner-layouts.md):
+    the Checks tab, and where the bar and its parts show on desktop and on
+    a phone.
 - [Agent tools](../protocol/agent-tools.md): the tools that agents use in a
   sandbox, and Mac commands.
   - [Agent tool access](../protocol/agent-tool-access.md): what each call
@@ -149,6 +152,9 @@ This page lists each protocol doc and what it covers.
 - [GitHub tokens](../protocol/github-tokens.md): the git and CLI account
   scope of a cloud computer, the author of each commit in a sandbox, and the
   GitHub actions of the Worker as a member.
+  - [GitHub tokens: image builds](../protocol/github-tokens-image-builds.md):
+    the installation token of each repository copy in an image build or a
+    refresh.
 - [Agent instructions](../protocol/agent-instructions.md): the text that each
   agent session gets, and the sender line and the branch line of each
   message.

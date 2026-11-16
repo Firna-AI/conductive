@@ -35,6 +35,7 @@ export async function advanceStartCommand(
   job: WorkspaceStartJob,
   label: string,
   call: StartCall,
+  preserveBase = false,
 ): Promise<boolean> {
   const sandboxId = row.sandboxId
   if (!sandboxId) throw new WorkspaceStartError(null)
@@ -80,6 +81,7 @@ export async function advanceStartCommand(
                 job.phase === 'startup'
                   ? await ownerCommitAuthor(env.DB, row.ownerUserId)
                   : null,
+                preserveBase,
               ),
         ),
       ),

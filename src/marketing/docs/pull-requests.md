@@ -29,12 +29,18 @@ A workspace you create targets the branch you select in **New workspace**.
 You can choose the default branch as the target instead.
 For a pull request run, its first message names the initial target under **Your work goes to**.
 On a computer, the pull request bar names the workspace's base branch.
+On a phone, the top of **Checks** shows the branch and its base while the branch has no pull request.
 After **Continue**, it targets the branch the pull request merged into, or the default branch if that branch is gone.
 Your draft and its attached files stay unchanged.
 Conductive then shows the pull request's state for that branch.
 
-If GitHub deletes the workspace's base branch, Conductive changes it to the default branch.
+If GitHub deletes the workspace's base branch, Conductive fetches the default branch into the cloud computer.
+The cloud computer uses the new base only after that fetch succeeds.
 The bar explains that change until a pull request opens.
+
+If the computer cannot complete the move, Conductive retries it automatically, also when the computer resumes.
+The pull request bar still shows GitHub state while that update waits.
+
 Changing a pull request's target on GitHub leaves the workspace's base unchanged.
 Check the target on GitHub before merging after such a change.
 

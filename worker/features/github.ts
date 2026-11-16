@@ -17,7 +17,7 @@ import { GitHubReader } from '../github/client'
 import type { WorkspaceAlarms } from './alarms'
 import type { ReceiverStorage } from '../members/receiver-storage'
 import { freshGitHubUserToken } from '../security/github-tokens'
-import { syncWorkspaceBase } from '../lifecycle/workspace-base'
+import type { WorkspaceBaseChanges } from '../lifecycle/workspace-base'
 
 interface ScheduledRead {
   at: number
@@ -32,6 +32,7 @@ export class WorkspaceGitHub {
   private readonly chat: WorkspaceChat
   private readonly matches: (id: string) => boolean
   private readonly alarms: WorkspaceAlarms
+  private readonly baseChanges: WorkspaceBaseChanges
 
   constructor(
     storage: ReceiverStorage,
@@ -40,6 +41,7 @@ export class WorkspaceGitHub {
     chat: WorkspaceChat,
     matches: (id: string) => boolean,
     alarms: WorkspaceAlarms,
+    baseChanges: WorkspaceBaseChanges,
   ) {
     this.storage = storage
     this.env = env
@@ -47,6 +49,7 @@ export class WorkspaceGitHub {
     this.chat = chat
     this.matches = matches
     this.alarms = alarms
+    this.baseChanges = baseChanges
   }
 
   async refresh(workspace: GitHubWorkspace, signal: GitHubRefresh) {
@@ -58,8 +61,6 @@ export class WorkspaceGitHub {
       this.stateOf(workspace),
       {
         ...this.dependencies,
-        syncBase: (binding) =>
-          syncWorkspaceBase(this.env, this.dependencies, binding),
         token:
           signal.requireWritable && userId !== undefined
             ? () => freshGitHubUserToken(this.env, userId, this.dependencies)
@@ -155,6 +156,7 @@ export class WorkspaceGitHub {
   }
 
   async alarm(): Promise<void> {
+    await this.baseChanges.advance()
     const reads = await this.storage.list<ScheduledRead>({
       prefix: 'github-refresh:',
     })

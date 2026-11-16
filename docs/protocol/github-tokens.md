@@ -23,8 +23,10 @@ rules. A decision number names a dated record, as
   The terminal is shared, so this account is the same for each connection.
 - A supplied turn ID must name a current turn. An unknown or ended turn
   never falls back to the workspace owner.
-- A trusted Continue job is the one other case. Its fetch gets the token
-  of the member who pressed Continue, as [Continue](#continue) says.
+- A trusted job is the other case. The fetch of a Continue job gets the
+  token of the member who pressed Continue, as [Continue](#continue) says.
+  The fetch of a moved base gets the token of the workspace owner, as
+  [A moved base](#a-moved-base) says.
 - Each command that an agent runs in a turn has the ID of that turn. This
   holds also in a shell that loads the sandbox's own variables again, such
   as the login shell in which Codex runs each command.
@@ -126,32 +128,9 @@ rules. A decision number names a dated record, as
 
 ## Image builds and refreshes
 
-- A build or a refresh copies each repository of the image with Git in the
-  build sandbox, as decision 90 requires. Each copy uses its own GitHub App
-  installation token, which can only read the contents of that one
-  repository.
-- The Worker gives the token only to the Git command of that copy. The
-  Worker and Git do not write it to command text, command history, a
-  remote URL, a Git config, a file, or a saved snapshot.
-- The Git command gets the token with a one-use build grant. The grant
-  works once, and only for its own build and repository.
-- The Worker revokes the token as soon as the Git command ends, also when
-  the command fails. The build goes on only after GitHub confirms the
-  revocation. The build starts no checkout, software step, install script,
-  snapshot, or other repository code before that.
-- Risk: a later build and a refresh start from the last org image. A
-  program with root access that an earlier install left in that image can
-  read the clone token of a later copy. That token can only read its own
-  repository, which the image already holds. The Worker revokes it when
-  the copy ends.
-- A build of an org without an org image starts from the software image or
-  from the base image, where no org code has run.
-- Reason: Git in the build sandbox copies a repository of any size, and the
-  Git data does not pass through the Worker. Larger uploads and stored
-  progress were rejected, because one repository or one Git response must
-  still fit in one Worker job. A Git proxy in the Worker and a Workflow
-  were rejected, because each puts a new service in the path of the Git
-  data.
+- [GitHub tokens: image builds](github-tokens-image-builds.md) states how
+  a build or a refresh copies each repository with its own installation
+  token.
 - A workspace sandbox never gets an installation token. Its Git gets
   GitHub tokens only from the git credential helper.
 
@@ -241,3 +220,33 @@ rules. A decision number names a dated record, as
   - An installation token that reads only the one repository. A workspace
     sandbox then gets an installation token, and the fetch needs the revoke
     steps of image builds.
+
+## A moved base
+
+- When GitHub deletes the base branch of a workspace, the Worker moves the
+  base branch to the default branch (decision 294). The cloud computer
+  then fetches the latest commit of the default branch, as
+  [The move in the cloud computer](base-branches.md#the-move-in-the-cloud-computer)
+  says.
+- That fetch gets the GitHub token of the workspace owner (decision 297).
+  The owner's account is the one that `gh` already uses outside an agent
+  turn.
+- Reason: no member starts the move. The Worker starts it after a GitHub
+  read, such as the read after a GitHub webhook. The saved retry of the
+  move or a resume runs the fetch. So no turn and no press of a member
+  gives a token.
+- The workspace runs this fetch as a trusted job, as it runs the fetch of
+  Continue. The credential route gives the token to that job only while
+  its fetch runs. GitHub then checks the read access of the owner.
+- As for Continue, the token reaches only that fetch. No Git setting and
+  no hook of the repository folder runs with it.
+- These ways were rejected (decision 297):
+  - A fetch only with the token of a turn or of the member who presses
+    Continue. A move after a GitHub webhook, at a retry, or at a resume
+    then gets no token.
+  - A base commit that the Worker reads from GitHub and gives to the agent
+    runner. It changes the contract of the agent runner.
+  - The move at the next agent turn, with the token of the sender of that
+    turn. A workspace that waits for review then keeps the old comparison.
+  - A button on the message of a moved base, which fetches with the token
+    of the member who presses it. Changes then wait for that press.

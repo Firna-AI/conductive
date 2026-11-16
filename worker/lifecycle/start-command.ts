@@ -12,6 +12,7 @@ export function workspacePhaseCommand(
   row: Pick<WorkspaceRow, 'repositoryId' | 'branch' | 'baseBranch'>,
   job: WorkspaceStartJob,
   owner: CommitAuthor | null,
+  preserveBase = false,
 ): string {
   const directory = repositoryLocation(
     job.repositoryLocations,
@@ -20,11 +21,15 @@ export function workspacePhaseCommand(
   if (job.phase === 'startup')
     return [
       'set -eu',
-      `${workspaceBaseCommand({
-        directory,
-        branch: row.branch,
-        baseBranch: row.baseBranch ?? job.baseBranch ?? job.defaultBranch,
-      })} || :`,
+      ...(preserveBase
+        ? []
+        : [
+            `${workspaceBaseCommand({
+              directory,
+              branch: row.branch,
+              baseBranch: row.baseBranch ?? job.baseBranch ?? job.defaultBranch,
+            })} || :`,
+          ]),
       workspaceStartupCommand(job.startupScript, owner),
     ].join('\n')
   const startBranch = job.startBranch ?? job.baseBranch ?? job.defaultBranch

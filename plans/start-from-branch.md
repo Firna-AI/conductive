@@ -406,6 +406,27 @@ Design calls from the mockups of Milestone 10, made on 16 November 2026:
   already imports for the top of the Checks tab. Reason: Milestone 13 can
   use them without a copy, and no rule that the app reads today changes.
 
+Design calls from Milestones 11 to 13, made on 16 November 2026:
+
+- Every fetch of a moved base uses the token of the workspace owner, also
+  when a tab read found the deleted base. Reason: decision 298 takes the
+  cloud update out of every GitHub read, so only the saved retry or a
+  resume runs the fetch, and neither has a member.
+- A failed move does not stop a resume, and the startup does not apply an
+  unfinished move before its fetch. Reason: decision 298 gives each
+  failure to the retry, and the missing-ref rule keeps the old target.
+- The retry job has one stable key, saved in the same transaction as the
+  repair marker. Its delay starts at one second, doubles after each
+  failure, and stops at 15 minutes. A move waits while a Continue runs.
+  Reason: decision 298, and Continue owns the branch while it runs.
+- The trusted fetch maps to the owner only while it runs, and the mapping
+  lives only in memory. Reason: a rebuilt object then gives no token.
+- `github-banner.md` and `github-tokens.md` were split, and only sections
+  with no inbound links moved. Reason: the file length rule.
+- The phone line reads the names from a new `branches` field of the bar
+  view, and the group keeps the name "Pull request actions". Reason: no
+  caller changes, and the shell tests find the group by that name.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -618,42 +639,46 @@ the list of changed views against a baseline build, and the screenshots.
 
 Depends on: 10
 
-- [ ] In `docs/protocol/github-tokens.md`, add the fetch of a moved base
+- [x] In `docs/protocol/github-tokens.md`, add the fetch of a moved base
       with the GitHub token of the workspace owner when no member started
-      the move (decision 297).
-- [ ] In `docs/protocol/base-branches.md`, state that a moved base fetches
+      the move (decision 297). The image builds moved to
+      `docs/protocol/github-tokens-image-builds.md`, so that the doc stays
+      near 250 lines.
+- [x] In `docs/protocol/base-branches.md`, state that a moved base fetches
       the new base before it changes the target (decision 297), and the one
       retry owner (decision 298).
-- [ ] In `docs/protocol/github-banner.md`, state decision 296 under
+- [x] In `docs/protocol/github-banner.md`, state decision 296 under
       "Layouts", with the design calls of the mockups of Milestone 10: on
       a phone the names wrap and show in full, the branch and its base
       stand above Create PR and under the line of a moved base, and they
-      show in each state without a pull request.
-- [ ] Read the Terms page, the Privacy page with its data uses, and each
+      show in each state without a pull request. The Checks and Layouts
+      sections moved to `docs/protocol/github-banner-layouts.md`, so that
+      the doc stays under 300 lines.
+- [x] Read the Terms page, the Privacy page with its data uses, and each
       public guide in full. Update each sentence that restates a changed
       fact, such as when Conductive uses a member's GitHub token. Bump
       `TERMS_VERSION` when the Terms change.
-- [ ] Check each relative link of each changed Markdown file.
+- [x] Check each relative link of each changed Markdown file.
 
 ## Milestone 12: Base move fetch and retry owner
 
 Depends on: 11
 
-- [ ] Build the shared base-change operation of decision 297, with the
+- [x] Build the shared base-change operation of decision 297, with the
       owner token for a move that no member started, the isolated stage of
       Continue, and the missing-ref guard of commit `dcbb1a2cd`.
-- [ ] Give the operation one saved retry job with a capped growing delay,
+- [x] Give the operation one saved retry job with a capped growing delay,
       run it at each resume, and take the cloud command out of the GitHub
       read (decision 298). A failed database write of the move also leaves
       one retry.
-- [ ] Apply option D of review item 103: move the failed-database recovery
+- [x] Apply option D of review item 103: move the failed-database recovery
       case to the native fixture `worker/features/base-moved.test.ts`, with
       a first refresh that cannot find the deleted base again, and checks of
       D1 and of the cloud command.
-- [ ] Test a merge commit into the default branch that the copy in the
+- [x] Test a merge commit into the default branch that the copy in the
       cloud computer lacks, repeated cloud failures with one retry job, a
       failed database write, a resume, and an owner without access.
-- [ ] Update `worker/github/README.md` and `worker/lifecycle/README.md`.
+- [x] Update `worker/github/README.md` and `worker/lifecycle/README.md`.
 
 ## Milestone 13: The base on a phone
 
@@ -661,12 +686,12 @@ Tags: ui
 
 Depends on: 10
 
-- [ ] Show the branch and its base at the top of the Checks tab on a phone
+- [x] Show the branch and its base at the top of the Checks tab on a phone
       while the branch has no pull request (decision 296), as the mockups
       of Milestone 10 show. They show also when the bar has no action, so
       the top of the Checks tab is no longer empty then. Take the styles
       from the shared `BarActions.module.css`.
-- [ ] Test it, and compare it with its mockup on a phone.
+- [x] Test it, and compare it with its mockup on a phone.
 
 ## Milestone 9: Verification, commit, review, and pull request
 

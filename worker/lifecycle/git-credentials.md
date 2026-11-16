@@ -13,6 +13,9 @@ methods of the object.
   and its `turnId` matches. The grant gives the sender of the admitted
   first message.
 - A Continue fetch has its own grant too, as [Continue](#continue) says.
+- A saved base-move fetch grants the workspace owner, as
+  [Moved bases](README.md#moved-bases) says. Its trusted ID cannot name an
+  agent turn. The grant ends when the fetch request ends.
 - Otherwise the turn must be the running stored chat turn: the active
   turn of an open session. `activeStoredTurn` in
   [`access.ts`](../devices/access.ts) reads it. So access ends with the

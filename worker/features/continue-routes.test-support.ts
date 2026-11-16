@@ -15,11 +15,18 @@ import { CONTINUE_JOB_KEY } from '../lifecycle/continue-types'
 import { saveGitHubTokens } from '../security/github-tokens'
 import { featureFixture, featureState } from './fixture.test-support'
 
-export async function continueRoutesFixture(bundle: string) {
+export async function continueRoutesFixture(
+  bundle: string,
+  options: Pick<
+    NonNullable<Parameters<typeof featureFixture>[1]>,
+    'handleStructuredLogs'
+  > = {},
+) {
   const { privateKey } = generateKeyPairSync('rsa', { modulusLength: 2048 })
   const reference: { api?: RepositoryGitHub } = {}
   const secret = 'continue-webhook-secret'
   const fixture = await featureFixture(bundle, {
+    ...options,
     configuration: {
       CONDUCTIVE_RUNNER_ARCHIVE_URL: OUTER_SOFTWARE.url,
       CONDUCTIVE_RUNNER_ARCHIVE_SHA256: OUTER_SOFTWARE.sha256,

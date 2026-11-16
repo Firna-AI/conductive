@@ -5,6 +5,7 @@ import type {
   WorkspaceLifecycleEndpoint,
 } from './workspace-runtime'
 import type { WorkspaceStorage } from './platform-storage'
+import type { WorkspaceBaseChanges } from './workspace-base'
 
 export interface WorkspaceEventPublication {
   workspaceId: string
@@ -20,6 +21,7 @@ interface WorkspaceChatRecovery {
 
 export interface WorkspacePlatform {
   storage: WorkspaceStorage
+  baseChanges?: Pick<WorkspaceBaseChanges, 'resume' | 'credentialSender'>
   assertStartActive?(turn: QueueTurn): Promise<void>
   hasOutsideTurns?(): boolean
   blockConcurrencyWhile<T>(operation: () => Promise<T>): Promise<T>

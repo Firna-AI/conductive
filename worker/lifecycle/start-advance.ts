@@ -70,6 +70,9 @@ export async function advanceStartPhases(input: {
       row,
       job,
       call,
+      job.phase === 'startup' && job.processId === null
+        ? await call(() => endpoint.prepareWorkspaceBase())
+        : false,
     ))
   )
     return false
