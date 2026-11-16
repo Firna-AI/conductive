@@ -53,6 +53,13 @@ export type Workspace = {
    */
   link: string
   branch: string
+  /**
+   * The branch before the workspace has a name, when it differs from
+   * `branch`. A new workspace starts on a branch with a city name, and the
+   * branch takes the title when the title comes before the sandbox creates
+   * the branch, as branch-name decision 1 says.
+   */
+  placeholderBranch?: string
   repository: RepositoryKey
   section: SectionKey
   /** The agent, model, and effort of its last message. */
@@ -101,7 +108,7 @@ export function workspaceLink(
 
 /**
  * The branch of a workspace: the GitHub login of its owner, then a name,
- * such as `calummoore/lisbon-7k2q`, as decision 53 says.
+ * such as `calummoore/saved-carts-7k2q`, as decision 53 says.
  */
 function branchFor(owner: PersonKey, name: string): string {
   return `${people[owner].login}/${name}`
@@ -127,15 +134,17 @@ export const checkoutAutocomplete: Workspace = {
  * name from the send until its title comes, about a second later, while
  * the sandbox starts. `name` is that title, from a small model that reads
  * the first message. A failed title request leaves the workspace without a
- * name until a later message with text. Its branch keeps a city name with
- * a random suffix.
+ * name until a later message with text. Its branch starts with a city name
+ * and a random suffix. It takes the title with the same suffix, because the
+ * title comes before the sandbox creates the branch.
  */
 export const savedCarts: Workspace = {
   key: 'saved-carts',
   name: 'Saved carts',
   number: 402,
   link: workspaceLink('ffpdvCrydZ85CicAsK7cqpirDrbK6GhAA6hB33ck1vE'),
-  branch: branchFor('cal', 'lisbon-7k2q'),
+  branch: branchFor('cal', 'saved-carts-7k2q'),
+  placeholderBranch: branchFor('cal', 'lisbon-7k2q'),
   repository: 'storefront',
   section: 'general',
   choice: defaultChoice,

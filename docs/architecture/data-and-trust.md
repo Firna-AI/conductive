@@ -18,14 +18,14 @@ and the separate preview domain.
 | Users, orgs, members, sections, workspaces, settings, suspensions, and lifts | D1                                       |
 | App access, the codes and their uses, and approval email states              | D1                                       |
 | The pause and the waitlist switch                                            | D1                                       |
-| Routines and their runs | D1 |
+| Automations and their runs | D1 |
 | The org and the provider account of each sandbox and each saved snapshot     | D1                                       |
 | Env var values and agent logins                                              | The Worker's storage, encrypted          |
 | The host of each own endpoint login | D1 |
 | The Boat key and the other keys of the Worker                                | Worker secrets                           |
 | Chat history and banner state                                                | The workspace Durable Object             |
 | A copy of the [GitHub state](../protocol/github-banner.md#the-github-state) of each workspace, for the lists | D1 |
-| Files attached to chat messages | The attachment storage, an R2 bucket |
+| Files attached to chat messages | The attachment storage, an R2 bucket, until the sandbox has them. Then the home folder of the sandbox |
 | The records of attached files | D1 |
 | The repository, the files, and the agent sessions                            | The home folder of the sandbox           |
 | The prepared repositories and the installed software                         | The org image, in the app's Boat account |
@@ -47,6 +47,10 @@ and the separate preview domain.
   into a saved snapshot.
 - Sandbox code is untrusted. Agents write and run it, and previews show it
   only on the preview domain.
+- A sandbox never reads the attachment storage. It gets each attached file
+  from a route of the Worker, with a one-use token for that file, as
+  [Hostnames and gates](../protocol/access-and-security.md#hostnames-and-gates)
+  says.
 - Each writer of the R2 bucket of the sandbox software releases is as
   trusted as the Worker deploy, because each sandbox installs the newest
   release from it. Today only the deploy token writes it, as
@@ -74,8 +78,8 @@ and the separate preview domain.
 - The members of one org can reach the turn token in a sandbox, as
   [Access and security](../protocol/isolation.md#agent-logins-in-a-sandbox)
   says.
-- A routine run acts as its owner while no person watches. It uses the
+- An automation run acts as its owner while no person watches. It uses the
   owner's agent login and GitHub token, and the org's env vars. Its
   sandbox follows the same gateway boundary above. Other GitHub accounts
   can write text that its agent reads, as
-  [Risks that stay open](../protocol/routines.md#risks-that-stay-open) says.
+  [Risks that stay open](../protocol/automations.md#risks-that-stay-open) says.

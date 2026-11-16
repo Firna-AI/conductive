@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, expect, it, vi } from 'vitest'
 
 import { createHarness, type TestHarness } from '../test-support/harness'
 import { deferred, gatewayHttp, openModelStream } from './http.test-support'
@@ -42,6 +42,7 @@ it('passes success bytes in steps before the upstream finishes and preserves the
 })
 
 it('checks an open answer every 15 seconds and ends it after its real turn ends', async () => {
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
   const client = await gatewayHttp(harness)
   const upstream = openModelStream()
   client.anthropic.response = () => new Response(upstream.body)
@@ -67,9 +68,20 @@ it('checks an open answer every 15 seconds and ends it after its real turn ends'
     await upstream.cancelled
     expect(client.checks).toHaveLength(3)
     expect(client.anthropic.requests[0].signal.aborted).toBe(true)
+    expect(warn.mock.calls).toEqual([
+      [
+        {
+          kind: 'model_gateway_answer_ended',
+          message: 'The gateway ended a model answer.',
+          workspaceId: 'unknown',
+          code: 'turn_not_active',
+        },
+      ],
+    ])
     await client.fixture.clock.advance(60_000)
     expect(client.checks).toHaveLength(3)
   } finally {
+    warn.mockRestore()
     await client.dispose()
   }
 })

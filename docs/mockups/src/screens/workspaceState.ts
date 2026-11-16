@@ -51,6 +51,7 @@ export const workspaceStateSchema = {
     'modelChoice',
     'resize',
     'rightColumn',
+    'sidebar',
     'overlay',
     'archive',
     'viewer',
@@ -155,12 +156,20 @@ export const workspaceStateSchema = {
      */
     rightColumn: { enum: ['shown', 'hidden'] },
     /**
+     * The sidebar of the desktop: shown, hidden with its toggle, or hidden
+     * with the workspace list open as a popover of the tile of the org.
+     */
+    sidebar: { enum: ['shown', 'hidden', 'popover'] },
+    /**
      * What lies open over the workspace: the session history, the question
      * before a running session closes, the owner of the workspace, the tab
      * menu of the first session or of the shown file or diff tab, such as
      * the temporary tab, or the question of Continue with work that is not
      * pushed. Or the question before a terminal closes, or the toast of a
-     * terminal that did not open or close.
+     * terminal that did not open or close. Or the menu of the header state,
+     * the question of Restart while an agent works, the time after Restart
+     * until the agents are back, or that time with the toast of a failed
+     * update check.
      */
     overlay: {
       enum: [
@@ -173,6 +182,10 @@ export const workspaceStateSchema = {
         'close-terminal',
         'terminal-open-failed',
         'terminal-close-failed',
+        'restart',
+        'restart-confirm',
+        'restarting',
+        'restart-update-failed',
       ],
     },
     /**
@@ -214,10 +227,10 @@ export const workspaceStateSchema = {
      */
     org: { enum: ['active', 'suspended'] },
     /**
-     * The run of a routine that made the workspace (decision 501): a run of
+     * The run of an automation that made the workspace (decision 501): a run of
      * a pull request, a run that Run now started, or a failed run that kept
      * its workspace, whose first start or first turn failed. A run
-     * workspace is a normal workspace, whose header links to its routine,
+     * workspace is a normal workspace, whose header links to its automation,
      * and for a pull request run to the pull request. It shows the chat of
      * its run at the stage of `conversation`: `queued` while the sandbox
      * starts or after a failed first start, or else its first turn. A
@@ -259,6 +272,7 @@ export const readyWorkspace: WorkspaceState = {
   modelChoice: 'workspace',
   resize: 'none',
   rightColumn: 'shown',
+  sidebar: 'shown',
   overlay: 'none',
   archive: 'kept',
   viewer: 'admin',

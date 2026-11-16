@@ -36,7 +36,7 @@ number names a dated record, as
 - [The Mac app](desktop-sign-in.md#github-app-install) has its own return.
 - The GitHub App sends pull request, check, status, and push webhooks to
   the Worker, at `https://api.conductive.build/v1/github/webhooks`.
-- A pull request webhook can also start the runs of routines, as
+- A pull request webhook can also start the runs of automations, as
   [Pull request runs](pull-request-runs.md) says.
 - The Worker accepts a GitHub webhook only with a valid GitHub signature.
 

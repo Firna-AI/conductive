@@ -17,7 +17,11 @@ actions at `app/command-palette/actions`, and the settings at
   (decision 144).
 - View commands were rejected for this version, because each needs its
   own mockups and stored state. Layout toggles, a focus mode, and a theme
-  choice are view commands.
+  choice are view commands. Hide and Show the sidebar are the one
+  exception, because the toggle has its mockups and keeps no state (list
+  popover decision 5 A).
+  [The hidden sidebar](org-rail-order.md#the-hidden-sidebar) defines the
+  list popover decisions.
 - The palette offers only the actions that the current page offers to the
   person. Send feedback is the one exception, as [Help](#help) says.
 - New workspace also shows on each page where the palette has an org that
@@ -35,9 +39,9 @@ actions at `app/command-palette/actions`, and the settings at
   2. The actions of the org: New workspace and New section.
   3. Create org, then a Switch to row for each other org of the person, in
      the order of the org rail.
-  4. In the Mac app, "Hide the sidebar" or "Show the sidebar", as the
-     sidebar toggle of the window says. This row shows on each page where
-     the sidebar can show.
+  4. "Hide the sidebar" or "Show the sidebar", as the
+     [sidebar toggle](org-rail-order.md#the-hidden-sidebar) says. This row
+     shows on each page where the sidebar can show.
   5. Send feedback, as [Help](#help) says.
 - The Actions tab shows these parts as groups. Their labels are the name
   of the open workspace, the name of the org, "Orgs", "Window", and
@@ -66,8 +70,8 @@ actions at `app/command-palette/actions`, and the settings at
   [Feedback dialog](feedback.md#the-dialog) over the current page.
 - The search words of Send feedback are "bug", "idea", "support",
   "contact", "help", and "report".
-- Help is the last group of the Actions tab. Outside the Mac app, no
-  Window group shows, so Help comes after Orgs. On the All tab, Send
+- Help is the last group of the Actions tab. On a page where the sidebar
+  cannot show, no Window group shows, so Help comes after Orgs. On the All tab, Send
   feedback is the last action.
 - Reason: feedback is about the product, not about a workspace, an org, or
   the window.
@@ -98,8 +102,10 @@ actions at `app/command-palette/actions`, and the settings at
   Sign-in, GitHub, Agents, and New workspaces. It also holds Keyboard
   shortcuts, the fourth tab of the Account page.
 - In the Mac app, the Account group also holds
-  [This Mac](desktop-commands.md#saved-choices), the fifth tab, which only
+  [This Mac](desktop-commands.md#saved-choices), the sixth tab, which only
   the Account page of the Mac app has.
+- The Stats tab of the Account page has no row, as
+  [Account stats](account-stats.md#where-the-tab-shows) says.
 - The Deleted orgs section of the Account page has no row. Reason: it
   shows only while the person has a deleted org, and the palette treats a
   deleted org as absent.

@@ -12,7 +12,7 @@ and a darker accent.
 
 The desktop layout has four columns. The org rail holds the mark, the orgs
 as squares with their initials, Create org, and the account at the bottom.
-The sidebar shows the org name with its Settings link, New workspace, Routines, Search, and
+The sidebar shows the org name with its Settings cog, New workspace, Automations, Search, and
 the sections that the user made. Each workspace is one line: a dot-matrix
 mark in the colour of its GitHub state, the name, and the time, and it
 moves to another section by drag and drop. Archive covers the time on
@@ -32,7 +32,7 @@ title in italics, until the next press replaces it.
 The right column has the pull request bar on top, the All files, Changes,
 and Checks lists below it, and the Terminal and Preview tabs at the bottom.
 It shows no file content. A phone shows an org switcher at the top of the list,
-then New workspace, Routines, and Search. It shows the
+then New workspace, Automations, and Search. It shows the
 workspace with its number under its name, a compact pull request row, the
 sessions as tabs above the chat, and four tabs at the bottom.
 
@@ -185,14 +185,17 @@ sessions as tabs above the chat, and four tabs at the bottom.
   and the attach button and Create, with the hint of the Enter key, at the
   bottom right. A phone always opens the page, so the dialog has no phone
   layout.
-- The account has four tabs, General, Agents, Preferences, and Keyboard
-  shortcuts, as links, as the org settings have. The Mac app adds This Mac
-  as its fifth tab. On a phone, a tab that
+- The account has five tabs, General, Agents, Preferences, Keyboard
+  shortcuts, and Stats, as links, as the org settings have. The Mac app
+  adds This Mac as its sixth tab. On a phone, a tab that
   does not fit moves to a second line. Preferences holds the New
   workspaces section, whose rows put each label beside its control in two
   columns. A segmented control chooses how New workspace opens, with a
   helper line under it, and a narrow section puts it under its label. A
   failed save shows its error under the control.
+- Stats uses the parts of the operator Overview: a box of tiles, the
+  workspaces by state, and the daily charts. Its tiles are Workspaces with
+  the new ones of 7 days, Running now, Automations, and Orgs.
 - `ShortcutsSections` in `src/components/settings/` draws the Keyboard
   shortcuts tab, in the Mac app and in each browser. It shows the keys of
   a host: the Mac app, a normal tab of Chrome or Firefox, or the installed
@@ -242,42 +245,42 @@ sessions as tabs above the chat, and four tabs at the bottom.
   because nothing brings the changes back. The error of a failed Reset all
   stands under the lines and Reset all, across the width of the tab.
 - [The marks](design-marks.md) give the list mark, the mark
-  of the header, and the marks of routine runs. They also give the mark of
+  of the header, and the marks of automation runs. They also give the mark of
   an agent.
 - [Workspace, session, and file chips](design-chat.md#workspace-session-and-file-chips)
   gives the chips, the list of `@`, and chip removal.
   [Links in text](design-links.md) gives the other links and `TextLink`.
-- The parts of routines live in `src/components/routines/`. The routine
+- The parts of automations live in `src/components/automations/`. The automation
   page puts its form beside the Runs column on desktop. A phone shows a
-  saved routine in two tabs, Routine and Runs. The Runs list holds the
+  saved automation in two tabs, Automation and Runs. The Runs list holds the
   newest 50 runs, and Show older runs ends it when older runs exist. A
   phone opens the Add trigger menu and the author filter of a pull request
-  trigger in a sheet. A suspended org keeps its Routines link, and shows
-  its routines read-only under its notice. `RunLinks` in
+  trigger in a sheet. A suspended org keeps its Automations link, and shows
+  its automations read-only under its notice. `RunLinks` in
   `src/components/workspace/` draws the line under the header of a run
-  workspace, which links to its routine and to its pull request. The pull
+  workspace, which links to its automation and to its pull request. The pull
   request bar names the base branch of a workspace: the default branch, or
   for a pull request run the head branch of its pull request. A long base
   branch ends in an ellipsis at half of the line. The
   bubble of a message keeps its line breaks, as in the app, so the first
   message of a run shows the facts of its trigger on their own lines.
   - `runCopy.ts` gives the words of a failed run from its stored cause, and
-    from the agent and the owner of the run itself, not of its routine. So
-    a later change of the agent, or a move of the routine to another owner,
+    from the agent and the owner of the run itself, not of its automation. So
+    a later change of the agent, or a move of the automation to another owner,
     changes no past row. A failed start and a failed first turn keep their
-    workspace, and their rows open it, as `app/routines/runs/failed` shows.
-  - When the routine page cannot show its routine, the page keeps Routine
-    as its name and shows no tabs, no Runs list, and no actions. A routine
-    that the org no longer has shows the empty state "This routine is not
-    available" with Open Routines. A read that failed shows `LoadFailure`.
-    `app/routines/routine/unavailable` and `not-loaded` show them.
+    workspace, and their rows open it, as `app/automations/runs/failed` shows.
+  - When the automation page cannot show its automation, the page keeps Automation
+    as its name and shows no tabs, no Runs list, and no actions. An automation
+    that the org no longer has shows the empty state "This automation is not
+    available" with Open Automations. A read that failed shows `LoadFailure`.
+    `app/automations/automation/unavailable` and `not-loaded` show them.
 - `SuspendedOrgNotice` in `src/components/orgs/` draws the notice of a
   suspended org, with the mark of a refused start. It names the org and
   the abuse address, and it offers no action. It is a box at the top of
-  the list, of each settings tab, and of each view of a routine page, and
+  the list, of each settings tab, and of each view of an automation page, and
   above the bar of an archived workspace. A phone shows it above either
-  tab of a routine page, as the `runs` variant of
-  `app/orgs/suspended/routines/routine` shows. `SuspendedOrgPanel` shows the same words in the main area of
+  tab of an automation page, as the `runs` variant of
+  `app/orgs/suspended/automations/automation` shows. `SuspendedOrgPanel` shows the same words in the main area of
   a wide desktop list. `SuspendedOrgAbove` puts the box above the page of
   a deleted org, at the width of a settings page. A suspended org shows no
   action that it refuses.
@@ -316,6 +319,12 @@ sessions as tabs above the chat, and four tabs at the bottom.
   panel gets an accent edge. The same handle lies across the top edge of the
   tools panel, and moves the split between the file lists and the tools, as
   `app/panels/split` shows.
+- The sidebar toggle hides the sidebar. In the browser it sits beside the
+  cog of Settings, and in the Mac app beside the window buttons. While the
+  sidebar is hidden, the tile of the current org opens the whole sidebar as
+  a popover beside the rail, as `app/panels/list-popover` shows. In the Mac
+  app the window controls then keep their width in the top left corner, as
+  `mac-app/window/sidebar-popover` shows.
 - A state tints a whole bar or box, and its edges stay neutral. No box has
   an accent strip on any edge.
 - `sizes.ts` in `src/components/chat/` holds the one size formatter.

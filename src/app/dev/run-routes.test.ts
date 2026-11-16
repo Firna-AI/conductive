@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test, vi } from 'vitest'
-import { routinePaths } from '../../shared/routines'
+import { automationPaths } from '../../shared/automations'
 import { workspaceViewPath } from '../../shared/workspace-view'
 import { readViewReply } from '../../chat/api/read-responses'
 import { FakeApiServer } from '../../test-support/fake-api'
@@ -7,9 +7,9 @@ import { FakeWorkspaceEvents } from '../../test-support/fake-events'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
 import { createApiClient } from '../api/client'
 import {
-  readRoutineRunResponse,
-  readRoutineRunsResponse,
-} from '../api/read-routine-runs'
+  readAutomationRunResponse,
+  readAutomationRunsResponse,
+} from '../api/read-automation-runs'
 import { createBackend, guardScope } from './backend'
 import { readDevOptions } from './options'
 import { routeFetch } from './router'
@@ -48,7 +48,10 @@ function runs(
   id: string,
   before?: string,
 ) {
-  return api.get(routinePaths.runs(orgId, id, before), readRoutineRunsResponse)
+  return api.get(
+    automationPaths.runs(orgId, id, before),
+    readAutomationRunsResponse,
+  )
 }
 
 function runNow(
@@ -58,9 +61,9 @@ function runNow(
 ) {
   return api.send(
     'POST',
-    routinePaths.runNow(orgId, id),
+    automationPaths.runNow(orgId, id),
     { requestId },
-    readRoutineRunResponse,
+    readAutomationRunResponse,
   )
 }
 
@@ -95,7 +98,7 @@ describe('the runs of the dev fake', () => {
     })
   })
 
-  test('Run now starts a workspace in the section of the routine, once for each request ID', async () => {
+  test('Run now starts a workspace in the section of the automation, once for each request ID', async () => {
     const { api, acme } = setup()
     const before = acme.workspaces.length
     const run = await runNow(api, 'error-triage', 'request-1')
@@ -130,21 +133,21 @@ describe('the runs of the dev fake', () => {
     })
   })
 
-  test('Run now refuses another owner and a routine of pull requests, fails without an agent login, and keeps the workspace of a start that failed', async () => {
+  test('Run now refuses another owner and an automation of pull requests, fails without an agent login, and keeps the workspace of a start that failed', async () => {
     const { api } = setup()
     await expect(
       runNow(api, 'dependency-updates', 'request-1'),
-    ).rejects.toMatchObject({ status: 403, code: 'routine_owner_required' })
+    ).rejects.toMatchObject({ status: 403, code: 'automation_owner_required' })
     await expect(runNow(api, 'review-prs', 'request-1')).rejects.toMatchObject({
       status: 409,
-      code: 'routine_pull_request_required',
+      code: 'automation_pull_request_required',
     })
     const run = await runNow(setup('?login=none').api, 'error-triage', 'r')
     // A prompt that contains `fail` stands for a cloud computer that did
     // not start, and its run keeps the workspace, as the Worker does.
     const start = setup()
     const { acme } = start
-    acme.routines = acme.routines.map((item) =>
+    acme.automations = acme.automations.map((item) =>
       item.id === 'error-triage'
         ? { ...item, prompt: `${item.prompt} Then fail.` }
         : item,
@@ -156,7 +159,7 @@ describe('the runs of the dev fake', () => {
       workspaceId: null,
       error: {
         code: 'agent_login_required',
-        message: 'Connect Claude to run this routine.',
+        message: 'Connect Claude to run this automation.',
       },
     })
     expect({
@@ -183,14 +186,14 @@ describe('the runs of the dev fake', () => {
     })
   })
 
-  test('the view of a run workspace names its routine and the pull request of its run', async () => {
+  test('the view of a run workspace names its automation and the pull request of its run', async () => {
     const path = workspaceViewPath(orgId, FAKE_IDS.workspace)
-    const routineOf = async (search: string) =>
-      (await setup(search).api.get(path, readViewReply)).routine
+    const automationOf = async (search: string) =>
+      (await setup(search).api.get(path, readViewReply)).automation
     expect({
-      person: await routineOf(''),
-      pullRequest: await routineOf('?run=pull-request'),
-      schedule: await routineOf('?run=schedule'),
+      person: await automationOf(''),
+      pullRequest: await automationOf('?run=pull-request'),
+      schedule: await automationOf('?run=schedule'),
     }).toEqual({
       person: null,
       pullRequest: {

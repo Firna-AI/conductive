@@ -42,7 +42,7 @@ The CLI and the MCP server offer these routes, as
   gives HTTP 400 `invalid_input`. The new section comes last. The reply
   gives its ID, its name, and its default mark, as the section list does.
 - A delete runs the whole app delete. Each workspace of the section, also
-  an archived one, and each routine of the section move to the default
+  an archived one, and each automation of the section move to the default
   section in one transaction. The workspace metadata is published before
   the reply.
 - A delete of the default section changes nothing and returns
@@ -92,7 +92,7 @@ The [Rust tools crate](../../crates/cnd-tools/README.md) tests CLI and MCP reque
 
 - `sections.test.ts`: member rights, trimmed names, order, blank names,
   stale callers, the default section, foreign and unknown IDs, active and
-  archived workspace moves, routines, metadata publication, and a sender
+  archived workspace moves, automations, metadata publication, and a sender
   who left.
 - `previews.test.ts`, with `previews.test-support.ts`: agent and member
   opens, signed-in launch links, list facts, close publication, repeated

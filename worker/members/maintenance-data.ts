@@ -107,10 +107,11 @@ export async function markDiskResumed(
   const result = await db
     .prepare(
       `UPDATE workspaces SET state = CASE WHEN archived_at IS NULL THEN 'starting' ELSE state END,
-       stopped_at = NULL WHERE org_id = ? AND id = ?
+       running_since = ?, stopped_at = NULL WHERE org_id = ? AND id = ?
        AND sandbox_id = ? AND provider_account = ? AND ${lifecycleWritePredicate}`,
     )
     .bind(
+      now,
       orgId,
       workspaceId,
       sandboxId,

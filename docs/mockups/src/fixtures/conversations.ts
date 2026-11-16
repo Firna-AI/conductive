@@ -38,6 +38,7 @@ import { tableConversations } from './tableConversations'
 import { unavailableConversations } from './unavailableConversations'
 import { workConversations } from './workConversations'
 import { conversationKeys } from './conversationKeys'
+import { answerFileConversations } from './answerFiles'
 import { fileMentionConversations } from './fileMentions'
 import { sessionLinkConversations } from './sessionLinkConversations'
 import { workspaceLinkConversations } from './workspaceLinkConversations'
@@ -49,11 +50,15 @@ type ToolCallStatus = 'done' | 'running' | 'stopped'
 /** A table in a message of the agent. A short row keeps only its own cells. */
 export type MessageTable = { kind: 'table' } & TableCells<string>
 
+/** A code block in a message of the agent, with its text as written. */
+type MessageCodeBlock = { kind: 'code'; text: string }
+
 /**
- * A block of a message of the agent: a paragraph, a heading, a table, or a
- * list.
+ * A block of a message of the agent: a paragraph, a heading, a table, a
+ * list, or a code block.
  */
-export type AgentBlock = string | MessageHeading | MessageTable | MessageList
+export type AgentBlock =
+  string | MessageHeading | MessageTable | MessageList | MessageCodeBlock
 
 export type ChatItem =
   | {
@@ -112,7 +117,18 @@ export type ChatItem =
       /** Why a fast turn ran at standard speed (fast mode decision 257). */
       standardSpeed?: StandardSpeedCause
     }
-  | { kind: 'error'; id: string; text: string }
+  | {
+      /** A failed turn: the cause, and Try again. */
+      kind: 'error'
+      id: string
+      text: string
+      /**
+       * A failed turn before the newest turn of the session. Try again shows
+       * only on the failed turn whose message the session record names for
+       * a retry, so this one has none.
+       */
+      older?: true
+    }
   | { kind: 'working'; id: string; elapsed: string }
   | {
       kind: 'turn-end'
@@ -207,6 +223,7 @@ export const conversations: Readonly<
   ...workspaceLinkConversations(history),
   ...sessionLinkConversations(history),
   ...fileMentionConversations(history),
+  ...answerFileConversations(history),
   ...workConversations({
     start: autocompleteStart,
     tests: autocompleteTests,

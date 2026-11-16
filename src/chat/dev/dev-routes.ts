@@ -1,16 +1,15 @@
 import type { Session } from '../../shared/generated/Session'
 import type { Attachment } from '../../shared/generated/Attachment'
 import type { UserMessage } from '../../shared/generated/UserMessage'
-import { filePaths } from '../../shared/files'
 import { attachmentFiles, readCopiedFile } from '../../app/dev/attachment-files'
-import { attachmentPath } from '../../shared/attachment-paths'
 import { sessionsPath } from '../../shared/sessions'
 import { workspaceViewPath } from '../../shared/workspace-view'
 import { workspacePaths } from '../../shared/workspaces'
 import { list, record, text } from '../api/json'
-import { readAttachment, readChoice } from '../api/read-chat'
+import { readChoice } from '../api/read-chat'
 import type { DevBackend } from './dev-backend'
 import { requestStop, resume } from './dev-sandbox'
+import { handleUpload } from './dev-uploads'
 import {
   askTitle,
   clearRetry,
@@ -216,26 +215,8 @@ export async function handleWrite(
   if (method === 'POST' && path === workspacePaths.resume(orgId, workspaceId)) {
     return reply(resume(backend))
   }
-  if (method === 'POST' && path === filePaths.attachments(orgId, workspaceId)) {
-    const query = new URL(request.url).searchParams
-    const mediaType = text(query.get('mediaType'))
-    const file = {
-      id: `dev-file-${attachments.size + 1}`,
-      name: text(query.get('name')),
-    }
-    const path = await attachmentPath(file)
-    const bytes = await request.arrayBuffer()
-    const attachment = readAttachment({
-      ...file,
-      path,
-      kind: mediaType.startsWith('image/') ? 'image' : 'file',
-      mediaType,
-      sizeBytes: bytes.byteLength,
-    })
-    attachments.set(attachment.id, attachment)
-    attachmentFiles(backend).retain(attachment, bytes)
-    return reply({ attachment }, 201)
-  }
+  const uploaded = await handleUpload(backend, request, attachments)
+  if (uploaded) return uploaded
   const prefix = `${sessionsPath(orgId, workspaceId)}/`
   if (!path.startsWith(prefix)) return null
   const [id = '', action = '', messageId, retry] = path

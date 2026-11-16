@@ -1,19 +1,19 @@
 /**
- * The parts of the workspaces of routine runs. A run workspace is a normal
- * workspace in the section of its routine (decision 504), on a new branch
+ * The parts of the workspaces of automation runs. A run workspace is a normal
+ * workspace in the section of its automation (decision 504), on a new branch
  * of the owner. Its first message is the prompt, a separator line, and the
  * facts of the trigger. The message copies no title or body of a pull
  * request.
  */
 
 import type { ChatItem } from './conversations'
-import type { Routine } from './routines'
+import type { Automation } from './automations'
 import type { StartingLog } from './starting'
 import type { Workspace } from './workspaces'
 
-/** The routine of a run, and the pull request of a pull request run. */
+/** The automation of a run, and the pull request of a pull request run. */
 type RunOrigin = {
-  routine: string
+  automation: string
   pullRequest?: { number: number; url: string }
 }
 
@@ -34,12 +34,15 @@ export type RunWorkspace = {
 const separator = '---'
 
 /** The first message of a run: the prompt, a separator, and the facts. */
-export function runMessage(routine: Routine, facts: readonly string[]): string {
+export function runMessage(
+  automation: Automation,
+  facts: readonly string[],
+): string {
   return [
-    routine.prompt,
+    automation.prompt,
     '',
     separator,
-    `Routine: ${routine.name}`,
+    `Automation: ${automation.name}`,
     ...facts,
   ].join('\n')
 }

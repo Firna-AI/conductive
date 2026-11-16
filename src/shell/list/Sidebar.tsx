@@ -9,7 +9,11 @@ import { useStore, valueOf } from '../../app/store'
 import type { User } from '../../shared/api'
 import type { OrgSummary } from '../../shared/orgs'
 import { useOrgAccess, useOrgModel } from '../context'
-import { useSidebarShown } from '../mac/mac-app'
+import {
+  SidebarHeaderToggle,
+  useSidebarPlace,
+  useSidebarShown,
+} from '../layout/sidebar-toggle'
 import { useNewWorkspace } from '../new-workspace/NewWorkspaceHost'
 import { SearchRow } from '../palette/SearchRow'
 import { shortcutTip, useShortcutHint } from '../shortcuts/shortcut-hints'
@@ -22,7 +26,7 @@ import type { RowVariant } from './WorkspaceRow'
 export type ListCurrent =
   | { screen: 'settings' }
   | { screen: 'new-workspace' }
-  | { screen: 'routines' }
+  | { screen: 'automations' }
   | { screen: 'workspace'; workspaceId: string }
   | null
 
@@ -112,10 +116,10 @@ export function NewWorkspaceLink(props: {
 }
 
 /**
- * The row below New workspace that opens the routines of the org. A
+ * The row below New workspace that opens the automations of the org. A
  * suspended org keeps it, because a suspension takes away no read.
  */
-export function RoutinesLink(props: {
+export function AutomationsLink(props: {
   orgId: string
   current: boolean
   variant: RowVariant
@@ -124,8 +128,8 @@ export function RoutinesLink(props: {
     <OrgPageLink
       current={props.current}
       icon={Repeat}
-      label="Routines"
-      to={routes.routines(props.orgId)}
+      label="Automations"
+      to={routes.automations(props.orgId)}
       variant={props.variant}
     />
   )
@@ -133,9 +137,12 @@ export function RoutinesLink(props: {
 
 /**
  * The desktop sidebar beside the org rail: the org name with its Settings
- * cog, New workspace, Routines, Search, and the sections of the org. A suspended
- * org shows its sections read-only, without New workspace. While the
- * sidebar shows, its list offers New section to the command palette.
+ * cog, New workspace, Automations, Search, and the sections of the org. A suspended
+ * org shows its sections read-only, without New workspace. In the
+ * browser the sidebar toggle sits beside the cog. While the sidebar shows,
+ * or while it is open as the list popover, its list offers New section and
+ * its keys. The hidden copy in the frame offers neither, so two copies
+ * never offer the same action.
  */
 export function Sidebar(props: {
   org: OrgSummary
@@ -145,11 +152,13 @@ export function Sidebar(props: {
   const { org, current } = props
   const { suspended } = useOrgAccess(org)
   const shown = useSidebarShown()
+  const popover = useSidebarPlace() === 'popover'
   return (
     <>
       <div className={styles.top}>
         <h2 className={styles.org}>{org.name}</h2>
         <SettingsLink current={current?.screen === 'settings'} orgId={org.id} />
+        <SidebarHeaderToggle />
       </div>
       <div className={styles.scroll}>
         <div className={styles.links}>
@@ -160,15 +169,15 @@ export function Sidebar(props: {
               variant="sidebar"
             />
           )}
-          <RoutinesLink
-            current={current?.screen === 'routines'}
+          <AutomationsLink
+            current={current?.screen === 'automations'}
             orgId={org.id}
             variant="sidebar"
           />
           <SearchRow variant="sidebar" />
         </div>
         <OrgList
-          offerActions={shown}
+          offerActions={shown || popover}
           orgId={org.id}
           readOnly={suspended}
           selectedId={

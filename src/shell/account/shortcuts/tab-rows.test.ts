@@ -40,7 +40,7 @@ test('a browser tab leaves out the rows and the group of the Mac app, and each g
       'Menus and palette',
       'Text',
     ],
-    tabView: ['Hide or show the right column'],
+    tabView: ['Hide or show the sidebar', 'Hide or show the right column'],
     appView: ['Hide or show the sidebar', 'Hide or show the right column'],
     appGroups: ['Menus and palette', 'Text', 'Mac app'],
     chat: [

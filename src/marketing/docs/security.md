@@ -100,8 +100,8 @@ Tool messages follow the receiving session's login-sharing rules.
 These workspace actions need no separate approval screen.
 Previews that agents open need sign-in and workspace access.
 
-A routine can start agent work from a pull request.
-Comments and reviews on that pull request can steer these reads and changes across the org, with the routine owner's rights.
+An automation can start agent work from a pull request.
+Comments and reviews on that pull request can steer these reads and changes across the org, with the automation owner's rights.
 Conductive sets no limit on the number of sessions or messages that agents create.
 Agents that keep replying to each other can spend logins and keep computers running.
 Use **Stop** in each affected session to end its turn.

@@ -31,6 +31,8 @@ gives the create, read, resume, and activity routes of a workspace to
   the current turn, or of the member who pressed Continue during its fetch.
 - Continue a workspace on a new branch after its merge, with the same
   sandbox and sessions.
+- Restart the runner and the preview relay of a running workspace, after
+  an update check, as [Restart](routes.md#restart) says.
 - Give the GitHub CLI the workspace owner's token outside an agent turn.
 
 ## Integration points
@@ -123,6 +125,16 @@ The [lifecycle test guide](tests.md) describes the native fixture, clocks, alarm
 
 D1 holds the workspace, token, build, and log records. The storage of each
 object holds the lifecycle state, the turn records, and the events.
+`WorkspaceStateProjection` passes the lifecycle start to `persistLifecycleState`
+in [`workspace-data.ts`](workspace-data.ts).
+The save copies `start.startedAt` into `workspaces.running_since` for starting,
+ready, working, unread, and input. A missing start writes null.
+Stopped, error, and archived states clear the time.
+Archive, Restore, and deleted-org stops also clear it in their direct D1 writes.
+A deleted-org disk restart saves its restart time.
+The [operator Overview](../operator/overview.md) reads this current run time without a provider call.
+The migration leaves existing times null until their next lifecycle save.
+The save runs within 5 minutes during a turn, and within 30 minutes otherwise.
 The computer ledger keeps allocation keys, orgs, owners or starters, and provider IDs with their [provider accounts](provider-accounts.md#the-computer-ledger).
 It keeps deleted computer IDs until their org is purged.
 Assigned identity writes also retain older IDs, including imports and repairs.

@@ -26,6 +26,23 @@ The [mockup catalogue](../mockups/catalogue.md) draws the tools at
   the temporary tab, as [Temporary tabs](temporary-tabs.md) says.
 - Markdown shows rendered, with a switch to its source. Code shows with line
   numbers and syntax colours.
+- A file tab can open at a line or a range of lines, such as from a file
+  chip of an answer with a line target, as
+  [Line targets](file-mentions.md#line-targets) says (answer chip
+  decision 2). The tab then shows the text of the file, also for a
+  Markdown file. It scrolls the first line to the middle of the view, and
+  marks each line of the range with a background colour.
+- The address of such a tab names the lines in its query, as
+  `?line=42` or `?line=42-50`. So a link opened in a new browser tab
+  shows the same lines. Each new address with lines scrolls again.
+- The lines win over the scroll place that the tab keeps. A later change
+  of the file does not scroll the tab again, so the reader keeps the
+  place.
+- The saved view of the workspace keeps the tab without the lines.
+  Reason: the view follows the member in each browser tab, and another
+  tab must not jump.
+- A range that runs past the end of the file stops at its last line. A
+  first line past the end shows the top of the file and marks nothing.
 - A link of the Markdown preview has the look and the title of a
   [link of chat text](chat-links.md) (chat link decision 1 D). A link to a
   page of the app opens that page in the app, in the same window, as in
@@ -288,6 +305,21 @@ The [mockup catalogue](../mockups/catalogue.md) draws the tools at
 - A stop of the sandbox ends the shell and its commands, as
   [Stop and resume](workspace-life.md#stop-and-resume) says. The first connection after the
   resume opens a new shell.
+- The commands that the user typed in the shell stay in its command
+  history after a stop. The new shell after the resume finds them, such as
+  with the Up arrow or Ctrl-R (terminal history decision 1). Terminal
+  history decisions are the decisions of the change that added this rule.
+- Each command goes into the history file when it ends, before the next
+  prompt. A command that still runs at the stop, such as a dev server, does
+  not go in. An empty or unset `HISTFILE` keeps the history out of the
+  file.
+- Reason: Bash writes its history file only when the shell exits. The
+  shell exits only during the shutdown at a stop, and a test on
+  16 November 2026 found no history file after the resume. The append
+  writes each command while the sandbox runs. A
+  shell that also reads the new commands of the other shells at each
+  prompt was rejected, because it changes the order of the Up arrow while
+  the user works.
 - On a phone, a row of keys adds the keys that a phone keyboard lacks.
 
 ## Port previews

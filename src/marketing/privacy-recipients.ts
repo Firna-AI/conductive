@@ -24,7 +24,11 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         a cloud computer carries its author's GitHub display name or login
         and GitHub no-reply address. That address contains the author's GitHub
         user ID and login. GitHub and each reader of the repository see
-        that name and address. The Mac app also checks
+        that name and address. Each workspace branch name starts with the
+        GitHub login of the workspace owner. It can also hold a short form
+        of the workspace name, which can come from the text of the first
+        message. A push sends the branch name to GitHub, and each reader of
+        the repository sees it. The Mac app also checks
         GitHub for updates and downloads new versions. These requests
         send your network address to GitHub.`,
       text`Resend sends the org invitations, approval emails, and feedback
@@ -62,13 +66,14 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         its sender. They get the
         names of the workspace branch and the branch that a pull request
         targets. Later messages give the current names when either branch
-        changes. Each workspace branch starts with the GitHub login of the
-        workspace owner when that branch is created. The agents send them
+        changes. Each workspace branch name starts with the GitHub login of
+        the workspace owner. It can also hold a short form of the workspace
+        name. The agents send them
         through ${productName}, which adds the agent login.
         Agent settings in the repository can send them to another address
         instead. Each session uses the
-        login of the member who started it. Each run of a routine sends
-        its prompt on the login of the member who owns the routine.
+        login of the member who started it. Each run of an automation sends
+        its prompt on the login of the member who owns the automation.
         Your messages in another
         member's session use that member's login only when that member
         lets other members use it. When that member does not share the
@@ -76,7 +81,7 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         terms of that provider or endpoint apply.`,
       text`The members of your orgs see the workspaces of the org,
         their chats, and each Mac command request and result. They also see
-        the routines of the org, with their prompts and their runs.
+        the automations of the org, with their prompts and their runs.
         A member with a terminal in a cloud computer can read
         the GitHub token of a turn that runs there. During Continue, they
         can also read the GitHub token of the member who clicked, while the
@@ -100,7 +105,7 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         seconds after the turn ends. If the member who started the session
         removes or changes the login, or loses access to the org, the turn
         ends at its next model request.`,
-      text`The run of your routine for a pull request reads the comments,
+      text`The run of your automation for a pull request reads the comments,
         reviews, and descriptions of other GitHub accounts. Such text can
         steer the agent while the run uses your agent login and GitHub
         token, and the env vars of the org. Such text can also steer the

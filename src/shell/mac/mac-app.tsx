@@ -7,7 +7,7 @@ import {
 } from 'react'
 import type { WindowMode } from '../../../docs/mockups/src/components/mac/MacApp'
 import { keptOrg } from '../../app/kept-org'
-import { Store, useStore, type Readable } from '../../app/store'
+import { useStore, type Readable } from '../../app/store'
 import type { OrgSummary } from '../../shared/orgs'
 import { useApp } from '../context'
 import mac from './mac.module.css'
@@ -35,20 +35,14 @@ export interface MacWindow {
 
 /**
  * The window controls of one run of the Mac app. They sit above every frame
- * of the shell, so the sidebar toggle stays through a new address, a
- * sign-in, and a load.
+ * of the shell. The panel layout of the app keeps whether the sidebar
+ * shows, so the toggle stays through a new address, a sign-in, and a load.
  */
 export class MacChrome {
   readonly window: MacWindow
-  /** The user hid the sidebar with its toggle. */
-  readonly sidebarHidden = new Store(false)
 
   constructor(window: MacWindow) {
     this.window = window
-  }
-
-  toggleSidebar = (): void => {
-    this.sidebarHidden.change((hidden) => !hidden)
   }
 }
 
@@ -101,20 +95,6 @@ export function useKeptOrg(
   const last = useStore(useApp().lastOrg)
   if (!chrome) return undefined
   return keptOrg(orgs, last)
-}
-
-const neverHidden: Readable<boolean> = {
-  get: () => false,
-  subscribe: () => () => undefined,
-}
-
-/**
- * The sidebar of the frame shows: the window is wide, and the toggle of
- * the Mac app does not hide it.
- */
-export function useSidebarShown(): boolean {
-  const hidden = useStore(useMacApp()?.sidebarHidden ?? neverHidden)
-  return !useNarrowWindow() && !hidden
 }
 
 /** Below this width the sidebar hides, as the container query of `AppFrame.module.css` says. */

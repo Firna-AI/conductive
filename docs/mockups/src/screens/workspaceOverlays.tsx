@@ -16,6 +16,11 @@ import type { PaletteContext } from '../components/palette/paletteContent'
 import { ArchivedToast } from '../components/workspace/ArchivedToast'
 import { ContinueDialog } from '../components/workspace/ContinueDialog'
 import { reassignMenu } from '../components/workspace/OwnerPicker'
+import {
+  RestartDialog,
+  RestartSheet,
+  UpdateCheckToast,
+} from '../components/workspace/RestartParts'
 import type { WorkspaceTab } from '../components/workspace/TabItem'
 import { TabMenuSheet } from '../components/workspace/TabMenu'
 import { transcriptToasts } from '../components/workspace/transcriptCopy'
@@ -164,6 +169,14 @@ export function workspaceOverlay(
   switch (state.overlay) {
     case 'none':
       return mobile ? rowMenuSheet(state, viewport) : null
+    case 'restarting':
+      return null
+    case 'restart':
+      return mobile ? <RestartSheet name={workspace.name} /> : null
+    case 'restart-confirm':
+      return <RestartDialog viewport={viewport} />
+    case 'restart-update-failed':
+      return <UpdateCheckToast viewport={viewport} />
     case 'close-session':
       return <CloseSessionDialog viewport={viewport} />
     case 'continue-unpushed':

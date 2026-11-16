@@ -19,7 +19,7 @@ On a phone, open the workspace's **Files** view.
 - **Changes** lists changes against the workspace's base branch.
 - **Checks** shows the pull request's GitHub checks.
 
-An automatic software update brings `.context/` support to an older workspace at a later start.
+An [automatic software update](/docs/cloud-computer#apply-setup-changes) brings `.context/` support to an older workspace at a later start or when it is idle.
 
 Workspaces in a suspended org have no file lists.
 An archived workspace keeps read-only chat, with no file lists or tools.
@@ -55,6 +55,10 @@ The file view also offers **Download** if the browser cannot draw an image withi
 
 You can read files, copy content or paths, and add files or folders to chat.
 To change a file, ask the agent or use **Terminal**.
+
+You can open a file from its chip in an agent reply.
+A chip with a line, such as `app.ts:42`, opens the file as text with that line in view and marked.
+The address of the tab keeps the line.
 
 You can also open an attached file from its chip in a sent message.
 It opens the copy in the workspace's repository folder after the message reaches the agent.

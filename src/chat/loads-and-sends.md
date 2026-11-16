@@ -25,9 +25,9 @@ of a draft.
   merges into the session log at once. Then the workspace and the session
   list load again. The stream starts after that page's
   `throughEventNumber`, while earlier pages still load. No change between
-  the reads and the stream gets lost. The view also gives the routine of a run
+  the reads and the stream gets lost. The view also gives the automation of a run
   workspace, with the pull request of a pull request run. The snapshot keeps
-  it as `routine` for the workspace header.
+  it as `automation` for the workspace header.
 - The history API reads newest first. Each earlier request uses the
   preceding page's `nextBeforeEventNumber` as an exclusive `before`
   cursor. Every request keeps the first page's cutoff. A cursor

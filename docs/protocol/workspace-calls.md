@@ -154,7 +154,10 @@ number names a dated record, as
   [Names from the workspace tools](tool-names.md) says.
 - No automatic name replaces the stored name, as after Rename in the
   [menu of a workspace row](workspace-menu.md#rename).
-- The rename keeps the branch.
+- The rename changes the branch only before the start creates the branch
+  in the sandbox, as
+  [The branch and the name](create-a-workspace.md#the-branch-and-the-name)
+  says. After that, the rename keeps the branch.
 - An archived workspace refuses the rename with HTTP 409 and the error
   code `workspace_archived`, as the app does.
 - The reply gives the workspace with its stored name.

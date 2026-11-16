@@ -37,7 +37,7 @@ export const attachmentsDrop = defineScreen({
       description:
         'Cal dropped the screenshot and the folder checkout-screens together. The browser zipped the folder, so both are chips at the place of the drop, in the order of the drop: the screenshot, then checkout-screens.zip. Both upload. The zip holds the folder with each file and folder in it.',
       rationale:
-        'The user asked to upload a folder as its zip, made before the upload. One zip keeps the folder as one chip and one file for the agent, which can unzip it. The zip counts against the limit of 100 MB as each file does. A zip over the limit is not attached, and the notice of a file over 100 MB names checkout-screens.zip.',
+        'The user asked to upload a folder as its zip, made before the upload. One zip keeps the folder as one chip and one file for the agent, which can unzip it. The zip counts against the limit of 1 GB as each file does. A zip over the limit is not attached, and the notice of a file over 1 GB names checkout-screens.zip.',
       props: { composer: 'dropped-folder' },
     },
     {
@@ -46,7 +46,7 @@ export const attachmentsDrop = defineScreen({
       description:
         'Cal dropped the screenshot and the folder checkout-screens together, and the browser could not read the folder. The screenshot is a chip at the place of the drop. The folder is not attached: the notice over the box names it, says that it could not be read, and says to attach the files in it. "Attach files" opens the file picker.',
       rationale:
-        'A folder that the browser cannot read cannot become a zip. So the notice names the folder, as it names a file over 100 MB, and the files of the same drop stay.',
+        'A folder that the browser cannot read cannot become a zip. So the notice names the folder, as it names a file over 1 GB, and the files of the same drop stay.',
       props: { composer: 'unreadable-folder' },
     },
   ],
