@@ -5,14 +5,14 @@ import { agentBlockSchema } from './chatBlockSchemas'
 
 /**
  * The blocks of a message of the agent, registered with Mokly. Its pages
- * show paragraphs with a list, headings, a table, and a list with lists
- * under its items.
+ * show paragraphs with a list, headings, a table, a list with lists under
+ * its items, and a code block.
  */
 export const agentBlocks = defineComponent({
   slug: 'agent-blocks',
   title: 'Agent blocks',
   description:
-    'The blocks of a message of the agent, in order: its paragraphs, its headings, its tables, and its lists. Their text keeps its inline code and its bold, and each link to a workspace of the org is a chip. A list shows the lists that the agent indents under its items. The element around them sets the type and the space between them. Its own page shows the answer of a finished turn.',
+    'The blocks of a message of the agent, in order: its paragraphs, its headings, its tables, its lists, and its code blocks. Their text keeps its inline code and its bold, and each link to a workspace of the org is a chip. Each mention, and each inline code whose whole text is a path of the tree, is a file chip. A code block stays code. A list shows the lists that the agent indents under its items. The element around them sets the type and the space between them. Its own page shows the answer of a finished turn.',
   relatedDocs: ['docs/mockups/design-chat.md'],
   propSchema: {
     type: 'object',
@@ -100,6 +100,22 @@ export const agentBlocks = defineComponent({
                 list: bullets('a. Keep them as a fallback.', 'b. Hide them.'),
               },
             ],
+          },
+        ],
+      },
+    },
+    {
+      slug: 'code',
+      title: 'Code block',
+      description:
+        'An answer with a code block, which keeps its text and its paths as code.',
+      props: {
+        id: 'screenshot',
+        blocks: [
+          'I took the screenshot with:',
+          {
+            kind: 'code',
+            text: 'npx playwright screenshot --device="iPhone 13" http://localhost:3000/checkout .context/shots/after.png',
           },
         ],
       },

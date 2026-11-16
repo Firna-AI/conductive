@@ -4,10 +4,22 @@ export function fixedUploadBody(request: Request, sizeBytes: number) {
   const controller = new AbortController()
   let failed = false
   let received = 0
+  let lastByte: Uint8Array | undefined
   const observed = new TransformStream<Uint8Array, Uint8Array>({
     transform(bytes, stream) {
       received += bytes.byteLength
-      stream.enqueue(bytes)
+      if (received > sizeBytes)
+        throw new Error('The attachment byte count did not match.')
+      if (!bytes.byteLength) return
+      if (lastByte) stream.enqueue(lastByte)
+      stream.enqueue(bytes.subarray(0, bytes.byteLength - 1))
+      lastByte = bytes.slice(-1)
+    },
+    flush(stream) {
+      if (received !== sizeBytes)
+        throw new Error('The attachment byte count did not match.')
+      // Native R2 must not receive the final byte before the counted source ends.
+      if (lastByte) stream.enqueue(lastByte)
     },
   })
   const empty = () =>

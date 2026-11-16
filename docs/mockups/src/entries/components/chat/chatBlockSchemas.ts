@@ -76,12 +76,29 @@ const leafItem = {
  */
 const listSchema = listOf(itemWith(listOf(itemWith(listOf(leafItem)))))
 
+/** A code block of a message, as `MessageCodeBlock`: its text as written. */
+const codeSchema = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['kind', 'text'],
+  properties: {
+    kind: { const: 'code' },
+    text: { type: 'string' },
+  },
+} as const
+
 /**
  * A block of a message of the agent, as `AgentBlock`: a paragraph, a
- * heading, a table, or a list.
+ * heading, a table, a list, or a code block.
  */
 export const agentBlockSchema = {
-  anyOf: [{ type: 'string' }, headingSchema, tableSchema, listSchema],
+  anyOf: [
+    { type: 'string' },
+    headingSchema,
+    tableSchema,
+    listSchema,
+    codeSchema,
+  ],
 } as const
 
 /** The kinds of an attached file, as `Attachment` lists them. */

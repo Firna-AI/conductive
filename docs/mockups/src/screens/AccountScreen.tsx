@@ -16,6 +16,7 @@ import {
 import { DeletedOrgsSection } from '../components/settings/DeletedOrgsSection'
 import { InviteCodeSection } from '../components/settings/InviteCodeSection'
 import { DefaultsSection } from '../components/settings/PreferencesSections'
+import { StatsTab } from './accountStats'
 import { ResetShortcutsDialog } from '../components/settings/ResetShortcutsDialog'
 import { ShortcutsTab } from '../components/settings/ShortcutsSections'
 import { ThisMacSection } from '../components/settings/ThisMacSection'
@@ -63,6 +64,7 @@ function TabContent(props: {
   state: AccountView
   host: ShortcutHost
   changes: ShortcutChanges
+  viewport: Viewport
 }) {
   const { state } = props
   switch (state.tab) {
@@ -87,6 +89,8 @@ function TabContent(props: {
           search={state.shortcutSearch}
         />
       )
+    case 'stats':
+      return <StatsTab stats={state.stats} viewport={props.viewport} />
     case 'this-mac':
       return <ThisMacSection />
   }
@@ -99,7 +103,8 @@ function TabContent(props: {
  * the host of an own endpoint. Preferences holds how new
  * workspaces start: their model, and how New workspace opens. Keyboard
  * shortcuts holds the keys of the host: the Mac app, or the browser and the
- * keyboard of `state.host`. The Mac app adds This Mac, with the commands
+ * keyboard of `state.host`. Stats holds the person's own counts. The Mac
+ * app adds This Mac, with the commands
  * that always run on this Mac. The product is free, so the page shows no
  * plan and no billing, and the sandbox provider stays out of sight. With the
  * person's changes to the shortcuts, the Search row of the Mac app's
@@ -127,7 +132,12 @@ export function AccountScreen(props: {
       title="Account"
       viewport={props.viewport}
     >
-      <TabContent changes={changes} host={host} state={state} />
+      <TabContent
+        changes={changes}
+        host={host}
+        state={state}
+        viewport={props.viewport}
+      />
     </pagePart.Component>
   )
   // Reset all asks first: a dialog over the account, or a sheet on a phone.

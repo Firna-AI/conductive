@@ -1,21 +1,54 @@
 import { describe, expect, it } from 'vitest'
 import { fileMark } from '../../app/draft-marks'
 import { flushMicrotasks } from '../../app/test-kit'
+import { attachmentUploadStartPath } from '../../shared/messages'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
-import { note } from '../../app/draft-files.test-support'
+import { firstCall, note } from '../../app/draft-files.test-support'
+import { record } from '../api/json'
 import { readyChat } from './draft-files.test-support'
 
+type Chat = Awaited<ReturnType<typeof readyChat>>
+
 const session = FAKE_IDS.session
+const startPath = attachmentUploadStartPath(FAKE_IDS.org, {
+  type: 'workspace',
+  workspaceId: FAKE_IDS.workspace,
+})
+
+/** The uploads that the chat started, as their start calls show. */
+function starts(chat: Chat): number {
+  return chat.requests('POST', startPath).length
+}
+
+/** The names of the files whose start calls the server got, in order. */
+async function startNames(chat: Chat): Promise<unknown[]> {
+  const bodies = await chat.bodies('POST', startPath)
+  return bodies.map((body) => record(body).name)
+}
+
+/** Attaches one.txt and two.txt in one pick, with a mark for each. */
+function pickTwo(chat: Chat): string[] {
+  const ids = chat.controller.attachFiles(session, [
+    note('one.txt'),
+    note('two.txt'),
+  ])
+  chat.controller.setDraft(session, ids.map(fileMark).join(' '))
+  return ids
+}
 
 describe('files held by draft marks', () => {
   it('returns file IDs before uploads finish and keeps the pick queue', async () => {
     const chat = await readyChat()
     const ids = chat.controller.attachFiles(session, [note(), note('two.txt')])
-    expect({ ids, started: chat.jobs.map((job) => job.name) }).toEqual({
+    const queued = starts(chat)
+    await chat.started(1)
+    expect({ ids, queued, started: chat.jobs.map((job) => job.name) }).toEqual({
       ids: ['file-1', 'file-2'],
+      queued: 1,
       started: ['notes.txt'],
     })
     await chat.finish(0, 'one')
+    await chat.started(2)
     expect(chat.jobs.map((job) => job.name)).toEqual(['notes.txt', 'two.txt'])
     await chat.finish(1, 'two')
   })
@@ -25,6 +58,7 @@ describe('files held by draft marks', () => {
     chat.controller.attachFiles(session, [note()])
     const marked = fileMark('file-1')
     chat.controller.setDraft(session, `${marked} ${marked}`)
+    await chat.started(1)
     await chat.finish(0, 'one')
     const ready = chat.draftOf(session)?.files[0]
     chat.controller.setDraft(session, marked)
@@ -37,7 +71,7 @@ describe('files held by draft marks', () => {
     chat.controller.setDraft(session, marked)
     expect({
       files: chat.draftOf(session)?.files,
-      uploads: chat.jobs.length,
+      uploads: starts(chat),
     }).toEqual({
       files: [ready],
       uploads: 1,
@@ -52,13 +86,19 @@ describe('files held by draft marks', () => {
     ])
     const text = `${fileMark('file-1')} ${fileMark('file-2')}`
     chat.controller.setDraft(session, text)
+    await chat.started(1)
     chat.controller.setDraft(session, '')
     chat.controller.setDraft(session, text)
+    await chat.started(2)
     expect(chat.jobs.map((job) => job.name)).toEqual(['first.txt', 'first.txt'])
     expect(chat.jobs[0].signal.aborted).toBe(true)
     await chat.finish(0, 'stale')
-    expect(chat.jobs).toHaveLength(2)
+    expect({ parts: chat.jobs.length, uploads: starts(chat) }).toEqual({
+      parts: 2,
+      uploads: 1,
+    })
     await chat.finish(1, 'first')
+    await chat.started(3)
     expect(chat.jobs.map((job) => job.name)).toEqual([
       'first.txt',
       'first.txt',
@@ -75,10 +115,16 @@ describe('files held by draft marks', () => {
     const chat = await readyChat()
     chat.controller.attachFiles(session, [note()])
     chat.controller.setDraft(session, fileMark('file-1'))
+    await chat.started(1)
     chat.controller.setDraft(session, '')
     expect(chat.jobs[0].signal.aborted).toBe(true)
     chat.controller.setDraft(session, fileMark('file-1'))
-    expect(chat.jobs).toHaveLength(2)
+    await chat.started(2)
+    // The upload that comes back sends its part again, in the same upload.
+    expect({ parts: chat.jobs.length, uploads: starts(chat) }).toEqual({
+      parts: 2,
+      uploads: 1,
+    })
     chat.jobs[1].progress(1)
     chat.jobs[0].progress(99)
     chat.jobs[0].reject(new Error('late failure'))
@@ -102,15 +148,16 @@ describe('files held by draft marks', () => {
     chat.controller.setDraft(session, text)
     chat.controller.setDraft(session, fileMark('file-1'))
     chat.controller.setDraft(session, text)
+    await chat.started(2)
     expect(chat.jobs.map((job) => job.name)).toEqual([
       'first.txt',
       'queued.txt',
     ])
     await chat.finish(0, 'first')
-    expect(chat.jobs.map((job) => job.name)).toEqual([
-      'first.txt',
-      'queued.txt',
-    ])
+    expect({
+      parts: chat.jobs.map((job) => job.name),
+      uploads: starts(chat),
+    }).toEqual({ parts: ['first.txt', 'queued.txt'], uploads: 2 })
     chat.jobs[1].progress(1)
     expect(chat.draftOf(session)?.files[1]).toMatchObject({
       state: 'uploading',
@@ -118,6 +165,7 @@ describe('files held by draft marks', () => {
     })
     chat.controller.setDraft(session, fileMark('file-1'))
     chat.controller.setDraft(session, text)
+    await chat.started(3)
     await chat.finish(1, 'stale')
     expect(chat.draftOf(session)?.files[1]).toMatchObject({
       state: 'uploading',
@@ -127,5 +175,52 @@ describe('files held by draft marks', () => {
       state: 'ready',
       attachment: { id: 'current' },
     })
+  })
+
+  it('starts the next file of the pick at once after a Remove while the start call waits, and ignores its late answer', async () => {
+    const chat = await readyChat(firstCall('start'))
+    const [one, two] = pickTwo(chat)
+    expect(chat.held).toHaveLength(1)
+    chat.controller.setDraft(session, fileMark(two))
+    await flushMicrotasks()
+    // The start call of one.txt still waits before the server.
+    expect(await startNames(chat)).toEqual(['two.txt'])
+    await chat.started(1)
+    await chat.finish(0, 'two')
+    const ready = chat.draftOf(session)
+    expect(ready).toMatchObject({
+      files: [{ id: two, state: 'ready', attachment: { id: 'two' } }],
+      detached: [{ id: one, state: 'uploading' }],
+    })
+    chat.held.splice(0, 1)[0]()
+    await flushMicrotasks()
+    expect(chat.draftOf(session)).toBe(ready)
+    expect({
+      starts: await startNames(chat),
+      parts: chat.jobs.map((job) => job.name),
+    }).toEqual({ starts: ['two.txt', 'one.txt'], parts: ['two.txt'] })
+  })
+
+  it('starts the next file of the pick at once after a Remove while the complete call waits, and ignores its late answer', async () => {
+    const chat = await readyChat(firstCall('complete'))
+    const [one, two] = pickTwo(chat)
+    await chat.started(1)
+    // The part of one.txt gets its receipt, and its complete call waits.
+    const late = chat.finish(0, 'one')
+    await flushMicrotasks()
+    expect(chat.held).toHaveLength(1)
+    chat.controller.setDraft(session, fileMark(two))
+    await flushMicrotasks()
+    expect(await startNames(chat)).toEqual(['one.txt', 'two.txt'])
+    await chat.started(2)
+    await chat.finish(1, 'two')
+    const ready = chat.draftOf(session)
+    expect(ready).toMatchObject({
+      files: [{ id: two, state: 'ready', attachment: { id: 'two' } }],
+      detached: [{ id: one, state: 'uploading' }],
+    })
+    chat.held.splice(0, 1)[0]()
+    await late
+    expect(chat.draftOf(session)).toBe(ready)
   })
 })

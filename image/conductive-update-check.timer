@@ -1,9 +1,9 @@
 [Unit]
-Description=Check Conductive software hourly
+Description=Check Conductive software every 10 minutes
 
 [Timer]
 OnBootSec=30s
-OnUnitActiveSec=1h
+OnUnitActiveSec=10min
 Unit=conductive-update-check.service
 
 [Install]

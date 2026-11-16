@@ -5,6 +5,10 @@ This guide belongs to [Web app: data and composition](README.md).
 limits of the chat over the fake. This guide gives the query options of
 the dev wiring in `dev/`, and what its fake routes do.
 
+Without `?conversation=`, a working workspace has a running recorded chat.
+Other recorded workspaces have a finished chat. An explicit conversation
+option overrides this default, including queued chats that show no spinner.
+
 - The dev wiring in `dev/` keeps an in-memory state, so that an edit in the
   browser shows on the next read. Query options choose a preview state, for
   example `?role=member`, `?workspace=starting`, `?firstRun=org`,
@@ -17,11 +21,16 @@ the dev wiring in `dev/`, and what its fake routes do.
   `?banner=checks-failed`, gives `checkout-autocomplete` that pull request
   bar, and its list mark shows the GitHub state of that bar. The other rows
   keep the GitHub states of the mockups. `dev/attachment-routes.ts`
-  keeps the uploaded files of both composers. With `?upload=wait` each
-  upload keeps running, and with `?upload=fail` the first upload of the
-  page fails once, so Try again works. `?sent=<percent>` makes the dev
-  fixture `dev/progress-fixture.ts` report that share of each file as
-  sent, so `?upload=wait&sent=64` shows the measured state. Create org of the dev fake
+  serves the start call, the parts, and the complete call of the uploads
+  of both composers, with the checks of the Worker, through the store of
+  `dev/attachment-parts.ts`. With `?upload=wait` no part gets an answer,
+  so each upload keeps running. With `?upload=fail` the first part of the
+  page fails at its first send and at each of its retries, so its chip
+  fails once, and Try again sends that part again. The retries wait 1, 2,
+  and 4 seconds, so the chip fails after about 7 seconds. `?sent=<percent>` makes
+  the dev fixture `dev/progress-fixture.ts` report that share of each part
+  as sent, so `?upload=wait&sent=64` shows the measured state of a file of
+  one part. Create org of the dev fake
   requires at least one repository and starts a simulated build. Its
   repository catalogue keeps the saved choices, and its custom initials
   stay through rename, delete, and restore. Settings changes during the
@@ -44,7 +53,9 @@ the dev wiring in `dev/`, and what its fake routes do.
   shows Refresh, and a Refresh shows the warning above the line of that
   list. A reload alone returns neither flag.
 - The upload routes also keep the exact bytes of each upload, in a private
-  store of the page. A send that names uploaded files gets a reply with its
+  store of the page. They keep the bytes of each part until the complete
+  call puts the file together, so a large file takes its size in the
+  memory of the page. A send that names uploaded files gets a reply with its
   own message ID, text, model choice, and files. An archived workspace,
   and each message without uploaded files, keep the recorded reply. In a
   workspace that runs, such as `checkout-autocomplete` by default, the
@@ -152,3 +163,8 @@ It checks the whole batch with the shared reader before it changes state.
 It keeps each keyboard separate, preserves empty key lists, and removes
 an override when the request sends null keys.
 The next account read returns both keyboards.
+
+The Stats tab of the account reads its counts from `dev/account-stats.ts`.
+It counts the orgs of the fake that are not deleted, the workspaces and
+the automations that the person owns in them, and the automation runs of the
+person that were not skipped, by the rules of the Worker.

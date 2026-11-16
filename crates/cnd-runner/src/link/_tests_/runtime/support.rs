@@ -18,6 +18,7 @@ use crate::link::connection::SavedRunnerLink;
 use crate::runtime::{CommandHandlerMock, Runner, RunnerCore};
 use crate::socket::{ConnectorMock, Socket, SocketMock};
 use crate::test_support::{Memory, clock, title};
+use crate::update::NoUpdates;
 
 #[unimock::unimock(api = SocketWorkMock)]
 trait SocketWork: Send + Sync {
@@ -157,6 +158,7 @@ impl Fixture {
             store,
             runtime_clock,
             Arc::new(handler),
+            Arc::new(NoUpdates),
         ));
         Ok(Self {
             link,

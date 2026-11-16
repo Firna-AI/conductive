@@ -170,11 +170,13 @@ export function ChatItemView(props: { item: SingleItem; viewer: PersonKey }) {
     case 'error':
       return (
         <notice.Component
-          action={
-            <actionButton.Component moklyInstance={`retry-${item.id}`}>
-              Try again
-            </actionButton.Component>
-          }
+          {...defined({
+            action: item.older ? undefined : (
+              <actionButton.Component moklyInstance={`retry-${item.id}`}>
+                Try again
+              </actionButton.Component>
+            ),
+          })}
           body={item.text}
           icon="circle-alert"
           moklyInstance={`error-${item.id}`}

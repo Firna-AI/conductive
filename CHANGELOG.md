@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.21.0](https://github.com/Firna-AI/conductive/compare/v0.20.0...v0.21.0) (2026-11-16)
+
+
+### Features
+
+* **attachments:** attach files of up to 1 GB ([#377](https://github.com/Firna-AI/conductive/issues/377)) ([4dde5db](https://github.com/Firna-AI/conductive/commit/4dde5db604cb6a4f0627ea5688a4fbecf7f07261))
+* **chat:** show a spinner on working session tabs ([#347](https://github.com/Firna-AI/conductive/issues/347)) ([b088ba2](https://github.com/Firna-AI/conductive/commit/b088ba2bc3caa339457bbddd5e22fe3d524ce1df))
+* **operator:** show the longest cloud computer runs on the Overview ([#403](https://github.com/Firna-AI/conductive/issues/403)) ([e37cdd4](https://github.com/Firna-AI/conductive/commit/e37cdd409a69e5e58413336c34526cb3e802ff99))
+
 ## [0.20.0](https://github.com/Firna-AI/conductive/compare/v0.19.0...v0.20.0) (2026-11-16)
 
 

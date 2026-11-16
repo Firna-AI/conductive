@@ -9,7 +9,7 @@ renders plain React parts. An edit to a shared part therefore gives one
 Changes row for each screen and variant that looks different, and no row
 names the part. Commit `cc3ea647` changed `WorkspaceMark`, which 196 screen
 modules import. This change registers every part of the catalogue with
-Mokly's `defineComponent`: 349 parts. An edit to a registered part then gives one row for the
+Mokly's `defineComponent`: 358 parts. An edit to a registered part then gives one row for the
 part, and the screens that use it go under its Affected screens. The
 change adds no HTML entry, changes no screen picture, and changes no app
 code.
@@ -23,7 +23,10 @@ follow that merge. A second merge on the same day brought the rename of
 routines to automations (#397), and two new parts: `NewSectionDialog`
 and `LongRuns`. Milestone 2 split out one more chat part, `NewTabAnchor`,
 and Milestone 3 split out `TurnFileChip`, because `TurnFileList` takes its
-chip as a callback.
+chip as a callback. A third merge on the same day added nine parts:
+`CodeBlock`, `MentionChip`, `FileLinkText`, `ChipCopyText`,
+`StatsNumbers`, `StatsLoading`, `StatsFailed`, `SessionTabIcon`, and the
+helper `StatsTab`.
 
 On 2026-11-13 the user asked that this plan include every part, not
 only a first batch. The milestones register the parts folder by folder,
@@ -79,8 +82,11 @@ counts and test under `.context/mokly-html/` of this workspace.
   "Mokly markers require a sidecar render context".
 - Repeated siblings need distinct `moklyInstance` names, in lowercase
   kebab-case. Duplicates in one scope fail the build.
-- After the second merge of `main` on 2026-11-16, the app reaches 61 of
-  the 301 TSX files of `docs/mockups/src/components/` and `docs/mockups/src/screens/`.
+- After the third merge of `main` on 2026-11-16, the app reaches 64 of the
+  308 TSX files of `docs/mockups/src/components/` and
+  `docs/mockups/src/screens/`. A merge can add files that the app shares.
+  The rule that holds is that no file the app reaches imports an entry
+  module.
 - Some parts nest other parts. Mokly attributes a child's edit to the
   child when the child renders through its wrapper, and to the parent
   when the child is plain.
@@ -142,7 +148,7 @@ These are design calls of the agent, made on 2026-11-13:
   reviewable, and no two milestones conflict.
 - **More than one mockup milestone.** All mockup work comes first, in
   Milestones 1 to 6, and the documentation milestone comes directly
-  after. Reason: the whole change is mockup work, and one milestone of 349
+  after. Reason: the whole change is mockup work, and one milestone of 358
   parts is too large to delegate and check.
 - **The place of a registration.** One entry module for each source file,
   at `docs/mockups/src/entries/components/<folder>/<file>.mockup.tsx`. It
@@ -216,7 +222,7 @@ These are design calls of the agent, made on 2026-11-13:
   refer to itself. Reason: props are JSON.
 - **Props for own pages only** (2026-11-16). `touch` on `ChipEndRemove`,
   `roomAbove` on the `@` lists and the composer, and `placeHeight` on
-  `ImageView` and `FilePage`. No screen passes them. Reason: without them
+  `ImageView`, `FilePage`, and `CodeView`. No screen passes them. Reason: without them
   those own pages draw nothing.
 - **Uses in chat text stay plain** (2026-11-16). In message text,
   `CodeText`, `WebLinkPart`, `SentFileChip`, `FileChip` with its
@@ -377,8 +383,16 @@ Tags: mockup
 Depends on: 3
 
 Register the parts of the settings, the members, the feedback, sign-in,
-and Get started: 74 parts.
+and Get started, and the nine parts of the third merge: 83 parts.
 
+- [ ] Register the nine parts that the third merge of `main` added:
+      `CodeBlock`, `MentionChip`, `FileLinkText`, and `ChipCopyText` of
+      `components/chat/`, `StatsNumbers`, `StatsLoading`, and `StatsFailed`
+      of `components/settings/StatsSections.tsx`, `SessionTabIcon` of
+      `components/workspace/`, and the helper `StatsTab` of
+      `screens/accountStats.tsx`. Move the plain `IconButton` in
+      `CodeBlock.tsx`, `LogoTile` in `screens/PreviewOpeningScreen.tsx`, and
+      `ActionButton` in `screens/accountStats.tsx` to wrappers.
 - [ ] Register the 59 parts of `components/settings/`.
 - [ ] Register the 5 parts of `components/members/` and the 4 of
       `components/feedback/`.
@@ -446,7 +460,7 @@ Mac app, and `ChatWorkspaces`: 35 parts.
       include `CopyLinkButton`, `OwnerPicker`, `GitHubLink`, `ChipIconCell`,
       `ChipTextField`, `MessageField`, `ModelPicker`, `Composer`,
       `FilePage`, `ServerList`, `PortMessage`, `PreviewTabs`,
-      `TerminalView`, and `TurnFileList`.
+      `TerminalView`, `TurnFileList`, and `CodeBlock`.
 - [ ] Check with `.context/registered-mockup-parts/inventory.mjs` that
       every part of the design is registered.
 - [ ] Move each mockup-only consumer of these parts to the wrapper.

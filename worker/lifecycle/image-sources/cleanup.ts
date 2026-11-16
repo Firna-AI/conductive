@@ -7,12 +7,17 @@ import {
   invalidateSourceGrant,
 } from './cleanup-data'
 import {
-  orgSourceJobs,
-  readSourceJob,
+  buildSourceJobs,
   sourceTokenContext,
   type SourceJob,
 } from './source-data'
 import { revokeInstallationToken } from './github-app'
+import { readSourceRun } from './run-data'
+import {
+  deleteSourceRun,
+  invalidateSourceRun,
+  orgSourceBuildIds,
+} from './run-cleanup-data'
 
 /** A failed revoke retains encrypted ownership. No caller may release the barrier. */
 export async function revokeSourceToken(
@@ -43,13 +48,20 @@ export async function cleanupBuildImageSources(
   buildId: string,
   ownership?: LifecycleOwnership,
 ): Promise<boolean> {
-  const job = await readSourceJob(env.DB, buildId)
-  if (!job) return true
+  const jobs = await buildSourceJobs(env.DB, buildId)
+  const run = await readSourceRun(env.DB, buildId)
+  if (!jobs.length && !run) return true
   await ownership?.renew()
-  await invalidateSourceGrant(env.DB, buildId, ownership)
-  if (!(await revokeSourceToken(env, fetch, job, ownership))) return false
+  if (jobs.length) await invalidateSourceGrant(env.DB, buildId, ownership)
+  if (run) await invalidateSourceRun(env.DB, buildId, ownership)
+  let complete = true
+  for (const job of jobs) {
+    if (!(await revokeSourceToken(env, fetch, job, ownership))) complete = false
+  }
+  if (!complete) return false
   await ownership?.renew()
   await deleteSourceJob(env.DB, buildId, ownership)
+  await deleteSourceRun(env.DB, buildId, ownership)
   return true
 }
 
@@ -61,8 +73,8 @@ export async function cleanupOrgImageSources(
   ownership?: LifecycleOwnership,
 ): Promise<boolean> {
   let complete = true
-  for (const job of await orgSourceJobs(env.DB, orgId)) {
-    if (!(await cleanupBuildImageSources(env, fetch, job.buildId, ownership)))
+  for (const buildId of await orgSourceBuildIds(env.DB, orgId)) {
+    if (!(await cleanupBuildImageSources(env, fetch, buildId, ownership)))
       complete = false
   }
   return complete

@@ -73,8 +73,8 @@ An invalid or ended turn gets no token.
 The wrapper saves no token and changes no shell profile or login file.
 
 A release update installs the wrapper. A workspace downloads updates in
-the background and applies them at a later start, as
-[Release updates](README.md#release-updates) describes.
+the background. Its runner applies them when the workspace is idle, or at
+a later start, as [Release updates](README.md#release-updates) describes.
 
 ### GitHub App permissions
 

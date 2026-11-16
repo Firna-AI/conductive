@@ -1,6 +1,25 @@
 import { defineComponent } from '@mokly/mokly'
-import { CodeTokens, CodeView } from '../../../components/files/CodeView'
+import {
+  CodeTokens,
+  CodeView,
+  type LineRange,
+} from '../../../components/files/CodeView'
 import { autocompleteHook } from '../../../fixtures/fileContents'
+import { inPlace, placeHeightSchema } from '../common/ownPages'
+
+/** A range of lines of a file, from 1, as `LineRange`. */
+const lineRangeSchema = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['first', 'last'],
+  properties: {
+    first: { type: 'integer', minimum: 1 },
+    last: { type: 'integer', minimum: 1 },
+  },
+} as const
+
+/** The lines of the hook that skip a short query, as an answer names them. */
+const shortQueryLines = { first: 19, last: 22 } as const satisfies LineRange
 
 /**
  * One line of code in syntax colours, registered with Mokly. Its page shows
@@ -26,20 +45,41 @@ export const codeTokens = defineComponent({
 
 /**
  * A code file with line numbers and syntax colours, registered with Mokly.
- * Its page shows the hook of Checkout address autocomplete.
+ * Its pages show the hook of Checkout address autocomplete, from the top
+ * and opened at the lines that an answer names. A view opened at a line
+ * fills the height of its place, so that page gives it a place of a fixed
+ * height.
  */
 export const codeView = defineComponent({
   slug: 'code-view',
   title: 'Code view',
   description:
-    'A code file with line numbers and syntax colours, as the tab of a code file shows it. Its own page shows the hook of Checkout address autocomplete.',
+    'A code file with line numbers and syntax colours, as the tab of a code file shows it. A tab opened at a line target marks the lines of the range and shows the first of them in the middle of the view. Its own page shows the hook of Checkout address autocomplete.',
   relatedDocs: ['docs/mockups/catalogue-attachments-and-files.md'],
   propSchema: {
     type: 'object',
     additionalProperties: false,
     required: ['code'],
-    properties: { code: { type: 'string' } },
+    properties: {
+      code: { type: 'string' },
+      /** The lines of a line target, which the tab opened at. */
+      marked: lineRangeSchema,
+      placeHeight: placeHeightSchema,
+    },
   } as const,
   props: { code: autocompleteHook },
-  render: (props) => <CodeView code={props.code} />,
+  render: (props) =>
+    inPlace(
+      <CodeView code={props.code} marked={props.marked} />,
+      props.placeHeight,
+    ),
+  variants: [
+    {
+      slug: 'at-a-line',
+      title: 'At a line',
+      description:
+        'The tab opened at lines 19 to 22, from a file chip of an answer: the lines have an amber background.',
+      props: { marked: shortQueryLines, placeHeight: 480 },
+    },
+  ],
 })

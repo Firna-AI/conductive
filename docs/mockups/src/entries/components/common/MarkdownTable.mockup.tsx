@@ -18,7 +18,7 @@ const alignments = [
  */
 const cellRenderers = {
   'inline-code': (text: string) => <InlineText text={text} />,
-  message: (text: string) => <MessageText strong text={text} />,
+  message: (text: string) => <MessageText answer text={text} />,
 } as const
 
 /**

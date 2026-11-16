@@ -31,6 +31,13 @@ The [behavior guide](../behavior.md), [login guide](../agent-logins.md), [Codex 
 [agent tools guide](../agent-tools.md), and [background work guide](../background-work.md)
 give the adapter behavior and its limits. The behavior guide gives the continue message after a dropped answer.
 
+Both adapters use the shared read line and file descriptions in
+`src/providers/attachment-description.ts`. That helper also owns the
+image input size limit. Codex uses the same image list for its image
+inputs and the image sentence after the read line.
+[What the agent gets](../../docs/protocol/attachment-transfers.md#what-the-agent-gets)
+states the read line and the size rule.
+
 ## Development
 
 Run from the repository root with Node 24:

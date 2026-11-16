@@ -1,4 +1,5 @@
 import { ApiError } from '../../app/api/client'
+import type { Delay } from '../../app/events'
 import type { WorkspaceView } from '../../shared/workspace-view'
 import type { ChatApi, WorkspaceTarget } from '../api/client'
 import type { DeviceChannel } from '../device/device-actions'
@@ -50,6 +51,11 @@ export interface ChatContext {
    * and a stop of the chat aborts each one.
    */
   readonly uploads: Map<string, AbortController>
+  /**
+   * The timer of the waits before a failed part of an upload goes again: the
+   * timers of the chat, which a test gives as manual timers.
+   */
+  readonly delay: Delay
   readonly saveView: (view: WorkspaceView) => void
   /** The chat is still open. A response that arrives later changes nothing. */
   readonly live: () => boolean

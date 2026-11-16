@@ -5,6 +5,37 @@ export interface SourceRepository extends SelectedRepository {
   installationId: number
 }
 
+/** Read the job's capture in one query, including repositories no longer selected. */
+export async function readSourceRepositories(
+  db: D1Database,
+  orgId: string,
+  requested: readonly SelectedRepository[],
+) {
+  const result = await db
+    .prepare(
+      `SELECT r.id, r.org_id AS orgId, r.full_name AS fullName, r.default_branch AS defaultBranch,
+       r.github_repository_id AS githubRepositoryId, r.installation_id AS installationId,
+       CAST(c.key AS INTEGER) AS sourceIndex
+     FROM json_each(?) c JOIN repositories r ON r.org_id = ? AND r.id = json_extract(c.value, '$.id')
+     WHERE r.org_id = json_extract(c.value, '$.orgId') AND r.full_name = json_extract(c.value, '$.fullName')
+       AND r.default_branch = json_extract(c.value, '$.defaultBranch') ORDER BY CAST(c.key AS INTEGER)`,
+    )
+    .bind(JSON.stringify(requested), orgId)
+    .all<SourceRepository & { sourceIndex: number }>()
+  if (
+    result.results.length !== requested.length ||
+    result.results.some(
+      (source) =>
+        !Number.isSafeInteger(source.githubRepositoryId) ||
+        source.githubRepositoryId <= 0 ||
+        !Number.isSafeInteger(source.installationId) ||
+        source.installationId <= 0,
+    )
+  )
+    throw new Error('Repository source access is not available')
+  return result.results
+}
+
 /** Only a running image job may send repository data to its own builder. */
 export async function authorizeImageBuilder(
   db: D1Database,

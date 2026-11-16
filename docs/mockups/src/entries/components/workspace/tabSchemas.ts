@@ -23,6 +23,8 @@ export const workspaceTabSchema = {
     /** The screen that the tab shows, when the mockups draw it. */
     to: { type: 'string', minLength: 1 },
     selected: { type: 'boolean' },
+    /** A session whose agent works: a spinner takes the place of its icon. */
+    running: { type: 'boolean' },
     /** The temporary tab, whose title shows in italics. */
     temporary: { type: 'boolean' },
   },

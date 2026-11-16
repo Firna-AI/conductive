@@ -26,9 +26,9 @@ the change that keeps a turn open for background work.
   [The version pin](version-pins.md#the-version-pin) states the lowest
   version that each workspace accepts.
 - Each build of the org image installs the newest runner. Each sandbox then
-  updates its runner itself at a later start, as
-  [Updates](sandbox-software.md#updates) says. Reason: a fix of the runner
-  then reaches each sandbox with no new workspace.
+  updates its runner itself, at a later start or when its workspace is
+  idle, as [Updates](sandbox-software.md#updates) says. Reason: a fix of
+  the runner then reaches each sandbox with no new workspace.
 - A sandbox runs its older runner until its update applies. A stopped
   sandbox can also resume weeks later with an old runner.
 - A connection to the runner through a Boat port address was rejected,
@@ -114,10 +114,11 @@ the change that keeps a turn open for background work.
   restart, until the workspace confirms the end of the turn. The workspace
   sends no turn or message command for a turn after it stores the end of
   that turn.
-- After a failed file copy ends a running turn, the workspace can still
-  send Stop for that turn, to cancel the agent. That turn still shows as
-  failed. Reason: the failure in [Attachments](messages-and-attachments.md#attachments) ends the turn
-  at once, with no new wait for the agent.
+- After a failed file transfer or file check ends a running turn, the
+  workspace can still send Stop for that turn, to cancel the agent. That
+  turn still shows as failed. Reason: the failure in
+  [The transfer](attachment-transfers.md#the-transfer) ends the turn at
+  once, with no new wait for the agent.
 - At a shutdown, the runner sends a stopped end for each accepted turn that
   has no end. After a restart, it does the same for each turn that it
   accepted before the restart. It starts no agent for such a turn.

@@ -117,7 +117,10 @@ export function OrgDetails(props: { org: OrgPage }) {
           ]}
         />
       </Section>
-      <WorkspaceStates builds={org.builds} counts={org.states} page="org" />
+      <WorkspaceStates
+        builds={{ count: org.builds, page: 'org' }}
+        counts={org.states}
+      />
       <Section
         description={`${members} ${members === 1 ? 'member' : 'members'}`}
         title="Members"

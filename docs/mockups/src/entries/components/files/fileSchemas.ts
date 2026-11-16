@@ -54,6 +54,7 @@ export const treeEntrySchema = {
 /** The kinds of file that open as a tab, as `FileTabView` lists them. */
 export const fileTabViews = [
   'code',
+  'code-lines',
   'markdown',
   'diff',
   'masked-diff',

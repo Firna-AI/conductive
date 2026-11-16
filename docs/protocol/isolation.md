@@ -47,7 +47,9 @@ logins, as [Tokens and secrets](tokens-and-secrets.md) says.
   request may reach.
 - One R2 bucket holds the uploaded files of all orgs (decision 132). So the
   bucket does not keep the orgs apart. The checks in this section do.
-- Only the Worker reads and writes that bucket.
+- Only the Worker reads and writes that bucket. A cloud computer gets each
+  file from a route of the Worker, as
+  [The transfer](attachment-transfers.md#the-transfer) says.
 - Each upload names one workspace, or the first message of a new workspace
   of one org (decision 132). Only a message of the uploader in that
   workspace, or that first message, can use the file.
@@ -58,9 +60,10 @@ logins, as [Tokens and secrets](tokens-and-secrets.md) says.
   sandbox belongs to a workspace or a build of that org.
 - The Worker calls only a fixed list of Boat routes. It has no general
   pass-through to Boat.
-- To copy an attachment, the Worker also sends the file to the upload
-  address that Boat returns for that sandbox (decision 132). It sends the
-  file only to that exact address.
+- The Worker gives the token of an attachment download only to the sandbox
+  that the workspace of the file names. The token gives only that one
+  file, as [Hostnames and gates](access-and-security.md#hostnames-and-gates)
+  says.
 - Lifecycle, saved snapshot, file metadata, and error replies from Boat
   can contain at most 1 MiB, or 1,048,576 bytes (decision 84).
 - A successful command reply from Boat can contain at most 18 MiB, or

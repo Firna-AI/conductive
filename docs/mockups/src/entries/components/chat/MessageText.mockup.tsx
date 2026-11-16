@@ -143,7 +143,7 @@ export const messageText = defineComponent({
   slug: 'message-text',
   title: 'Message text',
   description:
-    'The text of a sent message or an answer. Each part in backticks is code, and each link to a workspace of the org is a chip that opens the workspace. Each other web address is a link. An answer shows `**` as bold and a Markdown link as its label. In the text of a member, each mention of a file or a folder is a chip, and the mention of an attached file shows the chip of that file. Its own page shows a message that links a workspace.',
+    'The text of a sent message or an answer. Each part in backticks is code, and each link to a workspace of the org is a chip that opens the workspace. Each other web address is a link. An answer shows `**` as bold and a Markdown link as its label, and each mention and each inline path of the file tree in it is a file chip. In the text of a member, each mention of a file or a folder is a chip, and the mention of an attached file shows the chip of that file. Its own page shows a message that links a workspace.',
   relatedDocs: ['docs/mockups/design-chat.md'],
   propSchema: {
     type: 'object',
@@ -153,8 +153,11 @@ export const messageText = defineComponent({
       text: { type: 'string' },
       /** The text of a member: each mention of a file is a chip. */
       mentions: { type: 'boolean' },
-      /** An answer: `**` marks bold, and a Markdown link shows its label. */
-      strong: { type: 'boolean' },
+      /**
+       * An answer: `**` marks bold, a Markdown link shows its label, and
+       * each mention and each inline path of the file tree is a file chip.
+       */
+      answer: { type: 'boolean' },
       /** The attached files of a sent message. */
       files: { type: 'array', items: attachmentSchema },
       /** The message waits for the cloud computer. */
@@ -164,9 +167,9 @@ export const messageText = defineComponent({
   props: { text: followUpTask },
   render: (props) => (
     <MessageText
+      answer={props.answer}
       files={props.files}
       mentions={props.mentions}
-      strong={props.strong}
       text={props.text}
       waits={props.waits}
     />
@@ -178,8 +181,18 @@ export const messageText = defineComponent({
       description:
         'An answer of the agent with bold, code, and a Markdown link to the docs.',
       props: {
-        strong: true,
+        answer: true,
         text: 'The proxy calls the **[autocomplete endpoint](https://docs.places.example/v1/autocomplete)** of the places API, from `src/app/api/places/route.ts`.',
+      },
+    },
+    {
+      slug: 'answer-files',
+      title: 'Answer with files',
+      description:
+        'An answer that names files of the tree: a mention in bold, an inline path with a line target, and a Markdown link to a picture, which shows as a link.',
+      props: {
+        answer: true,
+        text: 'I moved the list under the postcode field in **@src/app/checkout/AddressForm.tsx**. The hook skips a short query in `src/app/checkout/useAddressAutocomplete.ts:19-22`. [The phone view](/home/user/code/storefront/.context/shots/after.png) shows the fix.',
       },
     },
     {

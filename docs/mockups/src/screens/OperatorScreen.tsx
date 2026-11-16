@@ -55,9 +55,8 @@ function OperatorBody(props: { state: OperatorState; viewport: Viewport }) {
         <>
           <OperatorTiles running={runs.running} />
           <WorkspaceStates
-            builds={runs.running.builds}
+            builds={{ count: runs.running.builds, page: 'overview' }}
             counts={runs.states}
-            page="overview"
           />
           <LongRuns runs={runs.longRuns} viewport={props.viewport} />
           <DailyChart

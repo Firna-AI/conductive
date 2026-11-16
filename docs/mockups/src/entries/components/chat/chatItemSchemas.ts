@@ -128,6 +128,8 @@ const errorItem = {
     kind: { const: 'error' },
     id: { type: 'string', minLength: 1 },
     text: { type: 'string' },
+    /** A failed turn before the newest turn: it shows no Try again. */
+    older: { const: true },
   },
 } as const
 
