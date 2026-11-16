@@ -106,16 +106,17 @@ function PhonePreview(props: { adding: boolean }) {
 }
 
 /**
- * The open previews in the tools panel of the desktop (decision 290). The
- * page shows in the Preview tab of the centre row, with Reload and Open in
- * the bar of that tab, so the tool has no bar of its own. It always shows
- * the port form with the servers that have no preview yet. A click on a
- * server loads its preview into the centre tab.
+ * The tool in the tools panel of the desktop (decisions 290 and 291). It
+ * has no bar: each port has its own Preview tab in the centre row, with
+ * Reload and Open in the bar of that tab. The tool lists each port, also
+ * the ports that have a tab. A click on a port shows its tab, or opens one.
+ * The row of the shown tab is the current one. The user does not end a
+ * preview: it ends by itself after a time without use (decision 292).
  */
-function PanelPreview() {
+function PanelPreview(props: { shown: number | null }) {
   return (
     <div className={styles.preview}>
-      <ServerList servers={unopened()} />
+      <ServerList current={props.shown} servers={detectedServers} />
     </div>
   )
 }
@@ -128,14 +129,19 @@ function unopened() {
 /**
  * The Preview tool in one of its states. `frame` draws the page in the
  * tool, as a phone does. Without it, the page shows in the Preview tab of
- * the centre row. On desktop, "+" and its `adding` state do not exist, so
+ * its port in the centre row. On desktop, "+" and its `adding` state do not exist, so
  * `adding` draws the open previews.
  */
-export function PreviewTool(props: { state: PreviewState; frame: boolean }) {
+export function PreviewTool(props: {
+  state: PreviewState
+  frame: boolean
+  /** The port of the Preview tab that shows on desktop, or null. */
+  shownPort: number | null
+}) {
   const open = props.frame ? (
     <PhonePreview adding={props.state === 'adding'} />
   ) : (
-    <PanelPreview />
+    <PanelPreview shown={props.shownPort} />
   )
   switch (props.state) {
     case 'open':

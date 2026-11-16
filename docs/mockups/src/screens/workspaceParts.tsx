@@ -27,6 +27,7 @@ import type { Membership } from '../fixtures/members'
 import type { ShortcutChanges } from '../fixtures/shortcutChanges'
 import { terminalSets } from '../fixtures/terminals'
 import type { ActivityStatus, Workspace } from '../fixtures/workspaces'
+import { openPort } from '../fixtures/previews'
 import { paths } from '../paths'
 import { freshPromptFor, runStartingLog } from './workspaceRun'
 import { panelState } from './workspaceSandbox'
@@ -202,7 +203,13 @@ export function ToolContent(props: {
     case 'terminal':
       return <TerminalContent state={state} viewport={props.viewport} />
     case 'preview':
-      return <PreviewTool frame={mobile} state={state.ports} />
+      return (
+        <PreviewTool
+          frame={mobile}
+          shownPort={state.tab === 'preview' ? openPort : null}
+          state={state.ports}
+        />
+      )
     case 'desktop':
       return <DesktopView />
   }

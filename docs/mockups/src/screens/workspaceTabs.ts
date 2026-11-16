@@ -8,7 +8,7 @@ import {
   workspaceSessions,
 } from '../fixtures/sessions'
 import { screenshotCopy } from '../fixtures/attachments'
-import { detectedServers, openPort } from '../fixtures/previews'
+import { detectedServers, openPort, openPorts } from '../fixtures/previews'
 import { previewTabLabel } from '../components/tools/previewCopy'
 import { branchPictures, splitPath } from '../fixtures/files'
 import { maskedDiffPath } from '../fixtures/maskedFiles'
@@ -88,22 +88,23 @@ function pictureTab(state: WorkspaceState): WorkspaceTab | undefined {
 }
 
 /**
- * The one Preview tab of the row, while the state keeps it (decision 288).
- * It shows the label of its preview, as the tab of the Preview tool does,
- * and it opened after the code file.
+ * The Preview tabs of the row, while the state keeps them (decision 291):
+ * one tab for each port, ports 3000 and 6006, opened after the code file.
+ * Each shows the label of its port, as the list of the tool names it. The
+ * tab of port 3000 shows in `preview`.
  */
-function previewTab(state: WorkspaceState): WorkspaceTab | undefined {
-  if (state.tab !== 'preview' && state.tab !== 'preview-behind') {
-    return undefined
-  }
-  const server = detectedServers.find((each) => each.port === openPort)
-  return {
-    key: 'preview',
-    kind: 'preview',
-    title: previewTabLabel(openPort, server),
-    to: paths.preview,
-    selected: state.tab === 'preview',
-  }
+function previewTabs(state: WorkspaceState): WorkspaceTab[] {
+  if (state.tab !== 'preview' && state.tab !== 'preview-behind') return []
+  return openPorts.map((port) => {
+    const server = detectedServers.find((each) => each.port === port)
+    return {
+      key: `preview:${port}`,
+      kind: 'preview',
+      title: previewTabLabel(port, server),
+      to: paths.preview,
+      selected: state.tab === 'preview' && port === openPort,
+    }
+  })
 }
 
 /**
@@ -121,7 +122,7 @@ function previewTab(state: WorkspaceState): WorkspaceTab | undefined {
  * to that view. After the second session sent its messages, the second
  * session can show, and each session tab leads to its chat of that time.
  * The file or the diff that the state opens can be the temporary tab, as
- * `withTemporaryTab` draws it. The Preview tab shows after the code file.
+ * `withTemporaryTab` draws it. The Preview tabs show after the code file.
  */
 export function tabsFor(
   state: WorkspaceState,
@@ -184,8 +185,7 @@ export function tabsFor(
   }
   const picture = pictureTab(state)
   if (picture) tabs.push(picture)
-  const preview = previewTab(state)
-  if (preview) tabs.push(preview)
+  tabs.push(...previewTabs(state))
   if (state.tab === 'unnamed-file') {
     tabs.push({
       key: 'unnamed',

@@ -44,8 +44,8 @@ press on the chip of the `Sent by:` line there shows the second session.
 decisions 1 to 3 of the terminal tabs change, with the test run of
 Terminal 2 shown. Its child
 pages show the other states of the terminals, the Preview tool, from
-decisions 220 C and 221 D, the Preview tab of the centre row, from
-decisions 288 to 290, its list after a failed repair, and the hidden
+decisions 220 C and 221 D, the Preview tabs of the centre row, from
+decisions 288 to 292, its list after a failed repair, and the hidden
 Desktop:
 
 - `app/tools/terminals` has the one terminal that a workspace starts
@@ -57,21 +57,23 @@ Desktop:
   Reconnect.
 - `app/tools/older-software` has the one terminal of a cloud computer with
   older software, without tabs.
-- `app/tools/preview` has an open port preview in the Preview tab of the
-  centre row, from decisions 288 and 290. The tab shows a globe icon and
-  the label of its preview. A bar over the page holds Reload and Open.
-  Only the Preview tab has this bar. The Preview tool in the tools panel
-  has no bar on desktop. It shows the port form with the servers that
-  have no preview yet. A phone has no Preview tab in its row, so its
-  Preview page keeps the page in a frame, with the tabs of the open
-  previews, "+", Reload, and Open. Each tab there shows the port and the
-  program name of its server, cut to 10 characters, such as
-  `6006 storybook…`. Its tooltip and its spoken name give the port, the
-  full name, and the folder. Each tab has its Close button after its
-  label, as the tabs of the centre tab row have: it shows on the current
-  tab, on hover, and while the focus is in the tab, and a hidden one keeps
-  its place. Two named tabs do not fit beside the actions, so the end of
-  the tab row fades, as the centre tab row does. Its variants:
+- `app/tools/preview` has an open port preview in its Preview tab of the
+  centre row, from decisions 288, 290, and 291. Each port has its own
+  Preview tab, with a globe icon and the label of its port. A bar over the
+  page holds Reload and Open. Only a Preview tab has this bar. The Preview
+  tool in the tools panel has no bar on desktop. It lists each port, and
+  the row of the shown tab is the current one. A click on a port shows its
+  tab, or opens one. Nothing in the tool ends a preview, from decision
+  292. A phone has no Preview tab in its row, so its Preview page keeps
+  the page in a frame, with the tabs of the open previews, "+", Reload,
+  and Open. Each tab there shows the port and the program name of its
+  server, cut to 10 characters, such as `6006 storybook…`. Its tooltip and
+  its spoken name give the port, the full name, and the folder. Each tab
+  has its Close button after its label, as the tabs of the centre tab row
+  have: it shows on the current tab, on hover, and while the focus is in
+  the tab, and a hidden one keeps its place. Two named tabs do not fit
+  beside the actions, so the end of the tab row fades, as the centre tab
+  row does. Its variants:
   - `detected` has the port form with no preview open. Each server that
     the runner detects is a button with its port, its name, and its
     folder. A folder that does not fit keeps its end, after "…". The
@@ -85,11 +87,11 @@ Desktop:
     the open previews. The ports of the open previews leave the list. The
     desktop shows the same screen as the open preview.
 - `app/tools/preview-tab` has the first session shown, with the Preview
-  tab behind it in the row, from decision 288. Its page stays loaded. The
+  tabs of two ports behind it in the row. Their pages stay loaded. The
   page stands beside `app/tools/preview`, which already shows five
   screens. Its variant:
-  - `closed` has the row after Close of the Preview tab, from decision
-    289. The previews stay open.
+  - `closed` has the row after Close of both Preview tabs, from decision
+    289. The previews end by themselves later, from decision 292.
 - `app/tools/preview-repair` has the port form after a failed repair of
   the list, from decision 96. The form keeps its last list and the Other
   port row. Under them, the row of a file list that is not the latest one

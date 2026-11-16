@@ -25,8 +25,8 @@ workspace and its number, such as `W-395`, the repository, and
 the owner of the workspace, and ends with the toggle of the
 right column. The toggle hides the right column, so the centre column
 takes its width, and shows it again. Then come a tab for each agent
-session, each open file or diff, and the one Preview tab of a port
-preview, in the order that the user gives them by drag, + for a new
+session, each open file or diff, and a Preview tab for each previewed
+port, in the order that the user gives them by drag, + for a new
 session, and a clock that opens the session history.
 The file or diff of the last press shows in the temporary tab, with its
 title in italics, until the next press replaces it.

@@ -7,10 +7,11 @@
  * browser cannot draw. `attachment` is the copy of an attached screenshot,
  * which a press on its sent chip opens. A phone shows a file in Files.
  *
- * `preview` shows the page of the open preview in the one Preview tab of
- * the row (decision 288). `preview-behind` shows the first session, and
- * the Preview tab stays in the row with its page loaded. A phone row shows
- * no Preview tab, so a phone shows the page on its Preview page.
+ * `preview` shows the page of port 3000 in its Preview tab, beside the
+ * Preview tab of port 6006 (decision 291). `preview-behind` shows the first
+ * session, and both Preview tabs stay in the row with their pages loaded.
+ * A phone row shows no Preview tab, so a phone shows the page on its
+ * Preview page.
  */
 export const tabStates = [
   'session',
