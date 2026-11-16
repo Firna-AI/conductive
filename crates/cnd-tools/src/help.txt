@@ -1,12 +1,12 @@
 Conductive workspace tools
 
-conductive workspaces list [--owner MEMBER_ID] [--state STATE] [--repository ID]
+conductive workspaces list [--owner MEMBER_ID] [--parent ID] [--state STATE] [--repository ID]
   [--query TEXT] [--updated-since MILLISECONDS] [--archived true|false]
   [--limit NUMBER] [--offset NUMBER]
 conductive workspaces get [--workspace ID]
 conductive workspaces create --repository ID --message TEXT
   [--agent claude|codex --model NAME] [--effort LEVEL] [--fast true|false] [--section ID] [--name TEXT]
-  [--first-session-title TEXT] [--request-id ID]
+  [--parent ID] [--first-session-title TEXT] [--request-id ID]
 conductive workspaces rename --name TEXT [--workspace ID]
 conductive workspaces move --section ID [--workspace ID]
 conductive workspaces archive [--workspace ID]
@@ -49,6 +49,17 @@ Close of an already closed preview succeeds with closed: false.
 
 Create uses the calling workspace's org and owner.
 Omitted workspace model and effort use the owner's defaults and the default section.
+For workspace create, --parent ID nests the new workspace under that parent.
+Agents usually pass their own workspace ID from their instructions.
+The new workspace joins its parent's section. --section has no effect with --parent.
+Nesting stops at depth 3. A create under a workspace at depth 3 fails with nesting_limit.
+Its message gives the parentId for a sibling. Pass that ID with --parent.
+Start the sibling's name with a one-word group prefix, such as "Limits: ".
+The workspace in a create reply gives parentId. The reply can give a section notice.
+For workspace list, --parent ID lists only the direct sub-workspaces of that workspace.
+Each workspace list entry gives parentId, or null for a top-level workspace.
+Workspace get also gives parent, depth, and children, including archived children.
+Workspace move can give a notice that names the top-level workspace to move instead.
 Session create uses the turn sender's default model and effort.
 Creates run fast only with --fast true, for a marked model.
 Send keeps the session's choice when omitted. --fast false turns fast mode off.
