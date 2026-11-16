@@ -7,8 +7,10 @@ import { CodexBodyScanner } from './codex-body'
 import { GatewayRequestError, refuseCodexBody } from './errors'
 import type { TurnTokenCheck } from './types'
 import { gatewayUpload } from './upload'
+import { warnWorker } from '../warnings'
 
-const LEASE_MS = 30_000
+/** The first turn check must pass within this time. */
+const START_LEASE_MS = 30_000
 
 interface GatewayLifetimeOptions {
   agent: Agent
@@ -17,7 +19,10 @@ interface GatewayLifetimeOptions {
   schedule: ConnectionScheduler
 }
 
-/** One lease covers the check, upload, fetch, and answer of a request. */
+/**
+ * The first turn check must pass before the request starts. Later checks run
+ * every 15 seconds and end the request only when the turn refuses it.
+ */
 export class GatewayRequestLifetime {
   private readonly abort = new AbortController()
   readonly signal = this.abort.signal
@@ -45,7 +50,7 @@ export class GatewayRequestLifetime {
   }
 
   async start(): Promise<Extract<TurnTokenCheck, { ok: true }>> {
-    this.deadline = this.options.now() + LEASE_MS
+    this.deadline = this.options.now() + START_LEASE_MS
     this.scheduleExpiry()
     try {
       const checked = await this.check()
@@ -134,6 +139,7 @@ export class GatewayRequestLifetime {
     )
   }
 
+  /** The first check must pass within the start lease. */
   private async check(): Promise<Extract<TurnTokenCheck, { ok: true }>> {
     const started = this.options.now()
     let checked: TurnTokenCheck
@@ -150,23 +156,46 @@ export class GatewayRequestLifetime {
       throw new GatewayRequestError(checked.reason, 'The model turn ended.')
     this.abort.signal.throwIfAborted()
     if (!this.active) return checked
-    this.deadline = started + LEASE_MS
     if (this.deadline <= this.options.now())
       throw new GatewayRequestError(
         'model_gateway_unavailable',
         'The model turn could not be checked.',
       )
-    this.scheduleExpiry()
+    this.cancelExpiry?.()
+    this.cancelExpiry = undefined
+    this.schedulePoll(started)
+    return checked
+  }
+
+  /** Later checks end the request only on a refusal, never on a delay. */
+  private async poll(): Promise<void> {
+    const started = this.options.now()
+    let checked: TurnTokenCheck
+    try {
+      checked = await this.wait(this.options.check())
+    } catch {
+      if (this.abort.signal.aborted || !this.active) return
+      warnWorker({ kind: 'model_gateway_check_failed' })
+      this.schedulePoll(started)
+      return
+    }
+    if (!this.active) return
+    if (this.options.now() - started > CONNECTION_CHECK_MS)
+      warnWorker({ kind: 'model_gateway_check_late' })
+    if (!checked.ok) {
+      this.cancel(
+        new GatewayRequestError(checked.reason, 'The model turn ended.'),
+      )
+      return
+    }
+    this.schedulePoll(started)
+  }
+
+  private schedulePoll(started: number): void {
+    if (!this.active) return
     this.cancelPoll = this.options.schedule(
-      async () => {
-        try {
-          await this.check()
-        } catch (error) {
-          this.cancel(error)
-        }
-      },
+      () => this.poll(),
       Math.max(0, CONNECTION_CHECK_MS - (this.options.now() - started)),
     )
-    return checked
   }
 }

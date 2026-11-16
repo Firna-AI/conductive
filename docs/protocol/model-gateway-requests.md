@@ -154,14 +154,30 @@ decision of the change that adds the egress container, as that doc says.
   back no part of an answer.
 - Reason: an agent program stalls on an answer that a gateway holds back,
   as Anthropic's gateway guide says.
-- A model request that still runs when its turn ends stops within 30
-  seconds, also while its upload runs or while it waits for the answer
-  (gateway decision 6).
-- Reason: the runner reports the end of a turn only after the agent
-  program of the turn exits. So only a copied turn token can still stream
-  after the turn.
-- An answer that runs to its end was rejected, because a copied token
-  could then spend the login for minutes after the turn.
+- A model request starts only after a turn check passes. When that check
+  does not pass within 30 seconds, the request fails, and the agent
+  program can send it again.
+- After the start, the gateway checks the turn every 15 seconds, also
+  while the upload runs or while it waits for the answer. A refusal, such
+  as an ended turn or a changed login, stops the request at once (gateway
+  decision 6).
+- A check that answers late or fails does not stop the request (stream
+  check decision 1, 16 November 2026). The next check starts 15 seconds
+  after the start of the previous check, or at once when the previous
+  check took longer.
+- Reason: slow checks cut long answers in the middle. The agent program
+  then sent the whole request again, and spent the login again on each
+  attempt.
+- So a request that still runs when its turn ends stops at the first check
+  that answers after the end. While no check answers, the answer can run
+  to its end. A copied turn token still starts no new request after the
+  turn, because each new request needs a check that passes.
+- Reason for the checks: the runner reports the end of a turn only after
+  the agent program of the turn exits. So only a copied turn token can
+  still stream after the turn.
+- A stop within 30 seconds whatever the check does was replaced by
+  stream check decision 1, because it cut the answers of turns that still
+  ran whenever the workspace answered slowly.
 - When the agent program closes its connection, the gateway cancels the
   request to the upstream.
 - A new version of the egress container takes each new ChatGPT request at

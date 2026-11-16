@@ -133,7 +133,7 @@ A backend is `NO_CONSTRAINT` or an HTTPS origin with no credentials, path, query
 The Worker adds `x-openai-account-routing-override` for `us` and `us_cr`.
 The client cannot supply this header.
 Failed or invalid account discovery sends no model request.
-The same request lease covers discovery, upload, and the streamed answer.
+The same request lifetime covers discovery, upload, and the streamed answer.
 The Worker reads a fresh ChatGPT login before forwarding a request.
 It renews before expiry through [Codex authentication](../codex-auth/README.md).
 Each turn can claim one renewal after a 401, across metadata and model requests.
@@ -176,11 +176,13 @@ That byte stays pending until another chunk passes or valid EOF arrives.
 An early upstream answer waits for the remaining upload to pass that reader.
 The remaining Codex bytes pass the same scan before an early answer can return.
 An overflow aborts the upstream request and returns the entry's shared 413 error.
-Each request gets a 30-second lease from its first turn check, before the upstream fetch.
-Checks start every 15 seconds while the upload, fetch, or answer runs.
-A passing check renews the lease to 30 seconds after that check started.
-A separate timer cancels the upload, fetch, and answer when the lease ends.
-A slow check cannot extend that deadline.
+Each request starts with a turn check that must pass within 30 seconds, before the upstream fetch.
+Otherwise the request returns `model_gateway_unavailable` with HTTP 503.
+After that, a check starts every 15 seconds while the upload, fetch, or answer runs.
+Only one check runs at a time. The next one starts 15 seconds after the previous one started, or at once after a longer check.
+A refusal cancels the upload, fetch, and answer.
+A late or failed check does not, and it logs `model_gateway_check_late` or `model_gateway_check_failed`.
+[Streams](../../docs/protocol/model-gateway-requests.md#streams) states the requirement.
 A refusal before the answer starts returns its stable error code.
 A client disconnect also cancels the upstream.
 It adds no model filter, rate limit, or answer size limit.
@@ -214,8 +216,8 @@ The `request` helper of `gatewayHttp` in [http.test-support.ts](http.test-suppor
 - [codex-body.ts](codex-body.ts): `CodexBodyScanner` checks the streamed JSON grammar and top-level `background` fields.
 - [json-tokens.ts](json-tokens.ts): `JsonTokens` reads JSON tokens and unescapes keys without keeping token text.
 - [json-stack.ts](json-stack.ts): `JsonStack` stores compact container states without a separate depth limit.
-- [request-lifetime.ts](request-lifetime.ts): `GatewayRequestLifetime` owns the lease, periodic checks, cancellation, and cleanup across every forwarding phase.
-- [stream.ts](stream.ts): answer forwarding under the request lease.
+- [request-lifetime.ts](request-lifetime.ts): `GatewayRequestLifetime` owns the start check, the periodic checks, cancellation, and cleanup across every forwarding phase.
+- [stream.ts](stream.ts): answer forwarding under the request lifetime.
 - [redact.ts](redact.ts): bounded carry bytes for credential removal from error bodies.
 - [errors.ts](errors.ts): stable gateway refusals in each provider's API shape.
 - [workspace.ts](workspace.ts): `WorkspaceTurnTokens.forRunningTurn` derives a stable token from the turn record.
@@ -250,7 +252,7 @@ The `request` helper of `gatewayHttp` in [http.test-support.ts](http.test-suppor
 - [endpoint-login.test.ts](endpoint-login.test.ts): both agents' endpoint routes and authentication, credential-free runner commands, revalidation, redirects, and unreachable endpoints.
 - [endpoint-errors.test.ts](endpoint-errors.test.ts): split endpoint and key redaction in errors and allowed headers.
 - [endpoint-redaction.test.ts](endpoint-redaction.test.ts): unchanged protocol paths and redaction of saved path or query forms in both filters.
-- [lease.test.ts](lease.test.ts): late answer starts, held uploads, and lease expiry during a held check, with a manual clock.
+- [lease.test.ts](lease.test.ts): late answer starts, held uploads, a start check that does not return, and answers that keep streaming through late and failed checks, with a manual clock.
 - [codex-body.test.ts](codex-body.test.ts): HTTP refusals, upload cancellation, and unchanged accepted bytes through the fake OpenAI upstream.
 - [codex-token.test.ts](codex-token.test.ts): ChatGPT metadata, Worker routing, header filtering, route refusals, and failed discovery.
 - [codex-renew.test.ts](codex-renew.test.ts): body-less 401 replay, rotated-token redaction, single model forwarding with a retryable 502, and the per-turn renewal bound.
