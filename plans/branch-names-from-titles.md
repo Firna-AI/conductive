@@ -161,21 +161,24 @@ the city name. The fixture of Saved carts has a city branch.
 
 Depends on: 1
 
-- [ ] `create-a-workspace.md`: the placeholder branch, the branch from the
+- [x] `create-a-workspace.md`: the placeholder branch, the branch from the
       name before the branch step, the slug, and the empty slug. Cite
       branch-name decisions 1 and 2.
-- [ ] `continue.md`: the new branch takes the workspace name, the version,
+- [x] `continue.md`: the new branch takes the workspace name, the version,
       and random characters. Cite branch-name decision 3.
-- [ ] `workspace-and-session-names.md`, `workspace-menu.md`,
+- [x] `workspace-and-session-names.md`, `workspace-menu.md`,
       `workspace-calls.md`, and `tool-names.md`: a name changes the branch
       only before the branch step.
-- [ ] Read the public guides in full. Update
+- [x] Read the public guides in full. Update
       `src/marketing/docs/workspaces.md` and each other guide sentence
       about branch names.
-- [ ] Read the Terms page and the Privacy page in full. Update each
+- [x] Read the Terms page and the Privacy page in full. Update each
       sentence that restates the branch rule. Check that the Privacy page
-      covers the title in a branch name on GitHub.
-- [ ] Check each relative link of each changed Markdown file.
+      covers the title in a branch name on GitHub. Done: the privacy
+      notice names the branch name in its GitHub and agent items, with a
+      new effective date. The guides of Workspaces and Pull requests name
+      the branch of Continue.
+- [x] Check each relative link of each changed Markdown file.
 
 ## Milestone 3: Worker
 
