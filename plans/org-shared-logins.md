@@ -338,6 +338,9 @@ from A to B. Its report is in
   protects the most, because it also covers older sessions.
 - **Action:** ask the user, because the options add new controls for
   orgs, or change decision 6 A, and no requirement covers them.
+- **Decision:** The user chose B on 16 November 2026. Before that, the user
+  said: "workspace agent credentials can be used by the entire workspace".
+  The agent read "workspace" as the org.
 
 ## Design calls
 
@@ -450,7 +453,11 @@ settings.
       login, and the form names the org login.
 - [ ] Model picker: a session or a routine on an org endpoint shows only
       the models of its last list.
-- [ ] The state that decision 7 chooses, when it adds a control.
+- [ ] Agents tab: the switch "Use for every member" of decision 7 under
+      each org login, off by default, with its hint and a save that fails.
+- [ ] Composer and new workspace form: a member with their own login, in
+      an org whose switch is on, sees the org login named, such as "Acme's
+      login".
 - [ ] Update `docs/mockups/catalogue.md`,
       `docs/mockups/orgs-and-logins.md`, and
       `docs/mockups/own-endpoint-logins.md`.
@@ -507,6 +514,8 @@ Depends on: 2
       address rule of `docs/protocol/own-endpoint-logins.md` and the org
       encryption context. Only an admin saves or removes.
 - [ ] Give the endpoint model refresh an org owner.
+- [ ] Add the switch of decision 7: a column, and an admin route that saves
+      it without a change of `updated_at`.
 - [ ] Tests: an admin save, a member refused, a response with no secret,
       an endpoint that the rule refuses, the delete of the org, and a
       ciphertext of another org that does not decrypt.
@@ -517,7 +526,8 @@ Depends on: 3
 
 - [ ] Add `login` to the session, and its default in `normalizeSession`.
 - [ ] Add the default login resolver of decisions 6 and 7, and the access
-      helper.
+      helper. With the switch on, a usable org login comes first. Without a
+      usable org login, the own login serves.
 - [ ] Move the first message, the send, the linked session, and
       `worker/chat/tool-session-write.ts` to the resolver.
 - [ ] Move `worker/model-gateway/workspace.ts`,
@@ -528,8 +538,8 @@ Depends on: 3
 - [ ] Move `worker/routines/run-starter.ts` to decision 5.
 - [ ] Tests: a first message on the org login, a message of another member
       in that session, an org login replaced during a turn, removed before
-      a waiting message, decision 6 order, decision 5, and an older stored
-      session.
+      a waiting message, decision 6 order, the switch of decision 7 on and
+      off, decision 5, and an older stored session.
 
 ## Milestone 5: The Agents tab of the org settings
 
