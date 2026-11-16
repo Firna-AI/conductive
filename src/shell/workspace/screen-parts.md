@@ -208,6 +208,17 @@ tools.
   and the address keeps the tab of the centre. Only a tool address follows
   the new tool. A preview tab changes the address only from a preview
   address, and otherwise picks the preview in the panel.
+- On desktop, a choice of Terminal moves the keyboard focus to the
+  terminal, as
+  [Terminal](../../../docs/protocol/workspace-tools.md#terminal) says. The
+  `select` of `useToolSelect` runs for a click on its tab and for Go to
+  Terminal of the palette or its key. It asks `terminalFocus` of the
+  workspace context, a `TerminalFocus` that each workspace screen keeps.
+  The request holds the element with the focus at the choice. A choice of
+  another tool drops it. The tools part passes it to the `focusRequest` of
+  `TerminalTool`, only while Terminal shows, and clears it once the
+  terminal took it. A phone asks for no focus, because its keyboard would
+  cover the page.
 - On a phone each tool that the app offers is a page of the tab bar, with
   its own address.
 - The terminal and Preview each mount at their first show, then stay

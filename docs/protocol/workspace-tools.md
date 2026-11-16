@@ -190,6 +190,17 @@ The [mockup catalogue](../mockups/catalogue.md) draws the tools at
   workspace's repository (decision 94).
 - The default shell prompt shows only the current folder name, such as
   `mokly`, in place of the full path.
+- On desktop, a click on the Terminal tab of the tools panel moves the
+  keyboard focus to the terminal. So does Go to Terminal, from its row of
+  the command palette or its key, ⌘J on a Mac or Ctrl+J elsewhere. A
+  terminal that still connects takes the focus when it shows, unless the
+  user moved the focus in the meantime. A choice of another tool drops
+  that wait. The user asked for the tab on 16 November 2026, and chose the
+  same for Go to Terminal on the same day.
+- Reason: a click on the tab says that the user wants to type in the
+  shell, so a second click in the terminal is a wasted step. A terminal
+  that takes the focus after the user chose another field was rejected,
+  because the user's keys then go to the shell.
 - The Terminal shell of a workspace keeps running when its connection
   drops. Each new connection attaches to that shell, with its running
   commands and its current screen (decision 118).
