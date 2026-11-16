@@ -300,8 +300,8 @@ Depends on: every other milestone
 
 - [x] Run the targeted tests, the runner checks, and the complete gate
       named in `AGENTS.md`. Evidence: `.context/model-stream-drops/gate.log`.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
