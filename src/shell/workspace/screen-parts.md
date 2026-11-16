@@ -208,6 +208,11 @@ tools.
   and the address keeps the tab of the centre. Only a tool address follows
   the new tool. A preview tab changes the address only from a preview
   address, and otherwise picks the preview in the panel.
+- A plain click on the Terminal tab of the panel moves the keyboard focus
+  to the terminal, through the `focusRequest` of `TerminalTool`, as
+  [Terminal](../../../docs/protocol/workspace-tools.md#terminal) says. The
+  request holds the element with the focus at the click. A click on
+  another tab drops it, and a hidden terminal does not get it.
 - On a phone each tool that the app offers is a page of the tab bar, with
   its own address.
 - The terminal and Preview each mount at their first show, then stay

@@ -6,6 +6,7 @@ import { ToolRoot } from './tool-parts/ToolRoot'
 import { ToolMessage, ToolWaiting } from './tool-parts/ToolStates'
 import { workspaceKey, type ToolWorkspace } from './tool-parts/workspace'
 import { createTerminalStore, type TerminalStore } from './terminalStore'
+import type { TerminalFocusRequest } from './terminalFocus'
 import type { TerminalLinks } from './terminalLinks'
 import { TerminalScreen, type ConnectTerminal } from './TerminalScreen'
 import styles from './TerminalTool.module.css'
@@ -27,6 +28,13 @@ export interface TerminalToolProps {
    * elsewhere, or a touch. Without it, no link opens.
    */
   links?: TerminalLinks
+  /**
+   * Moves the keyboard focus to the screen, such as after a click on the
+   * tab of the tool. A request waits until the terminal connects.
+   */
+  focusRequest?: TerminalFocusRequest | null
+  /** The screen took the focus request, or dropped it after a focus move. */
+  onFocusDone?: () => void
 }
 
 /**
@@ -87,7 +95,9 @@ function TerminalToolBody(props: TerminalToolProps) {
           <TerminalScreen
             connect={props.connect}
             ended={view.ended}
+            focusRequest={props.focusRequest}
             links={props.links}
+            onFocusDone={props.onFocusDone}
             onClosed={() => dispatch({ type: 'ended' })}
             onInput={props.onActivity}
             screenRef={props.screenRef}
