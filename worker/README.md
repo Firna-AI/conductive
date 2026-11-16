@@ -249,13 +249,14 @@ Call other parts of the app through a binding or an RPC method, not a global `fe
 - [marketing/site.ts](marketing/site.ts) serves the built root-domain site.
 - [marketing/consent.ts](marketing/consent.ts) serves the built agreement page before GitHub.
 - [routes.ts](routes.ts) dispatches protected app routes.
+- [server-timing.ts](server-timing.ts): `ServerTiming` records the steps of one request for its `Server-Timing` header. The preview proxy and the create of a workspace use it.
 - [codex-auth/README.md](codex-auth/README.md) owns device authorization,
   encrypted ChatGPT sign-ins, and serialized refresh-token renewal.
 - [http.ts](http.ts) serializes `HttpError` as the shared API error body, with optional structured details.
 - [waitlist/route.ts](waitlist/route.ts) reads the signed-in user's waitlist state and uses invite or referral codes.
 - [waitlist/grant.ts](waitlist/grant.ts) supplies the shared app access grant statements for D1 batches.
 - [app-api/README.md](app-api/README.md) names the entry points of the account, shell, and workspace routes.
-- [configuration.ts](configuration.ts): `runnerSoftware` reads the runner archive variables for builds and refreshes.
+- [configuration.ts](configuration.ts): `appFrameSources` reads extra frame origins. Release admission reads validated newest-release metadata.
 - [chat/router.ts](chat/router.ts) forwards the browser chat routes and the runner socket to the Durable Object of their workspace.
 - [workspace.ts](workspace.ts) composes each workspace Durable Object. [workspace-lifecycle.ts](workspace-lifecycle.ts) exposes its lifecycle RPC methods and owns its [input activity](lifecycle/README.md#input-activity). Its constructor restores the native sockets, and it receives their message, close, and error events.
 - [native-sockets.ts](native-sockets.ts): `WorkspaceSockets`, the trusted socket roles, the attachment check, the restore, and the dispatch of native socket events.

@@ -22,7 +22,7 @@ export interface CommandKey {
 
 /**
  * A compact labelled Firna button, as the mockups draw it: 26 px high in the
- * dense desktop layout, and 44 px high with `touch` on a phone. The `tint`
+ * dense desktop layout, and 40 px high with `touch` on a phone. The `tint`
  * of a tinted bar fills the button in the tone of that bar. Without a tint,
  * the button takes the outline tone without a fill, so the colour of the
  * bar shows through it. `busy` shows that its write runs: the
