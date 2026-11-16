@@ -32,12 +32,19 @@ export interface TerminalScriptOptions {
  * Bash checks once, at the first prompt after the restore marker exists.
  * If the real folder differs from `$PWD`, it moves there and keeps `OLDPWD`.
  * The check flag stays local to this shell, so new shells check for themselves.
+ * Bash also appends each new history line to `$HISTFILE` before each prompt.
+ * Bash otherwise writes the file only at exit, during the shutdown at a stop,
+ * and a stop lost that write. See the terminal README. An empty
+ * or unset `HISTFILE` turns the append off, and a failed append stays silent.
+ * Keep the `HISTFILE` test: without `HISTFILE`, `history -a` appends to the
+ * readline file `~/.history` when that file exists.
  */
 export function terminalPromptCommand(
   restoreMarker = TERMINAL_RESTORE_MARKER,
 ): string {
   return `PS1=\${PS1//\\\\w/\\\\W}
-builtin test -n "\${__conductive_restore_checked-}" || ! builtin test -f ${shellArgument(restoreMarker)} || { __conductive_restore_checked=1; [ -z "\${PWD-}" ] || builtin test . -ef "$PWD" || { __conductive_oldpwd=\${OLDPWD-}; builtin cd -- "$PWD" 2>/dev/null && OLDPWD=$__conductive_oldpwd; unset __conductive_oldpwd; }; }`
+builtin test -n "\${__conductive_restore_checked-}" || ! builtin test -f ${shellArgument(restoreMarker)} || { __conductive_restore_checked=1; [ -z "\${PWD-}" ] || builtin test . -ef "$PWD" || { __conductive_oldpwd=\${OLDPWD-}; builtin cd -- "$PWD" 2>/dev/null && OLDPWD=$__conductive_oldpwd; unset __conductive_oldpwd; }; }
+builtin test -z "\${HISTFILE-}" || builtin history -a 2>/dev/null`
 }
 
 const terminalScriptDefaults: TerminalScriptOptions = {

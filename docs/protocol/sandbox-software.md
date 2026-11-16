@@ -73,7 +73,9 @@ step of a build.
   The first also needs a new command, and an older runner closes its
   connection at an unknown command.
 - It downloads a newer release in the background. A start never waits for
-  a download.
+  a download. Only Restart in the workspace header waits for one, with a
+  limit of 60 seconds, as
+  [Restart the software](workspace-life.md#restart-the-software) says.
 - An update downloads only the parts that changed since the release that
   the sandbox runs.
 - The program installs only a release with a higher version than the
@@ -92,7 +94,10 @@ step of a build.
   its workspace is idle, as [Installs at idle](#installs-at-idle) says.
 - The program never restarts the runner service to apply an update.
   Reason: a restart stops each running turn, and each process that an
-  agent started, such as a dev server.
+  agent started, such as a dev server. A member can restart the service
+  with Restart in the workspace header, which then applies the newest
+  download, as
+  [Restart the software](workspace-life.md#restart-the-software) says.
 - The sandbox keeps the previous release. When the software of a new
   release fails to start, the next start runs the previous release again.
 - A new runner confirms its release when it first connects to the Worker.

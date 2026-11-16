@@ -36,6 +36,9 @@ export function AppLink({
   'aria-label'?: string
   /** The key of the command that the link runs, for a screen reader. */
   'aria-keyshortcuts'?: string
+  /** The popover that a plain click on the link opens, such as a list. */
+  'aria-controls'?: string
+  'aria-expanded'?: boolean
   /** Replaces the current address, as a redirect does. */
   replace?: boolean
   onClick?: (event: MouseEvent<HTMLAnchorElement>) => void
@@ -58,7 +61,9 @@ export function AppLink({
   }
   return (
     <a
+      aria-controls={props['aria-controls']}
       aria-current={props['aria-current']}
+      aria-expanded={props['aria-expanded']}
       aria-keyshortcuts={props['aria-keyshortcuts']}
       aria-label={props['aria-label']}
       className={props.className}

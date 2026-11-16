@@ -9,7 +9,11 @@ import { useStore, valueOf } from '../../app/store'
 import type { User } from '../../shared/api'
 import type { OrgSummary } from '../../shared/orgs'
 import { useOrgAccess, useOrgModel } from '../context'
-import { useSidebarShown } from '../mac/mac-app'
+import {
+  SidebarHeaderToggle,
+  useSidebarPlace,
+  useSidebarShown,
+} from '../layout/sidebar-toggle'
 import { useNewWorkspace } from '../new-workspace/NewWorkspaceHost'
 import { SearchRow } from '../palette/SearchRow'
 import { shortcutTip, useShortcutHint } from '../shortcuts/shortcut-hints'
@@ -134,8 +138,11 @@ export function AutomationsLink(props: {
 /**
  * The desktop sidebar beside the org rail: the org name with its Settings
  * cog, New workspace, Automations, Search, and the sections of the org. A suspended
- * org shows its sections read-only, without New workspace. While the
- * sidebar shows, its list offers New section to the command palette.
+ * org shows its sections read-only, without New workspace. In the
+ * browser the sidebar toggle sits beside the cog. While the sidebar shows,
+ * or while it is open as the list popover, its list offers New section and
+ * its keys. The hidden copy in the frame offers neither, so two copies
+ * never offer the same action.
  */
 export function Sidebar(props: {
   org: OrgSummary
@@ -145,11 +152,13 @@ export function Sidebar(props: {
   const { org, current } = props
   const { suspended } = useOrgAccess(org)
   const shown = useSidebarShown()
+  const popover = useSidebarPlace() === 'popover'
   return (
     <>
       <div className={styles.top}>
         <h2 className={styles.org}>{org.name}</h2>
         <SettingsLink current={current?.screen === 'settings'} orgId={org.id} />
+        <SidebarHeaderToggle />
       </div>
       <div className={styles.scroll}>
         <div className={styles.links}>
@@ -168,7 +177,7 @@ export function Sidebar(props: {
           <SearchRow variant="sidebar" />
         </div>
         <OrgList
-          offerActions={shown}
+          offerActions={shown || popover}
           orgId={org.id}
           readOnly={suspended}
           selectedId={

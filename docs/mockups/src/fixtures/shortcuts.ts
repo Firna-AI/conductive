@@ -62,8 +62,7 @@ function rowIn(
 
 /**
  * The groups of the tab on a host, with the keys of its keyboard. Only the
- * Mac app has the sidebar toggle, Back, Forward, and its menus, so a
- * browser leaves them out.
+ * Mac app has Back, Forward, and its menus, so a browser leaves them out.
  */
 export function shortcutGroups(host: ShortcutHost): ShortcutGroup[] {
   return shortcutSpecs

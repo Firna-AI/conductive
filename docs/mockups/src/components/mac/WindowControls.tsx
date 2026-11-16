@@ -26,15 +26,20 @@ export function WindowButtons(props: { active: boolean }) {
  * The top of the left panel of the Mac app, which has no title bar. In a
  * window it keeps the space of the window buttons at the left, then the
  * sidebar toggle, and back and forward at the right. In full screen macOS
- * hides the window buttons, and the toggle takes their space.
+ * hides the window buttons, and the toggle takes their space. While the
+ * user hides the sidebar, the controls keep their own width in the top
+ * left corner, and the toggle shows the sidebar again.
  */
-export function WindowControls(props: { mode: WindowMode }) {
+export function WindowControls(props: { mode: WindowMode; corner?: boolean }) {
   return (
-    <div className={styles.controls}>
+    <div className={classes(styles.controls, props.corner && styles.corner)}>
       {props.mode === 'window' ? (
         <span aria-hidden className={styles.reserved} />
       ) : null}
-      <IconButton icon={PanelLeft} label="Hide the sidebar" />
+      <IconButton
+        icon={PanelLeft}
+        label={props.corner ? 'Show the sidebar' : 'Hide the sidebar'}
+      />
       <span className={styles.spacer} />
       <IconButton icon={ArrowLeft} label="Back" />
       <IconButton disabled icon={ArrowRight} label="Forward" />

@@ -6,23 +6,15 @@ import type { ActivityStatus, Workspace } from '../../fixtures/workspaces'
 import { paths } from '../../paths'
 import { ScreenLink } from '../common/ScreenLink'
 import { ShortcutTip } from '../common/ShortcutTip'
+import { classes } from '../common/classes'
 import { IconButton } from '../common/actions'
+import { useCornerControls } from '../layout/sidebarPlace'
 import { workspaceLabel } from '../workspaces/label'
-import { activityPresentation } from '../workspaces/status'
-import { StatusGlyph } from '../workspaces/StatusGlyph'
 import { CopyLinkButton, type CopyResult } from './CopyLinkButton'
+import { HeaderState } from './HeaderState'
 import { OwnerPicker } from './OwnerPicker'
 import { RunLinks, type RunSource } from './RunLinks'
 import styles from './WorkspaceHeader.module.css'
-
-function State(props: { status: ActivityStatus }) {
-  return (
-    <span className={styles.state}>
-      <StatusGlyph status={props.status} />
-      {activityPresentation[props.status].label}
-    </span>
-  )
-}
 
 /**
  * The name, number, repository, owner, and state of the open
@@ -34,6 +26,8 @@ function State(props: { status: ActivityStatus }) {
  * the owner opens the menu that reassigns the workspace. On desktop the
  * header ends with the toggle that hides the right column and shows it
  * again. A run workspace also links to its automation and its pull request.
+ * While the software of the cloud computer runs, the state opens a menu with
+ * Restart, for every member of an org that is not suspended.
  */
 export function WorkspaceHeader(props: {
   workspace: Workspace
@@ -43,6 +37,10 @@ export function WorkspaceHeader(props: {
   viewport: Viewport
   /** The menu of the owner is open. A phone shows it as a sheet. */
   ownerOpen?: boolean
+  /** The menu of the state is open. A phone shows it as a sheet. */
+  stateOpen?: boolean
+  /** The workspace can change, so the state can open its menu. */
+  canRestart: boolean
   /** The person signed in is an admin of the org, who can reassign. */
   canReassign: boolean
   /** The list that Back opens on a phone, such as that of a suspended org. */
@@ -55,6 +53,7 @@ export function WorkspaceHeader(props: {
   run?: RunSource
 }) {
   const { workspace, name } = props
+  const corner = useCornerControls()
   const repository = repositories[workspace.repository].name
   const owner = (
     <OwnerPicker
@@ -88,10 +87,15 @@ export function WorkspaceHeader(props: {
           </span>
         </div>
         {owner}
-        <State status={props.status} />
+        <HeaderState
+          canRestart={props.canRestart}
+          open={props.stateOpen}
+          phone
+          status={props.status}
+        />
       </header>
     ) : (
-      <header className={styles.bar}>
+      <header className={classes(styles.bar, corner && styles.cornerBar)}>
         <h1 className={styles.title}>{name}</h1>
         {copyLink}
         <span className={styles.metas}>
@@ -101,7 +105,11 @@ export function WorkspaceHeader(props: {
           </span>
         </span>
         {owner}
-        <State status={props.status} />
+        <HeaderState
+          canRestart={props.canRestart}
+          open={props.stateOpen}
+          status={props.status}
+        />
         <IconButton
           icon={PanelRight}
           label={

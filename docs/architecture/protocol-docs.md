@@ -34,6 +34,10 @@ This page lists each protocol doc and what it covers.
     - [Temporary tabs](../protocol/temporary-tabs.md): the one file or diff
       tab that the next press replaces, what opens and keeps it, and its
       mark in the saved view.
+    - [File row menu](../protocol/file-row-menu.md): the menu of a row of
+      All files and Changes, with Add to chat and Copy path, Copy path in
+      the tab menu of a file or diff tab, and the paths whose label hides a
+      secret value.
     - [Port previews](../protocol/port-previews.md): detected servers, manual
       opening, the open from a local address in the chat, preview tabs,
       and the relay requirement.
@@ -52,8 +56,8 @@ This page lists each protocol doc and what it covers.
     - [Dropped answers](../protocol/dropped-answers.md): the continue
       message of a Claude turn after its model answer drops.
   - [File mentions](../protocol/file-mentions.md): the list of `@` in the
-    composer, the chips of files and folders, the sent chips of attached
-    files, and the removal of each chip of the composer.
+    composer, the chips of files and folders, Add to chat, the sent chips
+    of attached files, and the removal of each chip of the composer.
   - [Agent runner](../protocol/agent-runner.md): the connection of the runner,
     its events and their limits, its turns, the background work of Claude
     turns with its note and its time limit, its port reports, and the repair
@@ -114,7 +118,8 @@ This page lists each protocol doc and what it covers.
 - [Orgs and members](../protocol/orgs-and-members.md): orgs, sections,
   roles, the first run, and the end of an org.
   - [Org rail order](../protocol/org-rail-order.md): the order of the orgs
-    in the rail that each person keeps, and how the person changes it.
+    in the rail that each person keeps, how the person changes it, what a
+    tile opens, and the workspace list of a hidden sidebar.
   - [Get started](../protocol/get-started.md): the first run, its steps,
     the state of the first build in its org step, and its finish.
   - [Delete org](../protocol/delete-org.md): the delete of an org, its 7

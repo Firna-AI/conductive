@@ -20,7 +20,7 @@ const pressedTabs: ReadonlySet<WorkspaceState['tab']> = new Set([
 ])
 
 /** The state draws a temporary tab: the file or the diff of its tab. */
-export function hasTemporaryTab(state: WorkspaceState): boolean {
+function hasTemporaryTab(state: WorkspaceState): boolean {
   return state.temporary !== 'none' && pressedTabs.has(state.tab)
 }
 

@@ -40,6 +40,12 @@ export type WorkspaceTab = {
    * diff replaces its file. Only its title changes, in italics.
    */
   temporary?: boolean
+  /**
+   * The label of the file can hide a secret value: it holds "[redacted]",
+   * or the app does not know the name of the file yet. Its menu then
+   * leaves out Copy path.
+   */
+  hidesPath?: boolean
 }
 
 /** The open menu of a tab: beside it, or in a sheet that the screen draws. */

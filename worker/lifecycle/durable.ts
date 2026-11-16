@@ -255,7 +255,7 @@ export class DurableLifecycle {
     })
   }
 
-  private update(
+  update(
     change: (
       state: DurableLifecycleState,
     ) => DurableLifecycleState | Promise<DurableLifecycleState>,

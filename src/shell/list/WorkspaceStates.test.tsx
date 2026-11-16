@@ -5,6 +5,7 @@ import { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_IDS, fakeUser } from '../../test-support/fixtures/core'
 import { renderScreen, startedApp, textOf } from '../test-render'
 import { sandboxState } from '../workspace/features'
+import { TerminalFocus } from '../workspace/tools/terminal-focus'
 import { ToolEvents } from '../workspace/tools/tool-events'
 import { WorkspaceHeader } from '../workspace/WorkspaceHeader'
 import { OrgList } from './OrgList'
@@ -72,6 +73,7 @@ describe('workspace states', () => {
             savedView: chat,
             chat,
             toolEvents: new ToolEvents().subscribe,
+            terminalFocus: new TerminalFocus(),
             archive: null,
             restore: null,
             running: null,

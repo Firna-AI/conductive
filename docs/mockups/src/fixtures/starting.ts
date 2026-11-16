@@ -4,6 +4,7 @@
  * when a start fails.
  */
 
+import { restartCopy } from '../components/workspace/restartCopy'
 import { savedCarts } from './workspaces'
 
 export type StartingLog = {
@@ -44,7 +45,7 @@ export const resumingLog: StartingLog = {
 }
 
 /** Why a start failed: a failure, or the 20-minute limit. */
-export const startErrorKeys = ['failed', 'time-limit'] as const
+export const startErrorKeys = ['failed', 'time-limit', 'restart'] as const
 
 export type StartError = (typeof startErrorKeys)[number]
 
@@ -56,4 +57,5 @@ export const startErrors: Readonly<Record<StartError, string>> = {
   failed: 'The cloud computer could not start. Try again.',
   'time-limit':
     'The cloud computer did not start within the 20-minute limit. Try again.',
+  restart: restartCopy.failed,
 }
