@@ -22,8 +22,16 @@ parent and its sub-workspaces.
 
 Earlier work: workspace W-117, "nested workspace creation", ran a brainstorm
 on 13 November 2026 and asked five items. Nobody answered them, and W-117
-is archived. The message above answers items 1 to 3. Items 4 and 5 stay
-open below, and item 6 is new.
+is archived. The message above answers items 1 to 3. This plan gave items
+4 and 5 again and added item 6. The user chose 4 F, 5 C, and 6 A on
+16 November 2026.
+
+On 16 November 2026 this branch merged `main`. The merge brought the Rust
+sandbox software (PR #342). The workspace tools and the agent runner are
+now the Rust program `conductive`, under `crates/`. Their message types
+live in Rust, and `ts-rs` writes the TypeScript of the Worker and the app.
+The program updates itself after each deploy, so a cloud computer needs no
+new org image for new tools.
 
 This change does not cover nesting from the app, a change of the parent of
 an existing workspace, a collapse control, a parent label in the command
@@ -42,11 +50,15 @@ Contract owners:
 - [Fixed keys](../docs/protocol/keyboard-shortcuts-fixed-keys.md).
 - The [agent tools README](../worker/tools/README.md) and its
   [workspace calls page](../worker/tools/workspaces.md).
-- The [sandbox tools README](../tools/README.md) and its
+- The [workspace CLI and MCP server README](../tools/README.md) and its
   [calls page](../tools/calls.md).
+- The READMEs of the crates
+  [cnd-runner-interface](../crates/cnd-runner-interface/README.md),
+  [cnd-tools](../crates/cnd-tools/README.md), and
+  [cnd-runner](../crates/cnd-runner/README.md).
 - The runner's [agent input](../runner/agent-input.md) and
   [configuration](../runner/configuration.md) pages.
-- The [image README](../image/README.md#start-in-a-workspace).
+- The variable table of [Start in a workspace](../image/start.md#start-in-a-workspace).
 - The [migrations README](../migrations/README.md).
 - The [mockup catalogue](../docs/mockups/catalogue.md), at the new page
   `app/sub-workspaces`.
@@ -214,6 +226,7 @@ Items 1 to 5 keep the numbers of the brainstorm in W-117. Item 6 is new.
   section rule of A stays.
 - **Action:** ask the user, because no requirement covers how a tree
   moves, and A adds a refusal.
+- **Chosen:** F, by the user on 16 November 2026.
 
 ### 5. Sub-workspaces of an archived parent
 
@@ -276,6 +289,7 @@ Items 1 to 5 keep the numbers of the brainstorm in W-117. Item 6 is new.
   the simpler option when the tree shape counts less.
 - **Action:** ask the user, because the options show different lists, and
   no requirement covers this case.
+- **Chosen:** C, by the user on 16 November 2026.
 
 ### 6. How deep a tree can go
 
@@ -314,12 +328,14 @@ Items 1 to 5 keep the numbers of the brainstorm in W-117. Item 6 is new.
   kept this recommendation.
 - **Action:** ask the user, because the requirement has two readings, and
   neither is clearly right.
+- **Chosen:** A, by the user on 16 November 2026. The deepest depth of a
+  sub-workspace is 3.
 
 ## Design
 
 The mechanics below are the design of this change. The protocol docs get
-only the requirements, in Milestone 2. Items 4 to 6 are open, so the
-design names the recommended option where it depends on one.
+only the requirements, in Milestone 2. The design follows the chosen
+options 4 F, 5 C, and 6 A.
 
 ### The parent link
 
@@ -333,6 +349,24 @@ design names the recommended option where it depends on one.
   as it does for `created_by_workspace_id`.
 - The depth of a workspace counts every parent link above it, also the
   links to archived parents. The Worker counts them in its own records.
+- The deepest depth of a sub-workspace is 3, as item 6 A says. One
+  constant in `src/shared/` holds it. The Rust runner reads the same value
+  from the Worker, as "Agent context" below says.
+
+### The shared types
+
+- Rust owns the request and reply types of the workspace tools and the
+  `Workspace` of the app, in `crates/cnd-runner-interface/`. `ts-rs` writes
+  their TypeScript into `src/shared/generated/`, as `AGENTS.md` says.
+- So each new field starts in Rust: `parentId` of `Workspace`, of the
+  create request, of the list request, and of each list entry; `parent`,
+  `depth`, and `children` of the get reply; and `notice` of the create and
+  the move replies. Then the generator writes the TypeScript.
+- Each new reply field is optional in the Rust reply types, or always
+  present in each reply of the Worker. Reason: the tools refuse a reply
+  that lacks a field of their reply type, and they drop each field that
+  they do not know. So older tools keep working, and newer tools accept
+  each reply of the Worker.
 
 ### The create call
 
@@ -343,14 +377,14 @@ design names the recommended option where it depends on one.
 - An unknown parent, or a parent of another org, gets HTTP 404 with the
   error code `workspace_not_found`. Its message says that the parent
   workspace is not available.
-- A parent at the deepest depth that item 6 allows gets HTTP 409 with the
-  error code `nesting_limit`. The message names the parent by its number,
-  and says that it is at the deepest level. It tells the agent to create a
-  sibling instead: pass the parent's own `parentId`, given in the message,
-  and start the name with a short prefix that shows the group.
-- The new workspace joins the section of its parent, as item 4 A and F
-  say. The insert reads the section of the parent in the same statement,
-  so a move of the parent during the create cannot split the tree.
+- A parent of depth 3 gets HTTP 409 with the error code `nesting_limit`.
+  The message names the parent by its number, and says that it is at the
+  deepest level. It tells the agent to create a sibling instead: pass the
+  parent's own `parentId`, given in the message, and start the name with a
+  short prefix that shows the group.
+- The new workspace joins the section of its parent. The insert reads the
+  section of the parent in the same statement, so a move of the parent
+  during the create cannot split the tree.
 - When the call also names another section, the reply gives a `notice`:
   one sentence that says that the workspace joined the section of its
   parent. An unknown section still gets HTTP 404 `section_not_found`, as
@@ -361,13 +395,13 @@ design names the recommended option where it depends on one.
 
 ### Reads
 
-- The `Workspace` type of the browser gets `parentId: string | null`.
+- The `Workspace` of the app gets `parentId`, a workspace ID or `null`.
 - `list_workspaces` takes a `parentId` filter, for the direct
   sub-workspaces of one workspace. Each entry gives its `parentId`.
 - `get_workspace` gives `parent`, a list entry or `null`, the `depth`, and
   `children`: the direct sub-workspaces, oldest first, archived ones
-  included. Under item 4 F, its `section` is the section where the list
-  shows the workspace.
+  included. Its `section` is the section where the list shows the
+  workspace, as item 4 F says.
 
 ### The place of a row
 
@@ -376,9 +410,14 @@ design names the recommended option where it depends on one.
   app builds the list with it. The Worker uses it for the moves and for
   the section of `get_workspace`. So the list and the Worker never
   disagree about which rows are nested.
-- Under item 4 F, a live sub-workspace shows under its parent wherever the
-  list shows the parent. Item 5 decides its place when the list shows no
-  row of its parent.
+- A live sub-workspace shows under its parent wherever the list shows the
+  parent, whatever section its own record names, as item 4 F says.
+- When the list shows no row of its parent, a live sub-workspace shows
+  under the nearest live workspace above it in its tree. When no such
+  workspace is left, it shows at the top level of its own section. A
+  Restore of the parent puts it back under the parent. This is item 5 C.
+- The indent of a row follows the rows that the list shows. So a row under
+  its grandparent indents one step less than its depth.
 
 ### Moves
 
@@ -389,9 +428,12 @@ design names the recommended option where it depends on one.
 - The places of a section count only the rows that show at the top level.
   A nested row takes no place of its own.
 - A nested row has no drag, no move by keys, and no Move to section.
-  Under item 4 F, `move_workspace` on a nested row moves nothing. Its
-  reply gives the workspace in its section and a `notice` that names the
-  top-level workspace to move.
+  `move_workspace` on a nested row moves nothing. Its reply gives the
+  workspace in its section, and a `notice` that names the top-level
+  workspace to move. This is item 4 F, which takes the moves of item 4 E.
+- A row that shows at the top level because its parent is archived moves
+  like any top-level row. When its parent comes back, it shows under the
+  parent again, as item 4 F says.
 
 ### The list in the app
 
@@ -411,16 +453,16 @@ design names the recommended option where it depends on one.
 ### Agent context
 
 - At each start of a cloud computer, at the create and at each resume, the
-  Worker gives four new variables: `CONDUCTIVE_WORKSPACE_LINK`,
-  `CONDUCTIVE_WORKSPACE_DEPTH`, `CONDUCTIVE_PARENT_WORKSPACE_ID`, and
-  `CONDUCTIVE_PARENT_WORKSPACE_LINK`. A top-level workspace gets no parent
-  variables.
+  Worker gives five new variables: `CONDUCTIVE_WORKSPACE_LINK`,
+  `CONDUCTIVE_WORKSPACE_DEPTH`, `CONDUCTIVE_WORKSPACE_MAX_DEPTH`,
+  `CONDUCTIVE_PARENT_WORKSPACE_ID`, and `CONDUCTIVE_PARENT_WORKSPACE_LINK`.
+  A top-level workspace gets no parent variables.
 - The runner adds these lines to the agent instructions of each new
   session:
   - The ID and the link of the workspace.
   - That the workspace is top-level, or that it is nested at its depth
     under the parent, with the parent's ID and link.
-  - The deepest depth that item 6 allows.
+  - The deepest depth, 3.
   - How to nest a new workspace: pass this workspace's ID as `parentId`.
   - At the deepest depth: create a sibling instead, with this workspace's
     own `parentId`, and start its name with a prefix that shows the group.
@@ -428,9 +470,9 @@ design names the recommended option where it depends on one.
     workspace, and that `list_workspaces` with `parentId` lists the
     sub-workspaces of one workspace.
 - A runner without these variables leaves the lines out, and it warns.
-- A cloud computer gets the new tools and the new runner only from an org
-  image that a full build made after the deploy, as
-  [Workspace tools](../docs/protocol/agent-tools.md#workspace-tools) says.
+- A cloud computer gets the new tools and the new runner from the release
+  of the deploy, at a later start of its runner, as
+  [Updates](../docs/protocol/sandbox-software.md#updates) says.
 
 ### The workspace tools
 
@@ -440,18 +482,18 @@ design names the recommended option where it depends on one.
   section rule.
 - `list_workspaces` gets the filter `parentId`, and
   `conductive workspaces list` gets `--parent ID`.
-- The tools read the new fields of each reply: `parentId`, `parent`,
-  `depth`, `children`, and `notice`. The CLI writes the `notice` in its
-  JSON reply, and the MCP server keeps it in its result.
+- The tools keep the new fields of each reply: `parentId`, `parent`,
+  `depth`, `children`, and `notice`. The CLI writes them in its JSON
+  reply, and the MCP server keeps them in its result.
 
 ### Design calls
 
-All design calls are of 13 November 2026, by the agent.
+All design calls are of 13 November 2026, by the agent, unless a line
+gives another date.
 
 - The parent link never changes after the create, and no call sets it
   later. Reason: the depth and the agent context then stay true for the
-  life of the workspace. W-117 made the same call. Item 4 C would end a
-  link at a move. This call then gives way to it.
+  life of the workspace. W-117 made the same call.
 - `parent_workspace_id` is a new column, and `created_by_workspace_id`
   stays the record of the creator. Reason: the two can differ, as for a
   sibling, whose creator is not its parent. W-117 made the same call.
@@ -493,18 +535,29 @@ All design calls are of 13 November 2026, by the agent.
   The sub-workspaces change, so the instructions name the calls that list
   them. A line in each message, as the branch line, was rejected, because
   no fact of the line can change.
-- The comparison page at `conductive.build/from-conductor` stays as it is.
-  Reason: no listed Conductor feature changes its status.
 - A create that names a parent and an unknown section still gets HTTP 404
   `section_not_found`. Reason: the call keeps the checks that it has
   today, and an unknown ID is a mistake that the agent must see. The
   options check found this gap.
 - One shared rule gives the place of each row to the app and to the
-  Worker. Reason: a refusal or a notice of a move must name the rows that
-  the list shows as nested. The options check found this gap.
+  Worker. Reason: a notice of a move must name the rows that the list
+  shows as nested. The options check found this gap.
 - A move of a tree also writes the section of its archived workspaces.
   Reason: a Restore then puts each of them back in its tree. The options
   check found this gap.
+- The indent of a row follows the rows that the list shows, not the depth
+  of its record. Reason: under item 5 C a row can show under its
+  grandparent. Call of 16 November 2026.
+- The Worker gives the deepest depth to the runner as a variable. Reason:
+  the runner then needs no copy of the constant, and its text always
+  matches the check of the Worker. Call of 16 November 2026.
+- Each new reply field is optional in the Rust reply types, or always
+  present in the replies of the Worker. Reason: the tools refuse a reply
+  that lacks a field of their types. Call of 16 November 2026, after the
+  merge of the Rust sandbox software.
+- Main removed the Conductor comparison page on 16 November 2026, in
+  PR #380. So the call of 13 November 2026 about that page no longer
+  applies.
 
 ## Milestone 1: Mockups
 
@@ -513,19 +566,23 @@ Tags: mockup
 Depends on: none
 
 The workspace list with trees, in the sidebar and on the list page of a
-phone. Each mockup has a desktop and a phone variant. This milestone starts
-after the user answers items 4 to 6, because each of them changes a screen.
+phone. Each mockup has a desktop and a phone variant.
 
-- [ ] Give the workspace fixtures a parent link, with one tree at the
-      deepest depth of item 6 and a sibling whose name has a prefix.
+- [ ] Give the workspace fixtures of the new pages a parent link, with one
+      tree down to depth 3 and a sibling whose name has a prefix. Keep the
+      lists of the other pages as they are.
 - [ ] Draw the indent of each depth in the shared list styles of
       `docs/mockups/src/components/workspaces/`, which the app also uses.
 - [ ] Add the page `app/sub-workspaces`. Its canonical screen is the list
       with two trees in one section.
 - [ ] Add its child pages, each with at most five screens:
-  - [ ] The list after the Archive of a parent, as item 5 says.
-  - [ ] A drag of a tree to another section, as item 4 says.
-  - [ ] The row menu of a nested row, as item 4 says.
+  - [ ] The list after the Archive of a middle row: its sub-workspace shows
+        under the nearest live row above it, as item 5 C says.
+  - [ ] A drag of a tree to another section: the lifted top-level row
+        stands for its tree, and the line falls between trees, as item 4 F
+        says.
+  - [ ] The row menu of a nested row, without Move to section, as item 4 F
+        says.
 - [ ] Update `docs/mockups/catalogue.md` for the new pages.
 - [ ] Run `npm run mockups:check`. Smoke-test the changed pages, and save
       the screenshots under `.context/sub-workspaces/`.
@@ -545,13 +602,14 @@ The requirements and the decisions of this change, in the protocol docs.
 - [ ] Add the terms sub-workspace and parent to `docs/architecture.md`.
 - [ ] Update `docs/protocol/workspace-calls.md`: `parentId` of a create, the
       `parentId` filter and field of the list, the `parent`, `depth`, and
-      `children` of a get, and the move of a tree.
+      `children` of a get, the `notice` of a create and a move, and the move
+      of a tree.
 - [ ] Update `docs/protocol/agent-instructions.md` with the new facts and
       guidance.
 - [ ] Update the Sections of `docs/protocol/orgs-and-members.md`,
       `docs/protocol/workspace-menu.md`, `docs/protocol/workspace-life.md`,
       and `docs/protocol/keyboard-shortcuts-fixed-keys.md` for the trees,
-      as items 4 and 5 say.
+      as items 4 F and 5 C say.
 - [ ] Read both legal pages in full, `src/marketing/terms.ts` and
       `src/marketing/privacy.ts`. Update each sentence that restates a
       changed fact.
@@ -565,48 +623,52 @@ The requirements and the decisions of this change, in the protocol docs.
 
 Depends on: 2
 
-The stored parent, the create call with its depth check, and the reads of
-the app and of the tools.
+The shared types, the stored parent, the create call with its depth check,
+and the reads of the app and of the tools.
 
+- [ ] Add the new fields to the Rust types in `crates/cnd-runner-interface/`,
+      as "The shared types" says. Run the type generator, and commit
+      `src/shared/generated/`.
 - [ ] Add a migration with `workspaces.parent_workspace_id`, its index, and
       `workspace_creation_plans.parent_workspace_id`. Reserve its range and
       describe it in `migrations/README.md`.
-- [ ] Carry `parentId` through `AgentCreateWorkspaceRequest`, the create of
-      the tools, the creation plan, and the insert of the workspace row.
-      Keep it through a retry and a replay.
+- [ ] Carry `parentId` through the request reader of `worker/tools/`, the
+      create of the tools, the creation plan, and the insert of the
+      workspace row. Keep it through a retry and a replay.
 - [ ] Check the parent and its depth before the create. Give the 404 and
       the 409 of the design.
-- [ ] Put the sub-workspace in the section of its parent, as item 4 says.
-      Read that section in the statement that inserts the row. Give the
-      `notice` when the call names another section.
+- [ ] Put the sub-workspace in the section of its parent. Read that section
+      in the statement that inserts the row. Give the `notice` when the call
+      names another section.
 - [ ] Add the shared rule for the place of a row under `src/shared/`, with
-      the rule of item 5 for a parent that the list does not show.
+      item 5 C for a parent that the list does not show.
 - [ ] Clear `parent_workspace_id` in the org purge.
 - [ ] Rename `saveWorkspaceToolParent` to `saveWorkspaceToolCreator`.
-- [ ] Add `parentId` to the `Workspace` of the browser, and to the list and
-      the reads of the app.
+- [ ] Give `parentId` in the `Workspace` of each read and reply of the app.
 - [ ] Add the `parentId` filter and field to the workspace list of the
       tools, and `parent`, `depth`, and `children` to its get. Give the
-      section of the get with the shared rule, as item 4 says.
-- [ ] Add the tests: a create with a parent, a create past the depth limit
-      with its message, an unknown parent, a parent of another org, an
-      archived parent, a parent and another section, a replay, the shared
-      rule, the list filter, and the get.
-- [ ] Update `worker/tools/README.md` and `worker/tools/workspaces.md`.
+      section of the get with the shared rule.
+- [ ] Add the tests: a create with a parent, a create under a parent of
+      depth 3 with its message, an unknown parent, a parent of another org,
+      an archived parent, a parent and another section, a replay, the
+      shared rule, the list filter, and the get.
+- [ ] Update `worker/tools/README.md`, `worker/tools/workspaces.md`, and
+      the README of `cnd-runner-interface`.
 
 ## Milestone 4: The moves of a tree
 
 Depends on: 3
 
-The moves of the app and of the tools, as item 4 says.
+The moves of the app and of the tools, as item 4 F says.
 
 - [ ] Move each workspace of a tree with the move of its top-level row, in
       the metadata write of the app and in `move_workspace`. Write the
       section of the archived workspaces of the tree too.
 - [ ] Rank the places of a section among the trees, so that a nested row
       takes no place of its own.
-- [ ] Apply the rule of item 4 to the move of a nested row, in the app and
-      in `move_workspace`, with the shared rule of Milestone 3.
+- [ ] Let a move of a nested row change nothing, in the app and in
+      `move_workspace`. Give the `notice` of `move_workspace`, with the
+      shared rule of Milestone 3.
 - [ ] Add the tests: a move of a tree to another section, a move inside a
       section, the move of a nested row, the Restore of an archived
       sub-workspace after a move of its tree, and a section delete with a
@@ -618,18 +680,21 @@ The moves of the app and of the tools, as item 4 says.
 Depends on: 3
 
 The new variables of the cloud computer, the lines of the agent
-instructions, and the new fields of the workspace tools.
+instructions, and the new fields of the Rust workspace tools.
 
-- [ ] Give the four new variables at each start of the cloud computer.
-      Update the variable table in `image/README.md`.
-- [ ] Read the variables in the runner, and add the lines of the design to
-      the instructions of each new session. Warn and leave the lines out
-      when the variables are missing. Update `runner/agent-input.md` and
-      `runner/configuration.md`.
-- [ ] Add `parentId` to `create_workspace` and `list_workspaces`, and
-      `--parent` to the CLI, with their descriptions and help. Read the new
-      reply fields.
-- [ ] Update `tools/README.md` and `tools/calls.md`.
+- [ ] Give the five new variables at each start of the cloud computer, in
+      `worker/lifecycle/sandbox-environment.ts`. Update the variable table
+      in `image/start.md`.
+- [ ] Read the variables in `crates/cnd-runner/src/config.rs`, and add the
+      lines of the design in `crates/cnd-runner/src/engine/instructions.rs`.
+      Warn and leave the lines out when the variables are missing. Update
+      `runner/agent-input.md`, `runner/configuration.md`, and the README of
+      `cnd-runner`.
+- [ ] Add `parentId` to `create_workspace` and `list_workspaces` in
+      `crates/cnd-tools/`: the MCP schema, the CLI options, and the help.
+      Keep the new reply fields.
+- [ ] Update `tools/README.md`, `tools/calls.md`, and the README of
+      `cnd-tools`.
 - [ ] Add the tests: the instructions of a top-level workspace and of a
       sub-workspace, a runner without the variables, and the new fields of
       the MCP server and the CLI.
@@ -646,8 +711,8 @@ The trees in the sidebar and on the list page, as the mockups draw them.
 - [ ] Indent each nested row with the styles of Milestone 1, in both
       variants of the list.
 - [ ] Give the keys of the list the rows in tree order.
-- [ ] Apply item 4 to the drag, the long press, the move by keys, and Move
-      to section of a nested row.
+- [ ] Turn off the drag, the long press, the move by keys, and Move to
+      section of a nested row, as item 4 F says.
 - [ ] Support `parentId` in the local fake backend under `src/app/dev/`.
 - [ ] Add the tests: the tree of a section, an archived parent, the order
       of the keys, and a nested row that does not move.
@@ -659,6 +724,8 @@ The trees in the sidebar and on the list page, as the mockups draw them.
 Depends on: every other milestone
 
 - [ ] Run the targeted tests and the complete gate, `npm run check`.
+- [ ] Run the Rust checks of `AGENTS.md`, and the type generator with no
+      change to `src/shared/generated/`.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
@@ -672,12 +739,13 @@ Depends on: every other milestone
 - [ ] Open the pull request. Its description gives the decisions and the
       design calls of this plan with their dates, a permalink to this plan,
       and the follow-up items that the change adds. It says that an agent
-      gets `parentId` and its context only in a new workspace after the
-      next full image build.
+      gets `parentId` and its context after the sandbox software update of
+      its cloud computer.
 
 ## Post-merge follow-up (non-blocking)
 
-- [ ] After the deploy and a full image build, let an agent create a
-      sub-workspace, a sub-workspace of that, and so on to the limit.
-      Check the nested rows, the error past the limit, a sibling with a
-      name prefix, and the instructions of each new agent.
+- [ ] After the deploy and the sandbox software update of a cloud
+      computer, let an agent create a sub-workspace, a sub-workspace of
+      that, and so on to depth 3. Check the nested rows, the error under a
+      workspace of depth 3, a sibling with a name prefix, and the
+      instructions of each new agent.
