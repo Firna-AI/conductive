@@ -212,7 +212,7 @@ In the folded work of a turn, open a message line to read its table.
 
 ## Manage session tabs
 
-Use a tab's menu to rename or move it, or to copy its link.
+Use a tab's menu to rename or move it, to copy its link, or to close the tabs after it.
 Open the menu with a right click on a computer.
 You can also use **Shift+F10** while the tab has focus.
 On a phone, use a long press.
@@ -220,6 +220,8 @@ On a phone, use a long press.
 - **Rename session** changes the tab's title.
 - **Copy link** copies a link that opens the workspace with that session shown.
 - **Move left** and **Move right** move it one place.
+- **Close tabs to the right** closes every tab after it in the row.
+  If the shown tab closes, this tab shows.
 - Drag a tab to place it elsewhere in the row.
 
 File and diff tabs share the row on a computer.
@@ -232,6 +234,7 @@ Closing a tab or reloading the page forgets these places.
 
 Closing a session keeps its conversation in **Session history**.
 If its agent is working, closing asks first because it stops the turn.
+When you close several working sessions at once, one question names them all.
 Open **Session history** to reopen the conversation.
 
 After a merge, **Continue** keeps these sessions and their conversation context on the workspace's new branch.
