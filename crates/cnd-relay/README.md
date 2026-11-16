@@ -33,7 +33,13 @@ Other application cookies and headers pass through. The Worker owns its
 browser-facing header allowlist and origin rewrite.
 
 Hyper and Tokio stream HTTP/1 bodies without a request timeout or a full-body
-buffer. An upgraded connection forwards bytes in both directions, including
+buffer. Each target connection sends `Connection: close` and ends after its
+reply. The client connection stays open after a forwarded reply, so the
+provider's proxy can reuse it. A close after each reply cut large replies
+short between the provider's proxy and the browser. Relay failure replies
+and refused upgrades still close the client connection.
+
+An upgraded connection forwards bytes in both directions, including
 bytes already read with the handshake. Disconnects close the related
 connection. `X-Conductive-Relay: 1` replaces any upstream mark.
 

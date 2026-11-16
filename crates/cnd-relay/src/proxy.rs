@@ -84,6 +84,7 @@ impl RelayProxy {
         }));
         let mut response = sender.send_request(request).await.internal()?;
         let mut filtered = headers::response(response.headers());
+        let upgrading = downstream.is_some();
         if response.status() == StatusCode::SWITCHING_PROTOCOLS
             && let Some(downstream) = downstream
         {
@@ -109,7 +110,11 @@ impl RelayProxy {
             *answer.headers_mut() = filtered;
             return Ok(answer);
         }
-        filtered.insert(CONNECTION, HeaderValue::from_static("close"));
+        // The provider's proxy reuses the connection. Closing it after each reply cut large replies short.
+        // A refused upgrade still closes, as the Node relay did.
+        if upgrading {
+            filtered.insert(CONNECTION, HeaderValue::from_static("close"));
+        }
         let (mut parts, incoming) = response.into_parts();
         parts.headers = filtered;
         Ok(Response::from_parts(

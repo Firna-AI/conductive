@@ -128,7 +128,10 @@ async fn keeps_post_body_after_ipv4_refusal_and_connects_to_ipv6() -> TestResult
         .stream(
             "POST",
             "/",
-            &format!("{}Content-Length: 9\r\n", relay.headers(port)),
+            &format!(
+                "{}Content-Length: 9\r\nConnection: close\r\n",
+                relay.headers(port)
+            ),
         )
         .await?;
     stream.write_all(b"kept body").await?;
@@ -157,7 +160,9 @@ async fn tries_assigned_sandbox_address_after_both_loopback_addresses() -> TestR
         reply(&mut stream, "200 OK", "", "later address").await
     });
     let relay = Fixture::new().await?;
-    let result = relay.send(&relay.headers(port)).await?;
+    let result = relay
+        .send(&format!("{}Connection: close\r\n", relay.headers(port)))
+        .await?;
     assert!(result.starts_with("HTTP/1.1 200"));
     assert!(result.ends_with("later address"));
     served.await??;
