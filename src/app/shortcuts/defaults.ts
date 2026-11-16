@@ -85,6 +85,7 @@ const defaults: Readonly<Record<PlainId, Defaults>> = {
   'go-to-checks': { mac: [], other: [] },
   'go-to-terminal': { mac: ['Meta+J'], other: ['Ctrl+J'] },
   'go-to-preview': { mac: [], other: [] },
+  'new-terminal': { mac: [], other: [] },
   'new-session': {
     mac: ['Meta+T', 'Alt+Meta+T'],
     other: ['Ctrl+T', 'Alt+Shift+T'],

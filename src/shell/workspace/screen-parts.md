@@ -169,76 +169,9 @@ Each folder of a path is a part of the address. Another address under
 
 ## The tools part
 
-The shell gives its own Terminal and Preview tools, with the
-[terminal](../../terminal/README.md) and the
-[previews](../../previews/README.md). It keeps the
-[Desktop tool](../../desktop/README.md) hidden, as
-[Desktop](../../../docs/protocol/workspace-tools.md#desktop) says. A
-`tools` part of the host takes their place. An archived workspace has no
-tools.
-
-- While the sandbox does not run, the tools show its state: starting,
-  stopped, failed, or refused. On desktop the panel keeps its tabs around
-  the state. A phone shows the state on the tool page. No tool mounts then,
-  so no tool reads its route or opens the terminal.
-- A `tools` part of the host shows only while the sandbox runs. The shell
-  shows the state of the sandbox in its place.
-
-| Address | What shows |
-| ------- | ---------- |
-| `terminal` | The Terminal tool, with the saved terminal or the first |
-| `terminal/<terminalId>` | The Terminal tool, with that terminal |
-| `preview`, `preview/<previewId>` | The Preview tool, with that preview |
-| `preview/port/<port>` | The Preview tool, which shows or opens the preview of that port |
-| `desktop` | The Terminal tool, because Desktop is hidden |
-
-- An address that names a tool shows it and saves it as `tool` of the
-  view. Without one, the saved view names the tool.
-- `previewPortHref` gives the address of a port. Its port is a whole
-  number from 1 to 65535, with no leading zero. Another value shows the
-  Preview tool with no preview and no port.
-- The Preview tool shows or opens the preview of the port of the address,
-  as [the previews](../../previews/README.md#behaviour) say. Then the
-  address of that preview takes the place of the address of the port, with
-  no new history entry. After a failed open, `preview` takes its place.
-- The `desktop` address and a saved `desktop` tool show Terminal. Neither
-  mounts Desktop or saves Terminal in place of the saved tool. The view
-  keeps `desktop` as a valid tool.
-- On desktop the panel has a tab for each tool that the app offers. A
-  click saves the tool,
-  and the address keeps the tab of the centre. Only a tool address follows
-  the new tool. A preview tab changes the address only from a preview
-  address, and otherwise picks the preview in the panel.
-- On a phone each tool that the app offers is a page of the tab bar, with
-  its own address.
-- The terminal and Preview each mount at their first show, then stay
-  mounted and hidden while another tool shows. So the terminals keep their
-  connections, and the page in the preview frame does not load again when
-  the user goes back to Preview. The socket of each terminal opens at the
-  `socketPath` of its entry of the terminal state, through `openSocket` of
-  the app's event source, so the Mac app reaches its own Worker.
-- `useTerminalRoute` of `tools/terminal-route.ts` gives the Terminal tool
-  the terminal of the address, else `terminal` of the saved view, and a
-  show that saves it. From an address of the Terminal tool, also
-  `desktop`, the address follows the shown terminal. From another address,
-  it stays. See [the tabs](../../terminal/terminal-tabs.md).
-- The mount of the Desktop tool stays for its return. It mounts at each
-  show, so it reads a new desktop URL.
-- The tools part marks the xterm.js screen of each terminal for the
-  [shortcut layer](../shortcuts/README.md), through the `screenRef` of
-  `TerminalTool`. So the screen keeps the keys that its shell reads, such
-  as Ctrl+K on Windows and Linux, as
-  [Where a key goes](../../../docs/protocol/keyboard-shortcuts.md#where-a-key-goes)
-  says. The buttons of the tool, such as Reconnect, keep no key.
-- The tools part gives the terminal its links, from `useTerminalLinks` of
-  `tools/terminal-links.ts`. A local address goes to `previewPortHref` of
-  its port, an app page to its address in the app, and every other link to
-  `openInNewTab`. The router decides which addresses of the app origin are
-  pages.
-- The tabs of the tools panel name the keys of Go to Terminal and Go to
-  Preview in their tooltips, as the palette's Go to rows run them.
-- Each tool reads its routes with the `fetch` of the org's `ApiClient`,
-  and the events of the kept `ToolEvents`.
+[The tools part](tools-part.md) gives the Terminal and Preview tools of
+the shell, the hidden Desktop tool, their addresses, and New terminal of
+the command palette.
 
 ## The GitHub part
 

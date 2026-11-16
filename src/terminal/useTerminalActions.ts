@@ -11,6 +11,12 @@ import type { ToolRequests } from './tool-parts/workspace'
 export interface TerminalActions {
   /** The +: opens a terminal, then shows it. */
   open: () => void
+  /**
+   * The + from outside the tool, such as New terminal of the command
+   * palette: opens a terminal and shows it, then calls `shown`, so that
+   * the owner can show the tool where another tool showed.
+   */
+  openThen: (shown: () => void) => void
   /** Closes a terminal after its question, which ends its shell. */
   close: (terminal: TerminalEntry) => void
 }
@@ -19,8 +25,9 @@ export interface TerminalActions {
  * The writes of the terminal tabs. A new terminal shows once it opened. A
  * failed write shows the failure toast of the app with the message of the
  * server, and the terminals stay as they were, so the + and the close
- * button stay in place for the next try. A write that ends after the tool
- * left does nothing more.
+ * button stay in place for the next try. A write that ends after the owner
+ * of the terminals left, such as after a stop of the sandbox, does nothing
+ * more.
  */
 export function useTerminalActions(
   workspace: ToolRequests,
@@ -44,7 +51,7 @@ export function useTerminalActions(
     latestRoute.current = route
   })
 
-  const open = () => {
+  const openThen = (shown?: () => void) => {
     if (opening) return
     dispatch({ type: 'open' })
     void openTerminal(workspace).then((result) => {
@@ -61,6 +68,7 @@ export function useTerminalActions(
       const { terminal } = result.value
       dispatch({ type: 'opened', terminal })
       latestRoute.current.show(terminal.id, 'push')
+      shown?.()
     })
   }
 
@@ -81,5 +89,5 @@ export function useTerminalActions(
     })
   }
 
-  return { open, close }
+  return { open: () => openThen(), openThen, close }
 }

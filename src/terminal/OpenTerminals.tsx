@@ -9,8 +9,7 @@ import { shownTerminal, type TerminalRoute } from './terminalRoute'
 import { TerminalScreen, type ConnectTerminal } from './TerminalScreen'
 import { TerminalTabs } from './TerminalTabs'
 import { ToolButton } from './tool-parts/ToolButtons'
-import type { ToolRequests } from './tool-parts/workspace'
-import { useTerminalActions } from './useTerminalActions'
+import type { TerminalActions } from './useTerminalActions'
 import styles from './TerminalTool.module.css'
 
 /** What the screen of each terminal takes from the owner of the tool. */
@@ -74,8 +73,9 @@ function TerminalPane(
 
 /**
  * The terminals of a ready workspace: the row of tabs, the screen of each
- * terminal that the user showed, and the question before a close. The
- * route names the shown terminal. When the shown terminal closes, also for
+ * terminal that the user showed, and the question before a close. The +
+ * and the close run the actions of the owner of the terminals. The route
+ * names the shown terminal. When the shown terminal closes, also for
  * another member, the terminal before it shows, and the route follows it.
  * Each terminal that the user showed stays mounted and connected while
  * another one shows. A terminal that the user never showed opens no
@@ -86,22 +86,16 @@ export function OpenTerminals(
   props: ScreenProps & {
     ready: ReadyTerminals
     dispatch: (action: ReadyTerminalsAction) => void
-    workspace: ToolRequests
+    actions: TerminalActions
     route: TerminalRoute
   },
 ) {
-  const { ready, dispatch, route } = props
+  const { ready, dispatch, actions, route } = props
   const terminals = ready.several
     ? ready.terminals
     : ready.terminals.slice(0, 1)
   const shown = shownTerminal(terminals, ready.replaced, route)
   const { terminal, requested, follow } = shown
-  const actions = useTerminalActions(
-    props.workspace,
-    route,
-    ready.opening,
-    dispatch,
-  )
   const [asking, setAsking] = useState<TerminalEntry | null>(null)
   // The shell follows the shown terminal when the route names another one.
   useEffect(() => {

@@ -8,13 +8,16 @@ import { createTerminalConnector } from '../../../app/terminal-transport'
 import { DesktopTool } from '../../../desktop/DesktopTool'
 import { PreviewTool } from '../../../previews/PreviewTool'
 import type { ConnectTerminal } from '../../../terminal/TerminalScreen'
-import { TerminalTool } from '../../../terminal/TerminalTool'
-import type { ToolWorkspace } from '../../../terminal/tool-parts/workspace'
+import {
+  workspaceKey,
+  type ToolWorkspace,
+} from '../../../terminal/tool-parts/workspace'
 import type { ShortcutCommandId } from '../../../shared/shortcut-commands'
 import { useOrgServices } from '../../context'
 import { useShortcutTerminal } from '../../shortcuts/shortcut-context'
 import { shortcutTip, useShortcutHint } from '../../shortcuts/shortcut-hints'
 import type { WorkspaceContext } from '../features'
+import { TerminalPart } from './TerminalPart'
 import { useTerminalLinks } from './terminal-links'
 import { useTerminalRoute } from './terminal-route'
 import { offeredToolTabs, type ToolKey } from './tool-address'
@@ -120,12 +123,15 @@ function useShownOnce(shown: boolean): boolean {
  * Each tool reads the routes through the fetch of the org, and the events
  * of the workspace in order. The terminal and Preview each stay mounted
  * after their first show, so the connections of the terminals and the page
- * in the preview frame stay while another tool shows. The address and the
- * saved view name the shown terminal, as `useTerminalRoute` says. The app hides
- * Desktop and keeps its mount for its return: it mounts at each show, so
- * it reads a new desktop address. A `placeholder`, such as the state of a
- * sandbox that does not run, takes the place of the tools: the tabs stay on
- * desktop, and no tool mounts.
+ * in the preview frame stay while another tool shows. On desktop the
+ * terminals of the workspace load while the sandbox runs, also before the
+ * Terminal tool shows, so that the palette can offer New terminal, as
+ * `TerminalPart` says. The address and the saved view name the shown
+ * terminal, as `useTerminalRoute` says. The app hides Desktop and keeps its
+ * mount for its return: it mounts at each show, so it reads a new desktop
+ * address. A `placeholder`, such as the state of a sandbox that does not
+ * run, takes the place of the tools: the tabs stay on desktop, and no tool
+ * mounts.
  */
 export function ToolsPart(props: {
   context: WorkspaceContext
@@ -155,19 +161,22 @@ export function ToolsPart(props: {
   const { tool } = navigation
   const terminalShown = useShownOnce(tool === 'terminal')
   const previewShown = useShownOnce(tool === 'preview')
+  // A phone offers no New terminal, so its terminals load at the first show.
   const body = props.placeholder ?? (
     <>
-      {terminalShown ? (
-        <div className={styles.tool} hidden={tool !== 'terminal'}>
-          <TerminalTool
-            connect={connect}
-            links={links}
-            route={terminalRoute}
-            screenRef={terminal}
-            touch={touch}
-            workspace={toolWorkspace}
-          />
-        </div>
+      {terminalShown || !touch ? (
+        <TerminalPart
+          connect={connect}
+          context={context}
+          key={workspaceKey(toolWorkspace)}
+          links={links}
+          navigation={navigation}
+          route={terminalRoute}
+          screenRef={terminal}
+          shown={terminalShown}
+          touch={touch}
+          workspace={toolWorkspace}
+        />
       ) : null}
       {previewShown ? (
         <div className={styles.tool} hidden={tool !== 'preview'}>

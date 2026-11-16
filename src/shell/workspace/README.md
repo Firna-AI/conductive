@@ -47,8 +47,12 @@ of the shell, their addresses, and the saved view.
 
 ## The tools part
 
-[The tools part](screen-parts.md#the-tools-part) gives the Terminal and
-Preview tools of the shell, the hidden Desktop tool, and their addresses.
+[The tools part](tools-part.md) gives the Terminal and Preview tools of
+the shell, the hidden Desktop tool, and their addresses. On desktop it
+keeps the terminals of the workspace while the sandbox runs, so the
+command palette offers New terminal after the Go to rows while the + of
+the terminal tabs takes a press. The row runs that +, as
+[New terminal](tools-part.md#new-terminal) says.
 
 ## The GitHub part
 

@@ -52,10 +52,13 @@ export interface WorkspacePage {
   offersRestore: boolean
 }
 
-/** The actions that the screen of an open workspace offers. */
+/**
+ * The actions that the screen of an open workspace offers. New terminal
+ * comes from the Terminal tool, which offers it while its + takes a press.
+ */
 export type WorkspaceActionId = Exclude<
   OfferedActionId,
-  'new-section' | 'hide-sidebar' | 'show-sidebar'
+  'new-section' | 'hide-sidebar' | 'show-sidebar' | 'new-terminal'
 >
 
 const goToActions: readonly WorkspaceActionId[] = [
@@ -68,13 +71,24 @@ const goToActions: readonly WorkspaceActionId[] = [
 ]
 
 /**
+ * Whether the page offers the Go to rows: it shows the tabs of the right
+ * column, which an archived workspace does not show. New terminal shows
+ * only there too.
+ */
+export function showsGoToRows(
+  page: Pick<WorkspacePage, 'rightColumn' | 'workspace'>,
+): boolean {
+  return page.rightColumn && page.workspace.state !== 'archived'
+}
+
+/**
  * The actions that the workspace screen offers to the person, in their
  * order. A read-only workspace, archived or in a suspended org, offers no
  * New session. Session history stays, because it changes nothing. The Go
- * to rows need the tabs of the right column, which an archived workspace
- * does not show. Go to Desktop also needs the Desktop tool. Archive
- * follows `mayArchive`. Restore workspace follows the archived bar of the
- * chat, which offers it to every member until its last day.
+ * to rows follow `showsGoToRows`. Go to Desktop also needs the Desktop
+ * tool. Archive follows `mayArchive`. Restore workspace follows the
+ * archived bar of the chat, which offers it to every member until its
+ * last day.
  */
 export function workspaceActionIds(page: WorkspacePage): WorkspaceActionId[] {
   const { access, workspace } = page
@@ -83,7 +97,7 @@ export function workspaceActionIds(page: WorkspacePage): WorkspaceActionId[] {
   const ids: WorkspaceActionId[] = []
   if (page.chat && !readOnly) ids.push('new-session')
   if (page.chat) ids.push('session-history')
-  if (page.rightColumn && !archived) {
+  if (showsGoToRows(page)) {
     ids.push(
       ...goToActions.filter((id) => id !== 'go-to-desktop' || page.desktopTool),
     )

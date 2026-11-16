@@ -20,6 +20,11 @@ states the requirements.
 - The + opens a terminal, then shows it. At the limit of 10 terminals the +
   is off, and a line under the row says "A workspace holds up to 10
   terminals. Close one to open another."
+- New terminal of the command palette runs the same open through
+  `openThen` of the actions, while the + takes a press: below the limit,
+  with software that opens more terminals, and while no open runs. Its
+  owner then shows the Terminal tool, as
+  [New terminal](../shell/workspace/tools-part.md#new-terminal) says.
 - Each tab has a close button while the workspace has more than one
   terminal. The close asks first in the dialog of the app, which is a
   sheet on a phone. It names the terminal, and confirms with "Close

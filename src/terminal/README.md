@@ -115,13 +115,13 @@ change can move the shared parts to the app's shared components.
   terminal in the place of a closed one, or for the terminal of the
   address that the saved view lacks. The owner saves the terminal and
   moves the address, as
-  [the tools part](../shell/workspace/screen-parts.md#the-tools-part) says.
+  [the tools part](../shell/workspace/tools-part.md) says.
   Keep the object stable while it names the same terminals.
 - `links` is optional. It gives the app origin with the page check of the
   router, and the `open` of each `TerminalLink`: a local address with its
   port, an app page, or a web link. Without it, no link opens and no hint
   shows. The workspace screen gives it, as
-  [the tools part](../shell/workspace/screen-parts.md#the-tools-part)
+  [the tools part](../shell/workspace/tools-part.md)
   says.
 - `onActivity` is optional. It runs for each input of the user: keys, text,
   paste, and mouse reports. It does not run for the replies of xterm.js.
@@ -146,6 +146,11 @@ change can move the shared parts to the app's shared components.
   opens. The `ThemeRoot` and the frame of the app give both.
 - Keep the tool mounted while another tool shows, if the shell must keep the
   connections. An unmounted tool closes its connections.
+- An owner that runs the + from outside the tool keeps the terminals
+  itself: `useTerminals(workspace, route)` gives the state of the tool, its
+  actions, and `canOpen`, while the + takes a press. `TerminalToolView`
+  takes them in place of `workspace`. The workspace screen does this for
+  New terminal of the command palette, through `actions.openThen`.
 
 ## Workspace events
 
@@ -157,7 +162,7 @@ tool reads no events.
   workspace, and gives each action to the tool's reducer. React reads it
   with `useSyncExternalStore`, through `ToolStore.subscribe` and
   `getSnapshot`.
-- `TerminalToolBody` and `PreviewToolBody` get their stores through
+- `useTerminals` and `PreviewToolBody` get their stores through
   `useWorkspaceStore` of [the web app](../app/README.md#data-lifecycle).
   The stable `create` is the factory of the tool: `createTerminalStore` in
   `terminalStore.ts`, or `createPreviewsStore` in
@@ -240,7 +245,8 @@ each link that opens, in place of opening it.
 
 ## Key code
 
-- `TerminalTool.tsx`: the tool and its states.
+- `TerminalTool.tsx`: the tool and its states, and `TerminalToolView`, the
+  tool over the terminals of its owner. `useTerminals.ts`: those terminals.
 - `OpenTerminals.tsx`: the ready tool: the row of tabs, a pane for each
   terminal that the user showed, with its Disconnected bar, and the close
   question.
@@ -254,8 +260,8 @@ each link that opens, in place of opening it.
   closed.
 - `terminalRoute.ts`: `TerminalRoute`, and `shownTerminal`, which picks the
   shown terminal from the route and the list.
-- `useTerminalActions.ts`: the open and the close, and their failure
-  toasts. `terminalCopy.ts`: the words of the tabs.
+- `useTerminalActions.ts`: the open, also from outside the tool, and the
+  close, and their failure toasts. `terminalCopy.ts`: the words of the tabs.
 - `TerminalScreen.tsx`: the xterm.js screen, its fit, and the key row.
 - `xtermScreen.ts`: splits the data of xterm.js into the user's input and
   its own replies.

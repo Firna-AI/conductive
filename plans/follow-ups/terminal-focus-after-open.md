@@ -1,0 +1,31 @@
+# A new terminal does not take the focus
+
+- **Severity:** Medium. **Likelihood:** Common. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-16, from the branch `calummoore/terminal-tabs-implementation-l5ml`, Milestone 7 of the terminal tabs change.
+- **Location:** `src/shell/workspace/tools/TerminalPart.tsx:39`, `src/terminal/useTerminalActions.ts`, `src/shell/workspace/WorkspacePaletteActions.tsx`.
+- **Reason:** Go to Terminal already leaves the focus in place, so the problem is older than New terminal, and each option that moves the focus adds behaviour that no requirement states.
+
+- **Source:** Implementation.
+- **Category:** Product bug.
+- **Terms:**
+  - **Command palette:** the list of actions that ⌘K on a Mac, or Ctrl+K on Windows and Linux, opens. `docs/protocol/command-palette-actions.md` lists the actions of an open workspace.
+  - **Terminal tool:** the tool of a workspace that shows its terminals, in the right column on desktop. Its tab row has a + that opens a new terminal. `docs/protocol/terminal.md` gives the rules.
+- **Background:**
+  - The palette rows New terminal and Go to Terminal show the Terminal tool. The + of the terminal tabs opens a terminal and shows it.
+  - When the palette closes, the focus goes back to where it was before the palette opened. This is often the message box of the chat.
+  - None of the three controls moves the focus to the terminal. No requirement says where the focus goes.
+  - On Windows and Linux, a terminal with the focus keeps every key, also Ctrl+K. `plans/follow-ups/terminal-keyboard-trap.md` holds that older problem.
+- **Problem:** A user who runs New terminal or Go to Terminal from the palette and then types, types into the message box. Enter then sends that text to the agent as a chat message.
+- **Impact if no action:** Users send commands to the agent by mistake, and they must click the terminal before each use.
+- **Root question:** Where does the keyboard focus go when a control shows a terminal?
+- **Options:**
+  - **A.** Keep the focus where it was. Effort: Small.
+  - **B.** Give the focus to the terminal after New terminal from the palette. On Windows and Linux, the user then cannot reach Ctrl+K until a click outside the terminal. Effort: Medium.
+  - **C.** Do B, and give the focus to the terminal after Go to Terminal too. Effort: Medium.
+  - **D.** Do C, and also give the focus to the new terminal after a press on the + of the terminal tabs. Effort: Medium.
+- **Left out:** A notice that tells the user to click the terminal. It adds a step and does not stop the wrong message.
+- **Wider fix:** D. One rule then covers each control that shows a terminal.
+- **Previous examples:** Go to Terminal, since the command palette exists.
+- **Recommendation:** D. A user who shows or opens a terminal types in it next, and the Windows and Linux limit already holds for each terminal with the focus.
+- **Action:** ask the user, because each option that moves the focus adds behaviour that no requirement states, and it interacts with the open terminal keyboard trap item.

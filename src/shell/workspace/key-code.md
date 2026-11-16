@@ -98,10 +98,16 @@ this guide.
   `tools/terminal-route.ts` gives the route of the Terminal tool: the
   terminal of the address or of the saved view, and the show of a
   terminal, which saves it and moves the address of the Terminal tool.
+  `tools/TerminalPart.tsx` keeps the terminals of the workspace, also
+  before the Terminal tool shows, mounts the tool at its first show, and
+  offers New terminal to the command palette. The
+  [tools part](tools-part.md) gives the rules.
 - `WorkspacePaletteActions.tsx`: the actions that the screen offers to the
   command palette, as `workspaceActionIds` chooses them. Each one runs the
   control of the screen: +, the clock of the history, a tab of the right
-  column, Archive, or Restore.
+  column, Archive, or Restore. `useNewTerminalOffer` offers New terminal
+  for the Terminal tool, where the Go to rows show, while the + of the
+  terminal tabs takes a press.
 - `tools/tool-events.ts`: `ToolEvents`, the events of the tools from the
   ordered stream. It keeps the revokes of previews, the latest report of the
   listening ports, and the first failed repair of that report since it. A
@@ -142,6 +148,12 @@ this guide.
   close, the saved terminal after a reload, the address of a terminal, and
   older software.
   `wiring-test-kit.tsx` holds their helpers.
+- `../palette/PaletteNewTerminal.test.tsx` mounts the whole app over the
+  fake API for New terminal of the palette. It runs the row while Preview
+  shows and while the Terminal tool shows. It checks the place of the row,
+  no row at the limit, with a stopped cloud computer, with software for
+  one shell, or with the right column hidden, and a key that the person
+  gave the command, also while an open runs.
 - `header-notices.ts`: `HeaderNotices`, the failed repairs of the name and
   the start steps. `follow` reads a stream, `dismiss` hides a notice in
   this view, `newView` shows each notice again, and `shown` gives the

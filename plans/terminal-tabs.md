@@ -518,17 +518,40 @@ Tags: ui
 
 Depends on: 6
 
-- [ ] Add "New terminal" after the Go to rows. Run the + of the terminal
+- [x] Add "New terminal" after the Go to rows. Run the + of the terminal
       tabs, and show the new terminal in the Terminal tool.
-- [ ] Offer the row only while the Terminal tool offers its + button.
-- [ ] Make New terminal a command of the Keyboard shortcuts tab with no
+- [x] Offer the row only while the Terminal tool offers its + button.
+- [x] Make New terminal a command of the Keyboard shortcuts tab with no
       default key, as Restore workspace is. The list of commands is
       `docs/mockups/src/fixtures/shortcutCommands.ts`, which the app reads,
       so the command and its runner land together.
-- [ ] Test the row in the palette tests: its place, a run, and no row at
+- [x] Test the row in the palette tests: its place, a run, and no row at
       the limit or while the cloud computer does not run.
-- [ ] Update `src/app/key-code.md` and `src/shell/workspace/README.md`,
+- [x] Update `src/app/key-code.md` and `src/shell/workspace/README.md`,
       which list the palette actions.
+
+Done on 16 November 2026. The tests are in
+`src/shell/palette/PaletteNewTerminal.test.tsx`. `src/app/key-code.md`
+names no palette action, so its palette page, `src/app/key-code-layers.md`,
+took the change. The tools part moved from
+`src/shell/workspace/screen-parts.md` to `tools-part.md` beside it, because
+the new text would have passed 300 lines. Evidence:
+`.context/terminal-tabs/reports/m7.md` and `.context/terminal-tabs/m7-shots/`.
+
+## Milestone 7a: Mockup key of New terminal
+
+Tags: mockup
+
+Depends on: 7
+
+Milestone 7 found that the New terminal row of the palette mockup named no
+shortcut command, so the mockup palette could not show a key that a person
+gives it.
+
+- [x] Give the New terminal row of
+      `docs/mockups/src/components/palette/paletteCommands.ts` the command
+      `new-terminal`, with no change to the drawing.
+- [x] Run `npm run mockups:check`.
 
 ## Milestone 8: Public guide
 

@@ -1,15 +1,14 @@
-import { useCallback, type Ref } from 'react'
+import type { Ref } from 'react'
 import { CircleAlert, CirclePause } from 'lucide-react'
-import { useWorkspaceStore } from '../app/workspace-store'
 import { OpenTerminals } from './OpenTerminals'
 import { ToolButton } from './tool-parts/ToolButtons'
 import { ToolRoot } from './tool-parts/ToolRoot'
 import { ToolMessage, ToolWaiting } from './tool-parts/ToolStates'
 import { workspaceKey, type ToolWorkspace } from './tool-parts/workspace'
-import { createTerminalStore, type TerminalStore } from './terminalStore'
 import type { TerminalLinks } from './terminalLinks'
 import type { TerminalRoute } from './terminalRoute'
 import type { ConnectTerminal } from './TerminalScreen'
+import { useTerminals, type Terminals } from './useTerminals'
 
 export interface TerminalToolProps {
   workspace: ToolWorkspace
@@ -37,27 +36,38 @@ export interface TerminalToolProps {
 }
 
 /**
+ * What `TerminalToolView` takes: the props of the tool, with the terminals
+ * that its owner keeps in place of the workspace.
+ */
+export type TerminalToolViewProps = Omit<TerminalToolProps, 'workspace'> & {
+  /** The terminals of the workspace, from `useTerminals` of the owner. */
+  terminals: Terminals
+}
+
+/**
  * The Terminal tool: the terminals of the workspace, each a shell in the
  * sandbox, with their tabs. It reads the terminal state, and connects only
  * when the terminal is ready. A running sandbox makes a waiting or loading
  * terminal read its state again.
  */
 export function TerminalTool(props: TerminalToolProps) {
-  return <TerminalToolBody key={workspaceKey(props.workspace)} {...props} />
+  return <OwnTerminals key={workspaceKey(props.workspace)} {...props} />
 }
 
-function TerminalToolBody(props: TerminalToolProps) {
-  const { fetch, subscribe } = props.workspace
-  const connect = useCallback(
-    (store: TerminalStore) => store.connect({ fetch, subscribe }),
-    [fetch, subscribe],
-  )
-  const { store, snapshot } = useWorkspaceStore(props.workspace, {
-    create: createTerminalStore,
-    connect,
-  })
-  const { view } = snapshot
-  const { dispatch } = store
+/** The tool with the terminals that it keeps itself while it is mounted. */
+function OwnTerminals(props: TerminalToolProps) {
+  const { workspace, ...tool } = props
+  const terminals = useTerminals(workspace, props.route)
+  return <TerminalToolView {...tool} terminals={terminals} />
+}
+
+/**
+ * The Terminal tool over the terminals that its owner keeps, from
+ * `useTerminals`. So the owner can run the + from outside the tool, also
+ * before the tool shows. Mount a new view for another workspace.
+ */
+export function TerminalToolView(props: TerminalToolViewProps) {
+  const { view, dispatch, actions } = props.terminals
 
   const retry = () => dispatch({ type: 'retry' })
 
@@ -92,6 +102,7 @@ function TerminalToolBody(props: TerminalToolProps) {
     case 'ready':
       content = (
         <OpenTerminals
+          actions={actions}
           connect={props.connect}
           dispatch={dispatch}
           links={props.links}
@@ -99,7 +110,6 @@ function TerminalToolBody(props: TerminalToolProps) {
           ready={view}
           route={props.route}
           screenRef={props.screenRef}
-          workspace={props.workspace}
         />
       )
       break

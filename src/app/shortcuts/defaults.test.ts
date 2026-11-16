@@ -19,6 +19,15 @@ test('commands follow their groups, start with the checked keys, and run only wh
       defaults: { mac: [], other: [] },
     },
     {
+      id: 'new-terminal',
+      previous: 'go-to-preview',
+      group: 'Workspace',
+      scope: 'palette',
+      label: 'New terminal',
+      words: ['shell', 'tab'],
+      defaults: { mac: [], other: [] },
+    },
+    {
       id: 'send-feedback',
       previous: 'create-org',
       group: 'General',
