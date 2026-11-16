@@ -15,7 +15,7 @@ interface Totals {
   stopped: number
   failed: number
   archived: number
-  routines: number
+  automations: number
 }
 
 /**
@@ -28,9 +28,9 @@ function inLiveOrg(table: string): string {
 
 /**
  * Reads the counts of the Stats tab for one person in one D1 batch: the
- * orgs of the person, the workspaces and the routines that the person owns,
- * and the new workspaces and the routine runs of each of the 30 UTC days
- * through `readAt`. Deleted orgs and their records count nowhere. A routine
+ * orgs of the person, the workspaces and the automations that the person owns,
+ * and the new workspaces and the automation runs of each of the 30 UTC days
+ * through `readAt`. Deleted orgs and their records count nowhere. A automation
  * run counts for its owner at the time of the run, and a skipped run counts
  * nowhere, because it started no agent.
  */
@@ -53,7 +53,7 @@ export async function readAccountStats(
            FROM workspaces w ${inLiveOrg('w')}
            WHERE w.owner_user_id = ?1
          ) CROSS JOIN (
-           SELECT COUNT(*) AS routines FROM routines r ${inLiveOrg('r')}
+           SELECT COUNT(*) AS automations FROM automations r ${inLiveOrg('r')}
            WHERE r.owner_user_id = ?1
          )`,
       )
@@ -69,7 +69,7 @@ export async function readAccountStats(
     db
       .prepare(
         `SELECT ${createdDay('r')} AS date, COUNT(*) AS count
-         FROM routine_runs r ${inLiveOrg('r')}
+         FROM automation_runs r ${inLiveOrg('r')}
          WHERE r.owner_user_id = ?1 AND r.state != 'skipped'
            AND r.created_at BETWEEN ?2 AND ?3
          GROUP BY date ORDER BY date`,
@@ -92,8 +92,8 @@ export async function readAccountStats(
       failed: totals.failed,
       archived: totals.archived,
     },
-    routines: totals.routines,
+    automations: totals.automations,
     newWorkspacesByDay: dailyCounts(workspaceDays.results, firstDay),
-    routineRunsByDay: dailyCounts(runDays.results, firstDay),
+    automationRunsByDay: dailyCounts(runDays.results, firstDay),
   }
 }

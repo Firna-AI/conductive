@@ -9,7 +9,7 @@ import {
 } from '../operator/overview.test-support'
 import {
   accountStats,
-  seedRoutine,
+  seedAutomation,
   seedRun,
 } from './account-stats.test-support'
 
@@ -32,9 +32,9 @@ it('returns zero counts and thirty empty UTC days for a new account', async () =
     orgs: 0,
     workspaces: { total: 0, lastWeek: 0 },
     workspaceStates: { running: 0, stopped: 0, failed: 0, archived: 0 },
-    routines: 0,
+    automations: 0,
   })
-  for (const days of [result.newWorkspacesByDay, result.routineRunsByDay]) {
+  for (const days of [result.newWorkspacesByDay, result.automationRunsByDay]) {
     expect(days).toHaveLength(30)
     expect(days[0]?.date).toBe('2026-10-18')
     expect(days.at(-1)?.date).toBe('2026-11-16')
@@ -78,9 +78,13 @@ it('counts only the records of the person, without deleted orgs', async () => {
     orgId: 'deleted',
     createdAt: readAt,
   })
-  await seedRoutine(harness, { id: 'mine', orgId: 'acme' })
-  await seedRoutine(harness, { id: 'their', orgId: 'acme', ownerGithubId: 100 })
-  await seedRoutine(harness, { id: 'old', orgId: 'deleted' })
+  await seedAutomation(harness, { id: 'mine', orgId: 'acme' })
+  await seedAutomation(harness, {
+    id: 'their',
+    orgId: 'acme',
+    ownerGithubId: 100,
+  })
+  await seedAutomation(harness, { id: 'old', orgId: 'deleted' })
   const result = await accountStats(harness, cookie)
   expect(result.orgs).toBe(2)
   expect(result.workspaces).toEqual({ total: 5, lastWeek: 0 })
@@ -90,7 +94,7 @@ it('counts only the records of the person, without deleted orgs', async () => {
     failed: 1,
     archived: 1,
   })
-  expect(result.routines).toBe(1)
+  expect(result.automations).toBe(1)
   expect(result.newWorkspacesByDay.map((day) => day.count)).toEqual(
     Array(30).fill(0),
   )
@@ -116,18 +120,18 @@ it('counts the seven-day window and the runs of each UTC day', async () => {
       orgId: 'acme',
       createdAt,
     })
-  await seedRoutine(harness, { id: 'review', orgId: 'acme' })
-  await seedRoutine(harness, { id: 'old', orgId: 'deleted' })
+  await seedAutomation(harness, { id: 'review', orgId: 'acme' })
+  await seedAutomation(harness, { id: 'old', orgId: 'deleted' })
   const runs = [
     { id: 'first', createdAt: times[1] },
     { id: 'skipped', createdAt: times[1], state: 'skipped' },
     { id: 'failed', createdAt: times[4], state: 'failed' },
     { id: 'theirs', createdAt: times[4], ownerGithubId: 100 },
-    { id: 'gone', createdAt: times[4], routineId: 'old', orgId: 'deleted' },
+    { id: 'gone', createdAt: times[4], automationId: 'old', orgId: 'deleted' },
   ]
   for (const run of runs)
     await seedRun(harness, {
-      routineId: 'review',
+      automationId: 'review',
       orgId: 'acme',
       ...run,
       createdAt: run.createdAt ?? 0,
@@ -139,7 +143,7 @@ it('counts the seven-day window and the runs of each UTC day', async () => {
   expect(workspaceDays[22]).toEqual({ date: '2026-11-09', count: 2 })
   expect(workspaceDays[29]).toEqual({ date: '2026-11-16', count: 1 })
   expect(workspaceDays.reduce((sum, day) => sum + day.count, 0)).toBe(4)
-  const runDays = result.routineRunsByDay
+  const runDays = result.automationRunsByDay
   expect(runDays[0]).toEqual({ date: '2026-10-18', count: 1 })
   expect(runDays[29]).toEqual({ date: '2026-11-16', count: 1 })
   expect(runDays.reduce((sum, day) => sum + day.count, 0)).toBe(2)

@@ -11,17 +11,17 @@ import { paths } from '../paths'
 import type { WorkspaceState } from './workspaceState'
 
 /**
- * The routine page that the header of each run workspace links to. The
+ * The automation page that the header of each run workspace links to. The
  * failed runs link to the page whose Runs list shows them.
  */
-const routinePaths: Readonly<Record<RunWorkspaceKey, string>> = {
-  'pull-request': paths.routine,
-  'run-now': paths.routineRunNow,
-  'start-failed': paths.routineFailedRuns,
-  'turn-failed': paths.routineFailedRuns,
+const automationPaths: Readonly<Record<RunWorkspaceKey, string>> = {
+  'pull-request': paths.automation,
+  'run-now': paths.automationRunNow,
+  'start-failed': paths.automationFailedRuns,
+  'turn-failed': paths.automationFailedRuns,
 }
 
-/** The open workspace, its chat, and the routine of its run, if any. */
+/** The open workspace, its chat, and the automation of its run, if any. */
 export type OpenWorkspace = {
   record: Workspace
   items: readonly ChatItem[]
@@ -44,7 +44,7 @@ export function openWorkspace(state: WorkspaceState): OpenWorkspace {
   return {
     record: run.workspace,
     items: state.conversation === 'queued' ? run.queued : run.firstTurn,
-    run: { ...run.origin, routineTo: routinePaths[state.run] },
+    run: { ...run.origin, automationTo: automationPaths[state.run] },
   }
 }
 

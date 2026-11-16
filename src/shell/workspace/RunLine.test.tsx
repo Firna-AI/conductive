@@ -33,11 +33,11 @@ const { org, workspace: id } = FAKE_IDS
 const answer =
   'The checkout form now suggests addresses. Manual entry still works.'
 
-/** The view reply of a run workspace of the routine. */
+/** The view reply of a run workspace of the automation. */
 function runView(
-  routine: NonNullable<WorkspaceViewResponse['routine']>,
+  automation: NonNullable<WorkspaceViewResponse['automation']>,
 ): WorkspaceViewResponse {
-  return { ...workspaceFixtures().view, routine }
+  return { ...workspaceFixtures().view, automation }
 }
 
 /** The whole app at the open workspace. */
@@ -56,7 +56,7 @@ async function openWorkspace(server: FakeApiServer) {
 }
 
 describe('the header of a workspace', () => {
-  test('a pull request run links to its routine and to its pull request under the header', async () => {
+  test('a pull request run links to its automation and to its pull request under the header', async () => {
     const server = new FakeApiServer()
     const url = 'https://github.com/acme/storefront/pull/482'
     server.json(
@@ -70,13 +70,13 @@ describe('the header of a workspace', () => {
     )
     const { navigation, view } = await openWorkspace(server)
     const link = await waitFor(
-      () => queryByRole('link', 'Routine: Review pull requests', view),
-      'the link to the routine',
+      () => queryByRole('link', 'Automation: Review pull requests', view),
+      'the link to the automation',
     )
     const pullRequest = byRole('link', 'Pull request #482 on GitHub', view)
     const shown = {
       line: link.closest('p')?.textContent,
-      routine: link.getAttribute('href'),
+      automation: link.getAttribute('href'),
       pullRequest: {
         href: pullRequest.getAttribute('href'),
         target: pullRequest.getAttribute('target'),
@@ -86,13 +86,13 @@ describe('the header of a workspace', () => {
     await press(link)
     expect({ ...shown, address: navigation.href() }).toEqual({
       line: 'Run of Review pull requests for #482',
-      routine: '/orgs/acme/routines/review-prs',
+      automation: '/orgs/acme/automations/review-prs',
       pullRequest: { href: url, target: '_blank', rel: 'noreferrer' },
-      address: '/orgs/acme/routines/review-prs',
+      address: '/orgs/acme/automations/review-prs',
     })
   })
 
-  test('a run of a schedule links to its routine only', async () => {
+  test('a run of a schedule links to its automation only', async () => {
     const server = new FakeApiServer()
     server.json(
       'GET',
@@ -105,8 +105,8 @@ describe('the header of a workspace', () => {
     )
     const { view } = await openWorkspace(server)
     const link = await waitFor(
-      () => queryByRole('link', 'Routine: Triage new errors', view),
-      'the link to the routine',
+      () => queryByRole('link', 'Automation: Triage new errors', view),
+      'the link to the automation',
     )
     expect(link.closest('p')?.textContent).toBe('Run of Triage new errors')
   })

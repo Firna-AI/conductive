@@ -4,7 +4,7 @@ Conductive is a coding tool at `conductive.build`. Each workspace has its
 own cloud computer, a Boat sandbox, and one branch at a time. It can hold
 one task after another. Agents powered by Claude and Codex work only in
 the sandbox. The user follows them in the browser or in the Mac app, which
-shows the web app. Routines also start agents without a person, each run
+shows the web app. Automations also start agents without a person, each run
 in a new workspace. This doc describes the components, their
 responsibilities, and the boundaries between them. The
 [protocol docs](architecture/protocol-docs.md) hold the requirements of
@@ -99,11 +99,11 @@ each feature.
 - **Cloud hour:** one hour of one cloud computer that runs. Each plan
   includes a number of cloud hours each month.
 
-- **Routine:** a saved prompt of an org that runs an agent without a
+- **Automation:** a saved prompt of an org that runs an agent without a
   person. A schedule, a GitHub pull request event, or Run now starts each
   run. Each run creates a new workspace, the run workspace.
-- **Routine owner:** the member whose logins the runs of a routine use. It
-  is the member who created the routine, until that member leaves the org.
+- **Automation owner:** the member whose logins the runs of an automation use. It
+  is the member who created the automation, until that member leaves the org.
 - **Base branch:** the branch that the work of a workspace targets. Changes
   compares with it, and "Create PR" opens into it.
 
@@ -121,7 +121,7 @@ programs in each sandbox, their releases, and their updates.
 | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
 | `conductive.build`        | The marketing site, with the public docs and the pricing, Terms, and Privacy pages                                                         |
 | `app.conductive.build`    | The web app, the API, the chat sockets, and the terminal                                                                                   |
-| `api.conductive.build`    | The GitHub webhooks, the agent tools, the runner, the credential helper, the model gateway, and the software image route of the deploy run |
+| `api.conductive.build`    | The GitHub webhooks, the agent tools, the runner, the credential helper, the model gateway, the software image route of the deploy run, and the attachment downloads |
 | `*.conductive.page`       | One random hostname for each open port preview, one level deep                                                                             |
 | `runner.conductive.build` | The public files of each [release](protocol/sandbox-software.md#releases) of the sandbox software, from an R2 bucket                       |
 
@@ -134,7 +134,7 @@ the app (decision 6).
 
 The [flows page](architecture/flows.md) describes how the components work
 together for a new workspace, chat, the terminal, previews, the desktop,
-GitHub events, a merge, Continue, routine runs, and stops.
+GitHub events, a merge, Continue, automation runs, and stops.
 
 ## Where data lives
 
@@ -151,7 +151,7 @@ separate the orgs, the Boat key, the model gateway, and the sandboxes.
 A decision number, such as decision 36, names the dated record of one
 decision. The plan of the change that made the decision keeps the record
 while that change is open. The pull request of that change keeps the
-record after the merge. The decisions of routines use the numbers from
+record after the merge. The decisions of automations use the numbers from
 501, so that each number names one record.
 
 A decision of a later change carries the short name of that change, such

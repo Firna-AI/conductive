@@ -7,7 +7,7 @@ import { routes } from '../../app/router'
 import { HeldRequests } from '../../app/test-kit'
 import { attachmentPath } from '../../shared/attachment-paths'
 import { mentionText } from '../../shared/mention-text'
-import { attachmentUploadPath } from '../../shared/messages'
+import { attachmentUploadCompletePath } from '../../shared/messages'
 import { workspacesPath } from '../../shared/workspaces'
 import {
   byLabel,
@@ -16,7 +16,7 @@ import {
   queryByText,
 } from '../../test-support/dom-queries'
 import { pickFiles } from '../../test-support/file-picker'
-import { FAKE_ORIGIN } from '../../test-support/fixtures/core'
+import { FAKE_IDS, FAKE_ORIGIN } from '../../test-support/fixtures/core'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
 import { messageText } from '../../test-support/message-field'
 import { MOUNTED_TEST_TIMEOUT } from '../../test-support/mount'
@@ -201,19 +201,22 @@ describe('the send key of New workspace', () => {
       const shift = await keys({ shiftKey: true })
       const composing = await keys({ isComposing: true })
       const draft = tab.app.org(org).newWorkspace(null)
-      const uploadPath = attachmentUploadPath(org, {
-        type: 'new-workspace',
-        messageId: draft.draft.get().messageId,
-      })
+      // The complete call of the upload fails once. The upload keeps its
+      // part, so Try again sends only the complete call again.
+      const completePath = attachmentUploadCompletePath(
+        org,
+        { type: 'new-workspace', messageId: draft.draft.get().messageId },
+        FAKE_IDS.upload,
+      )
       server.json(
         'POST',
-        uploadPath,
+        completePath,
         {
           error: { code: 'upload_failed', message: 'The upload failed.' },
         },
         502,
       )
-      held.holdAnswer('POST', uploadPath)
+      held.holdAnswer('POST', completePath)
       await pickFiles(root, [
         new File(['png'], 'postcode-overlap.png', { type: 'image/png' }),
       ])
@@ -225,7 +228,7 @@ describe('the send key of New workspace', () => {
       const sendOff = isOff(
         byRole('button', form === 'page' ? 'Send' : 'Create', root),
       )
-      held.release('POST', uploadPath)
+      held.release('POST', completePath)
       await settle()
       const failed = await keys({})
       expect(failed).toEqual({ kept: true, creates: 0, text: withChip })
@@ -236,7 +239,7 @@ describe('the send key of New workspace', () => {
       const path = await attachmentPath(uploaded)
       server.json(
         'POST',
-        uploadPath,
+        completePath,
         {
           attachment: {
             ...uploaded,

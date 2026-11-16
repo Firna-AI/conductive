@@ -32,7 +32,7 @@ function days(times: readonly number[], now: number) {
 /**
  * The counts of the Stats tab from the orgs of the dev fake, by the rules
  * of the Worker: the orgs that are not deleted, the workspaces and the
- * routines that the person owns in them, and the runs that were not
+ * automations that the person owns in them, and the runs that were not
  * skipped, by their owner.
  */
 export function devAccountStats(state: DevState, now: number): AccountStats {
@@ -45,9 +45,9 @@ export function devAccountStats(state: DevState, now: number): AccountStats {
     (workspace) =>
       workspace.archivedAt === null && workspace.state !== 'archived',
   )
-  const routines = orgs
-    .flatMap((org) => org.routines)
-    .filter((routine) => routine.owner.id === userId)
+  const automations = orgs
+    .flatMap((org) => org.automations)
+    .filter((automation) => automation.owner.id === userId)
   const runs = orgs
     .flatMap((org) => org.runs)
     .filter((run) => run.owner?.id === userId && run.state !== 'skipped')
@@ -68,12 +68,12 @@ export function devAccountStats(state: DevState, now: number): AccountStats {
       failed: live.filter((workspace) => workspace.state === 'error').length,
       archived: workspaces.length - live.length,
     },
-    routines: routines.length,
+    automations: automations.length,
     newWorkspacesByDay: days(
       workspaces.map((workspace) => workspace.createdAt),
       now,
     ),
-    routineRunsByDay: days(
+    automationRunsByDay: days(
       runs.map((run) => run.createdAt),
       now,
     ),

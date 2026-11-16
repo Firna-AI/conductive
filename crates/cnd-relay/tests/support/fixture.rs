@@ -1,12 +1,12 @@
 //! A private relay instance for each integration test.
 
-use crate::support::wire::TestResult;
+use crate::support::wire::{TestResult, read_reply};
 use cnd_relay::connect::LocalConnector;
 use cnd_relay::listener::{Listener, NativeListener};
 use cnd_relay::proxy::RelayProxy;
 use cnd_relay::server::{RelayServer, Server};
 use std::sync::Arc;
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tokio::io::AsyncWriteExt;
 use tokio::net::TcpStream;
 use tokio_util::task::AbortOnDropHandle;
 
@@ -56,8 +56,7 @@ impl Fixture {
     }
     pub(crate) async fn send(&self, headers: &str) -> TestResult<String> {
         let mut stream = self.stream("GET", "/", headers).await?;
-        let mut text = String::new();
-        stream.read_to_string(&mut text).await?;
-        Ok(text)
+        let (head, body) = read_reply(&mut stream).await?;
+        Ok(format!("{head}{}", String::from_utf8(body)?))
     }
 }

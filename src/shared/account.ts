@@ -35,11 +35,11 @@ export interface AccountStats {
   /** The workspaces that the person owns, and the new ones of 7 days. */
   workspaces: { total: number; lastWeek: number }
   workspaceStates: OperatorWorkspaceStates
-  /** The routines that the person owns. */
-  routines: number
+  /** The automations that the person owns. */
+  automations: number
   newWorkspacesByDay: readonly { date: string; count: number }[]
   /** The runs that were not skipped, by the owner at the time of the run. */
-  routineRunsByDay: readonly { date: string; count: number }[]
+  automationRunsByDay: readonly { date: string; count: number }[]
 }
 
 export const NEW_WORKSPACE_VIEWS = ['page', 'dialog'] as const

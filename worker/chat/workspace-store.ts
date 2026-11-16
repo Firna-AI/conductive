@@ -1,5 +1,5 @@
 import type { AppEnv } from '../env'
-import { reportRoutineFirstTurn } from './routine-run'
+import { reportAutomationFirstTurn } from './automation-run'
 import { ChatStore } from './store'
 import { reportTurnEnd } from './turn-end-reports'
 import type { ChatDependencies, ChatStorage } from './types'
@@ -16,7 +16,7 @@ export function createWorkspaceChatStore(
     dependencies.now,
     (report) => reportTurnEnd(store, dependencies, publish, report),
     (workspaceId) =>
-      reportRoutineFirstTurn(env.DB, store, workspaceId, dependencies.now()),
+      reportAutomationFirstTurn(env.DB, store, workspaceId, dependencies.now()),
   )
   return store
 }

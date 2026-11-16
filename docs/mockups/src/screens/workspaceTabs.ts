@@ -17,7 +17,7 @@ import { codeTabKey, moreTabs, withCodeMoved } from './workspaceTabRow'
 import { withTemporaryTab } from './workspaceTemporaryTab'
 
 /**
- * A workspace that the create flow or a routine run made has one session,
+ * A workspace that the create flow or an automation run made has one session,
  * and no edits of its own.
  */
 export function isNew(state: WorkspaceState): boolean {

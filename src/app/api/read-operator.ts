@@ -22,6 +22,7 @@ import {
   text,
   type JsonObject,
 } from './parse'
+import { readLongRun } from './read-operator-runs'
 import {
   readAccessCode,
   readApprovalEmail,
@@ -93,6 +94,7 @@ export function readOperatorOverview(value: unknown): OperatorOverview {
         running: count(org, 'running'),
       }
     }),
+    longRuns: items(overview, 'longRuns', readLongRun),
   }
 }
 
@@ -130,6 +132,7 @@ function readUserSummary(value: unknown): OperatorUserSummary {
     login: text(user, 'login'),
     name: maybeText(user, 'name'),
     joinedAt: count(user, 'joinedAt'),
+    lastActiveAt: maybeCount(user, 'lastActiveAt'),
     orgs: count(user, 'orgs'),
     workspaces: count(user, 'workspaces'),
     status: choice(user, 'status', ['active', 'suspended']),

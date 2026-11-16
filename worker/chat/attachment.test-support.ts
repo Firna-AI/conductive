@@ -2,7 +2,7 @@ import type { AttachmentUploadTarget } from '../../src/shared/messages'
 import { sessionPaths } from '../../src/shared/sessions'
 import { TEST_TIME, type TestHarness } from '../test-support/harness'
 import { readAttachment } from './attachment-data'
-import { storeAttachment } from './attachment-storage'
+import { uploadAttachment } from '../test-support/attachment-upload'
 import { CLAUDE, createChatFixture, WORKSPACE_ID } from './harness.test-support'
 import type { ChatFixtureOptions } from './harness.test-support'
 import type { RepositoryLocation } from '../lifecycle/repository-locations'
@@ -60,10 +60,10 @@ export async function attachmentFixture(
   }
   let sequence = 0
   const upload = (
-    source: Uint8Array | ReadableStream<Uint8Array> = FILE_BYTES,
+    source: Uint8Array = FILE_BYTES,
     uploadTarget: AttachmentUploadTarget = target,
   ) =>
-    storeAttachment(
+    uploadAttachment(
       harness.env,
       {
         orgId: chat.org.id,

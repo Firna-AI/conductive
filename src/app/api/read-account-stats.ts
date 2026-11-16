@@ -12,8 +12,8 @@ export function readAccountStats(value: unknown): AccountStats {
       readWeekly(item, 'workspaces'),
     ),
     workspaceStates: nested(stats, 'workspaceStates', readWorkspaceStates),
-    routines: count(stats, 'routines'),
+    automations: count(stats, 'automations'),
     newWorkspacesByDay: readDays(stats, 'newWorkspacesByDay'),
-    routineRunsByDay: readDays(stats, 'routineRunsByDay'),
+    automationRunsByDay: readDays(stats, 'automationRunsByDay'),
   }
 }

@@ -9,11 +9,13 @@ starts one background title request for a workspace with a saved first
 session and no name or stored title. The request holds no chat queue while it waits for
 the model. Send and create do not wait for the answer.
 
-Before the request, `textWithAttachmentNames` in
-`src/shared/attachment-mentions.ts` puts the original name of each attached
-file of the message in place of its mention. A mention that names no file
-of the message stays as it is. So the model can get the file names, but it
-gets no attachment bytes.
+Before the request, `titleSourceText` in
+`src/shared/attachment-mentions.ts` removes each mention of an attached
+image of the message, with the spaces and tabs after it. It puts the
+original name of each other attached file of the message in place of its
+mention. A mention that names no file of the message stays as it is. So
+the model can get the names of files that are not images, but it gets no
+image names and no attachment bytes.
 
 `title-model.ts` reads `CONDUCTIVE_TITLE_MODEL` and calls the `AI` binding
 through the replaceable `runTitleModel` dependency. It sends only the first
@@ -40,9 +42,9 @@ as own words.
 
 The next accepted message with own words can try again. Each retry reads
 the stored first message through the message ID saved with the first
-session. If that message has own words, the retry uses its text with its
-file names. Otherwise it uses the text of the message that starts the
-retry, with the file names of that message. An existing title ends the
+session. If that message has own words, the retry uses its text from
+`titleSourceText`. Otherwise it uses the text of the message that starts
+the retry, from `titleSourceText` too. An existing title ends the
 requests. The first-message record keeps old workspaces outside this path.
 
 `workspace-title.ts` stores both Worker and runner titles through one
@@ -52,7 +54,11 @@ event. A refused title changes no name and emits no event.
 The runner receipt still advances its cursor and confirms that event.
 An accepted title emits `workspace.title` and updates the first session.
 The common chat publisher sends both events to open tabs. The same module
-writes the D1 name immediately, so the org list sees it too. The stored
+writes the D1 name immediately, so the org list sees it too. While the
+branch is a placeholder, that write also gives the title to the branch, as
+[The branch and the name](../../docs/protocol/create-a-workspace.md#the-branch-and-the-name)
+says. `workspace-titles.ts` then publishes `workspace.updated`, so open tabs
+show the new branch. The stored
 summary and the existing lifecycle repair keep a committed title available
 after a failed D1 write or an object restart. The detail read and the repair
 write fill only an empty D1 name under the same workspace access rule.
@@ -82,8 +88,10 @@ A later workspace title leaves the session unchanged.
 
 `messages.ts` uses the same session rule for each other session. It checks
 workspace access before it sets the title. `sessionTitleFrom` in
-`src/shared/session-title.ts` first puts the original name of each attached
-file of the message in place of its mention. It then makes a title from the
+`src/shared/session-title.ts` first applies `titleSourceText`. So it
+leaves out each mention of an attached image, and it puts the original name
+of each other attached file of the message in place of its mention. It
+then makes a title from the
 first line with text and limits it to 60 Unicode code points. So the names
 go in before the cut. It keeps underscores, because a member wrote that
 text. A message without own words leaves the title for the next message

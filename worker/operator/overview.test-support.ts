@@ -84,7 +84,9 @@ export async function seedWorkspace(
     state?: WorkspaceState
     createdAt?: number
     archivedAt?: number
-    /** The GitHub ID of the owner, the signed-in test user by default. */
+    runningSince?: number | null
+    lastActivityAt?: number | null
+    sandboxId?: string | null
     ownerGithubId?: number
   },
 ): Promise<void> {
@@ -92,8 +94,8 @@ export async function seedWorkspace(
   await harness.env.DB.prepare(
     `INSERT INTO workspaces
      (id, org_id, repository_id, owner_user_id, name, branch, state,
-      created_at, updated_at, archived_at)
-     SELECT ?, ?, ?, id, ?, 'main', ?, ?, ?, ? FROM users WHERE github_id = ?`,
+      created_at, updated_at, archived_at, running_since, last_activity_at, sandbox_id)
+     SELECT ?, ?, ?, id, ?, 'main', ?, ?, ?, ?, ?, ?, ? FROM users WHERE github_id = ?`,
   )
     .bind(
       workspace.id,
@@ -104,6 +106,9 @@ export async function seedWorkspace(
       createdAt,
       createdAt,
       workspace.archivedAt ?? null,
+      workspace.runningSince ?? null,
+      workspace.lastActivityAt ?? null,
+      workspace.sandboxId ?? null,
       workspace.ownerGithubId ?? 7,
     )
     .run()

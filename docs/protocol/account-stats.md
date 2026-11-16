@@ -33,26 +33,26 @@ stats decision" names a decision of the change that added the tab. The
   - The workspaces that the person owns, with the new ones of the last
     7 days.
   - The workspaces that run now.
-  - The routines that the person owns.
+  - The automations that the person owns.
   - The orgs of the person.
   - The workspaces by state: Running, Stopped, Failed, and Archived. They
     add up to the workspace total.
   - The new workspaces of each UTC day of the last 30 days, with their
     total for the 30 days.
-  - The routine runs of the person on each UTC day of the last 30 days,
+  - The automation runs of the person on each UTC day of the last 30 days,
     with their total for the 30 days.
 - The states, the 7 days, and the 30 UTC days are those of
   [The Overview](operator-section.md#the-overview) of the operator section.
 - A workspace counts for the person who owns it now. Reason: an admin can
   reassign a workspace, and the owner is the person who is responsible for
   it.
-- A routine counts for its routine owner now.
-- A routine run counts for the routine owner at the time of the run, whose
-  logins the run used. Reason: a later change of the routine owner then
+- A automation counts for its automation owner now.
+- A automation run counts for the automation owner at the time of the run, whose
+  logins the run used. Reason: a later change of the automation owner then
   does not move past runs to another person.
-- The routine runs leave out skipped runs, because a skipped run started no
-  agent. [Routine runs](routine-runs.md) states when a run is skipped.
-- The counts leave out deleted orgs and their workspaces and routines.
+- The automation runs leave out skipped runs, because a skipped run started no
+  agent. [Automation runs](automation-runs.md) states when a run is skipped.
+- The counts leave out deleted orgs and their workspaces and automations.
   Reason: the person can no longer open them.
 - The counts include each org of the person, also a suspended org.
 

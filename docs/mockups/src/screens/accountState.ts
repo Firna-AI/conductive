@@ -151,7 +151,7 @@ export const accountSchema = {
     deletedOrgs: { enum: deletedOrgStates },
     /**
      * The numbers of the Stats tab: shown, loading when the tab opens, failed
-     * to load, or shown for a new account with no workspace and no routine.
+     * to load, or shown for a new account with no workspace and no automation.
      */
     stats: { enum: ['ready', 'loading', 'failed', 'empty'] },
   },

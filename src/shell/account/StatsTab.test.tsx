@@ -38,9 +38,9 @@ const stats: AccountStats = {
   orgs: 2,
   workspaces: { total: 1240, lastWeek: 7 },
   workspaceStates: { running: 3, stopped: 11, failed: 1, archived: 1225 },
-  routines: 4,
+  automations: 4,
   newWorkspacesByDay: days((index) => index % 3),
-  routineRunsByDay: days(() => 2),
+  automationRunsByDay: days(() => 2),
 }
 
 /** The shell at the Stats tab of the account, with the fake API. */
@@ -92,7 +92,8 @@ describe('the Stats tab of the account', () => {
     }).toEqual({
       tabs: ['General', 'Agents', 'Preferences', 'Keyboard shortcuts', 'Stats'],
       current: ['Stats'],
-      totals: 'Workspaces 1,240 +7 in 7 days Running now 3 Routines 4 Orgs 2',
+      totals:
+        'Workspaces 1,240 +7 in 7 days Running now 3 Automations 4 Orgs 2',
       states: 'Running 3 0.2% Stopped 11 0.9% Failed 1 0.1% Archived 1,225 99%',
       workspaceDays: true,
       runDays: true,
@@ -125,7 +126,7 @@ describe('the Stats tab of the account', () => {
       reads: statsReads(server),
     }).toEqual({
       loading:
-        'Account @calummoore General Agents Preferences Keyboard shortcuts Stats Workspaces New workspaces Routine runs',
+        'Account @calummoore General Agents Preferences Keyboard shortcuts Stats Workspaces New workspaces Automation runs',
       failed:
         'Account @calummoore General Agents Preferences Keyboard shortcuts Stats Your stats could not load Try again',
       retried: true,

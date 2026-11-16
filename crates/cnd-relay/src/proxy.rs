@@ -84,6 +84,8 @@ impl RelayProxy {
         }));
         let mut response = sender.send_request(request).await.internal()?;
         let mut filtered = headers::response(response.headers());
+        let refused_upgrade =
+            downstream.is_some() && response.status() != StatusCode::SWITCHING_PROTOCOLS;
         if response.status() == StatusCode::SWITCHING_PROTOCOLS
             && let Some(downstream) = downstream
         {
@@ -109,7 +111,9 @@ impl RelayProxy {
             *answer.headers_mut() = filtered;
             return Ok(answer);
         }
-        filtered.insert(CONNECTION, HeaderValue::from_static("close"));
+        if refused_upgrade {
+            filtered.insert(CONNECTION, HeaderValue::from_static("close"));
+        }
         let (mut parts, incoming) = response.into_parts();
         parts.headers = filtered;
         Ok(Response::from_parts(

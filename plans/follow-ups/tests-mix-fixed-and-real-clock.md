@@ -1,0 +1,35 @@
+# Tests mix the fixed test time with the real clock
+
+- **Severity:** Medium. **Effort:** Large. **Confidence:** Medium. **Harder later:** Yes.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-14, from the branch `calummoore/lisbon-ogce`, review finding 2 and its check.
+- **Location:** `worker/test-support/native-workspace-api.ts:25` (`NATIVE_TEST_TIME`), `worker/test-support/harness.ts:17` (`TEST_TIME`), `worker/http/request-body.test.ts:207`, `worker/test-support/native-storage.ts:89`, `worker/test-support/native-storage.ts:115`, `worker/features/workspace-alarm.ts:64`.
+- **Reason:** The branch fixed its own test with a frozen clock, and the class fix touches about 233 files that name `TEST_TIME`.
+
+- **Source:** Review. **Category:** Test.
+- **Terms:**
+  - **Fixed test time:** `TEST_TIME`, the timestamp `1800000000000`, or 2027-01-15T08:00:00.000Z. Most Worker tests build their fixture data at this time. About 34 test files also hold raw copies of the number.
+  - **Real clock:** `Date.now()` without a stub, in Node or in workerd, the runtime of the Worker tests.
+- **Background:**
+  - The fixed test time is in the future of the real clock today. A test that builds data at the fixed time and then lets production code read the real clock passes until the real clock reaches that time, then fails.
+  - The branch `calummoore/lisbon-ogce` met one such test: `worker/chat/attachment-download.test.ts` minted a download token at the fixed time, with a 10-minute life, and the route claimed it with the real clock. From 2027-01-15T08:10Z both requests got 401. The branch froze `Date.now()` at `TEST_TIME` in that test, as `worker/lifecycle/image-sources/credential.test.ts:43` already does.
+  - The check of that finding found two more cases of the same class:
+    - `worker/http/request-body.test.ts:207`, "gives no body to a WebSocket upgrade", signs in at `TEST_TIME` and then sends its request through `createApp()`, which reads the real clock at line 36. The 7-day session then expires. With a shifted Node clock, the test passed at 2027-01-22T07:58Z and failed with 401 at 08:00Z. It has been on `main` since commit `6bed6bdb7`.
+    - The native test runtime sets real workerd alarms at times based on `TEST_TIME` (`worker/test-support/native-storage.ts:89` and `:115`). `NativeWorkspace` in `worker/test-support/native-workspace-entry.ts:40` keeps the production `alarm()`, which sets the next alarm 2 seconds after the frozen test time (`worker/features/workspace-alarm.ts:64`). Once the real clock passes `TEST_TIME`, workerd runs these alarms by itself. A one-time Miniflare proof ran an alarm with a past time once by itself, and an alarm that kept setting itself to a past time ran 129 times in 3 seconds. This was not reproduced in the real suite, because the workerd clock could not be moved.
+  - A full Worker run with the Node clock at 2027-03-01 failed 15 of 620 files. Most failures also happen without the shift on that machine. The repeated calendar failure was the request-body test above.
+  - `plans/follow-ups/real-runtime-clock-behind-real-time.md` covers a related problem: the real-runtime fixture mixes its manual clock with `Date.now()` helper times.
+- **Problem:** Tests can mix the fixed future test time with the real clock, and they then pass now and fail on a calendar date.
+- **Impact if no action:** From 2027-01-15, the Worker tests start to fail or hang with no product change, and the complete gate blocks every pull request.
+- **Root question:** How do the Worker tests stay independent of the calendar?
+- **Options:**
+  - **A.** Freeze `Date.now()` in each known test, as the branch did for the download test. The native alarm loop needs its own fix. Effort: Small.
+  - **B.** Make the test harness stub the Node `Date.now` at each `reset()` to `TEST_TIME` plus the real elapsed time, and restore it at `dispose()`. It fixes the Node cases in one place. It cannot move the workerd clock, so the native alarms stay. Effort: Medium.
+  - **C.** Move the fixed test time far into the past, for example `2021-01-15T08:00:00.000Z` (`1_610_697_600_000`), which has the same calendar as 2027. Replace the raw copies of the old value. Fix the native alarm loop first, because workerd then runs each past-due alarm by itself. Then fix each test that fails. A test that mixes the clocks then fails on the day that someone writes it, in Node and in workerd. Effort: Large.
+- **Left out:**
+  - Raise `TEST_TIME`: it only moves the failure to a later date.
+  - A CI job that runs the suite with a later clock: a Node clock shift cannot move the workerd clock, and it adds a gate.
+- **Wider fix:** C. Only a fixed test time in the past makes each such test fail at once, whatever the route, the lifetime, or the runtime.
+- **Previous examples:** `worker/lifecycle/image-sources/credential.test.ts:43` freezes the clock for one real-clock route. `plans/follow-ups/real-runtime-clock-behind-real-time.md`.
+- **Related:** `plans/follow-ups/real-runtime-clock-behind-real-time.md`: the same rule of one clock for each test, in the real-runtime fixture.
+- **Recommendation:** C. It removes the class before the date arrives. B is the smaller choice if a Node-only fix is enough, and the native alarms then need their own fix.
+- **Action:** fix after merge, apply C, because it changes about 233 test files, and the first failure date is 2027-01-15.

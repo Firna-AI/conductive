@@ -6,7 +6,7 @@ settings the Worker gives to each workspace sandbox.
 [Architecture](architecture.md) describes the Worker and its hostnames.
 The [Worker README](../worker/README.md#routes) lists the routes that the
 Worker serves now. [Automatic deploys](automatic-deploys.md) says how each
-push to `main` deploys the test deployment. Two linked pages hold the
+push to `main` deploys the production deployment. Two linked pages hold the
 [model inputs](deployment/models.md) and the
 [Conductive releases and software image](deployment/runner-archive.md).
 
@@ -131,12 +131,13 @@ serves every org.
   no CORS rule. Only the Worker reads and writes the bucket, as
   [Orgs and workspaces](protocol/isolation.md#orgs-and-workspaces)
   says.
-- Add no lifecycle rule that deletes files by age. Such a rule would also
-  delete the files of sent messages, which stay until the app deletes their
-  workspace.
-- The copy of each file into a sandbox also needs the `file.write` action
-  on the Boat key, as [The app's Boat account](#the-apps-boat-account)
-  says.
+- Add no lifecycle rule that deletes files by age. The Worker keeps each
+  accepted file until its transfer and the cloud computer's first start
+  succeed. Then it deletes the stored bytes and keeps the file record.
+  An age rule could delete bytes that a failed first start still needs.
+- The cloud computer downloads each attached file with a detached command.
+  The Boat key needs `exec` for this transfer, as
+  [The app's Boat account](#the-apps-boat-account) says.
 - Local development and the Worker tests use local R2 storage. They need no
   Cloudflare account and no bucket.
 
@@ -256,6 +257,6 @@ No org has a Boat key, and the Worker stores no Boat key in D1.
   says.
 - [The app's Boat account](../worker/sandbox/README.md#the-apps-boat-account)
   says how to make the organization and the key.
-- The key must also allow the `file.write` action. The Worker uses it to
-  copy each attached file into a sandbox. The primary orchestrator
-  supplies that action at the next deployment.
+- The key needs `exec` to start and read the detached attachment download
+  commands. The cloud computer uses a one-use token to read each file from
+  the machine host.

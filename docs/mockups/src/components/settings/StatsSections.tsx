@@ -13,16 +13,16 @@ import { Section } from './Section'
 /**
  * The numbers of the Stats tab of the account, for the person signed in:
  * the orgs of the person, the workspaces that the person owns, the
- * routines that the person owns, and the new workspaces and the routine
+ * automations that the person owns, and the new workspaces and the automation
  * runs of each UTC day of the last 30 days.
  */
 export type AccountStatsNumbers = {
   orgs: number
   workspaces: { total: number; lastWeek: number }
   workspaceStates: StateCounts
-  routines: number
+  automations: number
   newWorkspacesByDay: readonly DailyCount[]
-  routineRunsByDay: readonly DailyCount[]
+  automationRunsByDay: readonly DailyCount[]
 }
 
 /** Each tile shares the width of the row, so a phone shows two in a line. */
@@ -34,13 +34,13 @@ const placeholderTileStyle = { flex: 1, minWidth: 120 }
 /** A placeholder row fills its line. */
 const rowStyle = { flex: 1 }
 
-const tileKeys = ['workspaces', 'running', 'routines', 'orgs'] as const
+const tileKeys = ['workspaces', 'running', 'automations', 'orgs'] as const
 const stateKeys = ['running', 'stopped', 'failed', 'archived'] as const
-const chartTitles = ['New workspaces', 'Routine runs'] as const
+const chartTitles = ['New workspaces', 'Automation runs'] as const
 
 /**
  * The four numbers that lead the tab: the workspaces with the new ones of
- * the last 7 days, the workspaces that run now, the routines, and the orgs.
+ * the last 7 days, the workspaces that run now, the automations, and the orgs.
  */
 function StatsTiles(props: { stats: AccountStatsNumbers }) {
   const { stats } = props
@@ -58,7 +58,11 @@ function StatsTiles(props: { stats: AccountStatsNumbers }) {
           style={tileStyle}
           value={stats.workspaceStates.running}
         />
-        <StatTile label="Routines" style={tileStyle} value={stats.routines} />
+        <StatTile
+          label="Automations"
+          style={tileStyle}
+          value={stats.automations}
+        />
         <StatTile label="Orgs" style={tileStyle} value={stats.orgs} />
       </StatTileRow>
     </section>
@@ -67,7 +71,7 @@ function StatsTiles(props: { stats: AccountStatsNumbers }) {
 
 /**
  * The Stats tab with its numbers: the tiles, the workspaces by state, and
- * the charts of the new workspaces and of the routine runs. It imports no
+ * the charts of the new workspaces and of the automation runs. It imports no
  * fixture value, so the app uses it too.
  */
 export function StatsNumbers(props: {
@@ -86,9 +90,9 @@ export function StatsNumbers(props: {
         title="New workspaces"
       />
       <DailyChart
-        days={stats.routineRunsByDay}
+        days={stats.automationRunsByDay}
         narrow={narrow}
-        title="Routine runs"
+        title="Automation runs"
       />
     </>
   )

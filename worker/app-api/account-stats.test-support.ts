@@ -13,39 +13,39 @@ export async function accountStats(
 }
 
 /**
- * A routine of the org. Its owner is the user with `ownerGithubId`, the
+ * A automation of the org. Its owner is the user with `ownerGithubId`, the
  * signed-in test user by default.
  */
-export async function seedRoutine(
+export async function seedAutomation(
   harness: TestHarness,
-  routine: { id: string; orgId: string; ownerGithubId?: number },
+  automation: { id: string; orgId: string; ownerGithubId?: number },
 ): Promise<void> {
   await harness.env.DB.prepare(
-    `INSERT INTO routines
+    `INSERT INTO automations
      (id, org_id, owner_user_id, name, repository_id, section_id, prompt,
       agent, model, effort, time_zone, triggers_json, created_at, updated_at)
      SELECT ?, ?, id, ?, ?, 'section', 'Review.', 'claude', 'model', 'high',
        'UTC', '[]', 0, 0 FROM users WHERE github_id = ?`,
   )
     .bind(
-      routine.id,
-      routine.orgId,
-      routine.id,
-      `repo-${routine.orgId}`,
-      routine.ownerGithubId ?? 7,
+      automation.id,
+      automation.orgId,
+      automation.id,
+      `repo-${automation.orgId}`,
+      automation.ownerGithubId ?? 7,
     )
     .run()
 }
 
 /**
- * A run of a routine. Its owner, the owner at the time of the run, is the
+ * A run of a automation. Its owner, the owner at the time of the run, is the
  * user with `ownerGithubId`, the signed-in test user by default.
  */
 export async function seedRun(
   harness: TestHarness,
   run: {
     id: string
-    routineId: string
+    automationId: string
     orgId: string
     createdAt: number
     ownerGithubId?: number
@@ -53,15 +53,15 @@ export async function seedRun(
   },
 ): Promise<void> {
   await harness.env.DB.prepare(
-    `INSERT INTO routine_runs
-     (id, routine_id, org_id, owner_user_id, run_key, message_id,
+    `INSERT INTO automation_runs
+     (id, automation_id, org_id, owner_user_id, run_key, message_id,
       trigger_json, state, created_at, updated_at)
      SELECT ?, ?, ?, id, ?, ?, '{"kind":"run-now"}', ?, ?, ?
      FROM users WHERE github_id = ?`,
   )
     .bind(
       run.id,
-      run.routineId,
+      run.automationId,
       run.orgId,
       `manual:${run.id}`,
       `message-${run.id}`,

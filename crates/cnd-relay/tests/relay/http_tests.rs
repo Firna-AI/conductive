@@ -4,7 +4,7 @@ use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpListener;
 
 use crate::support::fixture::Fixture;
-use crate::support::wire::{TestResult, head, reply};
+use crate::support::wire::{TestResult, head, read_reply, reply};
 
 #[tokio::test]
 async fn accepts_only_private_host_and_one_valid_nonlooping_target() -> TestResult {
@@ -24,6 +24,7 @@ async fn accepts_only_private_host_and_one_valid_nonlooping_target() -> TestResu
             .await?;
         assert!(result.starts_with("HTTP/1.1 403"), "{host}: {result}");
         assert!(result.contains("x-conductive-relay: 1\r\n"));
+        assert!(result.contains("connection: close\r\n"), "{result}");
         assert!(result.contains("content-type: text/plain; charset=utf-8\r\n"));
         assert!(result.ends_with("The preview is not available."));
     }
@@ -53,6 +54,7 @@ async fn accepts_only_private_host_and_one_valid_nonlooping_target() -> TestResu
             .await?;
         assert!(result.starts_with("HTTP/1.1 400"), "{result}");
         assert!(result.contains("x-conductive-relay: 1\r\n"));
+        assert!(result.contains("connection: close\r\n"), "{result}");
         assert!(result.ends_with("The preview is not available."));
     }
     Ok(())
@@ -132,13 +134,13 @@ async fn keeps_post_body_after_ipv4_refusal_and_connects_to_ipv6() -> TestResult
         )
         .await?;
     stream.write_all(b"kept body").await?;
-    let mut result = String::new();
-    stream.read_to_string(&mut result).await?;
+    let (result, answer) = read_reply(&mut stream).await?;
     assert!(result.starts_with("HTTP/1.1 200"), "{result}");
+    assert!(!result.contains("connection: close"), "{result}");
     let (headers, body) = served.await??;
     assert_eq!(&body, b"kept body");
     assert!(headers.contains(&format!("host: localhost:{port}")));
-    assert!(result.ends_with("ipv6"));
+    assert_eq!(answer, b"ipv6");
     Ok(())
 }
 
@@ -174,6 +176,7 @@ async fn marks_gateway_errors_when_no_local_address_accepts() -> TestResult {
     let result = relay.send(&relay.headers(port)).await?;
     assert!(result.starts_with("HTTP/1.1 502"));
     assert!(result.contains("x-conductive-relay: 1\r\n"));
+    assert!(result.contains("connection: close\r\n"), "{result}");
     assert!(result.ends_with("The server did not answer."));
     Ok(())
 }

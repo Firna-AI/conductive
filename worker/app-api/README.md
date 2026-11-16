@@ -28,13 +28,13 @@ The [Continue route](continue.ts) starts a Continue job and reads its result in 
 `membersRoute` alone serves the org list and one org.
 It also serves Leave, org recovery, roles, invitations, and workspace ownership.
 Leave keeps the existing last-active-admin rule and native owner-change maintenance.
-The [routine routes](../routines/README.md) serve routine records after the same app gate.
-Section deletion moves routines to General in its workspace-move batch.
-Repository deselection turns matching routines off in its repository-write batch.
+The [automation routes](../automations/README.md) serve automation records after the same app gate.
+Section deletion moves automations to General in its workspace-move batch.
+Repository deselection turns matching automations off in its repository-write batch.
 Run now and run history use the same app gate.
-Workspace view replies include `routine`, the run's routine ID and name, or null.
-A join from the run record supplies the routine without a new lifecycle field.
-Deleting the routine removes that link and keeps its normal run workspaces.
+Workspace view replies include `automation`, the run's automation ID and name, or null.
+A join from the run record supplies the automation without a new lifecycle field.
+Deleting the automation removes that link and keeps its normal run workspaces.
 Workspace view replies also include the resolved `baseBranch`.
 View writes cannot change this branch.
 
@@ -59,7 +59,7 @@ View writes cannot change this branch.
   only. [`account-stats.ts`](account-stats.ts) reads every count from D1 in
   one batch, with the windows and the state SQL of the operator Overview
   from [`workspace-counts.ts`](../operator/workspace-counts.ts). It leaves
-  out deleted orgs and skipped routine runs. A run counts for the
+  out deleted orgs and skipped automation runs. A run counts for the
   `owner_user_id` of its row. The route keeps no history and calls no
   sandbox provider.
   [Account stats](../../docs/protocol/account-stats.md) states the rules.
@@ -224,6 +224,11 @@ The machine tools use the configured app origin instead.
   the index is 0.
 - A section move request holds `position`, the index in the section list.
   Each index counts the rows without the moved row.
+- A section create request can hold `afterSectionId`. The insert and a
+  move in the same batch then put the new section directly below that
+  section of the org. The move finds the place from the current rows.
+  Without `afterSectionId`, or when that section is gone, the new section
+  goes last.
 - A move ranks the current rows of its target from an `AS MATERIALIZED`
   snapshot, then puts the moved row at the index. That keyword makes
   SQLite compute the snapshot once, before the update changes a row.

@@ -135,8 +135,8 @@ return <TerminalTool screenRef={terminal} {...props} />
   of the mockups. Its option names the key in `aria-keyshortcuts`.
 - The Fast row of the model menu of a session shows the key of Fast mode
   between its label and its switch, in the same key chips, and names it in
-  `aria-keyshortcuts`. The menus of New workspace, Preferences, and a
-  routine show no key, because the key runs only where a session tab shows.
+  `aria-keyshortcuts`. The menus of New workspace, Preferences, and an
+  automation show no key, because the key runs only where a session tab shows.
 - The Search row shows the palette key, as ⌘K or Ctrl K.
 - A control that runs a command shows the key in its tooltip, such as
   "New session (⌥⌘T)", and names it in `aria-keyshortcuts`. The icon and

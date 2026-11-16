@@ -38,9 +38,9 @@ names a dated record, as
 - A smaller reach for `archive_workspace`, the calling workspace and the
   workspaces that it created, was rejected (decision 277). Tools without
   `delete_section` were rejected too. Reason: all calls keep one reach.
-- A smaller reach for the turns of routine runs was rejected. Its limit
+- A smaller reach for the turns of automation runs was rejected. Its limit
   must pass to each workspace, session, and message that such a turn
-  makes. A routine could then not follow up on its own work.
+  makes. An automation could then not follow up on its own work.
 - An org setting that lets an admin make the reach smaller was rejected.
   It needs a stored setting, a settings control, a mockup, and a protocol
   section.
