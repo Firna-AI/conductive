@@ -34,7 +34,7 @@ export const sectionsNew = defineScreen({
             below="Checkout"
             failed={
               props.from === 'failed'
-                ? 'The app could not reach the server. Try again.'
+                ? "The app can't reach the server. Check the connection, then try again."
                 : undefined
             }
             name="Payments"
