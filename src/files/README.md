@@ -119,6 +119,14 @@ The screens:
   gives the clock of the ages. Pass a stable function. The default is
   `Date.now`. The `listKeys` prop gives the key of the command that opens
   each list, as a tooltip and a name for `aria-keyshortcuts` of its tab.
+- The row menu prop of `FilesPanel` gives the items of the menu of a row
+  of All files or Changes, from the real path and the kind of the row. The
+  shell gives Add to chat and Copy path, so the Files code imports nothing
+  from the chat. The lists open the menu as
+  [File row menu](../../docs/protocol/file-row-menu.md) says, through
+  `PointMenu`, `Sheet`, `MenuList`, and `opensMenu` of the app shell and
+  `useLongPress` of the web app. A row whose label hides a secret value
+  opens no menu, as [Labels of paths](labels.md) says.
 - `FilePage` shows one file tab. Markdown starts rendered, and its view
   switch navigates to the same tab with the other mode. The page knows an
   image file by the name of its real path, as
@@ -200,7 +208,9 @@ workspace screen.
 ## Labels of paths
 
 [Labels of paths](labels.md) gives the label that each screen shows in
-place of a real path, because a path can hold a secret value.
+place of a real path, because a path can hold a secret value. It also
+gives the check that leaves out the items of the row menu, and Copy path
+of the tab menu, for such a path.
 
 ## Safety
 

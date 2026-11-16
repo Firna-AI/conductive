@@ -21,7 +21,8 @@ files.
 Contract owners:
 
 - [Workspace tools](../docs/protocol/workspace-tools.md), the section
-  "Files and changes".
+  "Files and changes", and its page
+  [File row menu](../docs/protocol/file-row-menu.md).
 - [The tab row](../docs/protocol/agents-and-sessions.md#the-tab-row), for
   the tab menu of a file or diff tab.
 - [Temporary tabs](../docs/protocol/temporary-tabs.md), for the record of
@@ -364,31 +365,41 @@ in the `app/files` pages, on desktop and on a phone.
 - [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
 
-## Milestone 2: Documentation and protocol
+## Milestone 2: Documentation and protocol (completed)
 
 Depends on: 1
 
 State the row menu, Copy path, and Add to chat as requirements, with the
 decisions of this plan.
 
-- [ ] `docs/protocol/workspace-tools.md`, "Files and changes": the row
+- [x] `docs/protocol/workspace-tools.md`, "Files and changes": the row
       menu, how it opens, its items, Copy path, and the rule for a row
-      whose label hides a secret (decisions 1 and 2).
-- [ ] `docs/protocol/agents-and-sessions.md`, "The tab row": Copy path in
+      whose label hides a secret (decisions 1 and 2). The row menu has its
+      own page, `docs/protocol/file-row-menu.md`, which "Files and
+      changes" links. Reason: `workspace-tools.md` already passes the
+      length target of the `documentation` skill, and `temporary-tabs.md`
+      was split out of it for the same reason. The index
+      `docs/architecture/protocol-docs.md` lists the page. Working agent's
+      call, 16 November 2026.
+- [x] `docs/protocol/agents-and-sessions.md`, "The tab row": Copy path in
       the tab menu of a file or diff tab, and the read-only file tab that
       now opens a tab menu (decision 3).
-- [ ] `docs/protocol/temporary-tabs.md`: say that decision 286 did not
+- [x] `docs/protocol/temporary-tabs.md`: say that decision 286 did not
       choose a menu on each file row for Keep open. The row menu has no
       Keep open.
-- [ ] `docs/protocol/file-mentions.md`: Add to chat as a way to put a chip
+- [x] `docs/protocol/file-mentions.md`: Add to chat as a way to put a chip
       in the message field, with its target (decision 4 A).
-- [ ] `src/files/labels.md`, `src/files/README.md`, and
-      `src/chat/README.md`.
-- [ ] The public guide `src/marketing/docs/files-and-changes.md`.
-- [ ] Read the Terms page `src/marketing/terms.ts` and the Privacy page
+- [x] `src/files/labels.md`, `src/files/README.md`, and
+      `src/chat/README.md`. Also `src/chat/tab-row.md` and
+      `src/chat/loads-and-sends.md`, which said that a read-only file tab
+      opens no tab menu.
+- [x] The public guide `src/marketing/docs/files-and-changes.md`.
+- [x] Read the Terms page `src/marketing/terms.ts` and the Privacy page
       `src/marketing/privacy.ts` in full. Update each sentence that
-      restates a changed fact.
-- [ ] Read each other public guide in `src/marketing/docs/` in full.
+      restates a changed fact. Both pages, with `terms-org.ts`,
+      `privacy-uses.ts`, and `privacy-recipients.ts`, hold no sentence
+      that restates a changed fact, so they stay as they are.
+- [x] Read each other public guide in `src/marketing/docs/` in full.
       Update each sentence that restates a changed fact.
 
 ## Milestone 3: The row menu with Copy path

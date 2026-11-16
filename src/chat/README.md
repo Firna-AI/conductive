@@ -18,7 +18,10 @@ tab menu of a session copies its link, and its transcript as Markdown,
 also in a read-only workspace, as
 [Session transcripts](../../docs/protocol/session-transcripts.md) and
 [Session links](../../docs/protocol/agents-and-sessions.md#session-links)
-say.
+say. The tab menu of a file or diff tab copies its path, with the Copy
+path item that the host gives with the tab, as
+[The tab row](../../docs/protocol/agents-and-sessions.md#the-tab-row)
+says.
 
 ## Use it in the app
 
@@ -47,6 +50,14 @@ stops its own controller:
 [Chat integration](integration.md) gives the rules of each prop and
 callback of `WorkspaceChat`, its theme and its layers, the parts that
 the Mac app shows outside the chat, and `useChatController`.
+
+Add to chat in the menu of a row of the Files panel puts the chip of a
+file or a folder into the message field of the session that the member
+saw last, as
+[Add to chat](../../docs/protocol/file-mentions.md#add-to-chat) says. The
+shell asks the kept `ChatController` for it. The controller shows that
+session, or starts a new one when no session tab is open. Its message
+field then puts the chip in as a pick from the list of `@` does.
 
 ### A chat that the app keeps
 

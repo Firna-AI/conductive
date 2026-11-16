@@ -61,9 +61,10 @@ of a draft.
   visit, and it sends no other write then.
 - A read-only chat shows no composer, no +, no Try again, no drag of a
   tab, and no answer to a Mac command. The tab menu of a session tab holds
-  only the two copy items, and a file or diff tab opens no tab menu, as
-  [the tab row](tab-row.md) says. A copy reads the transcript and sends no
-  write. Its empty state names only the session history.
+  only its three copy items, and the tab menu of a file or diff tab holds
+  only Copy path, as [the tab row](tab-row.md) says. A copy reads the
+  transcript and sends no write. Its empty state names only the session
+  history.
 
 When the chat becomes read-only, it hides an open rename or close question.
 The session history stays open. The tab keeps its old name, and the sandbox bar says why.

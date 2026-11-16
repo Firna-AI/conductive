@@ -14,11 +14,12 @@ the rule.
 
 - The screens show only labels: the rows of All files and Changes, a
   rename, the tab titles and their tooltips, the names of a tab in the tab
-  menu and the status of the tab row, the page headers, and the names that
-  a screen reader reads.
+  menu and the status of the tab row, the title of the sheet of a row menu,
+  the page headers, and the names that a screen reader reads.
 - The real path stays the key of each row and each tab, the address, the
-  read of a file or a diff, Copy, and Download, which saves the file under
-  its real name. A label never becomes a path.
+  read of a file or a diff, Copy, Copy path, the mention that Add to chat
+  writes, and Download, which saves the file under its real name. A label
+  never becomes a path.
 - A page takes its label from its reply, or else from the lists. A tab
   takes it from the lists, or else from the last read of its path in this
   page session, as `tabLabel` gives it. The store keeps the label of each
@@ -33,3 +34,15 @@ the rule.
   two labels, because two safe parts can form a secret value. A folder that
   the tree lacks takes its name from the label of an entry inside it, or
   shows "Folder".
+- One shared check says whether the label of a record hides a secret
+  value. The list of `@`, the row menu, and the tab menu use it. So a row
+  whose label hides a value has no item and opens no row menu, and such a
+  tab has no Copy path, as
+  [File row menu](../../docs/protocol/file-row-menu.md#paths-that-hide-a-secret-value)
+  says. The menus show only labels, and they read the real path only at
+  the press.
+- The check reads the record, not only a path and a label. A folder that
+  the tree lacks counts as hiding when its name comes from the label of an
+  entry inside it. A tab that shows "File" counts as hiding too. An entry
+  of a moved folder whose old label hides a value counts as hiding until
+  its update. So a missing or old label never lets a secret value through.

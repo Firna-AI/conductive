@@ -77,6 +77,8 @@ The [mockup catalogue](../mockups/catalogue.md) draws the tools at
 - A new temporary tab opens at the end of the tab row of the centre column.
   A replaced one keeps its place, as
   [The tab row](agents-and-sessions.md#the-tab-row) says.
+- A right click on a row of All files or Changes opens its row menu, with
+  Add to chat and Copy path, as [File row menu](file-row-menu.md) says.
 - The agent runner watches the repository and reports both lists.
   Branch changes count uncommitted and untracked work too.
 - The report of the branch changes also gives the number of commits of

@@ -9,7 +9,10 @@ their links, and the names of workspaces and sessions. It belongs to
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
 says. A title image decision number names a decision of the change that
 leaves the names of attached images out of titles, as
-[Messages and attachments](messages-and-attachments.md) says.
+[Messages and attachments](messages-and-attachments.md) says. A file row
+menu decision number names a decision of the change that adds the menu of
+the rows of All files and Changes, as [File row menu](file-row-menu.md)
+says.
 
 ## Agents
 
@@ -213,17 +216,26 @@ leaves the names of attached images out of titles, as
 - The tab menu of a session tab holds four groups, with a line between
   them: Rename session, then Copy link, Copy concise transcript, and Copy
   full transcript, then Move left and Move right, then Close tabs to the
-  right. The tab menu of a kept file or diff tab holds Move left and Move
-  right, then Close tabs to the right.
+  right. The tab menu of a kept file or diff tab holds three groups, with
+  a line between them: Copy path, then Move left and Move right, then
+  Close tabs to the right.
 - Copy link copies the link of the session of its tab, as
   [Session links](#session-links) says. The user added it on 12 November
   2026.
-- The tab menu of the temporary tab holds three groups, with a line
-  between them: Keep open, then Move left and Move right (decision 286 B),
-  then Close tabs to the right.
-- Reason: the tab menu groups its items by kind (decision 188).
+- The tab menu of the temporary tab holds four groups, with a line between
+  them: Keep open (decision 286 B), then Copy path, then Move left and
+  Move right, then Close tabs to the right.
+- Reason: the tab menu groups its items by kind (decision 188). Copy path
+  comes after Keep open and before the moves, as the copy items of a
+  session tab come after Rename session and before the moves.
 - [Session transcripts](session-transcripts.md) states what each copy item
   copies (decisions 213 and 215).
+- [Copy path](file-row-menu.md#copy-path) states what the Copy path item
+  copies, and the tabs that leave it out (file row menu decision 3 B).
+- Reason: a member can copy the path of the open file from its tab, with
+  no need to find its row. Copy path only on the rows, a Copy path button
+  in the header of the file, and a Copy path command in the command palette
+  were not chosen.
 - Move left and Move right move the tab one place in the row. On the first
   tab, Move left is off. On the last tab, Move right is off.
 - Close tabs to the right closes each tab after the tab in the row, of
@@ -265,14 +277,18 @@ leaves the names of attached images out of titles, as
   the workspace, and keeps each item that changes nothing (decision 214).
   So the tab menu of a session tab there holds only Copy link, Copy
   concise transcript, and Copy full transcript. It leaves out Close tabs to
-  the right. A file or diff tab there opens no tab menu.
+  the right. The tab menu of a file or diff tab there holds only Copy path
+  (file row menu decision 3 B).
+- A file or diff tab there without Copy path, such as a tab whose label
+  hides a secret value, has no item. So it opens no tab menu, and the
+  browser shows its own.
 - Reason: a read-only workspace accepts no change, but a member can still
   copy there, as
   [Read-only workspaces](session-transcripts.md#read-only-workspaces)
   says. The rule also covers each item that the menu gets later.
-- So a read-only workspace also leaves out Keep open. The temporary tab
-  there opens no tab menu either, and only a double-click keeps a tab
-  (decision 286 B).
+- So a read-only workspace also leaves out Keep open. The tab menu of the
+  temporary tab there holds only Copy path, and only a double-click keeps
+  a tab (decision 286 B).
 - The tab menu opens there in the same ways as in other workspaces. A long
   press on a phone opens it, but lifts no tab.
 - An item that the place of a tab rules out, such as Move left on the
