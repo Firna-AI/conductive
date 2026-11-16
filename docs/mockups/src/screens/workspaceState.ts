@@ -18,6 +18,11 @@ import {
   feedbackStateKeys,
   feedbackStateProperties,
 } from './feedbackState'
+import {
+  findStateDefaults,
+  findStateKeys,
+  findStateProperties,
+} from './findState'
 
 /**
  * The state of the workspace screen. Each catalogue entry of the screen is a
@@ -56,6 +61,7 @@ export const workspaceStateSchema = {
     'palette',
     ...feedbackStateKeys,
     ...barStateKeys,
+    ...findStateKeys,
   ],
   properties: {
     workspace: { enum: openableWorkspaces },
@@ -149,9 +155,11 @@ export const workspaceStateSchema = {
     /**
      * What lies open over the workspace: the session history, the question
      * before a running session closes, the owner of the workspace, the tab
-     * menu of the first session or of the temporary tab, or the question of
-     * Continue with work that is not pushed. Or the question before a
-     * terminal closes, or the toast of a terminal that did not open or close.
+     * menu of the first session, the temporary tab, or the kept code file,
+     * or the question of Continue with work that is not pushed. Or the
+     * question before a terminal closes, or the toast of a terminal that
+     * did not open or close. A phone shows no file tabs and opens no file
+     * tab menu.
      */
     overlay: {
       enum: [
@@ -160,6 +168,7 @@ export const workspaceStateSchema = {
         'close-session',
         'reassign',
         'tab-menu',
+        'file-tab-menu',
         'continue-unpushed',
         'close-terminal',
         'terminal-open-failed',
@@ -223,6 +232,7 @@ export const workspaceStateSchema = {
     palette: { enum: paletteViews },
     ...feedbackStateProperties,
     ...barStateProperties,
+    ...findStateProperties,
   },
 } as const
 
@@ -259,6 +269,7 @@ export const readyWorkspace: WorkspaceState = {
   palette: 'closed',
   ...feedbackStateDefaults,
   ...barStateDefaults,
+  ...findStateDefaults,
 }
 
 /**

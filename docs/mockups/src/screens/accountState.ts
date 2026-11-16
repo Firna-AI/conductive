@@ -108,7 +108,8 @@ export const accountSchema = {
      * The search of Keyboard shortcuts: an empty field, a query that finds
      * commands by their labels and their words, a query that finds the
      * fixed keys of a focused workspace row and divider, a query that finds
-     * only Model picker, or a query that matches no row.
+     * only Model picker, a query that finds the rows of find, or a query
+     * that matches no row.
      */
     shortcutSearch: { enum: shortcutSearches },
     /**

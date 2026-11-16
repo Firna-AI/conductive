@@ -10,6 +10,7 @@ import { agentStopConversations } from './agentStopConversations'
 import { attachmentConversations } from './attachmentConversations'
 import type { Attachment } from './attachments'
 import { endpointConversations } from './endpointModels'
+import { findConversations } from './findConversations'
 import {
   autocompleteStart,
   autocompleteTests,
@@ -215,4 +216,5 @@ export const conversations: Readonly<
   ...barConversations({ history, cutOff: cutOffTurn }),
   ...listConversations,
   ...headingConversations,
+  ...findConversations(history),
 }

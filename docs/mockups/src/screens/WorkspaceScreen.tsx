@@ -1,14 +1,11 @@
 import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
-import { MessageSquarePlus } from 'lucide-react'
-import { ChatPane } from '../components/chat/ChatPane'
 import { ChatWorkspaces } from '../components/chat/chatWorkspaces'
-import { EmptyState } from '../components/common/EmptyState'
+import { PhoneKeyboard } from '../components/common/PhoneKeyboard'
 import { FilePage } from '../components/files/FilePage'
 import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
 import { acmeRail } from '../components/layout/OrgRail'
 import { useMacApp } from '../components/mac/MacApp'
-import { SuspendedOrgNotice } from '../components/orgs/SuspendedOrgNotice'
 import { ChecksActions } from '../components/workspace/BarActions'
 import { MobileTabBar } from '../components/workspace/MobileTabBar'
 import {
@@ -20,24 +17,22 @@ import { WorkspaceBody } from '../components/workspace/WorkspaceBody'
 import { WorkspaceHeader } from '../components/workspace/WorkspaceHeader'
 import { WorkspaceTabs } from '../components/workspace/WorkspaceTabs'
 import { mayArchiveWorkspace } from '../components/workspaces/permissions'
-import { chatItemsFor } from '../fixtures/maskedFiles'
 import { memberViewer, people } from '../fixtures/members'
-import { orgs, suspendedOrg } from '../fixtures/orgs'
+import { suspendedOrg } from '../fixtures/orgs'
 import { bannerSummary } from '../fixtures/pullRequests'
 import type { ShortcutChanges } from '../fixtures/shortcutChanges'
 import { suspendedOwner } from '../fixtures/startRefusals'
 import { paths } from '../paths'
-import { composerFor } from './composerFor'
-import { composerNotice } from './composerNotice'
 import { placeLostUpdate } from './lostUpdates'
 import { changedWorkspaces, chatWorkspacesOf } from './orgWorkspaces'
 import { viewerOf } from './sessionStarter'
 import { barOf, branchOf } from './workspaceBar'
+import { WorkspaceChat } from './workspaceChat'
+import { findFor } from './workspaceFind'
 import {
   FilesContent,
   filesPlaceholder,
   openFile,
-  startingLogFor,
   ToolContent,
   workspaceSidebar,
 } from './workspaceParts'
@@ -48,12 +43,7 @@ import {
   workspaceToast,
 } from './workspaceOverlays'
 import { openWorkspace } from './workspaceRun'
-import {
-  activityOf,
-  archiveRestore,
-  drawnState,
-  sandboxNotice,
-} from './workspaceSandbox'
+import { activityOf, archiveRestore, drawnState } from './workspaceSandbox'
 import type { WorkspaceState } from './workspaceState'
 import { tabRowOf } from './workspaceTabRow'
 import { historyFor, tabsFor, workspaceName } from './workspaceTabs'
@@ -114,38 +104,15 @@ export function WorkspaceScreen(props: {
   // Every member restores it while the app keeps its cloud computer.
   const restorable = archiveRestore(state) === 'available'
   const bar = barOf(state, { archivable, readOnly })
-  const problem = sandboxNotice(state)
-  const fresh = state.tab === 'new-session'
   const rightHidden = state.rightColumn === 'hidden'
   const rows = chatWorkspacesOf(state, { workspace, status })
   const chat = (
-    <ChatWorkspaces rows={rows}>
-      <ChatPane
-        composer={composerFor(state, workspace, viewport)}
-        empty={
-          <EmptyState
-            body={`The agent works on ${workspace.branch}, on the same cloud computer as the other sessions.`}
-            icon={MessageSquarePlus}
-            title="New session"
-          />
-        }
-        fold={state.fold}
-        items={fresh ? [] : chatItemsFor(open.items, state.paths)}
-        notice={
-          // An archived workspace keeps its archived bar, so the notice of a
-          // suspended org shows above it.
-          archived && suspended ? (
-            <SuspendedOrgNotice org={orgs[suspendedOrg]} />
-          ) : (
-            composerNotice(state, workspace)
-          )
-        }
-        problem={problem}
-        starting={startingLogFor(state)}
-        viewer={viewer}
-        viewport={viewport}
-      />
-    </ChatWorkspaces>
+    <WorkspaceChat
+      rows={rows}
+      state={state}
+      viewport={viewport}
+      workspace={workspace}
+    />
   )
   const workspaceHeader = (
     <WorkspaceHeader
@@ -225,6 +192,10 @@ export function WorkspaceScreen(props: {
       files,
       tool,
     }
+    // An open find bar has the focus, so the keyboard covers the bottom.
+    const typing =
+      state.focus !== 'tool' &&
+      findFor(state, state.focus === 'chat' ? 'chat' : 'file')
     return (
       <MobileFrame>
         {header}
@@ -239,6 +210,7 @@ export function WorkspaceScreen(props: {
         )}
         {overlay}
         {toast}
+        {typing ? <PhoneKeyboard /> : null}
       </MobileFrame>
     )
   }
@@ -273,7 +245,11 @@ export function WorkspaceScreen(props: {
       <WorkspaceBody
         center={
           file ? (
-            <FilePage placeholder={filesPlaceholder(state, true)} view={file} />
+            <FilePage
+              find={findFor(state, 'file')}
+              placeholder={filesPlaceholder(state, true)}
+              view={file}
+            />
           ) : (
             chat
           )

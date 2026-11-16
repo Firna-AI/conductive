@@ -4,6 +4,8 @@ import type { ChatItem } from '../../fixtures/conversations'
 import type { PersonKey } from '../../fixtures/members'
 import type { StartingLog } from '../../fixtures/starting'
 import { classes } from '../common/classes'
+import { FindBar } from '../find/FindBar'
+import { FindScope, type FindState } from '../find/findMarks'
 import { DrawnChoices } from '../mac/CommandActions'
 import { useMacApp } from '../mac/MacApp'
 import { SandboxBar } from '../workspace/SandboxNotice'
@@ -27,7 +29,8 @@ import styles from './ChatPane.module.css'
  * of its answers folds into one line. The commands that wait for approval
  * on a Mac leave the transcript and stay in view just above the composer,
  * in a region that scrolls when they need more room. Once answered, a
- * command shows at its place in the transcript.
+ * command shows at its place in the transcript. An open find bar sits above
+ * the transcript, so it does not scroll with it.
  */
 export function ChatPane(props: {
   items: readonly ChatItem[]
@@ -51,6 +54,11 @@ export function ChatPane(props: {
    * open folds starts at its top.
    */
   fold?: FoldState
+  /**
+   * The find bar over the chat, and the matches that it colours. A chat in
+   * which the bar opened a fold starts at its top, as with open folds.
+   */
+  find?: FindState
 }) {
   const mac = useMacApp()
   const empty = props.items.length === 0 && !props.starting
@@ -58,6 +66,7 @@ export function ChatPane(props: {
   const pending = props.items.filter(isPendingCommand)
   const transcript = props.items.filter((item) => !isPendingCommand(item))
   const fold = props.fold ?? 'closed'
+  const opened = (props.find?.opened?.length ?? 0) > 0
   return (
     <section
       aria-label="Chat"
@@ -66,43 +75,50 @@ export function ChatPane(props: {
         props.viewport === 'mobile' && styles.mobile,
       )}
     >
+      {props.find ? <FindBar find={props.find} /> : null}
       {empty && props.empty ? (
         <div className={styles.empty}>{props.empty}</div>
       ) : (
         <div
           className={classes(
             styles.scroll,
-            fold !== 'closed' && styles.fromTop,
+            (fold !== 'closed' || opened) && styles.fromTop,
           )}
           data-mokly-scroll="chat-transcript"
         >
-          <div className={styles.transcript}>
-            {groupItems(transcript).map((entry) => {
-              switch (entry.kind) {
-                case 'tools':
-                  return (
-                    <ToolGroup
-                      calls={entry.calls}
-                      open={entry.open}
-                      key={entry.id}
-                    />
-                  )
-                case 'work':
-                  return (
-                    <WorkFold key={entry.id} state={fold} steps={entry.steps} />
-                  )
-                case 'item':
-                  return (
-                    <ChatItemView
-                      item={entry.item}
-                      key={entry.item.id}
-                      viewer={props.viewer}
-                    />
-                  )
-              }
-            })}
-            {props.starting ? <StartingCard log={props.starting} /> : null}
-          </div>
+          <FindScope find={props.find}>
+            <div className={styles.transcript}>
+              {groupItems(transcript).map((entry) => {
+                switch (entry.kind) {
+                  case 'tools':
+                    return (
+                      <ToolGroup
+                        calls={entry.calls}
+                        open={entry.open}
+                        key={entry.id}
+                      />
+                    )
+                  case 'work':
+                    return (
+                      <WorkFold
+                        key={entry.id}
+                        state={fold}
+                        steps={entry.steps}
+                      />
+                    )
+                  case 'item':
+                    return (
+                      <ChatItemView
+                        item={entry.item}
+                        key={entry.item.id}
+                        viewer={props.viewer}
+                      />
+                    )
+                }
+              })}
+              {props.starting ? <StartingCard log={props.starting} /> : null}
+            </div>
+          </FindScope>
         </div>
       )}
       <div className={styles.footer}>

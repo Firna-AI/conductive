@@ -6,6 +6,7 @@ import { paths } from '../../paths'
 import inline from '../common/InlineText.module.css'
 import { ScreenLink } from '../common/ScreenLink'
 import { EntryIcon } from '../files/fileIcons'
+import { Found } from '../find/findMarks'
 import { previewPaths } from '../files/previewPaths'
 import { workspaceLabel } from '../workspaces/label'
 import type { WorkspaceRow } from '../workspaces/sections'
@@ -110,13 +111,18 @@ export function LinkChip(props: {
 /**
  * One part of the text of a message: text, code, or a chip. While its
  * message `waits` for the cloud computer, the chip of an attached file opens
- * nothing, because its copy does not exist yet.
+ * nothing, because its copy does not exist yet. An open find bar colours
+ * its matches in the text and the code.
  */
 function Part(props: { part: TextPart; waits?: boolean }) {
   const { part } = props
-  if (part.kind === 'text') return part.text
+  if (part.kind === 'text') return <Found text={part.text} />
   if (part.kind === 'code') {
-    return <code className={inline.code}>{part.text}</code>
+    return (
+      <code className={inline.code}>
+        <Found text={part.text} />
+      </code>
+    )
   }
   if (part.kind === 'attached') {
     const tab = props.waits === true ? undefined : part.file.tab

@@ -26,7 +26,7 @@ how a screen is built, and links to the other pages.
 | `app/new-workspace` | An empty chat, the first build of a new org, a repository that waits for its build, its error, files on the first message, the model menu with Fast on, the dialog, a pasted workspace link, the start, a queued second message, the first turn, a failed start, Try again |
 | `app/routines` | The routines of the org, a routine, its triggers, its runs, and a run workspace |
 | `app/org-settings`  | General with Delete org, then Repositories and Cloud computer with the notice of a repository change, the first build of a new org, and Members |
-| `app/chat`          | A finished turn with its work folded, then running turns, turns that an agent stopped, open work, tables in replies, lists in replies, headings in replies, lost data, lost updates, unread files, the time limit of background work, and a fast turn at standard speed |
+| `app/chat`          | A finished turn with its work folded, then running turns, turns that an agent stopped, open work, tables in replies, lists in replies, headings in replies, lost data, lost updates, unread files, the time limit of background work, a fast turn at standard speed, and the find bar over a long chat |
 | `app/mac-commands`  | A command that an agent runs on the Mac of the sender, in the chat            |
 | `app/sessions`      | A new session, the history, closing one while it works, and a linked session  |
 | `app/reassign`      | The owner of a workspace, its reassign menu, a member's view, a stopped turn  |
@@ -36,8 +36,8 @@ how a screen is built, and links to the other pages.
 | `app/attachments`   | A file that uploads in the text, then a drop, a failed upload, a file over 100 MB, sent files, the file tab of a sent screenshot, and a first message with files |
 | `app/workspace-links` | Chips in a message and an answer, then Copy link and its failure, a pasted link, a link of another org, session chips, and messages that an agent sent |
 | `app/file-mentions` | The list of `@` with a query, then the list without one, its other states, and the file chips of the composer and of a sent message |
-| `app/files`         | All files, Changes with its summary, a file, Markdown, diff, and image tab, and the temporary tab that the next press replaces |
-| `app/tabs`          | A dragged tab, the moved row, a full row, the tab menu, and the rename field  |
+| `app/files`         | All files, Changes with its summary, a file, Markdown, diff, and image tab, the temporary tab that the next press replaces, and Find over each text tab |
+| `app/tabs`          | A dragged tab, then the moved row, a full row, the tab menus with Find, also of a file tab and of a read-only workspace, and the rename field |
 | `app/transcripts`   | Copy a transcript from the tab menu: the toast after a copy, a failed copy, and the menu of an archived workspace |
 | `app/tools`         | The terminal tabs and their states, then the Preview tool with its detected servers and its failed list repair, and the hidden Desktop, kept for its return |
 | `app/panels`        | The right column, widened by the handle on its inner edge, and then hidden    |
@@ -50,7 +50,7 @@ with child folders shows only its canonical screen, as `marketing`, `marketing/d
 `app/orgs/suspended`, `app/account`, `app/account/connect-codex`, `app/new-workspace`,
 `app/new-workspace/dialog`, `app/org-settings`,
 `app/org-settings/cloud-computer`, `app/operator`, `app/operator/user`, `app/operator/user/access`, `app/operator/codes`, `app/banner`, `app/chat`, `app/archive`, `app/workspace-links`, `app/routines`, `app/routines/routine`,
-`app/routines/triggers`, `app/orgs/suspended/routines`, `app/file-mentions`, `app/attachments`, `app/files`, `app/tools`, `app/account/shortcuts`, and `mac-app/shortcuts` do. `marketing/pictures` has no screen of its own. Each picture's capture
+`app/routines/triggers`, `app/orgs/suspended/routines`, `app/file-mentions`, `app/attachments`, `app/files`, `app/tabs`, `app/tools`, `app/account/shortcuts`, and `mac-app/shortcuts` do. `marketing/pictures` has no screen of its own. Each picture's capture
 page is its own entry at `marketing/pictures/<picture>`, so each page shows
 one screen. `marketing/from-conductor` has no screen of its own either. Its
 index document, `index.md`, gives the notes of the page and where its
@@ -60,8 +60,8 @@ and build-failed states moved from `app/repository-settings` and its updating
 and update-failed states, and declare `movedFrom`. The states of `app/shell`,
 `app/account`, `app/sign-in/waitlist`, `app/new-workspace`,
 `app/new-workspace/dialog`, `app/org-settings/cloud-computer`,
-`app/operator/user/access`, `app/archive`, `app/command-palette/search`, `app/attachments`, and
-`app/files` moved into their own folders and kept their paths. Each page
+`app/operator/user/access`, `app/archive`, `app/command-palette/search`, `app/attachments`,
+`app/files`, and `app/tabs` moved into their own folders and kept their paths. Each page
 shows only its canonical screen. `app/sign-in/get-started` moved into its
 own folder and
 kept its path. Its saved states `installed`, `org-created`, `connected`,
@@ -278,6 +278,23 @@ The user chose the four actions that change the workspace on 9 November
   admin, then her own workspace, her archived row, whose menu has only
   Copy link, and a suspended org, whose menus have only Copy link.
 
+`app/tabs` draws the tab row of the centre column, from decisions 186 to
+188. Its canonical screen has a tab in the middle of a drag. Its saved
+states moved into their own folders and kept their paths, so the page
+shows only its canonical screen. Its child pages:
+
+- `app/tabs/moved` has the row after the move, with a new session at its
+  end.
+- `app/tabs/full` has a row with more tabs than fit, which scrolls.
+- `app/tabs/menu` has the menu of a session tab: Rename session, then
+  Find, Copy link, and the two copies of a transcript, then the moves.
+  Find comes from find decision 1 B of 13 November 2026. Its `file`
+  variant has the menu of a file tab: Find, then the moves. A phone shows
+  no file tab, so its view is the file page with Find in its header. Its
+  `read-only` variant has the menu of a file tab in a workspace of a
+  suspended org, with only Find.
+- `app/tabs/rename` has the rename field in a session tab.
+
 [The command palette and feedback](catalogue-palette.md) gives the
 child pages of `app/command-palette` and of `app/feedback`, and the flow
 that sends feedback.
@@ -309,7 +326,9 @@ the model menu of a session shows the same key before its switch, as
   - `app/account/shortcuts/installed` has the installed app of Chrome on
     a Mac, where no key is dimmed.
   - `app/account/shortcuts/search` has a search for "tab", with dimmed
-    keys in its rows. Its `no-match` variant has a search without a
+    keys in its rows. Its `find` variant has a search for "find": Find,
+    Find next, and Find previous of find decision 1 B, with the fixed keys
+    of the find field. Its `no-match` variant has a search without a
     match.
   - `app/account/shortcuts/recording` has a row that records new keys,
     with Remove beside Cancel. Its `adding` variant has the recorder of +,

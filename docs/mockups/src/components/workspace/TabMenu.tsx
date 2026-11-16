@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'
 import { Menu, type MenuEntry } from '../common/Menu'
 import { Sheet } from '../common/Sheet'
+import { findItem } from '../find/findCopy'
 import { linkItem } from './linkCopy'
 import type { WorkspaceTab } from './TabItem'
 import { transcriptItems } from './transcriptCopy'
@@ -54,18 +55,20 @@ const keepOpen: TabMenuItem = {
 
 /**
  * The groups of the menu of a tab, before a read-only workspace leaves
- * items out: a session tab has Rename session, Copy link and its two
- * transcript copies, and the moves. The temporary tab has Keep open and the moves, and a kept file or
- * diff tab has only the moves.
+ * items out: a session tab has Rename session, Find, Copy link and its two
+ * transcript copies, and the moves. The temporary tab has Keep open, Find,
+ * and the moves. A kept file or diff tab has Find and the moves.
  */
 function groupsOf(
   tab: WorkspaceTab,
   moves: readonly TabMenuItem[],
 ): readonly (readonly TabMenuItem[])[] {
+  const find: TabMenuItem = { ...findItem, changes: false }
   if (tab.kind === 'session') {
     return [
       [{ label: 'Rename session', icon: Pencil, changes: true }],
       [
+        find,
         { ...linkItem, changes: false },
         { label: transcriptItems.concise, icon: Copy, changes: false },
         { label: transcriptItems.full, icon: CopyPlus, changes: false },
@@ -73,19 +76,22 @@ function groupsOf(
       moves,
     ]
   }
-  return tab.temporary ? [[keepOpen], moves] : [moves]
+  return tab.temporary ? [[keepOpen], [find], moves] : [[find], moves]
 }
 
 /**
  * The menu of a tab: a right click opens it, and on a phone a long press
  * that ends without a move. A session tab leads with Rename session, the
- * one way to rename a session. Its copy items follow: Copy link, which
- * copies the link of the session, the concise copy, with each fold of the
- * chat closed, and the full copy, with every fold open. The temporary tab
- * leads with Keep open. Every tab moves one place left or right. A move
- * that the place of the tab rules out keeps its place, off. A read-only
- * workspace leaves out each item that changes the workspace, so a session
- * tab keeps only its copy items, and a file or diff tab has no menu.
+ * one way to rename a session. Its second group starts with Find, which
+ * shows the tab and opens the find bar on it (find decision 1 B). The copy
+ * items follow: Copy link, which copies the link of the session, the
+ * concise copy, with each fold of the chat closed, and the full copy, with
+ * every fold open. A temporary tab leads with Keep open. A file or diff
+ * tab has Find as its own group. Every tab moves one place left or right.
+ * A move that the place of the tab rules
+ * out keeps its place, off. A read-only workspace leaves out each item
+ * that changes the workspace, so a session tab keeps Find and its copy
+ * items, and a file or diff tab keeps only Find.
  */
 export function tabMenuOf(
   tabs: readonly WorkspaceTab[],
@@ -118,7 +124,7 @@ export function tabMenuOf(
 
 /**
  * The tab menu of a phone: a sheet with the title of the tab. A tab whose
- * menu has no item, such as a file tab of a read-only workspace, opens none.
+ * menu has no item opens none.
  */
 export function TabMenuSheet(props: {
   tabs: readonly WorkspaceTab[]

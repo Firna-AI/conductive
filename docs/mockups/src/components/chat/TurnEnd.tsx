@@ -3,6 +3,7 @@ import type { TurnEndReason } from '../../../../../src/shared/chat-events'
 import { splitPath, type ChangedFile } from '../../fixtures/files'
 import { ScreenLink } from '../common/ScreenLink'
 import { DiffStat } from '../files/DiffStat'
+import { Found } from '../find/findMarks'
 import { paths } from '../../paths'
 import { EndReasonLine } from './EndReasonLine'
 import { turnFilesUnavailable } from './lostCopy'
@@ -16,7 +17,7 @@ function FileChip(props: { file: ChangedFile }) {
   const content = (
     <>
       <FileText className={styles.icon} size={12} />
-      {splitPath(file.path).name}
+      <Found text={splitPath(file.path).name} />
       <DiffStat added={file.added} removed={file.removed} />
     </>
   )
@@ -69,7 +70,9 @@ export function TurnEnd(props: {
   )
   const row = (
     <div className={styles.end}>
-      <span className={styles.duration}>{props.duration}</span>
+      <span className={styles.duration}>
+        <Found text={props.duration} />
+      </span>
       {props.standardSpeed === undefined ? (
         files
       ) : (

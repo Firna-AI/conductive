@@ -1,5 +1,6 @@
 import { productName } from '../brand'
 import type { Shortcut } from '../components/common/KeyChips'
+import { findKeyLabels, findWords } from '../components/find/findCopy'
 
 /**
  * A fixed shortcut, which the app, the system, or the menus of the Mac app
@@ -117,6 +118,20 @@ export const focusedButtonKeys: FixedSpec = {
 export const messageKeys: readonly FixedSpec[] = [
   fixed('Send', ['Enter', '⌘Enter'], ['Enter', 'Ctrl+Enter']),
   fixed('New line', ['⇧Enter'], ['Shift+Enter']),
+]
+
+/**
+ * The keys of the field of the find bar (find decision 1 B). Enter goes to
+ * the next match, Shift+Enter to the previous one, and Escape closes the
+ * bar.
+ */
+export const findFieldKeys: readonly FixedSpec[] = [
+  { ...fixed(findKeyLabels.next, ['Enter']), words: findWords },
+  {
+    ...fixed(findKeyLabels.previous, ['⇧Enter'], ['Shift+Enter']),
+    words: findWords,
+  },
+  { ...fixed(findKeyLabels.close, ['Esc']), words: findWords },
 ]
 
 /**

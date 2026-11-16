@@ -19,6 +19,15 @@ export const browserShortcutsSearch = defineScreen({
   ),
   variants: [
     {
+      slug: 'find',
+      title: 'Find',
+      description:
+        'A search for “find” in a normal Chrome tab on a Mac. The Chat group shows Find with ⌘F, Find next with ⌘G, and Find previous with ⌥⌘G. Chrome keeps none of these keys in a tab, so none is dimmed. The fixed keys of the find field follow them: Enter for the next match, ⇧Enter for the previous match, and Esc, which closes the find bar.',
+      rationale:
+        'The user chose B of find decision 1 on 13 November 2026: ⌘F or Ctrl+F opens the find bar of the shown tab. The default keys copy Conductor, so Find has ⌘F and Find next has ⌘G. ⇧⌘G of Conductor already opens the pull request on GitHub, and two commands share no default key, so Find previous has ⌥⌘G, a key chosen by hand. The tab lists each fixed key, so the keys of the find field show as fixed rows.',
+      props: { shortcutSearch: 'find' },
+    },
+    {
       slug: 'no-match',
       title: 'No match',
       description:

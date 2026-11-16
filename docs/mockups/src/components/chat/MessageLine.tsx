@@ -8,6 +8,7 @@ import type {
 import type { MessageHeading } from '../../fixtures/headingConversations'
 import type { MessageList } from '../../fixtures/listConversations'
 import { classes } from '../common/classes'
+import { useFind } from '../find/findMarks'
 import { AgentBlocks } from './AgentBlocks'
 import { MessageText } from './MessageText'
 import styles from './ToolGroup.module.css'
@@ -110,12 +111,16 @@ function LineBlock(props: { block: AgentBlock }) {
  * closed line shows the first table, and all that follows it, as text. When
  * the message opens, the line keeps the blocks before the table, and the
  * table and the rest of the message show under the line.
+ *
+ * The line cuts its text with an ellipsis, so the find bar opens the line
+ * that holds its current match.
  */
 export function MessageLine(props: { message: AgentItem; open: boolean }) {
   const { lead, rest } = splitAtTable(props.message.blocks)
   const table = rest.length > 0
+  const found = useFind()?.opened?.includes(props.message.id) === true
   return (
-    <details className={styles.message} open={props.open}>
+    <details className={styles.message} open={props.open || found}>
       <summary className={styles.messageLine}>
         <MessageSquareText aria-hidden className={styles.icon} size={13} />
         <span className={styles.messageText}>

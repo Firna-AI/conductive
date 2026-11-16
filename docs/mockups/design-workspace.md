@@ -22,12 +22,14 @@ link, and the bars of the cloud computer.
   stands between two tabs and takes no space. When the tabs do not fit at
   their minimum width, the row scrolls sideways with no scrollbar, keeps the
   shown tab in view, and fades each end that clips tabs. A right click on a
-  tab opens its menu at the pointer: Rename session, a line, Copy link,
-  Copy concise transcript, and Copy full transcript, a line, then Move left
-  and Move right, from decisions 188 and 215. Copy link copies the link of
-  the session. A kept file or diff tab has only the moves. In a read-only
-  workspace, the menu of a session tab holds only the three copy items,
-  and a file or diff tab opens no menu. A copy keeps the shown
+  tab opens its menu at the pointer: Rename session, a line, Find, Copy
+  link, Copy concise transcript, and Copy full transcript, a line, then
+  Move left and Move right, from decisions 188 and 215 and find decision
+  1 B. Find shows the tab and opens the find bar on it. Copy link copies
+  the link of the session. A kept file or diff tab has Find, a line, then the
+  moves. In a read-only workspace, the menu of a session tab holds only
+  Find and the three copy items, and a file or diff tab holds only Find.
+  A copy keeps the shown
   tab, and a toast gives its result, as `app/transcripts` shows. The menu
   is the one way to rename a session, so no tab shows a rename button.
   Rename session opens a field in place of the title of that tab, also when
@@ -49,13 +51,33 @@ link, and the bars of the cloud computer.
   ", temporary". The tab menu and the move messages keep the plain name. A
   double-click on the tab or on the row of its file keeps it as a normal
   tab, with an upright title, in its place. Its tab menu leads with Keep
-  open, which keeps it too, then a line, then Move left and Move right.
+  open, which keeps it too, then a line, then Find, a line, then Move left and Move right.
   Keep open has the icon of a bookmark with a check, because a pin names
   the pinned tabs of a browser. A drag, Move left, or Move right that
   changes its place keeps it. A drag that Escape cancels, or that ends in
   the same place, keeps it temporary. A phone row shows no file tabs, so a
   phone draws no temporary tab. `.temporary` of `WorkspaceTabs.module.css`
   styles the title.
+
+- `FindBar` in `src/components/find/` draws the find bar of the shown tab,
+  from find decision 1 B of 13 November 2026, as `app/chat/find` and the
+  `find` variants of `app/files` show. It is one line across the tab,
+  under the tab row of a session or under the header of a file page, with
+  the line and the height of that header. Its field, "Find in this tab",
+  its count, Previous, Next, and Close stand together at its start. The
+  field shows the focus, and on a phone it takes the width that the
+  buttons leave. The count says "3 of 17" or "No matches", and an empty
+  field shows none. The count takes the width of its text, so the arrows
+  stay beside it. Previous and Next are off without a match.
+  - `findMarks.tsx` beside it colours the matches of the text of the tab:
+    a tint of amber for each match, and solid amber for the current
+    match. A match has no border, no radius, and no padding, because the
+    app draws it with the CSS Custom Highlight API, which takes only
+    colours. A match can cross the coloured tokens of one line of code.
+  - The bar opens the fold and the message line that hold the current
+    match, as a click does. `findCopy.ts` holds the words of the bar, of
+    the Find item of the tab menu, and of the Find button of the header
+    of a file page, which sits beside Copy and is off where Copy is off.
 - `TerminalTabs` in `src/components/tools/` draws the terminals of a
   workspace as a row of tabs above the shown terminal, with + at its end,
   from decisions 1 to 3 of the terminal tabs change, as `app/tools` shows. Its tabs are

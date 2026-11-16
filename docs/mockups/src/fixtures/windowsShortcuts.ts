@@ -16,6 +16,7 @@ import type { CommandId } from './shortcutCommands'
  * Ctrl+Shift+X. Fast mode decision 258 C of 12 November 2026 gives Fast mode
  * Ctrl+Shift+E by the same rule. Only the Mac app has the sidebar toggle,
  * Back, and Forward, so they have no key here.
+ * Find, Find next, and Find previous use Ctrl+F, Ctrl+G, and Alt+Shift+G.
  */
 export const windowsKeys: Readonly<Record<CommandId, readonly Shortcut[]>> = {
   'command-palette': ['Ctrl+K'],
@@ -87,4 +88,7 @@ export const windowsKeys: Readonly<Record<CommandId, readonly Shortcut[]>> = {
   'stop-agent': ['Alt+Shift+S'],
   'copy-concise-transcript': ['Alt+Shift+C'],
   'copy-full-transcript': [],
+  find: ['Ctrl+F'],
+  'find-next': ['Ctrl+G'],
+  'find-previous': ['Alt+Shift+G'],
 }

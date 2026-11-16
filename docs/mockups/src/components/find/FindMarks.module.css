@@ -1,0 +1,17 @@
+/*
+ * The colours of the matches of the find bar. The app draws them with the
+ * CSS Custom Highlight API, whose `::highlight()` takes only colours. So a
+ * match has no border, no radius, and no padding here either.
+ *
+ * Each match keeps the colour of its text, on a tint of amber that the fill
+ * of its line, such as an added line of a diff, shows through. The current
+ * match is solid amber, with its text in the colour of a solid fill.
+ */
+.match {
+  background: color-mix(in srgb, var(--ui-amber) 30%, transparent);
+}
+
+.current {
+  background: var(--ui-amber);
+  color: var(--ui-on-solid);
+}

@@ -1,11 +1,15 @@
 import type { ReactNode } from 'react'
 import { SegmentedControl } from '@firna/ui/segmented'
-import { ChevronLeft, Code, Copy, Download, Eye } from 'lucide-react'
+import { ChevronLeft, Code, Copy, Download, Eye, Search } from 'lucide-react'
 import { splitPath } from '../../fixtures/files'
 import { noop } from '../../noop'
 import { ScreenLink } from '../common/ScreenLink'
+import { ShortcutTip } from '../common/ShortcutTip'
 import { IconButton } from '../common/actions'
 import { useControlSizes } from '../common/touch'
+import { FindBar } from '../find/FindBar'
+import { findInFile } from '../find/findCopy'
+import { FindScope, type FindState } from '../find/findMarks'
 import type { BackLink } from '../layout/Page'
 import { specFor } from './fileSpecs'
 import type { FileTabView } from './FilesPanel'
@@ -35,21 +39,39 @@ function isDiff(view: FileTabView): boolean {
 }
 
 /**
+ * Find in the text of the page, which opens the find bar. Its tooltip gives
+ * the key of Find. It is off where Copy is off, because the page then has
+ * no text to find.
+ */
+function FindButton(props: { name: string; off: boolean }) {
+  const label = findInFile(props.name)
+  return (
+    <ShortcutTip command="find" label={label} off={props.off}>
+      <IconButton disabled={props.off} icon={Search} label={label} />
+    </ShortcutTip>
+  )
+}
+
+/**
  * A file, a code preview, a picture, or a diff as a full page: a tab of the
  * centre column on desktop, and a page of the Files tab on a phone. The
  * header shows the label of the path, and the actions on the file. A file
  * whose name the app does not know shows "File". A file that is not text,
- * such as a picture, keeps Download, and its Copy is off.
+ * such as a picture, keeps Download, and its Copy and its Find are off.
+ * On a phone the page has no tab row, so Find in the header opens the bar.
  *
  * `placeholder` shows in place of the content, such as the state of a
  * sandbox that starts. The page then reads nothing, so its header has no
- * Download, no Copy, and no line count. A diff keeps its changed lines,
- * which come from the list of changes.
+ * Download and no line count, and its Copy and its Find are off. A diff
+ * keeps its changed lines, which come from the list of changes. `find` is
+ * the open find bar, under the header, which colours its matches in the
+ * text of the page. A page without text offers no Find, so it has no bar.
  */
 export function FilePage(props: {
   view: FileTabView
   back?: BackLink
   placeholder?: ReactNode
+  find?: FindState
 }) {
   const spec = specFor(props.view)
   const { folder, name } = splitPath(spec.path)
@@ -57,6 +79,7 @@ export function FilePage(props: {
   const waiting = props.placeholder !== undefined
   const closed = spec.closed === true || waiting
   const meta = waiting && !isDiff(props.view) ? undefined : spec.meta
+  const textless = closed || spec.binary === true
   return (
     <section aria-label={name} className={styles.page}>
       <div className={styles.header}>
@@ -78,15 +101,21 @@ export function FilePage(props: {
         </div>
         <div className={styles.end}>
           {meta ? <span className={styles.meta}>{meta}</span> : null}
+          <FindButton name={name} off={textless} />
           <IconButton
-            disabled={closed || spec.binary === true}
+            disabled={textless}
             icon={Copy}
             label={`Copy the text of ${name}`}
           />
           {props.view === 'markdown' ? <ViewSwitch /> : null}
         </div>
       </div>
-      <div className={styles.body}>{props.placeholder ?? spec.content}</div>
+      {props.find && !textless ? <FindBar find={props.find} /> : null}
+      <div className={styles.body}>
+        <FindScope find={textless ? undefined : props.find}>
+          {props.placeholder ?? spec.content}
+        </FindScope>
+      </div>
     </section>
   )
 }

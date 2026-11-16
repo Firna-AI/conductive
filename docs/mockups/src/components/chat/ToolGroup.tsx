@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import type { ToolCallItem, ToolKind } from '../../fixtures/conversations'
 import { classes } from '../common/classes'
+import { Found } from '../find/findMarks'
 import { LeftOut } from './LeftOut'
 import { leftOutOfCall, leftOutOfRun } from './lostCopy'
 import styles from './ToolGroup.module.css'
@@ -35,11 +36,15 @@ export function CallLine(props: { call: ToolCallItem }) {
     <>
       <Icon className={styles.icon} size={13} />
       <span className={styles.verb}>
-        {call.status === 'running' ? tool.running : tool.done}
+        <Found text={call.status === 'running' ? tool.running : tool.done} />
       </span>
-      <span className={styles.target}>{call.target}</span>
+      <span className={styles.target}>
+        <Found text={call.target} />
+      </span>
       {call.detail ? (
-        <span className={styles.detail}>{call.detail}</span>
+        <span className={styles.detail}>
+          <Found text={call.detail} />
+        </span>
       ) : null}
       {call.omittedDetailBytes ? (
         <LeftOut text={leftOutOfCall(call.omittedDetailBytes)} />
@@ -83,7 +88,7 @@ export function FoldLine(props: {
   return (
     <summary className={classes(styles.summary, leftOut > 0 && styles.wraps)}>
       <ChevronRight className={styles.chevron} size={14} />
-      {label}
+      <Found text={label} />
       {kinds.length > 0 ? (
         <span aria-hidden className={styles.kinds}>
           {kinds.map((kind) => {

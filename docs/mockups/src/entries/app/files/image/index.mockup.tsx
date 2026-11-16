@@ -8,7 +8,7 @@ import {
 export const filesImage = defineScreen({
   title: 'Image',
   description:
-    'A press on checkout-mobile.png in All files opened it in the temporary tab, with its picture. The picture keeps its proportions and fits the width and the height of the tab. A smaller picture keeps its own size. The header keeps Download, and Copy is off, as for every file that is not text. Its row in the list is marked.',
+    'A press on checkout-mobile.png in All files opened it in the temporary tab, with its picture. The picture keeps its proportions and fits the width and the height of the tab. A smaller picture keeps its own size. The header keeps Download, and Copy and Find are off, as for every file that is not text. Its row in the list is marked.',
   rationale:
     'The user chose option B of decision 265 on 10 November 2026: the file tab shows a PNG, JPEG, GIF, or WebP file up to its read limit as a picture, for every image of the workspace. The tab knows an image by the name of the file, because the reads of the cloud computer give no image type for each image. An image over the read limit keeps the state of the limit, "Open this file in the terminal". An SVG file stays text with line numbers, because its source is what a member edits. A press opens an image in the temporary tab, as it opens each file, from option B of decision 284, which the user chose on 11 November 2026.',
   relatedDocs: [],

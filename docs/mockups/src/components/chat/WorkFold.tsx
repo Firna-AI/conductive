@@ -1,3 +1,4 @@
+import { useFind } from '../find/findMarks'
 import type { WorkItem } from './groupItems'
 import { LostLine } from './LostLine'
 import { MacCommand } from './MacCommand'
@@ -51,18 +52,21 @@ function Step(props: { step: WorkItem; open: boolean }) {
  * command card and a lost line fold with the work at their place, and add
  * no count and no mark. The open fold lists the steps in order: a tool
  * call as its call line, a message as its first words, a card as the card,
- * and a lost line as the lost line.
+ * and a lost line as the lost line. The find bar opens the fold that holds
+ * its current match, and the fold stays open, as after a click.
  */
 export function WorkFold(props: {
   steps: readonly WorkItem[]
   state: FoldState
 }) {
   const { steps, state } = props
+  const opened = useFind()?.opened ?? []
   const calls = steps.filter((step) => step.kind === 'tool')
   const messages = steps.filter((step) => step.kind === 'agent')
   const openMessage = state === 'open-message' ? messages.at(-1) : undefined
+  const found = steps.some((step) => opened.includes(step.id))
   return (
-    <details className={styles.group} open={state !== 'closed'}>
+    <details className={styles.group} open={state !== 'closed' || found}>
       <FoldLine calls={calls} messages={messages.length} />
       <ul className={styles.calls}>
         {steps.map((step) => (

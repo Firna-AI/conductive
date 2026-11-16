@@ -62,13 +62,22 @@ variants:
   title, and the diff of AddressForm.tsx in a new temporary tab at the end
   of the row.
 - Its `menu` variant has the tab menu of the temporary tab: Keep open, a
-  line, then Move left and Move right.
+  line, Find, a line, then Move left and Move right.
 - Its `drag` variant has a drag of the temporary tab, whose lifted copy
   keeps the italics. A drop in another place keeps the tab.
 
 A phone row shows no file tabs, so the phone views of these pages show the
 file as a page of the Files tab. `app/tabs` names the page in the text of
 its tab menu and of its drag.
+
+The header of each file page has Find beside Copy, from find decision 1
+B of 13 November 2026. The `find` variant of `app/files/code`,
+`app/files/markdown`, and `app/files/diff` has the find bar under the
+header of the page: a query, its count, and the current match. The line
+numbers and the signs of a diff have no match. On a phone, Find in the
+header opens the bar, and the on-screen keyboard covers the bottom of the
+page. A picture and a file that did not open keep Find off, as their Copy
+is.
 
 The flow `user-flows/drop-a-file` goes from the drag of a screenshot onto
 the message box, through the drop, the upload, and Send, to the sent

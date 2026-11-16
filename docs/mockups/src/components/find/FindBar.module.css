@@ -1,0 +1,50 @@
+/*
+ * The find bar: one line across the shown tab, under the tab row of a
+ * session, or under the header of a file page. It has the height and the
+ * line of that header, and it keeps its place while the text scrolls.
+ */
+.bar {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 4px;
+  min-height: calc(var(--ui-bar-height) + 6px);
+  padding: 4px 8px 4px var(--ui-pad-x);
+  border-bottom: 1px solid var(--ui-border);
+  box-sizing: border-box;
+}
+
+.field {
+  flex: 0 1 280px;
+  min-width: 0;
+}
+
+/*
+ * The count takes the width of its text, so the arrows stay beside it.
+ * Its numbers keep one width each. The field gives up its room first,
+ * so the count never runs into the buttons.
+ */
+.count {
+  flex-shrink: 0;
+  min-width: 0;
+  padding: 0 4px;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+/* A phone gives the field the width that the count and the buttons leave. */
+.phone {
+  gap: 0;
+  padding: 4px 4px 4px 10px;
+}
+
+.phone .field {
+  flex: 1 1 auto;
+}
+
+.phone .count {
+  padding: 0 2px 0 8px;
+}

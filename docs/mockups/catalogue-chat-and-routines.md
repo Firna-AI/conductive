@@ -76,6 +76,19 @@ software". Its `stopped` variant has a stopped turn, whose line ends with
 the same words after a dot. A fast turn at fast speed ends as any turn
 does, as `app/fast-mode/trigger` shows.
 
+`app/chat/find` draws the find bar over a long chat, from find decision 1
+B of 13 November 2026. The chat is the finished turn of `app/chat`, then
+two more turns of the same session. The bar finds "places": the count
+says "4 of 10", each match has a tint of amber, and the current match is
+solid amber. The current match is in a call line of the work of the
+first turn, so the bar opened that fold. A view runs no script, so the
+chat starts at its top. The phone view has the bar at the top of the tab
+and the on-screen keyboard over the bottom of the screen. Its `no-match`
+variant has a query without a match, and its `empty` variant has the bar
+just after Find, with an empty field. The `find` state of the workspace
+screen draws the bar, and `findViews.ts` in `src/fixtures/` gives the
+query, the count, and the current match of each tab.
+
 `app/routines` lists the routines of Acme, which the Routines link below
 New workspace opens. Its child pages:
 

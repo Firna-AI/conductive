@@ -154,6 +154,11 @@ sessions as tabs above the chat, and four tabs at the bottom.
 - `SearchField` in `src/components/common/` draws the search field at the
   top of a list that it narrows: the repositories of an org, the tabs of
   the operator, and Keyboard shortcuts.
+- `PhoneKeyboard` in `src/components/common/` draws the on-screen keyboard
+  of a phone over the bottom of the screen, in the grey of a system
+  keyboard, while a field has the focus. The page keeps its size under it,
+  so the keyboard covers the message box and the tabs at the bottom. The
+  phone views of the find bar show it.
 - `LoadFailure` in `src/components/common/` draws data that did not load,
   as the lists of the app show it: what failed, the message of the server,
   and Try again.
@@ -214,9 +219,9 @@ sessions as tabs above the chat, and four tabs at the bottom.
   Navigation group ends with the keys that open the menu of a focused tab,
   and the Workspace group with the fixed keys of a focused workspace row and
   of a focused divider. Each of their labels names the control that has the
-  focus. The Chat group ends with the keys of the message field, and its
-  Send row shows Enter with ⌘ or Ctrl, so the tab shows that Enter with a
-  modifier is fixed too. A group of fixed shortcuts says it once, under its
+  focus. The Chat group ends with the keys of the message field and of
+  the find field, and its Send row shows Enter with ⌘ or Ctrl, so the tab
+  shows that Enter with a modifier is fixed too. A group of fixed shortcuts says it once, under its
   title. The Text group lists the text keys of the keyboard, with the keys
   that move or delete by word or by line in one row each, and its line
   says that the other text keys are fixed too. A narrow box, on a phone or

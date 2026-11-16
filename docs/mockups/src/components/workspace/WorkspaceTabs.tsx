@@ -85,7 +85,7 @@ function placeAfterDrop(from: number, index: number): number {
  * a session. `drag` draws a tab in the middle of a drag, and `menuTab` the
  * menu of a tab, below it or, on a phone, as a sheet that the screen draws.
  * In a read-only workspace the menu leaves out each item that changes the
- * workspace, so a file or diff tab there opens no menu.
+ * workspace, so a file or diff tab there holds only Find.
  * `renaming` draws the rename field in a tab, after Rename session in its
  * menu. `full` draws a row whose tabs do not fit, scrolled to the tab that
  * it keeps in view: the tab with the rename field, or else the shown tab.

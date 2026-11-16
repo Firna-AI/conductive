@@ -1,4 +1,5 @@
 import type { DiffHunkStart, DiffLine } from '../../fixtures/fileContents'
+import { Found } from '../find/findMarks'
 import { CodeTokens } from './CodeView'
 import styles from './code.module.css'
 
@@ -12,7 +13,11 @@ const lineClass = {
   removed: styles.removed,
 } as const
 
-/** A unified diff with old and new line numbers and syntax colours. */
+/**
+ * A unified diff with old and new line numbers and syntax colours. An open
+ * find bar colours its matches in the text of the lines and of the hunk
+ * headers, and never in a line number or a sign.
+ */
 export function DiffView(props: { hunks: readonly Hunk[] }) {
   const rows = props.hunks.flatMap((hunk) => {
     let oldLine = hunk.start.old
@@ -30,7 +35,7 @@ export function DiffView(props: { hunks: readonly Hunk[] }) {
         {rows.map((row, index) =>
           row.line.kind === 'hunk' ? (
             <div className={styles.hunk} key={index}>
-              {row.line.text}
+              <Found text={row.line.text} />
             </div>
           ) : (
             <div

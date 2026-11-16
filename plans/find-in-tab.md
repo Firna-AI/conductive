@@ -98,6 +98,35 @@ This plan names its decisions after the change, as find decision 1, as
 - **Recommendation:** A. The pages without a shown tab are short, and the palette already finds their rows.
 - **Chosen:** A, by the user on 13 November 2026. The follow-up item that recorded it was deleted in the same branch.
 
+### 3. Choose which tab menus offer Find
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Implementation, from the mockups of Milestone 1.
+- **Category:** Docs or spec.
+- **Location:** `docs/mockups/src/components/workspace/TabMenu.tsx:73`
+- **Terms:**
+  - **Tab menu:** the menu that a right click, or a long press on a phone, opens on a tab of the centre column ([The tab row](../docs/protocol/agents-and-sessions.md#the-tab-row)).
+  - **Read-only workspace:** an archived workspace, or a workspace of a suspended org. It accepts no change (decision 214).
+- **Background:**
+  - Find decision 1 B puts a Find item in the tab menu of each session, file, and diff tab. Find shows that tab and opens the find bar on it.
+  - A tab offers Find only while it shows text. A picture, a binary file, a file over the size limit, a file that did not load, and an empty session offer none.
+  - Decision 214 B keeps each item that changes nothing in the tab menu of a read-only workspace. So the design calls give a file or diff tab there a menu with only Find.
+  - The mockups show that a read-only workspace almost never shows the text of a file. An archived workspace shows no file tabs. A suspended org stops each sandbox, so its file tab shows "The sandbox can't start", as `app/tabs/menu/read-only` shows.
+- **Problem:** The menu offers Find on tabs where it finds nothing: a file or diff tab of a read-only workspace, a picture, and an empty session. Decision 214 B left rows that never turn on out of the menu of a read-only workspace for this reason.
+- **Impact if no action:** A person chooses Find, the tab shows, and no bar opens. This happens on each picture tab, such as the tab of an attached screenshot.
+- **Root question:** Which tab menus offer Find, so that the item works each time that it shows?
+- **Options:**
+  - **A.** Keep the design calls: the menu of each session, file, and diff tab has Find, also in a read-only workspace. On a tab without text, Find only shows the tab. One simple rule, but the item often does nothing. Effort: Small.
+  - **B.** Offer Find only where the app knows that the tab can show text: a session tab with messages, and a file or diff tab that is not a picture, while its sandbox runs or its page keeps the file. A file or diff tab of a read-only workspace then opens no menu in most cases, as today. The menu needs the state of the sandbox, and a binary file still offers Find before its first read. Effort: Small.
+  - **C.** Offer Find only in the menu of the shown tab, while that tab offers Find. The item always works, but the menus of the other tabs lack it, so the menu of a tab changes when the tab shows. Effort: Small.
+  - **D.** Keep Find in the menu of each session, file, and diff tab, and show it off where the app knows that the tab has no text, as the Find button of the page header is off. A read-only workspace leaves out such an item, under decision 214 B. The menu gets a third kind of off item, for the content of a tab. Effort: Small.
+- **Left out:** A Find item that shows a message when the tab has no text. The bar then opens on a tab that it cannot search, and the menu already knows most of these cases.
+- **Wider fix:** None. Each option changes one rule in `tabMenuOf` of the mockups and in `useTabMenu.ts` of the app.
+- **Previous examples:** Decision 214 B of 9 November 2026 left the rows that never turn on out of the menu of a read-only workspace. The Copy button of the page header is off for a picture.
+- **Recommendation:** B. It keeps Find only where it can work, for the reason that decision 214 B gives for the read-only menu.
+- **Action:** ask the user, because the recommended option changes the menu that find decision 1 B and decision 214 B give together, and no user decision covers that change.
+- **Chosen:** Open. The mockups draw option A, the design calls of 13 November 2026.
+
 ## Design
 
 The mechanics below are the design of this change. The protocol docs get
@@ -128,7 +157,13 @@ only the requirements, in Milestone 2.
   limit, a file that did not load, and an empty session offer no Find, so
   ⌘F goes on to the browser there.
 - A `FindBar` component, at the top of the shown tab, above the scroll box
-  of the tab. It does not scroll with the content.
+  of the tab. It does not scroll with the content. In a session it sits
+  under the tab row. In a file, Markdown, or diff page it sits under the
+  page header, above the text. Its field, count, Previous, Next, and Close
+  stand together at its start, as `app/chat/find` draws them.
+- The words of the bar, of the Find item, and of the Find button live in
+  `docs/mockups/src/components/find/findCopy.ts`. The app imports them, as
+  it imports `linkCopy.ts`.
 
 ### Matching
 
@@ -170,6 +205,11 @@ only the requirements, in Milestone 2.
   `Highlight` named `find-match` for all matches and one named
   `find-current` for the current match. The styles use `::highlight()`
   with colours from the theme tokens of `@firna/ui`.
+- Each match gets a tint of 30% `amber`, so the fill of its line, such as
+  an added line of a diff, shows through, and its text keeps its colour.
+  The current match gets solid `amber`, with its text in `onSolid`.
+  `FindMarks.module.css` of the mockups gives these styles. A highlight
+  takes only colours, so a match has no border and no radius.
 - The API changes no element of the page, so React keeps its DOM.
 - Where the API is missing, the bar still counts and goes to each match,
   and colours nothing.
@@ -238,16 +278,28 @@ only the requirements, in Milestone 2.
   - A Find item in the tab menu of a session, file, or diff tab.
   - A Find button with a search icon in the file page header, beside Copy
     and Download. On a phone, the file page shows no tab row, so this
-    button is its control.
+    button is its control. It stands just before Copy, and its tooltip
+    says "Find in" and the file name, with the key, such as
+    "Find in useAddressAutocomplete.ts (⌘F)". It is off where Copy is
+    off: for a picture, a binary file, and a page whose text did not load.
+- The Keyboard shortcuts tab lists the fixed keys of the find field in
+  the Chat group, after Send and New line: "Next match in the find
+  field", Enter, "Previous match in the find field", Shift+Enter, and
+  "Close the find bar", Escape. Their search words are "search" and
+  "text", as are those of the three commands.
 - The tooltips and `aria-keyshortcuts` show the keys of Find, Find next,
   and Find previous, as the other controls do.
 - The Mac app gets no Find menu item, because its page hears ⌘F first.
 
 ### Accessibility
 
-- The field has the label "Find in this tab". The count is a live region,
-  such as "3 of 17", or "No matches".
-- Previous, Next, and Close are icon buttons with labels.
+- The field has the label "Find in this tab". The empty field shows the
+  same words. The count is a live region, such as "3 of 17", or "No
+  matches".
+- Previous, Next, and Close are icon buttons with the labels "Previous
+  match", "Next match", and "Close the find bar". Previous and Next are
+  off while the field finds no match.
+- The bar is a search landmark with the label of its field.
 
 ### Phone
 
@@ -255,6 +307,14 @@ only the requirements, in Milestone 2.
   not cover it.
 - A session tab opens Find from its tab menu sheet, after a long press. A
   file page opens it from its header button.
+- The on-screen keyboard covers the bottom of the tab, and the page keeps
+  its size under it, as the phone mockups show. So on a phone, the middle
+  of the view, where the bar scrolls the current match, is the middle of
+  the part of the tab above the keyboard. `window.visualViewport` gives
+  that part.
+- Find from the sheet and from the header button puts the focus in the
+  field during the press. Reason: iOS opens the keyboard only for a focus
+  that a press gives.
 
 ### Tabs
 
@@ -293,6 +353,34 @@ decision test of the `decisions-and-findings` skill.
 - The bar closes on a change of the shown tab and keeps the query in
   memory.
 
+The calls below are the agent's calls of 13 November 2026, from the
+mockups of Milestone 1, under the same decision test.
+
+- In a file, Markdown, or diff page, the bar sits under the page header.
+  Reason: the header names the file and holds Find, and the bar then
+  stands next to the text that it searches.
+- The controls of the bar stand together at its start, on desktop and on
+  a phone. Reason: Close stays near the field, and the bar lines up with
+  the tab row and the page header.
+- Find in the menu of a tab that does not show shows that tab, then opens
+  the bar on it. Reason: the bar searches only the shown tab.
+- The Find button of the page header stands just before Copy, and it is
+  off where Copy is off. Reason: both act on the text of the page, and
+  the header already keeps Copy off where the page has no text.
+- Each match is a tint of amber, and the current match is solid amber.
+  Reason: amber is the usual colour of find, it differs from the accent of
+  the focus, and a tint lets the fill of a diff line show through.
+- The Keyboard shortcuts tab lists the fixed keys of the find field.
+  Reason: the tab lists each fixed key, as
+  [The rows](../docs/protocol/keyboard-shortcuts-tab.md#the-rows) says.
+- On a phone, the middle of the view is the middle of the part above the
+  keyboard. Reason: the keyboard covers the bottom of the tab, so the
+  middle of the whole tab can sit under it.
+
+On 13 November 2026, the user kept the full-width bar after considering
+an overlay. The count takes the width of its text. Reason: reserving the
+width of "No matches" left a large gap before the arrows for a short count.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -304,23 +392,26 @@ diff, on desktop and on a phone. The new items of the tab menu, the Find
 button of the file page header, and the new rows of the Keyboard shortcuts
 tab.
 
-- [ ] Add the find bar to the `app/chat` mockups: a long chat with a
+- [x] Add the find bar to the `app/chat` mockups: a long chat with a
       query, its count, the current match, and an opened fold. Add the
       state "No matches".
-- [ ] Add the find bar to the `app/files` mockups: `code`, `markdown`, and
+- [x] Add the find bar to the `app/files` mockups: `code`, `markdown`, and
       `diff`. Add the Find button to the file page header.
-- [ ] Add the Find item to the session tab menu and to the file and diff
+- [x] Add the Find item to the session tab menu and to the file and diff
       tab menu in `app/tabs`. Add the read-only file tab menu with only
       Find.
-- [ ] Add the phone layout: the bar over a session and over a file page,
+- [x] Add the phone layout: the bar over a session and over a file page,
       with the on-screen keyboard.
-- [ ] Add Find, Find next, and Find previous to the rows of the Keyboard
+- [x] Add Find, Find next, and Find previous to the rows of the Keyboard
       shortcuts tab mockup in `app/account/shortcuts`.
-- [ ] Update `docs/mockups/catalogue.md`.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages with
+- [x] Update `docs/mockups/catalogue.md`.
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages with
       `npm run mockups:serve`.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
+- [ ] Apply the answer to find decision 3 to the tab menus of
+      `app/tabs/menu`, its `read-only` variant, and `app/transcripts`,
+      with their descriptions and `catalogue.md`.
 
 ## Milestone 2: Documentation and protocol
 
@@ -340,7 +431,11 @@ The protocol states the requirements of find and of its keys and controls.
 - [ ] Update `docs/protocol/keyboard-shortcuts-fixed-keys.md`: Enter,
       Shift+Enter, and Escape in the find field.
 - [ ] Update `docs/protocol/agents-and-sessions.md` "The tab row": the
-      Find item of each tab menu, and the read-only file tab menu.
+      Find item of each tab menu, and the read-only file tab menu, as find
+      decision 3 chooses.
+- [ ] Add `docs/protocol/find-in-tab.md` to the `relatedDocs` of the find
+      mockups: `app/chat/find`, the `find` variants of `app/files`, and
+      `app/tabs/menu`.
 - [ ] Update `docs/protocol/workspace-tools.md` "Files and changes": the
       Find button of the file page header.
 - [ ] Read `src/marketing/terms.ts` and `src/marketing/privacy.ts` in full,
@@ -383,6 +478,9 @@ the Worker. No part offers them yet.
       ⌥⌘G, and Alt+Shift+G where the page offers them. Check ⌥⌘G and
       Alt+Shift+G in Chrome, Edge, Firefox, and Safari, and record the
       result in `docs/protocol/keyboard-shortcuts-keys.md`.
+- [ ] Add the fixed rows of the find field to the Chat group in
+      `src/shell/account/shortcuts/fixed-rows.ts`, with the words of
+      `findCopy.ts`, as `app/account/shortcuts/search/find` draws them.
 - [ ] Add the tests of the defaults and of the Worker check of saved keys.
 - [ ] Update `src/app/shortcuts/README.md` and
       `src/shell/shortcuts/README.md`, with the owners of the new
@@ -397,14 +495,19 @@ Depends on: 1, 3, 4
 The bar works in a session tab.
 
 - [ ] Add `FindProvider`, `useFindScope`, and `FindBar`, with the
-      highlights, the count, the keys, and the focus rules.
+      highlights, the count, the keys, and the focus rules. Use the words
+      of `findCopy.ts` and the styles of `FindBar.module.css` and
+      `FindMarks.module.css` of the mockups.
+- [ ] On a phone, scroll the current match to the middle of the part of
+      the tab above the on-screen keyboard. Put the focus in the field
+      during the press of Find, so iOS opens the keyboard.
 - [ ] Make the session view a scope, with a `show` that uses the keeper.
       Mark the visually hidden text and the labels of the controls of the
       chat with `data-find-skip`. Keep the visible text of the chips.
 - [ ] Open the closed folds and the message line of the current match
       through `useFold`, and keep the place of the reader through the
       keeper.
-- [ ] Add Find to the session tab menu, also in a read-only workspace.
+- [ ] Add Find to the session tab menu, as find decision 3 chooses.
 - [ ] Offer Find while a session tab with text shows, and Find next and
       Find previous while the bar is open.
 - [ ] Add DOM tests: open and close, the count, next and previous with
@@ -415,7 +518,8 @@ The bar works in a session tab.
 - [ ] Measure the search again in a chat of 4,200 items while a turn runs.
       Save the numbers in `.context/find-in-tab/`.
 - [ ] Check in Chrome, Firefox, and Safari, and in the Mac app, that the
-      keeper keeps the match in view. Save the screenshots in
+      keeper keeps the match in view. Check it also on a phone with the
+      on-screen keyboard open. Save the screenshots in
       `.context/find-in-tab/`.
 - [ ] Update `src/chat/README.md`, `src/chat/transcript.md`, and the tab
       menus in `src/chat/tab-row.md` and `src/chat/loads-and-sends.md`.
@@ -433,9 +537,9 @@ The bar works in each tab of a file with text.
 - [ ] Make the code view, the Markdown preview, and the diff view scopes.
       Mark their line numbers and the signs of the diff with
       `data-find-skip`.
-- [ ] Add the Find button to the file page header, and Find to the file
-      and diff tab menu. A read-only workspace opens that menu with only
-      Find.
+- [ ] Add the Find button to the file page header, just before Copy, and
+      off where Copy is off. Add Find to the file and diff tab menu, as
+      find decision 3 chooses.
 - [ ] Offer no Find for an image, a binary file, a file over the size
       limit, or a file that did not load.
 - [ ] Add DOM tests for each view and for the phone file page.

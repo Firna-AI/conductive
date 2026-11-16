@@ -3,6 +3,7 @@ import {
   sendFeedbackLabel,
   sendFeedbackWords,
 } from '../components/feedback/feedbackCopy'
+import { findCommands, findWords } from '../components/find/findCopy'
 import {
   agentActionLabels,
   type CommandAgentAction,
@@ -11,6 +12,7 @@ import { transcriptItems } from '../components/workspace/transcriptCopy'
 import {
   fixed,
   fixedGroups,
+  findFieldKeys,
   focusedButtonKeys,
   focusedKeys,
   messageKeys,
@@ -72,6 +74,9 @@ export type CommandId =
   | 'stop-agent'
   | 'copy-concise-transcript'
   | 'copy-full-transcript'
+  | 'find'
+  | 'find-next'
+  | 'find-previous'
 
 /**
  * A command with its default keys on a Mac. `windowsKeys` holds its keys
@@ -129,6 +134,9 @@ const commandWords: Partial<Record<CommandId, readonly string[]>> = {
   'stop-agent': ['cancel'],
   'copy-concise-transcript': ['markdown', 'clipboard', 'chat'],
   'copy-full-transcript': ['markdown', 'clipboard', 'chat', 'expanded'],
+  find: findWords,
+  'find-next': findWords,
+  'find-previous': findWords,
 }
 
 function command(
@@ -176,7 +184,10 @@ export function orgCommand(index: number): CommandId | undefined {
  * and 192 B). The key research of 10 November 2026 moved Next effort level
  * to ⌃⌘/ and Stop the agent to ⌃⌘⌫. Decision 199 C of 11 November 2026 adds
  * Copy link, the actions of the pull request bar, Copy concise transcript,
- * and Copy full transcript. Firefox keeps ⇧⌘P, so Create PR also has
+ * and Copy full transcript. Find decision 1 B of 13 November 2026 adds
+ * Find, Find next, and Find previous, with ⌘F and ⌘G of Conductor. ⇧⌘G of
+ * Conductor already opens the pull request, so Find previous has ⌥⌘G.
+ * Firefox keeps ⇧⌘P, so Create PR also has
  * ⌥⇧⌘P, and Firefox switches the text direction of a text field on ⇧⌘X, so
  * Fix checks has ⌥⌘X. Fast mode decision 258 C of 12 November 2026 adds Fast
  * mode, the switch of the model menu, with ⇧⌘E, the key of Conductor. The
@@ -270,7 +281,11 @@ export const shortcutSpecs: readonly GroupSpec[] = [
       command('stop-agent', 'Stop the agent', '⌃⌘⌫'),
       command('copy-concise-transcript', transcriptItems.concise, '⌥⌘C'),
       command('copy-full-transcript', transcriptItems.full),
+      command('find', findCommands.find, '⌘F'),
+      command('find-next', findCommands.next, '⌘G'),
+      command('find-previous', findCommands.previous, '⌥⌘G'),
       ...messageKeys,
+      ...findFieldKeys,
     ],
   },
   ...fixedGroups,

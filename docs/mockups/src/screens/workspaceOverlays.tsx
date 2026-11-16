@@ -178,6 +178,7 @@ export function workspaceOverlay(
         </Sheet>
       ) : null
     case 'tab-menu':
+    case 'file-tab-menu':
       return mobile && row.menuTab ? (
         <TabMenuSheet
           readOnly={row.readOnly}

@@ -28,6 +28,7 @@ import type { ShortcutChanges } from '../fixtures/shortcutChanges'
 import { terminalSets } from '../fixtures/terminals'
 import type { ActivityStatus, Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
+import { findFor } from './workspaceFind'
 import { freshPromptFor, runStartingLog } from './workspaceRun'
 import { panelState } from './workspaceSandbox'
 import { isNew } from './workspaceTabs'
@@ -120,7 +121,7 @@ export function filesPlaceholder(
  * keep the lists that the workspace saved. Otherwise, while the sandbox is
  * not running, the sandbox state takes the place of the lists. On a phone,
  * an open file shows as a page of the Files tab, with the same sandbox
- * state in place of its content. An archived workspace has no file lists:
+ * state in place of its content, and with the find bar of the state. An archived workspace has no file lists:
  * its files went with the cloud computer.
  */
 export function FilesContent(props: {
@@ -139,7 +140,12 @@ export function FilesContent(props: {
   const placeholder = filesPlaceholder(state, phone)
   if (phone && open) {
     return (
-      <FilePage back={backFrom(open)} placeholder={placeholder} view={open} />
+      <FilePage
+        back={backFrom(open)}
+        find={findFor(state, 'file')}
+        placeholder={placeholder}
+        view={open}
+      />
     )
   }
   return (

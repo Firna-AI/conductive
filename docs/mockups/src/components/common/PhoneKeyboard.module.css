@@ -1,0 +1,63 @@
+/*
+ * The keyboard of the system, over the bottom of a phone screen. It takes
+ * the grey of a system keyboard in each scheme, not the colours of the app.
+ */
+.keyboard {
+  display: flex;
+  position: absolute;
+  z-index: 30;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  flex-direction: column;
+  gap: 11px;
+  padding: 10px 3px 30px;
+  background: #d1d4da;
+  box-sizing: border-box;
+}
+
+.row {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+
+.key {
+  display: flex;
+  flex: 0 0 calc((100% - 54px) / 10);
+  align-items: center;
+  justify-content: center;
+  height: 42px;
+  border-radius: 5px;
+  background: #ffffff;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.3);
+  color: #000000;
+  font-family: var(--ui-font-sans);
+  font-size: 22px;
+}
+
+.action {
+  flex: 1 1 0;
+  max-width: 88px;
+  background: #abb0ba;
+  font-size: 15px;
+}
+
+.space {
+  flex: 1 1 0;
+  font-size: 15px;
+}
+
+:global(html[style*='dark']) .keyboard {
+  background: #2b2b2d;
+}
+
+:global(html[style*='dark']) .key {
+  background: #6b6b6d;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.6);
+  color: #ffffff;
+}
+
+:global(html[style*='dark']) .action {
+  background: #464648;
+}
