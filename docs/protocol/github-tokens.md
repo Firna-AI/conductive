@@ -1,10 +1,14 @@
 # GitHub tokens
 
 This doc states how a cloud computer gets GitHub access, who its commits
-name as their author, and how the Worker acts on GitHub as a member.
+name as their author, and how the Worker acts on GitHub as a member. It
+also states which GitHub tokens an image job uses to copy the
+repositories. An image job is a build or a refresh of the org image.
 [Access and security](access-and-security.md) states the shared access
 rules. A decision number names a dated record, as
-[Decision numbers](../architecture.md#decision-numbers) says.
+[Decision numbers](../architecture.md#decision-numbers) says. A parallel
+copy decision number names a decision of the change that copies the
+repositories of an image job in parallel.
 
 ## Git and the GitHub CLI
 
@@ -129,15 +133,38 @@ rules. A decision number names a dated record, as
   build sandbox, as decision 90 requires. Each copy uses its own GitHub App
   installation token, which can only read the contents of that one
   repository.
-- The Worker gives the token only to the Git command of that copy. The
-  Worker and Git do not write it to command text, command history, a
+- The copies of one image job run in parallel. Each copy has its own token
+  and its own one-use build grant.
+- The Git commands of an image job copy and check out its repositories.
+  These commands run at the same time only when they fit together in a
+  memory budget. The budget comes from the size of each repository that
+  GitHub reports and from the free memory of the build sandbox (parallel
+  copy decision 1). So a large repository copies alone. Many small
+  repositories copy together.
+- These ways were rejected (parallel copy decision 1):
+  - All copies at once, and a fixed number of copies or Git commands at
+    once in place of the budget. Only the budget lets a large repository
+    copy alone and many small ones copy together.
+  - One sandbox command for all copies. Each token then lives from the
+    start of that command until the slowest copy ends.
+- To read the size of each repository, the Worker uses installation tokens
+  that can only read metadata. Each token covers the repositories of the
+  job in one installation, at most 500 of them. When an installation has
+  more than 500 repositories of the job, each further batch of at most 500
+  gets its own token. Each metadata token stays in the Worker and never
+  reaches the build sandbox. The Worker revokes every metadata token before
+  the first copy starts.
+- The Worker gives each clone token only to the Git command of its copy.
+  The Worker and Git do not write it to command text, command history, a
   remote URL, a Git config, a file, or a saved snapshot.
 - The Git command gets the token with a one-use build grant. The grant
   works once, and only for its own build and repository.
-- The Worker revokes the token as soon as the Git command ends, also when
-  the command fails. The build goes on only after GitHub confirms the
-  revocation. The build starts no checkout, software step, install script,
-  snapshot, or other repository code before that.
+- The Worker revokes each clone token as soon as its Git command ends, also
+  when the command fails. A failed copy fails the job. The Worker then
+  revokes each token of the job that still works.
+- The job goes on only after GitHub confirms the revocation of every token
+  of the job. Before that, the job starts no checkout, software step,
+  install script, snapshot, or other repository code.
 - Risk: a later build and a refresh start from the last org image. A
   program with root access that an earlier install left in that image can
   read the clone token of a later copy. That token can only read its own
