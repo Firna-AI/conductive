@@ -127,11 +127,7 @@ export function OrgList(props: {
         variant={props.variant}
       />
       {adding && !readOnly ? (
-        <NewSectionDialog
-          below={adding.below}
-          close={cancelAdding}
-          create={create}
-        />
+        <NewSectionDialog close={cancelAdding} create={create} />
       ) : null}
       {layer}
     </>

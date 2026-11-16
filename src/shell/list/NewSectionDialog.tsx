@@ -4,9 +4,8 @@ import { Input, type InputFrameProps } from '@firna/ui/input'
 import { Notice } from '../../../docs/mockups/src/components/common/Notice'
 import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
 import { newSectionWords } from '../../../docs/mockups/src/components/workspaces/sectionCopy'
-import type { Section } from '../../shared/sections'
 import { ActionButton } from '../ui/actions'
-import { Dialog, DialogText } from '../ui/Dialog'
+import { Dialog } from '../ui/Dialog'
 import { useAction } from '../ui/useAction'
 
 type InputHandle =
@@ -15,15 +14,12 @@ type InputHandle =
     : never
 
 /**
- * New section: a dialog that asks for the name of a new section. From the
- * menu of a section, `below` is that section, and the new section goes
- * directly below it. Without it, as from the command palette, the new
- * section goes at the end of the list. Create section stays off until the
- * name holds text. While the create runs, nothing closes the dialog. A
- * failure shows in the dialog, and the dialog keeps the name.
+ * New section: a dialog that asks for the name of a new section. `create`
+ * knows where the section goes. Create section stays off until the name
+ * holds text. While the create runs, nothing closes the dialog. A failure
+ * shows in the dialog, and the dialog keeps the name.
  */
 export function NewSectionDialog(props: {
-  below: Section | null
   create: (name: string) => Promise<unknown>
   close: () => void
 }) {
@@ -63,11 +59,6 @@ export function NewSectionDialog(props: {
       initial={input}
       title={newSectionWords.title}
     >
-      <DialogText>
-        {props.below
-          ? newSectionWords.below(props.below.name)
-          : newSectionWords.atEnd}
-      </DialogText>
       <Input
         editable={!create.pending}
         inputRef={input}

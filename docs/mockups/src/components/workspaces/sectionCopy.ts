@@ -8,8 +8,4 @@ export const newSectionWords = {
   placeholder: 'Section name',
   create: 'Create section',
   failed: "The section wasn't created",
-  /** Where New section in the menu of a section puts the new section. */
-  below: (name: string) => `The new section goes below ${name}.`,
-  /** Where New section in the command palette puts the new section. */
-  atEnd: 'The new section goes at the end of the list.',
 } as const

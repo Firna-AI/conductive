@@ -74,9 +74,6 @@ describe('New section', () => {
     const open = await openFrom(view, 'General')
     const field = byRole('textbox', 'Name', open)
     const focused = field.contains(document.activeElement)
-    const said = open.textContent?.includes(
-      'The new section goes below General.',
-    )
     const offOnEmpty = byRole('button', 'Create section', open)
     const emptyOff = offOnEmpty.getAttribute('aria-disabled')
     typeText(field, '  Review ')
@@ -85,14 +82,12 @@ describe('New section', () => {
 
     expect({
       focused,
-      said,
       emptyOff,
       sent: await server.requests.at(-1)?.json(),
       open: dialog() !== null,
       order: order(view),
     }).toEqual({
       focused: true,
-      said: true,
       emptyOff: 'true',
       sent: { name: 'Review', afterSectionId: 'general' },
       open: false,
