@@ -7,12 +7,13 @@ a running agent turn. A stop ends every process in it. After a resume, the
 Terminal opens a new, empty shell. The user must start each dev server and
 watcher again, and the port previews stay blank until then. Boat, the
 sandbox provider, has no pause and keeps no memory after its first
-10 minutes, so a real process cannot come back. This change starts the
-commands of the Terminal shells again after a resume, in their folders.
+10 minutes. This change starts the commands of the Terminal shells again
+after a resume, in their folders. A copy of the process memory with CRIU
+is restart decisions 4 and 5.
 
 The user chose the approach on 16 November 2026: restart decision 1 C. The
 user's question was "is it possible to restore processes after a
-shutdown?". Decisions 2 and 3 below are open.
+shutdown?". Decisions 2, 3, and 5 below are open.
 
 This change does not cover the old output history of a shell, a setting
 that turns the restart off, the desktop apps, or the background work of an
@@ -85,7 +86,9 @@ says.
     10 minutes, or raise the idle stop. It keeps processes only across a
     short stop, and it costs compute time. Effort: Small.
 - **Left out:** A save of process memory, such as with CRIU. Boat has no
-  pause, and CRIU fails on open sockets, file watches, and browsers.
+  pause. Restart decisions 4 and 5 took up this approach later, after the
+  user asked about it. CRIU restores listening sockets and file watches.
+  Connections to the outside break.
 - **Recommendation:** B. It was predictable and ran only what a member
   chose.
 - **Chosen:** C, by the user on 16 November 2026.
@@ -226,6 +229,137 @@ options D and E, and corrected the reasons under **Left out** and
 - **Action:** ask the user, because A narrows restart decision 1 C, "an
   automatic restart of what ran before the stop", and the user's question
   named no kind of process.
+
+### 4. Copy the memory of processes across a stop
+
+- **Source:** Design.
+- **Root question:** Should a resume bring back the processes themselves,
+  and not only new runs of their commands?
+- **Options:**
+  - **A.** No memory copy. Keep only the restart of decision 1 C.
+    Effort: Small.
+  - **B.** First, a short test in a test workspace with CRIU, a Vite dev
+    server in tmux, a stop of more than 10 minutes, and a restore. Then
+    decide between A and C. Effort: Small.
+  - **C.** Build the memory copy for the Terminal processes now, with the
+    restart as the fallback. Effort: Large.
+  - **D.** Ask Boat for a pause that keeps the memory, or for a longer warm
+    time. Effort: Small for the app.
+  - **E.** A second provider whose pause keeps the memory, such as E2B.
+    Effort: Large.
+- **Recommendation:** B, with D at the same time.
+- **Chosen:** B, by the user on 16 November 2026.
+- **Result:** The test ran on 16 November 2026 in the workspace "CRIU
+  memory copy test". The user chose a fork of that sandbox for the new
+  machine, not a wait for the idle stop. The summary is in
+  `.context/restart-terminal-commands/criu-test.md`.
+  - CRIU 4.3 from `ppa:criu/ppa` saved and restored a Vite dev server and
+    a counter server in tmux, on the same machine and on a new machine
+    with another CPU model. The counter went on from its saved value. Vite
+    answered and saw file changes. The tmux screens came back.
+  - A save took about 0.2 seconds and about 100 MB. A restore took
+    0.1 seconds on a warm disk, and 15 to 97 seconds while Boat still
+    loaded the disk.
+  - Node opens `io_uring`, which CRIU cannot save. A seccomp filter that
+    blocks it fixed the save.
+  - A tree in its own PID namespace avoids clashes with PIDs that the new
+    machine uses. Its first process must run as root.
+  - A private mount namespace crashed the restore in CRIU 4.3.
+  - Each tree uses the shared terminal numbers, `/dev/pts/N`. A restore
+    fails when the Terminal of the new machine already uses a number. The
+    test did not reach this case.
+  - The shells of the test skipped `~/.bashrc`, because it exported a
+    token. A real Terminal shell loads it and the workspace variables, so
+    a saved image holds secrets.
+  - The real idle stop and a resume of the same workspace were not tested.
+- **Also chosen in the test session:** the component that decides the idle
+  stop saves the processes first, and asks Boat to stop only after the
+  save succeeds. The user chose this on 16 November 2026, as the test
+  session's decision 1 A.
+
+### 5. Build the memory copy
+
+The options check of 16 November 2026 added options E to H and the gaps
+on old disk views, old secret values, Boat's own stop, the Terminal wait,
+and ports. It changed the recommendation from B to E. Its report is in
+`.context/restart-terminal-commands/options-check-decision-5.md`.
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Design.
+- **Category:** Docs or spec.
+- **Location:** `worker/lifecycle/` (the idle stop), `worker/lifecycle/durable-turns.ts:10`, `worker/terminal/`, `image/release/`.
+- **Terms:**
+  - **CRIU:** a Linux tool that saves running processes, with their memory, to files and starts them again from the files.
+  - **Terminal number:** the device of a terminal, `/dev/pts/N`. A restored tmux server needs its old numbers.
+- **Background:** The test of restart decision 4 B showed that CRIU can
+  bring back a dev server with its memory on a new machine. The test
+  saved the whole tmux tree. The restart of decision 1 C stays as the
+  fallback, for a crash and a failed restore.
+- **Problem:** These gaps stay before a memory copy is safe for users:
+  - A whole tmux tree needs its old terminal numbers. The fix needs a
+    mount namespace, which crashed CRIU.
+  - A whole tree must restore before the Terminal starts and after the
+    disk load. So the Terminal waits for the load, which decisions 147
+    and 149 rejected.
+  - A process restored during the disk load keeps an old view of the
+    files. So each restore waits for the restore marker.
+  - The images hold the workspace token and the org variables. They need
+    encryption with a key that the Worker keeps. CRIU has no option that
+    encrypts its files.
+  - A restored process keeps the secret values of the last start. A
+    changed secret must apply at the next start, as
+    `docs/protocol/isolation.md` says.
+  - Boat's own auto-stop falls due with the idle stop, so Boat can stop
+    the machine before the save. Boat runs `~/.boat/pre-stop` at each
+    stop, for at most 60 seconds.
+  - The startup script can take a port before the restore.
+  - CRIU must ship with the sandbox software, and the saved processes
+    must run without `io_uring`.
+- **Impact if no action:** Processes come back as new runs of their
+  commands. Their memory, their screens, and their history are lost.
+- **Root question:** When, and how far, does the app build the memory copy
+  after the test?
+- **Options:**
+  - **A.** No memory copy. Build only the restart. Effort: Small.
+  - **B.** Build the restart now. Then run a second test of the whole tmux
+    tree that closes the gaps. Build the memory copy as its own change
+    only when that test passes. Effort: Medium for the test.
+  - **C.** Build the memory copy of the whole tree now, together with the
+    restart, and solve the gaps during the build. Effort: Large.
+  - **D.** Ask Boat for a pause that keeps the memory. Build only the
+    restart until then. The app cannot control whether or when Boat adds
+    it. Effort: Small for the app.
+  - **E.** Build the restart now. Then test a memory copy of each running
+    command only, not of tmux and the shells. CRIU saves each command as a
+    shell job. After the resume, the start program of the new pane waits
+    for the restore marker and restores the job into its pane. When the
+    restore fails, or the secrets changed, the restart runs. It needs no
+    old terminal numbers, no namespace, and no Terminal wait. The screens
+    and the shell state do not come back. Effort: Medium for the test,
+    Large for the build.
+  - **F.** An add-on: save the screens of each pane, encrypted, and print
+    them above the new shell. No process memory. Effort: Medium.
+  - **G.** Add "a pause that keeps the memory" to the checks of the second
+    provider, in `plans/follow-ups/choose-second-sandbox-provider.md`.
+    Effort: Small now.
+  - **H.** Run the Terminal in a small virtual machine inside the sandbox,
+    and save that machine's memory. Its file watches can miss the edits of
+    agents, and each save holds the whole memory of that machine. Effort:
+    Large.
+- **Left out:**
+  - A memory copy without encryption. The image holds the workspace
+    token, and Boat keeps a stopped disk for at least 14 days.
+  - A save at fixed times. After a crash, the image can be older than the
+    disk, so a restored program sees files that do not match its memory.
+- **Wider fix:** None. This is a new feature.
+- **Previous examples:** None found.
+- **Recommendation:** E, with D and G at the same time. E keeps the order
+  and the fallback of B, without the mount namespace that crashed CRIU or
+  a Terminal that waits. The first recommendation was B. Add F if the
+  screens must come back too.
+- **Action:** ask the user, because B, C, and E trade time against what
+  comes back, and the memory copy adds behaviour that no requirement
+  covers.
 
 ## Design
 
