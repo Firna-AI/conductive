@@ -16,7 +16,7 @@ import type { AppServices } from './services'
 import { asApiError } from './store'
 
 /** The code of the API for a request whose sign-in session ended. */
-export const signInRequiredCode = 'sign_in_required'
+const signInRequiredCode = 'sign_in_required'
 
 /** The first load of the app, and who it shows the app to. */
 export type Boot =
