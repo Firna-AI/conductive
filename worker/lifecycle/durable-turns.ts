@@ -17,7 +17,13 @@ export async function applyLifecycleTurn(
   return {
     ...state,
     runningSessions: [...sessions],
-    state: sessions.size ? 'working' : 'ready',
+    // A Restart shows Starting until the new runner is ready.
+    state:
+      state.softwareRestartAt !== undefined
+        ? 'starting'
+        : sessions.size
+          ? 'working'
+          : 'ready',
     lastActivityAt: Math.max(state.lastActivityAt, lastTurnEndedAt ?? 0),
   }
 }

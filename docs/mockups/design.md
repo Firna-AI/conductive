@@ -12,7 +12,7 @@ and a darker accent.
 
 The desktop layout has four columns. The org rail holds the mark, the orgs
 as squares with their initials, Create org, and the account at the bottom.
-The sidebar shows the org name with its Settings link, New workspace, Automations, Search, and
+The sidebar shows the org name with its Settings cog, New workspace, Automations, Search, and
 the sections that the user made. Each workspace is one line: a dot-matrix
 mark in the colour of its GitHub state, the name, and the time, and it
 moves to another section by drag and drop. Archive covers the time on
@@ -318,6 +318,12 @@ sessions as tabs above the chat, and four tabs at the bottom.
   panel gets an accent edge. The same handle lies across the top edge of the
   tools panel, and moves the split between the file lists and the tools, as
   `app/panels/split` shows.
+- The sidebar toggle hides the sidebar. In the browser it sits beside the
+  cog of Settings, and in the Mac app beside the window buttons. While the
+  sidebar is hidden, the tile of the current org opens the whole sidebar as
+  a popover beside the rail, as `app/panels/list-popover` shows. In the Mac
+  app the window controls then keep their width in the top left corner, as
+  `mac-app/window/sidebar-popover` shows.
 - A state tints a whole bar or box, and its edges stay neutral. No box has
   an accent strip on any edge.
 - `sizes.ts` in `src/components/chat/` holds the one size formatter.

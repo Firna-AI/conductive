@@ -110,7 +110,8 @@ This page lists each protocol doc and what it covers.
 - [Orgs and members](../protocol/orgs-and-members.md): orgs, sections,
   roles, and the first run.
   - [Org rail order](../protocol/org-rail-order.md): the order of the orgs
-    in the rail that each person keeps, and how the person changes it.
+    in the rail that each person keeps, how the person changes it, what a
+    tile opens, and the workspace list of a hidden sidebar.
   - [Delete org](../protocol/delete-org.md): the end of an org, the 7 days
     before the app deletes everything of it, and its Restore.
 - [Pricing](../protocol/pricing.md): the plans and their cloud hours, the

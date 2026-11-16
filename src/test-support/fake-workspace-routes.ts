@@ -111,6 +111,7 @@ export function fakeWorkspaceRoutes(
     routes.json('GET', workspacePath(org, id), ordered)
     routes.json('PATCH', workspacePath(org, id), reply)
     routes.json('POST', workspacePaths.resume(org, id), ordered)
+    routes.json('POST', workspacePaths.restart(org, id), { updateCheck: 'ok' })
     routes.empty('POST', workspacePaths.activity(org, id))
     routes.empty('PUT', workspacePaths.read(org, id))
     // Archive keeps the cloud computer for the days of Restore. Archive and
