@@ -38,13 +38,16 @@ gives the chips, which take the place of a link to a workspace of the org.
     `_`, `~`, and `]` at its end stay out of it, and so does a `)` that
     closes no `(` inside it.
   - In an answer and in a message line of the work of a turn, a Markdown
-    link shows as its label. A label that reads as an address shows the
-    real address in its place. The label is read as it shows, without
-    code marks, bold marks, and invisible characters. It reads as an
+    link shows as its label. Its link title, the text in quotes or in
+    parentheses after its address, does not show. A label that reads as
+    an address, or that shows nothing, shows the real address in its
+    place. The label is read as it shows, without code marks, bold marks,
+    invisible characters, and the spaces at its ends. It reads as an
     address when it then holds `://` or starts with `www.`, as
     `app/chat/links/label-address` shows.
-  - In a message of a member, a Markdown link shows as typed, and its
-    address is the link, as `app/chat/links/sent` shows.
+  - In a message of a member, a Markdown link shows as typed, with its
+    link title, and its address is the link, as `app/chat/links/sent`
+    shows.
   - Code that holds only one address, without the spaces at its ends,
     shows it as a link inside its code box. A workspace link in such code
     is a link, not a chip, so the code keeps its text. Longer code stays

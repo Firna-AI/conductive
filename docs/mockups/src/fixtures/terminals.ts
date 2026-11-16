@@ -26,6 +26,10 @@ import {
  * - `link`: the dev server, with the mouse pointer on its local address.
  * - `labelled-link`: a test run, with the pointer on a link that its
  *   reporter prints with a label.
+ * - `shared-larger`: another viewer with a larger panel set the shared size
+ *   of the shown terminal, so the text is smaller.
+ * - `shared-smaller`: another viewer with a smaller panel set the shared
+ *   size, so empty space follows the screen.
  */
 export const terminalStates = [
   'one',
@@ -35,6 +39,8 @@ export const terminalStates = [
   'older',
   'link',
   'labelled-link',
+  'shared-larger',
+  'shared-smaller',
 ] as const
 
 export type TerminalState = (typeof terminalStates)[number]
@@ -49,7 +55,15 @@ export type TerminalSet = {
   shown: number
   lines: readonly TerminalLine[]
   prompt?: string
+  shared?: SharedSize
 }
+
+/**
+ * How the shared size of a terminal compares with the panel of this viewer.
+ * All viewers of a terminal share one size, which the viewer where the user
+ * last typed or resized sets.
+ */
+export type SharedSize = 'larger' | 'smaller'
 
 const three = [1, 2, 3] as const
 
@@ -78,6 +92,18 @@ export const terminalSets: Readonly<Record<TerminalState, TerminalSet>> = {
     shown: 2,
     lines: labelledLinkSession,
     prompt: workspacePrompt,
+  },
+  'shared-larger': {
+    numbers: three,
+    shown: 1,
+    lines: workspaceSession,
+    shared: 'larger',
+  },
+  'shared-smaller': {
+    numbers: three,
+    shown: 1,
+    lines: workspaceSession,
+    shared: 'smaller',
   },
 }
 

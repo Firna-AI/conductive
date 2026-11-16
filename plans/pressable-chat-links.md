@@ -1,6 +1,6 @@
 # Pressable links in the chat
 
-Status: Active. [PR #265](https://github.com/Firna-AI/conductive/pull/265) is open. The pull request that completes the work deletes this plan, as the `plans` skill says.
+Status: Active. [PR #386](https://github.com/Firna-AI/conductive/pull/386) is open. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
 The chat shows each web address of an agent answer or a sent message as
 plain text, except a link to a workspace of the same org, which shows as a
@@ -75,7 +75,8 @@ and added decisions 5 and 6. Its report is in
 - **Answer:** D, on 10 November 2026.
 - **Severity:** Medium. **Likelihood:** Common. **Effort:** Medium.
 - **Source:** Design. First recorded in
-  `plans/follow-ups/chat-links-not-pressable.md` on 9 November 2026.
+  [plans/follow-ups/chat-links-not-pressable.md](https://github.com/Firna-AI/conductive/blob/f21071297/plans/follow-ups/chat-links-not-pressable.md)
+  on 9 November 2026.
 - **Category:** Product bug.
 - **Location:** `src/chat/links/chat-parts.ts:165` and `:173`,
   `src/chat/links/LinkedText.tsx:79`, `docs/protocol/chat-markdown.md:27`.
@@ -361,6 +362,56 @@ and added decisions 5 and 6. Its report is in
 - **Action:** ask the user, because B adds a copy rule that no requirement
   covers.
 
+### 7. A Markdown link with a title shows as typed
+
+- **Answer:** B, on 16 November 2026.
+- **Severity:** Low. **Likelihood:** Rare. **Effort:** Small.
+- **Source:** Review, round 1, from the check of finding 1.
+- **Category:** Product bug.
+- **Location:** `src/chat/links/chat-tokens.ts`, `markdownLinkAt`.
+- **Background:** A link title is the quoted text after the address, as in
+  `[docs](https://example.com/a "Docs")`. The file preview reads a title
+  and shows the link as its label. Chat text read no title.
+- **Problem:** The chat showed such a link as raw Markdown, and its address
+  then read as a bare address that kept its backslash escapes.
+- **Root question:** How does chat text show a Markdown link that has a
+  title?
+- **Options:**
+  - **A.** Keep it as typed. Effort: Small.
+  - **B.** Read the title as the file preview does, and show the link as
+    its label. Drop the title, because the title of a link gives its real
+    address. Effort: Small.
+  - **C.** Do B, and show the title after the label. Effort: Small.
+- **Left out:** The link title as the tooltip, because the tooltip gives
+  the real address.
+- **Recommendation:** B. The chat and the file preview then read the same
+  Markdown the same way.
+
+### 8. A label that shows nothing gives an empty link
+
+- **Answer:** B, on 16 November 2026.
+- **Severity:** Low. **Likelihood:** Rare. **Effort:** Small.
+- **Source:** Implementation, Milestone 5.
+- **Category:** Product bug.
+- **Location:** `src/markdown/web-links.ts`, `readsAsAddress`.
+- **Background:** The label test shows the real address in place of a
+  label that reads as an address.
+- **Problem:** A label that shows nothing, such as `[](https://x.example)`,
+  `[**](https://x.example)`, or invisible characters only, gave a link with
+  no visible words that the keyboard could still focus.
+- **Root question:** What does a reader see for a link whose label shows
+  nothing?
+- **Options:**
+  - **A.** Keep the empty link. Effort: Small.
+  - **B.** Treat a label that shows nothing as a label that reads as an
+    address, and show the real address. Effort: Small.
+  - **C.** Show such a link as typed, with its brackets. Effort: Small.
+- **Left out:** Remove the link, because each address of chat text is a
+  link.
+- **Related:** Decision 5 sets the other label rules. B extends the label
+  test that every option of decision 5 keeps.
+- **Recommendation:** B. The reader then always sees where the link leads.
+
 ## Design calls
 
 These calls are mine, made on 10 November 2026 under the decision test.
@@ -442,6 +493,36 @@ November 2026, under the same test:
   its address is a link. Its `[alt](address)` part is not a label link.
   Reason: [Agent instructions](../docs/protocol/agent-instructions.md)
   relies on the rule that the chat shows the Markdown of an image as text.
+
+The implementation of Milestones 5 and 6 made these calls on 13 November
+2026, under the same test:
+
+- The app origin of the opener is the origin of the app host, not the
+  origin of the workspace links. Reason: in `npm run dev`, the dev fake
+  writes workspace links with another origin.
+- The `web` reader of `chatParts` is required, so a caller without it
+  fails the typecheck and cannot drop links without notice.
+- One provider around each layout of the workspace screen gives the
+  opener to the chat and to the file preview, on desktop and on a phone.
+  Reason: the Files tab of a phone is outside the chat.
+- Until decision 4 has its answer, a local address of a file opens a new
+  tab, as before this change. An option of the opener sets this where the
+  file preview draws its links. This is no option of decision 4. It keeps
+  the behaviour of `main`.
+- A file keeps each address that its parser accepts as a link, also one
+  that chat text keeps as text. Reason: the file preview gets no stricter
+  rule, as the design calls above say.
+
+The implementation of the answers to decisions 7 and 8 made this call on
+16 November 2026, under the same test:
+
+- A Markdown link of a sent message and of the message field stands on
+  one line, as its label already does. A line break inside its
+  parentheses makes it no Markdown link, and its address reads as a bare
+  address, as on `main`. Reason: no chip then takes in a line break and
+  the text around it, and the spacing rule of the field reads one line.
+  An answer joins the lines of a paragraph before it reads them, so its
+  links read as in the file preview.
 
 ## Components
 
@@ -576,23 +657,23 @@ Tags: ui
 
 Depends on: 1, 3, 4
 
-- [ ] Add the opener and its context in `src/shell/ui/`. The workspace
+- [x] Add the opener and its context in `src/shell/ui/`. The workspace
       screen gives the app origin, the navigation, and the address of a
       port.
-- [ ] Make `chatParts` give a link part for each address that is not a
+- [x] Make `chatParts` give a link part for each address that is not a
       chip, as the design and the answer of decision 5 say.
-- [ ] Draw the link parts in `LinkedText` with `TextLink`, also in the
+- [x] Draw the link parts in `LinkedText` with `TextLink`, also in the
       message lines of a folded turn. The hidden copy of a line uses the
       plain mode.
 - [ ] Apply the answer of decision 6 to a copy of chat text.
-- [ ] Update the tests that expect other links as text, such as
+- [x] Update the tests that expect other links as text, such as
       `src/shell/workspace/LinkChips.test.tsx` and
       `src/chat/links/workspace-links.test.ts`. Add tests for the link
       parts and for a press on each kind of link.
-- [ ] Update the [chat README](../src/chat/README.md) and
+- [x] Update the [chat README](../src/chat/README.md) and
       [Agent text](../src/chat/agent-text.md).
-- [ ] Delete `plans/follow-ups/chat-links-not-pressable.md`.
-- [ ] Smoke-test in `npm run dev`: a bare address, a Markdown link, a
+- [x] Delete `plans/follow-ups/chat-links-not-pressable.md`.
+- [x] Smoke-test in `npm run dev`: a bare address, a Markdown link, a
       local address, and an address in code.
 
 ## Milestone 6: Links in the file preview
@@ -601,14 +682,14 @@ Tags: ui
 
 Depends on: 3, 5
 
-- [ ] Draw each link of `inlineNodes` with `TextLink` and the opener of
+- [x] Draw each link of `inlineNodes` with `TextLink` and the opener of
       Milestone 5. Delete the anchor of `inlineNodes`. Keep the links
       that the design keeps for the file preview.
-- [ ] Give the file preview the opener context in the workspace screen.
+- [x] Give the file preview the opener context in the workspace screen.
 - [ ] Apply the answer of decision 4 to local addresses in a file.
-- [ ] Move the link test of `src/files/markdown/MarkdownView.test.tsx`
+- [x] Move the link test of `src/files/markdown/MarkdownView.test.tsx`
       to the shared link part, and add a link to an app page.
-- [ ] Update the safety rules of the [Files README](../src/files/README.md).
+- [x] Update the safety rules of the [Files README](../src/files/README.md).
 
 ## Milestone 7: Verification, commit, review, and pull request
 

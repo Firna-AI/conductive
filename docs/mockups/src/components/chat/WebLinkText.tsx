@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import {
-  readsAsAddress,
+  labelHidesAddress,
   webAddressParts,
   webLink,
   type WebAddressLink,
@@ -97,10 +97,11 @@ function TypedText(props: { text: string }) {
 /**
  * A link of chat text that names no workspace of the org. A bare address
  * shows as the text has it. In an answer, a Markdown link shows as its
- * label, or as its address when the label reads as an address, and its
- * title gives the address. In a message of a member, a Markdown link shows
- * as typed, and its address is the link. An address that is no link, such
- * as one with a user name, shows as typed.
+ * label, or as its address when the label reads as an address or shows
+ * nothing, and its title gives the address. Its link title does not show.
+ * In a message of a member, a Markdown link shows as typed, and its address
+ * is the link. An address that is no link, such as one with a user name,
+ * shows as typed.
  */
 export function WebLinkPart(props: { part: WebAddressLink; answer: boolean }) {
   const { href, source, label } = props.part
@@ -109,7 +110,7 @@ export function WebLinkPart(props: { part: WebAddressLink; answer: boolean }) {
     return link ? <WebLinkText link={link}>{source}</WebLinkText> : source
   }
   if (!link || !props.answer) return <TypedText text={source} />
-  const shown = readsAsAddress(label) ? href : label
+  const shown = labelHidesAddress(label) ? href : label
   return <WebLinkText link={link}>{shown}</WebLinkText>
 }
 

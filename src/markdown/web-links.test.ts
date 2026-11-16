@@ -3,7 +3,7 @@ import { parseRoute, routes } from '../app/router'
 import {
   appAddress,
   bareAddressAt,
-  readsAsAddress,
+  labelHidesAddress,
   webAddressParts,
   webLink,
   type WebLinkContext,
@@ -144,11 +144,108 @@ describe('web addresses', () => {
       '**https://github.com**',
       ' https\u200b://github.com ',
       '\u2060 WWW.GitHub.com ',
+      // A label that shows nothing: empty, marks only, invisible characters
+      // only, or spaces only.
+      '',
+      '**',
+      '``',
+      '\u200b\u2060',
+      ' \u00a0 ',
     ]) {
-      expect(readsAsAddress(label), label).toBe(true)
+      expect(labelHidesAddress(label), JSON.stringify(label)).toBe(true)
     }
     for (const label of ['PR #2', 'github.com/acme', '**docs**']) {
-      expect(readsAsAddress(label), label).toBe(false)
+      expect(labelHidesAddress(label), JSON.stringify(label)).toBe(false)
+    }
+  })
+
+  test.each([
+    ['Wiki', 'https://en.wikipedia.org/wiki/Function_(mathematics)'],
+    ['Wiki', '<https://en.wikipedia.org/wiki/Function_(mathematics)>'],
+    [
+      'Wiki',
+      String.raw`https://en.wikipedia.org/wiki/Function_\(mathematics\)`,
+    ],
+    [
+      'Page',
+      'https://github.com/acme/app/blob/main/app/(marketing)/page.tsx#L4',
+    ],
+  ])(
+    'reads the complete Markdown destination in [%s](%s)',
+    (label, address) => {
+      const source = `[${label}](${address})`
+      const href =
+        label === 'Wiki'
+          ? 'https://en.wikipedia.org/wiki/Function_(mathematics)'
+          : 'https://github.com/acme/app/blob/main/app/(marketing)/page.tsx#L4'
+      expect(webAddressParts(`See ${source}.`)).toEqual([
+        { kind: 'text', text: 'See ' },
+        { kind: 'link', href, source, label },
+        { kind: 'text', text: '.' },
+      ])
+      const angle = address.startsWith('<')
+      expect(webAddressParts(source, false)).toEqual([
+        { kind: 'text', text: `[${label}](${angle ? '<' : ''}` },
+        {
+          kind: 'link',
+          href,
+          source: angle ? address.slice(1, -1) : address,
+        },
+        { kind: 'text', text: angle ? '>)' : ')' },
+      ])
+    },
+  )
+
+  test.each([
+    ['https://example.com/a<b', 'https://example.com/a<b'],
+    ['https://example.com/a>b', 'https://example.com/a>b'],
+    ['https://example.com/a`b', 'https://example.com/a`b'],
+    ['<https://example.com/a b>', 'https://example.com/a b'],
+    ['http://[::1]', 'http://[::1]'],
+  ])('leaves address validation to webLink for %s', (address, href) => {
+    const source = `[docs](${address})`
+    expect(webAddressParts(source)).toEqual([
+      { kind: 'link', href, source, label: 'docs' },
+    ])
+    expect(webLink(href, context)).toEqual({
+      kind: href === 'http://[::1]' ? 'local' : 'web',
+      url: new URL(href),
+      ...(href === 'http://[::1]' ? { port: 80 } : {}),
+    })
+  })
+
+  test('reads a link title and the spaces around a Markdown address as part of the link, and keeps them as typed text without a label', () => {
+    const href = 'https://example.com/docs'
+    for (const [before, after] of [
+      ['[docs](', ' "Guide")'],
+      ['[docs]( ', ' )'],
+      ['[docs]( <', "> 'See https://example.com/guide' )"],
+    ]) {
+      const source = `${before}${href}${after}`
+      expect(webAddressParts(source)).toEqual([
+        { kind: 'link', href, source, label: 'docs' },
+      ])
+      expect(webAddressParts(source, false)).toEqual([
+        { kind: 'text', text: before },
+        { kind: 'link', href, source: href },
+        { kind: 'text', text: after },
+      ])
+    }
+  })
+
+  test('keeps Markdown destinations beyond the length and nesting limits as typed', () => {
+    const long = `https://example.com/${'a'.repeat(2001)}`
+    const deep = `https://example.com/${'('.repeat(33)}x${')'.repeat(33)}`
+    for (const [before, href, after] of [
+      ['[docs](', long, ')'],
+      ['[docs](<', long, '>)'],
+      ['[docs](', deep, ')'],
+    ]) {
+      expect(webAddressParts(`${before}${href}${after}`)).toEqual([
+        { kind: 'text', text: before },
+        { kind: 'link', href, source: href },
+        { kind: 'text', text: after },
+      ])
     }
   })
 })

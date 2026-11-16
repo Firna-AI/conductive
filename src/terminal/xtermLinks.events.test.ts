@@ -3,6 +3,7 @@ import { Terminal } from '@xterm/xterm'
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
 import type { TerminalLink } from './terminalLinks'
 import { watchLinks } from './xtermLinks'
+import { XtermScreen } from './xtermScreen'
 
 /** The size of a cell of the fixed layout, in pixels. */
 const cell = { width: 10, height: 20 }
@@ -60,6 +61,7 @@ async function showing(output: string) {
   document.body.append(host)
   const xterm = new Terminal({ cols: 80, rows: 24 })
   xterm.open(host)
+  const terminalScreen = new XtermScreen(xterm, { links: true })
   const opened: TerminalLink[] = []
   const links = watchLinks(xterm, {
     links: () => ({
@@ -83,6 +85,7 @@ async function showing(output: string) {
   const hint = () => element.querySelector<HTMLElement>('.hint')
   cleanup = () => {
     links?.dispose()
+    terminalScreen.dispose()
     xterm.dispose()
     host.remove()
   }

@@ -1,3 +1,5 @@
+import { lineTargets } from './markdown-destination'
+
 /** A web address in text, with its source and optional Markdown label. */
 export type WebAddressLink = {
   kind: 'link'
@@ -21,7 +23,7 @@ export type WebLink =
   | { kind: 'web'; url: URL }
 
 const barePattern = /https?:\/\/[^\s<>`]+/y
-const markdownTarget = /\(<?(https?:\/\/[^\s<>)`]+)>?\)/y
+const markdownLabel = /\[([^\]\n]*)\]\(/y
 const endMarks = new Set([...'.,;:!?\'"*_~]'])
 const localHosts = new Set(['localhost', '127.0.0.1', '[::1]', '0.0.0.0'])
 const invisible = /\p{Default_Ignorable_Code_Point}/gu
@@ -81,55 +83,77 @@ export function bareAddressAt(text: string, at: number): string | null {
   return address || null
 }
 
-/** The web target in parentheses at `at`, with optional angle brackets. */
-export function markdownTargetAt(
-  text: string,
-  at: number,
-): { href: string; length: number } | null {
-  markdownTarget.lastIndex = at
-  const match = markdownTarget.exec(text)
-  return match ? { href: match[1] ?? '', length: match[0].length } : null
-}
-
-/** Text and its addresses. With `markdown`, a Markdown link stays one part. */
+/**
+ * Text and its addresses. With `markdown`, a Markdown link stays one part.
+ * Without it, only the address of a Markdown link is a part, and the rest
+ * of the link, such as its label and its link title, stays text. A Markdown
+ * link stands on one line, as in chat text, so no chip takes in a line
+ * break.
+ */
 export function webAddressParts(
   text: string,
   markdown = true,
 ): WebAddressPart[] {
-  const pattern = new RegExp(
-    markdown
-      ? `\\[([^\\]\\n]*)\\]${markdownTarget.source}|${barePattern.source}`
-      : barePattern.source,
-    'g',
-  )
   const parts: WebAddressPart[] = []
+  const targetAt = lineTargets(text)
   let end = 0
-  for (const match of text.matchAll(pattern)) {
-    const [whole, label, target] = match
-    const href = target ?? bareAddressAt(whole, 0)
-    if (!href) continue
-    const source = target === undefined ? href : whole
-    if (match.index > end) {
-      parts.push({ kind: 'text', text: text.slice(end, match.index) })
+  for (let index = 0; index < text.length;) {
+    let href: string | null = null
+    let source = ''
+    let label: string | undefined
+    let start = index
+    let next = index
+    if (text[index] === '[') {
+      markdownLabel.lastIndex = index
+      const match = markdownLabel.exec(text)
+      const target = match ? targetAt(index + match[0].length) : null
+      if (target) {
+        href = target.destination
+        next = target.next
+        if (markdown) {
+          source = text.slice(index, target.next)
+          label = match?.[1]
+        } else {
+          start = target.start
+          source = text.slice(target.start, target.end)
+        }
+      }
     }
+    if (href === null && text.startsWith('http', index)) {
+      href = bareAddressAt(text, index)
+      source = href ?? ''
+      next = index + source.length
+    }
+    if (href === null) {
+      index += 1
+      continue
+    }
+    if (start > end) parts.push({ kind: 'text', text: text.slice(end, start) })
     parts.push(
-      target === undefined
+      label === undefined
         ? { kind: 'link', href, source }
         : { kind: 'link', href, source, label },
     )
-    end = match.index + source.length
+    end = start + source.length
+    index = next
   }
   if (end < text.length) parts.push({ kind: 'text', text: text.slice(end) })
   return parts
 }
 
-/** Tests the visible label, without code, bold, or invisible characters. */
-export function readsAsAddress(label: string): boolean {
+/**
+ * Whether a Markdown label hides where its link leads, so that the link
+ * shows its real address in place of the label. The label is tested as it
+ * shows, without code marks, bold marks, invisible characters, or spaces
+ * at its ends. It hides the address when it then shows nothing, holds
+ * `://`, or starts with `www.` in any case.
+ */
+export function labelHidesAddress(label: string): boolean {
   const shown = label
     .replaceAll('`', '')
     .replaceAll('**', '')
     .replace(invisible, '')
     .trim()
     .toLowerCase()
-  return shown.includes('://') || shown.startsWith('www.')
+  return shown === '' || shown.includes('://') || shown.startsWith('www.')
 }

@@ -73,6 +73,7 @@ export function Composer(props: {
             label="Message"
             lines={2}
             maxLines={8}
+            onAttach={(files) => props.model.attach(files)}
             onChangeText={(text) => props.model.setText(text)}
             onEnter={sendKey}
             owner={props.model}

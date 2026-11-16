@@ -38,7 +38,7 @@ how a screen is built, and links to the other pages.
 | `app/files`         | All files, Changes with its summary, a file, Markdown, diff, and image tab, and the temporary tab that the next press replaces |
 | `app/tabs`          | A dragged tab, the moved row, a full row, the tab menu, and the rename field  |
 | `app/transcripts`   | Copy a transcript from the tab menu: the toast after a copy, a failed copy, and the menu of an archived workspace |
-| `app/tools`         | The terminal tabs and their states, a link in the terminal under the pointer, then the Preview tool with its detected servers and its failed list repair, and the hidden Desktop, kept for its return |
+| `app/tools`         | The terminal tabs and their states, a link in the terminal under the pointer and a size that another viewer set, then the Preview tool with its detected servers and its failed list repair, and the hidden Desktop, kept for its return |
 | `app/panels`        | The right column, widened by the handle on its inner edge, and then hidden    |
 | `mac-app`           | The Mac app: its window, the waitlist, its device commands, This Mac, Keyboard shortcuts, and the palette with keys |
 | `user-flows`        | Sign up, sign up during open sign-up, join with an invite link, create a workspace, create one in the dialog, reopen it, open one from the palette, send feedback, archive one from its row, create an org, run a Mac command, create a routine, link a workspace, open a session link, open a terminal link, merge and continue, mention a file, drop a file, open a local server |
@@ -206,7 +206,15 @@ owner of a login hide each model that its endpoint does not list. Both
 agents run on Cal's proxy, whose model list does not name Fable 5.1. The
 Claude row says that Fable 5.1 is hidden from Cal's model pickers, and
 why, with the model ID, the time of the last read of the list, and
-Refresh.
+Refresh. Its other states come from Codex base decision 1 C, which Cal
+chose on 13 November 2026:
+
+- `v1-added` has the note under the Codex row after a save that added
+  `/v1` to the typed address, because only that address lists the models.
+- `read-failed` has the warning under each row after a Refresh whose
+  model list read failed, each with Refresh.
+- `read-failed-unlisted` has the same warning above the models that the
+  last Claude list leaves out, with one Refresh beside the warning.
 
 `app/new-workspace/dialog` draws New workspace as a dialog over the ready
 workspace of `app`, for a new account or a user who chose the dialog.

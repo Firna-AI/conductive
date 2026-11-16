@@ -53,6 +53,19 @@ says.
   shows the right column on desktop, or the Files tab on a phone.
 - An archived workspace shows no file tabs and no file page, and its chat
   gets no files.
+- The screen gives each of its parts one link opener, `WorkspaceLinks` of
+  `link-opening.tsx`, through `LinkOpeningProvider` of
+  `../ui/text-links.tsx`. So the links of chat text open as
+  [Chat links](../../../docs/protocol/chat-links.md) says, and the links
+  of the file preview, also in the Files tab of a phone, as
+  [Files and changes](../../../docs/protocol/workspace-tools.md#files-and-changes)
+  says. A link of the app opens its page in the same window, as an
+  `AppLink` does, so a press on a link to the address that shows replaces
+  that address. A local address of chat text opens the address of the
+  Preview tool with its port, from `previewPortHref`. On desktop the right
+  column then shows, as for a folder chip, and a phone shows the Preview
+  tab. A read-only workspace gives no port previews, so a local address of
+  chat text stays text there. A local address of a file opens a new tab.
 - A `center` part of the host takes the place of the whole chat, also of
   its tabs.
 - When the features give the `tabs`, `transcript`, or `composer` slot, the
@@ -114,6 +127,8 @@ Each folder of a path is a part of the address. Another address under
 - On a phone, a file or a diff shows as a page of the Files tab, with a
   link back to All files or Changes. A press there opens the temporary tab
   of the saved view too, though the row of a phone shows no file tabs.
+- The links of the file preview open through the one link opener of the
+  screen, as [The chat of the workspace](#the-chat-of-the-workspace) says.
 - The lists show while the sandbox is stopped or failed, from the copy
   that the workspace keeps. While the sandbox starts, and while the app
   refuses its start, the sandbox panel shows in place of All files and
