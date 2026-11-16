@@ -2,8 +2,7 @@ import type { TranscriptDetail } from '../../shared/generated/TranscriptDetail'
 import type { AgentChoice } from '../../shared/generated/AgentChoice'
 import type { ApiClient } from '../../app/api/client'
 import { readWorkspaces } from '../../app/api/read-workspaces'
-import { uploadAttachment } from '../../app/attachment-upload'
-import type { UploadHooks } from '../../app/draft-files'
+import { uploadAttachment, type UploadHooks } from '../../app/attachment-upload'
 import { ACCOUNT_PATHS } from '../../shared/account'
 import { MODELS_PATH } from '../../shared/agents'
 import { orgPath, type EmptyRequest } from '../../shared/api'
@@ -97,7 +96,7 @@ export function createChatApi(client: ApiClient, target: WorkspaceTarget) {
         chatHistoryPath(orgId, workspaceId, sessionId, before, through),
         readNewestStoredEvents,
       ),
-    /** The saved view, with the routine of a run workspace. */
+    /** The saved view, with the automation of a run workspace. */
     view: () =>
       client.get(workspaceViewPath(orgId, workspaceId), readViewReply),
     saveView: (view: UpdateWorkspaceViewRequest) =>

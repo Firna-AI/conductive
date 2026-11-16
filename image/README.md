@@ -16,7 +16,8 @@ packaging and a real-sandbox live check.
 
 - Install the pinned private Node after a check of its SHA-256 digest, or
   reuse it when the image already holds it.
-- Install the newest release through a verified bootstrap program.
+- Install the newest release through the installed program, or through a
+  verified bootstrap program when the image has none.
 - Install and enable the systemd services of the agent runner and preview relay.
 - Install and enable the preview relay's socket unit.
 - Install the udev rule that stops disk flushes at each boot, as
@@ -31,7 +32,9 @@ packaging and a real-sandbox live check.
 
 The [terminal backend](../worker/terminal/README.md) supplies the terminal
 script sources. The release packages those scripts and their units.
-The build calls `terminalPackagesCommand()` for `ttyd` and `tmux`.
+The build calls `terminalPackagesCommand()` for `ttyd` and `tmux` when the
+image lacks a package, when the ttyd service is not masked, or when the apt
+part changed.
 The release installer owns the installed scripts and units.
 It enables services and starts none.
 
@@ -76,6 +79,9 @@ terminal module. The previous release keeps its own system part for fallback.
 The runner service applies a staged release in its root pre-start step.
 It applies only when `/run/conductive/workspace-ready` exists.
 Relay and terminal restarts do not apply or roll back releases.
+The system installer that an apply runs restarts a running relay, so the relay
+runs the active release. The installer of an older release, which a rollback
+can run, may not restart it.
 The runner requests a background check after each start. `conductive-update-check.timer` also checks after
 30 seconds of boot and every hour. The root check service runs the program
 and then exits. No separate updater process remains resident.

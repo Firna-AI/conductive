@@ -1,5 +1,5 @@
 /**
- * The workspaces of the two failed runs of the routine that reviews pull
+ * The workspaces of the two failed runs of the automation that reviews pull
  * requests, which kept their workspaces (decisions 130 D and 512 B): the
  * run of PR opened #486, whose first start failed, and the run of PR
  * pushed #486, whose first turn failed. Pull request #486 is Priya's. The
@@ -8,8 +8,8 @@
 
 import { people } from './members'
 import { repositories } from './repositories'
-import { routines } from './routines'
-import { turnError } from './routineRuns'
+import { automations } from './automations'
+import { turnError } from './automationRuns'
 import {
   cloudStart,
   pullRequestFacts,
@@ -18,7 +18,7 @@ import {
 } from './runWorkspaceParts'
 import { workspaceLink, type Workspace } from './workspaces'
 
-const review = routines['review-prs']
+const review = automations['review-prs']
 const storefront = repositories.storefront
 
 /** Pull request #486 of Priya, which both failed runs review. */
@@ -29,7 +29,7 @@ const orderHistory = {
 
 const head = `${people.priya.login}/order-history`
 
-const origin = { routine: review.name, pullRequest: orderHistory }
+const origin = { automation: review.name, pullRequest: orderHistory }
 
 const fetch = `Fetching pull request #${orderHistory.number} of ${storefront.name}`
 

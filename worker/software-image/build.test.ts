@@ -3,6 +3,7 @@ import { expect, it } from 'vitest'
 import { setupBackendTests } from '../lifecycle/backend-test-hooks'
 import { SOFTWARE_RELEASE as SOFTWARE } from '../lifecycle/software-release-test-support'
 import { SAVED_IMAGE_NAME } from '../lifecycle/image-names'
+import { imagePackagesVersion } from '../lifecycle/image-packages'
 import { requestSoftwareImage } from './build'
 import { softwareImages } from './data'
 
@@ -28,6 +29,7 @@ it('resumes commands with saved offsets, publishes once, and creates a secret-fr
     phase: 'software',
     stdoutOffset: 6,
     output: 'first\n',
+    packagesVersion: await imagePackagesVersion(),
   })
   boat.commandOutput += 'last\n'
   boat.commandRunning = false

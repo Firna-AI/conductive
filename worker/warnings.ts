@@ -24,6 +24,24 @@ export function warnWorker(warning: WorkerWarning): void {
 
 function warningFields(warning: WorkerWarning) {
   switch (warning.kind) {
+    case 'model_gateway_check_failed':
+    case 'model_gateway_check_retry':
+      return {
+        kind: warning.kind,
+        message:
+          warning.kind === 'model_gateway_check_failed'
+            ? 'A periodic model turn check failed.'
+            : 'A periodic model turn check retries.',
+        workspaceId: warning.workspaceId.text,
+        errorKind: warning.errorKind,
+      }
+    case 'model_gateway_answer_ended':
+      return {
+        kind: warning.kind,
+        message: 'The gateway ended a model answer.',
+        workspaceId: warning.workspaceId.text,
+        code: warning.code,
+      }
     case 'workspace_archive_failed':
       return {
         kind: warning.kind,

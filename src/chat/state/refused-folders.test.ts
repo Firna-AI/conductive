@@ -5,6 +5,7 @@ import {
   unreadable,
 } from '../../app/draft-files.test-support'
 import { fileMark } from '../../app/draft-marks'
+import { attachmentUploadStartPath } from '../../shared/messages'
 import { sessionPaths } from '../../shared/sessions'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
 import { record } from '../api/json'
@@ -22,17 +23,22 @@ const codex = {
   effort: 'medium',
   fast: false,
 } as const
+const startPath = attachmentUploadStartPath(FAKE_IDS.org, {
+  type: 'workspace',
+  workspaceId: FAKE_IDS.workspace,
+})
 
+/** A file one byte over the limit of 1 GB, without those bytes in memory. */
 function oversized(name: string): File {
   const file = note(name)
-  Object.defineProperty(file, 'size', { value: 100_000_001 })
+  Object.defineProperty(file, 'size', { value: 1_000_000_001 })
   return file
 }
 
 describe('refused folders of a chat draft', () => {
   it('owns folder-only names, ignores a cancelled pick and uploads genuine empty files', async () => {
     const uploads = controlledUploads()
-    const chat = chatFor({ conversation: 'history', files: uploads.files })
+    const chat = chatFor({ conversation: 'history', uploads })
     await chat.controller.start()
     chat.controller.setDraft(session, '')
     const names = ['Pictures', 'Design notes']
@@ -46,7 +52,7 @@ describe('refused folders of a chat draft', () => {
       refusedFolders: ['Pictures', 'Design notes'],
       files: [],
     })
-    expect(uploads.jobs).toEqual([])
+    expect(chat.requests('POST', startPath)).toEqual([])
     const beforeCancel = chat.draftOf(session)
     expect(chat.controller.attachFiles(session, [])).toEqual([])
     expect(chat.draftOf(session)).toBe(beforeCancel)
@@ -63,6 +69,7 @@ describe('refused folders of a chat draft', () => {
       files: [{ id: 'file-1', file: zero }],
     })
     expect(chat.draftOf(session)?.files[0]?.file.size).toBe(0)
+    await uploads.started(1)
     expect(uploads.jobs.map((job) => job.name)).toEqual(['empty.txt'])
     chat.controller.setDraft(session, `Read ${fileMark(ids[0])}`)
     await uploads.finish(0, 'empty')

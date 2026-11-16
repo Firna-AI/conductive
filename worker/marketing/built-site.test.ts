@@ -7,6 +7,7 @@ import { SITE_FOLDER, SITE_ICONS } from '../../src/shared/site-build'
 import { githubSetupResponse } from '../github-setup'
 import type { SiteBinding } from '../test-support/site-binding'
 import { checkGuideRoutes, checkScrollRegions } from './built-docs.test-support'
+import { checkPricingPage } from './built-pricing.test-support'
 import { checkMacDownloads } from './built-site-downloads.test-support'
 import { checkSharePreview } from './built-site-sharing.test-support'
 import { buildSiteAssets, expectedPolicy } from './built-site.test-support'
@@ -35,7 +36,7 @@ it('sends every sign-in to the app and shows the request year', async () => {
   expect(response.status).toBe(200)
   expect(response.headers.get('Content-Type')).toBe('text/html; charset=utf-8')
   const html = await response.text()
-  expect(html).toContain('Give every coding task its own cloud computer.')
+  expect(html).toContain('Ship code faster.')
   expect(html).toContain('Give your next task its own cloud computer.')
   const signIns = links(html).filter((link) =>
     ['Sign up', 'Sign in'].includes(link.text),
@@ -72,13 +73,14 @@ it('leads the header, action, and footer links of the Mac app to both chip downl
   await checkMacDownloads(get, SITE)
 })
 
-it('names no sandbox provider on home, legal, and docs pages', async () => {
+it('names no sandbox provider on home, legal, docs, and pricing pages', async () => {
   for (const path of [
     sitePaths.home,
     sitePaths.terms,
     sitePaths.privacy,
     docsPath,
     `${docsPath}/get-started`,
+    sitePaths.pricing,
   ]) {
     const response = await get(path)
     expect(response.status, path).toBe(200)
@@ -95,6 +97,7 @@ it('allows exactly each page inline style hash and serves every file it names', 
     sitePaths.privacy,
     docsPath,
     `${docsPath}/get-started`,
+    sitePaths.pricing,
     '/missing',
   ]) {
     const response = await get(path)
@@ -129,15 +132,8 @@ it('renders class-coloured code and named keyboard scroll regions', async () => 
   await checkScrollRegions(get)
 })
 
-it('serves no pricing page and links none', async () => {
-  const response = await get('/pricing')
-  expect(response.status).toBe(404)
-  const home = await (await get(sitePaths.home)).text()
-  expect(
-    links(home).filter(
-      (link) => link.href.endsWith('/pricing') || link.text === 'Pricing',
-    ),
-  ).toEqual([])
+it('serves public pricing from the header and footer with the site actions', async () => {
+  await checkPricingPage(get, APP_ORIGIN)
 })
 
 it('serves no Conductor comparison page and links none', async () => {

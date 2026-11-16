@@ -1,4 +1,4 @@
-import { textParts } from '../../links/workspace-links'
+import { webAddressParts } from '../../../markdown/web-links'
 
 /**
  * A part of the plain text of the field: text, or the exact source of a
@@ -22,7 +22,7 @@ function lineFrom(text: string, at: number): string {
 function staysLink(before: string, source: string, after: string): boolean {
   const line = before.slice(before.lastIndexOf('\n') + 1)
   let at = 0
-  for (const part of textParts(line + source + lineFrom(after, 0))) {
+  for (const part of webAddressParts(line + source + lineFrom(after, 0))) {
     if (at === line.length) {
       return part.kind === 'link' && part.source === source
     }

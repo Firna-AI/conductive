@@ -114,10 +114,11 @@ the change that keeps a turn open for background work.
   restart, until the workspace confirms the end of the turn. The workspace
   sends no turn or message command for a turn after it stores the end of
   that turn.
-- After a failed file copy ends a running turn, the workspace can still
-  send Stop for that turn, to cancel the agent. That turn still shows as
-  failed. Reason: the failure in [Attachments](messages-and-attachments.md#attachments) ends the turn
-  at once, with no new wait for the agent.
+- After a failed file transfer or file check ends a running turn, the
+  workspace can still send Stop for that turn, to cancel the agent. That
+  turn still shows as failed. Reason: the failure in
+  [The transfer](attachment-transfers.md#the-transfer) ends the turn at
+  once, with no new wait for the agent.
 - At a shutdown, the runner sends a stopped end for each accepted turn that
   has no end. After a restart, it does the same for each turn that it
   accepted before the restart. It starts no agent for such a turn.
@@ -168,7 +169,7 @@ the change that keeps a turn open for background work.
 - A Codex turn does not wait, because Codex gives its agent no notification
   when background work ends.
 - Reason: the tool text of Claude promises that notification. The wait
-  keeps the promise up to the limit, also in a routine run.
+  keeps the promise up to the limit, also in an automation run.
 - A rule that the agent waits in the foreground for each result was
   rejected, because the tool text still promises the notification.
 - Background work turned off was rejected, because agents then lose it also

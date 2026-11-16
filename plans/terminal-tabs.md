@@ -151,6 +151,12 @@ only the requirements, in Milestone 2.
   - Each new session starts a login Bash in the repository folder. The
     tmux server gives it the workspace variables and the prompt hook, as
     today.
+  - The attach program is the
+    [terminal bridge](../worker/terminal/README.md#the-terminal-bridge),
+    which takes the name of a tmux session. The bridge attaches in tmux
+    control mode and passes the raw output to the browser. Its hidden tabs
+    stay connected, so each one gets every byte and keeps its own history
+    of up to 2,000 lines.
 - The start: the start command of the Worker checks the image for the
   attach program, and writes a marker in the runtime folder. The password
   read of the start reads the marker too, and caches the result beside the
@@ -255,8 +261,7 @@ All design calls are of 10 November 2026, by the agent.
   or the first. Reason: the tool always shows a terminal.
 - A workspace whose image has no attach program shows one terminal and no
   + button. Reason: its launcher cannot choose a shell, so a + would open a
-  copy of the first shell. It gets terminal tabs in a new workspace after
-  the next image build, as each change of the terminal files does.
+  copy of the first shell. It gets terminal tabs when the automatic software update applies.
 - The terminal state keeps `socketPath` of the first terminal. Reason:
   the Mac app bundles the web app, so an older Mac app build keeps one
   working terminal until it updates.
@@ -384,7 +389,7 @@ The sandbox side: the attach program, the support marker, and the close
 command.
 
 - [ ] Run ttyd with `--url-arg` and the attach program. Install the
-      program with the other terminal files in each image build.
+      program with the other terminal files in the system release.
 - [ ] Make the attach program accept no argument or one valid terminal ID,
       and refuse each other argument list.
 - [ ] Make the start command write the support marker. Read it in the
@@ -522,16 +527,16 @@ Depends on: every other milestone
 - [ ] Open the pull request. Its description gives the decisions and the
       design calls of this plan with their dates, a permalink to this plan,
       and the follow-up items that the change adds. It says that an
-      existing workspace gets terminal tabs only in a new workspace after
-      the next image build.
+      existing workspace gets terminal tabs when the automatic software
+      update applies.
 
 ## Post-merge follow-up (non-blocking)
 
-- [ ] After the deploy and an org image build, open a new workspace. Open
+- [ ] After the deploy and a software update, open a workspace. Open
       three terminals and run a different command in each. Reload, and
       check that each terminal kept its command. Close one, and reach the
       limit.
-- [ ] Open a workspace from an older image. Check that it shows one
+- [ ] Open a workspace whose software has not updated. Check that it shows one
       terminal and no + button.
 - [ ] After the next Mac app release, repeat the first check in the Mac
       app.

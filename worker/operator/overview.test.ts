@@ -49,6 +49,7 @@ it('returns zero counts and thirty empty UTC days before any org exists', async 
     running: { workspaces: 0, builds: 0 },
     workspaceStates: { running: 0, stopped: 0, failed: 0, archived: 0 },
     largestOrgs: [],
+    longRuns: [],
   })
   expect(result.newWorkspacesByDay).toHaveLength(30)
   expect(result.newUsersByDay).toHaveLength(30)

@@ -26,6 +26,13 @@ it('renews once after a metadata 401 and redacts both credentials from the repla
   expect(await response?.text()).toBe('[redacted]')
   expect(response?.headers.get('x-request-id')).toBe('[redacted] [redacted]')
   expect(h.renewals).toEqual(['real-only-in-worker'])
+  expect(h.workspaceCalls).toEqual([
+    'workspace',
+    'workspace',
+    'workspace',
+    'workspace',
+    'workspace',
+  ])
   expect(h.bodies).toEqual(['', ''])
   expect(
     h.requests.map((request) => request.headers.get('authorization')),

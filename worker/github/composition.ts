@@ -6,8 +6,8 @@ import { refreshImagesForPush } from '../lifecycle/image-timers'
 import { handleGitHubWebhook } from './webhook'
 import { installedRepository } from './composition-data'
 import { requireFeatureResult } from '../features/result'
-import { dispatchPullRequestRuns } from '../routines/pull-request-dispatch'
-import { routineRunRuntime } from '../routines/run-runtime'
+import { dispatchPullRequestRuns } from '../automations/pull-request-dispatch'
+import { automationRunRuntime } from '../automations/run-runtime'
 import { warnWorker } from '../warnings'
 
 export async function productionGitHubWebhook(
@@ -28,7 +28,7 @@ export async function productionGitHubWebhook(
       now: dependencies.now,
       pullRequest: (event, deliveryId) =>
         dispatchPullRequestRuns(
-          routineRunRuntime(env, dependencies),
+          automationRunRuntime(env, dependencies),
           event,
           deliveryId,
           (work) => background.push(work),
@@ -58,7 +58,7 @@ export async function productionGitHubWebhook(
           try {
             await work()
           } catch {
-            warnWorker({ kind: 'routine_background_start_failed' })
+            warnWorker({ kind: 'automation_background_start_failed' })
           }
         }),
       ),

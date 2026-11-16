@@ -170,12 +170,21 @@ one building attempt per account. `image_build_jobs.software_image_name`
 pins the ready software image that a first build uses.
 The [software image backend](../worker/software-image/README.md) owns these records.
 
-`202611101300_routines.sql` adds org-scoped routines and their run records.
-Routine owners reference users, so membership removal can transfer their records.
+`202611161200_image_packages_version.sql` adds the nullable
+`packages_version` column to `image_build_jobs` and `software_images`. It
+holds the version of the apt part of the software step that the image of
+the row holds. Existing rows keep `NULL`, so the next build from their image
+runs the apt part once. A build job also keeps an empty version when two
+starts of its software command carried different apt parts.
+[Image builds](../worker/lifecycle/image-builds.md#the-software-step) says
+how a build reads and writes it.
+
+`202611101300_routines.sql` adds org-scoped automations and their run records.
+Automation owners reference users, so membership removal can transfer their records.
 Org deletion cascades to both tables.
 Run workspace IDs have no foreign key, so a failed admission can still keep its attempt identity.
 An accepted failed first start keeps its workspace.
-The routine also keeps the former owner's name and its consecutive failure count.
+The automation also keeps the former owner's name and its consecutive failure count.
 
 `202611101400_routine_run_failures.sql` keeps the public code and message of a failed workspace creation attempt.
 It also records the owner when a run enters the queue.
@@ -260,6 +269,23 @@ A Worker with the serial source loader cannot safely resume a parallel job.
 After a parallel job starts, deploy fixes forward instead of rolling back to that loader, as [When a deploy fails](../docs/automatic-deploys.md#when-a-deploy-fails) describes.
 The [source loader](../worker/lifecycle/repository-layout.md#the-source-loader) gives the rules of these records.
 
+`202611161200_user_last_active.sql` adds the nullable `users.last_active_at` column.
+It holds the time of the last new workspace or chat message of the person, as [the Worker README](../worker/README.md#last-active-time) says.
+The migration fills each existing user from the creation time of the newest workspace that the person created in the app, from `workspace_runtime.created_by_user_id`.
+It counts only a workspace whose first message ID has the 36-character form of `crypto.randomUUID()`, which only the app makes.
+Routine runs and agent tools make 43-character IDs, and the ID form stays after a routine delete removes its runs.
+As a second guard, it also leaves out each workspace with a `created_by_workspace_id`, and each workspace of a routine run, by `routine_runs.workspace_id` or by its first message ID.
+It also leaves out each workspace after the end of the last sign-in session, 7 days after `users.updated_at`, because no session of the person could create it.
+Chat messages live in Durable Object storage, so the migration cannot read them.
+A user with no such workspace keeps `NULL`.
+
+`202611161400_workspace_running_since.sql` adds the nullable Unix millisecond
+column `workspaces.running_since`. It keeps only the start of the current run.
+Existing rows keep null until their next lifecycle save. It guesses no time.
+The partial index `workspaces_running_since` holds running, unarchived rows
+with a non-null time. Its running states match `runningWorkspacePredicate`.
+The [operator Overview](../worker/operator/overview.md) uses this index to read the ten oldest runs.
+
 ## Reserved ranges
 
 Each milestone owns the complete inclusive range below.
@@ -300,12 +326,21 @@ UI and wiring milestones normally need no migration. Their ranges stay reserved.
 | Software image for first builds | `202611101200`–`202611101259` |
 | 16 Deployment | `202611071800`–`202611071859` |
 | 17 Verification | `202611071900`–`202611071959` |
-| Routines: records and routes | `202611101300`–`202611101359` |
-| Routines: runs and Run now | `202611101400`–`202611101459` |
-| Routines: pull request runs | `202611101500`–`202611101559` |
+| Automations: records and routes | `202611101300`–`202611101359` |
+| Automations: runs and Run now | `202611101400`–`202611101459` |
+| Automations: pull request runs | `202611101500`–`202611101559` |
 | Keyboard shortcuts storage | `202611101600`–`202611101659` |
 | Agent workspace calls | `202611111200`–`202611111259` |
 | Parallel image sources | `202611161200`–`202611161259` |
+
+`202611131221_attachment_download_tokens.sql` adds one-use attachment download grants.
+Each row holds a token digest, the file and destination identities, its expiry, and its claim time.
+Deleting an attachment also removes its grants.
+
+`202611131431_attachment_transferred_bytes.sql` adds the nullable transfer destination and byte-deletion time to each attachment.
+Existing rows keep null in both columns.
+The partial index serves the cleanup of transferred bytes.
+The attachment record stays after its R2 object is deleted.
 
 ## Key code
 
@@ -315,6 +350,28 @@ UI and wiring milestones normally need no migration. Their ranges stay reserved.
 - Run `npm run db:migrate` to apply the migrations to local development storage.
 
 `202611121610_fast_choices.sql` adds fast mode to workspace runtime records,
-creation plans, account defaults, and routines. Each column starts at 0.
-Sessions and routine run choices keep fast mode in their existing JSON records.
+creation plans, account defaults, and automations. Each column starts at 0.
+Sessions and automation run choices keep fast mode in their existing JSON records.
 [Fast mode](../docs/protocol/fast-mode.md) gives the choice rules.
+
+`202611161300_rename_routines_to_automations.sql` renames routines to
+automations, as the product did. The `routines` table becomes
+`automations`, `routine_runs` becomes `automation_runs`, and its
+`routine_id` column becomes `automation_id`. Each index gets the new name.
+The rows stay. Saved default names and stored failure codes and messages
+of runs and creation attempts use the new word, as new rows do.
+
+`202611161300_workspace_branch_names.sql` adds `workspaces.branch_placeholder`
+and `workspaces.task_number`. Existing rows get 0 and 1, so their branches stay.
+A new row starts with 1 in both. The start sets the placeholder to 0 before it
+uses the branch in the sandbox. Until then, a name renames the branch, as
+[The branch and the name](../docs/protocol/create-a-workspace.md#the-branch-and-the-name)
+says. Each Continue adds 1 to the task number. A row from before this file
+starts at task 1, also after an earlier Continue, because D1 holds no count
+of earlier Continues.
+
+`202611161600_owner_count_indexes.sql` adds indexes on the owner of
+workspaces, automations, and automation runs. The
+[Stats tab of the account](../docs/protocol/account-stats.md) counts the
+records of one person, and these indexes keep each read to that person's
+rows.

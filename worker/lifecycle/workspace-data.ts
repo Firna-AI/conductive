@@ -1,6 +1,7 @@
 import type { WorkspaceRow } from './workspace-row'
 import type { Workspace } from '../../src/shared/generated/Workspace'
 import type { WorkspaceState } from '../../src/shared/generated/WorkspaceState'
+import type { WorkspaceStart } from '../../src/shared/generated/WorkspaceStart'
 import { activeOrgIdPredicate } from '../data/org-access'
 import { workspaceNameColumn } from '../data/workspace-name'
 import { presentWorkspace } from '../data/workspace-link'
@@ -22,7 +23,7 @@ const columns = `w.id, w.number, w.org_id AS orgId, w.repository_id AS repositor
   w.provider_account AS providerAccount, w.state, w.github_summary AS github,
   w.created_at AS createdAt, w.updated_at AS updatedAt, w.archived_at AS archivedAt,
   w.stopped_at AS stoppedAt, w.next_disk_keepalive_at AS nextDiskKeepaliveAt,
-  r.agent, r.model, r.effort, r.fast, r.session_id AS sessionId, r.first_turn_id AS firstTurnId`
+  w.task_number AS taskNumber, r.agent, r.model, r.effort, r.fast, r.session_id AS sessionId, r.first_turn_id AS firstTurnId`
 
 export async function readWorkspace(
   db: D1Database,
@@ -132,8 +133,8 @@ export async function insertWorkspace(
     db
       .prepare(
         `INSERT INTO workspaces (id, org_id, repository_id, owner_user_id, section_id,
-       name, branch, base_branch, provider_account, state, created_at, updated_at, last_activity_at, position)
-       SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, 'starting', ?, ?, ?,
+       name, branch, branch_placeholder, base_branch, provider_account, state, created_at, updated_at, last_activity_at, position)
+       SELECT ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, 'starting', ?, ?, ?,
          (SELECT COALESCE(MIN(position) - 1, 0) FROM workspaces
           WHERE org_id = ? AND section_id = ? AND archived_at IS NULL AND state != 'archived')
        WHERE ${activeOrgIdPredicate('?')}`,
@@ -219,6 +220,7 @@ export async function persistLifecycleState(
     workspaceId: string
     orgId: string
     state: WorkspaceState
+    start?: WorkspaceStart | null
     lastActivityAt: number
     stoppedAt: number | null
     nextDiskKeepaliveAt: number | null
@@ -228,13 +230,16 @@ export async function persistLifecycleState(
 ): Promise<void> {
   await db
     .prepare(
-      `UPDATE workspaces SET state = ?, last_activity_at = ?, stopped_at = ?,
+      `UPDATE workspaces SET state = ?, running_since = ?, last_activity_at = ?, stopped_at = ?,
      next_disk_keepalive_at = ?, last_error_code = ?, last_error_message = ?, updated_at = MAX(updated_at, ?)
      WHERE id = ? AND org_id = ? AND archived_at IS NULL AND state != 'archived'
        AND EXISTS (SELECT 1 FROM orgs WHERE orgs.id = workspaces.org_id AND orgs.deleted_at IS NULL)`,
     )
     .bind(
       input.state,
+      ['starting', 'ready', 'working', 'unread', 'input'].includes(input.state)
+        ? (input.start?.startedAt ?? null)
+        : null,
       input.lastActivityAt,
       input.stoppedAt,
       input.nextDiskKeepaliveAt,

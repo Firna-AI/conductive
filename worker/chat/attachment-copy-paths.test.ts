@@ -16,7 +16,7 @@ import {
 import { prepareMessageAttachments } from './attachment-copy'
 import { providerCopy } from './attachment-copy.test-support'
 import { ATTACHMENTS_DIRECTORY } from '../../src/shared/attachment-paths'
-import { storeAttachment } from './attachment-storage'
+import { uploadAttachment } from '../test-support/attachment-upload'
 import { WORKSPACE_ID } from './harness.test-support'
 import { messageCommands } from './turn-lifecycle.test-support'
 
@@ -31,11 +31,11 @@ afterAll(async () => {
   await harness.dispose()
 })
 
-it('copies before delivery and preserves copy proof across reconnects while new messages and computers get fresh copies', async () => {
+it('copies before delivery and preserves copy proof across reconnects while new computers copy and later messages check the existing files', async () => {
   const longMessageId = 'valid-message-'.padEnd(400, 'x')
   const entered = held<void>()
   const release = held<void>()
-  const provider = providerCopy({
+  const provider = providerCopy(harness.env, {
     entered: () => entered.resolve(),
     hold: release.promise,
   })
@@ -49,7 +49,7 @@ it('copies before delivery and preserves copy proof across reconnects while new 
     .bind('sandbox-one', WORKSPACE_ID)
     .run()
   const upload = (id: string, name: string) =>
-    storeAttachment(
+    uploadAttachment(
       harness.env,
       {
         orgId: fixture.org.id,
@@ -84,6 +84,7 @@ it('copies before delivery and preserves copy proof across reconnects while new 
   expect(provider.copies).toEqual([
     ATTACHMENT_IGNORE_BYTES,
     FILE_BYTES,
+    ATTACHMENT_IGNORE_BYTES,
     FILE_BYTES,
   ])
   expect(provider.paths[0]).toBe(
@@ -92,7 +93,7 @@ it('copies before delivery and preserves copy proof across reconnects while new 
   expect(provider.paths[1]).toMatch(
     /^\/home\/user\/code\/attachment-repo\/\.context\/attachments\/[a-f0-9]{32}\/Project-plan\.pdf$/,
   )
-  expect(provider.paths[2]).toMatch(
+  expect(provider.paths[3]).toMatch(
     /^\/home\/user\/code\/attachment-repo\/\.context\/attachments\/[a-f0-9]{32}\/Project-plan\.pdf-notes$/,
   )
   const pending = await fixture.chat.store.read(WORKSPACE_ID, (view) =>
@@ -101,7 +102,7 @@ it('copies before delivery and preserves copy proof across reconnects while new 
   expect(pending[0]).toMatchObject({
     attachments: fileIds.map((attachmentId, index) => ({
       attachmentId,
-      relativePath: provider.paths[index + 1]?.slice(
+      relativePath: provider.paths[index * 2 + 1]?.slice(
         ATTACHMENT_REPOSITORY_DIRECTORY.length + 1,
       ),
     })),
@@ -117,7 +118,7 @@ it('copies before delivery and preserves copy proof across reconnects while new 
   runner.disconnect()
   await fixture.connect(runner)
   await fixture.drainAttachments()
-  expect(provider.copies).toHaveLength(3)
+  expect(provider.copies).toHaveLength(4)
   runner.disconnect()
   await harness.env.DB.prepare(
     'UPDATE workspaces SET sandbox_id = ? WHERE id = ?',
@@ -129,12 +130,14 @@ it('copies before delivery and preserves copy proof across reconnects while new 
   expect(provider.copies).toEqual([
     ATTACHMENT_IGNORE_BYTES,
     FILE_BYTES,
+    ATTACHMENT_IGNORE_BYTES,
     FILE_BYTES,
     ATTACHMENT_IGNORE_BYTES,
     FILE_BYTES,
+    ATTACHMENT_IGNORE_BYTES,
     FILE_BYTES,
   ])
-  expect(provider.paths.slice(3)).toEqual(provider.paths.slice(0, 3))
+  expect(provider.paths.slice(4)).toEqual(provider.paths.slice(0, 4))
   expect(
     (await fixture.sendAttachment(session.id, 'another-file-message', fileIds))
       .status,
@@ -143,18 +146,17 @@ it('copies before delivery and preserves copy proof across reconnects while new 
   expect(provider.copies).toEqual([
     ATTACHMENT_IGNORE_BYTES,
     FILE_BYTES,
+    ATTACHMENT_IGNORE_BYTES,
     FILE_BYTES,
     ATTACHMENT_IGNORE_BYTES,
     FILE_BYTES,
-    FILE_BYTES,
     ATTACHMENT_IGNORE_BYTES,
-    FILE_BYTES,
     FILE_BYTES,
   ])
-  expect(provider.paths[7]).toBe(provider.paths[1])
+  expect(provider.paths[5]).toBe(provider.paths[1])
   const message = messageCommands(runner, 'another-file-message')[0]
   expect(message?.type).toBe('message')
-  expect(message?.attachments[0]?.path).toBe(provider.paths[7])
+  expect(message?.attachments[0]?.path).toBe(provider.paths[5])
   expect(message).not.toHaveProperty('login')
   expect(message).not.toHaveProperty('credential')
   runner.disconnect()

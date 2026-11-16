@@ -48,6 +48,6 @@
   - A redirect in the Worker from such a path to one slash. The Mac app loads its pages from its own origin without the Worker, so its not-found page stays. A covers both.
 - **Wider fix:** None, because `useRoute` is the one reader of the current address.
 - **Previous examples:** The related chip item below has the same address pattern in chat. No other case found.
-- **Related:** [chip-leading-slashes-wrong-host.md](chip-leading-slashes-wrong-host.md): the same doubled-slash address in chat chips, where a press goes to host `orgs`. Its fix builds each chip address with one slash, so chips stop making such addresses. This item covers an address that a person opens directly. The two fixes are independent.
+- **Related:** [The shared app address builder](../../src/markdown/web-links.ts) fixes doubled slashes in chip navigation. This item covers an address that a person opens directly. Its fix is independent of the chip address builder.
 - **Recommendation:** A. It makes `useRoute` give the screen of the current address, as its comment says, at Small effort. It applies to the current address the same reading that `docs/protocol/workspace-links.md` gives a link in chat.
 - **Action:** fix after merge, apply A, because the defect is outside the workspace link chips change, and a separate branch fixes it.

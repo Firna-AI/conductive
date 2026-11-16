@@ -29,11 +29,13 @@ import { useMentionCopy } from './links/mention-copy'
 import { MentionsProvider, type ChatMentions } from './mentions/MentionsContext'
 import { endedAt, historySessions, tabSessions } from './state/archive-view'
 import {
+  isRunning,
   sessionState,
   type ChatSnapshot,
   type Overlay,
 } from './state/chat-snapshot'
 import type { ChatController } from './state/controller'
+import { withoutTabs } from './state/tab-order'
 import { browserCopy, type CopyServices } from './transcript-copy'
 import { systemClock, useNow, type Clock } from './ui/clock'
 import { useChatController, type ChatConnection } from './useChatController'
@@ -171,6 +173,7 @@ function ChatBody(
     snapshot.view,
     tabSessions(snapshot),
     shownTab(snapshot.view, active, content !== null),
+    (sessionId) => isRunning(snapshot, sessionId),
     props.renderTab,
   )
   useTabKeys({ tabs, controller, history, copy })
@@ -183,6 +186,9 @@ function ChatBody(
         mobile={mobile}
         onCancelRename={controller.dismissOverlay}
         onClose={controller.requestClose}
+        onCloseTabs={(closed) =>
+          controller.updateView((view) => withoutTabs(view, closed))
+        }
         onCopy={copy}
         onCopyLink={copyLink}
         onMove={controller.moveTab}
