@@ -201,9 +201,8 @@ export class ChatController {
       ? showLocally(this.context, sessionId)
       : selectSession(this.context, sessionId)
   /**
-   * Shows the open session that an app address names, as
-   * `showAddressSession` says. An abort of `signal`, such as at a newer
-   * address, makes the lookup show nothing.
+   * Shows or reopens the addressed session, as `showAddressSession` says.
+   * An aborted signal makes the pending lookup show nothing.
    */
   readonly showAddress = (sessionId: string, signal: AbortSignal) =>
     showAddressSession(
@@ -211,6 +210,7 @@ export class ChatController {
       sessionId,
       () => !signal.aborted,
       (id) => void this.select(id),
+      this.reopen,
     )
   readonly newSession = () => this.write(() => newSession(this.context))
   readonly startRename = (sessionId: string) =>
