@@ -279,3 +279,18 @@ export const consoleLogText = `[12:04:18.201] checkout: mounted AddressForm
 [12:04:24.020] checkout: postcode filled "EC3M 7AA"
 [12:04:24.731] checkout: validation passed
 `
+
+/**
+ * The draft with the screenshot and the full server log, whose size passes
+ * the 1 MB limit of a text preview.
+ */
+export const largeLogAttachments: readonly Attachment[] = [
+  screenshot,
+  serverLog,
+]
+
+/** The message about the screenshot and the full server log. */
+export const largeLogDraft = overlapText(
+  `${fileMark(screenshot.id)} `,
+  fileMark(serverLog.id),
+)

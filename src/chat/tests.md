@@ -203,6 +203,13 @@ state of a file without a preview, and the state of a picture over 20 MB.
 Escape and Close close it, and the field is inert while it shows. A mouse
 that rests 400 ms on a chip shows the card with the first lines, and a
 shorter rest or a touch shows none.
+`components/chip-field/FilePreviewPictures.dom.test.tsx` draws the picture
+of an image in the dialog and in the card with the fake decoder of
+`src/files/page/picture-test-kit.tsx`. A picture that the browser cannot
+draw has no preview, a press on the chip takes the card away, and the field
+takes the focus as the dialog closes, also when it did not have it.
+`components/chip-field/preview-test-kit.tsx` mounts the field with one
+attached file and rests a pointer on its chip on a fake clock.
 `components/chip-field/local-preview.test.ts` checks the text rule of the
 preview, its limits, and the first lines of the card.
 `src/shell/new-workspace/NewWorkspacePreview.test.tsx` opens the preview

@@ -126,6 +126,7 @@ export function FieldAttachedChip(props: { id: string; nodeKey: NodeKey }) {
           close={() => setOpen(false)}
           field={editor.getRootElement()}
           file={file}
+          returnFocus={() => focusField(editor)}
         />
       ) : null}
     </>

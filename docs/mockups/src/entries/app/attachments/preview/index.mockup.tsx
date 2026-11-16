@@ -69,10 +69,10 @@ export const attachmentsPreview = defineScreen({
       slug: 'too-large',
       title: 'File over the preview limit',
       description:
-        'Cal pressed the name of a full server log of 48 MB in the message box. The dialog says that previews show smaller files: pictures up to 20 MB and text files up to 1 MB.',
+        'Cal attached a full server log of 48 MB after the screenshot, and pressed its name in the message box. The dialog says that previews show smaller files: pictures up to 20 MB and text files up to 1 MB.',
       rationale:
         'The tab of the browser holds the whole text of a preview, and a picture loads from a data: address that holds all its bytes. The limits keep both small. The title gives the positive fact, and the limits stay in the body, as the copy rules of the product say.',
-      props: { composer: 'attachments', preview: 'large-log' },
+      props: { composer: 'attachment-large', preview: 'large-log' },
     },
   ],
 })

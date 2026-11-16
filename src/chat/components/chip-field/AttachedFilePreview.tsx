@@ -94,7 +94,8 @@ function holdInert(element: HTMLElement): () => void {
 /**
  * The preview of a file of the draft, as a dialog over the dimmed app.
  * Escape, Close, and a press on the dimmed app close it. The focus moves to
- * Close as it opens, and back to the field as it closes. It is a layer of
+ * Close as it opens, and to the field through `returnFocus` as it closes,
+ * also when the field did not have the focus before. It is a layer of
  * its own also inside the dialog of New workspace: Escape and a press
  * close only the preview, and its keys and drops stay inside it.
  *
@@ -107,13 +108,15 @@ export function FilePreviewLayer(props: {
   file: PreviewFile
   field: HTMLElement | null
   close: () => void
+  /** Gives the focus to the field as the dialog closes. */
+  returnFocus: () => void
 }) {
   const dialog = useRef<HTMLElement>(null)
   const { field } = props
   // Declared before the focus of the layer, so its cleanup runs first.
   useEffect(() => (field ? holdInert(field) : undefined), [field])
   useEscapeLayer(true, props.close)
-  useLayerFocus(dialog, { modal: true })
+  useLayerFocus(dialog, { modal: true, returnFocus: props.returnFocus })
   return (
     <Overlay>
       <div

@@ -217,8 +217,7 @@ decision of the change that lets a message carry files of up to 1 GB. The
   preview. Every other file, and an image that the browser cannot draw,
   shows that it has no preview. Escape, Close, and a press outside close the
   dialog, and the focus goes back to the field. Inside the New workspace
-  dialog, they close only the preview. The user asked for this on
-  16 November 2026.
+  dialog, they close only the preview.
 - When a mouse or a pen rests on a chip in the field for 400 ms, a small
   card shows above the chip. It shows the picture of an image file, or the
   first 6 lines of a text file, then the kind, the name, and the size of
@@ -233,10 +232,9 @@ decision of the change that lets a message carry files of up to 1 GB. The
   the content security policy of the apps allows `data:` images but not
   `blob:` images. The 20 MB limit keeps that address small enough for the
   tab. The 1 MB limit of a text keeps the tab from drawing a large text.
-- A press that opens nothing was the earlier rule. The user replaced it on
-  16 November 2026. The file tab of a sent chip was not chosen for a draft,
-  because the cloud computer does not hold the file before Send, and the
-  New workspace dialog has no file tabs.
+- The file tab of a sent chip was not chosen for a draft, because the
+  cloud computer does not hold the file before Send, and the New workspace
+  dialog has no file tabs.
 - A space follows each new chip, as after a pick of the list of `@`
   (decision 213). After the files of a drop or a pick, the caret stands
   after the last new chip, and the field has the focus.

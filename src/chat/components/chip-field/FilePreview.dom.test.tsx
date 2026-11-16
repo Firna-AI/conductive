@@ -1,26 +1,20 @@
 // @vitest-environment happy-dom
 
-import { act } from 'react'
-import { describe, expect, test, vi } from 'vitest'
-import type { DraftFile } from '../../../app/draft-files'
+import { describe, expect, test } from 'vitest'
 import { fileMark } from '../../../app/draft-marks'
 import {
   byRole,
   queryByRole,
   queryByText,
 } from '../../../test-support/dom-queries'
+import { press, pressKey, waitFor } from '../../../test-support/mount'
 import {
-  holdAnimationFrames,
-  press,
-  pressKey,
-  waitFor,
-} from '../../../test-support/mount'
-import { mountAttachedField } from './attached-field-test-kit'
-
-/** A file of a draft whose upload runs, with these bytes. */
-function draftFile(id: string, file: File): DraftFile {
-  return { state: 'uploading', id, file, sentBytes: null, upload: null }
-}
+  draftFile,
+  hover,
+  mountWith,
+  nameButton,
+  restOn,
+} from './preview-test-kit'
 
 const notes = new File(
   ['# Notes\nline 2\nline 3\nline 4\nline 5\nline 6\nline 7\n'],
@@ -31,62 +25,6 @@ const notes = new File(
 const archive = new File([new Uint8Array([80, 75, 3, 4, 0, 0])], 'site.zip', {
   type: 'application/zip',
 })
-
-/** Mounts the field with the chip of the file, whose spinner holds still. */
-async function mountWith(file: DraftFile) {
-  holdAnimationFrames()
-  const view = await mountAttachedField({
-    value: `See ${fileMark(file.id)} `,
-    files: [file],
-  })
-  await waitFor(() => view.chips().length === 1, 'the chip of the file')
-  return view
-}
-
-/** The button of the name of the only chip of the field. */
-function nameButton(field: HTMLElement): HTMLElement {
-  const button = field.querySelector<HTMLElement>(
-    '[contenteditable="false"] button[tabindex="-1"]:not([aria-label])',
-  )
-  if (!button) throw new Error('The chip has no name button.')
-  return button
-}
-
-function hover(element: Element, type: 'pointerover' | 'pointerout') {
-  act(() => {
-    element.dispatchEvent(
-      new PointerEvent(type, { bubbles: true, pointerType: 'mouse' }),
-    )
-  })
-}
-
-/**
- * Rests a pointer of `type` on the chip for `ms` on a fake clock, then
- * gives the page a few turns on the real clock. Gives the card, or null.
- */
-async function restOn(
-  chip: HTMLElement,
-  type: 'mouse' | 'touch',
-  ms: number,
-): Promise<Element | null> {
-  vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
-  try {
-    act(() => {
-      chip.dispatchEvent(
-        new PointerEvent('pointerover', { bubbles: true, pointerType: type }),
-      )
-    })
-    act(() => vi.advanceTimersByTime(ms))
-  } finally {
-    vi.useRealTimers()
-  }
-  for (let turn = 0; turn < 5; turn += 1) {
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 0))
-    })
-  }
-  return document.querySelector('pre')
-}
 
 describe('the preview of an attached file in the message field', () => {
   test('a press on the name opens the text of the file in a dialog, which holds the focus while the field is inert, and Escape closes it and keeps the draft', async () => {

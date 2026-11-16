@@ -62,7 +62,8 @@ export const temporaryTabStates = [
  * over the icon of the first chip of the text, where a × takes the place of
  * the icon. A phone has no pointer, so it shows the × at the end of each
  * chip instead. `attachment-peek` draws the card of a pointer that rests on
- * the chip of the screenshot, with its picture.
+ * the chip of the screenshot, with its picture. `attachment-large` holds the
+screenshot and a full server log over the limit of a text preview.
  *
  * The `drop` states draw a drop of files on the box: a screenshot that
  * hovers over it with the drop caret in the text, the screenshot at that
@@ -94,6 +95,7 @@ export const composerStates = [
   'workspace-link-pointer',
   'attachment-pointer',
   'attachment-peek',
+  'attachment-large',
   'drop-over',
   'dropped',
   'dropped-folder',

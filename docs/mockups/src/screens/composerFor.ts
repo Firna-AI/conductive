@@ -12,6 +12,8 @@ import {
   droppedAttachments,
   droppedFolderAttachments,
   failedAttachments,
+  largeLogAttachments,
+  largeLogDraft,
   folderDropDraft,
   uploadingAttachments,
   type Attachment,
@@ -63,6 +65,7 @@ const composerFiles: Partial<Record<ComposerKey, readonly Attachment[]>> = {
   picker: draftAttachments,
   'attachment-pointer': draftAttachments,
   'attachment-peek': draftAttachments,
+  'attachment-large': largeLogAttachments,
   'drop-over': beforeDropAttachments,
   dropped: droppedAttachments,
   'dropped-folder': droppedFolderAttachments,
@@ -214,6 +217,7 @@ export function composerFor(
   let draft = ''
   if (!fresh && state.conversation === 'steer') draft = steerDraft
   else if (drop) draft = drop.draft
+  else if (files && state.composer === 'attachment-large') draft = largeLogDraft
   else if (files) draft = attachmentDraft
   else if (!fresh && nextMessage) draft = followUpDraft
   else if (mention) draft = mention.draft
