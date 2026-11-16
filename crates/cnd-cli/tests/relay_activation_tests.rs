@@ -44,7 +44,7 @@ async fn serves_requests_on_the_descriptor_inherited_from_systemd()
     reader.read_line(&mut ready).await?;
     assert!(ready.contains("Listening on"), "{ready}");
     let mut client = UnixStream::connect(path).await?;
-    client.write_all(format!("GET /activated?value=1 HTTP/1.1\r\nHost: sandbox-0.on.boat.dev\r\nX-Conductive-Preview-Port: {port}\r\n\r\n").as_bytes()).await?;
+    client.write_all(format!("GET /activated?value=1 HTTP/1.1\r\nHost: sandbox-0.on.boat.dev\r\nX-Conductive-Preview-Port: {port}\r\nConnection: close\r\n\r\n").as_bytes()).await?;
     let mut response = String::new();
     client.read_to_string(&mut response).await?;
     assert!(response.starts_with("HTTP/1.1 200"), "{response}");
