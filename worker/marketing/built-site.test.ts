@@ -35,7 +35,7 @@ it('sends every sign-in to the app and shows the request year', async () => {
   expect(response.status).toBe(200)
   expect(response.headers.get('Content-Type')).toBe('text/html; charset=utf-8')
   const html = await response.text()
-  expect(html).toContain('Give every coding task its own cloud computer.')
+  expect(html).toContain('Ship code faster.')
   expect(html).toContain('Give your next task its own cloud computer.')
   const signIns = links(html).filter((link) =>
     ['Sign up', 'Sign in'].includes(link.text),
