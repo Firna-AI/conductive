@@ -46,6 +46,7 @@ export const workspaceStateSchema = {
     'modelChoice',
     'resize',
     'rightColumn',
+    'sidebar',
     'overlay',
     'archive',
     'viewer',
@@ -148,6 +149,11 @@ export const workspaceStateSchema = {
      * the end of the header. A phone has no right column.
      */
     rightColumn: { enum: ['shown', 'hidden'] },
+    /**
+     * The sidebar of the desktop: shown, hidden with its toggle, or hidden
+     * with the workspace list open as a popover of the tile of the org.
+     */
+    sidebar: { enum: ['shown', 'hidden', 'popover'] },
     /**
      * What lies open over the workspace: the session history, the question
      * before a running session closes, the owner of the workspace, the tab
@@ -258,6 +264,7 @@ export const readyWorkspace: WorkspaceState = {
   modelChoice: 'workspace',
   resize: 'none',
   rightColumn: 'shown',
+  sidebar: 'shown',
   overlay: 'none',
   archive: 'kept',
   viewer: 'admin',
