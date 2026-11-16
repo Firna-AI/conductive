@@ -120,6 +120,7 @@ The musl build needs a C compiler for musl. On Ubuntu, install the
 - [tool_command.rs](src/tool_command.rs) composes the workspace CLI and MCP runtime.
 - [environment.rs](src/environment.rs) reads saved shell settings for tools and credentials.
 - [relay_start_tests.rs](tests/relay_start_tests.rs) executes the relay start script with a fake program.
+- [system_install_tests.rs](tests/system_install_tests.rs) executes the system installer with stub commands and checks the relay restart.
 - [cli_tests.rs](src/_tests_/cli_tests.rs) checks relay argument parsing.
 
 ### Related Docs

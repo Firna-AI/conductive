@@ -79,6 +79,9 @@ terminal module. The previous release keeps its own system part for fallback.
 The runner service applies a staged release in its root pre-start step.
 It applies only when `/run/conductive/workspace-ready` exists.
 Relay and terminal restarts do not apply or roll back releases.
+The system installer that an apply runs restarts a running relay, so the relay
+runs the active release. The installer of an older release, which a rollback
+can run, may not restart it.
 The runner requests a background check after each start. `conductive-update-check.timer` also checks after
 30 seconds of boot and every hour. The root check service runs the program
 and then exits. No separate updater process remains resident.
