@@ -227,7 +227,7 @@ describe('the Files screens in the workspace', () => {
     }).toEqual({ current: ['page'], saved: [] })
   })
 
-  test('keep the lists of a stopped sandbox, and show the sandbox in their place while it starts or the app refuses its start', async () => {
+  test('keep the saved lists while the sandbox is stopped or starts, and show the sandbox in their place when the app refuses its start', async () => {
     holdAnimationFrames()
     const here = routes.workspace(org, id)
     const refusedServer = new FakeApiServer({ workspaceState: 'stopped' })
@@ -251,10 +251,7 @@ describe('the Files screens in the workspace', () => {
     const lists = (view: HTMLElement) =>
       queryByLabel('Changed files', column(view))
     expect(lists(stopped.view)).not.toBeNull()
-    expect(lists(starting.view)).toBeNull()
-    expect(column(starting.view).textContent).toContain(
-      'Waiting for the sandbox',
-    )
+    expect(lists(starting.view)).not.toBeNull()
     expect(lists(refused.view)).toBeNull()
     expect(column(refused.view).textContent).toContain(
       "The sandbox can't start",

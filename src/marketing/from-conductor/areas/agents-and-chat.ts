@@ -20,14 +20,14 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     area: 'agents-and-chat',
     name: 'Mentions',
     status: 'available',
-    note: 'Use @ for workspace files and folders. File chips in agent answers are planned, while teammate and pull request mentions remain under consideration.',
+    note: 'Use @ for workspace files and folders. File chips in agent answers are in progress, while teammate and pull request mentions remain under consideration.',
   },
   {
     id: 'attachments',
     area: 'agents-and-chat',
     name: 'Attachments',
     status: 'available',
-    note: 'Attach files up to 100 MB each.',
+    note: 'Attach files up to 100 MB each. Support for files up to 1 GB is in progress.',
   },
   {
     id: 'drag-and-drop-attachments',
@@ -103,8 +103,9 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     id: 'slash-commands',
     area: 'agents-and-chat',
     name: 'Slash commands',
-    status: 'considering',
-    note: 'A command menu in the message box is under consideration.',
+    status: 'in-progress',
+    note: 'A / menu for choosing skills in chat is in progress for agents powered by Claude and Codex.',
+    due: null,
   },
   {
     id: 'skills',
@@ -146,8 +147,8 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     id: 'chat-links',
     area: 'agents-and-chat',
     name: 'Chat links',
-    status: 'planned',
-    note: 'Clickable web links and labelled Markdown links are planned for chat. Local server links will open the workspace preview.',
+    status: 'in-progress',
+    note: 'Clickable web links and labelled Markdown links are in progress for chat. Local server links will open the workspace preview.',
     due: null,
   },
   {
@@ -155,7 +156,7 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     area: 'agents-and-chat',
     name: 'Session links',
     status: 'available',
-    note: 'Session links open one chat session and show as chips in chat. Copy link in the tab menu of a session copies its link, and agent tools give these links too.',
+    note: 'Session links from tab menus and agent tools open chats and appear as chips. Reopening closed sessions through links is in progress.',
   },
   {
     id: 'copy-session-transcripts',

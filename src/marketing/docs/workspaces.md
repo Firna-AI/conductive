@@ -183,7 +183,8 @@ A normal stop keeps its files, sessions, and chat history.
 Open a stopped workspace to start its computer again.
 If it stops while the workspace is open, select **Resume**, or open a file or a change.
 The history remains readable while the computer starts.
-An open file or change waits for the computer, then opens.
+A file or change that you open then waits for the computer, then opens.
+One that already shows stays.
 
 A message from an agent tool also starts a stopped workspace's computer.
 This includes the first message of a session that an agent creates.
@@ -225,7 +226,9 @@ The computer starts first if it is stopped.
 The new branch starts from the repository's latest default branch.
 That default branch becomes the workspace's base branch for its new task.
 
-Continue keeps the same cloud computer, files, installed software, running servers, sessions, and workspace name.
+Continue keeps the same cloud computer, files, running servers, sessions, and workspace name.
+It also keeps the software installed by the org's install script.
+Conductive's own software still updates itself.
 Changed files move to the new branch.
 Commits that are not pushed stay on their local branches.
 The question counts those commits across all local branches, including earlier tasks.

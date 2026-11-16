@@ -34,7 +34,7 @@ export const workspacesAndBranchesFeatures: readonly ParityFeature[] = [
     area: 'workspaces-and-branches',
     name: 'Start from a branch, PR, or issue',
     status: 'in-progress',
-    note: 'Starting from a GitHub branch or pull request is in progress. Starting from an issue is planned.',
+    note: 'Starting from another GitHub branch is in progress. Starting from a pull request or issue is planned.',
     due: null,
   },
   {
@@ -48,8 +48,8 @@ export const workspacesAndBranchesFeatures: readonly ParityFeature[] = [
     id: 'target-branch',
     area: 'workspaces-and-branches',
     name: 'Target branch',
-    status: 'planned',
-    note: 'Target branches that follow a pull request’s base are planned. Agents will also be able to change the target branch.',
+    status: 'in-progress',
+    note: 'Choosing a target branch for new workspaces is in progress. Following pull request base changes and letting agents change existing targets are planned.',
     due: null,
   },
   {
@@ -120,7 +120,7 @@ export const workspacesAndBranchesFeatures: readonly ParityFeature[] = [
     area: 'workspaces-and-branches',
     name: '.context folder',
     status: 'available',
-    note: 'Git ignores attachments and, after a new computer build, .context agent notes. All files lists them after rebuilding, with older workspace updates in progress.',
+    note: 'Git ignores attachments and .context agent notes. All files lists them. Older workspaces gain this support when an automatic software update applies at a later start.',
   },
   {
     id: 'monorepo-working-directories',
