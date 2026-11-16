@@ -72,7 +72,8 @@ function readWorkspace(value: unknown): Workspace {
     orgId: text(source.orgId),
     repositoryId: text(source.repositoryId),
     sectionId: text(source.sectionId),
-    parentId: nullable(text)(source.parentId),
+    // A snapshot from before sub-workspaces has no parent.
+    parentId: nullable(text)(source.parentId ?? null),
     owner: readSender(source.owner),
     name: nullable(text)(source.name),
     branch: text(source.branch),

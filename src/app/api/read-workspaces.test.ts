@@ -58,13 +58,16 @@ it('preserves the parent and each GitHub summary in shell, chat, and member work
   }
 })
 
-it('reads older shell, chat, and member replies without a GitHub summary as null', () => {
+it('reads older shell, chat, and member replies without a GitHub summary or a parent as null', () => {
   const { detail } = workspaceFixtures()
   const workspace = { ...detail.workspace }
   Reflect.deleteProperty(workspace, 'github')
+  Reflect.deleteProperty(workspace, 'parentId')
   expect(readWorkspace(workspace).github).toBeNull()
-  expect(
-    readChatWorkspace({ ...detail, workspace }).workspace.github,
-  ).toBeNull()
+  expect(readWorkspace(workspace).parentId).toBeNull()
+  const chat = readChatWorkspace({ ...detail, workspace }).workspace
+  expect(chat.github).toBeNull()
+  expect(chat.parentId).toBeNull()
   expect(parseWorkspace(workspace).github).toBeNull()
+  expect(parseWorkspace(workspace).parentId).toBeNull()
 })
