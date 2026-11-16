@@ -160,6 +160,12 @@ both.
 `app/org-settings/cloud-computer`, its `add-variable` and `change-value`
 pages, and its `member` page show them.
 
+The Skills section of the Cloud computer tab names the GitHub repository
+whose skills the agents of every workspace use. An admin edits it in a
+field, and a member sees it as text. `src/components/settings/SkillsSection.tsx`
+draws it, and `skillsCopy.ts` beside it holds its words, so that the app
+can share them. [The catalogue](catalogue.md) gives its pages.
+
 A file path can hold a secret value. The lists, the tabs, the page
 headers, and the files of a finished turn then show "[redacted]" in place
 of the value, and each file still opens by its real path. A tab whose file

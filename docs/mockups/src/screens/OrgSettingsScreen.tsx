@@ -24,6 +24,7 @@ export const orgSettingsSchema = {
     'script',
     'repositoryChange',
     'envForm',
+    'skills',
     'dialog',
     'viewer',
     'org',
@@ -58,6 +59,13 @@ export const orgSettingsSchema = {
      */
     envForm: { enum: ['none', 'add', 'change'] },
     /**
+     * The skills repository of the org, on the Cloud computer tab: Acme's
+     * saved acme/agent-skills, none chosen yet, or none with a link from
+     * GitHub that an admin pasted into the field and has not saved. A
+     * member sees only the saved repository. Firna, a new org, has none.
+     */
+    skills: { enum: ['chosen', 'none', 'pasted-link'] },
+    /**
      * A dialog over the page: Delete org, the removal of a member, or the
      * leave of a suspended org.
      */
@@ -89,6 +97,7 @@ export const acmeSettings: OrgSettingsState = {
   script: 'built',
   repositoryChange: 'none',
   envForm: 'none',
+  skills: 'chosen',
   dialog: 'none',
   viewer: 'admin',
   org: 'active',

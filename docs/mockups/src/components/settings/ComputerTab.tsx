@@ -7,11 +7,13 @@ import { BuildSection, type BuildState, type OrgBuilds } from './BuildSection'
 import { ScriptSection } from './EnvironmentSections'
 import { EnvVarsSection, type EnvVarForm } from './EnvVarsSection'
 import type { ReadOnlyCause } from './OrgSections'
+import { SkillsSection } from './SkillsSection'
 import { TabIntro } from './TabIntro'
 
 /**
- * The cloud computer of an org: its builds, its scripts, and its env vars.
- * A new org starts with empty scripts and no env vars.
+ * The cloud computer of an org: its builds, its scripts, its env vars, and
+ * its skills repository. A new org starts with empty scripts, no env vars,
+ * and no skills repository.
  */
 export type OrgComputer = OrgBuilds & {
   installScript: string
@@ -19,6 +21,8 @@ export type OrgComputer = OrgBuilds & {
   changedInstallScript: string
   startupScript: string
   envVars: readonly EnvVar[]
+  /** The GitHub repository of skills, as owner/name, when the org has one. */
+  skillsRepository?: string
 }
 
 /**
@@ -62,11 +66,13 @@ function changedNotice(props: {
 }
 
 /**
- * The org's cloud computer: its builds, its scripts, and its env vars.
- * `readOnly` shows them without edit fields and actions, for a member who
- * is not an admin (decision 57), and for everyone in a suspended org.
- * `envForm` opens a form of the env vars. `repositoryNotice` shows the
- * repository changes that the computer does not hold yet, under the intro.
+ * The org's cloud computer: its builds, its scripts, its env vars, and its
+ * skills repository. `readOnly` shows them without edit fields and
+ * actions, for a member who is not an admin (decision 57), and for
+ * everyone in a suspended org. `envForm` opens a form of the env vars.
+ * `skillsDraft` is the unsaved text of the Skills field. `repositoryNotice`
+ * shows the repository changes that the computer does not hold yet, under
+ * the intro.
  */
 export function ComputerTab(props: {
   org: string
@@ -76,6 +82,8 @@ export function ComputerTab(props: {
   computer: OrgComputer
   readOnly?: ReadOnlyCause
   envForm?: EnvVarForm
+  /** The text of the Skills field, when an admin changed it and has not saved. */
+  skillsDraft?: string
   /** The repository notice, while a repository change waits for a build. */
   repositoryNotice?: ReactNode
 }) {
@@ -125,6 +133,11 @@ export function ComputerTab(props: {
         org={props.org}
         readOnly={readOnly}
         vars={computer.envVars}
+      />
+      <SkillsSection
+        draft={props.skillsDraft}
+        readOnly={props.readOnly}
+        repository={computer.skillsRepository}
       />
     </>
   )

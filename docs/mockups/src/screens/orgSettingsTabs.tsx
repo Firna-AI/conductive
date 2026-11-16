@@ -11,6 +11,7 @@ import {
   RepositoryList,
 } from '../components/settings/RepositoryList'
 import { Section } from '../components/settings/Section'
+import { skillsRepositoryLink } from '../fixtures/computer'
 import {
   memberViewer,
   you,
@@ -101,6 +102,9 @@ export function TabBody(props: { state: OrgSettingsState }) {
           readOnly={readOnly}
           repositoryNotice={settingsRepositoryNotice(state, settings)}
           script={state.script}
+          skillsDraft={
+            state.skills === 'pasted-link' ? skillsRepositoryLink : undefined
+          }
         />
       )
     case 'members':

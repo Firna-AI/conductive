@@ -45,6 +45,16 @@ set -euo pipefail
 redis-server --daemonize yes`
 
 /**
+ * The GitHub repository of skills that an admin of Acme chose, as
+ * owner/name. The agents of every workspace of the org use its skills. A
+ * new org has none.
+ */
+export const skillsRepository = 'acme/agent-skills'
+
+/** The same repository as a link from GitHub, which an admin can paste. */
+export const skillsRepositoryLink = `https://github.com/${skillsRepository}`
+
+/**
  * An env var of the org: its name, and its Secret mark. The chat and the
  * start logs hide the value of a secret variable. No screen shows a value.
  */

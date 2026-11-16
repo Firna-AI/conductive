@@ -26,7 +26,7 @@ how a screen is built, and links to the other pages.
 | `app/banner`        | The pull request bar and Checks: no pull request, its other states, Merge, local work, the agent actions in the chat, and Continue |
 | `app/new-workspace` | An empty chat, the first build of a new org, a repository that waits for its build, its error, files on the first message, the dialog, a pasted workspace link, the start, a queued second message, the first turn, a failed start, Try again |
 | `app/routines` | The routines of the org, a routine, its triggers, its runs, and a run workspace |
-| `app/org-settings`  | General with Delete org, then Repositories and Cloud computer with the notice of a repository change, the first build of a new org, and Members |
+| `app/org-settings`  | General with Delete org, then Repositories and Cloud computer with the notice of a repository change, the first build of a new org, and the skills repository, then Members |
 | `app/chat`          | A finished turn with its work folded, then running turns, turns that an agent stopped, open work, tables in replies, lists in replies, headings in replies, lost data, lost updates, unread files, and the time limit of background work |
 | `app/mac-commands`  | A command that an agent runs on the Mac of the sender, in the chat            |
 | `app/sessions`      | A new session, the history, closing one while it works, and a linked session  |
@@ -150,6 +150,21 @@ Acme, which adds acme/admin-dashboard and removes acme/marketing-site:
   has the notice of a member. `app/org-settings/cloud-computer/script-changed`
   keeps the notice of the install script, which shows only for a change
   of the install script.
+
+The Skills section of the Cloud computer tab comes from decisions 1 to 3
+of the org skills repository plan, of 13 and 16 November 2026. It names
+one GitHub repository, and the agents of every workspace use its skills.
+It is the last section of the tab, after the environment variables:
+
+- `app/org-settings/cloud-computer` has acme/agent-skills in the field of
+  an admin, with Save repository off until the field changes.
+- `app/org-settings/cloud-computer/skills` has Acme before an admin chose
+  a repository, with the placeholder in the empty field. Its `pasted-link`
+  variant has a link from GitHub in the field, with Save repository on.
+- `app/org-settings/cloud-computer/member` shows the repository as text to
+  a member. Its `no-skills` variant has the empty text of a member.
+- A new org has no repository, as `app/org-settings/cloud-computer/first-build`
+  shows.
 
 `app/account` shows the General tab of the account, with Claude connected
 by a subscription token and Codex by an API key. Its three tabs are links, as

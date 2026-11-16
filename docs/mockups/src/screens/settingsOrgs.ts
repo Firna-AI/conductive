@@ -21,6 +21,7 @@ import {
   installScript,
   installScriptWithout,
   lastBuild,
+  skillsRepository,
   startupScript,
   timedOutBuild,
 } from '../fixtures/computer'
@@ -90,6 +91,7 @@ const acme: SettingsOrg = {
     changedInstallScript,
     startupScript,
     envVars,
+    skillsRepository,
   },
   list: paths.shell,
   sections: workspaceSections(),
@@ -117,8 +119,9 @@ function firnaBuilds(build: BuildState): Omit<OrgBuilds, 'logs'> {
 }
 
 /**
- * Firna, which Cal created in Get started. Its scripts are empty and it
- * has no env vars, as for every new org, until an admin adds them.
+ * Firna, which Cal created in Get started. Its scripts are empty, and it
+ * has no env vars and no skills repository, as for every new org, until an
+ * admin adds them.
  */
 function firna(build: BuildState): SettingsOrg {
   return {
@@ -173,16 +176,31 @@ function acmeAfter(change: RepositoryChange): SettingsOrg {
 }
 
 /**
+ * Acme in a state of its skills repository: acme/agent-skills, or none
+ * yet, as every org starts. A pasted link is not saved, so Acme then has
+ * none either.
+ */
+function acmeWithSkills(state: OrgSettingsState): SettingsOrg {
+  const settings = acmeAfter(state.repositoryChange)
+  if (state.skills === 'chosen') return settings
+  return {
+    ...settings,
+    computer: { ...settings.computer, skillsRepository: undefined },
+  }
+}
+
+/**
  * The org of the settings: Acme in use, Acme suspended, or Firna. Acme
- * shows the saved change of its repositories of the state.
+ * shows the saved change of its repositories and its skills repository
+ * of the state.
  */
 export function settingsOrg(state: OrgSettingsState): SettingsOrg {
   switch (state.org) {
     case 'active':
-      return acmeAfter(state.repositoryChange)
+      return acmeWithSkills(state)
     case 'suspended':
       return {
-        ...acmeAfter(state.repositoryChange),
+        ...acmeWithSkills(state),
         list: paths.suspendedOrg,
         sections: suspendedSections(),
         links: suspendedSettingsLinks,
