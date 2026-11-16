@@ -180,14 +180,17 @@ sessions as tabs above the chat, and four tabs at the bottom.
   and the attach button and Create, with the hint of the Enter key, at the
   bottom right. A phone always opens the page, so the dialog has no phone
   layout.
-- The account has four tabs, General, Agents, Preferences, and Keyboard
-  shortcuts, as links, as the org settings have. The Mac app adds This Mac
-  as its fifth tab. On a phone, a tab that
+- The account has five tabs, General, Agents, Preferences, Keyboard
+  shortcuts, and Stats, as links, as the org settings have. The Mac app
+  adds This Mac as its sixth tab. On a phone, a tab that
   does not fit moves to a second line. Preferences holds the New
   workspaces section, whose rows put each label beside its control in two
   columns. A segmented control chooses how New workspace opens, with a
   helper line under it, and a narrow section puts it under its label. A
   failed save shows its error under the control.
+- Stats uses the parts of the operator Overview: a box of tiles, the
+  workspaces by state, and the daily charts. Its tiles are Workspaces with
+  the new ones of 7 days, Running now, Automations, and Orgs.
 - `ShortcutsSections` in `src/components/settings/` draws the Keyboard
   shortcuts tab, in the Mac app and in each browser. It shows the keys of
   a host: the Mac app, a normal tab of Chrome or Firefox, or the installed

@@ -345,3 +345,9 @@ uses the branch in the sandbox. Until then, a name renames the branch, as
 says. Each Continue adds 1 to the task number. A row from before this file
 starts at task 1, also after an earlier Continue, because D1 holds no count
 of earlier Continues.
+
+`202611161600_owner_count_indexes.sql` adds indexes on the owner of
+workspaces, automations, and automation runs. The
+[Stats tab of the account](../docs/protocol/account-stats.md) counts the
+records of one person, and these indexes keep each read to that person's
+rows.
