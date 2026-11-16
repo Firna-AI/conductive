@@ -556,6 +556,11 @@ screen still draws one pane.
       pane, a new tab goes to the focused pane, a closed tab leaves its
       pane, and each pane keeps its own temporary tab (decision 5 B). Add
       Worker tests for a save from an old copy of the app.
+- [ ] Keep the old fields in each reply of the saved view: all tabs in one
+      order with the left pane first, and the shown tab and the temporary
+      tab of the focused pane. An older copy of the app then reads the view
+      as one row. Add a Worker test that reads a split view in the old
+      shape.
 - [ ] Move the tab order of `src/chat/state/tab-order.ts` to the panes.
       Moves inside a row and between rows go through one pure function.
 - [ ] Run the targeted tests and `npm run typecheck`.
