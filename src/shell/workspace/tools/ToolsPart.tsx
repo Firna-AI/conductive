@@ -1,20 +1,14 @@
-import {
-  useCallback,
-  useMemo,
-  useState,
-  type MouseEvent,
-  type ReactNode,
-} from 'react'
+import { useMemo, useState, type MouseEvent, type ReactNode } from 'react'
 import { classes } from '../../../../docs/mockups/src/components/common/classes'
 import tabs from '../../../../docs/mockups/src/components/common/LinkTabs.module.css'
 import { PanelBar } from '../../../../docs/mockups/src/components/workspace/PanelBar'
 import panel from '../../../../docs/mockups/src/components/workspace/ToolsPanel.module.css'
 import { useServices } from '../../../app/services'
+import { useStore } from '../../../app/store'
 import { createTerminalConnector } from '../../../app/terminal-transport'
 import { DesktopTool } from '../../../desktop/DesktopTool'
 import { PreviewTool } from '../../../previews/PreviewTool'
 import type { ConnectTerminal } from '../../../terminal/TerminalScreen'
-import type { TerminalFocusRequest } from '../../../terminal/terminalFocus'
 import { TerminalTool } from '../../../terminal/TerminalTool'
 import type { ToolWorkspace } from '../../../terminal/tool-parts/workspace'
 import type { ShortcutCommandId } from '../../../shared/shortcut-commands'
@@ -54,7 +48,6 @@ function ToolTab(props: {
   navigation: ToolNavigation
   tool: ToolKey
   label: string
-  onPick: (tool: ToolKey) => void
 }) {
   const { navigation, tool } = props
   const selected = tool === navigation.tool
@@ -68,7 +61,6 @@ function ToolTab(props: {
       onClick={(event) => {
         if (!isPlainClick(event)) return
         event.preventDefault()
-        props.onPick(tool)
         navigation.select(tool)
       }}
       title={shortcutTip(props.label, hint)}
@@ -78,14 +70,8 @@ function ToolTab(props: {
   )
 }
 
-/**
- * The tabs of the tools panel. Each tab is a link to its tool. `onPick`
- * runs before a plain click shows the tool of its tab.
- */
-function ToolTabs(props: {
-  navigation: ToolNavigation
-  onPick: (tool: ToolKey) => void
-}) {
+/** The tabs of the tools panel. Each tab is a link to its tool. */
+function ToolTabs(props: { navigation: ToolNavigation }) {
   return (
     <nav aria-label="Tools" className={tabs.tabs}>
       {offeredToolTabs.map((tab) => (
@@ -93,7 +79,6 @@ function ToolTabs(props: {
           key={tab.tool}
           label={tab.label}
           navigation={props.navigation}
-          onPick={props.onPick}
           tool={tab.tool}
         />
       ))}
@@ -168,25 +153,18 @@ export function ToolsPart(props: {
   const { tool } = navigation
   const terminalShown = useShownOnce(tool === 'terminal')
   const previewShown = useShownOnce(tool === 'preview')
-  // A click on the Terminal tab moves the focus to the terminal, also when
-  // the terminal connects later. A click on another tab drops the request.
-  const [terminalFocus, setTerminalFocus] =
-    useState<TerminalFocusRequest | null>(null)
-  const pickTool = useCallback((picked: ToolKey) => {
-    setTerminalFocus(
-      picked === 'terminal' ? { from: document.activeElement } : null,
-    )
-  }, [])
-  const focusDone = useCallback(() => setTerminalFocus(null), [])
+  // A choice of Terminal on desktop moves the focus to the terminal, also
+  // when the terminal connects later. A hidden terminal does not take it.
+  const focusRequest = useStore(context.terminalFocus.request)
   const body = props.placeholder ?? (
     <>
       {terminalShown ? (
         <div className={styles.tool} hidden={tool !== 'terminal'}>
           <TerminalTool
             connect={connect}
-            focusRequest={tool === 'terminal' ? terminalFocus : null}
+            focusRequest={tool === 'terminal' ? focusRequest : null}
             links={links}
-            onFocusDone={focusDone}
+            onFocusDone={context.terminalFocus.clear}
             screenRef={terminal}
             touch={touch}
             workspace={toolWorkspace}
@@ -212,7 +190,7 @@ export function ToolsPart(props: {
   return (
     <section aria-label="Tools" className={panel.panel}>
       <PanelBar>
-        <ToolTabs navigation={navigation} onPick={pickTool} />
+        <ToolTabs navigation={navigation} />
       </PanelBar>
       <div className={panel.body}>{body}</div>
     </section>

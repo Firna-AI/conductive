@@ -8,7 +8,7 @@ import {
   workspaceViewPath,
   type WorkspaceViewResponse,
 } from '../../../shared/workspace-view'
-import { byRole } from '../../../test-support/dom-queries'
+import { byLabel, byRole } from '../../../test-support/dom-queries'
 import { FakeApiServer } from '../../../test-support/fake-api'
 import { FAKE_IDS } from '../../../test-support/fixtures/core'
 import { toolFixtures } from '../../../test-support/fixtures/tools'
@@ -17,6 +17,8 @@ import {
   holdAnimationFrames,
   MOUNTED_TEST_TIMEOUT,
 } from '../../../test-support/mount'
+import { openPaletteTab } from '../../palette/palette-test-kit'
+import { pressCommand } from '../../shortcuts/shortcut-test-kit'
 import { click, settle } from '../../test-mount'
 import { linkTo, openTab, socketsOf } from '../wiring-test-kit'
 import { toolHref } from './tool-address'
@@ -34,17 +36,23 @@ function terminalFocused(panel: HTMLElement): boolean {
   return active !== null && panel.contains(active) && !!active.closest('.xterm')
 }
 
+/** A server whose saved view shows Preview. */
+function previewServer(): FakeApiServer {
+  const server = new FakeApiServer()
+  const saved: WorkspaceViewResponse = {
+    view: { ...workspaceFixtures().view.view, tool: 'preview' },
+  }
+  server.json('GET', workspaceViewPath(org, id), saved)
+  return server
+}
+
 /**
  * A server whose saved view shows Preview, so the terminal mounts at the
  * first click on its tab. Its read of the terminal state waits for
  * `release`.
  */
 function heldTerminalServer() {
-  const server = new FakeApiServer()
-  const saved: WorkspaceViewResponse = {
-    view: { ...workspaceFixtures().view.view, tool: 'preview' },
-  }
-  server.json('GET', workspaceViewPath(org, id), saved)
+  const server = previewServer()
   let release = () => {}
   const held = new Promise<void>((resolve) => {
     release = resolve
@@ -112,5 +120,41 @@ describe('the focus after a click on the Terminal tab', () => {
 
     expect(opened).toHaveLength(1)
     expect(document.activeElement).toBe(previewTab)
+  })
+})
+
+describe('the focus after Go to Terminal', () => {
+  test('moves to the terminal after the key', async () => {
+    holdAnimationFrames()
+    const server = previewServer()
+    const { view } = await openPaletteTab(routes.workspace(org, id), {
+      server,
+      events: socketsOf(server).events,
+    })
+    const panel = toolsPanel(view)
+    const previewTab = linkTo(panel, toolHref(org, id, 'preview'))
+    act(() => previewTab.focus())
+
+    pressCommand('go-to-terminal', 'other', previewTab)
+    await settle()
+
+    expect(terminalFocused(panel)).toBe(true)
+  })
+
+  test('moves to the terminal after the row of the palette', async () => {
+    holdAnimationFrames()
+    const server = previewServer()
+    const { view } = await openPaletteTab(routes.workspace(org, id), {
+      server,
+      events: socketsOf(server).events,
+    })
+    const panel = toolsPanel(view)
+
+    click(byRole('button', 'Search', byLabel('Workspaces', view)))
+    click(byRole('tab', 'Actions', view))
+    click(byRole('option', 'Go to Terminal', view))
+    await settle()
+
+    expect(terminalFocused(panel)).toBe(true)
   })
 })
