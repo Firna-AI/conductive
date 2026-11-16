@@ -194,15 +194,8 @@ waitlist, the commands that an agent runs on the Mac, and This Mac.
 
 [The marketing site](marketing-site.md) gives the home page and its
 pictures, the header and the footer, and [the docs pages](marketing-site.md#the-docs).
-It also gives the Terms, Privacy, and not-found pages, the comparison page,
-and the page before GitHub. The comparison page is the chosen design at
-`marketing/from-conductor/one-table`.
-[Conductor comparison](../protocol/conductor-comparison.md)
-states its requirements. It draws the real rows: its rows, statuses, dates,
-and words come from `src/marketing/from-conductor/`, the modules that the
-site also reads, as
-[the marketing site README](../../src/marketing/README.md#the-comparison-page)
-says. The pictures are captures of
+It also gives the Terms, Privacy, and not-found pages, and the page before
+GitHub. The pictures are captures of
 real screens, such as the workspace
 screen with its chat and composer. A change to a screen or a shared part
 that a picture shows needs a new capture, with the

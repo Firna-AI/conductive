@@ -1,3 +1,5 @@
+import type { FileEntry } from '../../shared/generated/FileEntry'
+import type { Attachment } from '../../shared/generated/Attachment'
 import { entryName } from '../../../docs/mockups/src/components/chat/entryPaths'
 import { FileChip } from '../../../docs/mockups/src/components/chat/FileChip'
 import { SentFileChip } from '../../../docs/mockups/src/components/chat/SentFileChip'
@@ -7,8 +9,6 @@ import {
   type ChipOpener,
 } from '../../../docs/mockups/src/components/chat/WorkspaceChip'
 import { routes } from '../../app/router'
-import type { FileEntry } from '../../shared/files'
-import type { Attachment } from '../../shared/messages'
 import { sessionLink } from '../../shared/session-link'
 import { isPlainClick } from '../../shell/ui/AppLink'
 import { useTextLinks } from '../../shell/ui/text-links'

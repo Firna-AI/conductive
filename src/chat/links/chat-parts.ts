@@ -1,7 +1,7 @@
 import { labelHidesAddress, type WebLink } from '../../markdown/web-links'
 import { attachmentForMention } from '../../shared/attachment-mentions'
-import type { FileEntry } from '../../shared/files'
-import type { Attachment } from '../../shared/messages'
+import type { FileEntry } from '../../shared/generated/FileEntry'
+import type { Attachment } from '../../shared/generated/Attachment'
 import type { Mention } from '../../shared/mention-text'
 import {
   tokens,

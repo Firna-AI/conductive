@@ -1,7 +1,5 @@
-/**
- * @jsxImportSource react
- * React's own JSX runtime, also when a Playwright spec renders this file.
- */
+/** @jsxImportSource react */
+/** React's own JSX runtime, also when a Playwright spec renders this file. */
 import {
   useEffect,
   useRef,
@@ -9,6 +7,8 @@ import {
   type ReactNode,
   type RefObject,
 } from 'react'
+import { highlightLines } from '../../files/code/highlight'
+import { languageOf } from '../../files/code/languages'
 
 /**
  * Characters that do not draw as themselves, so a reader cannot see them:
@@ -69,6 +69,39 @@ const LITERAL: CSSProperties = {
 
 /** A hidden bidi control changes the order of no text outside its mark. */
 const ISOLATED: CSSProperties = { unicodeBidi: 'isolate' }
+
+function markedText(text: string): ReactNode {
+  return literalParts(text).map((part, index) =>
+    part.kind === 'text' ? (
+      part.text
+    ) : (
+      <span
+        data-literal-code={part.code}
+        key={`${index}:${part.code}`}
+        style={ISOLATED}
+      >
+        {part.char}
+      </span>
+    ),
+  )
+}
+
+function shellText(text: string): ReactNode {
+  return highlightLines(text.split(/(?<=\n)/), languageOf('command.sh'))
+    .flat()
+    .map((token, index) => (
+      <span
+        key={index}
+        style={
+          token.kind === 'plain'
+            ? undefined
+            : { color: `var(--ui-code-${token.kind})` }
+        }
+      >
+        {markedText(token.text)}
+      </span>
+    ))
+}
 
 /**
  * The text of the selection when the whole selection lies inside `root`,
@@ -133,6 +166,7 @@ export function LiteralText(props: {
   className?: string
   lead?: ReactNode
   as?: 'code' | 'span'
+  syntax?: 'shell'
 }) {
   const Root = props.as ?? 'code'
   const root = useRef<HTMLElement>(null)
@@ -143,19 +177,9 @@ export function LiteralText(props: {
         {MARK_CSS}
       </style>
       {props.lead}
-      {literalParts(props.text).map((part, index) =>
-        part.kind === 'text' ? (
-          part.text
-        ) : (
-          <span
-            data-literal-code={part.code}
-            key={`${index}:${part.code}`}
-            style={ISOLATED}
-          >
-            {part.char}
-          </span>
-        ),
-      )}
+      {props.syntax === 'shell'
+        ? shellText(props.text)
+        : markedText(props.text)}
     </Root>
   )
 }

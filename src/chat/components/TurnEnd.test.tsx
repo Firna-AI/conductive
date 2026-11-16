@@ -1,8 +1,8 @@
 // @vitest-environment happy-dom
 
 import { expect, it, vi } from 'vitest'
+import type { ChangedFile } from '../../shared/generated/ChangedFile'
 import { TouchScreen } from '../../../docs/mockups/src/components/common/touch'
-import type { ChangedFile } from '../../shared/files'
 import { accessibleName, byRole } from '../../test-support/dom-queries'
 import { mount, MOUNTED_TEST_TIMEOUT, press } from '../../test-support/mount'
 import { TurnEnd } from './TurnEnd'
@@ -111,4 +111,23 @@ it('shows no button when the files fit', async () => {
     />,
   )
   expect(view.container.querySelector('button')).toBeNull()
+})
+
+it('shows no line counts on a file without line changes', async () => {
+  const view = await mount(
+    <TurnEnd
+      durationMs={1_000}
+      files={[
+        { path: 'logo.png', change: 'modified', added: 0, removed: 0 },
+        { path: 'old.ts', change: 'deleted', added: 0, removed: 4 },
+      ]}
+      filesUnavailable={false}
+      omittedFiles={0}
+      onOpenDiff={() => undefined}
+    />,
+  )
+  expect({
+    names: chipNames(view.container),
+    stats: view.container.querySelectorAll('[role="img"]').length,
+  }).toEqual({ names: ['logo.png', 'old.ts−4'], stats: 1 })
 })

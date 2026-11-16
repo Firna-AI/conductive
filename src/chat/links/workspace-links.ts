@@ -1,6 +1,6 @@
+import type { Workspace } from '../../shared/generated/Workspace'
 import { parseRoute, routes } from '../../app/router'
 import { appAddress } from '../../markdown/web-links'
-import type { Workspace } from '../../shared/workspaces'
 
 /** The workspaces whose links show as chips: the visible ones of one org. */
 export interface WorkspaceLinks {

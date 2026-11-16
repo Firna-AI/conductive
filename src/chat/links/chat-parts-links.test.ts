@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import { routes } from '../../app/router'
-import type { Workspace } from '../../shared/workspaces'
+import type { Workspace } from '../../shared/generated/Workspace'
 import { FAKE_IDS, FAKE_ORIGIN } from '../../test-support/fixtures/core'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
 import { chatParts, type ChatPart } from './chat-parts'

@@ -6,7 +6,7 @@ import styles from './CheckOption.module.css'
  * A checkbox with its label and a muted hint, for an option of a form or
  * a question, such as an extra step of an action. `@firna/ui` has no
  * checkbox, so this draws the one of the browser in the accent colour.
- * The whole row takes the click, and on a phone it is 44 px high.
+ * The whole row takes the click, and on a phone it is 40 px high.
  */
 export function CheckOption(props: {
   label: string

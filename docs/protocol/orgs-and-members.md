@@ -147,6 +147,11 @@ decision number names a dated record, as
   Only hover reveals its archive icon over the time without moving the row
   content. Selection and keyboard focus alone keep the time visible.
   The workspace header has no archive control.
+- A touch screen without hover, such as a phone, never shows the Archive
+  or the Restore icon of a row. One tap on a row opens its workspace.
+  Reason: iOS Safari takes the first tap on an element whose hover shows
+  content as a hover, so a person had to tap twice. On 16 November 2026
+  the user chose this, although a phone then has no Archive in the list.
 - A row of the Archived group offers Restore in the same way, to every
   member, until Restore of its workspace ends, as
   [Restore](workspace-life.md#restore) says.
@@ -157,6 +162,11 @@ decision number names a dated record, as
   Reason: the message box never takes the focus from a later choice of the
   user. The list page of a phone opens a workspace without that focus, so
   that no keyboard opens on its own.
+- When the message box of a workspace takes the focus without a press of
+  the pointer, the caret goes back where it was in that box. Without such
+  a caret, as for a kept draft, it goes to the end of the text, not to the
+  start. Reason: a person who comes back to a draft most often adds to its
+  end, as in the message box of New workspace.
 
 ## Members and roles
 

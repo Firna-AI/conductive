@@ -4,8 +4,9 @@ import { describe, expect, test, vi } from 'vitest'
 import { memoryNavigation, NavigationContext } from '../../app/navigation'
 import { routes } from '../../app/router'
 import { fakeWorkers } from '../../files/mount-test-kit'
-import { filePaths, type FileResponse } from '../../shared/files'
-import type { UserMessage } from '../../shared/messages'
+import type { FileResponse } from '../../shared/generated/FileResponse'
+import { filePaths } from '../../shared/files'
+import type { UserMessage } from '../../shared/generated/UserMessage'
 import { previewsPath } from '../../shared/previews'
 import {
   byRole,

@@ -10,7 +10,6 @@ import styles from './SitePage.module.css'
 const links: SiteLinks = {
   home: paths.marketing,
   docs: paths.docs,
-  fromConductor: paths.fromConductor,
   signIn: paths.signIn,
 }
 
