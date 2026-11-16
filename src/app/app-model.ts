@@ -16,7 +16,7 @@ import { readSession } from './api/read-waitlist'
 import { AccountModel } from './account-model'
 import type { ComposerFocusRequest } from './composer-focus'
 import { FeedbackModel } from './feedback-model'
-import { failedBoot, readShared, type Boot } from './boot'
+import { failedBoot, readShared, watchSession, type Boot } from './boot'
 import { InvitationsModel } from './invitations-model'
 import { LastWorkspaces } from './last-workspaces'
 import { OrgList } from './org-list'
@@ -85,9 +85,9 @@ export class AppModel {
   private admitting: Promise<void> | null = null
 
   constructor(services: AppServices) {
-    this.services = services
+    this.services = watchSession(services, () => this.endSession())
     this.lastWorkspaces = new LastWorkspaces(services.storage)
-    this.account = new AccountModel(services, this)
+    this.account = new AccountModel(this.services, this)
     this.feedback = new FeedbackModel(this)
     this.getStarted = setupSteps({
       server: this.setupReply,
@@ -183,6 +183,17 @@ export class AppModel {
     this.models.set(shared.models)
     this.setupReply.set(shared.getStarted)
     this.boot.set({ state: 'ready', user })
+  }
+
+  /**
+   * The API refused a request because the sign-in session ended, such as
+   * after 7 days, a sign-out in another tab, or a suspension. The app shows
+   * the sign-in in place of every screen.
+   */
+  private endSession(): void {
+    if (this.boot.get().state !== 'signed-out') {
+      this.boot.set({ state: 'signed-out' })
+    }
   }
 
   /** A load failed, while `from` is still the boot. */

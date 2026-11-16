@@ -41,5 +41,15 @@ export function feedbackFixture() {
     )
   const bodies = async (): Promise<SendFeedbackRequest[]> =>
     Promise.all(sent().map((request) => request.clone().json()))
-  return { server, held, services, app, model: app.feedback, sent, bodies }
+  // The services that the models read, with the client that watches the
+  // sign-in session.
+  return {
+    server,
+    held,
+    services: app.services,
+    app,
+    model: app.feedback,
+    sent,
+    bodies,
+  }
 }

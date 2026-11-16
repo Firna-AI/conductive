@@ -1,4 +1,4 @@
-import { readDestination } from './markdown-destination'
+import { readInlineTarget } from '../../markdown/markdown-destination'
 import type { BracketPairs } from './markdown-spans'
 import { normalizeLabel } from './markdown-text'
 
@@ -40,8 +40,8 @@ export function linkTarget(
   const { text, brackets } = source
   const after = close + 1
   if (text[after] === '(') {
-    const inline = readDestination(text, after + 1)
-    if (inline) return inline
+    const inline = readInlineTarget(text, after + 1)
+    if (inline) return { destination: inline.destination, end: inline.next }
   }
   const refClose = text[after] === '[' ? brackets.close.get(after) : undefined
   if (refClose !== undefined) {

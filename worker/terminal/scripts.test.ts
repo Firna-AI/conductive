@@ -101,7 +101,9 @@ it('attaches each terminal connection to the workspace shell at the repository p
   await writeFile(
     fixture.terminal,
     `#!/bin/sh
-printf '%s\\0' "$@"
+printf '%s\\0' "$1" "$2" "$3" "$4" "$5" "$6" "$7"
+shift 7
+exec "$@"
 `,
   )
   expect((await runScript(credentialScript(fixture.options))).code).toBe(0)
@@ -115,7 +117,8 @@ printf '%s\\0' "$@"
     '--writable',
     '--credential',
     `conductive:${'11'.repeat(32)}`,
-    fixture.multiplexer,
+    fixture.repository,
+    'workspace environment',
     '-N',
     '-S',
     fixture.sessionSocket,
@@ -154,6 +157,11 @@ it('starts the workspace shell server with the repository environment and privat
     '-g',
     'mouse',
     'on',
+    ';',
+    'set-option',
+    '-g',
+    'history-limit',
+    '2000',
     ';',
     'set-environment',
     '-g',

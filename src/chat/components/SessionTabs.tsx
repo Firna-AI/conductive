@@ -16,6 +16,7 @@ import { Menu, type MenuEntry } from '../ui/Menu'
 import { useEdgeScroll, useRowScroll } from './row-scroll'
 import { SessionTabItem } from './SessionTab'
 import { DropLine, LiftedTab } from './TabDragParts'
+import { closeTabsRight } from './close-right'
 import { TabMenu } from './TabMenu'
 import { TabNodes } from './tab-nodes'
 import { rowKey, type RowTab } from './tab-row'
@@ -39,10 +40,11 @@ function keptTab(tabs: readonly RowTab[], renaming: string | null) {
  * for a new session on the same branch and cloud computer, and the clock of
  * the session history. Every tab closes. A tab moves by drag and drop, or
  * by a long press on a phone, as `useTabDrag` says, and its tab menu renames
- * a session, copies its link or its transcript, keeps the temporary tab, and
- * moves a tab one place, as `useTabMenu` says. A row whose tabs do not fit
- * scrolls sideways, as `useRowScroll` says. On desktop the history and the
- * tab menu open beside their trigger; a phone shows them as sheets.
+ * a session, copies its link or its transcript, keeps the temporary tab,
+ * moves a tab one place, and closes the tabs to its right, as `useTabMenu`
+ * says. A row whose tabs do not fit scrolls sideways, as `useRowScroll`
+ * says. On desktop the history and the tab menu open beside their trigger;
+ * a phone shows them as sheets.
  */
 export function SessionTabs(props: {
   tabs: readonly RowTab[]
@@ -56,7 +58,10 @@ export function SessionTabs(props: {
   historyOpen: boolean
   historyEntries: readonly MenuEntry[]
   onSelect: (id: string) => void
-  onClose: (id: string) => void
+  /** Closes session tabs, with one question for the running sessions. */
+  onClose: (...ids: string[]) => void
+  /** Closes file and diff tabs of the host, for Close tabs to the right. */
+  onCloseTabs: (tabs: readonly WorkspaceTab[]) => void
   onStartRename: (id: string) => void
   onRename: (id: string, title: string) => void
   onCancelRename: () => void
@@ -84,6 +89,7 @@ export function SessionTabs(props: {
     renaming,
     onRename: props.onStartRename,
     onStep: moves.step,
+    onCloseRight: (tab) => closeTabsRight(tabs, tab, props),
     onKeep: moves.keep,
     onCopy: props.onCopy,
     onCopyLink: props.onCopyLink,
