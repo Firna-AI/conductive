@@ -34,6 +34,9 @@
   - A selected rerun from an identical source copy under `/tmp`, with `--maxWorkers=1`, still timed out in `worker/features/continue-routes.test.ts`. The test was `resumes Continue through real routes and socket wake, fences sends and Archive, expires recovered credentials, and routes new-branch GitHub events`.
   - The same command on untouched main commit `e12c3cb3d`, from a separate checkout under `/tmp`, failed that one test with `Error: Test timed out in 15000ms.` The run took 19.77 seconds. No source, assertion, or timeout changed.
   - This failure persists outside the home folder and without concurrent test files. Its cause remains unknown. The earlier path and load observations do not fully explain this reproduction.
+  - A later selected run after merging main commit `8a0db9604` passed 140 tests and failed one test across 46 files. `worker/chat/integration/workspace-device-projection.test.ts` failed `cancels a pending Mac request before org deletion finishes without projecting into the deleted org` with `Error: Test timed out in 15000ms.`
+  - The same file then passed both tests in 19.14 seconds, from the same `/tmp` checkout with `--maxWorkers=1`. No source, assertion, or timeout changed. The failed case matches main. This branch only changes the clock input of the other case in that file.
+  - Runtime or load sensitivity is suspected for this flake. Its cause remains unknown.
 - **Task:** Find the source of these timeouts. Compare focused and full runs at the same path, then compare paths with the same test set. Make the tests deterministic with readiness signals, event order, or isolated state. Keep each assertion. Add no retry, sleep, skip, or longer timeout.
 - **Impact if no action:** A complete check can fail while a focused run passes. This can hide a real regression or delay another branch.
 - **Needs:** Node 24 and a Conductive workspace that can run the full suite.

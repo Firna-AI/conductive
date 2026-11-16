@@ -71,8 +71,10 @@ sessions as tabs above the chat, and four tabs at the bottom.
   the icon on each model of the other agent say it.
 - A view runs no script, so a screen draws an open menu in place: `Menu` in
   `src/components/common/` beside its button or its tab, at the pointer of
-  a right click, or in a `Sheet` on a phone. Firna's own menu rows are
-  taller than the dense design. A row can lead with a mark, such as an
+  a right click, or in a `Sheet` on a phone. `PointMenu` beside it draws
+  the menu of a right click on a row at the pointer, with an open submenu
+  beside it, for a workspace row and a row of All files or Changes.
+  Firna's own menu rows are taller than the dense design. A row can lead with a mark, such as an
   avatar, and end with a muted detail and an icon. An item that is off
   keeps its place, greyed, and its detail keeps the muted colour, so that
   the reason stays readable. An item with choices ends with an arrow, and
@@ -90,7 +92,8 @@ sessions as tabs above the chat, and four tabs at the bottom.
   has a menu. `linkCopy.ts` in `src/components/workspace/` gives the words
   of Copy link and of its result. The app
   reads the same list, so `workspaceMenu.ts` imports no fixture. A right
-  click opens the menu at the pointer, from `RowMenu.tsx` beside it.
+  click opens the menu at the pointer, from `RowMenu.tsx` beside it, which
+  draws it with `PointMenu`.
   Shift+F10 and the Menu key on a focused row open it below the row. No
   row has a button for the menu. The row under the pointer keeps its
   hover, with Archive over the time when the person can archive the
@@ -99,8 +102,9 @@ sessions as tabs above the chat, and four tabs at the bottom.
   menu and its choices in a sheet. A
   long press on a phone still lifts the row for a drag, and opens no menu.
   Rename puts a field in place of the name and the time, with the name
-  selected. `RowMenu.module.css` styles the field and the menu at the
-  pointer.
+  selected. `RowMenu.module.css` styles the field, and
+  `PointMenu.module.css` in `src/components/common/` styles the menu at
+  the pointer.
 - `OrgRail` in `src/components/layout/` draws the order of the orgs that
   each person keeps, from decisions 515 to 517, as `app/orgs/reorder`
   shows. A drag of a tile looks like the drag of a tab and of a workspace
@@ -117,9 +121,10 @@ sessions as tabs above the chat, and four tabs at the bottom.
 - `FailureToast` in `src/components/common/` draws the toast that names a
   change of the list that failed, with the message of the server, in the
   `ToastLayer` beside it, as `app/workspace-menu/rename/failed` shows.
-  Transcript copy uses the same layer. A copy that worked shows the
-  success mark. A copy that failed shows the error mark with the words
-  "Try again", as `app/transcripts` shows.
+  Transcript copy and Copy path use the same layer. A copy that worked
+  shows the success mark. A copy that failed shows the error mark with the
+  words "Try again", as `app/transcripts` and `app/files/menu/copied`
+  show.
 - `SignInFrame` in `src/screens/signInFrame.tsx` draws the pages before the
   app opens: the wordmark, one card in the middle, and the legal links. The
   sign-in, the sign-in of an invite link, and the waitlist share it, without

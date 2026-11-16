@@ -38,9 +38,14 @@ export function LayoutRoot(props: {
   )
 }
 
+/** The layout of the parts inside `LayoutRoot`: desktop, or phone. */
+export function useFilesLayout(): FilesLayout {
+  return useContext(LayoutContext)
+}
+
 /** The sizes of the Firna controls: dense on desktop, touch sizes on a phone. */
 export function useControlSizes(): ControlSizes {
-  return useContext(LayoutContext) === 'phone' ? touchControl : control
+  return useFilesLayout() === 'phone' ? touchControl : control
 }
 
 /** The class that shows the keyboard focus of a local link or button. */

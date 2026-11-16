@@ -1,0 +1,14 @@
+/*
+ * A row that a finger can hold to open its menu. A long press must not open
+ * the menu of a link. On a touch screen it must not select text either, but
+ * a mouse can still select the text of a row.
+ */
+.hold {
+  -webkit-touch-callout: none;
+}
+
+@media (pointer: coarse) {
+  .hold {
+    user-select: none;
+  }
+}

@@ -15,7 +15,7 @@ import {
   useChatDropArea,
 } from './components/chat-drop-area'
 import { ChatOverlays, historyEntries } from './components/ChatOverlays'
-import type { ComposerFocus } from './components/Composer'
+import type { ComposerFocus } from './components/composer-requests'
 import { SessionChat, type ChatHost } from './components/SessionChat'
 import { CodeCopyProvider, useCodeCopyAction } from './components/code-copy'
 import { useSessionLinkCopy } from './components/session-link-copy'

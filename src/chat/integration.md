@@ -67,8 +67,12 @@ mount the chat.
   its place, as a double-click on the tab does, for Keep open of its tab
   menu. The host gives `keep` only to the temporary tab of the saved view,
   and null to each kept tab, whose menu then has no Keep open. The chat
-  calls it and saves nothing of its own. The host gives the key of Close
-  tab to its shown tab itself, as the shell does in `FileTab`.
+  calls it and saves nothing of its own. Its `copyPath` copies the real
+  path of the file of the tab, for Copy path of its tab menu, also in a
+  read-only chat. The host gives null to a tab whose label hides a secret
+  value or is not known yet, whose menu then has no Copy path. The host
+  gives the key of Close tab to its shown tab itself, as the shell does in
+  `FileTab`.
   Without `renderTab`, the row shows only the session tabs, as on a phone.
   `components/tab-row.ts` holds these types.
 - `onOpenDiff` gets the real path of a changed file of a finished turn. The
@@ -123,8 +127,9 @@ mount the chat.
   shows its history, as an archived workspace does, and the host's bar
   takes the place of the composer.
 - `composerFocus` asks the message field of the composer to take the focus
-  once, as `ComposerFocus` in `components/Composer.tsx` says. The app gives
-  it after a click on the workspace in the sidebar, from
+  once, as `ComposerFocus` in `components/composer-requests.ts` says. The
+  app gives it after a click on the workspace in the sidebar, and after
+  Add to chat of the Files panel on desktop, from
   `AppModel.composerFocus`. The request waits until the composer shows,
   such as after the first load of the chat. The field then takes the focus
   only while the focus is still on the element of the request, or on no

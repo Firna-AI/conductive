@@ -169,6 +169,7 @@ export function tabsFor(
       title: masked ? splitPath(maskedDiffPath).name : 'AddressForm.tsx',
       to: masked ? paths.maskedPaths : paths.diff,
       selected: true,
+      hidesPath: masked,
     })
   }
   const picture = pictureTab(state)
@@ -180,6 +181,7 @@ export function tabsFor(
       title: 'File',
       to: paths.maskedPathsUnnamed,
       selected: true,
+      hidesPath: true,
     })
   }
   if (state.tab === 'new-session') {

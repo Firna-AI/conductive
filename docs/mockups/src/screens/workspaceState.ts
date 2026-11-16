@@ -11,6 +11,7 @@ import { runWorkspaceKeys } from '../fixtures/runWorkspaces'
 import { startErrorKeys } from '../fixtures/starting'
 import { terminalStates } from '../fixtures/terminals'
 import { openableWorkspaces } from '../fixtures/workspaces'
+import { archiveStateProperties } from './archiveState'
 import { barStateDefaults, barStateKeys, barStateProperties } from './barState'
 import { composerStates, tabStates, temporaryTabStates } from './chatStates'
 import {
@@ -18,6 +19,11 @@ import {
   feedbackStateKeys,
   feedbackStateProperties,
 } from './feedbackState'
+import {
+  rowMenuStateDefaults,
+  rowMenuStateKeys,
+  rowMenuStateProperties,
+} from './rowMenuState'
 
 /**
  * The state of the workspace screen. Each catalogue entry of the screen is a
@@ -56,6 +62,7 @@ export const workspaceStateSchema = {
     'org',
     'palette',
     ...feedbackStateKeys,
+    ...rowMenuStateKeys,
     ...barStateKeys,
   ],
   properties: {
@@ -157,12 +164,13 @@ export const workspaceStateSchema = {
     /**
      * What lies open over the workspace: the session history, the question
      * before a running session closes, the owner of the workspace, the tab
-     * menu of the first session or of the temporary tab, or the question of
-     * Continue with work that is not pushed. Or the question before a
-     * terminal closes, or the toast of a terminal that did not open or close.
-     * Or the menu of the header state, the question of Restart while an
-     * agent works, the time after Restart until the agents are back, or
-     * that time with the toast of a failed update check.
+     * menu of the first session or of the shown file or diff tab, such as
+     * the temporary tab, or the question of Continue with work that is not
+     * pushed. Or the question before a terminal closes, or the toast of a
+     * terminal that did not open or close. Or the menu of the header state,
+     * the question of Restart while an agent works, the time after Restart
+     * until the agents are back, or that time with the toast of a failed
+     * update check.
      */
     overlay: {
       enum: [
@@ -181,17 +189,7 @@ export const workspaceStateSchema = {
         'restart-update-failed',
       ],
     },
-    /**
-     * An archived workspace and its cloud computer. For 14 days after the
-     * Archive, the workspace stays in the Archived group: `kept`, while the
-     * app keeps its cloud computer, so every member of an org that is not
-     * suspended may restore it, or `none`, without a kept cloud computer,
-     * as after a failed first start. When the 14 days end, Restore ends and
-     * the workspace leaves the list, and only a link opens it:
-     * `removed-deleting`, while a failed delete of its cloud computer tries
-     * again, or `removed`, after the delete.
-     */
-    archive: { enum: ['kept', 'none', 'removed-deleting', 'removed'] },
+    ...archiveStateProperties,
     /** The person signed in: an admin of the org, or a member who is not. */
     viewer: { enum: ['admin', 'member'] },
     /**
@@ -240,6 +238,7 @@ export const workspaceStateSchema = {
      */
     palette: { enum: paletteViews },
     ...feedbackStateProperties,
+    ...rowMenuStateProperties,
     ...barStateProperties,
   },
 } as const
@@ -277,6 +276,7 @@ export const readyWorkspace: WorkspaceState = {
   org: 'active',
   palette: 'closed',
   ...feedbackStateDefaults,
+  ...rowMenuStateDefaults,
   ...barStateDefaults,
 }
 

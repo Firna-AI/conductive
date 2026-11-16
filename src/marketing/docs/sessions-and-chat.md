@@ -53,6 +53,22 @@ The workspace keeps accepted messages for the agent.
 The org must have a successful build before you create a new workspace.
 That first build is separate from the start of an existing workspace's computer.
 
+## Mention a repository file
+
+Use a mention for a file or folder already in the workspace.
+
+1. Type `@` at the start of your message, or after a space or line break.
+2. Type part of the file or folder name.
+3. Select its entry from the list.
+
+The entry becomes a chip, a small box with its name, in the message field.
+Your message gives the agent its path, such as `@src/app.ts` or `@src/lib/`.
+Use **Attach files** for a file from your own computer.
+
+You can also select **Add to chat** from a row's menu in **All files** or **Changes**.
+
+- [Copy a path or add a file to chat](/docs/files-and-changes#copy-a-path-or-add-a-file-to-chat)
+
 ## Attach files
 
 Use **Attach files** to pick files, or drop files into the message box.
