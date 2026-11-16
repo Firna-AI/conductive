@@ -6,7 +6,9 @@ import type { ActivityStatus, Workspace } from '../../fixtures/workspaces'
 import { paths } from '../../paths'
 import { ScreenLink } from '../common/ScreenLink'
 import { ShortcutTip } from '../common/ShortcutTip'
+import { classes } from '../common/classes'
 import { IconButton } from '../common/actions'
+import { useCornerControls } from '../layout/sidebarPlace'
 import { workspaceLabel } from '../workspaces/label'
 import { activityPresentation } from '../workspaces/status'
 import { StatusGlyph } from '../workspaces/StatusGlyph'
@@ -55,6 +57,7 @@ export function WorkspaceHeader(props: {
   run?: RunSource
 }) {
   const { workspace, name } = props
+  const corner = useCornerControls()
   const repository = repositories[workspace.repository].name
   const owner = (
     <OwnerPicker
@@ -91,7 +94,7 @@ export function WorkspaceHeader(props: {
         <State status={props.status} />
       </header>
     ) : (
-      <header className={styles.bar}>
+      <header className={classes(styles.bar, corner && styles.cornerBar)}>
         <h1 className={styles.title}>{name}</h1>
         {copyLink}
         <span className={styles.metas}>

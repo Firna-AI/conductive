@@ -46,6 +46,7 @@ export const workspaceStateSchema = {
     'modelChoice',
     'resize',
     'rightColumn',
+    'sidebar',
     'overlay',
     'archive',
     'viewer',
@@ -149,6 +150,11 @@ export const workspaceStateSchema = {
      */
     rightColumn: { enum: ['shown', 'hidden'] },
     /**
+     * The sidebar of the desktop: shown, hidden with its toggle, or hidden
+     * with the workspace list open as a popover of the tile of the org.
+     */
+    sidebar: { enum: ['shown', 'hidden', 'popover'] },
+    /**
      * What lies open over the workspace: the session history, the question
      * before a running session closes, the owner of the workspace, the tab
      * menu of the first session or of the temporary tab, or the question of
@@ -251,6 +257,7 @@ export const readyWorkspace: WorkspaceState = {
   modelChoice: 'workspace',
   resize: 'none',
   rightColumn: 'shown',
+  sidebar: 'shown',
   overlay: 'none',
   archive: 'kept',
   viewer: 'admin',

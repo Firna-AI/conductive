@@ -193,19 +193,24 @@ The browser sidebar gets the toggle beside Settings. The Panels page and
 the Mac app Window page show the hidden sidebar and the open popover. A
 phone has no rail, so its variants do not change.
 
-- [ ] Add the toggle beside Settings to the sidebar mockup, in the browser
+- [x] Add the toggle beside Settings to the sidebar mockup, in the browser
       only.
-- [ ] Add the variants "Sidebar hidden" and "Workspace list popover" to
+- [x] Add the variants "Sidebar hidden" and "Workspace list popover" to
       `entries/app/panels`.
-- [ ] Add the variant "Sidebar hidden, list popover" to
+- [x] Add the variant "Sidebar hidden, list popover" to
       `entries/mac-app/window`.
-- [ ] Update the comment of `AppFrame` in the mockups for decision 2.
-- [ ] Update the shortcut fixtures `shortcutCommands.ts` and
+- [x] Update the comment of `AppFrame` in the mockups for decision 2.
+- [x] Update the mockup docs: `README.md`, `catalogue.md`, `design.md`,
+      and `mac-app.md`.
+- [x] Update the shortcut fixtures `shortcutCommands.ts` and
       `windowsShortcuts.ts` and the Keyboard shortcuts pages for
       decision 5.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
-- [ ] Update the design and the TODOs of this plan for each problem that
-      the mockups show.
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages.
+- [x] Update the design and the TODOs of this plan for each problem that
+      the mockups show. The Mac app had no mockup of a hidden sidebar, so
+      the mockups now draw its window controls in the top left corner,
+      with the top bar of the workspace after them. The screenshots are in
+      `.context/sidebar-list-popover/shots/`.
 
 ## Milestone 2: Documentation and protocol
 
@@ -218,8 +223,6 @@ Depends on: 1
 - [ ] Update `command-palette-actions.md`, `keyboard-shortcuts-keys.md`,
       and `keyboard-shortcuts-tab.md` for decision 5: the command and its
       palette row in every host, and Ctrl+B and [ on Windows and Linux.
-- [ ] Update the mockup catalogue for the new variants, and the rule for
-      a narrow window in `docs/mockups/README.md:42`.
 - [ ] Update the code comments that still say the tile opens the list
       page: `src/shell/layout/frames.tsx:114` and
       `src/shell/OrgRoutes.tsx:147`.

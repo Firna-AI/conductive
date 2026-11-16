@@ -256,6 +256,7 @@ export function WorkspaceScreen(props: {
         suspended: suspended ? suspendedOrg : undefined,
         person: admin ? undefined : people[memberViewer],
       }}
+      sidebarView={state.sidebar}
       sidebar={workspaceSidebar({
         // The toast of an Archive shows at once, so the row shows that Archive.
         workspace:
