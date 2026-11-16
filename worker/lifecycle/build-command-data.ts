@@ -6,11 +6,14 @@ export async function recordBuildCommand(
   processId: number,
   heading: string,
   now: number,
+  packagesVersion: string | null = null,
 ): Promise<void> {
   await db.batch([
     db
-      .prepare('UPDATE image_build_jobs SET process_id = ? WHERE build_id = ?')
-      .bind(processId, buildId),
+      .prepare(
+        'UPDATE image_build_jobs SET process_id = ?, packages_version = COALESCE(?, packages_version) WHERE build_id = ?',
+      )
+      .bind(processId, packagesVersion, buildId),
     ...buildLogStatements(db, buildId, heading, now),
   ])
 }

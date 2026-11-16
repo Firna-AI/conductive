@@ -9,8 +9,7 @@ import {
   type BuildPhase,
 } from './build-data'
 import { savedScriptCommand } from './saved-script'
-import { installImageSoftware } from './image-software'
-import { latestSoftwareRelease } from './software-release'
+import { buildSoftwareCommand } from './build-software'
 import { imageIsLeased } from './image-leases'
 import { scheduleIdleImage } from './image-schedule'
 import type { ImageRuntime } from './image-builds'
@@ -33,10 +32,9 @@ export async function advanceBuildCommand(
   if (!sandboxId) throw new Error('Missing build sandbox')
   if (job.processId === null) {
     let command: string
+    let packagesVersion: string | null = null
     if (job.phase === 'software')
-      command = installImageSoftware(
-        await latestSoftwareRelease(runtime.env, runtime.dependencies.fetch),
-      )
+      ({ command, packagesVersion } = await buildSoftwareCommand(runtime, job))
     else
       command = `set -eu\n${savedScriptCommand('/tmp/conductive-install.sh', job.installScript, ['set -a', '. /run/ascii-secrets/env.sh', 'set +a'])}\nrm -f /tmp/conductive-install.sh`
     if (job.phase !== 'software' && job.phase !== 'install')
@@ -51,6 +49,7 @@ export async function advanceBuildCommand(
       started.processId,
       phaseLabel(job.phase),
       runtime.dependencies.now(),
+      packagesVersion,
     )
     return false
   }

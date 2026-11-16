@@ -1,4 +1,5 @@
 import { installImageSoftware } from '../lifecycle/image-software'
+import { imagePackagesVersion } from '../lifecycle/image-packages'
 import { readSoftwareRelease } from '../lifecycle/software-release'
 import {
   clearImageCommands,
@@ -47,6 +48,8 @@ export async function advanceSoftwareImageStep(
     throw new JobTimeLimit('build')
   if (image.phase === 'software') {
     if (image.processId === null) {
+      // The base image holds no package, so the step always runs the apt part.
+      const packagesVersion = await imagePackagesVersion()
       const started = await provider.startCommand(
         image.sandboxId,
         lifecycleCommand(
@@ -54,10 +57,14 @@ export async function advanceSoftwareImageStep(
           'software',
           installImageSoftware(
             readSoftwareRelease(JSON.parse(image.softwareJson)),
+            'install',
           ),
         ),
       )
-      await saveSoftwareImage(db, image, { processId: started.processId })
+      await saveSoftwareImage(db, image, {
+        processId: started.processId,
+        packagesVersion,
+      })
       return {}
     }
     const status = await provider.getCommandStatus(

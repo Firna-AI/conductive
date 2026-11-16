@@ -52,7 +52,10 @@ The program also installs the other parts of the software:
   [Disk flushes](../protocol/workspaces-and-sandboxes.md#disk-flushes) says
 
 The image build installs the system packages, such as the terminal
-packages `ttyd` and `tmux`.
+packages `ttyd` and `tmux`. It runs apt only when the image lacks a package
+or when the apt part of the build changed, as
+[Installs in a build](../protocol/sandbox-software.md#installs-in-a-build)
+says.
 
 ## Releases and updates
 
@@ -69,7 +72,9 @@ packages `ttyd` and `tmux`.
    parts that changed. The next start of the runner applies it (sandbox
    software decision 5).
 5. Each build of an org image or of the software image installs the newest
-   release through the same program.
+   release through the same program. When the image already holds the
+   program, the build uses its updater, which downloads only the parts
+   that changed.
 
 ## Message types
 
