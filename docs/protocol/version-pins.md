@@ -94,7 +94,7 @@ the [model gateway](model-gateway.md), as that doc says.
 - Such a process or member can spend the login of the starter through the
   gateway while the turn runs. A copy of the token works in the same way
   outside the sandbox. A request that still runs at the end of the turn
-  stops within 30 seconds, as
+  stops at the first turn check that answers after the end, as
   [Streams](model-gateway-requests.md#streams) says.
 - The token works only on the model routes of the gateway.
   [The turn token](model-gateway.md#the-turn-token) states when it works.
