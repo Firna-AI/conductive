@@ -25,6 +25,11 @@
     - `worker/lifecycle/saved-script-execution.test.ts`: `runs retention startup in Bash with its org environment without marking ready or restarting the runner`.
     - `worker/lifecycle/start-runner-readiness.test.ts`: `completes a resume only after runner readiness without rerunning its startup script`.
   - All three files exactly matched main commit `196da1706`. A focused rerun of the three files at the same path, with the same source and timeouts, passed all 13 tests with no skips in 15.19 seconds. Both runs set `TMPDIR` to a directory on the repository filesystem. Resource contention during the full run is a suspected source. The blocked await and the cause remain unknown.
+  - On 16 November 2026, on branch `calummoore/quito-q38c` at `a79135dbf`, a targeted run of 16 files beside a concurrent `npm run check:static` timed out in three tests with `Error: Test timed out in 15000ms.`:
+    - `worker/tools/session-management-reads.test.ts`: `pages all sessions in stable creation order with explicit bounds and more flags`, which the branch does not change.
+    - `worker/tools/session-management-reads.test.ts`: `gets exact session and stored-message facts across workspaces and permits removed session reads`.
+    - `worker/tools/workspace-reads.test.ts`: `reads archived workspace facts with only its token and excludes another org`.
+  - A serial rerun of both files passed all four tests. The first test took 5,356 ms. Resource contention from the concurrent mockup build is the suspected source.
 - **Task:** Find the source of these timeouts. Compare focused and full runs at the same path, then compare paths with the same test set. Make the tests deterministic with readiness signals, event order, or isolated state. Keep each assertion. Add no retry, sleep, skip, or longer timeout.
 - **Impact if no action:** A complete check can fail while a focused run passes. This can hide a real regression or delay another branch.
 - **Needs:** Node 24 and a Conductive workspace that can run the full suite.
