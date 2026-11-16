@@ -217,9 +217,9 @@ export class ChatController {
     this.overlay({ kind: 'rename', sessionId })
   readonly rename = (sessionId: string, title: string) =>
     this.write(() => renameSession(this.context, sessionId, title))
-  readonly requestClose = async (sessionId: string): Promise<void> => {
-    if (!this.readOnly()) return requestClose(this.context, sessionId)
-    closeLocally(this.context, sessionId)
+  readonly requestClose = async (...sessionIds: string[]): Promise<void> => {
+    if (!this.readOnly()) return requestClose(this.context, sessionIds)
+    for (const id of sessionIds) closeLocally(this.context, id)
   }
   readonly confirmClose = () => this.write(() => confirmClose(this.context))
   readonly showHistory = (open: boolean) =>

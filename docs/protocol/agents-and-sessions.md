@@ -132,6 +132,11 @@ says.
   the session history (decision 31).
 - Closing the tab of a session whose turn runs asks first. After the
   confirm, the app stops the turn and moves the session to the history.
+- One close of several tabs, such as Close tabs to the right, asks one
+  question for all the running sessions among them. The question names
+  each of these sessions. The other sessions close at once. Cancel keeps
+  each running session open. The user asked for Close tabs to the right on
+  16 November 2026.
 - Reason: no agent runs where the user cannot see it, and no history gets
   lost. A close that only hides a running session was rejected for the
   first reason. A close that deletes the history was rejected for the
@@ -193,20 +198,30 @@ says.
   menu. This holds on every system.
 - On a phone, a long press that ends without a move opens the tab menu as
   a sheet.
-- The tab menu of a session tab holds three groups, with a line between
+- The tab menu of a session tab holds four groups, with a line between
   them: Rename session, then Copy link, Copy concise transcript, and Copy
-  full transcript, then Move left and Move right. The tab menu of a kept
-  file or diff tab holds Move left and Move right.
+  full transcript, then Move left and Move right, then Close tabs to the
+  right. The tab menu of a kept file or diff tab holds Move left and Move
+  right, then Close tabs to the right.
 - Copy link copies the link of the session of its tab, as
   [Session links](#session-links) says. The user added it on 12 November
   2026.
-- The tab menu of the temporary tab holds two groups, with a line between
-  them: Keep open, then Move left and Move right (decision 286 B).
+- The tab menu of the temporary tab holds three groups, with a line
+  between them: Keep open, then Move left and Move right (decision 286 B),
+  then Close tabs to the right.
 - Reason: the tab menu groups its items by kind (decision 188).
 - [Session transcripts](session-transcripts.md) states what each copy item
   copies (decisions 213 and 215).
 - Move left and Move right move the tab one place in the row. On the first
   tab, Move left is off. On the last tab, Move right is off.
+- Close tabs to the right closes each tab after the tab in the row, of
+  each kind, as the same item of a browser does. On the last tab, it is
+  off. The user asked for it on 16 November 2026.
+- When the shown tab is among the closed tabs, the tab of the menu shows
+  first, as in a browser. Each session tab closes as its Close does, so
+  its session moves to the history for every member.
+- On a phone, the row shows only the session tabs, so Close tabs to the
+  right closes only the session tabs after the tab. Each file tab stays.
 - After a move from the tab menu, a screen reader user hears the name of
   the tab and its new place, such as "Address autocomplete moves to place
   2 of 4". The focus then goes back to the tab.
@@ -237,8 +252,8 @@ says.
 - The tab menu of a read-only workspace leaves out each item that changes
   the workspace, and keeps each item that changes nothing (decision 214).
   So the tab menu of a session tab there holds only Copy link, Copy
-  concise transcript, and Copy full transcript. A file or diff tab there
-  opens no tab menu.
+  concise transcript, and Copy full transcript. It leaves out Close tabs to
+  the right. A file or diff tab there opens no tab menu.
 - Reason: a read-only workspace accepts no change, but a member can still
   copy there, as
   [Read-only workspaces](session-transcripts.md#read-only-workspaces)
