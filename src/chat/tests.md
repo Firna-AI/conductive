@@ -216,7 +216,7 @@ read the draft that the owner keeps.
 `../shared/attachment-mentions.test.ts` finds the attached file of a file
 mention, and leaves a folder mention and other mentions alone. It puts the
 original names in place of those mentions, and checks for words outside
-them.
+them. For a title, it leaves out the mentions of attached images.
 `links/chat-parts-mentions.test.ts` reads mentions in a sent message. A
 mention of a file of the message is its chip, also when the tree holds
 that path, and also without a tree. A folder mention of that path stays

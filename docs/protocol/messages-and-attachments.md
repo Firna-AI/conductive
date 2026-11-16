@@ -171,8 +171,8 @@ attached images out of titles.
 - The model writes the title from the text of that message. It leaves out
   the `---` line and the `Sent by:` line of a message from the agent tools.
   Reason: the title names the task, not its sender.
-- In that text, each mention of one of its attached files becomes the name
-  of the file (decision 262 D). The request holds no other data of the
+- In that text, each mention of one of its attached files that is not an
+  image becomes the name of the file (decision 262 D). The request holds no other data of the
   workspace. It uses no agent login of a member. The chat does not show it.
 - Reason: a path makes a poor title. A request with the copy path of each
   file was rejected for that reason.

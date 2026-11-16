@@ -112,7 +112,7 @@ leaves the names of attached images out of titles, as
   no title. A message whose text holds only the mentions of its own
   attached files counts as a message with no text.
 - In a title from a message, each mention of one of its attached files
-  becomes the name of the file (decision 262 D). Reason: a path makes a
+  that is not an image becomes the name of the file (decision 262 D). Reason: a path makes a
   poor title. A title with the copy path of each file was rejected for
   that reason.
 - In a title from a message, each mention of an attached image goes out,
