@@ -7,9 +7,11 @@ import { RemoveMemberDialog } from '../components/members/RemoveMemberDialog'
 import { SuspendedOrgNotice } from '../components/orgs/SuspendedOrgNotice'
 import { failedBuildOf } from '../components/settings/BuildSection'
 import { DeleteOrgDialog } from '../components/settings/DeleteOrgDialog'
+import { ResetPromptDialog } from '../components/settings/ResetPromptDialog'
 import { SettingsTabs } from '../components/settings/OrgSections'
 import { Sidebar } from '../components/workspaces/Sidebar'
 import { memberViewer, people, viewerMembership } from '../fixtures/members'
+import { acmeEditedAction } from '../fixtures/orgPrompts'
 import { type Org, orgList } from '../fixtures/orgs'
 import { repositoryChanges } from '../fixtures/repositories'
 import { settingsViewer, TabBody } from './orgSettingsTabs'
@@ -24,12 +26,15 @@ export const orgSettingsSchema = {
     'script',
     'repositoryChange',
     'envForm',
+    'prompts',
     'dialog',
     'viewer',
     'org',
   ],
   properties: {
-    tab: { enum: ['general', 'repositories', 'computer', 'members'] },
+    tab: {
+      enum: ['general', 'repositories', 'computer', 'members', 'prompts'],
+    },
     /**
      * The builds of the cloud computer, which its tab shows. `time-limit` is
      * a build that the app stopped at its 60-minute limit. `none` is an org
@@ -58,14 +63,29 @@ export const orgSettingsSchema = {
      */
     envForm: { enum: ['none', 'add', 'change'] },
     /**
-     * A dialog over the page: Delete org, the removal of a member, or the
-     * leave of a suspended org.
+     * The steps of the agent actions, which the Prompts tab shows: the
+     * default steps of each action, the steps of Resolve conflicts that Cal
+     * saved for Acme, which rebases, or the save of those steps that runs.
      */
-    dialog: { enum: ['none', 'delete-org', 'remove-member', 'leave-org'] },
+    prompts: { enum: ['default', 'edited', 'saving'] },
+    /**
+     * A dialog over the page: Delete org, the removal of a member, the leave
+     * of a suspended org, or the question before Reset to default of the
+     * steps of Resolve conflicts.
+     */
+    dialog: {
+      enum: [
+        'none',
+        'delete-org',
+        'remove-member',
+        'leave-org',
+        'reset-prompt',
+      ],
+    },
     /**
      * The person signed in: an admin, or a member who is not an admin. A
      * member sees no actions on the members, no Delete org, and the name,
-     * the repositories, and the cloud computer read-only.
+     * the repositories, the cloud computer, and the prompts read-only.
      */
     viewer: { enum: ['admin', 'member'] },
     /**
@@ -89,6 +109,7 @@ export const acmeSettings: OrgSettingsState = {
   script: 'built',
   repositoryChange: 'none',
   envForm: 'none',
+  prompts: 'default',
   dialog: 'none',
   viewer: 'admin',
   org: 'active',
@@ -96,9 +117,10 @@ export const acmeSettings: OrgSettingsState = {
 
 /**
  * The settings of an org: its name and initials, the repositories that it
- * uses, its cloud computer, and its members. The app-wide connections live
- * in the account. Only an admin changes the members and deletes the org. A
- * suspended org shows its notice first, and nobody changes its settings.
+ * uses, its cloud computer, its members, and the steps of the agent actions
+ * of the pull request bar. The app-wide connections live in the account.
+ * Only an admin changes the members and deletes the org. A suspended org
+ * shows its notice first, and nobody changes its settings.
  */
 export function OrgSettingsScreen(props: {
   state: OrgSettingsState
@@ -113,7 +135,7 @@ export function OrgSettingsScreen(props: {
   const settings = settingsOrg(state)
   const { org } = settings
   // A suspended org opens only the leave, because nothing else in it can
-  // change. An org in use has no Leave org.
+  // change. An org in use has no Leave org. Only an admin resets steps.
   const dialogs: Readonly<Record<OrgSettingsState['dialog'], ReactNode>> = {
     none: null,
     'delete-org': suspended ? null : <DeleteOrgDialog viewport={viewport} />,
@@ -123,6 +145,14 @@ export function OrgSettingsScreen(props: {
     'leave-org': suspended ? (
       <LeaveOrgDialog viewer={settingsViewer(state)} viewport={viewport} />
     ) : null,
+    'reset-prompt':
+      admin && !suspended ? (
+        <ResetPromptDialog
+          action={acmeEditedAction}
+          org={org.name}
+          viewport={viewport}
+        />
+      ) : null,
   }
   const dialog = dialogs[state.dialog]
   const page = (

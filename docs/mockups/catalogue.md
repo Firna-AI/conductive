@@ -21,10 +21,10 @@ how a screen is built, and links to the other pages.
 | `app/orgs`          | The org switcher of a phone, Create org, the first org, new orgs, deleted, suspended, and the order of the orgs |
 | `app/account`       | General with the GitHub sign-in, the GitHub App, and the invite code, then Agents with the agent logins and own endpoints, Preferences with the model, its menu with Fast on, and how New workspace opens, Keyboard shortcuts in a browser, the first run, the Connect forms with the ChatGPT sign-in of Codex, Codex on a ChatGPT plan and its sign-in that stopped working, and a share not saved |
 | `app/operator`      | The operator's Overview, Orgs, Users, Waitlist, and Invite codes tabs, the page of an org and of a user with Suspend, Lift, and Approve, the pause of sign-ups, the waitlist switch, and where an operator opens the section |
-| `app/banner`        | The pull request bar and Checks: no pull request, its other states, Merge, local work, the agent actions in the chat, and Continue |
+| `app/banner`        | The pull request bar and Checks: no pull request, its other states, Merge, local work, the agent actions in the chat, also with the steps of an org, and Continue |
 | `app/new-workspace` | An empty chat, the first build of a new org, a repository that waits for its build, its error, files on the first message, the model menu with Fast on, the dialog, a pasted workspace link, the start, a queued second message, the first turn, a failed start, Try again |
 | `app/routines` | The routines of the org, a routine, its triggers, its runs, and a run workspace |
-| `app/org-settings`  | General with Delete org, then Repositories and Cloud computer with the notice of a repository change, the first build of a new org, and Members |
+| `app/org-settings`  | General with Delete org, then Repositories and Cloud computer with the notice of a repository change, the first build of a new org, Members, and Prompts with the steps of the agent actions |
 | `app/chat`          | A finished turn with its work folded, then running turns, turns that an agent stopped, open work, tables in replies, lists in replies, headings in replies, lost data, lost updates, unread files, the time limit of background work, and a fast turn at standard speed |
 | `app/mac-commands`  | A command that an agent runs on the Mac of the sender, in the chat            |
 | `app/sessions`      | A new session, the history, closing one while it works, and a linked session  |
@@ -146,6 +146,17 @@ Acme, which adds acme/admin-dashboard and removes acme/marketing-site:
   has the notice of a member. `app/org-settings/cloud-computer/script-changed`
   keeps the notice of the install script, which shows only for a change
   of the install script.
+
+`app/org-settings/prompts` has the Prompts tab of Acme, from Prompts
+decision 1, the first decision of the org prompts change: the six agent
+actions of the pull request bar with their default steps, and under each
+box the part that the app adds to each press. Its `edited` variant has the
+steps of Resolve conflicts that Cal saved for Acme, which rebases, with
+Edited and Reset to default. Its `saving` variant has the save of those
+steps while it runs. Its `member` variant has the tab of a member who is
+not an admin, read-only. Its `reset` variant has the question before Reset
+to default, as a dialog on desktop and a sheet on a phone.
+`app/orgs/suspended/settings/prompts` has the tab of a suspended org.
 
 `app/account` shows the General tab of the account: the sign-in, GitHub,
 and the invite code. Its four tabs are links, as the tabs of the org

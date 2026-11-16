@@ -305,6 +305,21 @@ sessions as tabs above the chat, and four tabs at the bottom.
   `repositoryChangeCopy.ts` beside it holds the words of both, which the
   app shares, as `app/new-workspace/waiting-repository` and
   `app/org-settings/repositories` show.
+- `PromptsTab` in `src/components/settings/` draws the Prompts tab of the
+  org settings, from Prompts decision 1, the first decision of the org
+  prompts change. It lists the six agent actions of the pull request bar
+  in their order. `PromptSection` beside it draws one action as a card:
+  its label, the Edited mark after an admin saved steps of the org, the
+  steps in a box, and under the box, read-only, the part that the app adds
+  to each press, with sample facts. Save and Reset to default end the
+  card. Reset to default asks first with `ConfirmDialog`, from
+  `ResetPromptDialog` beside them, because nothing brings the steps of the
+  org back. A member who is not an admin sees the steps as text, without
+  Save and Reset to default. `promptsCopy.ts` beside them holds the words and
+  the sample facts, and `fixedPart` in `barCopy.ts` builds the part that
+  the app adds, so the tab shows the same text as a press. The parts take
+  no fixtures, so the app can share them, as `app/org-settings/prompts`
+  shows.
 - On desktop the sidebar and the right column resize from `ResizeHandle` in
   `src/components/layout/`, a hairline on their inner edge. On hover and
   during a drag a short grip in the accent colour shows in its middle, so no
@@ -334,7 +349,7 @@ sessions as tabs above the chat, and four tabs at the bottom.
   the Waitlist tab, the codes, and the approval email. It also gives
   Suspend, Lift, and Approve, the daily chart, the notice of a pause, and
   the waitlist switch.
-- On a phone the org settings put their four tabs in three columns, so every
+- On a phone the org settings put their five tabs in three columns, so every
   tab shows. The session tabs all shrink, and the current one keeps the start
   of its title beside its close button. When the session tabs still do not
   fit, their row scrolls sideways. A phone tab stays 40 px high to touch,

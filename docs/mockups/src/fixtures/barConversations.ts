@@ -2,6 +2,7 @@ import { agentPrompt, type AgentAction } from '../components/workspace/barCopy'
 import { continuedBranch, promptFacts } from './barActions'
 import type { ChatItem } from './conversations'
 import type { PersonKey } from './members'
+import { acmeRebaseSteps } from './orgPrompts'
 
 /**
  * The note of Continue in a session: the member who pressed Continue, the
@@ -24,6 +25,7 @@ export const barConversationKeys = [
   'sent-push',
   'sent-resolve-conflicts',
   'sent-address-review',
+  'sent-org-steps',
   'after-merge-running',
   'continued',
   'continued-by-member',
@@ -39,16 +41,22 @@ export const barRunningConversations: readonly BarConversationKey[] = [
   'sent-push',
   'sent-resolve-conflicts',
   'sent-address-review',
+  'sent-org-steps',
   'after-merge-running',
 ]
 
 /**
  * The message that an agent action sends, as a message of the member who
- * clicked, and the turn that it starts.
+ * clicked, and the turn that it starts. `steps` are the steps that an admin
+ * saved for the org, else the message has the default steps.
  */
-function sent(action: AgentAction): readonly ChatItem[] {
+function sent(action: AgentAction, steps?: string): readonly ChatItem[] {
   return [
-    { kind: 'user', id: 'action', text: agentPrompt(action, promptFacts) },
+    {
+      kind: 'user',
+      id: 'action',
+      text: agentPrompt(action, promptFacts, steps),
+    },
     { kind: 'working', id: 'working', elapsed: '6s' },
   ]
 }
@@ -66,8 +74,9 @@ function continued(by: PersonKey): ContinuedItem {
 /**
  * Each agent action after the turn that pushed the branch: Create pull
  * request after the turn that a stop cut off, and the others after the
- * turn that opened #482. Then a turn that runs after the merge, and the
- * note of Continue, from Cal and from Priya.
+ * turn that opened #482, also Resolve conflicts with the steps of Acme.
+ * Then a turn that runs after the merge, and the note of Continue, from
+ * Cal and from Priya.
  */
 export function barConversations(turns: {
   history: readonly ChatItem[]
@@ -86,6 +95,10 @@ export function barConversations(turns: {
     'sent-push': [...history, ...sent('push')],
     'sent-resolve-conflicts': [...history, ...sent('resolve-conflicts')],
     'sent-address-review': [...history, ...sent('address-review')],
+    'sent-org-steps': [
+      ...history,
+      ...sent('resolve-conflicts', acmeRebaseSteps),
+    ],
     'after-merge-running': [
       ...history,
       {

@@ -9,11 +9,13 @@ continues.
 `app/banner` shows a branch with commits and no pull request. Its bar
 offers Create PR, which asks the agent to open the pull request.
 Each state shows one main action, from decisions 220 to 228. The number of
-a pull request opens it on GitHub. The agent gets a fixed prompt for each
-step that changes code, and the app merges, continues, and archives. On a
-phone the row opens the Checks tab, whose top holds the actions, and the
-link to GitHub of a pull request. The `localWork`, `access`, `appAction`, and `branch`
-states of the workspace screen draw them. The child pages:
+a pull request opens it on GitHub. The agent gets a prompt for each step
+that changes code: the steps from the Prompts tab of the org, else the
+default steps, then the facts and "Don't reply on GitHub." The app merges,
+continues, and archives. On a phone the row opens the Checks tab, whose top
+holds the actions, and the link to GitHub of a pull request. The
+`localWork`, `access`, `appAction`, and `branch` states of the workspace
+screen draw them. The child pages:
 
 - `app/banner/checks` has the running, failed, and passed checks and the
   merge, which moved from `app/banner/checks-running`, `checks-failed`,
@@ -37,7 +39,14 @@ states of the workspace screen draw them. The child pages:
   action of its own. Its `commits` variant has only commits that are not
   pushed, so the bar offers Push.
 - `app/banner/sent` has the message of each agent action in the chat, as a
-  message of the member who clicked, while the agent works on it.
+  message of the member who clicked, while the agent works on it. Each
+  message has the default steps, a line of three dashes, the facts, and
+  "Don't reply on GitHub." `app/org-settings/prompts` has the tab where an
+  admin replaces the steps.
+- `app/banner/org-steps` has the message of Resolve conflicts with the
+  steps that Cal saved for Acme, which rebases. The facts and "Don't reply
+  on GitHub." follow the steps of the org, as they follow the default
+  steps.
 - `app/banner/continue` has the question of Continue with local work, the
   branch change that runs, a Continue that stopped, Continue while a turn
   runs, and Continue for a member who may not archive.

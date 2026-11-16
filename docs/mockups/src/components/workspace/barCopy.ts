@@ -1,18 +1,25 @@
 /**
  * The words of the actions of the pull request bar: the labels, the
- * messages under the bar, and the fixed prompts that the agent actions send
- * as a message of the member who clicks. This module imports no fixture, so
- * the app can take the words from here too.
+ * messages under the bar, and the text that the agent actions send as a
+ * message of the member who clicks. This module imports no fixture, so the
+ * app can take the words from here too.
  */
 
-/** The steps that the agent does on a fixed prompt. */
-export type AgentAction =
-  | 'create-pull-request'
-  | 'commit-and-push'
-  | 'push'
-  | 'fix-checks'
-  | 'resolve-conflicts'
-  | 'address-review'
+/**
+ * The agent actions, in their order: the order of their labels, and of the
+ * Prompts tab of the org settings.
+ */
+export const agentActions = [
+  'create-pull-request',
+  'commit-and-push',
+  'push',
+  'fix-checks',
+  'resolve-conflicts',
+  'address-review',
+] as const
+
+/** The steps that the agent does on a press of the bar. */
+export type AgentAction = (typeof agentActions)[number]
 
 /** The agent actions that have a command of their own in the keymap. */
 export type CommandAgentAction = Exclude<AgentAction, 'push'>
@@ -150,29 +157,95 @@ function requesters(reviewers: readonly string[]): string {
   return listText(reviewers.map((login) => `@${login}`))
 }
 
-const commitAndPush =
-  'Commit the changes that are not committed, with a clear message, and push this branch.'
+/**
+ * Steps that start with a short line that names the task, then a blank
+ * line and the rest. A session that a press starts takes its first line as
+ * its title.
+ */
+function titled(title: string, rest: string): string {
+  return `${title}\n\n${rest}`
+}
 
 /**
- * The fixed prompt of each agent action. A prompt that needs the GitHub CLI
- * says what to do when `gh` is missing or fails, as in a workspace from an
- * older org image. No prompt asks for a reply on GitHub, because a reply
- * posts as the member who clicked.
+ * The default steps of each agent action, which a press sends while no
+ * admin of the org replaced them in the Prompts tab. The facts come after
+ * the steps, so the steps say "below" where they need a fact. Steps that
+ * need the GitHub CLI say what to do when `gh` is missing or fails, as in a
+ * workspace from an older org image. That fallback is part of the steps,
+ * because each fallback fits the steps of its action.
  */
-export function agentPrompt(action: AgentAction, facts: PromptFacts): string {
-  const pr = `pull request #${facts.number}`
+export const defaultSteps: Readonly<Record<AgentAction, string>> = {
+  'create-pull-request': titled(
+    'Open a pull request for this branch.',
+    'Commit the changes that are not committed, and push this branch. Use `gh pr create`, with the target branch below as the base. Write a short title, and describe what changed and why. If `gh` is missing or fails, push the branch and say that `gh` failed.',
+  ),
+  'commit-and-push':
+    'Commit the changes that are not committed, with a clear message, and push this branch.',
+  push: 'Push this branch.',
+  'fix-checks': titled(
+    'Fix the failed checks of this pull request.',
+    'Find out why the checks below failed. Use `gh pr checks`, and read the logs of failed GitHub Actions jobs with `gh run view --log-failed`. For a check from another service, read its details, or run it locally. Fix the cause, then commit and push. If `gh` is missing or fails, run the failed checks locally, and say that `gh` failed.',
+  ),
+  'resolve-conflicts': titled(
+    'Resolve the conflicts of this pull request.',
+    'Fetch the target branch below from `origin` and merge it into this branch. Resolve each conflict, run the tests, then commit and push.',
+  ),
+  'address-review': titled(
+    'Address the requested changes on this pull request.',
+    'Read the open review comments with `gh`, make the changes, then commit and push. If `gh` is missing or fails, stop and say that `gh` failed.',
+  ),
+}
+
+/**
+ * The last line of each press. A reply on GitHub posts as the member who
+ * clicked, and that member did not ask for one.
+ */
+export const fixedLine = "Don't reply on GitHub."
+
+/**
+ * One labeled line for each fact that an action names. Commit and push and
+ * Push name no fact.
+ */
+export function factLines(action: AgentAction, facts: PromptFacts): string[] {
+  const pullRequest = `Pull request: #${facts.number}`
+  const target = `Target branch: ${facts.base}`
   switch (action) {
     case 'create-pull-request':
-      return `Commit the changes that are not committed, push this branch, and open a pull request into \`${facts.base}\` with \`gh pr create\`. Write a short title, and describe what changed and why. If \`gh\` is missing or fails, push the branch and say that \`gh\` failed.`
+      return [target]
     case 'commit-and-push':
-      return commitAndPush
     case 'push':
-      return 'Push this branch.'
+      return []
     case 'fix-checks':
-      return `These checks failed on ${pr}: ${listText(facts.failedChecks)}. Find out why with \`gh pr checks ${facts.number}\`, and read the logs of failed GitHub Actions jobs with \`gh run view --log-failed\`. For a check from another service, read its details, or run it locally. Fix the cause, then commit and push. If \`gh\` is missing or fails, run the failed checks locally, and say that \`gh\` failed.`
+      return [pullRequest, `Failed checks: ${listText(facts.failedChecks)}`]
     case 'resolve-conflicts':
-      return `Pull request #${facts.number} has conflicts with \`${facts.base}\`. Fetch \`origin/${facts.base}\` and merge it into this branch. Resolve each conflict, run the tests, then commit and push.`
+      return [pullRequest, target]
     case 'address-review':
-      return `${requesters(facts.reviewers)} requested changes on ${pr}. Read the open review comments with \`gh\`, make the changes, then commit and push. Don't reply on GitHub. If \`gh\` is missing or fails, stop and say that \`gh\` failed.`
+      return [pullRequest, `Requested changes: ${requesters(facts.reviewers)}`]
   }
+}
+
+/**
+ * The part that the app adds after the steps of each press: the line
+ * `---`, one line for each fact, and the fixed line. The Prompts tab of the
+ * org settings shows it under the steps of each action, with sample facts.
+ */
+export function fixedPart(action: AgentAction, facts: PromptFacts): string {
+  return ['---', ...factLines(action, facts), fixedLine].join('\n')
+}
+
+/** The steps that the admins of an org saved, for each action they edited. */
+export type OrgSteps = Readonly<Partial<Record<AgentAction, string>>>
+
+/**
+ * The text that a press of an agent action sends: the steps, one blank
+ * line, and the fixed part. `steps` are the steps that an admin saved for
+ * the org, else the default steps of the action. Blank lines at the end of
+ * the steps go, so one blank line always comes before the line `---`.
+ */
+export function agentPrompt(
+  action: AgentAction,
+  facts: PromptFacts,
+  steps: string = defaultSteps[action],
+): string {
+  return `${steps.trimEnd()}\n\n${fixedPart(action, facts)}`
 }

@@ -10,7 +10,8 @@ import { DetailList } from './DetailList'
 import { Section } from './Section'
 import styles from './OrgSections.module.css'
 
-export type SettingsTab = 'general' | 'repositories' | 'computer' | 'members'
+export type SettingsTab =
+  'general' | 'repositories' | 'computer' | 'members' | 'prompts'
 
 /**
  * Why the settings show without edit fields and actions: the person signed
@@ -26,6 +27,7 @@ export const settingsLinks: Readonly<Record<SettingsTab, string>> = {
   repositories: paths.repositories,
   computer: paths.cloudComputer,
   members: paths.members,
+  prompts: paths.prompts,
 }
 
 /** The page of each tab of the settings of a suspended org. */
@@ -34,6 +36,7 @@ export const suspendedSettingsLinks: Readonly<Record<SettingsTab, string>> = {
   repositories: paths.suspendedRepositories,
   computer: paths.suspendedComputer,
   members: paths.suspendedMembers,
+  prompts: paths.suspendedPrompts,
 }
 
 /**
@@ -52,6 +55,7 @@ export function SettingsTabs(props: {
     { label: 'Repositories', tab: 'repositories' },
     { label: 'Cloud computer', tab: 'computer' },
     { label: 'Members', tab: 'members' },
+    { label: 'Prompts', tab: 'prompts' },
   ] satisfies readonly { label: string; tab: SettingsTab }[]
   return (
     <LinkTabs

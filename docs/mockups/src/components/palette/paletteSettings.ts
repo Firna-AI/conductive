@@ -4,6 +4,7 @@ import {
   Keyboard,
   Laptop,
   LogIn,
+  MessageSquareText,
   Server,
   Settings2,
   SlidersHorizontal,
@@ -39,6 +40,12 @@ export const orgSettings: readonly Command[] = [
     lead: icon(Users),
     words: ['invite', 'admin', 'role'],
     to: paths.members,
+  },
+  {
+    label: 'Prompts',
+    lead: icon(MessageSquareText),
+    words: ['agent actions', 'pull request bar', 'steps', 'rebase'],
+    to: paths.prompts,
   },
 ]
 

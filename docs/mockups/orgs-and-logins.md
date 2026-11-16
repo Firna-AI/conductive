@@ -23,9 +23,11 @@ the screens show no plans, no billing, no seats, and no plan limits.
   waitlist screen, where Accept invitation also gives app access, as
   `app/sign-in/waitlist/invited` shows.
 - Only an admin renames the org, and changes the repositories, the scripts,
-  and the env vars, from decisions 54 and 57. A member sees the General,
-  Repositories, and Cloud computer tabs read-only: the values, without edit
-  fields, Save, or Build computer. The General tab of a member is the child
+  and the env vars, from decisions 54 and 57. Only an admin changes the
+  steps of the agent actions on the Prompts tab, from Prompts decision 1,
+  the first decision of the org prompts change. A member sees the General,
+  Repositories, Cloud computer, and Prompts tabs read-only: the values,
+  without edit fields, Save, Reset to default, or Build computer. The General tab of a member is the child
   page `app/org-settings/member`, because `app/org-settings` has child
   pages. `DetailList` in `src/components/settings/` shows such values.
 - Each session runs on the agent login of the member who started it. The

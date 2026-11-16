@@ -1,0 +1,20 @@
+/* The steps for a person who may not change them, as text. */
+.steps {
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-raised);
+  color: var(--ui-ink);
+  font-size: var(--ui-text-md);
+  line-height: 1.55;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* The part that the app adds, with the line above it, close together. */
+.added {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}

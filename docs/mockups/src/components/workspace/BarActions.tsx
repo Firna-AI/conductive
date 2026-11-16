@@ -29,7 +29,7 @@ import { barTint } from './prStatus'
 import styles from './BarActions.module.css'
 
 /**
- * One button of the bar. An agent action sends its fixed prompt, Merge
+ * One button of the bar. An agent action sends its prompt, Merge
  * merges as the viewer, Continue moves the workspace to a new branch, and
  * Archive archives the workspace at once. Each one leads to the screen that
  * follows. The main action takes the tint of the bar, outside its link,

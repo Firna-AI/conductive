@@ -39,5 +39,12 @@ export const suspendedOrgSettings = defineScreen({
         'The members of Acme and their roles, without the invite, the role menus, and Remove, also for Cal, an admin.',
       props: { tab: 'members' },
     },
+    {
+      slug: 'prompts',
+      title: 'Prompts',
+      description:
+        'The steps of the agent actions of Acme as text, with the part that the app adds to each press, without Save and Reset to default, also for Cal, an admin.',
+      props: { tab: 'prompts' },
+    },
   ],
 })

@@ -25,7 +25,7 @@ export const checks = defineScreen({
       slug: 'failed',
       title: 'Checks failed',
       description:
-        'Two checks failed. The bar gives the count, and Fix checks sends the agent a fixed prompt that names the failed checks. The Checks tab names them.',
+        'Two checks failed. The bar gives the count, and Fix checks sends the agent a prompt that names the failed checks. The Checks tab names them.',
       movedFrom: 'app/banner/checks-failed',
       props: { banner: 'checks-failed' },
     },

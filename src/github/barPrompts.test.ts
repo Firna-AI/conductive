@@ -17,6 +17,11 @@ it('names the pull request, the target, the blocking checks in GitHub order, and
       banner: { ...review.banner, changesRequestedBy: logins },
     })
   }
+  const addressReview = [
+    'Address the requested changes on this pull request.',
+    '',
+    'Read the open review comments with `gh`, make the changes, then commit and push. If `gh` is missing or fails, stop and say that `gh` failed.',
+  ].join('\n')
 
   expect([
     promptOf('create-pull-request', snapshotOf('none')),
@@ -27,10 +32,41 @@ it('names the pull request, the target, the blocking checks in GitHub order, and
     reviewers(['priyaraman', 'jonas']),
     reviewers([]),
   ]).toEqual([
-    'Commit the changes that are not committed, push this branch, and open a pull request into `main` with `gh pr create`. Write a short title, and describe what changed and why. If `gh` is missing or fails, push the branch and say that `gh` failed.',
-    'These checks failed on pull request #482: deploy, lint, and e2e (chromium). Find out why with `gh pr checks 482`, and read the logs of failed GitHub Actions jobs with `gh run view --log-failed`. For a check from another service, read its details, or run it locally. Fix the cause, then commit and push. If `gh` is missing or fails, run the failed checks locally, and say that `gh` failed.',
-    "@priyaraman and @jonas requested changes on pull request #482. Read the open review comments with `gh`, make the changes, then commit and push. Don't reply on GitHub. If `gh` is missing or fails, stop and say that `gh` failed.",
-    "A reviewer requested changes on pull request #482. Read the open review comments with `gh`, make the changes, then commit and push. Don't reply on GitHub. If `gh` is missing or fails, stop and say that `gh` failed.",
+    [
+      'Open a pull request for this branch.',
+      '',
+      'Commit the changes that are not committed, and push this branch. Use `gh pr create`, with the target branch below as the base. Write a short title, and describe what changed and why. If `gh` is missing or fails, push the branch and say that `gh` failed.',
+      '',
+      '---',
+      'Target branch: main',
+      "Don't reply on GitHub.",
+    ].join('\n'),
+    [
+      'Fix the failed checks of this pull request.',
+      '',
+      'Find out why the checks below failed. Use `gh pr checks`, and read the logs of failed GitHub Actions jobs with `gh run view --log-failed`. For a check from another service, read its details, or run it locally. Fix the cause, then commit and push. If `gh` is missing or fails, run the failed checks locally, and say that `gh` failed.',
+      '',
+      '---',
+      'Pull request: #482',
+      'Failed checks: deploy, lint, and e2e (chromium)',
+      "Don't reply on GitHub.",
+    ].join('\n'),
+    [
+      addressReview,
+      '',
+      '---',
+      'Pull request: #482',
+      'Requested changes: @priyaraman and @jonas',
+      "Don't reply on GitHub.",
+    ].join('\n'),
+    [
+      addressReview,
+      '',
+      '---',
+      'Pull request: #482',
+      'Requested changes: A reviewer',
+      "Don't reply on GitHub.",
+    ].join('\n'),
   ])
 })
 
@@ -38,8 +74,8 @@ it('asks for a commit and a push when files are not committed, and only for a pu
   const ready = snapshotOf('ready-to-merge')
   expect([promptOf('commit-and-push', ready), promptOf('push', ready)]).toEqual(
     [
-      'Commit the changes that are not committed, with a clear message, and push this branch.',
-      'Push this branch.',
+      "Commit the changes that are not committed, with a clear message, and push this branch.\n\n---\nDon't reply on GitHub.",
+      "Push this branch.\n\n---\nDon't reply on GitHub.",
     ],
   )
 })

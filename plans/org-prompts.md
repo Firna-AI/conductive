@@ -117,6 +117,10 @@ A press sends this text:
   its action, as the earlier bar plan says. A fixed fallback would
   contradict edited steps that do not use `gh`. An unedited action sends
   the same fallback as today.
+- My call, 16 November 2026, from the mockups: each long default starts
+  with a short first line, such as "Fix the failed checks of this pull
+  request.", then a blank line, then the steps. Reason: a session that a
+  press starts takes its title from that line.
 - The default steps are the steps of today's prompts, with their `gh`
   fallback, and without the facts. For example, Fix checks says "Fix the failed checks
   below. Find out why with `gh pr checks`, and read the logs of failed
@@ -154,12 +158,19 @@ A press sends this text:
   adds it to each press.
 - An edited action shows a mark, such as "Edited", and a Reset to default
   button. Each action has its own Save.
+- My call, 16 November 2026, from the mockups: Reset to default asks
+  first with `ConfirmDialog`, as Reset all of Keyboard shortcuts does.
+  Reason: a reset deletes the org's steps, and nothing brings them back.
 - An admin edits. Every other member sees the same tab read-only, as for
   the scripts (decision 57).
 - My call, 16 November 2026: Save with an empty box, or with the default
   text, stores no row. The action then follows the default. Reason: an
   empty prompt has no task, and a copy of the default would stop later
   improvements. No save is refused.
+- My call, 16 November 2026, from the mockups: the Worker trims spaces and
+  blank lines at both ends of the steps before it compares and stores
+  them. A press also uses the default steps when the stored steps are
+  blank. Reason: blank steps would send a press with no task.
 - No new length limit. The scripts have none either.
 - The command palette's Settings group gets the fifth tab.
 
@@ -177,7 +188,7 @@ A press sends this text:
   of the steps, as [Agents and sessions](../docs/protocol/agents-and-sessions.md)
   says. The title then no longer names the pull request number. My call,
   16 November 2026: accept this, because the facts block must follow the
-  steps.
+  steps. The short first line of each default keeps the title readable.
 
 ## Milestone 1: Mockups
 
@@ -187,21 +198,21 @@ Depends on: none
 
 The Prompts tab, and the new shape of each prompt in the banner mockups.
 
-- [ ] Change `agentPrompt` in
+- [x] Change `agentPrompt` in
       `docs/mockups/src/components/workspace/barCopy.ts` into the default
       steps with their `gh` fallback, the facts lines, and the fixed
       line, as the design says.
-- [ ] Add the Prompts tab to the org settings mockups under
+- [x] Add the Prompts tab to the org settings mockups under
       `docs/mockups/src/entries/app/org-settings/prompts/`: the admin view
       with defaults, an edited action with Reset to default, a save in
       progress, and the read-only view of a member who is not an admin.
-- [ ] Add Prompts to the tab list of every org settings mockup, and update
+- [x] Add Prompts to the tab list of every org settings mockup, and update
       the descriptions that say "four tabs".
-- [ ] Update the banner mockups at `app/banner` that show a sent prompt.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages at
+- [x] Update the banner mockups at `app/banner` that show a sent prompt.
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages at
       `npm run mockups:serve`.
-- [ ] Update the design and the TODOs of this plan for each problem that
-      the mockups show.
+- [x] Update the design and the TODOs of this plan for each problem that
+      the mockups show. Screenshots: `.context/org-prompts/milestone-1/`.
 
 ## Milestone 2: Documentation and protocol
 
@@ -235,8 +246,10 @@ Depends on: 2
 
 - [ ] Add the migration for `org_prompts` under `migrations/`.
 - [ ] Add the read and write routes, with the admin check and the
-      suspended-org check, under `worker/app-api/`.
-- [ ] Tests: a member reads, an admin saves and resets, a member who is
+      suspended-org check, under `worker/app-api/`. Trim the steps, and
+      store no row for blank steps or the default steps.
+- [ ] Tests: a member reads, an admin saves and resets, a blank save and
+      a save of the default store no row, a member who is
       not an admin cannot write, an unknown action is refused, a suspended
       org cannot write, and another org's prompts cannot be read or
       written.
@@ -252,7 +265,8 @@ Depends on: 3
       `src/shell/settings/OrgSettingsScreen.tsx`.
 - [ ] Add the `prompts` resource to `src/app/org-model.ts`, with its
       reader under `src/app/api/`.
-- [ ] Build the Prompts tab in `src/shell/settings/`, as the mockup shows.
+- [ ] Build the Prompts tab in `src/shell/settings/`, as the mockup shows,
+      with the question before Reset to default.
 - [ ] Add the fifth tab to the command palette's Settings group.
 - [ ] Build each press from the org's steps or the default in
       `src/github/barPrompts.ts`. Read the prompts at each press. Show the
@@ -260,10 +274,13 @@ Depends on: 3
 - [ ] Move `src/github/barPrompts.test.ts`, `src/github/dev/`, and every
       other consumer to the new shape. Delete the old shape.
 - [ ] Tests: a press with defaults, a press with org steps, the fixed line
-      after org steps, a press after an admin's change, a failed read, and
+      after org steps, blank org steps, a press after an admin's change, a
+      failed read, and
       the tab for an admin and for a member.
-- [ ] Update `src/github/actions.md` and the settings README, if one
-      covers the tabs.
+- [ ] Update `src/github/actions.md` and the code comments in `src/` that
+      say "fixed prompt".
+- [ ] Move the prompt part of `barCopy.ts` (251 lines) into a module of
+      its own, under the 200-line target.
 - [ ] Smoke-test in the browser at `npm run dev`: edit Resolve conflicts
       as an admin, press it, and check the sent message.
 

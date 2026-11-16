@@ -1,5 +1,6 @@
 import { MembersTab } from '../components/members/MembersTab'
 import { ComputerTab } from '../components/settings/ComputerTab'
+import { PromptsTab, type PromptSave } from '../components/settings/PromptsTab'
 import {
   DeleteOrgSection,
   LeaveOrgSection,
@@ -11,12 +12,19 @@ import {
   RepositoryList,
 } from '../components/settings/RepositoryList'
 import { Section } from '../components/settings/Section'
+import type { OrgSteps } from '../components/workspace/barCopy'
 import {
   memberViewer,
   you,
   type Membership,
   type PersonKey,
 } from '../fixtures/members'
+import {
+  acmeEditedAction,
+  acmeRebaseSteps,
+  acmeSteps,
+} from '../fixtures/orgPrompts'
+import { paths } from '../paths'
 import type { OrgSettingsState } from './OrgSettingsScreen'
 import { settingsOrg } from './settingsOrgs'
 import { settingsRepositoryNotice } from './settingsRepositoryNotice'
@@ -51,6 +59,28 @@ const repositoryNotes: Readonly<Record<ReadOnlyCause | 'editable', string>> = {
   editable: ' Adding a repository starts a build.',
   member: ' Only an admin can change them.',
   suspended: '',
+}
+
+/**
+ * The steps of the Prompts tab: the default steps, the steps of Resolve
+ * conflicts that Cal saved, or the save of those steps that runs, before
+ * the org has steps of its own.
+ */
+function promptsOf(state: OrgSettingsState): {
+  saved: OrgSteps
+  saving?: PromptSave
+} {
+  switch (state.prompts) {
+    case 'default':
+      return { saved: {} }
+    case 'edited':
+      return { saved: acmeSteps }
+    case 'saving':
+      return {
+        saved: {},
+        saving: { action: acmeEditedAction, steps: acmeRebaseSteps },
+      }
+  }
 }
 
 /** The body of the open tab of the org settings. */
@@ -111,6 +141,15 @@ export function TabBody(props: { state: OrgSettingsState }) {
           members={settings.members}
           viewer={viewer}
           workspaces={settings.workspaces}
+        />
+      )
+    case 'prompts':
+      return (
+        <PromptsTab
+          org={org.name}
+          readOnly={readOnly}
+          resetTo={paths.promptsReset}
+          {...promptsOf(state)}
         />
       )
   }

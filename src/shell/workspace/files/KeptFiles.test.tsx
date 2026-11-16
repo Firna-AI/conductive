@@ -20,8 +20,15 @@ vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
 const { org, workspace: id, session } = FAKE_IDS
 const checksHref = filesHref(org, id, { kind: 'list', list: 'checks' })
-const createPrompt =
-  'Commit the changes that are not committed, push this branch, and open a pull request into `main` with `gh pr create`. Write a short title, and describe what changed and why. If `gh` is missing or fails, push the branch and say that `gh` failed.'
+const createPrompt = [
+  'Open a pull request for this branch.',
+  '',
+  'Commit the changes that are not committed, and push this branch. Use `gh pr create`, with the target branch below as the base. Write a short title, and describe what changed and why. If `gh` is missing or fails, push the branch and say that `gh` failed.',
+  '',
+  '---',
+  'Target branch: main',
+  "Don't reply on GitHub.",
+].join('\n')
 
 describe('the kept files of the workspace screen', () => {
   test('a phone on the chat tab follows the local work, so a branch with no commits and a changed file opens Checks, and Files opens no second connection', async () => {

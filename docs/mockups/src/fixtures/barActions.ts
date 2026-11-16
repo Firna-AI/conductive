@@ -1,6 +1,6 @@
 /**
  * The facts behind the actions of the pull request bar: the merge method of
- * the viewer, the facts that the fixed prompts name, and the branch that
+ * the viewer, the facts that the prompts name, and the branch that
  * Continue creates.
  */
 
@@ -15,7 +15,7 @@ import { repositories } from './repositories'
  */
 export const viewerMergeMethod: MergeMethod = 'squash'
 
-/** The facts of pull request #482 that the fixed prompts name. */
+/** The facts of pull request #482 that the prompts name. */
 export const promptFacts: PromptFacts = {
   number: pullRequest.number,
   base: repositories.storefront.defaultBranch,

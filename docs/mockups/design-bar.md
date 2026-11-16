@@ -10,9 +10,12 @@ the actions on top of the Checks tab of a phone, and Continue.
   `src/components/workspace/` holds the rule: the action of each state, with
   the local work, the GitHub access of the viewer, and an action of the app
   that runs, and Merge needs a merge method. `barCopy.ts` beside it holds
-  the labels, the messages under the bar, and the fixed prompts of the agent
-  actions. Address review names "A reviewer" when GitHub names no login of
-  a reviewer. `barIcons.ts` holds the icon of each agent action. They import
+  the labels, the messages under the bar, and the text of each press of an
+  agent action: the default steps, the lines of the facts, and the fixed
+  line "Don't reply on GitHub." Each long default starts with a short line
+  that names the task, because a session that a press starts takes its
+  first line as its title. Address review names "A reviewer" when GitHub
+  names no login of a reviewer. `barIcons.ts` holds the icon of each agent action. They import
   no fixture, so the app uses them too.
   - On a tinted bar the main action takes the tint of the bar, so the
     button matches it: green, amber, red, or purple. A merged pull request
@@ -25,8 +28,10 @@ the actions on top of the Checks tab of a phone, and Continue.
     fill of the tint, a deeper fill on hover, and a white label, from the
     `successFill`, `warningFill`, `dangerFill`, `mergedFill`, and `onFill`
     tokens. `barTint` in `prStatus.ts` gives the tint of each state.
-  - An agent action sends its fixed prompt, so the chat shows it as a
-    message of the member who clicked. Merge names its method, such as
+  - An agent action sends its prompt, so the chat shows it as a message of
+    the member who clicked: the steps of the org or the default steps, a
+    line of three dashes, the facts, and the fixed line. The chat shows
+    the dashes as plain text, as the agent gets them. Merge names its method, such as
     "Squash and merge", and a spinner shows while the merge or Continue
     runs.
   - On desktop, the tooltip of each button that takes a click, and of each

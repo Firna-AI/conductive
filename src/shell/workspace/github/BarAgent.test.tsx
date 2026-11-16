@@ -39,8 +39,16 @@ const fileTab: FilesTab = {
   path: FAKE_FILE_PATH,
   mode: 'preview',
 }
-const fixChecks =
-  'These checks failed on pull request #482: lint and e2e (chromium). Find out why with `gh pr checks 482`, and read the logs of failed GitHub Actions jobs with `gh run view --log-failed`. For a check from another service, read its details, or run it locally. Fix the cause, then commit and push. If `gh` is missing or fails, run the failed checks locally, and say that `gh` failed.'
+const fixChecks = [
+  'Fix the failed checks of this pull request.',
+  '',
+  'Find out why the checks below failed. Use `gh pr checks`, and read the logs of failed GitHub Actions jobs with `gh run view --log-failed`. For a check from another service, read its details, or run it locally. Fix the cause, then commit and push. If `gh` is missing or fails, run the failed checks locally, and say that `gh` failed.',
+  '',
+  '---',
+  'Pull request: #482',
+  'Failed checks: lint and e2e (chromium)',
+  "Don't reply on GitHub.",
+].join('\n')
 const sends = (server: FakeApiServer) =>
   bodiesOf(server, 'POST', sessionPaths.messages(org, id, session), 0)
 const sentTexts = async (server: FakeApiServer) =>

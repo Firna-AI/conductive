@@ -10,7 +10,7 @@ export const blocked = defineScreen({
   description:
     'The pull request has a merge conflict with main, so GitHub blocks the merge. The bar names the conflict, and Resolve conflicts asks the agent to merge main into the branch and resolve each conflict. Its number leads to the pull request on GitHub. The Checks tab keeps the checks of the last push.',
   rationale:
-    'The user chose decision 18: the bar shows each state that blocks a merge, so a member without write access on GitHub still sees it. Decision 220 gives the agent a fixed prompt for a conflict and for requested changes. Decision 64 adds Blocked for each other reason that GitHub blocks a merge, and it shows only when no other state applies. A draft, a closed pull request, and Blocked get no action of their own, only Open on GitHub. A conflict, requested changes, and Blocked wait for someone to act, so they tint the bar amber, with an icon and words. A draft and a closed pull request stay neutral.',
+    'The user chose decision 18: the bar shows each state that blocks a merge, so a member without write access on GitHub still sees it. Decision 220 gives the agent a prompt for a conflict and for requested changes. Decision 64 adds Blocked for each other reason that GitHub blocks a merge, and it shows only when no other state applies. A draft, a closed pull request, and Blocked get no action of their own, only Open on GitHub. A conflict, requested changes, and Blocked wait for someone to act, so they tint the bar amber, with an icon and words. A draft and a closed pull request stay neutral.',
   relatedDocs: [],
   propSchema: workspaceStateSchema,
   props: { ...checksWorkspace, banner: 'conflict' },

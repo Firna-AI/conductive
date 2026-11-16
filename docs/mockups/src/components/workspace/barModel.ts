@@ -35,7 +35,7 @@ export const localWorkKinds = ['none', 'commits', 'changes'] as const
 
 export type LocalWorkKind = (typeof localWorkKinds)[number]
 
-/** A button of the bar. The agent actions send a fixed prompt. */
+/** A button of the bar. The agent actions send a prompt. */
 export type BarAction =
   | { kind: 'agent'; action: AgentAction }
   | { kind: 'merge'; method: MergeMethod; busy: boolean }
