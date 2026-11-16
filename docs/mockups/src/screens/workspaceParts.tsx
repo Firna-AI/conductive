@@ -1,17 +1,18 @@
 import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
-import { FilePage } from '../components/files/FilePage'
-import { FilesPanel, type FileTabView } from '../components/files/FilesPanel'
+import { filePage } from '../entries/components/files/FilePage.mockup'
+import type { FileTabView } from '../components/files/FilesPanel'
+import { filesPanel } from '../entries/components/files/FilesPanel.mockup'
 import type { BackLink } from '../components/layout/Page'
-import { DesktopView } from '../components/tools/DesktopView'
-import { PreviewTool } from '../components/tools/PortPreview'
-import { TerminalTool } from '../components/tools/TerminalTool'
+import { desktopView } from '../entries/components/tools/DesktopView.mockup'
+import { previewTool } from '../entries/components/tools/PortPreview.mockup'
+import { terminalTool } from '../entries/components/tools/TerminalTool.mockup'
 import { sandboxPanel } from '../entries/components/workspace/SandboxNotice.mockup'
 import {
   replacesList,
   replacesShownFile,
 } from '../components/workspace/sandboxNoticeState'
-import { plainData } from '../defined'
+import { defined, plainData } from '../defined'
 import { unpushedWork } from '../fixtures/barActions'
 import {
   creatingLog,
@@ -164,24 +165,28 @@ export function FilesContent(props: {
   const open = openFile(state)
   if (phone && open) {
     return (
-      <FilePage
+      <filePage.Component
         back={backFrom(open)}
-        placeholder={filePlaceholder(state, true)}
+        moklyInstance="file-page"
         view={open}
+        {...defined({ placeholder: filePlaceholder(state, true) })}
       />
     )
   }
   return (
-    <FilesPanel
+    <filesPanel.Component
       banner={state.banner}
-      checksTop={props.checksTop}
       edited={!isNew(state)}
-      only={changedPaths(state)}
-      open={open}
+      moklyInstance="files-panel"
       paths={state.paths}
-      placeholder={listsPlaceholder(state, phone)}
       tree={state.tree}
       view={state.files}
+      {...defined({
+        checksTop: props.checksTop,
+        only: changedPaths(state),
+        open,
+        placeholder: listsPlaceholder(state, phone),
+      })}
     />
   )
 }
@@ -197,11 +202,10 @@ function TerminalContent(props: { state: WorkspaceState; viewport: Viewport }) {
   const set = terminalSets[state.terminals]
   const fresh = isNew(state)
   return (
-    <TerminalTool
+    <terminalTool.Component
       disconnected={state.terminals === 'disconnected'}
       lines={fresh ? [] : set.lines}
-      prompt={fresh ? freshPromptFor(state) : set.prompt}
-      shared={set.shared}
+      moklyInstance="terminal-tool"
       tabs={
         state.terminals === 'older'
           ? null
@@ -213,6 +217,10 @@ function TerminalContent(props: { state: WorkspaceState; viewport: Viewport }) {
             }
       }
       viewport={props.viewport}
+      {...defined({
+        prompt: fresh ? freshPromptFor(state) : set.prompt,
+        shared: set.shared,
+      })}
     />
   )
 }
@@ -239,8 +247,13 @@ export function ToolContent(props: {
     case 'terminal':
       return <TerminalContent state={state} viewport={props.viewport} />
     case 'preview':
-      return <PreviewTool state={state.ports} />
+      return (
+        <previewTool.Component
+          moklyInstance="preview-tool"
+          state={state.ports}
+        />
+      )
     case 'desktop':
-      return <DesktopView />
+      return <desktopView.Component moklyInstance="desktop-view" />
   }
 }

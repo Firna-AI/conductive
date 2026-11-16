@@ -12,7 +12,7 @@ import {
   newWorkspaceForm,
   newWorkspaceSchema,
 } from './NewWorkspaceScreen'
-import { FirstBuildNotice } from './firstBuildNotice'
+import { firstBuildNotice } from '../entries/components/screens/firstBuildNotice.mockup'
 import {
   newOrgEmpty,
   newOrgOf,
@@ -115,10 +115,11 @@ export function NewWorkspaceDialogScreen(props: {
     notices.splice(
       failed ? 1 : 0,
       0,
-      <FirstBuildNotice
+      <firstBuildNotice.Component
         admin={state.viewer === 'admin'}
         build={state.firstBuild}
         key="first-build"
+        moklyInstance="first-build-notice"
       />,
     )
   }

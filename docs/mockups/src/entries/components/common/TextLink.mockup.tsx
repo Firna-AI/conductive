@@ -1,5 +1,5 @@
 import { defineComponent } from '@mokly/mokly'
-import { NewTabAnchor } from '../../../components/chat/WebLinkText'
+import { newTabAnchor } from '../chat/WebLinkText.mockup'
 import { ScreenLink } from '../../../components/common/ScreenLink'
 import { TextLink, type LinkOpener } from '../../../components/common/TextLink'
 import { paths } from '../../../paths'
@@ -24,7 +24,16 @@ const opensSchema = {
 function openerOf(opens: 'new-tab' | { to: string } | undefined, href: string) {
   if (opens === undefined) return undefined
   if (opens === 'new-tab') {
-    return (link: LinkOpener) => <NewTabAnchor {...link} href={href} />
+    return (link: LinkOpener) => (
+      <newTabAnchor.Component
+        className={link.className}
+        href={href}
+        moklyInstance="anchor"
+        title={link.title}
+      >
+        {link.children}
+      </newTabAnchor.Component>
+    )
   }
   return (link: LinkOpener) => <ScreenLink {...link} to={opens.to} />
 }

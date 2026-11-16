@@ -4,7 +4,7 @@ import { CornerDownLeft, Info } from 'lucide-react'
 import { defined } from '../../defined'
 import type { FeedbackScreenshot } from '../../fixtures/feedback'
 import { paths } from '../../paths'
-import { MessageField } from '../chat/MessageField'
+import { messageField } from '../../entries/components/chat/MessageField.mockup'
 import { actionButton } from '../../entries/components/common/actions.mockup'
 import { classes } from '../common/classes'
 import { confirmDialog } from '../../entries/components/common/ConfirmDialog.mockup'
@@ -164,9 +164,10 @@ export function FeedbackDialog(props: FeedbackDialogProps) {
         {props.screenshots.length > 0 ? (
           <ScreenshotRow screenshots={props.screenshots} />
         ) : null}
-        <MessageField
+        <messageField.Component
           lines={shownLines(props.text, phone ? 5 : 6)}
           maxLines={maxLines}
+          moklyInstance="feedback-message"
           placeholder={feedbackPlaceholder}
           text={props.text}
         />

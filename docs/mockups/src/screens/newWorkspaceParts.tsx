@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { ConnectAgentNotice } from '../components/chat/ConnectAgentNotice'
+import { connectAgentNotice } from '../entries/components/chat/ConnectAgentNotice.mockup'
 import { fileMark, withoutMarks } from '../../../../src/app/draft-marks'
 import { createFailedNotice } from '../entries/components/new-workspace/notices.mockup'
 import { repositoryWaits } from '../components/settings/repositoryChangeCopy'
@@ -12,6 +12,7 @@ import {
 import { savedCartsMessage } from '../fixtures/newWorkspaceConversations'
 import { followUpTask } from '../fixtures/workspaceLinkConversations'
 import { savedCarts } from '../fixtures/workspaces'
+import { plainData } from '../defined'
 
 /**
  * The state of the form of a new workspace that the New workspace page and
@@ -146,7 +147,13 @@ export function formNotices(
     )
   }
   if (state.login === 'missing') {
-    notices.push(<ConnectAgentNotice choice={newWorkspaceChoice} key="login" />)
+    notices.push(
+      <connectAgentNotice.Component
+        choice={plainData(newWorkspaceChoice)}
+        key="login"
+        moklyInstance="connect-agent-notice"
+      />,
+    )
   }
   return notices
 }

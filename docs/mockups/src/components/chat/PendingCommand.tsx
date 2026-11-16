@@ -8,7 +8,10 @@ import { classes } from '../common/classes'
 import { CommandActions } from '../mac/CommandActions'
 import { useMacApp } from '../mac/MacApp'
 import type { Detail } from '../settings/DetailList'
-import { CommandLine, CommandStatus } from './MacCommand'
+import {
+  commandLine,
+  commandStatus,
+} from '../../entries/components/chat/MacCommand.mockup'
 import styles from './PendingCommand.module.css'
 
 /** A command on the Mac that waits for its answer. */
@@ -100,13 +103,20 @@ export function PendingCommand(props: {
       <div className={styles.head}>
         <Laptop aria-hidden className={styles.icon} size={14} />
         <span className={styles.command}>
-          <CommandLine command={request.command} />
+          <commandLine.Component
+            command={request.command}
+            moklyInstance="command-line"
+          />
         </span>
         <span className={classes(styles.end, props.open && styles.endDrawn)}>
           {mac ? (
             <CommandActions choicesOpen={props.open} id={props.id} />
           ) : (
-            <CommandStatus id={props.id} state="waiting" />
+            <commandStatus.Component
+              id={props.id}
+              moklyInstance="command-status"
+              state="waiting"
+            />
           )}
         </span>
       </div>

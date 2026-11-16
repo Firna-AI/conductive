@@ -9,7 +9,7 @@ import {
 import type { TerminalLine } from '../../fixtures/terminal'
 import { actionButton } from '../../entries/components/common/actions.mockup'
 import { statusText } from '../../entries/components/common/StatusText.mockup'
-import { TerminalView } from '../tools/TerminalView'
+import { terminalView } from '../../entries/components/tools/TerminalView.mockup'
 import { BuildHistory, BuildResult } from './BuildHistory'
 import { SectionText } from './Section'
 import styles from './BuildSection.module.css'
@@ -55,7 +55,12 @@ export function failedBuildOf(state: BuildState): FailedBuild | undefined {
 function Log(props: { lines: readonly TerminalLine[]; live: boolean }) {
   return (
     <div className={styles.log}>
-      <TerminalView cursor={props.live} extraKeys={false} lines={props.lines} />
+      <terminalView.Component
+        cursor={props.live}
+        extraKeys={false}
+        lines={props.lines}
+        moklyInstance="build-log"
+      />
     </div>
   )
 }

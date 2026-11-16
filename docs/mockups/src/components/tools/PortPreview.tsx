@@ -6,14 +6,18 @@ import {
   serversUnavailable,
 } from '../../fixtures/previews'
 import { paths } from '../../paths'
-import { LostUpdateRow } from '../chat/LostUpdate'
+import { plainData } from '../../defined'
+import { lostUpdateRow } from '../../entries/components/chat/LostUpdate.mockup'
 import { iconButton } from '../../entries/components/common/actions.mockup'
 import { externalLink } from '../../entries/components/common/ExternalLink.mockup'
 import { ScreenLink } from '../common/ScreenLink'
-import { PortMessage, ServerList } from './PortForm'
-import { PreviewTabs } from './PreviewTabs'
+import {
+  portMessage,
+  serverList,
+} from '../../entries/components/tools/PortForm.mockup'
+import { previewTabs as previewTabsPart } from '../../entries/components/tools/PreviewTabs.mockup'
 import { portFormCopy, previewTabLabel, serverDescription } from './previewCopy'
-import { StorefrontPage } from './StorefrontPage'
+import { storefrontPage } from '../../entries/components/tools/StorefrontPage.mockup'
 import styles from './PortPreview.module.css'
 
 /**
@@ -65,7 +69,11 @@ function PortPreview(props: { adding: boolean }) {
     <div className={styles.preview}>
       <div className={styles.toolbar}>
         {/* Beside the actions of the frame, two named tabs do not fit. */}
-        <PreviewTabs fadeEnd={!adding} tabs={previewTabs(adding)} />
+        <previewTabsPart.Component
+          fadeEnd={!adding}
+          moklyInstance="preview-tabs"
+          tabs={plainData(previewTabs(adding))}
+        />
         {adding ? (
           <iconButton.Component
             icon="plus"
@@ -103,10 +111,10 @@ function PortPreview(props: { adding: boolean }) {
         )}
       </div>
       {adding ? (
-        <ServerList servers={unopened} />
+        <serverList.Component moklyInstance="server-list" servers={unopened} />
       ) : (
         <div className={styles.frame}>
-          <StorefrontPage />
+          <storefrontPage.Component moklyInstance="storefront-page" />
         </div>
       )}
     </div>
@@ -121,18 +129,39 @@ export function PreviewTool(props: { state: PreviewState }) {
     case 'adding':
       return <PortPreview adding />
     case 'detected':
-      return <ServerList servers={detectedServers} />
+      return (
+        <serverList.Component
+          moklyInstance="server-list"
+          servers={detectedServers}
+        />
+      )
     case 'no-servers':
-      return <PortMessage body={portFormCopy.noServers} />
+      return (
+        <portMessage.Component
+          body={portFormCopy.noServers}
+          moklyInstance="port-message"
+        />
+      )
     case 'no-report':
-      return <PortMessage body={portFormCopy.body} />
+      return (
+        <portMessage.Component
+          body={portFormCopy.body}
+          moklyInstance="port-message"
+        />
+      )
     case 'repair-failed':
       // The notice joins the list, as the notice of a file list joins the
       // file lists. The last list and the field stay usable.
       return (
         <>
-          <ServerList servers={detectedServers} />
-          <LostUpdateRow repair={serversUnavailable} />
+          <serverList.Component
+            moklyInstance="server-list"
+            servers={detectedServers}
+          />
+          <lostUpdateRow.Component
+            moklyInstance="lost-servers"
+            repair={serversUnavailable}
+          />
         </>
       )
   }

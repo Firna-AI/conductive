@@ -1,9 +1,8 @@
 import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
-import { ChatPane } from '../components/chat/ChatPane'
+import { workspaceChat } from './workspaceChat'
 import { ChatWorkspaces } from '../components/chat/chatWorkspaces'
-import { emptyState } from '../entries/components/common/EmptyState.mockup'
-import { FilePage } from '../components/files/FilePage'
+import { filePage } from '../entries/components/files/FilePage.mockup'
 import {
   appFrame,
   mobileFrame,
@@ -93,39 +92,28 @@ export function WorkspaceScreen(props: {
   const fresh = state.tab === 'new-session'
   const rightHidden = state.rightColumn === 'hidden'
   const rows = chatWorkspacesOf(state, { workspace, status })
-  const chat = (
-    <ChatWorkspaces rows={rows}>
-      <ChatPane
-        composer={composerFor(state, workspace, viewport)}
-        empty={
-          <emptyState.Component
-            body={`The agent works on ${workspace.branch}, on the same cloud computer as the other sessions.`}
-            icon="message-square-plus"
-            moklyInstance="new-session-empty"
-            title="New session"
-          />
-        }
-        fold={state.fold}
-        items={fresh ? [] : chatItemsFor(open.items, state.paths)}
-        notice={
-          // An archived workspace keeps its archived bar, so the notice of a
-          // suspended org shows above it.
-          archived && suspended ? (
-            <suspendedOrgNotice.Component
-              moklyInstance="suspended-org-notice"
-              org={{ name: orgs[suspendedOrg].name }}
-            />
-          ) : (
-            composerNotice(state, workspace)
-          )
-        }
-        problem={problem}
-        starting={startingLogFor(state)}
-        viewer={viewer}
-        viewport={viewport}
-      />
-    </ChatWorkspaces>
-  )
+  const chat = workspaceChat({
+    rows,
+    workspace,
+    items: fresh ? [] : chatItemsFor(open.items, state.paths),
+    composer: composerFor(state, workspace, viewport),
+    // An archived workspace keeps its archived bar, so the notice of a
+    // suspended org shows above it.
+    notice:
+      archived && suspended ? (
+        <suspendedOrgNotice.Component
+          moklyInstance="suspended-org-notice"
+          org={{ name: orgs[suspendedOrg].name }}
+        />
+      ) : (
+        composerNotice(state, workspace)
+      ),
+    problem,
+    starting: startingLogFor(state),
+    fold: state.fold,
+    viewer,
+    viewport,
+  })
   const headerBar = (
     <workspaceHeader.Component
       canReassign={admin && !readOnly}
@@ -266,7 +254,11 @@ export function WorkspaceScreen(props: {
       <workspaceBody.Component
         center={
           file ? (
-            <FilePage placeholder={filePlaceholder(state, true)} view={file} />
+            <filePage.Component
+              moklyInstance="file-page"
+              view={file}
+              {...defined({ placeholder: filePlaceholder(state, true) })}
+            />
           ) : (
             chat
           )

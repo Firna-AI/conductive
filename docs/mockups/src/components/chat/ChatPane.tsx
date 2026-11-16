@@ -13,12 +13,16 @@ import {
   type SandboxNoticeState,
 } from '../workspace/sandboxNoticeState'
 import { startingCard } from '../../entries/components/workspace/StartingCard.mockup'
-import { ChatItemView } from './ChatItemView'
-import { Composer, type ComposerState } from './Composer'
+import { chatItemView } from '../../entries/components/chat/ChatItemView.mockup'
+import { composer as composerPart } from '../../entries/components/chat/Composer.mockup'
+import type { ComposerState } from './Composer'
 import { groupItems } from './groupItems'
-import { isPendingCommand, PendingCommand } from './PendingCommand'
-import { ToolGroup } from './ToolGroup'
-import { WorkFold, type FoldState } from './WorkFold'
+import { isPendingCommand } from './PendingCommand'
+import { pendingCommand } from '../../entries/components/chat/PendingCommand.mockup'
+import { toolGroup } from '../../entries/components/chat/ToolGroup.mockup'
+import type { FoldState } from './WorkFold'
+import { workFold } from '../../entries/components/chat/WorkFold.mockup'
+import { instanceKey } from '../../instanceKey'
 import styles from './ChatPane.module.css'
 
 /**
@@ -82,21 +86,28 @@ export function ChatPane(props: {
               switch (entry.kind) {
                 case 'tools':
                   return (
-                    <ToolGroup
+                    <toolGroup.Component
                       calls={entry.calls}
-                      open={entry.open}
                       key={entry.id}
+                      moklyInstance={`tools-${instanceKey(entry.id)}`}
+                      open={entry.open}
                     />
                   )
                 case 'work':
                   return (
-                    <WorkFold key={entry.id} state={fold} steps={entry.steps} />
+                    <workFold.Component
+                      key={entry.id}
+                      moklyInstance={instanceKey(entry.id)}
+                      state={fold}
+                      steps={entry.steps}
+                    />
                   )
                 case 'item':
                   return (
-                    <ChatItemView
+                    <chatItemView.Component
                       item={entry.item}
                       key={entry.item.id}
+                      moklyInstance={`item-${instanceKey(entry.item.id)}`}
                       viewer={props.viewer}
                     />
                   )
@@ -119,9 +130,10 @@ export function ChatPane(props: {
             role="group"
           >
             {pending.map((item, index) => (
-              <PendingCommand
+              <pendingCommand.Component
                 id={item.id}
                 key={item.id}
+                moklyInstance={`pending-${instanceKey(item.id)}`}
                 open={mac?.choicesOpen === true && index === 0}
                 request={item.request}
               />
@@ -136,7 +148,12 @@ export function ChatPane(props: {
             state={plainData(props.problem)}
           />
         ) : null}
-        {composer ? <Composer {...props.composer} /> : null}
+        {composer ? (
+          <composerPart.Component
+            moklyInstance="composer"
+            {...props.composer}
+          />
+        ) : null}
       </div>
     </section>
   )

@@ -12,12 +12,12 @@ import { branchPictures, splitPath } from '../../fixtures/files'
 import { CheckoutPicture, screenshotSize } from '../../fixtures/pictures'
 import { actionButton } from '../../entries/components/common/actions.mockup'
 import { emptyState } from '../../entries/components/common/EmptyState.mockup'
-import { CodeView } from './CodeView'
-import { DiffStat } from './DiffStat'
-import { DiffView } from './DiffView'
+import { codeView } from '../../entries/components/files/CodeView.mockup'
+import { diffStat } from '../../entries/components/files/DiffStat.mockup'
+import { diffView } from '../../entries/components/files/DiffView.mockup'
 import type { FileTabView } from './FilesPanel'
-import { ImageView } from './ImageView'
-import { MarkdownView } from './MarkdownView'
+import { imageView } from '../../entries/components/files/ImageView.mockup'
+import { markdownView } from '../../entries/components/files/MarkdownView.mockup'
 
 /** What the page of a file shows: its header and its content. */
 export type FileSpec = {
@@ -41,9 +41,9 @@ function picture(path: string, overlap: boolean): FileSpec {
     path,
     icon: File,
     content: (
-      <ImageView size={screenshotSize}>
+      <imageView.Component moklyInstance="image-view" size={screenshotSize}>
         <CheckoutPicture label={splitPath(path).name} overlap={overlap} />
-      </ImageView>
+      </imageView.Component>
     ),
     binary: true,
   }
@@ -82,27 +82,55 @@ export function specFor(view: FileTabView): FileSpec {
         path: 'src/app/checkout/useAddressAutocomplete.ts',
         icon: FileCode,
         meta: `${autocompleteHook.split('\n').length} lines`,
-        content: <CodeView code={autocompleteHook} />,
+        content: (
+          <codeView.Component
+            code={autocompleteHook}
+            moklyInstance="code-view"
+          />
+        ),
       }
     case 'markdown':
       return {
         path: 'README.md',
         icon: FileText,
-        content: <MarkdownView blocks={readme} />,
+        content: (
+          <markdownView.Component
+            blocks={readme}
+            moklyInstance="markdown-view"
+          />
+        ),
       }
     case 'diff':
       return {
         path: 'src/app/checkout/AddressForm.tsx',
         icon: FileDiff,
-        meta: <DiffStat added={38} removed={6} />,
-        content: <DiffView hunks={addressFormDiff} />,
+        meta: (
+          <diffStat.Component
+            added={38}
+            moklyInstance="diff-stat"
+            removed={6}
+          />
+        ),
+        content: (
+          <diffView.Component
+            hunks={addressFormDiff}
+            moklyInstance="diff-view"
+          />
+        ),
       }
     case 'masked-diff':
       return {
         path: maskedDiffPath,
         icon: FileDiff,
-        meta: <DiffStat added={6} removed={0} />,
-        content: <DiffView hunks={seedScriptDiff} />,
+        meta: (
+          <diffStat.Component added={6} moklyInstance="diff-stat" removed={0} />
+        ),
+        content: (
+          <diffView.Component
+            hunks={seedScriptDiff}
+            moklyInstance="diff-view"
+          />
+        ),
       }
     case 'unnamed':
       return {

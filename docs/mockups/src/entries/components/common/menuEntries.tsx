@@ -1,6 +1,6 @@
 import type { SchemaProps } from '@mokly/mokly'
 import type { MenuEntry, MenuPlacement } from '../../../components/common/Menu'
-import { AgentMark } from '../../../components/chat/AgentMark'
+import { agentMark } from '../chat/AgentMark.mockup'
 import { instanceKey } from '../../../instanceKey'
 import { personAvatar } from '../orgs/OrgTile.mockup'
 import { agentKeys } from '../../../fixtures/agents'
@@ -123,7 +123,7 @@ type ItemData = Extract<MenuEntryData, { kind: 'item' }>
 
 /**
  * The mark of an item: the avatar of a person, or the mark of an agent.
- * `label` is the label of the item, which names the avatar for Mokly.
+ * `label` is the label of the item, which names the mark for Mokly.
  */
 function markOf(mark: NonNullable<ItemData['mark']>, label: string) {
   return mark.kind === 'person' ? (
@@ -133,7 +133,10 @@ function markOf(mark: NonNullable<ItemData['mark']>, label: string) {
       size={18}
     />
   ) : (
-    <AgentMark agent={mark.agent} />
+    <agentMark.Component
+      agent={mark.agent}
+      moklyInstance={`mark-${instanceKey(label)}`}
+    />
   )
 }
 

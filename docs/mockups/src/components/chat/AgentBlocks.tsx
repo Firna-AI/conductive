@@ -47,7 +47,9 @@ function ListView(props: { list: MessageList }) {
  * The blocks of a message of the agent, in order: its paragraphs, its
  * headings, its tables, and its lists. Their text keeps its inline code and
  * its bold, and each link to a workspace of the org is a chip. The element
- * around them sets the type and the space between them.
+ * around them sets the type and the space between them. The blocks have no
+ * key that stays when they move, so their text keeps the plain
+ * `MessageText`: the name of a Mokly instance must stay the same.
  */
 export function AgentBlocks(props: {
   /** The id of the message, which names its table for Mokly. */

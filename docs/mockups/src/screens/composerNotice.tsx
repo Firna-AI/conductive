@@ -5,7 +5,7 @@ import {
   smallerFileLabel,
   tooLargeBody,
 } from '../components/chat/attachmentCopy'
-import { ConnectAgentNotice } from '../components/chat/ConnectAgentNotice'
+import { connectAgentNotice } from '../entries/components/chat/ConnectAgentNotice.mockup'
 import {
   linkedReasonText,
   linkedTitle,
@@ -19,6 +19,7 @@ import { droppedFolder, largeRecording } from '../fixtures/attachments'
 import { people } from '../fixtures/members'
 import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
+import { plainData } from '../defined'
 import { otherStarter } from './sessionStarter'
 import type { WorkspaceState } from './workspaceState'
 
@@ -126,5 +127,10 @@ export function composerNotice(state: WorkspaceState, workspace: Workspace) {
   const noLogin =
     state.composer === 'no-agent' || state.composer === 'no-starter-login'
   if (!noLogin || starter !== undefined) return undefined
-  return <ConnectAgentNotice choice={choice} />
+  return (
+    <connectAgentNotice.Component
+      choice={plainData(choice)}
+      moklyInstance="connect-agent-notice"
+    />
+  )
 }

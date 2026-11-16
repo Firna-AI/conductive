@@ -8,7 +8,7 @@ import type {
 import type { MessageHeading } from '../../fixtures/headingConversations'
 import type { MessageList } from '../../fixtures/listConversations'
 import { classes } from '../common/classes'
-import { AgentBlocks } from './AgentBlocks'
+import { agentBlocks } from '../../entries/components/chat/AgentBlocks.mockup'
 import { MessageText } from './MessageText'
 import styles from './ToolGroup.module.css'
 
@@ -109,7 +109,9 @@ function LineBlock(props: { block: AgentBlock }) {
  * A `<summary>` holds no table, so a table never goes into the line. The
  * closed line shows the first table, and all that follows it, as text. When
  * the message opens, the line keeps the blocks before the table, and the
- * table and the rest of the message show under the line.
+ * table and the rest of the message show under the line. The blocks have
+ * no key that stays when they move, so their text keeps the plain
+ * `MessageText`, as in `AgentBlocks`.
  */
 export function MessageLine(props: { message: AgentItem; open: boolean }) {
   const { lead, rest } = splitAtTable(props.message.blocks)
@@ -133,7 +135,11 @@ export function MessageLine(props: { message: AgentItem; open: boolean }) {
       </summary>
       {table ? (
         <div className={styles.messageBody}>
-          <AgentBlocks blocks={rest} id={props.message.id} />
+          <agentBlocks.Component
+            blocks={rest}
+            id={props.message.id}
+            moklyInstance="blocks"
+          />
         </div>
       ) : null}
     </details>

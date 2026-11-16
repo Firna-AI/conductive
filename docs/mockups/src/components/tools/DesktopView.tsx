@@ -1,6 +1,6 @@
 import { MousePointer2 } from 'lucide-react'
 import { statusText } from '../../entries/components/common/StatusText.mockup'
-import { StorefrontPage } from './StorefrontPage'
+import { storefrontPage } from '../../entries/components/tools/StorefrontPage.mockup'
 import styles from './DesktopView.module.css'
 
 /**
@@ -38,7 +38,10 @@ export function DesktopView() {
             </div>
             <div className={styles.address}>localhost:3000/checkout</div>
             <div className={styles.page}>
-              <StorefrontPage compact />
+              <storefrontPage.Component
+                compact
+                moklyInstance="storefront-page"
+              />
             </div>
           </div>
           <MousePointer2 className={styles.pointer} size={18} />

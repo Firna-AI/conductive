@@ -1,7 +1,9 @@
 import type { Attachment } from '../../fixtures/attachments'
 import type { MentionEntry } from '../../fixtures/fileMentions'
 import { useChatWorkspaces, type ChatRow } from './chatWorkspaces'
-import { DraftFileChip, type ChipUpload } from './DraftFileChip'
+import type { ChipUpload } from './DraftFileChip'
+import { draftFileChip } from '../../entries/components/chat/DraftFileChip.mockup'
+import { instanceKey } from '../../instanceKey'
 import { draftParts } from '../../../../../src/app/draft-marks'
 import { entryName } from './entryPaths'
 import { FileChip } from './FileChip'
@@ -97,6 +99,9 @@ function uploadOf(file: Attachment): ChipUpload {
  * text: where a drop puts its files while they hover over the box, or
  * where the caret stands after a drop or a pick. A view has no pointer, so
  * `pointer` draws it over the icon of the first chip.
+ *
+ * The draft ID of an attached file names its chip for Mokly. A mention and
+ * a link can repeat in a draft, so their chips keep the plain parts.
  */
 export function DraftText(props: {
   text: string
@@ -128,8 +133,13 @@ export function DraftText(props: {
           case 'file':
             return (
               <span contentEditable={false} key={index}>
-                <DraftFileChip
-                  file={item.file}
+                <draftFileChip.Component
+                  file={{
+                    name: item.file.name,
+                    kind: item.file.kind,
+                    sizeBytes: item.file.sizeBytes,
+                  }}
+                  moklyInstance={`file-${instanceKey(item.file.id)}`}
                   removal={{ name: item.file.name, pointer }}
                   upload={uploadOf(item.file)}
                 />

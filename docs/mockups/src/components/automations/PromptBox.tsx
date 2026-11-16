@@ -3,7 +3,7 @@ import { Plug } from 'lucide-react'
 import { effortLabels } from '../../../../../src/shared/agents'
 import type { AgentChoice } from '../../fixtures/agents'
 import { noop } from '../../noop'
-import { ModelPicker } from '../chat/ModelPicker'
+import { modelPicker } from '../../entries/components/chat/ModelPicker.mockup'
 import { useControlSizes } from '../common/touch'
 import form from './form.module.css'
 import styles from './PromptBox.module.css'
@@ -53,7 +53,10 @@ export function PromptBox(props: {
             variant="seamless"
           />
           <div className={styles.bar}>
-            <ModelPicker choice={choice} />
+            <modelPicker.Component
+              choice={choice}
+              moklyInstance="prompt-model"
+            />
           </div>
         </div>
       )}

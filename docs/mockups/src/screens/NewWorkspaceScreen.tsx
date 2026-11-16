@@ -1,5 +1,5 @@
 import type { SchemaProps, Viewport } from '@mokly/mokly'
-import { ChatPane } from '../components/chat/ChatPane'
+import { chatPane } from '../entries/components/chat/ChatPane.mockup'
 import { menu } from '../entries/components/common/Menu.mockup'
 import { sheet as sheetPart } from '../entries/components/common/Sheet.mockup'
 import {
@@ -14,7 +14,7 @@ import { firstBuildStates } from '../fixtures/computer'
 import { memberViewer, you } from '../fixtures/members'
 import type { ShortcutChanges } from '../fixtures/shortcutChanges'
 import { paths } from '../paths'
-import { FirstBuildNotice } from './firstBuildNotice'
+import { firstBuildNotice } from '../entries/components/screens/firstBuildNotice.mockup'
 import { pageOrg, railOf, sidebarOf } from './newWorkspacePageParts'
 import {
   formNotices,
@@ -103,10 +103,11 @@ function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
     notices.splice(
       failed ? 1 : 0,
       0,
-      <FirstBuildNotice
+      <firstBuildNotice.Component
         admin={admin}
         build={state.firstBuild}
         key="first-build"
+        moklyInstance="first-build-notice"
       />,
     )
   }
@@ -124,8 +125,8 @@ function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
     state.files === 'ready' ? paths.attachmentsQueued : paths.creating
   const fastMenu = state.modelMenu === 'open-fast'
   return (
-    <ChatPane
-      composer={{
+    <chatPane.Component
+      composer={plainData({
         attachments: draft.files,
         attachTo:
           state.files === 'none' && !failed && !linked && state.org !== 'new'
@@ -144,9 +145,13 @@ function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
           failed || linked || waiting || state.org === 'new' || !hasWords(text)
             ? undefined
             : created,
-      }}
-      empty={
-        suspended ? undefined : (
+      })}
+      items={[]}
+      moklyInstance="chat"
+      viewer={admin ? you : memberViewer}
+      viewport={props.viewport}
+      {...defined({
+        empty: suspended ? undefined : (
           <newWorkspaceStart.Component
             admin={admin}
             chosen={state.repositories !== 'none'}
@@ -159,17 +164,12 @@ function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
                   : undefined,
             })}
           />
-        )
-      }
-      items={[]}
-      notice={suspended ? undefined : notices}
-      problem={
-        suspended
+        ),
+        notice: suspended ? undefined : notices,
+        problem: suspended
           ? { problem: 'refused', reason: orgSuspendedReason }
-          : undefined
-      }
-      viewer={admin ? you : memberViewer}
-      viewport={props.viewport}
+          : undefined,
+      })}
     />
   )
 }

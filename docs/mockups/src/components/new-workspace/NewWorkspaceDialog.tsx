@@ -2,8 +2,9 @@ import type { ReactNode } from 'react'
 import { ChevronDown, CornerDownLeft } from 'lucide-react'
 import type { AgentChoice } from '../../fixtures/agents'
 import type { Attachment } from '../../fixtures/attachments'
-import { MessageField } from '../chat/MessageField'
-import { ModelPicker } from '../chat/ModelPicker'
+import { messageField } from '../../entries/components/chat/MessageField.mockup'
+import { modelPicker } from '../../entries/components/chat/ModelPicker.mockup'
+import { defined } from '../../defined'
 import {
   actionButton,
   iconButton,
@@ -194,20 +195,24 @@ export function NewWorkspaceDialog(props: NewWorkspaceDialogProps) {
           />
         </div>
         <div className={styles.body}>
-          <MessageField
-            caret={props.caret}
+          <messageField.Component
             files={props.attachments}
             lines={7}
             maxLines={14}
+            moklyInstance="message-field"
             placeholder={props.placeholder}
             text={props.text}
+            {...defined({ caret: props.caret })}
           />
         </div>
         {props.notices === undefined ? null : (
           <div className={styles.notices}>{props.notices}</div>
         )}
         <div className={styles.footer}>
-          <ModelPicker choice={props.choice} />
+          <modelPicker.Component
+            choice={props.choice}
+            moklyInstance="model-picker"
+          />
           <span className={styles.spacer} />
           <iconButton.Component
             icon="paperclip"

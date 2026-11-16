@@ -125,7 +125,10 @@ function ChatLink(props: { part: WebAddressLink; answer: boolean }) {
 /**
  * One part of the text of a message: text, code, a chip, or a link. While
  * its message `waits` for the cloud computer, the chip of an attached file
- * opens nothing, because its copy does not exist yet.
+ * opens nothing, because its copy does not exist yet. The parts of a text
+ * have no key that stays the same, and two parts can hold the same path or
+ * address, so a part keeps the plain chip or link: the name of a Mokly
+ * instance must be unique and must stay when the parts move.
  */
 function Part(props: { part: TextPart; answer: boolean; waits?: boolean }) {
   const { part } = props
