@@ -169,7 +169,7 @@ the change that keeps a turn open for background work.
 - A Codex turn does not wait, because Codex gives its agent no notification
   when background work ends.
 - Reason: the tool text of Claude promises that notification. The wait
-  keeps the promise up to the limit, also in a routine run.
+  keeps the promise up to the limit, also in an automation run.
 - A rule that the agent waits in the foreground for each result was
   rejected, because the tool text still promises the notification.
 - Background work turned off was rejected, because agents then lose it also

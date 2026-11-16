@@ -74,8 +74,8 @@ export const termsDocument: LegalDocument = {
             For an own endpoint login, model use bills where the endpoint's
             owner runs it. You are responsible for the endpoint that you
             connect and for following its terms.
-            The runs of a routine start their sessions on the login of the
-            member who owns the routine.
+            The runs of an automation start their sessions on the login of the
+            member who owns the automation.
             ${productName} keeps agent logins outside cloud computers.
             Each turn gets a temporary credential for model requests.
             The agents send their model requests and receive their answers
@@ -162,11 +162,11 @@ export const termsDocument: LegalDocument = {
           notice.`,
         paragraph`A suspension of an account ends its sign-in. It stops the
           cloud computers of the workspaces that the account owns, closes
-          their previews, and blocks new starts. Its routines start no
+          their previews, and blocks new starts. Its automations start no
           runs.`,
         paragraph`A suspension of an org stops each cloud computer of the org,
           closes its previews and terminals, and blocks each start, build,
-          and routine run. Its members keep their accounts and their other
+          and automation run. Its members keep their accounts and their other
           orgs. They can still open the org and read its chat history.
           Nothing in the org can change, except that a member can leave it.
           An admin can leave only while another admin whose account is not

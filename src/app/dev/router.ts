@@ -12,7 +12,7 @@ export const ID = {
   section: ':section',
   repository: ':repository',
   build: ':build',
-  routine: ':routine',
+  automation: ':automation',
   user: ':user',
   invite: ':invite',
   upload: ':upload',

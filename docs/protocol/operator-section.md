@@ -118,7 +118,7 @@ names a dated record, as
   or sends again from the app (the user's decision of 14 November 2026).
   Reason: the operator sees which accounts still do work.
 - Sign-in, reads, and the other actions of the app do not count. An
-  action that an agent tool or a routine takes for the person does not
+  action that an agent tool or an automation takes for the person does not
   count either, because the person did not act.
 - The column gives the time of day for a time of today, and else the day,
   as Joined does. A user with no recorded action shows Unknown.

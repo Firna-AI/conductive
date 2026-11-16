@@ -59,8 +59,8 @@ import { failCodexAccessToken } from './codex-auth/failure'
 import { waitForCodexRotation } from './codex-auth/rotation'
 import { cleanupCodexDevices } from './codex-auth/device-store'
 import { warnWorker } from './warnings'
-import { routineRunRuntime } from './routines/run-runtime'
-import { scanRoutineSchedules } from './routines/schedule-scan'
+import { automationRunRuntime } from './automations/run-runtime'
+import { scanAutomationSchedules } from './automations/schedule-scan'
 
 export function createApp(overrides: Partial<AppDependencies> = {}) {
   const dependencies: AppDependencies = {
@@ -261,7 +261,7 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
     fetch: requestBodyEntry(application.fetch),
     async scheduled(event: ScheduledController, env: AppEnv): Promise<void> {
       if (event.cron === '* * * * *') {
-        await scanRoutineSchedules(routineRunRuntime(env, dependencies))
+        await scanAutomationSchedules(automationRunRuntime(env, dependencies))
         return
       }
       if (event.cron !== '*/15 * * * *') return

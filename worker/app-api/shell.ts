@@ -8,7 +8,7 @@ import type { AppDependencies, AppEnv } from '../env'
 import { readWorkspace, workspaceView } from '../lifecycle/workspace-data'
 import { listMembers } from '../members/membership'
 import type { RequestContext } from '../security/gate'
-import { workspaceRoutine } from '../routines/workspace-routine-data'
+import { workspaceAutomation } from '../automations/workspace-automation-data'
 import {
   saveWorkspaceReadMark,
   shellRepositories,
@@ -73,7 +73,7 @@ export async function shellRoute(
   if (path === viewPath && request.method === 'GET')
     return Response.json({
       view: await savedWorkspaceView(env.DB, workspaceId, userId),
-      routine: await workspaceRoutine(env.DB, orgId, workspaceId),
+      automation: await workspaceAutomation(env.DB, orgId, workspaceId),
       baseBranch: workspace.baseBranch,
     })
   if (path === viewPath && request.method === 'PUT') {
@@ -88,7 +88,7 @@ export async function shellRoute(
     })
     return Response.json({
       view,
-      routine: await workspaceRoutine(env.DB, orgId, workspaceId),
+      automation: await workspaceAutomation(env.DB, orgId, workspaceId),
       baseBranch: workspace.baseBranch,
     })
   }

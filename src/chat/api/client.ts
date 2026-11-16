@@ -96,7 +96,7 @@ export function createChatApi(client: ApiClient, target: WorkspaceTarget) {
         chatHistoryPath(orgId, workspaceId, sessionId, before, through),
         readNewestStoredEvents,
       ),
-    /** The saved view, with the routine of a run workspace. */
+    /** The saved view, with the automation of a run workspace. */
     view: () =>
       client.get(workspaceViewPath(orgId, workspaceId), readViewReply),
     saveView: (view: UpdateWorkspaceViewRequest) =>

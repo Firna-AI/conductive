@@ -18,7 +18,7 @@ pull request bar, and the owner picker. A host can give its own parts, as
 - [The development fake](dev-fake.md) gives the query options of the dev
   wiring in `dev/`, such as `?operator=1`. It also covers its fake routes:
   the uploads and their copies, Create org, feedback, the operator
-  section, the waitlist, the routines, and the workspace numbers.
+  section, the waitlist, the automations, and the workspace numbers.
 - The workspace screen shows the real chat over the dev fake. The fake
   sends no chat event, so a sent message stays pending, and a new session
   adds no tab. It answers each chat write with a recorded reply and
@@ -286,7 +286,7 @@ development fakes. `dev/attachment-test-kit.ts` gives them a stub
 
 [Key code](key-code.md) names the files, the types, and the functions to
 open first. It covers the dev fake, the API client, the clipboard, the
-models, the waitlist and its codes, the routines, and the workspace list.
+models, the waitlist and its codes, the automations, and the workspace list.
 It also covers the event streams, the drag, and the operator section.
 [Key code: drafts and attached files](key-code-drafts.md) covers the draft
 text, the attached files, and their uploads, which the chat and New

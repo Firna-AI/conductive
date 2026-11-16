@@ -3,15 +3,17 @@ import type { RepairKind } from './lifecycle/repair-data'
 import type { WorkspaceStartJob } from './lifecycle/start-types'
 import type { WorkspaceArchiveState } from './lifecycle/archive-types'
 import type { ErrorSummary, WarningCode, WarningId } from './warning-values'
+import type { GatewayCheckErrorKind } from './model-gateway/check-error'
+import type { GatewayRefusal } from './model-gateway/errors'
 
 export const SIMPLE_WARNINGS = {
   workspace_alarm_failed:
     'Workspace alarm work failed. Its durable deadline will retry.',
-  routine_schedule_failed:
-    'A routine schedule could not run. The next scan will try again.',
-  routine_queued_start_failed:
-    'A queued routine run could not start. The next scan will try again.',
-  routine_background_start_failed:
+  automation_schedule_failed:
+    'An automation schedule could not run. The next scan will try again.',
+  automation_queued_start_failed:
+    'A queued automation run could not start. The next scan will try again.',
+  automation_background_start_failed:
     'A pull request run could not start in the background.',
   marketing_site_unavailable: 'The built marketing site is not available.',
   turn_speed_invalid:
@@ -48,6 +50,16 @@ export const SIMPLE_WARNINGS = {
 
 /** Each kind permits only its fixed text and the safe values that it needs. */
 export type WorkerWarning =
+  | {
+      kind: 'model_gateway_check_failed' | 'model_gateway_check_retry'
+      workspaceId: WarningId
+      errorKind: GatewayCheckErrorKind
+    }
+  | {
+      kind: 'model_gateway_answer_ended'
+      workspaceId: WarningId
+      code: GatewayRefusal | GatewayCheckErrorKind | 'lease_expired'
+    }
   | {
       kind: 'workspace_archive_failed'
       workspaceId: WarningId

@@ -56,8 +56,8 @@ record, as [Decision numbers](../architecture.md#decision-numbers) says.
   routes each event to the workspace whose current branch it names.
 - A push to the default branch of a chosen repository can also start a
   refresh of the org image.
-- A pull request event can also start the runs of routines, as
-  [Routine runs](#routine-runs) says.
+- A pull request event can also start the runs of automations, as
+  [Automation runs](#automation-runs) says.
 
 ## Merge
 
@@ -83,7 +83,7 @@ record, as [Decision numbers](../architecture.md#decision-numbers) says.
 4. The Durable Object pushes the new state and the note of Continue to
    every open tab. Each later message carries the new branch to the agent.
 
-## Routine runs
+## Automation runs
 
 1. A trigger fires: the minute Cron Trigger finds a due schedule, a pull
    request webhook matches a trigger, or the owner uses Run now.
@@ -96,7 +96,7 @@ record, as [Decision numbers](../architecture.md#decision-numbers) says.
 4. The Durable Object of the workspace reports how the first turn ended,
    so that a failed first turn shows as a failed run.
 
-[Routines](../protocol/routines.md) and its linked pages state the rules.
+[Automations](../protocol/automations.md) and its linked pages state the rules.
 
 ## Stops
 

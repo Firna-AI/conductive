@@ -11,7 +11,8 @@ first.
   queued browser requests.
 - `workspace-binding.ts`: `ChatWorkspaceBinding`, which binds chat to one workspace and checks the object identity.
 - [../model-gateway/workspace.ts](../model-gateway/workspace.ts): `WorkspaceTurnTokens`, available through `WorkspaceChat.turnTokens`.
-  It derives a running turn's token and checks the starter's current login in the chat queue.
+  It derives a running turn's token and checks the starter's current login.
+  A check with no Codex claim reads outside the chat queue first. Every refusal and every write comes from a check in the queue.
   Runner delivery gets the token of each `turn` command from `forRunningTurn`.
 - `dependencies.ts`: the default seams of `WorkspaceChat`, which a feature
   owner can replace. The login resolver always wraps an override.
@@ -91,8 +92,8 @@ first.
   browser: up to 2,048 stored events or 4 MiB of session events.
 - `history-newest-pages.ts`: the reverse storage loop, its byte and scan
   limits, and the exclusive cursor of the next earlier page.
-- `routine-run.ts`: reports a routine's stored first-turn result after a chat transaction commits.
-- `workspace-store.ts`: creates the chat store with lifecycle turn-end reports and routine outcome recovery after each change.
+- `automation-run.ts`: reports an automation's stored first-turn result after a chat transaction commits.
+- `workspace-store.ts`: creates the chat store with lifecycle turn-end reports and automation outcome recovery after each change.
 - `runner-channel.ts`, `runner-receipt.ts`, and `runner-refusal.ts`: the
   runner connection, the stream cursors, the file commands, and the receipt
   or refusal marker of each runner event. An accepted connection has the

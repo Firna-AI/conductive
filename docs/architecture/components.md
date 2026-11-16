@@ -16,7 +16,7 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
 
 - A React app, built with Vite, that uses the `@firna/ui` components.
 - It lives on `app.conductive.build`, behind the GitHub sign-in.
-- It shows the orgs, the workspaces, the routines, the chat, the files, the tools, and
+- It shows the orgs, the workspaces, the automations, the chat, the files, the tools, and
   the org settings. It follows the phone and the desktop layouts of the
   [mockups](../mockups/README.md) (decision 15).
 - For an operator, it also shows the operator section at `/operator`. The
@@ -70,7 +70,7 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
 
 - Two Cron Triggers run the timed work. One runs every 15 minutes for
   deleted orgs, lifecycle repairs, and pending approval emails. One runs
-  every minute for due routine runs and runs that stayed queued.
+  every minute for due automation runs and runs that stayed queued.
 
 ## ChatGPT egress Worker
 
@@ -88,7 +88,7 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
 ## D1
 
 - D1 holds the records of the app: users, orgs, members, sections,
-  repositories, workspaces, routines and their runs, settings, the active preview hostnames, and the
+  repositories, workspaces, automations and their runs, settings, the active preview hostnames, and the
   records of attached files. D1 also holds app access, codes and their uses,
   the sign-up pause, the waitlist switch, and the state of approval emails.
 - The record of each workspace holds a copy of its

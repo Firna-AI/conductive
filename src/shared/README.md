@@ -43,9 +43,9 @@ Its `classify` change carries only a name and a mark, so it keeps the value.
 The org list uses each person's saved order. A new membership goes at the end.
 [Org rail order](../../docs/protocol/org-rail-order.md) states the requirements.
 Its `ApiErrorBody` carries the error code and message.
-The optional `error.details` identifies an unknown routine author login.
+The optional `error.details` identifies an unknown automation author login.
 It carries `login`, `triggerIndex`, and `list`.
-`triggerIndex` is zero-based in the routine's complete trigger list.
+`triggerIndex` is zero-based in the automation's complete trigger list.
 `list` uses the author-filter request key, `is` or `isNot`.
 Errors without details keep the code and message only.
 `EmptyRequest` means an empty JSON object, including DELETE requests.
@@ -286,5 +286,5 @@ the session addresses, the Markdown transcripts, and the shared words and
 parts of a transcript. It also covers the mentions, the attachment paths,
 and the session titles. Then it gives the contracts of the other areas,
 such as ports, orgs, members, the waitlist, workspaces, GitHub, feedback,
-and routines. It ends with links to the browser fakes, the runner fakes,
+and automations. It ends with links to the browser fakes, the runner fakes,
 and the migrations.

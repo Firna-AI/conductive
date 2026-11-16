@@ -71,7 +71,7 @@ agent login forms, and model lists in the web app.
 - When Refresh moves between the warning and the line of the models, after
   a read that failed or worked, it keeps the keyboard focus.
 - The model pickers of the person follow these lists: the default model of
-  Preferences, New workspace, the routine editor, and the composer of a
+  Preferences, New workspace, the automation editor, and the composer of a
   message on the person's own login. Each picker keeps the model that it
   shows. `offeredModels` in `endpoint-models.ts` holds the rule, and
   `useOfferedModels` in `../shell/context.ts` gives it to the shell.
