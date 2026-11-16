@@ -44,7 +44,7 @@ export interface ShownTerminal {
  * terminal that is not in the list. The tool then saves nothing and moves
  * no address, so the answer can still change both.
  */
-export function unlistedAddressTerminal(
+function unlistedAddressTerminal(
   terminals: readonly TerminalEntry[],
 ): TerminalEntry {
   return terminals[0]

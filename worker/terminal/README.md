@@ -446,7 +446,7 @@ Terminal status reads remain available.
 - [The shared connection reader](../security/connection-access.ts) reads each session, membership, and sandbox identity in one batch.
 - [service.ts](service.ts) exports `terminalPackagesCommand`, which installs the apt packages without replacing release files. It also exports the setup command `terminalStartCommand`, the password and support read `startWorkspaceTerminal`, and the marker writer `markTerminalRestoreEnded`.
 - [close.ts](close.ts) exports `closeWorkspaceTerminal`, which ends one terminal's session.
-- [The shared terminal contract](../../src/shared/terminal.ts) owns `TERMINAL_PORT`, `FIRST_TERMINAL_ID`, `TERMINAL_ID_PATTERN`, and `isAdditionalTerminalId`.
+- [The shared terminal contract](../../src/shared/terminal.ts) owns `TERMINAL_PORT`, `FIRST_TERMINAL_ID`, `TERMINAL_LIMIT`, `TERMINAL_ID_PATTERN`, and `isTerminalId`.
 - [scripts.ts](scripts.ts) builds the password program, attach program, launcher, and shell server with `credentialScript`, `attachScript`, `launcherScript`, and `sessionServerScript`. It also owns the terminal paths and attach program name, and builds the prompt hook with `terminalPromptCommand`.
 - [bridge/main.ts](bridge/main.ts) is the terminal bridge, and [bridge-files.ts](bridge-files.ts) lists its files for the system release packager.
 - [The shared bridge messages](../../src/shared/terminal-bridge.ts) give the private messages between the bridge and the screen, and the limits.
