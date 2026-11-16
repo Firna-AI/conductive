@@ -113,7 +113,8 @@ Contract owners:
 
 ### 521. Removed workspaces on the Stats tab of the account
 
-Open. Found on 16 November 2026, in the merge of `origin/main` at
+Decided on 16 November 2026, by Cal: option B with E, the recommendation.
+Found on 16 November 2026, in the merge of `origin/main` at
 `83585f007`. The options check added options D, E, and F, and changed the
 recommendation from B to B with E
 (`.context/archived-workspace-removal/options-check-521.md`).
@@ -197,7 +198,7 @@ recommendation from B to B with E
 
 ### 522. Switching to an org reopens a removed workspace
 
-- **Status:** open, asked on 16 November 2026.
+- **Decided:** 16 November 2026, by Cal. Option A, the recommendation.
 - **Background:** `main` (PR #353) remembers the last workspace page that
   a person opened in each org. The org tile, Switch to org, and the
   palette open it again. The memory keeps archived workspaces too
@@ -501,7 +502,7 @@ Depends on: 1, 2, 3, 4
 - [ ] Copy the justifications of the merge of `origin/main` from
       `.context/archived-workspace-removal/merge-resolutions.md` into the
       pull request description, as the `git-merge` skill says.
-- [ ] Apply the answer of decision 522 to the org switch and to
+- [x] Apply the answer of decision 522 to the org switch and to
       `docs/protocol/workspace-life.md` and `docs/protocol/org-rail-order.md`.
 - [ ] Apply the answer of decision 521 to the Stats tab: its doc, its
       Worker route, its reader, its mockup and the mockup note, its dev

@@ -223,8 +223,16 @@ keeps them after the merge.
 - Only a direct link opens a removed workspace (decision 519). A workspace
   link, its chip in a chat, a session link, and the run row of an
   automation still open its read-only chat.
+- The last workspace of an org counts as a direct link (decision 522). So
+  the tile of the org, Switch to org, and the Switch to rows of the
+  palette still open a removed workspace that the person opened last, as
+  [Opening an org](org-rail-order.md#opening-an-org) says.
 - Reason: a link names the workspace by its ID, and the chat of the
-  workspace stays.
+  workspace stays. The last workspace names it in the same way, and its
+  page says Removed.
+- Opening the list of the org in place of a removed last workspace was
+  rejected (decision 522), and so was forgetting the last workspace at
+  Archive. Both change the memory of the org for little gain.
 - While a removed workspace is open, no row of the list is selected, and
   the Archived group does not open for it.
 - The agent tools read a removed workspace by its ID. Their workspace list
