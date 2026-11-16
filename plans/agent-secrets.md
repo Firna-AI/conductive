@@ -925,15 +925,15 @@ Depends on: 3
 
 Depends on: 4
 
-- [ ] Add `conductive secrets list` and `conductive secrets run` to the
+- [x] Add `conductive secrets list` and `conductive secrets run` to the
       CLI, and `list_secrets` and `run_with_secrets` to the MCP server.
       Since the merge of `main` on 16 November 2026, both tools are Rust
       code in `crates/cnd-tools`, so this work goes there, with the Rust
       checks of `AGENTS.md`.
-- [ ] Hide each exact copy of a value in the output of the command.
-- [ ] Write the tool descriptions. Update `tools/README.md` and
+- [x] Hide each exact copy of a value in the output of the command.
+- [x] Write the tool descriptions. Update `tools/README.md` and
       `tools/calls.md`.
-- [ ] Add tests beside the code.
+- [x] Add tests beside the code.
 
 ## Milestone 6: Secrets tab and Capabilities
 

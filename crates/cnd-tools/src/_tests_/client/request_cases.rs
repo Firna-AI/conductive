@@ -43,6 +43,13 @@ fn write(name: Name, fields: Value, path: &'static [&'static str], body: Value) 
 
 pub(super) fn cases() -> Result<Vec<Case>> {
     Ok(vec![
+        read(Name::ListSecrets, json!({}), &["secrets"], json!({}))?,
+        write(
+            Name::RunWithSecrets,
+            json!({"names":["TOKEN"],"command":"deploy","reason":"Use deployment credentials"}),
+            &["secrets", "run"],
+            json!({"names":["TOKEN"],"command":"deploy","reason":"Use deployment credentials"}),
+        )?,
         write(
             Name::RunMacCommand,
             json!({"command":"pwd","folder":"/tmp","reason":"Check folder"}),

@@ -24,9 +24,12 @@ sorts below every release.
 
 The commands are `runner`, `relay`, `mcp`, `git-credential`, `update`,
 `workspaces`, `sessions`, `messages`, `sections`, `repositories`, `models`,
-`previews`, and `mac`. The workspace commands and `mcp` run the 24 calls in
+`previews`, `mac`, and `secrets`. The workspace commands and `mcp` run the 26 calls in
 [cnd-tools](../cnd-tools/README.md). They preserve the Worker replies and
 refusal codes. `relay` serves previews through [cnd-relay](../cnd-relay/README.md).
+`secrets list` returns metadata only. `secrets run --secret NAME -- <command>`
+puts approved values only in that command's environment. It keeps stdin,
+filters exact copies from stdout and stderr, and returns the child's exit status.
 `git-credential` supplies fresh GitHub tokens through
 [cnd-credential](../cnd-credential/README.md). The installed
 `conductive-git-credential` executable name selects that subcommand.
@@ -121,6 +124,7 @@ The musl build needs a C compiler for musl. On Ubuntu, install the
 - [environment.rs](src/environment.rs) reads saved shell settings for tools and credentials.
 - [relay_start_tests.rs](tests/relay_start_tests.rs) executes the relay start script with a fake program.
 - [cli_tests.rs](src/_tests_/cli_tests.rs) checks relay argument parsing.
+- [secret_command_tests.rs](tests/secret_command_tests.rs) checks the native secret routes, turn header, and filtered CLI streams.
 
 ### Related Docs
 

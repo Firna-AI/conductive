@@ -14,6 +14,8 @@ use cnd_runner_interface::tools::workspaces::{
 
 use crate::call::{Call, Name};
 use crate::error::{Error, ErrorResultExt, InputError, Result};
+use crate::process::CommandInput;
+use crate::secrets::input;
 
 use super::{lists, writes};
 
@@ -22,6 +24,12 @@ pub(crate) fn parse(name: Name, fields: &Map<String, Value>, request_id: &str) -
         || optional_text(fields, "workspaceId").map(|id| id.unwrap_or_else(|| "current".into()));
     let session = || text(fields, "sessionId");
     Ok(match name {
+        Name::ListSecrets => Call::ListSecrets,
+        Name::RunWithSecrets => {
+            let input = input::parse(fields)?;
+            let command = CommandInput::Capture(input.command.clone());
+            Call::RunWithSecrets(input, command)
+        }
         Name::RunMacCommand => Call::RunMacCommand(writes::mac(fields, request_id)?),
         Name::CreateWorkspace => Call::CreateWorkspace(writes::workspace(fields, request_id)?),
         Name::ListWorkspaces => Call::ListWorkspaces(lists::workspaces(fields)?),

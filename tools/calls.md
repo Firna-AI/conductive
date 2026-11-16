@@ -1,7 +1,7 @@
 # Workspace tool calls
 
 This page belongs to the [workspace CLI and MCP server](README.md). It
-gives the 24 calls of both tools, their options, and their replies.
+gives the 26 calls of both tools, their options, and their replies.
 [Agent tools](../docs/protocol/agent-tools.md#workspace-tools) and the
 pages that it links state the requirements.
 
@@ -37,6 +37,8 @@ with `conductive`.
 | `open_preview` | `previews open --port NUMBER [--workspace ID]` | Write |
 | `close_preview` | `previews close --preview ID [--workspace ID]` | Write |
 | `run_mac_command` | `mac run --command TEXT --folder PATH --reason TEXT [--timeout-seconds SECONDS] [--longer-timeout-reason TEXT] [--request-id ID]` | Mac command |
+| `list_secrets` | `secrets list` | Read |
+| `run_with_secrets` | `secrets run --secret NAME [--secret NAME…] [--reason TEXT] -- <command>` | Write |
 
 The MCP fields take the values of the CLI options, with these names:
 
@@ -53,9 +55,44 @@ The MCP fields take the values of the CLI options, with these names:
   `firstSessionTitle`, `requestId`, `startLine`, and `timeoutSeconds`.
 - `--message-file` has no MCP field, as [Message files](#message-files)
   says.
+- Repeated `--secret NAME` options give the `names` array.
+  The command after `--` gives `command`. `--reason` gives `reason`.
 
 [Mac commands](README.md#mac-commands) gives the rules of
 `run_mac_command`.
+[Secrets](#secrets) gives the two secret calls.
+
+## Secrets
+
+`secrets list` calls `GET /v1/tools/secrets`. Its reply is
+`{ secrets: [{ name, description, available }] }`. It never holds values.
+With a running turn, availability includes the calling session's approvals.
+Without one, it includes only org and workspace grants.
+
+`secrets run` calls `POST /v1/tools/secrets/run` with the turn header and
+`{ names, command, reason? }`. The CLI preserves the arguments after `--`.
+It sends a shell-quoted description of those arguments as `command`.
+MCP takes `names`, `command`, and optional `reason` directly.
+Names need not exist yet. A missing name asks a member for a temporary value.
+
+Only an allowed reply starts a command. Returned values go only into that
+child's environment under their secret names. Each stream replaces exact
+copies with `[redacted]`, also across output reads.
+Keep each value out of output, files, and answers.
+
+The CLI keeps stdin and streams the filtered output. Its exit status is
+the child's status. A signal gives 128 plus the signal number.
+MCP runs `command` with `/bin/sh -c` and closed stdin. Its reply is
+`{ status: "completed", stdout, stderr, exitCode }` after filtering.
+The MCP result sets `isError` when `exitCode` is not 0.
+
+The Worker can return `pending`, `denied`, or `not-answered`, with
+`requestId` and `message`. No command then starts. The CLI prints the
+message on stderr and exits 1. MCP returns those fields with `isError: true`.
+The request waits up to 90 seconds. After a late-answer notice, call run again.
+HTTP refusals keep their code and message. Malformed replies give safe text.
+The tools send no command output, exit status, or duration to the Worker.
+[Secret requests](../docs/protocol/secret-requests.md) states the requirements.
 
 ## Reach, turns, and rights
 
