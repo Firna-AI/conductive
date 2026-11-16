@@ -30,7 +30,11 @@ export interface SectionActions {
    */
   moveTo: (section: Section, index: number) => void
   newWorkspace: (section: Section) => void
-  newSection: () => void
+  /**
+   * Opens New section. The new section goes directly below `below`, or at
+   * the end of the list without it.
+   */
+  newSection: (below?: Section) => void
   remove: (section: Section) => void
 }
 
@@ -139,7 +143,7 @@ export function SectionHeader(props: {
       kind: 'item',
       label: 'New section',
       icon: FolderPlus,
-      onSelect: actions.newSection,
+      onSelect: () => actions.newSection(section),
     },
   ]
   if (!section.isDefault) {

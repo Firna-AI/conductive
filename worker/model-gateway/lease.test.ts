@@ -159,6 +159,7 @@ it('keeps an answer streaming through a slow and a failed turn check, and ends i
     expect(warn.mock.calls.map(([fields]) => fields.kind)).toEqual([
       'model_gateway_check_late',
       'model_gateway_check_failed',
+      'model_gateway_answer_ended',
     ])
   } finally {
     held.resolve({ ok: false, reason: 'turn_not_active' })

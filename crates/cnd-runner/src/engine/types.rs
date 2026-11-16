@@ -8,7 +8,7 @@ use cnd_runner_interface::chat_events::TurnSpeed;
 use cnd_runner_interface::runner_commands::{RunnerCommand, RunnerTurn};
 use cnd_runner_interface::sdk_helper::HelperOutput;
 use cnd_runner_interface::sdk_helper_options::ProviderInput;
-use tokio::sync::{mpsc, oneshot};
+use tokio::sync::oneshot;
 use tokio::task::JoinHandle;
 
 use crate::error::Result;
@@ -19,6 +19,7 @@ use crate::state::records::SavedSession;
 use super::background::Background;
 use super::control::Control;
 use super::dependencies::EngineDependencies;
+use super::mailbox::Mailbox;
 use super::output::TurnOutput;
 
 pub(super) enum Work {
@@ -53,7 +54,7 @@ pub(super) struct Session {
     pub(super) generation: u64,
     pub(super) controls: Arc<std::sync::Mutex<std::collections::BTreeMap<String, Control>>>,
     pub(super) ended: BTreeSet<String>,
-    pub(super) mailbox: mpsc::UnboundedSender<Work>,
+    pub(super) mailbox: Mailbox,
 }
 
 pub(super) fn identity(

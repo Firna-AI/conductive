@@ -9,8 +9,9 @@ provider, the org image, and the startup script. The terms are those of the
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
 says. A chat link decision number names a decision of the change that
 makes each web address of chat text a link, as
-[Chat links](chat-links.md) says. The
-[mockup catalogue](../mockups/catalogue.md) draws the tools at
+[Chat links](chat-links.md) says. A terminal links decision number names
+a decision of the change that makes the addresses in the terminal open.
+The [mockup catalogue](../mockups/catalogue.md) draws the tools at
 `app/files` and `app/tools`.
 
 ## Files and changes
@@ -25,6 +26,23 @@ makes each web address of chat text a link, as
   the temporary tab, as [Temporary tabs](temporary-tabs.md) says.
 - Markdown shows rendered, with a switch to its source. Code shows with line
   numbers and syntax colours.
+- A file tab can open at a line or a range of lines, such as from a file
+  chip of an answer with a line target, as
+  [Line targets](file-mentions.md#line-targets) says (answer chip
+  decision 2). The tab then shows the text of the file, also for a
+  Markdown file. It scrolls the first line to the middle of the view, and
+  marks each line of the range with a background colour.
+- The address of such a tab names the lines in its query, as
+  `?line=42` or `?line=42-50`. So a link opened in a new browser tab
+  shows the same lines. Each new address with lines scrolls again.
+- The lines win over the scroll place that the tab keeps. A later change
+  of the file does not scroll the tab again, so the reader keeps the
+  place.
+- The saved view of the workspace keeps the tab without the lines.
+  Reason: the view follows the member in each browser tab, and another
+  tab must not jump.
+- A range that runs past the end of the file stops at its last line. A
+  first line past the end shows the top of the file and marks nothing.
 - A link of the Markdown preview has the look and the title of a
   [link of chat text](chat-links.md) (chat link decision 1 D). A link to a
   page of the app opens that page in the app, in the same window, as in
@@ -218,7 +236,8 @@ makes each web address of chat text a link, as
 - The wheel scrolls the output history. While a program in the shell uses
   the mouse, the wheel, the right button, and the middle button reach the
   program. A held Cmd on a Mac, or Ctrl on Windows and Linux, gives a
-  click or a drag to the program.
+  click or a drag to the program, except a click on a link, as the
+  rules of links below say.
 - Reason: the user expects to select and copy as in the rest of the page.
   A copy through the clipboard writes of the program was rejected, because
   any process in the sandbox could then write the user's clipboard.
@@ -241,6 +260,40 @@ makes each web address of chat text a link, as
 - A workspace with older terminal software shows only its visible screen
   in the history until an automatic software update applies, as
   [Software updates](sandbox-software.md#updates) says.
+- Each `http` and `https` address in the output is a link. A held Cmd on
+  a Mac, or Ctrl on Windows and Linux, and a click open it (terminal links
+  decision 2 A). Such a click does not reach a program that uses the
+  mouse.
+- Reason: a plain click starts a selection, so a plain click that opens a
+  link was rejected. A rule that gives the click to a program that uses
+  the mouse was rejected, because the same click would then act in two
+  ways.
+- A local address opens the Preview tool at its port, as
+  [Port previews](port-previews.md) says. Its host is `localhost`,
+  `127.0.0.1`, `[::1]`, or `0.0.0.0`. Every other link opens in a new tab
+  of the browser, or in the default browser from the Mac app (terminal
+  links decision 1 B).
+- Reason: a local address in the terminal names the cloud computer, not
+  the user's computer. A new tab with the preview was rejected, because
+  the Preview tool keeps the user in the workspace.
+- A link under the mouse pointer shows an underline and a hint with the
+  key, such as "⌘-click to open".
+- A touch on a link opens it with no key, on each screen size. A mouse
+  always needs the key (terminal links decision 3 D).
+- Reason: a touch screen has no Cmd or Ctrl key. A rule by screen size
+  was rejected, because a narrow desktop window has a mouse, and a tablet
+  has the desktop layout. A menu, a long press, and Ctrl of the key row
+  then a tap were rejected, because each needs a second step or is hard
+  to find.
+- A program can print a link with a label, an OSC 8 link. The hint of
+  such a link also names the host of its real address, such as
+  "⌘-click to open reports.storefront.dev" (terminal links decision 4 B).
+- Reason: a label can hide where its link leads, and code in the sandbox
+  is untrusted. A dialog before each such link was rejected, because it
+  adds a step. A rule that such links open nothing was rejected, because
+  tools such as `ls --hyperlink` lose their links.
+- An address with a user name or a password, and an address with another
+  scheme, open nothing and show no hint.
 - When the connection ends, the user can still select and copy the text
   that stays on the screen (decision 245).
 - Reason: the screen keeps its output so that the user can still use it,

@@ -18,6 +18,11 @@ export type UserRow = {
   name?: string
   initials: string
   joined: string
+  /**
+   * The time of the last new workspace or sent message: the time of day
+   * for today, or else the day. No value shows Unknown.
+   */
+  lastActive?: string
   orgs: number
   workspaces: number
   status: UserStatus
@@ -28,6 +33,7 @@ const dana: UserRow = {
   name: 'Dana Kim',
   initials: 'DK',
   joined: '21 Oct',
+  lastActive: '6 Nov',
   orgs: 2,
   workspaces: 14,
   status: 'suspended',
@@ -58,6 +64,7 @@ export const newestUsers: readonly UserRow[] = [
     name: 'Rhea Okafor',
     initials: 'RO',
     joined: '8 Nov',
+    lastActive: '14:32',
     orgs: 1,
     workspaces: 2,
     status: 'active',
@@ -67,6 +74,7 @@ export const newestUsers: readonly UserRow[] = [
     name: 'Sam Ortiz',
     initials: 'SO',
     joined: '7 Nov',
+    lastActive: '7 Nov',
     orgs: 1,
     workspaces: 3,
     status: 'active',
@@ -76,6 +84,7 @@ export const newestUsers: readonly UserRow[] = [
     login: 'vex-ops',
     initials: 'V',
     joined: '28 Oct',
+    lastActive: '2 Nov',
     orgs: 1,
     workspaces: 6,
     status: 'active',
@@ -86,6 +95,7 @@ export const newestUsers: readonly UserRow[] = [
     name: 'Mira Santos',
     initials: 'MS',
     joined: '3 Oct',
+    lastActive: '11:05',
     orgs: 2,
     workspaces: 23,
     status: 'active',
@@ -95,6 +105,7 @@ export const newestUsers: readonly UserRow[] = [
     name: 'Li Wei',
     initials: 'LW',
     joined: '30 Sep',
+    lastActive: '29 Oct',
     orgs: 1,
     workspaces: 31,
     status: 'active',
@@ -112,6 +123,7 @@ export const userSearches = {
         name: 'Danny Brooks',
         initials: 'DB',
         joined: '12 Sep',
+        lastActive: '1 Nov',
         orgs: 1,
         workspaces: 9,
         status: 'active',

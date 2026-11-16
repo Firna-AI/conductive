@@ -66,7 +66,7 @@ Its chip, such as **Pasted text.txt**, goes in place of the pasted text.
 Undo takes the chip off, and the pasted text does not come back.
 To keep the text in the message, paste it in smaller parts.
 
-Each file can be up to 100 MB.
+Each file can be up to 1 GB.
 Wait for uploads to finish before you send.
 If an upload fails, use **Try again** or remove its chip.
 Removing a chip takes its file off the draft.
@@ -75,7 +75,7 @@ Undo brings back the chip and its file.
 To attach a folder, drop it into the message box.
 Your browser zips the folder before the upload, so the folder becomes one `.zip` file chip.
 The zip holds every file and folder in it, also hidden files.
-The zip can be up to 100 MB, as each file can.
+The zip can be up to 1 GB, as each file can.
 If the browser cannot read the folder, use **Attach files** in the notice to pick its files.
 
 Each chip keeps its place in the sent message.
@@ -85,12 +85,21 @@ This can start a stopped cloud computer.
 Restore an archived workspace before opening its attached files.
 
 Attached files arrive in `.context/attachments/` in the workspace's repository folder.
+Conductive keeps each attached file until the workspace's cloud computer has it and its first start succeeds.
+It then deletes its own copy.
+The file stays in the cloud computer.
+Conductive deletes an unsent file 7 days after you upload it.
+
 Each file keeps the same path when you retry its message.
+A later message or **Try again** uses the file already in the cloud computer.
+If a file is missing or its size changed, the turn fails and names it.
+Attach that file again in a new message.
+
 With current cloud computer software, workspaces also get a `.context/` folder for agent notes, screenshots, and files for other sessions.
 Git ignores the folder's files unless your repository already tracks them.
 **All files** lists them, so you can open them there.
 **Changes** does not list them.
-An older workspace gets this folder and its file list with an automatic software update at a later start.
+An older workspace gets this folder and its file list with an [automatic software update](/docs/cloud-computer#apply-setup-changes) at a later start or when it is idle.
 
 - [Read files and pictures](/docs/files-and-changes#read-a-file)
 
@@ -205,9 +214,18 @@ The answer stays visible beside it.
 
 ## Read replies and tables
 
-Agent replies can contain headings, paragraphs, lists, code, and tables.
+Agent replies can contain headings, paragraphs, lists, code, tables, and file chips.
 A wide table scrolls sideways inside the message.
 The text around it keeps the width of the chat.
+
+Agents name the files of your repository as `@` and a path, such as `@src/app.ts`.
+Each one shows as a file chip.
+Code that holds only the path of a file of the workspace also shows as a file chip.
+Select a chip to open its file.
+A Markdown link or image to a file of the workspace shows as a link with its label.
+Select the link to open the file.
+A path can end with a line or a range of lines, such as `@src/app.ts:42` or `src/app.ts:42-50`.
+Its chip opens the file as text, with those lines in view and marked.
 To copy a code block, select **Copy code** in its top corner.
 With a mouse, the button shows when you point at the block.
 **Code copied** confirms the copy.

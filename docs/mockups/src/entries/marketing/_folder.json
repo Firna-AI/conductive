@@ -1,3 +1,11 @@
 {
-  "order": ["docs", "open-sign-up", "terms", "privacy", "not-found", "pictures"]
+  "order": [
+    "docs",
+    "open-sign-up",
+    "pricing",
+    "terms",
+    "privacy",
+    "not-found",
+    "pictures"
+  ]
 }

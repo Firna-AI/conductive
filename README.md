@@ -20,9 +20,9 @@ Today the repository holds:
 - the Mac app in `desktop/`, with signed packages and update support, as
   [Mac app](#mac-app) says
 
-A test deployment runs at `conductive.build`. Each push to `main` deploys
-it, as [Automatic deploys](docs/automatic-deploys.md) says. The project is
-not in production yet. [Deployment inputs](docs/deployment.md) lists what a
+The production deployment runs at `conductive.build`. Each push to `main`
+deploys it, as [Automatic deploys](docs/automatic-deploys.md) says. The
+project is in production. [Deployment inputs](docs/deployment.md) lists what a
 deployment needs.
 
 ## Features
@@ -30,8 +30,9 @@ deployment needs.
 Conductive has these features. The protocol docs state each one. A
 feature that is not complete yet says so.
 
-- Sign in with GitHub. The product is free, with no plans or billing, as
-  [Orgs and members](docs/protocol/orgs-and-members.md#orgs) says.
+- Sign in with GitHub. The product is free until billing starts.
+  [Pricing](docs/protocol/pricing.md) states the coming plans, which the
+  pricing page of the marketing site shows. Billing is not built yet.
 - A waitlist. A new account waits until an operator approves it, or an
   invite code, a referral code, or an org invitation lets the person in.
   An operator can turn the waitlist off. Each new person then gets in at
@@ -43,7 +44,7 @@ feature that is not complete yet says so.
 - Chat with agents powered by Claude and Codex. A workspace holds several
   sessions, and one picker sets the model and the effort.
 - Send a message during a turn, or stop the turn.
-- Attach files of up to 100 MB each to a message.
+- Attach files of up to 1 GB each to a message.
 - Each user connects a Claude subscription token, a ChatGPT plan through
   device code sign-in, an API key, or an own endpoint in Account or Get started.
 - Files and Changes, a terminal, and port previews. The live desktop is
@@ -57,7 +58,7 @@ feature that is not complete yet says so.
   script, with a startup script and env vars.
 - Agents can create workspaces and sessions. They can read chats and
   message sessions across the org.
-- Routines run a saved prompt on a schedule or on a pull request event,
+- Automations run a saved prompt on a schedule or on a pull request event,
   each time in a new workspace.
 - Each workspace has a number, such as `W-395`. A press on the number in
   the header copies the link of the workspace. A workspace link in chat

@@ -26,7 +26,7 @@ import {
   MOUNTED_TEST_TIMEOUT,
 } from '../../test-support/mount'
 import { listItems } from '../account/test-markup'
-import { bodiesOf } from '../routines/routine-test-kit'
+import { bodiesOf } from '../automations/automation-test-kit'
 import { Shell } from '../Shell'
 import { click, mountScreen, settle, typeText } from '../test-mount'
 import { textOf } from '../test-render'

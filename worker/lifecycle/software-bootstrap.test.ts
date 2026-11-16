@@ -37,6 +37,12 @@ it('installs verified release software and apt packages without the legacy insta
   expect(command).not.toContain('install-runtime.sh')
   expect(command).not.toContain('/etc/systemd/system/conductive-terminal')
   expect(command).not.toContain('systemctl restart')
+  expect(command).not.toContain('dpkg-query')
+  const checked = unquote(installImageSoftware(SOFTWARE, 'when-missing'))
+  expect(checked).toContain('dpkg-query -W')
+  expect(checked.indexOf('dpkg-query')).toBeLessThan(
+    checked.indexOf('apt-get update'),
+  )
 })
 
 it('bootstraps only a missing program in a detached root job and serializes activation with runner restart', () => {

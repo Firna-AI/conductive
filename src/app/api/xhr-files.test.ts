@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { attachmentUploadUrl } from '../../shared/messages'
+import { attachmentUploadPartPath } from '../../shared/messages'
 import { xhrFileTransport, type XhrRequest } from './xhr-files'
 
 /** A request that records what the transport does, and plays the browser. */
@@ -55,11 +55,12 @@ class FakeRequest implements XhrRequest {
   }
 }
 
-const file = new File(['png'], 'overlap.png', { type: 'image/png' })
-const path = attachmentUploadUrl(
+const part = new File(['png'], 'overlap.png', { type: 'image/png' }).slice(1)
+const path = attachmentUploadPartPath(
   'acme',
   { type: 'new-workspace', messageId: 'message-1' },
-  { name: 'overlap.png', mediaType: 'image/png' },
+  'upload-1',
+  2,
 )
 const origin = 'https://worker.conductive.test'
 
@@ -71,7 +72,7 @@ function upload(request: FakeRequest, signal = new AbortController().signal) {
   )
   const reply = transport({
     path,
-    file,
+    body: part,
     progress: (sentBytes) => progress.push(sentBytes),
     signal,
   })
@@ -79,15 +80,15 @@ function upload(request: FakeRequest, signal = new AbortController().signal) {
 }
 
 describe('xhrFileTransport', () => {
-  test('sends the raw file to the resolved address with the cookie, only the file content type, and the measured progress', async () => {
+  test('puts the raw part at the resolved address with the cookie, only the file content type, and the measured progress', async () => {
     const request = new FakeRequest()
     const { reply, progress } = upload(request)
+    request.measure(1)
     request.measure(2)
-    request.measure(3)
-    request.answer(201, JSON.stringify({ attachment: { id: 'upload-1' } }))
+    request.answer(200, JSON.stringify({ partNumber: 2, etag: 'etag-2' }))
     expect(await reply).toEqual({
-      status: 201,
-      body: { attachment: { id: 'upload-1' } },
+      status: 200,
+      body: { partNumber: 2, etag: 'etag-2' },
     })
     expect({
       opened: request.opened,
@@ -96,11 +97,11 @@ describe('xhrFileTransport', () => {
       body: request.body,
       progress,
     }).toEqual({
-      opened: ['POST', `${origin}${path}`],
+      opened: ['PUT', `${origin}${path}`],
       credentials: true,
       headers: [['Content-Type', 'application/octet-stream']],
-      body: file,
-      progress: [2, 3],
+      body: part,
+      progress: [1, 2],
     })
   })
 
@@ -124,6 +125,22 @@ describe('xhrFileTransport', () => {
     expect({ aborted: running.aborted, opened: late.opened }).toEqual({
       aborted: true,
       opened: null,
+    })
+  })
+
+  test('a part that ended no longer listens to the signal of its upload, which the next part keeps', async () => {
+    const job = new AbortController()
+    const first = new FakeRequest()
+    const answered = upload(first, job.signal)
+    first.answer(200, JSON.stringify({ partNumber: 1, etag: 'etag-1' }))
+    await answered.reply
+    const next = new FakeRequest()
+    const running = upload(next, job.signal)
+    job.abort()
+    await expect(running.reply).rejects.toMatchObject({ name: 'AbortError' })
+    expect({ first: first.aborted, next: next.aborted }).toEqual({
+      first: false,
+      next: true,
     })
   })
 })

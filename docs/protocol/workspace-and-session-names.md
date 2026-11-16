@@ -29,6 +29,9 @@ says.
   its row in the sidebar.
 - The app gives no automatic name in an archived workspace, or in a
   workspace of a deleted org.
+- A workspace name can also name the branch, as
+  [The branch and the name](create-a-workspace.md#the-branch-and-the-name)
+  says.
 - Reason: a missing name shows that no one named the workspace or the
   session yet. A text comparison with "New session" or the city name of
   the branch was rejected. A member can type the same text and then lose

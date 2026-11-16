@@ -13,7 +13,7 @@ import type {
   AccountSummary,
   MemberSummary,
   OrgSummary,
-  RunRoutine,
+  RunAutomation,
 } from '../api/read-responses'
 import { initialDevices, type DeviceSnapshot } from '../device/device-snapshot'
 import {
@@ -121,10 +121,16 @@ export interface ChatSnapshot {
   archiveTabs: readonly string[] | null
   view: WorkspaceView | null
   /**
-   * The routine whose run made the workspace, from the read of the view.
+   * The automation whose run made the workspace, from the read of the view.
    * Null for a workspace that a person created, and until the view reads.
    */
-  routine: RunRoutine | null
+  automation: RunAutomation | null
+  /**
+   * The folder of the workspace repository in the cloud computer, from the
+   * read of the view. The chat reads a path under it as a file of the tree.
+   * Null until the view reads, and when the reply gives no folder.
+   */
+  repositoryFolder: string | null
   activeSessionId: string | null
   sessionStates: Readonly<Record<string, SessionState>>
   overlay: Overlay
@@ -171,7 +177,8 @@ export const initialSnapshot: ChatSnapshot = {
   history: [],
   archiveTabs: null,
   view: null,
-  routine: null,
+  automation: null,
+  repositoryFolder: null,
   activeSessionId: null,
   sessionStates: {},
   overlay: { kind: 'none' },

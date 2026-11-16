@@ -50,7 +50,8 @@ function subscribe(listeners: Set<Listener>, listener: Listener): IDisposable {
  * report. All other data is the user's: keys, text, composed text, paste,
  * and mouse reports. A plain drag selects text also while a program has the
  * mouse. It reads the private messages of the terminal bridge, and keeps the
- * links that a program marks with OSC 8 as plain text. Create it after
+ * links that a program marks with OSC 8 as plain text unless links are
+ * enabled. Create it after
  * `open()`, and write to xterm.js only through it.
  */
 export class XtermScreen implements TerminalScreen {
@@ -68,7 +69,7 @@ export class XtermScreen implements TerminalScreen {
   /** During the focus handler of xterm.js, while focus reports are on. */
   private focusing = false
 
-  constructor(xterm: Terminal) {
+  constructor(xterm: Terminal, options?: { links: boolean }) {
     this.xterm = xterm
     // A hook that returns false lets the handler of xterm.js answer next.
     const mark = () => {
@@ -85,8 +86,8 @@ export class XtermScreen implements TerminalScreen {
         if (event) for (const listener of this.bridgeListeners) listener(event)
         return true
       }),
-      // The link of an OSC 8 stays plain text, as it was in the tmux screen.
-      parser.registerOscHandler(8, () => true),
+      // Without a link handler, OSC 8 stays plain text as in the tmux screen.
+      parser.registerOscHandler(8, () => !options?.links),
       xterm.onBinary((data) => {
         for (const listener of this.mouseListeners) listener(data, true)
       }),

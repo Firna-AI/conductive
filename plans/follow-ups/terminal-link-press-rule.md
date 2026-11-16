@@ -1,0 +1,31 @@
+# One press rule for terminal link clicks
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-13, from review findings 1 and 5 of branch `calummoore/delft-vl39` (terminal links).
+- **Location:** `src/terminal/xtermLinks.ts` (the `activate` handler and the `keepFromProgram` listener on `.xterm-screen`), `src/terminal/plainPresses.ts`.
+- **Reason:** The bug needs a modified right or middle click on a link, which normal use does not meet, and the structural fix reaches the existing press filter outside the files of that branch.
+
+- **Terms:**
+  - **Terminal link:** a web address in the terminal output. Cmd+click on a Mac, Ctrl+click elsewhere, or a touch opens it.
+  - **Mouse report:** the input that xterm.js sends to a program, such as tmux, that asks for mouse events.
+  - **Forced selection press:** a copy of a press with Option on a Mac or Shift elsewhere. xterm.js treats it as a selection and sends no mouse report. `keepPlainPresses` in `src/terminal/plainPresses.ts` sends such copies today.
+- **Background:**
+  - A link opens on mouse-up, from the link part of xterm.js. That part checks no button.
+  - `watchLinks` opens a link when the link key is held, and stops a press with the key on a link before xterm.js sends it to the program. Neither check reads `event.button`.
+  - The link code finds the xterm.js screen by its private class `.xterm-screen`, and relies on the order of the xterm.js listeners.
+- **Problem:**
+  - A Cmd or Ctrl press with the right or the middle button on a link opens the link, and the program gets no report of it (finding 1). In Firefox the stop also blocks the right-click handling of xterm.js. On Linux a Ctrl+middle-click can open the link and paste the selection.
+  - The open runs on mouse-up and the stop on mouse-down, so a key change between them splits the two rules.
+  - The private selector breaks the TypeScript rule on another package's markup (finding 5).
+- **Impact if no action:** A rare modified right or middle click on a link does the wrong thing, and an update of xterm.js can turn the links off with no type error.
+- **Root question:** How can Conductive open a link and keep its press from a program, with one rule per press and only the public xterm.js API and elements that Conductive owns?
+- **Options:**
+  - **A.** Require the left button in both checks, and add the regression cases. Effort: Small.
+  - **D.** Decide once per press: on mouse-down, record a left press with the key, or a touch, on a link, and stop only that press. On activation, open only the recorded press. Effort: Small.
+  - **C.** Route link presses through `keepPlainPresses`: one press rule for a plain left press and a left press with the key on a link. While a program has the mouse, send the link press again as a forced selection press, so xterm.js sends no report and its link part still opens it. Place the hint from the hover event and the box of `xterm.element`. Delete the `.xterm-screen` lookup. Cost: a link press clears the selection while a program has the mouse. Effort: Medium.
+- **Left out:** xterm.js decorations for the hint: `registerDecoration` returns nothing in the alt buffer, where mouse programs run. A new xterm.js interface: it needs an upstream change.
+- **Wider fix:** C. One press rule serves selection and links, and it removes the private selector.
+- **Previous examples:** Commit `fcc244406` split plain left presses from other presses in `src/terminal/plainPresses.ts`.
+- **Recommendation:** C, with the per-press record of D inside it. The finding checks preferred D for finding 1 and C for finding 5. C covers both.
+- **Action:** fix after merge, apply C, because the bug is rare and C reaches the existing press filter.

@@ -3,17 +3,24 @@ import {
   CONNECTION_CHECK_MS,
   type ConnectionScheduler,
 } from '../security/connection-access'
+import { WarningId } from '../warning-values'
+import { warnWorker } from '../warnings'
+import { GatewayCheckError, type GatewayCheckErrorKind } from './check-error'
 import { CodexBodyScanner } from './codex-body'
-import { GatewayRequestError, refuseCodexBody } from './errors'
+import {
+  GatewayRequestError,
+  refuseCodexBody,
+  type GatewayRefusal,
+} from './errors'
 import type { TurnTokenCheck } from './types'
 import { gatewayUpload } from './upload'
-import { warnWorker } from '../warnings'
 
 /** The first turn check must pass within this time. */
 const START_LEASE_MS = 30_000
 
 interface GatewayLifetimeOptions {
   agent: Agent
+  workspaceId: string
   check: () => Promise<TurnTokenCheck>
   now: () => number
   schedule: ConnectionScheduler
@@ -64,7 +71,8 @@ export class GatewayRequestLifetime {
       }
       return checked
     } catch (error) {
-      this.cancel(error)
+      if (error instanceof GatewayCheckError) this.endCheck(error, error.kind)
+      else this.cancel(error)
       throw error
     }
   }
@@ -128,11 +136,12 @@ export class GatewayRequestLifetime {
     if (!this.active) return
     this.cancelExpiry = this.options.schedule(
       async () => {
-        this.cancel(
+        this.endCheck(
           new GatewayRequestError(
             'model_gateway_unavailable',
             'The model turn could not be checked.',
           ),
+          'lease_expired',
         )
       },
       Math.max(0, this.deadline - this.options.now()),
@@ -145,22 +154,28 @@ export class GatewayRequestLifetime {
     let checked: TurnTokenCheck
     try {
       checked = await this.wait(this.options.check())
-    } catch {
+    } catch (error) {
       if (this.abort.signal.aborted) throw this.abort.signal.reason
-      throw new GatewayRequestError(
-        'model_gateway_unavailable',
-        'The model turn could not be checked.',
-      )
+      throw new GatewayCheckError(error)
     }
-    if (!checked.ok)
-      throw new GatewayRequestError(checked.reason, 'The model turn ended.')
+    if (!checked.ok) {
+      const error = new GatewayRequestError(
+        checked.reason,
+        'The model turn ended.',
+      )
+      this.endCheck(error, checked.reason)
+      throw error
+    }
     this.abort.signal.throwIfAborted()
     if (!this.active) return checked
-    if (this.deadline <= this.options.now())
-      throw new GatewayRequestError(
+    if (this.deadline <= this.options.now()) {
+      const error = new GatewayRequestError(
         'model_gateway_unavailable',
         'The model turn could not be checked.',
       )
+      this.endCheck(error, 'lease_expired')
+      throw error
+    }
     this.cancelExpiry?.()
     this.cancelExpiry = undefined
     this.schedulePoll(started)
@@ -169,13 +184,18 @@ export class GatewayRequestLifetime {
 
   /** Later checks end the request only on a refusal, never on a delay. */
   private async poll(): Promise<void> {
+    if (!this.active) return
     const started = this.options.now()
     let checked: TurnTokenCheck
     try {
       checked = await this.wait(this.options.check())
-    } catch {
+    } catch (error) {
       if (this.abort.signal.aborted || !this.active) return
-      warnWorker({ kind: 'model_gateway_check_failed' })
+      warnWorker({
+        kind: 'model_gateway_check_failed',
+        workspaceId: WarningId.checked(this.options.workspaceId),
+        errorKind: new GatewayCheckError(error).kind,
+      })
       this.schedulePoll(started)
       return
     }
@@ -183,8 +203,9 @@ export class GatewayRequestLifetime {
     if (this.options.now() - started > CONNECTION_CHECK_MS)
       warnWorker({ kind: 'model_gateway_check_late' })
     if (!checked.ok) {
-      this.cancel(
+      this.endCheck(
         new GatewayRequestError(checked.reason, 'The model turn ended.'),
+        checked.reason,
       )
       return
     }
@@ -197,5 +218,18 @@ export class GatewayRequestLifetime {
       () => this.poll(),
       Math.max(0, CONNECTION_CHECK_MS - (this.options.now() - started)),
     )
+  }
+
+  private endCheck(
+    error: unknown,
+    code: GatewayRefusal | GatewayCheckErrorKind | 'lease_expired',
+  ): void {
+    if (!this.active) return
+    warnWorker({
+      kind: 'model_gateway_answer_ended',
+      workspaceId: WarningId.checked(this.options.workspaceId),
+      code,
+    })
+    this.cancel(error)
   }
 }

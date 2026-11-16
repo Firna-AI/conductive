@@ -26,6 +26,7 @@ export function shapeOf(part: ChatPart) {
       return { chip: part.target.workspace.id, to: part.target.to }
     case 'attachment':
       return { attachment: part.attachment.id, path: part.path }
+    case 'file-link':
     case 'file':
       return { file: part.entry.path }
     case 'link':

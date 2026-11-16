@@ -6,6 +6,9 @@ merged. [After the merge](github-banner.md#after-the-merge) states where
 the pull request bar offers it. The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
+says. A branch-name decision number names a decision of the
+change that names a branch after its workspace, as
+[The branch and the name](create-a-workspace.md#the-branch-and-the-name)
 says.
 
 ## One task after another
@@ -83,12 +86,26 @@ says.
   member who pressed Continue (decision 226), as
   [Continue](github-tokens.md#continue) in GitHub tokens says.
 - The new branch starts from that default branch.
-- The name of the new branch follows the rule of a new workspace, as
-  [The branch and the name](create-a-workspace.md#the-branch-and-the-name)
-  says: the current GitHub login of the workspace owner, a city name, and
-  four random characters. This holds also when another member presses
+- The name of the new branch has the current GitHub login of the
+  workspace owner, the name part from the workspace name, the version, and
+  four new random characters, such as `calummoore/saved-carts-v2-7k2q`
+  (branch-name decision 3 B). This holds also when another member presses
   Continue.
-- Reason: decision 53 keeps the branches of each person together.
+- The name part follows the rule of a new workspace, as
+  [The branch and the name](create-a-workspace.md#the-branch-and-the-name)
+  says. A workspace without a name, or a name with no letter or digit,
+  uses a city name, such as `calummoore/lisbon-v2-7k2q`.
+- The version is `v` and the number of the task. The first task of a
+  workspace is task 1, and its branch has no version. Each Continue adds 1
+  to the number, so the first Continue gives `v2`.
+- Reason: decision 53 keeps the branches of each person together. The
+  workspace name and the version say which work the branch holds. A city
+  name was rejected, because it says nothing of the work. A branch name
+  from the next message was rejected, because it needs a rename of a
+  branch that exists.
+- Reason: the app counts the tasks. A version read from the earlier branch
+  name was rejected, because a name such as "Upgrade to Node v24" ends
+  with a version too.
 
 ## After Continue
 

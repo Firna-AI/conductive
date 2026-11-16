@@ -1,10 +1,10 @@
 import type { CommitAuthor } from '../../src/shared/generated/CommitAuthor'
 import { HttpError, isRecord } from '../http'
-import { terminalPackagesCommand } from '../terminal/service'
 import { privilegedCommand } from '../terminal/privileged'
 import { shellQuote } from './commands'
+import { packagesStep, type ImagePackages } from './image-packages'
 import {
-  bootstrapDownload,
+  releaseInstallScript,
   startupBootstrap,
   type StartupBootstrap,
 } from './software-bootstrap'
@@ -55,23 +55,20 @@ export function readImageSoftware(value: unknown): ImageSoftwareArtifact {
   return { url: url.href, sha256: value.sha256.toLowerCase() }
 }
 
-export function installImageSoftware(release: SoftwareRelease): string {
+/**
+ * The software step of an image build, as one command. `when-missing` runs
+ * the apt part only when the image lacks a package or a masked ttyd
+ * service. The Worker chooses it only when the image holds the current apt
+ * part, as `build-software.ts` says.
+ */
+export function installImageSoftware(
+  release: SoftwareRelease,
+  packages: ImagePackages = 'install',
+): string {
   return [
     'set -eu',
-    terminalPackagesCommand(),
-    privilegedCommand(
-      [
-        'set -eu',
-        'umask 022',
-        'apt-get install -y gh',
-        bootstrapDownload(release),
-        `"$conductive_bootstrap/conductive" update check --bootstrap --server ${shellQuote(release.server)}`,
-        '"$conductive_bootstrap/conductive" update apply',
-        'test -x /opt/conductive/current/conductive',
-        'test -f /opt/conductive/current/complete',
-        '/opt/conductive/current/conductive update started',
-      ].join('\n'),
-    ),
+    packagesStep(packages),
+    privilegedCommand(releaseInstallScript(release)),
   ].join('\n')
 }
 
