@@ -26,7 +26,7 @@ how a screen is built, and links to the other pages.
 | `app/banner`        | The pull request bar and Checks: no pull request, its other states, Merge, local work, the agent actions in the chat, and Continue |
 | `app/new-workspace` | An empty chat, the first build of a new org, a repository that waits for its build, its error, files on the first message, the dialog, a pasted workspace link, the start, a queued second message, the first turn, a failed start, Try again |
 | `app/routines` | The routines of the org, a routine, its triggers, its runs, and a run workspace |
-| `app/org-settings`  | General with Delete org, then Repositories and Cloud computer with the notice of a repository change, the first build of a new org, and the skills repository, then Members |
+| `app/org-settings`  | General with Delete org, then Repositories and Cloud computer with the notice of a repository change, the first build of a new org, and the skills repository with its list of skills and its notices, then Members |
 | `app/chat`          | A finished turn with its work folded, then running turns, turns that an agent stopped, open work, tables in replies, lists in replies, headings in replies, lost data, lost updates, unread files, and the time limit of background work |
 | `app/mac-commands`  | A command that an agent runs on the Mac of the sender, in the chat            |
 | `app/sessions`      | A new session, the history, closing one while it works, and a linked session  |
@@ -49,7 +49,7 @@ with child folders shows only its canonical screen, as `marketing`, `marketing/d
 `app/sign-in`, `app/sign-in/get-started`, `app/sign-in/waitlist`, `app/sign-in/join`, `app/shell`, `app/workspace-menu`, `app/command-palette`, `app/command-palette/search`, `app/feedback`, `app/orgs`,
 `app/orgs/suspended`, `app/account`, `app/account/connect-codex`, `app/new-workspace`,
 `app/new-workspace/dialog`, `app/org-settings`,
-`app/org-settings/cloud-computer`, `app/operator`, `app/operator/user`, `app/operator/user/access`, `app/operator/codes`, `app/banner`, `app/chat`, `app/archive`, `app/workspace-links`, `app/routines`, `app/routines/routine`,
+`app/org-settings/cloud-computer`, `app/org-settings/cloud-computer/skills`, `app/operator`, `app/operator/user`, `app/operator/user/access`, `app/operator/codes`, `app/banner`, `app/chat`, `app/archive`, `app/workspace-links`, `app/routines`, `app/routines/routine`,
 `app/routines/triggers`, `app/orgs/suspended/routines`, `app/file-mentions`, `app/attachments`, `app/files`, `app/tools`, `app/account/shortcuts`, and `mac-app/shortcuts` do. `marketing/pictures` has no screen of its own. Each picture's capture
 page is its own entry at `marketing/pictures/<picture>`, so each page shows
 one screen. `marketing/from-conductor` has no screen of its own either. Its
@@ -60,6 +60,7 @@ and build-failed states moved from `app/repository-settings` and its updating
 and update-failed states, and declare `movedFrom`. The states of `app/shell`,
 `app/account`, `app/sign-in/waitlist`, `app/new-workspace`,
 `app/new-workspace/dialog`, `app/org-settings/cloud-computer`,
+`app/org-settings/cloud-computer/skills`,
 `app/operator/user/access`, `app/archive`, `app/command-palette/search`, `app/attachments`, and
 `app/files` moved into their own folders and kept their paths. Each page
 shows only its canonical screen. `app/sign-in/get-started` moved into its
@@ -151,18 +152,35 @@ Acme, which adds acme/admin-dashboard and removes acme/marketing-site:
   keeps the notice of the install script, which shows only for a change
   of the install script.
 
-The Skills section of the Cloud computer tab comes from decisions 1 to 3
-of the org skills repository plan, of 13 and 16 November 2026. It names
-one GitHub repository, and the agents of every workspace use its skills.
-It is the last section of the tab, after the environment variables:
+The Skills section of the Cloud computer tab comes from decisions 1 to 3,
+6, and 7 of the org skills repository plan, of 13 and 16 November 2026.
+It names one public GitHub repository, and the agents of every workspace
+use its skills. At Save and at each load, the section looks up the
+repository on GitHub. It lists the skills that it finds, or it shows a
+notice in place of the list. It is the last section of the tab, after the
+environment variables:
 
 - `app/org-settings/cloud-computer` has acme/agent-skills in the field of
-  an admin, with Save repository off until the field changes.
+  an admin, with Save repository off until the field changes. Its 12
+  skills show under the field.
 - `app/org-settings/cloud-computer/skills` has Acme before an admin chose
-  a repository, with the placeholder in the empty field. Its `pasted-link`
-  variant has a link from GitHub in the field, with Save repository on.
+  a repository, with the placeholder in the empty field. Its child pages
+  show the other states of the section:
+  - `pasted-link` has a link from GitHub in the field, with Save
+    repository on.
+  - `private` has the notice of a private repository.
+  - `not-found` has the notice of a repository that GitHub does not find.
+  - `without-skills` has the notice of a repository without skills, which
+    says where the skill folders go.
+  - `incomplete` has the list from a file tree that GitHub cut short,
+    with the note that the list can be incomplete.
+  - `lookup-failed` has the notice of a list that did not load, with Try
+    again.
 - `app/org-settings/cloud-computer/member` shows the repository as text to
-  a member. Its `no-skills` variant has the empty text of a member.
+  a member, with the same list. Its `no-skills` variant has the empty text
+  of a member. Its `private-skills` and `skills-not-found` variants have
+  the notices of a member, which say that an admin can act. The other
+  notices read the same for a member as for an admin.
 - A new org has no repository, as `app/org-settings/cloud-computer/first-build`
   shows.
 

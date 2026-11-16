@@ -29,6 +29,11 @@ plan limits.
   fields, Save, or Build computer. The General tab of a member is the child
   page `app/org-settings/member`, because `app/org-settings` has child
   pages. `DetailList` in `src/components/settings/` shows such values.
+  A member also sees the skills that the lookup of the skills repository
+  finds, and each notice in place of that list, from decision 7 of the
+  org skills repository plan. A notice that asks for a change of the
+  repository says that an admin can make it, as
+  `app/org-settings/cloud-computer/member/private-skills` shows.
 - Each session runs on the agent login of the member who started it. The
   messages of other members use that login only while that member shares
   it, with the switch under each login of the account. So a reassign

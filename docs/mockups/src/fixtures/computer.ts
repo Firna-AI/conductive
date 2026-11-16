@@ -55,6 +55,36 @@ export const skillsRepository = 'acme/agent-skills'
 export const skillsRepositoryLink = `https://github.com/${skillsRepository}`
 
 /**
+ * The skill folders of acme/agent-skills, in name order, as the lookup of
+ * the Skills section lists them. Acme keeps its own copy of skills that
+ * futex-ai/skills also has.
+ */
+export const agentSkills: readonly string[] = [
+  'brainstorming',
+  'databases',
+  'decisions-and-findings',
+  'documentation',
+  'git-commit',
+  'git-merge',
+  'implementation-review',
+  'mockups',
+  'plans',
+  'product-ui',
+  'testing',
+  'typescript',
+]
+
+/**
+ * The skills in a file tree of acme/agent-skills that GitHub cut short, as
+ * it does for a very large repository: the ones before the cut. The cloud
+ * computer still copies every skill.
+ */
+export const cutTreeSkills: readonly string[] = agentSkills.slice(0, 7)
+
+/** acme/agent-skills with a typo, which GitHub does not find. */
+export const misspelledSkillsRepository = 'acme/agent-skils'
+
+/**
  * An env var of the org: its name, and its Secret mark. The chat and the
  * start logs hide the value of a secret variable. No screen shows a value.
  */

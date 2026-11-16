@@ -9,10 +9,16 @@ export const offlineMessage =
 
 /**
  * Data that did not load, as the lists of the app show it: what failed,
- * the message of the server, and Try again, which loads it again. `to` is
- * the screen that shows the data after Try again, when the mockups draw it.
+ * the message of the server, and Try again, which loads it again. `body`
+ * replaces the message when the server answered but a service behind it
+ * did not, such as GitHub. `to` is the screen that shows the data after
+ * Try again, when the mockups draw it.
  */
-export function LoadFailure(props: { title: string; to?: string }) {
+export function LoadFailure(props: {
+  title: string
+  body?: string
+  to?: string
+}) {
   const button = <ActionButton icon={RotateCw}>Try again</ActionButton>
   return (
     <Notice
@@ -25,7 +31,7 @@ export function LoadFailure(props: { title: string; to?: string }) {
           button
         )
       }
-      body={offlineMessage}
+      body={props.body ?? offlineMessage}
       icon={TriangleAlert}
       title={props.title}
       tone="danger"

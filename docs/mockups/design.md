@@ -151,7 +151,8 @@ sessions as tabs above the chat, and four tabs at the bottom.
   the operator, and Keyboard shortcuts.
 - `LoadFailure` in `src/components/common/` draws data that did not load,
   as the lists of the app show it: what failed, the message of the server,
-  and Try again.
+  and Try again. When the server answered but a service behind it did not,
+  such as GitHub for the list of skills, its message names that service.
 - `ConfirmDialog` in `src/components/common/` asks before an action that a
   user cannot simply undo: a dialog over the dimmed app on desktop, and a
   sheet on a phone. The desktop dialog lies in the `overlay` of `AppFrame`.

@@ -296,6 +296,30 @@ calls from the mockup milestone and from decisions 6 and 7.
 - A failed lookup, such as a GitHub outage, gives a notice that the skills
   cannot be listed now. The saved repository stays.
 
+The agent made the calls below on 2026-11-16, from the mockups of
+Milestone 2.
+
+- A member sees the list and each notice. The notices of a private
+  repository and of a repository that is not found say that an admin can
+  act. In a suspended org they name no action. The other notices read the
+  same for each viewer. Reason: the lookup runs for each viewer, so a
+  member whose agents get no skills learns why, as with the repository
+  notice of decision 241.
+- The notice of a repository that is not found says that GitHub has no
+  public repository with that name. Reason: GitHub also answers "not
+  found" for a private repository that the sign-in of the viewer cannot
+  see.
+- The list and its notices belong to the saved repository. Unsaved text in
+  the field changes neither of them. Reason: the lookup runs only at Save
+  and at each load of the section.
+- A failed lookup gives the notice that the app shows for each part that
+  did not load, "The list of skills did not load", with Try again. Try
+  again loads the section again. Reason: the Cloud computer tab of the app
+  shows each failed load in this way.
+- A cut file tree that holds no skill gives only the note of the cut, not
+  the notice of a repository without skills. Reason: its skills can lie
+  after the cut, and the runner copies the whole repository.
+
 - The setting holds one repository as `owner/name`. The form also takes a
   `https://github.com/owner/name` link and saves it as `owner/name`. Reason:
   members copy links from GitHub.
@@ -313,12 +337,19 @@ calls from the mockup milestone and from decisions 6 and 7.
   rule, and the precedent of the context folder (repository-folders.md).
 - The runner moves its copy to a new commit only after a complete fetch.
   A fetch never leaves a half-written skill folder.
-- The runner loads each folder under `skills/` that holds a `SKILL.md`. A
-  repository without a `skills/` folder gives each folder at its top level
-  that holds a `SKILL.md`. It loads no hooks, MCP servers, agents,
-  commands, or settings. Reason: `anthropics/skills`, `openai/skills`, and
-  `futex-ai/skills` use `skills/`, and `ComposioHQ/awesome-claude-skills`
-  uses top-level folders. Hooks and the rest run code that no agent chose.
+- The runner and the lookup load each folder at any depth under `skills/`
+  that holds a `SKILL.md`, also a folder whose name starts with a dot. They
+  do not look inside a folder that holds a `SKILL.md`, and they skip
+  `.git`. A repository without a `skills/` folder gives each folder at its
+  top level that holds a `SKILL.md`. When two skill folders have the same
+  name, the first in path order loads, and the runner warns. One shared
+  function holds this rule. They load no hooks, MCP servers, agents,
+  commands, or settings. Reason: `anthropics/skills` and `futex-ai/skills`
+  use `skills/<name>/`, `openai/skills` uses `skills/.curated/<name>/` and
+  `skills/.system/<name>/`, and `ComposioHQ/awesome-claude-skills` uses
+  top-level folders. Hooks and the rest run code that no agent chose.
+  Changed on 2026-11-16 by the agent, from `skills/<name>/` only, after
+  the mockups found the layout of `openai/skills`.
 - An empty Save removes the repository. At its next start, the runner
   deletes its copy, and the agents get no skills from it.
 - The runner keeps its copy under the name of its repository. When the
@@ -365,16 +396,28 @@ Depends on: 1
 
 Decisions 6 A and 7 H add states to the Skills section.
 
-- [ ] Say in the description of the section that the repository must be
+- [x] Say in the description of the section that the repository must be
       public.
-- [ ] Show the list of skills that the lookup finds, for an admin and for a
-      member.
-- [ ] Add the notices for a private repository, a repository that is not
+- [x] Show the list of skills that the lookup finds, for an admin and for a
+      member. Pages `cloud-computer`, `cloud-computer/member`, and the
+      suspended org page.
+- [x] Add the notices for a private repository, a repository that is not
       found, a repository with no skills, a list that can be incomplete,
       and a lookup that fails. Keep each page at five screens or fewer.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
-- [ ] Update the design and the TODOs of this plan for each problem that the
-      mockups show.
+      Child pages `private`, `not-found`, `without-skills`, `incomplete`,
+      and `lookup-failed` of `cloud-computer/skills`, which now shows only
+      its canonical screen. Its `pasted-link` variant moved into its own
+      folder and kept its path. Variants `private-skills` and
+      `skills-not-found` of `cloud-computer/member` show the notices of a
+      member.
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages. The
+      screenshots are in `.context/org-skills-repository/screens-m2/`.
+- [x] Update the design and the TODOs of this plan for each problem that the
+      mockups show. This added five design calls.
+  - `openai/skills` keeps its skills one folder deeper, in
+    `skills/.curated/<name>/` and `skills/.system/<name>/`. The design
+    call about the folder layouts now loads skill folders at any depth
+    under `skills/`.
 
 ## Milestone 3: Documentation and protocol
 
@@ -387,7 +430,7 @@ Depends on: 2
       the lookup uses the viewer's GitHub sign-in.
 - [ ] Update `orgs-and-members.md` and `command-palette-actions.md` when the
       new section needs a row or an admin rule.
-- [ ] State the two folder layouts that load in a public guide under
+- [ ] State the folder layouts that load in a public guide under
       `src/marketing/docs/`.
 - [ ] Read both legal pages and every public guide in full. Update each
       sentence that the change makes wrong.

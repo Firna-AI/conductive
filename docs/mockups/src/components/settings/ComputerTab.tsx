@@ -7,6 +7,7 @@ import { BuildSection, type BuildState, type OrgBuilds } from './BuildSection'
 import { ScriptSection } from './EnvironmentSections'
 import { EnvVarsSection, type EnvVarForm } from './EnvVarsSection'
 import type { ReadOnlyCause } from './OrgSections'
+import type { SkillsLookup } from './skillsCopy'
 import { SkillsSection } from './SkillsSection'
 import { TabIntro } from './TabIntro'
 
@@ -23,6 +24,8 @@ export type OrgComputer = OrgBuilds & {
   envVars: readonly EnvVar[]
   /** The GitHub repository of skills, as owner/name, when the org has one. */
   skillsRepository?: string
+  /** What the lookup of the skills repository found on GitHub, when it has one. */
+  skillsLookup?: SkillsLookup
 }
 
 /**
@@ -136,6 +139,7 @@ export function ComputerTab(props: {
       />
       <SkillsSection
         draft={props.skillsDraft}
+        lookup={computer.skillsLookup}
         readOnly={props.readOnly}
         repository={computer.skillsRepository}
       />

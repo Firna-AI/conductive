@@ -21,7 +21,6 @@ import {
   installScript,
   installScriptWithout,
   lastBuild,
-  skillsRepository,
   startupScript,
   timedOutBuild,
 } from '../fixtures/computer'
@@ -53,6 +52,7 @@ import {
 import { type Workspace, workspaceList } from '../fixtures/workspaces'
 import { paths } from '../paths'
 import type { OrgSettingsState } from './OrgSettingsScreen'
+import { acmeSkillsComputer } from './settingsSkills'
 
 /** The org whose settings show, and what its tabs hold. */
 export type SettingsOrg = {
@@ -91,7 +91,6 @@ const acme: SettingsOrg = {
     changedInstallScript,
     startupScript,
     envVars,
-    skillsRepository,
   },
   list: paths.shell,
   sections: workspaceSections(),
@@ -176,16 +175,14 @@ function acmeAfter(change: RepositoryChange): SettingsOrg {
 }
 
 /**
- * Acme in a state of its skills repository: acme/agent-skills, or none
- * yet, as every org starts. A pasted link is not saved, so Acme then has
- * none either.
+ * Acme in a state of its skills repository, with what the lookup of the
+ * saved repository found, as `settingsSkills.ts` gives them.
  */
 function acmeWithSkills(state: OrgSettingsState): SettingsOrg {
   const settings = acmeAfter(state.repositoryChange)
-  if (state.skills === 'chosen') return settings
   return {
     ...settings,
-    computer: { ...settings.computer, skillsRepository: undefined },
+    computer: { ...settings.computer, ...acmeSkillsComputer(state) },
   }
 }
 
