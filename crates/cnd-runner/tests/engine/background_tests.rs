@@ -176,3 +176,55 @@ async fn resets_the_wait_from_receipt_even_when_the_session_queue_is_held() -> T
     );
     h.close().await
 }
+
+/// Work that ends before the reply leaves a wait for the idle state.
+async fn ended_work_wait(h: &Fixture) -> TestResult {
+    h.command(turn("session", "first")?).await?;
+    let helper = h.latest()?;
+    helper.event(ProviderEvent::Background {
+        live: true,
+        idle: false,
+    });
+    helper.event(ProviderEvent::Background {
+        live: false,
+        idle: false,
+    });
+    helper.result(&[]);
+    h.engine.idle().await?;
+    assert_eq!(h.events().await.len(), 1);
+    Ok(())
+}
+
+#[tokio::test(start_paused = true)]
+async fn ends_a_wake_up_reply_after_work_that_ended_before_the_reply() -> TestResult {
+    let h = Fixture::new().await?;
+    ended_work_wait(&h).await?;
+    let helper = h.latest()?;
+    // The notification of the ended task starts a reply.
+    helper.event(ProviderEvent::Activity { idle: false });
+    helper.event(ProviderEvent::WakeUp {
+        state: ProviderResultState::Finished,
+    });
+    h.engine.idle().await?;
+    assert_eq!(h.events().await.len(), 1);
+    helper.event(ProviderEvent::Activity { idle: true });
+    h.wait_events(2).await;
+    let end = serde_json::to_value(h.events().await)?;
+    assert_eq!(end[1]["endReason"], serde_json::Value::Null);
+    h.close().await
+}
+
+#[tokio::test(start_paused = true)]
+async fn applies_the_limit_to_a_wait_for_idle_after_work_ended() -> TestResult {
+    let h = Fixture::new().await?;
+    ended_work_wait(&h).await?;
+    h.advance(LIMIT - Duration::from_secs(1)).await;
+    h.engine.idle().await?;
+    assert_eq!(h.events().await.len(), 1);
+    h.advance(Duration::from_secs(1)).await;
+    h.wait_events(2).await;
+    let end = serde_json::to_value(h.events().await)?;
+    assert_eq!(end[1]["endReason"], "background_work_limit");
+    assert!(h.latest()?.closed.load(Ordering::SeqCst));
+    h.close().await
+}
