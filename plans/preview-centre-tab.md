@@ -8,10 +8,9 @@ desktop, each previewed port gets its own Preview tab in the centre tab
 row, beside the session, file, and diff tabs. A bar over the page in that
 tab holds Reload and Open. The tool in the panel has no bar on desktop. It
 lists the ports, and a click on a port shows its tab, or opens one. A
-preview ends by itself when the cloud computer stops, and the app opens a new
-one without notice the next time the user shows its tab. A preview stays
-open until the computer stops, and its use never keeps the computer
-running. A phone has no
+preview stays open until the cloud computer stops, and its use never keeps
+the computer running. The app opens a new preview without notice the next
+time the user shows its tab. A phone has no
 centre tab row, so its Preview page keeps its bar and its frame as today.
 
 The change does not cover a change to the preview access rules.
