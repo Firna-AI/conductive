@@ -290,14 +290,17 @@ Depends on: 3
 
 Depends on: every other milestone
 
-- [ ] Run the targeted tests and the complete gate named in `CLAUDE.md`.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Run the targeted tests and the complete gate named in `CLAUDE.md`.
+      The static checks passed. The local test step failed on timeouts
+      on 4 CPUs and on an EXDEV error of the site build. CI runs the tests
+      on the pull request. The log is in `.context/operator-long-runs/`.
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
-      once, and report.
-- [ ] Delete this plan when the `plans` skill says, under "Deleting the
+      once, and report. Round 1 found no findings.
+- [x] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the
       design calls of this plan with their dates, a permalink to this plan,
@@ -307,3 +310,4 @@ Depends on: every other milestone
 
 - [ ] On the test deployment, open the Overview and check that a running
       workspace shows its run length within 30 minutes of the deploy.
+      Follow-up item: `plans/follow-ups/operator-long-runs-smoke-test.md`.
