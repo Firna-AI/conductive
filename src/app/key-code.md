@@ -52,8 +52,11 @@ Each path is relative to `src/app/`, the folder of this page.
 - `app-model.ts`: the session, the orgs, the models list, Get started,
   `putOrg`, which takes a confirmed org record, `moveOrg`, which moves an
   org in the person's own order, and `admit`, which opens the app when app
-  access arrives. `boot.ts`: `Boot`, the states of the first load, and
-  `readShared`, what every screen of the app shares.
+  access arrives. `boot.ts`: `Boot`, the states of the first load,
+  `readShared`, what every screen of the app shares, and `watchSession`,
+  the client that shows the sign-in after a `sign_in_required` refusal.
+- `api/refusals.ts`: `noteRefusals`, a client that reports each refusal
+  with one error code, also the replies of its fetch.
 - `org-list.ts`: `OrgList`, the orgs of the person in their own order, as
   `AppModel.orgs` gives them: the list that the server confirmed, then the
   moves that wait for their answer.
