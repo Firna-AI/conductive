@@ -1,6 +1,7 @@
-import { ChevronDown, FolderGit2, Sparkles } from 'lucide-react'
-import { ActionButton } from '../components/common/actions'
-import { Menu, type MenuEntry } from '../components/common/Menu'
+import { ChevronDown, Sparkles } from 'lucide-react'
+import { actionButton } from '../entries/components/common/actions.mockup'
+import { menu } from '../entries/components/common/Menu.mockup'
+import type { MenuEntryData } from '../entries/components/common/menuEntries'
 import {
   ChooseRepositoriesButton,
   chooseRepositoriesFirst,
@@ -15,23 +16,29 @@ import styles from './NewWorkspaceScreen.module.css'
  */
 function RepositoryPicker(props: {
   repository: string
-  menu?: readonly MenuEntry[]
+  menu?: readonly MenuEntryData[]
 }) {
   return (
     <span className={styles.anchor}>
-      <ActionButton
+      <actionButton.Component
         accessibilityLabel={`Repository: ${props.repository}`}
         expanded={props.menu !== undefined}
-        icon={FolderGit2}
+        icon="folder-git-2"
         menu
+        moklyInstance="repository"
         trailing={
           <ChevronDown aria-hidden className={styles.chevron} size={13} />
         }
       >
         {props.repository}
-      </ActionButton>
+      </actionButton.Component>
       {props.menu ? (
-        <Menu entries={props.menu} label="Repository" placement="below-start" />
+        <menu.Component
+          entries={props.menu}
+          label="Repository"
+          moklyInstance="repository-menu"
+          placement="below-start"
+        />
       ) : null}
     </span>
   )
@@ -49,7 +56,7 @@ export function Start(props: {
   chosen: boolean
   admin: boolean
   /** The open repository menu, on a computer. */
-  menu?: readonly MenuEntry[]
+  menu?: readonly MenuEntryData[]
 }) {
   const { page } = props
   const ready = formWait(page) === undefined

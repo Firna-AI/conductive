@@ -1,7 +1,10 @@
 import type { ReactNode } from 'react'
 import type { SchemaProps, Viewport } from '@mokly/mokly'
-import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
-import { Page } from '../components/layout/Page'
+import {
+  appFrame,
+  mobileFrame,
+} from '../entries/components/layout/AppFrame.mockup'
+import { page as pagePart } from '../entries/components/layout/Page.mockup'
 import { LeaveOrgDialog } from '../components/members/LeaveOrgDialog'
 import { RemoveMemberDialog } from '../components/members/RemoveMemberDialog'
 import { SuspendedOrgNotice } from '../components/orgs/SuspendedOrgNotice'
@@ -14,6 +17,7 @@ import { type Org, orgList } from '../fixtures/orgs'
 import { repositoryChanges } from '../fixtures/repositories'
 import { settingsViewer, TabBody } from './orgSettingsTabs'
 import { settingsOrg } from './settingsOrgs'
+import { defined } from '../defined'
 
 export const orgSettingsSchema = {
   type: 'object',
@@ -126,9 +130,11 @@ export function OrgSettingsScreen(props: {
   }
   const dialog = dialogs[state.dialog]
   const page = (
-    <Page
-      back={mobile ? { label: 'Workspaces', to: settings.list } : undefined}
+    <pagePart.Component
       subtitle="Org settings"
+      {...defined({
+        back: mobile ? { label: 'Workspaces', to: settings.list } : undefined,
+      })}
       tabs={
         <SettingsTabs links={settings.links} tab={state.tab} wrap={mobile} />
       }
@@ -137,14 +143,14 @@ export function OrgSettingsScreen(props: {
     >
       {suspended ? <SuspendedOrgNotice org={org} /> : null}
       <TabBody state={state} />
-    </Page>
+    </pagePart.Component>
   )
   if (mobile) {
     return (
-      <MobileFrame>
+      <mobileFrame.Component>
         {page}
         {dialog}
-      </MobileFrame>
+      </mobileFrame.Component>
     )
   }
   const sidebar = (
@@ -159,17 +165,17 @@ export function OrgSettingsScreen(props: {
     />
   )
   return (
-    <AppFrame
-      overlay={dialog}
+    <appFrame.Component
       rail={{
         orgs: props.railOrgs ?? orgList,
         current: org.key,
-        suspended: suspended ? org.key : undefined,
-        person: admin ? undefined : people[memberViewer],
+        ...(suspended ? { suspended: org.key } : {}),
+        ...(admin ? {} : { person: people[memberViewer] }),
       }}
       sidebar={sidebar}
+      {...defined({ overlay: dialog ?? undefined })}
     >
       {page}
-    </AppFrame>
+    </appFrame.Component>
   )
 }

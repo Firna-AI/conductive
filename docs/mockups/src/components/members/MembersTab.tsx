@@ -1,9 +1,9 @@
 import { InputFrame } from '@firna/ui/input'
-import { Mail, UserPlus } from 'lucide-react'
+import { Mail } from 'lucide-react'
 import type { Invite, Membership, PersonKey } from '../../fixtures/members'
 import type { Workspace } from '../../fixtures/workspaces'
 import { noop } from '../../noop'
-import { ActionButton } from '../common/actions'
+import { actionButton } from '../../entries/components/common/actions.mockup'
 import { useControlSizes } from '../common/touch'
 import { Section } from '../settings/Section'
 import { MemberList } from './MemberList'
@@ -30,7 +30,9 @@ function InviteSection() {
           size={field}
           value=""
         />
-        <ActionButton icon={UserPlus}>Invite</ActionButton>
+        <actionButton.Component icon="user-plus" moklyInstance="invite-member">
+          Invite
+        </actionButton.Component>
       </div>
     </Section>
   )

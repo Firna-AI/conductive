@@ -1,5 +1,8 @@
 import { Fragment } from 'react'
 import { Gauge, Plus } from 'lucide-react'
+import { defined } from '../../defined'
+import { iconKeyOf } from '../../entries/components/common/icons'
+import type { MenuEntryData } from '../../entries/components/common/menuEntries'
 import type { Person } from '../../fixtures/members'
 import { account, orgList, type Org, type OrgKey } from '../../fixtures/orgs'
 import { shownShortcut } from '../../fixtures/shortcutChanges'
@@ -8,12 +11,17 @@ import { pageHost, type ShortcutHost } from '../../fixtures/shortcutHosts'
 import { paths } from '../../paths'
 import type { Shortcut } from '../common/KeyChips'
 import { classes } from '../common/classes'
-import { LogoTile } from '../brand/Logo'
+import { logoTile } from '../../entries/components/brand/Logo.mockup'
 import { useMacApp } from '../mac/MacApp'
 import { OrgDrop, placeAfterDrop, type OrgDrag } from '../orgs/OrgDrop'
-import { tileMenuOf } from '../orgs/orgTileMenu'
+import { tileMenuItems } from '../orgs/orgTileMenu'
 import { PersonAvatar } from '../orgs/OrgTile'
-import { OrgItem, RailLink, RailTile, type OrgState } from './RailItems'
+import type { OrgState } from './RailItems'
+import {
+  orgItem,
+  railLink,
+  railTile,
+} from '../../entries/components/layout/RailItems.mockup'
 import styles from './OrgRail.module.css'
 
 export type RailState = {
@@ -74,13 +82,31 @@ function orgShortcut(index: number, host: ShortcutHost): Shortcut | undefined {
   return command === undefined ? undefined : shownShortcut(command, {}, host)
 }
 
+/**
+ * The menu of the org tile at a place in the rail, as the registered menu
+ * takes it: the move items, with the key of their icons.
+ */
+function tileMenu(place: number, count: number): MenuEntryData[] {
+  return tileMenuItems(place, count).map((item) => ({
+    kind: 'item',
+    label: item.label,
+    icon: iconKeyOf(item.icon),
+    disabled: item.disabled,
+  }))
+}
+
 /** The link of an operator to the operator page, above the account. */
 function OperatorItem(props: { current: boolean; hint: boolean }) {
   return (
     <div className={classes(styles.item, styles.operator)}>
-      <RailLink current={props.current} label="Operator" to={paths.operator}>
+      <railLink.Component
+        current={props.current}
+        label="Operator"
+        moklyInstance="operator"
+        to={paths.operator}
+      >
         <Gauge size={16} />
-      </RailLink>
+      </railLink.Component>
       {props.hint ? (
         <span aria-hidden className={styles.hint}>
           Operator
@@ -112,44 +138,51 @@ export function OrgRail(props: RailState) {
         name={dragged.name}
         place={placeAfterDrop(from, index)}
       >
-        <RailTile current={props.current === dragged.key} org={dragged} />
+        <railTile.Component
+          current={props.current === dragged.key}
+          moklyInstance="lifted-tile"
+          org={dragged}
+        />
       </OrgDrop>
     ) : null
   return (
     <nav aria-label="Orgs" className={styles.rail}>
       <span className={styles.mark}>
-        <LogoTile size={24} />
+        <logoTile.Component size={24} />
       </span>
       <ul className={styles.orgs}>
         {orgs.map((org, index) => (
           <Fragment key={org.key}>
             {dropAt(index)}
-            <OrgItem
+            <orgItem.Component
               current={props.current === org.key}
               hint={props.hint === org.key}
-              menu={
-                props.menu === org.key
-                  ? tileMenuOf(index, orgs.length)
-                  : undefined
-              }
+              moklyInstance={`org-${org.key}`}
               org={org}
-              shortcut={orgShortcut(index, host)}
               placeholder={org === dragged}
-              state={orgState(props, org.key)}
+              {...defined({
+                menu:
+                  props.menu === org.key
+                    ? tileMenu(index, orgs.length)
+                    : undefined,
+                shortcut: orgShortcut(index, host),
+                state: orgState(props, org.key),
+              })}
             />
           </Fragment>
         ))}
         {dropAt(orgs.length)}
         <li className={styles.item}>
-          <RailLink
+          <railLink.Component
             current={props.current === 'create'}
             label="Create org"
+            moklyInstance="create-org"
             to={props.firstRun ? paths.getStarted : paths.createOrg}
           >
             <span className={styles.create}>
               <Plus size={15} />
             </span>
-          </RailLink>
+          </railLink.Component>
         </li>
       </ul>
       {props.operator ? (
@@ -158,13 +191,14 @@ export function OrgRail(props: RailState) {
           hint={props.hint === 'operator'}
         />
       ) : null}
-      <RailLink
+      <railLink.Component
         current={props.current === 'account'}
         label="Account"
+        moklyInstance="account"
         to={props.firstRun ? paths.accountSetup : paths.account}
       >
         <PersonAvatar initials={(props.person ?? account).initials} size={24} />
-      </RailLink>
+      </railLink.Component>
     </nav>
   )
 }

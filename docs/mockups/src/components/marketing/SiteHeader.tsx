@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
 import { sourceRepositoryHref } from '../../../../../src/marketing/links'
-import { GitHubMark } from '../common/GitHubMark'
+import { githubMark } from '../../entries/components/common/GitHubMark.mockup'
 import { ScreenLink, useOutsideHref } from '../common/ScreenLink'
 import { classes } from '../common/classes'
 import { StartButton } from './SiteActions'
@@ -39,7 +39,7 @@ export function SiteHeader(props: {
   return (
     <header className={classes(styles.header, mobile && styles.mobile)}>
       <div className={styles.inner}>
-        <Wordmark to={props.links.home} />
+        <Wordmark place="header" to={props.links.home} />
         {props.bare ? null : (
           <SiteNav
             current={props.current}
@@ -118,13 +118,18 @@ function SiteNav(props: {
         href={sourceHref}
         title="Open source on GitHub"
       >
-        <GitHubMark size={mobile ? 18 : 16} />
+        <githubMark.Component
+          moklyInstance="header-github"
+          size={mobile ? 18 : 16}
+        />
         {mobile ? null : 'GitHub'}
       </a>
       <ScreenLink className={styles.link} to={props.links.signIn}>
         Sign in
       </ScreenLink>
-      {mobile ? null : <StartButton size="md" to={props.links.signIn} />}
+      {mobile ? null : (
+        <StartButton place="header" size="md" to={props.links.signIn} />
+      )}
     </nav>
   )
 }

@@ -114,6 +114,7 @@ export function ChatPane(props: {
           >
             {pending.map((item, index) => (
               <PendingCommand
+                id={item.id}
                 key={item.id}
                 open={mac?.choicesOpen === true && index === 0}
                 request={item.request}

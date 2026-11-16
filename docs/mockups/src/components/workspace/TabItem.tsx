@@ -7,11 +7,12 @@ import {
   FileText,
   MessageSquare,
   SquareTerminal,
-  X,
 } from 'lucide-react'
-import { Menu, type MenuEntry } from '../common/Menu'
+import { instanceKey } from '../../instanceKey'
+import { menu as menuPart } from '../../entries/components/common/Menu.mockup'
+import type { MenuEntryData } from '../../entries/components/common/menuEntries'
 import { ScreenLink } from '../common/ScreenLink'
-import { IconButton } from '../common/actions'
+import { iconButton } from '../../entries/components/common/actions.mockup'
 import a11y from '../common/a11y.module.css'
 import { classes } from '../common/classes'
 import { RenameField } from './RenameField'
@@ -41,7 +42,10 @@ export type WorkspaceTab = {
 }
 
 /** The open menu of a tab: beside it, or in a sheet that the screen draws. */
-export type OpenTabMenu = { entries: readonly MenuEntry[]; anchored: boolean }
+export type OpenTabMenu = {
+  entries: readonly MenuEntryData[]
+  anchored: boolean
+}
 
 const icons: Readonly<Record<TabKind, LucideIcon>> = {
   session: MessageSquare,
@@ -110,7 +114,14 @@ export function TabItem(props: {
 }) {
   const { tab, menu } = props
   const closable = props.closable ?? true
-  const close = <IconButton icon={X} label={`Close ${tab.title}`} quiet />
+  const close = (
+    <iconButton.Component
+      icon="x"
+      label={`Close ${tab.title}`}
+      moklyInstance={`close-${instanceKey(tab.key)}`}
+      quiet
+    />
+  )
   if (props.renaming) {
     return (
       <li
@@ -152,9 +163,10 @@ export function TabItem(props: {
         </span>
       ) : null}
       {menu?.anchored ? (
-        <Menu
+        <menuPart.Component
           entries={menu.entries}
           label={tab.title}
+          moklyInstance={`menu-${instanceKey(tab.key)}`}
           placement="below-start"
         />
       ) : null}

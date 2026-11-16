@@ -1,6 +1,5 @@
 import type { Viewport } from '@mokly/mokly'
-import { Plus } from 'lucide-react'
-import { IconButton } from '../common/actions'
+import { iconButton } from '../../entries/components/common/actions.mockup'
 import { classes } from '../common/classes'
 import { TabItem } from '../workspace/TabItem'
 import tabScroll from '../workspace/TabScroll.module.css'
@@ -62,7 +61,12 @@ export function TerminalTabs(props: {
             )
           })}
         </ul>
-        <IconButton disabled={atLimit} icon={Plus} label="New terminal" />
+        <iconButton.Component
+          disabled={atLimit}
+          icon="plus"
+          label="New terminal"
+          moklyInstance="new-terminal"
+        />
       </nav>
       {atLimit ? <p className={styles.hint}>{terminalLimitHint}</p> : null}
     </div>

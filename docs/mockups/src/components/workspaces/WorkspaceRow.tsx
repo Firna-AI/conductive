@@ -1,9 +1,8 @@
 import type { ReactNode } from 'react'
-import { Archive, ArchiveRestore } from 'lucide-react'
 import { workspaceMark } from '../../entries/components/workspaces/WorkspaceMark.mockup'
 import { paths } from '../../paths'
 import { ScreenLink } from '../common/ScreenLink'
-import { IconButton } from '../common/actions'
+import { iconButton } from '../../entries/components/common/actions.mockup'
 import a11y from '../common/a11y.module.css'
 import { classes } from '../common/classes'
 import { RowPointMenu, type RowControls } from './RowMenu'
@@ -71,23 +70,35 @@ function RenameRow(props: {
 /**
  * The one action of a row: Archive for a workspace in a section, which
  * archives it at once, or Restore for an archived one, which puts it back
- * in its section.
+ * in its section. `name` is the instance name of the row, which names the
+ * button for Mokly.
  */
 function rowAction(
   row: WorkspaceRow,
   archivable: boolean,
   restorable: boolean,
+  name: string,
 ): ReactNode {
   if (row.status === 'archived') {
     return restorable ? (
       <ScreenLink asChild to={paths.restored}>
-        <IconButton icon={ArchiveRestore} label="Restore workspace" quiet />
+        <iconButton.Component
+          icon="archive-restore"
+          label="Restore workspace"
+          moklyInstance={`${name}-restore`}
+          quiet
+        />
       </ScreenLink>
     ) : null
   }
   return archivable ? (
     <ScreenLink asChild to={paths.justArchived}>
-      <IconButton icon={Archive} label="Archive workspace" quiet />
+      <iconButton.Component
+        icon="archive"
+        label="Archive workspace"
+        moklyInstance={`${name}-archive`}
+        quiet
+      />
     </ScreenLink>
   ) : null
 }
@@ -144,6 +155,7 @@ export function WorkspaceRowView(props: {
     row,
     props.archivable === true,
     props.restorable === true,
+    markInstance(row, props.variant),
   )
   // The pointer of a right click lies over the row of its menu. A sheet
   // keeps its row marked, without a hover.

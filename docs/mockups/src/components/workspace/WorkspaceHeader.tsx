@@ -1,12 +1,12 @@
 import type { Viewport } from '@mokly/mokly'
-import { ChevronLeft, FolderGit2, PanelRight } from 'lucide-react'
+import { FolderGit2 } from 'lucide-react'
 import { people } from '../../fixtures/members'
 import { repositories } from '../../fixtures/repositories'
 import type { ActivityStatus, Workspace } from '../../fixtures/workspaces'
 import { paths } from '../../paths'
 import { ScreenLink } from '../common/ScreenLink'
-import { ShortcutTip } from '../common/ShortcutTip'
-import { IconButton } from '../common/actions'
+import { shortcutTip } from '../../entries/components/common/ShortcutTip.mockup'
+import { iconButton } from '../../entries/components/common/actions.mockup'
 import { workspaceLabel } from '../workspaces/label'
 import { activityPresentation } from '../workspaces/status'
 import { StatusGlyph } from '../workspaces/StatusGlyph'
@@ -66,19 +66,27 @@ export function WorkspaceHeader(props: {
   )
   const label = workspaceLabel(workspace.number)
   const copyLink = (
-    <ShortcutTip command="copy-link" label={`Copy link to ${label}`}>
+    <shortcutTip.Component
+      command="copy-link"
+      label={`Copy link to ${label}`}
+      moklyInstance="copy-link-tip"
+    >
       <CopyLinkButton
         inline={props.viewport === 'mobile'}
         label={label}
         result={props.copy}
       />
-    </ShortcutTip>
+    </shortcutTip.Component>
   )
   const header =
     props.viewport === 'mobile' ? (
       <header className={styles.mobile}>
         <ScreenLink asChild to={props.back ?? paths.shell}>
-          <IconButton icon={ChevronLeft} label="All workspaces" />
+          <iconButton.Component
+            icon="chevron-left"
+            label="All workspaces"
+            moklyInstance="all-workspaces"
+          />
         </ScreenLink>
         <div className={styles.titles}>
           <h1 className={styles.title}>{name}</h1>
@@ -102,8 +110,9 @@ export function WorkspaceHeader(props: {
         </span>
         {owner}
         <State status={props.status} />
-        <IconButton
-          icon={PanelRight}
+        <iconButton.Component
+          icon="panel-right"
+          moklyInstance="toggle-right-column"
           label={
             props.rightHidden
               ? 'Show the right column'

@@ -1,13 +1,12 @@
 import { Fragment } from 'react'
 import type { Viewport } from '@mokly/mokly'
-import { History, Plus, RotateCcw } from 'lucide-react'
 import { nameLabel } from '../../../../../src/shared/name-label'
 import { closedSessions } from '../../fixtures/sessions'
 import { paths } from '../../paths'
-import { AgentMark } from '../chat/AgentMark'
-import { Menu, type MenuEntry } from '../common/Menu'
+import { menu as menuPart } from '../../entries/components/common/Menu.mockup'
+import type { MenuEntryData } from '../../entries/components/common/menuEntries'
 import { ScreenLink } from '../common/ScreenLink'
-import { IconButton } from '../common/actions'
+import { iconButton } from '../../entries/components/common/actions.mockup'
 import { classes } from '../common/classes'
 import { DropPlace, TabItem, type WorkspaceTab } from './TabItem'
 import { tabMenuOf } from './TabMenu'
@@ -24,13 +23,13 @@ export type TabDrag = { tab: string; index: number }
  * The sessions whose tabs the user closed, the last closed first: the mark
  * of the agent, the title, and the time. Each one reopens as a tab.
  */
-export const historyEntries: readonly MenuEntry[] = closedSessions.map(
-  (session): MenuEntry => ({
+export const historyEntries: readonly MenuEntryData[] = closedSessions.map(
+  (session): MenuEntryData => ({
     kind: 'item',
     label: nameLabel(session.title),
-    mark: <AgentMark agent={session.agent} />,
+    mark: { kind: 'agent', agent: session.agent },
     detail: session.closed,
-    trailingIcon: RotateCcw,
+    trailingIcon: 'rotate-ccw',
   }),
 )
 
@@ -38,15 +37,16 @@ export const historyEntries: readonly MenuEntry[] = closedSessions.map(
 function HistoryButton(props: {
   open: boolean
   anchored: boolean
-  entries: readonly MenuEntry[]
+  entries: readonly MenuEntryData[]
 }) {
   const hasHistory = props.entries.some((entry) => entry.kind === 'item')
   const button = (
-    <IconButton
+    <iconButton.Component
       expanded={props.open}
-      icon={History}
+      icon="history"
       label="Session history"
       menu
+      moklyInstance="session-history"
     />
   )
   return (
@@ -61,9 +61,10 @@ function HistoryButton(props: {
         )
       ) : null}
       {props.open && props.anchored ? (
-        <Menu
+        <menuPart.Component
           entries={props.entries}
           label="Session history"
+          moklyInstance="history-menu"
           placement="below-end"
           wide
         />
@@ -96,7 +97,7 @@ function placeAfterDrop(from: number, index: number): number {
 export function WorkspaceTabs(props: {
   tabs: readonly WorkspaceTab[]
   viewport: Viewport
-  historyEntries?: readonly MenuEntry[]
+  historyEntries?: readonly MenuEntryData[]
   historyOpen?: boolean
   /**
    * A read-only workspace, such as an archived one: no new session, and a
@@ -161,7 +162,11 @@ export function WorkspaceTabs(props: {
       </ul>
       {readOnly ? null : (
         <ScreenLink asChild to={paths.sessions}>
-          <IconButton icon={Plus} label="New session" />
+          <iconButton.Component
+            icon="plus"
+            label="New session"
+            moklyInstance="new-session"
+          />
         </ScreenLink>
       )}
       <HistoryButton

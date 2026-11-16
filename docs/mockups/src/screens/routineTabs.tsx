@@ -1,7 +1,8 @@
-import { LinkTabs } from '../components/common/LinkTabs'
+import { linkTabs } from '../entries/components/common/LinkTabs.mockup'
 import type { Routine } from '../fixtures/routines'
 import { paths } from '../paths'
 import type { RoutineState } from './routineState'
+import { defined } from '../defined'
 
 /** The pages of the two tabs of a routine, where the mockups draw them. */
 type TabPages = { routine?: string; runs?: string }
@@ -33,15 +34,20 @@ export function RoutineTabs(props: {
     ? { routine: paths.suspendedRoutine, runs: paths.suspendedRoutineRuns }
     : (tabPages[props.routine.key] ?? {})
   return (
-    <LinkTabs
+    <linkTabs.Component
       label="Routine"
+      moklyInstance="routine-tabs"
       tabs={[
         {
           label: 'Routine',
-          to: pages.routine,
           selected: props.tab === 'routine',
+          ...defined({ to: pages.routine }),
         },
-        { label: 'Runs', to: pages.runs, selected: props.tab === 'runs' },
+        {
+          label: 'Runs',
+          selected: props.tab === 'runs',
+          ...defined({ to: pages.runs }),
+        },
       ]}
     />
   )

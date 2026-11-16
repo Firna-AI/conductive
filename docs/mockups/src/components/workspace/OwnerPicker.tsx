@@ -8,7 +8,8 @@ import {
 } from '../../fixtures/members'
 import { noop } from '../../noop'
 import { paths } from '../../paths'
-import { Menu, type MenuEntry } from '../common/Menu'
+import { menu } from '../../entries/components/common/Menu.mockup'
+import type { MenuEntryData } from '../../entries/components/common/menuEntries'
 import { ScreenLink } from '../common/ScreenLink'
 import a11y from '../common/a11y.module.css'
 import { useControlSizes } from '../common/touch'
@@ -22,15 +23,13 @@ import styles from './OwnerPicker.module.css'
  * the cloud computer keeps running. One exception: a workspace whose stop
  * for a suspended owner has not finished still stops.
  */
-export function reassignMenu(owner: PersonKey): MenuEntry[] {
+export function reassignMenu(owner: PersonKey): MenuEntryData[] {
   return [
     { kind: 'label', label: 'Owner' },
-    ...acmeMembers.map((membership): MenuEntry => ({
+    ...acmeMembers.map((membership): MenuEntryData => ({
       kind: 'item',
       label: people[membership.person].name,
-      mark: (
-        <PersonAvatar initials={people[membership.person].initials} size={18} />
-      ),
+      mark: { kind: 'person', initials: people[membership.person].initials },
       checked: membership.person === owner,
     })),
     { kind: 'divider' },
@@ -109,9 +108,10 @@ export function OwnerPicker(props: {
         </ScreenLink>
       )}
       {props.open && !props.compact ? (
-        <Menu
+        <menu.Component
           entries={reassignMenu(owner.key)}
           label="Owner"
+          moklyInstance="owner-menu"
           placement="below-end"
           wide
         />

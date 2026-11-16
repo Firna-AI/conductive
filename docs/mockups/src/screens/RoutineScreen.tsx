@@ -1,5 +1,5 @@
 import type { Viewport } from '@mokly/mokly'
-import { Page } from '../components/layout/Page'
+import { page } from '../entries/components/layout/Page.mockup'
 import { SuspendedOrgNotice } from '../components/orgs/SuspendedOrgNotice'
 import { DeleteRoutineDialog } from '../components/routines/DeleteRoutineDialog'
 import { RunsPanel } from '../components/routines/RunsPanel'
@@ -20,6 +20,7 @@ import {
   type RoutineState,
 } from './routineState'
 import { RoutineTabs } from './routineTabs'
+import { defined } from '../defined'
 import styles from './RoutineScreen.module.css'
 
 /**
@@ -118,33 +119,36 @@ export function RoutineScreen(props: {
       state={state}
       viewport={viewport}
     >
-      <Page
-        actions={routineActions({
-          routine,
-          access,
-          save: saveStateOf(state, routine),
-          viewport,
-          withForm: !runsTab,
-          runNow: offersRunNow(edits.map((edit) => edit.trigger)),
-          ...links,
-        })}
+      <page.Component
         back={{
           label: 'Routines',
           to: suspended ? paths.suspendedRoutines : paths.routines,
         }}
         fill
         subtitle="Routine"
-        tabs={
-          mobile && routine.saved ? (
-            <RoutineTabs
-              routine={routine}
-              suspended={suspended}
-              tab={state.tab}
-            />
-          ) : undefined
-        }
         title={titleOf(routine)}
         viewport={viewport}
+        {...defined({
+          // A member gets no actions, so the page has no bar of actions.
+          actions:
+            routineActions({
+              routine,
+              access,
+              save: saveStateOf(state, routine),
+              viewport,
+              withForm: !runsTab,
+              runNow: offersRunNow(edits.map((edit) => edit.trigger)),
+              ...links,
+            }) ?? undefined,
+          tabs:
+            mobile && routine.saved ? (
+              <RoutineTabs
+                routine={routine}
+                suspended={suspended}
+                tab={state.tab}
+              />
+            ) : undefined,
+        })}
       >
         {mobile ? (
           <div className={styles.phoneScroll}>
@@ -167,7 +171,7 @@ export function RoutineScreen(props: {
             {runs}
           </div>
         )}
-      </Page>
+      </page.Component>
     </RoutineFrame>
   )
 }

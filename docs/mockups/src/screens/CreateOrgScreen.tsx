@@ -1,8 +1,8 @@
 import type { SchemaProps, Viewport } from '@mokly/mokly'
 import { ScreenLink } from '../components/common/ScreenLink'
-import { ActionButton } from '../components/common/actions'
-import { MobileFrame } from '../components/layout/AppFrame'
-import { Page } from '../components/layout/Page'
+import { actionButton } from '../entries/components/common/actions.mockup'
+import { mobileFrame } from '../entries/components/layout/AppFrame.mockup'
+import { page as pagePart } from '../entries/components/layout/Page.mockup'
 import { OrgNameFields } from '../components/settings/OrgSections'
 import { RepositoryList } from '../components/settings/RepositoryList'
 import {
@@ -11,6 +11,7 @@ import {
   type ReachableRepository,
 } from '../fixtures/repositories'
 import { paths } from '../paths'
+import { defined } from '../defined'
 import styles from './forms.module.css'
 
 export const createOrgSchema = {
@@ -66,14 +67,20 @@ export function CreateOrgScreen(props: {
   const cancelTo = first ? paths.getStartedInstalled : paths.shell
   const createdTo = first ? paths.getStartedOrgCreated : paths.anotherNewOrg
   const create = (
-    <ActionButton disabled={!ready} tone="primary">
+    <actionButton.Component
+      disabled={!ready}
+      moklyInstance="create-org"
+      tone="primary"
+    >
       Create org
-    </ActionButton>
+    </actionButton.Component>
   )
   const actions = (
     <>
       <ScreenLink asChild to={cancelTo}>
-        <ActionButton>Cancel</ActionButton>
+        <actionButton.Component moklyInstance="cancel-create-org">
+          Cancel
+        </actionButton.Component>
       </ScreenLink>
       {ready ? (
         <ScreenLink asChild to={createdTo}>
@@ -86,10 +93,12 @@ export function CreateOrgScreen(props: {
   )
   const mobile = props.viewport === 'mobile'
   const page = (
-    <Page
-      actions={mobile ? actions : undefined}
-      back={mobile ? { label: 'Cancel', to: cancelTo } : undefined}
+    <pagePart.Component
       title="Create an org"
+      {...defined({
+        actions: mobile ? actions : undefined,
+        back: mobile ? { label: 'Cancel', to: cancelTo } : undefined,
+      })}
       viewport={props.viewport}
     >
       <div className={styles.form}>
@@ -104,8 +113,8 @@ export function CreateOrgScreen(props: {
         </div>
         {mobile ? null : <div className={styles.actions}>{actions}</div>}
       </div>
-    </Page>
+    </pagePart.Component>
   )
-  if (mobile) return <MobileFrame>{page}</MobileFrame>
+  if (mobile) return <mobileFrame.Component>{page}</mobileFrame.Component>
   return <div className={styles.standalone}>{page}</div>
 }

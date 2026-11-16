@@ -1,7 +1,6 @@
-import { Ban, Hourglass } from 'lucide-react'
 import type { UserPage } from '../../fixtures/operatorUserPages'
 import { paths } from '../../paths'
-import { Notice } from '../common/Notice'
+import { notice as noticePart } from '../../entries/components/common/Notice.mockup'
 import { DetailList } from '../settings/DetailList'
 import { Section } from '../settings/Section'
 import { AppAccessSection, ReferralSection } from './AccessSections'
@@ -19,16 +18,24 @@ function UserNotice(props: { user: UserPage }) {
   if (user.suspension) {
     const { since, by, stopping } = user.suspension
     return (
-      <Notice
+      <noticePart.Component
         body={suspendedUserBody(name, stopping)}
-        icon={Ban}
+        icon="ban"
+        moklyInstance="suspended-notice"
         title={suspendedTitle(since, by)}
       />
     )
   }
   if (user.access.state === 'waiting') {
     const notice = waitingNotice(name, user.access.since)
-    return <Notice body={notice.body} icon={Hourglass} title={notice.title} />
+    return (
+      <noticePart.Component
+        body={notice.body}
+        icon="hourglass"
+        moklyInstance="waiting-notice"
+        title={notice.title}
+      />
+    )
   }
   return null
 }

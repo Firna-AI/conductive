@@ -1,10 +1,9 @@
 import type { Viewport } from '@mokly/mokly'
-import { SearchX } from 'lucide-react'
-import { EmptyState } from '../components/common/EmptyState'
-import { LoadFailure } from '../components/common/LoadFailure'
+import { emptyState } from '../entries/components/common/EmptyState.mockup'
+import { loadFailure } from '../entries/components/common/LoadFailure.mockup'
 import { ScreenLink } from '../components/common/ScreenLink'
-import { ActionButton } from '../components/common/actions'
-import { Page } from '../components/layout/Page'
+import { actionButton } from '../entries/components/common/actions.mockup'
+import { page } from '../entries/components/layout/Page.mockup'
 import { SuspendedOrgNotice } from '../components/orgs/SuspendedOrgNotice'
 import { orgs, suspendedOrg } from '../fixtures/orgs'
 import { paths } from '../paths'
@@ -25,17 +24,24 @@ type Pages = { routine: string; routines: string }
 function Content(props: { read: NotShown; pages: Pages }) {
   if (props.read === 'failed') {
     return (
-      <LoadFailure title="The routine didn't load" to={props.pages.routine} />
+      <loadFailure.Component
+        moklyInstance="routine-load-failure"
+        title="The routine didn't load"
+        to={props.pages.routine}
+      />
     )
   }
   return (
-    <EmptyState
+    <emptyState.Component
       action={
         <ScreenLink asChild to={props.pages.routines}>
-          <ActionButton tone="primary">Open Routines</ActionButton>
+          <actionButton.Component moklyInstance="open-routines" tone="primary">
+            Open Routines
+          </actionButton.Component>
         </ScreenLink>
       }
-      icon={SearchX}
+      icon="search-x"
+      moklyInstance="routine-not-available"
       title="This routine is not available"
     />
   )
@@ -64,7 +70,7 @@ export function RoutineNotShown(props: {
     </>
   )
   return (
-    <Page
+    <page.Component
       back={{ label: 'Routines', to: pages.routines }}
       fill
       title="Routine"
@@ -81,6 +87,6 @@ export function RoutineNotShown(props: {
           </div>
         </div>
       )}
-    </Page>
+    </page.Component>
   )
 }

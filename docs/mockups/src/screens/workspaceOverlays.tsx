@@ -1,14 +1,16 @@
 import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
-import { Square, X } from 'lucide-react'
 import { nameLabel } from '../../../../src/shared/name-label'
-import { ActionButton } from '../components/common/actions'
-import { ToastLayer } from '../components/common/ToastLayer'
-import { ConfirmDialog, DialogText } from '../components/common/ConfirmDialog'
-import { FailureToast } from '../components/common/FailureToast'
-import { Menu } from '../components/common/Menu'
+import { actionButton } from '../entries/components/common/actions.mockup'
+import { toastLayer } from '../entries/components/common/ToastLayer.mockup'
+import {
+  confirmDialog,
+  dialogText,
+} from '../entries/components/common/ConfirmDialog.mockup'
+import { failureToast } from '../entries/components/common/FailureToast.mockup'
+import { menu } from '../entries/components/common/Menu.mockup'
 import { ScreenLink } from '../components/common/ScreenLink'
-import { Sheet } from '../components/common/Sheet'
+import { sheet } from '../entries/components/common/Sheet.mockup'
 import { CommandPalette } from '../components/palette/CommandPalette'
 import type { PaletteContext } from '../components/palette/paletteContent'
 import { ArchivedToast } from '../components/workspace/ArchivedToast'
@@ -47,25 +49,32 @@ export function workspacePalette(
 function CloseSessionDialog(props: { viewport: Viewport }) {
   const session = workspaceSessions[0]
   return (
-    <ConfirmDialog
+    <confirmDialog.Component
       actions={
         <>
           <ScreenLink asChild to={paths.chat}>
-            <ActionButton>Cancel</ActionButton>
+            <actionButton.Component moklyInstance="dialog-cancel">
+              Cancel
+            </actionButton.Component>
           </ScreenLink>
-          <ActionButton icon={Square} tone="primary">
+          <actionButton.Component
+            icon="square"
+            moklyInstance="dialog-stop-and-close"
+            tone="primary"
+          >
             Stop and close
-          </ActionButton>
+          </actionButton.Component>
         </>
       }
+      moklyInstance="close-session-dialog"
       title="Stop the turn and close the tab?"
       viewport={props.viewport}
     >
-      <DialogText>
+      <dialogText.Component moklyInstance="session-moves">
         The agent is working in {nameLabel(session.title)}. The session moves to
         the session history, where you can reopen it.
-      </DialogText>
-    </ConfirmDialog>
+      </dialogText.Component>
+    </confirmDialog.Component>
   )
 }
 
@@ -76,32 +85,40 @@ function CloseSessionDialog(props: { viewport: Viewport }) {
  */
 function CloseTerminalDialog(props: { viewport: Viewport }) {
   return (
-    <ConfirmDialog
+    <confirmDialog.Component
       actions={
         <>
           <ScreenLink asChild to={paths.terminal}>
-            <ActionButton>Cancel</ActionButton>
+            <actionButton.Component moklyInstance="dialog-cancel">
+              Cancel
+            </actionButton.Component>
           </ScreenLink>
-          <ActionButton icon={X} tone="danger">
+          <actionButton.Component
+            icon="x"
+            moklyInstance="dialog-close-terminal"
+            tone="danger"
+          >
             Close terminal
-          </ActionButton>
+          </actionButton.Component>
         </>
       }
+      moklyInstance="close-terminal-dialog"
       title={`Close ${closedTerminal}?`}
       viewport={props.viewport}
     >
-      <DialogText>
+      <dialogText.Component moklyInstance="terminal-ends">
         Its shell and any running commands end for everyone in this workspace.
-      </DialogText>
-    </ConfirmDialog>
+      </dialogText.Component>
+    </confirmDialog.Component>
   )
 }
 
 /** The toast of a terminal that did not open or close, with its message. */
 function TerminalFailure(props: { title: string; viewport: Viewport }) {
   return (
-    <FailureToast
+    <failureToast.Component
       message={cloudComputerSilent}
+      moklyInstance="terminal-failure"
       phone={props.viewport === 'mobile'}
       title={props.title}
     />
@@ -121,14 +138,16 @@ export function transcriptToast(
       return null
     case 'copied':
       return (
-        <ToastLayer
+        <toastLayer.Component
+          moklyInstance="transcript-toast"
           phone={viewport === 'mobile'}
           toast={{ title: transcriptToasts.copied, tone: 'success' }}
         />
       )
     case 'failed':
       return (
-        <ToastLayer
+        <toastLayer.Component
+          moklyInstance="transcript-toast"
           phone={viewport === 'mobile'}
           toast={{ title: transcriptToasts.failed, tone: 'error' }}
         />
@@ -159,23 +178,25 @@ export function workspaceOverlay(
       return <ContinueDialog viewport={viewport} workspace={workspace} />
     case 'history':
       return mobile ? (
-        <Sheet title="Session history">
-          <Menu
+        <sheet.Component moklyInstance="history-sheet" title="Session history">
+          <menu.Component
             entries={historyFor(state)}
             label="Session history"
+            moklyInstance="history-menu"
             placement="sheet"
           />
-        </Sheet>
+        </sheet.Component>
       ) : null
     case 'reassign':
       return mobile ? (
-        <Sheet title={workspace.name}>
-          <Menu
+        <sheet.Component moklyInstance="owner-sheet" title={workspace.name}>
+          <menu.Component
             entries={reassignMenu(workspace.owner)}
             label="Owner"
+            moklyInstance="owner-menu"
             placement="sheet"
           />
-        </Sheet>
+        </sheet.Component>
       ) : null
     case 'tab-menu':
       return mobile && row.menuTab ? (

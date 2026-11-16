@@ -6,7 +6,7 @@ import {
 } from '../../fixtures/shortcutChanges'
 import { paths } from '../../paths'
 import { classes } from '../common/classes'
-import { LoadFailure } from '../common/LoadFailure'
+import { loadFailure } from '../../entries/components/common/LoadFailure.mockup'
 import type { RowFocus } from './rowControls'
 import type {
   ListDrag,
@@ -93,7 +93,10 @@ export function Sidebar(props: {
           />
         </div>
         {props.failed ? (
-          <LoadFailure title="The workspaces didn't load" />
+          <loadFailure.Component
+            moklyInstance="sidebar-load-failure"
+            title="The workspaces didn't load"
+          />
         ) : (
           <SectionList
             archived={props.archived}

@@ -1,9 +1,13 @@
-import { Check, FolderGit2, Plus, X } from 'lucide-react'
+import { Check, FolderGit2 } from 'lucide-react'
 import type { ReachableRepository } from '../../fixtures/repositories'
-import { ActionButton, IconButton } from '../common/actions'
-import { EmptyState } from '../common/EmptyState'
-import { ExternalLink } from '../common/ExternalLink'
-import { SearchField } from '../common/SearchField'
+import {
+  actionButton,
+  iconButton,
+} from '../../entries/components/common/actions.mockup'
+import { emptyState } from '../../entries/components/common/EmptyState.mockup'
+import { externalLink } from '../../entries/components/common/ExternalLink.mockup'
+import { searchField } from '../../entries/components/common/SearchField.mockup'
+import { instanceKey } from '../../instanceKey'
 import styles from './RepositoryList.module.css'
 
 /**
@@ -28,12 +32,21 @@ function Row(props: { repository: ReachableRepository; readOnly?: boolean }) {
             <Check aria-hidden size={13} />
             Added
           </span>
-          <IconButton icon={X} label={`Remove ${repository.name}`} quiet />
+          <iconButton.Component
+            icon="x"
+            label={`Remove ${repository.name}`}
+            moklyInstance={`remove-${instanceKey(repository.name)}`}
+            quiet
+          />
         </>
       ) : (
-        <ActionButton accessibilityLabel={`Add ${repository.name}`} icon={Plus}>
+        <actionButton.Component
+          accessibilityLabel={`Add ${repository.name}`}
+          icon="plus"
+          moklyInstance={`add-${instanceKey(repository.name)}`}
+        >
           Add
-        </ActionButton>
+        </actionButton.Component>
       )}
     </li>
   )
@@ -50,20 +63,27 @@ export function RepositoryList(props: {
 }) {
   if (props.repositories.length === 0) {
     return (
-      <EmptyState
+      <emptyState.Component
+        moklyInstance="no-repositories"
         action={
-          <ExternalLink href={githubAccessUrl}>Manage access</ExternalLink>
+          <externalLink.Component
+            href={githubAccessUrl}
+            moklyInstance="grant-access"
+          >
+            Manage access
+          </externalLink.Component>
         }
         body="The repositories that the GitHub App can reach show here."
-        icon={FolderGit2}
+        icon="folder-git-2"
         title="Give the GitHub App access to a repository"
       />
     )
   }
   return (
     <div className={styles.picker}>
-      <SearchField
+      <searchField.Component
         label="Search repositories"
+        moklyInstance="search-repositories"
         placeholder="Search repositories"
         query={props.search}
       />
@@ -74,7 +94,12 @@ export function RepositoryList(props: {
       </ul>
       <p className={styles.note}>
         The list shows the repositories that the GitHub App can reach.{' '}
-        <ExternalLink href={githubAccessUrl}>Manage access</ExternalLink>
+        <externalLink.Component
+          href={githubAccessUrl}
+          moklyInstance="manage-access"
+        >
+          Manage access
+        </externalLink.Component>
       </p>
     </div>
   )

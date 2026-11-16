@@ -1,9 +1,9 @@
 import { Fragment, type ReactNode } from 'react'
 import { Check, Gauge, Plus } from 'lucide-react'
 import { classes } from '../components/common/classes'
-import { Menu } from '../components/common/Menu'
+import { menu as menuPart } from '../entries/components/common/Menu.mockup'
 import { ScreenLink } from '../components/common/ScreenLink'
-import { Sheet } from '../components/common/Sheet'
+import { sheet } from '../entries/components/common/Sheet.mockup'
 import orgDrag from '../components/orgs/OrgDrag.module.css'
 import {
   OrgDrop,
@@ -97,7 +97,7 @@ export function OrgSwitcherSheet(props: {
       </OrgDrop>
     ) : null
   return (
-    <Sheet title="Orgs">
+    <sheet.Component moklyInstance="org-sheet" title="Orgs">
       <nav aria-label="Orgs">
         <ul className={styles.sheetList}>
           {orgs.map((org, index) => (
@@ -141,7 +141,7 @@ export function OrgSwitcherSheet(props: {
           </SheetRow>
         ) : null}
       </nav>
-    </Sheet>
+    </sheet.Component>
   )
 }
 
@@ -149,16 +149,17 @@ export function OrgSwitcherSheet(props: {
 export function SectionSheet() {
   const section = sections[menuSection]
   return (
-    <Sheet title={section.name}>
-      <Menu
+    <sheet.Component moklyInstance="section-sheet" title={section.name}>
+      <menuPart.Component
         entries={sectionMenu({
           first: sectionKeys[0] === menuSection,
           last: sectionKeys.at(-1) === menuSection,
         })}
         label={section.name}
+        moklyInstance="section-menu"
         placement="sheet"
       />
-    </Sheet>
+    </sheet.Component>
   )
 }
 
@@ -172,8 +173,13 @@ export function WorkspaceMenuSheet(props: { menu: RowMenuOpen }) {
   const { menu } = props
   const shown = menu.submenu ?? menu
   return (
-    <Sheet title={menu.label}>
-      <Menu entries={shown.entries} label={shown.label} placement="sheet" />
-    </Sheet>
+    <sheet.Component moklyInstance="workspace-menu-sheet" title={menu.label}>
+      <menuPart.Component
+        entries={shown.entries}
+        label={shown.label}
+        moklyInstance="workspace-menu"
+        placement="sheet"
+      />
+    </sheet.Component>
   )
 }

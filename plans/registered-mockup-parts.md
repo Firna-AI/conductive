@@ -92,8 +92,20 @@ counts and test under `.context/mokly-html/` of this workspace.
   picture is the same. So this pull request lists almost every screen.
   The proof found that these screens differ only by Mokly's markers, the
   frame-probe data, and React `useId` values.
-- Until a parent is registered, an instance name must be unique in the
-  whole view, because a plain parent makes no instance scope.
+- Content that a screen supplies keeps the scope of its outermost slot,
+  also inside the slots of other registered parts. Only the own render of
+  a registered part starts a new scope. So an instance name must be unique
+  across a whole frame area: the main area, the sidebar, the overlay, the
+  phone column, or one marketing picture. A repeat across nested slots
+  fails in the core with `conflicting fragment input <key>`, which names
+  no entry. The follow-up item `mokly-repeated-instance-diagnostic.md`
+  asks Mokly for a better message.
+- Mokly compares a part inside a screen by its props. An input that
+  reaches a part only through React context, such as the Mac app state or
+  the touch sizes, is not compared.
+- An entry module that imports another part's entry module, to fill a
+  variant slot, adds that part's CSS to the bundle of every screen that
+  imports it.
 
 ## Design
 
@@ -153,6 +165,28 @@ These are design calls of the agent, made on 2026-11-13:
   screens show. Until decision 521 is answered, each part has at most five
   entries: its own page and four variants. A component variant cannot have
   child pages. Pick the states that cover the most CSS rules.
+- **The viewport of a part** (2026-11-16). A part that draws a different
+  layout by viewport takes an optional `viewport` data prop, or `phone`
+  for the toasts, and falls back to the render context on its own pages.
+  Reason: the Mac app views and the `phone` and `mac` marketing pictures
+  draw a screen of the other viewport.
+- **Inputs from React context** (2026-11-16). Milestone 6 registers
+  `MacScreen` with the Mac app state as data and the banner as a slot. The
+  parts with touch sizes get a variant with the touch sizes through a prop
+  that only their own pages pass. Milestone 7 states the inputs that stay
+  uncompared. Reason: the Mac app state is the largest input that Changes
+  cannot see, and Milestone 6 registers `MacScreen` anyway.
+- **Variant slots** (2026-11-16). A variant slot uses parts whose CSS its
+  consumers load already, or a placeholder. Reason: another import adds
+  CSS to screen bundles that the HTML comparison cannot see.
+- **Shared helpers.** One list of icon keys in
+  `docs/mockups/src/entries/components/common/icons.ts`. Menu entries are
+  JSON. `defined()` drops undefined props before a wrapper. `instanceKey()`
+  and `shortcutKey()` make names from fixture keys and shortcuts.
+- **Uses that stay plain** (2026-11-16). `InlineText` in the blocks of
+  `MarkdownView` stays plain, because the blocks have no stable key.
+  `RailLink` and `RailTile` inside `OrgItem` stay plain, because they share
+  its file, and a wrapper there would import the file's own entry module.
 - **The check for each milestone.** Each mockup milestone compares its
   built screen documents with a build of the merge base, without the
   Mokly markers, the frame-probe data, and `useId` values. A screen that
@@ -203,20 +237,20 @@ screen uses: 37 parts, with the two marketing frames.
       key.
 - [x] Add the `components` folder of the catalogue, with its
       `_folder.json`, to the order in `docs/mockups/src/entries/_folder.json`.
-- [ ] Register the 23 parts of `components/common/`.
-- [ ] Register the 8 parts of `components/layout/` and the 3 parts of
+- [x] Register the 23 parts of `components/common/`.
+- [x] Register the 8 parts of `components/layout/` and the 3 parts of
       `components/brand/`.
-- [ ] Move each mockup-only consumer of these parts to the wrapper.
+- [x] Move each mockup-only consumer of these parts to the wrapper.
       Keep the plain part in each file that the app reaches. Check this
       with `.context/mokly-html/closure2.mjs`.
-- [ ] Run `npm run mockups:check`, `npm run lint`, `npm run format:check`,
+- [x] Run `npm run mockups:check`, `npm run lint`, `npm run format:check`,
       and `npm run exports:check`.
-- [ ] Compare the built screen documents with a build of the merge base
+- [x] Compare the built screen documents with a build of the merge base
       without markers, as the design says. Save the result under
       `.context/registered-mockup-parts/`.
-- [ ] Smoke-test the new component pages and five screens that use them,
+- [x] Smoke-test the new component pages and five screens that use them,
       at both sizes, in light and dark.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
 
 ## Milestone 2: Mockups, workspaces and orgs
@@ -338,7 +372,9 @@ Mac app: 38 parts.
 
 - [ ] Register the other 23 parts of `components/marketing/` and the 7 of
       `components/parity/`.
-- [ ] Register the 8 parts of `components/mac/`.
+- [ ] Register the 8 parts of `components/mac/`. `MacScreen` takes the Mac
+      app state as data and the banner as a slot, as the design says.
+- [ ] Give the parts with touch sizes a variant with the touch sizes.
 - [ ] Check with `.context/registered-mockup-parts/inventory.mjs` that
       every part of the design is registered.
 - [ ] Move each mockup-only consumer of these parts to the wrapper.
@@ -365,8 +401,9 @@ the product does not change.
 
 - [ ] Update "How a screen is built" and "Folder layout" in
       `docs/mockups/README.md`: the registered parts, their place, the
-      wrapper rule for files that the app reaches, Affected screens, and
-      the CSS rules that still give screen rows.
+      wrapper rule for files that the app reaches, Affected screens, the
+      CSS rules that still give screen rows, the inputs from React context
+      that Changes does not compare, and the scope of instance names.
 - [ ] Add the `components` paths to `docs/mockups/catalogue.md`.
 - [ ] Check each relative link of the changed Markdown files.
 

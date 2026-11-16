@@ -1,9 +1,12 @@
 import type { SchemaProps, Viewport } from '@mokly/mokly'
 import { ChatPane } from '../components/chat/ChatPane'
-import { Menu } from '../components/common/Menu'
-import { Sheet } from '../components/common/Sheet'
-import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
-import { Page } from '../components/layout/Page'
+import { menu } from '../entries/components/common/Menu.mockup'
+import { sheet as sheetPart } from '../entries/components/common/Sheet.mockup'
+import {
+  appFrame,
+  mobileFrame,
+} from '../entries/components/layout/AppFrame.mockup'
+import { page as pagePart } from '../entries/components/layout/Page.mockup'
 import { useMacApp } from '../components/mac/MacApp'
 import { formWait } from '../components/new-workspace/waitingRepository'
 import { orgSuspendedReason } from '../components/orgs/suspension'
@@ -23,6 +26,7 @@ import {
 } from './newWorkspaceParts'
 import { repositoryMenu, waitingNotice } from './newWorkspaceRepositories'
 import { Start } from './newWorkspaceStart'
+import { defined } from '../defined'
 
 export const newWorkspaceSchema = {
   type: 'object',
@@ -183,42 +187,50 @@ export function NewWorkspaceScreen(props: {
   const mobile = props.viewport === 'mobile'
   const pageOrgData = pageOrg(state)
   const page = (
-    <Page
-      back={mobile ? { label: 'Workspaces', to: pageOrgData.list } : undefined}
+    <pagePart.Component
       fill
+      {...defined({
+        back: mobile
+          ? { label: 'Workspaces', to: pageOrgData.list }
+          : undefined,
+      })}
       subtitle={pageOrgData.org.name}
       title="New workspace"
       viewport={props.viewport}
     >
       <NewChat state={state} viewport={props.viewport} />
-    </Page>
+    </pagePart.Component>
   )
   if (mobile) {
     const sheet =
       state.repositoryMenu === 'open' &&
       state.repositories !== 'none' &&
       state.org !== 'suspended' ? (
-        <Sheet title="Repository">
-          <Menu
+        <sheetPart.Component
+          moklyInstance="repository-sheet"
+          title="Repository"
+        >
+          <menu.Component
             entries={repositoryMenu(pageOrgData, state.waitingBuild)}
             label="Repository"
+            moklyInstance="repository-menu"
             placement="sheet"
           />
-        </Sheet>
+        </sheetPart.Component>
       ) : null
     return (
-      <MobileFrame>
+      <mobileFrame.Component>
         {page}
         {sheet}
-      </MobileFrame>
+      </mobileFrame.Component>
     )
   }
   return (
-    <AppFrame
+    <appFrame.Component
       rail={railOf(state)}
       sidebar={sidebarOf(state, mac?.needsInput, props.shortcuts)}
     >
       {page}
-    </AppFrame>
+    </appFrame.Component>
   )
 }

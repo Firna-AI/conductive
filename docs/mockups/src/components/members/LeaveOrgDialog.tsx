@@ -1,11 +1,13 @@
 import type { Viewport } from '@mokly/mokly'
-import { LogOut } from 'lucide-react'
 import type { PersonKey } from '../../fixtures/members'
 import { orgs, suspendedOrg } from '../../fixtures/orgs'
 import { workspaceList } from '../../fixtures/workspaces'
 import { paths } from '../../paths'
-import { ActionButton } from '../common/actions'
-import { ConfirmDialog, DialogText } from '../common/ConfirmDialog'
+import { actionButton } from '../../entries/components/common/actions.mockup'
+import {
+  confirmDialog,
+  dialogText,
+} from '../../entries/components/common/ConfirmDialog.mockup'
 import { ScreenLink } from '../common/ScreenLink'
 
 /**
@@ -24,26 +26,33 @@ export function LeaveOrgDialog(props: {
   ).length
   const owned = `${total} ${total === 1 ? 'workspace' : 'workspaces'}`
   return (
-    <ConfirmDialog
+    <confirmDialog.Component
       actions={
         <>
           <ScreenLink asChild to={paths.suspendedLeave}>
-            <ActionButton>Cancel</ActionButton>
+            <actionButton.Component moklyInstance="dialog-cancel">
+              Cancel
+            </actionButton.Component>
           </ScreenLink>
           <ScreenLink asChild to={paths.getStartedNoOrg}>
-            <ActionButton icon={LogOut} tone="danger">
+            <actionButton.Component
+              icon="log-out"
+              moklyInstance="dialog-leave-org"
+              tone="danger"
+            >
               Leave org
-            </ActionButton>
+            </actionButton.Component>
           </ScreenLink>
         </>
       }
+      moklyInstance="leave-org-dialog"
       title={`Leave ${org.name}?`}
       viewport={props.viewport}
     >
-      <DialogText>
+      <dialogText.Component>
         You can no longer open {org.name} or read its chats. Your {owned} stay
         in {org.name}.
-      </DialogText>
-    </ConfirmDialog>
+      </dialogText.Component>
+    </confirmDialog.Component>
   )
 }

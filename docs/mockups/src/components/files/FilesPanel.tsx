@@ -1,13 +1,12 @@
 import type { ReactNode } from 'react'
-import { CircleSlash } from 'lucide-react'
 import { splitPath, withPublicOpen } from '../../fixtures/files'
 import { filesFor, type PathState } from '../../fixtures/maskedFiles'
 import type { BannerState } from '../../fixtures/pullRequests'
 import { checksPaths, paths } from '../../paths'
 import { allFilesUnavailable } from '../chat/lostCopy'
 import { LostUpdateRow } from '../chat/LostUpdate'
-import { EmptyState } from '../common/EmptyState'
-import { LinkTabs } from '../common/LinkTabs'
+import { emptyState } from '../../entries/components/common/EmptyState.mockup'
+import { linkTabs } from '../../entries/components/common/LinkTabs.mockup'
 import { PanelBar } from '../workspace/PanelBar'
 import { ChangeList } from './ChangeList'
 import { ChecksList } from './ChecksList'
@@ -65,8 +64,9 @@ function FileTabs(props: {
 }) {
   return (
     <PanelBar>
-      <LinkTabs
+      <linkTabs.Component
         label="Files"
+        moklyInstance="files-tabs"
         tabs={[
           {
             label: 'All files',
@@ -76,7 +76,7 @@ function FileTabs(props: {
           {
             label: 'Changes',
             to: paths.filesChanges,
-            count: props.changes > 0 ? props.changes : undefined,
+            ...(props.changes > 0 ? { count: props.changes } : {}),
             selected: props.view === 'changes',
           },
           {
@@ -137,9 +137,10 @@ export function FilesPanel(props: {
       {view === 'checks' ? <ChecksList state={props.banner} /> : null}
       {view !== 'checks' && props.placeholder ? props.placeholder : null}
       {view === 'all' && lists && props.tree === 'none' ? (
-        <EmptyState
+        <emptyState.Component
           body={allFilesUnavailable.body}
-          icon={CircleSlash}
+          icon="circle-slash"
+          moklyInstance="all-files-empty"
           title={allFilesUnavailable.title}
         />
       ) : null}

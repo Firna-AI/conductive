@@ -1,18 +1,17 @@
 import type { ReactNode } from 'react'
-import {
-  ChevronDown,
-  CornerDownLeft,
-  FolderGit2,
-  Paperclip,
-} from 'lucide-react'
+import { ChevronDown, CornerDownLeft } from 'lucide-react'
 import type { AgentChoice } from '../../fixtures/agents'
 import type { Attachment } from '../../fixtures/attachments'
 import { MessageField } from '../chat/MessageField'
 import { ModelPicker } from '../chat/ModelPicker'
-import { ActionButton, IconButton } from '../common/actions'
+import {
+  actionButton,
+  iconButton,
+} from '../../entries/components/common/actions.mockup'
 import { classes } from '../common/classes'
 import dialog from '../common/ConfirmDialog.module.css'
-import { Menu, type MenuEntry } from '../common/Menu'
+import { menu } from '../../entries/components/common/Menu.mockup'
+import type { MenuEntryData } from '../../entries/components/common/menuEntries'
 import styles from './NewWorkspaceDialog.module.css'
 
 /**
@@ -21,24 +20,30 @@ import styles from './NewWorkspaceDialog.module.css'
  */
 function RepositoryPicker(props: {
   name: string
-  menu?: readonly MenuEntry[]
+  menu?: readonly MenuEntryData[]
 }) {
   return (
     <span className={styles.anchor}>
-      <ActionButton
+      <actionButton.Component
         accessibilityLabel={`Repository: ${props.name}`}
         expanded={props.menu !== undefined}
-        icon={FolderGit2}
+        icon="folder-git-2"
         menu
+        moklyInstance="repository"
         tone="plain"
         trailing={
           <ChevronDown aria-hidden className={styles.chevron} size={13} />
         }
       >
         {props.name}
-      </ActionButton>
+      </actionButton.Component>
       {props.menu ? (
-        <Menu entries={props.menu} label="Repository" placement="below-start" />
+        <menu.Component
+          entries={props.menu}
+          label="Repository"
+          moklyInstance="repository-menu"
+          placement="below-start"
+        />
       ) : null}
     </span>
   )
@@ -51,23 +56,29 @@ function RepositoryPicker(props: {
 function SectionPicker(props: {
   place: string
   section: string
-  menu?: readonly MenuEntry[]
+  menu?: readonly MenuEntryData[]
 }) {
   return (
     <span className={classes(styles.anchor, styles.placeMenu)}>
-      <ActionButton
+      <actionButton.Component
         accessibilityLabel={`Section: ${props.section}`}
         expanded={props.menu !== undefined}
         menu
+        moklyInstance="section"
         tone="plain"
         trailing={
           <ChevronDown aria-hidden className={styles.chevron} size={13} />
         }
       >
         {props.place}
-      </ActionButton>
+      </actionButton.Component>
       {props.menu ? (
-        <Menu entries={props.menu} label="Section" placement="below-end" />
+        <menu.Component
+          entries={props.menu}
+          label="Section"
+          moklyInstance="section-menu"
+          placement="below-end"
+        />
       ) : null}
     </span>
   )
@@ -80,8 +91,9 @@ function SectionPicker(props: {
  */
 function CreateButton(props: { ready: boolean }) {
   return (
-    <ActionButton
+    <actionButton.Component
       disabled={!props.ready}
+      moklyInstance="create-workspace"
       tone={props.ready ? 'primary' : 'secondary'}
       trailing={
         <CornerDownLeft
@@ -92,7 +104,7 @@ function CreateButton(props: { ready: boolean }) {
       }
     >
       Create
-    </ActionButton>
+    </actionButton.Component>
   )
 }
 
@@ -103,7 +115,7 @@ export type NewWorkspaceDialogProps = {
    * The repository menu, drawn open: each chosen repository, and a waiting
    * one off with its note, as on the New workspace page.
    */
-  repositoryMenu?: readonly MenuEntry[]
+  repositoryMenu?: readonly MenuEntryData[]
   /** The org and the section that the new workspace joins. */
   place: string
   /** The section that the new workspace joins, such as General. */
@@ -112,7 +124,7 @@ export type NewWorkspaceDialogProps = {
    * The section menu, drawn open: each section of the org in the order of
    * the list, with the current one checked. Archived is not a section.
    */
-  sectionMenu?: readonly MenuEntry[]
+  sectionMenu?: readonly MenuEntryData[]
   /** The message, with a chip for each of its files at its place. */
   text: string
   attachments: readonly Attachment[]
@@ -196,7 +208,11 @@ export function NewWorkspaceDialog(props: NewWorkspaceDialogProps) {
         <div className={styles.footer}>
           <ModelPicker choice={props.choice} />
           <span className={styles.spacer} />
-          <IconButton icon={Paperclip} label="Attach files" />
+          <iconButton.Component
+            icon="paperclip"
+            label="Attach files"
+            moklyInstance="attach-files"
+          />
           <CreateButton ready={props.ready && !uploads} />
         </div>
       </section>

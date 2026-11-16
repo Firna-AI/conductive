@@ -1,6 +1,7 @@
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
-import { LoadFailure } from '../common/LoadFailure'
+import { defined } from '../../defined'
+import { loadFailure } from '../../entries/components/common/LoadFailure.mockup'
 import type { PaletteContent } from './paletteContent'
 import { paletteTabPaths } from './paletteViews'
 import styles from './CommandPalette.module.css'
@@ -37,9 +38,13 @@ export function PaletteStatusPart(props: { content: PaletteContent }) {
     case 'repositories-failed':
       return (
         <div className={styles.status}>
-          <LoadFailure
+          <loadFailure.Component
+            moklyInstance="palette-load-failure"
             title={failures[content.status]}
-            to={content.query === '' ? paletteTabPaths[content.tab] : undefined}
+            {...defined({
+              to:
+                content.query === '' ? paletteTabPaths[content.tab] : undefined,
+            })}
           />
         </div>
       )

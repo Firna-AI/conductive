@@ -1,10 +1,11 @@
-import { ArchiveRestore, ChevronDown, PanelLeft, Plus } from 'lucide-react'
+import { ChevronDown } from 'lucide-react'
 import { ScreenLink } from '../components/common/ScreenLink'
-import { ActionButton } from '../components/common/actions'
+import { actionButton } from '../entries/components/common/actions.mockup'
+import { defined } from '../defined'
 import a11y from '../components/common/a11y.module.css'
-import { EmptyState } from '../components/common/EmptyState'
-import { LoadFailure } from '../components/common/LoadFailure'
-import { AppFrame } from '../components/layout/AppFrame'
+import { emptyState } from '../entries/components/common/EmptyState.mockup'
+import { loadFailure } from '../entries/components/common/LoadFailure.mockup'
+import { appFrame } from '../entries/components/layout/AppFrame.mockup'
 import { acmeRail, type RailState } from '../components/layout/OrgRail'
 import responsive from '../components/layout/responsive.module.css'
 import { OrgTile } from '../components/orgs/OrgTile'
@@ -43,9 +44,13 @@ import styles from './WorkspaceListScreen.module.css'
 function NewWorkspaceAction(props: { to?: string }) {
   return (
     <ScreenLink asChild to={props.to ?? paths.newWorkspace}>
-      <ActionButton icon={Plus} tone="primary">
+      <actionButton.Component
+        icon="plus"
+        moklyInstance="new-workspace"
+        tone="primary"
+      >
         New workspace
-      </ActionButton>
+      </actionButton.Component>
     </ScreenLink>
   )
 }
@@ -127,7 +132,10 @@ export function HomeList(props: {
           />
         </div>
         {props.failed ? (
-          <LoadFailure title="The workspaces didn't load" />
+          <loadFailure.Component
+            moklyInstance="list-load-failure"
+            title="The workspaces didn't load"
+          />
         ) : (
           <SectionList
             archived={props.archived}
@@ -164,7 +172,7 @@ export function SuspendedList(props: {
   const org = orgs[suspendedOrg]
   const sections = props.sections ?? suspendedSections()
   return (
-    <AppFrame
+    <appFrame.Component
       rail={{ ...(props.rail ?? acmeRail), suspended: suspendedOrg }}
       sidebar={
         <Sidebar
@@ -190,16 +198,17 @@ export function SuspendedList(props: {
           viewer={props.viewer}
         />
       </div>
-    </AppFrame>
+    </appFrame.Component>
   )
 }
 
 /** The main area of a desktop list: the user picks a workspace. */
 export function ChooseWorkspace() {
   return (
-    <EmptyState
+    <emptyState.Component
       action={<NewWorkspaceAction />}
-      icon={PanelLeft}
+      icon="panel-left"
+      moklyInstance="choose-workspace"
       title="Choose a workspace"
     />
   )
@@ -219,10 +228,11 @@ export function NewOrgEmpty(props: { org: NewOrg; newWorkspaceTo?: string }) {
   const { org } = props
   const used = org.repositories.filter((item) => item.used)
   return (
-    <EmptyState
+    <emptyState.Component
       action={<NewWorkspaceAction to={props.newWorkspaceTo} />}
       body={`Workspaces of ${org.name} start in ${used.map((item) => item.name).join(' or ')}.`}
-      icon={Plus}
+      icon="plus"
+      moklyInstance="new-org-empty"
       title={`Start the first workspace in ${org.name}`}
     />
   )
@@ -239,22 +249,27 @@ export function DeletedOrg(props: { suspended?: boolean }) {
   const facts =
     "Its cloud computers are stopped, and its members can't open it."
   const page = (
-    <EmptyState
-      action={
-        props.suspended ? undefined : (
+    <emptyState.Component
+      moklyInstance="deleted-org"
+      {...defined({
+        action: props.suspended ? undefined : (
           <ScreenLink asChild to={paths.shell}>
-            <ActionButton icon={ArchiveRestore} tone="primary">
+            <actionButton.Component
+              icon="archive-restore"
+              moklyInstance="restore-org"
+              tone="primary"
+            >
               {`Restore ${org.name}`}
-            </ActionButton>
+            </actionButton.Component>
           </ScreenLink>
-        )
-      }
+        ),
+      })}
       body={
         props.suspended
           ? facts
           : `${facts} Restore it to bring back its workspaces, chats, and settings.`
       }
-      icon={ArchiveRestore}
+      icon="archive-restore"
       title={`${org.name} is deleted on ${deletedOrg.deletes}`}
     />
   )

@@ -1,6 +1,5 @@
 import type { SchemaProps, Viewport } from '@mokly/mokly'
-import { RefreshCw } from 'lucide-react'
-import { ActionButton } from '../components/common/actions'
+import { actionButton } from '../entries/components/common/actions.mockup'
 import { DailyChart } from '../components/operator/DailyChart'
 import { LargestOrgs } from '../components/operator/LargestOrgs'
 import { OperatorPage } from '../components/operator/OperatorPage'
@@ -83,7 +82,9 @@ export function OperatorScreen(props: {
   // desktop header has Refresh.
   const refresh =
     ready && props.viewport === 'desktop' ? (
-      <ActionButton icon={RefreshCw}>Refresh</ActionButton>
+      <actionButton.Component icon="refresh-cw" moklyInstance="refresh">
+        Refresh
+      </actionButton.Component>
     ) : undefined
   return (
     <OperatorPage

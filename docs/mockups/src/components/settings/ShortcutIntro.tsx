@@ -1,4 +1,3 @@
-import { RotateCcw } from 'lucide-react'
 import { productName } from '../../brand'
 import {
   browserTabOf,
@@ -7,8 +6,8 @@ import {
   type Keyboard,
   type ShortcutHost,
 } from '../../fixtures/shortcutHosts'
-import { ActionButton } from '../common/actions'
-import { KeyChips } from '../common/KeyChips'
+import { actionButton } from '../../entries/components/common/actions.mockup'
+import { keyChips } from '../../entries/components/common/KeyChips.mockup'
 import { ScreenLink } from '../common/ScreenLink'
 import { RowMessage } from './ShortcutParts'
 import styles from './ShortcutsSections.module.css'
@@ -22,8 +21,9 @@ function TerminalLine(props: { keyboard: Keyboard }) {
   if (props.keyboard === 'mac') {
     return (
       <p className={styles.introLine}>
-        Keys without <KeyChips shortcut="⌘" /> go to the terminal while it has
-        the focus.
+        Keys without{' '}
+        <keyChips.Component moklyInstance="command-key" shortcut="⌘" /> go to
+        the terminal while it has the focus.
       </p>
     )
   }
@@ -68,9 +68,13 @@ export function ShortcutIntro(props: {
   const keyboard = keyboardOf(props.host)
   const tab = browserTabOf(props.host)
   const resetAll = (
-    <ActionButton accessibilityLabel="Reset all shortcuts" icon={RotateCcw}>
+    <actionButton.Component
+      accessibilityLabel="Reset all shortcuts"
+      icon="rotate-ccw"
+      moklyInstance="reset-all-shortcuts"
+    >
       Reset all
-    </ActionButton>
+    </actionButton.Component>
   )
   return (
     <div className={styles.intro}>

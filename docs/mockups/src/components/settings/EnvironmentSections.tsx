@@ -2,9 +2,10 @@ import type { ReactNode } from 'react'
 import { InputFrame } from '@firna/ui/input'
 import { useSharedUiTheme } from '@firna/ui/theme'
 import { noop } from '../../noop'
-import { ActionButton } from '../common/actions'
+import { actionButton } from '../../entries/components/common/actions.mockup'
 import { useControlSizes } from '../common/touch'
 import { MonoBlock, Section } from './Section'
+import { instanceKey } from '../../instanceKey'
 
 /**
  * The script in a code field, which an admin edits. The field shows at
@@ -43,7 +44,12 @@ export function ScriptSection(props: {
     <Section
       actions={
         props.readOnly ? undefined : (
-          <ActionButton disabled>Save script</ActionButton>
+          <actionButton.Component
+            disabled
+            moklyInstance={`save-${instanceKey(props.title)}`}
+          >
+            Save script
+          </actionButton.Component>
         )
       }
       description={props.description}

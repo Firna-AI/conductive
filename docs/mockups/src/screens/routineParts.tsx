@@ -1,9 +1,8 @@
 import type { Viewport } from '@mokly/mokly'
-import { FolderX, PowerOff, UserX } from 'lucide-react'
-import { Notice } from '../components/common/Notice'
-import { Menu } from '../components/common/Menu'
-import { Sheet } from '../components/common/Sheet'
-import { ActionButton } from '../components/common/actions'
+import { notice } from '../entries/components/common/Notice.mockup'
+import { menu } from '../entries/components/common/Menu.mockup'
+import { sheet } from '../entries/components/common/Sheet.mockup'
+import { actionButton } from '../entries/components/common/actions.mockup'
 import { AuthorFilter } from '../components/routines/AuthorFilter'
 import { PromptBox } from '../components/routines/PromptBox'
 import {
@@ -69,13 +68,14 @@ function ReadOnlyNote(props: { routine: Routine; access: RoutineAccess }) {
  */
 function FailedRunsNotice(props: { routine: Routine; ownerViews: boolean }) {
   return (
-    <Notice
+    <notice.Component
       body={
         props.ownerViews
           ? 'Three runs in a row failed. Fix the cause, then turn it on.'
           : `Three runs in a row failed. Only ${props.routine.owner.name} can turn it on again.`
       }
-      icon={PowerOff}
+      icon="power-off"
+      moklyInstance="failed-runs"
       title="This routine turned off"
       tone="danger"
     />
@@ -111,9 +111,10 @@ function RepositoryRemovedNotice(props: {
       : `${removed} Only ${owner} can turn it on again.`
   }
   return (
-    <Notice
+    <notice.Component
       body={body}
-      icon={FolderX}
+      icon="folder-x"
+      moklyInstance="repository-removed"
       title="This routine turned off"
       tone="danger"
     />
@@ -147,9 +148,10 @@ function Note(props: {
   }
   if (!routine.movedFrom) return null
   return (
-    <Notice
+    <notice.Component
       body={`${routine.movedFrom} left ${orgs.acme.name}. It stays off until you turn it on.`}
-      icon={UserX}
+      icon="user-x"
+      moklyInstance="moved-to-you"
       title="This routine moved to you"
     />
   )
@@ -217,23 +219,29 @@ export function PhoneSheet(props: {
 }) {
   if (props.menu) {
     return (
-      <Sheet title="Add trigger">
-        <Menu
+      <sheet.Component moklyInstance="add-trigger-sheet" title="Add trigger">
+        <menu.Component
           entries={addTriggerEntries}
           label="Add trigger"
+          moklyInstance="add-trigger-menu"
           placement="sheet"
         />
-      </Sheet>
+      </sheet.Component>
     )
   }
   const edit = props.edits.find((item) => item.filterOpen)
   if (!edit || edit.trigger.kind !== 'pull-request') return null
   return (
-    <Sheet title={`Authors for ${eventLabels[edit.trigger.event]}`}>
+    <sheet.Component
+      moklyInstance="authors-sheet"
+      title={`Authors for ${eventLabels[edit.trigger.event]}`}
+    >
       <div className={styles.sheetBody}>
         <AuthorFilter edit={edit} />
-        <ActionButton tone="primary">Done</ActionButton>
+        <actionButton.Component moklyInstance="done" tone="primary">
+          Done
+        </actionButton.Component>
       </div>
-    </Sheet>
+    </sheet.Component>
   )
 }

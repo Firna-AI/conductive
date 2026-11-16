@@ -37,7 +37,7 @@ export function Hero(props: {
         ) : null}
         <h1 className={styles.title}>{props.title}</h1>
         <p className={styles.text}>{props.text}</p>
-        <SiteActions stack={mobile} to={props.signIn} />
+        <SiteActions place="hero" stack={mobile} to={props.signIn} />
       </div>
       <div className={styles.picture}>
         <screenFrame.Component

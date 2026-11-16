@@ -1,10 +1,12 @@
 import type { SchemaProps, Viewport } from '@mokly/mokly'
-import { ArrowRight } from 'lucide-react'
-import { ActionButton } from '../components/common/actions'
+import { actionButton } from '../entries/components/common/actions.mockup'
 import { ScreenLink } from '../components/common/ScreenLink'
-import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
+import {
+  appFrame,
+  mobileFrame,
+} from '../entries/components/layout/AppFrame.mockup'
 import type { RailState } from '../components/layout/OrgRail'
-import { Page } from '../components/layout/Page'
+import { page as pagePart } from '../entries/components/layout/Page.mockup'
 import { DeletedOrgsSection } from '../components/settings/DeletedOrgsSection'
 import { people } from '../fixtures/members'
 import { orgs } from '../fixtures/orgs'
@@ -88,9 +90,13 @@ function Finish(props: { build: FirstBuildState }) {
     <div className={styles.finish}>
       <p className={styles.finishText}>{finishes[props.build](newOrg.name)}</p>
       <ScreenLink asChild to={paths.newOrg}>
-        <ActionButton icon={ArrowRight} tone={fix ? 'secondary' : 'primary'}>
+        <actionButton.Component
+          icon="arrow-right"
+          moklyInstance="open-org"
+          tone={fix ? 'secondary' : 'primary'}
+        >
           {copy.open(newOrg.name)}
-        </ActionButton>
+        </actionButton.Component>
       </ScreenLink>
     </div>
   )
@@ -111,7 +117,7 @@ export function GetStartedScreen(props: {
   const { step, agent, firstBuild } = props.state
   const person = people[props.state.person]
   const page = (
-    <Page
+    <pagePart.Component
       subtitle={`@${person.login}`}
       title={copy.title}
       viewport={props.viewport}
@@ -135,14 +141,14 @@ export function GetStartedScreen(props: {
       {step === 'done' && agent === 'connected' ? (
         <Finish build={firstBuild} />
       ) : null}
-    </Page>
+    </pagePart.Component>
   )
-  if (props.viewport === 'mobile') return <MobileFrame>{page}</MobileFrame>
+  if (props.viewport === 'mobile')
+    return <mobileFrame.Component>{page}</mobileFrame.Component>
   const rail: RailState = {
     orgs: isPast(step, 'org') ? [orgs.firna] : [],
-    current: undefined,
     firstRun: step === 'install',
     person,
   }
-  return <AppFrame rail={rail}>{page}</AppFrame>
+  return <appFrame.Component rail={rail}>{page}</appFrame.Component>
 }

@@ -1,5 +1,4 @@
-import type { LucideIcon } from 'lucide-react'
-import { Ban, CircleCheck, Laptop, MonitorOff } from 'lucide-react'
+import { Laptop } from 'lucide-react'
 import { LiteralText } from '../../../../../src/chat/device/LiteralText'
 import {
   safariDuration,
@@ -9,13 +8,16 @@ import {
   type MacCommandState,
 } from '../../fixtures/mac'
 import { people } from '../../fixtures/members'
-import { StatusText, type StatusTone } from '../common/StatusText'
+import { defined } from '../../defined'
+import type { IconKey } from '../../entries/components/common/icons'
+import type { StatusTone } from '../common/StatusText'
+import { statusText } from '../../entries/components/common/StatusText.mockup'
 import styles from './MacCommand.module.css'
 
 type StatePresentation = {
   label: string
   tone: StatusTone
-  icon?: LucideIcon
+  icon?: IconKey
   busy?: boolean
 }
 
@@ -23,16 +25,16 @@ const sender = people[thisMac.owner].name
 
 const states: Readonly<Record<MacCommandState, StatePresentation>> = {
   waiting: { label: 'Waiting for approval', tone: 'active', busy: true },
-  denied: { label: 'Denied', tone: 'muted', icon: Ban },
+  denied: { label: 'Denied', tone: 'muted', icon: 'ban' },
   done: {
     label: `Done in ${safariDuration}`,
     tone: 'success',
-    icon: CircleCheck,
+    icon: 'circle-check',
   },
   unavailable: {
     label: 'Mac not available',
     tone: 'warning',
-    icon: MonitorOff,
+    icon: 'monitor-off',
   },
 }
 
@@ -61,15 +63,18 @@ export function CommandLine(props: { command: string }) {
   )
 }
 
-/** The state of a command on the Mac, as a glyph and a word. */
-export function CommandStatus(props: { state: MacCommandState }) {
+/**
+ * The state of a command on the Mac, as a glyph and a word. `id` is the id
+ * of the chat item of the command, which names the state for Mokly.
+ */
+export function CommandStatus(props: { id: string; state: MacCommandState }) {
   const presentation = states[props.state]
   return (
-    <StatusText
-      busy={presentation.busy}
-      icon={presentation.icon}
+    <statusText.Component
       label={presentation.label}
+      moklyInstance={`command-${props.id}`}
       tone={presentation.tone}
+      {...defined({ busy: presentation.busy, icon: presentation.icon })}
     />
   )
 }
@@ -80,6 +85,8 @@ export function CommandStatus(props: { state: MacCommandState }) {
  * command, its folder and time limit, and the output once it ran.
  */
 export function MacCommand(props: {
+  /** The id of the chat item of the command. */
+  id: string
   request: MacCommandRequest
   state: MacCommandState
 }) {
@@ -91,7 +98,7 @@ export function MacCommand(props: {
         <Laptop aria-hidden className={styles.icon} size={14} />
         <span className={styles.mac}>{thisMac.name}</span>
         <span className={styles.spacer} />
-        <CommandStatus state={state} />
+        <CommandStatus id={props.id} state={state} />
       </div>
       <CommandLine command={request.command} />
       <span className={styles.meta}>

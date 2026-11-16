@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
 import { classes } from './classes'
-import { Sheet } from './Sheet'
+import { sheet } from '../../entries/components/common/Sheet.mockup'
 import styles from './ConfirmDialog.module.css'
 
 /**
@@ -20,12 +20,12 @@ export function ConfirmDialog(props: {
 }) {
   if (props.viewport === 'mobile') {
     return (
-      <Sheet title={props.title}>
+      <sheet.Component title={props.title}>
         <div className={styles.sheetBody}>
           {props.children}
           <div className={styles.sheetActions}>{props.actions}</div>
         </div>
-      </Sheet>
+      </sheet.Component>
     )
   }
   return (

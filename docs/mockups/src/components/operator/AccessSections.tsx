@@ -1,4 +1,3 @@
-import { Ban } from 'lucide-react'
 import type {
   ApprovalEmailNote,
   AppAccess,
@@ -7,7 +6,7 @@ import type {
 } from '../../fixtures/operatorAccess'
 import { codeState } from '../../fixtures/operatorCodes'
 import { paths } from '../../paths'
-import { ActionButton } from '../common/actions'
+import { actionButton } from '../../entries/components/common/actions.mockup'
 import { ScreenLink } from '../common/ScreenLink'
 import { DetailList, type Detail } from '../settings/DetailList'
 import { Section, SectionText } from '../settings/Section'
@@ -164,9 +163,13 @@ export function ReferralSection(props: {
     })
   }
   const button = (
-    <ActionButton icon={Ban} tone="danger">
+    <actionButton.Component
+      icon="ban"
+      moklyInstance="disable-referral-code"
+      tone="danger"
+    >
       {disableCodeWords.action}
-    </ActionButton>
+    </actionButton.Component>
   )
   const action = props.disable ? (
     <ScreenLink asChild to={props.disable}>
@@ -178,7 +181,7 @@ export function ReferralSection(props: {
   return (
     <Section
       actions={state === 'active' ? action : undefined}
-      status={<CodeStateText state={state} />}
+      status={<CodeStateText code={code.code} state={state} />}
       title={referralWords.title}
     >
       <DetailList rows={rows} />

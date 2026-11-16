@@ -1,4 +1,5 @@
-import { ActionButton, type ActionTone } from '../components/common/actions'
+import type { ActionTone } from '../components/common/actions'
+import { actionButton } from '../entries/components/common/actions.mockup'
 import { ScreenLink } from '../components/common/ScreenLink'
 import type { PendingInviteRow } from '../components/members/PendingInvites'
 import { orgLinks } from '../components/orgs/orgLinks'
@@ -8,12 +9,13 @@ import { orgs, type Org } from '../fixtures/orgs'
 /** Accept invitation of one org. It opens the org when the mockups draw it. */
 function Accept(props: { org: Org; tone: ActionTone }) {
   const button = (
-    <ActionButton
+    <actionButton.Component
       accessibilityLabel={`Accept the invitation to ${props.org.name}`}
+      moklyInstance={`accept-${props.org.key}`}
       tone={props.tone}
     >
       Accept invitation
-    </ActionButton>
+    </actionButton.Component>
   )
   const to = orgLinks[props.org.key]
   if (!to) return button

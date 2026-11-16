@@ -1,11 +1,13 @@
 import type { SchemaProps, Viewport } from '@mokly/mokly'
-import { Plus, Repeat } from 'lucide-react'
-import { ActionButton } from '../components/common/actions'
-import { EmptyState } from '../components/common/EmptyState'
+import { actionButton } from '../entries/components/common/actions.mockup'
+import { emptyState } from '../entries/components/common/EmptyState.mockup'
 import { ScreenLink } from '../components/common/ScreenLink'
-import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
+import {
+  appFrame,
+  mobileFrame,
+} from '../entries/components/layout/AppFrame.mockup'
 import { acmeRail } from '../components/layout/OrgRail'
-import { Page } from '../components/layout/Page'
+import { page as pagePart } from '../entries/components/layout/Page.mockup'
 import { SuspendedOrgNotice } from '../components/orgs/SuspendedOrgNotice'
 import { RoutineList } from '../components/routines/RoutineList'
 import { SectionText } from '../components/settings/Section'
@@ -17,6 +19,7 @@ import { Sidebar } from '../components/workspaces/Sidebar'
 import { orgs, suspendedOrg } from '../fixtures/orgs'
 import { routineRows, suspendedRoutineRows } from '../fixtures/routineRows'
 import { paths } from '../paths'
+import { defined } from '../defined'
 
 export const routinesSchema = {
   type: 'object',
@@ -55,9 +58,13 @@ const suspendedLinks: Readonly<Record<string, string>> = {
 
 const newRoutine = (
   <ScreenLink asChild to={paths.newRoutine}>
-    <ActionButton icon={Plus} tone="primary">
+    <actionButton.Component
+      icon="plus"
+      moklyInstance="new-routine"
+      tone="primary"
+    >
       New routine
-    </ActionButton>
+    </actionButton.Component>
   </ScreenLink>
 )
 
@@ -76,19 +83,22 @@ export function RoutinesScreen(props: {
   const empty = props.state.list === 'empty' && !suspended
   const list = suspended ? paths.suspendedOrg : paths.shell
   const page = (
-    <Page
-      actions={empty || suspended ? undefined : newRoutine}
-      back={mobile ? { label: 'Workspaces', to: list } : undefined}
+    <pagePart.Component
       fill={empty}
+      {...defined({
+        actions: empty || suspended ? undefined : newRoutine,
+        back: mobile ? { label: 'Workspaces', to: list } : undefined,
+      })}
       subtitle={org.name}
       title="Routines"
       viewport={viewport}
     >
       {empty ? (
-        <EmptyState
+        <emptyState.Component
           action={newRoutine}
           body={routineWords}
-          icon={Repeat}
+          icon="repeat"
+          moklyInstance="no-routines"
           title={`Create the first routine in ${org.name}`}
         />
       ) : (
@@ -102,12 +112,12 @@ export function RoutinesScreen(props: {
           />
         </>
       )}
-    </Page>
+    </pagePart.Component>
   )
-  if (mobile) return <MobileFrame>{page}</MobileFrame>
+  if (mobile) return <mobileFrame.Component>{page}</mobileFrame.Component>
   return (
-    <AppFrame
-      rail={{ ...acmeRail, suspended: suspended ? suspendedOrg : undefined }}
+    <appFrame.Component
+      rail={{ ...acmeRail, ...(suspended ? { suspended: suspendedOrg } : {}) }}
       sidebar={
         <Sidebar
           current="routines"
@@ -119,6 +129,6 @@ export function RoutinesScreen(props: {
       }
     >
       {page}
-    </AppFrame>
+    </appFrame.Component>
   )
 }

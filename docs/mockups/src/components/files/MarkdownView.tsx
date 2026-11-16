@@ -2,14 +2,15 @@ import type { MarkdownBlock } from '../../fixtures/fileContents'
 import { classes } from '../common/classes'
 import { InlineText } from '../common/InlineText'
 import headingStyles from '../common/MarkdownHeadings.module.css'
-import { MarkdownTable } from '../common/MarkdownTable'
+import { markdownTable } from '../../entries/components/common/MarkdownTable.mockup'
 import styles from './MarkdownView.module.css'
 
-/** A cell of a table, with its inline code. */
-function fileCell(text: string) {
-  return <InlineText text={text} />
-}
-
+/**
+ * One block of a Markdown file. The blocks of a file have no key that stays
+ * when they move, so their text keeps the plain `InlineText`: the name of a
+ * Mokly instance must stay the same when the blocks move. A file shows one
+ * table, which keeps the default name of the registered table.
+ */
 function Block(props: { block: MarkdownBlock }) {
   const { block } = props
   switch (block.kind) {
@@ -49,11 +50,11 @@ function Block(props: { block: MarkdownBlock }) {
       return <pre className={styles.block}>{block.text}</pre>
     case 'table':
       return (
-        <MarkdownTable
+        <markdownTable.Component
           align={block.align}
+          cells="inline-code"
           className={styles.table}
           head={block.head}
-          renderCell={fileCell}
           rows={block.rows}
         />
       )

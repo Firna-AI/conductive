@@ -12,8 +12,8 @@ import {
   type LoginKind,
 } from '../../fixtures/logins'
 import { noop } from '../../noop'
-import { ActionButton } from '../common/actions'
-import { ExternalLink } from '../common/ExternalLink'
+import { actionButton } from '../../entries/components/common/actions.mockup'
+import { externalLink } from '../../entries/components/common/ExternalLink.mockup'
 import { ScreenLink } from '../common/ScreenLink'
 import { useControlSizes } from '../common/touch'
 import { ChatGptSignIn } from './ChatGptSignIn'
@@ -59,9 +59,12 @@ const asks: AgentAsks = {
       text: (
         <>
           Paste an API key of your Anthropic account.{' '}
-          <ExternalLink href={anthropicKeyPage}>
+          <externalLink.Component
+            href={anthropicKeyPage}
+            moklyInstance="anthropic-keys"
+          >
             Make one on Anthropic
-          </ExternalLink>
+          </externalLink.Component>
         </>
       ),
       label: 'Anthropic API key',
@@ -75,7 +78,12 @@ const asks: AgentAsks = {
       text: (
         <>
           Paste an API key of your OpenAI account.{' '}
-          <ExternalLink href={openAiKeyPage}>Make one on OpenAI</ExternalLink>
+          <externalLink.Component
+            href={openAiKeyPage}
+            moklyInstance="openai-keys"
+          >
+            Make one on OpenAI
+          </externalLink.Component>
         </>
       ),
       label: 'OpenAI API key',
@@ -109,9 +117,15 @@ function SecretFields(props: {
         value=""
       />
       <div className={styles.actions}>
-        {props.cancel ? <ActionButton>Cancel</ActionButton> : null}
+        {props.cancel ? (
+          <actionButton.Component moklyInstance="cancel-connect">
+            Cancel
+          </actionButton.Component>
+        ) : null}
         <ScreenLink asChild to={props.connectTo}>
-          <ActionButton tone="primary">Connect</ActionButton>
+          <actionButton.Component moklyInstance="connect-login" tone="primary">
+            Connect
+          </actionButton.Component>
         </ScreenLink>
       </div>
     </>
@@ -162,9 +176,18 @@ export function AgentConnectForm(props: {
             keyHint={`${productName} keeps it encrypted, and never shows it again.`}
           />
           <div className={styles.actions}>
-            {props.cancel ? <ActionButton>Cancel</ActionButton> : null}
+            {props.cancel ? (
+              <actionButton.Component moklyInstance="cancel-connect">
+                Cancel
+              </actionButton.Component>
+            ) : null}
             <ScreenLink asChild to={props.connectTo}>
-              <ActionButton tone="primary">Connect</ActionButton>
+              <actionButton.Component
+                moklyInstance="connect-login"
+                tone="primary"
+              >
+                Connect
+              </actionButton.Component>
             </ScreenLink>
           </div>
         </>

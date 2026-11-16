@@ -1,8 +1,7 @@
-import { Ban, Trash2 } from 'lucide-react'
 import type { OrgMember } from '../../fixtures/operatorDirectory'
 import type { OrgPage } from '../../fixtures/operatorPages'
 import { paths } from '../../paths'
-import { Notice } from '../common/Notice'
+import { notice } from '../../entries/components/common/Notice.mockup'
 import { DetailList } from '../settings/DetailList'
 import { Section } from '../settings/Section'
 import { TargetState } from './directory'
@@ -13,6 +12,8 @@ import {
 } from './operatorCopy'
 import { TargetList, TargetRow } from './targets'
 import { WorkspaceStates } from './WorkspaceStates'
+import { instanceKey } from '../../instanceKey'
+import { defined } from '../../defined'
 
 /**
  * The notices of a suspended or a deleted org, at the top of its page. An
@@ -25,20 +26,27 @@ function OrgNotices(props: { org: OrgPage }) {
   return (
     <>
       {suspension ? (
-        <Notice
-          body={suspendedOrgBody(org.name, suspension.stopping, deletion)}
-          icon={Ban}
+        <notice.Component
+          icon="ban"
+          {...defined({
+            // A deleted org with no workspace that stops has no body.
+            body:
+              suspendedOrgBody(org.name, suspension.stopping, deletion) ||
+              undefined,
+          })}
+          moklyInstance="suspended-notice"
           title={suspendedTitle(suspension.since, suspension.by)}
         />
       ) : null}
       {deleted ? (
-        <Notice
+        <notice.Component
           body={deletedOrgBody(
             org.name,
             { purge: deleted.purge },
             suspension !== undefined,
           )}
-          icon={Trash2}
+          icon="trash-2"
+          moklyInstance="deleted-notice"
           title={`Deleted on ${deleted.on}`}
         />
       ) : null}
@@ -51,12 +59,14 @@ function OrgNotices(props: { org: OrgPage }) {
  * suspended member.
  */
 function MemberLine(props: { member: OrgMember }) {
-  const { name, suspended } = props.member
+  const { login, name, suspended } = props.member
   return (
     <>
       {name}
       {name && suspended ? ' · ' : null}
-      {suspended ? <TargetState status="suspended" /> : null}
+      {suspended ? (
+        <TargetState id={instanceKey(login)} status="suspended" />
+      ) : null}
     </>
   )
 }

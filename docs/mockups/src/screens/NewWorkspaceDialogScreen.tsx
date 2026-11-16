@@ -1,10 +1,10 @@
 import type { SchemaProps, Viewport } from '@mokly/mokly'
-import { AppFrame } from '../components/layout/AppFrame'
+import { appFrame } from '../entries/components/layout/AppFrame.mockup'
 import { NewWorkspaceDialog } from '../components/new-workspace/NewWorkspaceDialog'
 import { ChooseRepositoriesNotice } from '../components/new-workspace/notices'
 import { formWait } from '../components/new-workspace/waitingRepository'
 import { newOrg } from '../fixtures/repositories'
-import type { MenuEntry } from '../components/common/Menu'
+import type { MenuEntryData } from '../entries/components/common/menuEntries'
 import { defaultSection, sections } from '../fixtures/sections'
 import {
   NewWorkspaceScreen,
@@ -78,7 +78,7 @@ export const emptyDialog: NewWorkspaceDialogState = {
 }
 
 /** The sections of the org in the order of the list, with General checked. */
-const sectionMenu: MenuEntry[] = Object.values(sections).map((section) => ({
+const sectionMenu: MenuEntryData[] = Object.values(sections).map((section) => ({
   kind: 'item',
   label: section.name,
   checked: section.key === defaultSection,
@@ -157,13 +157,13 @@ export function NewWorkspaceDialogScreen(props: {
   )
   if (state.org === 'new') {
     return (
-      <AppFrame
+      <appFrame.Component
         overlay={dialog}
         rail={railOf(pageState)}
         sidebar={sidebarOf(pageState)}
       >
         <NewOrgEmpty org={newOrg} />
-      </AppFrame>
+      </appFrame.Component>
     )
   }
   return (

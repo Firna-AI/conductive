@@ -37,7 +37,7 @@ export function SiteFooter(props: {
     <footer className={classes(styles.footer, mobile && styles.mobile)}>
       <div className={styles.inner}>
         <div className={styles.brand}>
-          <Wordmark to={props.links.home} />
+          <Wordmark place="footer" to={props.links.home} />
           <p className={styles.tagline}>{props.tagline}</p>
         </div>
         <Column title="Product">

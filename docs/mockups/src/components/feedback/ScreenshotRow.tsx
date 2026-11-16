@@ -1,6 +1,7 @@
-import { ImageIcon, X } from 'lucide-react'
+import { ImageIcon } from 'lucide-react'
 import type { FeedbackScreenshot } from '../../fixtures/feedback'
-import { IconButton } from '../common/actions'
+import { iconButton } from '../../entries/components/common/actions.mockup'
+import { instanceKey } from '../../instanceKey'
 import { classes } from '../common/classes'
 import { ChipIconCell, useNoHover } from '../chat/ChipRemove'
 import { formatSize } from '../chat/sizes'
@@ -32,7 +33,12 @@ function ScreenshotChip(props: { screenshot: FeedbackScreenshot }) {
       <span className={styles.name}>{screenshot.name}</span>
       <span className={styles.size}>{formatSize(screenshot.sizeBytes)}</span>
       {noHover ? (
-        <IconButton icon={X} label={`Remove ${screenshot.name}`} quiet />
+        <iconButton.Component
+          icon="x"
+          label={`Remove ${screenshot.name}`}
+          moklyInstance={`remove-${instanceKey(screenshot.name)}`}
+          quiet
+        />
       ) : null}
     </li>
   )

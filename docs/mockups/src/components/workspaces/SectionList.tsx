@@ -1,10 +1,10 @@
 import { Fragment } from 'react'
-import { ChevronDown, ChevronRight, MoreHorizontal } from 'lucide-react'
+import { ChevronDown, ChevronRight } from 'lucide-react'
 import type { Membership } from '../../fixtures/members'
-import { IconButton } from '../common/actions'
+import { iconButton } from '../../entries/components/common/actions.mockup'
 import a11y from '../common/a11y.module.css'
 import { classes } from '../common/classes'
-import { Menu } from '../common/Menu'
+import { menu } from '../../entries/components/common/Menu.mockup'
 import { ArchivedGroup } from './ArchivedGroup'
 import { sectionMenu, type SectionPlace } from './menus'
 import { mayArchiveWorkspace } from './permissions'
@@ -60,19 +60,21 @@ function SectionHeader(props: {
       </h3>
       {props.readOnly ? null : (
         <span className={classes(styles.more, props.open && styles.moreOpen)}>
-          <IconButton
+          <iconButton.Component
             expanded={props.open}
-            icon={MoreHorizontal}
+            icon="more-horizontal"
             label={`More for ${section.name}`}
             menu
+            moklyInstance={`${props.variant}-more-${section.key}`}
             quiet
           />
         </span>
       )}
       {props.open && props.menuStyle === 'anchored' ? (
-        <Menu
+        <menu.Component
           entries={sectionMenu(props.place)}
           label={section.name}
+          moklyInstance={`${props.variant}-section-menu`}
           placement="below-end"
         />
       ) : null}

@@ -1,5 +1,6 @@
 import type { TerminalLine, TerminalTone } from '../../fixtures/terminal'
-import { ActionButton } from '../common/actions'
+import { actionButton } from '../../entries/components/common/actions.mockup'
+import { instanceKey } from '../../instanceKey'
 import styles from './TerminalView.module.css'
 
 const toneClass: Readonly<Record<TerminalTone, string>> = {
@@ -55,9 +56,13 @@ export function TerminalView(props: {
       {props.extraKeys ? (
         <div className={styles.keys}>
           {extraKeys.map((key) => (
-            <ActionButton accessibilityLabel={key.name} key={key.name}>
+            <actionButton.Component
+              accessibilityLabel={key.name}
+              key={key.name}
+              moklyInstance={`key-${instanceKey(key.name)}`}
+            >
               {key.label}
-            </ActionButton>
+            </actionButton.Component>
           ))}
         </div>
       ) : null}

@@ -1,18 +1,12 @@
-import {
-  Archive,
-  CircleAlert,
-  Clock,
-  GitBranchPlus,
-  GitMerge,
-} from 'lucide-react'
+import { CircleAlert, Clock } from 'lucide-react'
 import { pullRequest } from '../../fixtures/pullRequests'
 import { repositories } from '../../fixtures/repositories'
 import type { Workspace } from '../../fixtures/workspaces'
 import { barPaths, paths } from '../../paths'
-import { ActionButton } from '../common/actions'
+import { actionButton } from '../../entries/components/common/actions.mockup'
 import { classes } from '../common/classes'
 import { ScreenLink } from '../common/ScreenLink'
-import { ShortcutTip } from '../common/ShortcutTip'
+import { shortcutTip } from '../../entries/components/common/ShortcutTip.mockup'
 import { TintedTheme, type ButtonTint } from '../common/tint'
 import {
   agentActionCommand,
@@ -26,6 +20,7 @@ import { agentIcons } from './barIcons'
 import type { BarAction, BarModel } from './barModel'
 import { BarGitHubLink, GitHubLink } from './barParts'
 import { barTint } from './prStatus'
+import { iconKeyOf } from '../../entries/components/common/icons'
 import styles from './BarActions.module.css'
 
 /**
@@ -49,48 +44,65 @@ function BarButton(props: {
   switch (action.kind) {
     case 'agent':
       return (
-        <ShortcutTip
+        <shortcutTip.Component
           command={agentActionCommand(action.action)}
           label={agentActionLabels[action.action]}
+          moklyInstance="agent-tip"
         >
           <TintedTheme tint={tint}>
             <ScreenLink asChild to={barPaths.sent[action.action]}>
-              <ActionButton icon={agentIcons[action.action]} tone={tone}>
+              <actionButton.Component
+                icon={iconKeyOf(agentIcons[action.action])}
+                moklyInstance={`agent-${action.action}`}
+                tone={tone}
+              >
                 {agentActionLabels[action.action]}
-              </ActionButton>
+              </actionButton.Component>
             </ScreenLink>
           </TintedTheme>
-        </ShortcutTip>
+        </shortcutTip.Component>
       )
     case 'merge':
       return (
-        <ShortcutTip
+        <shortcutTip.Component
           command="merge-pull-request"
           label={mergeLabels[action.method]}
+          moklyInstance="merge-tip"
           off={action.busy}
         >
           <TintedTheme tint={tint}>
             <ScreenLink asChild to={barPaths.merging}>
-              <ActionButton busy={action.busy} icon={GitMerge} tone={tone}>
+              <actionButton.Component
+                busy={action.busy}
+                icon="git-merge"
+                moklyInstance="merge-pull-request"
+                tone={tone}
+              >
                 {action.busy ? barLabels.merging : mergeLabels[action.method]}
-              </ActionButton>
+              </actionButton.Component>
             </ScreenLink>
           </TintedTheme>
-        </ShortcutTip>
+        </shortcutTip.Component>
       )
     case 'continue':
       // While a turn runs, Continue is not available.
       return (
-        <ShortcutTip
+        <shortcutTip.Component
           command="continue-after-merge"
           label={barLabels.continue}
+          moklyInstance="continue-tip"
           off={action.waiting || action.busy}
         >
           <TintedTheme tint={tint}>
             {action.waiting ? (
-              <ActionButton disabled icon={GitBranchPlus} tone={tone}>
+              <actionButton.Component
+                disabled
+                icon="git-branch-plus"
+                moklyInstance="continue-after-merge"
+                tone={tone}
+              >
                 {barLabels.continue}
-              </ActionButton>
+              </actionButton.Component>
             ) : (
               <ScreenLink
                 asChild
@@ -100,37 +112,49 @@ function BarButton(props: {
                     : barPaths.continuing
                 }
               >
-                <ActionButton
+                <actionButton.Component
                   busy={action.busy}
-                  icon={GitBranchPlus}
+                  icon="git-branch-plus"
+                  moklyInstance="continue-after-merge"
                   tone={tone}
                 >
                   {action.busy ? barLabels.continuing : barLabels.continue}
-                </ActionButton>
+                </actionButton.Component>
               </ScreenLink>
             )}
           </TintedTheme>
-        </ShortcutTip>
+        </shortcutTip.Component>
       )
     case 'archive':
       return (
-        <ShortcutTip
+        <shortcutTip.Component
           command="archive-workspace"
           label={barLabels.archive}
+          moklyInstance="archive-tip"
           off={action.busy || action.disabled}
         >
           {action.disabled ? (
-            <ActionButton disabled icon={Archive} tone="outline">
+            <actionButton.Component
+              disabled
+              icon="archive"
+              moklyInstance="archive-workspace"
+              tone="outline"
+            >
               {barLabels.archive}
-            </ActionButton>
+            </actionButton.Component>
           ) : (
             <ScreenLink asChild to={paths.justArchived}>
-              <ActionButton busy={action.busy} icon={Archive} tone="outline">
+              <actionButton.Component
+                busy={action.busy}
+                icon="archive"
+                moklyInstance="archive-workspace"
+                tone="outline"
+              >
                 {barLabels.archive}
-              </ActionButton>
+              </actionButton.Component>
             </ScreenLink>
           )}
-        </ShortcutTip>
+        </shortcutTip.Component>
       )
   }
 }
@@ -174,7 +198,11 @@ export function BarMessage(props: {
         {barMessageText(props.kind, branches)}
       </span>
       {props.kind === 'merge-refused' ? (
-        <GitHubLink href={pullRequest.url} label={barLabels.openOnGitHub} />
+        <GitHubLink
+          href={pullRequest.url}
+          id="message"
+          label={barLabels.openOnGitHub}
+        />
       ) : null}
     </div>
   )

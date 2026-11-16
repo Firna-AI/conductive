@@ -32,7 +32,7 @@ function Step(props: { step: WorkItem; open: boolean }) {
     case 'mac-command':
       return (
         <li className={styles.card}>
-          <MacCommand request={step.request} state={step.state} />
+          <MacCommand id={step.id} request={step.request} state={step.state} />
         </li>
       )
     case 'lost':

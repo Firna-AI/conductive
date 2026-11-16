@@ -1,4 +1,3 @@
-import { Hammer, RotateCw } from 'lucide-react'
 import {
   buildLimit,
   failedBuild,
@@ -8,8 +7,8 @@ import {
   type FailedBuild,
 } from '../../fixtures/computer'
 import type { TerminalLine } from '../../fixtures/terminal'
-import { ActionButton } from '../common/actions'
-import { StatusText } from '../common/StatusText'
+import { actionButton } from '../../entries/components/common/actions.mockup'
+import { statusText } from '../../entries/components/common/StatusText.mockup'
 import { TerminalView } from '../tools/TerminalView'
 import { BuildHistory, BuildResult } from './BuildHistory'
 import { SectionText } from './Section'
@@ -67,34 +66,51 @@ function HeadAction(props: { state: BuildState; readOnly: boolean }) {
   switch (props.state) {
     case 'building':
       return (
-        <ActionButton disabled icon={Hammer}>
+        <actionButton.Component
+          disabled
+          icon="hammer"
+          moklyInstance="build-action"
+        >
           Build computer
-        </ActionButton>
+        </actionButton.Component>
       )
     case 'failed':
     case 'time-limit':
       return (
-        <ActionButton icon={RotateCw} tone="primary">
+        <actionButton.Component
+          icon="rotate-cw"
+          moklyInstance="build-action"
+          tone="primary"
+        >
           Try again
-        </ActionButton>
+        </actionButton.Component>
       )
     case 'none':
       return (
-        <ActionButton icon={Hammer} tone="primary">
+        <actionButton.Component
+          icon="hammer"
+          moklyInstance="build-action"
+          tone="primary"
+        >
           Build computer
-        </ActionButton>
+        </actionButton.Component>
       )
     case 'ready':
-      return <ActionButton icon={Hammer}>Build computer</ActionButton>
+      return (
+        <actionButton.Component icon="hammer" moklyInstance="build-action">
+          Build computer
+        </actionButton.Component>
+      )
   }
 }
 
 function Head(props: { state: BuildState; builds: OrgBuilds }) {
   if (props.state === 'building') {
     return (
-      <StatusText
+      <statusText.Component
         busy
         label={`Building · ${runningBuild.elapsed}`}
+        moklyInstance="build-state"
         tone="active"
       />
     )
@@ -107,7 +123,7 @@ function Head(props: { state: BuildState; builds: OrgBuilds }) {
     <>
       <span className={styles.label}>Last build</span>
       <span className={styles.when}>{build.when}</span>
-      <BuildResult build={build} />
+      <BuildResult build={build} id="last" />
     </>
   )
 }

@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
-import { FailureToast } from '../components/common/FailureToast'
+import { failureToast } from '../entries/components/common/FailureToast.mockup'
 import { acmeRail, type RailState } from '../components/layout/OrgRail'
 import { ArchivedToast } from '../components/workspace/ArchivedToast'
 import {
@@ -162,8 +162,9 @@ function overOf(
       return viewport === 'mobile' ? sheetOf(view) : null
     case 'rename-failed':
       return (
-        <FailureToast
+        <failureToast.Component
           message={offline}
+          moklyInstance="rename-failed"
           phone={viewport === 'mobile'}
           title="The workspace wasn't renamed."
         />

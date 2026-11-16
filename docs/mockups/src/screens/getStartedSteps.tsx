@@ -1,7 +1,6 @@
-import { ArrowUpRight, Plus } from 'lucide-react'
-import { ActionButton } from '../components/common/actions'
+import { actionButton } from '../entries/components/common/actions.mockup'
 import { ScreenLink } from '../components/common/ScreenLink'
-import { StatusText } from '../components/common/StatusText'
+import { statusText } from '../entries/components/common/StatusText.mockup'
 import {
   AgentList,
   type OpenAgentForm,
@@ -60,7 +59,10 @@ export function isPast(step: GetStartedStep, target: GetStartedStep): boolean {
   return getStartedSteps.indexOf(step) > getStartedSteps.indexOf(target)
 }
 
-const done = (label: string) => <StatusText label={label} tone="success" />
+/** The state of a step that is done. `name` names it for Mokly. */
+const done = (label: string, name: string) => (
+  <statusText.Component label={label} moklyInstance={name} tone="success" />
+)
 
 export function InstallStep(props: {
   step: GetStartedStep
@@ -72,9 +74,13 @@ export function InstallStep(props: {
       <Section
         actions={
           <ScreenLink asChild to={paths.getStartedInstalled}>
-            <ActionButton icon={ArrowUpRight} tone="primary">
+            <actionButton.Component
+              icon="arrow-up-right"
+              moklyInstance="install-github-app"
+              tone="primary"
+            >
               {install.action}
-            </ActionButton>
+            </actionButton.Component>
           </ScreenLink>
         }
         description={install.description}
@@ -85,8 +91,12 @@ export function InstallStep(props: {
   const installation = installationOf[props.person]
   return (
     <Section
-      actions={<ActionButton icon={Plus}>{install.another}</ActionButton>}
-      status={done(install.done)}
+      actions={
+        <actionButton.Component icon="plus" moklyInstance="install-another">
+          {install.another}
+        </actionButton.Component>
+      }
+      status={done(install.done, 'install-done')}
       title={install.title}
     >
       <SectionText>
@@ -112,7 +122,7 @@ export function OrgStep(props: {
     return (
       <Section
         actions={orgBuildActions(props.build)}
-        status={done(org.done)}
+        status={done(org.done, 'org-done')}
         title={org.title}
       >
         <SectionText>
@@ -125,13 +135,14 @@ export function OrgStep(props: {
   }
   const next = props.step === 'org'
   const create = (
-    <ActionButton
+    <actionButton.Component
       disabled={!next}
-      icon={Plus}
+      icon="plus"
+      moklyInstance="create-org"
       tone={next ? 'primary' : 'secondary'}
     >
       {org.action}
-    </ActionButton>
+    </actionButton.Component>
   )
   return (
     <Section
@@ -181,7 +192,7 @@ export function AgentStep(props: {
   return (
     <Section
       description={copy.agent.description}
-      status={connected ? done(copy.agent.done) : undefined}
+      status={connected ? done(copy.agent.done, 'agent-done') : undefined}
       title={copy.agent.title}
     >
       <AgentList form={form} logins={logins} />

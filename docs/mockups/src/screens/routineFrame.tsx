@@ -1,6 +1,9 @@
 import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
-import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
+import {
+  appFrame,
+  mobileFrame,
+} from '../entries/components/layout/AppFrame.mockup'
 import { acmeRail } from '../components/layout/OrgRail'
 import {
   suspendedSections,
@@ -10,6 +13,7 @@ import { Sidebar } from '../components/workspaces/Sidebar'
 import { memberViewer, people } from '../fixtures/members'
 import { orgs, suspendedOrg } from '../fixtures/orgs'
 import { viewerOf, type RoutineState } from './routineState'
+import { defined } from '../defined'
 
 /**
  * The app around a routine page: the rail and the sidebar of Acme on
@@ -26,20 +30,20 @@ export function RoutineFrame(props: {
   const { state } = props
   if (props.viewport === 'mobile') {
     return (
-      <MobileFrame>
+      <mobileFrame.Component>
         {props.children}
         {props.overlay}
-      </MobileFrame>
+      </mobileFrame.Component>
     )
   }
   const suspended = state.org === 'suspended'
   return (
-    <AppFrame
-      overlay={props.overlay}
+    <appFrame.Component
+      {...defined({ overlay: props.overlay })}
       rail={{
         ...acmeRail,
-        suspended: suspended ? suspendedOrg : undefined,
-        person: state.viewer === 'member' ? people[memberViewer] : undefined,
+        ...(suspended ? { suspended: suspendedOrg } : {}),
+        ...(state.viewer === 'member' ? { person: people[memberViewer] } : {}),
       }}
       sidebar={
         <Sidebar
@@ -52,6 +56,6 @@ export function RoutineFrame(props: {
       }
     >
       {props.children}
-    </AppFrame>
+    </appFrame.Component>
   )
 }

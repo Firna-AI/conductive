@@ -92,12 +92,14 @@ export function pageOrg(state: NewWorkspaceState): PageOrg {
 
 /** The rail of the page, with the person signed in. */
 export function railOf(state: NewWorkspaceState): RailState {
-  const person = state.viewer === 'admin' ? undefined : people[memberViewer]
-  if (state.org === 'new') return { orgs: orgList, current: 'firna', person }
+  // The rail of an admin shows the account of the mockups.
+  const person =
+    state.viewer === 'admin' ? {} : { person: people[memberViewer] }
+  if (state.org === 'new') return { orgs: orgList, current: 'firna', ...person }
   if (state.org === 'suspended') {
-    return { ...acmeRail, suspended: suspendedOrg, person }
+    return { ...acmeRail, suspended: suspendedOrg, ...person }
   }
-  return { ...acmeRail, person }
+  return { ...acmeRail, ...person }
 }
 
 /**

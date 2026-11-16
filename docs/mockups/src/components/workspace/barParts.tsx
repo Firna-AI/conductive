@@ -3,7 +3,7 @@ import { useSharedUiTheme } from '@firna/ui/theme'
 import { ArrowRight, ArrowUpRight, GitBranch } from 'lucide-react'
 import { pullRequest } from '../../fixtures/pullRequests'
 import { baseBranchOf, type Workspace } from '../../fixtures/workspaces'
-import { GitHubMark } from '../common/GitHubMark'
+import { githubMark } from '../../entries/components/common/GitHubMark.mockup'
 import { useOutsideHref } from '../common/ScreenLink'
 import { useShortcutTip } from '../common/ShortcutTip'
 import { useControlSizes } from '../common/touch'
@@ -17,7 +17,12 @@ import styles from './PullRequestBar.module.css'
  * the place of the words and the arrow, and the link keeps its name as a
  * tooltip. On desktop, the tooltip also names the key of Open PR on GitHub.
  */
-export function GitHubLink(props: { href: string; label: string }) {
+export function GitHubLink(props: {
+  href: string
+  label: string
+  /** The place of the link, which names its mark for Mokly. */
+  id: 'bar' | 'message'
+}) {
   const href = useOutsideHref(props.href)
   // The words take the size of the button labels: larger on a phone.
   const control = useControlSizes()
@@ -32,7 +37,11 @@ export function GitHubLink(props: { href: string; label: string }) {
       target="_blank"
       title={tip ?? props.label}
     >
-      <GitHubMark className={styles.mark} size={13} />
+      <githubMark.Component
+        className={styles.mark}
+        moklyInstance={`github-${props.id}`}
+        size={13}
+      />
       <span className={styles.actionLabel}>{props.label}</span>
       <ArrowUpRight aria-hidden className={styles.arrow} size={13} />
     </a>
@@ -67,7 +76,13 @@ export function PullRequestNumber(props: { number: number; href: string }) {
 
 /** The link of the bar to the pull request on GitHub. */
 export function BarGitHubLink() {
-  return <GitHubLink href={pullRequest.url} label={barLabels.openOnGitHub} />
+  return (
+    <GitHubLink
+      href={pullRequest.url}
+      id="bar"
+      label={barLabels.openOnGitHub}
+    />
+  )
 }
 
 /**

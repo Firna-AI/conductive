@@ -1,5 +1,4 @@
 import type { Viewport } from '@mokly/mokly'
-import { Check, Hourglass } from 'lucide-react'
 import { TableCell, type TableColumn } from '@firna/ui/table'
 import {
   samOkafor,
@@ -7,14 +6,15 @@ import {
   type WaitingPerson,
 } from '../../fixtures/operatorWaitlist'
 import { paths } from '../../paths'
-import { ActionButton } from '../common/actions'
-import { EmptyState } from '../common/EmptyState'
+import { actionButton } from '../../entries/components/common/actions.mockup'
+import { emptyState } from '../../entries/components/common/EmptyState.mockup'
 import { ScreenLink } from '../common/ScreenLink'
-import { StatusText } from '../common/StatusText'
+import { statusText } from '../../entries/components/common/StatusText.mockup'
 import { Section } from '../settings/Section'
 import { approvedEmailLines, approvedLabel, emptyWaitlist } from './accessCopy'
 import { NameCell } from './directory'
 import { ProfileLink, TargetMark } from './targets'
+import { instanceKey } from '../../instanceKey'
 import styles from './waitlist.module.css'
 
 /**
@@ -44,12 +44,23 @@ function ApprovalCell(props: { person: WaitingPerson; email?: ApprovalEmail }) {
   if (props.email) {
     return (
       <span className={styles.approved}>
-        <StatusText icon={Check} label={approvedLabel} tone="success" />
+        <statusText.Component
+          icon="check"
+          label={approvedLabel}
+          moklyInstance={`approved-${instanceKey(props.person.login)}`}
+          tone="success"
+        />
         <span className={styles.email}>{approvedEmailLines[props.email]}</span>
       </span>
     )
   }
-  const button = <ActionButton>Approve</ActionButton>
+  const button = (
+    <actionButton.Component
+      moklyInstance={`approve-${instanceKey(props.person.login)}`}
+    >
+      Approve
+    </actionButton.Component>
+  )
   if (props.person.login !== samOkafor.login) return button
   return (
     <ScreenLink asChild to={paths.operatorWaitlistApprove}>
@@ -105,9 +116,10 @@ export function waitlistCell(
 export function EmptyWaitlist() {
   return (
     <Section title="Waitlist">
-      <EmptyState
+      <emptyState.Component
+        moklyInstance="waitlist-empty"
         body={emptyWaitlist.body}
-        icon={Hourglass}
+        icon="hourglass"
         title={emptyWaitlist.title}
       />
     </Section>

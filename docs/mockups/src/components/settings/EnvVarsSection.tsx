@@ -1,14 +1,17 @@
 import { Input } from '@firna/ui/input'
-import { Pencil, Plus, Trash2, X } from 'lucide-react'
 import { productName } from '../../brand'
 import { envVars, newEnvVar, type EnvVar } from '../../fixtures/computer'
 import { noop } from '../../noop'
-import { ActionButton, IconButton } from '../common/actions'
+import {
+  actionButton,
+  iconButton,
+} from '../../entries/components/common/actions.mockup'
 import { classes } from '../common/classes'
 import { useControlSizes } from '../common/touch'
 import { SecretMark, SecretSwitch, ValueDots } from './EnvVarParts'
 import { secretNote } from './envVarCopy'
 import { Section, SectionText } from './Section'
+import { instanceKey } from '../../instanceKey'
 import styles from './EnvironmentSections.module.css'
 import sections from './Section.module.css'
 
@@ -38,8 +41,16 @@ function EditableRow(props: { item: EnvVar }) {
       <RowSwitch item={item} />
       <ValueDots />
       <span className={styles.actions}>
-        <IconButton icon={Pencil} label={`Change the value of ${item.name}`} />
-        <IconButton icon={Trash2} label={`Delete ${item.name}`} />
+        <iconButton.Component
+          icon="pencil"
+          label={`Change the value of ${item.name}`}
+          moklyInstance={`change-${instanceKey(item.name)}`}
+        />
+        <iconButton.Component
+          icon="trash-2"
+          label={`Delete ${item.name}`}
+          moklyInstance={`delete-${instanceKey(item.name)}`}
+        />
       </span>
     </li>
   )
@@ -66,8 +77,17 @@ function ChangingRow(props: { item: EnvVar }) {
           size={field}
           value=""
         />
-        <ActionButton tone="primary">Save</ActionButton>
-        <IconButton icon={X} label="Cancel" />
+        <actionButton.Component
+          moklyInstance={`save-${instanceKey(item.name)}`}
+          tone="primary"
+        >
+          Save
+        </actionButton.Component>
+        <iconButton.Component
+          icon="x"
+          label="Cancel"
+          moklyInstance={`cancel-${instanceKey(item.name)}`}
+        />
       </span>
     </li>
   )
@@ -110,10 +130,16 @@ function AddVariableForm() {
       />
       <SecretSwitch label="Secret" onValueChange={noop} value />
       <div className={sections.actions}>
-        <ActionButton>Cancel</ActionButton>
-        <ActionButton icon={Plus} tone="primary">
+        <actionButton.Component moklyInstance="cancel-variable">
+          Cancel
+        </actionButton.Component>
+        <actionButton.Component
+          icon="plus"
+          moklyInstance="save-variable"
+          tone="primary"
+        >
           Save variable
-        </ActionButton>
+        </actionButton.Component>
       </div>
     </>
   )
@@ -146,7 +172,9 @@ export function EnvVarsSection(props: {
     <Section
       actions={
         props.readOnly || form === 'add' ? undefined : (
-          <ActionButton icon={Plus}>Add variable</ActionButton>
+          <actionButton.Component icon="plus" moklyInstance="add-variable">
+            Add variable
+          </actionButton.Component>
         )
       }
       description={`Workspaces of ${props.org} get these each time their cloud computer starts. Builds run without them.`}

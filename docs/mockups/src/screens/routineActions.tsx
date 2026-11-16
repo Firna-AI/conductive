@@ -1,8 +1,7 @@
 import type { ReactElement, ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
-import { Play, Power, Trash2 } from 'lucide-react'
 import { ScreenLink } from '../components/common/ScreenLink'
-import { ActionButton } from '../components/common/actions'
+import { actionButton } from '../entries/components/common/actions.mockup'
 import type { Routine } from '../fixtures/routines'
 import type { RoutineAccess, SaveState } from './routineState'
 import styles from './RoutineScreen.module.css'
@@ -18,9 +17,13 @@ function linked(button: ReactElement, to: string | undefined): ReactElement {
 }
 
 const deleteButton = (
-  <ActionButton icon={Trash2} tone="danger">
+  <actionButton.Component
+    icon="trash-2"
+    moklyInstance="delete-routine"
+    tone="danger"
+  >
     Delete
-  </ActionButton>
+  </actionButton.Component>
 )
 
 /**
@@ -55,7 +58,9 @@ export function routineActions(props: {
       return (
         <>
           {props.routine.active ? (
-            <ActionButton icon={Power}>Turn off</ActionButton>
+            <actionButton.Component icon="power" moklyInstance="turn-off">
+              Turn off
+            </actionButton.Component>
           ) : null}
           {deleteButton}
         </>
@@ -63,15 +68,21 @@ export function routineActions(props: {
     case 'owner': {
       const changed = props.save === 'changed'
       const save = linked(
-        <ActionButton disabled={!changed} tone="primary">
+        <actionButton.Component
+          disabled={!changed}
+          moklyInstance="save-routine"
+          tone="primary"
+        >
           Save
-        </ActionButton>,
+        </actionButton.Component>,
         changed ? props.saveTo : undefined,
       )
       if (!props.routine.saved) return save
       const runNow = props.runNow
         ? linked(
-            <ActionButton icon={Play}>Run now</ActionButton>,
+            <actionButton.Component icon="play" moklyInstance="run-now">
+              Run now
+            </actionButton.Component>,
             props.runNowTo,
           )
         : null
@@ -97,9 +108,13 @@ export function PhoneDelete(props: { to?: string }) {
   return (
     <div className={styles.phoneDelete}>
       {linked(
-        <ActionButton icon={Trash2} tone="danger">
+        <actionButton.Component
+          icon="trash-2"
+          moklyInstance="delete-routine"
+          tone="danger"
+        >
           Delete routine
-        </ActionButton>,
+        </actionButton.Component>,
         props.to,
       )}
     </div>

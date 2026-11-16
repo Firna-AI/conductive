@@ -115,7 +115,7 @@ export function filePlaceholder(
 ): ReactNode {
   const panel = panelState(state)
   return panel && (panel.problem === 'starting' || replacesShownFile(panel)) ? (
-    <SandboxPanel phone={withAction} state={panel} />
+    <SandboxPanel phone={withAction} place="file" state={panel} />
   ) : undefined
 }
 
@@ -128,7 +128,7 @@ export function filePlaceholder(
 function listsPlaceholder(state: WorkspaceState, phone: boolean): ReactNode {
   const panel = panelState(state)
   return panel && replacesList(panel, !isNew(state)) ? (
-    <SandboxPanel phone={phone} state={panel} />
+    <SandboxPanel phone={phone} place="files" state={panel} />
   ) : undefined
 }
 
@@ -152,7 +152,7 @@ export function FilesContent(props: {
   const phone = props.viewport === 'mobile'
   const panel = panelState(state)
   if (panel?.problem === 'archived') {
-    return <SandboxPanel phone={phone} state={panel} />
+    return <SandboxPanel phone={phone} place="files" state={panel} />
   }
   const open = openFile(state)
   if (phone && open) {
@@ -217,7 +217,7 @@ export function ToolContent(props: {
   const { state } = props
   const mobile = props.viewport === 'mobile'
   const panel = panelState(state)
-  if (panel) return <SandboxPanel phone={mobile} state={panel} />
+  if (panel) return <SandboxPanel phone={mobile} place="tools" state={panel} />
   switch (state.tool) {
     case 'terminal':
       return <TerminalContent state={state} viewport={props.viewport} />

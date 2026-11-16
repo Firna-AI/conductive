@@ -1,9 +1,8 @@
 import type { Viewport } from '@mokly/mokly'
 import { Button } from '@firna/ui/button'
-import { Ticket } from 'lucide-react'
 import { termsAgreement } from '../../../../src/marketing/legal-text'
-import { GitHubMark } from '../components/common/GitHubMark'
-import { Notice } from '../components/common/Notice'
+import { githubMark } from '../entries/components/common/GitHubMark.mockup'
+import { notice } from '../entries/components/common/Notice.mockup'
 import { ScreenLink } from '../components/common/ScreenLink'
 import { CatalogueText } from '../components/marketing/CatalogueText'
 import { noop } from '../noop'
@@ -20,9 +19,10 @@ import styles from './SignInScreen.module.css'
  */
 function LinkCode(props: { code: string }) {
   return (
-    <Notice
+    <notice.Component
       body={<span className={frame.inviteCode}>{props.code}</span>}
-      icon={Ticket}
+      icon="ticket"
+      moklyInstance="link-code"
       title={waitlistCopy.linkCode}
     />
   )
@@ -47,7 +47,13 @@ export function SignInScreen(props: { viewport: Viewport; code?: string }) {
       <ScreenLink asChild to={props.code ? paths.getStarted : paths.waitlist}>
         <Button
           block
-          iconNode={<GitHubMark className={styles.mark} size={17} />}
+          iconNode={
+            <githubMark.Component
+              className={styles.mark}
+              moklyInstance="sign-in-github"
+              size={17}
+            />
+          }
           onPress={noop}
           size="lg"
           tone="primary"

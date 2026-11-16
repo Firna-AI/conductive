@@ -24,7 +24,7 @@ import {
   type CommandRow,
   type ShortcutGroup,
 } from '../../fixtures/shortcuts'
-import { SearchField } from '../common/SearchField'
+import { searchField } from '../../entries/components/common/SearchField.mockup'
 import { NoResults } from '../palette/PaletteEmpty'
 import { Section } from './Section'
 import { ShortcutIntro } from './ShortcutIntro'
@@ -185,8 +185,9 @@ export function ShortcutsTab(props: {
   }
   return (
     <>
-      <SearchField
+      <searchField.Component
         label="Search shortcuts"
+        moklyInstance="search-shortcuts"
         placeholder="Search shortcuts"
         query={query}
       />

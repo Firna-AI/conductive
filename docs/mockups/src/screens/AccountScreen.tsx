@@ -1,10 +1,14 @@
 import type { Viewport } from '@mokly/mokly'
-import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
-import type { RailState } from '../components/layout/OrgRail'
-import { Page } from '../components/layout/Page'
-import { useMacApp } from '../components/mac/MacApp'
 import {
-  AccountTabs,
+  appFrame,
+  mobileFrame,
+} from '../entries/components/layout/AppFrame.mockup'
+import type { RailState } from '../components/layout/OrgRail'
+import { page as pagePart } from '../entries/components/layout/Page.mockup'
+import { useMacApp } from '../components/mac/MacApp'
+// The tabs come first, so that their styles keep their place in the bundle.
+import { AccountTabs } from '../components/settings/AccountTabs'
+import {
   AgentsSection,
   GitHubSection,
   SignInSection,
@@ -27,6 +31,7 @@ import { viewerMembership } from '../fixtures/members'
 import { paths } from '../paths'
 import type { AccountState, AccountView } from './accountState'
 import { agentsFor } from './accountAgents'
+import { defined } from '../defined'
 
 const connectedRail: RailState = { orgs: orgList, current: 'account' }
 
@@ -115,15 +120,15 @@ export function AccountScreen(props: {
     ? { label: 'Workspaces', to: paths.shell }
     : { label: 'Get started', to: paths.getStarted }
   const page = (
-    <Page
-      back={mobile ? back : undefined}
+    <pagePart.Component
       subtitle={`@${account.login}`}
+      {...defined({ back: mobile ? back : undefined })}
       tabs={<AccountTabs flow={mobile} host={host} tab={state.tab} />}
       title="Account"
       viewport={props.viewport}
     >
       <TabContent changes={changes} host={host} state={state} />
-    </Page>
+    </pagePart.Component>
   )
   // Reset all asks first: a dialog over the account, or a sheet on a phone.
   const dialog =
@@ -133,13 +138,13 @@ export function AccountScreen(props: {
         host={host}
         viewport={props.viewport}
       />
-    ) : null
+    ) : undefined
   if (mobile) {
     return (
-      <MobileFrame>
+      <mobileFrame.Component>
         {page}
         {dialog}
-      </MobileFrame>
+      </mobileFrame.Component>
     )
   }
   // The Mac app keeps the sidebar of the org beside the account.
@@ -152,12 +157,11 @@ export function AccountScreen(props: {
     />
   ) : undefined
   return (
-    <AppFrame
-      overlay={dialog}
+    <appFrame.Component
       rail={connected ? connectedRail : firstRunRail}
-      sidebar={sidebar}
+      {...defined({ overlay: dialog, sidebar })}
     >
       {page}
-    </AppFrame>
+    </appFrame.Component>
   )
 }

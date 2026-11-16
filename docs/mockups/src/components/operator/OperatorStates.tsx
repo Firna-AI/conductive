@@ -1,10 +1,9 @@
 import type { Viewport } from '@mokly/mokly'
-import { CircleAlert, RotateCw } from 'lucide-react'
 import { StatTileRow } from '@firna/ui/chart'
 import { SkeletonBar, SkeletonGroup } from '@firna/ui/skeleton'
 import { Table } from '@firna/ui/table'
-import { ActionButton } from '../common/actions'
-import { Notice } from '../common/Notice'
+import { actionButton } from '../../entries/components/common/actions.mockup'
+import { notice } from '../../entries/components/common/Notice.mockup'
 import { Section } from '../settings/Section'
 import { orgColumns, orgTableSize } from './LargestOrgs'
 import tiles from './OperatorTiles.module.css'
@@ -83,9 +82,14 @@ export function OperatorLoading(props: { viewport: Viewport }) {
 /** The numbers could not load. Try again reads them again. */
 export function OperatorError() {
   return (
-    <Notice
-      action={<ActionButton icon={RotateCw}>Try again</ActionButton>}
-      icon={CircleAlert}
+    <notice.Component
+      action={
+        <actionButton.Component icon="rotate-cw" moklyInstance="retry-numbers">
+          Try again
+        </actionButton.Component>
+      }
+      icon="circle-alert"
+      moklyInstance="numbers-error"
       title="The numbers could not load"
       tone="danger"
     />

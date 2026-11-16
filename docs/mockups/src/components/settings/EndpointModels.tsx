@@ -1,6 +1,6 @@
-import { RefreshCw } from 'lucide-react'
 import type { ModelListCheck } from '../../fixtures/endpointModels'
-import { ActionButton } from '../common/actions'
+import { actionButton } from '../../entries/components/common/actions.mockup'
+import { instanceKey } from '../../instanceKey'
 import formStyles from './AgentConnectForm.module.css'
 import styles from './EndpointModels.module.css'
 
@@ -49,12 +49,13 @@ export function EndpointModels(props: {
           {`. Checked ${checked}.`}
         </span>
       </div>
-      <ActionButton
+      <actionButton.Component
         accessibilityLabel={`Refresh the model list of ${props.agent}`}
-        icon={RefreshCw}
+        icon="refresh-cw"
+        moklyInstance={`refresh-${instanceKey(props.agent)}-models`}
       >
         Refresh
-      </ActionButton>
+      </actionButton.Component>
     </div>
   )
 }

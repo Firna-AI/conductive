@@ -1,6 +1,5 @@
-import { FileDiff } from 'lucide-react'
 import { splitPath, type ChangedFile } from '../../fixtures/files'
-import { EmptyState } from '../common/EmptyState'
+import { emptyState } from '../../entries/components/common/EmptyState.mockup'
 import { ScreenLink } from '../common/ScreenLink'
 import { ChangeIcon } from './ChangeIcon'
 import { DiffStat } from './DiffStat'
@@ -60,9 +59,10 @@ export function ChangeList(props: {
 }) {
   if (props.files.length === 0) {
     return (
-      <EmptyState
+      <emptyState.Component
         body="Files that the agent edits appear as it works."
-        icon={FileDiff}
+        icon="file-diff"
+        moklyInstance="changes-empty"
         title="Changes show here"
       />
     )

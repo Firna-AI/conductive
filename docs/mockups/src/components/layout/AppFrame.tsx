@@ -2,8 +2,10 @@ import type { ReactNode } from 'react'
 import { TouchScreen } from '../common/touch'
 import { useMacApp } from '../mac/MacApp'
 import { WindowControls } from '../mac/WindowControls'
-import { acmeRail, OrgRail, type RailState } from './OrgRail'
-import { ResizeHandle, sidebarWidth } from './ResizeHandle'
+import { acmeRail, type RailState } from './OrgRail'
+import { orgRail } from '../../entries/components/layout/OrgRail.mockup'
+import { sidebarWidth } from './ResizeHandle'
+import { resizeHandle } from '../../entries/components/layout/ResizeHandle.mockup'
 import styles from './AppFrame.module.css'
 
 /**
@@ -21,11 +23,11 @@ export function AppFrame(props: {
   children: ReactNode
 }) {
   const mac = useMacApp()
-  const rail = <OrgRail {...(props.rail ?? acmeRail)} />
+  const rail = <orgRail.Component {...(props.rail ?? acmeRail)} />
   const sidebar = props.sidebar ? (
     <aside className={styles.sidebar}>
       {props.sidebar}
-      <ResizeHandle
+      <resizeHandle.Component
         edge="right"
         label="Resize the sidebar"
         width={sidebarWidth}

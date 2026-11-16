@@ -1,6 +1,6 @@
 import type { SchemaProps, Viewport } from '@mokly/mokly'
 import { TableCell, type TableColumn } from '@firna/ui/table'
-import { SearchField } from '../components/common/SearchField'
+import { searchField } from '../entries/components/common/SearchField.mockup'
 import {
   DirectoryTable,
   NameCell,
@@ -16,6 +16,7 @@ import {
   type TargetStatus,
 } from '../fixtures/operatorDirectory'
 import { paths } from '../paths'
+import { instanceKey } from '../instanceKey'
 
 export const operatorOrgsSchema = {
   type: 'object',
@@ -60,7 +61,9 @@ const orgPaths: Readonly<Record<TargetStatus, string>> = {
  */
 function lineOf(row: OrgRow, viewport: Viewport) {
   const state =
-    row.status === 'active' ? null : <TargetState status={row.status} />
+    row.status === 'active' ? null : (
+      <TargetState id={instanceKey(row.name)} status={row.status} />
+    )
   if (row.match && state) {
     return (
       <>
@@ -133,8 +136,9 @@ export function OperatorOrgsScreen(props: {
   const found = results(props.state.search)
   return (
     <OperatorPage tab="orgs" title="Operator" viewport={props.viewport}>
-      <SearchField
+      <searchField.Component
         label="Search orgs"
+        moklyInstance="search-orgs"
         placeholder="Name, org ID, cloud computer ID, or preview address"
         query={found.query}
       />

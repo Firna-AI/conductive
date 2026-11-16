@@ -1,8 +1,7 @@
-import { ArchiveRestore, CircleAlert } from 'lucide-react'
 import { accountDeletedOrg, orgs } from '../../fixtures/orgs'
 import { paths } from '../../paths'
-import { ActionButton } from '../common/actions'
-import { Notice } from '../common/Notice'
+import { actionButton } from '../../entries/components/common/actions.mockup'
+import { notice } from '../../entries/components/common/Notice.mockup'
 import { ScreenLink } from '../common/ScreenLink'
 import { OrgTile } from '../orgs/OrgTile'
 import { DeletedOrgList } from './DeletedOrgList'
@@ -45,19 +44,21 @@ export function DeletedOrgsSection(props: {
           detail: suspended ? copy.suspended(day) : copy.deletes(day),
           action: suspended ? undefined : (
             <ScreenLink asChild to={props.restoredTo ?? paths.account}>
-              <ActionButton
+              <actionButton.Component
                 accessibilityLabel={copy.restoreLabel(org.name)}
-                icon={ArchiveRestore}
+                icon="archive-restore"
+                moklyInstance={`restore-${org.key}`}
               >
                 {copy.restore}
-              </ActionButton>
+              </actionButton.Component>
             </ScreenLink>
           ),
           error:
             props.state === 'failed' ? (
-              <Notice
+              <notice.Component
                 body="The request failed. Try again."
-                icon={CircleAlert}
+                icon="circle-alert"
+                moklyInstance={`restore-failed-${org.key}`}
                 title={copy.failed(org.name)}
                 tone="danger"
               />

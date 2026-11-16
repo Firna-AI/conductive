@@ -4,7 +4,7 @@ import type { Run, RunState } from '../../fixtures/routineRuns'
 import { repositoryOf, type Routine } from '../../fixtures/routines'
 import { orgs } from '../../fixtures/orgs'
 import { classes } from '../common/classes'
-import { ExternalLink } from '../common/ExternalLink'
+import { externalLink } from '../../entries/components/common/ExternalLink.mockup'
 import { ScreenLink } from '../common/ScreenLink'
 import { StatusGlyph } from '../workspaces/StatusGlyph'
 import {
@@ -104,9 +104,12 @@ function RunRow(props: RowProps) {
           )}
           {number === undefined ? null : (
             <span className={styles.pr}>
-              <ExternalLink href={pullRequestUrl(props.routine, number)}>
+              <externalLink.Component
+                href={pullRequestUrl(props.routine, number)}
+                moklyInstance={`pr-${run.key}`}
+              >
                 {`#${number}`}
-              </ExternalLink>
+              </externalLink.Component>
             </span>
           )}
           <span className={styles.when}>{run.when}</span>

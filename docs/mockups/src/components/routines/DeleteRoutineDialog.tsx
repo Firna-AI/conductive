@@ -1,9 +1,11 @@
 import type { Viewport } from '@mokly/mokly'
-import { Trash2 } from 'lucide-react'
 import type { Routine } from '../../fixtures/routines'
 import { paths } from '../../paths'
-import { ActionButton } from '../common/actions'
-import { ConfirmDialog, DialogText } from '../common/ConfirmDialog'
+import { actionButton } from '../../entries/components/common/actions.mockup'
+import {
+  confirmDialog,
+  dialogText,
+} from '../../entries/components/common/ConfirmDialog.mockup'
 import { ScreenLink } from '../common/ScreenLink'
 
 /**
@@ -16,25 +18,32 @@ export function DeleteRoutineDialog(props: {
   viewport: Viewport
 }) {
   return (
-    <ConfirmDialog
+    <confirmDialog.Component
       actions={
         <>
           <ScreenLink asChild to={paths.routine}>
-            <ActionButton>Cancel</ActionButton>
+            <actionButton.Component moklyInstance="dialog-cancel">
+              Cancel
+            </actionButton.Component>
           </ScreenLink>
           <ScreenLink asChild to={paths.routines}>
-            <ActionButton icon={Trash2} tone="danger">
+            <actionButton.Component
+              icon="trash-2"
+              moklyInstance="dialog-delete-routine"
+              tone="danger"
+            >
               Delete routine
-            </ActionButton>
+            </actionButton.Component>
           </ScreenLink>
         </>
       }
+      moklyInstance="delete-routine-dialog"
       title={`Delete ${props.routine.name}?`}
       viewport={props.viewport}
     >
-      <DialogText>
+      <dialogText.Component>
         Its triggers and prompt are deleted. Its run workspaces stay.
-      </DialogText>
-    </ConfirmDialog>
+      </dialogText.Component>
+    </confirmDialog.Component>
   )
 }

@@ -1,8 +1,7 @@
 import type { ReactNode } from 'react'
-import { CircleAlert, Hammer, RotateCw } from 'lucide-react'
-import { ActionButton } from '../components/common/actions'
+import { actionButton } from '../entries/components/common/actions.mockup'
 import { ScreenLink } from '../components/common/ScreenLink'
-import { StatusText } from '../components/common/StatusText'
+import { statusText } from '../entries/components/common/StatusText.mockup'
 import { SectionText } from '../components/settings/Section'
 import {
   failedBuild,
@@ -19,24 +18,38 @@ function BuildStatus(props: { build: FirstBuildState }) {
   switch (props.build) {
     case 'running':
       return (
-        <StatusText
+        <statusText.Component
           busy
           label={computer.preparing(runningBuild.elapsed)}
+          moklyInstance="first-build-state"
           tone="active"
         />
       )
     case 'succeeded':
-      return <StatusText label={computer.ready} tone="success" />
+      return (
+        <statusText.Component
+          label={computer.ready}
+          moklyInstance="first-build-state"
+          tone="success"
+        />
+      )
     case 'failed':
       return (
-        <StatusText
-          icon={CircleAlert}
+        <statusText.Component
+          icon="circle-alert"
           label={computer.failed(failedBuild.duration)}
+          moklyInstance="first-build-state"
           tone="danger"
         />
       )
     case 'none':
-      return <StatusText label={computer.none} tone="muted" />
+      return (
+        <statusText.Component
+          label={computer.none}
+          moklyInstance="first-build-state"
+          tone="muted"
+        />
+      )
   }
 }
 
@@ -75,21 +88,31 @@ export function orgBuildActions(build: FirstBuildState): ReactNode {
       return (
         <>
           <ScreenLink asChild to={paths.getStartedPreparing}>
-            <ActionButton icon={RotateCw} tone="primary">
+            <actionButton.Component
+              icon="rotate-cw"
+              moklyInstance="retry-build"
+              tone="primary"
+            >
               {computer.retry}
-            </ActionButton>
+            </actionButton.Component>
           </ScreenLink>
           <ScreenLink asChild to={paths.firstBuildComputerFailed}>
-            <ActionButton>{computer.log}</ActionButton>
+            <actionButton.Component moklyInstance="build-log">
+              {computer.log}
+            </actionButton.Component>
           </ScreenLink>
         </>
       )
     case 'none':
       return (
         <ScreenLink asChild to={paths.getStartedPreparing}>
-          <ActionButton icon={Hammer} tone="primary">
+          <actionButton.Component
+            icon="hammer"
+            moklyInstance="start-build"
+            tone="primary"
+          >
             {computer.build}
-          </ActionButton>
+          </actionButton.Component>
         </ScreenLink>
       )
   }

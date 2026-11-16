@@ -2,7 +2,7 @@ import type { ComponentProps } from 'react'
 import type { Viewport } from '@mokly/mokly'
 import { Unplug } from 'lucide-react'
 import type { TerminalLine } from '../../fixtures/terminal'
-import { ActionButton } from '../common/actions'
+import { actionButton } from '../../entries/components/common/actions.mockup'
 import { TerminalTabs } from './TerminalTabs'
 import { TerminalView } from './TerminalView'
 import styles from './TerminalTool.module.css'
@@ -42,7 +42,9 @@ export function TerminalTool(props: {
             <Unplug aria-hidden size={13} />
             Disconnected
           </span>
-          <ActionButton>Reconnect</ActionButton>
+          <actionButton.Component moklyInstance="reconnect">
+            Reconnect
+          </actionButton.Component>
         </div>
       ) : null}
     </div>

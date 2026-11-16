@@ -3,7 +3,8 @@ import type { RoutineRow } from '../../fixtures/routineRows'
 import { offAfterFailedRuns, repositoryOf } from '../../fixtures/routines'
 import { classes } from '../common/classes'
 import { ScreenLink } from '../common/ScreenLink'
-import { StatusText, type StatusTone } from '../common/StatusText'
+import type { StatusTone } from '../common/StatusText'
+import { statusText } from '../../entries/components/common/StatusText.mockup'
 import { PersonAvatar } from '../orgs/OrgTile'
 import { StatusGlyph } from '../workspaces/StatusGlyph'
 import { runStateLabels } from './runCopy'
@@ -46,7 +47,11 @@ function State(props: { row: RoutineRow }) {
   if (failed) tone = 'danger'
   return (
     <span className={styles.state}>
-      <StatusText label={routine.active ? 'Active' : 'Off'} tone={tone} />
+      <statusText.Component
+        label={routine.active ? 'Active' : 'Off'}
+        moklyInstance={`state-${routine.key}`}
+        tone={tone}
+      />
       {failed ? <span className={styles.reason}>3 failed runs</span> : null}
     </span>
   )

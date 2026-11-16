@@ -1,17 +1,21 @@
 import type { SchemaProps, Viewport } from '@mokly/mokly'
-import { CircleAlert } from 'lucide-react'
-import { ActionButton } from '../components/common/actions'
-import { LoadFailure, offlineMessage } from '../components/common/LoadFailure'
-import { Notice } from '../components/common/Notice'
+import { actionButton } from '../entries/components/common/actions.mockup'
+import { offlineMessage } from '../components/common/LoadFailure'
+import { loadFailure } from '../entries/components/common/LoadFailure.mockup'
+import { notice } from '../entries/components/common/Notice.mockup'
 import { ScreenLink } from '../components/common/ScreenLink'
-import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
-import { Page } from '../components/layout/Page'
+import {
+  appFrame,
+  mobileFrame,
+} from '../entries/components/layout/AppFrame.mockup'
+import { page as pagePart } from '../entries/components/layout/Page.mockup'
 import { PendingInviteList } from '../components/members/PendingInvites'
 import { orgLinks } from '../components/orgs/orgLinks'
 import { pendingInvites } from '../fixtures/members'
 import { account, orgs } from '../fixtures/orgs'
 import { paths } from '../paths'
 import { inviteRows } from './inviteRows'
+import { defined } from '../defined'
 import styles from './InvitationsScreen.module.css'
 
 export const invitationsSchema = {
@@ -37,10 +41,14 @@ const failedOrg = orgs.acme
  * again, which joins the org.
  */
 function AcceptFailure() {
-  const button = <ActionButton tone="primary">Try again</ActionButton>
+  const button = (
+    <actionButton.Component moklyInstance="try-again" tone="primary">
+      Try again
+    </actionButton.Component>
+  )
   const to = orgLinks[failedOrg.key]
   return (
-    <Notice
+    <notice.Component
       action={
         to ? (
           <ScreenLink asChild to={to}>
@@ -51,7 +59,8 @@ function AcceptFailure() {
         )
       }
       body={offlineMessage}
-      icon={CircleAlert}
+      icon="circle-alert"
+      moklyInstance="accept-failed"
       title={`The invitation to ${failedOrg.name} wasn't accepted`}
       tone="danger"
     />
@@ -65,7 +74,9 @@ function AcceptFailure() {
 function ContinueLink() {
   return (
     <ScreenLink asChild to={paths.getStarted}>
-      <ActionButton>Continue to workspaces</ActionButton>
+      <actionButton.Component moklyInstance="continue-to-workspaces">
+        Continue to workspaces
+      </actionButton.Component>
     </ScreenLink>
   )
 }
@@ -74,7 +85,11 @@ function ContinueLink() {
 function Body(props: { state: InvitationsState; mobile: boolean }) {
   if (props.state.result === 'load-failed') {
     return (
-      <LoadFailure title="The invitations didn't load" to={paths.invitations} />
+      <loadFailure.Component
+        moklyInstance="invitations-load-failure"
+        title="The invitations didn't load"
+        to={paths.invitations}
+      />
     )
   }
   return (
@@ -101,9 +116,9 @@ export function InvitationsScreen(props: {
 }) {
   const mobile = props.viewport === 'mobile'
   const page = (
-    <Page
-      actions={mobile ? <ContinueLink /> : undefined}
+    <pagePart.Component
       subtitle={`@${account.login}`}
+      {...defined({ actions: mobile ? <ContinueLink /> : undefined })}
       title="Invitations"
       viewport={props.viewport}
     >
@@ -113,8 +128,12 @@ export function InvitationsScreen(props: {
           <ContinueLink />
         </div>
       )}
-    </Page>
+    </pagePart.Component>
   )
-  if (mobile) return <MobileFrame>{page}</MobileFrame>
-  return <AppFrame rail={{ orgs: [], firstRun: true }}>{page}</AppFrame>
+  if (mobile) return <mobileFrame.Component>{page}</mobileFrame.Component>
+  return (
+    <appFrame.Component rail={{ orgs: [], firstRun: true }}>
+      {page}
+    </appFrame.Component>
+  )
 }

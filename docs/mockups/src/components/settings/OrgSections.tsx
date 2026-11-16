@@ -1,13 +1,13 @@
 import { Input } from '@firna/ui/input'
-import { LogOut, Trash2 } from 'lucide-react'
 import { noop } from '../../noop'
 import { paths } from '../../paths'
-import { ActionButton } from '../common/actions'
-import { LinkTabs } from '../common/LinkTabs'
+import { actionButton } from '../../entries/components/common/actions.mockup'
+import { linkTabs } from '../../entries/components/common/LinkTabs.mockup'
 import { ScreenLink } from '../common/ScreenLink'
 import { useControlSizes } from '../common/touch'
 import { DetailList } from './DetailList'
 import { Section } from './Section'
+import { defined } from '../../defined'
 import styles from './OrgSections.module.css'
 
 export type SettingsTab = 'general' | 'repositories' | 'computer' | 'members'
@@ -54,14 +54,15 @@ export function SettingsTabs(props: {
     { label: 'Members', tab: 'members' },
   ] satisfies readonly { label: string; tab: SettingsTab }[]
   return (
-    <LinkTabs
+    <linkTabs.Component
       label="Org settings"
+      moklyInstance="settings-tabs"
       tabs={tabs.map((item) => ({
         label: item.label,
         to: links[item.tab],
         selected: props.tab === item.tab,
       }))}
-      wrap={props.wrap}
+      {...defined({ wrap: props.wrap })}
     />
   )
 }
@@ -114,7 +115,14 @@ export function OrgDetailsSection(props: {
     )
   }
   return (
-    <Section actions={<ActionButton disabled>Save</ActionButton>} title="Org">
+    <Section
+      actions={
+        <actionButton.Component disabled moklyInstance="save-org">
+          Save
+        </actionButton.Component>
+      }
+      title="Org"
+    >
       <OrgNameFields initials={props.initials} name={props.name} />
     </Section>
   )
@@ -130,9 +138,13 @@ export function DeleteOrgSection(props: { name: string }) {
     <Section
       actions={
         <ScreenLink asChild to={paths.deleteOrg}>
-          <ActionButton icon={Trash2} tone="danger">
+          <actionButton.Component
+            icon="trash-2"
+            moklyInstance="delete-org"
+            tone="danger"
+          >
             Delete org
-          </ActionButton>
+          </actionButton.Component>
         </ScreenLink>
       }
       description={`Stops every cloud computer of ${props.name} and hides it from its members. Everything is deleted after 7 days, unless an admin restores it.`}
@@ -151,9 +163,13 @@ export function LeaveOrgSection(props: { name: string }) {
     <Section
       actions={
         <ScreenLink asChild to={paths.suspendedLeaveConfirm}>
-          <ActionButton icon={LogOut} tone="danger">
+          <actionButton.Component
+            icon="log-out"
+            moklyInstance="leave-org"
+            tone="danger"
+          >
             Leave org
-          </ActionButton>
+          </actionButton.Component>
         </ScreenLink>
       }
       description={`You can no longer open ${props.name}. Your workspaces stay in it.`}

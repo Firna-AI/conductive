@@ -2,32 +2,41 @@ import { useId, type ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
 import { Input } from '@firna/ui/input'
 import { Switch } from '@firna/ui/switch'
-import type { LucideIcon } from 'lucide-react'
-import { ChevronDown, FolderGit2, Rows3 } from 'lucide-react'
+import { ChevronDown } from 'lucide-react'
 import { repositoryOf, type Routine } from '../../fixtures/routines'
 import { sections } from '../../fixtures/sections'
 import { noop } from '../../noop'
-import { ActionButton } from '../common/actions'
+import { actionButton } from '../../entries/components/common/actions.mockup'
+import type { IconKey } from '../../entries/components/common/icons'
 import { useControlSizes } from '../common/touch'
 import { PersonAvatar } from '../orgs/OrgTile'
 import { DetailList } from '../settings/DetailList'
 import form from './form.module.css'
 import styles from './RoutineFields.module.css'
 
-/** A closed menu button that picks a value, such as the repository. */
-function Picker(props: { icon: LucideIcon; name: string; value: string }) {
+/**
+ * A closed menu button that picks a value, such as the repository. `id`
+ * names the picker for Mokly.
+ */
+function Picker(props: {
+  id: 'repository' | 'section'
+  icon: IconKey
+  name: string
+  value: string
+}) {
   return (
     <span className={styles.picker}>
-      <ActionButton
+      <actionButton.Component
         accessibilityLabel={`${props.name}: ${props.value}`}
         icon={props.icon}
         menu
+        moklyInstance={`${props.id}-picker`}
         trailing={
           <ChevronDown aria-hidden className={styles.chevron} size={13} />
         }
       >
         {props.value}
-      </ActionButton>
+      </actionButton.Component>
     </span>
   )
 }
@@ -90,14 +99,16 @@ export function RoutineFields(props: { routine: Routine; viewport: Viewport }) {
       <div className={mobile ? styles.stack : styles.meta}>
         <Field label="Repository">
           <Picker
-            icon={FolderGit2}
+            icon="folder-git-2"
+            id="repository"
             name="Repository"
             value={repositoryOf(routine)}
           />
         </Field>
         <Field label="Section">
           <Picker
-            icon={Rows3}
+            icon="rows-3"
+            id="section"
             name="Section of the run workspaces"
             value={sections[routine.section].name}
           />

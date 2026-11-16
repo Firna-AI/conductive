@@ -1,5 +1,4 @@
-import { noop } from '../../noop'
-import { ToastLayer } from '../common/ToastLayer'
+import { toastLayer } from '../../entries/components/common/ToastLayer.mockup'
 
 /**
  * The toast just after Archive, over the open workspace or over the list.
@@ -8,12 +7,13 @@ import { ToastLayer } from '../common/ToastLayer'
  */
 export function ArchivedToast(props: { name: string; phone: boolean }) {
   return (
-    <ToastLayer
+    <toastLayer.Component
+      moklyInstance="archived-toast"
       phone={props.phone}
       toast={{
         title: `${props.name} is archived.`,
         tone: 'success',
-        action: { label: 'Restore', onPress: noop },
+        action: { label: 'Restore' },
       }}
     />
   )

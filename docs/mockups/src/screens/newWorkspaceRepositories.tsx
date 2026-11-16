@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react'
-import { ArrowRight } from 'lucide-react'
-import { ActionButton } from '../components/common/actions'
-import type { MenuEntry } from '../components/common/Menu'
+import { actionButton } from '../entries/components/common/actions.mockup'
+import type { MenuEntryData } from '../entries/components/common/menuEntries'
 import { ScreenLink } from '../components/common/ScreenLink'
 import {
   type FormRepositories,
@@ -66,13 +65,13 @@ export function acmeFormRepositories(
 export function repositoryMenu(
   form: FormRepositories,
   wait: RepositoryWait,
-): MenuEntry[] {
-  const item = (entry: FormRepository, waits: boolean): MenuEntry => ({
+): MenuEntryData[] {
+  const item = (entry: FormRepository, waits: boolean): MenuEntryData => ({
     kind: 'item',
     label: entry.name,
     checked: entry.key === form.repository.key,
     disabled: waits,
-    detail: waits ? menuNotes[wait] : undefined,
+    ...(waits ? { detail: menuNotes[wait] } : {}),
   })
   return [
     ...form.ready.map((entry) => item(entry, false)),
@@ -106,9 +105,12 @@ export function waitingNotice(props: {
     <WaitingRepositoryNotice
       action={(wait) => (
         <ScreenLink asChild to={computerPages[wait]}>
-          <ActionButton icon={ArrowRight}>
+          <actionButton.Component
+            icon="arrow-right"
+            moklyInstance="open-computer"
+          >
             {firstBuildCopy.settings}
-          </ActionButton>
+          </actionButton.Component>
         </ScreenLink>
       )}
       admin={props.admin}

@@ -83,6 +83,8 @@ function RequestDetails(props: { request: MacCommandRequest; mac: boolean }) {
  * the chat draws them outside the region of the requests, at its actions.
  */
 export function PendingCommand(props: {
+  /** The id of the chat item of the command. */
+  id: string
   request: MacCommandRequest
   open?: boolean
 }) {
@@ -102,9 +104,9 @@ export function PendingCommand(props: {
         </span>
         <span className={classes(styles.end, props.open && styles.endDrawn)}>
           {mac ? (
-            <CommandActions choicesOpen={props.open} />
+            <CommandActions choicesOpen={props.open} id={props.id} />
           ) : (
-            <CommandStatus state="waiting" />
+            <CommandStatus id={props.id} state="waiting" />
           )}
         </span>
       </div>

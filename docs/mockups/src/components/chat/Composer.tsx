@@ -1,10 +1,13 @@
 import { Button } from '@firna/ui/button'
-import { ArrowUp, Paperclip, Square } from 'lucide-react'
+import { ArrowUp } from 'lucide-react'
 import type { AgentChoice, AgentKey } from '../../fixtures/agents'
 import type { Attachment } from '../../fixtures/attachments'
 import { noop } from '../../noop'
 import { ScreenLink } from '../common/ScreenLink'
-import { ActionButton, IconButton } from '../common/actions'
+import {
+  actionButton,
+  iconButton,
+} from '../../entries/components/common/actions.mockup'
 import { classes } from '../common/classes'
 import { useControlSizes } from '../common/touch'
 import { FileMentionList, type MentionTree } from './FileMentionList'
@@ -137,7 +140,13 @@ export function Composer(props: ComposerState & { lines?: number }) {
     : (props.placeholder ?? 'Message the agent')
   const uploads = props.attachments.some((file) => file.state !== undefined)
   const off = props.blocked === true || uploads
-  const attach = <IconButton icon={Paperclip} label="Attach files" />
+  const attach = (
+    <iconButton.Component
+      icon="paperclip"
+      label="Attach files"
+      moklyInstance="attach-files"
+    />
+  )
   return (
     <div className={styles.wrap}>
       <MentionAnchor>
@@ -179,7 +188,9 @@ export function Composer(props: ComposerState & { lines?: number }) {
             ) : null}
             <span className={styles.spacer} />
             {props.running ? (
-              <ActionButton icon={Square}>Stop</ActionButton>
+              <actionButton.Component icon="square" moklyInstance="stop-agent">
+                Stop
+              </actionButton.Component>
             ) : null}
             {props.sendTo && !off ? (
               <ScreenLink asChild to={props.sendTo}>

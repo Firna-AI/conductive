@@ -1,9 +1,12 @@
 import type { ReactNode } from 'react'
-import { Plus } from 'lucide-react'
 import type { BrowserTab } from '../../fixtures/shortcutHosts'
 import { shortcutLimit } from '../../fixtures/shortcuts'
-import { ActionButton, IconButton } from '../common/actions'
-import { KeyChips, type Shortcut } from '../common/KeyChips'
+import {
+  actionButton,
+  iconButton,
+} from '../../entries/components/common/actions.mockup'
+import type { Shortcut } from '../common/KeyChips'
+import { keyChips } from '../../entries/components/common/KeyChips.mockup'
 import {
   CancelButton,
   ConflictActions,
@@ -17,6 +20,7 @@ import {
   RowMessage,
   type RefusedShortcut,
 } from './ShortcutParts'
+import { instanceKey, shortcutKey } from '../../instanceKey'
 import styles from './ShortcutsSections.module.css'
 
 /**
@@ -83,7 +87,10 @@ export function FixedShortcuts(props: {
     <RowLayout
       keys={props.keys.map((shortcut) => (
         <span className={styles.still} key={shortcut}>
-          <KeyChips shortcut={shortcut} />
+          <keyChips.Component
+            moklyInstance={`${instanceKey(props.label)}-${shortcutKey(shortcut)}`}
+            shortcut={shortcut}
+          />
         </span>
       ))}
       label={props.label}
@@ -133,6 +140,7 @@ function recordingKeys(
  * shortcut does. The others show without a control until the answer.
  */
 function resetKeys(
+  label: string,
   state: { keys: readonly Shortcut[]; shortcut: Shortcut },
   tab?: BrowserTab,
 ): ReactNode[] {
@@ -141,8 +149,9 @@ function resetKeys(
       <Recorder key={shortcut} shortcut={shortcut} />
     ) : (
       <span className={styles.still} key={shortcut}>
-        <KeyChips
+        <keyChips.Component
           dimmed={keeper(shortcut, tab) !== undefined}
+          moklyInstance={`${instanceKey(label)}-${shortcutKey(shortcut)}`}
           shortcut={shortcut}
         />
       </span>
@@ -193,7 +202,7 @@ export function CommandShortcuts(props: {
       return (
         <RowLayout
           end={<ConflictActions held={state} label={label} />}
-          keys={resetKeys(state, tab)}
+          keys={resetKeys(label, state, tab)}
           label={label}
           message={<ConflictLine held={state} />}
         />
@@ -216,19 +225,25 @@ function ShortcutsLine(props: {
       end={
         count > 0 && count < shortcutLimit ? (
           <Linked to={state.addTo}>
-            <IconButton icon={Plus} label={`Add shortcut for ${label}`} quiet />
+            <iconButton.Component
+              icon="plus"
+              label={`Add shortcut for ${label}`}
+              moklyInstance={`add-${instanceKey(label)}`}
+              quiet
+            />
           </Linked>
         ) : undefined
       }
       keys={
         count === 0 ? (
-          <ActionButton
+          <actionButton.Component
             accessibilityLabel={`Add shortcut for ${label}`}
-            icon={Plus}
+            icon="plus"
+            moklyInstance={`add-${instanceKey(label)}`}
             tone="plain"
           >
             Add shortcut
-          </ActionButton>
+          </actionButton.Component>
         ) : (
           state.keys.map((shortcut, index) => (
             <KeyButton
@@ -245,15 +260,23 @@ function ShortcutsLine(props: {
       message={
         state.unsaved ? (
           <RowMessage tone="danger">
-            <KeyChips shortcut={state.unsaved} /> wasn't saved. Try again.
+            <keyChips.Component
+              moklyInstance={`unsaved-${instanceKey(label)}`}
+              shortcut={state.unsaved}
+            />{' '}
+            wasn't saved. Try again.
           </RowMessage>
         ) : undefined
       }
       note={
         state.changed ? (
-          <ActionButton accessibilityLabel={`Reset ${label}`} tone="plain">
+          <actionButton.Component
+            accessibilityLabel={`Reset ${label}`}
+            moklyInstance={`reset-${instanceKey(label)}`}
+            tone="plain"
+          >
             Reset
-          </ActionButton>
+          </actionButton.Component>
         ) : undefined
       }
     />

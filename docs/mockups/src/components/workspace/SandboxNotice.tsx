@@ -1,12 +1,12 @@
-import type { LucideIcon } from 'lucide-react'
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
-import { Archive, CircleAlert, CirclePause } from 'lucide-react'
+import { defined } from '../../defined'
 import { archivedOn, restoreUntil } from '../../fixtures/archive'
 import { paths } from '../../paths'
-import { ActionButton } from '../common/actions'
-import { EmptyState } from '../common/EmptyState'
-import { Notice } from '../common/Notice'
+import { actionButton } from '../../entries/components/common/actions.mockup'
+import { emptyState } from '../../entries/components/common/EmptyState.mockup'
+import { iconKeyOf, type IconKey } from '../../entries/components/common/icons'
+import { notice } from '../../entries/components/common/Notice.mockup'
 import { ScreenLink } from '../common/ScreenLink'
 import { refusedIcon } from '../orgs/suspension'
 import styles from './SandboxNotice.module.css'
@@ -18,7 +18,7 @@ import type {
 } from './sandboxNoticeState'
 
 type Problem = {
-  icon: LucideIcon
+  icon: IconKey
   title: string
   /** The text of the bar under the chat. */
   body: string
@@ -46,7 +46,7 @@ const chatSaved = 'Your chat is saved.'
 const problems: Readonly<Record<Exclude<SandboxProblem, 'archived'>, Problem>> =
   {
     stopped: {
-      icon: CirclePause,
+      icon: 'circle-pause',
       title: 'Sandbox stopped',
       body: saved,
       panelBody: saved,
@@ -54,7 +54,7 @@ const problems: Readonly<Record<Exclude<SandboxProblem, 'archived'>, Problem>> =
       tone: 'neutral',
     },
     error: {
-      icon: CircleAlert,
+      icon: 'circle-alert',
       title: "The sandbox couldn't start",
       body: saved,
       panelBody: saved,
@@ -62,7 +62,7 @@ const problems: Readonly<Record<Exclude<SandboxProblem, 'archived'>, Problem>> =
       tone: 'danger',
     },
     refused: {
-      icon: refusedIcon,
+      icon: iconKeyOf(refusedIcon),
       title: "The sandbox can't start",
       body: history,
       panelBody: history,
@@ -80,7 +80,7 @@ const archivedTitle = `Archived on ${archivedOn}`
  */
 const archived: Readonly<Record<ArchiveRestore | 'deleted', Problem>> = {
   available: {
-    icon: Archive,
+    icon: 'archive',
     title: archivedTitle,
     body: `Restore it until ${restoreUntil} to bring back its files and sessions.`,
     panelBody: 'The files and the tools come back with Restore.',
@@ -88,21 +88,21 @@ const archived: Readonly<Record<ArchiveRestore | 'deleted', Problem>> = {
     tone: 'neutral',
   },
   refused: {
-    icon: Archive,
+    icon: 'archive',
     title: archivedTitle,
     body: history,
     panelBody: history,
     tone: 'neutral',
   },
   ended: {
-    icon: Archive,
+    icon: 'archive',
     title: archivedTitle,
     body: `Restore ended on ${restoreUntil}, and the chat is read-only.`,
     panelBody: history,
     tone: 'neutral',
   },
   deleted: {
-    icon: Archive,
+    icon: 'archive',
     title: archivedTitle,
     body: 'Its cloud computer is deleted, and the chat is read-only.',
     panelBody: 'The files and the tools went with the cloud computer.',
@@ -131,7 +131,11 @@ function recoveryPath(state: SandboxNoticeState): string | undefined {
 
 /** The one way forward, as a link where the mockups draw its screen. */
 function RecoveryButton(props: { label: string; state: SandboxNoticeState }) {
-  const button = <ActionButton tone="primary">{props.label}</ActionButton>
+  const button = (
+    <actionButton.Component moklyInstance="recover" tone="primary">
+      {props.label}
+    </actionButton.Component>
+  )
   const to = recoveryPath(props.state)
   if (to === undefined) return button
   return (
@@ -171,16 +175,17 @@ function barBody(state: SandboxNoticeState, body: string): string {
 export function SandboxBar(props: SandboxNoticeState) {
   const problem = problemOf(props)
   return (
-    <Notice
-      action={
-        problem.action ? (
-          <RecoveryButton label={problem.action} state={props} />
-        ) : undefined
-      }
+    <notice.Component
       body={barBody(props, keptBody(props, problem.body))}
       icon={problem.icon}
+      moklyInstance="sandbox-bar"
       title={problem.title}
       tone={problem.tone}
+      {...defined({
+        action: problem.action ? (
+          <RecoveryButton label={problem.action} state={props} />
+        ) : undefined,
+      })}
     />
   )
 }
@@ -193,6 +198,8 @@ export function SandboxBar(props: SandboxNoticeState) {
 export function SandboxPanel(props: {
   state: SandboxPanelState
   phone: boolean
+  /** The place of the panel, which names it for Mokly. */
+  place: 'file' | 'files' | 'tools'
 }) {
   const theme = useSharedUiTheme()
   const { state } = props
@@ -206,12 +213,14 @@ export function SandboxPanel(props: {
   }
   const problem = problemOf(state)
   return (
-    <EmptyState
-      action={
-        props.phone && problem.action ? (
-          <RecoveryButton label={problem.action} state={state} />
-        ) : undefined
-      }
+    <emptyState.Component
+      moklyInstance={`sandbox-${props.place}`}
+      {...defined({
+        action:
+          props.phone && problem.action ? (
+            <RecoveryButton label={problem.action} state={state} />
+          ) : undefined,
+      })}
       body={
         props.phone && state.problem === 'refused'
           ? state.reason

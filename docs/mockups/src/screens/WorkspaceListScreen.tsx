@@ -1,8 +1,12 @@
 import type { ReactNode } from 'react'
 import type { SchemaProps, Viewport } from '@mokly/mokly'
-import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
+import {
+  appFrame,
+  mobileFrame,
+} from '../entries/components/layout/AppFrame.mockup'
 import { paletteViews } from '../components/palette/paletteViews'
 import type { RailState } from '../components/layout/OrgRail'
+import { defined } from '../defined'
 import responsive from '../components/layout/responsive.module.css'
 import {
   archivedGroup,
@@ -137,14 +141,18 @@ function MobileList(props: { state: WorkspaceListState; overlay?: ReactNode }) {
   const { list, menu, palette } = props.state
   // On a phone the palette is a page in place of the list.
   if (palette !== 'closed') {
-    return <MobileFrame>{listPalette(palette, 'mobile')}</MobileFrame>
+    return (
+      <mobileFrame.Component>
+        {listPalette(palette, 'mobile')}
+      </mobileFrame.Component>
+    )
   }
   if (list === 'deleted' || list === 'deleted-suspended') {
     return (
-      <MobileFrame>
+      <mobileFrame.Component>
         <ListHeader org={orgs[deletedOrg.org]} settings={false} />
         <DeletedOrg suspended={list === 'deleted-suspended'} />
-      </MobileFrame>
+      </mobileFrame.Component>
     )
   }
   const view = rowMenuView(props.state, 'mobile')
@@ -152,7 +160,7 @@ function MobileList(props: { state: WorkspaceListState; overlay?: ReactNode }) {
   if (list === 'suspended') {
     // A suspended org has no section menus, so only the org switcher opens.
     return (
-      <MobileFrame>
+      <mobileFrame.Component>
         <HomeList
           focus={view?.focus}
           menuStyle="sheet"
@@ -162,13 +170,13 @@ function MobileList(props: { state: WorkspaceListState; overlay?: ReactNode }) {
           viewer={view?.viewer ?? viewer}
         />
         {menu === 'orgs' ? listSheet(menu, props.state.orgOrder) : null}
-      </MobileFrame>
+      </mobileFrame.Component>
     )
   }
   const fresh = newOrgs[list]
   const group = list === 'archived' ? archivedGroupView() : undefined
   return (
-    <MobileFrame>
+    <mobileFrame.Component>
       <HomeList
         archived={view?.archived ?? group?.archived}
         archivedCollapsed={view?.archivedCollapsed}
@@ -184,7 +192,7 @@ function MobileList(props: { state: WorkspaceListState; overlay?: ReactNode }) {
       />
       {props.overlay ??
         (view ? view.over : listSheet(menu, props.state.orgOrder))}
-    </MobileFrame>
+    </mobileFrame.Component>
   )
 }
 
@@ -222,16 +230,16 @@ export function WorkspaceListScreen(props: {
       orgs: orgList.filter((org) => org.key !== deletedOrg.org),
     }
     return (
-      <AppFrame rail={rail}>
+      <appFrame.Component rail={rail}>
         <DeletedOrg suspended={list === 'deleted-suspended'} />
-      </AppFrame>
+      </appFrame.Component>
     )
   }
   const fresh = newOrgs[list]
   if (fresh) {
     const rail: RailState = { orgs: fresh.rail, current: fresh.org.key }
     return (
-      <AppFrame
+      <appFrame.Component
         rail={rail}
         sidebar={
           <Sidebar
@@ -243,7 +251,7 @@ export function WorkspaceListScreen(props: {
         }
       >
         <NewOrgEmpty newWorkspaceTo={fresh.newWorkspaceTo} org={fresh.form} />
-      </AppFrame>
+      </appFrame.Component>
     )
   }
   const group = list === 'archived' ? archivedGroupView() : undefined
@@ -259,11 +267,15 @@ export function WorkspaceListScreen(props: {
     viewer: view?.viewer ?? viewer,
   }
   return (
-    <AppFrame
-      overlay={
-        props.overlay ?? listPalette(palette, props.viewport) ?? view?.over
-      }
+    <appFrame.Component
       rail={view?.rail ?? listRail(menu, orgOrder)}
+      {...defined({
+        overlay:
+          props.overlay ??
+          listPalette(palette, props.viewport) ??
+          view?.over ??
+          undefined,
+      })}
       sidebar={<Sidebar {...listed} />}
     >
       <div className={`${responsive.wideOnly} ${styles.choose}`}>
@@ -272,6 +284,6 @@ export function WorkspaceListScreen(props: {
       <div className={`${responsive.narrowOnly} ${styles.narrowList}`}>
         <HomeList {...listed} keys menuStyle="anchored" />
       </div>
-    </AppFrame>
+    </appFrame.Component>
   )
 }

@@ -1,12 +1,11 @@
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
-import { CircleAlert } from 'lucide-react'
 import { people, type PersonKey } from '../../fixtures/members'
 import { paths } from '../../paths'
-import { ActionButton } from '../common/actions'
+import { actionButton } from '../../entries/components/common/actions.mockup'
 import { classes } from '../common/classes'
 import headingStyles from '../common/MarkdownHeadings.module.css'
-import { Notice } from '../common/Notice'
+import { notice } from '../../entries/components/common/Notice.mockup'
 import { ScreenLink } from '../common/ScreenLink'
 import { AgentBlocks } from './AgentBlocks'
 import { ContinuedLine } from './ContinuedLine'
@@ -81,11 +80,13 @@ export function ChatItemView(props: { item: SingleItem; viewer: PersonKey }) {
     case 'agent':
       return (
         <div className={classes(styles.agent, headingStyles.headings)}>
-          <AgentBlocks blocks={item.blocks} />
+          <AgentBlocks blocks={item.blocks} id={item.id} />
         </div>
       )
     case 'mac-command':
-      return <MacCommand request={item.request} state={item.state} />
+      return (
+        <MacCommand id={item.id} request={item.request} state={item.state} />
+      )
     case 'turn-end':
       return (
         <TurnEnd
@@ -121,10 +122,15 @@ export function ChatItemView(props: { item: SingleItem; viewer: PersonKey }) {
       )
     case 'error':
       return (
-        <Notice
-          action={<ActionButton>Try again</ActionButton>}
+        <notice.Component
+          action={
+            <actionButton.Component moklyInstance={`retry-${item.id}`}>
+              Try again
+            </actionButton.Component>
+          }
           body={item.text}
-          icon={CircleAlert}
+          icon="circle-alert"
+          moklyInstance={`error-${item.id}`}
           title="This turn stopped"
           tone="danger"
         />

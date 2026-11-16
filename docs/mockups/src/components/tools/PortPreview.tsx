@@ -1,4 +1,3 @@
-import { Plus, RotateCw } from 'lucide-react'
 import {
   detectedServers,
   openPort,
@@ -8,8 +7,8 @@ import {
 } from '../../fixtures/previews'
 import { paths } from '../../paths'
 import { LostUpdateRow } from '../chat/LostUpdate'
-import { IconButton } from '../common/actions'
-import { ExternalLink } from '../common/ExternalLink'
+import { iconButton } from '../../entries/components/common/actions.mockup'
+import { externalLink } from '../../entries/components/common/ExternalLink.mockup'
 import { ScreenLink } from '../common/ScreenLink'
 import { PortMessage, ServerList } from './PortForm'
 import { PreviewTabs } from './PreviewTabs'
@@ -68,20 +67,37 @@ function PortPreview(props: { adding: boolean }) {
         {/* Beside the actions of the frame, two named tabs do not fit. */}
         <PreviewTabs fadeEnd={!adding} tabs={previewTabs(adding)} />
         {adding ? (
-          <IconButton icon={Plus} label="Preview another port" pressed />
+          <iconButton.Component
+            icon="plus"
+            label="Preview another port"
+            moklyInstance="preview-another-port"
+            pressed
+          />
         ) : (
           <ScreenLink asChild to={paths.previewAnotherPort}>
-            <IconButton icon={Plus} label="Preview another port" />
+            <iconButton.Component
+              icon="plus"
+              label="Preview another port"
+              moklyInstance="preview-another-port"
+            />
           </ScreenLink>
         )}
         <span className={styles.spacer} />
         {adding ? null : (
           <>
-            <IconButton icon={RotateCw} label="Reload" />
+            <iconButton.Component
+              icon="rotate-cw"
+              label="Reload"
+              moklyInstance="reload-preview"
+            />
             <span className={styles.link}>
-              <ExternalLink href={previewUrl} label="Open in new tab">
+              <externalLink.Component
+                href={previewUrl}
+                label="Open in new tab"
+                moklyInstance="open-preview"
+              >
                 Open
-              </ExternalLink>
+              </externalLink.Component>
             </span>
           </>
         )}

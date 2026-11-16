@@ -1,5 +1,4 @@
 import { useId } from 'react'
-import { ArrowUpRight, LogOut } from 'lucide-react'
 import { agentKeys, agents, type AgentKey } from '../../fixtures/agents'
 import {
   loginLabels,
@@ -9,14 +8,11 @@ import {
   type LoginKind,
 } from '../../fixtures/logins'
 import { account, installations } from '../../fixtures/orgs'
-import type { ShortcutHost } from '../../fixtures/shortcutHosts'
 import { noop } from '../../noop'
-import { paths } from '../../paths'
-import { ActionButton } from '../common/actions'
+import { actionButton } from '../../entries/components/common/actions.mockup'
 import { classes } from '../common/classes'
-import { LinkTabs, type LinkTab } from '../common/LinkTabs'
 import { AccountAvatar } from '../orgs/OrgTile'
-import { StatusText } from '../common/StatusText'
+import { statusText } from '../../entries/components/common/StatusText.mockup'
 import { AgentConnectForm } from './AgentConnectForm'
 import type { EndpointEntry } from './EndpointFields'
 import { EndpointModels } from './EndpointModels'
@@ -29,10 +25,18 @@ import {
 } from './LoginNotUsable'
 import { LoginShare } from './LoginShare'
 import { Section } from './Section'
-import { shortcutPages } from './shortcutPages'
 import styles from './AccountSections.module.css'
 
-const connected = <StatusText label="Connected" tone="success" />
+/** The state of a connected app or login. `name` names it for Mokly. */
+function Connected(props: { name: string }) {
+  return (
+    <statusText.Component
+      label="Connected"
+      moklyInstance={props.name}
+      tone="success"
+    />
+  )
+}
 
 /** The person signed in, with GitHub, and the way to sign out. */
 export function SignInSection() {
@@ -43,7 +47,9 @@ export function SignInSection() {
         Signed in with GitHub as{' '}
         <span className={styles.login}>@{account.login}</span>
       </span>
-      <ActionButton icon={LogOut}>Sign out</ActionButton>
+      <actionButton.Component icon="log-out" moklyInstance="sign-out">
+        Sign out
+      </actionButton.Component>
     </section>
   )
 }
@@ -54,9 +60,13 @@ export function GitHubSection(props: { connected: boolean }) {
     return (
       <Section
         actions={
-          <ActionButton icon={ArrowUpRight} tone="primary">
+          <actionButton.Component
+            icon="arrow-up-right"
+            moklyInstance="install-github-app"
+            tone="primary"
+          >
             Install the GitHub App
-          </ActionButton>
+          </actionButton.Component>
         }
         description="Install the GitHub App on the accounts whose repositories your orgs use."
         title="GitHub"
@@ -66,10 +76,15 @@ export function GitHubSection(props: { connected: boolean }) {
   return (
     <Section
       actions={
-        <ActionButton icon={ArrowUpRight}>Manage on GitHub</ActionButton>
+        <actionButton.Component
+          icon="arrow-up-right"
+          moklyInstance="manage-on-github"
+        >
+          Manage on GitHub
+        </actionButton.Component>
       }
       description="Each org chooses its repositories from these accounts."
-      status={connected}
+      status={<Connected name="github-connected" />}
       title="GitHub"
     >
       <ul aria-label="GitHub accounts" className={styles.list}>
@@ -146,15 +161,20 @@ export function AgentList(props: {
             ? props.form
             : undefined
         const nameId = `${ids}-${key}`
-        let action = form ? null : <ActionButton>Connect</ActionButton>
+        let action = form ? null : (
+          <actionButton.Component moklyInstance={`connect-${key}`}>
+            Connect
+          </actionButton.Component>
+        )
         if (login) {
           action = props.removable ? (
-            <ActionButton
+            <actionButton.Component
               accessibilityLabel={`Remove ${agents[key].name}`}
+              moklyInstance={`remove-${key}`}
               tone="plain"
             >
               Remove
-            </ActionButton>
+            </actionButton.Component>
           ) : null
         }
         return (
@@ -166,7 +186,11 @@ export function AgentList(props: {
               <span className={styles.detail}>
                 {login ? (
                   <>
-                    {unusable ? <SignedOutStatus /> : connected}
+                    {unusable ? (
+                      <SignedOutStatus />
+                    ) : (
+                      <Connected name={`${key}-connected`} />
+                    )}
                     {login.kind === 'endpoint' ? null : (
                       <span className={styles.kind}>
                         {loginLabels[key][login.kind]}
@@ -243,53 +267,4 @@ export function AgentsSection(props: {
       />
     </Section>
   )
-}
-
-/** The pages of the account. */
-export type AccountTab =
-  'general' | 'agents' | 'preferences' | 'shortcuts' | 'this-mac'
-
-/**
- * The pages of the account, as tabs that link to each one: General, with
- * the sign-in, GitHub, and the invite code, Agents, with the logins of
- * Claude and Codex, Preferences, and Keyboard shortcuts.
- * Keyboard shortcuts links to the tab of the host. The Mac app adds This
- * Mac last. `flow` moves a tab that
- * does not fit to a second line, for a phone.
- */
-export function AccountTabs(props: {
-  tab: AccountTab
-  host: ShortcutHost
-  flow?: boolean
-}) {
-  const tabs: LinkTab[] = [
-    {
-      label: 'General',
-      to: paths.account,
-      selected: props.tab === 'general',
-    },
-    {
-      label: 'Agents',
-      to: paths.accountAgents,
-      selected: props.tab === 'agents',
-    },
-    {
-      label: 'Preferences',
-      to: paths.accountPreferences,
-      selected: props.tab === 'preferences',
-    },
-    {
-      label: 'Keyboard shortcuts',
-      to: shortcutPages[props.host].tab,
-      selected: props.tab === 'shortcuts',
-    },
-  ]
-  if (props.host === 'mac-app') {
-    tabs.push({
-      label: 'This Mac',
-      to: paths.thisMac,
-      selected: props.tab === 'this-mac',
-    })
-  }
-  return <LinkTabs flow={props.flow} label="Account" tabs={tabs} />
 }

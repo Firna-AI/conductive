@@ -6,9 +6,11 @@ import {
   type ShortcutChanges,
 } from '../../fixtures/shortcutChanges'
 import type { ShortcutHost } from '../../fixtures/shortcutHosts'
-import { GitHubMark } from '../common/GitHubMark'
-import { KeyChips, type Shortcut } from '../common/KeyChips'
+import { githubMark } from '../../entries/components/common/GitHubMark.mockup'
+import type { Shortcut } from '../common/KeyChips'
+import { keyChips } from '../../entries/components/common/KeyChips.mockup'
 import { ScreenLink } from '../common/ScreenLink'
+import { instanceKey } from '../../instanceKey'
 import a11y from '../common/a11y.module.css'
 import { classes } from '../common/classes'
 import { OrgTile } from '../orgs/OrgTile'
@@ -19,7 +21,11 @@ import { EmptyTab, NoResults } from './PaletteEmpty'
 import { PaletteStatusPart } from './PaletteStatus'
 import styles from './CommandPalette.module.css'
 
-function Lead(props: { lead: CommandLead }) {
+function Lead(props: {
+  lead: CommandLead
+  /** The key of the row, which names its mark for Mokly. */
+  name: string
+}) {
   const { lead } = props
   switch (lead.kind) {
     case 'icon': {
@@ -29,7 +35,13 @@ function Lead(props: { lead: CommandLead }) {
     case 'org':
       return <OrgTile org={lead.org} size={16} />
     case 'github':
-      return <GitHubMark className={styles.icon} size={14} />
+      return (
+        <githubMark.Component
+          className={styles.icon}
+          moklyInstance={`github-${props.name}`}
+          size={14}
+        />
+      )
   }
 }
 
@@ -110,19 +122,23 @@ function Row(props: {
     )
   }
   const { command, detail } = row
+  const name = instanceKey(command.label)
   return (
     <RowLink
       className={classes(styles.row, highlighted && styles.highlighted)}
       to={command.to}
     >
       <span className={styles.lead}>
-        <Lead lead={command.lead} />
+        <Lead lead={command.lead} name={name} />
       </span>
       <span className={styles.label}>{command.label}</span>
       {detail ? <span className={styles.detail}>{detail}</span> : null}
       {props.shortcut ? (
         <span className={styles.keys}>
-          <KeyChips shortcut={props.shortcut} />
+          <keyChips.Component
+            moklyInstance={`keys-${name}`}
+            shortcut={props.shortcut}
+          />
         </span>
       ) : null}
     </RowLink>

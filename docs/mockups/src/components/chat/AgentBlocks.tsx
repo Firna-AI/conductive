@@ -1,13 +1,8 @@
 import type { AgentBlock } from '../../fixtures/conversations'
 import type { MessageHeading } from '../../fixtures/headingConversations'
 import type { MessageList } from '../../fixtures/listConversations'
-import { MarkdownTable } from '../common/MarkdownTable'
+import { markdownTable } from '../../entries/components/common/MarkdownTable.mockup'
 import { MessageText } from './MessageText'
-
-/** A cell of a table in a message, with the text of a paragraph. */
-function messageCell(text: string) {
-  return <MessageText strong text={text} />
-}
 
 /**
  * A heading at the level that the agent wrote, from `h1` to `h6`, with the
@@ -54,7 +49,11 @@ function ListView(props: { list: MessageList }) {
  * its bold, and each link to a workspace of the org is a chip. The element
  * around them sets the type and the space between them.
  */
-export function AgentBlocks(props: { blocks: readonly AgentBlock[] }) {
+export function AgentBlocks(props: {
+  /** The id of the message, which names its table for Mokly. */
+  id: string
+  blocks: readonly AgentBlock[]
+}) {
   return props.blocks.map((block, index) => {
     if (typeof block === 'string') {
       return (
@@ -68,11 +67,12 @@ export function AgentBlocks(props: { blocks: readonly AgentBlock[] }) {
     }
     if (block.kind === 'list') return <ListView key={index} list={block} />
     return (
-      <MarkdownTable
+      <markdownTable.Component
         align={block.align}
         head={block.head}
+        cells="message"
         key={index}
-        renderCell={messageCell}
+        moklyInstance={`table-${props.id}`}
         rows={block.rows}
       />
     )

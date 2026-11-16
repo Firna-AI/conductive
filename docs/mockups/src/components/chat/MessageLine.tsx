@@ -133,7 +133,7 @@ export function MessageLine(props: { message: AgentItem; open: boolean }) {
       </summary>
       {table ? (
         <div className={styles.messageBody}>
-          <AgentBlocks blocks={rest} />
+          <AgentBlocks blocks={rest} id={props.message.id} />
         </div>
       ) : null}
     </details>

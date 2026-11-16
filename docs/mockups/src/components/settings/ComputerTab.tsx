@@ -1,13 +1,13 @@
 import type { ReactNode } from 'react'
-import { Hammer } from 'lucide-react'
 import { type EnvVar, includedSoftware } from '../../fixtures/computer'
-import { ActionButton } from '../common/actions'
-import { Notice } from '../common/Notice'
+import { actionButton } from '../../entries/components/common/actions.mockup'
+import { notice } from '../../entries/components/common/Notice.mockup'
 import { BuildSection, type BuildState, type OrgBuilds } from './BuildSection'
 import { ScriptSection } from './EnvironmentSections'
 import { EnvVarsSection, type EnvVarForm } from './EnvVarsSection'
 import type { ReadOnlyCause } from './OrgSections'
 import { TabIntro } from './TabIntro'
+import { defined } from '../../defined'
 
 /**
  * The cloud computer of an org: its builds, its scripts, and its env vars.
@@ -39,24 +39,33 @@ function changedNotice(props: {
       props.build === 'building'
         ? 'One more build runs it when this build succeeds.'
         : 'It runs at the next build.'
-    return <Notice body={body} icon={Hammer} title={title} />
+    return (
+      <notice.Component
+        body={body}
+        icon="hammer"
+        moklyInstance="script-changed"
+        title={title}
+      />
+    )
   }
   return (
-    <Notice
-      action={
-        props.readOnly ? undefined : (
-          <ActionButton
+    <notice.Component
+      body="It runs at the next build. Workspaces keep the current build until then."
+      icon="hammer"
+      moklyInstance="script-changed"
+      title={title}
+      {...defined({
+        action: props.readOnly ? undefined : (
+          <actionButton.Component
             disabled={props.build === 'building'}
-            icon={Hammer}
+            icon="hammer"
+            moklyInstance="build-computer"
             tone="primary"
           >
             Build computer
-          </ActionButton>
-        )
-      }
-      body="It runs at the next build. Workspaces keep the current build until then."
-      icon={Hammer}
-      title={title}
+          </actionButton.Component>
+        ),
+      })}
     />
   )
 }

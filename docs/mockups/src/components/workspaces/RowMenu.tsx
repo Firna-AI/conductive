@@ -1,10 +1,12 @@
-import { Menu, type MenuEntry } from '../common/Menu'
+import { defined } from '../../defined'
+import { menu as menuPart } from '../../entries/components/common/Menu.mockup'
+import type { MenuEntryData } from '../../entries/components/common/menuEntries'
 import styles from './RowMenu.module.css'
 
 /** The choices of an open submenu, beside its item of the menu. */
 export type OpenSubmenu = {
   label: string
-  entries: readonly MenuEntry[]
+  entries: readonly MenuEntryData[]
   /** The place of its item among the items of the menu: first or second. */
   item: 0 | 1
   wide?: boolean
@@ -18,7 +20,7 @@ export type OpenSubmenu = {
 export type RowMenuOpen = {
   at: 'pointer' | 'sheet'
   label: string
-  entries: readonly MenuEntry[]
+  entries: readonly MenuEntryData[]
   submenu?: OpenSubmenu
 }
 
@@ -41,14 +43,20 @@ function PointMenu(props: { menu: RowMenuOpen }) {
   const { submenu } = menu
   return (
     <span className={styles.pointer}>
-      <Menu entries={menu.entries} label={menu.label} placement="point" />
+      <menuPart.Component
+        entries={menu.entries}
+        label={menu.label}
+        moklyInstance="row-menu"
+        placement="point"
+      />
       {submenu ? (
         <span className={submenu.item === 1 ? styles.second : undefined}>
-          <Menu
+          <menuPart.Component
             entries={submenu.entries}
             label={submenu.label}
+            moklyInstance="row-submenu"
             placement="point"
-            wide={submenu.wide}
+            {...defined({ wide: submenu.wide })}
           />
         </span>
       ) : null}

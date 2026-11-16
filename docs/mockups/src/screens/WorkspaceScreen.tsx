@@ -1,11 +1,13 @@
 import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
-import { MessageSquarePlus } from 'lucide-react'
 import { ChatPane } from '../components/chat/ChatPane'
 import { ChatWorkspaces } from '../components/chat/chatWorkspaces'
-import { EmptyState } from '../components/common/EmptyState'
+import { emptyState } from '../entries/components/common/EmptyState.mockup'
 import { FilePage } from '../components/files/FilePage'
-import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
+import {
+  appFrame,
+  mobileFrame,
+} from '../entries/components/layout/AppFrame.mockup'
 import { acmeRail } from '../components/layout/OrgRail'
 import { useMacApp } from '../components/mac/MacApp'
 import { SuspendedOrgNotice } from '../components/orgs/SuspendedOrgNotice'
@@ -123,9 +125,10 @@ export function WorkspaceScreen(props: {
       <ChatPane
         composer={composerFor(state, workspace, viewport)}
         empty={
-          <EmptyState
+          <emptyState.Component
             body={`The agent works on ${workspace.branch}, on the same cloud computer as the other sessions.`}
-            icon={MessageSquarePlus}
+            icon="message-square-plus"
+            moklyInstance="new-session-empty"
             title="New session"
           />
         }
@@ -213,7 +216,7 @@ export function WorkspaceScreen(props: {
   })
   if (viewport === 'mobile') {
     if (state.palette !== 'closed') {
-      return <MobileFrame>{palette}</MobileFrame>
+      return <mobileFrame.Component>{palette}</mobileFrame.Component>
     }
     const body = {
       chat: (
@@ -226,7 +229,7 @@ export function WorkspaceScreen(props: {
       tool,
     }
     return (
-      <MobileFrame>
+      <mobileFrame.Component>
         {header}
         {archived ? null : <PullRequestRow bar={bar} />}
         <div className={styles.mobileBody}>
@@ -239,12 +242,12 @@ export function WorkspaceScreen(props: {
         )}
         {overlay}
         {toast}
-      </MobileFrame>
+      </mobileFrame.Component>
     )
   }
   const file = openFile(state)
   return (
-    <AppFrame
+    <appFrame.Component
       overlay={
         <>
           {palette ?? overlay}
@@ -253,8 +256,8 @@ export function WorkspaceScreen(props: {
       }
       rail={{
         ...acmeRail,
-        suspended: suspended ? suspendedOrg : undefined,
-        person: admin ? undefined : people[memberViewer],
+        ...(suspended ? { suspended: suspendedOrg } : {}),
+        ...(admin ? {} : { person: people[memberViewer] }),
       }}
       sidebar={workspaceSidebar({
         // The toast of an Archive shows at once, so the row shows that Archive.
@@ -291,6 +294,6 @@ export function WorkspaceScreen(props: {
           )
         }
       />
-    </AppFrame>
+    </appFrame.Component>
   )
 }

@@ -1,10 +1,10 @@
 import type { ReactNode } from 'react'
 import { SegmentedControl } from '@firna/ui/segmented'
-import { ChevronLeft, Code, Copy, Download, Eye } from 'lucide-react'
+import { ChevronLeft, Code, Eye } from 'lucide-react'
 import { splitPath } from '../../fixtures/files'
 import { noop } from '../../noop'
 import { ScreenLink } from '../common/ScreenLink'
-import { IconButton } from '../common/actions'
+import { iconButton } from '../../entries/components/common/actions.mockup'
 import { useControlSizes } from '../common/touch'
 import type { BackLink } from '../layout/Page'
 import { specFor } from './fileSpecs'
@@ -73,15 +73,20 @@ export function FilePage(props: {
             <span className={styles.name}>{name}</span>
           </span>
           {closed ? null : (
-            <IconButton icon={Download} label={`Download ${name}`} />
+            <iconButton.Component
+              icon="download"
+              label={`Download ${name}`}
+              moklyInstance="download-file"
+            />
           )}
         </div>
         <div className={styles.end}>
           {meta ? <span className={styles.meta}>{meta}</span> : null}
-          <IconButton
+          <iconButton.Component
             disabled={closed || spec.binary === true}
-            icon={Copy}
+            icon="copy"
             label={`Copy the text of ${name}`}
+            moklyInstance="copy-file-text"
           />
           {props.view === 'markdown' ? <ViewSwitch /> : null}
         </div>

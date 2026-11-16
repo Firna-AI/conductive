@@ -1,13 +1,6 @@
 import type { ReactNode } from 'react'
 import type { LucideIcon } from 'lucide-react'
-import {
-  File,
-  FileBox,
-  FileCode,
-  FileDiff,
-  FileText,
-  FileX,
-} from 'lucide-react'
+import { File, FileCode, FileDiff, FileText } from 'lucide-react'
 import { screenshotCopy } from '../../fixtures/attachments'
 import {
   addressFormDiff,
@@ -17,8 +10,8 @@ import {
 import { maskedDiffPath, seedScriptDiff } from '../../fixtures/maskedFiles'
 import { branchPictures, splitPath } from '../../fixtures/files'
 import { CheckoutPicture, screenshotSize } from '../../fixtures/pictures'
-import { ActionButton } from '../common/actions'
-import { EmptyState } from '../common/EmptyState'
+import { actionButton } from '../../entries/components/common/actions.mockup'
+import { emptyState } from '../../entries/components/common/EmptyState.mockup'
 import { CodeView } from './CodeView'
 import { DiffStat } from './DiffStat'
 import { DiffView } from './DiffView'
@@ -65,10 +58,15 @@ function notDrawn(path: string): FileSpec {
     path,
     icon: File,
     content: (
-      <EmptyState
-        action={<ActionButton>Download</ActionButton>}
+      <emptyState.Component
+        action={
+          <actionButton.Component moklyInstance="download-binary-file">
+            Download
+          </actionButton.Component>
+        }
         body="It is a binary file."
-        icon={FileBox}
+        icon="file-box"
+        moklyInstance="binary-file"
         title="Download this file to open it"
       />
     ),
@@ -111,7 +109,11 @@ export function specFor(view: FileTabView): FileSpec {
         path: 'File',
         icon: FileCode,
         content: (
-          <EmptyState icon={FileX} title="This file moved or was deleted" />
+          <emptyState.Component
+            icon="file-x"
+            moklyInstance="missing-file"
+            title="This file moved or was deleted"
+          />
         ),
         closed: true,
       }

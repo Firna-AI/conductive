@@ -1,11 +1,10 @@
 import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
-import { Ban, Hourglass, Trash2 } from 'lucide-react'
 import { Table, type TableColumn } from '@firna/ui/table'
 import type { TargetStatus } from '../../fixtures/operatorDirectory'
 import type { UserStatus } from '../../fixtures/operatorUsers'
-import { ActionButton } from '../common/actions'
-import { StatusText } from '../common/StatusText'
+import { actionButton } from '../../entries/components/common/actions.mockup'
+import { statusText } from '../../entries/components/common/StatusText.mockup'
 import { Section } from '../settings/Section'
 import styles from './directory.module.css'
 
@@ -13,16 +12,42 @@ import styles from './directory.module.css'
  * The state of a suspended or deleted target, or of a user who waits on
  * the waitlist. A target in use shows none.
  */
-export function TargetState(props: { status: TargetStatus | UserStatus }) {
+export function TargetState(props: {
+  status: TargetStatus | UserStatus
+  /** The key of the row, which names the state for Mokly. */
+  id: string
+}) {
+  const name = `state-${props.id}`
   switch (props.status) {
     case 'active':
       return null
     case 'suspended':
-      return <StatusText icon={Ban} label="Suspended" tone="danger" />
+      return (
+        <statusText.Component
+          icon="ban"
+          label="Suspended"
+          moklyInstance={name}
+          tone="danger"
+        />
+      )
     case 'deleted':
-      return <StatusText icon={Trash2} label="Deleted" tone="muted" />
+      return (
+        <statusText.Component
+          icon="trash-2"
+          label="Deleted"
+          moklyInstance={name}
+          tone="muted"
+        />
+      )
     case 'waiting':
-      return <StatusText icon={Hourglass} label="Waiting" tone="warning" />
+      return (
+        <statusText.Component
+          icon="hourglass"
+          label="Waiting"
+          moklyInstance={name}
+          tone="warning"
+        />
+      )
   }
 }
 
@@ -85,7 +110,9 @@ export function DirectoryTable<Row>(props: {
       )}
       {props.more ? (
         <div className={styles.more}>
-          <ActionButton tone="plain">Show more</ActionButton>
+          <actionButton.Component moklyInstance="show-more" tone="plain">
+            Show more
+          </actionButton.Component>
         </div>
       ) : null}
     </Section>

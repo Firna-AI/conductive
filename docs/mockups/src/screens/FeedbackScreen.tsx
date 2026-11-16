@@ -1,6 +1,6 @@
 import type { SchemaProps, Viewport } from '@mokly/mokly'
 import { offlineMessage } from '../components/common/LoadFailure'
-import { SuccessToast } from '../components/common/SuccessToast'
+import { successToast } from '../entries/components/common/SuccessToast.mockup'
 import { sentToastTitle } from '../components/feedback/feedbackCopy'
 import {
   FeedbackDialog,
@@ -116,7 +116,11 @@ export function FeedbackScreen(props: {
   const { state, viewport } = props
   const overlay =
     state.send === 'sent' ? (
-      <SuccessToast phone={viewport === 'mobile'} title={sentToastTitle} />
+      <successToast.Component
+        moklyInstance="feedback-sent"
+        phone={viewport === 'mobile'}
+        title={sentToastTitle}
+      />
     ) : (
       <FeedbackDialog
         problem={problemOf(state)}
