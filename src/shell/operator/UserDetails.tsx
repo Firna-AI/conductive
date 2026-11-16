@@ -1,6 +1,9 @@
 import { Ban, Hourglass } from 'lucide-react'
 import { Notice } from '../../../docs/mockups/src/components/common/Notice'
-import { waitingNotice } from '../../../docs/mockups/src/components/operator/accessCopy'
+import {
+  noVerifiedEmail,
+  waitingNotice,
+} from '../../../docs/mockups/src/components/operator/accessCopy'
 import { suspendedUserBody } from '../../../docs/mockups/src/components/operator/operatorCopy'
 import { DetailList } from '../../../docs/mockups/src/components/settings/DetailList'
 import { Section } from '../../../docs/mockups/src/components/settings/Section'
@@ -9,7 +12,12 @@ import { useServices } from '../../app/services'
 import { roleLabels } from '../../members/people'
 import type { OperatorUserDetail } from '../../shared/operator'
 import { AppAccessSection, ReferralSection } from './AccessSections'
-import { formatAge, formatCount, formatLongDay } from './format'
+import {
+  formatAge,
+  formatCount,
+  formatLongDay,
+  formatLongMoment,
+} from './format'
 import { suspensionTitle } from './TargetPage'
 import { EmptyRows, TargetList, TargetRow } from './TargetParts'
 
@@ -44,7 +52,8 @@ function UserNotice(props: {
  * details with the age of the GitHub account, how and when they got app
  * access, their referral code, the workspaces that they own, and their orgs
  * with their roles. Each org opens the page of that org. A user without a
- * name on GitHub has no Name row. A person who waits has no Orgs box while
+ * name on GitHub has no Name row. The Email row gives the primary verified
+ * email on GitHub, or says that the account has none. A person who waits has no Orgs box while
  * they have no org, and a user with app access says where their orgs show.
  */
 export function UserDetails(props: {
@@ -67,9 +76,17 @@ export function UserDetails(props: {
         <DetailList
           rows={[
             ...(user.name ? [{ term: 'Name', value: user.name }] : []),
+            { term: 'Email', value: user.email ?? noVerifiedEmail },
             { term: 'GitHub ID', value: String(user.githubId), mono: true },
             { term: 'On GitHub', value: age },
             { term: 'Joined', value: formatLongDay(user.joinedAt, timeZone) },
+            {
+              term: 'Last active',
+              value:
+                user.lastActiveAt === null
+                  ? 'Unknown'
+                  : formatLongMoment(user.lastActiveAt, timeZone),
+            },
             {
               term: 'Workspaces',
               value: `${formatCount(total)} owned, ${formatCount(running)} running`,

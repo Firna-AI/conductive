@@ -98,8 +98,10 @@ actions at `app/command-palette/actions`, and the settings at
   Sign-in, GitHub, Agents, and New workspaces. It also holds Keyboard
   shortcuts, the fourth tab of the Account page.
 - In the Mac app, the Account group also holds
-  [This Mac](desktop-commands.md#saved-choices), the fifth tab, which only
+  [This Mac](desktop-commands.md#saved-choices), the sixth tab, which only
   the Account page of the Mac app has.
+- The Stats tab of the Account page has no row, as
+  [Account stats](account-stats.md#where-the-tab-shows) says.
 - The Deleted orgs section of the Account page has no row. Reason: it
   shows only while the person has a deleted org, and the palette treats a
   deleted org as absent.

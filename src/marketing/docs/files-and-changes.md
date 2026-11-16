@@ -9,15 +9,17 @@ order: 30
 
 Open a workspace that belongs to one of your orgs.
 Its file tools use the workspace's selected repository.
-If its computer is stopped, the file lists show their last saved copy.
+If its computer is stopped or starts again, the file lists show their last saved copy.
 Opening a file or a change starts the computer again.
 
 On a computer, the file lists sit beside the chat.
 On a phone, open the workspace's **Files** view.
 
-- **All files** shows the repository as a tree. After a new computer build, it also lists the files in `.context/`.
+- **All files** shows the repository as a tree. With current cloud computer software, it also lists the files in `.context/`.
 - **Changes** lists changes against the workspace's base branch.
 - **Checks** shows the pull request's GitHub checks.
+
+An [automatic software update](/docs/cloud-computer#apply-setup-changes) brings `.context/` support to an older workspace at a later start or when it is idle.
 
 An archived workspace keeps read-only chat, with no file lists or tools.
 Its computer and files can stay available for Restore for 14 days after Archive.
@@ -52,6 +54,10 @@ The file view also offers **Download** if the browser cannot draw an image withi
 
 These views let you read the files.
 Ask the agent to change a file, or use **Terminal**.
+
+You can open a file from its chip in an agent reply.
+A chip with a line, such as `app.ts:42`, opens the file as text with that line in view and marked.
+The address of the tab keeps the line.
 
 You can also open an attached file from its chip in a sent message.
 It opens the copy in the workspace's repository folder after the message reaches the agent.
@@ -127,8 +133,9 @@ Before the first successful list, the view can show an unavailable state.
 
 An unavailable list does not prove that the repository is empty.
 Use **Try again** when a file read fails.
-An open file or change waits while the workspace's computer starts.
+A file or change that you open while the workspace's computer starts waits for it.
 It opens when the computer is ready.
+A file or change that already shows stays open.
 
 If a turn says **Changed files unavailable**, open **Changes** to inspect the branch.
 That notice describes a missing turn summary.

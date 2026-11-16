@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
 import { siteActionCopy } from '../../../../../src/marketing/access-copy'
-import { parityLinkCopy } from '../../../../../src/marketing/from-conductor/copy'
 import { abuseAddress } from '../../../../../src/marketing/legal-text'
+import { pricingLinkText } from '../../../../../src/marketing/pricing'
 import { productName } from '../../brand'
 import { ScreenLink } from '../common/ScreenLink'
 import { classes } from '../common/classes'
@@ -22,9 +22,9 @@ function Column(props: { title: string; children: ReactNode }) {
 }
 
 /**
- * The foot of the site: the wordmark, the sections with the features,
- * the docs, and the page for people who move from Conductor, the sign-in,
- * the address for abuse reports, and the legal pages beside the copyright.
+ * The foot of the site: the wordmark, the sections with the features, the
+ * pricing page, and the docs, the sign-in, the address for abuse reports,
+ * and the legal pages beside the copyright.
  */
 export function SiteFooter(props: {
   links: SiteLinks
@@ -51,6 +51,11 @@ export function SiteFooter(props: {
             </ScreenLink>
           </li>
           <li>
+            <ScreenLink className={styles.link} to={props.links.pricing}>
+              {pricingLinkText}
+            </ScreenLink>
+          </li>
+          <li>
             <ScreenLink className={styles.link} to={props.links.docs}>
               Docs
             </ScreenLink>
@@ -62,11 +67,6 @@ export function SiteFooter(props: {
               to={props.links.home}
             >
               Mac app
-            </ScreenLink>
-          </li>
-          <li>
-            <ScreenLink className={styles.link} to={props.links.fromConductor}>
-              {parityLinkCopy.footer}
             </ScreenLink>
           </li>
         </Column>

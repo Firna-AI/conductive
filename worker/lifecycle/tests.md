@@ -35,6 +35,8 @@ Use `TEST_TIME` as the future origin for native alarms.
 Await fixture clock changes so the host and native object use the same time.
 An alarm near zero is already due on the real runtime clock.
 It can run before a manual test advance.
+The real-runtime fixture, `WorkspaceRuntimeFixture`, starts its manual clock 10 minutes ahead of the real clock, as `CLOCK_LEAD_MS`.
+So the real runtime finds no due alarm of its own while a test runs.
 
 `advanceTo` uses `advanceScheduledAlarms` from `scheduled-alarms.test-support.ts`.
 It advances the clock and runs only stored due alarms, in time order.

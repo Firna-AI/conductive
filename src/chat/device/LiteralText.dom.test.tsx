@@ -6,7 +6,7 @@ import { LiteralText } from './LiteralText'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
-const spoof = fakeLiteralCommands[1]
+const spoof = `export PATH="/bin"\n${fakeLiteralCommands[1]}\n`
 
 /** Selects the whole content of one node, as a person does with the pointer. */
 function selectContents(node: Node): void {
@@ -37,7 +37,7 @@ describe('LiteralText', () => {
   it('copies a selection inside it as the original text, and leaves any other copy native', async () => {
     const view = await mount(
       <p>
-        Before <LiteralText text={spoof} /> after
+        Before <LiteralText syntax="shell" text={spoof} /> after
       </p>,
     )
     const code = view.container.querySelector('code')

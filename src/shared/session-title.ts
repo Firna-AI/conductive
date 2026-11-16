@@ -1,9 +1,10 @@
-import { hasOwnWords, textWithAttachmentNames } from './attachment-mentions'
-import type { Attachment } from './messages'
+import type { Attachment } from './generated/Attachment'
+import { hasOwnWords, titleSourceText } from './attachment-mentions'
 
 /**
  * A title for a session or workspace, or null when no own words remain.
- * It replaces mentions of its attached files with their original names.
+ * It leaves out mentions of its attached images, and replaces mentions of
+ * its other attached files with their original names.
  * It takes the first line with text and makes each run of spaces one space.
  * It removes one final full stop, but keeps an ellipsis. It cuts a line
  * over 60 Unicode code points at its last space within the limit, or at
@@ -16,7 +17,7 @@ export function sessionTitleFrom(
   attachments: readonly Attachment[] = [],
 ): string | null {
   if (!hasOwnWords(text, attachments)) return null
-  const line = textWithAttachmentNames(text, attachments)
+  const line = titleSourceText(text, attachments)
     .trim()
     .split('\n')[0]
     .replace(/\s+/g, ' ')

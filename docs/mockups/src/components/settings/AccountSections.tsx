@@ -18,9 +18,8 @@ import { LinkTabs, type LinkTab } from '../common/LinkTabs'
 import { AccountAvatar } from '../orgs/OrgTile'
 import { StatusText } from '../common/StatusText'
 import { AgentConnectForm } from './AgentConnectForm'
+import { EndpointDetails } from './EndpointDetails'
 import type { EndpointEntry } from './EndpointFields'
-import { EndpointModels } from './EndpointModels'
-import { LoginEndpoint } from './LoginEndpoint'
 import type { SignInStep } from './chatGptSignInCopy'
 import {
   LoginNotUsable,
@@ -115,8 +114,8 @@ export type OpenAgentForm = {
  * Claude and Codex, each with Connect, or Connected and the kind of its
  * login. An own endpoint login shows its kind with the host of its endpoint
  * under its row, so that a phone shows both in full. Under them come the
- * models of the app that the model list of the endpoint does not name, with
- * Refresh. `form` opens the Connect form of an agent under its row.
+ * lines of its model list, with one Refresh, as `EndpointDetails` draws
+ * them. `form` opens the Connect form of an agent under its row.
  * `removable` gives each connected login its Remove, and `shares` its share
  * setting, as on the account.
  * `unusable` names a connected login
@@ -178,13 +177,7 @@ export function AgentList(props: {
               {action}
             </div>
             {login?.kind === 'endpoint' ? (
-              <LoginEndpoint
-                host={login.host}
-                kind={loginLabels[key].endpoint}
-              />
-            ) : null}
-            {login?.kind === 'endpoint' && login.models ? (
-              <EndpointModels agent={agents[key].name} check={login.models} />
+              <EndpointDetails agent={key} login={login} />
             ) : null}
             {unusable && !form ? (
               <LoginNotUsable
@@ -247,12 +240,12 @@ export function AgentsSection(props: {
 
 /** The pages of the account. */
 export type AccountTab =
-  'general' | 'agents' | 'preferences' | 'shortcuts' | 'this-mac'
+  'general' | 'agents' | 'preferences' | 'shortcuts' | 'stats' | 'this-mac'
 
 /**
  * The pages of the account, as tabs that link to each one: General, with
  * the sign-in, GitHub, and the invite code, Agents, with the logins of
- * Claude and Codex, Preferences, and Keyboard shortcuts.
+ * Claude and Codex, Preferences, Keyboard shortcuts, and Stats.
  * Keyboard shortcuts links to the tab of the host. The Mac app adds This
  * Mac last. `flow` moves a tab that
  * does not fit to a second line, for a phone.
@@ -282,6 +275,11 @@ export function AccountTabs(props: {
       label: 'Keyboard shortcuts',
       to: shortcutPages[props.host].tab,
       selected: props.tab === 'shortcuts',
+    },
+    {
+      label: 'Stats',
+      to: paths.accountStats,
+      selected: props.tab === 'stats',
     },
   ]
   if (props.host === 'mac-app') {

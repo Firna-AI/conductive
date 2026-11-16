@@ -1,10 +1,11 @@
+import type { WorkspaceState } from '../../src/shared/generated/WorkspaceState'
 import { expect } from 'vitest'
 
 import {
   operatorOverviewPath,
   type OperatorOverview,
 } from '../../src/shared/operator'
-import type { WorkspaceState } from '../../src/shared/workspaces'
+
 import { TEST_TIME, type TestHarness } from '../test-support/harness'
 
 export async function overview(
@@ -83,14 +84,18 @@ export async function seedWorkspace(
     state?: WorkspaceState
     createdAt?: number
     archivedAt?: number
+    runningSince?: number | null
+    lastActivityAt?: number | null
+    sandboxId?: string | null
+    ownerGithubId?: number
   },
 ): Promise<void> {
   const createdAt = workspace.createdAt ?? TEST_TIME
   await harness.env.DB.prepare(
     `INSERT INTO workspaces
      (id, org_id, repository_id, owner_user_id, name, branch, state,
-      created_at, updated_at, archived_at)
-     SELECT ?, ?, ?, id, ?, 'main', ?, ?, ?, ? FROM users WHERE github_id = 7`,
+      created_at, updated_at, archived_at, running_since, last_activity_at, sandbox_id)
+     SELECT ?, ?, ?, id, ?, 'main', ?, ?, ?, ?, ?, ?, ? FROM users WHERE github_id = ?`,
   )
     .bind(
       workspace.id,
@@ -101,6 +106,10 @@ export async function seedWorkspace(
       createdAt,
       createdAt,
       workspace.archivedAt ?? null,
+      workspace.runningSince ?? null,
+      workspace.lastActivityAt ?? null,
+      workspace.sandboxId ?? null,
+      workspace.ownerGithubId ?? 7,
     )
     .run()
 }

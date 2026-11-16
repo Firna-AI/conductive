@@ -46,7 +46,7 @@ describe('the Overview of the operator section', () => {
       states: textOf(byRole('list', 'Workspaces by state').innerHTML),
       lines: lines.filter((line) => queryByText(line) !== null),
     }
-    click(byText('Kestrel Labs'))
+    click(byText('Kestrel Labs', byLabel('Largest orgs')))
     await settle()
     expect({
       ...shown,
@@ -141,7 +141,7 @@ describe('the Overview of the operator section', () => {
     },
   )
 
-  test('keeps the boxes in place while the numbers load, shows only a notice when they fail, and Try again reads them again', async () => {
+  test('keeps the boxes in place while the numbers load, with 10 placeholder rows of the long runs, shows only a notice when they fail, and Try again reads them again', async () => {
     const server = new FakeApiServer()
     serveOperator(server)
     const held = new HeldRequests(server)
@@ -150,6 +150,9 @@ describe('the Overview of the operator section', () => {
       services: { fetch: held.fetch },
     })
     const loading = text()
+    const longRunRows = Array.from(byLabel('Long runs').children).filter(
+      (row) => row.getAttribute('aria-hidden') === 'true',
+    ).length
     server.json(
       'GET',
       overviewPath,
@@ -164,11 +167,13 @@ describe('the Overview of the operator section', () => {
     await settle()
     expect({
       loading,
+      longRunRows,
       failed,
       retried: queryByRole('region', 'Totals') !== null,
     }).toEqual({
       loading:
-        'AC Acme Alt 1 Alt 1 FX Futex Alt 2 Alt 2 FI Firna Alt 3 Alt 3 Operator C Operator Overview Orgs Users Waitlist Invite codes Workspaces New workspaces New users Largest orgs Org Members Workspaces Running',
+        'AC Acme Alt 1 Alt 1 FX Futex Alt 2 Alt 2 FI Firna Alt 3 Alt 3 Operator C Operator Overview Orgs Users Waitlist Invite codes Workspaces Long runs Org Owner Cloud computer Last activity Running for New workspaces New users Largest orgs Org Members Workspaces Running',
+      longRunRows: 10,
       failed:
         'AC Acme Alt 1 Alt 1 FX Futex Alt 2 Alt 2 FI Firna Alt 3 Alt 3 Operator C Operator Overview Orgs Users Waitlist Invite codes The numbers could not load Try again',
       retried: true,

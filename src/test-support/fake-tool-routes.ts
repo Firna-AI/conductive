@@ -2,7 +2,14 @@ import type { PathState } from '../../docs/mockups/src/fixtures/maskedFiles'
 import { desktopPath } from '../shared/desktop'
 import { filePaths } from '../shared/files'
 import { githubPaths, type BannerState } from '../shared/github'
-import { attachmentUploadPath } from '../shared/messages'
+import {
+  ATTACHMENT_PART_BYTES,
+  attachmentUploadCompletePath,
+  attachmentUploadPartPath,
+  attachmentUploadStartPath,
+  type AttachmentUploadPart,
+  type StartAttachmentUploadResponse,
+} from '../shared/messages'
 import { attachmentPath } from '../shared/attachment-paths'
 import { previewPath, previewsPath } from '../shared/previews'
 import { terminalPaths } from '../shared/terminal'
@@ -89,16 +96,32 @@ export function fakeToolRoutes(
   )
   routes.json('GET', filePaths.changes(org, id), data.changes)
   routes.json('GET', filePaths.diff(org, id, FAKE_FILE_PATH), data.diff)
-  // The raw file upload of the app's upload operation, at the route of each
-  // target: a workspace, and the first message of a new workspace.
+  // The upload in parts of the app's upload operation, at the routes of each
+  // target: a workspace, and the first message of a new workspace. Each
+  // start gives the same upload of one part, and its complete call the file.
   for (const [fileId, target] of [
     ['attachment-1', { type: 'workspace', workspaceId: id }],
     ['draft-attachment-1', { type: 'new-workspace', messageId: '' }],
   ] as const) {
     const file = { id: fileId, name: 'postcode-overlap.png' }
+    const upload = FAKE_IDS.upload
     routes.json(
       'POST',
-      attachmentUploadPath(org, target),
+      attachmentUploadStartPath(org, target),
+      {
+        uploadId: upload,
+        partSizeBytes: ATTACHMENT_PART_BYTES,
+        partCount: 1,
+      } satisfies StartAttachmentUploadResponse,
+      201,
+    )
+    routes.json('PUT', attachmentUploadPartPath(org, target, upload, 1), {
+      partNumber: 1,
+      etag: 'etag-1',
+    } satisfies AttachmentUploadPart)
+    routes.json(
+      'POST',
+      attachmentUploadCompletePath(org, target, upload),
       attachmentPath(file).then((path) => ({
         attachment: {
           ...file,
