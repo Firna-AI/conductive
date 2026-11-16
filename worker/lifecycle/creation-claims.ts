@@ -101,6 +101,7 @@ interface PlanRow {
   repositoryId: string
   ownerUserId: string
   sectionId: string | null
+  parentId: string | null
   sessionId: string
   turnId: string
   city: string
@@ -135,7 +136,7 @@ export async function recordedCreationJob(
   const reading = db
     .prepare(
       `SELECT p.repository_id AS repositoryId, p.owner_user_id AS ownerUserId,
-    p.section_id AS sectionId, p.session_id AS sessionId, p.turn_id AS turnId, p.city, p.name, p.first_session_title AS firstSessionTitle, p.branch,
+    p.section_id AS sectionId, p.parent_workspace_id AS parentId, p.session_id AS sessionId, p.turn_id AS turnId, p.city, p.name, p.first_session_title AS firstSessionTitle, p.branch,
     p.start_attempt AS attempt, p.startup_script AS startupScript, p.environment_ciphertext AS environmentCiphertext,
     p.image_name AS imageName, p.provider_account AS providerAccount,
     p.default_branch AS defaultBranch, p.base_branch AS baseBranch, p.start_sha AS startSha, p.agent, p.model, p.effort, p.fast,
@@ -192,6 +193,7 @@ export async function recordedCreationJob(
       sender: availableUser(sender),
       repositoryId: plan.repositoryId,
       sectionId: plan.sectionId ?? undefined,
+      parentId: plan.parentId ?? undefined,
       sessionId: plan.sessionId,
       firstSessionTitle: plan.firstSessionTitle ?? undefined,
       city: plan.city,

@@ -31,7 +31,7 @@ it('reads upload and sent paths and gives old stored files a null path', () => {
   }
 })
 
-it('preserves each GitHub summary in shell, chat, and member workspace records', () => {
+it('preserves the parent and each GitHub summary in shell, chat, and member workspace records', () => {
   const { detail } = workspaceFixtures()
   for (const github of [
     'checks-running',
@@ -44,12 +44,17 @@ it('preserves each GitHub summary in shell, chat, and member workspace records',
     'blocked',
     null,
   ]) {
-    const workspace = { ...detail.workspace, github }
+    const workspace = { ...detail.workspace, parentId: 'parent', github }
     expect(readWorkspace(workspace).github).toBe(github)
+    expect(readWorkspace(workspace).parentId).toBe('parent')
     expect(readChatWorkspace({ ...detail, workspace }).workspace.github).toBe(
       github,
     )
+    expect(readChatWorkspace({ ...detail, workspace }).workspace.parentId).toBe(
+      'parent',
+    )
     expect(parseWorkspace(workspace).github).toBe(github)
+    expect(parseWorkspace(workspace).parentId).toBe('parent')
   }
 })
 

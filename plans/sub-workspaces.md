@@ -629,6 +629,25 @@ them.
   old anchor. The orchestrator checked that every moved line still exists
   and that every inbound link resolves.
 
+The backend of Milestone 3 led to these calls, all of 16 November 2026.
+The `non-ui implementor` proposed them, and the orchestrator accepted them.
+
+- The durable admission of a create saves its `notice`, so a replay gives
+  the same notice.
+- A create with a parent and no section saves no section in its creation
+  plan. Reason: an implicit General section would give a false notice.
+- The list query of the app keeps the archived rows at their places, in
+  place of after the live rows. Reason: the shared rule needs the place of
+  an archived row to put its live sub-workspaces in that place.
+- A saved snapshot from before this change has no `parentId`, and the app
+  reads it as `null`.
+- The `nesting_limit` message reads: "W-<number> is at the deepest level.
+  Create a sibling instead. Pass parentId "<id>". Start the name with a
+  one-word group prefix, such as "Limits: "."
+- `get_workspace` reads the workspaces of the org to place one workspace
+  with the shared rule. The review of Milestone 7 weighs its cost in a
+  large org.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -707,34 +726,43 @@ Depends on: 2
 The shared types, the stored parent, the create call with its depth check,
 and the reads of the app and of the tools.
 
-- [ ] Add the new fields to the Rust types in `crates/cnd-runner-interface/`,
+- [x] Add the new fields to the Rust types in `crates/cnd-runner-interface/`,
       as "The shared types" says. Run the type generator, and commit
       `src/shared/generated/`.
-- [ ] Add a migration with `workspaces.parent_workspace_id`, its index, and
+- [x] Add a migration with `workspaces.parent_workspace_id`, its index, and
       `workspace_creation_plans.parent_workspace_id`. Reserve its range and
       describe it in `migrations/README.md`.
-- [ ] Carry `parentId` through the request reader of `worker/tools/`, the
+- [x] Carry `parentId` through the request reader of `worker/tools/`, the
       create of the tools, the creation plan, and the insert of the
       workspace row. Keep it through a retry and a replay.
-- [ ] Check the parent and its depth before the create. Give the 404 and
+- [x] Check the parent and its depth before the create. Give the 404 and
       the 409 of the design.
-- [ ] Put the sub-workspace in the section of its parent. Read that section
+- [x] Put the sub-workspace in the section of its parent. Read that section
       in the statement that inserts the row. Give the `notice` when the call
       names another section.
-- [ ] Add the shared rule for the place of a row under `src/shared/`, with
+- [x] Add the shared rule for the place of a row under `src/shared/`, with
       item 5 C for a parent that the list does not show.
-- [ ] Clear `parent_workspace_id` in the org purge.
-- [ ] Rename `saveWorkspaceToolParent` to `saveWorkspaceToolCreator`.
-- [ ] Give `parentId` in the `Workspace` of each read and reply of the app.
-- [ ] Add the `parentId` filter and field to the workspace list of the
+- [x] Clear `parent_workspace_id` in the org purge.
+- [x] Rename `saveWorkspaceToolParent` to `saveWorkspaceToolCreator`.
+- [x] Give `parentId` in the `Workspace` of each read and reply of the app.
+- [x] Add the `parentId` filter and field to the workspace list of the
       tools, and `parent`, `depth`, and `children` to its get. Give the
       section of the get with the shared rule.
-- [ ] Add the tests: a create with a parent, a create under a parent of
+- [x] Add the tests: a create with a parent, a create under a parent of
       depth 3 with its message, an unknown parent, a parent of another org,
       an archived parent, a parent and another section, a replay, the
       shared rule, the list filter, and the get.
-- [ ] Update `worker/tools/README.md`, `worker/tools/workspaces.md`, and
+- [x] Update `worker/tools/README.md`, `worker/tools/workspaces.md`, and
       the README of `cnd-runner-interface`.
+
+Done on 16 November 2026 by the `non-ui implementor`. The orchestrator
+applied a one-line fix to the list fixture of `cnd-tools`, which the brief
+had kept out of scope. On this machine, some creation, device, and stop
+tests take longer than the 15-second limit, also on the commit before this
+milestone; with a longer limit on the command line they pass on both
+commits, in about the same time, and CI runs them within the limit.
+Evidence: `.context/sub-workspaces/m3-checks.log` and the logs in
+`.context/sub-workspaces/m3/`.
 
 ## Milestone 3a: The mockup list on the shared rule
 

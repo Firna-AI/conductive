@@ -237,6 +237,13 @@ It keeps every other preference and every saved view.
 An unset view now uses the dialog, so only accounts made after this migration get the dialog without a choice.
 [The preference](../docs/protocol/create-a-workspace.md#the-preference) gives the requirement.
 
+`202611161200_workspace_parents.sql` adds the nullable parent workspace link
+to `workspaces` and `workspace_creation_plans`. Existing rows keep `NULL`.
+The workspace link references `workspaces(id)`. The index on
+`(org_id, parent_workspace_id)` serves direct sub-workspace reads.
+The creation plan keeps the parent through creation retries and replay.
+[Sub-workspaces](../docs/protocol/sub-workspaces.md) gives the parent rules.
+
 ## Reserved ranges
 
 Each milestone owns the complete inclusive range below.
@@ -282,6 +289,7 @@ UI and wiring milestones normally need no migration. Their ranges stay reserved.
 | Routines: pull request runs | `202611101500`–`202611101559` |
 | Keyboard shortcuts storage | `202611101600`–`202611101659` |
 | Agent workspace calls | `202611111200`–`202611111259` |
+| Sub-workspaces | `202611161200`–`202611161259` |
 
 ## Key code
 

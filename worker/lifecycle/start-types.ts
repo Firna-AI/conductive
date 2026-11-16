@@ -81,6 +81,7 @@ interface WorkspaceCreation {
   sender: User
   repositoryId: string
   sectionId?: string
+  parentId?: string
   city: string
   name?: string
   firstSessionTitle?: string

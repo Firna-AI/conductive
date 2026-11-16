@@ -130,6 +130,7 @@ export function parseWorkspace(value: unknown): Workspace {
     orgId: text(source, 'orgId'),
     repositoryId: text(source, 'repositoryId'),
     sectionId: text(source, 'sectionId'),
+    parentId: textOrNull(source, 'parentId'),
     owner: sender(nested(source, 'owner')),
     name: textOrNull(source, 'name'),
     branch: text(source, 'branch'),

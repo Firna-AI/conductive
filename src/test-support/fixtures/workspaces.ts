@@ -56,6 +56,7 @@ export function workspaceFixtures(
         orgId: FAKE_IDS.org,
         repositoryId: workspace.repository,
         sectionId: workspace.section,
+        parentId: null,
         owner:
           fakeUsers.find((user) => user.id === workspace.owner) ?? fakeUser,
         name: workspace.name,

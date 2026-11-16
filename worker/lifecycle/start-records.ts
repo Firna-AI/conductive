@@ -76,6 +76,7 @@ async function prepareWorkspaceRecords(
         providerAccount: image.providerAccount,
         repositoryId: creation.repositoryId,
         sectionId: creation.sectionId,
+        parentId: creation.parentId,
         user: creation.user,
         senderUserId: creation.sender.id,
         city: creation.city,

@@ -128,6 +128,7 @@ export function startWorkspace(
     orgId: org.org.id,
     repositoryId,
     sectionId: section?.id ?? '',
+    parentId: null,
     owner,
     name: null,
     branch,

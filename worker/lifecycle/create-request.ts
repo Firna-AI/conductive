@@ -15,6 +15,7 @@ export interface WorkspaceCreationBase {
 export interface WorkspaceCreationInput extends CreateWorkspaceRequest {
   name?: string
   firstSessionTitle?: string
+  parentId?: string
 }
 
 /**
@@ -67,6 +68,7 @@ export async function prepareCreationRequest(
       sender,
       repositoryId: repository.id,
       sectionId: input.sectionId,
+      parentId: input.parentId,
       city,
       ...(input.name !== undefined && { name: input.name }),
       branch,

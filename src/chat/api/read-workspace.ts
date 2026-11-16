@@ -72,6 +72,7 @@ function readWorkspace(value: unknown): Workspace {
     orgId: text(source.orgId),
     repositoryId: text(source.repositoryId),
     sectionId: text(source.sectionId),
+    parentId: nullable(text)(source.parentId),
     owner: readSender(source.owner),
     name: nullable(text)(source.name),
     branch: text(source.branch),
