@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Likelihood:** Common. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-10, from review round 1 of the branch `calummoore/git-identity-error` (pull request #181).
-- **Location:** `crates/cnd-credential/src/service.rs`, `image/github.md`, section "Git credential helper", `src/marketing/docs/terminal-and-previews.md:47` and `:53`, `src/marketing/docs/pull-requests.md:34`, `src/marketing/docs/security.md:36` and `:49`, and the comparison notes in `src/marketing/from-conductor/areas/cloud.ts:72` and `src/marketing/from-conductor/areas/review-and-merge.ts:103` and `:141`.
+- **Location:** `crates/cnd-credential/src/service.rs`, `image/github.md`, section "Git credential helper", `src/marketing/docs/terminal-and-previews.md:47` and `:53`, `src/marketing/docs/pull-requests.md:34`, and `src/marketing/docs/security.md:36` and `:49`.
 - **Reason:** the commit author change did not touch the credential helper, and the fix changes who can push from the shared terminal.
 
 - **Terms:**
@@ -27,9 +27,6 @@
   - The public guides say that commands in the shared Terminal use the
     workspace owner's GitHub account, and the terminal guide says that Git
     and the GitHub CLI get GitHub access through Conductive.
-  - Three notes of the comparison page at `conductive.build/from-conductor`
-    say the same: the terminal uses the owner's account, and Git can push
-    from the terminal.
 - **Problem:** A member cannot push from the shared terminal with Git,
   while the guides say that terminal commands use the owner's account.
 - **Impact if no action:** Members who commit in the terminal cannot push

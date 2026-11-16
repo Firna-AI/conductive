@@ -2,7 +2,7 @@
 
 The public marketing pages provide Open Graph and Twitter card metadata
 so that a shared link can show a product preview.
-This includes the home page, guides, legal pages, and comparison page.
+This includes the home page, guides, and legal pages.
 
 - Each page uses its own title and description.
 - A page without a description omits the description metadata.
