@@ -114,6 +114,10 @@ session and keeps that turn's sender. Both the app line and agent text
 name the member who answered. Notice admission is idempotent by request
 ID. It never opens a linked session.
 
+After admission releases the chat queue, one delivery helper flushes a
+connected runner. Without a runner, it uses the normal open checks and
+resume flow, with the accepted turn's sender. Recovery uses the same helper.
+
 No event or transcript insert has a value, command output, command
 duration, or command exit code. The browser can fetch `workspaceValues`
 after an answer or removal to refresh Capabilities. Fifteen-minute values
@@ -155,6 +159,7 @@ filter state. No automation-specific rule changes these grants.
 - [capabilities-input.ts](capabilities-input.ts): capability request parsing and create defaults.
 - [runtime.ts](runtime.ts), [request-run.ts](request-run.ts), and [run-values.ts](run-values.ts): machine calls and their waiters.
 - [request-answer.ts](request-answer.ts) and [request-reconcile.ts](request-reconcile.ts): member answers, late notices, and lifecycle cleanup.
+- [notice-delivery.ts](notice-delivery.ts): runner delivery and resume after an accepted late notice.
 - [request-records.ts](request-records.ts) and [request-storage.ts](request-storage.ts): durable requests and encrypted temporary values.
 - [output-values.ts](output-values.ts) and [filter state](../chat/output-filter-records.ts): exact-copy filtering.
 - [Settings routes](../app-api/secrets.ts) and

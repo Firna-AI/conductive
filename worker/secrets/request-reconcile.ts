@@ -2,7 +2,7 @@ import type { SecretRequestEnd } from '../../src/shared/secret-requests'
 import { activeStoredTurn } from '../devices/access'
 import type { WorkspaceOperation } from '../chat/workspace-operation'
 import { secretWorkspaceState } from './grant-data'
-import { openSecretRequest } from './request-records'
+import { openSecretRequest, type StoredSecretRequest } from './request-records'
 import type { SecretRuntime } from './runtime'
 import { pruneSavedOutputSecrets } from '../chat/output-filter-records'
 import { runningOutputSecrets } from '../lifecycle/output-secrets'
@@ -15,6 +15,7 @@ export async function reconcileSecretRequests(
   operation: WorkspaceOperation,
   workspaceId: string,
 ) {
+  const notices: StoredSecretRequest[] = []
   const records = await runtime.chat.store.read(workspaceId, (view) =>
     view.secrets.requests(),
   )
@@ -26,9 +27,9 @@ export async function reconcileSecretRequests(
         record.lateAnswer &&
         record.request.notice === null),
   )
-  if (!unsettled && !values.length) return
+  if (!unsettled && !values.length) return notices
   const state = await secretWorkspaceState(runtime.env.DB, workspaceId)
-  if (!state) return
+  if (!state) return notices
   const endedBy: SecretRequestEnd | null =
     state.archivedAt !== null
       ? 'archived'
@@ -76,6 +77,7 @@ export async function reconcileSecretRequests(
     ) {
       record.request.notice = await runtime.chat.secretNotice(record)
       await runtime.publish(operation, record)
+      if (record.request.notice.state === 'sent') notices.push(record)
     }
   }
   if (
@@ -104,4 +106,5 @@ export async function reconcileSecretRequests(
         ]),
       )
     })
+  return notices
 }

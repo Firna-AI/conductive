@@ -28,6 +28,7 @@ import {
 import { secretGrants } from './grant-data'
 import { fetchSecretRequests } from './routes'
 import { runWithSecrets } from './request-run'
+import { deliverSecretNotice } from './notice-delivery'
 
 export type SecretStateProjection = (
   request: SecretRequest,
@@ -151,41 +152,50 @@ export class SecretRuntime {
     answer: AnswerSecretRequest,
     member: MessageSender,
   ) {
-    return this.chat.authorizedWorkspaceOperation(
-      workspaceId,
-      async () => {},
-      async (operation) => {
-        await reconcileSecretRequests(this, operation, workspaceId)
-        const record = await this.records.request(id)
-        if (!record || record.request.workspaceId !== workspaceId)
-          throw new HttpError(
-            404,
-            'secret_request_not_found',
-            'The request is not available.',
+    await this.reconcile()
+    const { result, orgId, acceptedNotice } =
+      await this.chat.authorizedWorkspaceOperation(
+        workspaceId,
+        async () => {},
+        async (operation) => {
+          const record = await this.records.request(id)
+          if (!record || record.request.workspaceId !== workspaceId)
+            throw new HttpError(
+              404,
+              'secret_request_not_found',
+              'The request is not available.',
+            )
+          const open = openSecretRequest(record.request)
+          const result = await answerSecretRequest(
+            this,
+            operation,
+            record,
+            answer,
+            member,
           )
-        const result = await answerSecretRequest(
-          this,
-          operation,
-          record,
-          answer,
-          member,
-        )
-        await this.schedule()
-        await this.chat.flushRunner()
-        return result
-      },
-    )
+          await this.schedule()
+          return {
+            result,
+            orgId: record.orgId,
+            acceptedNotice: open && result.notice?.state === 'sent',
+          }
+        },
+      )
+    if (acceptedNotice) await deliverSecretNotice(this, orgId, result)
+    return result
   }
 
   async reconcile() {
     const workspaceId = await this.chat.store.workspaceId()
     if (!workspaceId) return
-    await this.chat.authorizedWorkspaceOperation(
+    const notices = await this.chat.authorizedWorkspaceOperation(
       workspaceId,
       async () => {},
       (operation) => reconcileSecretRequests(this, operation, workspaceId),
     )
     await this.schedule()
+    for (const record of notices)
+      await deliverSecretNotice(this, record.orgId, record.request)
   }
 
   async waiting(workspaceId: string) {

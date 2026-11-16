@@ -159,42 +159,64 @@ describe('the Capabilities control of a workspace', () => {
     }).toEqual({ sheet: null, focus: 'More options' })
   })
 
-  test('lists each value for the workspace with who gave it and when, and Remove ends the value', async () => {
-    const server = capabilitiesServer(new FakeApiServer())
-    server.json('GET', secretRequestsPath(org, id), {
-      requests: [],
-      workspaceValues: [
-        {
-          id: 'value-1',
-          name: 'MAPBOX_TOKEN',
-          suppliedBy: priya,
-          createdAt: FAKE_TIME - 3 * 3_600_000,
-        },
-      ],
-    })
-    const valuePath = workspaceSecretValuePath(org, id, 'value-1')
-    server.empty('DELETE', valuePath)
-    const tab = await openTab(server)
-    click(byRole('button', 'Capabilities', tab.view))
-    await settle()
-    const control = byRole('dialog', 'Capabilities', tab.view)
-    const groups = () =>
-      Array.from(control.querySelectorAll('h4'), (title) => title.textContent)
-    expect({ rows: approvals(control).at(-1), groups: groups() }).toEqual({
-      rows: 'MAPBOX_TOKEN | Given by Priya Raman, 3 hours ago',
-      groups: ['Allowed in sessions', 'Values for this workspace'],
-    })
-    const from = server.requests.length
-    click(byRole('button', 'Remove the value of MAPBOX_TOKEN', control))
-    await settle()
-    expect({
-      removed: server.requests
-        .slice(from)
-        .map((item) => `${item.method} ${new URL(item.url).pathname}`),
-      after: groups(),
-    }).toEqual({
-      removed: [`DELETE ${valuePath}`],
-      after: ['Allowed in sessions'],
-    })
-  })
+  test.each([
+    {
+      saved: 'saved secrets',
+      savedSecrets: secrets,
+      capabilities: grants,
+      approvalGroups: ['Allowed in sessions'],
+    },
+    {
+      saved: 'no saved secrets',
+      savedSecrets: [],
+      capabilities: {
+        ...grants,
+        preapprovedSecretIds: [],
+        sessionApprovals: [],
+      },
+      approvalGroups: [],
+    },
+  ])(
+    'lists and removes each workspace value with $saved',
+    async ({ savedSecrets, capabilities, approvalGroups }) => {
+      const server = capabilitiesServer(new FakeApiServer())
+      server.json('GET', secretsPath(org), { secrets: savedSecrets })
+      server.json('GET', path, { capabilities })
+      server.json('GET', secretRequestsPath(org, id), {
+        requests: [],
+        workspaceValues: [
+          {
+            id: 'value-1',
+            name: 'MAPBOX_TOKEN',
+            suppliedBy: priya,
+            createdAt: FAKE_TIME - 3 * 3_600_000,
+          },
+        ],
+      })
+      const valuePath = workspaceSecretValuePath(org, id, 'value-1')
+      server.empty('DELETE', valuePath)
+      const tab = await openTab(server)
+      click(byRole('button', 'Capabilities', tab.view))
+      await settle()
+      const control = byRole('dialog', 'Capabilities', tab.view)
+      const groups = () =>
+        Array.from(control.querySelectorAll('h4'), (title) => title.textContent)
+      expect({ rows: approvals(control).at(-1), groups: groups() }).toEqual({
+        rows: 'MAPBOX_TOKEN | Given by Priya Raman, 3 hours ago',
+        groups: [...approvalGroups, 'Values for this workspace'],
+      })
+      const from = server.requests.length
+      click(byRole('button', 'Remove the value of MAPBOX_TOKEN', control))
+      await settle()
+      expect({
+        removed: server.requests
+          .slice(from)
+          .map((item) => `${item.method} ${new URL(item.url).pathname}`),
+        after: groups(),
+      }).toEqual({
+        removed: [`DELETE ${valuePath}`],
+        after: approvalGroups,
+      })
+    },
+  )
 })

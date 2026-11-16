@@ -82,12 +82,11 @@ function SecretCheck(props: {
 }
 
 /**
- * The secrets of the org, each with its checkbox, then the grants of the
- * workspace. An org without secrets says so, with a link to its Secrets
- * tab. A quiet spinner shows while the secrets load, and a failed read
- * shows Try again.
+ * The secrets of the org, each with its checkbox. An org without secrets
+ * links to its Secrets tab. A quiet spinner shows while the secrets load,
+ * and a failed read shows Try again.
  */
-function SecretsContent(props: { view: CapabilitiesView }) {
+function SecretPicker(props: { view: CapabilitiesView }) {
   const { view } = props
   const theme = useSharedUiTheme()
   const { secrets } = view
@@ -117,22 +116,29 @@ function SecretsContent(props: { view: CapabilitiesView }) {
     )
   }
   return (
+    <div
+      aria-label="Pre-approved secrets"
+      className={styles.checks}
+      role="group"
+    >
+      {secrets.value.map((secret) => (
+        <SecretCheck
+          change={(on) => view.setPreapproved(secret.id, on)}
+          checked={view.preapproved.includes(secret.id)}
+          disabled={view.disabled}
+          key={secret.id}
+          secret={secret}
+        />
+      ))}
+    </div>
+  )
+}
+
+function SecretsContent(props: { view: CapabilitiesView }) {
+  const { view } = props
+  return (
     <>
-      <div
-        aria-label="Pre-approved secrets"
-        className={styles.checks}
-        role="group"
-      >
-        {secrets.value.map((secret) => (
-          <SecretCheck
-            change={(on) => view.setPreapproved(secret.id, on)}
-            checked={view.preapproved.includes(secret.id)}
-            disabled={view.disabled}
-            key={secret.id}
-            secret={secret}
-          />
-        ))}
-      </div>
+      <SecretPicker view={view} />
       {view.grants}
     </>
   )

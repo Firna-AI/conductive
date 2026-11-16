@@ -123,8 +123,9 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
         Such text can also steer the agent to read and change work across
         the org, with that member's workspace tool rights.
         Messages follow the same session login rules.`,
-      text`A tool message can start a stopped workspace's cloud computer
-        under the same checks as opening the workspace. ${productName}
+      text`A tool message or an accepted late answer to a secret request
+        can start a stopped workspace's cloud computer.
+        The start follows the same checks as opening the workspace. ${productName}
         sets no limit on how many sessions or messages agents create.
         Repeated replies can spend agent logins and keep computers running.
         Use Stop in each affected session to end its turn.`,

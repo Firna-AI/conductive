@@ -59,10 +59,10 @@ function SecretCheck(props: { secret: OrgSecret; checked: boolean }) {
 }
 
 /**
- * The secrets of the org, each with its checkbox, then the grants of the
- * workspace. An org without secrets links to its Secrets tab.
+ * The secrets of the org, each with its checkbox. An org without secrets
+ * links to its Secrets tab.
  */
-function SecretsContent(props: { view: CapabilitiesView }) {
+function SecretPicker(props: { view: CapabilitiesView }) {
   const { view } = props
   if (view.secrets.length === 0) {
     return (
@@ -75,20 +75,27 @@ function SecretsContent(props: { view: CapabilitiesView }) {
     )
   }
   return (
+    <div
+      aria-label="Pre-approved secrets"
+      className={styles.checks}
+      role="group"
+    >
+      {view.secrets.map((secret) => (
+        <SecretCheck
+          checked={view.preApproved.includes(secret.name)}
+          key={secret.name}
+          secret={secret}
+        />
+      ))}
+    </div>
+  )
+}
+
+function SecretsContent(props: { view: CapabilitiesView }) {
+  const { view } = props
+  return (
     <>
-      <div
-        aria-label="Pre-approved secrets"
-        className={styles.checks}
-        role="group"
-      >
-        {view.secrets.map((secret) => (
-          <SecretCheck
-            checked={view.preApproved.includes(secret.name)}
-            key={secret.name}
-            secret={secret}
-          />
-        ))}
-      </div>
+      <SecretPicker view={view} />
       {view.grants ? (
         <GrantList
           grants={view.grants}

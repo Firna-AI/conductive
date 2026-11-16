@@ -195,6 +195,11 @@ It can also retry a failed later start.
 A failed first start still waits for **Try again**.
 Creating a session without a message starts no computer.
 
+A late answer to a secret request can also start the computer.
+This happens when you allow the secret or supply a value after the agent stopped waiting.
+The agent receives a message in the session that asked.
+The start follows the same checks as opening the workspace.
+
 **Stop** in chat interrupts an agent turn.
 It is separate from the computer's automatic stop.
 
