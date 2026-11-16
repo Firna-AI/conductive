@@ -137,6 +137,8 @@ export interface MentionQuery {
   /** The offset of the caret. */
   end: number
   query: string
+  /** Whether the trigger starts the whole text of the field. */
+  atStart: boolean
 }
 
 /** Whether the node before a text ends with a space, or no text comes before. */
@@ -170,7 +172,15 @@ export function $triggerQuery(trigger: MentionTrigger): MentionQuery | null {
   if (!match) return null
   const start = end - match[2].length - 1
   if (start === 0 && !startsAfterSpace(node.getPreviousSibling())) return null
-  return { trigger, nodeKey: node.getKey(), start, end, query: match[2] }
+  const atStart = start === 0 && node.is($getRoot().getFirstDescendant())
+  return {
+    trigger,
+    nodeKey: node.getKey(),
+    start,
+    end,
+    query: match[2],
+    atStart,
+  }
 }
 
 /**

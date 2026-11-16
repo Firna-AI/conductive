@@ -8,7 +8,7 @@ import {
   useMentionSkills,
   type MentionSkills,
 } from '../../mentions/mention-skills'
-import { skillRows } from '../../mentions/skill-rows'
+import { offeredSkills, skillRows } from '../../mentions/skill-rows'
 import { MentionListPlugin, type MentionSource } from './mention-list-plugin'
 import { $pickSkill } from './skill-content'
 
@@ -34,7 +34,8 @@ function lineOf(
 
 /**
  * The list of `/`, as `MentionListPlugin` opens it, with the skills of
- * `agent`: the agent of the model chosen now in the composer. When no skill
+ * `agent`: the agent of the model chosen now in the composer, as
+ * `offeredSkills` gives them for the place of `/`. When no skill
  * matches the query, the list closes. While the list shows no row, also
  * while a line shows, Enter goes on to the field, so it sends. Screen
  * readers hear the list as "Skills". A pick puts the chip of the skill in
@@ -49,8 +50,12 @@ export function SkillMentionPlugin(props: {
   const source = useMemo(
     (): MentionSource<AgentSkill> | null =>
       skills && {
-        rowsOf: (query) => skillRows(agentSkills(skills, agent), query),
-        lineOf: (query) => lineOf(skills, agent, query),
+        rowsOf: (query) =>
+          skillRows(
+            offeredSkills(agentSkills(skills, agent), agent, query.atStart),
+            query.query,
+          ),
+        lineOf: (query) => lineOf(skills, agent, query.query),
       },
     [skills, agent],
   )

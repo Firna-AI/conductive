@@ -94,9 +94,9 @@ export function MentionPlugin(props: { host: HTMLElement | null }) {
       tree && {
         rowsOf: (query) =>
           tree.state === 'ready'
-            ? mentionRows(tree.entries.values(), query)
+            ? mentionRows(tree.entries.values(), query.query)
             : [],
-        lineOf: (query, rows) => lineOf(tree, query, rows),
+        lineOf: (query, rows) => lineOf(tree, query.query, rows),
       },
     [tree],
   )

@@ -52,7 +52,7 @@ requirements.
 
 ## Messages and files
 
-Each message to an agent starts with a sender line, then an empty line:
+Each message to an agent ends with a sender line:
 `Sender: <display name> (@<login>) [member ID: "<id>"]`, or
 `Sender: @<login> [member ID: "<id>"]` without a display name. The member
 ID is a JSON string. Each run of white space in the name and the login
@@ -62,12 +62,24 @@ gives its own sender, also a message during a turn.
 the workspace tools. No adapter maps a user message to an event, so the
 chat never shows the sender line.
 
+- Claude gets one text: the member's text, the lines of the attached
+  files, an empty line, the sender line, and the branch line when one is
+  due.
+- When the member's text starts with a skill text whose name is not a
+  skill of the Claude list, Claude gets the sender line and the branch
+  line first, then an empty line, the member's text, and the lines of the
+  attached files. The provider reads the Claude skill folder at the send
+  of such a message, as the skills report reads it, because the helper of
+  a session gets only the Codex paths. When it cannot read the folder,
+  the message takes this form too.
+- Codex gets the member's text as the first text item, and the sender
+  line, with the branch line when one is due, as the last text item.
 - Each `turn` and `message` command of the current Worker carries the
   current branches in `branches`, also a message during a turn.
 - When those branches differ from the saved pair of the session, or the
   saved pair is unknown, a branch line follows the sender line:
   `Current branches: workspace "<branch>"; target "<branch>".` Each name is
-  a JSON string, so it stays on one line. Then the empty line follows.
+  a JSON string, so it stays on one line.
 - A session whose saved pair names the current branches gets no branch
   line. So a new session after Continue gets none, because its text names
   the new branch.
@@ -79,9 +91,9 @@ chat never shows the sender line.
   after an update.
 
 A message with attached files adds one read instruction after the
-member's text, then one JSON line per file. Each line gives its original
-name, media type, copied absolute path, and `sizeBytes` from message
-metadata. Codex keeps each image input after its file line. Its read
+member's text, then one JSON line per file, before the sender line. Each
+line gives its original name, media type, copied absolute path, and
+`sizeBytes` from message metadata. Codex keeps each image input after its file line. Its read
 instruction mentions image input only when the message has an image.
 A message without files gets no extra line.
 
@@ -103,7 +115,8 @@ text.
   distinct skill of the text that the current Codex list holds, in the
   order of the text. `path` is the absolute path of the `SKILL.md` from
   that list, from `skills/list` or from the scan of the Codex folders. The
-  read instruction and the lines of the attached files follow.
+  read instruction and the lines of the attached files follow, and the
+  sender line comes last.
 - `turn/start` and `turn/steer` get the same items, so a message during a
   turn gets them too. The provider reads the list at each send.
 - The Rust report owner keeps the current private Codex paths. The
@@ -113,10 +126,9 @@ text.
 - A name that the Codex list does not hold adds nothing. The text keeps
   it.
 - Claude gets the text unchanged. Claude runs a skill that the text names
-  as `/name`, also after the sender line.
-- The invocation form of a Claude manual-only skill
-  (`disable-model-invocation: true`) is still open. Its message text stays
-  unchanged.
+  as `/name`. A listed skill at the start of the text starts the message,
+  so the Claude CLI runs it, also a manual-only skill
+  (`disable-model-invocation: true`).
 
 [Skills of a message](../docs/protocol/agent-instructions.md#skills-of-a-message)
 states these requirements. [Skills](reports.md#skills) in the report guide
@@ -128,9 +140,10 @@ says how the runner makes each list.
 - [instructions.rs](../crates/cnd-runner/src/engine/instructions.rs) builds session instructions and reads legacy branches.
 - [input.rs](../crates/cnd-runner/src/engine/input.rs) keeps session instructions and the turn's original context.
 - [reporter.rs](../crates/cnd-runner/src/skills/reporter.rs) keeps current private Codex paths.
-- [codex-input.ts](sdk-helper/src/providers/codex-input.ts) builds Codex text, skill, and file input items.
+- [codex-input.ts](sdk-helper/src/providers/codex-input.ts) builds Codex text, skill, file, and sender input items.
+- [claude-input.ts](sdk-helper/src/providers/claude-input.ts) builds the Claude text, with the sender line at its end or, before an unlisted `/` word, at its start.
 - [skill-input.ts](sdk-helper/src/providers/skill-input.ts) finds each distinct named skill in member text.
-- [message.ts](sdk-helper/src/providers/message.ts) formats sender lines, branch lines, and attachments.
+- [message.ts](sdk-helper/src/providers/message.ts) formats the sender line and the branch line.
 - [instructions.test.ts](sdk-helper/src/providers/instructions.test.ts) and
   [branches.test.ts](sdk-helper/src/providers/branches.test.ts) check the helper input text.
 - [context_tests.rs](../crates/cnd-runner/tests/repository/context_tests.rs) checks ordinary and linked Git worktrees.

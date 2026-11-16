@@ -21,7 +21,7 @@ says.
   guidance for the tools of the product.
 - **System instructions:** the text that an agent takes before its
   conversation, apart from the messages.
-- **Sender line:** one line at the start of each message to the agent. It
+- **Sender line:** one line at the end of each message to the agent. It
   names the member who sent that message.
 - **Workspace branch:** the branch that the Worker's record of the
   workspace names. The app tracks this branch. Continue changes it after a
@@ -120,9 +120,22 @@ says.
 
 ## The sender line
 
-- Each message that reaches the agent starts with a sender line. This
-  holds also for each message during a turn, and for each message of the
+- Each message that reaches the agent ends with a sender line. This holds
+  also for each message during a turn, and for each message of the
   starter.
+- The member's text comes first, then the lines of the attached files, an
+  empty line, the sender line, and the branch line when one is due (skill
+  list decision 3). Reason: a skill text at the start of the member's text
+  then starts the message, so Claude runs it.
+- Exception: when the text of a Claude message starts with `/` and a word
+  that names no skill of the Claude list, the sender line and the branch
+  line come first, then an empty line and the text. Reason: Claude reads
+  such a word as a command. With the sender line at the end, Claude ran
+  its built-in command `/context`. The app does not know the effects of a
+  built-in command, such as `/clear`, so no message runs one.
+- The instructions of an older session still say that each message starts
+  with a sender line, because a session keeps its instructions for its
+  whole life.
 - The sender line gives the display name, the GitHub login, and the
   member ID of the member who sent the message (decision 283). For a
   member without a display name, it gives only the GitHub login and the
@@ -174,7 +187,8 @@ says.
   branch with each message (decision 227).
 - When the agent instructions of a session name an earlier workspace
   branch or an earlier target branch, each message to the agent gets a
-  branch line after its sender line. The line names the current branches.
+  branch line right after its sender line. The line names the current
+  branches.
 - A session whose instructions name the current branches gets no branch
   line. A new session gets the current branches in its instructions.
 - The branch line exists only in the text that reaches the agent, as the
@@ -201,8 +215,16 @@ says.
   that agent. Every other `/` text, and a skill text in inline code or in
   a code block, reaches the agent as text only.
 - Claude gets the text of the message unchanged. Claude runs a skill that
-  the text names as `/name`, also after the sender line and the branch
-  line.
+  the text names as `/name`.
+- A skill text at the start of the text starts the message, because the
+  sender line comes at the end. Claude then runs that skill, also a
+  manual-only skill, whose `SKILL.md` sets `disable-model-invocation: true`
+  (skill list decision 3).
+- Claude can skip a manual-only skill whose skill text comes later in the
+  text. So the list of `/` offers such a skill only at the start of the
+  text, as
+  [Manual-only Claude skills](skill-mentions.md#manual-only-claude-skills)
+  says.
 - Codex gets the text of the message unchanged too. Beside the text, it
   gets one skill input for each skill of the message. The skill input
   gives the name of the skill and the absolute path of its `SKILL.md`, as
@@ -214,8 +236,6 @@ says.
   reaches that agent as the text `/name`, with no skill input.
 - Risk: Codex drops a skill input whose path names no skill, with no
   error. So a skill that moves after the latest list does not run.
-- How Claude runs a manual-only skill, whose `SKILL.md` sets
-  `disable-model-invocation: true`, is not decided yet.
 - The skill inputs exist only in the input of the agent, as the sender
   line does. The stored message, the chat, and the titles from messages
   hold the stored text.

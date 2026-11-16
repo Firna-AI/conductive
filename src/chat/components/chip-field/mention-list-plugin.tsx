@@ -27,8 +27,8 @@ import {
  * source stays the same, so the rows are found once for each query.
  */
 export interface MentionSource<Row> {
-  rowsOf: (query: string) => readonly Row[]
-  lineOf: (query: string, rows: number) => string | null
+  rowsOf: (query: MentionQuery) => readonly Row[]
+  lineOf: (query: MentionQuery, rows: number) => string | null
 }
 
 /** The id of a row of a list, which the field names as its active row. */
@@ -43,7 +43,12 @@ function anchorOf(query: MentionQuery): string {
 
 function sameQuery(a: MentionQuery | null, b: MentionQuery | null): boolean {
   if (a === null || b === null) return a === b
-  return anchorOf(a) === anchorOf(b) && a.end === b.end && a.query === b.query
+  return (
+    anchorOf(a) === anchorOf(b) &&
+    a.end === b.end &&
+    a.query === b.query &&
+    a.atStart === b.atStart
+  )
 }
 
 /**
@@ -90,10 +95,10 @@ export function MentionListPlugin<Row>(props: {
   const anchor = query ? anchorOf(query) : null
   const active = query !== null && source !== null && anchor !== dismissed
   const rows = useMemo(
-    () => (active ? source.rowsOf(query.query) : []),
+    () => (active ? source.rowsOf(query) : []),
     [active, source, query],
   )
-  const line = active ? source.lineOf(query.query, rows.length) : null
+  const line = active ? source.lineOf(query, rows.length) : null
   const open = active && (rows.length > 0 || line !== null)
   const highlightKey = `${anchor}:${query?.query}`
   const index =

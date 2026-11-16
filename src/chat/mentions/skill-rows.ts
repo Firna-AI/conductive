@@ -1,3 +1,4 @@
+import type { Agent } from '../../shared/generated/Agent'
 import type { AgentSkill } from '../../shared/generated/AgentSkill'
 
 /** The most rows that the list of `/` shows. A longer query narrows it. */
@@ -33,6 +34,21 @@ function rankOf(name: string, skill: AgentSkill, query: string): number | null {
   if (name.includes(query)) return 1
   if (skill.description.toLowerCase().includes(query)) return 2
   return null
+}
+
+/**
+ * The skills of `agent` that the list of `/` offers. Claude runs a
+ * manual-only skill only when its skill text starts the message, so the
+ * list offers a manual-only Claude skill only when `/` starts the text.
+ * The Codex list offers each skill.
+ */
+export function offeredSkills(
+  skills: readonly AgentSkill[],
+  agent: Agent,
+  atStart: boolean,
+): readonly AgentSkill[] {
+  if (agent === 'codex' || atStart) return skills
+  return skills.filter((skill) => skill.manualOnly !== true)
 }
 
 /**

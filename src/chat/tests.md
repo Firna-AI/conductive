@@ -175,7 +175,8 @@ the files, and checks that Enter then sends nothing.
 orders and filters its rows, picks with Enter and Tab, closes it with Esc
 and a space, sends with Enter when no skill matches and while the loading
 or the unavailable line shows, shows the line of an agent without skills
-for `/` alone, and shows the skills of the agent of a newly chosen model.
+for `/` alone, shows the skills of the agent of a newly chosen model, and
+offers a manual-only Claude skill only when `/` starts the text.
 `components/chip-field/SkillChips.dom.test.tsx` restores skill chips of
 either agent from a draft, keeps a skill text with more after it as text,
 removes a chip with its × and with Backspace, copies and pastes a chip,

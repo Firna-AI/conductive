@@ -1,3 +1,4 @@
+import { mkdir, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 
 import { beforeEach, expect, it, onTestFinished } from 'vitest'
@@ -7,6 +8,7 @@ import { FakeClaudeQuery } from '../../test-support/claude-query'
 import { mockComputerServer } from '../../test-support/computer-mcp'
 import { providerFixture } from '../../test-support/fixture'
 import { duringTurn, turn } from '../../test-support/input'
+import { skillText } from '../../test-support/skills'
 import type { HelperOutput } from '../generated/HelperOutput'
 import type { HelperRequest } from '../generated/HelperRequest'
 import { readRequest } from '../read-request'
@@ -17,6 +19,8 @@ import { writeCodexCredentials } from './codex-credentials'
 import { SkillInputs } from './skill-input'
 
 beforeEach(mockComputerServer)
+
+const sender = 'Sender: @alice [member ID: "alice"]'
 
 function inputOf(servers: FakeAppServers, method: string): unknown {
   const params = servers.latest.writes.findLast(
@@ -73,10 +77,11 @@ it('gives Codex unchanged text and distinct listed skills for starts and message
   expect(inputOf(servers, 'turn/start')).toEqual([
     {
       type: 'text',
-      text: 'Sender: @alice [member ID: "alice"]\n\n/plans then /unknown, `/review`, and /plans again',
+      text: '/plans then /unknown, `/review`, and /plans again',
       text_elements: [],
     },
     { type: 'skill', name: 'plans', path: path('plans') },
+    { type: 'text', text: sender, text_elements: [] },
   ])
   const second = duringTurn(turn('2', 'alice', 'codex'))
   second.message.text = 'Also\n/review it with /plans'
@@ -90,27 +95,50 @@ it('gives Codex unchanged text and distinct listed skills for starts and message
     ],
   })
   expect(inputOf(servers, 'turn/steer')).toEqual([
-    {
-      type: 'text',
-      text: 'Sender: @alice [member ID: "alice"]\n\nAlso\n/review it with /plans',
-      text_elements: [],
-    },
+    { type: 'text', text: 'Also\n/review it with /plans', text_elements: [] },
     { type: 'skill', name: 'review', path: path('review') },
     { type: 'skill', name: 'plans', path: '/new/plans/SKILL.md' },
+    { type: 'text', text: sender, text_elements: [] },
   ])
 })
 
-it('gives Claude the stored text of a message that names a skill', async () => {
+it('ends a Claude message with its sender line, but starts it with that line when the text starts with a / word that is not a listed Claude skill', async () => {
   const h = await providerFixture()
+  const folder = join(h.root, '.claude/skills/plan-files')
+  await mkdir(folder, { recursive: true })
+  await writeFile(
+    join(folder, 'SKILL.md'),
+    skillText({
+      name: 'plans',
+      description: 'Write a plan.',
+      'disable-model-invocation': 'true',
+    }),
+  )
   const sdk = new FakeClaudeQuery()
   const provider = await createClaudeFactory(
     sdk.open,
     () => '/pinned/claude',
   )(h.options)
   onTestFinished(() => provider.close())
-  h.command.message.text = '/plans for the next step'
-  await provider.send(h.command)
-  expect((await sdk.nextUser()).message.content).toBe(
-    'Sender: @alice [member ID: "alice"]\n\n/plans for the next step',
-  )
+  const texts = [
+    '/plans for the next step',
+    'Use /plans now',
+    '/plan-files',
+    '/context',
+    '/tmp/a.txt is missing',
+  ]
+  const contents: unknown[] = []
+  for (const [index, text] of texts.entries()) {
+    const message = index === 0 ? h.command : duringTurn(turn(`${index}`))
+    message.message.text = text
+    await provider.send(message)
+    contents.push((await sdk.nextUser()).message.content)
+  }
+  expect(contents).toEqual([
+    `/plans for the next step\n\n${sender}`,
+    `Use /plans now\n\n${sender}`,
+    `${sender}\n\n/plan-files`,
+    `${sender}\n\n/context`,
+    `${sender}\n\n/tmp/a.txt is missing`,
+  ])
 })

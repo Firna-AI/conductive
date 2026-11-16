@@ -39,6 +39,8 @@ that those chips show, from the attach to the send.
   place above the box. They differ in their rows, their lines, and Enter:
   the list of `@` keeps Enter while it shows no row, and the list of `/`
   closes when no skill matches and lets Enter send while it shows no row.
+  Each query says whether its trigger starts the whole text of the field,
+  and the Claude list of `/` offers a manual-only skill only then.
   [Skill mentions](../../docs/protocol/skill-mentions.md) states the list
   of `/` and its chips. A paste, a draft that comes back, and a skill list
   that loads later make a skill chip of each skill text that a list of

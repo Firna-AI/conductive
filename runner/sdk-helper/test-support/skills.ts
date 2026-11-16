@@ -31,7 +31,7 @@ export function codexAnswer(
   }
 }
 
-export function codexServers(answer: unknown | null) {
+function codexServers(answer: unknown | null) {
   const servers = new FakeAppServers()
   servers.prepare = (server) => {
     if (answer === null) server.unanswered.add('skills/list')

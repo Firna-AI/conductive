@@ -64,6 +64,38 @@ adds the list of skills, as
   else the line would show over the chat for each typed path, such as
   `see /tmp`.
 
+## Manual-only Claude skills
+
+- A manual-only skill sets `disable-model-invocation: true` in the front
+  matter of its `SKILL.md`. Claude does not tell the model about such a
+  skill, so the model does not choose it by itself.
+- Each message to an agent ends with its sender line (skill list decision
+  3). So a skill text at the start of the member's text starts the
+  message, and Claude runs that skill, also a manual-only one, as
+  [The sender line](agent-instructions.md#the-sender-line) says.
+- The Claude rows show a manual-only skill only when `/` starts the text
+  of the message. Reason: for a skill text later in the text, the model
+  chooses the skill. In the tests, it then ran a similar skill or read the
+  file by hand.
+- The Codex rows show each skill of the Codex list.
+- These ways were rejected (skill list decision 3):
+  - Leave manual-only skills out of the Claude list. A member then cannot
+    pick them.
+  - `/name` of a manual-only skill before the sender line. A message can
+    then run one such skill only, and the sender line becomes the
+    arguments of the skill.
+  - The text of the `SKILL.md` in the message. Settings of the skill, such
+    as `allowed-tools`, then do nothing.
+  - `/name` before the sender line for every Claude skill. It has the
+    costs of the option above.
+  - The sender line and the branch line as context from a Claude hook. The
+    lines then leave the text of the message, for Claude only.
+  - The sender line and the branch line in a text part before the member's
+    text. The message then has a form for Claude only.
+- Reason for the end of the message: the sender stays in the text of each
+  message, one rule holds for both agents, and Claude runs the skill
+  itself.
+
 ## The sources of the skills
 
 - The runner reads the skills that each agent loads, and it reports them

@@ -63,7 +63,7 @@ session gets the current guidance.
 
 ## Sender IDs
 
-Each message to an agent starts with a sender line, as
+Each message to an agent ends with a sender line, as
 [Messages and files](agent-input.md#messages-and-files) says. The line
 gives the member who sent that message, with the member ID:
 
@@ -88,9 +88,10 @@ A member without a display name gets
 
 ## Key code
 
-- [message.ts](sdk-helper/src/providers/message.ts) gives `providerMessage`, which
-  puts the sender line with the member ID of each message before its
-  text. The stored message and the chat never hold that line.
+- [message.ts](sdk-helper/src/providers/message.ts) gives `senderLines`, the
+  sender line with the member ID of each message, which the input of each
+  agent puts at the end of the message. The stored message and the chat
+  never hold that line.
 - [instructions.rs](../crates/cnd-runner/src/engine/instructions.rs) builds the session instructions, which
   holds the workspace tool guidance of each new session: the call names,
   the access rules, and the choice of an owner ID.

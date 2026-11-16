@@ -3,14 +3,15 @@ import {
   attachmentDescription,
   attachmentReadInstruction,
 } from './attachment-description'
-import { providerMessage } from './message'
+import { senderLines } from './message'
 import { codexSkillInputs, type SkillSource } from './skill-input'
 import type { ProviderInput } from '../generated/ProviderInput'
 
 /**
- * The `turn/start` and `turn/steer` input of one message: the text with its
- * sender line, one skill input for each skill of the text, then the read
- * instruction and one line for each attached file, each image after its line.
+ * The `turn/start` and `turn/steer` input of one message: the member's text,
+ * one skill input for each skill of the text, the read instruction and one
+ * line for each attached file, each image after its line, and last the
+ * sender lines.
  */
 export function codexInput(
   command: ProviderInput,
@@ -18,11 +19,7 @@ export function codexInput(
   branches?: RunnerBranches | null,
 ) {
   return [
-    {
-      type: 'text',
-      text: providerMessage(command.message, command.branches, branches),
-      text_elements: [],
-    },
+    { type: 'text', text: command.message.text, text_elements: [] },
     ...codexSkillInputs(command.message.text, skills),
     ...(command.attachments.length
       ? [
@@ -50,5 +47,10 @@ export function codexInput(
         ? [description, { type: 'localImage', path: attachment.path }]
         : [description]
     }),
+    {
+      type: 'text',
+      text: senderLines(command.message, command.branches, branches),
+      text_elements: [],
+    },
   ]
 }

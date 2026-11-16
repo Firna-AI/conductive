@@ -2,11 +2,13 @@
 
 import { describe, expect, test } from 'vitest'
 import {
+  clearMessage,
   messageText,
+  pasteMessage,
   pressInField,
   typeMessage,
 } from '../../../test-support/message-field'
-import { FakeSkills } from '../../mentions/skills-test-kit'
+import { FakeSkills, skill } from '../../mentions/skills-test-kit'
 import { mountField } from './chip-field-test-kit'
 import { mountMentionField } from './mention-field-test-kit'
 
@@ -136,6 +138,33 @@ describe('the list of /', () => {
         'codex-tests, Run the tests of the repository.',
         'review, Review the diff with Codex.',
       ],
+    })
+  })
+
+  test('a manual-only Claude skill shows only when / starts the text, and the Codex list keeps each skill', async () => {
+    const skills = new FakeSkills({
+      claude: [
+        { name: 'deploy', description: 'Ship the branch.', manualOnly: true },
+        skill('plans', 'Write a plan.'),
+      ],
+      codex: [
+        { name: 'deploy', description: 'Ship with Codex.', manualOnly: true },
+      ],
+    })
+    const view = await mountMentionField({ skills })
+    typeMessage(view.field, '/')
+    const start = view.skills.rows()
+    typeMessage(view.field, 'Then /')
+    const later = view.skills.rows()
+    clearMessage(view.field)
+    pasteMessage(view.field, 'Then\n/')
+    const nextLine = { text: messageText(view.field), rows: view.skills.rows() }
+    await view.chooseAgent('codex')
+    expect({ start, later, nextLine, codex: view.skills.rows() }).toEqual({
+      start: ['deploy, Ship the branch.', 'plans, Write a plan.'],
+      later: ['plans, Write a plan.'],
+      nextLine: { text: 'Then\n/', rows: ['plans, Write a plan.'] },
+      codex: ['deploy, Ship with Codex.'],
     })
   })
 

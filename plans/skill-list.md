@@ -544,20 +544,44 @@ Design calls of 2026-11-16, my calls:
   Sender line". Reason: the text of a session stays the same for its life.
   The line still reaches the agent.
 
-- [ ] Move the sender line and the branch line to a footer in
+Implementation calls of 2026-11-16, my calls:
+
+- The helper of a session gets only the Codex paths with each send. So
+  the Claude provider reads `<repository>/.claude/skills` at the send of a
+  message that starts with a `/word`, with the reader of the skills
+  report. A folder that it cannot read gives the header form. Reason: it
+  needs no change of the runner wire types, and it reads the folder that
+  the Claude CLI loads.
+- Codex gets the sender line and the branch line as its own last text
+  item, after the images. Reason: the read instruction and each file line
+  are already items of their own.
+- A Claude message with empty text and attached files starts with the
+  read instruction, with no line break before it.
+- `docs/protocol/skill-mentions.md` cites skill list decision 3 without a
+  date, as each protocol doc cites a decision. The plan holds the date.
+
+- [x] Move the sender line and the branch line to a footer in
       `providerMessage` (`runner/sdk-helper/src/providers/message.ts`),
       with the header form for a Claude text that starts with a `/word`
       that is not a listed Claude skill. Update the tests.
-- [ ] Change "Each message starts with a Sender line" in
+      `senderLines` in `message.ts`, `claudeInput` in `claude-input.ts`,
+      and `codexInput` build the messages.
+- [x] Change "Each message starts with a Sender line" in
       `crates/cnd-runner/src/engine/instructions.rs`, and the tool help in
       `crates/cnd-tools/` if it says where the line is. Update snapshots.
-- [ ] Offer manual-only Claude skills only when `/` starts the text, in the
+      No snapshot or test holds the sentence. The tool help names the line
+      but not its place, so it stays.
+- [x] Offer manual-only Claude skills only when `/` starts the text, in the
       app list. DOM test.
-- [ ] Update `docs/protocol/agent-instructions.md`,
+- [x] Update `docs/protocol/agent-instructions.md`,
       `docs/protocol/skill-mentions.md`, and `runner/agent-input.md`. Read
       both legal pages and each public guide in full for a restated fact.
-- [ ] Run the helper tests, the Rust checks, the typecheck, lint, format,
-      and the chat tests.
+      No sentence of the legal pages or the guides says where the sender
+      line is. `runner/agent-tools.md` and the chat guides changed too.
+- [x] Run the helper tests, the Rust checks, the typecheck, lint, format,
+      and the chat tests. The Rust doctests cannot run in this sandbox,
+      which has no `rustdoc`. Two real Claude runs confirmed the footer
+      and the header form, with evidence in `.context/skill-list/m8/`.
 
 ## Post-merge follow-up (non-blocking)
 
