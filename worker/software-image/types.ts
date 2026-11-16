@@ -30,6 +30,8 @@ export interface SoftwareImage {
   tokenDigest: string
   startedAt: number
   completedAt: number | null
+  /** The apt part version of the started software command, as `image-packages.ts` says. */
+  packagesVersion: string | null
 }
 
 export interface SoftwareImageRuntime {

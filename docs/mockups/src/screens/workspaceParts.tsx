@@ -194,6 +194,7 @@ function TerminalContent(props: { state: WorkspaceState; viewport: Viewport }) {
       disconnected={state.terminals === 'disconnected'}
       lines={fresh ? [] : set.lines}
       prompt={fresh ? freshPromptFor(state) : set.prompt}
+      shared={set.shared}
       tabs={
         state.terminals === 'older'
           ? null

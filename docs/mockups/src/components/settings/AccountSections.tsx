@@ -14,9 +14,8 @@ import { classes } from '../common/classes'
 import { AccountAvatar } from '../orgs/OrgTile'
 import { statusText } from '../../entries/components/common/StatusText.mockup'
 import { AgentConnectForm } from './AgentConnectForm'
+import { EndpointDetails } from './EndpointDetails'
 import type { EndpointEntry } from './EndpointFields'
-import { EndpointModels } from './EndpointModels'
-import { LoginEndpoint } from './LoginEndpoint'
 import type { SignInStep } from './chatGptSignInCopy'
 import {
   LoginNotUsable,
@@ -130,8 +129,8 @@ export type OpenAgentForm = {
  * Claude and Codex, each with Connect, or Connected and the kind of its
  * login. An own endpoint login shows its kind with the host of its endpoint
  * under its row, so that a phone shows both in full. Under them come the
- * models of the app that the model list of the endpoint does not name, with
- * Refresh. `form` opens the Connect form of an agent under its row.
+ * lines of its model list, with one Refresh, as `EndpointDetails` draws
+ * them. `form` opens the Connect form of an agent under its row.
  * `removable` gives each connected login its Remove, and `shares` its share
  * setting, as on the account.
  * `unusable` names a connected login
@@ -202,13 +201,7 @@ export function AgentList(props: {
               {action}
             </div>
             {login?.kind === 'endpoint' ? (
-              <LoginEndpoint
-                host={login.host}
-                kind={loginLabels[key].endpoint}
-              />
-            ) : null}
-            {login?.kind === 'endpoint' && login.models ? (
-              <EndpointModels agent={agents[key].name} check={login.models} />
+              <EndpointDetails agent={key} login={login} />
             ) : null}
             {unusable && !form ? (
               <LoginNotUsable

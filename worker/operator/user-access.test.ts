@@ -131,7 +131,10 @@ it('shows invite labels and referral owners with the referral recipients and the
   const list: OperatorUsersResponse = await users.json()
   expect(list.users[0].appAccess).toEqual(detail.appAccess)
   expect(list.users[0].referralCode).toEqual(detail.referralCode)
-  expect(JSON.stringify([detail, list])).not.toContain('@')
+  // Only the email field of the user page holds an email address.
+  const { email, ...rest } = detail
+  expect(email).toBe('member@example.com')
+  expect(JSON.stringify([rest, list])).not.toContain('@')
 })
 
 it('shows the org and inviting admin after acceptance and the operator and existing sources', async () => {

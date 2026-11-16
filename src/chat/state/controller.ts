@@ -40,12 +40,11 @@ import { sendPrompt, type PromptOutcome } from './prompt-actions'
 import { moveTab } from './tab-actions'
 import type { TabPlace } from './tab-order'
 import { ownWorkspaceList, type WorkspaceList } from './workspace-list'
+import { confirmClose, requestClose } from './close-actions'
 import {
-  confirmClose,
   newSession,
   renameSession,
   reopenSession,
-  requestClose,
   selectSession,
   updateView,
 } from './session-actions'
@@ -201,9 +200,8 @@ export class ChatController {
       ? showLocally(this.context, sessionId)
       : selectSession(this.context, sessionId)
   /**
-   * Shows the open session that an app address names, as
-   * `showAddressSession` says. An abort of `signal`, such as at a newer
-   * address, makes the lookup show nothing.
+   * Shows or reopens the addressed session, as `showAddressSession` says.
+   * An aborted signal makes the pending lookup show nothing.
    */
   readonly showAddress = (sessionId: string, signal: AbortSignal) =>
     showAddressSession(
@@ -211,15 +209,16 @@ export class ChatController {
       sessionId,
       () => !signal.aborted,
       (id) => void this.select(id),
+      this.reopen,
     )
   readonly newSession = () => this.write(() => newSession(this.context))
   readonly startRename = (sessionId: string) =>
     this.overlay({ kind: 'rename', sessionId })
   readonly rename = (sessionId: string, title: string) =>
     this.write(() => renameSession(this.context, sessionId, title))
-  readonly requestClose = async (sessionId: string): Promise<void> => {
-    if (!this.readOnly()) return requestClose(this.context, sessionId)
-    closeLocally(this.context, sessionId)
+  readonly requestClose = async (...sessionIds: string[]): Promise<void> => {
+    if (!this.readOnly()) return requestClose(this.context, sessionIds)
+    for (const id of sessionIds) closeLocally(this.context, id)
   }
   readonly confirmClose = () => this.write(() => confirmClose(this.context))
   readonly showHistory = (open: boolean) =>

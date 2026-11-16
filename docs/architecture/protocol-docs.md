@@ -29,7 +29,8 @@ This page lists each protocol doc and what it covers.
       tab that the next press replaces, what opens and keeps it, and its
       mark in the saved view.
     - [Port previews](../protocol/port-previews.md): detected servers, manual
-      opening, preview tabs, and the relay requirement.
+      opening, the open from a local address in the chat, preview tabs,
+      and the relay requirement.
 - [Chat and events](../protocol/chat-and-events.md): sessions, messages, what
   the chat shows, and the events.
   - [Messages and attachments](../protocol/messages-and-attachments.md)
@@ -100,6 +101,9 @@ This page lists each protocol doc and what it covers.
   roles, the first run, and the end of an org.
   - [Org rail order](../protocol/org-rail-order.md): the order of the orgs
     in the rail that each person keeps, and how the person changes it.
+- [Pricing](../protocol/pricing.md): the plans and their cloud hours, the
+  extra hours, the seller and the tax, the pricing page, and the planned
+  billing changes. Use is free until billing starts.
 - [Mac app](../protocol/desktop-app.md): the shell for macOS, its sign-in, and
   Mac commands.
   - [Mac packages and updates](../protocol/desktop-packages-and-updates.md)
@@ -142,6 +146,9 @@ This page lists each protocol doc and what it covers.
   - [Chat tables](../protocol/chat-tables.md): the tables of agent
     messages, their short rows and wide tables, and the table rules that
     they share with the file preview.
+  - [Chat links](../protocol/chat-links.md): the links of agent messages
+    and of sent messages, the labels of Markdown links, local addresses,
+    and links in code.
 - [GitHub tokens](../protocol/github-tokens.md): the git and CLI account
   scope of a cloud computer, the author of each commit in a sandbox, and the
   GitHub actions of the Worker as a member.
@@ -159,9 +166,6 @@ This page lists each protocol doc and what it covers.
 - [Website docs](../protocol/website-docs.md): the public guides of the
   marketing site, their addresses and navigation, and the rules for their
   words.
-- [Conductor comparison](../protocol/conductor-comparison.md): the public
-  page for people who move from Conductor, with the status of each
-  Conductor feature.
 - [Routines](../protocol/routines.md): routines and their schedules, with the
   linked pages [Routine runs](../protocol/routine-runs.md),
   [Pull request runs](../protocol/pull-request-runs.md), and

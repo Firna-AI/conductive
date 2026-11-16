@@ -15,6 +15,7 @@ import { createBackend } from './dev/backend'
 import { readDevOptions } from './dev/options'
 import { routeFetch } from './dev/router'
 import { seedState } from './dev/seed'
+import { endpointReadOf } from './endpoint-reads'
 import { HeldRequests, testServices } from './test-kit'
 
 /** The Claude token of the fixtures, which other members do not use. */
@@ -135,7 +136,9 @@ describe('AccountModel', () => {
     })
     const app = new AppModel(testServices(server, { fetch: held.fetch }))
     await app.start()
-    server.empty('POST', refreshAgentLoginModelsPath('claude'))
+    server.json('POST', refreshAgentLoginModelsPath('claude'), {
+      modelListReadFailed: false,
+    })
     held.holdAnswer('GET', ACCOUNT_PATHS.account)
     const refresh = app.account.refreshModels('claude')
     await app.account.removeLogin('claude')
@@ -146,6 +149,46 @@ describe('AccountModel', () => {
       connected: false,
     })
   })
+  test('the note and the warning belong to the login of their save, so a Refresh answer after a new save and a save in another tab show none', async () => {
+    const server = new FakeApiServer()
+    const [, codex] = endpointLoginFixtures(FAKE_TIME)
+    if (!codex?.connected) throw new Error('The Codex fixture is missing.')
+    serveLogins(server, [claude, codex])
+    const { app, held } = await startedWithHolds(server)
+    const reads = () =>
+      endpointReadOf(
+        app.account.endpointReads.get(),
+        app.account.login('codex'),
+      )
+    const refreshPath = refreshAgentLoginModelsPath('codex')
+    server.json('POST', refreshPath, { modelListReadFailed: true })
+    held.holdAnswer('POST', refreshPath)
+    const refresh = app.account.refreshModels('codex')
+    await app.account.removeLogin('codex')
+    const saved = { ...codex, updatedAt: FAKE_TIME + 1_000 }
+    server.json('PUT', agentLoginPath('codex'), {
+      ...saved,
+      endpointV1Added: true,
+      modelListReadFailed: false,
+    })
+    serveLogins(server, [claude, saved])
+    await app.account.saveLogin({
+      agent: 'codex',
+      kind: 'endpoint',
+      endpoint: 'https://proxy.example.test',
+      secret: 'key-of-the-proxy',
+    })
+    held.release('POST', refreshPath)
+    await refresh
+    const afterRefresh = reads()
+    serveLogins(server, [claude, { ...saved, updatedAt: FAKE_TIME + 2_000 }])
+    await app.account.refreshLogins()
+    expect({ afterRefresh, afterOtherTab: reads() }).toEqual({
+      afterRefresh: { addedV1: true, readFailed: false },
+      afterOtherTab: { addedV1: false, readFailed: false },
+    })
+  })
+
   test('a login read that answers after a remove leaves the login removed, and shows the other login of its answer', async () => {
     const server = new FakeApiServer()
     const chatGpt = { ...claude, agent: 'codex' } as const

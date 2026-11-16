@@ -188,6 +188,7 @@ export function Composer(props: ComposerProps) {
               lines={2}
               maxLines={8}
               mentionHost={mentionHost}
+              onAttach={props.onAttach}
               onChangeText={props.onChangeText}
               onEnter={sendKey}
               owner={draft.id}

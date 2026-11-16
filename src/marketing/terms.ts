@@ -51,8 +51,8 @@ export const termsDocument: LegalDocument = {
           Mac app. Each workspace has its own cloud computer, where agents
           powered by Claude and Codex work. A workspace can hold one task
           after another, with one branch at a time.`,
-        paragraph`${productName} is free. The operator charges no fee for
-          it.`,
+        paragraph`${productName} is free until billing starts. Nobody pays
+          until they choose a plan.`,
       ],
     },
     {
@@ -199,7 +199,8 @@ export const termsDocument: LegalDocument = {
           cloud computers that ${productName} runs for your org.
           ${productName} keeps the chat history of each workspace, so that
           you can read it while the cloud computer is stopped. It also keeps
-          the files that you attach to messages. It copies each file to the
+          the files that you attach to messages, also the file that a large
+          paste becomes. It copies each file to the
           cloud computer when the agent starts work on its message. When it
           passes on the model requests of a cloud computer, it keeps no
           copy of a request or of its answer. It writes no body or header

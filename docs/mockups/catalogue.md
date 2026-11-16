@@ -7,10 +7,10 @@ how a screen is built, and links to the other pages.
 | ------------------- | ----------------------------------------------------------------------------- |
 | `marketing`         | The home page of the site: the app, its features, the Mac app downloads, and Sign up |
 | `marketing/docs`    | The overview of the public docs, then a guide, with its Docs menu or its contents open on a phone |
+| `marketing/pricing` | The pricing page: four plans with their prices and cloud hours, the tax line, and how cloud hours count |
 | `marketing/terms`   | The Terms of use, with the operator details, suspension, and abuse reports     |
 | `marketing/privacy` | The Privacy notice, with the operator details and legal contact address       |
 | `marketing/not-found` | The page of the site for an address that it does not have                   |
-| `marketing/from-conductor` | The page for people who move from Conductor, with no scope note: one table of Conductor features, local and cloud, with a merged cell for each area |
 | `marketing/pictures` | One capture page for each picture of the home page, without a frame         |
 | `app`               | A ready workspace: two sessions and a file tab, and a pull request to merge   |
 | `app/sign-in`       | GitHub sign-in with the agreement to the Terms, the page before GitHub, the waitlist, the sign-in of an invite link, and the invitations that wait after it. Get started, the only first run, in three steps, with the first build of the new org. The return page after a GitHub App install in the Mac app. |
@@ -26,7 +26,7 @@ how a screen is built, and links to the other pages.
 | `app/new-workspace` | An empty chat, the first build of a new org, a repository that waits for its build, its error, files on the first message, the model menu with Fast on, the dialog, a pasted workspace link, the start, a queued second message, the first turn, a failed start, Try again |
 | `app/routines` | The routines of the org, a routine, its triggers, its runs, and a run workspace |
 | `app/org-settings`  | General with Delete org, then Repositories and Cloud computer with the notice of a repository change, the first build of a new org, and Members |
-| `app/chat`          | A finished turn with its work folded, then running turns, turns that an agent stopped, open work, tables in replies, lists in replies, headings in replies, lost data, lost updates, unread files, the time limit of background work, and a fast turn at standard speed |
+| `app/chat`          | A finished turn with its work folded, then running turns, turns that an agent stopped, open work, tables in replies, lists in replies, headings in replies, links in chat text, lost data, lost updates, unread files, the time limit of background work, and a fast turn at standard speed |
 | `app/mac-commands`  | A command that an agent runs on the Mac of the sender, in the chat            |
 | `app/sessions`      | A new session, the history, closing one while it works, and a linked session  |
 | `app/reassign`      | The owner of a workspace, its reassign menu, a member's view, a stopped turn  |
@@ -39,10 +39,10 @@ how a screen is built, and links to the other pages.
 | `app/files`         | All files, Changes with its summary, a file, Markdown, diff, and image tab, and the temporary tab that the next press replaces |
 | `app/tabs`          | A dragged tab, the moved row, a full row, the tab menu, and the rename field  |
 | `app/transcripts`   | Copy a transcript from the tab menu: the toast after a copy, a failed copy, and the menu of an archived workspace |
-| `app/tools`         | The terminal tabs and their states, then the Preview tool with its detected servers and its failed list repair, and the hidden Desktop, kept for its return |
+| `app/tools`         | The terminal tabs and their states, a link in the terminal under the pointer and a size that another viewer set, then the Preview tool with its detected servers and its failed list repair, and the hidden Desktop, kept for its return |
 | `app/panels`        | The right column, widened by the handle on its inner edge, and then hidden    |
 | `mac-app`           | The Mac app: its window, the waitlist, its device commands, This Mac, Keyboard shortcuts, and the palette with keys |
-| `user-flows`        | Sign up, sign up during open sign-up, join with an invite link, create a workspace, create one in the dialog, reopen it, open one from the palette, send feedback, archive one from its row, create an org, run a Mac command, create a routine, link a workspace, open a session link, merge and continue, mention a file, drop a file |
+| `user-flows`        | Sign up, sign up during open sign-up, join with an invite link, create a workspace, create one in the dialog, reopen it, open one from the palette, send feedback, archive one from its row, create an org, run a Mac command, create a routine, link a workspace, open a session link, open a terminal link, merge and continue, mention a file, drop a file, open a local server |
 
 A folder page shows at most five screens, saved states included. A folder
 with child folders shows only its canonical screen, as `marketing`, `marketing/docs`, `app`,
@@ -52,10 +52,7 @@ with child folders shows only its canonical screen, as `marketing`, `marketing/d
 `app/org-settings/cloud-computer`, `app/operator`, `app/operator/user`, `app/operator/user/access`, `app/operator/codes`, `app/banner`, `app/chat`, `app/archive`, `app/workspace-links`, `app/routines`, `app/routines/routine`,
 `app/routines/triggers`, `app/orgs/suspended/routines`, `app/file-mentions`, `app/attachments`, `app/files`, `app/tools`, `app/account/shortcuts`, and `mac-app/shortcuts` do. `marketing/pictures` has no screen of its own. Each picture's capture
 page is its own entry at `marketing/pictures/<picture>`, so each page shows
-one screen. `marketing/from-conductor` has no screen of its own either. Its
-index document, `index.md`, gives the notes of the page and where its
-content comes from, and links to `marketing/from-conductor/one-table`,
-which links back to it. `app/org-settings/cloud-computer` and its building
+one screen. `app/org-settings/cloud-computer` and its building
 and build-failed states moved from `app/repository-settings` and its updating
 and update-failed states, and declare `movedFrom`. The states of `app/shell`,
 `app/account`, `app/sign-in/waitlist`, `app/new-workspace`,
@@ -210,7 +207,15 @@ owner of a login hide each model that its endpoint does not list. Both
 agents run on Cal's proxy, whose model list does not name Fable 5.1. The
 Claude row says that Fable 5.1 is hidden from Cal's model pickers, and
 why, with the model ID, the time of the last read of the list, and
-Refresh.
+Refresh. Its other states come from Codex base decision 1 C, which Cal
+chose on 13 November 2026:
+
+- `v1-added` has the note under the Codex row after a save that added
+  `/v1` to the typed address, because only that address lists the models.
+- `read-failed` has the warning under each row after a Refresh whose
+  model list read failed, each with Refresh.
+- `read-failed-unlisted` has the same warning above the models that the
+  last Claude list leaves out, with one Refresh beside the warning.
 
 `app/new-workspace/dialog` draws New workspace as a dialog over the ready
 workspace of `app`, for a new account or a user who chose the dialog.

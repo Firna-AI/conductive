@@ -5,12 +5,20 @@ import { FitAddon } from '@xterm/addon-fit'
 import { Terminal } from '@xterm/xterm'
 import { useSharedUiTheme } from '@firna/ui/theme'
 import type { TerminalTransport } from '../shared/terminal'
+import {
+  TERMINAL_HISTORY_LINES,
+  type BridgeSize,
+} from '../shared/terminal-bridge'
 import { ToolButton } from './tool-parts/ToolButtons'
 import { useTouch } from './tool-parts/ToolRoot'
 import type { ReadyTerminal } from './terminalApi'
 import type { ExtraKey } from './terminalKeys'
+import type { TerminalLinks } from './terminalLinks'
+import { linkKey } from './terminalLinks'
+import { fittedFontSize } from './sharedSize'
 import { TerminalSession } from './terminalSession'
 import { cssTokens, terminalFont, terminalTheme } from './terminalTheme'
+import { watchLinks } from './xtermLinks'
 import { XtermScreen } from './xtermScreen'
 import styles from './TerminalScreen.module.css'
 
@@ -43,6 +51,12 @@ function fitVisible(host: HTMLElement, fit: FitAddon): void {
 /**
  * The xterm.js screen of one terminal connection. It fits the terminal to its
  * box and sends each new size. On a phone it shows the key row.
+ *
+ * With the terminal bridge, all viewers share one size. The screen then
+ * sends the size of its panel, counted at the normal font, and shows the
+ * shared size. A larger shared size gets a smaller font, down to 6px, and
+ * the panel scrolls when even that does not fit. A smaller one leaves empty
+ * space after it.
  */
 export function TerminalScreen(props: {
   terminal: ReadyTerminal
@@ -53,6 +67,8 @@ export function TerminalScreen(props: {
   onInput?: () => void
   /** The element of the xterm.js screen, without the key row. */
   screenRef?: Ref<HTMLDivElement>
+  /** Opens the links of the output. Without it, no link opens. */
+  links?: TerminalLinks
 }) {
   const hostRef = useRef<HTMLDivElement>(null)
   const xtermRef = useRef<Terminal | null>(null)
@@ -63,6 +79,7 @@ export function TerminalScreen(props: {
   const { terminal, connect, ended, screenRef } = props
   const onClosed = useEffectEvent(() => props.onClosed())
   const onInput = useEffectEvent(() => props.onInput?.())
+  const currentLinks = useEffectEvent(() => props.links)
   const currentTheme = useEffectEvent((host: Element) =>
     terminalTheme(cssTokens(host), scheme),
   )
@@ -87,24 +104,59 @@ export function TerminalScreen(props: {
       // On a Mac, an Option press selects while a program has the mouse. The
       // screen sends each plain press again with Option, so a drag selects.
       macOptionClickForcesSelection: true,
+      // The same history as tmux keeps, so a reload shows the same lines.
+      scrollback: TERMINAL_HISTORY_LINES,
     })
     const fit = new FitAddon()
     xterm.loadAddon(fit)
     xterm.open(host)
     fitVisible(host, fit)
-    const screen = new XtermScreen(xterm)
+    const screen = new XtermScreen(xterm, { links: true })
+    const outputLinks = watchLinks(xterm, {
+      links: () => currentLinks(),
+      linkKey: linkKey(navigator.platform),
+      hintClass: styles.linkHint,
+    })
+    const normalFont = xterm.options.fontSize ?? 12
+    let shared: BridgeSize | null = null
+    const layout = () => {
+      if (host.clientWidth <= 0 || host.clientHeight <= 0) return
+      if (!shared) {
+        fit.fit()
+        return
+      }
+      // The panel size counts at the normal font. xterm.js measures a new
+      // font at once and draws in the next frame, so the change does not show.
+      if (xterm.options.fontSize !== normalFont)
+        xterm.options.fontSize = normalFont
+      // Measure without the scrollbars of a shared size that does not fit.
+      host.style.overflow = 'hidden'
+      const panel = fit.proposeDimensions()
+      host.style.overflow = ''
+      if (!panel || Number.isNaN(panel.cols) || Number.isNaN(panel.rows)) return
+      session.resizePanel(panel.cols, panel.rows)
+      const fontSize = fittedFontSize(normalFont, panel, shared)
+      if (fontSize !== normalFont) xterm.options.fontSize = fontSize
+      const smaller = shared.columns < panel.cols || shared.rows < panel.rows
+      host.dataset.shared = smaller ? 'smaller' : 'fits'
+    }
     const session = new TerminalSession(screen, transport, {
       onClosed: () => onClosed(),
       onControlChange: setControl,
       onInput: () => onInput(),
+      onSharedSize: (size) => {
+        shared = size
+        layout()
+      },
     })
     session.start()
-    const observer = new ResizeObserver(() => fitVisible(host, fit))
+    const observer = new ResizeObserver(layout)
     observer.observe(host)
     xtermRef.current = xterm
     sessionRef.current = session
     return () => {
       observer.disconnect()
+      outputLinks?.dispose()
       session.dispose()
       screen.dispose()
       xterm.dispose()
@@ -118,6 +170,8 @@ export function TerminalScreen(props: {
     const xterm = xtermRef.current
     if (host && xterm) {
       xterm.options.theme = terminalTheme(cssTokens(host), scheme)
+      // The bridge answers the colour queries of programs with these colours.
+      sessionRef.current?.coloursChanged()
     }
   }, [scheme])
 
