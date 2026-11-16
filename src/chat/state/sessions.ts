@@ -65,7 +65,7 @@ export function viewShowing(
 }
 
 /** The view without the session's tab. The next session takes its place. */
-function viewWithout(
+export function viewWithout(
   view: WorkspaceView,
   sessionId: string,
   next: string | null,
@@ -100,11 +100,13 @@ const lastClosedFirst = (left: Session, right: Session) =>
 /**
  * Puts a session record where it belongs: an open session among the tabs, a
  * closed one in the history, the last closed first. When the open session
- * closes, the next session becomes the open one.
+ * closes, the next session becomes the open one. A read-only workspace
+ * updates the records without changing browser tabs or selection.
  */
 export function placeSession(
   snapshot: ChatSnapshot,
   session: Session,
+  readOnly = false,
 ): ChatSnapshot {
   const others = (list: readonly Session[]) =>
     list.filter((item) => item.id !== session.id)
@@ -116,17 +118,21 @@ export function placeSession(
         : snapshot.sessions.map((item) =>
             item.id === session.id ? session : item,
           )
-    const view = withSessionPlace(snapshot.view, session.id)
+    const view = readOnly
+      ? snapshot.view
+      : withSessionPlace(snapshot.view, session.id)
     return {
       ...snapshot,
       view,
       sessions: orderSessions(sessions, view),
       history: others(snapshot.history),
-      activeSessionId: snapshot.activeSessionId ?? session.id,
+      activeSessionId: readOnly
+        ? snapshot.activeSessionId
+        : (snapshot.activeSessionId ?? session.id),
     }
   }
   const active =
-    snapshot.activeSessionId === session.id
+    !readOnly && snapshot.activeSessionId === session.id
       ? neighbour(snapshot.sessions, session.id)
       : snapshot.activeSessionId
   return {
@@ -134,7 +140,10 @@ export function placeSession(
     sessions: others(snapshot.sessions),
     history: [...others(snapshot.history), session].sort(lastClosedFirst),
     activeSessionId: active,
-    view: snapshot.view && viewWithout(snapshot.view, session.id, active),
+    view:
+      !readOnly && snapshot.view
+        ? viewWithout(snapshot.view, session.id, active)
+        : snapshot.view,
     overlay: overlayWithout(snapshot.overlay, session.id),
   }
 }

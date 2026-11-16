@@ -22,8 +22,8 @@
   - **D.** Record the time of each local close and return it first from `endedAt`. Remove that time at a local reopen and clear it at Restore. Order, row age, and the key use that value. This changes which time the rows show and needs a user decision. It also needs a clock in chat state. Effort: Medium.
 - **Left out:** Timestamp tie-breaking cannot recover close order that the state never recorded. It also fails when an older closed session is reopened and closed again. A stack in the key hook misses closes from the tab control. Server writes break the read-only rule. Changing nothing breaks the close-order requirement.
 - **Wider fix:** D. One end-time value serves all readers of history and its ages. Its row-time change needs a user decision, so it does not block C.
-- **Previous examples:** No earlier close-order defect was found. `plans/follow-ups/read-only-tabs-have-two-owners.md` records a related ownership problem.
-- **Related:** `plans/follow-ups/read-only-tabs-have-two-owners.md` shares the tab state. Keep local close state beside `archiveTabs` until that item moves both to one owner. `plans/follow-ups/read-only-session-history-time.md` records the existing row-time problem that D would also fix.
+- **Previous examples:** No earlier close-order defect was found. The split panes change fixed a related ownership problem on 16 November 2026: the browser copy of the view became the one owner of the read-only tabs.
+- **Related:** The browser copy of the view owns the read-only tabs since 16 November 2026. Keep local close state beside it. `plans/follow-ups/read-only-session-history-time.md` records the existing row-time problem that D would also fix.
 - **Recommendation:** C. It meets the key and history requirements without changing row-time semantics.
 - **Action:** fix after merge, apply C. Keep D as an option for a later decision about row times.
 

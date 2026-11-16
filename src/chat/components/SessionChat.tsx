@@ -133,12 +133,13 @@ function useDraftFiles(controller: ChatController, draftId: string) {
 export function SessionChat(props: SessionChatProps) {
   const { snapshot, controller, now } = props
   const { workspace } = snapshot
+  const readOnly = (props.readOnly ?? false) || workspace?.state === 'archived'
   const id = snapshot.activeSessionId
-  const session = tabSessions(snapshot).find((item) => item.id === id) ?? null
+  const session =
+    tabSessions(snapshot, readOnly).find((item) => item.id === id) ?? null
   const state = sessionState(snapshot, id ?? '')
   const files = useDraftFiles(controller, state.draft.id)
   const { starting, sandboxBar, keepsComposer } = sandboxParts(props)
-  const readOnly = (props.readOnly ?? false) || workspace?.state === 'archived'
   // A bar or a read-only workspace takes the place of the composer. The bar
   // of a failed first start keeps the composer under it.
   const down = (sandboxBar !== null && !keepsComposer) || readOnly

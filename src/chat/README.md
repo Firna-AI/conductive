@@ -62,6 +62,10 @@ chips.
   scroll of the row, and the reader's place that each tab keeps. A move of
   the temporary tab to another place keeps it, and so does Keep open in its tab menu, through the `keep` that the
   host gives that tab.
+- A read-only workspace keeps its tab order and selection in the browser
+  copy of the saved view. The row, Close, Reopen, and session selection use
+  that copy, as [the tab row](tab-row.md) says. Session records stay separate
+  from the browser tabs, and their updates change no local tab place.
 - [Transcript rules](transcript.md) give the rules of the stream cursor,
   the session logs, the transcript items and their counts, the changed
   files that the cloud computer could not read, the end reason of a

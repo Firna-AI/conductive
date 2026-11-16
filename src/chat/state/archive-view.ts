@@ -1,10 +1,11 @@
 import type { Session } from '../../shared/generated/Session'
+import type { WorkspaceView } from '../../shared/workspace-view'
 
 import type { ChatSnapshot } from './chat-snapshot'
 import type { ChatContext } from './context'
 import { hydrate } from './history'
 import { withSessionPlaces } from './tab-order'
-import { neighbour, pickActive } from './sessions'
+import { neighbour, pickActive, viewShowing, viewWithout } from './sessions'
 
 /**
  * A read-only workspace keeps its chat as it is, and the backend refuses
@@ -12,24 +13,42 @@ import { neighbour, pickActive } from './sessions'
  * its session tabs change in the browser only: the reader opens the stored
  * history of any session as a tab, and closes that tab again. The stored
  * session records never change, so a closed session stays closed.
- * `archiveTabs` holds the IDs of these tabs, and the records stay in
+ * The browser copy of the view holds these tabs, and the records stay in
  * `sessions` and `history`.
  */
 export function isArchived(snapshot: ChatSnapshot): boolean {
   return snapshot.workspace?.state === 'archived'
 }
 
-/** The IDs of the session tabs: the open sessions, until a local change. */
-function tabIds(snapshot: ChatSnapshot): readonly string[] {
-  return snapshot.archiveTabs ?? snapshot.sessions.map((item) => item.id)
+/** The sessions whose tabs show, in the order of the tabs. */
+export function tabSessions(
+  snapshot: ChatSnapshot,
+  readOnly = isArchived(snapshot),
+): readonly Session[] {
+  if (!readOnly || snapshot.view === null) return snapshot.sessions
+  const known = new Map(
+    [...snapshot.sessions, ...snapshot.history].map((item) => [item.id, item]),
+  )
+  return snapshot.view.tabs.flatMap((tab) =>
+    tab.kind === 'session' ? (known.get(tab.sessionId) ?? []) : [],
+  )
 }
 
-/** The sessions whose tabs show, in the order of the tabs. */
-export function tabSessions(snapshot: ChatSnapshot): readonly Session[] {
-  if (snapshot.archiveTabs === null) return snapshot.sessions
-  const known = [...snapshot.sessions, ...snapshot.history]
-  return snapshot.archiveTabs.flatMap(
-    (id) => known.find((item) => item.id === id) ?? [],
+/** A failed view load keeps each open session when a local action starts a view. */
+function localView(snapshot: ChatSnapshot): WorkspaceView {
+  return (
+    snapshot.view ?? {
+      tabs: snapshot.sessions.map(({ id }) => ({
+        kind: 'session',
+        sessionId: id,
+      })),
+      activeTab: snapshot.activeSessionId
+        ? { kind: 'session', sessionId: snapshot.activeSessionId }
+        : null,
+      temporaryTab: null,
+      fileList: 'all',
+      tool: 'terminal',
+    }
   )
 }
 
@@ -45,7 +64,7 @@ export function historySessions(
   readOnly = isArchived(snapshot),
 ): readonly Session[] {
   if (!readOnly) return snapshot.history
-  const shown = new Set(tabIds(snapshot))
+  const shown = new Set(tabSessions(snapshot, true).map((item) => item.id))
   return [...snapshot.sessions, ...snapshot.history].filter(
     (item) => !shown.has(item.id),
   )
@@ -78,23 +97,9 @@ export async function showLocally(
   const snapshot = context.store.get()
   const known = [...snapshot.sessions, ...snapshot.history]
   if (!known.some((item) => item.id === sessionId)) return
-  const ids = tabIds(snapshot)
-  const opening = !ids.includes(sessionId)
   context.store.update((current) => ({
     ...current,
-    archiveTabs: opening ? [...ids, sessionId] : ids,
-    view:
-      opening && current.view
-        ? {
-            ...current.view,
-            tabs: [
-              ...current.view.tabs.filter(
-                (tab) => tab.kind !== 'session' || tab.sessionId !== sessionId,
-              ),
-              { kind: 'session', sessionId },
-            ],
-          }
-        : current.view,
+    view: viewShowing(localView(current), sessionId),
     activeSessionId: sessionId,
     overlay: { kind: 'none' },
   }))
@@ -107,7 +112,7 @@ export async function showLocally(
  */
 export function closeLocally(context: ChatContext, sessionId: string): void {
   context.store.update((snapshot) => {
-    const shown = tabSessions(snapshot)
+    const shown = tabSessions(snapshot, true)
     if (!shown.some((item) => item.id === sessionId)) return snapshot
     const active =
       snapshot.activeSessionId === sessionId
@@ -115,15 +120,7 @@ export function closeLocally(context: ChatContext, sessionId: string): void {
         : snapshot.activeSessionId
     return {
       ...snapshot,
-      view: snapshot.view && {
-        ...snapshot.view,
-        tabs: snapshot.view.tabs.filter(
-          (tab) => tab.kind !== 'session' || tab.sessionId !== sessionId,
-        ),
-      },
-      archiveTabs: shown
-        .filter((item) => item.id !== sessionId)
-        .map((item) => item.id),
+      view: viewWithout(localView(snapshot), sessionId, active),
       activeSessionId: active,
     }
   })
@@ -142,7 +139,6 @@ export function afterRestore(snapshot: ChatSnapshot): ChatSnapshot {
   )
   return {
     ...snapshot,
-    archiveTabs: null,
     overlay: { kind: 'none' },
     activeSessionId: open
       ? snapshot.activeSessionId

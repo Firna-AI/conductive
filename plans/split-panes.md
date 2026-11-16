@@ -469,9 +469,10 @@ The split changes the tab state of read-only workspaces too. Fix the two
 owners first, as `plans/follow-ups/read-only-tabs-have-two-owners.md`
 option B says.
 
-- [ ] Apply option B of the follow-up item, with its tests. Delete the
+- [x] Apply option B of the follow-up item, with its tests. Delete the
       item, and `plans/follow-ups/read-only-session-click-over-file.md`
-      when B fixes it.
+      when B fixes it. B fixed both, and both items are deleted. The
+      handoff is in `.context/split-panes/m3-handoff.md`.
 
 ## Milestone 4: Panes in the saved view
 

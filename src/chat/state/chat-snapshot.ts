@@ -113,12 +113,7 @@ export interface ChatSnapshot {
   sessions: readonly Session[]
   /** Closed sessions, the last closed first. */
   history: readonly Session[]
-  /**
-   * The IDs of the session tabs of an archived workspace, which change in
-   * the browser only, as `archive-view.ts` says. Null while the tabs are the
-   * open sessions.
-   */
-  archiveTabs: readonly string[] | null
+  /** The saved view, changed in the browser only while the workspace is read-only. */
   view: WorkspaceView | null
   /**
    * The automation whose run made the workspace, from the read of the view.
@@ -175,7 +170,6 @@ export const initialSnapshot: ChatSnapshot = {
   models: [],
   sessions: [],
   history: [],
-  archiveTabs: null,
   view: null,
   automation: null,
   repositoryFolder: null,

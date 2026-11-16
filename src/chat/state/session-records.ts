@@ -2,6 +2,7 @@ import type { Session } from '../../shared/generated/Session'
 import type { SessionsResponse } from '../../shared/sessions'
 import type { ChatSnapshot } from './chat-snapshot'
 import { withTranscript, type ChatContext } from './context'
+import { tabSessions } from './archive-view'
 import { applyMoves, claimMoves, saveMovedView } from './model-moves'
 import type { ChatEnvelope } from '../../shared/transcript/session-events'
 import {
@@ -76,7 +77,9 @@ function placeShown(
   sessionId: string,
 ): ChatSnapshot {
   const record = shownRecord(context, sessionId)
-  return record === null ? snapshot : placeSession(snapshot, record)
+  return record === null
+    ? snapshot
+    : placeSession(snapshot, record, context.readOnly(snapshot))
 }
 
 /** The snapshot with the shown record of a session and its transcript. */
@@ -139,22 +142,30 @@ export function confirmSessions(
     const current = change(snapshot)
     const records = listed.map((item) => shownRecord(context, item.id) ?? item)
     const openRecords = records.filter((item) => item.closedAt === null)
-    // The complete list gives each open session a place in the saved order,
-    // and drops the places of sessions that are not open.
-    const view = withSessionPlaces(current.view, openRecords)
+    // The first read initializes places. Later read-only reads keep local tabs.
+    const readOnly = context.readOnly(current)
+    const view =
+      readOnly && snapshot.load.state === 'ready'
+        ? current.view
+        : withSessionPlaces(current.view, openRecords)
     const open = orderSessions(openRecords, view)
+    const history = sortHistory(
+      records.filter((item) => item.closedAt !== null),
+    )
     // A local tab of a read-only workspace can show a closed session, as
     // `showLocally` says. That session stays shown too.
     const active = current.activeSessionId
-    const shown =
-      open.some((item) => item.id === active) ||
-      (active !== null && (current.archiveTabs ?? []).includes(active))
+    const tabs = tabSessions(
+      { ...current, view, sessions: open, history },
+      readOnly,
+    )
+    const shown = tabs.some((item) => item.id === active)
     let next: ChatSnapshot = {
       ...current,
       view,
       sessions: open,
-      history: sortHistory(records.filter((item) => item.closedAt !== null)),
-      activeSessionId: shown ? current.activeSessionId : pickActive(open, view),
+      history,
+      activeSessionId: shown ? current.activeSessionId : pickActive(tabs, view),
     }
     for (const { id } of listed) {
       const log = logOf(context, id)

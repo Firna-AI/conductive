@@ -17,7 +17,7 @@ import { isArchived, reloadView } from './archive-view'
 import { viewWriter, type ChatContext } from './context'
 import type { ChatSources } from './sources'
 
-export interface ChatContextOptions {
+export interface ChatControllerOptions {
   target: WorkspaceTarget
   /** The JSON client of the app, over the Worker or the fake API. */
   client: ApiClient
@@ -31,6 +31,11 @@ export interface ChatContextOptions {
    * workspace list itself.
    */
   sources?: ChatSources
+  /**
+   * Whether the host shows the workspace read-only, such as while its org
+   * is suspended. Each action and arriving record reads the current value.
+   */
+  readOnly?: () => boolean
 }
 
 /** A delay over the timers of the chat, so the waits of uploads use them too. */
@@ -54,7 +59,7 @@ const changesWorkspace = (envelopes: readonly StreamEnvelope[]) =>
 
 /** Builds the data and stream of one controller run. */
 export function createChatContext(
-  options: ChatContextOptions,
+  options: ChatControllerOptions,
   store: ChatStore,
   live: () => boolean,
   draftEpoch: number,
@@ -86,6 +91,8 @@ export function createChatContext(
     delay: timerDelay(timers ?? browserTimers),
     saveView: viewWriter((view) => api.saveView(view)),
     live,
+    readOnly: (snapshot) =>
+      isArchived(snapshot) || (options.readOnly?.() ?? false),
     owned: options.sources !== undefined,
     devices: {
       api: createDeviceApi(options.client),

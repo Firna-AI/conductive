@@ -21,7 +21,7 @@
 - **Left out:** Changing nothing keeps an age that never grows. Anchoring the time at the first menu render measures when the menu opened, not when the tab closed.
 - **Wider fix:** B. One recorded local close time serves every reader of the history order and ages.
 - **Previous examples:** `plans/follow-ups/read-only-session-close-order.md` records another consequence of missing local close metadata.
-- **Related:** `plans/follow-ups/read-only-session-close-order.md` shares B as its wider option D. `plans/follow-ups/read-only-tabs-have-two-owners.md` owns the wider state move. Keep new read-only close state beside the current `archiveTabs` owner until that move.
+- **Related:** `plans/follow-ups/read-only-session-close-order.md` shares B as its wider option D. The browser copy of the view owns the read-only tabs since 16 November 2026. Keep new read-only close state beside it.
 - **Recommendation:** B. It gives the menu, key, and age one source for local closes.
 - **Action:** Ask the user when this separate work starts, because the choice changes which time read-only history rows describe.
 

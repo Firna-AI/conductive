@@ -16,12 +16,12 @@ import {
   type Overlay,
 } from './chat-snapshot'
 import { showAddressSession } from './address-session'
-import { closeLocally, isArchived, showLocally } from './archive-view'
+import { closeLocally, showLocally } from './archive-view'
 import { attachFiles } from './attachment-actions'
 import type { ChatContext } from './context'
 import {
   createChatContext,
-  type ChatContextOptions,
+  type ChatControllerOptions,
 } from './controller-context'
 import { hydrate, watchShownSession } from './history'
 import { followSources, withSources } from './sources'
@@ -48,15 +48,6 @@ import {
   selectSession,
   updateView,
 } from './session-actions'
-
-export interface ChatControllerOptions extends ChatContextOptions {
-  /**
-   * Whether the host shows the workspace read-only, such as while its org
-   * is suspended. The controller reads it at each action, because a
-   * suspension can start during a visit.
-   */
-  readOnly?: () => boolean
-}
 
 /**
  * The chat of one workspace. It loads the sessions and the history of the
@@ -187,7 +178,7 @@ export class ChatController {
    * its tabs in the browser only, and sends no write.
    */
   private readOnly(): boolean {
-    return isArchived(this.store.get()) || (this.options.readOnly?.() ?? false)
+    return this.context.readOnly(this.store.get())
   }
 
   /** Runs a write of the user, unless the workspace is read-only. */

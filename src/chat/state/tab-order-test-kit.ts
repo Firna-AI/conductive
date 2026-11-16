@@ -11,7 +11,7 @@ import {
 import { FAKE_IDS } from '../../test-support/fixtures/core'
 import { createChatApi } from '../api/client'
 import { readView } from '../api/read-responses'
-import { tabSessions } from './archive-view'
+import { isArchived, tabSessions } from './archive-view'
 import { rowTabs } from './tab-order'
 import { chatFor } from './test-kit'
 
@@ -91,7 +91,8 @@ export function tabChat(
     writes: () => chat.server.requests.filter((item) => item.method !== 'GET'),
     row: (files = true) => {
       const snapshot = chat.controller.getSnapshot()
-      return rowTabs(snapshot.view, tabSessions(snapshot), files)
+      const readOnly = isArchived(snapshot) || (options.readOnly?.() ?? false)
+      return rowTabs(snapshot.view, tabSessions(snapshot, readOnly), files)
     },
     setSessions: (
       sessions: readonly Session[],

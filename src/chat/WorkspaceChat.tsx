@@ -156,7 +156,7 @@ function ChatBody(
   useFollowTabs(
     controller.places,
     snapshot.load.state === 'ready'
-      ? tabSessions(snapshot).map((session) => session.id)
+      ? tabSessions(snapshot, readOnly).map((session) => session.id)
       : null,
   )
   const reopen = useCallback(
@@ -171,7 +171,7 @@ function ChatBody(
   )
   const tabs = rowOf(
     snapshot.view,
-    tabSessions(snapshot),
+    tabSessions(snapshot, readOnly),
     shownTab(snapshot.view, active, content !== null),
     (sessionId) => isRunning(snapshot, sessionId),
     props.renderTab,

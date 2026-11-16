@@ -59,6 +59,8 @@ export interface ChatContext {
   readonly saveView: (view: WorkspaceView) => void
   /** The chat is still open. A response that arrives later changes nothing. */
   readonly live: () => boolean
+  /** Read-only access for the snapshot being changed, including the host's current access. */
+  readonly readOnly: (snapshot: ChatSnapshot) => boolean
   /**
    * App models own the account, the org, the models, and the members, so
    * the load reads none of them, as `ChatSources` says.

@@ -13,7 +13,9 @@ and it does not draw two panes yet.
 - The state keeps one saved order for session, file, and diff tabs. The row
   order includes each tab once. A host with no file or diff tabs leaves
   their saved places in the view. In a read-only workspace, the row uses
-  the session tabs that the browser keeps.
+  the session places in the browser copy of the saved view. That copy owns
+  both the order and the selection. The stored session records stay in the
+  open sessions and the history, even when their browser tabs change.
 - The saved view also marks the temporary tab, which the host opens,
   keeps, and closes, as
   [Temporary tabs](../../docs/protocol/temporary-tabs.md) says. A move
@@ -22,9 +24,18 @@ and it does not draw two panes yet.
 - The load gives each open session a place and removes the places of
   sessions that are not open. When an open session first arrives, the
   state adds its missing place at the end. It drops no other place.
-  At the load, missing places go at the end, in the order of creation.
+  At the first load, missing places go at the end, in the order of creation.
   These changes send no write of their own. The next view save carries
-  them, and a read-only workspace keeps them in the browser only.
+  them. A read-only workspace initializes these places once, then keeps
+  them in the browser. Later session reads and stream updates change the
+  records without adding or removing local places or changing the selection.
+- In a read-only workspace, Close takes the next session from the row
+  order, else the session before it. It removes the session place from the
+  browser view and updates its active tab when that tab closed. Reopen adds
+  the session at the end. A session selection sets the active tab of the
+  browser view, also when a file shows. These actions send no write. If the
+  view did not load, the row shows the open sessions. The first local tab
+  action makes a browser view with all these sessions, so the other tabs stay.
 - The keys of the row follow the row order, as `useTabKeys` in
   `components/tab-keys.ts` gives them. Previous tab and Next tab show the
   tab before or after the shown tab, with a wrap at each end, also a file

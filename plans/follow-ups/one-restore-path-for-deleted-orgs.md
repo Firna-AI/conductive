@@ -20,6 +20,6 @@
   - **C.** Make the address of a deleted org show the same row as the Deleted orgs section in place of `DeletedOrgPage`. This removes the second screen, but it changes the screen of the `app/orgs/deleted` mockup. Effort: Medium.
 - **Left out:** Deleting the deleted org page, because it is functionality that the change of 12 November 2026 chose to keep.
 - **Wider fix:** B. One restore hook removes the second path.
-- **Previous examples:** `plans/follow-ups/read-only-tabs-have-two-owners.md` and `plans/follow-ups/duplicate-browser-base64-helpers.md`.
+- **Previous examples:** The two owners of the read-only tabs, which the split panes change fixed on 16 November 2026, and `plans/follow-ups/duplicate-browser-base64-helpers.md`.
 - **Recommendation:** B. It removes the duplicate and the drift with no visible change.
 - **Action:** fix after merge, apply B, because it reaches files outside the branch that found it, and the drift needs an unusual timing.
