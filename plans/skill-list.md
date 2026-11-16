@@ -91,8 +91,7 @@ Answered on 2026-11-13: **B**.
 
 ### Skill list decision 3: How Claude runs a manual-only skill
 
-Open since 2026-11-13. Asked in the chat. It blocks only the Claude form
-of a manual-only skill in Milestone 3.
+Answered on 2026-11-16: **G**, the footer, which the user proposed.
 
 - Background: a manual-only skill sets `disable-model-invocation: true` in
   its `SKILL.md`. In the spike of Milestone 3, Claude ran no such skill
@@ -516,6 +515,49 @@ Depends on: every other milestone
 - [ ] Open the pull request. Its description gives the decisions and the
       design calls of this plan with their dates, a permalink to this plan,
       and the follow-up items that the change adds.
+
+## Milestone 8: Sender footer for skill list decision 3
+
+Depends on: 3, 6
+
+Decision 3 G moves the sender line and the branch line to the end of each
+message, so that a skill at the start of the member's text starts the
+prompt. Milestone 7's open TODOs run after this milestone.
+
+Design calls of 2026-11-16, my calls:
+
+- The footer goes on Codex messages too, so one rule holds for both
+  agents.
+- Order of a message: the member's text, the lines of attached files, an
+  empty line, the sender line, then the branch line when one is due.
+- When the text of a Claude message starts with `/word`, and `word` is not
+  a skill of the Claude list, the sender line stays at the start, as
+  today. Reason: with the footer, Claude ran the built-in command
+  `/context` at the start of a message. Today no message can run a
+  built-in command, and the app does not know its effects, such as
+  `/clear`. A path such as `/tmp/a.txt` and an unknown word reached the
+  model as text in the test.
+- The list offers a manual-only Claude skill only when `/` is at the start
+  of the text. Reason: Claude ran a manual-only skill from the middle of
+  the text in 0 of 2 footer runs.
+- Saved instructions of an older session keep the words "starts with a
+  Sender line". Reason: the text of a session stays the same for its life.
+  The line still reaches the agent.
+
+- [ ] Move the sender line and the branch line to a footer in
+      `providerMessage` (`runner/sdk-helper/src/providers/message.ts`),
+      with the header form for a Claude text that starts with a `/word`
+      that is not a listed Claude skill. Update the tests.
+- [ ] Change "Each message starts with a Sender line" in
+      `crates/cnd-runner/src/engine/instructions.rs`, and the tool help in
+      `crates/cnd-tools/` if it says where the line is. Update snapshots.
+- [ ] Offer manual-only Claude skills only when `/` starts the text, in the
+      app list. DOM test.
+- [ ] Update `docs/protocol/agent-instructions.md`,
+      `docs/protocol/skill-mentions.md`, and `runner/agent-input.md`. Read
+      both legal pages and each public guide in full for a restated fact.
+- [ ] Run the helper tests, the Rust checks, the typecheck, lint, format,
+      and the chat tests.
 
 ## Post-merge follow-up (non-blocking)
 
