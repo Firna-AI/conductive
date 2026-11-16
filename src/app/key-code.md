@@ -238,9 +238,10 @@ Each path is relative to `src/app/`, the folder of this page.
   of a row wait while one of them saves.
 - `build-log-follower.ts`: `BuildLogFollower`, the reads and the timer of
   the log of one build.
-- `events.ts`: the ordered event stream, its count of reconnects, the event
-  socket, and `openSocket`, the terminal socket on the same origin as the
-  events.
+- `events.ts`: the ordered event stream, its count of reconnects, and
+  `follow`, which tells the replayed events from the live ones.
+- `event-socket.ts`: the event socket of the Worker, and `openSocket`, the
+  terminal socket on the same origin as the events.
 - `workspace-store.ts`: `useWorkspaceStore`, which gives a connected view
   the store of its workspace, and the `create` and `connect` functions that
   the view supplies.

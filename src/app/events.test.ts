@@ -125,6 +125,30 @@ describe('WorkspaceStream', () => {
     expect(source.opened.map((item) => item.afterEventNumber)).toEqual([0])
   })
 
+  test('tells a follower the replayed events from the live ones, and when each replay ends', async () => {
+    const { source, delay, stream } = start()
+    const seen: string[] = []
+    stream.follow({
+      event: (item, replayed) =>
+        seen.push(`${replayed ? 'replay' : 'live'} ${item.eventNumber}`),
+      replayEnded: (through) => seen.push(`end ${through}`),
+    })
+    source.send(page([envelope(1)], 3, 2))
+    source.send({ type: 'event', envelope: envelope(4) })
+    source.send(page([envelope(3)], 3))
+    source.drop()
+    await delay.runAll()
+    source.send(page([envelope(5)], 5))
+    expect(seen).toEqual([
+      'replay 1',
+      'replay 3',
+      'end 3',
+      'live 4',
+      'replay 5',
+      'end 5',
+    ])
+  })
+
   test('opens again after the page progress when the connection drops between pages', async () => {
     const { source, stream, seen, delay } = start()
     source.send(page([envelope(2)], 9, 5))
