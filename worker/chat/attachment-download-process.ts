@@ -6,7 +6,7 @@ import type { SandboxProvider } from '../sandbox/provider'
  * waits are short, so a small file reaches the cloud computer soon after
  * its curl exits. After them, each wait is the last one, 1 second.
  */
-export const DOWNLOAD_POLL_WAITS_MS: readonly number[] = [
+const DOWNLOAD_POLL_WAITS_MS: readonly number[] = [
   100, 200, 400, 800, 1_000,
 ]
 
