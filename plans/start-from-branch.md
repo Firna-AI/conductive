@@ -54,8 +54,9 @@ Contract owners:
 
 ## Decisions
 
-The numbers 288 to 295 were the next free numbers on 13 November 2026.
-Decisions 288 to 295 hold Cal's answers. An
+The numbers 288 to 295 were the next free numbers on 13 November 2026,
+and 297 and 298 on 16 November 2026. Decisions 288 to 298 hold Cal's
+answers. An
 options check ran over the decisions and the design calls. It added options
 to decisions 288, 289, 290, and 291, corrected the design calls, and found
 decisions 293 and 294. Its report is in
@@ -166,28 +167,50 @@ branch as the target before the member chooses.
   pull request with the commits of the picked branch. C, no selection,
   because it adds a step before Send.
 
-### Decision 296: a phone does not show the base branch
+### Decision 296: a phone shows the base branch
 
-Open. Found by the mockups of Milestone 1 on 13 November 2026.
+Chosen by Cal on 16 November 2026: A. While the workspace branch has no
+pull request, the top of the Checks tab on a phone shows the branch and its
+base, where Create PR stands. Found by the mockups of Milestone 1.
 
-- **Severity:** Medium. **Effort:** Small.
-- **Source:** Implementation.
-- **Category:** Docs or spec.
-- **Location:** `docs/mockups/src/components/workspace/BarActions.tsx:199` and `docs/protocol/github-banner.md`, under "Layouts".
-- **Background:** On a computer the bar names the branch and its base. On a phone the compact row shows only the state, and Create PR stands at the top of the Checks tab.
-- **Problem:** No phone screen names the base of a workspace without a pull request. Create PR on a phone opens a pull request into a branch that the phone does not show.
-- **Impact if no action:** A member on a phone cannot see that a stacked workspace targets its picked branch and not the default branch.
-- **Root question:** How does a member on a phone learn the target before Create PR?
-- **Options:**
-  - **A.** Show the branch and its base at the top of the Checks tab while the branch has no pull request. Effort: Small.
-  - **B.** Show the base in the compact row at the top of the workspace. Long names get cut more. Effort: Small.
-  - **C.** A, only when the base is not the default branch. Effort: Small.
-  - **D.** No change. Effort: Small.
-- **Left out:** A line in the workspace header, because the bar owns the branches.
-- **Wider fix:** None. This is one layout rule.
-- **Previous examples:** Pull request runs have a base that is not the default branch, and a phone does not show it either.
-- **Recommendation:** A. The base shows where the member presses Create PR, with one rule for every workspace.
-- **Action:** ask the user, because A changes the phone layout that `github-banner.md` states.
+- Rejected: B, the base in the compact row, because long names get cut
+  more. C, only when the base is not the default branch, because one rule
+  for every workspace is simpler. D, no change, because a phone user could
+  not see the target before Create PR.
+
+### Decision 297: the fetch of a moved base
+
+Chosen by Cal on 16 November 2026: D, from review item 1 of the branch
+review. When a base moves (decision 294), one shared base-change
+operation, built like the one of Continue, fetches the new base into its
+remote-tracking ref in an isolated stage, and only then changes
+`gh-merge-base` and `origin/HEAD`. A move that no member started, from a
+webhook, a retry, or a resume, fetches with the GitHub token of the
+workspace owner, the account that `gh` already uses outside a turn.
+
+- Problem that it solves: the move changed only the names, so Changes
+  compared with an old copy of the default branch and showed merged work.
+- Rejected: A and B of the review, because a move that no member started
+  has no token under the rules before this decision. C and F, a resolved
+  base commit for the runner, because they change the runner contract. E,
+  a move at the next agent turn, because a workspace that waits for review
+  keeps the old comparison. G, a button on the line of a moved base,
+  because Changes then wait for a press.
+
+### Decision 298: one owner of the base move retries
+
+Chosen by Cal on 16 November 2026: E, from review item 101 of the branch
+review. The shared operation of decision 297 owns the cloud update of a
+base move, with one saved retry job that starts with the repair marker and
+a capped growing delay. Each resume runs the same job. The GitHub read
+keeps the database move and the marker, and runs no cloud command, so a
+failing cloud computer no longer fails a banner read.
+
+- Problem that it solves: each failed cloud update added a new retry chain,
+  a failed database write of the move scheduled no retry, and a failed
+  cloud command showed "GitHub is not available".
+- Rejected: A, B, D, and F of the review, because the cloud update stays
+  inside the GitHub read and its failure keeps failing that read.
 
 ## Design calls
 
@@ -537,6 +560,73 @@ Depends on: 1, 3, 4
 Evidence: `.context/start-from-branch/m8-mutations.log`,
 `m8-repeat-summary.log`, `m8-test-cost.log`, and the screenshots in
 `.context/start-from-branch/ui/`.
+
+## Milestone 10: Mockups of the review fixes
+
+Tags: mockup
+
+Depends on: 8
+
+Draw decision 296 on a phone.
+
+- [ ] Draw the top of the Checks tab on a phone with the branch and its
+      base while the branch has no pull request, for a stacked workspace
+      and for a workspace that targets the default branch, under
+      `app/new-workspace/start-branch/stacked` and the pull request bar
+      pages that show the phone Checks tab.
+- [ ] Update `docs/mockups/catalogue*.md` and `docs/mockups/design*.md`.
+- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
+- [ ] Update the design and the TODOs of this plan for each problem that
+      the mockups show.
+
+## Milestone 11: Documentation of the review fixes
+
+Depends on: 10
+
+- [ ] In `docs/protocol/github-tokens.md`, add the fetch of a moved base
+      with the GitHub token of the workspace owner when no member started
+      the move (decision 297).
+- [ ] In `docs/protocol/base-branches.md`, state that a moved base fetches
+      the new base before it changes the target (decision 297), and the one
+      retry owner (decision 298).
+- [ ] In `docs/protocol/github-banner.md`, state decision 296 under
+      "Layouts".
+- [ ] Read the Terms page, the Privacy page with its data uses, and each
+      public guide in full. Update each sentence that restates a changed
+      fact, such as when Conductive uses a member's GitHub token. Bump
+      `TERMS_VERSION` when the Terms change.
+- [ ] Check each relative link of each changed Markdown file.
+
+## Milestone 12: Base move fetch and retry owner
+
+Depends on: 11
+
+- [ ] Build the shared base-change operation of decision 297, with the
+      owner token for a move that no member started, the isolated stage of
+      Continue, and the missing-ref guard of commit `dcbb1a2cd`.
+- [ ] Give the operation one saved retry job with a capped growing delay,
+      run it at each resume, and take the cloud command out of the GitHub
+      read (decision 298). A failed database write of the move also leaves
+      one retry.
+- [ ] Apply option D of review item 103: move the failed-database recovery
+      case to the native fixture `worker/features/base-moved.test.ts`, with
+      a first refresh that cannot find the deleted base again, and checks of
+      D1 and of the cloud command.
+- [ ] Test a merge commit into the default branch that the copy in the
+      cloud computer lacks, repeated cloud failures with one retry job, a
+      failed database write, a resume, and an owner without access.
+- [ ] Update `worker/github/README.md` and `worker/lifecycle/README.md`.
+
+## Milestone 13: The base on a phone
+
+Tags: ui
+
+Depends on: 10
+
+- [ ] Show the branch and its base at the top of the Checks tab on a phone
+      while the branch has no pull request (decision 296), as the mockups
+      of Milestone 10 show.
+- [ ] Test it, and compare it with its mockup on a phone.
 
 ## Milestone 9: Verification, commit, review, and pull request
 
