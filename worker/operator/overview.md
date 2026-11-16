@@ -27,8 +27,9 @@ The reply is an `OperatorOverview` from
   Builds include both builds and refreshes whose job phase is not `done`.
 - `workspaceStates` gives `running`, `stopped`, `failed`, `archived`, and `removed`.
   Running includes starting, ready, working, unread, and input.
-  Archived counts archived workspaces before their removal.
-  Removed counts archived workspaces from the end of their 14 days of Restore.
+  `archived` counts every archived workspace, removed ones included, so that an older app that reads four states adds up to the total.
+  `removed` counts archived workspaces from the end of their 14 days of Restore.
+  The app subtracts `removed` from `archived` and shows the two as separate rows.
   This count does not depend on a kept cloud computer or its deletion.
   Failed counts the error state.
   The five counts add up to the workspace total.

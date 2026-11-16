@@ -139,13 +139,14 @@ it('counts each workspace state and unfinished builds across existing and delete
     running: 6,
     stopped: 1,
     failed: 1,
-    archived: 3,
+    archived: 5,
     removed: 2,
   })
-  expect(
-    Object.values(result.workspaceStates).reduce(
-      (sum, count) => sum + count,
-      0,
-    ),
-  ).toBe(result.workspaces.total)
+  // An older app reads only the first four states. They still add up to the
+  // total, because `archived` holds the removed workspaces too.
+  const { removed, ...olderStates } = result.workspaceStates
+  expect({
+    removed,
+    olderTotal: Object.values(olderStates).reduce((sum, n) => sum + n, 0),
+  }).toEqual({ removed: 2, olderTotal: result.workspaces.total })
 })

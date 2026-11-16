@@ -88,12 +88,12 @@ export async function readAccountStats(
       lastWeek: totals.workspacesLastWeek,
     },
     // The tab has no Removed state, so it counts a removed workspace as
-    // Archived.
+    // Archived, as the archived count of the SQL does.
     workspaceStates: {
       running: totals.running,
       stopped: totals.stopped,
       failed: totals.failed,
-      archived: totals.archived + totals.removed,
+      archived: totals.archived,
     },
     automations: totals.automations,
     newWorkspacesByDay: dailyCounts(workspaceDays.results, firstDay),

@@ -123,7 +123,7 @@ it('reads org state buckets, builds, named and unnamed members, suspension, and 
       running: 5,
       stopped: 1,
       failed: 1,
-      archived: 4,
+      archived: 6,
       removed: 2,
     },
     running: { workspaces: 5, builds: 2 },

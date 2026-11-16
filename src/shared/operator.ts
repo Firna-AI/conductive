@@ -42,6 +42,12 @@ export interface OperatorLongRun {
   lastActivityAt: number | null
 }
 
+/**
+ * The workspaces in each state, as the app shows them: Archived counts the
+ * archived workspaces of the list, and Removed those whose Restore ended.
+ * The Worker reply counts every archived workspace in `archived`, so that
+ * an older app adds up. `readWorkspaceStates` takes Removed out of it.
+ */
 export interface OperatorWorkspaceStates {
   running: number
   stopped: number

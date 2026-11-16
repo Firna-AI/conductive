@@ -68,15 +68,18 @@ export function readAccountWorkspaceStates(
 }
 
 /**
- * The workspaces in each state. Archived counts the archived workspaces of
- * the list, and Removed those whose Restore ended, which left it.
+ * The workspaces in each state. The reply counts every archived workspace
+ * in `archived`, so that an older app adds up, and the removed ones also in
+ * `removed`. Archived here counts the archived workspaces of the list, and
+ * Removed those whose Restore ended, which left it.
  */
 export function readWorkspaceStates(value: unknown): OperatorWorkspaceStates {
   const states = record(value, 'workspaceStates')
-  return {
-    ...readAccountWorkspaceStates(states),
-    removed: count(states, 'removed'),
-  }
+  const removed = count(states, 'removed')
+  const counts = readAccountWorkspaceStates(states)
+  if (removed > counts.archived)
+    throw new Error('The removed workspaces exceed the archived ones.')
+  return { ...counts, archived: counts.archived - removed, removed }
 }
 
 /** The counts of the 30 UTC days of a list of days. */

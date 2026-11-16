@@ -195,6 +195,29 @@ recommendation from B to B with E
   there, and the options trade the rule of the Overview against the rule
   of the archived state.
 
+### 522. Switching to an org reopens a removed workspace
+
+- **Status:** open, asked on 16 November 2026.
+- **Background:** `main` (PR #353) remembers the last workspace page that
+  a person opened in each org. The org tile, Switch to org, and the
+  palette open it again. The memory keeps archived workspaces too
+  (`src/shell/workspace/remember-workspace.tsx`).
+- **Problem:** a workspace archived from its own page opens again on the
+  next switch to its org, also after day 14. Decision 519 B does not name
+  this way in.
+- **Root question:** when the remembered workspace of an org is removed,
+  what does a switch to the org open?
+- **Options:**
+  - **A.** Keep opening it, and document the memory as a direct link.
+    Effort: Small.
+  - **B.** Open the list of the org instead, and forget the memory.
+    Effort: Medium.
+  - **C.** Forget the memory at Archive, so the list opens also during the
+    14 days. This changes the rule of `main` for archived workspaces.
+    Effort: Small.
+- **Recommendation:** A. The memory names the workspace by its ID, as a
+  link does, and the page already says Removed.
+
 ## Design
 
 Each item is my call unless it names a decision. The date of each call is
@@ -478,11 +501,13 @@ Depends on: 1, 2, 3, 4
 - [ ] Copy the justifications of the merge of `origin/main` from
       `.context/archived-workspace-removal/merge-resolutions.md` into the
       pull request description, as the `git-merge` skill says.
+- [ ] Apply the answer of decision 522 to the org switch and to
+      `docs/protocol/workspace-life.md` and `docs/protocol/org-rail-order.md`.
 - [ ] Apply the answer of decision 521 to the Stats tab: its doc, its
       Worker route, its reader, its mockup and the mockup note, its dev
       fake (`src/app/dev/account-stats.ts`), `worker/app-api/README.md`,
       `worker/operator/README.md`, `docs/mockups/design.md`, and its tests.
-- [ ] Operator replies for an older Mac app: the Overview and the page of
+- [x] Operator replies for an older Mac app: the Overview and the page of
       an org now count `archived` without the removed workspaces, so an
       older copy of the Mac app, which bundles the web app, shows four rows
       that do not add up. `AGENTS.md` asks for a compatible path: keep
