@@ -49,7 +49,7 @@ it('gives each Continue the next version of the workspace name once', async () =
     if (pending.state !== 'pending') throw new Error('Expected Continue.')
     await f.finish()
     expect((await f.result(pending.continueId)).state).toBe('continued')
-    const job = await f.chat.storage.get<ContinueJob>(
+    const job = await f.storage.get<ContinueJob>(
       continueJobKey(pending.continueId),
     )
     if (!job) throw new Error('Expected the saved Continue job.')
