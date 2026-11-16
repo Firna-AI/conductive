@@ -141,3 +141,19 @@
 .mobile .footer {
   padding: 0 10px 10px;
 }
+
+/*
+ * A pane of a split that is narrower than 360 px gives its chat the
+ * paddings of a phone, so its text keeps the room that a phone gives it
+ * (split panes decision 6 G). `SplitColumn.module.css` makes the content of
+ * each pane the `split-pane` container. One pane has no such container.
+ */
+@container split-pane (width < 360px) {
+  .transcript {
+    padding: 16px 16px 10px;
+  }
+
+  .footer {
+    padding: 0 10px 10px;
+  }
+}

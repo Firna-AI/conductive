@@ -1,4 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react'
+import { classes } from '../common/classes'
 import {
   filesShare as filesRange,
   ResizeHandle,
@@ -28,7 +29,8 @@ export function splitStyles(share: number): {
  * file lists and the tools. `width` and `filesShare` draw the column while
  * the user drags a handle. Without `tools`, the files part fills the
  * column, as for an archived workspace. `hidden` draws the column that the
- * user hid with the toggle at the end of the header.
+ * user hid with the toggle at the end of the header. `split` draws the
+ * column beside two panes, which it gives way to.
  */
 export function RightColumn(props: {
   pullRequest: ReactNode
@@ -38,6 +40,8 @@ export function RightColumn(props: {
   /** The share of the file lists, in percent, while the user drags the split. */
   filesShare?: number
   hidden?: boolean
+  /** The centre column shows two panes (split panes decision 6 G). */
+  split?: boolean
 }) {
   const dragging = props.width !== undefined
   const splitting = props.filesShare !== undefined
@@ -45,7 +49,7 @@ export function RightColumn(props: {
   return (
     <aside
       aria-label="Files and tools"
-      className={styles.column}
+      className={classes(styles.column, props.split && styles.split)}
       hidden={props.hidden}
       style={dragging ? { width: props.width } : undefined}
     >

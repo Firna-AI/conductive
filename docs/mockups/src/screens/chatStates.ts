@@ -51,6 +51,13 @@ export const temporaryTabStates = [
  * sessions in the left pane, which has the focus, beside the kept code file
  * in the right pane.
  *
+ * The `temporary` states draw a temporary tab in each pane, from split
+ * panes decision 5 B. `temporary` draws README.md in the left pane beside
+ * the first session, and the diff of AddressForm.tsx in the right pane
+ * beside the second session. The right pane shows the diff and has the
+ * focus. `temporary-replaced` draws the code file in the place of the diff,
+ * after a press that replaced it.
+ *
  * The `drag-` states draw a tab in the middle of a drag. Over one pane, the
  * code file hovers over the left half of its content, or the second session
  * over the right half. Over the split of `sessions`, the code file hovers
@@ -59,14 +66,18 @@ export const temporaryTabStates = [
  * the second session in the one row: at its place over one pane, and
  * across the border into the left part over a split.
  *
- * A phone, and a centre column narrower than two panes of 320 px, draw one
- * row with the tabs of both panes, and the shown tab of the focused pane.
- * A read-only workspace draws the saved split, with no drag.
+ * On desktop the panes stand side by side at every width (split panes
+ * decision 6 G). A phone draws one row with the session tabs of both panes,
+ * and the shown session of the focused pane, or of the other pane when the
+ * focused pane shows a file. A read-only workspace draws the saved split,
+ * with no drag.
  */
 export const paneStates = [
   'one',
   'sessions',
   'file',
+  'temporary',
+  'temporary-replaced',
   'drag-left',
   'drag-right',
   'drag-pane',

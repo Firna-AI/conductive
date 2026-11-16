@@ -1,14 +1,10 @@
-/*
- * The centre column under the header. It is the size container of its
- * panes, so the layout follows the width of the column, not of the window.
- */
+/* The centre column under the header, with one pane or two side by side. */
 .column {
   display: flex;
   flex: 1;
   flex-direction: column;
   min-width: 0;
   min-height: 0;
-  container: centre / inline-size;
 }
 
 .panes {
@@ -28,11 +24,14 @@
 
 /*
  * Two panes share the column half and half, until the user moves the
- * divider. A pane keeps at least 320 px, the least width of the right
- * column. A neutral hairline parts the panes, and the divider lies over it.
+ * divider. On desktop they never turn into one row (split panes decision
+ * 6 G): they shrink with the column and have no least width. The divider
+ * keeps each pane at least 320 px wide while the column has room for that,
+ * and else at least half of the column. A neutral hairline parts the
+ * panes, and the divider lies over it.
  */
 .split .pane {
-  min-width: 320px;
+  min-width: min(320px, 50% - 1px);
 }
 
 .split .pane:first-child {
@@ -53,9 +52,13 @@
   min-height: 0;
 }
 
-/* The one row of the tabs of both panes shows only in a narrow column. */
-.oneRow {
-  display: none;
+/*
+ * The content of each pane of a split is a size container. A chat in a
+ * pane narrower than 360 px then takes the paddings of a phone, as
+ * `ChatPane.module.css` says.
+ */
+.split .content {
+  container: split-pane / inline-size;
 }
 
 /*
@@ -75,31 +78,4 @@
 
 .phoneFooter {
   padding: 0 10px 10px;
-}
-
-/*
- * A centre column narrower than two panes of 320 px and the hairline shows
- * one pane: one row with the tabs of both panes, and the shown tab of the
- * focused pane. The saved split stays.
- */
-@container centre (width < 641px) {
-  .oneRow {
-    display: block;
-  }
-
-  .split .paneRow,
-  .split .divider,
-  .split .other {
-    display: none;
-  }
-
-  /* The pane of the focus takes the column, whatever share the divider keeps. */
-  .split .pane {
-    flex: 1 1 0 !important;
-    min-width: 0;
-  }
-
-  .split .pane:first-child {
-    border-right: none;
-  }
 }

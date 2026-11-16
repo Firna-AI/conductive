@@ -28,8 +28,9 @@ const places: Readonly<
  * The drop mark of a drag over the content of a pane (split panes decision
  * 1 C): the area where the tab lands, with an outline in the accent colour
  * over a light tint, and the lifted tab under the pointer. The content
- * stays readable under the tint. A narrow centre column opens no second
- * pane, so it hides the mark, and its status with it.
+ * stays readable under the tint. On desktop the mark shows at every width
+ * of the column, because the split never turns into one row there (split
+ * panes decision 6 G). A phone has no drop on the content, so it draws none.
  */
 export function PaneDrop(props: ContentDrop) {
   const place = places[props.area]

@@ -47,3 +47,11 @@
   overflow-x: clip;
   overflow-y: visible;
 }
+
+/*
+ * A row of one tab has no tab to clip, so its tab menu and a lifted tab
+ * also hang past its sides, such as the menu of the only tab of a pane.
+ */
+.scroll.noClip {
+  overflow: visible;
+}

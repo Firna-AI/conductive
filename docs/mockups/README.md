@@ -41,7 +41,9 @@ The catalogue shows the desktop view beside the phone, in a frame narrower
 than a laptop screen. The desktop layout narrows with its app frame, which
 fills the window: below 1295 px the right column gets narrower, below
 1280 px the sidebar gets narrower, and below 900 px the sidebar hides. The org rail stays, and the current org opens its list as its
-own page. The number of a pull request in the bar opens it on GitHub, with
+own page. While the centre column shows two panes, the right column also
+gives way to them, as [the design of the workspace](design-workspace.md)
+says. The number of a pull request in the bar opens it on GitHub, with
 an arrow. A narrow right column hides the detail of the pull request bar.
 When the bar shows an action, a column narrower than 520 px does the same.
 Use the expand control of the frame to see the full desktop layout.
@@ -138,7 +140,8 @@ a dropped folder that the browser cannot read. The app shares these words.
   image tabs of the centre column. `temporaryTabStates` covers the
   temporary tab, which `src/screens/workspaceTemporaryTab.ts` draws in the
   row. `paneStates` covers the split panes of the centre column, which
-  `src/screens/workspacePanes.ts` lays out and `src/screens/workspaceSplit.tsx`
+  `src/screens/workspacePanes.ts` lays out, with the drags of
+  `src/screens/workspacePaneDrags.ts`, and `src/screens/workspaceSplit.tsx`
   draws. `composerStates` covers the composer, with its links, mentions,
   attached files, and drops.
 - A flow (`defineUseCase`) lists the paths of existing screens. Each screen

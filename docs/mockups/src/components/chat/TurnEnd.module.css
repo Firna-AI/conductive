@@ -26,6 +26,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+  min-width: 0;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -45,6 +46,23 @@
   font-size: var(--ui-text-sm);
   text-decoration: none;
   white-space: nowrap;
+  /* A chat narrower than a chip, as in a narrow pane, cuts the name. */
+  max-width: 100%;
+  min-width: 0;
+}
+
+/* Each item of the list can shrink to the width of the chat. */
+.chips > li {
+  display: flex;
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* The name of the file. It loses its end first, so the counts stay. */
+.name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 a.chip:hover {

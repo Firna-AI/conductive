@@ -42,6 +42,7 @@ import {
   workspacePalette,
   workspaceToast,
 } from './workspaceOverlays'
+import { showsTwoPanes } from './workspacePanes'
 import { openWorkspace } from './workspaceRun'
 import {
   activityOf,
@@ -176,6 +177,7 @@ export function WorkspaceScreen(props: {
         <WorkspaceSplit
           chat={chatProps}
           historyEntries={historyFor(state)}
+          menuTab={row.menuTab}
           panes={state.panes}
           readOnly={readOnly}
           state={state}
@@ -280,6 +282,7 @@ export function WorkspaceScreen(props: {
         pullRequest={<PullRequestBar bar={bar} workspace={workspace} />}
         rightHidden={rightHidden}
         rightWidth={state.resize === 'right' ? widenedRight : undefined}
+        split={showsTwoPanes(state.panes)}
         tabs={split ? undefined : tabRow}
         tools={
           archived ? undefined : (

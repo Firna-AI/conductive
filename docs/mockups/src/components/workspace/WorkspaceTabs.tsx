@@ -105,8 +105,9 @@ function placeAfterDrop(from: number, index: number): number {
  *
  * A split centre column gives each pane its own row (split panes decision
  * 1 C). `focused` marks the row of the focused pane, and only the right row
- * keeps the clock. `border` parts the tabs of the two panes in the one row
- * of a phone or of a narrow column.
+ * keeps the clock. `split` says that two panes show, so the tab menu moves
+ * a tab to the other pane (split panes decision 4 B). `border` parts the
+ * tabs of the two panes in the one row of a phone.
  */
 export function WorkspaceTabs(props: {
   tabs: readonly WorkspaceTab[]
@@ -132,8 +133,14 @@ export function WorkspaceTabs(props: {
   /** The name of the row for a screen reader, which names its pane. */
   label?: string
   /**
-   * The index of the first tab of the right pane, in the one row that holds
-   * the tabs of both panes. A quiet border stands between the two parts.
+   * The centre column shows two panes. The tab menu then offers Move to the
+   * other pane in place of Open in a new pane.
+   */
+  split?: boolean
+  /**
+   * The index of the first tab of the right pane, in the one row of a phone
+   * that holds the tabs of both panes. A quiet border stands between the
+   * two parts.
    */
   border?: number
 }) {
@@ -145,7 +152,8 @@ export function WorkspaceTabs(props: {
   const dragged = from < 0 ? drag?.from : tabs[from]
   const kept = props.renaming ?? tabs.find((tab) => tab.selected)?.key
   const endInView = full && kept !== undefined && tabs.at(-1)?.key === kept
-  const menu = menuTab === undefined ? [] : tabMenuOf(tabs, menuTab, readOnly)
+  const place = { readOnly, split: props.split ?? false, phone, border }
+  const menu = menuTab === undefined ? [] : tabMenuOf(tabs, menuTab, place)
   const menuOpen = menu.length > 0
   // The lifted tab and a menu below a tab hang below the row.
   const lifted = dragged !== undefined && drag?.index !== undefined
@@ -194,7 +202,9 @@ export function WorkspaceTabs(props: {
           tabScroll.scroll,
           endInView && tabScroll.scrolledToEnd,
           full && (endInView ? tabScroll.fadeStart : tabScroll.fadeEnd),
-          overRow && !full && tabScroll.clipSides,
+          overRow &&
+            !full &&
+            (tabs.length > 1 ? tabScroll.clipSides : tabScroll.noClip),
         )}
       >
         {tabs.map((tab, index) => (

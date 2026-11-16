@@ -2,6 +2,17 @@
 export type PaneSide = 'left' | 'right'
 
 /**
+ * The one item of the tab menu that moves a tab between panes, in the
+ * group of Move left and Move right (split panes decision 4 B). With two
+ * panes it moves the tab to the other pane. With one pane it opens the
+ * second pane on the right, with the tab in it.
+ */
+export const paneItems = {
+  move: 'Move to the other pane',
+  open: 'Open in a new pane',
+} as const
+
+/**
  * Where a drop puts a dragged tab: a place in its own row, a place in the
  * row of the other pane, or a new pane on one side of the column. A place
  * counts from 1, of `count` tabs in that row after the drop.

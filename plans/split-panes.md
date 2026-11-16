@@ -425,6 +425,31 @@ protocol docs took decisions 4 to 8.
 - The paddings of a phone apply only while two panes show, as decision 6 G
   is about two panes.
 
+### Calls from the second mockup round
+
+These are design calls of the agent, made on 16 November 2026, when the
+mockups drew decisions 4 B, 5 B, and 6 G.
+
+- A chat in a narrow pane does not scroll sideways. The file chip of a
+  finished turn cuts its name with an ellipsis, as a tab title does.
+  Reason: under decision 6 G a pane can be about 180 px wide, and a chip
+  of about 300 px then pushed the chat sideways. The mockups apply the fix
+  now. The app takes it in Milestone 6, because it shares the styles.
+- A drag of the divider stops where a pane would get narrower than 320 px,
+  or at half of a centre column narrower than 641 px. A kept share holds
+  while each pane keeps 320 px. Reason: the right column handle also stops
+  at 320 px, and a narrow window must still shrink both panes.
+- The right column still leaves the centre column at least 360 px, as the
+  app does for one chat. So in the narrowest desktop windows the right
+  column gets narrower than 280 px. Reason: the text of decision 6 G, which
+  the user chose, gives a narrowest pane of about 180 px at 640 px, which
+  this rule gives. The mockups now have the same rule as the app.
+- "Move to the other pane" uses a two-column icon, so it looks different
+  from the toggle of the right column.
+- The width rules moved to their own page,
+  `docs/protocol/split-pane-width.md`, so that `split-panes.md` stays near
+  250 lines.
+
 ### The chat state
 
 - The chat state replaces `activeSessionId` with the shown tab of each pane
@@ -444,16 +469,17 @@ Tags: mockup
 Depends on: none
 
 The mockups draw the split column on desktop, and the one row of a phone
-and of a narrow centre column. They live under `app/tabs/split`.
+They live under `app/tabs/split`. Since decision 6 G, only the phone shows
+one row.
 
 - [x] Add a split workspace screen: two panes, two tab rows, the divider,
       and the mark of the focused pane. Draw a session beside a session,
       and a session beside a file.
 - [x] Draw the drag: the drop marks for the left half, the right half, and
       a pane of an open split, and a tab over the other row.
-- [ ] Draw the control of decision 4 that the user chooses: the tab menu
+- [x] Draw the control of decision 4 that the user chooses: the tab menu
       item, or the split button of each row.
-- [ ] Draw the temporary tab as decision 5 says.
+- [x] Draw the temporary tab as decision 5 says.
 - [x] Draw the one row of a narrow centre column, with the tabs of both
       panes.
 - [x] Draw a read-only workspace with a split.
@@ -461,7 +487,7 @@ and of a narrow centre column. They live under `app/tabs/split`.
       screenshots are in `.context/split-panes/mockups/`.
 - [x] Update the design and the TODOs of this plan for each problem that
       the mockups show. Decision 6 and seven design calls came from them.
-- [ ] Redraw `app/tabs/split/narrow` and its `file` page as a narrow
+- [x] Redraw `app/tabs/split/narrow` and its `file` page as a narrow
       desktop window with two panes, as decision 6 says. Keep their phone
       views. Draw the least width of a pane there.
 
@@ -559,6 +585,9 @@ Depends on: 5
       drop.
 - [ ] Show one row and one pane on a phone, and share a narrow desktop
       window as decision 6 says.
+- [ ] Wrap the file name of a turn chip in `src/chat/components/TurnEnd.tsx`
+      in the `name` part of its shared styles, as the mockup does, so that
+      a narrow pane cuts the name and does not scroll sideways.
 - [ ] Delete the old single-row paths that Milestone 4 left.
 
 ## Milestone 7: The drag between panes

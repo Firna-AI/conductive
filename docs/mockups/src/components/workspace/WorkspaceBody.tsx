@@ -6,7 +6,8 @@ import styles from './WorkspaceBody.module.css'
  * The desktop workspace beside the sidebar: the centre column with its
  * header, its tabs, and the open session or file, then the right column with
  * the pull request, the file lists, and the tools. When the user hides the
- * right column, the centre column takes its width.
+ * right column, the centre column takes its width. While the centre column
+ * shows two panes, the right column gives way to them first.
  */
 export function WorkspaceBody(props: {
   header: ReactNode
@@ -22,6 +23,8 @@ export function WorkspaceBody(props: {
   filesShare?: number
   /** The user hid the right column with the toggle of the header. */
   rightHidden?: boolean
+  /** The centre column shows two panes (split panes decision 6 G). */
+  split?: boolean
 }) {
   return (
     <div className={styles.body}>
@@ -35,6 +38,7 @@ export function WorkspaceBody(props: {
         filesShare={props.filesShare}
         hidden={props.rightHidden}
         pullRequest={props.pullRequest}
+        split={props.split}
         tools={props.tools}
         width={props.rightWidth}
       />

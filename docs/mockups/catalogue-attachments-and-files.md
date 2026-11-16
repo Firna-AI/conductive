@@ -75,7 +75,8 @@ variants:
   title, and the diff of AddressForm.tsx in a new temporary tab at the end
   of the row.
 - Its `menu` variant has the tab menu of the temporary tab: Keep open, a
-  line, then Move left and Move right.
+  line, Move left, Move right, and Open in a new pane, a line, then Close
+  tabs to the right.
 - Its `drag` variant has a drag of the temporary tab, whose lifted copy
   keeps the italics. A drop in another place keeps the tab.
 

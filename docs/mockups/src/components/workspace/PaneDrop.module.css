@@ -49,13 +49,3 @@
 .pointerPane {
   left: 50%;
 }
-
-/*
- * A centre column narrower than two panes of 320 px shows one pane, so a
- * drop on its content moves no tab (`SplitColumn.module.css`).
- */
-@container centre (width < 641px) {
-  .mark {
-    display: none;
-  }
-}

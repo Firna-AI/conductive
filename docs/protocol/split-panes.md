@@ -61,24 +61,9 @@ the change that adds split panes. The
 
 ## The width of the panes
 
-- On desktop, the split never turns into one row. Only the phone layout
-  shows one row, as [On a phone](#on-a-phone) says. The user asked for
-  this on 16 November 2026.
-- Reason: a split that stops at a fixed width of the window confuses the
-  user.
-- When the window narrows while two panes show, the right column narrows
-  first, down to 280 px, so that each pane keeps 320 px. Then both panes
-  shrink with the window. A pane has no least width (split panes decision
-  6 G).
-- Reason: everything then shrinks with the window, and no panel or pane
-  hides at a fixed width.
-- A least width of a pane was not chosen. Below that width, the column
-  would show one row, the right column would hide itself, or the pane that
-  is not focused would shrink to a strip. Each of these changes the layout
-  at a width that the user did not choose.
-- While two panes show, a pane narrower than 360 px gives its chat the
-  paddings of the phone layout. Reason: the text of a narrow pane then
-  gets as much room as on a phone of the same width.
+[The width of split panes](split-pane-width.md) states how the panes and
+the right column share a narrow window. On desktop, the split never turns
+into one row (split panes decision 6 G).
 
 ## The focus
 

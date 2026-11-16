@@ -1,1 +1,1 @@
-{ "order": ["file", "drag", "narrow", "archived"] }
+{ "order": ["file", "temporary", "drag", "menu", "narrow", "archived"] }

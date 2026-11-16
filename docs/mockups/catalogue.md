@@ -37,7 +37,7 @@ how a screen is built, and links to the other pages.
 | `app/workspace-links` | Chips in a message and an answer, then Copy link and its failure, a pasted link, a link of another org, session chips, and messages that an agent sent |
 | `app/file-mentions` | The list of `@` with a query, then the list without one, its other states, the file chips of the composer and of a sent message, and the file chips of an answer |
 | `app/files`         | All files, Changes with its summary, a file, Markdown, diff, and image tab, the temporary tab that the next press replaces, and the file tab at a line |
-| `app/tabs`          | A dragged tab, the moved row, a full row, the tab menu, the rename field, and split panes with their drags, their one row, and an archived split |
+| `app/tabs`          | A dragged tab, the moved row, a full row, the tab menu, the rename field, and split panes with a temporary tab in each pane, their drags, their tab menu, a narrow window, and an archived split |
 | `app/transcripts`   | Copy a transcript from the tab menu: the toast after a copy, a failed copy, and the menu of an archived workspace |
 | `app/tools`         | The terminal tabs and their states, a link in the terminal under the pointer and a size that another viewer set, then the Preview tool with its detected servers and its failed list repair, and the hidden Desktop, kept for its return |
 | `app/panels`        | The right column, widened by the handle on its inner edge, and then hidden    |

@@ -15,12 +15,12 @@ import { ArchivedToast } from '../components/workspace/ArchivedToast'
 import { ContinueDialog } from '../components/workspace/ContinueDialog'
 import { reassignMenu } from '../components/workspace/OwnerPicker'
 import type { WorkspaceTab } from '../components/workspace/TabItem'
-import { TabMenuSheet } from '../components/workspace/TabMenu'
 import { transcriptToasts } from '../components/workspace/transcriptCopy'
 import { workspaceSessions } from '../fixtures/sessions'
 import { closedTerminal, cloudComputerSilent } from '../fixtures/terminals'
 import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
+import { PhoneTabMenu } from './workspaceSplit'
 import type { WorkspaceState } from './workspaceState'
 import { historyFor } from './workspaceTabs'
 
@@ -179,11 +179,7 @@ export function workspaceOverlay(
       ) : null
     case 'tab-menu':
       return mobile && row.menuTab ? (
-        <TabMenuSheet
-          readOnly={row.readOnly}
-          tab={row.menuTab}
-          tabs={row.tabs}
-        />
+        <PhoneTabMenu row={{ ...row, menuTab: row.menuTab }} state={state} />
       ) : null
     case 'close-terminal':
       return <CloseTerminalDialog viewport={viewport} />

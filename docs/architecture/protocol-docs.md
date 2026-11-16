@@ -155,6 +155,8 @@ This page lists each protocol doc and what it covers.
     - [Split panes](../protocol/split-panes.md): the one or two panes of
       the centre column, their width and their focus, the pane where a tab
       opens, the moves between panes, the saved split, and the phone.
+      - [The width of split panes](../protocol/split-pane-width.md): how
+        the panes and the right column share a narrow desktop window.
 - [Workspace links](../protocol/workspace-links.md): Copy link, and the chips
   that show workspace links in chat.
 - [Chat Markdown](../protocol/chat-markdown.md): the formatting of agent

@@ -5,10 +5,24 @@
   flex-shrink: 0;
   flex-direction: column;
   width: clamp(280px, 34cqw, var(--ui-right-width));
+  /* The column leaves the chat at least 360 px, as the app does. */
+  max-width: calc(100% - 360px);
   min-height: 0;
   border-left: 1px solid var(--ui-border);
   background: var(--ui-panel);
   container-type: inline-size;
+}
+
+/*
+ * While two panes show, the column gives way to them, down to 280 px, so
+ * that each pane keeps 320 px (split panes decision 6 G). The centre column
+ * then keeps 641 px: two panes and the hairline between them. The 642 px
+ * add the border of this column. A narrower window shrinks the panes. The
+ * column still leaves the centre at least 360 px, so in the narrowest
+ * windows it gets narrower than 280 px, as for one chat.
+ */
+.split {
+  max-width: min(max(280px, 100% - 642px), 100% - 360px);
 }
 
 .files {

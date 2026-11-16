@@ -19,21 +19,29 @@ export type Pane = {
   drag?: TabDrag
   /** The drop mark over its content during a drag. */
   drop?: ContentDrop
+  /** The tab of its row whose menu is open. */
+  menuTab?: string
 }
 
 /**
- * The one row of a phone or of a narrow column: the tabs of the left pane,
- * then the tabs of the right pane, from the index `border`.
+ * The one row of a phone: the tabs of the left pane, then the tabs of the
+ * right pane, from the index `border`. `shown` is the index of the pane
+ * whose shown tab the content area shows: the focused pane, or the other
+ * pane when the focused pane shows a file, because a phone shows files
+ * only in its Files tab.
  */
 export type OneRow = {
   tabs: readonly WorkspaceTab[]
+  shown: number
   border?: number
   drag?: TabDrag
+  menuTab?: string
 }
 
 /**
  * The divider moves the share of the left pane, in percent. A drag stops
- * where a pane would get narrower than 320 px.
+ * where a pane would get narrower than 320 px, or than half of a column
+ * narrower than two panes of 320 px.
  */
 const paneShare: PanelWidth = { value: 50, min: 0, max: 100 }
 
@@ -51,8 +59,10 @@ const paneNames: Readonly<Record<PaneSide, { pane: string; row: string }>> = {
  * panes moves the split. A pane that shows a session has its own message
  * field, and `footer` holds a bar that both panes share.
  *
- * A phone, and a centre column narrower than two panes of 320 px, show one
- * row with the tabs of both panes, and the shown tab of the focused pane.
+ * On desktop the split never turns into one row (split panes decision
+ * 6 G): the panes shrink with the column, and a pane narrower than 360 px
+ * gives its chat the paddings of a phone. Only a phone shows one row with
+ * the tabs of both panes, and the content of one pane.
  */
 export function SplitColumn(props: {
   panes: readonly Pane[]
@@ -65,23 +75,14 @@ export function SplitColumn(props: {
   footer?: ReactNode
   /**
    * The share of the left pane, in percent, while the user drags the
-   * divider. A pane keeps its 320 px also then.
+   * divider. A pane keeps 320 px also then, while the column has room.
    */
   share?: number
 }) {
   const { panes, focused, viewport, readOnly, historyEntries, share } = props
   const phone = viewport === 'mobile'
   const split = panes.length > 1
-  const oneRow = (
-    <WorkspaceTabs
-      border={props.row.border}
-      drag={props.row.drag}
-      historyEntries={historyEntries}
-      readOnly={readOnly}
-      tabs={props.row.tabs}
-      viewport={viewport}
-    />
-  )
+  const { row } = props
   const footer = props.footer ? (
     <div className={classes(styles.footer, phone && styles.phoneFooter)}>
       {props.footer}
@@ -90,20 +91,28 @@ export function SplitColumn(props: {
   if (phone) {
     return (
       <>
-        {oneRow}
-        <div className={styles.content}>{panes[focused]?.content}</div>
+        <WorkspaceTabs
+          border={row.border}
+          drag={row.drag}
+          historyEntries={historyEntries}
+          menuTab={row.menuTab}
+          readOnly={readOnly}
+          split={split}
+          tabs={row.tabs}
+          viewport={viewport}
+        />
+        <div className={styles.content}>{panes[row.shown]?.content}</div>
         {footer}
       </>
     )
   }
   return (
     <div className={classes(styles.column, split && styles.split)}>
-      {split ? <div className={styles.oneRow}>{oneRow}</div> : null}
       <div className={styles.panes}>
         {panes.map((pane, index) => (
           <section
             aria-label={split ? paneNames[pane.side].pane : undefined}
-            className={classes(styles.pane, index !== focused && styles.other)}
+            className={styles.pane}
             key={pane.side}
             style={
               split && index === 0 && share !== undefined
@@ -111,18 +120,18 @@ export function SplitColumn(props: {
                 : undefined
             }
           >
-            <div className={styles.paneRow}>
-              <WorkspaceTabs
-                drag={pane.drag}
-                focused={split ? index === focused : undefined}
-                history={index === panes.length - 1}
-                historyEntries={historyEntries}
-                label={split ? paneNames[pane.side].row : undefined}
-                readOnly={readOnly}
-                tabs={pane.tabs}
-                viewport={viewport}
-              />
-            </div>
+            <WorkspaceTabs
+              drag={pane.drag}
+              focused={split ? index === focused : undefined}
+              history={index === panes.length - 1}
+              historyEntries={historyEntries}
+              label={split ? paneNames[pane.side].row : undefined}
+              menuTab={pane.menuTab}
+              readOnly={readOnly}
+              split={split}
+              tabs={pane.tabs}
+              viewport={viewport}
+            />
             <div className={styles.content}>
               {pane.content}
               {pane.drop ? <PaneDrop {...pane.drop} /> : null}

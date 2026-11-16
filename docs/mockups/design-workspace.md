@@ -23,11 +23,13 @@ workspace with Copy link, and the bars of the cloud computer.
   their minimum width, the row scrolls sideways with no scrollbar, keeps the
   shown tab in view, and fades each end that clips tabs. A right click on a
   tab opens its menu at the pointer: Rename session, a line, Copy link,
-  Copy concise transcript, and Copy full transcript, a line, then Move left
-  and Move right, from decisions 188 and 215. Copy link copies the link of
-  the session. A kept file or diff tab has only the moves. In a read-only
-  workspace, the menu of a session tab holds only the three copy items,
-  and a file or diff tab opens no menu. A copy keeps the shown
+  Copy concise transcript, and Copy full transcript, a line, Move left,
+  Move right, and the pane item of split panes decision 4 B, a line, then
+  Close tabs to the right, from decisions 188 and 215. Copy link copies the
+  link of the session. A kept file or diff tab has only the moves, then
+  Close tabs to the right. In a read-only workspace, the menu of a session
+  tab holds only the three copy items, and a file or diff tab opens no
+  menu. A copy keeps the shown
   tab, and a toast gives its result, as `app/transcripts` shows. The menu
   is the one way to rename a session, so no tab shows a rename button.
   Rename session opens a field in place of the title of that tab, also when
@@ -49,7 +51,8 @@ workspace with Copy link, and the bars of the cloud computer.
   ", temporary". The tab menu and the move messages keep the plain name. A
   double-click on the tab or on the row of its file keeps it as a normal
   tab, with an upright title, in its place. Its tab menu leads with Keep
-  open, which keeps it too, then a line, then Move left and Move right.
+  open, which keeps it too, then a line, then the moves, then Close tabs
+  to the right.
   Keep open has the icon of a bookmark with a check, because a pin names
   the pinned tabs of a browser. A drag, Move left, or Move right that
   changes its place keeps it. A drag that Escape cancels, or that ends in
@@ -61,14 +64,34 @@ workspace with Copy link, and the bars of the cloud computer.
   1 C, 2 A, and 3 B, as `app/tabs/split` shows. Each pane has its own
   `WorkspaceTabs` row with its own +, and the session history ends the
   right row. A tab stands in one row only. A hairline parts the panes, and
-  the `ResizeHandle` of the divider lies over it. A pane is at least
-  320 px wide. The row of the focused pane marks its shown tab: its icon
-  takes the accent colour, as the current item of the org rail does. The
-  shown tab of the other pane keeps its fill, with a quieter title, and
-  one pane draws no mark. Each pane that shows a session has its own chat
-  and message field. A bar of the cloud computer that takes the place of
-  the message field, such as the archived bar, shows once, under both
-  panes.
+  the `ResizeHandle` of the divider lies over it. The row of the focused
+  pane marks its shown tab: its icon takes the accent colour, as the
+  current item of the org rail does. The shown tab of the other pane keeps
+  its fill, with a quieter title, and one pane draws no mark. Each pane
+  that shows a session has its own chat and message field. A bar of the
+  cloud computer that takes the place of the message field, such as the
+  archived bar, shows once, under both panes.
+  - On desktop the split never turns into one row, from split panes
+    decision 6 G, as `app/tabs/split/narrow` shows. While two panes show,
+    `RightColumn` gives way to them, down to 280 px, so that each pane
+    keeps 320 px. Then both panes shrink with the window, with no least
+    width. The content of each pane is the `split-pane` size container, so
+    a chat in a pane narrower than 360 px takes the paddings of a phone
+    from `ChatPane.module.css`. A drag of the divider stops where a pane
+    would get narrower than 320 px, or than half of a column that has no
+    room for two panes of 320 px.
+  - Each pane keeps its own temporary tab, from split panes decision 5 B,
+    as `app/tabs/split/temporary` shows. A press replaces only the
+    temporary tab of the pane that it uses, so the column holds at most
+    two temporary tabs.
+  - The tab menu has one pane item in the group of Move left and Move
+    right, from split panes decision 4 B, as `app/tabs/split/menu` shows.
+    With two panes it reads Move to the other pane, and it moves the tab
+    to the end of the other row. With one pane it reads Open in a new
+    pane, and it opens the second pane on the right. The item is off when
+    the pane holds only this tab and no other pane exists, and on a phone.
+    A read-only workspace leaves it out. Its icon shows two columns.
+    `paneCopy.ts` gives its words.
   - During a drag, `PaneDrop` beside it draws the drop mark over the
     content of a pane: a full outline in the accent colour over a light
     tint of it, on the left or the right half of one pane, or on the whole
@@ -76,10 +99,11 @@ workspace with Copy link, and the bars of the cloud computer.
     other row shows the line of that row. `paneCopy.ts` gives the words
     that a screen reader hears, such as "Moving app.ts to the right pane,
     place 2 of 3".
-  - A phone, and a centre column narrower than 641 px, show one row with
-    the tabs of the left pane, a short neutral line, then the tabs of the
-    right pane, and the shown tab of the focused pane. There a drop on the
-    content shows no mark. The phone row still shows only session tabs.
+  - A phone shows one row with the tabs of the left pane, a short neutral
+    line, then the tabs of the right pane. Its content shows the shown tab
+    of the focused pane, or the shown session of the other pane when the
+    focused pane shows a file. There a drop on the content shows no mark.
+    The phone row still shows only session tabs.
   - A read-only workspace shows the saved split, with no + and no drag.
     `SplitColumn.module.css` and `PaneDrop.module.css` style these parts.
 - `TerminalTabs` in `src/components/tools/` draws the terminals of a

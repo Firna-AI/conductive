@@ -72,15 +72,18 @@ function dragOf(
 
 /**
  * The tab whose menu is open: the temporary tab when the state draws one,
- * or else the first session. A phone row shows no file tabs, so a phone
- * opens no menu for the temporary tab.
+ * or else the first session, or else the first tab, such as the one session
+ * of a new workspace. A phone row shows no file tabs, so a phone opens no
+ * menu for the temporary tab.
  */
 function menuTabOf(
   state: WorkspaceState,
   tabs: readonly WorkspaceTab[],
 ): string | undefined {
   if (state.overlay !== 'tab-menu') return undefined
-  return hasTemporaryTab(state) ? temporaryKey(tabs) : firstSession.key
+  if (hasTemporaryTab(state)) return temporaryKey(tabs)
+  const first = tabs.find((tab) => tab.key === firstSession.key) ?? tabs[0]
+  return first?.key
 }
 
 /**

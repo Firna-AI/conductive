@@ -21,7 +21,7 @@ function FileChip(props: { file: ChangedFile }) {
   const content = (
     <>
       <FileText className={styles.icon} size={12} />
-      {splitPath(file.path).name}
+      <span className={styles.name}>{splitPath(file.path).name}</span>
       {file.added > 0 || file.removed > 0 ? (
         <DiffStat added={file.added} removed={file.removed} />
       ) : null}
