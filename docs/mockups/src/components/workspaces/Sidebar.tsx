@@ -17,7 +17,7 @@ import type {
 import { SectionList } from './SectionList'
 import {
   NewWorkspaceLink,
-  RoutinesLink,
+  AutomationsLink,
   SearchLink,
   SettingsLink,
 } from './SidebarLinks'
@@ -25,8 +25,8 @@ import styles from './Sidebar.module.css'
 
 /**
  * The desktop sidebar beside the org rail: the org name with its Settings
- * link, New workspace, Routines, Search, and the sections of the org.
- * A suspended org keeps Routines and Search, with read-only sections.
+ * cog, New workspace, Automations, Search, and the sections of the org.
+ * A suspended org keeps Automations and Search, with read-only sections.
  * A list that did not load shows its failure in place of the sections.
  * An open menu of a row may pass the edge of the sidebar.
  */
@@ -34,7 +34,7 @@ export function Sidebar(props: {
   org: Org
   sections: readonly SidebarSection[]
   /** The page that the main area shows, when the sidebar links to it. */
-  current?: 'settings' | 'new-workspace' | 'routines'
+  current?: 'settings' | 'new-workspace' | 'automations'
   /** A build of the org's cloud computer failed. */
   settingsAlert?: boolean
   /** The New workspace page of the org, such as that of a new org. */
@@ -82,9 +82,9 @@ export function Sidebar(props: {
               variant="sidebar"
             />
           )}
-          <RoutinesLink
-            current={props.current === 'routines'}
-            to={suspended ? paths.suspendedRoutines : undefined}
+          <AutomationsLink
+            current={props.current === 'automations'}
+            to={suspended ? paths.suspendedAutomations : undefined}
             variant="sidebar"
           />
           <SearchLink

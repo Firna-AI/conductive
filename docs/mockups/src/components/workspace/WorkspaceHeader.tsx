@@ -35,7 +35,7 @@ function State(props: { status: ActivityStatus }) {
  * moves the workspace to another repository. For an admin of the org,
  * the owner opens the menu that reassigns the workspace. On desktop the
  * header ends with the toggle that hides the right column and shows it
- * again. A run workspace also links to its routine and its pull request.
+ * again. A run workspace also links to its automation and its pull request.
  */
 export function WorkspaceHeader(props: {
   workspace: Workspace
@@ -53,7 +53,7 @@ export function WorkspaceHeader(props: {
   copy?: CopyResult
   /** The user hid the right column of the desktop with the toggle. */
   rightHidden?: boolean
-  /** The routine of a run workspace and the pull request of its run. */
+  /** The automation of a run workspace and the pull request of its run. */
   run?: RunSource
   /**
    * The menu of the repository is open, or the change of the repository

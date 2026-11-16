@@ -1,4 +1,4 @@
-import type { UserMessage } from '../../src/shared/messages'
+import type { UserMessage } from '../../src/shared/generated/UserMessage'
 import {
   buildEventsPath,
   buildPath,
@@ -13,11 +13,12 @@ import {
 } from '../../src/shared/workspaces'
 import { HttpError, privateResponse } from '../http'
 import type { RequestContext } from '../security/gate'
+import { ServerTiming, SERVER_TIMING_HEADER } from '../server-timing'
 import { requireOrgMember } from './access'
 import { readBuild, readBuildHistory } from './build-data'
 import { buildEventsResponse } from './build-stream'
 import { startImageBuild, type ImageRuntime } from './image-builds'
-import type { ImageSoftwareArtifact } from './image-software'
+import { latestSoftwareRelease } from './software-release'
 import { createWorkspaceInput } from './request-parser'
 import { resumeWorkspace } from './workspace-resume'
 import { workspaceResponse } from './workspace-response'
@@ -28,7 +29,6 @@ import type {
 import { createWorkspace } from './workspaces'
 
 export interface LifecycleBrowserOptions {
-  software: ImageSoftwareArtifact
   /** Milestone 7 stores this message/session and resolves real attachments. */
   acceptFirstMessage(first: FirstWorkspaceMessage): Promise<UserMessage>
   projectWorkspace?(response: WorkspaceResponse): Promise<WorkspaceResponse>
@@ -47,8 +47,12 @@ export async function handleLifecycleRequest(
   const path = new URL(request.url).pathname
   const project = async (response: WorkspaceResponse) =>
     options.projectWorkspace ? options.projectWorkspace(response) : response
-  await requireOrgMember(runtime.env.DB, orgId, context.user.id)
+  // A create comes first, because `createWorkspace` checks the same
+  // membership itself, together with its other checks.
   if (path === workspacesPath(orgId) && request.method === 'POST') {
+    // The answer names the duration of each step, so a slow create can be
+    // measured from the browser.
+    const timing = new ServerTiming()
     const provisioning = createWorkspace(
       runtime,
       orgId,
@@ -56,11 +60,11 @@ export async function handleLifecycleRequest(
       createWorkspaceInput(context.body),
     )
     options.waitUntil(provisioning)
-    const created = await provisioning
-    const firstMessage = await options.acceptFirstMessage(created.first)
-    const projected = options.projectWorkspace
-      ? await options.projectWorkspace(created)
-      : created
+    const created = await timing.step('create', () => provisioning)
+    const firstMessage = await timing.step('message', () =>
+      options.acceptFirstMessage(created.first),
+    )
+    const projected = await timing.step('project', () => project(created))
     const result: CreateWorkspaceResponse = {
       workspace: projected.workspace,
       start: projected.start,
@@ -68,8 +72,11 @@ export async function handleLifecycleRequest(
       sessionId: created.first.sessionId,
       firstMessage,
     }
-    return privateResponse(Response.json(result, { status: 201 }))
+    const response = privateResponse(Response.json(result, { status: 201 }))
+    response.headers.set(SERVER_TIMING_HEADER, timing.header())
+    return response
   }
+  await requireOrgMember(runtime.env.DB, orgId, context.user.id)
   if (path === orgSettingsPaths.builds(orgId)) {
     if (request.method === 'GET')
       return privateResponse(
@@ -80,7 +87,10 @@ export async function handleLifecycleRequest(
         orgId,
         userId: context.user.id,
         kind: 'build',
-        software: options.software,
+        software: await latestSoftwareRelease(
+          runtime.env,
+          runtime.dependencies.fetch,
+        ),
       })
       return privateResponse(
         Response.json(await readBuild(runtime.env.DB, orgId, id), {
@@ -94,7 +104,10 @@ export async function handleLifecycleRequest(
       orgId,
       userId: context.user.id,
       kind: 'refresh',
-      software: options.software,
+      software: await latestSoftwareRelease(
+        runtime.env,
+        runtime.dependencies.fetch,
+      ),
     })
     return privateResponse(
       Response.json(await readBuild(runtime.env.DB, orgId, id), {

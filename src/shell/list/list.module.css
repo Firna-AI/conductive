@@ -27,11 +27,6 @@
   transform: rotate(-1.5deg);
 }
 
-/* The field of a new section, under the other sections. */
-.newSection {
-  padding: 0 2px 0 4px;
-}
-
 .choose {
   display: flex;
   flex: 1;

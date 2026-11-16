@@ -11,6 +11,7 @@ describe('file ownership after a fresh controller start', () => {
     const chat = await readyChat()
     const [oldId] = chat.controller.attachFiles(session, [note('old.txt')])
     chat.controller.setDraft(session, `Old words ${fileMark(oldId)}`)
+    await chat.started(1)
     await chat.finish(0, 'old')
     const owner = chat.draftOf(session)?.id ?? ''
     const oldSource = chat.controller.draftFiles(owner)
@@ -30,6 +31,7 @@ describe('file ownership after a fresh controller start', () => {
     expect(newSource.files()).toMatchObject([
       { id: newId, file: { name: 'new.txt' } },
     ])
+    await chat.started(2)
     await chat.finish(1, 'new')
     expect(newSource.files()).toMatchObject([
       { state: 'ready', attachment: { id: 'new' } },

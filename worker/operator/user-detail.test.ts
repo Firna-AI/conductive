@@ -18,7 +18,7 @@ beforeEach(async () => {
 })
 afterAll(async () => harness.dispose())
 
-it('reads only owned workspace counts, all org roles, the name, and the suspension of a user', async () => {
+it('reads only owned workspace counts, all org roles, the name, the email, and the suspension of a user', async () => {
   const cookie = await harness.login()
   await directoryUser(harness, {
     githubId: 8,
@@ -56,12 +56,19 @@ it('reads only owned workspace counts, all org roles, the name, and the suspensi
     `UPDATE workspaces SET owner_user_id = (SELECT id FROM users WHERE github_id = 8)`,
   ).run()
   await seedWorkspace(harness, { id: 'another-owner', orgId: 'zeta' })
+  await harness.env.DB.prepare(
+    'UPDATE users SET last_active_at = ? WHERE github_id = 8',
+  )
+    .bind(TEST_TIME - 60_000)
+    .run()
   const active = await userPage(harness, cookie, 8)
   expect(active).toEqual({
     githubId: 8,
     login: 'dana-k',
     name: 'Dana Kim',
+    email: null,
     joinedAt: TEST_TIME - 1,
+    lastActiveAt: TEST_TIME - 60_000,
     appAccess: { state: 'waiting', waitingSince: TEST_TIME - 1 },
     approvalEmail: { state: 'none', updatedAt: null },
     hasVerifiedEmail: false,
@@ -87,9 +94,12 @@ it('reads only owned workspace counts, all org roles, the name, and the suspensi
   })
   expect(suspended.orgs).toEqual(active.orgs)
   await harness.env.DB.prepare(
-    'UPDATE users SET display_name = NULL, suspended_by_user_id = NULL WHERE github_id = 8',
+    `UPDATE users SET display_name = NULL, suspended_by_user_id = NULL,
+     primary_verified_email = 'dana@example.com' WHERE github_id = 8`,
   ).run()
   const unnamed = await userPage(harness, cookie, 8)
   expect(unnamed.name).toBeNull()
+  expect(unnamed.email).toBe('dana@example.com')
+  expect(unnamed.hasVerifiedEmail).toBe(true)
   expect(unnamed.suspension).toEqual({ suspendedAt: TEST_TIME, operator: null })
 })

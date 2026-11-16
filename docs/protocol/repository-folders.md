@@ -84,14 +84,15 @@ number names a dated record, as
   files fails and names the cause. Reason: such a repository is rare, and
   a second place for the files doubles the path rules.
 - A command that deletes ignored files, such as `git clean -fdx`, deletes
-  the folder with its notes and attached files. Reason: Conductor has the
-  same limit, and the app still stores each attached file outside the
-  cloud computer.
-- Each build of the org image installs the newest runner, as
-  [The agent runner](agent-runner.md#the-agent-runner) says. A cloud
-  computer with an older runner gets no rule and no folder at its start.
-  Its agents are not told about the folder. Its All files lists no file
-  of the folder that Git ignores.
+  the folder with its notes and attached files. A later message with such
+  a file then fails and names it, as
+  [Later messages](attachment-transfers.md#later-messages) says. Reason:
+  Conductor has the same limit, and the failure names each lost file.
+- A cloud computer with an older runner gets no rule and no folder at its
+  start. Its agents are not told about the folder. Its All files lists no
+  file of the folder that Git ignores. An update gives it a newer runner at
+  a later start, as [The agent runner](agent-runner.md#the-agent-runner)
+  says.
 - These ways were rejected:
   - A `.context/` line in the `.gitignore` of each repository. It adds a
     tracked change on every branch.

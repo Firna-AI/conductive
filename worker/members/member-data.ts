@@ -118,7 +118,7 @@ export async function removeMembership(
       ),
     db
       .prepare(
-        `UPDATE routines SET owner_user_id = (${recipient}), active = 0,
+        `UPDATE automations SET owner_user_id = (${recipient}), active = 0,
          inactive_reason = 'owner_left', next_run_at = NULL,
          moved_from_name = (SELECT COALESCE(display_name, github_login) FROM users WHERE id = ?),
          updated_at = ?

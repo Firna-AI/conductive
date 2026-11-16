@@ -9,7 +9,7 @@
 - **Terms:**
   - **Shared words:** `src/marketing/features.ts`, which the Astro site and the mockups both read. It holds the feature texts, the Mac app section, and `productSummary` with the hero sentence and the footer tagline.
 - **Background:** The mockups in `docs/mockups/` are the visual spec of the marketing site at `conductive.build`. The site is built with Astro from `src/marketing/`. The shared words keep one source for each text that both show.
-- **Problem:** The hero title "Give every coding task its own cloud computer.", the grid title "Less to look after." and its sentence, and the closing title "Give your next task its own cloud computer." each have one copy in the site and one in the mockups. No test compares the copies.
+- **Problem:** The hero title "Ship code faster.", the grid title "Less to look after." and its sentence, and the closing title "Give your next task its own cloud computer." each have one copy in the site and one in the mockups. No test compares the copies.
 - **Impact if no action:** A change of one copy leaves the other old, so the site and its visual spec show different words.
 - **Root question:** How do the site and the mockups read each text of the home page from one place?
 - **Options:**

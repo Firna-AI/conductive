@@ -4,6 +4,7 @@ import type { RepositoryKey } from '../fixtures/repositories'
 import { movedBranch, movedRepository } from '../fixtures/repositoryMove'
 import type { Workspace } from '../fixtures/workspaces'
 import { isRunning } from './composerFor'
+import { isNew } from './workspaceTabs'
 import type { WorkspaceState } from './workspaceState'
 
 /**
@@ -32,7 +33,8 @@ export function barOf(
 
 /**
  * The branch and the repository of the workspace. The branch is its first
- * one, the one after Continue, or the one after a repository change. The
+ * one, the one after Continue, or the one after a repository change. A new
+ * workspace without its title is still on its placeholder branch. The
  * repository is the new one while a change runs and after it.
  */
 export function placeOf(
@@ -42,12 +44,19 @@ export function placeOf(
   if (state.repositoryMove === 'changed')
     return { branch: movedBranch, repository: movedRepository }
   return {
-    branch: state.branch === 'continued' ? continuedBranch : workspace.branch,
+    branch: branchOf(state, workspace),
     repository:
       state.repositoryMove === 'changing'
         ? movedRepository
         : workspace.repository,
   }
+}
+
+function branchOf(state: WorkspaceState, workspace: Workspace): string {
+  if (state.branch === 'continued') return continuedBranch
+  if (state.name === 'untitled' && isNew(state))
+    return workspace.placeholderBranch ?? workspace.branch
+  return workspace.branch
 }
 
 /** The state of the repository button in the header, if any. */

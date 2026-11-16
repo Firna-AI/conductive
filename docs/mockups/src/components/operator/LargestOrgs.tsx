@@ -1,6 +1,6 @@
 import type { Viewport } from '@mokly/mokly'
 import { Table, TableCell, type TableColumn } from '@firna/ui/table'
-import { largestOrgs, type OrgCounts } from '../../fixtures/operator'
+import type { OrgCounts } from '../../fixtures/operator'
 import { paths } from '../../paths'
 import { Section } from '../settings/Section'
 import { NameLink } from './targets'
@@ -41,7 +41,10 @@ function cell(org: OrgCounts, key: string) {
  * The five orgs with the most workspaces: their names and their counts
  * only. Each name opens the page of its org.
  */
-export function LargestOrgs(props: { viewport: Viewport }) {
+export function LargestOrgs(props: {
+  orgs: readonly OrgCounts[]
+  viewport: Viewport
+}) {
   return (
     <Section title="Largest orgs">
       <Table
@@ -49,7 +52,7 @@ export function LargestOrgs(props: { viewport: Viewport }) {
         cell={cell}
         columns={orgColumns[props.viewport]}
         rowKey={(org) => org.name}
-        rows={[...largestOrgs]}
+        rows={[...props.orgs]}
         size={orgTableSize[props.viewport]}
       />
     </Section>

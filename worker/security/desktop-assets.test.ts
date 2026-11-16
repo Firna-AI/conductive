@@ -130,9 +130,7 @@ it('serves app assets and same-origin local modules with the actual desktop poli
       { ...env, APP_ORIGIN: harness.env.APP_ORIGIN, ASSETS: fakeSite() },
     )
     expect(marketing.status, binding).toBe(200)
-    expect(await marketing.text(), binding).toContain(
-      'Give every coding task its own cloud computer.',
-    )
+    expect(await marketing.text(), binding).toContain('Ship code faster.')
     expect(requests, binding).toHaveLength(3)
   }
 })

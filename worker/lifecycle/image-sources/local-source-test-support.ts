@@ -30,6 +30,7 @@ export async function localSourceFixture(
   empty = false,
 ) {
   await harness.env.DB.prepare('DELETE FROM image_source_jobs').run()
+  await harness.env.DB.prepare('DELETE FROM image_source_runs').run()
   const session = await harness.login()
   const org = await harness.createOrg(session)
   const repository: SelectedRepository = {

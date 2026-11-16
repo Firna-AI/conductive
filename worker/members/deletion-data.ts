@@ -193,6 +193,7 @@ export async function markResourceStopped(
     db
       .prepare(
         `UPDATE workspaces SET state = CASE WHEN archived_at IS NULL THEN 'stopped' ELSE state END,
+       running_since = NULL,
        stopped_at = CASE WHEN state IN ('stopped', 'archived') AND stopped_at IS NOT NULL THEN stopped_at ELSE ? END,
        next_disk_keepalive_at = CASE WHEN state IN ('stopped', 'archived') AND stopped_at IS NOT NULL THEN next_disk_keepalive_at ELSE NULL END,
        updated_at = MAX(updated_at, ?) WHERE org_id = ? AND sandbox_id = ? AND provider_account = ?${guard}`,

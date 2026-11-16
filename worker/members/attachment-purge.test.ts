@@ -3,7 +3,7 @@ import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 import { deleteOrgPath } from '../../src/shared/orgs'
 import { readAttachment } from '../chat/attachment-data'
 import { attachmentBucket } from '../chat/attachment-record'
-import { storeAttachment } from '../chat/attachment-storage'
+import { uploadAttachment } from '../test-support/attachment-upload'
 import { failedAttachmentDeletes } from '../test-support/attachment-r2'
 import {
   createHarness,
@@ -27,7 +27,7 @@ afterAll(async () => {
 it('keeps a deleted zero-workspace org pending until external draft-file purge succeeds', async () => {
   const { org, admin } = await memberFixture(harness)
   const client = membersClient(harness)
-  const file = await storeAttachment(
+  const file = await uploadAttachment(
     harness.env,
     {
       orgId: org.id,

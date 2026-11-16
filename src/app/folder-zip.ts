@@ -26,10 +26,31 @@ const ZIP_MAX_ENTRIES = 65_535
  */
 const CHUNK_BYTES = 1_048_576
 
+/**
+ * The bytes of the compressed zip that the page keeps in its memory before
+ * it moves them into a blob: 8 MiB. The browser can keep a blob out of the
+ * memory of the page, so a zip of up to 1 GB never sits there whole. A zip
+ * of 1 GB then has about 125 blobs.
+ */
+const ZIP_FLUSH_BYTES = 8_388_608
+
+/** The limits of one zip. */
+interface ZipLimits {
+  /** The most bytes that the zip can have, the size limit of a file. */
+  maxBytes: number
+  /** The bytes of the zip that wait in the memory of the page for a blob. */
+  flushBytes: number
+}
+
 /** A zip can store the dates from 1980 to 2099. */
 function zipTime(file: File): number | undefined {
   const year = new Date(file.lastModified).getFullYear()
   return year >= 1980 && year <= 2099 ? file.lastModified : undefined
+}
+
+/** A chunk on its own `ArrayBuffer`, which a blob takes as it is. */
+function onArrayBuffer(chunk: Uint8Array): chunk is Uint8Array<ArrayBuffer> {
+  return chunk.buffer instanceof ArrayBuffer
 }
 
 /** The zip grew past the size limit, or holds too many entries. */
@@ -44,31 +65,48 @@ function stopIf(signal: AbortSignal): void {
 
 /**
  * Writes the entries of a zip and keeps its bytes, up to the size limit.
- * Each push compresses at once, so the size is known after each chunk.
+ * Each push compresses at once, so the size is known after each chunk. The
+ * compressed chunks wait in the memory of the page only until they reach
+ * `flushBytes`. Then they move into one blob.
  */
 class ZipWriter {
   private readonly zip: Zip
-  private readonly chunks: Uint8Array[] = []
-  private readonly maxBytes: number
+  private readonly limits: ZipLimits
+  /** The compressed chunks that wait for the next blob. */
+  private chunks: Uint8Array<ArrayBuffer>[] = []
+  private waiting = 0
+  /** The blobs of the zip so far, in their order. */
+  private readonly blobs: Blob[] = []
   private size = 0
   private entries = 0
   private failure: Error | null = null
 
-  constructor(maxBytes: number) {
-    this.maxBytes = maxBytes
+  constructor(limits: ZipLimits) {
+    this.limits = limits
     this.zip = new Zip((error, chunk) => {
-      if (error) this.failure = error
-      else {
-        this.size += chunk.length
-        this.chunks.push(chunk)
+      if (error) {
+        this.failure = error
+        return
       }
+      this.size += chunk.length
+      this.chunks.push(onArrayBuffer(chunk) ? chunk : new Uint8Array(chunk))
+      this.waiting += chunk.length
+      if (this.waiting >= this.limits.flushBytes) this.flush()
     })
+  }
+
+  /** Moves the chunks that wait into one blob, out of the memory of the page. */
+  private flush(): void {
+    if (this.chunks.length === 0) return
+    this.blobs.push(new Blob(this.chunks))
+    this.chunks = []
+    this.waiting = 0
   }
 
   /** Throws when the zip failed, or passed the size limit. */
   private check(): void {
     if (this.failure) throw this.failure
-    if (this.size > this.maxBytes) throw new TooLarge()
+    if (this.size > this.limits.maxBytes) throw new TooLarge()
   }
 
   private add(entry: ZipInputFile): void {
@@ -100,17 +138,12 @@ class ZipWriter {
     this.check()
   }
 
-  /** Ends the zip and gives its bytes in one buffer. */
-  end(): Uint8Array<ArrayBuffer> {
+  /** Ends the zip and gives its bytes as blobs, in their order. */
+  end(): Blob[] {
     this.zip.end()
     this.check()
-    const bytes = new Uint8Array(this.size)
-    let offset = 0
-    for (const chunk of this.chunks) {
-      bytes.set(chunk, offset)
-      offset += chunk.length
-    }
-    return bytes
+    this.flush()
+    return this.blobs
   }
 
   stop(): void {
@@ -141,20 +174,25 @@ async function addFolder(
  * The zip holds the folder itself, with each file and each folder in it,
  * also hidden ones and empty folders. It compresses each file in chunks, so
  * the page stays responsive, and it stops as soon as the zip passes the size
- * limit of an attachment. A stopped signal throws `ZipStopped`.
+ * limit of an attachment. The zip file is made of blobs, so the page never
+ * holds the whole zip. A stopped signal throws `ZipStopped`. A test can give
+ * smaller `limits`.
  */
 export async function zipFolder(
   folder: DroppedFolderEntry,
   signal: AbortSignal,
-  maxBytes: number = ATTACHMENT_MAX_BYTES,
+  limits: Partial<ZipLimits> = {},
 ): Promise<FolderZip> {
-  const writer = new ZipWriter(maxBytes)
+  const writer = new ZipWriter({
+    maxBytes: limits.maxBytes ?? ATTACHMENT_MAX_BYTES,
+    flushBytes: limits.flushBytes ?? ZIP_FLUSH_BYTES,
+  })
   const name = `${folder.name}.zip`
   try {
     await addFolder(writer, folder, folder.name, signal)
     return {
       state: 'zipped',
-      file: new File([writer.end()], name, { type: 'application/zip' }),
+      file: new File(writer.end(), name, { type: 'application/zip' }),
     }
   } catch (error) {
     writer.stop()

@@ -1,0 +1,49 @@
+/*
+ * The page while a preview opens. `worker/previews/opening-page.ts` sends
+ * the same layout with the same values, so keep the two in step.
+ */
+.page {
+  display: flex;
+  min-height: var(--ui-screen-height);
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 24px;
+  background: var(--ui-surface);
+  font-family: var(--ui-font-sans);
+  text-align: center;
+}
+
+.status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-md);
+  line-height: 1.4;
+}
+
+.title {
+  margin: 0;
+  color: var(--ui-ink);
+  font-size: var(--ui-text-md);
+  font-weight: var(--ui-weight-strong);
+  line-height: 1.4;
+}
+
+.body {
+  max-width: 300px;
+  margin: 0;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  line-height: 1.5;
+}

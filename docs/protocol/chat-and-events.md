@@ -93,7 +93,7 @@ holds how an agent action of the pull request bar sends its fixed prompt.
   `app/chat/background-limit`.
 - The line names no length of the limit. Reason: the member cannot change
   the limit.
-- A toast at the limit was rejected, because a routine run has no open tab.
+- A toast at the limit was rejected, because an automation run has no open tab.
 - When the runner cannot tell which files a turn changed, its end shows
   "Changed files unavailable" in place of the files (decision 109). The
   turn still shows as finished or stopped, not as failed.

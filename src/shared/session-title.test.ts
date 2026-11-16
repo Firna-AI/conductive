@@ -54,16 +54,27 @@ it.each([
   expect(sessionTitleFrom(text)).toBe(title)
 })
 
-it('titles from attached-file names before it cuts the first line', () => {
-  const file = {
+it('titles from attached-file names without image names before it cuts the first line', () => {
+  const image = {
     id: 'image',
-    name: 'Login screen.png',
-    path: '.context/attachments/image/Login-screen.png',
+    name: 'Screenshot 2026-11-16 at 10.23.45.png',
+    path: '.context/attachments/image/Screenshot-2026-11-16-at-10.23.45.png',
     kind: 'image' as const,
     mediaType: 'image/png',
     sizeBytes: 100,
   }
+  const file = {
+    ...image,
+    id: 'log',
+    name: 'crash report.log',
+    path: '.context/attachments/log/crash-report.log',
+    kind: 'file' as const,
+    mediaType: 'text/plain',
+  }
   expect(
-    sessionTitleFrom(`Inspect @${file.path} with @src/login.ts.`, [file]),
-  ).toBe('Inspect Login screen.png with @src/login.ts')
+    sessionTitleFrom(
+      `Inspect @${image.path} and @${file.path} with @src/login.ts.`,
+      [image, file],
+    ),
+  ).toBe('Inspect and crash report.log with @src/login.ts')
 })

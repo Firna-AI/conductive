@@ -1,71 +1,8 @@
 import { describe, expect, it, vi } from 'vitest'
 import { FakeTerminal } from '../test-support/fake-terminal'
 import { fakeTerminalOutput } from '../test-support/fixtures/tools'
-import { TerminalSession, type TerminalScreen } from './terminalSession'
-
-/** Stands in for xterm.js: records output, and plays input and resizes. */
-class FakeScreen implements TerminalScreen {
-  cols = 80
-  rows = 24
-  modes = { applicationCursorKeysMode: false }
-  readonly output: string[] = []
-  focusCount = 0
-  mouseReleased = false
-  private readonly inputListeners = new Set<(data: string) => void>()
-  private readonly replyListeners = new Set<(data: string) => void>()
-  private readonly resizeListeners = new Set<
-    (size: { cols: number; rows: number }) => void
-  >()
-
-  get listenerCount(): number {
-    return (
-      this.inputListeners.size +
-      this.replyListeners.size +
-      this.resizeListeners.size
-    )
-  }
-
-  write(data: string): void {
-    this.output.push(data)
-  }
-
-  onUserInput(listener: (data: string) => void) {
-    this.inputListeners.add(listener)
-    return { dispose: () => this.inputListeners.delete(listener) }
-  }
-
-  onReply(listener: (data: string) => void) {
-    this.replyListeners.add(listener)
-    return { dispose: () => this.replyListeners.delete(listener) }
-  }
-
-  onResize(listener: (size: { cols: number; rows: number }) => void) {
-    this.resizeListeners.add(listener)
-    return { dispose: () => this.resizeListeners.delete(listener) }
-  }
-
-  focus(): void {
-    this.focusCount += 1
-  }
-
-  releaseMouse(): void {
-    this.mouseReleased = true
-  }
-
-  type(data: string): void {
-    for (const listener of this.inputListeners) listener(data)
-  }
-
-  reply(data: string): void {
-    for (const listener of this.replyListeners) listener(data)
-  }
-
-  resizeTo(cols: number, rows: number): void {
-    this.cols = cols
-    this.rows = rows
-    for (const listener of this.resizeListeners) listener({ cols, rows })
-  }
-}
+import { FakeScreen } from './fakeScreen.test-support'
+import { TerminalSession } from './terminalSession'
 
 function startSession() {
   const screen = new FakeScreen()

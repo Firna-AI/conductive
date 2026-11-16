@@ -27,7 +27,7 @@ import { bannerSummary } from '../fixtures/pullRequests'
 import type { ShortcutChanges } from '../fixtures/shortcutChanges'
 import { suspendedOwner } from '../fixtures/startRefusals'
 import { paths } from '../paths'
-import { composerFor } from './composerFor'
+import { composerFor, isRunning } from './composerFor'
 import { composerNotice } from './composerNotice'
 import { placeLostUpdate } from './lostUpdates'
 import { changedWorkspaces, chatWorkspacesOf } from './orgWorkspaces'
@@ -35,7 +35,7 @@ import { viewerOf } from './sessionStarter'
 import { barOf, placeOf, repositoryControlOf } from './workspaceBar'
 import {
   FilesContent,
-  filesPlaceholder,
+  filePlaceholder,
   openFile,
   startingLogFor,
   ToolContent,
@@ -163,7 +163,7 @@ export function WorkspaceScreen(props: {
     />
   )
   // A phone and an archived workspace show only the session tabs.
-  const tabs = tabsFor(state, workspace).filter(
+  const tabs = tabsFor(state, workspace, isRunning(state)).filter(
     (tab) => tab.kind === 'session' || (!archived && viewport === 'desktop'),
   )
   const row = tabRowOf(state, tabs, viewport, readOnly)
@@ -274,7 +274,7 @@ export function WorkspaceScreen(props: {
       <WorkspaceBody
         center={
           file ? (
-            <FilePage placeholder={filesPlaceholder(state, true)} view={file} />
+            <FilePage placeholder={filePlaceholder(state, true)} view={file} />
           ) : (
             chat
           )
