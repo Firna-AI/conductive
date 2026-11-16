@@ -23,6 +23,7 @@ import { readChatHistoryPages } from './history-pages.test-support'
 import {
   expireAndReadFirstStartFile,
   expectFirstStartCopies,
+  expectTransferredFirstStartFile,
   FIRST_START_FILE_BYTES,
   firstStartAttachmentTransfer,
   REPAIRED_REPOSITORY_LOCATIONS,
@@ -67,8 +68,8 @@ it('retries the same failed workspace with a fresh token and dispatches every st
   const transfer = firstStartAttachmentTransfer()
   const active = (fixture = await createOuterRuntime(bundle, {
     persistencePath: await mkdtemp(`${directory}/retry-runtime-`),
-    outbound: transfer.outbound,
   }))
+  transfer.connect(active)
   const saveSetup = async (script: string, value: string) => {
     const ciphertext = await encrypt(
       JSON.stringify({ RETRY_SETUP: value }),
@@ -100,6 +101,9 @@ it('retries the same failed workspace with a fresh token and dispatches every st
     })
   const response = await create()
   expect(response.status).toBe(201)
+  expect(response.headers.get('Server-Timing')).toMatch(
+    /^create;dur=\d+, message;dur=\d+, project;dur=\d+$/,
+  )
   const created = readCreated(await response.json())
   expect(created.firstMessage).toMatchObject({
     id: 'kept-first',
@@ -288,10 +292,5 @@ it('retries the same failed workspace with a fresh token and dispatches every st
   expect(final.firstMessage.id).toBe('kept-first')
   expect(final.firstMessage.attachments).toEqual([attachment])
   await expectFirstStartCopies(active, transfer, commands[0], attachment.id)
-  expect(
-    await expireAndReadFirstStartFile(active, id, attachment.id),
-  ).toMatchObject({
-    claim: { state: 'claimed', claimedWorkspaceId: id },
-    bytes: FIRST_START_FILE_BYTES,
-  })
+  await expectTransferredFirstStartFile(active, id, attachment.id)
 })

@@ -9,7 +9,7 @@ export const workspaceMenuRename = defineScreen({
   description:
     'Rename turns the name of Apple Pay button into a field in its row, with the name selected, so typing replaces it. Enter or a click outside the field saves the name, and Escape keeps the old one. An empty or unchanged name saves nothing. A workspace that shows Untitled starts with an empty field. On a phone the field shows in the row of the list.',
   rationale:
-    'The user chose Rename for the menu on 9 November 2026, because the app has no other way to rename a workspace. The field works as the field that renames a section, in its place in the list. The server keeps its rules for a name, and the branch keeps its name.',
+    'The user chose Rename for the menu on 9 November 2026, because the app has no other way to rename a workspace. The field works as the field that renames a section, in its place in the list. The server keeps its rules for a name. The branch takes the new name only while the sandbox has not created the branch, as branch-name decision 1 says. After that, the branch keeps its name.',
   relatedDocs: [],
   propSchema: workspaceListSchema,
   props: { list: 'workspaces', menu: 'workspace-rename', palette: 'closed' },

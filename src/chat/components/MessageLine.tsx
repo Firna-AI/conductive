@@ -4,8 +4,10 @@ import styles from '../../../docs/mockups/src/components/chat/ToolGroup.module.c
 import a11y from '../../../docs/mockups/src/components/common/a11y.module.css'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import markdown from '../../../docs/mockups/src/components/files/MarkdownView.module.css'
-import { LinkedText } from '../links/LinkedText'
+import { AnswerText } from '../links/LinkedText'
+import { PlainLinks } from '../../shell/ui/text-links'
 import { LinksProvider, type ChatLinks } from '../links/LinksContext'
+import { MentionsProvider } from '../mentions/MentionsContext'
 import { AgentBlocks } from './AgentText'
 import {
   textBlocks,
@@ -17,7 +19,10 @@ import {
 import local from './chat.module.css'
 import { useFold } from './useFold'
 
-/** No link is a chip here, as outside a chat, so the text holds no link. */
+/**
+ * No link is a chip here, as outside a chat, so the text holds no link. The
+ * hidden copy also gives no file chips, through a chat without files.
+ */
 const plainLinks: ChatLinks = { links: { orgId: '', workspaces: null } }
 
 /** The cells of a table as text, row by row, with a dot between two cells. */
@@ -26,7 +31,7 @@ function TableText(props: { table: TextTable }) {
   return [head, ...rows].flat().map((cell, index) => (
     <Fragment key={index}>
       {index > 0 ? ' · ' : null}
-      <LinkedText strong text={cell} />
+      <AnswerText text={cell} />
     </Fragment>
   ))
 }
@@ -41,7 +46,7 @@ function LineItem(props: { item: TextItem; open: boolean }) {
   if (props.item.length === 1 && first.kind === 'p') {
     return (
       <>
-        <LinkedText strong text={first.text} />{' '}
+        <AnswerText text={first.text} />{' '}
       </>
     )
   }
@@ -79,8 +84,8 @@ function LineList(props: { list: TextList; open: boolean }) {
 }
 
 /**
- * A block of a message line, as `AgentText` draws it, with the same text
- * and workspace chips. A `<summary>` holds only phrasing content and
+ * A block of a message line, as `AgentText` draws it, with the same text,
+ * workspace chips, and links. A `<summary>` holds only phrasing content and
  * headings, and no paragraph, list, or table. So each block is a span,
  * which CSS shows as a block while the line is open. A code block takes the
  * look of an answer's code block only while the line is open, so the closed
@@ -96,7 +101,7 @@ function LineBlock(props: { block: TextBlock; open: boolean }) {
     case 'p':
       return (
         <span className={classes(styles.paragraph, local.lineBlock)}>
-          <LinkedText strong text={block.text} />{' '}
+          <AnswerText text={block.text} />{' '}
         </span>
       )
     case 'heading':
@@ -109,7 +114,7 @@ function LineBlock(props: { block: TextBlock; open: boolean }) {
             local.lineHeading,
           )}
         >
-          <LinkedText strong text={block.text} />{' '}
+          <AnswerText text={block.text} />{' '}
         </span>
       )
     case 'ul':
@@ -167,8 +172,10 @@ function holdsTable(block: TextBlock): boolean {
  * the first table, or before the list that holds it. That block and the
  * blocks after it open under the line. A line that starts with a table, or
  * with only empty headings before it, keeps its closed text as its name for
- * a screen reader. That hidden copy shows no chips, so it holds no link
- * that the keyboard can reach while nobody sees it.
+ * a screen reader. That hidden copy shows no chips, and draws each link as
+ * its words, so it holds no link that the keyboard can reach while nobody
+ * sees it. A press on a link in the line opens the link, as on a chip, and
+ * the line stays open or closed.
  */
 export function MessageLine(props: { text: string }) {
   const [open, setOpen] = useState(false)
@@ -190,7 +197,11 @@ export function MessageLine(props: { text: string }) {
           {split && lead.every(isEmptyHeading) ? (
             <span className={a11y.hidden}>
               <LinksProvider value={plainLinks}>
-                <LineBlocks blocks={body} open={false} />
+                <PlainLinks>
+                  <MentionsProvider value={null}>
+                    <LineBlocks blocks={body} open={false} />
+                  </MentionsProvider>
+                </PlainLinks>
               </LinksProvider>
             </span>
           ) : null}

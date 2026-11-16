@@ -14,14 +14,12 @@ import {
   productSummary,
   smallerFeatures,
 } from '../features'
-import { parityLinkCopy } from '../from-conductor/copy'
 import SiteLayout from '../layouts/SiteLayout.astro'
-import { sitePaths } from '../links'
 
 /*
- * The home page: the hero with the app and a short link to the page for
- * people who move from Conductor, the features with real screens, the Mac
- * app with its downloads, the smaller features, and a last call to action.
+ * The home page: the hero with the app, the features with real screens,
+ * the Mac app with its downloads, the smaller features, and a last call to
+ * action.
  */
 ---
 
@@ -32,10 +30,6 @@ import { sitePaths } from '../links'
   <main class="main">
     <section class="hero">
       <div class="hero-copy">
-        <a class="hero-notice" href={sitePaths.fromConductor}>
-          {parityLinkCopy.home}
-          <Icon name="arrow-right" size={14} class="hero-notice-icon" />
-        </a>
         <h1 class="hero-title">{productSummary.heroTitle}</h1>
         <p class="hero-text">{productSummary.heroText}</p>
         <SiteActions />

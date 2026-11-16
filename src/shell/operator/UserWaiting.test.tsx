@@ -65,7 +65,7 @@ describe('the page of a person who waits', () => {
       header: page.header(),
       requests: await operatorRequests(page.server),
     }).toEqual({
-      main: 'Users @sam-okafor Sam Okafor Suspend user Approve Overview Orgs Users Waitlist Invite codes On the waitlist since 1 Jan 2027 @sam-okafor sees only the waitlist screen until they get app access. Details Name Sam Okafor GitHub ID 91827364 On GitHub 9 years Joined 1 Jan 2027 Workspaces 0 owned, 0 running',
+      main: 'Users @sam-okafor Sam Okafor Suspend user Approve Overview Orgs Users Waitlist Invite codes On the waitlist since 1 Jan 2027 @sam-okafor sees only the waitlist screen until they get app access. Details Name Sam Okafor Email sam-okafor@example.com GitHub ID 91827364 On GitHub 9 years Joined 1 Jan 2027 Last active Unknown Workspaces 0 owned, 0 running',
       access:
         'App access How Approved by @calummoore Since 15 Jan 2027 at 08:00 Approval email Not sent yet Conductive tries again on its own.',
       header: 'Users @sam-okafor Sam Okafor Suspend user',
@@ -95,7 +95,13 @@ describe('the page of a person who waits', () => {
     const asked = textOf(question.innerHTML)
     click(byRole('button', 'Approve', question))
     await settle()
-    expect({ asked, access: boxText(page.view, 'App access') }).toEqual({
+    expect({
+      details: boxText(page.view, 'Details'),
+      asked,
+      access: boxText(page.view, 'App access'),
+    }).toEqual({
+      details:
+        'Details Name Kenji Watanabe Email No verified email GitHub ID 70214398 On GitHub 4 years Joined 4 Jan 2027 Last active Unknown Workspaces 0 owned, 0 running',
       asked:
         'Approve @kenji-w? Kenji Watanabe gets app access now, and sees it at their next visit. No email goes out, because their GitHub account has no verified email. An approval is final. You can still suspend the user later. Cancel Approve',
       access:

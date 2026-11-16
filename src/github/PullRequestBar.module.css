@@ -13,9 +13,9 @@
   box-sizing: border-box;
 }
 
-/* The row shows only on a phone, where each touch target is 44px or more. */
+/* The row shows only on a phone, where each touch target is 40px or more. */
 .row {
-  min-height: max(44px, var(--ui-touch-min, 0px));
+  min-height: max(40px, var(--ui-touch-min, 0px));
   padding-right: 12px;
   text-decoration: none;
 }

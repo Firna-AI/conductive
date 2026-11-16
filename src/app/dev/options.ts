@@ -45,8 +45,8 @@ const BANNERS = [
 
 const PATHS = ['plain', 'masked'] as const
 
-/** The last model lists of the Claude own endpoint login that leave models out. */
-const MODEL_LISTS = ['unlisted', 'none'] as const
+/** Endpoint model lists and hosts for save and Refresh previews. */
+const MODEL_LISTS = ['unlisted', 'none', 'v1-only', 'read-failed'] as const
 
 /** The states of the invite code of the user, besides the pause. */
 const INVITE_CODES = ['left', 'used-up', 'disabled'] as const
@@ -74,6 +74,10 @@ type DevInviteCode = (typeof INVITE_CODES)[number]
  *   the Claude login does not name the last Claude model of the app, or
  *   names no Claude model of the app. The list was read 4 minutes before
  *   the fake starts. Refresh and a save read a list that names every model.
+ * - `modelList=v1-only|read-failed`: with `login=endpoint`, use the fake
+ *   host that lists only under /v1, or the host that never lists models.
+ *   With `read-failed`, the Claude login keeps a list from a day before
+ *   that does not name the last Claude model of the app.
  * - `deleted=1`: Acme is deleted, as its admins see it.
  * - `suspended=1`: the operator suspended Acme. Each write of Acme gets
  *   `org_suspended`, except a leave, as the Worker does.
@@ -84,8 +88,10 @@ type DevInviteCode = (typeof INVITE_CODES)[number]
  * - `signedOut=1`: the Worker refuses the session, so the sign-in shows.
  * - `stop=<seconds>`: an open workspace stops that many seconds after it
  *   opens, as a sandbox does that stops while its workspace is open.
- * - `upload=wait|fail`: each file upload never ends, or the first upload of
- *   each file name fails once, so Try again works.
+ * - `upload=wait|fail`: no part of an upload gets an answer, so each file
+ *   keeps uploading, or the first part of the page fails at each of its
+ *   sends, so its chip fails once, after the waits of its retries of about
+ *   7 seconds, and Try again works.
  * - `shareSave=fail`: each change of the share setting of an agent login
  *   fails, so the account shows that the change was not saved.
  * - `runs=failed|skipped`: the Runs list of Review pull requests holds a
@@ -119,7 +125,7 @@ export interface DevOptions {
   firstRun: GetStartedStep | null
   noAgentLogin: boolean
   endpointLogins: boolean
-  /** What the last model list of the Claude own endpoint login leaves out. */
+  /** The seeded endpoint model list or the fake endpoint host. */
   modelList: (typeof MODEL_LISTS)[number] | null
   deleted: boolean
   suspended: boolean

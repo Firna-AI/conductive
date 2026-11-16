@@ -1,23 +1,11 @@
-import type {
-  Attachment,
-  AttachmentUploadTarget,
-} from '../../src/shared/messages'
+import type { AttachmentUploadTarget } from '../../src/shared/messages'
 import type { AppEnv } from '../env'
-import { randomToken } from '../security/crypto'
 import { warnWorker } from '../warnings'
-import {
-  insertAttachment,
-  publishAttachment,
-  readAttachment,
-  saveAttachmentMultipart,
-} from './attachment-data'
-import { deleteAttachment } from './attachment-cleanup'
-import { writeAttachmentObject } from './attachment-byte-storage'
+import { insertAttachment, readAttachment } from './attachment-data'
+import { deleteAttachment, removeAttachmentBytes } from './attachment-cleanup'
 import {
   ATTACHMENT_DRAFT_MS,
-  attachmentBucket,
   attachmentNotFound,
-  publicAttachment,
   type AttachmentRecord,
 } from './attachment-record'
 
@@ -30,22 +18,12 @@ export interface AttachmentStorageInput {
   mediaType: string
 }
 
-/** Internal boundary. A browser adapter must authenticate metadata before calling it. */
-export async function storeAttachment(
+export async function createAttachmentRecord(
   env: AppEnv,
   input: AttachmentStorageInput,
-  source: Uint8Array | ReadableStream<Uint8Array>,
-  dependencies: {
-    now: () => number
-    newId: () => string
-    byteLength?: number
-    bodyComplete?: Promise<void>
-  } = {
-    now: Date.now,
-    newId: randomToken,
-  },
-): Promise<Attachment> {
-  const bucket = attachmentBucket(env)
+  sizeBytes: number,
+  dependencies: { now: () => number; newId: () => string },
+): Promise<AttachmentRecord> {
   const id = dependencies.newId()
   const now = dependencies.now()
   const record: AttachmentRecord = {
@@ -60,7 +38,7 @@ export async function storeAttachment(
     name: input.name,
     kind: input.kind,
     mediaType: input.mediaType,
-    sizeBytes: 0,
+    sizeBytes,
     objectKey: `attachments/${encodeURIComponent(input.orgId)}/${encodeURIComponent(id)}`,
     multipartId: null,
     state: 'uploading',
@@ -68,40 +46,25 @@ export async function storeAttachment(
     expiresAt: now + ATTACHMENT_DRAFT_MS,
     claimedWorkspaceId: null,
     claimedMessageId: null,
+    transferredSandboxId: null,
+    bytesDeletedAt: null,
     revision: 0,
   }
   if (!(await insertAttachment(env.DB, record))) throw attachmentNotFound()
+  return record
+}
+
+export async function cleanupAttachmentUpload(
+  env: AppEnv,
+  record: AttachmentRecord,
+): Promise<void> {
   try {
-    record.sizeBytes = await writeAttachmentObject(
-      bucket,
-      record.objectKey,
-      { attachmentId: id, orgId: input.orgId },
-      source,
-      async (multipartId) => {
-        if (!(await saveAttachmentMultipart(env.DB, id, multipartId)))
-          throw attachmentNotFound()
-      },
-      dependencies.byteLength,
-    )
-    await dependencies.bodyComplete
-    if (
-      !(await publishAttachment(
-        env.DB,
-        record,
-        record.sizeBytes,
-        dependencies.now(),
-      ))
-    )
-      throw attachmentNotFound()
-    return publicAttachment(record)
-  } catch (error) {
-    try {
-      const current = await readAttachment(env.DB, id)
-      if (current) await deleteAttachment(env, current)
-      else await bucket.delete(record.objectKey)
-    } catch {
-      warnWorker({ kind: 'attachment_upload_cleanup_retry' })
-    }
-    throw error
+    const current = await readAttachment(env.DB, record.id)
+    if (current) {
+      current.multipartId ??= record.multipartId
+      await deleteAttachment(env, current)
+    } else await removeAttachmentBytes(env, record)
+  } catch {
+    warnWorker({ kind: 'attachment_upload_cleanup_retry' })
   }
 }

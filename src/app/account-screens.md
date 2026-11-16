@@ -3,8 +3,8 @@
 This page belongs to [Screens](screens.md). It describes the account,
 agent login forms, and model lists in the web app.
 
-- The account has four tabs, General, Agents, Preferences, and Keyboard
-  shortcuts, as the org settings have. Each tab is a link with its own
+- The account has five tabs, General, Agents, Preferences, Keyboard
+  shortcuts, and Stats, as the org settings have. Each tab is a link with its own
   address. General holds the sign-in, GitHub, and the invite
   code. Agents, at `/account/agents`, holds the logins of Claude and
   Codex. The `?connect=` address of an agent opens its Connect form on
@@ -22,8 +22,11 @@ agent login forms, and model lists in the web app.
   at once through `AccountModel.saveShortcuts`, as
   [the Keyboard shortcuts tab](../shell/account/shortcuts/README.md) says.
   The keys and every hint of the app use the saved changes at once.
-- The account of the Mac app adds This Mac as its fifth tab, after Keyboard
-  shortcuts. A browser shows General at its address and asks no Mac.
+- Stats, at `/account/stats`, shows the counts of the person signed in.
+  `StatsTab` reads them through `PageRead` each time that the tab opens, as
+  [Account stats](../../docs/protocol/account-stats.md) says. A failed read
+  shows a notice with Try again and no number.
+- The account of the Mac app adds This Mac as its sixth tab, after Stats. A browser shows General at its address and asks no Mac.
 - Each connected login of the account shows its share switch, "Let other
   members use this login", and Get started shows none. The switch saves
   at once through `AccountModel.setNoReuse`. While it saves, it shows the
@@ -40,19 +43,38 @@ agent login forms, and model lists in the web app.
   checks the address with the rule of the save, as
   [Own endpoint logins](../../docs/protocol/own-endpoint-logins.md)
   says. The hint under the address names the address of the requests, and
-  first the address that the form saves when the rule changes the typed
-  one. Connect with an address that the rule refuses shows the refusal at
-  the address and sends nothing. A refusal of the save shows there too.
-  The key stays in its field.
+  first the address that the rule makes of the typed one when the rule
+  changes it. A Codex save can still add `/v1` after its model list reads,
+  as [The address of a Codex save](../../docs/protocol/own-endpoint-logins.md#the-address-of-a-codex-save)
+  says, so the hint cannot show that change. The note below shows it.
+  Connect with an address that the rule refuses shows the refusal at the
+  address and sends nothing. A refusal of the save shows there too. The
+  key stays in its field.
 - A connected own endpoint login shows "Own endpoint at" its host under
-  its row. Under that, the account names each app model that the last model
-  list of the endpoint does not name, with its model ID, the time of the
-  last read, and Refresh. A list that names every app model of the agent
-  shows no line. A list that names none of them says that the pickers show
-  all of them. The save of the login and Refresh read the account again,
-  because only the account holds the list.
+  its row. After a Codex save that added `/v1`, a note follows the host. It
+  stays until the next save, a Remove, or a reload of the page. After a
+  save or a Refresh that read no model list, a warning with Refresh
+  follows the host and the note. It stays until the next save, a Refresh
+  that reads a list, a Remove, or a reload. The protocol doc gives the
+  words of both.
+- Under those, the account names each app model that the last model list
+  of the endpoint does not name, with its model ID, the time of that list,
+  and Refresh. While the warning shows, its Refresh is the one Refresh of
+  the row, and this line has none. A list that names every app model of
+  the agent shows no line. A list that names none of them says that the
+  pickers show all of them. The save of the login and Refresh read the
+  account again, because only the account holds the list.
+- The app keeps the flags of the save and of Refresh beside the account
+  data, only in memory. So the note and the warning stay when the agent
+  step of Get started draws the list again, and a reload removes them.
+  The flags belong to the login of that save, by its save time. So a login
+  that a later save replaced, also in another tab, shows neither. A
+  Refresh answer that comes after a Remove or a new save changes nothing.
+  `EndpointReads` in `endpoint-reads.ts` keeps them.
+- When Refresh moves between the warning and the line of the models, after
+  a read that failed or worked, it keeps the keyboard focus.
 - The model pickers of the person follow these lists: the default model of
-  Preferences, New workspace, the routine editor, and the composer of a
+  Preferences, New workspace, the automation editor, and the composer of a
   message on the person's own login. Each picker keeps the model that it
   shows. `offeredModels` in `endpoint-models.ts` holds the rule, and
   `useOfferedModels` in `../shell/context.ts` gives it to the shell.

@@ -67,16 +67,21 @@ is relative to `src/chat/`, the folder of this guide.
 - `links/`: `workspace-links.ts`, the link syntax, the reader of the
   links of a message field, and `linkTarget`, with the session of a
   session link. Its `sessionTarget` gives the same target for a session
-  that the chat names by its IDs. `chat-parts.ts` is the one tokenizer of
-  sent messages and answers. In it, each mention of a file of the message is an
+  that the chat names by its IDs. `chat-parts.ts` is the one reading of
+  sent messages and answers, over the tokens of `chat-tokens.ts`. In it,
+  each mention of a file of the message is an
   `AttachmentPart`, also when the tree holds that path, and also without a
   tree. Its `filesWithoutChip` gives the files of a message that no part
-  shows as a chip. `LinksContext.tsx` gives the workspaces that chips find
+  shows as a chip. `link-parts.ts` gives the `LinkPart` of a web link with
+  its words, and the `CodePart` of code that holds one address alone.
+  `LinksContext.tsx` gives the workspaces that chips find
   the open of a chip, and the origin of the chat's workspace link.
   `LinkedText.tsx` holds `useChatParts` and
   `ChatText`. `useChatParts` reads the parts of a text with the workspaces
-  and the tree of the chat, and the files of a sent message. `ChatText`
-  draws the parts with their workspace, session, and file chips, and each
+  and the tree of the chat, the files of a sent message, and the web links
+  of `useTextLinks` in `../shell/ui/text-links.tsx`. `ChatText`
+  draws the parts with their workspace, session, and file chips, their
+  links through `WebLinkText.tsx`, and each
   `AttachmentPart` as the mockups' `SentFileChip`.
   `SessionLinkText` draws a session that the chat names by its IDs, such
   as the session whose agent stopped a turn, with the same session chip.
@@ -84,10 +89,15 @@ is relative to `src/chat/`, the folder of this guide.
   states the rules of that chip. The chip opens the file tab of its copy
   through `openFile` and `href` of `ChatMentions`. It opens nothing when
   `ChatText` gets no `opens`, or in a chat without `ChatMentions`.
-  `LinkedText` reads and draws a text in one step. `mention-copy.ts` gives
-  the copy of chat text with the mention of each chip that has a
-  `data-mention` mark: each file chip and each `SentFileChip`. It leaves
-  out text that the browser leaves out of a copy.
+  `AnswerText` reads and draws the text of an answer in one step.
+  `mention-copy.ts` makes
+  the browser's own copy of chat text give the text of each chip that has
+  a `data-mention` mark: each file chip and each `SentFileChip`. Each such
+  chip holds its copy text in a `ChipCopyText`, which shows only while the
+  root of the page has `COPYING_CLASS`. The style sheet of `ChipCopyText`
+  gives that class, so the class name has one source. The copy sets the class, moves an
+  edge of the selection inside a chip to the edge of the chip, and the
+  next animation frame removes the class before the page paints.
   `chipOf` in `LinksContext.tsx` gives what a chip shows of its workspace.
 - `links/session-links.ts`: `useLinkedSession`, the session that a chip
   finds: a live session of the chat's workspace, or one of the one read of
@@ -130,7 +140,8 @@ is relative to `src/chat/`, the folder of this guide.
   says. `resumeFiles` starts again the uploads that a new text brings
   back, such as after undo, and `retryFile` is Try again. Each upload goes
   through the app's `uploadAttachment`, and it ends on its draft after a
-  move. It stops when its chip leaves the text, and when the chat stops.
+  move. A new try resumes the kept upload of the file. It stops when its
+  chip leaves the text, and when the chat stops.
 - `state/draft-file-source.ts`: `draftFileSource`, the `FieldFiles` of one
   draft identity, behind `ChatController.draftFiles`. It reads the session
   that holds the draft at each call, and gives its attached and detached
@@ -184,7 +195,7 @@ is relative to `src/chat/`, the folder of this guide.
   with the text that an underline turns into a heading.
   `components/AgentText.tsx`: `AgentText`, which draws them, with the
   heading style that the file preview shares, and `AgentBlocks`, which the
-  message line shares. Their text draws through `LinkedText` of `links/`.
+  message line shares. Their text draws through `AnswerText` of `links/`.
 - `components/ToolGroup.tsx`: a run of tool calls, with `FoldLine` and
   `CallLine`, which the work fold shares.
 - `components/reading-place.ts`: the keeper of the reader's place, which

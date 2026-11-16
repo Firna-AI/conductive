@@ -3,10 +3,10 @@ import { sessionLink } from '../../src/shared/session-link'
 import type { WebSocket } from 'miniflare'
 import { afterEach, beforeAll, expect, it } from 'vitest'
 
-import { MACHINE_PATHS } from '../../src/shared/agent-tools'
+import { MACHINE_PATHS, TOOL_TURN_HEADER } from '../../src/shared/agent-tools'
 import { chatHistoryPath } from '../../src/shared/events'
 import { sessionsPath, sessionPaths } from '../../src/shared/sessions'
-import { TOOL_TURN_HEADER } from '../../tools/context'
+
 import { closeSockets } from '../chat/adapter-sockets.test-support'
 import { CLAUDE } from '../chat/harness.test-support'
 import { record, string } from '../chat/inputs'
@@ -151,13 +151,11 @@ it('uses the active stored sender and inherited owner when a machine tool create
       string(created.sessionId),
     ),
   )
-  const city = await active.env.DB.prepare(
-    'SELECT city FROM workspace_creation_plans WHERE workspace_id = ?',
-  )
-    .bind(newId)
-    .first('city')
   expect(workspace.name).toBe(expectedName)
-  expect(workspace.branch).toMatch(new RegExp(`^owner/${city}-[a-z0-9]{4}$`))
+  // A name from the create call names the branch at once.
+  expect(workspace.branch).toMatch(
+    /^owner\/validate-uk-postcodes-before-the-lookup-[a-z0-9]{4}$/,
+  )
   expect(
     await active.env.DB.prepare('SELECT name FROM workspaces WHERE id = ?')
       .bind(newId)

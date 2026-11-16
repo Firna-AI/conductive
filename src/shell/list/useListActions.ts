@@ -12,6 +12,7 @@ import {
 } from '../../app/section-actions'
 import { defaultSection } from '../../app/sections'
 import { valueOf } from '../../app/store'
+import type { Section } from '../../shared/sections'
 import { useNewWorkspace } from '../new-workspace/NewWorkspaceHost'
 import type { DropTarget } from './drop-target'
 import type { SectionActions } from './SectionHeader'
@@ -23,7 +24,9 @@ import type { SectionActions } from './SectionHeader'
 export function useListActions(org: OrgModel) {
   const newWorkspace = useNewWorkspace()
   const { toast } = useToast()
-  const [adding, setAdding] = useState(false)
+  // The New section dialog, open with the section that it goes below, or
+  // with `null` for the end of the list.
+  const [adding, setAdding] = useState<{ below: Section | null } | null>(null)
   const failed = (title: string) => (error: unknown) =>
     toast({ title, description: errorMessage(error), tone: 'error' })
 
@@ -47,7 +50,7 @@ export function useListActions(org: OrgModel) {
         orgId: org.orgId,
         sectionId: section.isDefault ? null : section.id,
       }),
-    newSection: () => setAdding(true),
+    newSection: (below) => setAdding({ below: below ?? null }),
     remove: (section) => {
       const general = defaultSection(
         (valueOf(org.sections.get()) ?? []).filter(
@@ -73,10 +76,8 @@ export function useListActions(org: OrgModel) {
       failed("The workspace didn't move."),
     )
 
-  const create = (name: string) => {
-    setAdding(false)
-    void createSection(org, name).catch(failed("The section wasn't created."))
-  }
+  // The dialog shows a failure, so a create shows no toast.
+  const create = (name: string) => createSection(org, name, adding?.below?.id)
 
-  return { actions, move, adding, create, cancelAdding: () => setAdding(false) }
+  return { actions, move, adding, create, cancelAdding: () => setAdding(null) }
 }

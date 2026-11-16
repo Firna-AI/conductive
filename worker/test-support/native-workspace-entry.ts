@@ -23,7 +23,6 @@ import { nativeChatObservers } from './native-chat-observers'
 import { nativeDatabase } from './native-d1'
 import { nativeCryptoObservation } from './native-crypto'
 import { nativeChatRecordControls } from './native-chat-record-controls'
-import { nativeAttachmentControls } from './native-attachment-controls'
 import { nativeWarningObservation } from './native-warnings'
 import { initialNativeTitleModel } from './native-constructor-options'
 import { nativeEntryFetch } from './native-entry-router'
@@ -174,7 +173,6 @@ export class NativeWorkspace extends Workspace {
         ...nativeCryptoObservation(),
         ...nativeWarningObservation(),
         ...nativeChatRecordControls(this.chat, this.integration.files),
-        ...nativeAttachmentControls(env, clock.now),
         configure: async (options) => {
           state.workspaceId = options.workspaceId
           for (const key of Object.keys(hooks))

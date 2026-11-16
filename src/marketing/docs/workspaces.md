@@ -79,7 +79,8 @@ The workspace can show **Untitled** before it receives an automatic name.
 The name comes from the first message.
 
 The branch name uses a GitHub login, a city, and a short suffix.
-It stays the same when the workspace receives a name.
+When the workspace receives its name before the cloud computer creates the branch, the city changes to the name.
+After that, the branch name stays the same, also when you rename the workspace.
 To see the checked-out branch, run this command in **Terminal**:
 
 ```bash
@@ -145,6 +146,7 @@ The **New workspace** action at the top of the list uses **General**.
 In the **New workspace** dialog, you can select another section.
 
 The section menu also offers **Rename section**, **Move section up**, **Move section down**, **New section**, and **Delete section**.
+**New section** asks for a name in a dialog, and adds the new section directly below this one.
 Deleting a section moves its workspaces to **General**.
 The default section stays available.
 
@@ -183,7 +185,8 @@ A normal stop keeps its files, sessions, and chat history.
 Open a stopped workspace to start its computer again.
 If it stops while the workspace is open, select **Resume**, or open a file or a change.
 The history remains readable while the computer starts.
-An open file or change waits for the computer, then opens.
+A file or change that you open then waits for the computer, then opens.
+One that already shows stays.
 
 A message from an agent tool also starts a stopped workspace's computer.
 This includes the first message of a session that an agent creates.
@@ -224,8 +227,12 @@ On a phone, open **Checks** from the pull request row to find **Continue**.
 The computer starts first if it is stopped.
 The new branch starts from the repository's latest default branch.
 That default branch becomes the workspace's base branch for its new task.
+The new branch name uses the workspace name, a version such as `v2`, and a new short suffix.
+A workspace without a name uses a city in place of the name.
 
-Continue keeps the same cloud computer, files, installed software, running servers, sessions, and workspace name.
+Continue keeps the same cloud computer, files, running servers, sessions, and workspace name.
+It also keeps the software installed by the org's install script.
+Conductive's own software still updates itself.
 Changed files move to the new branch.
 Commits that are not pushed stay on their local branches.
 The question counts those commits across all local branches, including earlier tasks.

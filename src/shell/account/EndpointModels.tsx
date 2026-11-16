@@ -1,14 +1,9 @@
-import { RefreshCw } from 'lucide-react'
+import type { ReactNode } from 'react'
 import formStyles from '../../../docs/mockups/src/components/settings/AgentConnectForm.module.css'
 import styles from '../../../docs/mockups/src/components/settings/EndpointModels.module.css'
 import type { UnlistedModels } from '../../app/endpoint-models'
 import { useServices } from '../../app/services'
 import { useNow, whenOf } from '../../app/time'
-import type { Agent } from '../../shared/agents'
-import { useApp } from '../context'
-import { ActionButton } from '../ui/actions'
-import { useAction } from '../ui/useAction'
-import { agentNames } from './labels'
 
 /** Names in a sentence, such as "A", "A and B", or "A, B, and C". */
 const names = new Intl.ListFormat('en', { type: 'conjunction' })
@@ -34,21 +29,17 @@ function listText(unlisted: UnlistedModels): string {
  * The models of the app that the last model list of an own endpoint does
  * not name, under the host of the login: what the pickers of the owner do
  * with them, their IDs as code that the owner can copy into the setup of
- * the endpoint, and the time of the last read of the list. Refresh reads
- * the list again, and the line follows the new list.
+ * the endpoint, and the time of the last read of the list that worked.
+ * `refresh` is the Refresh button of the login, which reads the list again,
+ * and the line follows the new list. The row has one Refresh, so after a
+ * read that failed the warning above holds it, and the line has none.
  */
 export function EndpointModels(props: {
-  agent: Agent
   unlisted: UnlistedModels
+  refresh: ReactNode
 }) {
-  const app = useApp()
   const { timeZone } = useServices()
   const now = useNow(60_000)
-  const name = agentNames[props.agent]
-  const refresh = useAction(
-    () => app.account.refreshModels(props.agent),
-    `The model list of ${name} wasn't refreshed.`,
-  )
   const { models, checkedAt } = props.unlisted
   const ids = names.formatToParts(models.map((model) => model.model))
   const checked = whenOf(now, checkedAt, timeZone)
@@ -70,14 +61,7 @@ export function EndpointModels(props: {
           {`. Checked ${checked.kind === 'date' ? `on ${checked.text}` : checked.text}.`}
         </span>
       </div>
-      <ActionButton
-        accessibilityLabel={`Refresh the model list of ${name}`}
-        busy={refresh.pending}
-        icon={RefreshCw}
-        onPress={refresh.run}
-      >
-        Refresh
-      </ActionButton>
+      {props.refresh}
     </div>
   )
 }

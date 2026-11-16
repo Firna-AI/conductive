@@ -7,7 +7,9 @@ their links, and the names of workspaces and sessions. It belongs to
 [Chat and events](chat-and-events.md). The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
-says.
+says. A title image decision number names a decision of the change that
+leaves the names of attached images out of titles, as
+[Messages and attachments](messages-and-attachments.md) says.
 
 ## Agents
 
@@ -34,9 +36,9 @@ says.
     [Messages](messages-and-attachments.md#messages) says
   - through a call of the agent tools in a turn that the member sent, as
     [The sender](session-calls.md#the-sender) says
-- A routine run starts the first session of its workspace in the name of
-  the routine owner, as
-  [A run acts as its owner](routine-runs.md#a-run-acts-as-its-owner) says.
+- An automation run starts the first session of its workspace in the name of
+  the automation owner, as
+  [A run acts as its owner](automation-runs.md#a-run-acts-as-its-owner) says.
 - The session record names its starter in `startedBy`. A session without a
   known starter has no login that can be used.
 - While the starter shares the login, the messages of the other members
@@ -110,9 +112,15 @@ says.
   no title. A message whose text holds only the mentions of its own
   attached files counts as a message with no text.
 - In a title from a message, each mention of one of its attached files
-  becomes the name of the file (decision 262 D). Reason: a path makes a
+  that is not an image becomes the name of the file (decision 262 D). Reason: a path makes a
   poor title. A title with the copy path of each file was rejected for
   that reason.
+- In a title from a message, each mention of an attached image goes out,
+  with no name (title image decision 2 A). The workspace title follows the
+  same rule, as [Messages](messages-and-attachments.md#messages) says.
+  Reason: image names such as "Screenshot 2026-11-16 at 10.23.45.png" do
+  not name the task. Different rules for the two titles were rejected,
+  because an image name is just as poor in a session title.
 - In a title from a message, each run of spaces becomes one space. The app
   removes one final full stop, but it keeps an ellipsis.
 - A title from a message holds at most 60 characters. The limit counts
@@ -132,6 +140,15 @@ says.
   the session history (decision 31).
 - Closing the tab of a session whose turn runs asks first. After the
   confirm, the app stops the turn and moves the session to the history.
+- A close shows at once. The tab moves to the session history before the
+  server confirms the close. When the close fails, the tab returns to its
+  place in the row, and a notice says that the session did not close. The
+  user asked for this on 16 November 2026.
+- One close of several tabs, such as Close tabs to the right, asks one
+  question for all the running sessions among them. The question names
+  each of these sessions. The other sessions close at once. Cancel keeps
+  each running session open. The user asked for Close tabs to the right on
+  16 November 2026.
 - Reason: no agent runs where the user cannot see it, and no history gets
   lost. A close that only hides a running session was rejected for the
   first reason. A close that deletes the history was rejected for the
@@ -166,12 +183,23 @@ column, each with its own tab row.
   then becomes the link of the workspace. Reason: the session tabs keep
   their behaviour, and the address does not follow the shown tab.
 - With two panes, a session link shows its session in the pane that holds
-  its tab, as [The address](split-panes.md#the-address) says.
-- A link to a closed or an unknown session opens the page of its
-  workspace, as a workspace link does. When that workspace already shows,
-  its shown tab stays. The link reopens no session.
-- Reason: the members share the sessions of a workspace, so a reopen would
-  show the tab again to every member.
+  its tab, as [The address](split-panes.md#the-address) says. A link to a
+  closed session reopens it in the focused pane, as an entry of the
+  session history does.
+- A link to a closed session reopens that session and shows it, as an
+  entry of the session history does. In a read-only workspace, the link
+  shows the stored chat of the session as a tab in this browser only, and
+  reopens nothing. The user chose this on 13 November 2026.
+- Reason: a press on a session chip must show its session, and agents
+  close the sessions that they start when the work ends. A link that
+  opens only the workspace of a closed session was rejected, because the
+  press then shows nothing. A reopen only for a press on a chip was
+  rejected, so that each session link works the same way.
+- A reopen shows the tab again to every member, because the members share
+  the sessions of a workspace.
+- A link to an unknown session opens the page of its workspace, as a
+  workspace link does. When that workspace already shows, its shown tab
+  stays.
 - A session link in chat text shows as a session chip, as
   [Session chips](workspace-links.md#session-chips) says.
 - The agent tools give the link of each session that they name, as

@@ -13,7 +13,7 @@ import type { Workspace } from '../fixtures/workspaces'
 import { composerFor } from './composerFor'
 import type { ChatProps } from './workspaceChat'
 import { splitPlanOf, type SplitState } from './workspacePanes'
-import { filesPlaceholder } from './workspaceParts'
+import { filePlaceholder } from './workspaceParts'
 import type { WorkspaceState } from './workspaceState'
 import { codeTabKey } from './workspaceTabRow'
 
@@ -71,7 +71,7 @@ export function WorkspaceSplit(props: {
         )
       case codeTabKey:
         return (
-          <FilePage placeholder={filesPlaceholder(state, true)} view="code" />
+          <FilePage placeholder={filePlaceholder(state, true)} view="code" />
         )
       default:
         return null

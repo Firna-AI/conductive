@@ -1,5 +1,9 @@
 import { useMemo, type ReactNode } from 'react'
-import { replacesLists } from '../../../../docs/mockups/src/components/workspace/sandboxNoticeState'
+import {
+  replacesList,
+  replacesShownFile,
+  type SandboxPanelState,
+} from '../../../../docs/mockups/src/components/workspace/sandboxNoticeState'
 import { useServices } from '../../../app/services'
 import type { WorkspaceFiles } from '../../../files/model/files-store'
 import type {
@@ -22,6 +26,7 @@ import { useGitHubFeed, useScreenBar } from '../github/WorkspaceGitHub'
 import { SandboxPanel } from '../SandboxNotice'
 import { contentState } from '../sandbox-view'
 import { useSavedView } from '../saved-view'
+import { useAddressLines } from './address-lines'
 import { filesPlace, tabOf } from './files-address'
 import {
   useAddressList,
@@ -51,10 +56,10 @@ function pagePlaceholder(context: WorkspaceContext): ReactNode {
 
 /**
  * A file tab or a diff tab as a page, which keeps its tab in the saved view.
- * While the sandbox does not run, the page reads nothing. A stopped sandbox,
- * and one whose later start failed, keep the file that the page shows, as
- * they keep the lists. Otherwise the state of the sandbox takes the place of
- * the content.
+ * While the sandbox does not run, the page reads nothing. A sandbox that is
+ * stopped or starts, and one whose later start failed, keep the file that
+ * the page shows, as they keep the lists. Otherwise the state of the sandbox
+ * takes the place of the content, which is the wait while it starts.
  */
 function TabPage(props: {
   context: WorkspaceContext
@@ -65,40 +70,61 @@ function TabPage(props: {
 }) {
   const { tab, context } = props
   useOpenTab(context.savedView, tab)
+  const lines = useAddressLines()
   const targets = useFileTargets(context.org.id)
   const common = {
     files: props.files,
     layout: props.layout,
     navigation: props.navigation,
     placeholder: pagePlaceholder(context),
-    keepShown: context.panel !== null && !replacesLists(context.panel),
+    keepShown: context.panel !== null && !replacesShownFile(context.panel),
     targets,
   }
   return tab.kind === 'file' ? (
-    <FilePage {...common} key={tab.path} tab={tab} />
+    <FilePage {...common} key={tab.path} lines={lines} tab={tab} />
   ) : (
     <DiffPage {...common} key={tab.path} tab={tab} />
   )
 }
 
-/**
- * The state of the sandbox in place of All files and Changes: while it
- * starts, while the app refuses its start, with the words of the refusal,
- * and after a failed first start, with Try again on a phone. A stopped
- * sandbox, and one whose later start failed, keep the lists, from the copy
- * that the workspace keeps.
- */
-function sandboxPlaceholder(context: WorkspaceContext): ReactNode {
-  const { panel } = context
-  if (!panel || !replacesLists(panel)) return undefined
+/** The state of the sandbox as a panel of the files. */
+function sandboxPanel(
+  context: WorkspaceContext,
+  state: SandboxPanelState,
+): ReactNode {
   return (
     <SandboxPanel
       phone={context.viewport === 'phone'}
       resume={context.resume}
-      state={panel}
+      state={state}
       workspace={context.workspace}
     />
   )
+}
+
+/**
+ * The state of the sandbox in place of All files and Changes, whatever the
+ * workspace saved: while the app refuses its start, with the words of the
+ * refusal, and after a failed first start, with Try again on a phone. A
+ * sandbox that is stopped or starts, and one whose later start failed, keep
+ * the lists, from the copy that the workspace keeps.
+ */
+function sandboxPlaceholder(context: WorkspaceContext): ReactNode {
+  const { panel } = context
+  if (!panel || !replacesList(panel, true)) return undefined
+  return sandboxPanel(context, panel)
+}
+
+/**
+ * The state of the sandbox in place of a list that the workspace has not
+ * saved. While the sandbox starts, also while the open resumes it, this is
+ * the wait, as at the first start of a new workspace. A refused start and a
+ * failed first start already take the place of each list.
+ */
+function listWait(context: WorkspaceContext): ReactNode {
+  const state = contentState(context.panel, context.resumingAtOpen)
+  if (!state || !replacesList(state, false)) return undefined
+  return sandboxPanel(context, state)
 }
 
 /**
@@ -168,6 +194,7 @@ function FilesPart(props: { context: WorkspaceContext }) {
       navigation={navigation}
       now={now}
       placeholder={sandboxPlaceholder(context)}
+      waiting={listWait(context)}
     />
   )
 }

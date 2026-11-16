@@ -1,9 +1,13 @@
-import type { AgentChoice } from './agents'
-import { orgPath, type Timestamp } from './api'
-import type { Session } from './sessions'
+import type { Session } from './generated/Session'
+import type { AgentChoice } from './generated/AgentChoice'
+import type { UserMessage } from './generated/UserMessage'
+import type { Attachment } from './generated/Attachment'
+import { orgPath } from './api'
+
 import { filePaths } from './files'
 
-export const ATTACHMENT_MAX_BYTES = 100_000_000
+export const ATTACHMENT_MAX_BYTES = 1_000_000_000
+export const ATTACHMENT_PART_BYTES = 67_108_864
 
 export type AttachmentUploadTarget =
   | { type: 'workspace'; workspaceId: string }
@@ -13,7 +17,7 @@ function draftAttachmentsPath(orgId: string): string {
   return `${orgPath(orgId)}/attachments`
 }
 
-export function attachmentUploadPath(
+function attachmentUploadPath(
   orgId: string,
   target: AttachmentUploadTarget,
 ): string {
@@ -22,30 +26,50 @@ export function attachmentUploadPath(
     : draftAttachmentsPath(orgId)
 }
 
-export function attachmentUploadUrl(
+export function attachmentUploadStartPath(
   orgId: string,
   target: AttachmentUploadTarget,
-  metadata: { name: string; mediaType: string },
 ): string {
-  const query = new URLSearchParams(metadata)
-  if (target.type === 'new-workspace') query.set('messageId', target.messageId)
-  return `${attachmentUploadPath(orgId, target)}?${query}`
+  return `${attachmentUploadPath(orgId, target)}/uploads`
 }
 
-export interface MessageSender {
-  id: string
-  githubLogin: string
-  displayName: string | null
-  avatarUrl: string | null
+export function attachmentUploadPartPath(
+  orgId: string,
+  target: AttachmentUploadTarget,
+  uploadId: string,
+  partNumber: number,
+): string {
+  return `${attachmentUploadStartPath(orgId, target)}/${encodeURIComponent(uploadId)}/parts/${partNumber}`
 }
 
-export interface Attachment {
-  id: string
+export function attachmentUploadCompletePath(
+  orgId: string,
+  target: AttachmentUploadTarget,
+  uploadId: string,
+): string {
+  return `${attachmentUploadStartPath(orgId, target)}/${encodeURIComponent(uploadId)}/complete`
+}
+
+export interface StartAttachmentUploadRequest {
   name: string
-  path: string | null
-  kind: 'image' | 'file'
   mediaType: string
   sizeBytes: number
+  messageId?: string
+}
+
+export interface StartAttachmentUploadResponse {
+  uploadId: string
+  partSizeBytes: number
+  partCount: number
+}
+
+export interface AttachmentUploadPart {
+  partNumber: number
+  etag: string
+}
+
+export interface CompleteAttachmentUploadRequest {
+  parts: readonly AttachmentUploadPart[]
 }
 
 export interface MessageDraft {
@@ -57,17 +81,6 @@ export interface SendMessageRequest extends MessageDraft {
   /** A stable client ID lets a retry refer to the same message. */
   id: string
   choice: AgentChoice
-}
-
-export interface UserMessage {
-  id: string
-  sessionId: string
-  sender: MessageSender
-  text: string
-  attachments: readonly Attachment[]
-  choice: AgentChoice
-  createdAt: Timestamp
-  state: 'queued' | 'sent'
 }
 
 export interface SendMessageResponse {

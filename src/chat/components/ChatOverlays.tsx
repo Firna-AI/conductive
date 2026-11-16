@@ -1,5 +1,6 @@
+import type { Session } from '../../shared/generated/Session'
 import { RotateCcw, Square } from 'lucide-react'
-import type { Session } from '../../shared/sessions'
+
 import { nameLabel } from '../../shared/name-label'
 import type { Overlay } from '../state/chat-snapshot'
 import { formatAgo } from '../state/format'
@@ -36,6 +37,55 @@ export function historyEntries(
     }))
 }
 
+/** The names of sessions in a sentence, such as "A, B, and C". */
+function namesOf(names: readonly string[]): string {
+  if (names.length <= 2) return names.join(' and ')
+  return `${names.slice(0, -1).join(', ')}, and ${names[names.length - 1]}`
+}
+
+/**
+ * The question before the tabs of running sessions close. It names each
+ * session as its tab does. One running session keeps the singular words.
+ */
+function CloseQuestion(props: {
+  sessionIds: readonly string[]
+  sessions: readonly Session[]
+  mobile: boolean
+  onCancel: () => void
+  onConfirm: () => void
+}) {
+  const titles = props.sessionIds.map((id) => {
+    const session = props.sessions.find((item) => item.id === id)
+    return session ? nameLabel(session.title) : 'this session'
+  })
+  const many = titles.length > 1
+  return (
+    <ConfirmDialog
+      actions={
+        <>
+          <ActionButton onPress={props.onCancel}>Cancel</ActionButton>
+          <ActionButton icon={Square} onPress={props.onConfirm} tone="primary">
+            Stop and close
+          </ActionButton>
+        </>
+      }
+      mobile={props.mobile}
+      onCancel={props.onCancel}
+      title={
+        many
+          ? 'Stop the turns and close the tabs?'
+          : 'Stop the turn and close the tab?'
+      }
+    >
+      <DialogText>
+        {many
+          ? `The agents are working in ${namesOf(titles)}. The sessions move to the session history, where you can reopen them.`
+          : `The agent is working in ${titles[0]}. The session moves to the session history, where you can reopen it.`}
+      </DialogText>
+    </ConfirmDialog>
+  )
+}
+
 /**
  * What lies open over the chat: the question before a running session
  * closes, which names the session as its tab does, and on a phone the
@@ -51,31 +101,14 @@ export function ChatOverlays(props: {
 }) {
   const { overlay } = props
   if (overlay.kind === 'close') {
-    const session = props.sessions.find((item) => item.id === overlay.sessionId)
-    const title = session ? nameLabel(session.title) : 'this session'
     return (
-      <ConfirmDialog
-        actions={
-          <>
-            <ActionButton onPress={props.onDismiss}>Cancel</ActionButton>
-            <ActionButton
-              icon={Square}
-              onPress={props.onConfirmClose}
-              tone="primary"
-            >
-              Stop and close
-            </ActionButton>
-          </>
-        }
+      <CloseQuestion
         mobile={props.mobile}
         onCancel={props.onDismiss}
-        title="Stop the turn and close the tab?"
-      >
-        <DialogText>
-          The agent is working in {title}. The session moves to the session
-          history, where you can reopen it.
-        </DialogText>
-      </ConfirmDialog>
+        onConfirm={props.onConfirmClose}
+        sessionIds={overlay.sessionIds}
+        sessions={props.sessions}
+      />
     )
   }
   if (overlay.kind === 'history' && props.mobile) {

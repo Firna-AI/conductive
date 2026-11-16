@@ -93,6 +93,24 @@ export function focusMessage(field: HTMLElement): void {
 }
 
 /**
+ * Makes each focus of a message field put the caret at the start of the
+ * field when the caret of the page is outside it, as Chrome does before the
+ * focus event. The result stops it.
+ */
+export function chromeCaretOnFocus(): () => void {
+  const place = (event: FocusEvent) => {
+    const field = event.target
+    if (!(field instanceof Element) || !isMessageField(field)) return
+    const selection = field.ownerDocument.getSelection()
+    if (selection && !field.contains(selection.anchorNode)) {
+      selection.collapse(field, 0)
+    }
+  }
+  document.addEventListener('focus', place, true)
+  return () => document.removeEventListener('focus', place, true)
+}
+
+/**
  * Pastes plain text into the field at its caret, as the paste event of a
  * browser gives it. The result is the event, whose `defaultPrevented` says
  * whether the field took the paste.

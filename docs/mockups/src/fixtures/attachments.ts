@@ -69,6 +69,18 @@ export const screenshotCopy = screenshot
 export const draftAttachments: readonly Attachment[] = [screenshot, consoleLog]
 
 /**
+ * The files of the sent message once the cloud computer has them and the
+ * app deleted its stored copies. Each later try of the message uses the
+ * copies in the cloud computer. The file tab of a copy that is gone says
+ * that the file moved or was deleted, so the chip of the screenshot opens
+ * no drawn tab.
+ */
+export const transferredAttachments: readonly Attachment[] = [
+  { ...screenshot, tab: undefined },
+  consoleLog,
+]
+
+/**
  * The screenshot uploads, and the browser measured 64% of it as sent. The
  * log is uploaded.
  */
@@ -95,7 +107,7 @@ export const failedAttachments: readonly Attachment[] = [
 /** A screen recording over the size limit, which the app does not attach. */
 export const largeRecording = {
   name: 'checkout-recording.mov',
-  sizeBytes: 49_912_218,
+  sizeBytes: 1_386_217_472,
 } as const
 
 /** A folder of screenshots that a drop holds, which the browser zips. */
