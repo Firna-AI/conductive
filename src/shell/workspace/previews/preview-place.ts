@@ -9,7 +9,7 @@ import { toolPlace } from '../tools/tool-address'
 export type PreviewTab = Extract<WorkspaceTab, { kind: 'preview' }>
 
 /** Whether a tab of the saved view is a Preview tab. */
-export function isPreviewTab(tab: WorkspaceTab | null): tab is PreviewTab {
+function isPreviewTab(tab: WorkspaceTab | null): tab is PreviewTab {
   return tab?.kind === 'preview'
 }
 

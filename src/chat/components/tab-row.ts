@@ -11,7 +11,7 @@ import type { WorkspaceTab, WorkspaceView } from '../../shared/workspace-view'
 import { rowTabs, tabKey } from '../state/tab-order'
 
 /** A file, diff, or Preview tab of the saved view. The host draws it. */
-export type HostTab = Exclude<WorkspaceTab, { kind: 'session' }>
+type HostTab = Exclude<WorkspaceTab, { kind: 'session' }>
 
 /**
  * The props that the row gives the list item of a tab: the handlers and the
