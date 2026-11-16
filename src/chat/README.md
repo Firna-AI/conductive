@@ -59,13 +59,14 @@ chips.
 
 - [The tab row](tab-row.md) gives the rules of the one order of the
   tabs, the mark of the temporary tab, the drag, the tab menu, and the
-  scroll of the row. A move of the temporary tab to another place keeps
-  it, and so does Keep open in its tab menu, through the `keep` that the
+  scroll of the row, and the reader's place that each tab keeps. A move of
+  the temporary tab to another place keeps it, and so does Keep open in its tab menu, through the `keep` that the
   host gives that tab.
 - [Transcript rules](transcript.md) give the rules of the stream cursor,
   the session logs, the transcript items and their counts, the changed
   files that the cloud computer could not read, the end reason of a
-  finished turn, the lost lines, the turns, the open run of tool calls of
+  finished turn, the standard speed of a fast turn, the lost lines, the
+  turns, the open run of tool calls of
   a running turn, the work fold of each ended turn, and Try again.
 - [The work of a turn](../../docs/protocol/chat-and-events.md#the-work-of-a-turn)
   says what folds when a turn ends. It also says that the line of each fold
@@ -73,11 +74,17 @@ chips.
 - [Chat Markdown](../../docs/protocol/chat-markdown.md) states the
   formatting of agent messages, with their headings and lists.
   [Chat tables](../../docs/protocol/chat-tables.md) states their tables.
-  [Workspace links](../../docs/protocol/workspace-links.md) states the
-  chips of sent messages and answers. [Agent text](agent-text.md) gives the
-  rules of the code that formats them: the chips, and the heading, list,
-  and table parts that the chat shares with the file preview and the
-  mockups.
+  [Chat links](../../docs/protocol/chat-links.md) states the links of sent
+  messages and answers, and
+  [Workspace links](../../docs/protocol/workspace-links.md) states their
+  chips. [Agent text](agent-text.md) gives the rules of the code that
+  formats them: the links, the chips, and the heading, list, and table
+  parts that the chat shares with the file preview and the mockups.
+- The links of chat text open through the link opener of the app shell, in
+  `../shell/ui/text-links.tsx`. The workspace screen gives it the pages of
+  the app and the port previews of the workspace, as
+  [Chat integration](integration.md) says. Outside that screen, each link
+  opens a new tab.
 - [Loads, records, and sends](loads-and-sends.md) gives the rules of
   the history loads, the read-only chats, the order of the records, the
   sends, the fixed prompts of the pull request bar, and Stop with the line
@@ -151,6 +158,8 @@ copy, the chat routes, the Mac commands, and the development page.
   agent messages, with their headings and lists.
 - [Chat tables](../../docs/protocol/chat-tables.md): the tables of agent
   messages.
+- [Chat links](../../docs/protocol/chat-links.md): the links of sent
+  messages and answers.
 - [Agent runner](../../docs/protocol/agent-runner.md): the limits of the
   runner events, their refusal markers, and the late events of a turn.
 - [Workspaces and sandboxes](../../docs/protocol/workspaces-and-sandboxes.md):

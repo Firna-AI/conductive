@@ -16,13 +16,13 @@ export const reopenStoppedWorkspace = defineUseCase({
       screenPath: 'app/shell/starting',
       title: 'Open it',
       description:
-        'Opening the workspace resumes its sandbox. The chat history shows at once.',
+        'Opening the workspace resumes its sandbox. The chat history and the saved file lists show at once.',
     },
     {
       screenPath: 'app',
       title: 'Keep working',
       description:
-        'The sandbox is ready. The tools open, and the user sends the next message.',
+        'The sandbox is ready. The tools and the files open, and the user sends the next message.',
     },
   ],
 })

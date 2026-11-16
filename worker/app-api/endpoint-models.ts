@@ -1,4 +1,7 @@
-import { refreshAgentLoginModelsPath } from '../../src/shared/account'
+import {
+  refreshAgentLoginModelsPath,
+  type RefreshAgentLoginModelsResponse,
+} from '../../src/shared/account'
 import type { AppDependencies, AppEnv } from '../env'
 import { refreshEndpointModels } from '../model-gateway/endpoint-model-refresh'
 import type { RequestContext } from '../security/gate'
@@ -15,6 +18,13 @@ export async function endpointModelsRoute(
     (agent) => path === refreshAgentLoginModelsPath(agent),
   )
   if (!agent) return null
-  await refreshEndpointModels(env, context.user.id, agent, dependencies)
-  return new Response(null, { status: 204 })
+  const read = await refreshEndpointModels(
+    env,
+    context.user.id,
+    agent,
+    dependencies,
+  )
+  return Response.json({
+    modelListReadFailed: !read,
+  } satisfies RefreshAgentLoginModelsResponse)
 }

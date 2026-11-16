@@ -49,6 +49,8 @@ In a workspace with older cloud computer software, agent commits name the worksp
 
 Other members' messages can spend a session starter's login while that person shares it.
 Without sharing, another member's message starts a new session on their own login.
+Any member who can send in a session can still change its model, effort, and **Fast** setting.
+That choice also applies to the starter's own messages, which use the starter's login.
 The agent can identify the member who sent each message.
 Another member's message during a turn does not change its GitHub account, commit author, or receiving Mac.
 

@@ -30,7 +30,12 @@ export async function routineFixture(harness: TestHarness) {
     repositoryId: 'routine-repository',
     sectionId: 'general-members-org',
     prompt: 'Summarize the work.',
-    choice: { agent: 'codex', model: 'test-model', effort: 'medium' },
+    choice: {
+      agent: 'codex',
+      model: 'test-model',
+      effort: 'medium',
+      fast: false,
+    },
     active: true,
     timeZone: 'Europe/London',
     triggers: [{ kind: 'daily', time: { hour: 9, minute: 0 } }],

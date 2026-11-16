@@ -84,6 +84,15 @@ export const workspaceCommandDefaults = [
     defaults: { mac: ['Shift+Meta+G'], other: ['Ctrl+Shift+G'] },
   },
   {
+    id: 'fast-mode',
+    previous: 'next-effort',
+    group: 'Chat',
+    scope: 'workspace',
+    label: 'Fast mode',
+    words: [],
+    defaults: { mac: ['Shift+Meta+E'], other: ['Ctrl+Shift+E'] },
+  },
+  {
     id: 'copy-concise-transcript',
     previous: 'stop-agent',
     group: 'Chat',

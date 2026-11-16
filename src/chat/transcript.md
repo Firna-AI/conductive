@@ -2,7 +2,8 @@
 
 This guide belongs to [the chat](README.md). It gives the rules of the
 stream cursor, the session logs, the transcript items and their counts,
-the end reason of a finished turn, the lost lines, the turns, the open run
+the end reason of a finished turn, the standard speed of a fast turn, the
+lost lines, the turns, the open run
 of tool calls of a running turn, the work fold of each ended turn, and Try
 again. Its [key code](#key-code) names the shared transcript modules.
 
@@ -30,6 +31,12 @@ again. Its [key code](#key-code) names the shared transcript modules.
   The reader keeps only a known value and drops an unknown one, so it refuses nothing new. `turnCompletions` keeps the reason with the completion.
   `turnEndReason` gives the reason to the chat and to the copied transcript, so both show its line for the same turns.
   A finished turn then shows the line, "Background work stopped at the time limit", above its duration and its files. A stopped line does not change.
+- A completion of a fast turn can give its speed in `speed`: fast, or standard with a cause code, as [The speed of a turn](../../docs/protocol/fast-mode.md#the-speed-of-a-turn) says.
+  The reader keeps a speed that `readTurnSpeed` reads and drops any other value, so it refuses nothing new. `turnCompletions` keeps the speed with the completion.
+  `standardSpeedOf` gives the standard speed of a turn, with the cause that the line can name: `fast_limit` or `older_runner`. Another cause, or none, gives "Standard speed" alone.
+  A finished turn then shows the note, such as "Standard speed · Fast limit reached", beside its duration, with its files under it. A stopped line ends with the same words, before the notes of its files.
+  A fast turn at fast speed and a turn without fast mode show nothing new. A late end shows the note in its file row, or on the stopped line when its turn has no file row.
+  The copied transcript gives the same words after the duration of a finished turn, and in a stop line.
 - Each refusal marker of a session becomes one `lost` item at its place among the events, which shows one line.
   The transcript keeps the marker only in that item. A repeat of the same marker replaces its item.
   The line names the lost data and the reason in plain words, and never the stream, number, or event type.
@@ -87,7 +94,9 @@ again. Its [key code](#key-code) names the shared transcript modules.
   [`tool-words.ts`](../shared/transcript/tool-words.ts), and
   [`turn-words.ts`](../shared/transcript/turn-words.ts): the pure format,
   tool words, fold counts, and turn lines that the browser and Worker share.
-  `turnEndReason` gives the end reason of a turn from `turnCompletions`.
+  `turnEndReason` gives the end reason of a turn from `turnCompletions`, and
+  `standardSpeedOf` and `standardSpeedLine` give the standard speed of a
+  fast turn.
 - [`session-events.ts`](../shared/transcript/session-events.ts): the session
   events from stored Worker envelopes or parsed browser envelopes.
 - [`session-log.ts`](../shared/transcript/session-log.ts): the event log of each session, with its records

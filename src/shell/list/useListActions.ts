@@ -5,6 +5,7 @@ import type { OrgModel } from '../../app/org-model'
 import {
   createSection,
   deleteSection,
+  moveSection,
   moveToSection,
   renameSection,
   setSectionCollapsed,
@@ -34,6 +35,10 @@ export function useListActions(org: OrgModel) {
     rename: (section, name) =>
       void renameSection(org, section.id, name).catch(
         failed("The section wasn't renamed."),
+      ),
+    moveTo: (section, index) =>
+      void moveSection(org, section.id, index).catch(
+        failed("The section didn't move."),
       ),
     // General, the default section, keeps the one draft of the row at the
     // top of the list, which puts the workspace in General too.

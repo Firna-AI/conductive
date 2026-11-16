@@ -1,14 +1,15 @@
+import type { Workspace } from '../../shared/generated/Workspace'
 // @vitest-environment happy-dom
 
 import { act } from 'react'
 import { describe, expect, test, vi } from 'vitest'
+import type { UserMessage } from '../../shared/generated/UserMessage'
 import chipStyles from '../../../docs/mockups/src/components/chat/WorkspaceChip.module.css'
 import { routes } from '../../app/router'
 import { ManualDelay, requestLines } from '../../app/test-kit'
-import type { UserMessage } from '../../shared/messages'
 import { sessionLink } from '../../shared/session-link'
 import { sessionsPath } from '../../shared/sessions'
-import { workspacesPath, type Workspace } from '../../shared/workspaces'
+import { workspacesPath } from '../../shared/workspaces'
 import { accessibleName } from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
 import {
@@ -58,7 +59,7 @@ const message: UserMessage = {
   sender: senderSnapshot(fakeUser),
   text: `Ask ${link(id, 'debounce')}, then ${link(other.id, 'plan')}, ${link(other.id, 'notes')}, and ${link(other.id, 'missing')}.`,
   attachments: [],
-  choice: { agent: 'claude', model: 'Opus 5.5', effort: 'high' },
+  choice: { agent: 'claude', model: 'Opus 5.5', effort: 'high', fast: false },
   createdAt: FAKE_TIME,
   state: 'sent',
 }

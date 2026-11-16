@@ -30,7 +30,7 @@ export interface FilesNavigation {
   keep(tab: FilesTab): void
 }
 
-/** The desktop layout, or the phone layout with 44 px touch targets. */
+/** The desktop layout, or the phone layout with 40 px touch targets. */
 export type FilesLayout = 'desktop' | 'phone'
 
 /** True when a tab of the workspace view shows this file tab or diff tab. */

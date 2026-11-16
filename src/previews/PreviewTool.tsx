@@ -1,7 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback } from 'react'
 import { CircleAlert } from 'lucide-react'
 import { useWorkspaceStore } from '../app/workspace-store'
-import type { Preview } from '../shared/previews'
 import { ToolButton } from '../terminal/tool-parts/ToolButtons'
 import { ToolRoot } from '../terminal/tool-parts/ToolRoot'
 import { ToolMessage, ToolWaiting } from '../terminal/tool-parts/ToolStates'
@@ -10,11 +9,11 @@ import {
   type ToolWorkspace,
 } from '../terminal/tool-parts/workspace'
 import { PortsNotice } from './PortsNotice'
+import { usePreviewActions } from './previewActions'
 import { PreviewFrame } from './PreviewFrame'
 import { PreviewOpenForm } from './PreviewOpenForm'
 import { PreviewToolbar } from './PreviewToolbar'
-import { closePreview, openPreview } from './previewsApi'
-import { portFormList, selectedPreview, visiblePreviews } from './previewsState'
+import { portFormList } from './previewsState'
 import { createPreviewsStore, type PreviewsStore } from './previewsStore'
 import styles from './PreviewTool.module.css'
 
@@ -25,10 +24,21 @@ import styles from './PreviewTool.module.css'
 export interface PreviewRoute {
   /** The preview that the current address names, or null. */
   previewId: string | null
+  /**
+   * The port of the sandbox that the current address names, or null. The
+   * tool shows the open preview of the port, or opens it, then replaces
+   * the address.
+   */
+  port: number | null
   /** The address of the tab of one preview. */
   href: (previewId: string) => string
   /** Goes to the address of one preview without a page load. */
   navigate: (previewId: string) => void
+  /**
+   * Puts the address of one preview, or of the tool for null, in place of
+   * the current address, with no new entry in the browser history.
+   */
+  replace: (previewId: string | null) => void
 }
 
 export interface PreviewToolProps {
@@ -45,8 +55,9 @@ export interface PreviewToolProps {
 
 /**
  * The Preview tool: the web servers of the sandbox, each in a frame with an
- * "Open" link to a new tab. The user opens a preview by its port, or by a
- * click on a server that the runner reports.
+ * "Open" link to a new tab. The user opens a preview by its port, by a
+ * click on a server that the runner reports, or by an address that names
+ * the port.
  */
 export function PreviewTool(props: PreviewToolProps) {
   return <PreviewToolBody key={workspaceKey(props.workspace)} {...props} />
@@ -64,65 +75,12 @@ function PreviewToolBody(props: PreviewToolProps) {
     connect,
   })
   const { dispatch } = store
-  /** The form shows after "+", until the address changes. */
-  const [adding, setAdding] = useState<{ routeId: string | null } | null>(null)
-  const mounted = useRef(false)
-  /** The route of the last render, for a write that ends later. */
-  const latestRoute = useRef(route)
-
-  useEffect(() => {
-    mounted.current = true
-    return () => {
-      mounted.current = false
-    }
-  }, [])
-
-  useEffect(() => {
-    latestRoute.current = route
-  })
-
-  const visible = visiblePreviews(state)
-  const formShown = adding !== null && adding.routeId === route.previewId
-  const selected = formShown ? null : selectedPreview(visible, route.previewId)
-
-  const follow = (previewId: string, current = route) => {
-    setAdding(null)
-    if (current.previewId !== previewId) current.navigate(previewId)
-  }
-
-  const open = (port: number) => {
-    const existing = visible.find((preview) => preview.port === port)
-    if (existing) {
-      follow(existing.id)
-      return
-    }
-    dispatch({ type: 'open' })
-    void openPreview(workspace, port).then((result) => {
-      if (!mounted.current) return
-      if (!result.ok) {
-        dispatch({ type: 'open-failed', error: result.error })
-        return
-      }
-      dispatch({ type: 'opened', preview: result.value })
-      follow(result.value.id, latestRoute.current)
-    })
-  }
-
-  const close = (preview: Preview) => {
-    dispatch({ type: 'close', previewId: preview.id })
-    void closePreview(workspace, preview.id).then((result) => {
-      if (!mounted.current) return
-      dispatch(
-        result.ok
-          ? { type: 'closed', previewId: preview.id }
-          : {
-              type: 'close-failed',
-              previewId: preview.id,
-              error: result.error,
-            },
-      )
-    })
-  }
+  const { visible, selected, open, follow, add, close } = usePreviewActions(
+    workspace,
+    route,
+    state,
+    dispatch,
+  )
 
   const reloadList = () => dispatch({ type: 'load' })
 
@@ -169,7 +127,7 @@ function PreviewToolBody(props: PreviewToolProps) {
           <PreviewToolbar
             closing={state.closing}
             href={route.href}
-            onAdd={() => setAdding({ routeId: route.previewId })}
+            onAdd={add}
             onClose={close}
             onFollow={follow}
             onReload={() => dispatch({ type: 'reload' })}

@@ -22,8 +22,18 @@ this guide.
 - `ChatArea.tsx`: the chat of the centre, with the start steps and the
   sandbox bar of the shell, the open file tabs, and the file page in place
   of the chat of the session, or the shell's own column for the chat slots.
+- `link-opening.tsx`: `WorkspaceLinks`, which gives each part of the
+  screen the link opener of its untrusted text: the pages of the app, and
+  the port previews of the workspace. `TextLinks.test.tsx` mounts the
+  whole app. It presses a local address and a link of the app in the chat
+  on desktop, and a link of the app to the address that shows. It checks
+  that an archived workspace keeps a local address as text, and presses a
+  link of the app in a Markdown file on a phone.
 - `files/files-features.tsx`: the Files part, which reads the kept files
-  that the screen connects, and the file or diff page of the centre.
+  that the screen connects, and the file or diff page of the centre. The
+  page gives its tab to `KeptScroll`, so each file and diff tab keeps its
+  scroll offset, as
+  [Kept scroll offsets](../../files/README.md#kept-scroll-offsets) says.
 - `files/tab-open-resume.tsx`: `ResumeOnTabOpen`, which resumes a stopped
   sandbox at each visit that opens a file or diff tab, also a second click
   on the tab that shows. The screen draws it in each layout.
@@ -64,6 +74,10 @@ this guide.
   address. It checks the file that a tab keeps when the sandbox stops, no
   start at a switch of its view, and no start in a ready or a refused
   workspace.
+- `files/TabScroll.test.tsx`: mounts the whole app over the fake API. It
+  scrolls a file tab and a diff tab, shows the chat, and checks that each
+  tab gives its offset back. A tab that the user closes opens at the top
+  again.
 - `app-features.tsx`: the shell's own files, pull request, and owner
   parts, which `useFeatures` puts under the parts of the host. The screen
   draws its own tools panel when the host gives no `tools` part.
@@ -74,9 +88,11 @@ this guide.
   the routine of a run workspace, which the chat reads with the view.
 - `tools/ToolsPart.tsx`, `tools/tool-navigation.ts`, and
   `tools/tool-address.ts`: the tools panel and its `placeholder`, which
-  takes the place of the tools inside the tabs, the tool and preview of the
-  address or the saved view, and their addresses. `useToolSelect` is the
-  select of a tool tab, which the Go to rows of the command palette share.
+  takes the place of the tools inside the tabs, the tool of the address or
+  the saved view, the preview or the port of the address, and their
+  addresses. `previewPortHref` gives the address of the Preview tool with a
+  port. `useToolSelect` is the select of a tool tab, which the Go to rows
+  of the command palette share.
 - `WorkspacePaletteActions.tsx`: the actions that the screen offers to the
   command palette, as `workspaceActionIds` chooses them. Each one runs the
   control of the screen: +, the clock of the history, a tab of the right
@@ -108,9 +124,9 @@ this guide.
   the whole app over the fake API. They check the terminal socket across
   tool switches, the saved tool, the tabs and the state of a stopped
   sandbox with no tool mounted, a revoke before the Preview tool shows, a
-  preview address on a phone, one GitHub read for the bar and Checks with a
-  live event, the Checks row of a phone, an archived phone, and the key of
-  Open PR on GitHub.
+  preview address on a phone, a port address on desktop and on a phone,
+  one GitHub read for the bar and Checks with a live event, the Checks row
+  of a phone, an archived phone, and the key of Open PR on GitHub.
   `wiring-test-kit.tsx` holds their helpers.
 - `header-notices.ts`: `HeaderNotices`, the failed repairs of the name and
   the start steps. `follow` reads a stream, `dismiss` hides a notice in
@@ -131,7 +147,9 @@ this guide.
   `RightColumnToggle.test.tsx` mounts the whole app over the fake API. It
   hides the right column, opens the workspace again, and shows the column.
   `WorkspaceKeys.test.tsx` runs the keys of the tab row, of the
-  composer, and the copy keys of the shown session in the whole app.
+  composer, and the copy keys of the shown session in the whole app. It
+  also runs the key of Fast mode, and reads that key at the end of the
+  Fast row of the model menu.
 - `CopyLink.tsx`: the label of the number, such as `W-395`, as the Copy
   link button of the header, as
   [Copy link](../../../docs/protocol/workspace-links.md#copy-link) says.

@@ -88,7 +88,7 @@ When any file is not committed, **Commit and push** asks the agent to commit and
 When only commits are left, **Push** asks the agent to push the branch.
 
 Each agent action sends a fixed message to the chat session you viewed last.
-It uses that session's model, effort, and normal send rules.
+It uses that session's model, effort, **Fast** setting, and normal send rules.
 It preserves your draft and uploads.
 
 **Address review** asks the agent to change code without replying on GitHub.

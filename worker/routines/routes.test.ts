@@ -183,12 +183,26 @@ it('refuses empty prompts and foreign repository or section references on create
     [{ repositoryId: 'removed-repo' }, 'repository_not_found', 404],
     [{ sectionId: 'foreign-section' }, 'section_not_found', 404],
     [
-      { choice: { agent: 'other', model: 'model', effort: 'medium' } },
+      {
+        choice: {
+          agent: 'other',
+          model: 'model',
+          effort: 'medium',
+          fast: false,
+        },
+      },
       'invalid_input',
       400,
     ],
     [
-      { choice: { agent: 'codex', model: 'model', effort: 'invalid' } },
+      {
+        choice: {
+          agent: 'codex',
+          model: 'model',
+          effort: 'invalid',
+          fast: false,
+        },
+      },
       'invalid_input',
       400,
     ],

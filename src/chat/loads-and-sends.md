@@ -78,7 +78,15 @@ The session history stays open. The tab keeps its old name, and the sandbox bar 
   again. The steps after an action, such as a view save, the focus, or a
   free Resume button, still run when its reply is older. The header of
   [`state/session-records.ts`](state/session-records.ts) gives the pending
-  edits of a rename or a model change.
+  edits of a rename, a model change, or a close.
+- A close of a session tab shows at once, as a pending edit that sets
+  `closedAt`. The tab moves to the session history and the next tab shows
+  before the reply. The reply confirms the close and saves the view. A
+  failed close puts the tab back at its place in the row. When the close
+  moved the user off that tab and the user chose no other tab since, the
+  tab shows again. The notice "The session didn't close" shows with the
+  tab, or on the shown tab when the restored tab stays hidden.
+  [`state/close-actions.ts`](state/close-actions.ts) holds these steps.
 
 ## Sends and Stop
 
@@ -111,7 +119,9 @@ The session history stays open. The tab keeps its old name, and the sandbox bar 
   agent as Stop does while a turn runs and does not stop yet. The key of
   Model picker opens the menu of the model picker. The key of Next effort
   level chooses the next effort of the menu, with a wrap from the last
-  effort to the first.
+  effort to the first. For a model that the model list marks as fast, the
+  key of Fast mode turns fast mode on or off, as the Fast row of the menu
+  does.
 - Send works while the sandbox is not ready: during the first start of a
   new workspace, after it failed, and during a resume. The workspace queues
   each message for the sandbox, as

@@ -26,3 +26,13 @@ export const defaultSection: SectionKey = 'general'
 
 /** The section whose menu the section state opens. */
 export const menuSection: SectionKey = 'checkout'
+
+/**
+ * The section that the section drag state moves, and where it lands:
+ * Infra, lifted between General and Checkout.
+ */
+export const sectionDrag = {
+  kind: 'section',
+  section: 'infra',
+  index: 1,
+} as const

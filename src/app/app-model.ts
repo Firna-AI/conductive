@@ -1,4 +1,5 @@
-import type { AgentModel } from '../shared/agents'
+import type { AgentModel } from '../shared/generated/AgentModel'
+
 import { API_PATHS, type User } from '../shared/api'
 import { GET_STARTED_PATH, type GetStartedResponse } from '../shared/onboarding'
 import {
@@ -15,8 +16,9 @@ import { readSession } from './api/read-waitlist'
 import { AccountModel } from './account-model'
 import type { ComposerFocusRequest } from './composer-focus'
 import { FeedbackModel } from './feedback-model'
-import { failedBoot, readShared, type Boot } from './boot'
+import { failedBoot, readShared, watchSession, type Boot } from './boot'
 import { InvitationsModel } from './invitations-model'
+import { LastWorkspaces } from './last-workspaces'
 import { OrgList } from './org-list'
 import { OrgModel } from './org-model'
 import { patchOrg, postOrg } from './org-writes'
@@ -50,6 +52,11 @@ export class AppModel {
    */
   readonly lastOrg = new Store<string | null>(null)
   /**
+   * The last workspace of each org of the person signed in, which the
+   * browser keeps, as `LastWorkspaces` says.
+   */
+  readonly lastWorkspaces: LastWorkspaces
+  /**
    * The workspace whose message field takes the focus when its chat shows,
    * as `ComposerFocusRequest` says. The tab keeps it in memory only.
    */
@@ -78,8 +85,9 @@ export class AppModel {
   private admitting: Promise<void> | null = null
 
   constructor(services: AppServices) {
-    this.services = services
-    this.account = new AccountModel(services, this)
+    this.services = watchSession(services, () => this.endSession())
+    this.lastWorkspaces = new LastWorkspaces(services.storage)
+    this.account = new AccountModel(this.services, this)
     this.feedback = new FeedbackModel(this)
     this.getStarted = setupSteps({
       server: this.setupReply,
@@ -95,11 +103,15 @@ export class AppModel {
   /**
    * A sign-out, or a sign-in of another person, ends the create requests
    * of every org that still run, so that their answers change nothing. It
-   * also forgets the GitHub access of the person.
+   * also forgets the GitHub access of the person. The last workspaces
+   * follow the person of each ready boot and each sign-out.
    */
   private followPerson(): void {
     const boot = this.boot.get()
     const person = boot.state === 'ready' ? boot.user.id : null
+    if (boot.state === 'ready' || boot.state === 'signed-out') {
+      this.lastWorkspaces.follow(person)
+    }
     if (
       boot.state !== 'signed-out' &&
       (person === null || person === this.userId)
@@ -171,6 +183,17 @@ export class AppModel {
     this.models.set(shared.models)
     this.setupReply.set(shared.getStarted)
     this.boot.set({ state: 'ready', user })
+  }
+
+  /**
+   * The API refused a request because the sign-in session ended, such as
+   * after 7 days, a sign-out in another tab, or a suspension. The app shows
+   * the sign-in in place of every screen.
+   */
+  private endSession(): void {
+    if (this.boot.get().state !== 'signed-out') {
+      this.boot.set({ state: 'signed-out' })
+    }
   }
 
   /** A load failed, while `from` is still the boot. */

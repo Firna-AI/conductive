@@ -24,7 +24,7 @@ export const privacyDocument: LegalDocument = {
   title: legalTitles.privacy,
   description: `The privacy notice of ${productName}.`,
   lead: text`This notice says which personal data ${productName} uses, why
-  it uses it, and who gets it. Effective date: 12 November 2026.`,
+  it uses it, and who gets it. Effective date: 15 November 2026.`,
   sections: [
     {
       title: 'Who is responsible',
@@ -95,7 +95,8 @@ export const privacyDocument: LegalDocument = {
           workspace before then.`,
         paragraph`${productName} keeps each file that you send with a message
           until it deletes the workspace of the message. It deletes an unsent
-          file 7 days after you upload it.`,
+          file 7 days after you upload it. A large text that you paste into
+          a message becomes such a file, and it uploads before you send it.`,
         paragraph`An account that waits for app access stays until you ask
           for its deletion, as every other account does.`,
         paragraph`Account records, the latest Terms acceptance, and
@@ -105,8 +106,8 @@ export const privacyDocument: LegalDocument = {
           stopped. When ${productName} passes on model requests and their
           answers, it keeps no copy of them.`,
         paragraph`A connected agent login stays until you remove or replace
-          it. Panel sizes stay in your browser until you clear its saved
-          data. The providers above can keep their own records under their
+          it. Panel sizes and the last workspace of each org stay in your
+          browser until you clear its saved data. The providers above can keep their own records under their
           terms and privacy notices.`,
         paragraph`The team keeps each feedback email in its inbox while it
           helps to improve ${productName}. It deletes the email when it no

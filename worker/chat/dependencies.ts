@@ -1,3 +1,4 @@
+import { modelChoice } from '../app-api/models'
 import type { AppEnv } from '../env'
 import { commitAuthor } from '../../src/shared/commit-author'
 import { readUser } from '../data/users'
@@ -32,8 +33,9 @@ export function chatDependencies(
   overrides: Partial<ChatDependencies> = {},
 ): ChatDependencies {
   return {
-    refreshEndpointModels: (userId, agent) =>
-      refreshEndpointModels(
+    normalizeChoice: (choice) => modelChoice(env, choice),
+    refreshEndpointModels: async (userId, agent) => {
+      await refreshEndpointModels(
         env,
         userId,
         agent,
@@ -42,7 +44,8 @@ export function chatDependencies(
           now: overrides.now ?? Date.now,
         },
         { background: true },
-      ),
+      )
+    },
     readBranches: (id) => readRunnerBranches(env.DB, id),
     readCommitAuthor: async (userId) => {
       const user = await readUser(env.DB, userId)

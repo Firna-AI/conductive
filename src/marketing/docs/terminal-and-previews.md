@@ -42,6 +42,25 @@ Reconnect to return to the same shell and running commands.
 A stop of the cloud computer ends those commands.
 After a resume, start any needed server again.
 
+## Copy output
+
+1. Drag over the output to select it.
+2. Drag past the top or bottom edge to scroll and select more of the earlier output.
+3. Copy the selection, for example with Cmd+C on a Mac.
+
+The wheel scrolls the earlier output.
+A new connection shows up to 2,000 lines of earlier output.
+Every key goes to the shell, also Ctrl-b.
+
+Every member who opens the same terminal sees it at one shared size.
+The panel where someone last typed, pasted, or resized sets that size.
+Another panel can show smaller text, or empty space after the terminal.
+Type in a panel to give the terminal its size.
+
+A workspace with older cloud computer software shows only the visible screen when you drag.
+An automatic software update brings the newer terminal at a later start.
+[Apply setup changes](/docs/cloud-computer#apply-setup-changes) explains when updates apply.
+
 ## Know which GitHub account a command uses
 
 Git and the GitHub CLI, `gh`, get GitHub access through Conductive.
@@ -96,11 +115,10 @@ Use the port of your server when it reports a different one.
 
 An older cloud computer can show only the **Port** field.
 Use the manual steps there.
-If Preview says it needs newer cloud computer software, ask an admin to run **Build computer**.
-After that build succeeds, create a new workspace.
-An existing workspace keeps its installed software after a resume.
+If Preview says it needs newer cloud computer software, an automatic update brings the required preview support at a later start.
+An existing workspace also gets the server list with an automatic software update.
 
-- [Prepare a new cloud computer for the server list](/docs/cloud-computer#apply-setup-changes)
+- [Understand cloud computer software updates](/docs/cloud-computer#apply-setup-changes)
 
 The preview opens inside the workspace.
 Use **Open** to show the app in a new browser tab when it works better there.

@@ -1,4 +1,5 @@
-import type { AgentChoice, Effort } from '../../src/shared/agents'
+import type { AgentChoice } from '../../src/shared/generated/AgentChoice'
+import type { Effort } from '../../src/shared/generated/Effort'
 import type {
   MessageDraft,
   SendMessageRequest,
@@ -63,6 +64,7 @@ export function choice(value: unknown): AgentChoice {
     agent: input.agent,
     model: identifier(input.model),
     effort: effort(input.effort),
+    fast: input.fast === true,
   }
 }
 

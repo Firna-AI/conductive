@@ -1,4 +1,4 @@
-import type { AgentChoice } from '../../src/shared/agents'
+import type { AgentChoice } from '../../src/shared/generated/AgentChoice'
 import type { Routine } from '../../src/shared/routines'
 import { routineNotFound } from './errors'
 import { readRoutineTriggers } from './stored-triggers'
@@ -6,7 +6,8 @@ import { readRoutineTriggers } from './stored-triggers'
 interface RoutineRow
   extends
     Omit<Routine, 'owner' | 'choice' | 'triggers' | 'active'>,
-    AgentChoice {
+    Omit<AgentChoice, 'fast'> {
+  fast: number
   ownerUserId: string
   githubLogin: string
   displayName: string | null
@@ -18,7 +19,7 @@ interface RoutineRow
 const columns = `r.id, r.org_id AS orgId, r.owner_user_id AS ownerUserId,
   u.github_login AS githubLogin, u.display_name AS displayName, u.avatar_url AS avatarUrl,
   r.moved_from_name AS movedFrom, r.name, r.repository_id AS repositoryId,
-  r.section_id AS sectionId, r.prompt, r.agent, r.model, r.effort, r.active,
+  r.section_id AS sectionId, r.prompt, r.agent, r.model, r.effort, r.fast, r.active,
   r.inactive_reason AS inactiveReason, r.failed_runs_in_a_row AS failedRunsInARow,
   r.time_zone AS timeZone, r.triggers_json AS triggersJson, r.next_run_at AS nextRunAt,
   r.created_at AS createdAt, r.updated_at AS updatedAt`
@@ -38,7 +39,12 @@ function routine(row: RoutineRow): Routine {
     repositoryId: row.repositoryId,
     sectionId: row.sectionId,
     prompt: row.prompt,
-    choice: { agent: row.agent, model: row.model, effort: row.effort },
+    choice: {
+      agent: row.agent,
+      model: row.model,
+      effort: row.effort,
+      fast: row.fast === 1,
+    },
     active: row.active === 1,
     inactiveReason: row.inactiveReason,
     failedRunsInARow: row.failedRunsInARow,

@@ -40,7 +40,8 @@ state what they do.
   Next tab with one tab, is not offered, so it goes on to the browser.
 - The org rail offers Switch to org 1 to 9 while it shows, for each org by
   its place from the top, as its tile opens the org. So the key also opens
-  the org of the page. The rail leaves out a deleted org, so no key opens
+  the org of the page. The tile, its key, and the Switch to row open the
+  last workspace of the org, through `orgEntry` of `last-workspaces.ts`. The rail leaves out a deleted org, so no key opens
   one. A page without the rail, such as
   the phone layout, runs no org key, and the palette's Switch to rows only
   show the keys.

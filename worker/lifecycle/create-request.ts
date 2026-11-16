@@ -1,8 +1,8 @@
+import { modelChoice } from '../app-api/models'
 import type { User } from '../../src/shared/api'
 import type { CreateWorkspaceRequest } from '../../src/shared/workspaces'
 import { DEFAULT_PROVIDER_ACCOUNT } from '../sandbox/account-identity'
 import { workspaceBranch } from './workspace-branch'
-import { requireOrgMember } from './access'
 import { readCreationImage } from './published-image-data'
 import type { WorkspaceRuntime } from './workspace-runtime'
 import type { WorkspaceStartJob } from './start-types'
@@ -17,6 +17,11 @@ export interface WorkspaceCreationInput extends CreateWorkspaceRequest {
   firstSessionTitle?: string
 }
 
+/**
+ * The plan of a new create. It checks no access: each caller has already
+ * checked that the org is active and that the user and the sender are
+ * members, in the same request.
+ */
 export async function prepareCreationRequest(
   runtime: WorkspaceRuntime,
   orgId: string,
@@ -28,7 +33,6 @@ export async function prepareCreationRequest(
   base?: WorkspaceCreationBase,
 ): Promise<WorkspaceStartJob> {
   const { env, dependencies } = runtime
-  await requireOrgMember(env.DB, orgId, user.id)
   const image = await readCreationImage(
     env.DB,
     orgId,
@@ -68,7 +72,10 @@ export async function prepareCreationRequest(
       branch,
       sessionId,
       firstSessionTitle: input.firstSessionTitle,
-      request: input.firstMessage,
+      request: {
+        ...input.firstMessage,
+        choice: modelChoice(env, input.firstMessage.choice),
+      },
       createdAt: dependencies.now(),
     },
     processId: null,

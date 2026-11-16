@@ -1,13 +1,14 @@
+import type { Workspace } from '../../shared/generated/Workspace'
 // @vitest-environment happy-dom
 
 import { act } from 'react'
 import { describe, expect, test, vi } from 'vitest'
+import type { UserMessage } from '../../shared/generated/UserMessage'
 import chipStyles from '../../../docs/mockups/src/components/chat/WorkspaceChip.module.css'
 import { memoryNavigation, NavigationContext } from '../../app/navigation'
 import { routes } from '../../app/router'
 import { ManualDelay, requestLines } from '../../app/test-kit'
-import type { UserMessage } from '../../shared/messages'
-import { workspacesPath, type Workspace } from '../../shared/workspaces'
+import { workspacesPath } from '../../shared/workspaces'
 import { accessibleName, byText } from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_IDS, FAKE_TIME, fakeUser } from '../../test-support/fixtures/core'
@@ -44,7 +45,7 @@ const archived: Workspace = {
   github: 'checks-failed',
   archivedAt: FAKE_TIME,
 }
-/** A link of another origin, which stays text. */
+/** A link of another origin, which is a link to another site. */
 const elsewhere = `https://elsewhere.example${routes.workspace(org, linked.id)}`
 
 /** The names of the chips of the chat, which are links to their workspaces. */
@@ -65,7 +66,7 @@ const message: UserMessage = {
   sender: senderSnapshot(fakeUser),
   text: `Compare ${linked.link} with ${archived.link} and ${elsewhere}.`,
   attachments: [],
-  choice: { agent: 'claude', model: 'Opus 5.5', effort: 'high' },
+  choice: { agent: 'claude', model: 'Opus 5.5', effort: 'high', fast: false },
   createdAt: FAKE_TIME,
   state: 'sent',
 }
@@ -98,19 +99,22 @@ async function openPhoneChat() {
 }
 
 describe('workspace chips in the chat of the app', () => {
-  test('shows each linked workspace with its current name, GitHub state, and state, keeps other links as text, and opens a chip in the same window', async () => {
+  test('shows each linked workspace with its current name, GitHub state, and state, shows a link of another origin as a link to a new tab, and opens a chip in the same window', async () => {
     const { view, navigation } = await openPhoneChat()
     const chip = linkTo(view, routes.workspace(org, linked.id))
     expect({
       linked: chipsOf(view, linked),
       archived: chipsOf(view, archived),
-      text: chip.parentElement?.textContent?.endsWith(` and ${elsewhere}.`),
+      elsewhere: linksTo(view, elsewhere).map((link) => [
+        link.textContent,
+        link.target,
+      ]),
     }).toEqual({
       linked: [`W-${linked.number} ${linked.name}, Checks running, Starting`],
       // The mark of an archived workspace shows no colour, so its chip says
       // no GitHub state.
       archived: [`W-${archived.number} ${archived.name}, Archived`],
-      text: true,
+      elsewhere: [[elsewhere, '_blank']],
     })
 
     const newTab = new MouseEvent('click', {

@@ -14,6 +14,7 @@ import type { OrgSummary } from '../../shared/orgs'
 import { useApp } from '../context'
 import list from '../list/list.module.css'
 import { LiftedOrg, OrgDropLine } from '../orgs/OrgDragParts'
+import { useOrgEntry } from '../orgs/useOrgEntry'
 import {
   useShortcutOffers,
   type CommandOffer,
@@ -95,18 +96,20 @@ function RailHint(props: { name: string; hint?: ShortcutHint }) {
  */
 function useOrgKeys(orgs: readonly OrgSummary[]): void {
   const open = useOpenPage()
+  const entry = useOrgEntry()
   useShortcutOffers(
     orgs.flatMap((org, place): CommandOffer[] => {
       const command = orgCommand(place)
       if (command === null) return []
-      return [{ command, run: () => open(routes.org(org.id)) }]
+      return [{ command, run: () => open(entry(org.id)) }]
     }),
   )
 }
 
 /**
  * An org of the rail, with the name of the org and the key that opens it
- * in its drawn hint. A screen reader hears the key on the link.
+ * in its drawn hint. A screen reader hears the key on the link. The link
+ * opens the last workspace of the org, as `useOrgEntry` says.
  */
 function OrderedOrg(props: {
   org: OrgSummary
@@ -117,6 +120,7 @@ function OrderedOrg(props: {
 }) {
   const { org, index, current, order } = props
   const hint = useShortcutHint(orgCommand(index) ?? undefined)
+  const entry = useOrgEntry()
   return (
     <li
       {...order.tile(org, index)}
@@ -131,7 +135,7 @@ function OrderedOrg(props: {
         hint={hint}
         label={props.label}
         linkRef={order.linkRef(org.id)}
-        to={routes.org(org.id)}
+        to={entry(org.id)}
       >
         <OrgTile current={current} org={org} size={26} />
       </RailLink>

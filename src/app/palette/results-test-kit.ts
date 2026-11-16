@@ -1,4 +1,5 @@
-import type { Workspace } from '../../shared/workspaces'
+import type { Workspace } from '../../shared/generated/Workspace'
+
 import { coreFixtures, FAKE_ORIGIN } from '../../test-support/fixtures/core'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
 import { routes } from '../router'
@@ -36,6 +37,7 @@ export function source(overrides: Partial<PaletteSource> = {}): PaletteSource {
     repositories: ready(repositories),
     openWorkspaceId: null,
     createOrgHref: routes.createOrg(),
+    orgHref: routes.org,
     offers: [],
     mac: false,
     ...overrides,

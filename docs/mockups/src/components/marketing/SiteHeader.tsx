@@ -9,13 +9,12 @@ import { Wordmark } from './Wordmark'
 import styles from './SiteHeader.module.css'
 
 /**
- * Where the header and the footer lead: the home page, the docs, the page
- * for people who move from Conductor, and the GitHub sign-in.
+ * Where the header and the footer lead: the home page, the docs, and the
+ * GitHub sign-in.
  */
 export type SiteLinks = {
   home: string
   docs: string
-  fromConductor: string
   signIn: string
 }
 

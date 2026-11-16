@@ -6,7 +6,6 @@ import {
   productSummary,
   smallerFeatures,
 } from '../../../../src/marketing/features'
-import { parityLinkCopy } from '../../../../src/marketing/from-conductor/copy'
 import { classes } from '../components/common/classes'
 import { ClosingCall } from '../components/marketing/ClosingCall'
 import { FeatureGrid } from '../components/marketing/FeatureGrid'
@@ -35,7 +34,6 @@ export function MarketingScreen(props: { viewport: Viewport }) {
     <SitePage viewport={viewport}>
       <Hero
         device={hero.device}
-        notice={{ text: parityLinkCopy.home, to: paths.fromConductor }}
         picture={hero.picture}
         signIn={paths.signIn}
         text={productSummary.heroText}

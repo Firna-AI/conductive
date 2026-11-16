@@ -183,7 +183,12 @@ describe('NewWorkspaceScreen', () => {
     held.hold('POST', createPath)
     const sending = draft.send({
       repositoryId: 'storefront',
-      choice: { agent: 'claude', model: 'Opus 5.5', effort: 'high' },
+      choice: {
+        agent: 'claude',
+        model: 'Opus 5.5',
+        effort: 'high',
+        fast: false,
+      },
     })
     const whileSending = buttons('Attach files')
     held.release('POST', createPath)
@@ -250,7 +255,12 @@ describe('NewWorkspaceScreen', () => {
       draft.setText('Fix the flaky cart test.')
       await draft.send({
         repositoryId: 'storefront',
-        choice: { agent: 'claude', model: 'Opus 5.5', effort: 'high' },
+        choice: {
+          agent: 'claude',
+          model: 'Opus 5.5',
+          effort: 'high',
+          fast: false,
+        },
       })
       const text = textOf(
         renderScreen(

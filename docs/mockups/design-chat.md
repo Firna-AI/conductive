@@ -3,11 +3,11 @@
 This page belongs to [the design](design.md), which gives the style, the
 layouts, the design tokens, and the shared parts. This page gives workspace,
 session, and file chips with the list of `@`, and attached files with their
-drops. It gives the picture of an image file, the Markdown tables and
+drops. [Links in text](design-links.md) gives the other links of the chat. It gives the picture of an image file, the Markdown tables and
 headings of a reply and of a file preview, the work fold of a turn, and the
 line of a stopped turn. It also gives the data that the chat does not
-have, the files that the cloud computer could not read, and the end of a turn at the time limit of
-background work.
+have, the files that the cloud computer could not read, the end of a turn at the time limit of
+background work, and the end of a fast turn that ran at standard speed.
 
 - `DraftFileChip` in `src/components/chat/` draws each attached file of a
   draft as a chip at its place in the text of the message box. It is one
@@ -217,6 +217,24 @@ background work.
     such as "Changed files unavailable".
   - The words name what stopped, not the number of the limit, because the
     member cannot change it.
+- A fast turn that ran at standard speed still ends as finished, with its
+  duration and its files, from fast mode decision 257. A note beside the
+  duration names the speed and the cause, such as "Standard speed · Fast
+  limit reached", and the files go under the note.
+  - `StandardSpeedNote` in `src/components/chat/` draws the note: muted
+    text with a gauge icon. One line has the height of a chip. A narrow
+    chat wraps the note, and the icon stays on its first line. It takes no
+    fixtures, so the app can use it too.
+  - `speedCopy.ts` beside it holds the words of each cause: "Fast limit
+    reached" for the fast limit of Claude, and "Older cloud computer
+    software" for a cloud computer whose software ignores fast mode.
+  - The words name no time until a limit resets, because the note stays in
+    the chat after the reset.
+  - A stopped turn ends its line with the same words after a dot, before
+    the notes of its files, such as "You stopped the agent · Standard speed
+    · Fast limit reached".
+  - A fast turn that ran at fast speed, and a turn without fast mode, show
+    no note.
 
 ## Workspace, session, and file chips
 
@@ -232,9 +250,9 @@ background work.
   - `MessageText` shows the chips in sent messages and in answers, as
     links to the screens of the workspaces. In an answer, `**` marks bold
     text, and a chip inside it is bold too. A Markdown link to a
-    workspace shows as the chip alone, and a link in code stays code. A
-    link to another org, or to a workspace that the list does not hold,
-    stays plain text, and a long link breaks to fit the line.
+    workspace shows as the chip alone. A link in code is no chip. A link
+    to another org, or to a workspace that the list does not hold, is a
+    link, as [Links in text](design-links.md) says.
   - The chat finds each workspace in the list of the org, with the
     archived ones and with the states of the list, through
     `ChatWorkspaces`. A phone finds the same workspaces with no list on

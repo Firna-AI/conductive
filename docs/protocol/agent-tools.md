@@ -39,10 +39,13 @@ decision number names a dated record, as
 - The calls cover each command of Conductor's CLI whose feature Conductive
   has (decision 277). Reason: an agent can then manage the work that it
   hands out.
-- Calls for routines, for the env vars of one workspace, and for fast mode
-  were left out (decision 277). Reason: Conductor's CLI refuses the
-  workspace token for its routine commands, so its agents cannot use them
-  either. Conductive has no env vars for one workspace and no fast mode.
+- Calls for routines and for the env vars of one workspace were left out
+  (decision 277). Reason: Conductor's CLI refuses the workspace token for
+  its routine commands, so its agents cannot use them either. Conductive
+  has no env vars for one workspace.
+- Fast mode has no call of its own. Each call that takes a model also takes
+  fast mode, as Conductor's CLI takes it beside the model and the effort.
+  [Fast mode](fast-mode.md#agent-tools) gives the rules.
 - Both tools call the Worker with the workspace token of their sandbox.
 - With the workspace token, the tools can make only these calls.
   [The workspace token](tokens-and-secrets.md#the-workspace-token) states
@@ -61,11 +64,11 @@ decision number names a dated record, as
 - The CLI takes the text of a message from a file, or from stdin with `-`,
   for each call that takes a message. Reason: Conductor's CLI takes a
   message file. The MCP server takes the text only.
-- A cloud computer has the workspace tools of the org image that it starts
-  from. A full build of the org image installs the current tools. A
-  refresh and a resume keep the tools of the cloud computer.
-- Tools from an older org image keep working with the Worker. They offer
-  only their own calls.
+- The workspace tools are a part of the sandbox software. A build of the
+  org image installs the newest tools. A cloud computer gets newer tools
+  with each update, as [Updates](sandbox-software.md#updates) says.
+- Older tools keep working with the Worker until their update applies.
+  They offer only their own calls.
 - The app sets no limit of its own on the workspaces that agents create
   (decision 8). The plan limits of the app's Boat account apply, as
   [The provider](workspaces-and-sandboxes.md#the-provider) says.

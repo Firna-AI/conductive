@@ -3,24 +3,33 @@ import { shownShortcut } from '../../fixtures/shortcutChanges'
 import type { CommandId } from '../../fixtures/shortcutCommands'
 import { pageHost } from '../../fixtures/shortcutHosts'
 import { useMacApp } from '../mac/MacApp'
+import type { Shortcut } from './KeyChips'
 import { useTouchScreen } from './touch'
 import styles from './ShortcutTip.module.css'
 
 /**
- * The tooltip of a control whose command has a key: the label of the
- * control and the first default key of the command that works where the
- * page runs, such as "Create PR (⇧⌘P)". The page runs in the Mac app or in
- * a normal Chrome tab on a Mac. A phone shows no key hint, and a command
- * without a key that works there gives no tooltip.
+ * The key hint of a command: its first default key that works where the
+ * page runs, such as ⇧⌘P. The page runs in the Mac app or in a normal
+ * Chrome tab on a Mac. A phone shows no key hint, and a command without a
+ * key that works there has none.
+ */
+export function useShortcutHint(command: CommandId): Shortcut | undefined {
+  const host = pageHost(useMacApp() !== undefined)
+  const touch = useTouchScreen()
+  return touch ? undefined : shownShortcut(command, {}, host)
+}
+
+/**
+ * The tooltip of a control whose command has a key hint: the label of the
+ * control and the key, such as "Create PR (⇧⌘P)". A control without a key
+ * hint gives no tooltip.
  */
 export function useShortcutTip(
   label: string,
   command: CommandId,
 ): string | undefined {
-  const host = pageHost(useMacApp() !== undefined)
-  const touch = useTouchScreen()
-  const shortcut = shownShortcut(command, {}, host)
-  if (touch || shortcut === undefined) return undefined
+  const shortcut = useShortcutHint(command)
+  if (shortcut === undefined) return undefined
   return `${label} (${shortcut})`
 }
 

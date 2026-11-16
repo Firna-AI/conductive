@@ -21,7 +21,11 @@ on one fake stream. `components/SessionLogin.test.tsx` renders the login
 label and its notices. `components/ComposerModels.dom.test.tsx` opens the
 model picker of a reader whose own endpoint list leaves models out, in the
 reader's own session, in the session of another member, and before a
-message that starts a linked session. `components/SourceLink.dom.test.tsx` presses the link
+message that starts a linked session. `components/ModelPicker.dom.test.tsx`
+checks the New session mark of each model of the other agent, and the Fast
+row of the model picker: the keys reach it, a change of it sends a choice
+that differs only in fast and keeps the menu open, the trigger names Fast,
+and a model without fast mode has no row and turns fast off. `components/SourceLink.dom.test.tsx` presses the link
 of a linked session to its open and its closed source. In an archived
 workspace, it opens a linked session that closed before the archive from the
 session history. Its source link writes nothing.
@@ -63,6 +67,14 @@ out its reversed scroll box. It ends a long turn while the reader reads
 higher up, and checks the read row and the newest message at the bottom.
 While the reader reads higher up, a message of another member keeps the
 read row in place, and a message that the user sends goes to the bottom.
+`components/TabPlace.dom.test.tsx` uses the same layout. It shows another
+session tab, or a page in place of the chat as a file tab does, and checks
+the read row after output came in the meantime. It also checks the bottom
+for a reader at the bottom, for a read row that folded away, and for a
+session that kept no place, the read row of a session whose sent message
+still waits, a send after a switch of session tabs, and the bottom of a
+session that the user closed and opened again. `components/reading-place-test-kit.tsx` holds
+the long turn and the layout of both files.
 `components/TabDrag.dom.test.tsx` mounts the chat with the real
 `FileTabItem` of the Files screens and drags tabs with pointer events over
 boxes that `components/tab-drag-test-kit.tsx` gives them. The file tab of
@@ -88,6 +100,17 @@ opens no menu on that tab. `state/tab-order.test.ts` moves tabs through
 the controller and checks the saved order. A move that changes the place
 of the temporary tab drops its mark in the same save. A move of another
 tab, and a move to its own place, keep the mark.
+`components/CloseRight.dom.test.tsx` presses Close tabs to the right on
+the first tab of a row with a file tab and a session tab. The file tab
+leaves the view in one save, with its temporary mark, the session closes
+with no stop, and the shown tab stays. When the shown tab is to the right,
+the tab of the menu shows first. The item is off on the last tab.
+`state/controller.test.ts` closes an idle and a running session in one
+close: the idle one closes at once, and the running one waits for one
+question. `components/CloseQuestion.dom.test.tsx` checks the words of
+that question for one and for two running sessions, and
+`state/sessions.test.ts` drops a session that another member closes from
+the question.
 `components/TranscriptCopy.dom.test.tsx` copies the transcript of a tab
 that never showed, through the real controller, client, and menu, with
 the copy of the app's test services. Copy full transcript asks for the
@@ -105,7 +128,13 @@ says "The link didn't copy. Try again."
 `../shared/transcript/session-markdown.test.ts` builds the concise and the
 full text of a copy. In a member's message, it checks the name of each
 attached file in place of its mention. It also checks that the attachments
-line lists only the other files.
+line lists only the other files. `../shared/transcript/turn-speed.test.ts`
+copies the standard speed of a fast turn after its duration and in a stop
+line, and nothing for a fast turn at fast speed.
+`components/TurnSpeed.test.tsx` renders the end of fast turns: standard
+speed with each known cause, "Standard speed" alone for another cause or
+none, the words at the end of a stop line, and nothing for a fast turn at
+fast speed or a turn without fast mode.
 `components/TabRow.dom.test.tsx` turns the wheel over a full row and reads
 its fades. It also scrolls a full row over the browser layout of
 `components/row-layout-test-kit.ts`, which gives the row and its tabs
@@ -208,9 +237,20 @@ also renders the files under a sent message, with their sizes and no
 Remove.
 `links/workspace-links.test.ts` reads links with and without a tab path,
 Markdown links, a code label in a sent message, code, `..`, other origins
-and orgs, unknown workspaces, and punctuation. `links/LinkedText.test.tsx`
+and orgs, which are links and no chips, unknown workspaces, and
+punctuation. `links/LinkedText.test.tsx`
 mounts an answer with chips: in bold, in a list, with a bold or a code
 label, and a link in inline code and in a code block.
+`links/chat-parts-links.test.ts` reads the web links of an answer and of a
+sent message: a bare address in bold, a label with its code and bold, a
+label that reads as an address, a Markdown link that shows as typed, the
+Markdown of an image, and code that holds one address alone.
+`links/WebLinkText.dom.test.tsx` mounts an answer in a screen that opens
+links. It checks the words, the title, and the target of each kind of
+link, a plain press and a press with a modifier key on each, a workspace
+that runs no server, the links outside such a screen, and the links of a
+message line. `links/links-test-kit.ts` holds the helpers of the link
+tests.
 `components/AgentStop.dom.test.tsx` mounts the chat with its controller,
 workspace list, and session reads, and draws four stops through the
 workspace tools. The stopping sessions are a session of the chat's
@@ -222,7 +262,11 @@ the read, the known session shows its session chip, and the other
 workspace got one request. The last stop keeps the session link as text.
 `state/workspace-list.test.ts` checks that a chat without sources reads the
 list while it shows, and not while it is hidden. The workspace screen's
-`LinkChips.test.tsx` checks the chips of a kept chat on a phone, and its
+`LinkChips.test.tsx` checks the chips of a kept chat on a phone, and a
+link of another origin there. Its `TextLinks.test.tsx` presses a local
+address and a link of the app on desktop, and a link of the app to the
+address that shows, which replaces that address. It checks that an
+archived workspace keeps a local address as text. Its
 `FileMentions.test.tsx` lists the files on a phone before a visit to
 Files, and opens a file and a folder from their chips, also into a hidden
 right column.

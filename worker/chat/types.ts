@@ -1,19 +1,19 @@
+import type { Agent } from '../../src/shared/generated/Agent'
+import type { AgentChoice } from '../../src/shared/generated/AgentChoice'
+import type { CommitAuthor } from '../../src/shared/generated/CommitAuthor'
+import type { Attachment } from '../../src/shared/generated/Attachment'
+import type { RunnerAttachment } from '../../src/shared/generated/RunnerAttachment'
+import type { RunnerChangeModel } from '../../src/shared/generated/RunnerChangeModel'
+import type { RunnerCommand } from '../../src/shared/generated/RunnerCommand'
+import type { RunnerInterrupt } from '../../src/shared/generated/RunnerInterrupt'
+import type { RunnerLoginKind } from '../../src/shared/generated/RunnerLoginKind'
+import type { WorkspaceToRunner } from '../../src/shared/generated/WorkspaceToRunner'
+import type { RunnerEventEnvelope } from '../../src/shared/generated/RunnerEventEnvelope'
+import type { RunnerProtocolVersion } from '../../src/shared/generated/RunnerProtocolVersion'
 import type { TurnStopRequester } from '../../src/shared/session-stop'
-import type { Agent, AgentChoice } from '../../src/shared/agents'
-import type { CommitAuthor } from '../../src/shared/commit-author'
 import type { PendingTurn } from '../lifecycle/workspace-runtime'
 import type { WorkspaceSocketMessage } from '../../src/shared/events'
-import type { Attachment, MessageDraft } from '../../src/shared/messages'
-import type {
-  RunnerAttachment,
-  RunnerChangeModel,
-  RunnerCommand,
-  RunnerInterrupt,
-  RunnerLoginKind,
-  WorkspaceToRunner,
-  RunnerEventEnvelope,
-  RunnerProtocolVersion,
-} from '../../src/shared/runner'
+import type { MessageDraft } from '../../src/shared/messages'
 import type { WorkspaceEvent, WorkspaceEventEnvelope } from './workspace-events'
 import type {
   ConnectionGrant,
@@ -69,6 +69,8 @@ export interface StoredTurn {
   /** Retained dispatch evidence. Older records may have no evidence. */
   started?: boolean
   startedAt?: number
+  /** Fast was requested but absent from the runner's started choice. */
+  olderRunner?: true
   closeAfterStop: boolean
   stopRequest?: TurnStopRequester
   /** Internal waiting work. Older records have no successor. */
@@ -151,10 +153,13 @@ export type ChatCallbackPublisher = (
 ) => Promise<void>
 
 export interface ChatDependencies {
+  normalizeChoice(choice: AgentChoice): AgentChoice
   refreshEndpointModels(userId: string, agent: Agent): Promise<void>
   readBranches(
     workspaceId: string,
-  ): Promise<import('../../src/shared/runner').RunnerBranches | null>
+  ): Promise<
+    import('../../src/shared/generated/RunnerBranches').RunnerBranches | null
+  >
   readCommitAuthor: (userId: string) => Promise<CommitAuthor | null>
   readAutomaticTitleWorkspace: (
     workspaceId: string,
@@ -169,7 +174,7 @@ export interface ChatDependencies {
     workspaceId: string,
     connectionId: string,
     send: (
-      command: import('../../src/shared/runner-files').RunnerFileCommand,
+      command: import('../../src/shared/generated/RunnerFileCommand').RunnerFileCommand,
     ) => Promise<boolean>,
   ): void
   runnerDetached(connectionId: string): void
