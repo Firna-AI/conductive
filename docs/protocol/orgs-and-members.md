@@ -118,6 +118,13 @@ decision number names a dated record, as
   Move section up, Move section down, New section, and Delete section, in
   that order. The first section has no Move section up, and the last
   section has no Move section down.
+- New section opens the New section dialog, which asks for the name of
+  the section. New section in the menu of a section puts the new section
+  directly below that section. New section in the command palette puts
+  it at the end of the list. When the section of the menu is gone at the
+  create, the new section goes at the end. Reason: the user asked on 16
+  November 2026 that a new section show where the user made it, because
+  a field at the end of the list was far from the menu.
 - The order of the sections is the same for each member of the org. A
   collapse is for the member only. Reason: a section is a grouping that
   the people of the org define, as its name is.

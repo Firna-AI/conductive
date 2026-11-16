@@ -145,6 +145,7 @@ The **New workspace** action at the top of the list uses **General**.
 In the **New workspace** dialog, you can select another section.
 
 The section menu also offers **Rename section**, **Move section up**, **Move section down**, **New section**, and **Delete section**.
+**New section** asks for a name in a dialog, and adds the new section directly below this one.
 Deleting a section moves its workspaces to **General**.
 The default section stays available.
 
