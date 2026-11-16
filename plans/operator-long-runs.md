@@ -121,7 +121,7 @@ Contract owners:
   owner's GitHub ID, login, and status, the cloud computer ID, the org
   status, the state, `runningSince`, and `lastActivityAt`. The cloud
   computer ID is null until the provider gives the computer. The entry
-  has no org initials, because the rows show no org mark.
+  has no org initials, because the rows show no initials tile.
 - The org status is active, suspended, or deleted. A deleted org that is
   also suspended is deleted, as on the Orgs tab
   (`worker/operator/org-directory.ts`).
@@ -161,9 +161,10 @@ Contract owners:
     computers. The words follow the empty list of the largest orgs in
     the app: "The orgs with the most workspaces show here." The
     workspaces by state above the list still give the Running count.
-  - The rows show no org mark, as the largest orgs do. Reason: the page
-    column is 640 px or less, and in the narrow desktop frame of the
-    catalogue the mark cut off the org names and the Suspended mark.
+  - The rows show no initials tile beside the org name, as the largest
+    orgs do. Reason: the page column is 640 px or less, and in the narrow
+    desktop frame of the catalogue the tile cut off the org names and the
+    Suspended mark.
   - The workspace number goes under the owner's login, as the label of
     the header writes it, such as `W-12`. The state mark goes under the
     run length: the glyph of the header and its word. A phone keeps only
