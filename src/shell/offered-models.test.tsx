@@ -12,7 +12,7 @@ import {
   FAKE_TIME,
 } from '../test-support/fixtures/core'
 import { MOUNTED_TEST_TIMEOUT } from '../test-support/mount'
-import { openApp } from './routines/routine-test-kit'
+import { openApp } from './automations/automation-test-kit'
 import { click, press, settle } from './test-mount'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
@@ -74,7 +74,7 @@ describe('the model pickers of the shell', () => {
     expect({
       preferences: await offered(routes.accountTab('preferences')),
       newWorkspace: await offered(routes.newWorkspace(FAKE_IDS.org)),
-      routine: await offered(routes.newRoutine(FAKE_IDS.org)),
-    }).toEqual({ preferences: kept, newWorkspace: kept, routine: kept })
+      automation: await offered(routes.newAutomation(FAKE_IDS.org)),
+    }).toEqual({ preferences: kept, newWorkspace: kept, automation: kept })
   })
 })

@@ -8,7 +8,7 @@ It also keeps a copy of the GitHub summary of each workspace in D1, as [The summ
 The production Worker mounts the browser reads, the member merge routes, and the signed webhook route.
 The workspace object owns one state adapter and its durable retry requests.
 Verified default-branch pushes also notify image refresh.
-Verified pull request events also store [automation runs](../routines/README.md).
+Verified pull request events also store [automation runs](../automations/README.md).
 The run callback and banner refresh have separate error boundaries.
 The production composition starts stored runs through `waitUntil` after webhook handling.
 Without a request execution context, the minute scan recovers the queued runs.

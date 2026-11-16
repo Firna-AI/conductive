@@ -40,7 +40,7 @@ number names a dated record, as
 - So each workspace of the section moves to the default section, also each
   archived one, as [Sections](orgs-and-members.md#sections) says. Each
   automation of the section moves there too, as
-  [An automation](routines.md#an-automation) says.
+  [An automation](automations.md#an-automation) says.
 - The default section cannot be deleted. A delete of it changes nothing,
   as in the app.
 - An unknown section gets HTTP 404 with the error code

@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-10, from branch `calummoore/routines-feature-brainstorm`, item 3 of the Milestone 7 report of `plans/routines.md`.
-- **Location:** `src/app/time.ts:9` (`formatAgo`), and the automation mockups under `docs/mockups/src/fixtures/routineRows.ts`, `routineRuns.ts`, and `runLists.ts`.
+- **Location:** `src/app/time.ts:9` (`formatAgo`), and the automation mockups under `docs/mockups/src/fixtures/automationRows.ts`, `automationRuns.ts`, and `runLists.ts`.
 - **Reason:** The mockups and the app disagree, and only the user decides which side is right.
 
 - **Terms:**

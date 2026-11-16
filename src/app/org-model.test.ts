@@ -4,10 +4,10 @@ import { describe, expect, test } from 'vitest'
 
 import { orgSettingsPaths, type ImageBuild } from '../shared/org-settings'
 import {
-  routinesPath,
-  type RoutineRun,
-  type RoutinesResponse,
-} from '../shared/routines'
+  automationsPath,
+  type AutomationRun,
+  type AutomationsResponse,
+} from '../shared/automations'
 import { workspacesPath } from '../shared/workspaces'
 import { FakeApiServer } from '../test-support/fake-api'
 import {
@@ -15,7 +15,7 @@ import {
   FAKE_IDS,
   FAKE_TIME,
 } from '../test-support/fixtures/core'
-import { routineFixtures } from '../test-support/fixtures/routines'
+import { automationFixtures } from '../test-support/fixtures/automations'
 import { workspaceFixtures } from '../test-support/fixtures/workspaces'
 import { latestBuild, OrgModel } from './org-model'
 import { valueOf } from './store'
@@ -48,13 +48,13 @@ function serverList(
   }
 }
 
-/** The routines of the server, with a new state of the last run of one. */
-function routinesWith(state: RoutineRun['state']): RoutinesResponse {
+/** The automations of the server, with a new state of the last run of one. */
+function automationsWith(state: AutomationRun['state']): AutomationsResponse {
   return {
-    routines: routineFixtures().list.routines.map((routine) =>
-      routine.id === 'review-prs' && routine.lastRun
-        ? { ...routine, lastRun: { ...routine.lastRun, state } }
-        : routine,
+    automations: automationFixtures().list.automations.map((automation) =>
+      automation.id === 'review-prs' && automation.lastRun
+        ? { ...automation, lastRun: { ...automation.lastRun, state } }
+        : automation,
     ),
   }
 }
@@ -211,23 +211,23 @@ describe('OrgModel', () => {
       testServices(server, { delay: delay.delay }),
       org,
     )
-    server.json('GET', routinesPath(org), routinesWith('queued'))
-    const release = model.watch('routines')
+    server.json('GET', automationsPath(org), automationsWith('queued'))
+    const release = model.watch('automations')
     await flushMicrotasks()
     const queued = delay.waits
-    server.json('GET', routinesPath(org), routinesWith('ready'))
+    server.json('GET', automationsPath(org), automationsWith('ready'))
     await delay.runAll()
     const idle = delay.waits
-    server.json('GET', routinesPath(org), routinesWith('working'))
+    server.json('GET', automationsPath(org), automationsWith('working'))
     await delay.runAll()
     const working = delay.waits
     release()
     expect({
       reads: requestLines(server).filter(
-        (line) => line === `GET ${routinesPath(org)}`,
+        (line) => line === `GET ${automationsPath(org)}`,
       ).length,
-      lastRun: valueOf(model.routines.get())?.find(
-        (routine) => routine.id === 'review-prs',
+      lastRun: valueOf(model.automations.get())?.find(
+        (automation) => automation.id === 'review-prs',
       )?.lastRun?.state,
       timers: [queued.length, idle.length, working.length],
       faster: Math.max(...queued, ...working) < Math.min(...idle),

@@ -51,9 +51,9 @@ shows stopped. Its child pages:
   old tab can still open. The refused bar takes the place of the composer.
 - `app/orgs/suspended/settings` has the four tabs, read-only also for an
   admin.
-- `app/orgs/suspended/routines` has the automations of the org under its
+- `app/orgs/suspended/automations` has the automations of the org under its
   notice, without New automation, because a suspension takes away no read.
-  Its child page `app/orgs/suspended/routines/routine` has an automation
+  Its child page `app/orgs/suspended/automations/automation` has an automation
   without Save, Run now, Delete, Turn off, or Add trigger. Its `runs`
   variant has the Runs tab of a phone, and its `unavailable` and
   `not-loaded` variants have the page when it cannot show the automation.

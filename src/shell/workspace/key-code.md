@@ -84,7 +84,7 @@ this guide.
 - `WorkspaceOwner.tsx` and `WorkspaceMacBar.tsx`: the owner picker of the
   members UI, and the bar of the 15 minutes in the Mac app.
 - `saved-view.ts`: the saved view of the kept chat, `saveView`, which
-  writes a change only once the chat read the view, and `useRunRoutine`,
+  writes a change only once the chat read the view, and `useRunAutomation`,
   the automation of a run workspace, which the chat reads with the view.
 - `tools/ToolsPart.tsx`, `tools/tool-navigation.ts`, and
   `tools/tool-address.ts`: the tools panel and its `placeholder`, which

@@ -90,7 +90,7 @@ first.
   browser: up to 2,048 stored events or 4 MiB of session events.
 - `history-newest-pages.ts`: the reverse storage loop, its byte and scan
   limits, and the exclusive cursor of the next earlier page.
-- `routine-run.ts`: reports an automation's stored first-turn result after a chat transaction commits.
+- `automation-run.ts`: reports an automation's stored first-turn result after a chat transaction commits.
 - `workspace-store.ts`: creates the chat store with lifecycle turn-end reports and automation outcome recovery after each change.
 - `runner-channel.ts`, `runner-receipt.ts`, and `runner-refusal.ts`: the
   runner connection, the stream cursors, the file commands, and the receipt

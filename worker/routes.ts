@@ -16,8 +16,8 @@ import { membersRoute } from './members/route'
 import { productionMembersHooks } from './members/composition'
 import { archiveRoute } from './app-api/archive'
 import { continueRoute } from './app-api/continue'
-import { routinesRoute } from './routines/route'
-import { routineRunsRoute } from './routines/run-route'
+import { automationsRoute } from './automations/route'
+import { automationRunsRoute } from './automations/run-route'
 import { hasAppAccess } from './waitlist/data'
 import { waitlistRoute } from './waitlist/route'
 import { feedbackRoute } from './app-api/feedback'
@@ -66,10 +66,15 @@ export async function route(
     productionMembersHooks(env, dependencies),
   )
   if (members) return members
-  const runs = await routineRunsRoute(request, env, context, dependencies)
+  const runs = await automationRunsRoute(request, env, context, dependencies)
   if (runs) return runs
-  const routines = await routinesRoute(request, env, context, dependencies)
-  if (routines) return routines
+  const automations = await automationsRoute(
+    request,
+    env,
+    context,
+    dependencies,
+  )
+  if (automations) return automations
   const featureShell = await featureShellRoute(
     request,
     env,

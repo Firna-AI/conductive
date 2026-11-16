@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-10, from branch `calummoore/routines-feature-brainstorm`, finding 105 of its review. Finding 107 of its second review found it again, with the focus loss after Enter.
-- **Location:** `src/shell/routines/LoginField.tsx:106`, `:141`, and `:163`, `src/shell/routines/LoginSuggestions.tsx:68`, and `src/shell/routines/refused-login.test.tsx:112`.
+- **Location:** `src/shell/automations/LoginField.tsx:106`, `:141`, and `:163`, `src/shell/automations/LoginSuggestions.tsx:68`, and `src/shell/automations/refused-login.test.tsx:112`.
 - **Reason:** The best option sets a keyboard model for the field that no requirement covers.
 
 - **Terms:**

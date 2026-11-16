@@ -20,7 +20,7 @@
   - **A.** Compare fast mode in `waitingMove` too. If the first request worked, two sessions can open, as a changed effort can do today. Effort: Small.
   - **B.** Change nothing. Effort: Small.
   - **C.** Add one `sameChoice` helper in `src/shared/agents.ts`. Use it in `waitingMove`, in the picker, and in the automation draft. Effort: Small.
-  - **F.** C, with a helper that reads a map with one equality for each field of `AgentChoice`, as `FieldEqualities` in `src/app/routine-draft.ts` does. The typecheck then names each comparison that misses a later field. Use it also in the Worker repeat checks of `worker/chat/model-changes.ts` and `worker/chat/messages.ts`, which first read a missing stored fast as false. Add the retry regression case to `src/chat/state/model-moves.test.ts`, because no test catches the stale fast mode today. Effort: Small.
+  - **F.** C, with a helper that reads a map with one equality for each field of `AgentChoice`, as `FieldEqualities` in `src/app/automation-draft.ts` does. The typecheck then names each comparison that misses a later field. Use it also in the Worker repeat checks of `worker/chat/model-changes.ts` and `worker/chat/messages.ts`, which first read a missing stored fast as false. Add the retry regression case to `src/chat/state/model-moves.test.ts`, because no test catches the stale fast mode today. Effort: Small.
 - **Left out:** A separate fast change after the move. It adds a request, and A is better on every point.
 - **Wider fix:** F. A hand-written field list in C can miss the next field again. The fast mode branch added fast by hand to seven comparisons and missed `waitingMove`.
 - **Previous examples:** The automation draft and the chat picker comparisons, fixed in Milestone 5 of the fast mode plan.

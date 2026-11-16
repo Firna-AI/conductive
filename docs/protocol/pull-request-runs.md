@@ -2,7 +2,7 @@
 
 This doc holds the requirements and the decisions in force for the runs
 that GitHub pull request events start. It belongs to
-[Automations](routines.md). [Automation runs](routine-runs.md) states the rules
+[Automations](automations.md). [Automation runs](automation-runs.md) states the rules
 of every run. [Base branches](base-branches.md) states the branch and the
 base branch of a pull request run. The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
@@ -78,7 +78,7 @@ says.
   states what its sandbox can read.
 - A run that waits for the approval of the owner was rejected, because it
   needs a new run state.
-- [Risks that stay open](routines.md#risks-that-stay-open) states what this
+- [Risks that stay open](automations.md#risks-that-stay-open) states what this
   rule does not stop.
 
 ## Loops
@@ -101,7 +101,7 @@ says.
   request of the event, as
   [Banner states](github-banner.md#banner-states) says.
 - The run text names the pull request, as
-  [The run text](routine-runs.md#the-run-text) says.
+  [The run text](automation-runs.md#the-run-text) says.
 - The line under the header of the run workspace and the row of the run
   link to the pull request on GitHub. Reason: the members see which pull
   request started the run.

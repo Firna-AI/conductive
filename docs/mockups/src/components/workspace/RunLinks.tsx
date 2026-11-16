@@ -2,19 +2,19 @@ import { Repeat } from 'lucide-react'
 import { ScreenLink, useOutsideHref } from '../common/ScreenLink'
 import styles from './RunLinks.module.css'
 
-/** The routine of a run workspace, and the pull request of its run. */
+/** The automation of a run workspace, and the pull request of its run. */
 export type RunSource = {
-  routine: string
-  /** The page of the routine in the mockups. */
-  routineTo: string
+  automation: string
+  /** The page of the automation in the mockups. */
+  automationTo: string
   pullRequest?: { number: number; url: string }
 }
 
 /**
- * The line under the header of a run workspace, which links to its routine
+ * The line under the header of a run workspace, which links to its automation
  * and to the pull request that started the run (decision 505 A, with the
  * links of D). The header bar has no room left for them, also on desktop.
- * A long routine name gives up its room first, and the number of the pull
+ * A long automation name gives up its room first, and the number of the pull
  * request always shows.
  */
 export function RunLinks(props: { run: RunSource }) {
@@ -25,11 +25,11 @@ export function RunLinks(props: { run: RunSource }) {
       <Repeat aria-hidden className={styles.icon} size={13} />
       <span className={styles.words}>Run of</span>
       <ScreenLink
-        aria-label={`Automation: ${run.routine}`}
-        className={styles.routine}
-        to={run.routineTo}
+        aria-label={`Automation: ${run.automation}`}
+        className={styles.automation}
+        to={run.automationTo}
       >
-        {run.routine}
+        {run.automation}
       </ScreenLink>
       {run.pullRequest ? (
         <>

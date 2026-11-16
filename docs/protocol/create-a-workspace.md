@@ -299,4 +299,4 @@ decision number names a dated record, as
 - When that sandbox is ready, the agent gets the queued messages, as
   [Messages](messages-and-attachments.md#messages) says.
 - An automation run keeps its failed workspace and its cause, as
-  [Failed runs](routine-runs.md#failed-runs) says (decision 512 B).
+  [Failed runs](automation-runs.md#failed-runs) says (decision 512 B).

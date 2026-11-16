@@ -118,7 +118,7 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the switch at
   decision 255).
 - The default choice of the app has fast mode off.
 - An automation keeps fast mode in its choice, as
-  [An automation](routines.md#an-automation) says. Reason: each choice holds fast
+  [An automation](automations.md#an-automation) says. Reason: each choice holds fast
   mode, and an automation keeps a choice.
 
 ## Agent tools

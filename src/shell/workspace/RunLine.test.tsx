@@ -33,11 +33,11 @@ const { org, workspace: id } = FAKE_IDS
 const answer =
   'The checkout form now suggests addresses. Manual entry still works.'
 
-/** The view reply of a run workspace of the routine. */
+/** The view reply of a run workspace of the automation. */
 function runView(
-  routine: NonNullable<WorkspaceViewResponse['routine']>,
+  automation: NonNullable<WorkspaceViewResponse['automation']>,
 ): WorkspaceViewResponse {
-  return { ...workspaceFixtures().view, routine }
+  return { ...workspaceFixtures().view, automation }
 }
 
 /** The whole app at the open workspace. */
@@ -76,7 +76,7 @@ describe('the header of a workspace', () => {
     const pullRequest = byRole('link', 'Pull request #482 on GitHub', view)
     const shown = {
       line: link.closest('p')?.textContent,
-      routine: link.getAttribute('href'),
+      automation: link.getAttribute('href'),
       pullRequest: {
         href: pullRequest.getAttribute('href'),
         target: pullRequest.getAttribute('target'),
@@ -86,9 +86,9 @@ describe('the header of a workspace', () => {
     await press(link)
     expect({ ...shown, address: navigation.href() }).toEqual({
       line: 'Run of Review pull requests for #482',
-      routine: '/orgs/acme/routines/review-prs',
+      automation: '/orgs/acme/automations/review-prs',
       pullRequest: { href: url, target: '_blank', rel: 'noreferrer' },
-      address: '/orgs/acme/routines/review-prs',
+      address: '/orgs/acme/automations/review-prs',
     })
   })
 

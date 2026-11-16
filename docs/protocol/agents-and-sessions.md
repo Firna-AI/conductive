@@ -36,7 +36,7 @@ says.
     [The sender](session-calls.md#the-sender) says
 - An automation run starts the first session of its workspace in the name of
   the automation owner, as
-  [A run acts as its owner](routine-runs.md#a-run-acts-as-its-owner) says.
+  [A run acts as its owner](automation-runs.md#a-run-acts-as-its-owner) says.
 - The session record names its starter in `startedBy`. A session without a
   known starter has no login that can be used.
 - While the starter shares the login, the messages of the other members

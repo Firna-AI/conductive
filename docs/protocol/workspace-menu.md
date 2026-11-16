@@ -19,7 +19,7 @@ number names a dated record, as
   This holds in the sidebar and on the list page, in the desktop layout
   and in the phone layout.
 - This includes automation run workspaces, as
-  [A run is a workspace](routine-runs.md#a-run-is-a-workspace) says.
+  [A run is a workspace](automation-runs.md#a-run-is-a-workspace) says.
 - The menu holds Move to section, Reassign to, Rename, Copy link, and
   Archive, in that order. A line comes before Archive.
 - On 9 November 2026 the user chose the four actions that change the

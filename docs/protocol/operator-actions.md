@@ -129,7 +129,7 @@ whoever owns or started it (decision 129).
 - Nobody can create, resume, or start a workspace of the org. No build and
   no image refresh of the org runs, by hand or automatically.
 - No automation of the org starts a run, as
-  [Suspensions and deleted orgs](routines.md#suspensions-and-deleted-orgs)
+  [Suspensions and deleted orgs](automations.md#suspensions-and-deleted-orgs)
   says.
 - A start of a workspace of the org that waits or runs stops before its
   next step.

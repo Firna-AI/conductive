@@ -70,7 +70,7 @@ it('uses sender section rights and returns live archived and automation work to 
       "INSERT INTO workspace_runtime (workspace_id, org_id, created_by_user_id, session_id, first_turn_id, agent, model, effort, first_message_id) VALUES ('archived-section-work', 'chat-org', 'owner', 'archived-session', 'archived-turn', 'claude', 'test-claude', 'high', 'archived-message')",
     ),
     active.env.DB.prepare(
-      "INSERT INTO routines (id, org_id, owner_user_id, name, repository_id, section_id, prompt, agent, model, effort, time_zone, triggers_json, created_at, updated_at) VALUES ('section-routine', 'chat-org', 'member', 'Keep routine', 'chat-repository', ?, 'Task', 'claude', 'test-claude', 'high', 'UTC', '[]', 1, 1)",
+      "INSERT INTO automations (id, org_id, owner_user_id, name, repository_id, section_id, prompt, agent, model, effort, time_zone, triggers_json, created_at, updated_at) VALUES ('section-automation', 'chat-org', 'member', 'Keep automation', 'chat-repository', ?, 'Task', 'claude', 'test-claude', 'high', 'UTC', '[]', 1, 1)",
     ).bind(id),
     active.env.DB.prepare(
       "INSERT INTO sections (id, org_id, name, position, created_at) VALUES ('foreign-section', 'other-org', 'Private', 0, 1)",
@@ -115,7 +115,7 @@ it('uses sender section rights and returns live archived and automation work to 
   ])
   expect(
     await active.env.DB.prepare(
-      "SELECT section_id AS sectionId, active FROM routines WHERE id = 'section-routine'",
+      "SELECT section_id AS sectionId, active FROM automations WHERE id = 'section-automation'",
     ).first(),
   ).toEqual({ sectionId: OUTER_SECTION, active: 1 })
   expect(

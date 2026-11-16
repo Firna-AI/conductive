@@ -78,4 +78,4 @@ and the separate preview domain.
   owner's agent login and GitHub token, and the org's env vars. Its
   sandbox follows the same gateway boundary above. Other GitHub accounts
   can write text that its agent reads, as
-  [Risks that stay open](../protocol/routines.md#risks-that-stay-open) says.
+  [Risks that stay open](../protocol/automations.md#risks-that-stay-open) says.

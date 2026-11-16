@@ -242,7 +242,7 @@ sessions as tabs above the chat, and four tabs at the bottom.
 - [Workspace, session, and file chips](design-chat.md#workspace-session-and-file-chips)
   gives the chips, the list of `@`, and chip removal.
   [Links in text](design-links.md) gives the other links and `TextLink`.
-- The parts of automations live in `src/components/routines/`. The automation
+- The parts of automations live in `src/components/automations/`. The automation
   page puts its form beside the Runs column on desktop. A phone shows a
   saved automation in two tabs, Automation and Runs. The Runs list holds the
   newest 50 runs, and Show older runs ends it when older runs exist. A
@@ -260,19 +260,19 @@ sessions as tabs above the chat, and four tabs at the bottom.
     from the agent and the owner of the run itself, not of its automation. So
     a later change of the agent, or a move of the automation to another owner,
     changes no past row. A failed start and a failed first turn keep their
-    workspace, and their rows open it, as `app/routines/runs/failed` shows.
+    workspace, and their rows open it, as `app/automations/runs/failed` shows.
   - When the automation page cannot show its automation, the page keeps Automation
     as its name and shows no tabs, no Runs list, and no actions. An automation
     that the org no longer has shows the empty state "This automation is not
     available" with Open Automations. A read that failed shows `LoadFailure`.
-    `app/routines/routine/unavailable` and `not-loaded` show them.
+    `app/automations/automation/unavailable` and `not-loaded` show them.
 - `SuspendedOrgNotice` in `src/components/orgs/` draws the notice of a
   suspended org, with the mark of a refused start. It names the org and
   the abuse address, and it offers no action. It is a box at the top of
   the list, of each settings tab, and of each view of an automation page, and
   above the bar of an archived workspace. A phone shows it above either
   tab of an automation page, as the `runs` variant of
-  `app/orgs/suspended/routines/routine` shows. `SuspendedOrgPanel` shows the same words in the main area of
+  `app/orgs/suspended/automations/automation` shows. `SuspendedOrgPanel` shows the same words in the main area of
   a wide desktop list. `SuspendedOrgAbove` puts the box above the page of
   a deleted org, at the width of a settings page. A suspended org shows no
   action that it refuses.

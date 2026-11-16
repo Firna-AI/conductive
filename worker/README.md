@@ -91,7 +91,7 @@ The [feature shell](app-api/feature-shell.ts) implements the shared shell writes
 The [workspace features](features/workspace.ts) dispatch files, terminal,
 previews, and desktop inside the real workspace object.
 The [GitHub composition](features/github.ts) stores banner updates in the common chat stream.
-The [automations area](routines/README.md) stores saved prompts and their triggers.
+The [automations area](automations/README.md) stores saved prompts and their triggers.
 It validates schedules and resolves author-filter logins at save.
 Its owner-only Run now starts a stored run as a new workspace.
 The run starter joins repeated creates through a stable first-message ID and returns before the workspace start ends.
@@ -271,11 +271,11 @@ Call other parts of the app through a binding or an RPC method, not a global `fe
 - [features/alarm-tasks.ts](features/alarm-tasks.ts): `WorkspaceAlarmTasks`, the tracked background work of an alarm.
 - [members/workspace-receiver.ts](members/workspace-receiver.ts) fences suspension, Restore, and payload deletion.
 - [operator/route.ts](operator/route.ts) serves the operator routes after the request gate.
-- [routines/route.ts](routines/route.ts) serves automation records after the request gate.
-- [routines/run-route.ts](routines/run-route.ts) serves Run now and paginated run history.
-- [routines/run-starter.ts](routines/run-starter.ts) starts queued runs with the owner's logins.
-- [routines/pull-request-dispatch.ts](routines/pull-request-dispatch.ts) applies author filters, trust, and loop guards before it stores pull request runs.
-- [routines/schedule-scan.ts](routines/schedule-scan.ts) claims up to 50 due automations and retries up to 50 old queued runs each minute.
+- [automations/route.ts](automations/route.ts) serves automation records after the request gate.
+- [automations/run-route.ts](automations/run-route.ts) serves Run now and paginated run history.
+- [automations/run-starter.ts](automations/run-starter.ts) starts queued runs with the owner's logins.
+- [automations/pull-request-dispatch.ts](automations/pull-request-dispatch.ts) applies author filters, trust, and loop guards before it stores pull request runs.
+- [automations/schedule-scan.ts](automations/schedule-scan.ts) claims up to 50 due automations and retries up to 50 old queued runs each minute.
 - [operator/approval-email.ts](operator/approval-email.ts) sends approval messages and retries pending deliveries from the scheduled entry.
 - [mail-sender.ts](mail-sender.ts) shares Resend transport and local logging between the approval, invitation, and feedback emails.
   It writes the sender address, and the name and the media type of each attachment from a `CheckedImage`.
@@ -297,4 +297,4 @@ Call other parts of the app through a binding or an RPC method, not a global `fe
 - [Chat and events](../docs/protocol/chat-and-events.md)
 - [Agent runner](../docs/protocol/agent-runner.md)
 - [Workspaces and sandboxes](../docs/protocol/workspaces-and-sandboxes.md)
-- [Automations](../docs/protocol/routines.md)
+- [Automations](../docs/protocol/automations.md)

@@ -13,7 +13,7 @@
 - **Background:** The test starts a workspace, exercises failed maintenance, and resumes it through a user action. It then advances one native alarm and checks that no stale maintenance stop follows that resume.
 - **Problem:** One targeted suite observed an extra stop after the resume. The test file is byte-identical to both parent versions. The disk-retention implementation is unchanged from the automations parent in this merge.
 - **Failure:** `worker/lifecycle/disk-retention.test.ts > keeps a stopped disk through startup and stop failures without a stale stop after user open` failed at line 86. The assertion reported `expected [ 'bx_1', 'bx_1', 'bx_1' ] to have a length of 2 but got 3`. The failing case took 2,642 ms. It did not reach the 15-second time limit.
-- **Run:** `npm run test -- worker/lifecycle worker/routines worker/files src/app src/shell/list` exited 1. It reported 530 passes, one failure, and no skips across 196 files.
+- **Run:** `npm run test -- worker/lifecycle worker/automations worker/files src/app src/shell/list` exited 1. It reported 530 passes, one failure, and no skips across 196 files.
 - **Rerun:** `npm run test -- worker/lifecycle/disk-retention.test.ts --reporter=verbose` exited 0. Both cases passed, with no skips. The marked case took 4,386 ms. No code, assertion, time limit, or runner setting changed between those runs.
 - **Suspected source:** Native alarm ordering or the controlled clock may advance a valid idle stop before the assertion. A stale maintenance stop remains another possible cause. Neither cause is proved.
 - **Impact if no action:** The gate can fail intermittently. A real stale stop could interrupt a resumed workspace, so the investigation must distinguish it from a fixture error.

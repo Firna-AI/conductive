@@ -33,7 +33,7 @@ of the data that the screens read and write.
   as events, then the waiting writes in the order that they went out. A
   read that started before a change keeps the change. A failed read keeps
   the value that shows. A part can name the errors that prove that its
-  value no longer exists, as the automation page does for `routine_not_found`.
+  value no longer exists, as the automation page does for `automation_not_found`.
   Such a read shows its error also over the value.
 - The org list reads only at the first load of the app. `OrgList` keeps the
   list that the server confirmed, with the answers of create, rename,
@@ -49,12 +49,12 @@ of the data that the screens read and write.
   takes it at once, with the last run that the list has. A delete takes
   the automation out of the list, and a later visit of its address reads it
   again.
-- A read of the automation that gets `routine_not_found` shows that the
+- A read of the automation that gets `automation_not_found` shows that the
   automation is not available, also in place of an automation that shows. Any
   other failed read keeps the automation. The other requests of the page go
   through one client of the automation: the reads of the runs, Show older
   runs, Save, Turn off, Run now, and Delete. When one of them gets
-  `routine_not_found`, the automation reads again, after the read that runs,
+  `automation_not_found`, the automation reads again, after the read that runs,
   if any, and that read decides. A write can get that refusal also while
   the automation exists, so the refusal alone decides nothing.
 - The Runs list of the automation page shows a number of pages of 50 runs:

@@ -294,3 +294,10 @@ UI and wiring milestones normally need no migration. Their ranges stay reserved.
 creation plans, account defaults, and automations. Each column starts at 0.
 Sessions and automation run choices keep fast mode in their existing JSON records.
 [Fast mode](../docs/protocol/fast-mode.md) gives the choice rules.
+
+`202611161300_rename_routines_to_automations.sql` renames routines to
+automations, as the product did. The `routines` table becomes
+`automations`, `routine_runs` becomes `automation_runs`, and its
+`routine_id` column becomes `automation_id`. Each index gets the new name.
+The rows stay. Saved default names and stored failure codes and messages
+of runs and creation attempts use the new word, as new rows do.

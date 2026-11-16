@@ -95,7 +95,7 @@ record, as [Decision numbers](../architecture.md#decision-numbers) says.
 4. The Durable Object of the workspace reports how the first turn ended,
    so that a failed first turn shows as a failed run.
 
-[Automations](../protocol/routines.md) and its linked pages state the rules.
+[Automations](../protocol/automations.md) and its linked pages state the rules.
 
 ## Stops
 

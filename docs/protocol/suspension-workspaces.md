@@ -33,7 +33,7 @@ and workspace owners. The terms come from the
   another member, as the refusal above says.
 - A suspended user can create no workspace and start no build.
 - The automations of a suspended user start no runs, as
-  [Suspensions and deleted orgs](routines.md#suspensions-and-deleted-orgs)
+  [Suspensions and deleted orgs](automations.md#suspensions-and-deleted-orgs)
   says.
 - Each unfinished build that the user started stops and fails. The app
   removes its build sandbox.

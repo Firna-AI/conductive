@@ -81,10 +81,10 @@ export function NewWorkspaceLink(props: {
 }
 
 /**
- * The row below New workspace that opens the routines of the org. `to` is
- * the page of the routines, such as those of a suspended org.
+ * The row below New workspace that opens the automations of the org. `to` is
+ * the page of the automations, such as those of a suspended org.
  */
-export function RoutinesLink(props: {
+export function AutomationsLink(props: {
   current?: boolean
   variant: LinkVariant
   to?: string
@@ -94,7 +94,7 @@ export function RoutinesLink(props: {
       current={props.current}
       icon={Repeat}
       label="Automations"
-      to={props.to ?? paths.routines}
+      to={props.to ?? paths.automations}
       variant={props.variant}
     />
   )

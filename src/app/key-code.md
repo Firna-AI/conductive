@@ -95,22 +95,22 @@ Each path is relative to `src/app/`, the folder of this page.
   workspace show until the org has a good image. `changedScriptNotice`
   gives the words of the notice of a changed install script, which the
   Cloud computer tab of an admin and of a member show.
-- `api/read-routines.ts`: the readers of the automations, each with its newest run, and of one automation. `api/read-routine-runs.ts`: the readers of the runs.
-- `routine-model.ts`: `RoutineModel`, one automation with its reads, its
-  saves, and its runs, and `routineModel`, the model that the org keeps for
+- `api/read-automations.ts`: the readers of the automations, each with its newest run, and of one automation. `api/read-automation-runs.ts`: the readers of the runs.
+- `automation-model.ts`: `AutomationModel`, one automation with its reads, its
+  saves, and its runs, and `automationModel`, the model that the org keeps for
   each automation. Its `client` sends the other requests of the automation page,
-  and a `routine_not_found` from any of them reads the automation again.
-  `routine-actions.ts`: create, update, Turn off, Delete, and Run now,
+  and an `automation_not_found` from any of them reads the automation again.
+  `automation-actions.ts`: create, update, Turn off, Delete, and Run now,
   which also update the Automations list.
-- `routine-runs.ts`: `RoutineRuns`, the Runs list of one automation: the
+- `automation-runs.ts`: `AutomationRuns`, the Runs list of one automation: the
   pages that it shows, which each read gets again from the newest run
   while the page shows them, Show older runs, which adds a page, and Run
   now.
-- `routine-draft.ts`: the draft of the automation page, the equality of each
+- `automation-draft.ts`: the draft of the automation page, the equality of each
   of its fields, its create and update requests, and whether Save can send
-  it. `routine-triggers.ts`: the
+  it. `automation-triggers.ts`: the
   defaults of a new trigger and the edits of an author filter.
-  `routine-cron.ts`: the rule of a custom cron, which the Worker applies
+  `automation-cron.ts`: the rule of a custom cron, which the Worker applies
   too.
 - `repository-changes.ts`: the saved repository changes that the org
   image lacks, from `BuildsResponse.changes`. `repositoryWaitOf` gives
@@ -322,20 +322,20 @@ Each path is relative to `src/app/`, the folder of this page.
   names the entry points of the command palette, the layers of each
   frame, New workspace as a dialog, and feedback with its screenshots.
 - `../shell/Shell.tsx` and `../shell/OrgRoutes.tsx`: the screen of each address.
-- `../shell/routines/RoutinesScreen.tsx`: the Automations page, which the
+- `../shell/automations/AutomationsScreen.tsx`: the Automations page, which the
   Automations link of the sidebar and of the phone list opens.
-  [Automations](../../docs/protocol/routines.md#the-automation-pages) states what
+  [Automations](../../docs/protocol/automations.md#the-automation-pages) states what
   it shows.
-- `../shell/routines/RoutineScreen.tsx`: the automation page and the page of
-  a new automation. `RoutineEditor.tsx` is the form of the owner, and
-  `RoutineReader.tsx` the read-only view of every other member, with Turn
-  off and Delete for an admin. `useRoutineSave.ts` is Save, with the login
-  that a save refused. `RoutineFrame.tsx` puts the Runs list beside the
+- `../shell/automations/AutomationScreen.tsx`: the automation page and the page of
+  a new automation. `AutomationEditor.tsx` is the form of the owner, and
+  `AutomationReader.tsx` the read-only view of every other member, with Turn
+  off and Delete for an admin. `useAutomationSave.ts` is Save, with the login
+  that a save refused. `AutomationFrame.tsx` puts the Runs list beside the
   form on desktop, and on the Runs tab of a phone. It alone shows the
-  notice of a suspended org, in every view of the page. `RoutineNote.tsx`
+  notice of a suspended org, in every view of the page. `AutomationNote.tsx`
   is the note above an automation, which reads the saved repository from the
   repository list of the org.
-- `../shell/routines/RunsPanel.tsx` and `RunList.tsx`: the Runs list, with
+- `../shell/automations/RunsPanel.tsx` and `RunList.tsx`: the Runs list, with
   the mark, the state, the trigger, the pull request, and the time of each
   run, and the link to its workspace. `run-copy.ts`: the mark of a run, the
   cause of a failed run in words, from the agent and the owner of the run

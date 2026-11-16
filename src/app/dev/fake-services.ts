@@ -28,7 +28,7 @@ import { APP_VERSION } from '../version'
 import { operatorRoutes } from './operator-routes'
 import { readDevOptions } from './options'
 import { orgRoutes } from './org-routes'
-import { routineRoutes } from './routine-routes'
+import { automationRoutes } from './automation-routes'
 import { devFileTransport } from './progress-fixture'
 import { routeFetch, RouteError, type Route } from './router'
 import { runRoutes } from './run-routes'
@@ -78,7 +78,7 @@ export function createFakeServices(search: string): AppServices {
     ...attachmentFileRoutes(backend),
     ...settingsRoutes(backend),
     ...buildRoutes(backend),
-    ...routineRoutes(backend),
+    ...automationRoutes(backend),
     ...runRoutes(backend),
     ...operatorRoutes(backend),
   ]
