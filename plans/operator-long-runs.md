@@ -26,7 +26,7 @@ they cannot run long.
 
 Contract owners:
 
-- [Operator section](../docs/protocol/operator-section.md#the-overview).
+- [Operator section: the Overview](../docs/protocol/operator-overview.md#long-runs).
 - The [operator overview guide](../worker/operator/overview.md).
 - The [lifecycle README](../worker/lifecycle/README.md).
 - The [migrations README](../migrations/README.md).
@@ -106,6 +106,8 @@ Contract owners:
 - A workspace that runs at the deploy gets its time at its next save:
   within 5 minutes during a turn, and within 30 minutes otherwise. Until
   then it is not in the list. No backfill guesses a time.
+- The state save skips the workspaces of a deleted org. So a computer of
+  a deleted org that already runs at the deploy never joins the list.
 - Known limit, from the brainstorm: a list from D1 misses a computer that
   runs while its row says stopped, such as during a disk restart. After
   the provider stops a computer, its row can say running for about 30
@@ -216,15 +218,19 @@ Depends on: none
 
 Depends on: 1
 
-- [ ] Add the long runs list to "The Overview" in
-      `docs/protocol/operator-section.md`, with long runs decision 1 and
-      the known limit.
-- [ ] Read the Terms page in `src/marketing/terms.ts` and the Privacy
+- [x] Add the long runs list to the Overview rules, with long runs
+      decision 1 and the known limits. The rules moved to the new page
+      `docs/protocol/operator-overview.md`, because `operator-section.md`
+      passed the length limit of the documentation skill.
+- [x] Read the Terms page in `src/marketing/terms.ts` and the Privacy
       page in `src/marketing/privacy.ts` and `privacy-uses.ts` in full.
       Update each sentence that restates what the app keeps about a
       workspace or what an operator sees.
-- [ ] Read each public guide in `src/marketing/docs/` in full. Update each
+- [x] Read each public guide in `src/marketing/docs/` in full. Update each
       sentence that restates these facts.
+- [x] No legal page and no guide restates a changed fact, so none
+      changed. The list of the sentences that were checked is in
+      `.context/operator-long-runs/docs-check.md`.
 
 ## Milestone 3: Run start in D1 and the overview read
 
