@@ -14,7 +14,7 @@ sharing".
 On 15 November 2026 the user asked: "allow user to share their
 credentials with the org, so other members can use them - i.e. custom url
 or api key". A brainstorm on that day gave three approaches. On
-16 November 2026 the user chose decisions 1 to 3 below. The user also
+16 November 2026 the user chose decisions 1 to 3, 5, and 6 below. The user also
 said: "if an org has a shared credential, the user does not need to enter
 their own credentials at all". Decision 4 records that rule.
 
@@ -272,6 +272,7 @@ report is in `.context/org-shared-logins/options-check-decisions-5-6.md`.
 - **Action:** ask the user, because the options change the routine run
   rule of `docs/protocol/routine-runs.md`, and the options have real
   trade-offs on unattended spend.
+- **Decision:** The user chose A on 16 November 2026.
 
 ### 6. A member with more than one usable login
 
@@ -326,6 +327,8 @@ report is in `.context/org-shared-logins/options-check-decisions-5-6.md`.
   F.
 - **Action:** ask the user, because B and C add new controls, and no
   option is clearly best until members use the feature.
+- **Decision:** The user chose A on 16 November 2026. F changes no
+  behaviour, so the plan keeps it as a design call.
 
 ## Design calls
 
@@ -364,6 +367,10 @@ Each call is the agent's call, made on 16 November 2026.
   gateway request would be a new rejection.
 - The agent tools follow the default login of the sender when a call
   starts a session.
+- The account response names the default login for each org and agent,
+  from the Worker's resolver, as option F of decision 6 says. The screens
+  show that value and do not compute the order. Reason: one source of the
+  rule, and F changes no behaviour.
 - One helper decides whether a login can serve a sender in a workspace.
   Each caller uses it.
 - No use counts, limits, or admin view in this change. The open items
