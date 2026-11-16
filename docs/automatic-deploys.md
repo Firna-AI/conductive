@@ -1,11 +1,12 @@
 # Automatic deploys
 
-Each push to `main` deploys the test deployment at `conductive.build`. The
-GitHub Actions workflow `Deploy`, in `.github/workflows/deploy.yml`, runs
-the deploy. This guide gives its triggers, its GitHub settings, its
-Cloudflare token, and its steps. It also says how to recover from a failed
-deploy. [Deployment inputs](deployment.md) lists the bindings, the
-variables, and the secrets of the Worker.
+Each push to `main` deploys the production deployment at
+`conductive.build`. The GitHub Actions workflow `Deploy`, in
+`.github/workflows/deploy.yml`, runs the deploy. This guide gives its
+triggers, its GitHub settings, its Cloudflare token, and its steps. It
+also says how to recover from a failed deploy.
+[Deployment inputs](deployment.md) lists the bindings, the variables, and
+the secrets of the Worker.
 
 ## When it runs
 

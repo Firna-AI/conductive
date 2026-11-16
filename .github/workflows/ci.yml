@@ -67,6 +67,10 @@ jobs:
           ELECTRON_SKIP_BINARY_DOWNLOAD=1 npm --prefix desktop ci
           npm ci --prefix runner
 
+      # The terminal bridge tests run the bridge against a real tmux.
+      - name: Install tmux
+        run: sudo apt-get update && sudo apt-get install -y tmux
+
       - name: Run tests
         run: npm run test -- --shard=${{ matrix.shard }}/4
 
