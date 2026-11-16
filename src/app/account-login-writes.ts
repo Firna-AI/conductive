@@ -9,7 +9,7 @@ import {
   type UpdateAgentLoginRequest,
   type UpdateAgentLoginResponse,
 } from '../shared/account'
-import type { Agent } from '../shared/agents'
+import type { Agent } from '../shared/generated/Agent'
 import type { AccountLoginReads } from './account-login-reads'
 import type { AgentLogins } from './agent-logins'
 import { ignore } from './api/parse'

@@ -1,6 +1,6 @@
 import type { AgentLoginStatus } from '../shared/account'
-import type { Agent } from '../shared/agents'
-import type { Timestamp } from '../shared/api'
+import type { Agent } from '../shared/generated/Agent'
+import type { Timestamp } from '../shared/generated/Timestamp'
 import type { SavedLogin } from './api/read-login-writes'
 import { Store, type Readable } from './store'
 

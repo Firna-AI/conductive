@@ -6,7 +6,7 @@ export const filesFeatures: readonly ParityFeature[] = [
     area: 'files',
     name: 'File tree',
     status: 'available',
-    note: 'All files shows the repository tree and marks added or changed files. Showing saved lists during cloud computer startup is in progress.',
+    note: 'All files shows the repository tree and marks added or changed files. Saved file lists stay visible while the cloud computer starts.',
   },
   {
     id: 'quick-open',

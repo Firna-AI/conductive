@@ -13,7 +13,9 @@ import {
   type RefreshAgentLoginModelsResponse,
   type SaveAgentLoginResponse,
 } from '../../shared/account'
-import { MODELS_PATH, type Agent, type AgentModel } from '../../shared/agents'
+import { MODELS_PATH } from '../../shared/agents'
+import type { Agent } from '../../shared/generated/Agent'
+import type { AgentModel } from '../../shared/generated/AgentModel'
 import { GET_STARTED_PATH } from '../../shared/onboarding'
 import { byRole, queryAllByRole } from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'

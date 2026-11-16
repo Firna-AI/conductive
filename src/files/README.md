@@ -145,7 +145,7 @@ that parses the Markdown of a preview, and what the preview shows while
 it waits for the worker or when the worker fails.
 
 Each screen takes `layout`: `desktop`, or `phone` with touch targets of at
-least 44 px. On a phone, a file page and a diff page link back to All
+least 40 px. On a phone, a file page and a diff page link back to All
 files or Changes.
 
 Copy and Download take `targets`. Copy is off for a picture and for each

@@ -1,3 +1,4 @@
+import type { Agent } from '../../shared/generated/Agent'
 import {
   agentLoginPath,
   refreshAgentLoginModelsPath,
@@ -8,7 +9,6 @@ import {
   type SaveAgentLoginResponse,
   type UpdateAgentLoginResponse,
 } from '../../shared/account'
-import type { Agent } from '../../shared/agents'
 import {
   ENDPOINT_ADDRESS_ERROR,
   readEndpointAddress,
