@@ -678,6 +678,25 @@ this call on the same day.
   the place of the archived row, as decision 5 C and its design call say.
   It changes no requirement of the protocol docs.
 
+Milestone 6 led to these calls, of 16 November 2026, by the
+`ui implementor`, accepted by the orchestrator.
+
+- A drop lands before the first other tree whose middle is below the
+  pointer, so the line never falls inside a tree, as the mockup draws.
+- Alt with Up or Down on a nested row does nothing, and the app also stops
+  the browser's own action of those keys there.
+- A nested row stops the browser's own drag of its link, because such a
+  drag would look like a move.
+- A screen reader hears the count of the rows that move with a tree, such
+  as "Apple Pay button and 2 sub-workspaces move to Checkout, place 4."
+- The app applies the place change of an Archive at once, from the
+  running Archive, its reply, and its event, so the list does not jump.
+- A local move of an archived workspace changes nothing, as the Worker
+  refuses that move.
+- The dev fake shows trees only with `?subWorkspaces=1`, so its default
+  list and the tests stay as before. Its moves and Archives follow the
+  Worker's tree rules.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -874,17 +893,25 @@ Depends on: 1, 3, 3a, 4
 
 The trees in the sidebar and on the list page, as the mockups draw them.
 
-- [ ] Build the tree of each section with the shared rule of Milestone 3.
-- [ ] Indent each nested row with the styles of Milestone 1, in both
+- [x] Build the tree of each section with the shared rule of Milestone 3.
+- [x] Indent each nested row with the styles of Milestone 1, in both
       variants of the list.
-- [ ] Give the keys of the list the rows in tree order.
-- [ ] Turn off the drag, the long press, the move by keys, and Move to
+- [x] Give the keys of the list the rows in tree order.
+- [x] Turn off the drag, the long press, the move by keys, and Move to
       section of a nested row, as item 4 F says.
-- [ ] Support `parentId` in the local fake backend under `src/app/dev/`.
-- [ ] Add the tests: the tree of a section, an archived parent, the order
+- [x] Support `parentId` in the local fake backend under `src/app/dev/`.
+- [x] Add the tests: the tree of a section, an archived parent, the order
       of the keys, and a nested row that does not move.
-- [ ] Smoke-test the list in a browser with `npm run dev`, on desktop and
+- [x] Smoke-test the list in a browser with `npm run dev`, on desktop and
       on a phone size. Save the screenshots under `.context/sub-workspaces/`.
+
+Done on 16 November 2026 by the `ui implementor`. The dev fake shows trees
+with `?subWorkspaces=1`. Evidence: the screenshots in
+`.context/sub-workspaces/m6/shots/`, the break proofs in
+`.context/sub-workspaces/m6/mutation-proofs.log`, and
+`.context/sub-workspaces/m6-checks.log`. The milestone found an older
+problem outside this change, recorded in
+`plans/follow-ups/long-press-menu-in-read-only-list.md`.
 
 ## Milestone 7: Verification, commit, review, and pull request
 

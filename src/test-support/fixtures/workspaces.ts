@@ -8,7 +8,10 @@ import {
   closedSessions,
   workspaceSessions,
 } from '../../../docs/mockups/src/fixtures/sessions'
-import { workspaceList } from '../../../docs/mockups/src/fixtures/workspaces'
+import {
+  workspaceList,
+  type Workspace as MockupWorkspace,
+} from '../../../docs/mockups/src/fixtures/workspaces'
 import type { User } from '../../shared/api'
 
 import type { SessionsResponse } from '../../shared/sessions'
@@ -34,6 +37,35 @@ const personNamed = (key: string): User =>
   fakeUsers.find((user) => user.id === key) ?? fakeUser
 
 /**
+ * The record of a workspace of the mockups in Acme, as the API gives it,
+ * top-level, made and last changed at `times`.
+ */
+export function workspaceRecord(
+  workspace: MockupWorkspace,
+  times: Pick<Workspace, 'createdAt' | 'updatedAt'>,
+): Workspace {
+  return {
+    id: workspace.key,
+    number: workspace.number,
+    link: new URL(routes.workspace(FAKE_IDS.org, workspace.key), FAKE_ORIGIN)
+      .href,
+    orgId: FAKE_IDS.org,
+    repositoryId: workspace.repository,
+    sectionId: workspace.section,
+    parentId: null,
+    owner: personNamed(workspace.owner),
+    name: workspace.name,
+    branch: workspace.branch,
+    choice: { ...workspace.choice, fast: workspace.choice.fast ?? false },
+    state: workspace.status,
+    github: workspace.github,
+    ...times,
+    restoreUntil: null,
+    archivedAt: null,
+  }
+}
+
+/**
  * The workspaces of Acme, with `checkout-autocomplete` in `state`. Each
  * workspace has the GitHub state of its mockup workspace, unless `github`
  * gives the one of `checkout-autocomplete`, also `null`.
@@ -47,29 +79,15 @@ export function workspaceFixtures(
       const open = workspace.key === FAKE_IDS.workspace
       const archived = open && state === 'archived'
       return {
-        id: workspace.key,
-        number: workspace.number,
-        link: new URL(
-          routes.workspace(FAKE_IDS.org, workspace.key),
-          FAKE_ORIGIN,
-        ).href,
-        orgId: FAKE_IDS.org,
-        repositoryId: workspace.repository,
-        sectionId: workspace.section,
-        parentId: null,
-        owner:
-          fakeUsers.find((user) => user.id === workspace.owner) ?? fakeUser,
-        name: workspace.name,
-        branch: workspace.branch,
-        choice: { ...workspace.choice, fast: workspace.choice.fast ?? false },
+        ...workspaceRecord(workspace, {
+          createdAt: FAKE_TIME - (index + 1) * 86_400_000,
+          // Archive raises the time of the record to its own time, as the
+          // Worker does, so the archived record is newer than each record
+          // of the workspace from before the Archive.
+          updatedAt: archived ? FAKE_TIME : FAKE_TIME - index * 60_000,
+        }),
         state: open ? state : workspace.status,
         github: open && github !== undefined ? github : workspace.github,
-        createdAt: FAKE_TIME - (index + 1) * 86_400_000,
-        // Archive raises the time of the record to its own time, as the
-        // Worker does, so the archived record is newer than each record of
-        // the workspace from before the Archive.
-        updatedAt: archived ? FAKE_TIME : FAKE_TIME - index * 60_000,
-        restoreUntil: null,
         archivedAt: archived ? FAKE_TIME : null,
       }
     }),

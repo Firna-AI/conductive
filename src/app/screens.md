@@ -2,9 +2,9 @@
 
 This guide belongs to [Web app: data and composition](README.md). It
 gives the rules of the screens of the app shell: the account and Get
-started, sign-in, invitations, orgs, panels and layers, the focus, saved
-drafts, New workspace as a page or a dialog, and
-[the waitlist](#the-waitlist).
+started, sign-in, invitations, orgs, panels and layers, the trees of the
+workspace list, the focus, saved drafts, New workspace as a page or a
+dialog, and [the waitlist](#the-waitlist).
 [Command palette and keys](palette-and-keys.md) gives the rules of the
 command palette and of the keyboard shortcuts.
 [Feedback](palette-screens.md) gives the rules of the Feedback dialog that
@@ -126,6 +126,31 @@ the Help row of the command palette opens.
   and the keys of the workspace list.
 - [Feedback](palette-screens.md) gives the rules of the Feedback dialog
   that the Help row of the palette opens, with its screenshots.
+- The workspace list shows each live sub-workspace nested under the row of
+  its parent, in the sidebar and on the list page, as
+  [The list](../../docs/protocol/sub-workspaces.md#the-list) says.
+  `groupWorkspaces` in `sections.ts` places the rows of each section with
+  `placeWorkspaces`, the shared rule of the Worker, so a row whose parent
+  is archived shows under the nearest live row above it. Each row that the
+  list shows above a row in its tree indents it by one step, with the
+  guide lines of the tree, through the classes `.nested` and `.indent1` to
+  `.indent3` of the mockups. A collapsed section counts its nested rows
+  too. The Archived group and the command palette stay flat.
+- Only a top-level row moves, and it takes its whole tree: by a drag, by a
+  long press on a phone, by Alt with Up or Down, and by Move to section.
+  The lifted row shows the count of the nested rows that move with it,
+  the tree stays faint in its place, and the drop line falls only between
+  two trees. The place of a move counts the top-level rows of the section
+  without the moved one, as the Worker counts them. A move shows the tree
+  at its new place at once. A nested row has no drag, no move by keys, and
+  no Move to section, and a long press on it does nothing, as
+  [Moves](../../docs/protocol/sub-workspaces.md#moves) says.
+- An Archive of a workspace gives each live workspace that showed under
+  its row the section and the place of the archived workspace, in the
+  list of the app as in the Worker (`replaceWorkspace` in
+  `list-trees.ts`). So these rows stay where they showed: while the
+  Archive runs, after its reply, after an event of the archived record,
+  and after the next read of the list.
 - A move of a workspace row by keys keeps the focus on the row. The list
   gives back only a lost focus, as a layer does: when a render takes the
   focused row out of the page and the focus falls to the page, the

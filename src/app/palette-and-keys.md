@@ -82,10 +82,17 @@ state what they do.
   without an org read it through `keptOrg`.
 - A workspace row moves on Alt with Up or Down and no other modifier,
   through `workspaceRowMove` of the shortcut model. A key with more
-  modifiers, such as ⌥⌘↑, goes to its shortcut.
+  modifiers, such as ⌥⌘↑, goes to its shortcut. A top-level row moves
+  with its tree, past the whole tree above or below it. On a nested row
+  the key does nothing: the row stays, and the browser's own action of
+  the key does not run.
 - While the page shows the workspace list, the keys of Open workspace 1
   to 9, Previous and Next workspace, and Next workspace that needs input
   open its rows, as their links do. They count only the rows that the list
-  shows: a collapsed section and a closed Archived group add none. So the
+  shows, in tree order, with each nested row: a collapsed section and a
+  closed Archived group add none. So the
   list keeps whether the Archived group is open. With no open row, as on
   the list page, Next workspace that needs input starts from the top.
+- The Workspaces tab of the palette stays flat. It shows each
+  sub-workspace in the section that shows its row, in the order of the
+  list, and names no parent.
