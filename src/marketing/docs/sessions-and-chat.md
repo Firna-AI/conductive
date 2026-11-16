@@ -61,6 +61,11 @@ A file dropped on the text goes where you drop it.
 A drop elsewhere uses the text cursor or the end.
 The text cursor then moves after the new chips.
 
+A paste of a long text, with 2,000 characters or 40 lines, attaches as a text file.
+Its chip, such as **Pasted text.txt**, goes in place of the pasted text.
+Undo takes the chip off, and the pasted text does not come back.
+To keep the text in the message, paste it in smaller parts.
+
 Each file can be up to 100 MB.
 Wait for uploads to finish before you send.
 If an upload fails, use **Try again** or remove its chip.

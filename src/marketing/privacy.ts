@@ -95,7 +95,8 @@ export const privacyDocument: LegalDocument = {
           workspace before then.`,
         paragraph`${productName} keeps each file that you send with a message
           until it deletes the workspace of the message. It deletes an unsent
-          file 7 days after you upload it.`,
+          file 7 days after you upload it. A large text that you paste into
+          a message becomes such a file, and it uploads before you send it.`,
         paragraph`An account that waits for app access stays until you ask
           for its deletion, as every other account does.`,
         paragraph`Account records, the latest Terms acceptance, and

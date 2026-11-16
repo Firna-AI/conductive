@@ -47,8 +47,8 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     id: 'large-text-pastes',
     area: 'agents-and-chat',
     name: 'Large text pastes',
-    status: 'considering',
-    note: 'Turning large text pastes into attached files is under consideration. Save the text as a file and attach it today.',
+    status: 'available',
+    note: 'A paste of 2,000 characters or 40 lines attaches as a text file chip in chat or New workspace.',
   },
   {
     id: 'terminal-context',
