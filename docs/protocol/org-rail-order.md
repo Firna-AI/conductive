@@ -38,7 +38,7 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the order at
   the orgs and still need an order inside each folder.
 - An org that the person creates or joins goes at the end of the rail.
   Reason: a new tab also opens at the end of the tab row, as
-  [The tab row](agents-and-sessions.md#the-tab-row) says.
+  [The tab row](tab-row.md#the-order) says.
 - Create org, Operator, and the account have no tile menu and do not move.
 
 ## Where the order shows

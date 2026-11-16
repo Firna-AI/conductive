@@ -61,7 +61,7 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the tools at
   syntax colours of the file, as code does.
 - A new temporary tab opens at the end of the tab row of the centre column.
   A replaced one keeps its place, as
-  [The tab row](agents-and-sessions.md#the-tab-row) says.
+  [The tab row](tab-row.md#the-order) says.
 - The agent runner watches the repository and reports both lists.
   Branch changes count uncommitted and untracked work too.
 - The report of the branch changes also gives the number of commits of

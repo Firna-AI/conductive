@@ -29,7 +29,8 @@ decision number names a decision of the change that adds
     shows, such as the number of the pull request in the bar.
   - **Workspace label:** where the header of a workspace shows the label
     of its number, which is the Copy link button.
-  - **Session tab:** where the shown tab of a workspace is a session.
+  - **Session tab:** where the shown tab of a pane of a workspace is a
+    session.
   - **Mac app:** only the Mac app has the command.
 - A dash means that the command has no default key.
 - Switch to org 1 to 9 and Open workspace 1 to 9 stand for nine commands

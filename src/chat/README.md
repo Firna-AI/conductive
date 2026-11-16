@@ -148,6 +148,10 @@ copy, the chat routes, the Mac commands, and the development page.
 ### Related docs
 
 - [Chat and events](../../docs/protocol/chat-and-events.md)
+- [The tab row](../../docs/protocol/tab-row.md): the order, the drag, the
+  scroll, and the tab menu of the tabs of the centre column.
+  [Split panes](../../docs/protocol/split-panes.md) states the requirements
+  of two panes, which the chat does not draw yet.
 - [Chat Markdown](../../docs/protocol/chat-markdown.md): the formatting of
   agent messages, with their headings and lists.
 - [Chat tables](../../docs/protocol/chat-tables.md): the tables of agent

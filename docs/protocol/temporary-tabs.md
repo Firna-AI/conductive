@@ -4,12 +4,14 @@ This doc holds the requirements and the decisions in force for the
 temporary tab of a workspace. It covers what opens the temporary tab, how
 it shows, what keeps it, and its mark in the saved view. It belongs to
 [Files and changes](workspace-tools.md#files-and-changes).
-[The tab row](agents-and-sessions.md#the-tab-row) states its place in the
-row, its tab menu, and its moves. The terms are those of the
+[The tab row](tab-row.md) states its place in the row, its tab menu, and
+its moves. The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
-says. The [mockup catalogue](../mockups/catalogue-attachments-and-files.md)
-draws the temporary tab at `app/files/temporary`.
+says. A split panes decision number names a decision of the change that
+adds [split panes](split-panes.md), as that doc says. The
+[mockup catalogue](../mockups/catalogue-attachments-and-files.md) draws the
+temporary tab at `app/files/temporary`.
 
 ## Terms
 
@@ -29,10 +31,10 @@ draws the temporary tab at `app/files/temporary`.
   It replaces the file or the diff that the temporary tab showed. The
   temporary tab then shows.
 - When the row has no temporary tab, the press opens a new one.
-  [The tab row](agents-and-sessions.md#the-tab-row) states where a new
+  [The tab row](tab-row.md#the-order) states where a new
   temporary tab opens, and that a replaced one keeps its place.
-- A press on a file or a diff that has a tab shows that tab. The temporary
-  tab stays as it is.
+- A press on a file or a diff that has a tab shows that tab in its pane.
+  The temporary tab stays as it is.
 - Reason: the files that the user only looks at then take at most one tab,
   and no tab that the user chose closes. VS Code, Zed, and JetBrains work
   in this way, so most developers know it. The user chose this on
@@ -61,10 +63,16 @@ draws the temporary tab at `app/files/temporary`.
 - Enter on a focused file row is a press too.
 - Reason: each press follows one rule. A chip already opens its file as a
   press in All files does.
+- With two panes, each of these presses uses the pane that shows a file or
+  a diff. When no pane or both panes show one, the press uses the focused
+  pane (split panes decision 3 B).
+  [Where a tab opens](split-panes.md#where-a-tab-opens) gives the reason.
 - An address that names a file or a diff without a tab also opens it in
   the temporary tab. This holds for Back, Forward, a reload, a pasted
   address, and a link that opens in a new browser tab.
 - Reason: a visit by address is a look at the file too.
+- With two panes, a visit by address uses the same pane as a press on that
+  file or diff, as [The address](split-panes.md#the-address) says.
 - On a phone, a press also opens the file or the diff in the temporary
   tab. So the presses on a phone add at most one tab to the row. A phone
   has no way to keep a file tab.
@@ -103,7 +111,7 @@ draws the temporary tab at `app/files/temporary`.
   double-click for its text.
 - A keyboard user and a screen-reader user keep the tab with Keep open in
   its tab menu (decision 286 B).
-  [The tab row](agents-and-sessions.md#the-tab-row) states that menu.
+  [The tab row](tab-row.md#the-tab-menu) states that menu.
 - Reason: such a user cannot double-click. The tab menu is where such a
   user looks for an action of a tab.
 - A second press that keeps the tab was rejected. No editor works in this
@@ -114,7 +122,7 @@ draws the temporary tab at `app/files/temporary`.
   chosen. A rule that gives each pointer gesture on a tab an item in the
   tab menu was not chosen either.
 - A move of the temporary tab to another place also keeps it, as
-  [The tab row](agents-and-sessions.md#the-tab-row) says.
+  [The tab row](tab-row.md#the-tab-menu) says.
 - Nothing else keeps the tab. A switch between Preview and Source of a
   Markdown file keeps the state of the tab, temporary or kept. Copy,
   Download, and a scroll keep no tab.
@@ -123,7 +131,7 @@ draws the temporary tab at `app/files/temporary`.
 - A read-only workspace, such as an archived workspace or a workspace of a
   suspended org, uses the same rules for a press and a double-click. Its
   tab menu has no Keep open, as
-  [The tab row](agents-and-sessions.md#the-tab-row) says.
+  [The tab row](tab-row.md#read-only-workspaces) says.
 
 ## The saved view
 

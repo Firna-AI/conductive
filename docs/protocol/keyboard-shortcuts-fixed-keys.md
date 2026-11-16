@@ -22,7 +22,7 @@ No person can give a fixed key to a command. The fixed keys are:
   says
 - Enter, which saves a rename, and Escape, which cancels it
 - Shift+F10 and the Menu key on a focused tab, which open the tab menu, as
-  [The tab row](agents-and-sessions.md#the-tab-row) says
+  [The tab row](tab-row.md#the-tab-menu) says
 - on a focused workspace row, Alt with Up or Down and no other modifier,
   which moves the workspace
 - on a focused panel divider, Left and Right with no modifier or with

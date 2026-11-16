@@ -82,7 +82,7 @@ number names a dated record, as
 - Every member sees Copy link on every row, also an archived row and a
   row of a suspended org. Reason: a copy changes nothing, as for the copy
   items of the
-  [tab menu of a read-only workspace](agents-and-sessions.md#the-tab-row).
+  [tab menu of a read-only workspace](tab-row.md#read-only-workspaces).
 - So every row has a menu.
 - Every member sees Move to section and Rename on a workspace that is not
   archived, as [Members and roles](orgs-and-members.md#members-and-roles)

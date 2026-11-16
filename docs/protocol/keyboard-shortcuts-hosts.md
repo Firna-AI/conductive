@@ -2,10 +2,11 @@
 
 This doc holds the requirements and the decisions in force for the keys
 in each host: the Mac app, an installed app, and a normal browser tab. It
-covers the kept keys, the second keys, and the keys that the app leaves to
-the browser. It belongs to [Keyboard shortcuts](keyboard-shortcuts.md),
-which gives the rules and the terms. A decision number names a dated
-record, as [Decision numbers](../architecture.md#decision-numbers) says.
+covers the kept keys, the second keys, the keys that the app leaves to the
+browser, and the keys of the page and of the menus in the Mac app. It
+belongs to [Keyboard shortcuts](keyboard-shortcuts.md), which gives the
+rules and the terms. A decision number names a dated record, as
+[Decision numbers](../architecture.md#decision-numbers) says.
 
 ## Hosts
 
@@ -66,3 +67,16 @@ record, as [Decision numbers](../architecture.md#decision-numbers) says.
 - In a normal tab, Back and Forward stay with the browser. Only the Mac app
   has the commands Back and Forward, because only the Mac app has their
   buttons.
+
+## The Mac app
+
+- The page of the Mac app hears each key before the menus of the Mac app.
+  A menu acts on a key only when the page leaves the key.
+- So ⌘N, ⌘T, and ⌘W run their commands in the Mac app. ⌘R still reloads
+  the page.
+- The keys of the menus of the Mac app are fixed keys, as
+  [Fixed keys](keyboard-shortcuts-fixed-keys.md#fixed-keys) says.
+- The menu bar of the Mac app has no item for a command that keys run,
+  such as a Search item. Reason: the page hears each key itself. A menu
+  cannot run an action inside the page, because the page has no bridge, as
+  [Permissions](desktop-commands.md#permissions) says.

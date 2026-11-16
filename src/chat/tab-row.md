@@ -4,8 +4,10 @@ This guide belongs to [the chat](README.md). It gives the rules of the one
 order of the session, file, and diff tabs, the mark of the temporary tab
 and the moves that keep it, the drag, the tab menu with Keep open, and the
 scroll of the row, and the reader's place that each tab keeps.
-[The tab row](../../docs/protocol/agents-and-sessions.md#the-tab-row) states
-the requirements.
+[The tab row](../../docs/protocol/tab-row.md) states the requirements.
+[Split panes](../../docs/protocol/split-panes.md) states the requirements
+of two panes, each with its own row. The chat draws one row and one pane,
+and it does not draw two panes yet.
 
 - The state keeps one saved order for session, file, and diff tabs. The row
   order includes each tab once. A host with no file or diff tabs leaves
@@ -37,7 +39,7 @@ the requirements.
   sessions for Close. A new or reopened session opens at the end. A
   read-only workspace moves no tab.
 - A move that changes the place of the temporary tab keeps it, as
-  [The tab row](../../docs/protocol/agents-and-sessions.md#the-tab-row)
+  [The tab row](../../docs/protocol/tab-row.md#the-tab-menu)
   says: the pure `moveTab` of `state/tab-order.ts` drops the mark with the
   new order, so one save holds both. The drop of a drag, Move left, and
   Move right all move through it. A move that changes no place gives the

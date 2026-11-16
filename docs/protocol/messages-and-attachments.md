@@ -233,9 +233,13 @@ says.
 ### Messages from the bar
 
 - An [agent action](github-banner.md#agent-actions) of the pull request bar
-  sends its fixed prompt as a message of the member who clicks, to the
-  session that the member saw last, with its model, its effort, and its
-  fast mode.
+  sends its fixed prompt as a message of the member who clicks. The prompt
+  goes to the session that the session keys use, as
+  [Where a command runs](keyboard-shortcuts.md#where-a-command-runs) says,
+  with its model, its effort, and its fast mode.
+- When no pane of the centre column shows a session, the prompt goes to
+  the session that the focused pane showed last.
+  [Split panes](split-panes.md) states the panes and the focused pane.
 - It follows each rule of a message from the composer, and the draft stays
   as it is. The chat shows it as a message of that member, with no mark of
   the action. Reason: an action is a message (decision 220).

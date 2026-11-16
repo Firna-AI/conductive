@@ -33,8 +33,10 @@ that keeps a turn open for background work, as
 
 ### The tab row
 
-- [The tab row](agents-and-sessions.md#the-tab-row) says how the tabs of
+- [The tab row](tab-row.md) says how the tabs of
   the centre column keep their order, move, and open their tab menu.
+- [Split panes](split-panes.md) says how the centre column shows one or
+  two panes, each with its own tab row.
 
 ## Workspace and session names
 

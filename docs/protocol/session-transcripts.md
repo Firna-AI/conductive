@@ -29,7 +29,7 @@ at `app/tabs` and `app/transcripts`.
 
 - The tab menu of each session tab holds two copy items: Copy concise
   transcript and Copy full transcript (decision 215).
-  [The tab row](agents-and-sessions.md#the-tab-row) gives their place in
+  [The tab row](tab-row.md#the-tab-menu) gives their place in
   the menu, after Copy link, which copies the link of the session.
 - Each item copies the transcript of the session of its tab (decision
   213). A member can then paste it into another agent, a document, or a
@@ -60,14 +60,17 @@ at `app/tabs` and `app/transcripts`.
 - The tab keeps that text only in its memory. No chat stays on the disk of
   the device, as [Events](chat-and-events.md#events) says.
 - Two commands of [Keyboard shortcuts](keyboard-shortcuts.md) copy the
-  transcript of the shown session tab, as its tab menu does (decision 199).
+  transcript of the session that the session keys use, as the tab menu of
+  that session does (decision 199).
+  [Where a command runs](keyboard-shortcuts.md#where-a-command-runs) says
+  which session that is.
   [The default keys](keyboard-shortcuts-keys.md#the-default-keys) gives
   their keys. The command palette has no row for them.
 
 ### Read-only workspaces
 
 - A member can copy each session of a read-only workspace from its tab
-  menu (decision 214). [The tab row](agents-and-sessions.md#the-tab-row)
+  menu (decision 214). [The tab row](tab-row.md#read-only-workspaces)
   states which items that menu holds.
 - In a read-only workspace, an entry of the session history shows its
   session as a tab for the member alone. So a member can copy each session

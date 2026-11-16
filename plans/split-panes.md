@@ -385,23 +385,31 @@ The protocol docs state the requirements of the split. The tab row section
 moves to its own page first, as
 `plans/follow-ups/split-the-tab-row-protocol-section.md` option A says.
 
-- [ ] Move The tab row to `docs/protocol/tab-row.md`, with a short heading
+- [x] Move The tab row to `docs/protocol/tab-row.md`, with a short heading
       and a link left in `agents-and-sessions.md`. Add the page to
       `docs/architecture/protocol-docs.md`. Delete the follow-up item.
-- [ ] Add the panes, the drag, the focus, and decisions 1 C, 2 A, and 3 B
+- [x] Add the panes, the drag, the focus, and decisions 1 C, 2 A, and 3 B
       to `docs/protocol/tab-row.md`. Replace the one-order rule of decision
-      186, and the rule that a drag does not change the shown tab.
+      186, and the rule that a drag does not change the shown tab. The
+      panes went to the linked page `docs/protocol/split-panes.md`.
 - [ ] Update `docs/protocol/temporary-tabs.md` with decisions 3 B and 5.
+      Decision 3 B is done. (blocked: decision 5)
 - [ ] Update `docs/protocol/keyboard-shortcuts.md` for keys that act on the
       focused pane, and with decision 4 C or 4 F if the user chooses one.
-- [ ] Update the prompts of the pull request bar in
+      The keys that act on the focused pane are done. (blocked: decision 4)
+- [x] Update the prompts of the pull request bar in
       `docs/protocol/messages-and-attachments.md`.
-- [ ] Read the Terms and Privacy pages and each guide in
+- [x] Read the Terms and Privacy pages and each guide in
       `src/marketing/docs/` in full. Update each sentence that restates a
       changed fact, such as `sessions-and-chat.md` and
-      `files-and-changes.md`.
-- [ ] Update `src/chat/README.md`, `src/chat/tab-row.md`, and
+      `files-and-changes.md`. No sentence describes the split, and each
+      guide describes only the current product, so none changes before the
+      split ships.
+- [x] Update `src/chat/README.md`, `src/chat/tab-row.md`, and
       `src/shell/workspace/README.md`.
+
+The format, lint, and link checks of this milestone are in
+`.context/split-panes/m2-*.log`.
 
 ## Milestone 3: One owner of the read-only tabs
 

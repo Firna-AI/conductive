@@ -129,6 +129,12 @@ This page lists each protocol doc and what it covers.
   their logins, the sessions, and the names of workspaces and sessions.
   - [Workspace and session names](../protocol/workspace-and-session-names.md):
     the missing and the automatic names of workspaces and sessions.
+  - [The tab row](../protocol/tab-row.md): the order of the tabs of the
+    centre column, their drag, the scroll of the row, the reader's place of
+    each tab, and the tab menu.
+    - [Split panes](../protocol/split-panes.md): the one or two panes of
+      the centre column, their focus, the pane that a press uses, the moves
+      between panes, the saved split, and the phone.
 - [Workspace links](../protocol/workspace-links.md): Copy link, and the chips
   that show workspace links in chat.
 - [Chat Markdown](../protocol/chat-markdown.md): the formatting of agent

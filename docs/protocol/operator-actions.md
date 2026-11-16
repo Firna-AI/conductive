@@ -168,7 +168,7 @@ whoever owns or started it (decision 129).
 - Reason: that order spans all the orgs of the member, and other members
   see no change. An order inside the org, such as the tab order of a
   workspace, still does not change, as
-  [The tab row](agents-and-sessions.md#the-tab-row) says.
+  [The tab row](tab-row.md#read-only-workspaces) says.
 - The rules of a leave in [Owners and admins](#owners-and-admins) still
   hold (decision 123). No member can become an admin while the org is
   suspended. So the only active admin cannot leave it until an operator

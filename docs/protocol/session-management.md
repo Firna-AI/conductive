@@ -41,7 +41,7 @@ says.
 - The Worker cleans the title, and treats a blank title, as
   [Names from the workspace tools](tool-names.md) says.
 - No automatic title replaces the stored title, as after Rename session in
-  the [tab menu](agents-and-sessions.md#the-tab-row).
+  the [tab menu](tab-row.md#the-tab-menu).
 - The reply gives the session with its stored title and its link.
 
 ## Close a session

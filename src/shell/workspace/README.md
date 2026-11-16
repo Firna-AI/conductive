@@ -156,6 +156,9 @@ functions of the workspace screen that a reader opens first.
 - [Web app: data and composition](../../app/README.md): the models, the
   event stream, and the features.
 - [The chat](../../chat/README.md): the chat that fills the centre.
+- [Split panes](../../../docs/protocol/split-panes.md): the requirements
+  of two panes in the centre column. The screen draws one pane, and it
+  does not draw two panes yet.
 - [The Files screens](../../files/README.md) and
   [the browser fakes](../../test-support/README.md).
 - [The web app in the architecture](../../../docs/architecture/components.md#web-app).

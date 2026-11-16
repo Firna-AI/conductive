@@ -54,6 +54,8 @@ app.
 - **Layout switch key:** a key that switches the keyboard layout of the
   system, such as from English to Russian. The browser reports its press
   as GroupNext, GroupPrevious, GroupFirst, or GroupLast.
+- **Focused pane:** the pane of the centre column that the user used last,
+  as [Split panes](split-panes.md#terms) says.
 
 ## Commands
 
@@ -99,13 +101,22 @@ app.
 - [The default keys](keyboard-shortcuts-keys.md#the-default-keys) gives
   where each other command runs, such as on every page, in a workspace, on
   the pull request bar, or only in the Mac app.
+- The session keys are the keys of Focus the message field, Attach files,
+  Model picker, Next effort level, Fast mode, Stop the agent, Copy concise
+  transcript, and Copy full transcript. They act on the session of the
+  focused pane. When the focused pane shows a file or a diff, they act on
+  the session of the other pane. When no pane shows a session, the page
+  offers none of these commands, so their keys go on to the page.
+- Reason: each pane has its own tab row, as in VS Code, so the keys of the
+  tabs and of the session act on the focused pane.
 - The key of each of these commands does this:
   - Workspace list opens the list page of the org.
   - Previous tab and Next tab show the tab before or after the shown tab
-    of the [tab row](agents-and-sessions.md#the-tab-row).
-  - Close tab closes the shown tab, as the close control of that tab does.
-  - Reopen closed session reopens the session that closed last. The
-    session history lists that session first.
+    of the focused pane, in the [tab row](tab-row.md) of that pane.
+  - Close tab closes the shown tab of the focused pane, as the close
+    control of that tab does.
+  - Reopen closed session reopens the session that closed last, in the
+    focused pane. The session history lists that session first.
   - Switch to org 1 to 9 opens the org at that place in the org rail,
     counted from the top, as
     [Opening an org](org-rail-order.md#opening-an-org) says.
@@ -118,11 +129,11 @@ app.
     that needs input. With no open workspace, it starts from the top of
     the list.
   - Focus the message field moves the focus to the message field of the
-    workspace.
+    session that the session keys use.
   - Next effort level chooses the next effort of the model in the model
     picker.
   - Fast mode turns fast mode on or off, as the Fast row of the model menu
-    of the shown session does.
+    of the session that the session keys use does.
   - Each action of the pull request bar does what a click on its button
     does. So Merge PR merges at once, with no question.
   - Open PR on GitHub opens the pull request on GitHub, as a link to it
@@ -130,7 +141,7 @@ app.
   - Copy link copies the link of the workspace, as its label in the header
     does.
   - Copy concise transcript and Copy full transcript copy the transcript of
-    the session of the shown tab, as the items of its tab menu do.
+    the session that the session keys use, as the items of its tab menu do.
 - A key that steps through a list wraps at its end: from the last item to
   the first, and from the first to the last. This holds for Previous and
   Next tab, Previous and Next workspace, Next workspace that needs input,
@@ -189,19 +200,6 @@ app.
   gives the exception while a layout switch key is down.
 - No key allows or denies a Mac command (decision 62). Reason: a stray key
   must never run a command on the Mac of the person.
-
-## The Mac app
-
-- The page of the Mac app hears each key before the menus of the Mac app.
-  A menu acts on a key only when the page leaves the key.
-- So ⌘N, ⌘T, and ⌘W run their commands in the Mac app. ⌘R still reloads
-  the page.
-- The keys of the menus of the Mac app are fixed keys, as
-  [Fixed keys](keyboard-shortcuts-fixed-keys.md#fixed-keys) says.
-- The menu bar of the Mac app has no item for a command that keys run,
-  such as a Search item. Reason: the page hears each key itself. A menu
-  cannot run an action inside the page, because the page has no bridge, as
-  [Permissions](desktop-commands.md#permissions) says.
 
 ## Key hints
 
