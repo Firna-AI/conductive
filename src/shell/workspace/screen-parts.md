@@ -213,6 +213,17 @@ tools.
   click saves the tool,
   and the address keeps the tab of the centre. Only a tool address follows
   the new tool.
+- On desktop, a choice of Terminal moves the keyboard focus to the
+  terminal, as
+  [Terminal](../../../docs/protocol/workspace-tools.md#terminal) says. The
+  `select` of `useToolSelect` runs for a click on its tab and for Go to
+  Terminal of the palette or its key. It asks `terminalFocus` of the
+  workspace context, a `TerminalFocus` that each workspace screen keeps.
+  The request holds the element with the focus at the choice. A choice of
+  another tool drops it. The tools part passes it to the `focusRequest` of
+  `TerminalTool`, only while Terminal shows, and clears it once the
+  terminal took it. A phone asks for no focus, because its keyboard would
+  cover the page.
 - On a phone each tool that the app offers is a page of the tab bar, with
   its own address.
 - The terminal and Preview each mount at their first show, then stay
@@ -287,7 +298,9 @@ The workspace screen keeps one GitHub store, through `useGitHubState` of
 [the GitHub screens](../../github/README.md), for the pull request bar or
 row and the Checks tab of the Files part. It reads with the `fetch` of
 the org, waits with the timer of the app, and takes the GitHub events of
-the ordered stream of the workspace.
+the ordered stream of the workspace. Of the old GitHub states that a replay
+of the stream holds, it takes only the newest, so the bar does not flicker
+through them while the workspace loads.
 
 - The screen keeps one action state for the bar on desktop and the top of
   the Checks tab on a phone, as

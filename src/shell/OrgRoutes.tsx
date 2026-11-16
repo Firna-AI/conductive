@@ -32,6 +32,8 @@ export function RailFrame(props: {
   user: User
   current: RailCurrent
   sidebar?: ReactNode
+  /** The page is the list page of the current org. */
+  listPage?: boolean
   children: ReactNode
 }) {
   const app = useApp()
@@ -45,8 +47,10 @@ export function RailFrame(props: {
         <OrgRail
           current={props.current}
           firstRun={inFirstRun(getStarted)}
+          listPage={props.listPage}
           operator={operator}
           orgs={orgs}
+          sidebar={props.sidebar}
           user={props.user}
         />
       }
@@ -145,7 +149,7 @@ function listCurrent(route: OrgRoute): ListCurrent {
 /**
  * The screens of one org, in the desktop frame or the phone frame. Each
  * page of an org that is not deleted takes the key of Workspace list,
- * which opens the list page of the org, as its tile in the rail does.
+ * which opens the list page of the org.
  */
 export function OrgRoutes(props: { route: OrgRoute; user: User }) {
   const app = useApp()
@@ -197,6 +201,7 @@ export function OrgRoutes(props: { route: OrgRoute; user: User }) {
   return (
     <RailFrame
       current={current}
+      listPage={screen === null}
       sidebar={
         <Sidebar
           current={listCurrent(props.route)}

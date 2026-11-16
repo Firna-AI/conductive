@@ -31,6 +31,8 @@ gives the create, read, resume, and activity routes of a workspace to
   the current turn, or of the member who pressed Continue during its fetch.
 - Continue a workspace on a new branch after its merge, with the same
   sandbox and sessions.
+- Restart the runner and the preview relay of a running workspace, after
+  an update check, as [Restart](routes.md#restart) says.
 - Give the GitHub CLI the workspace owner's token outside an agent turn.
 
 ## Integration points

@@ -149,11 +149,13 @@ export function WorkspaceScreen(props: {
     <WorkspaceHeader
       back={suspended ? paths.suspendedOrg : undefined}
       canReassign={admin && !readOnly}
+      canRestart={!readOnly}
       copy={state.copyLink === 'none' ? undefined : state.copyLink}
       name={workspace.name}
       ownerOpen={state.overlay === 'reassign'}
       run={open.run}
       rightHidden={rightHidden}
+      stateOpen={state.overlay === 'restart'}
       status={status}
       viewport={viewport}
       workspace={workspace}
@@ -206,6 +208,7 @@ export function WorkspaceScreen(props: {
     archivable,
     restorable,
     rightColumn: !rightHidden,
+    sidebar: true,
     mac: mac !== undefined,
     shortcuts: props.shortcuts,
   })
@@ -253,6 +256,7 @@ export function WorkspaceScreen(props: {
         suspended: suspended ? suspendedOrg : undefined,
         person: admin ? undefined : people[memberViewer],
       }}
+      sidebarView={state.sidebar}
       sidebar={workspaceSidebar({
         // The toast of an Archive shows at once, so the row shows that Archive.
         workspace:

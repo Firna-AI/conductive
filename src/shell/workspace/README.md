@@ -29,6 +29,15 @@ toast after the reply offers Restore. The archived bar, the row of the Archived 
 the palette offer Restore to each member until the last day, as
 [Restore](../../../docs/protocol/workspace-life.md#restore) says.
 
+The state in the header is a menu button while the software of the cloud
+computer runs: Ready, Working, Needs input, and Done, unread.
+[`HeaderState`](HeaderState.tsx) offers Restart there to each member of an
+org that is not suspended. It shows Starting from the press, asks first
+while an agent works, and names a failed update check or a failed restart
+in a toast, as
+[Restart the software](../../../docs/protocol/workspace-life.md#restart-the-software)
+says. The mockups are at `app/restart`.
+
 ## The kept workspace
 
 [The kept workspace](kept-workspace.md) gives the parts that the tab keeps

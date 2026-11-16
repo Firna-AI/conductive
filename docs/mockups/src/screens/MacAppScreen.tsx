@@ -37,6 +37,11 @@ export const macAppSchema = {
     /** A normal window, or full screen, where macOS hides the buttons. */
     window: { enum: ['window', 'full-screen'] },
     /**
+     * The sidebar of a workspace: shown, hidden with the toggle, or hidden
+     * with the workspace list open as a popover of the tile of the org.
+     */
+    sidebar: { enum: ['shown', 'hidden', 'popover'] },
+    /**
      * The page of the app: a workspace, the empty New workspace, the
      * account, its Keyboard shortcuts tab, its This Mac tab, or the
      * waitlist of a person without app access.
@@ -156,7 +161,11 @@ function pageFor(state: MacAppState): ReactNode {
       return (
         <WorkspaceScreen
           shortcuts={shortcuts}
-          state={{ ...workspaceFor(state.command), palette: state.palette }}
+          state={{
+            ...workspaceFor(state.command),
+            palette: state.palette,
+            sidebar: state.sidebar ?? 'shown',
+          }}
           viewport="desktop"
         />
       )

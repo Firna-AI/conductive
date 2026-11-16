@@ -15,7 +15,8 @@ import {
 import type { TurnTokenCheck } from './types'
 import { gatewayUpload } from './upload'
 
-const LEASE_MS = 30_000
+/** The first turn check must pass within this time. */
+const START_LEASE_MS = 30_000
 
 interface GatewayLifetimeOptions {
   agent: Agent
@@ -25,7 +26,10 @@ interface GatewayLifetimeOptions {
   schedule: ConnectionScheduler
 }
 
-/** One lease covers the check, upload, fetch, and answer of a request. */
+/**
+ * The first turn check must pass before the request starts. Later checks run
+ * every 15 seconds and end the request only when the turn refuses it.
+ */
 export class GatewayRequestLifetime {
   private readonly abort = new AbortController()
   readonly signal = this.abort.signal
@@ -53,7 +57,7 @@ export class GatewayRequestLifetime {
   }
 
   async start(): Promise<Extract<TurnTokenCheck, { ok: true }>> {
-    this.deadline = this.options.now() + LEASE_MS
+    this.deadline = this.options.now() + START_LEASE_MS
     this.scheduleExpiry()
     try {
       const checked = await this.check()
@@ -144,6 +148,7 @@ export class GatewayRequestLifetime {
     )
   }
 
+  /** The first check must pass within the start lease. */
   private async check(): Promise<Extract<TurnTokenCheck, { ok: true }>> {
     const started = this.options.now()
     let checked: TurnTokenCheck
@@ -163,7 +168,6 @@ export class GatewayRequestLifetime {
     }
     this.abort.signal.throwIfAborted()
     if (!this.active) return checked
-    this.deadline = started + LEASE_MS
     if (this.deadline <= this.options.now()) {
       const error = new GatewayRequestError(
         'model_gateway_unavailable',
@@ -172,49 +176,48 @@ export class GatewayRequestLifetime {
       this.endCheck(error, 'lease_expired')
       throw error
     }
-    this.scheduleExpiry()
+    this.cancelExpiry?.()
+    this.cancelExpiry = undefined
+    this.schedulePoll(started)
+    return checked
+  }
+
+  /** Later checks end the request only on a refusal, never on a delay. */
+  private async poll(): Promise<void> {
+    if (!this.active) return
+    const started = this.options.now()
+    let checked: TurnTokenCheck
+    try {
+      checked = await this.wait(this.options.check())
+    } catch (error) {
+      if (this.abort.signal.aborted || !this.active) return
+      warnWorker({
+        kind: 'model_gateway_check_failed',
+        workspaceId: WarningId.checked(this.options.workspaceId),
+        errorKind: new GatewayCheckError(error).kind,
+      })
+      this.schedulePoll(started)
+      return
+    }
+    if (!this.active) return
+    if (this.options.now() - started > CONNECTION_CHECK_MS)
+      warnWorker({ kind: 'model_gateway_check_late' })
+    if (!checked.ok) {
+      this.endCheck(
+        new GatewayRequestError(checked.reason, 'The model turn ended.'),
+        checked.reason,
+      )
+      return
+    }
+    this.schedulePoll(started)
+  }
+
+  private schedulePoll(started: number): void {
+    if (!this.active) return
     this.cancelPoll = this.options.schedule(
       () => this.poll(),
       Math.max(0, CONNECTION_CHECK_MS - (this.options.now() - started)),
     )
-    return checked
-  }
-
-  private async poll(
-    retry = 0,
-    errorKind?: GatewayCheckErrorKind,
-  ): Promise<void> {
-    if (!this.active) return
-    if (errorKind)
-      warnWorker({
-        kind: 'model_gateway_check_retry',
-        workspaceId: WarningId.checked(this.options.workspaceId),
-        errorKind,
-      })
-    try {
-      await this.check()
-    } catch (error) {
-      if (!this.active) return
-      if (!(error instanceof GatewayCheckError)) {
-        this.endCheck(error, 'unknown')
-        return
-      }
-      warnWorker({
-        kind: 'model_gateway_check_failed',
-        workspaceId: WarningId.checked(this.options.workspaceId),
-        errorKind: error.kind,
-      })
-      if (error.kind === 'overloaded') {
-        this.endCheck(error, error.kind)
-        return
-      }
-      const delay = retry === 0 ? 1_000 : retry === 1 ? 2_000 : 4_000
-      if (this.options.now() + delay < this.deadline)
-        this.cancelPoll = this.options.schedule(
-          () => this.poll(retry + 1, error.kind),
-          delay,
-        )
-    }
   }
 
   private endCheck(

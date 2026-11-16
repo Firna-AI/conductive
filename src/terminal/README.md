@@ -117,6 +117,14 @@ change can move the shared parts to the app's shared components.
 - `workspace.fetch` is the app's fetch. `workspace.subscribe` is required.
   It delivers the events of the workspace in order. Keep both stable.
 - `touch` selects the phone layout: 40px controls and the key row.
+- `focusRequest` is optional. A new request moves the keyboard focus to
+  the xterm.js screen. A request waits until the screen exists, also
+  across the mount and the connection of the terminal. The screen takes it
+  only while the focus is still on the element of the request, `from`, or
+  on no element. Then it calls `onFocusDone`, and the owner clears the
+  request. So a reconnect does not take the focus again. In StrictMode,
+  the second screen takes the request too, because the request still
+  holds until the owner clears it.
 - `screenRef` is optional. It gets the element of the xterm.js screen,
   without the key row and the buttons of the tool, such as Reconnect. The
   workspace screen marks this element for the shortcut layer, so only the
