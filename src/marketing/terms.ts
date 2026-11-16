@@ -202,7 +202,8 @@ export const termsDocument: LegalDocument = {
           cloud computers that ${productName} runs for your org.
           ${productName} keeps the chat history of each workspace, so that
           you can read it while the cloud computer is stopped. It also keeps
-          the files that you attach to messages. It copies each file to the
+          the files that you attach to messages, also the file that a large
+          paste becomes. It copies each file to the
           cloud computer when the agent starts work on its message. When it
           passes on the model requests of a cloud computer, it keeps no
           copy of a request or of its answer. It writes no body or header

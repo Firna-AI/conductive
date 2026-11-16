@@ -1,7 +1,7 @@
 import type { Session } from '../../shared/generated/Session'
 
 import type { WorkspaceTab, WorkspaceView } from '../../shared/workspace-view'
-import type { ChatSnapshot } from './chat-snapshot'
+import type { ChatSnapshot, Overlay } from './chat-snapshot'
 import { withSessionPlace } from './tab-order'
 
 const isSessionTab = (
@@ -135,13 +135,26 @@ export function placeSession(
     history: [...others(snapshot.history), session].sort(lastClosedFirst),
     activeSessionId: active,
     view: snapshot.view && viewWithout(snapshot.view, session.id, active),
-    overlay:
-      snapshot.overlay.kind !== 'none' &&
-      'sessionId' in snapshot.overlay &&
-      snapshot.overlay.sessionId === session.id
-        ? { kind: 'none' }
-        : snapshot.overlay,
+    overlay: overlayWithout(snapshot.overlay, session.id),
   }
+}
+
+/**
+ * The overlay after a session closed, such as through another member. A
+ * rename of that session ends. A question before a close no longer names
+ * it, and a question that names no session then ends.
+ */
+function overlayWithout(overlay: Overlay, sessionId: string): Overlay {
+  if (overlay.kind === 'rename') {
+    return overlay.sessionId === sessionId ? { kind: 'none' } : overlay
+  }
+  if (overlay.kind !== 'close' || !overlay.sessionIds.includes(sessionId)) {
+    return overlay
+  }
+  const sessionIds = overlay.sessionIds.filter((id) => id !== sessionId)
+  return sessionIds.length > 0
+    ? { kind: 'close', sessionIds }
+    : { kind: 'none' }
 }
 
 /** Sorts a history list, the last closed first. */

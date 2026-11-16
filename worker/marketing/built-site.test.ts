@@ -1,13 +1,11 @@
 import { beforeAll, expect, it } from 'vitest'
 
 import { productName } from '../../docs/mockups/src/brand'
-import { parityLinkCopy } from '../../src/marketing/from-conductor/copy'
-import { docsPath, pageHrefs, sitePaths } from '../../src/marketing/links'
+import { docsPath, sitePaths } from '../../src/marketing/links'
 import { GITHUB_SETUP_PATH } from '../../src/shared/github-setup'
 import { SITE_FOLDER, SITE_ICONS } from '../../src/shared/site-build'
 import { githubSetupResponse } from '../github-setup'
 import type { SiteBinding } from '../test-support/site-binding'
-import { checkBuiltComparison } from './built-comparison.test-support'
 import { checkGuideRoutes, checkScrollRegions } from './built-docs.test-support'
 import { checkMacDownloads } from './built-site-downloads.test-support'
 import { checkSharePreview } from './built-site-sharing.test-support'
@@ -74,14 +72,13 @@ it('leads the header, action, and footer links of the Mac app to both chip downl
   await checkMacDownloads(get, SITE)
 })
 
-it('names no sandbox provider on home, legal, docs, and comparison pages', async () => {
+it('names no sandbox provider on home, legal, and docs pages', async () => {
   for (const path of [
     sitePaths.home,
     sitePaths.terms,
     sitePaths.privacy,
     docsPath,
     `${docsPath}/get-started`,
-    sitePaths.fromConductor,
   ]) {
     const response = await get(path)
     expect(response.status, path).toBe(200)
@@ -98,7 +95,6 @@ it('allows exactly each page inline style hash and serves every file it names', 
     sitePaths.privacy,
     docsPath,
     `${docsPath}/get-started`,
-    sitePaths.fromConductor,
     '/missing',
   ]) {
     const response = await get(path)
@@ -144,25 +140,13 @@ it('serves no pricing page and links none', async () => {
   ).toEqual([])
 })
 
-it('serves the complete Conductor comparison with its public entry links', async () => {
-  const response = await get(sitePaths.fromConductor)
-  expect(response.status).toBe(200)
-  expect(response.headers.get('Set-Cookie')).toBeNull()
-  const page = await response.text()
-  await checkBuiltComparison(page)
+it('serves no Conductor comparison page and links none', async () => {
+  const response = await get('/from-conductor')
+  expect(response.status).toBe(404)
   const home = await (await get(sitePaths.home)).text()
-  const intro = home.slice(0, home.indexOf('<h1'))
   expect(
-    links(intro).find((link) => link.text === parityLinkCopy.home)?.href,
-  ).toBe(pageHrefs().fromConductor)
-  const footer = home.slice(home.indexOf('<footer'))
-  const product =
-    /<h2\b[^>]*>\s*Product\s*<\/h2>\s*<ul\b[^>]*>([\s\S]*?)<\/ul>/.exec(
-      footer,
-    )?.[1] ?? ''
-  expect(
-    links(product).find((link) => link.text === parityLinkCopy.footer)?.href,
-  ).toBe(pageHrefs().fromConductor)
+    links(home).filter((link) => link.href.endsWith('/from-conductor')),
+  ).toEqual([])
 })
 
 it('serves the built agreement with Continue and legal links on the given origins', async () => {

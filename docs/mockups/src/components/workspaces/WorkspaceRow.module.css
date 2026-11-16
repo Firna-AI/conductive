@@ -77,14 +77,21 @@
   transform: translateY(-50%);
 }
 
-.archivable:hover .time {
-  visibility: hidden;
-}
+/*
+ * Only a pointer that can hover reveals the action. On a touch screen, iOS
+ * Safari takes the first tap on a row whose hover shows or hides content as
+ * a hover, so the person would tap twice to open the workspace.
+ */
+@media (hover: hover) {
+  .archivable:hover .time {
+    visibility: hidden;
+  }
 
-.archivable:hover .archive {
-  opacity: 1;
-  visibility: visible;
-  pointer-events: auto;
+  .archivable:hover .archive {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
 }
 
 /* A row whose Archive or Restore runs keeps its busy action over its time. */

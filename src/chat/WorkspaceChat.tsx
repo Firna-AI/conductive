@@ -34,6 +34,7 @@ import {
   type Overlay,
 } from './state/chat-snapshot'
 import type { ChatController } from './state/controller'
+import { withoutTabs } from './state/tab-order'
 import { browserCopy, type CopyServices } from './transcript-copy'
 import { systemClock, useNow, type Clock } from './ui/clock'
 import { useChatController, type ChatConnection } from './useChatController'
@@ -183,6 +184,9 @@ function ChatBody(
         mobile={mobile}
         onCancelRename={controller.dismissOverlay}
         onClose={controller.requestClose}
+        onCloseTabs={(closed) =>
+          controller.updateView((view) => withoutTabs(view, closed))
+        }
         onCopy={copy}
         onCopyLink={copyLink}
         onMove={controller.moveTab}

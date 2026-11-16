@@ -76,7 +76,8 @@ export interface SessionState {
 export type Overlay =
   | { kind: 'none' }
   | { kind: 'history' }
-  | { kind: 'close'; sessionId: string }
+  /** The question before the tabs of running sessions close. */
+  | { kind: 'close'; sessionIds: readonly string[] }
   | { kind: 'rename'; sessionId: string }
 
 /** A failed action, shown above the composer until the user dismisses it. */

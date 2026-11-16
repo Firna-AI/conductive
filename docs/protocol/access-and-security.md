@@ -57,6 +57,10 @@ These docs belong to this doc:
 - A changed revision of the Terms applies at the user's next sign-in,
   within 7 days for a user who keeps using the app (decision 126).
   Browser and Mac app sign-in sessions last at most 7 days.
+- When the sign-in session ends while the app is open, the next refused
+  request shows the sign-in in place of every screen. The app keeps no
+  screen whose requests all fail. Reason: an error with only Try again
+  gives no way to sign in.
 - An open session needs no new agreement. A consent page that blocks the
   app at once was rejected (decision 126).
 - The session lives in a signed cookie that is HttpOnly, Secure, and

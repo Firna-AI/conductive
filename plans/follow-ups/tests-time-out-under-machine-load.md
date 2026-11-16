@@ -80,6 +80,64 @@
   This repair changes no test or timeout.
   The blocked await and cause remain unknown.
   The runs overlapped other checks, but machine load is not an established cause.
+- On 16 November 2026, the merge of `origin/main` at `a20746b99` into
+  `calummoore/quito-oqn7` passed every static check and 54 targeted endpoint
+  tests. The local complete gate was interrupted after repeated timeouts
+  in six unchanged Worker test files. The interrupted run also reported
+  the 12 tests of `worker/marketing/built-site.test.ts` as skipped.
+  A rerun of the six failed files with `VITEST_MAX_WORKERS=2` finished:
+  15 tests passed and 12 failed. These cases failed:
+  - `worker/devices/lifecycle.test.ts > relays all four approval choices only from the paired desktop session`.
+  - `worker/features/continue-routes.test.ts > resumes Continue through real routes and socket wake, fences sends and Archive, expires recovered credentials, and routes new-branch GitHub events`.
+  - `worker/lifecycle/archive-lifecycle.test.ts > restores without starting, orders same-time transitions, and resumes with a fresh token`.
+  - `worker/lifecycle/published-image-creation.test.ts > creates from captured image repositories while current settings and selection change`.
+  - `worker/lifecycle/workspace-publication-retry.test.ts > keeps the original idle alarm after a stored creation result retries its D1 publication`.
+  - `worker/lifecycle/workspace-publication-retry.test.ts > stops at the original idle deadline while the completed creation still needs publication`.
+  - `worker/lifecycle/workspace-publication-retry.test.ts > retains an older creation publication retry after a resume completes`.
+  - `worker/lifecycle/workspace-publication-retry.test.ts > recovers publication during runner wait without moving the resume deadline`.
+  - `worker/lifecycle/workspace-publication-retry.test.ts > stops a suspended owner while the completed creation still needs publication`.
+  - `worker/lifecycle/workspace-publication-retry.test.ts > recovers a stored creation publication from a legacy lifecycle alarm`.
+  - `worker/lifecycle/workspace-publication-retry.test.ts > releases start and publication alarms after archive removes their records`.
+  - `worker/chat/integration/failed-first-start-retry.test.ts > retries the same failed workspace with a fresh token and dispatches every stored message once in order`.
+  The failures were `Error: Test timed out in 15000ms`, except the
+  legacy lifecycle alarm case. Its reset failed with `Timed out waiting
+  to evict Durable Object: it still has active references`, and its
+  cleanup failed with `TypeError: fetch failed` and `UND_ERR_SOCKET`.
+  A clean detached checkout of `a20746b99` then ran the Continue routes
+  file alone with `VITEST_MAX_WORKERS=1`. Its only case also failed with
+  `Error: Test timed out in 15000ms` in an 18.91-second run. This proves
+  that the Continue failure occurs without the merge. All six failed
+  test files match that main commit. The other failures were not checked
+  on a clean main checkout. Native runtime or storage delays are a
+  suspected source; neither the blocked await nor the cause is known.
+- On 16 November 2026, a second merge into `calummoore/quito-0ojg`
+  integrated `origin/main` at `6b82e7e6a`.
+  The conflicts affected this evidence file and two files from the
+  Conductor comparison page that main removed.
+  Typechecks, lint, formatting, export checks, all 89 SDK-helper tests,
+  the app build, and the strict mockup build passed.
+  The full Vitest run was interrupted after more than 21 minutes of
+  repeated native runtime failures. It had reported 104 failed cases
+  across 48 files and skipped all 12 cases of
+  `worker/marketing/built-site.test.ts` after its setup failed.
+  Each of those 49 files matched the fetched main commit.
+  Examples include the Continue route, archive/resume, browser access,
+  multipart reports, workspace publication, device approval, and routine tests.
+  This was partial verification, with no complete suite pass count.
+  GitHub CI and Desktop passed on that main commit.
+  The test environment's blocked awaits and failure causes remain unknown.
+  A focused run of six marketing and secrets files then passed six cases,
+  timed out in three, and skipped the 12 marketing cases after setup failed.
+  The timeouts were:
+  - `worker/app-api/capabilities.test.ts:26`, "lets each member change workspace capabilities and remove only the selected session approval".
+  - `worker/app-api/create-capabilities.test.ts:28`, "saves the app capabilities with its workspace and keeps those choices on a repeated create".
+  - `worker/devices/mac-access.test.ts:70`, "ends every waiting Mac request when access turns off and keeps a running command through its result".
+  Each reported `Error: Test timed out in 15000ms.`
+  Marketing setup reported `EXDEV: cross-device link not permitted` while
+  Astro renamed an asset from `.astro/.prerender/` into `/tmp`.
+  This is the existing issue in `plans/follow-ups/built-site-test-cross-device-rename.md`.
+  Running that marketing file with `TMPDIR` inside the ignored `.context/`
+  folder passed all 12 cases in 8.83 seconds, with no code or test edit.
 - **Problem:** These tests depend on wall-clock time limits, so a busy machine can fail them with no defect in the code.
 - **Impact if no action:** A slow CI runner or a busy developer machine can fail the gate now and then, and a person must rerun it.
 - **Root question:** How do these tests stay correct on a slow or busy machine?
