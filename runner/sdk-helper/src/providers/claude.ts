@@ -91,16 +91,31 @@ export function createClaudeFactory(
       options.backgroundNoteIds,
     )
     env.CLAUDE_CODE_EMIT_SESSION_STATE_EVENTS = '1'
-    let resultReceived = false
     const mapper = new ClaudeEvents(
       input.ids,
-      (event) => {
-        if (event.type === 'result') resultReceived = true
-        options.event(event)
-      },
+      options.event,
       (uuid) => input.hasOutstanding(uuid),
       background,
       options.choice.fast,
+      (userMessageIds) => {
+        const uuid = randomUUID()
+        input.continue(userMessageIds, {
+          type: 'user',
+          uuid,
+          session_id: options.conversationId ?? '',
+          parent_tool_use_id: null,
+          message: {
+            role: 'user',
+            content:
+              'The connection to the model dropped before your last response finished. Continue from where you stopped. Do not repeat work that is already done. Start your reply with one short sentence that says that the connection to the model dropped and that you continue.',
+          },
+          priority: 'next',
+        })
+        options.warn(
+          'The Claude answer stream dropped. Continuing the agent once.',
+        )
+        return uuid
+      },
     )
     let closed = false
     let stream: ClaudeQuery
@@ -179,10 +194,9 @@ export function createClaudeFactory(
       try {
         for await (const message of stream) {
           if (closed) continue
-          resultReceived = false
-          mapper.accept(message)
-          if (resultReceived) {
-            input.complete(message)
+          const completed = mapper.accept(message)
+          if (completed) {
+            input.complete(completed)
             background.result(!input.pending)
           }
         }

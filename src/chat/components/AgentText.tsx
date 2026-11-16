@@ -2,13 +2,13 @@ import itemStyles from '../../../docs/mockups/src/components/chat/ChatItemView.m
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import headingStyles from '../../../docs/mockups/src/components/common/MarkdownHeadings.module.css'
 import { MarkdownTable } from '../../../docs/mockups/src/components/common/MarkdownTable'
-import { LinkedText } from '../links/LinkedText'
+import { AnswerText } from '../links/LinkedText'
 import { textBlocks, type TextBlock, type TextItem } from './agent-text'
 import { CodeBlock } from './CodeBlock'
 
 /** A cell of a table in an answer, with the formatting of a paragraph. */
 function tableCell(text: string) {
-  return <LinkedText strong text={text} />
+  return <AnswerText text={text} />
 }
 
 /**
@@ -24,7 +24,7 @@ function ListItems(props: { items: readonly TextItem[] }) {
     return (
       <li key={index}>
         {tight ? (
-          <LinkedText strong text={first.text} />
+          <AnswerText text={first.text} />
         ) : (
           <AgentBlocks blocks={item} />
         )}
@@ -39,7 +39,7 @@ function Block(props: { block: TextBlock }) {
     case 'p':
       return (
         <p>
-          <LinkedText strong text={block.text} />
+          <AnswerText text={block.text} />
         </p>
       )
     case 'heading': {
@@ -49,7 +49,7 @@ function Block(props: { block: TextBlock }) {
       const Heading = `h${block.level}` as const
       return (
         <Heading>
-          <LinkedText strong text={block.text} />
+          <AnswerText text={block.text} />
         </Heading>
       )
     }

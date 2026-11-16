@@ -135,7 +135,7 @@ it('reads current branches for each turn, in-turn message, reconnect, retry, and
   await f.env.DB.prepare('UPDATE workspaces SET base_branch = ? WHERE id = ?')
     .bind('feature/review', WORKSPACE_ID)
     .run()
-  await f.send(fresh.id, 'routine-target')
+  await f.send(fresh.id, 'automation-target')
   expect(runner.commands.at(-1)).toMatchObject({
     type: 'message',
     branches: {

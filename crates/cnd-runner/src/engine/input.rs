@@ -166,6 +166,7 @@ impl Session {
             notes: BTreeSet::new(),
             speed: None,
         });
+        self.mailbox.active(true);
         if control.stopped() {
             return Err(Error::Canceled);
         }

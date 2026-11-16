@@ -26,6 +26,7 @@ import { useGitHubFeed, useScreenBar } from '../github/WorkspaceGitHub'
 import { SandboxPanel } from '../SandboxNotice'
 import { contentState } from '../sandbox-view'
 import { useSavedView } from '../saved-view'
+import { useAddressLines } from './address-lines'
 import { filesPlace, tabOf } from './files-address'
 import {
   useAddressList,
@@ -69,6 +70,7 @@ function TabPage(props: {
 }) {
   const { tab, context } = props
   useOpenTab(context.savedView, tab)
+  const lines = useAddressLines()
   const targets = useFileTargets(context.org.id)
   const common = {
     files: props.files,
@@ -79,7 +81,7 @@ function TabPage(props: {
     targets,
   }
   return tab.kind === 'file' ? (
-    <FilePage {...common} key={tab.path} tab={tab} />
+    <FilePage {...common} key={tab.path} lines={lines} tab={tab} />
   ) : (
     <DiffPage {...common} key={tab.path} tab={tab} />
   )

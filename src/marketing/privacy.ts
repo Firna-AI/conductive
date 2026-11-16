@@ -24,7 +24,7 @@ export const privacyDocument: LegalDocument = {
   title: legalTitles.privacy,
   description: `The privacy notice of ${productName}.`,
   lead: text`This notice says which personal data ${productName} uses, why
-  it uses it, and who gets it. Effective date: 15 November 2026.`,
+  it uses it, and who gets it. Effective date: 16 November 2026.`,
   sections: [
     {
       title: 'Who is responsible',
@@ -93,14 +93,17 @@ export const privacyDocument: LegalDocument = {
           secret value that a script or an agent wrote there. ${productName}
           then deletes the cloud computer, unless a member restores the
           workspace before then.`,
-        paragraph`${productName} keeps each file that you send with a message
-          until it deletes the workspace of the message. It deletes an unsent
-          file 7 days after you upload it. A large text that you paste into
-          a message becomes such a file, and it uploads before you send it.`,
+        paragraph`${productName} keeps each attached file until the cloud
+          computer of its workspace has it and its first start succeeds.
+          It then deletes its own copy. The file stays in the cloud computer.
+          The message keeps the file's name, type, size, and path.
+          ${productName} deletes an unsent file 7 days after you upload it.
+          A large text that you paste into a message becomes such a file,
+          and it uploads before you send it.`,
         paragraph`An account that waits for app access stays until you ask
           for its deletion, as every other account does.`,
-        paragraph`Account records, the latest Terms acceptance, and
-          suspension records do not automatically expire when you stop
+        paragraph`Account records, the latest Terms acceptance, the time of
+          your last activity, and suspension records do not automatically expire when you stop
           using ${productName}. Workspace chat history, Mac command records,
           and secret request records stay while their org exists, including
           while a cloud computer is stopped. When ${productName} passes on

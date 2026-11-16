@@ -152,10 +152,11 @@ limits, their results, and what the chat shows. A workspace with
 - A saved end of the 15 minutes includes an end that Extend set.
 - Reason: the Mac then decides what runs on it, and no record on the
   server can allow a command.
-- The account page of the Mac app has a This Mac tab, after Keyboard
-  shortcuts. It shows the name of the Mac, whether the Mac is available,
-  and each always-allowed command by its exact text, with Remove. It also
-  shows each workspace with a grant, with the time left or Until you stop, and Stop.
+- The account page of the Mac app has a This Mac tab, after Stats. It
+  shows the name of the Mac, whether the Mac is available, and each
+  always-allowed command by its exact text, with Remove. It also shows
+  each workspace with a grant, with the time left or Until you stop, and
+  Stop.
 - A long always-allowed command shows its first three lines, and its last
   shown line fades out. Show all shows the whole command, and Show less
   makes it short again. A command that fits shows no button.

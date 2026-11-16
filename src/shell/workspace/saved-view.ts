@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react'
-import type { RunRoutine } from '../../chat/api/read-responses'
+import type { RunAutomation } from '../../chat/api/read-responses'
 import type { WorkspaceView } from '../../shared/workspace-view'
 import type { SavedView } from './features'
 
@@ -38,10 +38,10 @@ export function saveView(
 }
 
 /**
- * The routine whose run made the workspace, which the chat reads with the
+ * The automation whose run made the workspace, which the chat reads with the
  * view. Null for a workspace that a person created, and until the read.
  */
-export function useRunRoutine(saved: SavedView): RunRoutine | null {
-  const read = () => saved.getSnapshot().routine
+export function useRunAutomation(saved: SavedView): RunAutomation | null {
+  const read = () => saved.getSnapshot().automation
   return useSyncExternalStore(saved.subscribe, read, read)
 }

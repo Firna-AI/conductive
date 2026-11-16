@@ -14,7 +14,7 @@ decision number names a decision of the change that adds
 
 - An org owns its workspaces, its sections, its repositories, and the
   settings of its org image (decision 21).
-- An org also has members and [routines](routines.md).
+- An org also has members and [automations](automations.md).
 - All orgs share the app's GitHub App. The agent logins of a user serve all
   of that user's orgs (decision 21).
 - All orgs share the app's Boat account and its plan limits, as
@@ -123,6 +123,13 @@ decision number names a decision of the change that adds
   Move section up, Move section down, New section, and Delete section, in
   that order. The first section has no Move section up, and the last
   section has no Move section down.
+- New section opens the New section dialog, which asks for the name of
+  the section. New section in the menu of a section puts the new section
+  directly below that section. New section in the command palette puts
+  it at the end of the list. When the section of the menu is gone at the
+  create, the new section goes at the end. Reason: the user asked on 16
+  November 2026 that a new section show where the user made it, because
+  a field at the end of the list was far from the menu.
 - The order of the sections is the same for each member of the org. A
   collapse is for the member only. Reason: a section is a grouping that
   the people of the org define, as its name is.
@@ -212,8 +219,8 @@ decision number names a decision of the change that adds
 - Every member who sees a session can answer its secret requests
   (secrets decision 4 B).
 - Every member of the org sees all of its workspaces (decision 39).
-- Every member also sees all of the routines of the org and their runs.
-  Only the owner of a routine changes it, as [Access](routines.md#access)
+- Every member also sees all of the automations of the org and their runs.
+  Only the owner of an automation changes it, as [Access](automations.md#access)
   says (decision 502 B).
 - Every member can send messages in every workspace of the org. Each
   session runs on the agent login of its starter, as
@@ -269,8 +276,8 @@ decision number names a decision of the change that adds
   states the choice when no such admin exists (decision 123).
 - Reason: each workspace keeps a person in the org who is responsible for
   it.
-- Their routines in the org move to the member who gets the workspaces,
-  turned off, as [When the owner leaves](routines.md#when-the-owner-leaves)
+- Their automations in the org move to the member who gets the workspaces,
+  turned off, as [When the owner leaves](automations.md#when-the-owner-leaves)
   says (decision 508 E).
 - The last admin can leave only after they make another member an admin,
   or by deleting the org (decision 55). This also holds when the last

@@ -4,7 +4,7 @@ This doc holds the requirements and the decisions in force for the secrets
 of an org. A secret is a named value that agents use in one command at a
 time, after a member allows it. This doc covers the secrets and their
 storage, the Secrets tab, the rights of each role, Reveal, the mark for all
-agents, the grants, Capabilities with Mac access, routine runs, and the
+agents, the grants, Capabilities with Mac access, automation runs, and the
 risks that stay. [Secret requests](secret-requests.md) covers the two calls
 of the workspace tools, the requests and their time limit, late answers,
 temporary values, and what the chat shows. This doc belongs to
@@ -182,7 +182,7 @@ while the change is open. Its pull request keeps them after the merge.
 - The person who creates a workspace in New workspace can pre-approve each
   secret of the org, as [Capabilities](#capabilities) says.
 - A workspace that an agent creates with the workspace tools starts with
-  no pre-approval. So does the run workspace of a routine. Reason: the
+  no pre-approval. So does the run workspace of an automation. Reason: the
   task gives the pre-approval to a person who creates a workspace.
 - Every member can remove each pre-approval, each session approval, and
   each value for this workspace in the Capabilities of the workspace
@@ -220,14 +220,14 @@ while the change is open. Its pull request keeps them after the merge.
 ### Mac access
 
 - Mac access is on in each new workspace, also in a workspace that an
-  agent or a routine creates (secrets decision 9 A).
+  agent or an automation creates (secrets decision 9 A).
 - Reason: the Mac app still asks before each command that its user did
   not always allow. So the switch only adds a stop, and each Mac still
   decides, as decision 62 says.
 - While Mac access is off, the Worker refuses each Mac command request of
   the workspace, as [Mac commands](agent-tools.md#mac-commands) says.
 - Mac access that starts off was rejected, in each new workspace and in a
-  workspace that an agent or a routine creates. So was Mac access that a
+  workspace that an agent or an automation creates. So was Mac access that a
   new workspace copies from the workspace that creates it. Reason: each
   of them adds a refusal to the behaviour of decision 62.
 - A Mac access switch that each member keeps for each workspace was
@@ -238,7 +238,7 @@ while the change is open. Its pull request keeps them after the merge.
 - Risk: an agent in a workspace with Mac access off can create a new
   workspace, where Mac access is on. The first turn there has the same
   sender, so its requests reach the Mac of that sender.
-- Risk: a run workspace starts with Mac access on, and the routine owner
+- Risk: a run workspace starts with Mac access on, and the automation owner
   sends its first turn. So text that steers the agent of a run can ask for
   a command on the Mac of the owner. A command that the owner always
   allowed then runs with no question, as
@@ -246,16 +246,16 @@ while the change is open. Its pull request keeps them after the merge.
 
 ## Turns that no person started
 
-- A request in a routine run, or in a turn that an agent started, waits
+- A request in an automation run, or in a turn that an agent started, waits
   for a member as each other request does (secrets decision 5 C).
 - Reason: the time limit of a request ends the wait of its tool call. So
   an unanswered request keeps no cloud computer awake, and the late
   request stays in the chat.
 - A run that gets only the secrets for all agents, a picker of secrets on
-  the routine form, and a record of whether a person started each turn
+  the automation form, and a record of whether a person started each turn
   were rejected.
 - Risk: text from outside the org can steer such an agent, as
-  [Risks that stay open](routines.md#risks-that-stay-open) says. The agent
+  [Risks that stay open](automations.md#risks-that-stay-open) says. The agent
   then uses the grants of its workspace and its session with no request.
 - Risk: through the session calls, such an agent can also start turns in
   the other workspaces and sessions of the org. Those turns use the grants

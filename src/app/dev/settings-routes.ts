@@ -96,7 +96,7 @@ function updateSettings(
 
 /**
  * Chooses a repository of the org, or removes it. A removal turns off each
- * routine in the repository with the reason that its page shows, as the
+ * automation in the repository with the reason that its page shows, as the
  * Worker does.
  */
 function setRepository(
@@ -114,16 +114,16 @@ function setRepository(
     repository.id === repositoryId ? { ...repository, selected } : repository,
   )
   if (!selected) {
-    org.routines = org.routines.map((routine) =>
-      routine.repositoryId === repositoryId
+    org.automations = org.automations.map((automation) =>
+      automation.repositoryId === repositoryId
         ? {
-            ...routine,
+            ...automation,
             active: false,
             inactiveReason: 'repository_removed',
             nextRunAt: null,
             updatedAt: now,
           }
-        : routine,
+        : automation,
     )
   }
   if (changed) org.settingsRevision += 1

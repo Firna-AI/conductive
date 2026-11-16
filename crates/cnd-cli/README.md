@@ -46,6 +46,20 @@ SIGTERM and SIGINT end live turns, save pending events, and close the connection
 The installed service runs this Rust runner. Its first valid welcome confirms
 the release through the pinned executable. It keeps the Node-format state file.
 
+The runner checks downloaded releases through the updater's `DiskStore`.
+After an idle swap result, it runs its own pinned executable as
+`sudo -n -- <executable> update apply` with no standard input.
+It then checks `current` again. A newer release replaces the runner through
+`current/system/runner-start.sh` with the same process ID.
+An unchanged release starts a fresh connection and fresh handlers on the
+running version. A failed activation also reconnects when `current` still names
+the running release and no pending marker exists. Each process attempts only
+one idle update. A reconnect after that attempt disables further idle updates
+until the next service start. Failed activation after a state change, or failed
+execution, exits for the service's existing restart and rollback path.
+A shutdown received during activation prevents execution of the new release.
+Development builds disable idle swaps.
+
 `update check` uses `cli-updater` to read and compare the newest release.
 It downloads into a private version folder. It checks the program digest
 through `cli-updater` and checks every part digest before extraction.
@@ -119,10 +133,15 @@ The musl build needs a C compiler for musl. On Ubuntu, install the
 - [update/disk.rs](src/update/disk.rs) stores complete versions and locks.
 - [update_tests.rs](tests/update_tests.rs) checks real files and local HTTP downloads.
 - [runner_command.rs](src/runner_command.rs) composes the full runner and graceful shutdown.
+- [runner_update/idle.rs](src/runner_update/idle.rs) shares one idle update attempt across fresh runner instances and disables readiness afterward.
+- [runner_update/releases.rs](src/runner_update/releases.rs) checks complete releases and running-release confirmation through `DiskStore`.
+- [runner_update/swap.rs](src/runner_update/swap.rs) applies a release and checks whether to reconnect or exec the current launcher.
+- [runner_update/process.rs](src/runner_update/process.rs) runs noninteractive sudo and replaces the process without changing its ID.
 - [sandbox_command.rs](src/sandbox_command.rs) composes the relay and credential runtimes.
 - [tool_command.rs](src/tool_command.rs) composes the workspace CLI and MCP runtime.
 - [environment.rs](src/environment.rs) reads saved shell settings for tools and credentials.
 - [relay_start_tests.rs](tests/relay_start_tests.rs) executes the relay start script with a fake program.
+- [system_install_tests.rs](tests/system_install_tests.rs) executes the system installer with stub commands and checks the relay restart.
 - [cli_tests.rs](src/_tests_/cli_tests.rs) checks relay argument parsing.
 - [secret_command_tests.rs](tests/secret_command_tests.rs) checks the native secret routes, turn header, and filtered CLI streams.
 

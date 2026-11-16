@@ -167,16 +167,22 @@ A new build does not replace the existing computer.
 
 Conductive's own software updates itself in existing cloud computers.
 Fixes need no new workspace or manual install.
-The software checks for a newer release when it starts, including at each cloud computer start, and every hour while it runs.
+The software checks for a newer release when it starts, including at each cloud computer start, and every 10 minutes while it runs.
 It downloads a newer release in the background.
 A start never waits for a download.
-A downloaded release applies at the software's next start.
-Conductive does not restart the software during a session to apply an update.
+A downloaded release applies at the software's next start or when the workspace has been idle for 2 minutes.
+The workspace is idle when no agent turn runs in any session and no message waits.
+
+The update never interrupts a running turn.
+Agents keep their context.
+Programs that agents started, including development servers, keep running.
+Terminals keep running.
+Terminal and preview software update at the next cloud computer start.
 
 A failed check or download leaves the current release in use.
 Conductive checks each downloaded file against its expected digest and refuses a broken release.
 The previous release stays available.
-If a new release fails to start, the next start uses the previous release.
+If a new release fails to start, the previous release starts again.
 An older cloud computer without the update program gets it at its next start.
 
 An automatic software update gives an existing workspace the server list in **Preview**.

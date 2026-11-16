@@ -8,12 +8,12 @@ import {
   type OrgSettings,
   type Repository,
 } from '../shared/org-settings'
-import { routinesPath } from '../shared/routines'
+import { automationsPath } from '../shared/automations'
 import { sectionsPath, type Section } from '../shared/sections'
 import { workspacesPath } from '../shared/workspaces'
 import { items, record } from './api/parse'
 import { readSection } from './api/read-core'
-import { readRoutines, type ListedRoutine } from './api/read-routines'
+import { readAutomations, type ListedAutomation } from './api/read-automations'
 import { readWorkspaces } from './api/read-workspaces'
 import {
   readBuildResponse,
@@ -26,7 +26,7 @@ import { listWithArchives } from './archive-overlay'
 import { Creations } from './creations'
 import { workspaceUpdated, type ListData } from './list-changes'
 import { NewWorkspaceModel } from './new-workspace-model'
-import { buildsWait, listWait, onEntry, routinesWait } from './org-waits'
+import { buildsWait, listWait, onEntry, automationsWait } from './org-waits'
 import { Refresher, type Refreshing } from './refresh'
 import { Resource } from './resource'
 import { SecretsModel } from './secrets-model'
@@ -40,12 +40,12 @@ import {
 } from './suspension'
 
 export type OrgPart =
-  'list' | 'repositories' | 'builds' | 'members' | 'routines'
+  'list' | 'repositories' | 'builds' | 'members' | 'automations'
 
 /**
  * The data of one org: its list of sections and workspaces, its
  * repositories, the builds and settings of its cloud computer, its
- * members, its routines, and its secrets. A part reads while a screen shows
+ * members, its automations, and its secrets. A part reads while a screen shows
  * it, as `watch` says. The Cloud computer tab reads the settings itself, and
  * the Secrets tab and the Capabilities control read the secrets. Each
  * request of the org that the API refuses with `org_suspended` goes to
@@ -60,7 +60,7 @@ export class OrgModel {
     readonly repositories: Resource<readonly Repository[]>
     readonly builds: Resource<BuildsResponse>
     readonly members: Resource<MembersResponse>
-    readonly routines: Resource<readonly ListedRoutine[]>
+    readonly automations: Resource<readonly ListedAutomation[]>
     /**
      * The settings of the cloud computer. Every opening of the Cloud
      * computer tab shares them, so a save from a closed tab still shows.
@@ -82,7 +82,7 @@ export class OrgModel {
   readonly repositories: Readable<Loadable<readonly Repository[]>>
   readonly builds: Readable<Loadable<BuildsResponse>>
   readonly members: Readable<Loadable<MembersResponse>>
-  readonly routines: Readable<Loadable<readonly ListedRoutine[]>>
+  readonly automations: Readable<Loadable<readonly ListedAutomation[]>>
   /** The secrets, which the Secrets tab and Capabilities read when they show. */
   readonly secrets: SecretsModel
   /** The create requests of this tab, which a sign-out ends. */
@@ -121,14 +121,14 @@ export class OrgModel {
       members: new Resource<MembersResponse>(() =>
         api.get(membersPath(orgId), readMembers),
       ),
-      routines: new Resource<readonly ListedRoutine[]>(() =>
-        api.get(routinesPath(orgId), readRoutines),
+      automations: new Resource<readonly ListedAutomation[]>(() =>
+        api.get(automationsPath(orgId), readAutomations),
       ),
       settings: new Resource<OrgSettings>(() =>
         api.get(orgSettingsPaths.settings(orgId), readSettings),
       ),
     }
-    const { list, repositories, builds, members, routines } = this.resources
+    const { list, repositories, builds, members, automations } = this.resources
     this.secrets = new SecretsModel(api, orgId, services.now)
     this.workspaceActions = new WorkspaceActions(this)
     this.sections = partOf(list.store, (value) => value.sections)
@@ -141,13 +141,13 @@ export class OrgModel {
     this.repositories = repositories.store
     this.builds = builds.store
     this.members = members.store
-    this.routines = routines.store
+    this.automations = automations.store
     this.parts = {
       list: new Refresher(list, listWait, this.services),
       repositories: new Refresher(repositories, onEntry, this.services),
       builds: new Refresher(builds, buildsWait, this.services),
       members: new Refresher(members, onEntry, this.services),
-      routines: new Refresher(routines, routinesWait, this.services),
+      automations: new Refresher(automations, automationsWait, this.services),
     }
   }
 

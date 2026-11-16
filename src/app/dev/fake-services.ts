@@ -28,7 +28,7 @@ import { APP_VERSION } from '../version'
 import { operatorRoutes } from './operator-routes'
 import { readDevOptions } from './options'
 import { orgRoutes } from './org-routes'
-import { routineRoutes } from './routine-routes'
+import { automationRoutes } from './automation-routes'
 import { devFileTransport } from './progress-fixture'
 import { routeFetch, RouteError, type Route } from './router'
 import { runRoutes } from './run-routes'
@@ -51,11 +51,19 @@ import { workspaceRoutes } from './workspace-routes'
  */
 export function createFakeServices(search: string): AppServices {
   const options = readDevOptions(search)
-  const server = new FakeApiServer(options.server)
+  const state = seedState(options)
+  const workspaceStates = new Map(
+    state.orgs.flatMap((org) =>
+      org.workspaces.map(
+        (workspace) => [workspace.id, workspace.state] as const,
+      ),
+    ),
+  )
+  const server = new FakeApiServer({ ...options.server, workspaceStates })
   const offset = FAKE_TIME - Date.now()
   const now = () => Date.now() + offset
   const newId = () => crypto.randomUUID()
-  const backend = createBackend(seedState(options), server.events, now, newId)
+  const backend = createBackend(state, server.events, now, newId)
   seedSecretRequests(backend, server.events, options.secrets)
   const signedOut: Route[] = options.signedOut
     ? [
@@ -84,7 +92,7 @@ export function createFakeServices(search: string): AppServices {
     ...secretRoutes(backend),
     ...secretRequestRoutes(backend),
     ...buildRoutes(backend),
-    ...routineRoutes(backend),
+    ...automationRoutes(backend),
     ...runRoutes(backend),
     ...operatorRoutes(backend),
   ]

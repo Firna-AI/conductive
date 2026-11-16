@@ -7,7 +7,9 @@ their links, and the names of workspaces and sessions. It belongs to
 [Chat and events](chat-and-events.md). The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
-says.
+says. A title image decision number names a decision of the change that
+leaves the names of attached images out of titles, as
+[Messages and attachments](messages-and-attachments.md) says.
 
 ## Agents
 
@@ -34,9 +36,9 @@ says.
     [Messages](messages-and-attachments.md#messages) says
   - through a call of the agent tools in a turn that the member sent, as
     [The sender](session-calls.md#the-sender) says
-- A routine run starts the first session of its workspace in the name of
-  the routine owner, as
-  [A run acts as its owner](routine-runs.md#a-run-acts-as-its-owner) says.
+- An automation run starts the first session of its workspace in the name of
+  the automation owner, as
+  [A run acts as its owner](automation-runs.md#a-run-acts-as-its-owner) says.
 - The session record names its starter in `startedBy`. A session without a
   known starter has no login that can be used.
 - While the starter shares the login, the messages of the other members
@@ -110,9 +112,15 @@ says.
   no title. A message whose text holds only the mentions of its own
   attached files counts as a message with no text.
 - In a title from a message, each mention of one of its attached files
-  becomes the name of the file (decision 262 D). Reason: a path makes a
+  that is not an image becomes the name of the file (decision 262 D). Reason: a path makes a
   poor title. A title with the copy path of each file was rejected for
   that reason.
+- In a title from a message, each mention of an attached image goes out,
+  with no name (title image decision 2 A). The workspace title follows the
+  same rule, as [Messages](messages-and-attachments.md#messages) says.
+  Reason: image names such as "Screenshot 2026-11-16 at 10.23.45.png" do
+  not name the task. Different rules for the two titles were rejected,
+  because an image name is just as poor in a session title.
 - In a title from a message, each run of spaces becomes one space. The app
   removes one final full stop, but it keeps an ellipsis.
 - A title from a message holds at most 60 characters. The limit counts

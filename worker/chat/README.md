@@ -184,11 +184,11 @@ runner commands.
 [Retries](retries.md) gives the stored retry state, and the rules of the
 retry route for `Session.retryMessageId`.
 
-## Routine first turns
+## Automation first turns
 
 A run workspace reports the stored outcome of its first turn to its D1 run record.
 The report keeps the failure cause, including a login failure before dispatch.
-A finished first turn resets the routine's consecutive failure count.
+A finished first turn resets the automation's consecutive failure count.
 A failed first turn adds one failure and stays failed after an in-workspace retry.
 Later turns do not change that run outcome.
 Chat commits the turn before it reports the outcome.
@@ -224,7 +224,7 @@ Restart keeps that storage, and disposal removes it.
 
 ## Seams for other milestones
 
-[Chat attachments](attachments.md) gives the internal storage boundary, acceptance proof, copy preparation and order, agent input, and cleanup integration.
+[Chat attachments](attachments.md) gives storage, message proofs, shared file transfers, the one-use machine download route, dispatch order, agent input, and cleanup.
 Attachment copies use the provider account of the workspace record.
 Each copy checks that account and the sandbox ID before each file and after the last file.
 

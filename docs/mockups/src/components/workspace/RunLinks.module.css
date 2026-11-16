@@ -23,7 +23,7 @@
   white-space: nowrap;
 }
 
-.routine,
+.automation,
 .pullRequest {
   color: var(--ui-link);
   font-weight: 500;
@@ -31,8 +31,8 @@
   white-space: nowrap;
 }
 
-/* A long routine name gives up its room before the number of the pull request. */
-.routine {
+/* A long automation name gives up its room before the number of the pull request. */
+.automation {
   overflow: hidden;
   min-width: 0;
   text-overflow: ellipsis;
@@ -42,7 +42,7 @@
   flex-shrink: 0;
 }
 
-.routine:hover,
+.automation:hover,
 .pullRequest:hover {
   text-decoration: underline;
 }

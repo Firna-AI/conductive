@@ -30,7 +30,7 @@ export const termsDocument: LegalDocument = {
   at ${appDomain}, and in the Mac app. You accept their current version
   each time that you continue with GitHub to sign in. ${productName} keeps
   the latest version that you accepted, and the time when you first
-  accepted it. Effective date: 12 November 2026.`,
+  accepted it. Effective date: 13 November 2026.`,
   sections: [
     {
       title: `Who runs ${productName}`,
@@ -74,8 +74,8 @@ export const termsDocument: LegalDocument = {
             For an own endpoint login, model use bills where the endpoint's
             owner runs it. You are responsible for the endpoint that you
             connect and for following its terms.
-            The runs of a routine start their sessions on the login of the
-            member who owns the routine.
+            The runs of an automation start their sessions on the login of the
+            member who owns the automation.
             ${productName} keeps agent logins outside cloud computers.
             Each turn gets a temporary credential for model requests.
             The agents send their model requests and receive their answers
@@ -165,11 +165,11 @@ export const termsDocument: LegalDocument = {
           notice.`,
         paragraph`A suspension of an account ends its sign-in. It stops the
           cloud computers of the workspaces that the account owns, closes
-          their previews, and blocks new starts. Its routines start no
+          their previews, and blocks new starts. Its automations start no
           runs.`,
         paragraph`A suspension of an org stops each cloud computer of the org,
           closes its previews and terminals, and blocks each start, build,
-          and routine run. Its members keep their accounts and their other
+          and automation run. Its members keep their accounts and their other
           orgs. They can still open the org and read its chat history.
           Nothing in the org can change, except that a member can leave it.
           An admin can leave only while another admin whose account is not
@@ -201,13 +201,17 @@ export const termsDocument: LegalDocument = {
         paragraph`Your repositories, files, and agent sessions live in the
           cloud computers that ${productName} runs for your org.
           ${productName} keeps the chat history of each workspace, so that
-          you can read it while the cloud computer is stopped. It also keeps
-          the files that you attach to messages, also the file that a large
-          paste becomes. It copies each file to the
-          cloud computer when the agent starts work on its message. When it
-          passes on the model requests of a cloud computer, it keeps no
-          copy of a request or of its answer. It writes no body or header
-          value of them to its logs.`,
+          you can read it while the cloud computer is stopped.`,
+        paragraph`The cloud computer downloads a new attachment when the
+          agent starts work on its message.
+          A large text that you paste becomes an attached file.
+          ${productName} keeps each attached file until the cloud
+          computer of its workspace has it and its first start succeeds.
+          It then deletes its own copy. The file stays in the cloud computer.
+          ${productName} deletes an unsent file 7 days after you upload it.`,
+        paragraph`When ${productName} passes on the model requests of a cloud
+          computer, it keeps no copy of a request or of its answer.
+          It writes no body or header value of them to its logs.`,
         paragraph`Continue starts a new branch from the latest default branch
           of the repository. It keeps the cloud computer and its sessions.
           Changed files move to the new branch. Commits that are not pushed

@@ -142,7 +142,7 @@ and deletion therefore change the next filter read. Every live temporary
 value also enters the filter, including a supplied value before a run.
 The filter covers runner text and each request's reason and command.
 Expiry and removal also remove temporary copies from encrypted saved
-filter state. No routine-specific rule changes these grants.
+filter state. No automation-specific rule changes these grants.
 
 ## Key code
 

@@ -62,7 +62,7 @@ export interface WorkspaceRequest {
   first: SendMessageRequest
   /**
    * A first start that fails keeps its workspace in the error state, as
-   * the Worker keeps the workspace of a routine run.
+   * the Worker keeps the workspace of an automation run.
    */
   keepFailedStart?: boolean
 }

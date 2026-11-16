@@ -52,9 +52,9 @@ and Mac access on.
 The org list uses each person's saved order. A new membership goes at the end.
 [Org rail order](../../docs/protocol/org-rail-order.md) states the requirements.
 Its `ApiErrorBody` carries the error code and message.
-The optional `error.details` identifies an unknown routine author login.
+The optional `error.details` identifies an unknown automation author login.
 It carries `login`, `triggerIndex`, and `list`.
-`triggerIndex` is zero-based in the routine's complete trigger list.
+`triggerIndex` is zero-based in the automation's complete trigger list.
 `list` uses the author-filter request key, `is` or `isNot`.
 Errors without details keep the code and message only.
 `EmptyRequest` means an empty JSON object, including DELETE requests.
@@ -67,10 +67,21 @@ confirmations, reports, and credentials.
 `generated/` contains `Attachment`, `MessageSender`, and `UserMessage`.
 `messages.ts` owns attachment upload targets, paths, and browser requests.
 `AttachmentUploadTarget` names a workspace or stable first-message ID.
-`attachmentUploadPath` selects the workspace or org-scoped draft base path.
-`ATTACHMENT_MAX_BYTES` is the decoded file limit.
-`attachmentUploadUrl` appends the filename, media type, and first-message target as URL data.
-The browser posts one raw file as `application/octet-stream` with its known byte length.
+Each upload path starts at the base of its target: a workspace, or the drafts of the org.
+`ATTACHMENT_MAX_BYTES` is the decoded file limit of 1,000,000,000 bytes.
+`ATTACHMENT_PART_BYTES` is the part size of 67,108,864 bytes.
+`attachmentUploadStartPath` builds the JSON start path.
+`StartAttachmentUploadRequest` declares `name`, `mediaType`, and `sizeBytes`.
+A draft request also gives `messageId`.
+`StartAttachmentUploadResponse` gives `uploadId`, `partSizeBytes`, and `partCount`.
+`attachmentUploadPartPath` puts the upload ID and part number in the raw PUT path.
+Each part uses `application/octet-stream` and its known byte length.
+Its reply is `AttachmentUploadPart`, with `partNumber` and `etag`.
+`attachmentUploadCompletePath` builds the JSON complete path.
+`CompleteAttachmentUploadRequest.parts` carries the confirmed receipts.
+A complete reply uses `UploadAttachmentResponse`, including the attachment's copy path.
+Both targets use these builders and types.
+The app uploads each file in parts.
 `Attachment.path` is the copy path of the file, relative to the workspace repository.
 The upload reply gives it, so each upload has its path before Send.
 Each file of an accepted message gives it too, and the browser builds no path.
@@ -284,5 +295,5 @@ the session addresses, the Markdown transcripts, and the shared words and
 parts of a transcript. It also covers the mentions, the attachment paths,
 and the session titles. Then it gives the contracts of the other areas,
 such as ports, orgs, members, the waitlist, workspaces, GitHub, feedback,
-and routines. It ends with links to the browser fakes, the runner fakes,
+and automations. It ends with links to the browser fakes, the runner fakes,
 and the migrations.
