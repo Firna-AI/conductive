@@ -362,6 +362,56 @@ and added decisions 5 and 6. Its report is in
 - **Action:** ask the user, because B adds a copy rule that no requirement
   covers.
 
+### 7. A Markdown link with a title shows as typed
+
+- **Answer:** B, on 16 November 2026.
+- **Severity:** Low. **Likelihood:** Rare. **Effort:** Small.
+- **Source:** Review, round 1, from the check of finding 1.
+- **Category:** Product bug.
+- **Location:** `src/chat/links/chat-tokens.ts`, `markdownLinkAt`.
+- **Background:** A link title is the quoted text after the address, as in
+  `[docs](https://example.com/a "Docs")`. The file preview reads a title
+  and shows the link as its label. Chat text read no title.
+- **Problem:** The chat showed such a link as raw Markdown, and its address
+  then read as a bare address that kept its backslash escapes.
+- **Root question:** How does chat text show a Markdown link that has a
+  title?
+- **Options:**
+  - **A.** Keep it as typed. Effort: Small.
+  - **B.** Read the title as the file preview does, and show the link as
+    its label. Drop the title, because the title of a link gives its real
+    address. Effort: Small.
+  - **C.** Do B, and show the title after the label. Effort: Small.
+- **Left out:** The link title as the tooltip, because the tooltip gives
+  the real address.
+- **Recommendation:** B. The chat and the file preview then read the same
+  Markdown the same way.
+
+### 8. A label that shows nothing gives an empty link
+
+- **Answer:** B, on 16 November 2026.
+- **Severity:** Low. **Likelihood:** Rare. **Effort:** Small.
+- **Source:** Implementation, Milestone 5.
+- **Category:** Product bug.
+- **Location:** `src/markdown/web-links.ts`, `readsAsAddress`.
+- **Background:** The label test shows the real address in place of a
+  label that reads as an address.
+- **Problem:** A label that shows nothing, such as `[](https://x.example)`,
+  `[**](https://x.example)`, or invisible characters only, gave a link with
+  no visible words that the keyboard could still focus.
+- **Root question:** What does a reader see for a link whose label shows
+  nothing?
+- **Options:**
+  - **A.** Keep the empty link. Effort: Small.
+  - **B.** Treat a label that shows nothing as a label that reads as an
+    address, and show the real address. Effort: Small.
+  - **C.** Show such a link as typed, with its brackets. Effort: Small.
+- **Left out:** Remove the link, because each address of chat text is a
+  link.
+- **Related:** Decision 5 sets the other label rules. B extends the label
+  test that every option of decision 5 keeps.
+- **Recommendation:** B. The reader then always sees where the link leads.
+
 ## Design calls
 
 These calls are mine, made on 10 November 2026 under the decision test.
@@ -462,6 +512,17 @@ The implementation of Milestones 5 and 6 made these calls on 13 November
 - A file keeps each address that its parser accepts as a link, also one
   that chat text keeps as text. Reason: the file preview gets no stricter
   rule, as the design calls above say.
+
+The implementation of the answers to decisions 7 and 8 made this call on
+16 November 2026, under the same test:
+
+- A Markdown link of a sent message and of the message field stands on
+  one line, as its label already does. A line break inside its
+  parentheses makes it no Markdown link, and its address reads as a bare
+  address, as on `main`. Reason: no chip then takes in a line break and
+  the text around it, and the spacing rule of the field reads one line.
+  An answer joins the lines of a paragraph before it reads them, so its
+  links read as in the file preview.
 
 ## Components
 

@@ -1,4 +1,4 @@
-import { readsAsAddress, type WebLink } from '../../markdown/web-links'
+import { labelHidesAddress, type WebLink } from '../../markdown/web-links'
 import { attachmentForMention } from '../../shared/attachment-mentions'
 import type { FileEntry } from '../../shared/files'
 import type { Attachment } from '../../shared/messages'
@@ -59,10 +59,11 @@ export type MentionLookup = (mention: Mention) => FileEntry | undefined
  * `web` says where each other address leads. A bare address shows as the
  * text has it. With `strong`, as in an answer, a Markdown link shows as its
  * label, with its code and bold, or as its address when the label reads as
- * one. In a message of a member, a Markdown link shows as typed, and its
- * address is a link as a bare address is. So does the Markdown of an image,
- * such as `![alt](address)`. A Markdown link whose address is no link
- * shows as typed, with its code and bold.
+ * one or shows nothing. Its link title does not show. In a message of a
+ * member, a Markdown link shows as typed, and its address is a link as a
+ * bare address is. So does the Markdown of an image, such as
+ * `![alt](address)`. A Markdown link whose address is no link shows as
+ * typed, with its code and bold.
  *
  * With `strong`, `**` marks bold around text, chips, and links. Bold ends
  * at code, as it did before. With `mentions`, as in a message of a member,
@@ -138,7 +139,7 @@ export function chatParts(
       const link = options.strong ? options.web(href) : undefined
       if (link) {
         const { label } = markdown
-        const words = readsAsAddress(label)
+        const words = labelHidesAddress(label)
           ? addressWords(href)
           : labelWords(label)
         addLink(link, words)

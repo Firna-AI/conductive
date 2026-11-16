@@ -80,13 +80,27 @@ requirements.
   server with its port, or another web page. The caller supplies the app
   origin and a page check built on `parseRoute`. `appAddress` joins the
   raw path segments with one slash, then adds the query and hash.
-- `readsAsAddress` tests a Markdown label as it shows, without code marks,
-  bold marks, invisible characters, or spaces at its ends.
-- `src/markdown/markdown-destination.ts` supplies `readMarkdownAddress`.
-  Chat text, the message field, the mockups, and the file preview share
-  its address boundaries and escape decoding. It returns the decoded
-  address and its source offsets.
-- `chatParts` uses `bareAddressAt` and `readMarkdownAddress`, through the
+- `labelHidesAddress` tests a Markdown label as it shows, without code
+  marks, bold marks, invisible characters, or spaces at its ends. A label
+  that then shows nothing, holds `://`, or starts with `www.` hides where
+  its link leads.
+- `src/markdown/markdown-destination.ts` supplies `readInlineTarget`. It
+  reads the target of an inline link after its `(`: the spaces and line
+  breaks around the address, the address, an optional link title, and the
+  `)`. Chat text, the message field, the mockups, and the file preview
+  share it, with its address boundaries, its escape decoding, and its
+  length limits. It returns the decoded address, its source offsets, and
+  the index after the `)`.
+- Chat text, the message field, and the mockups read each target through
+  `lineTargets` of the same module. It keeps each Markdown link on one
+  line, as its label is. A line break inside its parentheses makes it no
+  Markdown link, so no chip of a sent message or of the field takes in a
+  line break. An answer joins the lines of a paragraph before it reads
+  them, so it reads a link that spans lines as the file preview does.
+- `lineTargets` reads each target of a text once. Keep it so. The readers
+  try a link at each `[`, and many `[` can reach the same `(`. One read
+  for each `[` would take seconds for a crafted answer.
+- `chatParts` uses `bareAddressAt` and `lineTargets`, through the
   tokenizer of `links/chat-tokens.ts`. The message field uses
   `webAddressParts` and reads no code, so its addresses stay text.
 
@@ -99,14 +113,15 @@ text. These parts read and draw them:
   that is no chip and that its `web` reader accepts. The part holds the
   `WebLink` and its words. A bare address shows as the text has it. In an
   answer, a Markdown link shows as its label, with the code and bold of the
-  label. Its `**` marks bold only inside the label. A label that
-  `readsAsAddress` shows the address as the text has it.
-- In a sent message, a Markdown link shows as typed. Its brackets and its
-  label read again as text and code, with no link, and its address reads
-  as a bare address: a chip, a link, or text. The Markdown of an image,
-  `![alt](address)`, shows as typed in the same way, also in an answer. A
-  Markdown link whose address is no link shows as typed, with its code and
-  bold.
+  label. Its `**` marks bold only inside the label, and its link title
+  does not show. A label that hides the address, by `labelHidesAddress`,
+  shows the address as the text has it.
+- In a sent message, a Markdown link shows as typed. Its brackets, its
+  label, and its link title read again as text and code, with no link, and
+  its address reads as a bare address: a chip, a link, or text. The
+  Markdown of an image, `![alt](address)`, shows as typed in the same way,
+  also in an answer. A Markdown link whose address is no link shows as
+  typed, with its code and bold.
 - Inline code whose text, without the spaces at its ends, is one address
   that the reader accepts holds that link, as `CodePart.link`. A
   workspace link alone in code is such a link, not a chip. Code in a label

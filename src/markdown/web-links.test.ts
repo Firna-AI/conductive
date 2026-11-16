@@ -3,7 +3,7 @@ import { parseRoute, routes } from '../app/router'
 import {
   appAddress,
   bareAddressAt,
-  readsAsAddress,
+  labelHidesAddress,
   webAddressParts,
   webLink,
   type WebLinkContext,
@@ -144,11 +144,18 @@ describe('web addresses', () => {
       '**https://github.com**',
       ' https\u200b://github.com ',
       '\u2060 WWW.GitHub.com ',
+      // A label that shows nothing: empty, marks only, invisible characters
+      // only, or spaces only.
+      '',
+      '**',
+      '``',
+      '\u200b\u2060',
+      ' \u00a0 ',
     ]) {
-      expect(readsAsAddress(label), label).toBe(true)
+      expect(labelHidesAddress(label), JSON.stringify(label)).toBe(true)
     }
     for (const label of ['PR #2', 'github.com/acme', '**docs**']) {
-      expect(readsAsAddress(label), label).toBe(false)
+      expect(labelHidesAddress(label), JSON.stringify(label)).toBe(false)
     }
   })
 
@@ -207,20 +214,20 @@ describe('web addresses', () => {
     })
   })
 
-  test('keeps titles and spaces around a Markdown address as typed', () => {
+  test('reads a link title and the spaces around a Markdown address as part of the link, and keeps them as typed text without a label', () => {
+    const href = 'https://example.com/docs'
     for (const [before, after] of [
       ['[docs](', ' "Guide")'],
       ['[docs]( ', ' )'],
+      ['[docs]( <', "> 'See https://example.com/guide' )"],
     ]) {
-      expect(
-        webAddressParts(`${before}https://example.com/docs${after}`),
-      ).toEqual([
+      const source = `${before}${href}${after}`
+      expect(webAddressParts(source)).toEqual([
+        { kind: 'link', href, source, label: 'docs' },
+      ])
+      expect(webAddressParts(source, false)).toEqual([
         { kind: 'text', text: before },
-        {
-          kind: 'link',
-          href: 'https://example.com/docs',
-          source: 'https://example.com/docs',
-        },
+        { kind: 'link', href, source: href },
         { kind: 'text', text: after },
       ])
     }

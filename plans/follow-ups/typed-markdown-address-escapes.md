@@ -7,7 +7,7 @@
 - **Reason:** Only a backslash escape inside a Markdown address meets the bug, and members and agents seldom write one.
 
 - **Terms:**
-  - **Shared destination reader:** `readMarkdownAddress` in `src/markdown/markdown-destination.ts`. The chat and the file preview read each Markdown address with it. It decodes backslash escapes, such as `\(`, and gives the source offsets of the address.
+  - **Shared destination reader:** `readInlineTarget` in `src/markdown/markdown-destination.ts`. The chat and the file preview read each Markdown address with it. It decodes backslash escapes, such as `\(`, and gives the source offsets of the address.
   - **Typed link:** a Markdown link that chat text shows as typed: each Markdown link of a sent message, the Markdown of an image, and a Markdown link whose address stays text.
 - **Background:**
   - `docs/protocol/chat-links.md` says that a sent message shows a Markdown link as typed, as the member typed it, and its address is a link.
@@ -25,6 +25,5 @@
 - **Left out:** Stop the decoding: the link then opens another page again. Show the decoded address and change the doc: it breaks the rule that a sent message shows as typed. Read the typed Markdown again as bare addresses, as the mockups do: a label with a `]` in code then reads the raw address, which opens another page.
 - **Wider fix:** B. The token then holds both forms, and no consumer derives the source again.
 - **Previous examples:** None found. The decoding came with the shared destination reader on 14 November 2026.
-- **Related:** `plans/follow-ups/chat-markdown-link-title.md`: a Markdown link with a title reads as a bare address that keeps its escapes, so `[docs](https://example.com/a\(b\) "Docs")` opens `https://example.com/a/(b/)`. Its option B removes that case.
 - **Recommendation:** B. It removes the only path where a decoded address becomes shown text, at Small effort.
 - **Action:** fix after merge, apply B, because only an unusual input meets the bug.

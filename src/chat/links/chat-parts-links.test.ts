@@ -142,8 +142,11 @@ describe('the links of chat text', () => {
     'https://en.wikipedia.org/wiki/Function_(mathematics)',
     '<https://en.wikipedia.org/wiki/Function_(mathematics)>',
     String.raw`https://en.wikipedia.org/wiki/Function_\(mathematics\)`,
+    'https://en.wikipedia.org/wiki/Function_(mathematics) "Function"',
+    "<https://en.wikipedia.org/wiki/Function_(mathematics)> 'Function'",
+    String.raw` https://en.wikipedia.org/wiki/Function_\(mathematics\) (Function) `,
   ])(
-    'an answer links the whole decoded destination of [Wiki](%s)',
+    'an answer shows [Wiki](%s) as its label alone and links its whole decoded destination',
     (address) => {
       expect(answer(`Read [Wiki](${address}).`)).toEqual([
         text('Read '),
@@ -162,6 +165,14 @@ describe('the links of chat text', () => {
       text('[Wiki](<'),
       web(href, plain(href)),
       text('>)'),
+    ])
+    // The link title stays text, also the address in it, and the `!` at the
+    // end of the address stays in the link.
+    const yahoo = 'https://en.wikipedia.org/wiki/Yahoo!'
+    expect(sent(`[Yahoo](${yahoo} "About https://www.yahoo.com")`)).toEqual([
+      text('[Yahoo]('),
+      web(yahoo, plain(yahoo)),
+      text(' "About https://www.yahoo.com")'),
     ])
   })
 

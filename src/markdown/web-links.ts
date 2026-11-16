@@ -1,4 +1,4 @@
-import { readMarkdownAddress } from './markdown-destination'
+import { lineTargets } from './markdown-destination'
 
 /** A web address in text, with its source and optional Markdown label. */
 export type WebAddressLink = {
@@ -83,38 +83,46 @@ export function bareAddressAt(text: string, at: number): string | null {
   return address || null
 }
 
-/** Text and its addresses. With `markdown`, a Markdown link stays one part. */
+/**
+ * Text and its addresses. With `markdown`, a Markdown link stays one part.
+ * Without it, only the address of a Markdown link is a part, and the rest
+ * of the link, such as its label and its link title, stays text. A Markdown
+ * link stands on one line, as in chat text, so no chip takes in a line
+ * break.
+ */
 export function webAddressParts(
   text: string,
   markdown = true,
 ): WebAddressPart[] {
   const parts: WebAddressPart[] = []
+  const targetAt = lineTargets(text)
   let end = 0
   for (let index = 0; index < text.length;) {
     let href: string | null = null
     let source = ''
     let label: string | undefined
     let start = index
+    let next = index
     if (text[index] === '[') {
       markdownLabel.lastIndex = index
       const match = markdownLabel.exec(text)
-      const address = match
-        ? readMarkdownAddress(text, index + match[0].length)
-        : null
-      if (address && text[address.next] === ')') {
-        href = address.destination
+      const target = match ? targetAt(index + match[0].length) : null
+      if (target) {
+        href = target.destination
+        next = target.next
         if (markdown) {
-          source = text.slice(index, address.next + 1)
+          source = text.slice(index, target.next)
           label = match?.[1]
         } else {
-          start = address.start
-          source = text.slice(address.start, address.end)
+          start = target.start
+          source = text.slice(target.start, target.end)
         }
       }
     }
     if (href === null && text.startsWith('http', index)) {
       href = bareAddressAt(text, index)
       source = href ?? ''
+      next = index + source.length
     }
     if (href === null) {
       index += 1
@@ -126,20 +134,26 @@ export function webAddressParts(
         ? { kind: 'link', href, source }
         : { kind: 'link', href, source, label },
     )
-    index = start + source.length
-    end = index
+    end = start + source.length
+    index = next
   }
   if (end < text.length) parts.push({ kind: 'text', text: text.slice(end) })
   return parts
 }
 
-/** Tests the visible label, without code, bold, or invisible characters. */
-export function readsAsAddress(label: string): boolean {
+/**
+ * Whether a Markdown label hides where its link leads, so that the link
+ * shows its real address in place of the label. The label is tested as it
+ * shows, without code marks, bold marks, invisible characters, or spaces
+ * at its ends. It hides the address when it then shows nothing, holds
+ * `://`, or starts with `www.` in any case.
+ */
+export function labelHidesAddress(label: string): boolean {
   const shown = label
     .replaceAll('`', '')
     .replaceAll('**', '')
     .replace(invisible, '')
     .trim()
     .toLowerCase()
-  return shown.includes('://') || shown.startsWith('www.')
+  return shown === '' || shown.includes('://') || shown.startsWith('www.')
 }

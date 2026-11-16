@@ -1,4 +1,7 @@
-import { readMarkdownAddress } from '../../markdown/markdown-destination'
+import {
+  lineTargets,
+  type TargetReader,
+} from '../../markdown/markdown-destination'
 import { bareAddressAt } from '../../markdown/web-links'
 import { mentionAt, type Mention } from '../../shared/mention-text'
 
@@ -6,9 +9,9 @@ import { mentionAt, type Mention } from '../../shared/mention-text'
 export interface MarkdownLink {
   /** The text between the brackets. */
   label: string
-  /** The text before the address, such as `[docs](` or `[docs](<`. */
+  /** The text before the address, such as `[docs](` or `[docs]( <`. */
   before: string
-  /** The text after the address: `)`, or `>)`. */
+  /** The text after the address, such as `)`, `>)`, or ` "Docs")`. */
   after: string
   /** A `!` stands before it, so it is the Markdown of an image. */
   image: boolean
@@ -45,10 +48,16 @@ interface Reading {
 
 /**
  * The Markdown link whose `[` stands at `at`, or null. Its label ends at the
- * first `]` outside code, on the same line, and its target follows at once.
- * So a label can hold code or bold.
+ * first `]` outside code, and its target follows at once, with an optional
+ * link title, as the file preview reads it. So a label can hold code or
+ * bold. The whole link stands on one line, as in the message field, so no
+ * chip takes in a line break.
  */
-function markdownLinkAt(text: string, at: number): LinkToken | null {
+function markdownLinkAt(
+  text: string,
+  at: number,
+  targetAt: TargetReader,
+): LinkToken | null {
   let code = false
   for (let index = at + 1; index < text.length; index += 1) {
     const char = text[index]
@@ -56,17 +65,16 @@ function markdownLinkAt(text: string, at: number): LinkToken | null {
     if (char === '`') code = !code
     else if (char === ']' && !code) {
       if (text[index + 1] !== '(') return null
-      const address = readMarkdownAddress(text, index + 2)
-      if (!address || text[address.next] !== ')') return null
-      const end = address.next + 1
+      const target = targetAt(index + 2)
+      if (!target) return null
       return {
         kind: 'link',
-        href: address.destination,
-        source: text.slice(at, end),
+        href: target.destination,
+        source: text.slice(at, target.next),
         markdown: {
           label: text.slice(at + 1, index),
-          before: text.slice(at, address.start),
-          after: text.slice(address.end, end),
+          before: text.slice(at, target.start),
+          after: text.slice(target.end, target.next),
           image: text[at - 1] === '!',
         },
       }
@@ -97,6 +105,7 @@ function bareAddressTokenAt(
  */
 export function tokens(text: string, reading: Reading): Token[] {
   const found: Token[] = []
+  const targetAt = lineTargets(text)
   let plain = ''
   const add = (token: Token, length: number) => {
     if (plain !== '') found.push({ kind: 'text', text: plain })
@@ -125,7 +134,7 @@ export function tokens(text: string, reading: Reading): Token[] {
     const link = !reading.links
       ? null
       : text[index] === '['
-        ? markdownLinkAt(text, index)
+        ? markdownLinkAt(text, index, targetAt)
         : text.startsWith('http', index)
           ? bareAddressTokenAt(text, index, reading.marks)
           : null

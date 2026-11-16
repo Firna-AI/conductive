@@ -71,18 +71,35 @@ link.
 - In an agent message, a Markdown link shows as its label, and its title
   gives its address (chat link decision 1 D). Reason: the text then reads
   as the agent meant it, with no raw brackets.
+- A Markdown link can hold a link title: text in quotes or in parentheses
+  after its address, such as `[docs](https://example.com/a "Docs")`. The
+  chat reads a link title and the spaces around the address as the file
+  preview does. The chat does not show the link title (chat link decision
+  7 B).
+- Reason: the chat and the file preview then read the same Markdown in the
+  same way. A link title after the label was rejected, because it adds
+  more untrusted text. A link title as the title of the link was rejected,
+  because that title gives the real address.
 - The chat tests each label as it shows: without code marks, bold marks,
   invisible characters, and the spaces at its ends. The invisible
   characters are the default ignorable code points of Unicode, such as a
   zero-width space.
 - A label that then holds `://`, or starts with `www.` in any case, shows
   the real address in its place, as the text has it.
+- A label that then shows nothing also shows the real address in its
+  place (chat link decision 8 B). Examples are an empty label, a label of
+  bold marks only, and a label of invisible characters only.
 - Reason: sandbox code can shape agent text, so a label can name another
   address than its link. A label that reads as an address then cannot
-  hide where its link leads.
-- In a sent message, a Markdown link shows as typed. Its brackets and its
-  label stay text, and its address is a link as a bare address is.
-  Reason: a sent message shows the text as the member typed it.
+  hide where its link leads. A link whose label shows nothing shows its
+  address, so the reader sees where it leads.
+- For a label that shows nothing, an empty link was rejected, because the
+  keyboard can reach a link with no words. The Markdown as typed was
+  rejected, because its raw brackets then show.
+- In a sent message, a Markdown link shows as typed. Its brackets, its
+  label, and its link title stay text, and its address is a link as a
+  bare address is. Reason: a sent message shows the text as the member
+  typed it.
 - A Markdown link whose address stays text shows as typed, also in an
   agent message.
 - The Markdown of an image, such as `![alt](address)`, is not a Markdown

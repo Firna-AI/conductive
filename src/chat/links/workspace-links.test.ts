@@ -64,6 +64,21 @@ describe('the workspace links of a text', () => {
     })
   })
 
+  test('a Markdown link to a workspace with a link title is the chip alone, and with a line break in its parentheses it shows as typed, in a message and in a message field', () => {
+    const chip = { chip: first.id, to: routes.workspace(org, first.id) }
+    const titled = `See [W-${first.number}](<${first.link}> "Checkout")`
+    expect(shapes(messageParts(titled))).toEqual([{ text: 'See ' }, chip])
+    expect(fieldShapes(titled)).toEqual([{ text: 'See ' }, chip])
+    const broken = `[W-${first.number}](<${first.link}>\n"Checkout")`
+    const typed = [
+      { text: `[W-${first.number}](<` },
+      chip,
+      { text: '>\n"Checkout")' },
+    ]
+    expect(shapes(messageParts(broken))).toEqual(typed)
+    expect(fieldShapes(broken)).toEqual(typed)
+  })
+
   test('a link in code stays code in a message, and a message field reads no code', () => {
     const text = `Run \`open ${first.link}\` now`
     expect(shapes(messageParts(text))).toEqual([
