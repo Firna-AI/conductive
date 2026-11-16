@@ -1,6 +1,6 @@
 # Repository change
 
-Status: Active. On branch `calummoore/perth-siol`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
+Status: Active. [PR #423](https://github.com/Firna-AI/conductive/pull/423) is open. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
 Today a workspace keeps the repository that it was created in. The header
 shows the repository as plain text (`src/shell/workspace/WorkspaceHeader.tsx`).
