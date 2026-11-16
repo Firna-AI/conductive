@@ -23,6 +23,13 @@ states the line of the chat at the limit. An automatic update gives existing wor
 - A result that answers each sent member message ends no turn while live
   work remains. The turn then waits. The agent process, its profile with
   the turn token, the turn ID, the file baseline, and the output stay.
+- After the agent process had live work, a result that answers each sent
+  member message also starts a wait when no live work remains. That wait
+  lasts until a fresh idle state. The agent can stop a task just before it
+  ends its reply, and the reply to the notification of that task can come
+  before the idle state. The adapter and the engine use this same rule.
+  Otherwise the engine waits while the adapter ignores the wake-up reply,
+  and the turn never ends.
 - During a wait, a result with the origin `task-notification` that answers
   no waiting message ends a wake-up reply. That reply stays in the same
   turn. The result answers no member message, and it frees no held input.
@@ -61,7 +68,8 @@ states the line of the chat at the limit. An automatic update gives existing wor
 ## The time limit
 
 - The turn owns its wait clock. The first wait sets a deadline 30 days
-  later. Agent work after a wake-up and each later wait use that deadline.
+  later. A wait for a fresh idle state after ended work sets it too, so no
+  wait lasts past the limit. Agent work after a wake-up and each later wait use that deadline.
 - A member message during a wait moves the deadline to 30 days after
   the receipt of that message. The runner takes that time before the
   message waits in the queue of its session. A message during agent work
@@ -94,5 +102,6 @@ states the line of the chat at the limit. An automatic update gives existing wor
 - [recovery_tests.rs](../crates/cnd-runner/tests/core/recovery_tests.rs) checks saved terminal reasons and replay.
 - [claude-background-note.test.ts](sdk-helper/src/providers/claude-background-note.test.ts) and
   [claude-background-note-handoff.test.ts](sdk-helper/src/providers/claude-background-note-handoff.test.ts) check helper task and note behavior.
+- [claude-background-wait.test.ts](sdk-helper/src/providers/claude-background-wait.test.ts) checks a wake-up reply after a task that ended before the reply.
 
 The helper uses fake SDK events. Check their real order again after each SDK update.

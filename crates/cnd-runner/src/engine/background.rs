@@ -47,17 +47,15 @@ impl Background {
             return Disposition::Limit;
         }
         self.replied = true;
-        if self.live {
+        // Work that ended before this reply can still send a wake-up reply
+        // before the fresh idle state. That wait keeps the limit too.
+        if self.live || self.observed && !self.idle {
             self.waiting = true;
             self.deadline
                 .get_or_insert(now.saturating_add(limit.as_millis() as i64));
             return Disposition::Wait;
         }
-        if self.observed && !self.idle {
-            Disposition::Wait
-        } else {
-            Disposition::Finish
-        }
+        Disposition::Finish
     }
     pub(super) fn restart(&mut self) {
         let deadline = self.deadline;
