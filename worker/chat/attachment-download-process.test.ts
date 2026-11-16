@@ -52,7 +52,7 @@ it('starts a detached download and polls its next byte offsets until the process
         }),
       ),
   }
-  const wait = vi.fn(async () => {})
+  const wait = vi.fn<(ms: number) => Promise<void>>(async () => {})
   await runAttachmentDownload(provider, 'sandbox', 'download command', wait)
   expect(provider.startCommand.mock.calls).toEqual([
     ['sandbox', 'download command'],
@@ -62,7 +62,7 @@ it('starts a detached download and polls its next byte offsets until the process
     ['sandbox', 7, { stdoutOffset: 5, stderrOffset: 3 }],
     ['sandbox', 7, { stdoutOffset: 10, stderrOffset: 6 }],
   ])
-  expect(wait).toHaveBeenCalledTimes(2)
+  expect(wait.mock.calls).toEqual([[100], [200]])
 })
 
 it('fails a nonzero, timed-out, or lost download with the existing attachment copy error', async () => {
@@ -82,4 +82,22 @@ it('fails a nonzero, timed-out, or lost download with the existing attachment co
       ),
     ).rejects.toMatchObject({ status: 503, code: 'attachment_copy_failed' })
   }
+})
+
+it('waits short times between the first status checks, then 1 second', async () => {
+  const running = status({ state: 'running', running: true, exitCode: null })
+  const getCommandStatus = vi.fn(async () => running)
+  for (let checks = 0; checks < 7; checks += 1)
+    getCommandStatus.mockResolvedValueOnce(running)
+  getCommandStatus.mockResolvedValueOnce(status())
+  const wait = vi.fn<(ms: number) => Promise<void>>(async () => {})
+  await runAttachmentDownload(
+    { startCommand: async () => ({ processId: 7 }), getCommandStatus },
+    'sandbox',
+    'download command',
+    wait,
+  )
+  expect(wait.mock.calls.map(([ms]) => ms)).toEqual([
+    100, 200, 400, 800, 1_000, 1_000, 1_000,
+  ])
 })
