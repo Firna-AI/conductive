@@ -20,6 +20,8 @@ actions at `app/command-palette/actions`, and the settings at
   choice are view commands. Hide and Show the sidebar are the one
   exception, because the toggle has its mockups and keeps no state (list
   popover decision 5 A).
+  [The hidden sidebar](org-rail-order.md#the-hidden-sidebar) defines the
+  list popover decisions.
 - The palette offers only the actions that the current page offers to the
   person. Send feedback is the one exception, as [Help](#help) says.
 - New workspace also shows on each page where the palette has an org that

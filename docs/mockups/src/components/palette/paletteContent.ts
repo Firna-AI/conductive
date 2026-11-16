@@ -11,6 +11,7 @@ import {
 import {
   appActions,
   helpActions,
+  windowActions,
   orgActions,
   workspaceActions,
   type Command,
@@ -130,11 +131,17 @@ function openActions(context: PaletteContext): Command[] {
 }
 
 /**
- * The actions in their order: those of the open workspace, of the org, and
- * of the orgs, then Send feedback, which comes last.
+ * The actions in their order: those of the open workspace, of the org, of
+ * the orgs, and of the window, then Send feedback, which comes last.
  */
 function actionsOf(context: PaletteContext): Command[] {
-  return [...openActions(context), ...orgActions, ...appActions, ...helpActions]
+  return [
+    ...openActions(context),
+    ...orgActions,
+    ...appActions,
+    ...windowActions,
+    ...helpActions,
+  ]
 }
 
 /** The settings, each with the page that holds it, for a mixed list. */
@@ -224,6 +231,7 @@ function groupsOf(
         ...own,
         { label: orgs.acme.name, rows: commandRows(orgActions) },
         { label: 'Orgs', rows: commandRows(appActions) },
+        { label: 'Window', rows: commandRows(windowActions) },
         { label: helpGroupLabel, rows: commandRows(helpActions) },
       ]
     }

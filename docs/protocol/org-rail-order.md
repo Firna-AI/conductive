@@ -98,8 +98,10 @@ pull request keeps the record. The [mockup catalogue](../mockups/catalogue.md) d
   tile of the current org opens the list popover (list popover decision
   2 B, 16 November 2026). The sidebar shows no list when the toggle hid it,
   and in a window narrower than 900 px.
-- The list page of an org shows the list in its main area, so its tile
-  opens no popover.
+- In a window narrower than 900 px, the list page of an org shows the list
+  in its main area, so its tile opens no popover there. A wider list page
+  shows no list while the toggle hides the sidebar, so its tile opens the
+  popover.
 - Reason: since a tile opens the last workspace of its org, a click on the
   tile of the current org opened the same workspace again. While the
   sidebar was hidden, no click reached the list.
@@ -110,9 +112,18 @@ pull request keeps the record. The [mockup catalogue](../mockups/catalogue.md) d
 - A click with a modifier key opens the org in a new tab, and Switch to
   org 1 to 9 opens the org. Neither opens the popover.
 - A second click on the tile, Escape, a click outside the popover, and
-  each page, dialog, or palette that opens from it close the popover. The
-  focus then goes back to the tile. A row menu, a rename, and a drag in the
-  popover keep it open.
+  each page, dialog, or palette that opens from it close the popover. A row
+  menu, a rename, and a drag in the popover keep it open.
+- Escape belongs first to the newest layer or field: a menu, a dialog, or
+  the palette over the popover closes first, and Escape in a rename field
+  of the popover cancels the rename. Escape while an input method composes
+  stays with the text.
+- The focus moves into the popover as it opens, to the row of the open
+  page, else to its first control. As the popover closes, the focus goes
+  back to the tile. A page that opens from it takes the focus instead, and
+  a click outside leaves the focus where the person clicked. After a
+  dialog or the palette that opened from the popover, the focus goes back
+  to the tile.
 - The popover holds the sidebar toggle in the browser, so the toggle there
   shows the sidebar again. In a window narrower than 900 px the sidebar
   cannot show, so the popover holds no toggle.

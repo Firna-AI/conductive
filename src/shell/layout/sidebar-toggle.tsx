@@ -13,9 +13,19 @@ import { usePanelLayout } from './panels'
  */
 export type SidebarToggle = 'hide' | 'show' | 'off'
 
+/**
+ * The column of the sidebar shows: the window is wide, and the sidebar
+ * toggle does not hide it. The frame, the toggle, the list, and the list
+ * popover all read it here.
+ */
+export function useSidebarShown(): boolean {
+  const shown = useStore(usePanelLayout().sidebarShown)
+  return !useNarrowWindow() && shown
+}
+
 /** The toggle of a frame that has a sidebar, or not. */
 export function useSidebarToggle(sidebar: boolean): SidebarToggle {
-  const shown = useStore(usePanelLayout().sidebarShown)
+  const shown = useSidebarShown()
   const narrow = useNarrowWindow()
   if (!sidebar || narrow) return 'off'
   return shown ? 'hide' : 'show'

@@ -173,8 +173,17 @@ otherwise.
 - The tile of the current org says `aria-expanded` while it can open the
   popover, and `aria-controls` while the popover is open. The name of the
   tile hides while the popover is open, so it does not cover the list.
-- A popover that the keys opened, with Enter on the focused tile, moves
-  the focus to the current row of the list, else to its first control.
+- The popover uses the focus helper of every layer, `useLayerFocus`. The
+  focus moves into it as it opens, to the current row, else to its first
+  control. As it closes, the focus goes back to the tile, or to the new
+  page. This replaced a first call of 13 November 2026 that moved the
+  focus only after Enter, after review item 2 of 16 November 2026.
+- Escape: the popover listens after the page, not on the Escape stack, so
+  a rename field, the palette, a menu, a dialog, and an input method keep
+  their Escape. Review item 1 of 16 November 2026 found that the stack
+  took Escape from a rename field, which then saved the name. The wider
+  fix, one stack for every Escape handler, waits in
+  `plans/follow-ups/escape-on-one-stack.md`.
 - The browser toggle sits in the top of the sidebar, beside Settings. In
   the popover it reads "Show the sidebar". The Mac app keeps its toggle
   beside the window buttons and shows none beside Settings. Reason: one

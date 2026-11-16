@@ -3,7 +3,6 @@ import {
   useContext,
   useEffect,
   useId,
-  useLayoutEffect,
   useRef,
   useState,
   type MouseEvent,
@@ -11,15 +10,15 @@ import {
   type RefObject,
 } from 'react'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
-import { useHref } from '../../app/navigation'
+import frame from '../../../docs/mockups/src/components/layout/AppFrame.module.css'
+import { useHref, useNavigation } from '../../app/navigation'
 import { useStore } from '../../app/store'
 import { useMacApp, useNarrowWindow } from '../mac/mac-app'
 import { isPlainClick } from '../ui/AppLink'
 import { LayersContext } from '../ui/layers'
-import { focusableSelector, useEscapeLayer } from '../ui/Overlay'
-import layout from './layout.module.css'
+import { useLayerFocus } from '../ui/Overlay'
 import { usePanelLayout } from './panels'
-import { SidebarPlaceContext } from './sidebar-toggle'
+import { SidebarPlaceContext, useSidebarShown } from './sidebar-toggle'
 
 /** What the tile of the current org needs from its list popover. */
 export interface ListPopoverTile {
@@ -32,29 +31,108 @@ export interface ListPopoverTile {
   onClick: (event: MouseEvent<HTMLAnchorElement>) => void
 }
 
+/** A field where Escape belongs to the text, such as a rename field. */
+function isTextField(target: EventTarget | null): boolean {
+  return (
+    target instanceof HTMLElement &&
+    (target.isContentEditable || target.matches('input, textarea, select'))
+  )
+}
+
 /**
- * Closes the popover on a press outside it and outside its tile. A press
- * while a menu or a dialog is open belongs to that layer, such as a row
- * menu of the list, so the popover stays: the list owns that layer.
+ * Closes the popover on a press outside it and outside its tile, and on
+ * Escape. A press or a key while a menu or a dialog is open belongs to that
+ * layer, such as a row menu of the list or the palette, so the popover
+ * stays. Escape counts only after the page had it: a field of the popover,
+ * such as a rename field, cancels on Escape, and a key that a handler took
+ * or that an input method composes does not close the popover.
  */
-function usePressOutside(
-  open: boolean,
+function useDismiss(
   parts: readonly RefObject<HTMLElement | null>[],
   close: () => void,
 ): void {
   const layers = useContext(LayersContext)
   useEffect(() => {
-    if (!open) return
+    const inside = (target: EventTarget | null) =>
+      target instanceof Node &&
+      parts.some((part) => part.current?.contains(target))
+    const layerOpen = () => layers?.menuOpen() || layers?.modalOpen()
     const onPointer = (event: PointerEvent) => {
-      const target = event.target
-      if (!(target instanceof Node)) return
-      if (parts.some((part) => part.current?.contains(target))) return
-      if (layers?.menuOpen() || layers?.modalOpen()) return
+      if (inside(event.target) || layerOpen()) return
+      close()
+    }
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape' || event.defaultPrevented) return
+      if (event.isComposing || layerOpen()) return
+      if (inside(event.target) && isTextField(event.target)) return
       close()
     }
     document.addEventListener('pointerdown', onPointer)
-    return () => document.removeEventListener('pointerdown', onPointer)
-  }, [open, parts, layers, close])
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('pointerdown', onPointer)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [parts, layers, close])
+}
+
+/**
+ * The open popover: the whole sidebar beside the rail. The focus moves into
+ * it as it opens, to the row of the open page, else to its first control.
+ * As it closes, the focus goes back to the tile, or to the new page when
+ * the address changed.
+ */
+function ListPopoverSurface(props: {
+  id: string
+  tile: RefObject<HTMLAnchorElement | null>
+  openedAt: string
+  close: () => void
+  children: ReactNode
+}) {
+  const { tile, close } = props
+  const surface = useRef<HTMLElement | null>(null)
+  const navigation = useNavigation()
+  const width = useStore(usePanelLayout().widths).sidebar
+  const mac = useMacApp()
+  const [parts] = useState(() => [surface, tile])
+  const [current] = useState(() => ({
+    get current(): HTMLElement | null {
+      return (
+        surface.current?.querySelector<HTMLElement>('[aria-current="page"]') ??
+        null
+      )
+    },
+  }))
+  useLayerFocus(surface, {
+    modal: false,
+    initial: current,
+    moved: () => navigation.href() !== props.openedAt,
+    returnFocus: () => tile.current?.focus(),
+  })
+  useDismiss(parts, close)
+
+  /** A link or a control that opens a dialog leaves the popover. */
+  const onClick = (event: MouseEvent<HTMLElement>) => {
+    const target = event.target
+    if (!(target instanceof Element) || !isPlainClick(event)) return
+    const control = target.closest('a[href], [aria-haspopup="dialog"]')
+    if (control && surface.current?.contains(control)) close()
+  }
+
+  return (
+    <section
+      aria-label="Workspace list"
+      className={classes(frame.popover, mac !== null && frame.cornerPopover)}
+      id={props.id}
+      onClick={onClick}
+      ref={surface}
+      style={width === null ? undefined : { width }}
+    >
+      <SidebarPlaceContext.Provider value="popover">
+        {props.children}
+      </SidebarPlaceContext.Provider>
+    </section>
+  )
 }
 
 /**
@@ -65,88 +143,38 @@ function usePressOutside(
  * The list page of a narrow window shows its list already, so its tile
  * opens no popover. A second click on the tile, Escape, a press outside,
  * a link, and a control that opens a dialog close it, and so does a new
- * address. Escape gives the focus back to the tile. A tile of another org
- * opens its org as before. `sidebar` is the sidebar of the frame, and
- * `listPage` says that the page is the list page of the org.
+ * address. A tile of another org opens its org as before. `sidebar` is the
+ * sidebar of the frame, and `listPage` says that the page is the list page
+ * of the org.
  */
 export function useListPopover(props: {
   sidebar?: ReactNode
   listPage: boolean
 }): { tile: ListPopoverTile; popover: ReactNode } {
-  const panels = usePanelLayout()
-  const shown = useStore(panels.sidebarShown)
-  const widths = useStore(panels.widths)
+  const shown = useSidebarShown()
   const narrow = useNarrowWindow()
-  const mac = useMacApp()
   const href = useHref()
   const id = useId()
   const tile = useRef<HTMLAnchorElement | null>(null)
-  const surface = useRef<HTMLElement | null>(null)
-  const [opened, setOpened] = useState<{ at: string; keys: boolean } | null>(
-    null,
-  )
+  const [openedAt, setOpenedAt] = useState<string | null>(null)
   const available =
-    props.sidebar !== undefined && (narrow ? !props.listPage : !shown)
+    props.sidebar !== undefined && !shown && !(narrow && props.listPage)
   // A new address, or a list that shows again, closes the popover.
-  if (opened && (opened.at !== href || !available)) setOpened(null)
-  const open = opened !== null && opened.at === href && available
-
-  const close = useCallback(() => setOpened(null), [])
-  useEscapeLayer(open, () => {
-    close()
-    tile.current?.focus()
-  })
-  const [parts] = useState(() => [surface, tile])
-  usePressOutside(open, parts, close)
-
-  // A popover that the keys opened takes the focus, on its current row.
-  useLayoutEffect(() => {
-    const node = surface.current
-    if (!opened?.keys || !node || node.contains(document.activeElement)) {
-      return
-    }
-    const target =
-      node.querySelector<HTMLElement>('[aria-current="page"]') ??
-      node.querySelector<HTMLElement>(focusableSelector)
-    target?.focus()
-  }, [opened])
+  if (openedAt !== null && (openedAt !== href || !available)) {
+    setOpenedAt(null)
+  }
+  const open = openedAt !== null && openedAt === href && available
+  const close = useCallback(() => setOpenedAt(null), [])
 
   const onClick = (event: MouseEvent<HTMLAnchorElement>) => {
     if (!available || !isPlainClick(event)) return
     event.preventDefault()
-    // A click from the keys, Enter on the focused tile, has no detail.
-    setOpened(open ? null : { at: href, keys: event.detail === 0 })
+    setOpenedAt(open ? null : href)
   }
   const tileRef = useCallback((node: HTMLAnchorElement | null) => {
     tile.current = node
   }, [])
 
-  /** A link or a control that opens a dialog leaves the popover. */
-  const onSurfaceClick = (event: MouseEvent<HTMLElement>) => {
-    const target = event.target
-    if (!(target instanceof Element) || !isPlainClick(event)) return
-    const control = target.closest('a[href], [aria-haspopup="dialog"]')
-    if (control && surface.current?.contains(control)) close()
-  }
-
-  const width = widths.sidebar
-  const popover = open ? (
-    <section
-      aria-label="Workspace list"
-      className={classes(
-        layout.listPopover,
-        mac !== null && layout.cornerPopover,
-      )}
-      id={id}
-      onClick={onSurfaceClick}
-      ref={surface}
-      style={width === null ? undefined : { width }}
-    >
-      <SidebarPlaceContext.Provider value="popover">
-        {props.sidebar}
-      </SidebarPlaceContext.Provider>
-    </section>
-  ) : null
   return {
     tile: {
       expanded: available ? open : undefined,
@@ -154,6 +182,10 @@ export function useListPopover(props: {
       tileRef,
       onClick,
     },
-    popover,
+    popover: open ? (
+      <ListPopoverSurface close={close} id={id} openedAt={href} tile={tile}>
+        {props.sidebar}
+      </ListPopoverSurface>
+    ) : null,
   }
 }

@@ -124,7 +124,7 @@ export function defaultShortcutKeys(
   return (entry?.[1][keyboard] ?? []).map(readShortcutKeyText)
 }
 
-/** Back, Forward, and the sidebar toggle belong only to the Mac app. */
+/** Back and Forward belong only to the Mac app. */
 export function commandInHost(
   id: ShortcutCommandId,
   host: ShortcutHost,

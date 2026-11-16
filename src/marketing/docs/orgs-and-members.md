@@ -72,7 +72,8 @@ Or press **⌘B** on a Mac or **Ctrl+B** on another computer.
 While the list is hidden, select the current org in the org list.
 The workspace list opens beside it, over the page.
 Select a workspace to open it.
-Select **Show the sidebar** in that list to show the list again.
+To show the list again, select **Show the sidebar** in that list in a browser.
+In the Mac app, select **Show the sidebar** beside the window buttons.
 
 A narrow window also hides the list.
 Select the current org to open the list in the same way.

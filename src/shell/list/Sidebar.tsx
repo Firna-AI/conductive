@@ -9,8 +9,11 @@ import { useStore, valueOf } from '../../app/store'
 import type { User } from '../../shared/api'
 import type { OrgSummary } from '../../shared/orgs'
 import { useOrgAccess, useOrgModel } from '../context'
-import { SidebarHeaderToggle, useSidebarPlace } from '../layout/sidebar-toggle'
-import { useSidebarShown } from '../mac/mac-app'
+import {
+  SidebarHeaderToggle,
+  useSidebarPlace,
+  useSidebarShown,
+} from '../layout/sidebar-toggle'
 import { useNewWorkspace } from '../new-workspace/NewWorkspaceHost'
 import { SearchRow } from '../palette/SearchRow'
 import { shortcutTip, useShortcutHint } from '../shortcuts/shortcut-hints'

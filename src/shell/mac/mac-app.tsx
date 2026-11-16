@@ -10,7 +10,6 @@ import { keptOrg } from '../../app/kept-org'
 import { useStore, type Readable } from '../../app/store'
 import type { OrgSummary } from '../../shared/orgs'
 import { useApp } from '../context'
-import { usePanelLayout } from '../layout/panels'
 import mac from './mac.module.css'
 
 /** What the page of the Mac app knows about its window. */
@@ -96,15 +95,6 @@ export function useKeptOrg(
   const last = useStore(useApp().lastOrg)
   if (!chrome) return undefined
   return keptOrg(orgs, last)
-}
-
-/**
- * The sidebar of the frame shows: the window is wide, and the sidebar
- * toggle does not hide it.
- */
-export function useSidebarShown(): boolean {
-  const shown = useStore(usePanelLayout().sidebarShown)
-  return !useNarrowWindow() && shown
 }
 
 /** Below this width the sidebar hides, as the container query of `AppFrame.module.css` says. */
