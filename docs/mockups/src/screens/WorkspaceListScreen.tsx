@@ -4,17 +4,9 @@ import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
 import { paletteViews } from '../components/palette/paletteViews'
 import type { RailState } from '../components/layout/OrgRail'
 import responsive from '../components/layout/responsive.module.css'
-import {
-  archivedGroup,
-  newOrgSections,
-  suspendedSections,
-  workspaceSections,
-  type SidebarSection,
-} from '../components/workspaces/sections'
+import { newOrgSections } from '../components/workspaces/sections'
 import { Sidebar } from '../components/workspaces/Sidebar'
-import { viewerMembership } from '../fixtures/members'
 import { deletedOrg, orgList, orgs, suspendedOrg } from '../fixtures/orgs'
-import { checkoutAutocomplete } from '../fixtures/workspaces'
 import {
   ChooseWorkspace,
   DeletedOrg,
@@ -31,16 +23,15 @@ import {
   listSheet,
   newOrgs,
 } from './listStates'
+import {
+  archivedGroupView,
+  listViewer as viewer,
+  sectionsOf,
+  stateView,
+} from './listViews'
 import { orderRail, orgOrderStates } from './orgOrderStates'
-import {
-  isWorkspaceMenuState,
-  workspaceMenuStates,
-} from './workspaceMenuStates'
-import {
-  generalOnlySections,
-  menuListView,
-  type MenuListView,
-} from './workspaceMenuView'
+import { subWorkspaceStates } from './subWorkspaceStates'
+import { workspaceMenuStates } from './workspaceMenuStates'
 import styles from './WorkspaceListScreen.module.css'
 
 export const workspaceListSchema = {
@@ -93,45 +84,15 @@ export const workspaceListSchema = {
      * saved order.
      */
     orgOrder: { enum: orgOrderStates },
+    /**
+     * The sub-workspaces of Acme, nested under their parents, as
+     * `subWorkspaceStates` says. Without it, every row is top-level.
+     */
+    subWorkspaces: { enum: subWorkspaceStates },
   },
 } as const
 
 export type WorkspaceListState = SchemaProps<typeof workspaceListSchema>
-
-/** Cal, an admin of each org, who looks at the lists of these views. */
-const viewer = viewerMembership('admin')
-
-/** The sections of a list before any state changes them. */
-function sectionsOf(list: WorkspaceListState['list']): SidebarSection[] {
-  if (list === 'general-only') return generalOnlySections()
-  if (list === 'suspended') return suspendedSections()
-  if (list === 'archived') return archivedGroup().sections
-  return newOrgs[list] ? newOrgSections() : workspaceSections()
-}
-
-/**
- * The open Archived group of the `archived` list, with the pointer over
- * the row of the last archived workspace, whose Restore covers its time.
- * A phone draws no hover, because it has no pointer.
- */
-function archivedGroupView(): Pick<MenuListView, 'archived' | 'focus'> {
-  return {
-    archived: archivedGroup().archived,
-    focus: { workspace: checkoutAutocomplete.key, drawing: { kind: 'hover' } },
-  }
-}
-
-/** The list and what lies over it, in a state of the menu of a row. */
-function rowMenuView(
-  state: WorkspaceListState,
-  viewport: Viewport,
-): MenuListView | undefined {
-  const { list, menu } = state
-  if (!isWorkspaceMenuState(menu)) return undefined
-  if (list !== 'workspaces' && list !== 'general-only' && list !== 'suspended')
-    return undefined
-  return menuListView(menu, list, viewport)
-}
 
 function MobileList(props: { state: WorkspaceListState; overlay?: ReactNode }) {
   const { list, menu, palette } = props.state
@@ -147,7 +108,7 @@ function MobileList(props: { state: WorkspaceListState; overlay?: ReactNode }) {
       </MobileFrame>
     )
   }
-  const view = rowMenuView(props.state, 'mobile')
+  const view = stateView(props.state, 'mobile')
   const sections = view?.sections ?? sectionsOf(list)
   if (list === 'suspended') {
     // A suspended org has no section menus, so only the org switcher opens.
@@ -172,7 +133,7 @@ function MobileList(props: { state: WorkspaceListState; overlay?: ReactNode }) {
       <HomeList
         archived={view?.archived ?? group?.archived}
         archivedCollapsed={view?.archivedCollapsed}
-        drag={listDrag(menu)}
+        drag={view?.drag ?? listDrag(menu)}
         failed={list === 'failed'}
         focus={view?.focus ?? group?.focus}
         menu={listMenu(menu)}
@@ -205,7 +166,7 @@ export function WorkspaceListScreen(props: {
   if (props.viewport === 'mobile') {
     return <MobileList overlay={props.overlay} state={props.state} />
   }
-  const view = rowMenuView(props.state, props.viewport)
+  const view = stateView(props.state, props.viewport)
   if (list === 'suspended') {
     return (
       <SuspendedList
@@ -250,7 +211,7 @@ export function WorkspaceListScreen(props: {
   const listed = {
     archived: view?.archived ?? group?.archived,
     archivedCollapsed: view?.archivedCollapsed,
-    drag: listDrag(menu),
+    drag: view?.drag ?? listDrag(menu),
     failed: list === 'failed',
     menu: listMenu(menu),
     focus: view?.focus ?? group?.focus,

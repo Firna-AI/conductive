@@ -14,8 +14,9 @@ The desktop layout has four columns. The org rail holds the mark, the orgs
 as squares with their initials, Create org, and the account at the bottom.
 The sidebar shows the org name with its Settings link, New workspace, Routines, Search, and
 the sections that the user made. Each workspace is one line: a dot-matrix
-mark in the colour of its GitHub state, the name, and the time, and it
-moves to another section by drag and drop. Archive covers the time on
+mark in the colour of its GitHub state, the name, and the time. A
+sub-workspace shows indented under the row of its parent, and a top-level
+row moves to another section by drag and drop, with the rows under it. Archive covers the time on
 hover only, without moving the row content, and Restore does so in the
 Archived group. Selection and
 keyboard focus alone keep the time visible. A right click on a row opens
@@ -82,10 +83,34 @@ sessions as tabs above the chat, and four tabs at the bottom.
   A move that the place of a tab rules out keeps its place, greyed.
   A read-only workspace leaves out each item that it does not allow,
   from decision 214.
+- A sub-workspace shows under the row of its parent, from sub-workspace
+  decisions 1 C, 4 F, 5 C, and 6 A, as `app/sub-workspaces` shows.
+  `withTrees` in `src/components/workspaces/trees.ts` places the rows of
+  each section: a top-level row, then its sub-workspaces, oldest first,
+  each followed by its own. A sub-workspace whose parent the list does not
+  show, such as an archived parent, shows under the nearest row above it
+  in its tree. Each level indents the row by one step, 12 px in the
+  sidebar and 16 px on the list page of a phone, so a tree shows at most
+  four levels. The indent follows the rows that the list shows, not the
+  depth of the record. A hairline in the `border2` colour runs down from
+  under the middle of the mark of each parent to its last nested row, as
+  the indent guides of a file tree do. The guides are neutral lines of the
+  tree, not an accent edge, and the fill of a hover or a selection still
+  spans the whole row. A tree has no collapse control. `.nested` and
+  `.indent1` to `.indent3` of `WorkspaceRow.module.css` draw the indent and
+  the guides, and the app shares them.
+- Only a top-level row drags, and its whole tree moves with it. The lifted
+  row stands for the tree: in place of its time it shows the count of the
+  nested rows that move with it, such as +2, over the edge of a second
+  card. The rows of the tree stay faint in their place, and the line falls
+  only between two trees, at the edge of a top-level row, as
+  `app/sub-workspaces/drag` shows. A nested row has no drag, no long press,
+  no move by keys, and no Move to section.
 - The menu of a workspace row has Move to section, Reassign to, Rename,
   Copy link, a line, then Archive, as `app/workspace-menu` shows. It lists
   only the actions that the person can use, from `workspaceMenu.ts` in
-  `src/components/workspaces/`. Every row offers Copy link, so every row
+  `src/components/workspaces/`. A nested row has no Move to section,
+  because it moves only with its tree. Every row offers Copy link, so every row
   has a menu. `linkCopy.ts` in `src/components/workspace/` gives the words
   of Copy link and of its result. The app
   reads the same list, so `workspaceMenu.ts` imports no fixture. A right

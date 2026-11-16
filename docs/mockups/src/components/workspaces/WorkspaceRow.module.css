@@ -143,3 +143,79 @@
 .placeholder {
   opacity: 0.35;
 }
+
+/*
+ * A nested row: a sub-workspace that the list shows under another row of
+ * its tree. Each step of its indent moves the content of the row to the
+ * right, and the fill of a hover or a selection still spans the row. The
+ * step classes give the number of steps.
+ */
+.indent1 {
+  --row-indent: 1;
+}
+
+.indent2 {
+  --row-indent: 2;
+}
+
+.indent3 {
+  --row-indent: 3;
+}
+
+.nested {
+  --row-step: 12px;
+  --row-guide: 15px;
+
+  position: relative;
+  padding-left: calc(10px + var(--row-indent) * var(--row-step));
+}
+
+/* The taller rows of the list page take a wider step. */
+.nested.page {
+  --row-step: 16px;
+  --row-guide: 17px;
+
+  padding-left: calc(12px + var(--row-indent) * var(--row-step));
+}
+
+/*
+ * The indent guides: a hairline under the middle of the mark of each row
+ * above it in its tree. The guides of the rows of one tree join across the
+ * gaps between the rows, so each line runs from under the mark of a parent
+ * to its last nested row. They are lines of the tree in a neutral colour,
+ * not an accent, and they take no pointer input.
+ */
+.nested::before {
+  position: absolute;
+  top: 0;
+  bottom: -1px;
+  left: var(--row-guide);
+  width: calc(var(--row-indent) * var(--row-step));
+  background: repeating-linear-gradient(
+    to right,
+    var(--ui-border2) 0 1px,
+    transparent 1px var(--row-step)
+  );
+  content: '';
+  pointer-events: none;
+}
+
+/*
+ * The lifted row of a tree stands for the whole tree. In place of its time
+ * it shows how many nested rows move with it, and the edge of a second card
+ * under it shows that it carries more than one row.
+ */
+.liftedTree {
+  box-shadow:
+    0 4px 0 -1px var(--ui-composer),
+    0 4px 0 0 var(--ui-border2),
+    0 8px 22px var(--ui-shadow);
+}
+
+.moving {
+  flex-shrink: 0;
+  color: var(--ui-muted);
+  font-family: var(--ui-font-label);
+  font-size: var(--ui-text-sm);
+  font-variant-numeric: tabular-nums;
+}

@@ -381,7 +381,7 @@ options 4 F, 5 C, and 6 A.
   The message names the parent by its number, and says that it is at the
   deepest level. It tells the agent to create a sibling instead: pass the
   parent's own `parentId`, given in the message, and start the name with a
-  short prefix that shows the group.
+  one-word prefix that shows the group, such as "Limits: ".
 - The new workspace joins the section of its parent. The insert reads the
   section of the parent in the same statement, so a move of the parent
   during the create cannot split the tree.
@@ -416,6 +416,10 @@ options 4 F, 5 C, and 6 A.
   under the nearest live workspace above it in its tree. When no such
   workspace is left, it shows at the top level of its own section. A
   Restore of the parent puts it back under the parent. This is item 5 C.
+- Such rows take the place of the archived row: they fill its place in
+  the tree order, oldest first, and no other row moves. At the top level
+  they take the place of the archived top-level row among the top-level
+  rows of its section.
 - The indent of a row follows the rows that the list shows. So a row under
   its grandparent indents one step less than its depth.
 
@@ -465,7 +469,8 @@ options 4 F, 5 C, and 6 A.
   - The deepest depth, 3.
   - How to nest a new workspace: pass this workspace's ID as `parentId`.
   - At the deepest depth: create a sibling instead, with this workspace's
-    own `parentId`, and start its name with a prefix that shows the group.
+    own `parentId`, and start its name with a one-word prefix that shows
+    the group, such as "Limits: ".
   - That `get_workspace` gives the parent and the sub-workspaces of a
     workspace, and that `list_workspaces` with `parentId` lists the
     sub-workspaces of one workspace.
@@ -559,6 +564,41 @@ gives another date.
   PR #380. So the call of 13 November 2026 about that page no longer
   applies.
 
+The mockups of Milestone 1 led to these calls, all of 16 November 2026.
+The `ui implementor` proposed them, and the orchestrator accepted them.
+
+- Each shown level indents a row by 12 px in the sidebar and by 16 px on
+  the list page of a phone. Reason: 12 px is the width of the list mark,
+  so each child mark starts where its parent mark ends.
+- A 1 px neutral guide line, in the `border2` colour, runs down from each
+  parent's mark to its last nested row. Reason: four levels and two
+  trees side by side were hard to follow without it. The `product-ui`
+  skill allows neutral indent guides.
+- The fill of a hover or a selection still spans the whole row. Reason:
+  the rows keep one shape, and no box gets a stroke on its left edge.
+- A dragged tree lifts as one card: the top-level row, with "+N" in place
+  of its time, over the edge of a second card. N counts the nested rows
+  that move with it. The whole tree stays faint in its place. Reason: a
+  card of the whole tree would cover the rows around the drop line.
+- The drop line falls only before a top-level row or after the last tree.
+  The drop index counts the top-level rows without the dragged tree, as
+  the app counts rows today.
+- A long press on a nested row does nothing on a phone. Reason: a nested
+  row has no drag, and a long press opens no menu today.
+- The shared `workspaceMenuItems` takes an optional `nested` flag that
+  drops Move to section. Reason: the app already imports this module, so
+  Milestone 6 only passes the flag.
+- The advice for a sibling asks for a one-word prefix, such as "Limits: ",
+  in the depth error and in the agent instructions. Reason: at depth 3 a
+  narrow sidebar shows about 12 characters of a name, so a long prefix
+  hides the part that differs. The user asked for a name prefix, so a
+  one-word prefix keeps that request. The mockups found this problem.
+- The rows that move up after an Archive take the place of the archived
+  row, oldest first, and no other row moves. Reason: decision 5 C keeps
+  each tree as whole as its live rows allow, so these rows stay where the
+  member saw them, and a Restore puts the archived row back with no jump.
+  The mockups found this gap.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -568,26 +608,31 @@ Depends on: none
 The workspace list with trees, in the sidebar and on the list page of a
 phone. Each mockup has a desktop and a phone variant.
 
-- [ ] Give the workspace fixtures of the new pages a parent link, with one
+- [x] Give the workspace fixtures of the new pages a parent link, with one
       tree down to depth 3 and a sibling whose name has a prefix. Keep the
       lists of the other pages as they are.
-- [ ] Draw the indent of each depth in the shared list styles of
+- [x] Draw the indent of each depth in the shared list styles of
       `docs/mockups/src/components/workspaces/`, which the app also uses.
-- [ ] Add the page `app/sub-workspaces`. Its canonical screen is the list
+- [x] Add the page `app/sub-workspaces`. Its canonical screen is the list
       with two trees in one section.
-- [ ] Add its child pages, each with at most five screens:
-  - [ ] The list after the Archive of a middle row: its sub-workspace shows
+- [x] Add its child pages, each with at most five screens:
+  - [x] The list after the Archive of a middle row: its sub-workspace shows
         under the nearest live row above it, as item 5 C says.
-  - [ ] A drag of a tree to another section: the lifted top-level row
+  - [x] A drag of a tree to another section: the lifted top-level row
         stands for its tree, and the line falls between trees, as item 4 F
         says.
-  - [ ] The row menu of a nested row, without Move to section, as item 4 F
+  - [x] The row menu of a nested row, without Move to section, as item 4 F
         says.
-- [ ] Update `docs/mockups/catalogue.md` for the new pages.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages, and save
+- [x] Update `docs/mockups/catalogue.md` for the new pages.
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages, and save
       the screenshots under `.context/sub-workspaces/`.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
+
+Done on 16 November 2026. The pages are `app/sub-workspaces` and its child
+pages `archived-parent`, `drag`, and `menu`. Evidence: the screenshots in
+`.context/sub-workspaces/shots/` and the checks in
+`.context/sub-workspaces/m1-checks.log`.
 
 ## Milestone 2: Documentation and protocol
 
