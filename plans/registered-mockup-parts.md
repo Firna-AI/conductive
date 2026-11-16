@@ -9,14 +9,19 @@ renders plain React parts. An edit to a shared part therefore gives one
 Changes row for each screen and variant that looks different, and no row
 names the part. Commit `cc3ea647` changed `WorkspaceMark`, which 196 screen
 modules import. This change registers every part of the catalogue with
-Mokly's `defineComponent`: 342 parts. An edit to a registered part then gives one row for the
+Mokly's `defineComponent`: 344 parts. An edit to a registered part then gives one row for the
 part, and the screens that use it go under its Affected screens. The
 change adds no HTML entry, changes no screen picture, and changes no app
 code.
 
 On 2026-11-13 the user chose decision 519 A in a brainstorm: register the
 shared React parts with `defineComponent`, in batches, the widest first.
-On the same day the user asked that this plan include every part, not
+On 2026-11-16 the branch merged `main`, which removed the Conductor
+comparison page with its 7 `parity` parts and added 9 parts: `TextLink`,
+3 `pricing` parts, 2 chat parts, and 3 settings parts. The counts below
+follow that merge.
+
+On 2026-11-13 the user asked that this plan include every part, not
 only a first batch. The milestones register the parts folder by folder,
 the widest folders first. The alternatives were:
 
@@ -113,11 +118,11 @@ These are design calls of the agent, made on 2026-11-13:
 
 - **The parts.** A part is an exported React component with a PascalCase
   name that draws UI. The plan registers each such export:
-  - All 323 exports of the 234 files in `docs/mockups/src/components/`,
+  - All 325 exports of the 236 files in `docs/mockups/src/components/`,
     except six that draw nothing of their own: the link primitives
     `ScreenLink` and `StillLinks`, and the context providers
     `TouchScreen`, `TintedTheme`, `MacApp`, and `ChatWorkspaces`. That
-    leaves 317 parts.
+    leaves 319 parts.
   - The 26 helper parts that live in `docs/mockups/src/screens/`, except
     `PictureCapture`, which only frames the marketing captures. That
     leaves 25 parts.
@@ -132,7 +137,7 @@ These are design calls of the agent, made on 2026-11-13:
   reviewable, and no two milestones conflict.
 - **More than one mockup milestone.** All mockup work comes first, in
   Milestones 1 to 6, and the documentation milestone comes directly
-  after. Reason: the whole change is mockup work, and one milestone of 342
+  after. Reason: the whole change is mockup work, and one milestone of 344
   parts is too large to delegate and check.
 - **The place of a registration.** One entry module for each source file,
   at `docs/mockups/src/entries/components/<folder>/<file>.mockup.tsx`. It
@@ -260,8 +265,15 @@ Tags: mockup
 Depends on: 1
 
 Register the parts of the workspace lists, the workspace page, the orgs,
-the palette, and New workspace: 72 parts.
+the palette, and New workspace, and the parts that `main` added to
+the folders of Milestone 1: 73 parts.
 
+- [ ] Register `TextLink` of `components/common/`, which `main` added after
+      Milestone 1.
+- [ ] Move each plain use of a part of Milestone 1 that the merge of
+      `main` added, such as `ActionButton` in
+      `components/settings/EndpointDetails.tsx`, to the wrapper, unless the
+      app reaches the file.
 - [ ] Register the other 12 parts of `components/workspaces/`.
 - [ ] Register the 30 parts of `components/workspace/`.
 - [ ] Register the 8 parts of `components/orgs/`, the 5 of
@@ -288,9 +300,9 @@ Tags: mockup
 
 Depends on: 2
 
-Register the parts of the chat, the files, and the tools: 70 parts.
+Register the parts of the chat, the files, and the tools: 72 parts.
 
-- [ ] Register the 47 parts of `components/chat/`.
+- [ ] Register the 49 parts of `components/chat/`.
 - [ ] Register the 13 parts of `components/files/` and the 9 of
       `components/tools/`.
 - [ ] Register `FirstBuildNotice` of `screens/firstBuildNotice.tsx`.
@@ -314,9 +326,9 @@ Tags: mockup
 Depends on: 3
 
 Register the parts of the settings, the members, the feedback, sign-in,
-and Get started: 71 parts.
+and Get started: 74 parts.
 
-- [ ] Register the 56 parts of `components/settings/`.
+- [ ] Register the 59 parts of `components/settings/`.
 - [ ] Register the 5 parts of `components/members/` and the 4 of
       `components/feedback/`.
 - [ ] Register the 6 helper parts of `screens/orgSettingsTabs.tsx`,
@@ -367,11 +379,11 @@ Tags: mockup
 
 Depends on: 5
 
-Register the parts of the marketing site, the comparison page, and the
-Mac app: 38 parts.
+Register the parts of the marketing site, the pricing page, and the
+Mac app: 34 parts.
 
-- [ ] Register the other 23 parts of `components/marketing/` and the 7 of
-      `components/parity/`.
+- [ ] Register the other 23 parts of `components/marketing/` and the 3 of
+      `components/pricing/`.
 - [ ] Register the 8 parts of `components/mac/`. `MacScreen` takes the Mac
       app state as data and the banner as a slot, as the design says.
 - [ ] Give the parts with touch sizes a variant with the touch sizes.
