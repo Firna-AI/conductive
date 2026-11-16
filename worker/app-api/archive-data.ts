@@ -37,7 +37,7 @@ export async function markWorkspaceArchived(
     .map(({ workspace }) => workspace.id)
   await env.DB.batch([
     env.DB.prepare(
-      `UPDATE workspaces SET archived_at = ?, state = 'archived',
+      `UPDATE workspaces SET archived_at = ?, state = 'archived', running_since = NULL,
       updated_at = MAX(?, updated_at + 1) WHERE id = ? AND org_id = ? AND archived_at IS NULL
       AND EXISTS (SELECT 1 FROM orgs o JOIN org_members m ON m.org_id = o.id
         JOIN users u ON u.id = m.user_id AND u.suspended_at IS NULL

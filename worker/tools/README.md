@@ -5,7 +5,7 @@ It implements the [agent-tool requirements](../../docs/protocol/agent-tools.md).
 It uses the existing [shared contracts](../../src/shared/README.md) and D1 tables.
 The [workspace name migration](../../migrations/202611081300_workspace_creation_name.sql) keeps an agent's chosen name through creation retries.
 The [first session title migration](../../migrations/202611111230_workspace_first_session_title.sql) keeps a requested first session title in the same way.
-The [parent migration](../../migrations/202611161200_workspace_parents.sql) keeps the parent link in the workspace and its creation plan.
+The [parent migration](../../migrations/202611161700_workspace_parents.sql) keeps the parent link in the workspace and its creation plan.
 [Sub-workspaces](../../docs/protocol/sub-workspaces.md) gives the nesting rules.
 [Workspace calls](workspaces.md) gives the get, rename, move, and archive routes, the list options, and the replay of a create.
 [Session management calls](sessions.md) gives the session get, rename, close, and stop routes, the message get, and the session list paging.
@@ -139,7 +139,7 @@ It cuts at 60 Unicode code points, at a whole word when possible.
 It keeps each underscore, and it does not use `modelTitleFrom`, the title model rule that changes underscores to spaces.
 The tool description and the CLI help ask the agent to avoid underscores unless the user asks for them, as [Names from the workspace tools](../../docs/protocol/tool-names.md) says.
 A blank result counts as no name, and the app shows "Untitled".
-The create answer gives the stored name and the first session's absolute `sessionLink`. The branch and stored city keep the city.
+The create answer gives the stored name and the first session's absolute `sessionLink`. The branch takes the name in place of the city, as [The branch and the name](../../docs/protocol/create-a-workspace.md#the-branch-and-the-name) says. The stored city stays.
 The tools preserve string names, including blank names, and ignore names of other types.
 An optional `firstSessionTitle` and an optional `requestId` follow [Creation replay and first title](workspaces.md#creation-replay-and-first-title).
 A repeat with the same request ID resolves before the default lookup below.

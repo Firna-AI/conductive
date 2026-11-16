@@ -47,6 +47,7 @@ export async function prepareCreationRequest(
   const { city, branch } = await workspaceBranch(
     user.githubLogin,
     dependencies.randomToken,
+    { name: input.name },
   )
   return {
     workspaceId: id,

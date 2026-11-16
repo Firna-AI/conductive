@@ -10,7 +10,7 @@ use cnd_runner_interface::runner_commands::{
 };
 use cnd_runner_interface::runner_credentials::{CodexTurnCredential, RunnerTurnCredential};
 use futures_util::future::BoxFuture;
-use tokio::sync::{mpsc, oneshot};
+use tokio::sync::oneshot;
 
 use crate::error::{Error, Result};
 use crate::runtime::CommandHandler;
@@ -19,10 +19,11 @@ use crate::state::records::{RunnerState, SavedTurn};
 use super::actor::run;
 use super::control::Control;
 use super::dependencies::EngineDependencies;
+use super::mailbox::Mailbox;
 use super::types::{Session, Work};
 
 struct SessionHandle {
-    mailbox: mpsc::UnboundedSender<Work>,
+    mailbox: Mailbox,
     controls: Arc<Mutex<BTreeMap<String, Control>>>,
 }
 #[derive(Default)]
@@ -108,6 +109,27 @@ fn route(command: &RunnerCommand) -> Option<(&str, &str, Option<&str>)> {
 
 #[async_trait]
 impl CommandHandler for AgentEngine {
+    async fn busy(&self) -> Result<bool> {
+        if self
+            .registry
+            .lock()
+            .or(Err(Error::InvalidCommand))?
+            .sessions
+            .values()
+            .any(|session| session.mailbox.busy())
+        {
+            return Ok(true);
+        }
+        Ok(self
+            .dependencies
+            .store
+            .snapshot()
+            .await
+            .turns
+            .iter()
+            .any(|turn| turn.end_event_number.is_none()))
+    }
+
     async fn start(&self) -> Result<()> {
         self.dependencies.startup.prepare().await
     }
@@ -165,7 +187,7 @@ impl CommandHandler for AgentEngine {
                 }
                 return Ok(());
             }
-            let (mailbox, receiver) = mpsc::unbounded_channel();
+            let (mailbox, receiver) = Mailbox::channel();
             let controls = Arc::new(Mutex::new(BTreeMap::new()));
             let session = Session {
                 id: session_id.clone(),
@@ -267,3 +289,7 @@ impl CommandHandler for AgentEngine {
         self.dependencies.store.persist().await
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/busy_tests.rs"]
+mod busy_tests;

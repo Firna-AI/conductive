@@ -67,8 +67,8 @@ and the repositories that wait for a build. Its linked page,
 the pages of the waitlist, the child pages of `app/orgs/suspended`, and the
 operator section. Its linked page
 [the pull request bar](catalogue-bar.md) gives `app/banner` and its child
-pages. The [chat and routines](catalogue-chat-and-routines.md) page gives
-the child pages and flows of `app/chat` and `app/routines`. The
+pages. The [chat and automations](catalogue-chat-and-automations.md) page gives
+the child pages and flows of `app/chat` and `app/automations`. The
 [workspace links, file mentions, and tools](catalogue-workspace-tools.md)
 page gives the child pages and flows of `app/workspace-links`,
 `app/file-mentions`, and `app/tools`.
@@ -85,11 +85,12 @@ the text, a dropped folder that attaches as its zip, and a folder that the
 browser cannot read, which the box does not attach.
 `app/attachments/open` shows the temporary tab that a press on a sent chip
 opens, with the picture of the screenshot. The other child pages show a
-failed upload, a file over 100 MB, the sent message, and the files of a
-queued first message. `app/files/image` shows the picture of an image file
-in its tab, and an image that the browser cannot draw. The flow
-`user-flows/drop-a-file` goes from the drop of a screenshot, through Send,
-to its file tab.
+failed upload, a file over 1 GB, the sent message, and the files of a
+queued first message. `app/attachments/missing` shows a Try again that
+failed, because a file of its message is no longer in the cloud computer.
+`app/files/image` shows the picture of an image file in its tab, and an
+image that the browser cannot draw. The flow `user-flows/drop-a-file` goes
+from the drop of a screenshot, through Send, to its file tab.
 
 `app/new-workspace/files` shows the same chips in the first message of a
 new workspace, before the workspace exists. `app/new-workspace/dialog/files`
@@ -101,8 +102,9 @@ file in the text of a message box, in each state of its upload.
 a sent message. `ImageView` in `src/components/files/` draws the picture of
 an image file in its tab. These three parts take no fixtures, so the app
 can draw them too. [attachmentCopy.ts](src/components/chat/attachmentCopy.ts)
-holds the words of the chips, and of the notices for a file over 100 MB and
-a dropped folder that the browser cannot read. [The chat](design-chat.md) gives the design of each part.
+holds the words of the chips, and of the notices for a file over 1 GB and
+a dropped folder that the browser cannot read. The app shares these words.
+[The chat](design-chat.md) gives the design of each part.
 
 ## Folder layout
 
@@ -127,8 +129,8 @@ a dropped folder that the browser cannot read. [The chat](design-chat.md) gives 
 - An entry module in `src/entries/` exports one `defineScreen` with a named
   export. Its props and saved states (`variants`) choose the state. The
   workspace screen declares its states in `src/screens/workspaceState.ts`, so
-  `mockups:serve` offers a control for each part of the state. The routine
-  screen declares its states in `src/screens/routineState.ts` in the same
+  `mockups:serve` offers a control for each part of the state. The automation
+  screen declares its states in `src/screens/automationState.ts` in the same
   way. The tab and composer states of the workspace screen live in
   `src/screens/chatStates.ts`. `tabStates` covers the session, file, and
   image tabs of the centre column. `temporaryTabStates` covers the
@@ -193,9 +195,12 @@ waitlist, the commands that an agent runs on the Mac, and This Mac.
 ## The marketing site
 
 [The marketing site](marketing-site.md) gives the home page and its
-pictures, the header and the footer, and [the docs pages](marketing-site.md#the-docs).
+pictures, the header and the footer, [the docs pages](marketing-site.md#the-docs),
+and [the pricing page](marketing-site.md#the-pricing-page).
 It also gives the Terms, Privacy, and not-found pages, and the page before
-GitHub. The pictures are captures of
+GitHub. The pricing page reads its plans, its prices, and its words from
+`src/marketing/pricing.ts`, the module that the site also reads. The
+pictures are captures of
 real screens, such as the workspace
 screen with its chat and composer. A change to a screen or a shared part
 that a picture shows needs a new capture, with the

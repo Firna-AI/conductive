@@ -45,11 +45,19 @@ async fn serves_requests_on_the_descriptor_inherited_from_systemd()
     assert!(ready.contains("Listening on"), "{ready}");
     let mut client = UnixStream::connect(path).await?;
     client.write_all(format!("GET /activated?value=1 HTTP/1.1\r\nHost: sandbox-0.on.boat.dev\r\nX-Conductive-Preview-Port: {port}\r\n\r\n").as_bytes()).await?;
-    let mut response = String::new();
-    client.read_to_string(&mut response).await?;
+    // The relay keeps the connection open, so read one reply by its length.
+    let mut response = Vec::new();
+    while !response.ends_with(b"\r\n\r\n") {
+        response.push(client.read_u8().await?);
+    }
+    let response = String::from_utf8(response)?;
     assert!(response.starts_with("HTTP/1.1 200"), "{response}");
     assert!(response.contains("x-conductive-relay: 1\r\n"));
-    assert!(response.ends_with("activated"));
+    assert!(response.contains("content-length: 9\r\n"), "{response}");
+    assert!(!response.contains("connection: close"), "{response}");
+    let mut body = [0; 9];
+    client.read_exact(&mut body).await?;
+    assert_eq!(&body, b"activated");
     let incoming = served.await??;
     assert!(incoming.starts_with("GET /activated?value=1 HTTP/1.1\r\n"));
     assert!(incoming.contains(&format!("host: localhost:{port}\r\n")));

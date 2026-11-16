@@ -79,6 +79,7 @@ export function readOperatorUser(value: unknown): OperatorUserDetail {
     name: maybeText(user, 'name'),
     email: maybeText(user, 'email'),
     joinedAt: count(user, 'joinedAt'),
+    lastActiveAt: maybeCount(user, 'lastActiveAt'),
     workspaces: nested(user, 'workspaces', (item) => {
       const workspaces = record(item, 'workspaces')
       return {

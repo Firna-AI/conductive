@@ -3,7 +3,12 @@ import type { Section } from '../shared/sections'
 
 import { replaceWorkspace } from './list-trees'
 import type { Change } from './resource'
-import { moveWorkspace, reorderSections, withoutSection } from './sections'
+import {
+  moveWorkspace,
+  ordered,
+  reorderSections,
+  withoutSection,
+} from './sections'
 
 /** The list of an org: its sections, and its workspaces in their order. */
 export interface ListData {
@@ -86,12 +91,24 @@ export function workspaceLifecycle(workspace: Workspace): ListChange {
   })
 }
 
-/** A new section at the end. A read that has it already keeps its own. */
-export function sectionAdded(section: Section): ListChange {
-  return (list) =>
-    list.sections.some((item) => item.id === section.id)
-      ? list
-      : { ...list, sections: [...list.sections, section] }
+/**
+ * A new section directly below `afterSectionId`, or at the end without it
+ * or when that section is gone. A read that has it already keeps its own.
+ */
+export function sectionAdded(
+  section: Section,
+  afterSectionId?: string,
+): ListChange {
+  return (list) => {
+    if (list.sections.some((item) => item.id === section.id)) return list
+    const sections = [...list.sections, section]
+    const below = ordered(list.sections).findIndex(
+      (item) => item.id === afterSectionId,
+    )
+    return below === -1
+      ? { ...list, sections }
+      : { ...list, sections: reorderSections(sections, section.id, below + 1) }
+  }
 }
 
 function sectionChanged(

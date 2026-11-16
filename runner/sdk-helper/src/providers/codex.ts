@@ -6,6 +6,7 @@ import {
 
 import { object, string } from '../parse'
 import {
+  ATTACHMENT_IMAGE_MAX_BYTES,
   attachmentDescription,
   attachmentReadInstruction,
 } from './attachment-description'
@@ -25,6 +26,15 @@ import type { ProviderFactory } from './types'
 import type { ProviderInput } from '../generated/ProviderInput'
 
 function input(command: ProviderInput, branches?: RunnerBranches | null) {
+  const images = command.attachments.filter((attachment) => {
+    const metadata = command.message.attachments.find(
+      (item) => item.id === attachment.attachmentId,
+    )
+    return (
+      metadata?.kind === 'image' &&
+      metadata.sizeBytes <= ATTACHMENT_IMAGE_MAX_BYTES
+    )
+  })
   return [
     {
       type: 'text',
@@ -37,23 +47,20 @@ function input(command: ProviderInput, branches?: RunnerBranches | null) {
             type: 'text',
             text:
               attachmentReadInstruction +
-              (command.message.attachments.some((file) => file.kind === 'image')
-                ? ' Each image is also in this message.'
+              (images.length
+                ? ' Only an image that comes right after its file line is also in this message.'
                 : ''),
             text_elements: [],
           },
         ]
       : []),
     ...command.attachments.flatMap((attachment) => {
-      const metadata = command.message.attachments.find(
-        (item) => item.id === attachment.attachmentId,
-      )
       const description = {
         type: 'text',
         text: attachmentDescription(command, attachment),
         text_elements: [],
       }
-      return metadata?.kind === 'image'
+      return images.includes(attachment)
         ? [description, { type: 'localImage', path: attachment.path }]
         : [description]
     }),

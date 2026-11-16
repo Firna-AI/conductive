@@ -39,6 +39,21 @@ export function formatShortDay(
   }).format(time)
 }
 
+/**
+ * A recent time in a list: the time of day for a time of today, 14:32, or
+ * else the day, 8 Nov.
+ */
+export function formatRecent(
+  time: number,
+  now: number,
+  timeZone?: string,
+): string {
+  const today = formatLongDay(time, timeZone) === formatLongDay(now, timeZone)
+  return today
+    ? formatClock(time, timeZone)
+    : formatShortDay(time, now, timeZone)
+}
+
 /** A day with its year, as the details of a page give it: 28 Oct 2026. */
 export function formatLongDay(time: number, timeZone?: string): string {
   return new Intl.DateTimeFormat('en-GB', {

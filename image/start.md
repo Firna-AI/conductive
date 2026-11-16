@@ -100,7 +100,9 @@ Both units stay enabled, so the relay starts without waiting for a preview reque
 The [preview relay guide](../runner/preview-relay.md) gives its start command.
 It reads no workspace variable or workspace marker.
 Its service restarts it after each exit.
-A restart of the runner service does not restart the relay service.
+A restart of the runner service alone does not restart the relay service.
+When the runner pre-start step applies a release, the system installer
+restarts a running relay, as [Release installation](install.md#release-installation) says.
 
 Before it runs the runner, `runner-start.sh` sets three variables of the
 runner's [configuration](../runner/README.md#configuration) from the table.

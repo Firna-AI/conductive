@@ -5,6 +5,12 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Duration;
 
+use cnd_cli::runner_update::idle::IdleUpdates;
+use cnd_cli::runner_update::ports::RunnerSwap;
+use cnd_cli::runner_update::process::SystemSwap;
+use cnd_cli::runner_update::releases::RunnerReleases;
+use cnd_cli::runner_update::swap::UpdateRunner;
+use cnd_cli::update::disk::DiskStore;
 use cnd_cli::update::staging::NODE_PART;
 use cnd_runner::clock::SystemClock;
 use cnd_runner::config::Configuration;
@@ -22,9 +28,10 @@ use cnd_runner::reports::files::FileReporter;
 use cnd_runner::reports::handler::{ReportCommandHandler, ReportDependencies};
 use cnd_runner::repository::git::{Cancellation, ChildGit};
 use cnd_runner::repository::io::LocalRepositoryIo;
-use cnd_runner::runtime::{Runner, RunnerCore};
+use cnd_runner::runtime::{RunExit, Runner, RunnerCore};
 use cnd_runner::socket::WebSocketConnector;
 use cnd_runner::state::store::{DurableStore, EventStore};
+use cnd_runner::update::ReleaseReadiness;
 use cnd_runner::watcher::linux::LinuxWatchDriver;
 use cnd_runner::watcher::service::ReportWatchService;
 use tokio::signal::unix::{SignalKind, signal};
@@ -32,6 +39,7 @@ use tokio::sync::watch;
 use uuid::Uuid;
 
 use crate::error::{ErrorResultExt, Result};
+use crate::release::VERSION;
 
 /// Role containing the SDK helper and its runtime packages.
 pub(crate) const SDK_HELPER_PART: &str = "sdk-helper";
@@ -73,6 +81,57 @@ pub(crate) async fn execute() -> Result<()> {
             }
         });
     let helpers = Arc::new(NodeHelpers { node, program });
+    let install_root = PathBuf::from("/opt/conductive");
+    let release_store = Arc::new(DiskStore::new(install_root.clone()));
+    let releases: Arc<dyn ReleaseReadiness> = Arc::new(RunnerReleases {
+        store: release_store.clone(),
+        running_version: VERSION.into(),
+    });
+    let updater: Arc<dyn RunnerSwap> = Arc::new(UpdateRunner {
+        store: release_store,
+        processes: Arc::new(SystemSwap),
+        running_version: VERSION.into(),
+        executable: executable.clone(),
+        start_script: install_root.join("current/system/runner-start.sh"),
+    });
+    let updates = Arc::new(IdleUpdates::new(releases, updater));
+    let (stop, shutdown) = watch::channel(false);
+    let mut terminate = signal(SignalKind::terminate()).internal()?;
+    let mut interrupt = signal(SignalKind::interrupt()).internal()?;
+    let signals = tokio::spawn(async move {
+        tokio::select! { _ = terminate.recv() => {}, _ = interrupt.recv() => {} }
+        stop.send_replace(true);
+    });
+    let result = async {
+        while !*shutdown.borrow() && shutdown.has_changed().is_ok() {
+            let exit = run_once(
+                configuration.clone(),
+                helpers.clone(),
+                executable.clone(),
+                updates.clone(),
+                shutdown.clone(),
+            )
+            .await?;
+            if exit == RunExit::Shutdown || *shutdown.borrow() || shutdown.has_changed().is_err() {
+                return Ok(());
+            }
+            updates.swap(shutdown.clone()).await.internal()?;
+        }
+        Ok(())
+    }
+    .await;
+    signals.abort();
+    let _ = signals.await;
+    result
+}
+
+async fn run_once(
+    configuration: Configuration,
+    helpers: Arc<NodeHelpers>,
+    executable: PathBuf,
+    releases: Arc<dyn ReleaseReadiness>,
+    shutdown: watch::Receiver<bool>,
+) -> Result<RunExit> {
     let clock = Arc::new(SystemClock);
     let store: Arc<dyn EventStore> = Arc::new(DurableStore::new(
         Arc::new(AtomicDisk::new(configuration.state_path.clone())),
@@ -156,16 +215,6 @@ pub(crate) async fn execute() -> Result<()> {
         },
         loaded.reports.commands,
     ));
-    let runner: Arc<dyn Runner> = Arc::new(RunnerCore::new(link, store, clock, handler));
-    let (stop, shutdown) = watch::channel(false);
-    let mut terminate = signal(SignalKind::terminate()).internal()?;
-    let mut interrupt = signal(SignalKind::interrupt()).internal()?;
-    let signals = tokio::spawn(async move {
-        tokio::select! { _ = terminate.recv() => {}, _ = interrupt.recv() => {} }
-        stop.send_replace(true);
-    });
-    let result = runner.run(shutdown).await.internal();
-    signals.abort();
-    let _ = signals.await;
-    result
+    let runner: Arc<dyn Runner> = Arc::new(RunnerCore::new(link, store, clock, handler, releases));
+    runner.run(shutdown).await.internal()
 }

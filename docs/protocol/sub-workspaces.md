@@ -46,8 +46,8 @@ them after the merge.
   new workspace under the calling workspace when the call names no
   parent, with a flag to opt out. Reason: the user asked for a parent that
   the agent passes.
-- So New workspace in the app and each run of a routine make a top-level
-  workspace. The app offers no way to nest a workspace. Reason: the user
+- So New workspace in the app and each run of an automation make a
+  top-level workspace. The app offers no way to nest a workspace. Reason: the user
   asked for nesting by agents.
 - The parent can be any workspace of the org of the calling workspace. It
   can be in any state, also archived, and of any repository.

@@ -9,6 +9,11 @@ const macPlatforms: readonly string[] = [
   'Mac68K',
 ]
 
+/** Whether xterm.js 6 reads a `navigator.platform` value as a Mac. */
+export function isMacPlatform(platform: string): boolean {
+  return macPlatforms.includes(platform)
+}
+
 /**
  * The key that xterm.js 6 takes as a forced selection: Option on a Mac,
  * with its `macOptionClickForcesSelection` option on, and Shift elsewhere.
@@ -16,7 +21,7 @@ const macPlatforms: readonly string[] = [
  * forced press with the other key would not select.
  */
 export function forcedSelectionKey(platform: string): ForcedSelectionKey {
-  return macPlatforms.includes(platform) ? 'altKey' : 'shiftKey'
+  return isMacPlatform(platform) ? 'altKey' : 'shiftKey'
 }
 
 function isPlainLeftPress(event: MouseEvent): boolean {

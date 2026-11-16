@@ -39,7 +39,7 @@
   background: var(--ui-rose);
 }
 
-/* The rows at the top of the list: New workspace, Routines, and Search. */
+/* The rows at the top of the list: New workspace, Automations, and Search. */
 .row {
   display: flex;
   align-items: center;

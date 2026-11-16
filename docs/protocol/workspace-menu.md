@@ -19,8 +19,8 @@ number names a dated record, as
   person can use, as [Who sees each action](#who-sees-each-action) says.
   This holds in the sidebar and on the list page, in the desktop layout
   and in the phone layout.
-- This includes routine run workspaces, as
-  [A run is a workspace](routine-runs.md#a-run-is-a-workspace) says.
+- This includes automation run workspaces, as
+  [A run is a workspace](automation-runs.md#a-run-is-a-workspace) says.
 - The menu holds Move to section, Reassign to, Rename, Copy link, and
   Archive, in that order. A line comes before Archive.
 - On 9 November 2026 the user chose the four actions that change the
@@ -177,7 +177,8 @@ number names a dated record, as
   replaces it, as
   [Workspace and session names](agents-and-sessions.md#workspace-and-session-names)
   says.
-- Rename keeps the branch, as
+- Rename changes the branch only before the start creates the branch in
+  the sandbox. After that, Rename keeps the branch, as
   [The branch and the name](create-a-workspace.md#the-branch-and-the-name)
   says.
 

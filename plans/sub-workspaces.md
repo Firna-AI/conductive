@@ -537,7 +537,7 @@ gives another date.
   search finds a workspace by its name or its number.
 - The app offers no way to nest a workspace. Reason: the message asks for
   agents. A later change can add a menu action.
-- Routine runs make top-level workspaces. An agent in a run workspace can
+- Automation runs make top-level workspaces. An agent in a run workspace can
   nest its own new workspaces under it.
 - Continue keeps the parent link. Reason: the parent belongs to the
   workspace, not to its branch.
@@ -626,7 +626,7 @@ them.
 - The docs also state rules that the plan settles but that the brief did
   not list: the help text of `create_workspace`, a runner start without
   the new facts, the count of a collapsed section, the rejected refusals,
-  and that New workspace in the app and routine runs make top-level
+  and that New workspace in the app and automation runs make top-level
   workspaces.
 - Four protocol docs passed about 250 lines, so the documentation skill
   split them. Whole sections moved, word for word, to

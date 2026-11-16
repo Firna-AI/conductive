@@ -2,6 +2,7 @@ import {
   placeWorkspaces,
   type TreeWorkspace,
 } from '../../src/shared/workspace-tree'
+import { namedBranchSql } from '../lifecycle/workspace-branch'
 import { activeShellMemberPredicate } from './feature-shell-access'
 import { shellSections } from './shell-data'
 
@@ -91,14 +92,16 @@ export async function updateShellWorkspace(
   const guard = `org_id = ? AND archived_at IS NULL AND state != 'archived'
     AND ${activeShellMemberPredicate}
     AND EXISTS (SELECT 1 FROM sections WHERE org_id = ? AND id = COALESCE(?, workspaces.section_id))`
+  const branch = namedBranchSql(name)
   const statements = [
     db
       .prepare(
-        `UPDATE workspaces SET name = COALESCE(?, name), section_id = COALESCE(?, section_id), updated_at = MAX(updated_at, ?)
+        `UPDATE workspaces SET name = COALESCE(?, name), branch = ${branch.sql}, section_id = COALESCE(?, section_id), updated_at = MAX(updated_at, ?)
      WHERE id = ? AND ${guard}`,
       )
       .bind(
         name ?? null,
+        ...branch.values,
         sectionId ?? null,
         now,
         workspaceId,

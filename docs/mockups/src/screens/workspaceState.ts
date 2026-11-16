@@ -95,8 +95,10 @@ export const workspaceStateSchema = {
     /**
      * The terminals of the Terminal tool, from decisions 1 and 2 of the
      * terminal tabs change: the one terminal that a workspace starts with, three terminals,
-     * the limit of ten, three terminals whose shown connection ended, or the
-     * one terminal of older cloud computer software, which shows no tabs.
+     * the limit of ten, three terminals whose shown connection ended, the
+     * one terminal of older cloud computer software, which shows no tabs, or
+     * a link of the output under the mouse pointer, from the terminal links
+     * change.
      */
     terminals: { enum: terminalStates },
     /**
@@ -205,10 +207,10 @@ export const workspaceStateSchema = {
      */
     org: { enum: ['active', 'suspended'] },
     /**
-     * The run of a routine that made the workspace (decision 501): a run of
+     * The run of an automation that made the workspace (decision 501): a run of
      * a pull request, a run that Run now started, or a failed run that kept
      * its workspace, whose first start or first turn failed. A run
-     * workspace is a normal workspace, whose header links to its routine,
+     * workspace is a normal workspace, whose header links to its automation,
      * and for a pull request run to the pull request. It shows the chat of
      * its run at the stage of `conversation`: `queued` while the sandbox
      * starts or after a failed first start, or else its first turn. A

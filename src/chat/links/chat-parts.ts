@@ -2,6 +2,13 @@ import { labelHidesAddress, type WebLink } from '../../markdown/web-links'
 import { attachmentForMention } from '../../shared/attachment-mentions'
 import type { FileEntry } from '../../shared/generated/FileEntry'
 import type { Attachment } from '../../shared/generated/Attachment'
+import type { LineRange } from '../../shared/line-target'
+import {
+  codeTarget,
+  fileLinkTarget,
+  mentionTarget,
+  type EntryLookup,
+} from './file-targets'
 import type { Mention } from '../../shared/mention-text'
 import {
   tokens,
@@ -30,8 +37,39 @@ export type ChatPart =
   | CodePart
   | { kind: 'chip'; source: string; target: LinkTarget; strong: boolean }
   | LinkPart
-  | { kind: 'file'; source: string; entry: FileEntry; strong: boolean }
+  | FilePart
+  | FileLinkPart
   | AttachmentPart
+
+/** A part of the label of a link: text or code. */
+type LabelPart = LinkWord
+
+/**
+ * A Markdown link or image of an answer whose target is an entry of the
+ * file tree, such as `[the form](src/app.ts#L42)`. It shows as a link with
+ * its label, which opens the file. An image with no label shows the name
+ * of the file.
+ */
+export type FileLinkPart = {
+  kind: 'file-link'
+  source: string
+  entry: FileEntry
+  lines: LineRange | null
+  label: LabelPart[]
+  strong: boolean
+}
+
+/**
+ * An entry of the file tree that the text names: a `@` mention, or inline
+ * code of an answer. `source` is the text that a copy of its chip gives.
+ */
+export type FilePart = {
+  kind: 'file'
+  source: string
+  entry: FileEntry
+  lines: LineRange | null
+  strong: boolean
+}
 
 /**
  * The mention of a file of the message, which shows as the chip of the
@@ -45,8 +83,7 @@ export type AttachmentPart = {
   strong: boolean
 }
 
-/** Finds the entry of the file tree that a mention names. */
-export type MentionLookup = (mention: Mention) => FileEntry | undefined
+export type { EntryLookup }
 
 /**
  * Splits a sent message or an answer into text, code, chips, and links,
@@ -63,14 +100,16 @@ export type MentionLookup = (mention: Mention) => FileEntry | undefined
  * member, a Markdown link shows as typed, and its address is a link as a
  * bare address is. So does the Markdown of an image, such as
  * `![alt](address)`. A Markdown link whose address is no link shows as
- * typed, with its code and bold.
+ * typed, with its code and bold. With `code` and a tree, a file target
+ * instead shows its label as a link that opens the file.
  *
  * With `strong`, `**` marks bold around text, chips, and links. Bold ends
  * at code, as it did before. With `mentions`, as in a message of a member,
  * each mention of an entry of the file tree is a file chip, and each other
  * mention stays text. `attachments` are the files of a sent message: each
  * mention of the copy path of one of them is the chip of that file, before
- * an entry of the tree, also in a chat without a tree.
+ * an entry of the tree, also in a chat without a tree. With `code`, inline
+ * paths of entries also show as file chips, with their line targets.
  */
 export function chatParts(
   text: string,
@@ -78,7 +117,8 @@ export function chatParts(
   options: {
     strong: boolean
     web: WebLinkOf
-    mentions?: MentionLookup
+    mentions?: EntryLookup
+    code?: { root: string | null }
     attachments?: readonly Attachment[]
   },
 ): ChatPart[] {
@@ -103,9 +143,17 @@ export function chatParts(
       parts.push({ kind: 'attachment', source, path, attachment, strong })
       return
     }
-    const entry = options.mentions?.(mention)
-    if (entry) parts.push({ kind: 'file', source, entry, strong })
-    else addText(source)
+    const found = options.mentions && mentionTarget(mention, options.mentions)
+    if (!found) addText(source)
+    else {
+      parts.push({
+        kind: 'file',
+        source: found.source,
+        ...found.target,
+        strong,
+      })
+      if (found.rest !== '') addText(found.rest)
+    }
   }
   const addLink = (link: WebLink, words: readonly LinkWord[]) => {
     parts.push({ kind: 'link', link, words, strong })
@@ -130,6 +178,20 @@ export function chatParts(
     )
   const addMarkdown = (token: LinkToken, markdown: MarkdownLink) => {
     const { href, source } = token
+    const { mentions, code } = options
+    const file = mentions && code && fileLinkTarget(href, mentions, code.root)
+    if (file) {
+      const label =
+        markdown.label.trim() === '' ? file.entry.name : markdown.label
+      parts.push({
+        kind: 'file-link',
+        source,
+        ...file,
+        label: labelWords(label),
+        strong,
+      })
+      return
+    }
     if (!markdown.image) {
       const target = linkTarget(href, links)
       if (target) {
@@ -158,7 +220,15 @@ export function chatParts(
       else if (token.kind === 'text') addText(token.text)
       else if (token.kind === 'code') {
         strong = false
-        parts.push(linked ? codePart(token.text, options.web) : token)
+        const { mentions, code } = options
+        const file =
+          linked &&
+          mentions &&
+          code &&
+          codeTarget(token.text, mentions, code.root)
+        if (file)
+          parts.push({ kind: 'file', source: token.text, ...file, strong })
+        else parts.push(linked ? codePart(token.text, options.web) : token)
       } else if (token.kind === 'mention') addMention(token.mention)
       else if (token.markdown) addMarkdown(token, token.markdown)
       else addAddress(token.href)
@@ -169,6 +239,7 @@ export function chatParts(
       marks: options.strong,
       links: true,
       mentions: counts,
+      paths: options.code !== undefined && options.mentions !== undefined,
     }),
     true,
   )

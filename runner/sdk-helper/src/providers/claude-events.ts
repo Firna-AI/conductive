@@ -10,6 +10,24 @@ export function synthetic(text: string): boolean {
   return /^\[Request interrupted by user(?: for tool use)?\]$/.test(text.trim())
 }
 
+function userUuids(input: Record<string, unknown>): string[] {
+  return Array.isArray(input.user_message_uuids)
+    ? array(input.user_message_uuids, string)
+    : typeof input.user_message_uuid === 'string'
+      ? [input.user_message_uuid]
+      : []
+}
+
+interface Continuation {
+  uuid: string
+  wake: boolean
+}
+
+interface Reply {
+  uuids: readonly string[]
+  userMessageIds: readonly string[]
+}
+
 /**
  * Claude names a tool of an MCP server `mcp__<server>__<tool>`. This gives
  * the tool part of such a name, or null for any other tool.
@@ -24,35 +42,61 @@ function mcpTool(name: string): string | null {
 export class ClaudeEvents {
   private messageId = ''
   private readonly tools = new Map<string, ReturnType<typeof mapTool>>()
-  private userIds: string[] = []
+  private reply: Reply = { uuids: [], userMessageIds: [] }
   private errorKind: ReturnType<typeof assistantError> = null
-  private readonly ids: Map<string, string>
+  private unfinished = false
+  private continued = false
+  private continuation: Continuation | null = null
+  private readonly ids: Map<string, readonly string[]>
   private readonly hasOutstanding: (uuid: string) => boolean
   private readonly emit: (event: ProviderEvent) => void
   private readonly messages: ClaudeMessages
   private readonly background: ClaudeBackground
+  private readonly continueInput?: (userMessageIds: readonly string[]) => string
   readonly speed: ClaudeSpeed
   stopped = false
 
   constructor(
-    ids: Map<string, string>,
+    ids: Map<string, readonly string[]>,
     emit: (event: ProviderEvent) => void,
     hasOutstanding: (uuid: string) => boolean,
     background = new ClaudeBackground(emit),
     fast = false,
+    continueInput?: (userMessageIds: readonly string[]) => string,
   ) {
     this.ids = ids
     this.hasOutstanding = hasOutstanding
     this.emit = emit
     this.background = background
+    this.continueInput = continueInput
     this.messages = new ClaudeMessages(emit)
     this.speed = new ClaudeSpeed(emit, fast)
   }
 
-  accept(value: unknown): void {
+  accept(value: unknown): readonly string[] | undefined {
     const input = object(value)
-    const wake = input.type === 'result' && !this.answersOutstandingInput(input)
-    if (wake && !this.background.waited) return
+    const uuids = userUuids(input)
+    const continuation =
+      input.type === 'result' ? this.continuationFor(input, uuids) : null
+    const completed =
+      continuation && !uuids.length ? [continuation.uuid] : uuids
+    let reply = this.reply
+    if (
+      Array.isArray(input.user_message_uuids) ||
+      (typeof input.user_message_uuid === 'string' &&
+        this.ids.has(input.user_message_uuid))
+    )
+      reply = this.association(uuids)
+    if (continuation && !uuids.length)
+      reply = this.reply.uuids.includes(continuation.uuid)
+        ? this.reply
+        : this.association(completed)
+    const wake =
+      input.type === 'result' &&
+      (continuation
+        ? continuation.wake && !reply.userMessageIds.length
+        : !this.answersOutstandingInput(input))
+    if (wake && !this.background.waited && !continuation) return
     if (
       this.background.waited &&
       input.type === 'system' &&
@@ -60,21 +104,12 @@ export class ClaudeEvents {
       input.state === 'running' &&
       ![...this.ids.keys()].some(this.hasOutstanding)
     )
-      this.userIds = []
+      this.reply = this.association([])
     if (this.background.accept(input)) return
+    if (wake) reply = this.association([])
+    this.reply = reply
     if (typeof input.session_id === 'string')
       this.emit({ type: 'conversation', id: input.session_id })
-    if (wake) this.userIds = []
-    else if (Array.isArray(input.user_message_uuids)) {
-      this.userIds = array(input.user_message_uuids, string).flatMap((id) =>
-        this.ids.has(id) ? [this.ids.get(id) ?? ''] : [],
-      )
-    } else if (
-      typeof input.user_message_uuid === 'string' &&
-      this.ids.has(input.user_message_uuid)
-    ) {
-      this.userIds = [this.ids.get(input.user_message_uuid) ?? '']
-    }
     if (input.parent_tool_use_id) return
     this.speed.accept(input)
     if (input.type === 'stream_event') this.partial(object(input.event))
@@ -92,7 +127,7 @@ export class ClaudeEvents {
       const message = object(input.message)
       const id = string(message.id)
       const blocks = array(message.content, object)
-      this.messages.frame(id, blocks, this.userIds)
+      this.messages.frame(id, blocks, this.reply.userMessageIds)
       for (const block of blocks) {
         if (block.type === 'tool_use') this.beginTool(block)
       }
@@ -120,17 +155,64 @@ export class ClaudeEvents {
     }
     if (input.type === 'result') {
       this.messages.finish()
-      const outcome = claudeOutcome(input, this.errorKind, this.stopped)
-      if (outcome.state === 'failed') this.emit(outcome.failure)
-      else if (wake) this.emit({ type: 'wake-up', state: outcome.state })
-      else
-        this.emit({
-          type: 'result',
-          state: outcome.state,
-          userMessageIds: this.userIds,
-        })
+      const outcome = claudeOutcome(
+        input,
+        this.errorKind,
+        this.stopped,
+        this.unfinished,
+      )
       this.stopped = false
       this.errorKind = null
+      this.unfinished = false
+      if (continuation) this.continuation = null
+      if (outcome.state === 'failed') {
+        if (outcome.dropped && !this.continued && this.continueInput) {
+          this.continued = true
+          this.continuation = {
+            uuid: this.continueInput(reply.userMessageIds),
+            wake,
+          }
+        } else this.emit(outcome.failure)
+        return
+      }
+      if (wake) {
+        this.emit({ type: 'wake-up', state: outcome.state })
+        return
+      }
+      this.emit({
+        type: 'result',
+        state: outcome.state,
+        userMessageIds: reply.userMessageIds,
+      })
+      return completed
+    }
+  }
+
+  private continuationFor(
+    input: Record<string, unknown>,
+    uuids: readonly string[],
+  ): Continuation | null {
+    const continuation = this.continuation
+    if (!continuation) return null
+    if (uuids.length)
+      return uuids.some((uuid) => uuid === continuation.uuid)
+        ? continuation
+        : null
+    const origin = input.origin
+    return typeof origin === 'object' &&
+      origin !== null &&
+      'kind' in origin &&
+      origin.kind === 'task-notification'
+      ? null
+      : continuation
+  }
+
+  private association(uuids: readonly string[]): Reply {
+    return {
+      uuids,
+      userMessageIds: [
+        ...new Set(uuids.flatMap((uuid) => this.ids.get(uuid) ?? [])),
+      ],
     }
   }
 
@@ -143,20 +225,19 @@ export class ClaudeEvents {
       origin.kind !== 'task-notification'
     )
       return true
-    const uuids = Array.isArray(input.user_message_uuids)
-      ? array(input.user_message_uuids, string)
-      : typeof input.user_message_uuid === 'string'
-        ? [input.user_message_uuid]
-        : []
-    return uuids.some(this.hasOutstanding)
+    return userUuids(input).some(this.hasOutstanding)
   }
 
   private partial(event: Record<string, unknown>): void {
     if (event.type === 'message_start') {
+      this.unfinished = true
       this.messageId = string(object(event.message).id)
-      this.messages.start(this.messageId, this.userIds)
+      this.messages.start(this.messageId, this.reply.userMessageIds)
     }
-    if (event.type === 'message_stop') this.messages.finish(this.messageId)
+    if (event.type === 'message_stop') {
+      this.unfinished = false
+      this.messages.finish(this.messageId)
+    }
     if (event.type === 'content_block_start') {
       const block = object(event.content_block)
       if (typeof event.index === 'number')
@@ -164,7 +245,7 @@ export class ClaudeEvents {
           this.messageId,
           event.index,
           typeof block.text === 'string' ? block.text : '',
-          this.userIds,
+          this.reply.userMessageIds,
         )
       if (block.type === 'tool_use') this.beginTool(block)
     }
@@ -180,7 +261,7 @@ export class ClaudeEvents {
           this.messageId,
           typeof event.index === 'number' ? event.index : null,
           delta.text,
-          this.userIds,
+          this.reply.userMessageIds,
         )
         this.emit({
           type: 'delta',
