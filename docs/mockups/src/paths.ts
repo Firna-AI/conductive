@@ -58,6 +58,7 @@ export const paths = {
   accountAgents: 'app/account/agents',
   accountPreferences: 'app/account/preferences',
   accountShortcuts: 'app/account/shortcuts',
+  accountStats: 'app/account/stats',
   accountShortcutsRecording: 'app/account/shortcuts/recording',
   accountShortcutsAdding: 'app/account/shortcuts/recording/adding',
   accountShortcutsChanges: 'app/account/shortcuts/changes',

@@ -3,8 +3,8 @@
 This page belongs to [Screens](screens.md). It describes the account,
 agent login forms, and model lists in the web app.
 
-- The account has four tabs, General, Agents, Preferences, and Keyboard
-  shortcuts, as the org settings have. Each tab is a link with its own
+- The account has five tabs, General, Agents, Preferences, Keyboard
+  shortcuts, and Stats, as the org settings have. Each tab is a link with its own
   address. General holds the sign-in, GitHub, and the invite
   code. Agents, at `/account/agents`, holds the logins of Claude and
   Codex. The `?connect=` address of an agent opens its Connect form on
@@ -22,8 +22,11 @@ agent login forms, and model lists in the web app.
   at once through `AccountModel.saveShortcuts`, as
   [the Keyboard shortcuts tab](../shell/account/shortcuts/README.md) says.
   The keys and every hint of the app use the saved changes at once.
-- The account of the Mac app adds This Mac as its fifth tab, after Keyboard
-  shortcuts. A browser shows General at its address and asks no Mac.
+- Stats, at `/account/stats`, shows the counts of the person signed in.
+  `StatsTab` reads them through `PageRead` each time that the tab opens, as
+  [Account stats](../../docs/protocol/account-stats.md) says. A failed read
+  shows a notice with Try again and no number.
+- The account of the Mac app adds This Mac as its sixth tab, after Stats. A browser shows General at its address and asks no Mac.
 - Each connected login of the account shows its share switch, "Let other
   members use this login", and Get started shows none. The switch saves
   at once through `AccountModel.setNoReuse`. While it saves, it shows the
