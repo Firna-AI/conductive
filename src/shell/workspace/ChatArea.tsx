@@ -7,7 +7,7 @@ import {
 import { routes } from '../../app/router'
 import { useServices } from '../../app/services'
 import { useStore } from '../../app/store'
-import type { ComposerFocus } from '../../chat/components/Composer'
+import type { ComposerFocus } from '../../chat/components/composer-requests'
 import type { ChatHost } from '../../chat/components/SessionChat'
 import type { ChatController } from '../../chat/state/controller'
 import type { RenderTab } from '../../chat/components/tab-row'

@@ -148,7 +148,7 @@ describe('the Files screens in the workspace', () => {
     await pressKey('Escape')
 
     // The address opened the diff in the temporary tab, so its menu leads
-    // with Keep open.
+    // with Keep open. Its label hides a secret value, so it has no Copy path.
     expect({ ...shown, menu, moved, dragging }).toEqual({
       tab: 'seed-[redacted].sql',
       tooltip: 'scripts/seed-[redacted].sql',

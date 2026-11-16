@@ -138,7 +138,10 @@ a dropped folder that the browser cannot read. The app shares these words.
   image, and Preview tabs of the centre column. `temporaryTabStates` covers the
   temporary tab, which `src/screens/workspaceTemporaryTab.ts` draws in the
   row. `composerStates` covers the composer, with its links, mentions,
-  attached files, and drops.
+  attached files, drops, and the chip of Add to chat.
+  `src/screens/rowMenuState.ts` holds the open menu of a row of All files
+  or Changes, which `src/screens/workspaceRowMenu.ts` draws, and the toast
+  after Copy path.
 - A flow (`defineUseCase`) lists the paths of existing screens. Each screen
   that a flow uses names the flow in `useCasePaths`.
 - Screens link to each other with `ScreenLink` from

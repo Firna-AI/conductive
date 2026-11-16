@@ -148,6 +148,8 @@ export function usePreviewCentre(context: WorkspaceContext): PreviewCentre {
       show: () =>
         navigation.push(previewPortHref(org.id, workspace.id, tab.port)),
       keep: null,
+      // A Preview tab names a port, not a file, so its menu has no Copy path.
+      copyPath: null,
     }
   }
 

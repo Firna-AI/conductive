@@ -13,6 +13,7 @@ import {
   type RangeSelection,
 } from 'lexical'
 import { $createAttachedFileNode } from './attached-file-node'
+import { $createFileMentionNode } from './file-mention-nodes'
 import { $caretAtPoint, type FieldPoint } from './point-caret'
 
 /**
@@ -49,6 +50,23 @@ function $spaceFollows(caret: RangeSelection): boolean {
 }
 
 /**
+ * Puts the chips at the caret in their order, each with a space after it, as
+ * after a pick of the list of `@`. The last chip gets no space when one
+ * follows already. The caret then stands after the last new chip.
+ */
+function $insertChips(
+  caret: RangeSelection,
+  chips: readonly LexicalNode[],
+): void {
+  const spaced = $spaceFollows(caret)
+  const nodes = chips.flatMap((chip, index): LexicalNode[] => {
+    const last = index === chips.length - 1
+    return last && spaced ? [chip] : [chip, $createTextNode(' ')]
+  })
+  caret.insertNodes(nodes)
+}
+
+/**
  * Puts a chip of each file at the place under a point over the text, else at
  * the caret, else at the end: in the order of `ids`, each with a space after
  * it, as after a pick of the list of `@`. The last chip gets no space when
@@ -63,11 +81,17 @@ export function $insertFiles(
   const caret = at
     ? $setSelectionFromCaretRange($getCollapsedCaretRange(at))
     : $caretOrEnd()
-  const spaced = $spaceFollows(caret)
-  const nodes = ids.flatMap((id, index): LexicalNode[] => {
-    const chip = $createAttachedFileNode(id)
-    const last = index === ids.length - 1
-    return last && spaced ? [chip] : [chip, $createTextNode(' ')]
-  })
-  caret.insertNodes(nodes)
+  $insertChips(
+    caret,
+    ids.map((id) => $createAttachedFileNode(id)),
+  )
+}
+
+/**
+ * Puts the chip of a mention, such as `@src/lib/`, at the caret, else at
+ * the end, with a space after it unless one follows already, as a pick of
+ * the list of `@` does. The caret then stands after the chip and its space.
+ */
+export function $insertMention(source: string): void {
+  $insertChips($caretOrEnd(), [$createFileMentionNode(source)])
 }

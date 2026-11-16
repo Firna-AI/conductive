@@ -18,6 +18,11 @@ import {
   feedbackStateKeys,
   feedbackStateProperties,
 } from './feedbackState'
+import {
+  rowMenuStateDefaults,
+  rowMenuStateKeys,
+  rowMenuStateProperties,
+} from './rowMenuState'
 
 /**
  * The state of the workspace screen. Each catalogue entry of the screen is a
@@ -56,6 +61,7 @@ export const workspaceStateSchema = {
     'org',
     'palette',
     ...feedbackStateKeys,
+    ...rowMenuStateKeys,
     ...barStateKeys,
   ],
   properties: {
@@ -158,12 +164,13 @@ export const workspaceStateSchema = {
     /**
      * What lies open over the workspace: the session history, the question
      * before a running session closes, the owner of the workspace, the tab
-     * menu of the first session or of the temporary tab, or the question of
-     * Continue with work that is not pushed. Or the question before a
-     * terminal closes, or the toast of a terminal that did not open or close.
-     * Or the menu of the header state, the question of Restart while an
-     * agent works, the time after Restart until the agents are back, or
-     * that time with the toast of a failed update check.
+     * menu of the first session or of the shown file or diff tab, such as
+     * the temporary tab, or the question of Continue with work that is not
+     * pushed. Or the question before a terminal closes, or the toast of a
+     * terminal that did not open or close. Or the menu of the header state,
+     * the question of Restart while an agent works, the time after Restart
+     * until the agents are back, or that time with the toast of a failed
+     * update check.
      */
     overlay: {
       enum: [
@@ -238,6 +245,7 @@ export const workspaceStateSchema = {
      */
     palette: { enum: paletteViews },
     ...feedbackStateProperties,
+    ...rowMenuStateProperties,
     ...barStateProperties,
   },
 } as const
@@ -275,6 +283,7 @@ export const readyWorkspace: WorkspaceState = {
   org: 'active',
   palette: 'closed',
   ...feedbackStateDefaults,
+  ...rowMenuStateDefaults,
   ...barStateDefaults,
 }
 

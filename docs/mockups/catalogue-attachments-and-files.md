@@ -75,13 +75,41 @@ variants:
   title, and the diff of AddressForm.tsx in a new temporary tab at the end
   of the row.
 - Its `menu` variant has the tab menu of the temporary tab: Keep open, a
-  line, then Move left and Move right.
+  line, Copy path, a line, Move left and Move right, a line, then Close
+  tabs to the right.
 - Its `drag` variant has a drag of the temporary tab, whose lifted copy
   keeps the italics. A drop in another place keeps the tab.
 
 A phone row shows no file tabs, so the phone views of these pages show the
 file as a page of the Files tab. `app/tabs` names the page in the text of
 its tab menu and of its drag.
+
+`app/files/menu` draws the menu of a row of All files and Changes, from
+decisions 1 to 4 of the file row menu change. Its canonical screen has the
+menu of AddressForm.tsx in All files, at the pointer of a right click: Add
+to chat, a line, then Copy path. The row keeps the fill of a hover, as a
+tab with an open menu does. On a phone, a long press opens the menu as a
+sheet with the name of the row as its title. The page shows only its
+canonical screen. Its child pages:
+
+- `app/files/menu/folder` has the menu of the folder `src/app/checkout`,
+  with the same items.
+- `app/files/menu/changes` has the menu of AddressForm.tsx in Changes. Its
+  `deleted` variant has the menu of postcodeLookup.ts, which the branch
+  deletes, with only Copy path.
+- `app/files/menu/copied` has the toast "Path copied" after Copy path. Its
+  `failed` variant has the toast of a copy that failed.
+- `app/files/menu/stopped` has the menu while the cloud computer is
+  stopped. Its bar takes the place of the message field, so the menu has
+  only Copy path. A read-only workspace shows no rows: an archived
+  workspace has no file lists, and the refused start of a suspended org
+  takes the place of All files and Changes. So no page draws a row menu of
+  a read-only workspace.
+- `app/files/menu/added` has Address autocomplete after Add to chat, with
+  the chip of AddressForm.tsx at the end of its draft and the caret after
+  the chip. On a phone, it has the chat of that session, with no caret.
+- `app/files/menu/read-only-tab` has the tab menu of useAddressAutocomplete.ts
+  in a workspace of a suspended org, with only Copy path.
 
 The flow `user-flows/drop-a-file` goes from the drag of a screenshot onto
 the message box, through the drop, the upload, and Send, to the sent
