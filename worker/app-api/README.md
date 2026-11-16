@@ -210,14 +210,28 @@ The machine tools use the configured app origin instead.
   [dev fake](../../src/app/dev/create-routes.ts) also show a new workspace
   first.
 - A workspace move request holds `sectionId` and `position`, the index in
-  that section. It can omit `sectionId`. Then the move uses the stored
+  that section among its top-level rows, without the moved tree. A nested
+  row takes no index. The request can omit `sectionId`. Then the move uses the stored
   section of the workspace, inside the transaction. Without `position`,
   the index is 0.
+- `readWorkspaceMove` selects the shown top-level rows and the moved tree
+  with [the shared placement rule](../../src/shared/workspace-tree.ts).
+  It includes archived descendants when it selects the tree.
+  A move writes every tree member's section in one guarded D1 batch.
+  A move of a nested row changes no placement or activity time.
+  A name write still works for a nested row.
 - A section move request holds `position`, the index in the section list.
   Each index counts the rows without the moved row.
 - A move ranks the current rows of its target from an `AS MATERIALIZED`
-  snapshot, then puts the moved row at the index. That keyword makes
+  snapshot, counting only the selected top-level rows. It then puts the
+  moved row at the index. That keyword makes
   SQLite compute the snapshot once, before the update changes a row.
+- `markWorkspaceArchived` gives each first live descendant, reached
+  through archived rows, the archived workspace's section and position.
+  This write follows Archive in the same D1 batch and checks `changes()`.
+  It runs only when Archive wrote. Promoted top-level rows then keep their
+  initial places and can move independently. Restore shows them under
+  their nearest live ancestor again.
 
 ## Development
 
@@ -259,14 +273,17 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
   [agent section calls](../tools/sections-and-previews.md#sections) reuse
   it with the sender as the user.
 - [`workspace-metadata.ts`](workspace-metadata.ts):
-  `changeWorkspaceMetadata`, the rename and the move of one workspace. It
+  `changeWorkspaceMetadata`, the rename and the move of a workspace tree. It
   checks the member and the archive state, runs `updateShellWorkspace`, and
-  publishes the metadata. `feature-workspaces.ts` and the
+  publishes the metadata of each moved workspace. `feature-workspaces.ts` and the
   [agent workspace tools](../tools/workspaces.md#rename-and-move) both call
   it. A tool move to the current section of a workspace changes nothing.
 - [`feature-workspaces-data.ts`](feature-workspaces-data.ts):
-  `updateShellWorkspace`, the rename and the move of a workspace in one D1
-  batch. [`feature-sections-data.ts`](feature-sections-data.ts): the
+  `readWorkspaceTree` and `readWorkspaceMove` read the org's tree and its
+  shown places. `updateShellWorkspace` saves the rename, the tree's sections,
+  and the top-level ranks in one D1 batch.
+  [`archive-data.ts`](archive-data.ts) guards Archive and its promoted rows.
+  [`feature-sections-data.ts`](feature-sections-data.ts): the
   section writes `insertShellSection`, `updateShellSection`, and
   `deleteShellSection`. [List order](#list-order) gives their rules.
 - [`feature-github.ts`](feature-github.ts): account installations and

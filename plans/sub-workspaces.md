@@ -824,23 +824,23 @@ Depends on: 3
 
 The moves of the app and of the tools, as item 4 F says.
 
-- [ ] Place a live workspace with no live workspace above it at its own
+- [x] Place a live workspace with no live workspace above it at its own
       place, in `placeWorkspaces`.
-- [ ] At an Archive, give the live workspaces below the archived one,
+- [x] At an Archive, give the live workspaces below the archived one,
       reached through archived workspaces, its section and place.
-- [ ] Move each workspace of a tree with the move of its top-level row, in
+- [x] Move each workspace of a tree with the move of its top-level row, in
       the metadata write of the app and in `move_workspace`. Write the
       section of the archived workspaces of the tree too.
-- [ ] Rank the places of a section among the trees, so that a nested row
+- [x] Rank the places of a section among the trees, so that a nested row
       takes no place of its own.
-- [ ] Let a move of a nested row change nothing, in the app and in
+- [x] Let a move of a nested row change nothing, in the app and in
       `move_workspace`. Give the `notice` of `move_workspace`, with the
       shared rule of Milestone 3.
-- [ ] Add the tests: a move of a tree to another section, a move inside a
+- [x] Add the tests: a move of a tree to another section, a move inside a
       section, the move of a nested row, the Restore of an archived
       sub-workspace after a move of its tree, and a section delete with a
       tree.
-- [ ] Update the READMEs of the changed areas.
+- [x] Update the READMEs of the changed areas.
 
 ## Milestone 5: Agent context and workspace tools
 

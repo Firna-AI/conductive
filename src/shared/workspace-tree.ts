@@ -27,17 +27,20 @@ export function placeWorkspaces<T extends TreeWorkspace>(
   const sectionIds = new Set(sections.map(({ id }) => id))
   const fallback =
     sections.find((section) => section.isDefault) ?? orderedSections[0]
-  const ids = new Set(workspaces.map(({ id }) => id))
+  const byId = new Map(workspaces.map((workspace) => [workspace.id, workspace]))
   const children = new Map<string, T[]>()
   const roots: T[] = []
   for (const workspace of workspaces) {
-    if (workspace.parentId === null || !ids.has(workspace.parentId)) {
-      roots.push(workspace)
-    } else {
+    if (workspace.parentId !== null && byId.has(workspace.parentId)) {
       const siblings = children.get(workspace.parentId) ?? []
       siblings.push(workspace)
       children.set(workspace.parentId, siblings)
     }
+    if (workspace.state === 'archived') continue
+    let ancestor = byId.get(workspace.parentId ?? '')
+    while (ancestor?.state === 'archived')
+      ancestor = byId.get(ancestor.parentId ?? '')
+    if (!ancestor) roots.push(workspace)
   }
   for (const siblings of children.values()) {
     siblings.sort(

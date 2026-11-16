@@ -56,7 +56,9 @@ For live workspaces, the section comes from the shared
 [row placement helper](../../src/shared/workspace-tree.ts).
 For archived workspaces, it is the workspace's own section.
 The helper takes top-level rows in their existing order, including archived rows.
-It removes archived rows in place and keeps the shown sub-workspaces there.
+It removes archived middle rows in place and keeps their shown sub-workspaces there.
+A live row with no live ancestor uses its own section and input place.
+The Archive write gives promoted rows their first places.
 [The place of a row](../../docs/protocol/sub-workspaces.md#the-place-of-a-row)
 states the rule.
 
@@ -75,6 +77,16 @@ states the rule.
   a workspace without a name.
 - A move puts the workspace first in its destination section. A move to
   the section that already holds the workspace changes nothing.
+- A top-level row moves with every descendant, including archived ones.
+  `readWorkspaceMove` in [feature-workspaces-data.ts](../app-api/feature-workspaces-data.ts)
+  uses the shared placement rule to select the tree and the top-level rows.
+  The batch ranks only those top-level rows and writes each descendant's section.
+- A nested row changes nothing. The route still runs the existing member,
+  workspace, and section checks. It reads the shown top-level workspace
+  with the shared rule and adds `notice` to `AgentWorkspaceResponse`:
+  "Move W-<number> to move this workspace."
+- A top-level row whose parent is archived moves independently.
+  Restore of an ancestor shows it under the nearest live ancestor again.
 
 ## Archive
 
@@ -167,6 +179,9 @@ The [Rust tools crate](../../crates/cnd-tools/README.md) tests CLI and MCP reque
   and archived writes, moves to a section top, unchanged same-section moves,
   stored-sender archive rights, and a self-archive that stops its turn and
   revokes its token.
+- `workspace-tree-actions.test.ts`: a nested move's notice, its unchanged
+  placement and activity time, its existing section check, and a tree move
+  that also publishes a descendant's changed metadata.
 - `workspace-lists.test.ts`: each filter alone and together, paging edges
   and `hasMore`, the direct-parent filter, and malformed options.
 - `workspace-creation.test.ts`, with `workspace-creation.test-support.ts`:

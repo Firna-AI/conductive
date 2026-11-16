@@ -81,14 +81,33 @@ it('replaces an archived top row at its existing place', () => {
     places([
       row('before', null, 2),
       row('archived', null, 1, 'general', 'archived'),
-      row('after', null, 3),
-      row('late-child', 'archived', 9),
       row('early-child', 'archived', 8),
+      row('late-child', 'archived', 9),
+      row('after', null, 3),
     ]),
   ).toEqual([
     ['before', 'general', null, 0],
     ['early-child', 'general', null, 0],
     ['late-child', 'general', null, 0],
+    ['after', 'general', null, 0],
+  ])
+})
+
+it('places a moved row with no live ancestor at its own place', () => {
+  expect(
+    places([
+      row('newer-child', 'archived', 5),
+      row('before', null, 1),
+      row('archived', null, 2, 'general', 'archived'),
+      row('older-child', 'archived', 4),
+      row('after', null, 3),
+      row('grandchild', 'newer-child', 6, 'other'),
+    ]),
+  ).toEqual([
+    ['newer-child', 'general', null, 0],
+    ['grandchild', 'general', 'newer-child', 1],
+    ['before', 'general', null, 0],
+    ['older-child', 'general', null, 0],
     ['after', 'general', null, 0],
   ])
 })
