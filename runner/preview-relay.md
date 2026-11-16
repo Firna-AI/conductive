@@ -33,5 +33,6 @@ Both units stay enabled, so the service starts without waiting for a preview req
 A runner restart does not restart the relay.
 The release system part installs its start script and units.
 The script executes `/opt/conductive/current/conductive relay`.
-A workspace downloads newer software in the background and applies it at a
-later start, as [Release updates](../image/README.md#release-updates) describes.
+A workspace downloads newer software in the background. The relay runs it
+from its next start, also when the runner installs it earlier at idle, as
+[Release updates](../image/README.md#release-updates) describes.

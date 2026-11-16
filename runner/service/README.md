@@ -22,6 +22,18 @@ The check timer also runs after boot and every 10 minutes.
 A start never waits for its download.
 The next start applies a complete newer release before the runner works.
 
+While it runs, the runner also installs a complete newer release when its
+workspace is idle, as
+[Installs at idle](../../docs/protocol/sandbox-software.md#installs-at-idle) says.
+It installs only when its own release is confirmed and the newer release is not rejected.
+It closes its connection, then closes its helper processes and saves its state, as at SIGTERM.
+It runs its executable's `update apply` through noninteractive sudo.
+When `current` then names the newer release, it executes the new
+`/opt/conductive/current/system/runner-start.sh` in the same process.
+The service does not stop, so systemd stops no process of the service group.
+When `current` did not change, the runner warns and connects again on its release.
+A changed runner unit applies only at the next start of the service.
+
 A new runner confirms its release only after its first valid `welcome`.
 Its startup hook calls the resolved executable's `update started` through
 noninteractive sudo. A process start alone clears no pending marker.
@@ -29,6 +41,8 @@ A later apply restores the previous executable and system files when a
 new release remains unconfirmed. That previous release can still run Node.
 
 The service restarts after failure, with a two-second delay.
+So after an idle install, a new release that exits at its start restarts the service.
+That restart stops each process of the service group, and its pre-start apply restores the previous release.
 SIGTERM closes helper processes and ends running turns before the connection closes.
 `KillMode=control-group` keeps its child processes in the service group.
 [Workspace startup](../../image/start.md) gives the build and retention gates.

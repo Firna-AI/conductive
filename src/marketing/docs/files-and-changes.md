@@ -19,7 +19,7 @@ On a phone, open the workspace's **Files** view.
 - **Changes** lists changes against the workspace's base branch.
 - **Checks** shows the pull request's GitHub checks.
 
-An automatic software update brings `.context/` support to an older workspace at a later start.
+An [automatic software update](/docs/cloud-computer#apply-setup-changes) brings `.context/` support to an older workspace at a later start or when it is idle.
 
 An archived workspace keeps read-only chat, with no file lists or tools.
 Its computer and files can stay available for Restore for 14 days after Archive.

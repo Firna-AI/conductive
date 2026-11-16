@@ -30,4 +30,5 @@ content-addressed parts. Current and previous releases retain their own links.
    installer on a development host. It writes fixed sandbox paths.
 
 Each build and refresh installs the newest release. Existing workspaces
-stage updates in the background and apply them before a later runner start.
+stage updates in the background. Their runners apply them when the
+workspace is idle, or before a later runner start.

@@ -90,7 +90,7 @@ With current cloud computer software, workspaces also get a `.context/` folder f
 Git ignores the folder's files unless your repository already tracks them.
 **All files** lists them, so you can open them there.
 **Changes** does not list them.
-An older workspace gets this folder and its file list with an automatic software update at a later start.
+An older workspace gets this folder and its file list with an [automatic software update](/docs/cloud-computer#apply-setup-changes) at a later start or when it is idle.
 
 - [Read files and pictures](/docs/files-and-changes#read-a-file)
 

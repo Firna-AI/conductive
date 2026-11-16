@@ -26,9 +26,9 @@ the change that keeps a turn open for background work.
   [The version pin](version-pins.md#the-version-pin) states the lowest
   version that each workspace accepts.
 - Each build of the org image installs the newest runner. Each sandbox then
-  updates its runner itself at a later start, as
-  [Updates](sandbox-software.md#updates) says. Reason: a fix of the runner
-  then reaches each sandbox with no new workspace.
+  updates its runner itself, at a later start or when its workspace is
+  idle, as [Updates](sandbox-software.md#updates) says. Reason: a fix of
+  the runner then reaches each sandbox with no new workspace.
 - A sandbox runs its older runner until its update applies. A stopped
   sandbox can also resume weeks later with an old runner.
 - A connection to the runner through a Boat port address was rejected,

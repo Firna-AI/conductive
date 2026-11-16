@@ -83,6 +83,17 @@ The runner requests a background check after each start. `conductive-update-chec
 30 seconds of boot and every 10 minutes. The root check service runs the program
 and then exits. No separate updater process remains resident.
 
+A running runner also applies a staged release when its workspace is idle,
+as the [runner service guide](../runner/service/README.md) describes. It
+runs `update apply` through `sudo -n`, then executes the new
+`current/system/runner-start.sh` in the same process. The service does not
+restart, so a changed runner unit applies only at the next start of the
+service. A runner without this step applies a release only at its next start.
+The relay and terminal processes keep their release until they start again.
+A new terminal connection runs the bridge from `current` under the command
+line of the running terminal service. So the bridge keeps its command-line
+arguments compatible across releases.
+
 The Rust runner calls `update started` only after its first valid Worker
 `welcome`. A process start alone leaves the pending marker in place.
 The next apply restores the previous release when confirmation did not occur.
@@ -97,9 +108,10 @@ paths, and its update steps.
 [Install in a build](install.md) describes the verified bootstrap, release
 layout, apt packages, and startup locking. Every org build and refresh uses
 the release installer. The [software image backend](../worker/software-image/README.md)
-uses the same command. A workspace downloads updates in the background and
-applies them before a later runner start. A workspace without the program
-gets it through the background startup bootstrap.
+uses the same command. A workspace downloads updates in the background. Its
+runner applies them when the workspace is idle, or before a later runner
+start. A workspace without the program gets it through the background
+startup bootstrap.
 
 ## Start in a workspace
 

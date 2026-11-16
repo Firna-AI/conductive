@@ -162,6 +162,13 @@ decision 1.
    reload does not apply the new interval to the running timer, the
    script also restarts the timer.
 
+9. **A failed install changes nothing and does not repeat** (found in
+   the orchestrator check, 2026-11-16). When `update apply` fails and the
+   store still names the running release with no pending marker, the
+   runner warns and connects again. It makes no other idle install in
+   that process. Reason: an exit would restart the service and stop each
+   agent process, and the same failure would repeat every 2 minutes.
+
 No wire type, stored data, or Worker API changes. An older runner never
 swaps, so a rollback to it needs nothing new.
 
@@ -172,20 +179,21 @@ Depends on: none
 Update the requirements and the decisions in force for decisions 1, 2,
 and 3.
 
-- [ ] Update [Updates](../docs/protocol/sandbox-software.md#updates): the
+- [x] Update [Updates](../docs/protocol/sandbox-software.md#updates): the
       check every 10 minutes, the swap at idle with its conditions, no
       guard for a release that cannot connect, and the rejected options.
       Replace "The program never restarts the software to apply an
       update" with the rule of option F.
-- [ ] Update [The agent runner](../docs/protocol/agent-runner.md#the-agent-runner):
+- [x] Update [The agent runner](../docs/protocol/agent-runner.md#the-agent-runner):
       a sandbox updates its runner at a later start or when it is idle.
-- [ ] Update `docs/architecture/sandbox-software.md`, the
+- [x] Update `docs/architecture/sandbox-software.md`, the
       [runner service README](../runner/service/README.md), the
       [image README](../image/README.md), and `image/install.md`.
-- [ ] Read both legal pages and each public guide in
+- [x] Read both legal pages and each public guide in
       `src/marketing/docs/` in full. Update each sentence that restates
-      the update rules.
-- [ ] Check each relative link of each changed Markdown file.
+      the update rules. Evidence:
+      `.context/idle-update-restart/legal-and-guides-read.md`.
+- [x] Check each relative link of each changed Markdown file.
 
 ## Milestone 2: Check every 10 minutes
 
@@ -202,31 +210,34 @@ Depends on: 1
 
 Depends on: 1
 
-- [ ] Add `CommandHandler::busy`, with the idle rules of design item 2,
+- [x] Add `CommandHandler::busy`, with the idle rules of design item 2,
       in `AgentEngine` and `ReportCommandHandler`. Test each rule.
-- [ ] Add the release port of design item 3 in `cnd-cli`, and compose it
+- [x] Add the release port of design item 3 in `cnd-cli`, and compose it
       into the runner. Test it with a rejected, an incomplete, and an
       unconfirmed version.
-- [ ] In `RunnerCore`, check every 60 seconds. When idle for 2 minutes,
+- [x] In `RunnerCore`, check every 60 seconds. When idle for 2 minutes,
       with a newer release and a confirmed running release, close the
       link, shut down, and return a swap result. Test: a swap when idle;
       no swap while busy, before 2 minutes, or without a newer release.
-- [ ] In `runner_command`, run `update apply` through `sudo -n`, check
+- [x] In `runner_command`, run `update apply` through `sudo -n`, check
       `current`, and exec the new `runner-start.sh`. When `current` did not
       change, connect again. Test the decision with fakes.
-- [ ] Prove design item 5 with a Worker test: a command sent to a
+- [x] Prove design item 5 with a Worker test: a command sent to a
       connection that closes unread reaches the next connection once.
-- [ ] Check that the terminal bridge keeps its command-line arguments, as
+- [x] Check that the terminal bridge keeps its command-line arguments, as
       design item 6 says.
-- [ ] Run the Rust checks of `AGENTS.md`.
+- [x] Run the Rust checks of `AGENTS.md`.
+
+Implementation and check evidence: `.context/idle-update-restart/rust-report.md`.
 
 ## Milestone 4: Verification, commit, review, and pull request
 
 Depends on: 2, 3
 
-- [ ] Run the targeted tests, the complete gate, and the Rust checks and
-      release build named in `AGENTS.md`.
-- [ ] Commit with Conventional Commits and push the branch.
+- [x] Run the targeted tests, the complete gate, and the Rust checks and
+      release build named in `AGENTS.md`. Evidence:
+      `.context/idle-update-restart/gate/`.
+- [x] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
