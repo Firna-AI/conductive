@@ -54,7 +54,7 @@ A null stored base uses the repository default branch.
 
 [Input activity](routes.md#input-activity) gives how one
 `InputActivityOwner` in each workspace object takes the input of the
-browser and of previews. Terminal frames report no activity.
+browser. Previews and terminal frames report no activity.
 
 ### Machine route
 
