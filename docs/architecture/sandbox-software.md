@@ -9,11 +9,13 @@ states the rules of the releases and the updates. A decision number names
 a dated record, as [Decision numbers](../architecture.md#decision-numbers)
 says. A sandbox software decision number, such as sandbox software
 decision 3, names a decision of the change that makes the sandbox software
-update itself.
+update itself. An idle update decision number, such as idle update
+decision 1, names a decision of the change that installs a new release
+while the workspace is idle.
 
 ## Programs
 
-Every sandbox holds two programs of the app (sandbox software decision 3):
+The sandbox software includes these programs:
 
 - `conductive`, one Rust program. Its subcommands run the agent runner,
   the preview relay, the agent tools, the git credential helper, and the
@@ -23,11 +25,14 @@ Every sandbox holds two programs of the app (sandbox software decision 3):
   Codex SDK for the runner, because these SDKs exist only in TypeScript
   and Python. The runner starts it as a child process. The two programs
   exchange JSON lines.
+- The terminal bridge, a Node program. Each terminal connection runs it
+  between ttyd and tmux. It sends the raw shell output to the browser, so
+  the browser can keep and select the output history.
 
 Reason: one program then holds one update path for each part. The preview
-relay and the git credential helper need no npm package, so Node runs only
-the SDK helper. Rust only later, a Rust installer only, and a Rust
-installer with only the workspace CLI were rejected. A runner with no Node
+relay and the git credential helper need no npm package. The SDK helper
+and the terminal bridge share the release's private Node. Rust only later,
+a Rust installer only, and a Rust installer with only the workspace CLI were rejected. A runner with no Node
 was left out, because the stream protocol of the `claude` program is not a
 published stable API.
 
@@ -42,14 +47,18 @@ The program also installs the other parts of the software:
 - the SDK helper, with its private Node, its packages, and the agent
   programs
 - the units of the runner and the preview relay
-- the scripts and units of the terminal service, on a private port
+- the scripts, bridge, and units of the terminal service, on a private port
 - the wrapper of the GitHub CLI, and the Git setting of the credential
   helper
 - a udev rule that stops disk flushes at each boot, as
   [Disk flushes](../protocol/workspaces-and-sandboxes.md#disk-flushes) says
 
 The image build installs the system packages, such as the terminal
-packages `ttyd` and `tmux`.
+packages `ttyd` and `tmux`. It runs apt only when the image lacks a
+package, when the ttyd service is not masked, or when the apt part of the
+build changed, as
+[Installs in a build](../protocol/sandbox-software.md#installs-in-a-build)
+says.
 
 ## Releases and updates
 
@@ -60,13 +69,22 @@ packages `ttyd` and `tmux`.
    (sandbox software decision 4). It writes the JSON file of the newest
    release last.
 3. In each sandbox, the updater reads that JSON file when the runner
-   starts and every hour. It uses the `cli-updater` crate of
+   starts and every 10 minutes. It uses the `cli-updater` crate of
    `futex-ai/cli-release` (sandbox software decision 1).
 4. The updater downloads a newer release in the background, with only the
-   parts that changed. The next start of the runner applies it (sandbox
-   software decision 5).
-5. Each build of an org image or of the software image installs the newest
-   release through the same program.
+   parts that changed. It never changes the release that runs.
+5. The runner decides when its own release changes, because only the
+   runner knows whether a turn runs. When its workspace is idle, the
+   runner closes its connection, runs the updater as root to install the
+   release, and runs the new release in the same process (idle update
+   decision 1). So its service keeps running, and so does each process
+   that an agent started. Otherwise, the next start of the runner applies
+   the release (sandbox software decision 5). The preview relay and the
+   terminal run a new release from their next start.
+6. Each build of an org image or of the software image installs the newest
+   release through the same program. When the image already holds the
+   program, the build uses its updater, which downloads only the parts
+   that changed.
 
 ## Message types
 

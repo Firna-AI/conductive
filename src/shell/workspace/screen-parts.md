@@ -224,6 +224,11 @@ tools.
   as Ctrl+K on Windows and Linux, as
   [Where a key goes](../../../docs/protocol/keyboard-shortcuts.md#where-a-key-goes)
   says. The buttons of the tool, such as Reconnect, keep no key.
+- The tools part gives the terminal its links, from `useTerminalLinks` of
+  `tools/terminal-links.ts`. A local address goes to `previewPortHref` of
+  its port, an app page to its address in the app, and every other link to
+  `openInNewTab`. The router decides which addresses of the app origin are
+  pages.
 - The tabs of the tools panel name the keys of Go to Terminal and Go to
   Preview in their tooltips, as the palette's Go to rows run them.
 - Each tool reads its routes with the `fetch` of the org's `ApiClient`,
@@ -235,7 +240,9 @@ The workspace screen keeps one GitHub store, through `useGitHubState` of
 [the GitHub screens](../../github/README.md), for the pull request bar or
 row and the Checks tab of the Files part. It reads with the `fetch` of
 the org, waits with the timer of the app, and takes the GitHub events of
-the ordered stream of the workspace.
+the ordered stream of the workspace. Of the old GitHub states that a replay
+of the stream holds, it takes only the newest, so the bar does not flicker
+through them while the workspace loads.
 
 - The screen keeps one action state for the bar on desktop and the top of
   the Checks tab on a phone, as

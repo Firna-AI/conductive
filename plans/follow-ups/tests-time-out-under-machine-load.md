@@ -78,6 +78,14 @@
   It does not establish the cause of the other failures.
   The blocked awaits and the cause remain unknown.
   Machine load is not established as the cause.
+- On 16 November 2026, the main merge into `calummoore/lima-gc9c` ran the complete gate without another test run beside it.
+  The suite passed 3,310 tests and reported two lifecycle timeouts:
+  - `worker/lifecycle/ownership-maintenance.test.ts`, "retries a revoked-token stop after active ownership and preserves maintenance before a fresh resume": `Error: Test timed out in 15000ms.`
+  - `worker/lifecycle/disk-retention-time-limit.test.ts`, "ends an unready retention restart at its original deadline through phase changes, reconstruction, and stop retries, then permits user resume": `Error: Test timed out in 15000ms.`
+  Both files match `main` at `eedd836791eaf1793563a4fc4ad207398cdc60a1`.
+  Both files then passed unchanged together: six tests, no failures or skips.
+  The same rerun included the marketing site file, which failed setup with the separate known cross-device rename error.
+  Machine contention during native fixture work is suspected. The blocked await and the cause are not established.
 - On 16 November 2026, the merge of `origin/main` at `a20746b99` into
   `calummoore/quito-oqn7` passed every static check and 54 targeted endpoint
   tests. The local complete gate was interrupted after repeated timeouts
@@ -120,6 +128,23 @@
   Worker sources. The case passed in 13.37 seconds, with all assertions kept.
   This comparison does not establish why the runs under `/home` timed out.
   No assertion, test timeout, or gate configuration changed.
+- On 16 November 2026, the main merge into `calummoore/delft-i3g7`
+  passed every static gate step and 275 selected tests.
+  The complete Vitest run was stopped after 39 failed cases across
+  16 completed Worker test files. The run is partial.
+  The files cover Continue, startup retries, device approval, publication,
+  archive, workspace lifecycle, image sources, model endpoints, and previews.
+  All 16 files match main at `699027931e00f214ef4ba734cdfd0907093590a7`.
+  `worker/features/continue-routes.test.ts` then failed alone on the
+  merged tree with `Error: Test timed out in 15000ms.`
+  Its only case, "resumes Continue through real routes and socket wake,
+  fences sends and Archive, expires recovered credentials, and routes
+  new-branch GitHub events", also failed alone in a clean detached checkout
+  of that main commit with the same error.
+  The merged-tree rerun took 26.15 seconds. The main run took 22.65 seconds.
+  This proves that the Continue timeout occurs without the merge.
+  The other failures were not reproduced on main in this attempt.
+  The blocked await and cause remain unknown.
 - **Problem:** These tests depend on wall-clock time limits, so a busy machine can fail them with no defect in the code.
 - **Impact if no action:** A slow CI runner or a busy developer machine can fail the gate now and then, and a person must rerun it.
 - **Root question:** How do these tests stay correct on a slow or busy machine?

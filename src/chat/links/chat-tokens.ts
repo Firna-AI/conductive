@@ -45,6 +45,7 @@ interface Reading {
   marks: boolean
   /** Links count. A text that shows as typed reads again without them. */
   links: boolean
+  paths?: boolean
   /**
    * Whether a mention counts, as in a message of a member. The `@` of each
    * other mention reads as plain text.
@@ -91,6 +92,17 @@ function markdownLinkAt(
   return null
 }
 
+/** A file image includes its leading exclamation mark in the link source. */
+function imageLinkAt(
+  text: string,
+  at: number,
+  targetAt: TargetReader,
+): LinkToken | null {
+  const link = markdownLinkAt(text, at + 1, targetAt)
+  if (!link || /^https?:/u.test(link.href)) return null
+  return { ...link, source: `!${link.source}` }
+}
+
 /**
  * The bare web address at `at`, or null. Where `**` marks bold, the address
  * ends before the next mark, so bold around the address stays bold.
@@ -109,7 +121,9 @@ function bareAddressTokenAt(
  * The tokens of a chat text, from left to right. A backtick starts code,
  * which runs to the next backtick, or to the end of the text. Outside code,
  * a Markdown link, a bare web address, and a `**` mark each start where
- * they stand, so code and bold in a link label stay in the link.
+ * they stand, so code and bold in a link label stay in the link. A mention
+ * starts at the start of the text, after a space or a line break, or right
+ * after a mark. It ends before the next mark.
  */
 export function tokens(text: string, reading: Reading): Token[] {
   const found: Token[] = []
@@ -134,7 +148,14 @@ export function tokens(text: string, reading: Reading): Token[] {
       index += add({ kind: 'mark' }, 2)
       continue
     }
-    const mention = mentionAt(text, index)
+    const mark = reading.marks ? text.indexOf('**', index) : -1
+    const scope = mark === -1 ? text : text.slice(0, mark)
+    // Right after a mark that the reader reads, a mention can start too,
+    // as in `**@src/app.ts**` (answer chip decision 5).
+    const afterMark = plain === '' && found.at(-1)?.kind === 'mark'
+    const mention = afterMark
+      ? mentionAt(scope.slice(index), 0)
+      : mentionAt(scope, index)
     if (mention && reading.mentions(mention)) {
       index += add({ kind: 'mention', mention }, mention.source.length)
       continue
@@ -148,11 +169,13 @@ export function tokens(text: string, reading: Reading): Token[] {
     }
     const link = !reading.links
       ? null
-      : text[index] === '['
-        ? markdownLinkAt(text, index, targetAt)
-        : text.startsWith('http', index)
-          ? bareAddressTokenAt(text, index, reading.marks)
-          : null
+      : reading.paths && text[index] === '!' && text[index + 1] === '['
+        ? imageLinkAt(text, index, targetAt)
+        : text[index] === '['
+          ? markdownLinkAt(text, index, targetAt)
+          : text.startsWith('http', index)
+            ? bareAddressTokenAt(text, index, reading.marks)
+            : null
     if (link) {
       index += add(link, link.source.length)
       continue

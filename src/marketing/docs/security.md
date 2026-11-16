@@ -100,8 +100,8 @@ Tool messages follow the receiving session's login-sharing rules.
 These workspace actions need no separate approval screen.
 Previews that agents open need sign-in and workspace access.
 
-A routine can start agent work from a pull request.
-Comments and reviews on that pull request can steer these reads and changes across the org, with the routine owner's rights.
+An automation can start agent work from a pull request.
+Comments and reviews on that pull request can steer these reads and changes across the org, with the automation owner's rights.
 Conductive sets no limit on the number of sessions or messages that agents create.
 Agents that keep replying to each other can spend logins and keep computers running.
 Use **Stop** in each affected session to end its turn.
@@ -133,7 +133,9 @@ That token can use the session starter's login through Conductive while the turn
 It also works from outside the cloud computer during that turn.
 
 After **Stop**, the token can start no new request.
-Any request that still runs ends within 30 seconds after the turn ends.
+A request that still runs ends at the first turn check that answers after the turn ends.
+Conductive checks the turn every 15 seconds.
+While no check answers, the request can run to the end of its answer.
 Changing or removing the session starter's login ends the turn at its next model request.
 The same happens if that member loses org access.
 A program that keeps running can read or copy the tokens of later turns, including turns in other members' sessions.

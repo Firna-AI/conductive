@@ -53,6 +53,11 @@ export type RailState = {
    * menu opens at the pointer, and the tile keeps the fill of a hover.
    */
   menu?: OrgKey
+  /**
+   * The workspace list of the hidden sidebar is open as a popover, from a
+   * click on the tile of the current org.
+   */
+  popover?: boolean
 }
 
 /** The rail of the canonical views: every org, with Acme open. */
@@ -126,6 +131,7 @@ export function OrgRail(props: RailState) {
             {dropAt(index)}
             <OrgItem
               current={props.current === org.key}
+              expanded={props.popover && props.current === org.key}
               hint={props.hint === org.key}
               menu={
                 props.menu === org.key

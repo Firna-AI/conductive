@@ -2,43 +2,37 @@ import { entryName } from '../../../docs/mockups/src/components/chat/entryPaths'
 import { FileChip } from '../../../docs/mockups/src/components/chat/FileChip'
 import { SentFileChip } from '../../../docs/mockups/src/components/chat/SentFileChip'
 import type { FileEntry } from '../../shared/generated/FileEntry'
-import { isPlainClick } from '../../shell/ui/AppLink'
+import { lineLabel } from '../../shared/line-target'
 import { MentionIcon } from '../mentions/MentionIcon'
 import { useChatMentions } from '../mentions/MentionsContext'
-import type { AttachmentPart } from './chat-parts'
+import type { AttachmentPart, FilePart } from './chat-parts'
+import { fileOpener, fileTitle } from './file-opener'
 
 /**
- * A file or a folder in a sent message: a link of the app to the file, or
- * to All files with the folder open, as a press in All files opens them.
- * A click with a modifier key stays with the browser.
+ * A file or a folder in a sent message or an answer: a link of the app to
+ * the file, or to All files with the folder open, as a press in All files
+ * opens them. A file with `lines` opens as text at the lines, and its name
+ * and title end with them, as in `app.ts:42`. A click with a modifier key
+ * stays with the browser.
  */
-export function FileLink(props: { entry: FileEntry; source: string }) {
+export function FileLink(props: { part: FilePart }) {
   const mentions = useChatMentions()
-  const { entry } = props
+  const { entry, lines } = props.part
   const folder = entry.kind === 'directory'
+  const at = lines ? `:${lineLabel(lines)}` : ''
   return (
     <FileChip
       entry={{ path: entry.path, folder }}
       icon={<MentionIcon entry={entry} size={12} />}
-      mention={props.source}
+      mention={props.part.source}
+      lines={at || undefined}
       name={entry.name}
       opener={
         mentions
-          ? (chip) => (
-              <a
-                {...chip}
-                href={mentions.href(entry)}
-                onClick={(event) => {
-                  if (!isPlainClick(event)) return
-                  event.preventDefault()
-                  if (folder) mentions.showFolder(entry.path)
-                  else mentions.openFile(entry.path)
-                }}
-              />
-            )
+          ? (chip) => <a {...chip} {...fileOpener(mentions, entry, lines)} />
           : undefined
       }
-      title={folder ? `${entry.path}/` : entry.path}
+      title={fileTitle(entry, lines)}
     />
   )
 }
@@ -70,17 +64,7 @@ export function AttachmentLink(props: {
       mention={props.part.source}
       opener={
         files
-          ? (chip) => (
-              <a
-                {...chip}
-                href={files.href(copy)}
-                onClick={(event) => {
-                  if (!isPlainClick(event)) return
-                  event.preventDefault()
-                  files.openFile(path)
-                }}
-              />
-            )
+          ? (chip) => <a {...chip} {...fileOpener(files, copy, null)} />
           : undefined
       }
     />

@@ -56,7 +56,12 @@ export function devMentions(
       subscribe: () => () => undefined,
       getSnapshot: () => skillSnapshot,
     },
-    openFile: (path) => note(`The app opens ${path}.`),
+    openFile: (path, lines) =>
+      note(
+        lines
+          ? `The app opens ${path} at lines ${lines.start} to ${lines.end}.`
+          : `The app opens ${path}.`,
+      ),
     showFolder: (path) => note(`The app shows ${path}/ in All files.`),
     href: (entry) => `#${entry.path}`,
   }

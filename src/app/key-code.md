@@ -31,9 +31,10 @@ Each path is relative to `src/app/`, the folder of this page.
   the chat API, and the file client.
 - `api/client.ts`: the JSON client and `ApiError`. The client also gives
   its `fetch`, for a feature client that reads its own replies, so the web
-  app and the Mac app keep their transport. Its `sendFile` sends a raw file
-  through the file transport of the services: `api/xhr-files.ts` in the
-  browser and in the Mac app. `api/read-*.ts`: the readers.
+  app and the Mac app keep their transport. Its `sendPart` sends a raw part
+  of a file with `PUT` through the file transport of the services:
+  `api/xhr-files.ts` in the browser and in the Mac app.
+  `api/read-*.ts`: the readers.
   [api/read-shortcuts.ts](api/read-shortcuts.ts) reads both shortcut keyboards and
   the reply of a shortcut save with the shared reply readers. A malformed
   account structure remains an `invalid_response` error from the API
@@ -86,7 +87,7 @@ Each path is relative to `src/app/`, the folder of this page.
 - [getStartedCopy.ts](../../docs/mockups/src/screens/getStartedCopy.ts): the
   setup text that the app and mockups share.
 - `org-model.ts`: the sections, workspaces, repositories, builds, members,
-  routines, and computer settings of one org, with `watch`. `org-waits.ts`
+  automations, and computer settings of one org, with `watch`. `org-waits.ts`
   gives the wait of each part, such as `workspacesWait`.
   `OrgModel.startBuild` sends Build computer and Try again for each screen
   that offers them.
@@ -95,22 +96,22 @@ Each path is relative to `src/app/`, the folder of this page.
   workspace show until the org has a good image. `changedScriptNotice`
   gives the words of the notice of a changed install script, which the
   Cloud computer tab of an admin and of a member show.
-- `api/read-routines.ts`: the readers of the routines, each with its newest run, and of one routine. `api/read-routine-runs.ts`: the readers of the runs.
-- `routine-model.ts`: `RoutineModel`, one routine with its reads, its
-  saves, and its runs, and `routineModel`, the model that the org keeps for
-  each routine. Its `client` sends the other requests of the routine page,
-  and a `routine_not_found` from any of them reads the routine again.
-  `routine-actions.ts`: create, update, Turn off, Delete, and Run now,
-  which also update the Routines list.
-- `routine-runs.ts`: `RoutineRuns`, the Runs list of one routine: the
+- `api/read-automations.ts`: the readers of the automations, each with its newest run, and of one automation. `api/read-automation-runs.ts`: the readers of the runs.
+- `automation-model.ts`: `AutomationModel`, one automation with its reads, its
+  saves, and its runs, and `automationModel`, the model that the org keeps for
+  each automation. Its `client` sends the other requests of the automation page,
+  and an `automation_not_found` from any of them reads the automation again.
+  `automation-actions.ts`: create, update, Turn off, Delete, and Run now,
+  which also update the Automations list.
+- `automation-runs.ts`: `AutomationRuns`, the Runs list of one automation: the
   pages that it shows, which each read gets again from the newest run
   while the page shows them, Show older runs, which adds a page, and Run
   now.
-- `routine-draft.ts`: the draft of the routine page, the equality of each
+- `automation-draft.ts`: the draft of the automation page, the equality of each
   of its fields, its create and update requests, and whether Save can send
-  it. `routine-triggers.ts`: the
+  it. `automation-triggers.ts`: the
   defaults of a new trigger and the edits of an author filter.
-  `routine-cron.ts`: the rule of a custom cron, which the Worker applies
+  `automation-cron.ts`: the rule of a custom cron, which the Worker applies
   too.
 - `repository-changes.ts`: the saved repository changes that the org
   image lacks, from `BuildsResponse.changes`. `repositoryWaitOf` gives
@@ -216,7 +217,8 @@ Each path is relative to `src/app/`, the folder of this page.
   says.
 - `new-workspace-marks.test.ts` checks the IDs at once, the words outside
   the chips, and the mentions in the order of the chips. It also checks
-  undo of a ready file, stopped and queued uploads, a sign-out, and the
+  undo of a ready file, stopped and queued uploads, a Remove while the
+  start call or the complete call of a file waits, a sign-out, and the
   text that a create took. `new-workspace-refusals.test.ts` checks folder
   names with no files, an empty pick, a file with no bytes, a sign-out,
   and a failed create.
@@ -236,9 +238,10 @@ Each path is relative to `src/app/`, the folder of this page.
   of a row wait while one of them saves.
 - `build-log-follower.ts`: `BuildLogFollower`, the reads and the timer of
   the log of one build.
-- `events.ts`: the ordered event stream, its count of reconnects, the event
-  socket, and `openSocket`, the terminal socket on the same origin as the
-  events.
+- `events.ts`: the ordered event stream and its count of reconnects. Its
+  `subscribe` tells the replayed events from the live ones.
+- `event-socket.ts`: the event socket of the Worker, and `openSocket`, the
+  terminal socket on the same origin as the events.
 - `workspace-store.ts`: `useWorkspaceStore`, which gives a connected view
   the store of its workspace, and the `create` and `connect` functions that
   the view supplies.
@@ -287,6 +290,8 @@ Each path is relative to `src/app/`, the folder of this page.
   the entry of each item, and `intakeOf`, which turns each folder into its
   zip. `folder-zip.ts`: `zipFolder`, the zip of one dropped folder in the
   browser, with `fflate`, which stops at the size limit of an attachment.
+  It moves the compressed bytes into blobs of about 8 MiB, so the page
+  never holds the whole zip.
   `folder-entries.ts`: the parts of a dropped entry that the zip reads. `useFileDropGuard` cancels each drag of files that no part
   took, so the browser opens no file in place of the page. `App` and the
   chat development page mount it. The composer drop and the
@@ -322,27 +327,27 @@ Each path is relative to `src/app/`, the folder of this page.
   names the entry points of the command palette, the layers of each
   frame, New workspace as a dialog, and feedback with its screenshots.
 - `../shell/Shell.tsx` and `../shell/OrgRoutes.tsx`: the screen of each address.
-- `../shell/routines/RoutinesScreen.tsx`: the Routines page, which the
-  Routines link of the sidebar and of the phone list opens.
-  [Routines](../../docs/protocol/routines.md#the-routine-pages) states what
+- `../shell/automations/AutomationsScreen.tsx`: the Automations page, which the
+  Automations link of the sidebar and of the phone list opens.
+  [Automations](../../docs/protocol/automations.md#the-automation-pages) states what
   it shows.
-- `../shell/routines/RoutineScreen.tsx`: the routine page and the page of
-  a new routine. `RoutineEditor.tsx` is the form of the owner, and
-  `RoutineReader.tsx` the read-only view of every other member, with Turn
-  off and Delete for an admin. `useRoutineSave.ts` is Save, with the login
-  that a save refused. `RoutineFrame.tsx` puts the Runs list beside the
+- `../shell/automations/AutomationScreen.tsx`: the automation page and the page of
+  a new automation. `AutomationEditor.tsx` is the form of the owner, and
+  `AutomationReader.tsx` the read-only view of every other member, with Turn
+  off and Delete for an admin. `useAutomationSave.ts` is Save, with the login
+  that a save refused. `AutomationFrame.tsx` puts the Runs list beside the
   form on desktop, and on the Runs tab of a phone. It alone shows the
-  notice of a suspended org, in every view of the page. `RoutineNote.tsx`
-  is the note above a routine, which reads the saved repository from the
+  notice of a suspended org, in every view of the page. `AutomationNote.tsx`
+  is the note above an automation, which reads the saved repository from the
   repository list of the org.
-- `../shell/routines/RunsPanel.tsx` and `RunList.tsx`: the Runs list, with
+- `../shell/automations/RunsPanel.tsx` and `RunList.tsx`: the Runs list, with
   the mark, the state, the trigger, the pull request, and the time of each
   run, and the link to its workspace. `run-copy.ts`: the mark of a run, the
   cause of a failed run in words, from the agent and the owner of the run
   itself, and the reason of a skipped run, with the login of an account
   outside the org. `RunNow.tsx`: Run now of the owner.
 - `../shell/workspace/RunLine.tsx`: the line under the header of a run
-  workspace, which links to its routine, and to the pull request of a pull
+  workspace, which links to its automation, and to the pull request of a pull
   request run.
 - `../shell/ui/useSavedDraft.ts`: the draft of an editor of a saved value,
   as one value or field by field (`eachField`).

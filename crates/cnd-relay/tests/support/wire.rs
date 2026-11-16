@@ -16,6 +16,22 @@ pub(crate) async fn head(stream: &mut (impl AsyncRead + Unpin)) -> TestResult<St
     }
 }
 
+/// Reads one reply by its `Content-Length`, so the read never waits for the connection to end.
+pub(crate) async fn read_reply(
+    stream: &mut (impl AsyncRead + Unpin),
+) -> TestResult<(String, Vec<u8>)> {
+    let headers = head(stream).await?;
+    let length = headers
+        .lines()
+        .find_map(|line| line.strip_prefix("content-length: "))
+        .ok_or("missing content length")?
+        .trim()
+        .parse::<usize>()?;
+    let mut body = vec![0; length];
+    stream.read_exact(&mut body).await?;
+    Ok((headers, body))
+}
+
 pub(crate) async fn reply(
     stream: &mut TcpStream,
     status: &str,

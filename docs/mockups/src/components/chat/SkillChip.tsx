@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { SquareSlash } from 'lucide-react'
 import a11y from '../common/a11y.module.css'
+import { ChipCopyText } from './ChipCopyText'
 import { ChipEndRemove, ChipIconCell, type ChipRemoval } from './ChipRemove'
 import base from './InlineChip.module.css'
 import { useChipClass, type ChipOpener } from './WorkspaceChip'
@@ -30,8 +31,9 @@ export function SkillIcon(props: { size: number }) {
  * pointer turns into a × that removes the chip. Where no pointer hovers, as
  * on a phone, the icon stays and a × ends the chip. A chip in a sent
  * message has no ×. `opener` makes the chip an element that opens a page.
- * `mention` marks the chip with its text, such as `/plans`, so a copy of a
- * sent message can give it. It takes no fixtures, so the app can use it.
+ * `mention` marks the chip with its text, such as `/plans`, and a copy of
+ * the chip gives that text, as `ChipCopyText` says. It takes no fixtures,
+ * so the app can use it.
  */
 export function SkillChip(props: {
   skill: ChipSkill
@@ -57,6 +59,7 @@ export function SkillChip(props: {
           <span className={base.name}>{skill.name}</span>
         </span>
         {removal ? <ChipEndRemove removal={removal} /> : null}
+        <ChipCopyText text={props.mention} />
       </>
     ),
   }

@@ -14,6 +14,21 @@
   box-sizing: border-box;
 }
 
+/*
+ * Without a sidebar, the controls sit in the top left corner, over the rail
+ * and the start of the top bar of the main area, with their own width.
+ */
+.corner {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  left: 0;
+  width: var(--mac-corner-width, 164px);
+  border-right: 0;
+  border-bottom: 1px solid var(--ui-border);
+  background: var(--ui-bar);
+}
+
 /* The space that the window buttons take, in a window only. */
 .reserved {
   flex-shrink: 0;

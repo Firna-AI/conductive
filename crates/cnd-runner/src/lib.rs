@@ -19,6 +19,7 @@ pub mod runtime;
 pub mod skills;
 pub mod socket;
 pub mod state;
+pub mod update;
 pub mod watcher;
 
 #[cfg(test)]

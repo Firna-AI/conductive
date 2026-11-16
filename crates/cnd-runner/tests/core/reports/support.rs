@@ -69,6 +69,9 @@ impl Repository for Source {
 pub(super) struct Next(pub mpsc::UnboundedSender<RunnerCommand>);
 #[async_trait]
 impl CommandHandler for Next {
+    async fn busy(&self) -> Result<bool> {
+        Ok(false)
+    }
     fn connected(&self) -> BoxFuture<'static, Result<()>> {
         Box::pin(async { Ok(()) })
     }

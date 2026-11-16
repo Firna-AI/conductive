@@ -23,6 +23,8 @@ export interface AttachmentRecord {
   expiresAt: number
   claimedWorkspaceId: string | null
   claimedMessageId: string | null
+  transferredSandboxId: string | null
+  bytesDeletedAt: number | null
   revision: number
 }
 
@@ -38,7 +40,7 @@ export function attachmentTooLarge(): HttpError {
   return new HttpError(
     413,
     'attachment_too_large',
-    'Each file can be up to 100 MB.',
+    'Each file can be up to 1 GB.',
   )
 }
 

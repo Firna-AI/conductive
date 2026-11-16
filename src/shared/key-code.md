@@ -59,10 +59,11 @@ page.
 - [Attachment mentions](attachment-mentions.ts): `attachmentForMention`
   finds the attached file that a file mention of the message names.
   `textWithAttachmentNames` puts the original name of each such file in
-  place of its mention. `hasOwnWords` says whether the text holds more than
-  spaces and those mentions.
-- [Session title](session-title.ts): `sessionTitleFrom` puts in those names
-  before it takes the first line and cuts it to 60 code points. It gives
+  place of its mention. `titleSourceText` does the same for titles, but it
+  leaves out each mention of an attached image. `hasOwnWords` says whether
+  the text holds more than spaces and those mentions.
+- [Session title](session-title.ts): `sessionTitleFrom` applies
+  `titleSourceText` before it takes the first line and cuts it to 60 code points. It gives
   null when the text holds nothing but those mentions. `modelTitleFrom`
   first changes each underscore of a model answer to a space.
 - [Port reports](ports.ts) carry sorted listening ports and their safe labels.
@@ -101,17 +102,17 @@ page.
 - [Org settings](org-settings.ts) carry the base image software for the Cloud computer tab.
 - [Feedback contracts](feedback.ts) define the feedback path, its request and reply, and its byte limits.
 - [Image signatures](images.ts) give `readImage` and `CheckedImage`. [images.test.ts](images.test.ts) checks the four formats, both GIF signatures, and refused or short signatures.
-- [Routines](routines.ts) define routine paths, editable fields, triggers, inactive reasons, and run states.
+- [Automations](automations.ts) define automation paths, editable fields, triggers, inactive reasons, and run states.
   Author-filter requests carry logins. Saved filters carry account IDs and canonical logins.
   Run now takes a page request ID and returns its run after workspace admission.
-  Run history returns up to 50 runs and a `nextCursor` for `routinePaths.runs`.
-  Each run carries its own `agent` and `owner`, independent of later routine edits or owner moves.
+  Run history returns up to 50 runs and a `nextCursor` for `automationPaths.runs`.
+  Each run carries its own `agent` and `owner`, independent of later automation edits or owner moves.
   An unknown historical agent or owner is null.
   Removed workspaces have a null run workspace ID, while first-turn failures keep their workspace link.
   A pull request trigger can carry `skipLogin`, the account login of an author or sender skip.
   Older runs and skips without an account omit it.
-- [Workspace views](workspace-view.ts) add the routine ID and name of a run, or null, in backend replies.
-  The routine's `pullRequest` holds the run's pull request number and URL, or null for scheduled and Run now runs.
+- [Workspace views](workspace-view.ts) add the automation ID and name of a run, or null, in backend replies.
+  The automation's `pullRequest` holds the run's pull request number and URL, or null for scheduled and Run now runs.
   Replies also carry `baseBranch`, resolved by the Worker. View writes cannot change it.
 - [Base image](base-image.ts) records the software labels, their primary source, and the source check date.
 - [Browser fakes](../test-support/README.md) use these response types.

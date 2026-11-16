@@ -1,0 +1,115 @@
+import type { Viewport } from '@mokly/mokly'
+import type { AutomationRow } from '../../fixtures/automationRows'
+import { offAfterFailedRuns, repositoryOf } from '../../fixtures/automations'
+import { classes } from '../common/classes'
+import { ScreenLink } from '../common/ScreenLink'
+import { StatusText, type StatusTone } from '../common/StatusText'
+import { PersonAvatar } from '../orgs/OrgTile'
+import { StatusGlyph } from '../workspaces/StatusGlyph'
+import { runStateLabels } from './runCopy'
+import { triggersSummary } from './triggerCopy'
+import styles from './AutomationList.module.css'
+
+/** The state of the last run and its time, or no run yet. */
+function LastRun(props: { row: AutomationRow }) {
+  const run = props.row.lastRun
+  if (!run) return <span className={styles.lastRun}>No runs</span>
+  return (
+    <span
+      className={styles.lastRun}
+      title={`Last run: ${runStateLabels[run.state]}, ${run.when}`}
+    >
+      <StatusGlyph status={run.state} />
+      <span className={styles.when}>{run.when}</span>
+    </span>
+  )
+}
+
+function Owner(props: { row: AutomationRow }) {
+  const { owner } = props.row.automation
+  return (
+    <span className={styles.owner} title={`By ${owner.name}`}>
+      <PersonAvatar initials={owner.initials} size={18} />
+      <span className={styles.ownerName}>{owner.name}</span>
+    </span>
+  )
+}
+
+/**
+ * Whether the automation is on. An automation that turned off after failed runs
+ * says so in short, under Off (decision 513 B).
+ */
+function State(props: { row: AutomationRow }) {
+  const { automation } = props.row
+  const failed = offAfterFailedRuns(automation)
+  let tone: StatusTone = automation.active ? 'success' : 'muted'
+  if (failed) tone = 'danger'
+  return (
+    <span className={styles.state}>
+      <StatusText label={automation.active ? 'Active' : 'Off'} tone={tone} />
+      {failed ? <span className={styles.reason}>3 failed runs</span> : null}
+    </span>
+  )
+}
+
+function Row(props: { row: AutomationRow; to?: string; viewport: Viewport }) {
+  const { row, to } = props
+  const { automation } = row
+  const detail = `${repositoryOf(automation)} · ${triggersSummary(automation.triggers)}`
+  const mobile = props.viewport === 'mobile'
+  const content = (
+    <>
+      <span className={styles.text}>
+        <span className={styles.name}>{automation.name}</span>
+        <span className={classes(styles.detail, mobile && styles.wrap)}>
+          {detail}
+        </span>
+        {mobile ? (
+          <span className={styles.facts}>
+            <Owner row={row} />
+            <LastRun row={row} />
+          </span>
+        ) : null}
+      </span>
+      {mobile ? null : <LastRun row={row} />}
+      {mobile ? null : <Owner row={row} />}
+      <State row={row} />
+    </>
+  )
+  return (
+    <li className={styles.item}>
+      {to ? (
+        <ScreenLink className={classes(styles.row, styles.link)} to={to}>
+          {content}
+        </ScreenLink>
+      ) : (
+        <span className={styles.row}>{content}</span>
+      )}
+    </li>
+  )
+}
+
+/**
+ * The automations of the org. Every member sees each automation (decision 502).
+ * Each row shows the name, the repository, the triggers, the state of the
+ * last run, the person whose logins the runs use, and whether it is on.
+ */
+export function AutomationList(props: {
+  rows: readonly AutomationRow[]
+  /** The automation pages that the mockups draw, by automation. */
+  links: Readonly<Record<string, string>>
+  viewport: Viewport
+}) {
+  return (
+    <ul aria-label="Automations" className={styles.list}>
+      {props.rows.map((row) => (
+        <Row
+          key={row.automation.key}
+          row={row}
+          to={props.links[row.automation.key]}
+          viewport={props.viewport}
+        />
+      ))}
+    </ul>
+  )
+}

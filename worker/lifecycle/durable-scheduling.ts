@@ -8,6 +8,7 @@ import {
   type LifecyclePublisher,
 } from './durable-types'
 import { isConfirmedStopped } from './confirmed-stop'
+import { isFailedRestart, restartDeadline } from './durable-restart'
 
 export async function writeLifecycleState(
   storage: LifecycleStorage,
@@ -83,7 +84,7 @@ export async function scheduleLifecycleState(
       ? null
       : isConfirmedStopped(state)
         ? state.nextDiskKeepaliveAt
-        : state.state === 'error'
+        : state.state === 'error' && !isFailedRestart(state)
           ? now() + 5_000
           : state.runningSessions.length
             ? now() + TURN_HEARTBEAT_MS
@@ -93,6 +94,7 @@ export async function scheduleLifecycleState(
     const next = Math.min(
       alarm,
       hooks.checkRestore ? (state.restoreWatchAt ?? Infinity) : Infinity,
+      restartDeadline(state) ?? Infinity,
     )
     await storage.setAlarm(
       !state.runnerConnected && !isConfirmedStopped(state) && hooks.reconcile

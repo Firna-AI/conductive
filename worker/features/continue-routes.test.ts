@@ -193,7 +193,7 @@ it('resumes Continue through real routes and socket wake, fences sends and Archi
       name: 'Kept workspace',
       owner: { id: 'owner' },
     })
-    expect(branch).toMatch(/^owner\/[a-z]+-[a-z0-9]{4}$/)
+    expect(branch).toMatch(/^owner\/kept-workspace-v2-[a-z0-9]{4}$/)
     const history = await f.request(
       chatHistoryPath(OUTER_ORG, OUTER_WORKSPACE, f.firstSession),
     )

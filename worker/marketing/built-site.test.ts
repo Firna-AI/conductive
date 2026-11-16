@@ -7,6 +7,7 @@ import { SITE_FOLDER, SITE_ICONS } from '../../src/shared/site-build'
 import { githubSetupResponse } from '../github-setup'
 import type { SiteBinding } from '../test-support/site-binding'
 import { checkGuideRoutes, checkScrollRegions } from './built-docs.test-support'
+import { checkPricingPage } from './built-pricing.test-support'
 import { checkMacDownloads } from './built-site-downloads.test-support'
 import { checkSharePreview } from './built-site-sharing.test-support'
 import { buildSiteAssets, expectedPolicy } from './built-site.test-support'
@@ -72,13 +73,14 @@ it('leads the header, action, and footer links of the Mac app to both chip downl
   await checkMacDownloads(get, SITE)
 })
 
-it('names no sandbox provider on home, legal, and docs pages', async () => {
+it('names no sandbox provider on home, legal, docs, and pricing pages', async () => {
   for (const path of [
     sitePaths.home,
     sitePaths.terms,
     sitePaths.privacy,
     docsPath,
     `${docsPath}/get-started`,
+    sitePaths.pricing,
   ]) {
     const response = await get(path)
     expect(response.status, path).toBe(200)
@@ -95,6 +97,7 @@ it('allows exactly each page inline style hash and serves every file it names', 
     sitePaths.privacy,
     docsPath,
     `${docsPath}/get-started`,
+    sitePaths.pricing,
     '/missing',
   ]) {
     const response = await get(path)
@@ -129,15 +132,8 @@ it('renders class-coloured code and named keyboard scroll regions', async () => 
   await checkScrollRegions(get)
 })
 
-it('serves no pricing page and links none', async () => {
-  const response = await get('/pricing')
-  expect(response.status).toBe(404)
-  const home = await (await get(sitePaths.home)).text()
-  expect(
-    links(home).filter(
-      (link) => link.href.endsWith('/pricing') || link.text === 'Pricing',
-    ),
-  ).toEqual([])
+it('serves public pricing from the header and footer with the site actions', async () => {
+  await checkPricingPage(get, APP_ORIGIN)
 })
 
 it('serves no Conductor comparison page and links none', async () => {

@@ -1,15 +1,19 @@
 // @vitest-environment happy-dom
 
 import { describe, expect, test } from 'vitest'
+import type { AgentChoice } from '../../shared/generated/AgentChoice'
+import type { UserMessage } from '../../shared/generated/UserMessage'
 import { accessibleName } from '../../test-support/dom-queries'
-import { FAKE_IDS } from '../../test-support/fixtures/core'
+import { FAKE_IDS, FAKE_TIME, fakeUser } from '../../test-support/fixtures/core'
+import { senderSnapshot } from '../../test-support/fixtures/workspaces'
 import { mount } from '../../test-support/mount'
+import { UserBubble } from '../components/TranscriptItem'
 import {
   MentionsProvider,
   type ChatMentions,
 } from '../mentions/MentionsContext'
 import { FakeSkills } from '../mentions/skills-test-kit'
-import { LinkedText } from './LinkedText'
+import { AnswerText } from './LinkedText'
 import { Copying, copyAll } from './mention-copy-test-kit'
 import { LinksProvider } from './LinksContext'
 
@@ -19,7 +23,36 @@ const noFiles = {
   treeUnavailable: false,
 }
 
-async function mountText(text: string, skills: FakeSkills | null) {
+const opus: AgentChoice = {
+  agent: 'claude',
+  model: 'Opus 5.5',
+  effort: 'high',
+  fast: false,
+}
+
+/** A sent message of a member with `text`. */
+function sent(text: string): UserMessage {
+  return {
+    id: 'message-1',
+    sessionId: FAKE_IDS.session,
+    sender: senderSnapshot(fakeUser),
+    text,
+    attachments: [],
+    choice: opus,
+    createdAt: FAKE_TIME,
+    state: 'sent',
+  }
+}
+
+/**
+ * Mounts `text` as the chat draws it: a sent message of a member, or with
+ * `answer`, an answer of the agent.
+ */
+async function mountText(
+  text: string,
+  skills: FakeSkills | null,
+  answer = false,
+) {
   const value: ChatMentions | null = skills && {
     files: { subscribe: () => () => undefined, getSnapshot: () => noFiles },
     skills,
@@ -31,9 +64,13 @@ async function mountText(text: string, skills: FakeSkills | null) {
     <LinksProvider value={{ links: { orgId: FAKE_IDS.org, workspaces: [] } }}>
       <MentionsProvider value={value}>
         <Copying>
-          <p>
-            <LinkedText mentions text={text} />
-          </p>
+          {answer ? (
+            <p>
+              <AnswerText text={text} />
+            </p>
+          ) : (
+            <UserBubble message={sent(text)} />
+          )}
         </Copying>
       </MentionsProvider>
     </LinksProvider>,
@@ -70,14 +107,15 @@ describe('skill chips in a sent message', () => {
         },
       ],
       code: '/review',
-      text: 'Run Skill plans and Skill codex-tests now, not /tmp, /review or src/plans',
+      text: 'Run Skill plans/plans and Skill codex-tests/codex-tests now, not /tmp, /review or src/plans',
     })
   })
 
   test('a copy of the message gives the skill text of each chip', async () => {
     const view = await mountText('Run /plans now', new FakeSkills())
     expect(copyAll(view.container)).toEqual({
-      kept: true,
+      copying: true,
+      native: true,
       text: 'Run /plans now',
     })
   })
@@ -98,5 +136,13 @@ describe('skill chips in a sent message', () => {
       'Run /plans now',
       'Run /plans now',
     ])
+  })
+
+  test('an answer keeps each skill text as text', async () => {
+    const view = await mountText('Run /plans now', new FakeSkills(), true)
+    expect({
+      chips: view.chips(),
+      text: view.container.textContent,
+    }).toEqual({ chips: [], text: 'Run /plans now' })
   })
 })

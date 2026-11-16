@@ -79,7 +79,8 @@ The workspace can show **Untitled** before it receives an automatic name.
 The name comes from the first message.
 
 The branch name uses a GitHub login, a city, and a short suffix.
-It stays the same when the workspace receives a name.
+When the workspace receives its name before the cloud computer creates the branch, the city changes to the name.
+After that, the branch name stays the same, also when you rename the workspace.
 To see the checked-out branch, run this command in **Terminal**:
 
 ```bash
@@ -145,6 +146,7 @@ The **New workspace** action at the top of the list uses **General**.
 In the **New workspace** dialog, you can select another section.
 
 The section menu also offers **Rename section**, **Move section up**, **Move section down**, **New section**, and **Delete section**.
+**New section** asks for a name in a dialog, and adds the new section directly below this one.
 Deleting a section moves its workspaces to **General**.
 The default section stays available.
 
@@ -196,6 +198,23 @@ Creating a session without a message starts no computer.
 **Stop** in chat interrupts an agent turn.
 It is separate from the computer's automatic stop.
 
+## Restart the software
+
+Select the state in the workspace header, such as **Ready**, then **Restart**.
+Restart restarts Conductive's agent software and the port previews in the running computer.
+Use it when an agent or a preview stops responding, or to apply a software update now.
+Any member can restart a workspace while it is ready, working, needs input, or has unread output.
+
+Restart first downloads the newest software, for up to 60 seconds.
+If that download fails, a message says so, and the restart uses the installed software.
+The header shows **Starting** until the agents are back.
+
+Restart stops each running agent turn, so it asks first while an agent works.
+The shells and commands in your terminals keep running.
+An open terminal tab disconnects until the agents are back. Then select **Reconnect**.
+Files, sessions, and chat history stay.
+If the restart fails, the workspace shows an error with **Try again**.
+
 ## Recover from a failed start
 
 A computer start has a 20-minute limit.
@@ -225,6 +244,8 @@ On a phone, open **Checks** from the pull request row to find **Continue**.
 The computer starts first if it is stopped.
 The new branch starts from the repository's latest default branch.
 That default branch becomes the workspace's base branch for its new task.
+The new branch name uses the workspace name, a version such as `v2`, and a new short suffix.
+A workspace without a name uses a city in place of the name.
 
 Continue keeps the same cloud computer, files, running servers, sessions, and workspace name.
 It also keeps the software installed by the org's install script.

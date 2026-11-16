@@ -1,4 +1,5 @@
 import { useMemo, type ReactNode } from 'react'
+import type { MarkedLines } from '../code/CodeView'
 import type { FilesClient } from '../api/files-client'
 import { labelName, pageLabel } from '../model/file-labels'
 import type { WorkspaceFiles } from '../model/files-store'
@@ -51,6 +52,8 @@ export function FilePage(props: {
   placeholder?: ReactNode
   /** Keeps a file that the page already shows, in place of the placeholder. */
   keepShown?: boolean
+  /** The lines that the text of the file shows in view and marked. */
+  lines?: MarkedLines | null
 }) {
   const { files, tab, navigation, placeholder } = props
   const snapshot = useFilesSnapshot(files)
@@ -82,6 +85,7 @@ export function FilePage(props: {
   } else if (view) {
     body = (
       <FileContent
+        lines={props.lines}
         mode={tab.mode}
         name={labelName(label)}
         onDownload={download}

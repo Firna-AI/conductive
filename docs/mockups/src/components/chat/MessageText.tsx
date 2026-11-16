@@ -2,17 +2,13 @@ import { Fragment, type ReactNode } from 'react'
 import type { WebAddressLink } from '../../../../../src/markdown/web-links'
 import { nameLabel } from '../../../../../src/shared/name-label'
 import type { Attachment } from '../../fixtures/attachments'
-import type { MentionEntry } from '../../fixtures/fileMentions'
 import { paths } from '../../paths'
 import { ScreenLink } from '../common/ScreenLink'
-import { EntryIcon } from '../files/fileIcons'
-import { previewPaths } from '../files/previewPaths'
 import { workspaceLabel } from '../workspaces/label'
 import type { WorkspaceRow } from '../workspaces/sections'
 import type { ChipRemoval } from './ChipRemove'
 import { useChatWorkspaces } from './chatWorkspaces'
-import { FileChip } from './FileChip'
-import { entryName } from './entryPaths'
+import { FileLinkText, MentionChip } from './MentionChip'
 import { SentFileChip } from './SentFileChip'
 import { SessionChip, type ChipSession } from './SessionChip'
 import { SkillChip } from './SkillChip'
@@ -39,20 +35,6 @@ function chipOf(row: WorkspaceRow): ChipWorkspace {
     status: row.status,
     github: row.github,
   }
-}
-
-/** The icon of an entry, as the All files of the mockups draws it. */
-export function iconOf(entry: MentionEntry) {
-  return <EntryIcon folder={entry.folder} name={entryName(entry)} size={12} />
-}
-
-/**
- * The page that a press on a file chip opens, when the mockups draw it: the
- * tab of the file, as a press in All files opens it. A press on a folder
- * chip shows All files with the folder open, which no view draws.
- */
-function filePage(entry: MentionEntry): string | undefined {
-  return entry.preview ? previewPaths[entry.preview] : undefined
 }
 
 /** The file tab of the copy of an attached file, when the mockups draw it. */
@@ -145,17 +127,8 @@ function Part(props: { part: TextPart; answer: boolean; waits?: boolean }) {
       />
     )
   }
-  if (part.kind === 'mention') {
-    const to = filePage(part.entry)
-    return (
-      <FileChip
-        entry={part.entry}
-        icon={iconOf(part.entry)}
-        mention={part.source}
-        opener={to ? (chip) => <ScreenLink {...chip} to={to} /> : undefined}
-      />
-    )
-  }
+  if (part.kind === 'mention') return <MentionChip part={part} />
+  if (part.kind === 'file-link') return <FileLinkText part={part} />
   if (part.kind === 'skill') {
     return <SkillChip mention={part.source} skill={part.skill} />
   }
@@ -186,6 +159,7 @@ export function LinkText(props: { href: string; source?: string }) {
  * shows as its label. In the text of a member, `mentions` makes each
  * mention of a file or a folder of the tree a chip that opens the file,
  * and each skill of the list a skill chip, which opens nothing.
+ * In an answer, each mention and each inline path of the file tree is a file chip.
  *
  * `files` are the attached files of a sent message. A mention of the copy
  * path of one of them shows as the chip of that file, which opens the file
@@ -195,13 +169,19 @@ export function LinkText(props: { href: string; source?: string }) {
 export function MessageText(props: {
   text: string
   mentions?: boolean
-  strong?: boolean
+  answer?: boolean
   files?: readonly Attachment[]
   waits?: boolean
 }) {
-  const answer = props.strong === true
-  const parts = textParts(props.text, true, props.mentions, props.files)
-  const runs = answer ? strongRuns(parts) : [{ strong: false, parts }]
+  const answer = props.answer === true
+  const parts = textParts(
+    props.text,
+    true,
+    props.mentions,
+    props.files,
+    props.answer,
+  )
+  const runs = props.answer ? strongRuns(parts) : [{ strong: false, parts }]
   return runs.map((run, index) => {
     const content = run.parts.map((part, inner) => (
       <Part answer={answer} key={inner} part={part} waits={props.waits} />

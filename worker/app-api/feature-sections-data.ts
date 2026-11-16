@@ -1,6 +1,13 @@
 import { activeShellMemberPredicate } from './feature-shell-access'
 
-export function insertShellSection(
+/**
+ * Adds a section at the end of the list, or directly below
+ * `afterSectionId` when it is given. A section of that ID that is gone
+ * puts it at the end. The insert and the move run in one batch, and the
+ * move finds the place from the current rows, so the section never shows
+ * in another place.
+ */
+export async function insertShellSection(
   db: D1Database,
   input: {
     id: string
@@ -8,9 +15,10 @@ export function insertShellSection(
     userId: string
     name: string
     now: number
+    afterSectionId?: string
   },
-) {
-  return db
+): Promise<{ id: string } | null> {
+  const insert = db
     .prepare(
       `INSERT INTO sections (id, org_id, name, position, created_at)
      SELECT ?, ?, ?, (SELECT COALESCE(MAX(position) + 1, 0) FROM sections WHERE org_id = ?), ?
@@ -25,7 +33,67 @@ export function insertShellSection(
       input.orgId,
       input.userId,
     )
-    .first<{ id: string }>()
+  if (input.afterSectionId === undefined) return insert.first<{ id: string }>()
+  const [inserted] = await db.batch<{ id: string }>([
+    insert,
+    sectionMoveStatement(db, {
+      orgId: input.orgId,
+      userId: input.userId,
+      sectionId: input.id,
+      to: { after: input.afterSectionId },
+    }),
+  ])
+  return inserted?.results[0] ?? null
+}
+
+/**
+ * Moves a section to `index` of the list, which counts the sections
+ * without the moved one, or directly below the section `after`. An `after`
+ * that is gone moves it to the end. Each section then has its index as its
+ * position.
+ */
+function sectionMoveStatement(
+  db: D1Database,
+  input: {
+    orgId: string
+    userId: string
+    sectionId: string
+    to: { index: number } | { after: string }
+  },
+): D1PreparedStatement {
+  const { orgId, userId, sectionId, to } = input
+  const destination =
+    'index' in to
+      ? 'SELECT MIN(?, COUNT(*)) AS position FROM siblings'
+      : `SELECT COALESCE((SELECT rank + 1 FROM siblings WHERE id = ?), COUNT(*))
+               AS position FROM siblings`
+  return db
+    .prepare(
+      `WITH siblings AS MATERIALIZED (
+             SELECT id, ROW_NUMBER() OVER (ORDER BY position, id) - 1 AS rank
+             FROM sections WHERE org_id = ? AND id != ?
+           ), destination AS MATERIALIZED (
+             ${destination}
+           ), ranks AS MATERIALIZED (
+             SELECT siblings.id, rank + CASE WHEN rank >= destination.position THEN 1 ELSE 0 END AS position
+             FROM siblings CROSS JOIN destination
+             UNION ALL SELECT ?, position FROM destination
+           ) UPDATE sections SET position = (
+             SELECT ranks.position FROM ranks WHERE ranks.id = sections.id
+           ) WHERE org_id = ? AND ${activeShellMemberPredicate} AND id IN (SELECT id FROM ranks)
+             AND EXISTS (SELECT 1 FROM sections target WHERE target.id = ? AND target.org_id = ?)`,
+    )
+    .bind(
+      orgId,
+      sectionId,
+      'index' in to ? to.index : to.after,
+      sectionId,
+      orgId,
+      orgId,
+      userId,
+      sectionId,
+      orgId,
+    )
 }
 
 export async function updateShellSection(
@@ -73,33 +141,12 @@ export async function updateShellSection(
     )
   if (position !== undefined)
     statements.push(
-      db
-        .prepare(
-          `WITH siblings AS MATERIALIZED (
-             SELECT id, ROW_NUMBER() OVER (ORDER BY position, id) - 1 AS rank
-             FROM sections WHERE org_id = ? AND id != ?
-           ), destination AS MATERIALIZED (
-             SELECT MIN(?, COUNT(*)) AS position FROM siblings
-           ), ranks AS MATERIALIZED (
-             SELECT siblings.id, rank + CASE WHEN rank >= destination.position THEN 1 ELSE 0 END AS position
-             FROM siblings CROSS JOIN destination
-             UNION ALL SELECT ?, position FROM destination
-           ) UPDATE sections SET position = (
-             SELECT ranks.position FROM ranks WHERE ranks.id = sections.id
-           ) WHERE ${guard} AND id IN (SELECT id FROM ranks)
-             AND EXISTS (SELECT 1 FROM sections target WHERE target.id = ? AND target.org_id = ?)`,
-        )
-        .bind(
-          orgId,
-          sectionId,
-          position,
-          sectionId,
-          orgId,
-          orgId,
-          userId,
-          sectionId,
-          orgId,
-        ),
+      sectionMoveStatement(db, {
+        orgId,
+        userId,
+        sectionId,
+        to: { index: position },
+      }),
     )
   const result = await db.batch(statements)
   return result[0].meta.changes > 0
@@ -144,7 +191,7 @@ export async function deleteShellSection(
       ),
     db
       .prepare(
-        `UPDATE routines SET
+        `UPDATE automations SET
          section_id = (SELECT id FROM sections WHERE org_id = ? AND is_default = 1),
          updated_at = ?
        WHERE org_id = ? AND section_id = ? AND ${activeShellMemberPredicate}

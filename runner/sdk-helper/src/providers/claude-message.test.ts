@@ -82,8 +82,8 @@ it('uses explicit Claude boundaries and fallbacks while retaining identities and
   const events: ProviderEvent[] = []
   const mapper = new ClaudeEvents(
     new Map([
-      ['one', 'message-one'],
-      ['two', 'message-two'],
+      ['one', ['message-one']],
+      ['two', ['message-two']],
     ]),
     (event) => events.push(event),
     (uuid) => uuid === 'one' || uuid === 'two',

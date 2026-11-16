@@ -40,12 +40,11 @@ import { sendPrompt, type PromptOutcome } from './prompt-actions'
 import { moveTab } from './tab-actions'
 import type { TabPlace } from './tab-order'
 import { ownWorkspaceList, type WorkspaceList } from './workspace-list'
+import { confirmClose, requestClose } from './close-actions'
 import {
-  confirmClose,
   newSession,
   renameSession,
   reopenSession,
-  requestClose,
   selectSession,
   updateView,
 } from './session-actions'
