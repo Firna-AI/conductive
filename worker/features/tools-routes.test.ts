@@ -104,6 +104,18 @@ it('serves terminal and fresh desktop URLs and launches a preview through its se
     state: 'ready',
     protocol: 'tty',
     socketPath: terminalPaths.socket(OUTER_ORG, OUTER_WORKSPACE),
+    terminals: [
+      {
+        id: 'workspace',
+        number: 1,
+        socketPath: terminalPaths.terminalSocket(
+          OUTER_ORG,
+          OUTER_WORKSPACE,
+          'workspace',
+        ),
+      },
+    ],
+    several: false,
   })
   const first = await active.request(desktopPath(OUTER_ORG, OUTER_WORKSPACE))
   expect(first.status).toBe(200)

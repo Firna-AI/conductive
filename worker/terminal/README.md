@@ -2,21 +2,44 @@
 
 This area connects the app terminal to a private ttyd port. It also keeps
 the workspace shells: one tmux session for each terminal, which outlives
-each connection. The current handler still exposes only the first terminal.
+each connection. The workspace object owns the shared list of terminals.
 This area owns the ttyd and tmux package install and the terminal script sources.
 The [sandbox software](../../image/README.md) packages those scripts and their
 systemd units in each release.
 
-The production Worker forwards both terminal paths to the workspace object.
+The production Worker forwards terminal state, list writes, and the legacy socket to the workspace object.
 Its feature handler keeps one terminal connection owner.
 The browser uses the [shared terminal contract](../../src/shared/terminal.ts).
 
-Call `createTerminalHandler(env, dependencies).fetch(request)` for both
-shared terminal paths. The handler runs the app gate on each request and
+Call `createTerminalHandler(env, dependencies, terminals).fetch(request)` for
+the shared terminal paths. Supply the object's `WorkspaceTerminals` owner.
+The handler runs the app gate on each request and
 each upgrade. Its default socket runtime uses Cloudflare WebSocket pairs.
 Tests can inject `dependencies.sockets` at that boundary.
-A socket open for a workspace whose owner is suspended gets 403
+A create, close, or socket open for a workspace whose owner is suspended gets 403
 `user_suspended`. The status read still answers.
+
+`GET terminal` includes the list and the cached `several` support value.
+It keeps the legacy state, protocol, and socket path fields.
+The new shared response fields are optional for existing response readers.
+The Worker always sends them.
+`POST terminal/terminals` creates an entry without starting a shell.
+`DELETE terminal/terminals/<terminalId>` ends its shell and removes the entry.
+Both writes need a running workspace and a trusted app or desktop origin.
+They use the same JSON request gate as the other tools.
+
+`TerminalList` stores IDs and numbers at `terminals:list` in object storage.
+An absent record reads as Terminal 1 with ID `workspace`.
+Its writes and full-list `terminals.updated` events share the chat transaction.
+The common workspace stream publishes only after that transaction commits.
+Replayed creates with the same ID and repeated removals add no second event.
+`WorkspaceTerminals` keeps closing marks in memory while provider calls wait.
+It prevents concurrent closes from removing the last available terminal.
+A failed close clears its mark and keeps its entry.
+The list stays through Stop and resume. The existing payload purge deletes it.
+
+Entry socket paths name individual terminals. The handler currently accepts
+only `GET terminal/socket`, which still opens the `workspace` shell.
 
 The handler opens the `/ws` path of the private ttyd port with the shared
 `portRequest` of the [preview backend](../previews/README.md). That request
@@ -150,12 +173,12 @@ creates a new session. A stop of the sandbox ends both units and the
 session. `/run` is temporary memory storage, so the next start begins with
 no session.
 
-Call `closeWorkspaceTerminal(provider, sandboxId, terminalId)` to end a later
+Call `closeWorkspaceTerminal(provider, sandboxId, terminalId)` to end a
 terminal's session. It validates the ID before it sends one fixed command.
 It runs tmux as `user` on the private socket, with an exact session target.
 An absent session or server succeeds. Other failures and command timeouts
-throw a provider error. The function refuses Terminal 1's fixed ID,
-`workspace`. No route calls this function yet.
+throw a provider error. Terminal 1's fixed ID selects the exact target
+`=workspace`. The close route uses this helper for every terminal.
 
 The workspace lifecycle starts the terminal in two phases of the start,
 after the workspace startup script succeeds at create and at each resume.
@@ -352,17 +375,21 @@ device of Python's `pty` module, and replay its output in
 `@xterm/headless`. They are skipped when the machine has no tmux, except in
 CI, which installs tmux. Run them with `npm run test -- worker/terminal/bridge`.
 
-An org suspension refuses new sockets with 403 `org_suspended`.
+An org suspension refuses creates, closes, and new sockets with 403 `org_suspended`.
 The shared sandbox rule closes existing sockets at their next access check.
 Terminal status reads remain available.
 
 ### Key Code
 
 - [handler.ts](handler.ts) exports `createTerminalHandler`.
+- [request.ts](request.ts) checks terminal paths through the app request gate.
+- [mutations.ts](mutations.ts) applies running and support checks to terminal writes.
+- [workspace.ts](workspace.ts) owns list operations and closing marks beside the chat queue.
+- [list-store.ts](list-store.ts) stores the list and emits its events through [chat/store.ts](../chat/store.ts).
 - [connections.ts](connections.ts) owns terminal registration, expiry, and scheduled access checks.
 - [The shared connection reader](../security/connection-access.ts) reads each session, membership, and sandbox identity in one batch.
 - [service.ts](service.ts) exports `terminalPackagesCommand`, which installs the apt packages without replacing release files. It also exports the setup command `terminalStartCommand`, the password and support read `startWorkspaceTerminal`, and the marker writer `markTerminalRestoreEnded`.
-- [close.ts](close.ts) exports `closeWorkspaceTerminal`, which ends one later terminal's session.
+- [close.ts](close.ts) exports `closeWorkspaceTerminal`, which ends one terminal's session.
 - [The shared terminal contract](../../src/shared/terminal.ts) owns `TERMINAL_PORT`, `FIRST_TERMINAL_ID`, `TERMINAL_ID_PATTERN`, and `isAdditionalTerminalId`.
 - [scripts.ts](scripts.ts) builds the password program, attach program, launcher, and shell server with `credentialScript`, `attachScript`, `launcherScript`, and `sessionServerScript`. It also owns the terminal paths and attach program name, and builds the folder hook with `terminalPromptCommand`.
 - [bridge/main.ts](bridge/main.ts) is the terminal bridge, and [bridge-files.ts](bridge-files.ts) lists its files for the system release packager.

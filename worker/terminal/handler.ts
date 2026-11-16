@@ -5,40 +5,46 @@ import {
 } from '../../src/shared/terminal'
 import type { AppEnv } from '../env'
 import { HttpError, privateResponse } from '../http'
-import {
-  requireRunning,
-  toolError,
-  toolRequest,
-  verifyTarget,
-} from '../previews/access'
+import { requireRunning, toolError, verifyTarget } from '../previews/access'
 import { portRequest } from '../previews/headers'
 import { WorkspaceTools } from '../previews/provider'
 import { bridgeSocket } from '../previews/socket'
 import type { ToolDependencies } from '../previews/types'
 import { ProviderError } from '../sandbox/errors'
-import { terminalPassword } from './credentials'
+import { terminalPassword, terminalSeveral } from './credentials'
+import { initialTerminals } from './list-store'
+import { mutateTerminal } from './mutations'
+import { terminalRequest } from './request'
+import type { WorkspaceTerminals } from './workspace'
 import { terminalFrames } from './protocol'
 import { TerminalConnections, type TerminalRegistration } from './connections'
 
 export function createTerminalHandler(
   env: AppEnv,
   dependencies: ToolDependencies,
+  terminals?: WorkspaceTerminals,
 ) {
   const connections = new TerminalConnections(env, dependencies)
   return {
     fetch: async (request: Request): Promise<Response> => {
       let registration: TerminalRegistration | null = null
       try {
-        const { context, target, tail } = await toolRequest(
+        const { context, target, route } = await terminalRequest(
           request,
           env,
           dependencies.now(),
-          'terminal',
         )
-        if (request.method !== 'GET' || (tail !== null && tail !== 'socket')) {
-          throw new HttpError(404, 'not_found', 'The page is not available.')
+        if (route.kind === 'create' || route.kind === 'close') {
+          return await mutateTerminal(
+            env,
+            dependencies,
+            terminals,
+            target,
+            context.user.id,
+            route,
+          )
         }
-        if (tail === 'socket') {
+        if (route.kind === 'socket') {
           const protocols = (
             request.headers.get('Sec-WebSocket-Protocol') ?? ''
           )
@@ -61,7 +67,16 @@ export function createTerminalHandler(
           target.sandboxId,
           target.providerAccount,
         )
-        if (tail === null) {
+        if (route.kind === 'state') {
+          const list = terminals
+            ? await terminals.list(target.orgId, target.workspaceId)
+            : initialTerminals(target.orgId, target.workspaceId)
+          const several = await terminalSeveral(
+            env,
+            target.workspaceId,
+            target.sandboxId,
+            target.providerAccount,
+          )
           const stopped = ['stopped', 'error'].includes(target.state)
           const ready =
             ['ready', 'working', 'unread', 'input'].includes(target.state) &&
@@ -75,8 +90,15 @@ export function createTerminalHandler(
                   target.workspaceId,
                 ),
                 protocol: 'tty',
+                terminals: list,
+                several,
               }
-            : { state: stopped ? 'stopped' : 'starting', socketPath: null }
+            : {
+                state: stopped ? 'stopped' : 'starting',
+                socketPath: null,
+                terminals: list,
+                several,
+              }
           return privateResponse(Response.json(response))
         }
         requireRunning(target)

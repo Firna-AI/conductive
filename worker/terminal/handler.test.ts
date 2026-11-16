@@ -78,18 +78,36 @@ it('returns ready, starting, and stopped terminal states without exposing a pass
   const handler = createTerminalHandler(harness.env, harness.dependencies)
   const path = terminalPaths.connection(seed.orgId, seed.workspaceId)
   const ready = await handler.fetch(seed.request(path))
+  const terminals = [
+    {
+      id: 'workspace',
+      number: 1,
+      socketPath: terminalPaths.terminalSocket(
+        seed.orgId,
+        seed.workspaceId,
+        'workspace',
+      ),
+    },
+  ]
   expect(ready.status).toBe(200)
   expect(await ready.json()).toEqual({
     state: 'ready',
     protocol: 'tty',
     socketPath: terminalPaths.socket(seed.orgId, seed.workspaceId),
+    terminals,
+    several: false,
   })
   for (const state of ['starting', 'stopped']) {
     await harness.env.DB.prepare('UPDATE workspaces SET state = ? WHERE id = ?')
       .bind(state, seed.workspaceId)
       .run()
     const response = await handler.fetch(seed.request(path))
-    expect(await response.json()).toEqual({ state, socketPath: null })
+    expect(await response.json()).toEqual({
+      state,
+      socketPath: null,
+      terminals,
+      several: false,
+    })
   }
   expect(harness.requests).toHaveLength(startRequests)
 })

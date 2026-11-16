@@ -97,6 +97,41 @@ it('returns no temporary tab for a new view and for older saved views', async ()
   })
 })
 
+it('keeps a valid terminal ID through saves and reads, including unknown IDs', async () => {
+  for (const terminal of ['workspace', '0123456789abcdef0123456789abcdef']) {
+    const expected = { ...view, temporaryTab: null, terminal }
+    const saved = await requestView('PUT', { ...view, terminal })
+    expect(saved.status).toBe(200)
+    expect(await saved.json()).toMatchObject({ view: expected })
+    expect(await (await requestView()).json()).toMatchObject({ view: expected })
+    await storeRawView({ ...view, terminal })
+    expect(await (await requestView()).json()).toMatchObject({ view: expected })
+  }
+})
+
+it('drops invalid terminal IDs and accepts views without a terminal', async () => {
+  for (const terminal of [
+    undefined,
+    null,
+    2,
+    'other',
+    'A'.repeat(32),
+    `${'a'.repeat(32)}\n`,
+  ]) {
+    const saved = await requestView('PUT', { ...view, terminal })
+    expect(saved.status).toBe(200)
+    const expected = { view: { ...view, temporaryTab: null } }
+    const savedBody: unknown = await saved.json()
+    expect(savedBody).toMatchObject(expected)
+    expect(savedBody).not.toHaveProperty('view.terminal')
+    await storeRawView({ ...view, terminal })
+    const loaded = await requestView()
+    const loadedBody: unknown = await loaded.json()
+    expect(loadedBody).toMatchObject(expected)
+    expect(loadedBody).not.toHaveProperty('view.terminal')
+  }
+})
+
 it('accepts invalid temporary marks and loads them as null', async () => {
   const marks: readonly unknown[] = [
     null,

@@ -70,6 +70,7 @@ export class Workspace extends AgentSessionWorkspace {
           : this.chat.runLifecycle(() =>
               this.chat.commitPreviewRevocations(id, ids),
             ),
+      this.chat,
     )
     this.integration.onStopped((id) => this.features.revokeWorkspace(id, true))
     this.github = new WorkspaceGitHub(

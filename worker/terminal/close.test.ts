@@ -70,6 +70,22 @@ exit "$TMUX_EXIT"
     '-t',
     `=terminal-${terminalId}`,
   ])
+  for (message of ['', "can't find session: workspace"])
+    await expect(
+      closeWorkspaceTerminal({ runCommand }, 'bx_one', 'workspace'),
+    ).resolves.toBeUndefined()
+  expect(
+    (await readFile(`${fixture.root}/arguments`, 'utf8'))
+      .split('\0')
+      .slice(0, -1),
+  ).toEqual([
+    '-N',
+    '-S',
+    `${TERMINAL_RUNTIME}/tmux.sock`,
+    'kill-session',
+    '-t',
+    '=workspace',
+  ])
 })
 
 it('reports a failed close or a command timeout as a provider error', async () => {
@@ -86,10 +102,9 @@ it('reports a failed close or a command timeout as a provider error', async () =
   }
 })
 
-it('refuses Terminal 1 and invalid IDs before sending a command', async () => {
+it('refuses invalid IDs before sending a command', async () => {
   const runCommand = vi.fn()
   for (const id of [
-    'workspace',
     '',
     'bad-id',
     `${terminalId}\n`,

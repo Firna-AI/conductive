@@ -12,6 +12,7 @@ import type { GitHubStateTransaction } from '../github/contracts'
 import { ReportRepairs } from './report-repairs'
 import { WorkspaceSummaryProjection } from './workspace-summary'
 import { PreviewRevocations } from '../previews/revocation-events'
+import { TerminalList } from '../terminal/list-store'
 import { RunnerOutputState } from './runner-output-state'
 import {
   CHAT_ROOT as ROOT,
@@ -33,6 +34,7 @@ export class ChatTransaction extends ChatRecords {
   readonly github: GitHubStateTransaction
   readonly repairs: ReportRepairs
   readonly previews: PreviewRevocations
+  readonly terminals: TerminalList
   readonly output: RunnerOutputState
   private readonly summary: WorkspaceSummaryProjection
   private readonly pages = new HistoryPages(this.data)
@@ -50,6 +52,7 @@ export class ChatTransaction extends ChatRecords {
     }
     this.repairs = new ReportRepairs(data)
     this.previews = new PreviewRevocations(data, (event) => this.emit(event))
+    this.terminals = new TerminalList(data, (event) => this.emit(event))
     this.summary = new WorkspaceSummaryProjection(
       data,
       () => this.turns(),

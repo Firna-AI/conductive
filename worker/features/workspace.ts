@@ -4,6 +4,8 @@ import { createFilesHandler } from '../files/handlers'
 import type { WorkspaceFiles } from '../files/workspace'
 import { createDesktopHandler } from '../desktop/handler'
 import { createTerminalHandler } from '../terminal/handler'
+import { WorkspaceTerminals } from '../terminal/workspace'
+import type { WorkspaceChat } from '../chat/backend'
 import { createPreviewHandler } from '../previews/handler'
 import { workspaceRepositoryLocations } from '../lifecycle/repository-location-data'
 import { repositoryLocation } from '../lifecycle/repository-locations'
@@ -44,6 +46,7 @@ export class WorkspaceFeatures {
       ids: readonly string[],
       queueOwned: boolean,
     ) => Promise<void>,
+    chat: WorkspaceChat,
   ) {
     this.env = env
     this.matches = matches
@@ -51,7 +54,11 @@ export class WorkspaceFeatures {
     this.publishPreviews = publishPreviews
     const tools = { ...dependencies, onActivity: activity }
     this.previews = createPreviewHandler(env, tools)
-    this.terminal = createTerminalHandler(env, tools)
+    this.terminal = createTerminalHandler(
+      env,
+      tools,
+      new WorkspaceTerminals(chat),
+    )
     this.desktop = createDesktopHandler(env, tools)
     this.files = createFilesHandler({
       ...dependencies,
@@ -75,8 +82,7 @@ export class WorkspaceFeatures {
         'workspace_not_found',
         'The workspace is not available.',
       )
-    if (/\/terminal(?:\/socket)?$/.test(path))
-      return this.terminal.fetch(request)
+    if (/\/terminal(?:\/.*)?$/.test(path)) return this.terminal.fetch(request)
     if (path.endsWith('/desktop')) return this.desktop.fetch(request)
     if (/\/previews(?:\/[^/]+)?$/.test(path)) {
       const response = await this.previews.fetch(request)

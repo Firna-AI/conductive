@@ -1,4 +1,4 @@
-import { isAdditionalTerminalId } from '../../src/shared/terminal'
+import { FIRST_TERMINAL_ID, isTerminalId } from '../../src/shared/terminal'
 import { ProviderError } from '../sandbox/errors'
 import type { SandboxProvider } from '../sandbox/provider'
 import { privilegedCommand, shellArgument } from './privileged'
@@ -9,9 +9,9 @@ export async function closeWorkspaceTerminal(
   sandboxId: string,
   terminalId: string,
 ): Promise<void> {
-  if (!isAdditionalTerminalId(terminalId))
-    throw new ProviderError('invalid_request', 400)
-  const session = `terminal-${terminalId}`
+  if (!isTerminalId(terminalId)) throw new ProviderError('invalid_request', 400)
+  const session =
+    terminalId === FIRST_TERMINAL_ID ? 'workspace' : `terminal-${terminalId}`
   const socket = `${TERMINAL_RUNTIME}/tmux.sock`
   const command = `set -eu
 if error=$(LC_ALL=C /usr/bin/tmux -N -S ${shellArgument(socket)} kill-session -t ${shellArgument(`=${session}`)} 2>&1); then

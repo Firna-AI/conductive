@@ -1,7 +1,12 @@
 import { HttpError } from '../http'
+import {
+  FIRST_TERMINAL_ID,
+  TERMINAL_ID_PATTERN,
+} from '../../src/shared/terminal'
 
-const featurePath =
-  /^\/api\/orgs\/[^/]+\/workspaces\/([^/]+)\/(?:files\/(?:tree|content|download)|changes(?:\/diff)?|terminal(?:\/socket)?|previews(?:\/[^/]+)?|desktop|github(?:\/(?:checks|stored|capabilities|merge(?:\/[^/]+)?))?)$/
+const featurePath = new RegExp(
+  `^/api/orgs/[^/]+/workspaces/([^/]+)/(?:files/(?:tree|content|download)|changes(?:/diff)?|terminal(?:/socket|/terminals(?:/(?:${FIRST_TERMINAL_ID}|${TERMINAL_ID_PATTERN}))?)?|previews(?:/[^/]+)?|desktop|github(?:/(?:checks|stored|capabilities|merge(?:/[^/]+)?))?)$`,
+)
 
 export function isFeatureWorkspacePath(path: string): boolean {
   return featurePath.test(path)

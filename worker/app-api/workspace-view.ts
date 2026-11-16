@@ -7,6 +7,7 @@ import { identifier, record } from '../chat/inputs'
 import { HttpError } from '../http'
 import { activeOrgIdPredicate } from '../data/org-access'
 import { requireActiveOrg } from '../data/user-access'
+import { isTerminalId } from '../../src/shared/terminal'
 
 function invalidView(): never {
   throw new HttpError(
@@ -64,6 +65,7 @@ export function workspaceViewInput(value: unknown): WorkspaceView {
     temporaryTab: temporaryTab(view.temporaryTab, tabs),
     fileList: view.fileList,
     tool: view.tool,
+    ...(isTerminalId(view.terminal) ? { terminal: view.terminal } : {}),
   }
 }
 

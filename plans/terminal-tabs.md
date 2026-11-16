@@ -439,23 +439,23 @@ Depends on: 3
 
 The list in the workspace object, its routes, and its event.
 
-- [ ] Add the terminal entry, the new fields of the terminal state, the
+- [x] Add the terminal entry, the new fields of the terminal state, the
       paths, and the `terminals.updated` event to `src/shared/`.
-- [ ] Keep the list in the workspace object, with Terminal 1 at the start.
-- [ ] Add the create route: the lowest free number, 409 `terminal_limit`
+- [x] Keep the list in the workspace object, with Terminal 1 at the start.
+- [x] Add the create route: the lowest free number, 409 `terminal_limit`
       at 10, and 409 `terminals_unavailable` without `several`.
-- [ ] Add the close route. Mark the terminal as closing first, so that no
+- [x] Add the close route. Mark the terminal as closing first, so that no
       socket opens it. Then end the shell, remove the entry, and commit
       the event. When the command fails, drop the mark, keep the entry,
       and give an error. Give 409 `terminal_last` for the last terminal.
-- [ ] Commit each change of the list with its event, so that a retry adds
+- [x] Commit each change of the list with its event, so that a retry adds
       no second event.
-- [ ] Give the create and the close the gate of the terminal socket.
-- [ ] Add `terminal` to the saved view, and accept a view without it.
-- [ ] Test the create, the limit, the close, the last terminal, a failed
+- [x] Give the create and the close the gate of the terminal socket.
+- [x] Add `terminal` to the saved view, and accept a view without it.
+- [x] Test the create, the limit, the close, the last terminal, a failed
       close, the event order, a suspended owner, a suspended org, and the
       saved view.
-- [ ] Update `worker/terminal/README.md` and the routes in
+- [x] Update `worker/terminal/README.md` and the routes in
       `worker/README.md`.
 
 ## Milestone 5: The socket of each terminal
