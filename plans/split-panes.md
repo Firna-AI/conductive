@@ -149,6 +149,7 @@ as [Decision numbers](../docs/architecture.md#decision-numbers) says.
 - **Previous examples:** Move left and Move right in the tab menu. The follow-up item `plans/follow-ups/tab-menu-keys-on-a-mac.md` says that Shift and F10 is not yet checked on a Mac.
 - **Recommendation:** B. It extends the tab menu, which the user chose for each earlier keyboard path of a tab, in decisions 188 and 286 B. D is better when the user wants the keyboard to open a left pane. F also helps when the menu keys fail.
 - **Action:** ask the user, because it adds a new menu item that the user did not ask for.
+- **Chosen:** B, by the user on 16 November 2026.
 
 ### 5. The temporary tab with two panes
 
@@ -172,6 +173,7 @@ as [Decision numbers](../docs/architecture.md#decision-numbers) says.
 - **Previous examples:** Decision 284 B. VS Code keeps one preview editor in each group.
 - **Recommendation:** B. It matches VS Code, which the user chose in decision 1 C, and a press never changes the other pane.
 - **Action:** ask the user, because each option changes a decision in force: decision 284 B, the place rule of the temporary tab, or the tie rule of decision 3 B.
+- **Chosen:** B, by the user on 16 November 2026. So each pane keeps its own temporary tab, and the column holds at most two.
 
 ### 6. The least width of a pane
 
@@ -207,6 +209,7 @@ as [Decision numbers](../docs/architecture.md#decision-numbers) says.
 - **Previous examples:** The app keeps one chat at least 360 px wide in `src/shell/workspace/workspace.module.css:28-31`. VS Code keeps an editor group at least 220 px wide. The right column narrows to 280 px in a narrow window.
 - **Recommendation:** G, in place of D, which the options check of 13 November 2026 recommended in place of B. G meets the user input with one rule: everything shrinks with the window, and nothing hides or changes shape at a fixed width. H is better if a pane under 220 px is too narrow to use, at the cost of a panel that hides itself.
 - **Action:** ask the user, because the options trade the width of a pane against a panel or a pane that hides itself, and no option is clearly best.
+- **Chosen:** G, by the user on 16 November 2026. So on desktop the right column first narrows to 280 px, then both panes shrink with the window, with no least width, and a pane under 360 px takes the paddings of a phone.
 
 ### 7. The pane of a session that the member did not open
 
@@ -227,6 +230,7 @@ as [Decision numbers](../docs/architecture.md#decision-numbers) says.
 - **Previous examples:** None found.
 - **Recommendation:** B. The moved draft and the reply then stay beside the chat that the user typed in.
 - **Action:** ask the user, because no requirement covers these sessions. No options check ran over this item yet.
+- **Chosen:** B, by the user on 16 November 2026.
 
 ## Design
 
@@ -240,9 +244,10 @@ first draft, and this text closes them.
   A divider between them moves the split. The browser keeps the share of
   the left pane, as it keeps the panel widths in `src/app/panels.ts`.
   Reason: the panel widths already stay in the browser.
-- A pane is at least 320 px wide, the minimum of the right column, until
-  decision 6 says otherwise. Reason: with default panels, a 1440 px window
-  leaves about 720 px, and two panes must fit there.
+- A pane has no least width on desktop (decision 6 G). While two panes
+  show, the right column first narrows, down to 280 px, so that each pane
+  keeps 320 px. Then both panes shrink with the window. A pane narrower
+  than 360 px gives its chat the paddings of a phone.
 - Each pane has its own tab row, with its own "+" (decision 1 C). The
   session history button stays at the far right of the right row, and it
   reopens a session in the focused pane (decision 3 B).
@@ -296,6 +301,12 @@ first draft, and this text closes them.
   the row does (decision 287 B).
 
 ### The saved view
+
+- Finding 8, chosen B by the user on 16 November 2026: an old copy of the
+  app, such as a browser tab that was open before the deploy, saves the
+  view without panes. The Worker then keeps the stored panes and fits the
+  tab list of the save onto them. Reason: the product is in production,
+  and stored data needs a compatible path.
 
 - The saved view holds a list of one or two panes. Each pane has its tabs
   in order and its shown tab. The view also holds the index of the focused
@@ -485,6 +496,12 @@ screen still draws one pane.
       panes and the focused pane.
 - [ ] Read the old shape and a wrong pane list in
       `worker/app-api/workspace-view.ts`, with Worker tests.
+- [ ] Keep the stored panes when a save has no pane field, as finding 8
+      option B says. The user chose B on 16 November 2026. Fit the tab
+      list of the old save onto the stored panes: each tab stays in its
+      pane, a new tab goes to the focused pane, a closed tab leaves its
+      pane, and each pane keeps its own temporary tab (decision 5 B). Add
+      Worker tests for a save from an old copy of the app.
 - [ ] Move the tab order of `src/chat/state/tab-order.ts` to the panes.
       Moves inside a row and between rows go through one pure function.
 - [ ] Run the targeted tests and `npm run typecheck`.
