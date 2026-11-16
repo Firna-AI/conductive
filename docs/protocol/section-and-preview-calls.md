@@ -39,8 +39,8 @@ number names a dated record, as
   Delete section in the app.
 - So each workspace of the section moves to the default section, also each
   archived one, as [Sections](orgs-and-members.md#sections) says. Each
-  routine of the section moves there too, as
-  [A routine](routines.md#a-routine) says.
+  automation of the section moves there too, as
+  [An automation](automations.md#an-automation) says.
 - The default section cannot be deleted. A delete of it changes nothing,
   as in the app.
 - An unknown section gets HTTP 404 with the error code

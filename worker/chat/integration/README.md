@@ -198,5 +198,5 @@ each group of tests covers. [Outer Worker tests](outer-worker-tests.md)
 gives the tests through the production Worker entry.
 
 The browser harness saves a GitHub token with no expiry for its seeded
-owner, so that a routine's Run now reaches its workspace in a manual smoke
+owner, so that an automation's Run now reaches its workspace in a manual smoke
 test. The shared outer-runtime seed keeps its existing credentials.

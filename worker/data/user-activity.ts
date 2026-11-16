@@ -10,7 +10,7 @@ export const ACTIVITY_WRITE_INTERVAL_MS = 60_000
 /**
  * The person of a signed-in request, as the session gate gives it. Only a
  * route that passed the gate holds a sign-in session ID, so shared code of
- * agent tools and routines cannot record an action of its own.
+ * agent tools and automations cannot record an action of its own.
  */
 type SignedInPerson = Pick<RequestContext, 'user' | 'sessionId'>
 

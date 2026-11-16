@@ -2,9 +2,9 @@
 
 - **Severity:** Low. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
-- **Added:** 2026-11-09, from branch `calummoore/routines-feature-brainstorm`, a new problem of the options check of the routines plan.
+- **Added:** 2026-11-09, from branch `calummoore/routines-feature-brainstorm`, a new problem of the options check of the automations plan.
 - **Location:** `worker/github/webhook-routing.ts:18-27` and `worker/github/webhook-routing.ts:73`.
-- **Reason:** The routines plan does not change how the webhook route reads forks, and the event already starts no work.
+- **Reason:** The automations plan does not change how the webhook route reads forks, and the event already starts no work.
 
 - **Terms:**
   - **Webhook route:** `webhookRoute` in `worker/github/webhook-routing.ts`. It reads a verified GitHub webhook and names the repository and the branch that the event is about, or gives null for an event that the app ignores.
@@ -24,4 +24,4 @@
 - **Wider fix:** B. It covers every missing repository of a pull request, not only a deleted head fork.
 - **Previous examples:** None found.
 - **Recommendation:** B. It ends the false failures for each shape of a missing repository with the same small change.
-- **Action:** fix after merge, apply B, because the problem is outside the scope of the routines plan, and it loses no work.
+- **Action:** fix after merge, apply B, because the problem is outside the scope of the automations plan, and it loses no work.

@@ -26,7 +26,7 @@ export interface WorkspaceView {
 export interface WorkspaceViewResponse {
   view: WorkspaceView
   baseBranch?: string
-  routine?: {
+  automation?: {
     id: string
     name: string
     pullRequest?: { number: number; url: string } | null

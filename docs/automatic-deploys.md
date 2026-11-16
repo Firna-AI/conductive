@@ -196,6 +196,13 @@ A failed run does not roll back.
   D1 with Time Travel to a minute before the migration, together with a
   Worker rollback to a version from before it. That restore loses each D1
   write after that minute.
+- `migrations/202611161300_rename_routines_to_automations.sql` has the same
+  limit. It renames the `routines` and `routine_runs` tables to
+  `automations` and `automation_runs`, with no bridge for an older Worker.
+  A Worker version from before it reads the old tables, so every
+  automation request, schedule scan, and run report of that version fails.
+  Recover in the same way: deploy a fix forward, or restore D1 with Time
+  Travel together with a Worker rollback.
 - [D1 Time Travel](https://developers.cloudflare.com/d1/reference/time-travel/)
   restores the database to an earlier minute. Run
   `npx wrangler d1 time-travel restore DB --timestamp=<time>`, with a Unix

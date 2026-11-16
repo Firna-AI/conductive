@@ -191,7 +191,7 @@ export async function deleteShellSection(
       ),
     db
       .prepare(
-        `UPDATE routines SET
+        `UPDATE automations SET
          section_id = (SELECT id FROM sections WHERE org_id = ? AND is_default = 1),
          updated_at = ?
        WHERE org_id = ? AND section_id = ? AND ${activeShellMemberPredicate}

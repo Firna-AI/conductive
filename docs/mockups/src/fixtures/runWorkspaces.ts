@@ -1,5 +1,5 @@
 /**
- * The workspaces of routine runs that the workspace screen can show. The
+ * The workspaces of automation runs that the workspace screen can show. The
  * base branch of a pull request run is the head branch of its pull
  * request, so its Changes list and its pull request bar show only its own
  * work (decision 507 G).
@@ -11,7 +11,7 @@ import { changedFiles } from './files'
 import { people } from './members'
 import { pullRequest } from './pullRequests'
 import { repositories } from './repositories'
-import { routines } from './routines'
+import { automations } from './automations'
 import {
   cloudStart,
   pullRequestFacts,
@@ -47,8 +47,8 @@ const pullRequestStat = `+${changedLines('added')} −${changedLines('removed')}
 /** The head commit of pull request #482 when it opened. */
 const headCommit = '9c41d7a2f0e85b13c6d4a7e9f2b0c5d8e1a3f604'
 
-const review = routines['review-prs']
-const summary = routines['morning-summary']
+const review = automations['review-prs']
+const summary = automations['morning-summary']
 const storefront = repositories.storefront
 
 const reviewMessage = runMessage(
@@ -99,7 +99,7 @@ export const runWorkspaces: Readonly<Record<RunWorkspaceKey, RunWorkspace>> = {
   'pull-request': {
     workspace: reviewRun,
     origin: {
-      routine: review.name,
+      automation: review.name,
       pullRequest: { number: pullRequest.number, url: pullRequest.url },
     },
     queued: [{ kind: 'user', id: 'run', text: reviewMessage, queued: true }],
@@ -136,7 +136,7 @@ export const runWorkspaces: Readonly<Record<RunWorkspaceKey, RunWorkspace>> = {
   },
   'run-now': {
     workspace: summaryRun,
-    origin: { routine: summary.name },
+    origin: { automation: summary.name },
     queued: [{ kind: 'user', id: 'run', text: summaryMessage, queued: true }],
     firstTurn: [
       { kind: 'user', id: 'run', text: summaryMessage },

@@ -116,7 +116,7 @@ the dev wiring in `dev/`, and what its fake routes do.
   of the switch, or a new code of the operator section cannot reach the
   waitlist screen.
 - Acme has the
-  routines of the mockups, each with the runs that its page in the mockups
+  automations of the mockups, each with the runs that its page in the mockups
   lists. `?runs=failed` or `?runs=skipped` gives Review pull requests the
   failed or the skipped runs of the mockups. A skipped run names the
   account outside Acme by its login. The fake has no workspaces for these
@@ -125,22 +125,22 @@ the dev wiring in `dev/`, and what its fake routes do.
   makes `checkout-autocomplete` the workspace of one run, so its header
   shows the line of that run, with the pull request of a pull request run.
   The other orgs have no
-  routines, so their Routines page shows its empty state. A save of a
-  routine checks the prompt, each custom cron, and the time zone, as the
+  automations, so their Automations page shows its empty state. A save of an
+  automation checks the prompt, each custom cron, and the time zone, as the
   Worker does. A removal of a repository on the Repositories tab turns off
-  each routine in it, with the reason that the routine page shows, as the
+  each automation in it, with the reason that the automation page shows, as the
   Worker does. Its author filter knows the members of the org and a few
   bots, such as `dependabot[bot]`. Any other login gets the refusal of a
   login that names no GitHub account, with its trigger and its list.
 - Run now makes the workspace of the run as Create workspace does, in the
-  section of the routine, and the run takes the state of that workspace.
-  Without the agent login of the routine's model, as with `?login=none`,
+  section of the automation, and the run takes the state of that workspace.
+  Without the agent login of the automation's model, as with `?login=none`,
   the run fails with no workspace. A prompt that contains `fail` stands for
   a cloud computer that did not start: the run fails and keeps its
   workspace, in the error state with Try again, as the Worker does. The
   recorded server has no chat for
   a workspace that the fake made, so its chat does not load, and the line
-  of its routine does not show.
+  of its automation does not show.
   The dev backend records each run's agent and owner when Run now starts it.
 
 The development fake keeps each org's workspace number counter.

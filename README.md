@@ -58,7 +58,7 @@ feature that is not complete yet says so.
   script, with a startup script and env vars.
 - Agents can create workspaces and sessions. They can read chats and
   message sessions across the org.
-- Routines run a saved prompt on a schedule or on a pull request event,
+- Automations run a saved prompt on a schedule or on a pull request event,
   each time in a new workspace.
 - Each workspace has a number, such as `W-395`. A press on the number in
   the header copies the link of the workspace. A workspace link in chat

@@ -41,7 +41,7 @@ record.
   rejected, because the user then looks in two places.
 - Model and effort also saves fast mode, with the Fast switch of its menu.
   New workspace starts from the saved choice with its fast mode, as
-  [Fast mode](fast-mode.md#saved-defaults-new-workspaces-and-routines)
+  [Fast mode](fast-mode.md#saved-defaults-new-workspaces-and-automations)
   says.
 - The choice offers the page and the dialog. Each change saves at once, as
   a change of Model and effort does.
@@ -333,5 +333,5 @@ record.
   good org image, with the current startup script and env vars.
 - When that sandbox is ready, the agent gets the queued messages, as
   [Messages](messages-and-attachments.md#messages) says.
-- A routine run keeps its failed workspace and its cause, as
-  [Failed runs](routine-runs.md#failed-runs) says (decision 512 B).
+- An automation run keeps its failed workspace and its cause, as
+  [Failed runs](automation-runs.md#failed-runs) says (decision 512 B).

@@ -166,7 +166,7 @@ This page lists each protocol doc and what it covers.
 - [Website docs](../protocol/website-docs.md): the public guides of the
   marketing site, their addresses and navigation, and the rules for their
   words.
-- [Routines](../protocol/routines.md): routines and their schedules, with the
-  linked pages [Routine runs](../protocol/routine-runs.md),
+- [Automations](../protocol/automations.md): automations and their schedules, with the
+  linked pages [Automation runs](../protocol/automation-runs.md),
   [Pull request runs](../protocol/pull-request-runs.md), and
   [Base branches](../protocol/base-branches.md).
