@@ -34,8 +34,8 @@ describe('the attached files', () => {
       two: notice(['recording.mov', 'trace.zip']),
     }).toEqual({
       none: '',
-      one: "recording.mov wasn't attached Each file can be up to 100 MB. Attach a smaller file",
-      two: "2 files weren't attached Each file can be up to 100 MB. Attach a smaller file",
+      one: "recording.mov wasn't attached Each file can be up to 1 GB. Attach a smaller file",
+      two: "2 files weren't attached Each file can be up to 1 GB. Attach a smaller file",
     })
   })
 

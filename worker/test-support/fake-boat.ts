@@ -9,7 +9,12 @@ export class FakeBoat {
   responseOverride: Response | null = null
   /** One-shot factories return fresh bodies without clone/tee buffering. */
   responseFactories: ((request: Request) => Response)[] = []
+  readonly files = new Map<string, number>()
   private readonly accountKeys = new Map<string, string>()
+
+  setFile(sandboxId: string, path: string, sizeBytes: number) {
+    this.files.set(JSON.stringify([sandboxId, path]), sizeBytes)
+  }
 
   addAccount(account: { orgId: string; apiKey: string }) {
     this.accountKeys.set(account.orgId, account.apiKey)
@@ -20,6 +25,7 @@ export class FakeBoat {
     this.failure = null
     this.responseOverride = null
     this.responseFactories = []
+    this.files.clear()
   }
 
   fetch: HttpFetch = async (request) => {
@@ -47,6 +53,24 @@ export class FakeBoat {
     if (request.headers.get('Authorization') !== `Bearer ${apiKey}`)
       return Response.json({ ok: false, code: 'unauthorized' }, { status: 401 })
     const path = new URL(request.url).pathname.replace('/api/v1', '')
+    if (path.endsWith('/files/info')) {
+      const file = new URL(request.url).searchParams.get('path') ?? ''
+      const size = this.files.get(JSON.stringify([path.split('/')[2], file]))
+      if (size === undefined)
+        return Response.json({ ok: false, code: 'not_found' }, { status: 404 })
+      return Response.json({
+        ok: true,
+        type: 'file.info',
+        success: true,
+        path: file,
+        name: file.slice(file.lastIndexOf('/') + 1),
+        size,
+        isDir: false,
+        isSymlink: false,
+        mode: '0600',
+        modifiedAt: '2026-11-13T00:00:00Z',
+      })
+    }
     if (path.startsWith('/saved-snapshots')) {
       return Response.json({
         ok: true,

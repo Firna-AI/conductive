@@ -121,7 +121,7 @@ programs in each sandbox, their releases, and their updates.
 | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
 | `conductive.build`        | The marketing site, with the public docs and the pricing, Terms, and Privacy pages                                                         |
 | `app.conductive.build`    | The web app, the API, the chat sockets, and the terminal                                                                                   |
-| `api.conductive.build`    | The GitHub webhooks, the agent tools, the runner, the credential helper, the model gateway, and the software image route of the deploy run |
+| `api.conductive.build`    | The GitHub webhooks, the agent tools, the runner, the credential helper, the model gateway, the software image route of the deploy run, and the attachment downloads |
 | `*.conductive.page`       | One random hostname for each open port preview, one level deep                                                                             |
 | `runner.conductive.build` | The public files of each [release](protocol/sandbox-software.md#releases) of the sandbox software, from an R2 bucket                       |
 

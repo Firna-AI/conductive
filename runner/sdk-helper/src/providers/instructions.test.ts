@@ -53,7 +53,7 @@ it.each(['claude', 'codex'] as const)(
         ? {
             role: 'user',
             content:
-              'Sender: Alice Example Member (@alice) [member ID: "member-alice-id"]\n\n  Keep this text.\n\nAnd this line.  \nThe sender attached these files. Read each file before you answer.\nAttached file: {"name":"image.png","mediaType":"image/png","path":"/uploads/image.png","sizeBytes":10}\nAttached file: {"name":"notes.txt","mediaType":"text/plain","path":"/uploads/notes.txt","sizeBytes":20}',
+              'Sender: Alice Example Member (@alice) [member ID: "member-alice-id"]\n\n  Keep this text.\n\nAnd this line.  \nThe sender attached these files. Read each file, or the parts of a large file that you need, before you answer.\nAttached file: {"name":"image.png","mediaType":"image/png","path":"/uploads/image.png","sizeBytes":10}\nAttached file: {"name":"notes.txt","mediaType":"text/plain","path":"/uploads/notes.txt","sizeBytes":20}',
           }
         : {
             input: [
@@ -64,7 +64,7 @@ it.each(['claude', 'codex'] as const)(
               },
               {
                 type: 'text',
-                text: 'The sender attached these files. Read each file before you answer. Each image is also in this message.',
+                text: 'The sender attached these files. Read each file, or the parts of a large file that you need, before you answer. Only an image that comes right after its file line is also in this message.',
                 text_elements: [],
               },
               {

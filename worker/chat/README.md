@@ -213,7 +213,7 @@ Their restart helpers evict the real object.
 
 ## Seams for other milestones
 
-[Chat attachments](attachments.md) gives the internal storage boundary, acceptance proof, copy preparation and order, agent input, and cleanup integration.
+[Chat attachments](attachments.md) gives storage, message proofs, shared file transfers, the one-use machine download route, dispatch order, agent input, and cleanup.
 Attachment copies use the provider account of the workspace record.
 Each copy checks that account and the sandbox ID before each file and after the last file.
 

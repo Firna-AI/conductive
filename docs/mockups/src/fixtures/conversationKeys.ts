@@ -40,6 +40,8 @@ export const conversationKeys = [
   'sent-files',
   'sent-files-listed',
   'queued-files',
+  'missing-file',
+  'missing-files',
   'link-sent',
   'link-answer',
   'other-org-link',

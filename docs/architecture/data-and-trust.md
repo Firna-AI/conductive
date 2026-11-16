@@ -25,7 +25,7 @@ and the separate preview domain.
 | The Boat key and the other keys of the Worker                                | Worker secrets                           |
 | Chat history and banner state                                                | The workspace Durable Object             |
 | A copy of the [GitHub state](../protocol/github-banner.md#the-github-state) of each workspace, for the lists | D1 |
-| Files attached to chat messages | The attachment storage, an R2 bucket |
+| Files attached to chat messages | The attachment storage, an R2 bucket, until the sandbox has them. Then the home folder of the sandbox |
 | The records of attached files | D1 |
 | The repository, the files, and the agent sessions                            | The home folder of the sandbox           |
 | The prepared repositories and the installed software                         | The org image, in the app's Boat account |
@@ -47,6 +47,10 @@ and the separate preview domain.
   into a saved snapshot.
 - Sandbox code is untrusted. Agents write and run it, and previews show it
   only on the preview domain.
+- A sandbox never reads the attachment storage. It gets each attached file
+  from a route of the Worker, with a one-use token for that file, as
+  [Hostnames and gates](../protocol/access-and-security.md#hostnames-and-gates)
+  says.
 - Each writer of the R2 bucket of the sandbox software releases is as
   trusted as the Worker deploy, because each sandbox installs the newest
   release from it. Today only the deploy token writes it, as
