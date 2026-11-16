@@ -11,6 +11,7 @@ import { LinkTabs } from '../common/LinkTabs'
 import { PanelBar } from '../workspace/PanelBar'
 import { ChangeList } from './ChangeList'
 import { ChecksList } from './ChecksList'
+import type { FileRowMenu } from './FileRowMenu'
 import { FileTree } from './FileTree'
 import styles from './FilesPanel.module.css'
 
@@ -100,7 +101,8 @@ function FileTabs(props: {
  * is available. `paths` adds two files whose labels hide a secret value.
  * `checksTop` stands above the checks, such as the actions of the pull
  * request bar on a phone. `only` keeps the changes of these paths, such as
- * the changed files that moved to the new branch of Continue.
+ * the changed files that moved to the new branch of Continue. `menu` is the
+ * open menu of a row of the shown list.
  */
 export function FilesPanel(props: {
   view: FileList
@@ -112,6 +114,7 @@ export function FilesPanel(props: {
   paths?: PathState
   checksTop?: ReactNode
   only?: readonly string[]
+  menu?: FileRowMenu
 }) {
   const { view, open, only } = props
   const masked = props.paths === 'masked'
@@ -145,7 +148,7 @@ export function FilesPanel(props: {
       ) : null}
       {view === 'all' && lists && props.tree !== 'none' ? (
         <div className={styles.scroll} data-mokly-scroll="file-tree">
-          <FileTree entries={tree} open={treeOpen} />
+          <FileTree entries={tree} menu={props.menu} open={treeOpen} />
         </div>
       ) : null}
       {view === 'changes' && lists ? (
@@ -153,6 +156,7 @@ export function FilesPanel(props: {
           diffOpen={open === 'diff' || open === 'masked-diff'}
           diffTo={masked ? paths.maskedPaths : paths.diff}
           files={changes}
+          menu={props.menu}
         />
       ) : null}
       {props.tree === 'saved' ? (

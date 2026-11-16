@@ -202,7 +202,14 @@ recommended F.
 - Until Milestone 5 lands, the menu holds only Copy path.
 - Escape, Tab, or a press outside closes the menu. The focus goes back to
   the row. The row of an open menu gets the mark that a tab with an open
-  menu has.
+  menu has: the fill of a hover. A phone keeps that fill on the row under
+  the sheet, as a phone tab keeps it under its sheet. Working agent's call,
+  16 November 2026, from the mockups.
+- Add to chat has the icon of the `@` of a mention, and Copy path has the
+  copy icon of the copy items of the tab menu. Reason: the speech bubble
+  with a plus names New session in the app, and the chip that Add to chat
+  puts in the field is a mention. Working agent's call, 16 November 2026,
+  from the mockups.
 - The browser's own menu does not open on the rows. A click with a
   modifier key, or a middle click, still opens the file in a new browser
   tab. A row with no item, such as a row whose label hides a secret,
@@ -231,9 +238,16 @@ recommended F.
 - The label "Copy path" stays, although the docs also name the "copy path"
   of an attached file (decision 262 D). The docs write "the Copy path
   item". Working agent's call.
-- A read-only workspace keeps Copy path, because it changes nothing
-  (decision 214). An archived workspace has no file lists, so only a
-  workspace of a suspended org shows it there.
+- A read-only workspace shows no rows, so the row menu never opens there.
+  An archived workspace has no file lists. In a suspended org the refused
+  start takes the place of All files and Changes, in the app
+  (`sandboxPlaceholder` of `src/shell/workspace/files/files-features.tsx`)
+  and in the mockups (`app/orgs/suspended/workspace`). A read-only
+  workspace keeps Copy path only in the tab menu of a file or diff tab,
+  because a copy changes nothing (decision 214). Working agent's call, 16
+  November 2026, from the mockups. It corrects an earlier call of the same
+  day, which said that a workspace of a suspended org shows the row menu
+  with only Copy path.
 
 ### Copy path in the tab menu
 
@@ -282,10 +296,12 @@ Decision 4 A sets the target. Milestone 5 builds it.
 - The item shows only for a path that the `@` list offers, as
   `findMentioned` of `src/chat/mentions/MentionsContext.tsx` checks.
   Reason: the field turns any other mention back into text.
-- A read-only workspace leaves out Add to chat, because its message field
-  takes no change. A Changes row of a deleted file leaves it out too,
-  because the chip would name a file that the branch does not hold.
-  Working agent's calls.
+- A Changes row of a deleted file leaves out Add to chat, because the chip
+  would name a file that the branch does not hold. Working agent's call.
+- A read-only workspace shows no rows, as the section "Copy path" says.
+  Its bar also takes the place of the message field, so the rule below
+  already leaves out Add to chat there. Working agent's call, 16 November
+  2026, from the mockups.
 - While a bar of the computer takes the place of the message field, such
   as while the computer is stopped, the item does not show. Reason: no
   field can take the chip, and decision 4 A chose the field, not the
@@ -294,7 +310,7 @@ Decision 4 A sets the target. Milestone 5 builds it.
   keyboard opens by itself. On desktop, the field takes the focus. Working
   agent's call.
 
-## Milestone 1: Mockups
+## Milestone 1: Mockups (completed)
 
 Tags: mockup
 
@@ -303,25 +319,49 @@ Depends on: none
 Draw the row menu, the new tab menu item, and the result of Add to chat
 in the `app/files` pages, on desktop and on a phone.
 
-- [ ] Add the page `app/files/menu`. Its canonical screen has the row menu
+- [x] Add the page `app/files/menu`. Its canonical screen has the row menu
       of a file row of All files, with Add to chat, a line, and Copy path.
-      - [ ] Variant `folder`: the row menu of a folder row.
-      - [ ] Variant `changes`: the row menu of a row of Changes.
-      - [ ] Variant `copied`: the toast "Path copied" after the press.
-      - [ ] Variant `read-only`: the row menu with only Copy path.
-      - [ ] Variant `added`: the session tab that Add to chat showed, with
-            the chip of the file in its message field.
-      - [ ] The phone view: the row menu as a sheet with the name of the
+      The page with its six planned variants shows seven screens, and a
+      catalogue page shows at most five. So each planned variant is a
+      child page with the same path, such as `app/files/menu/folder`, and
+      the page shows only its canonical screen. Working agent's call, 16
+      November 2026, from the catalogue rules of `docs/mockups/catalogue.md`.
+      - [x] Child page `folder`: the row menu of a folder row.
+      - [x] Child page `changes`: the row menu of a row of Changes.
+            - [x] Its variant `deleted`: the row menu of a deleted file,
+                  with only Copy path. Working agent's call, 16 November
+                  2026: it draws the rule of the design for a deleted file.
+      - [x] Child page `copied`: the toast "Path copied" after the press.
+            - [x] Its variant `failed`: the toast "The path didn't copy.
+                  Try again." Working agent's call, 16 November 2026: it
+                  draws the failure toast of the design.
+      - [x] Child page `stopped`, in place of the variant `read-only`: the
+            row menu with only Copy path while the bar of a stopped cloud
+            computer takes the place of the message field. A read-only
+            workspace shows no rows, as the section "Copy path" says, so
+            the planned `read-only` state cannot happen. Working agent's
+            call, 16 November 2026, from the mockups.
+      - [x] Child page `added`: the session tab that Add to chat showed,
+            with the chip of the file in its message field.
+      - [x] The phone view: the row menu as a sheet with the name of the
             row, and the chat with the chip after Add to chat.
-- [ ] Update the `menu` variant of `app/files/temporary`: Keep open, a
+- [x] Update the `menu` variant of `app/files/temporary`: Keep open, a
       line, Copy path, a line, Move left and Move right, a line, Close tabs
       to the right.
-- [ ] Add a `read-only-tab` variant to `app/files/menu`: the tab menu of a
-      file tab in a read-only workspace, with only Copy path.
-- [ ] Update `docs/mockups/catalogue-attachments-and-files.md` and the
+- [x] Add a `read-only-tab` child page to `app/files/menu`: the tab menu of
+      a file tab in a read-only workspace, with only Copy path.
+- [x] Update `docs/mockups/catalogue-attachments-and-files.md` and the
       table row of `app/files` in `docs/mockups/catalogue.md`.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Update the other mockup texts that this change makes wrong. The
+      texts of `app/tabs`, `app/transcripts`, and
+      `docs/mockups/design-workspace.md` gave the old tab menu, and said
+      that a read-only file tab opens no menu. `docs/mockups/design.md`
+      and the mockups README name the parts that draw the menu and the
+      toast. The menu at the pointer of a workspace row moved to a shared
+      `PointMenu` in `docs/mockups/src/components/common/`, which the rows
+      of the Files panel use too. Working agent's call, 16 November 2026.
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages.
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
 
 ## Milestone 2: Documentation and protocol
@@ -372,8 +412,10 @@ Build the row menu on both lists, with Copy path only.
       toast of its result.
 - [ ] Leave Copy path out on a row whose label hides a secret.
 - [ ] Tests: the items on file, folder, and Changes rows; each way to open;
-      the copied text; the toast; a hidden-secret row that opens no menu; a
-      read-only workspace.
+      the copied text; the toast; a hidden-secret row that opens no menu;
+      the saved lists of a stopped cloud computer. A read-only workspace
+      shows no rows, so it needs no test here. Working agent's call, 16
+      November 2026, from the mockups.
 
 ## Milestone 4: Copy path in the tab menu
 
@@ -403,9 +445,11 @@ Depends on: 3
 - [ ] Put the chip into its message field with the insertion of a pick
       from the `@` list, once the field shows. Give the field the focus on
       desktop only.
-- [ ] Leave the item out in a read-only workspace, while a bar of the
-      computer replaces the field, on a deleted file of Changes, and on a
-      path that `findMentioned` refuses.
+- [ ] Leave the item out while a bar of the computer replaces the field,
+      on a deleted file of Changes, and on a path that `findMentioned`
+      refuses. A read-only workspace shows no rows, and its bar replaces
+      the field too. Working agent's call, 16 November 2026, from the
+      mockups.
 - [ ] Tests: a file chip, a folder chip, a shown session, a session behind
       a file tab, no open session, the phone, and each row that leaves the
       item out.
