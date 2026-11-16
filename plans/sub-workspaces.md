@@ -420,6 +420,14 @@ options 4 F, 5 C, and 6 A.
   the tree order, oldest first, and no other row moves. At the top level
   they take the place of the archived top-level row among the top-level
   rows of its section.
+- A live sub-workspace with no live workspace above it in its tree is a
+  top-level row at its own place: its own section and its own place among
+  the top-level rows. To give it the place of the archived row, an Archive
+  gives each live workspace below the archived one, reached only through
+  archived workspaces, the section and the place of the archived
+  workspace, in the same write. With equal places, the order by creation
+  puts these rows right after the archived row, oldest first. A later move
+  of such a row then changes its own place, as for any top-level row.
 - The indent of a row follows the rows that the list shows. So a row under
   its grandparent indents one step less than its depth.
 
@@ -657,6 +665,19 @@ Milestone 3a led to these calls, of 16 November 2026, by the
   the shared rule. Reason: the fixtures give them no place and no link, so
   they cannot change a row.
 
+Milestone 4 found a gap on 16 November 2026, and the orchestrator made
+this call on the same day.
+
+- At an Archive, the Worker gives each live workspace below the archived
+  one, reached only through archived workspaces, the section and the place
+  of the archived workspace. The shared rule shows a live sub-workspace
+  with no live workspace above it at its own place. Reason: the first rule
+  of `placeWorkspaces` kept such a row at the place of its archived
+  ancestor, so a move of it had no effect, but decision 4 F moves it like
+  any top-level row. The write keeps the first display after an Archive in
+  the place of the archived row, as decision 5 C and its design call say.
+  It changes no requirement of the protocol docs.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -803,6 +824,10 @@ Depends on: 3
 
 The moves of the app and of the tools, as item 4 F says.
 
+- [ ] Place a live workspace with no live workspace above it at its own
+      place, in `placeWorkspaces`.
+- [ ] At an Archive, give the live workspaces below the archived one,
+      reached through archived workspaces, its section and place.
 - [ ] Move each workspace of a tree with the move of its top-level row, in
       the metadata write of the app and in `move_workspace`. Write the
       section of the archived workspaces of the tree too.
