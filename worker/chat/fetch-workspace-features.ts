@@ -10,7 +10,7 @@ export async function fetchWorkspaceFeatures(
   const devices = await integration.devices.fetch(request)
   if (devices) return devices
   const response = await integration.chat.fetch(request)
-  if (request.method !== 'GET' && request.method !== 'HEAD')
+  if (response.ok && request.method !== 'GET' && request.method !== 'HEAD')
     context.waitUntil(integration.reconcileStopped())
   return response
 }
