@@ -37,8 +37,8 @@ export const unpushedWork = {
 } as const
 
 /**
- * The branch of the workspace after Continue. It follows the create rule:
- * the GitHub login of the workspace owner, a city name, and four random
+ * The branch of the workspace after Continue: the GitHub login of the
+ * workspace owner, the workspace name, the task number, and four random
  * characters, also when another member pressed Continue.
  */
-export const continuedBranch = `${people.cal.login}/porto-3f8d`
+export const continuedBranch = `${people.cal.login}/checkout-address-autocomplete-v2-3f8d`

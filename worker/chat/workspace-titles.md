@@ -54,7 +54,11 @@ event. A refused title changes no name and emits no event.
 The runner receipt still advances its cursor and confirms that event.
 An accepted title emits `workspace.title` and updates the first session.
 The common chat publisher sends both events to open tabs. The same module
-writes the D1 name immediately, so the org list sees it too. The stored
+writes the D1 name immediately, so the org list sees it too. While the
+branch is a placeholder, that write also gives the title to the branch, as
+[The branch and the name](../../docs/protocol/create-a-workspace.md#the-branch-and-the-name)
+says. `workspace-titles.ts` then publishes `workspace.updated`, so open tabs
+show the new branch. The stored
 summary and the existing lifecycle repair keep a committed title available
 after a failed D1 write or an object restart. The detail read and the repair
 write fill only an empty D1 name under the same workspace access rule.
