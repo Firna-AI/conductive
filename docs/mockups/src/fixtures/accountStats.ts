@@ -39,8 +39,8 @@ export const accountStats: AccountStatsNumbers = {
 }
 
 /**
- * A new account: one org, and no workspace and no routine yet. Each count
- * is zero, and each day of the charts too.
+ * A new account: one org, and no workspace and no routine yet. Each other
+ * count is zero, and each day of the charts too.
  */
 export const emptyAccountStats: AccountStatsNumbers = {
   orgs: 1,

@@ -46,12 +46,6 @@ export function StatsTab() {
         />
       )
     case 'ready':
-      return (
-        <StatsNumbers
-          narrow={narrow}
-          refreshing={reading}
-          stats={numbers.value}
-        />
-      )
+      return <StatsNumbers narrow={narrow} stats={numbers.value} />
   }
 }

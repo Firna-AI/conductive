@@ -60,6 +60,9 @@ My calls, 16 November 2026:
   so that the Stats tab shows no build line.
 - No public guide and no legal page changes. A full read of each found no
   sentence that the tab makes wrong.
+- Review finding 1 added owner indexes on workspaces, routines, and
+  routine runs, in a new migration, so that each read uses only the rows
+  of the person.
 - The chart axis of a 30-day chart with only zeros shows 0.2 to 1. The
   operator Overview has the same axis, and the Firna chart has no axis
   setting, so this change leaves it.
@@ -136,10 +139,10 @@ Depends on: 1, 3
 
 Depends on: every other milestone
 
-- [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
-- [ ] Check the tab in a browser on desktop and on a phone.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Run the targeted tests and the complete gate named in `AGENTS.md`.
+- [x] Check the tab in a browser on desktop and on a phone.
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review

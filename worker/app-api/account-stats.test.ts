@@ -1,14 +1,16 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
 import { createHarness, type TestHarness } from '../test-support/harness'
-import { seedOrg, seedUser } from '../operator/overview.test-support'
+import { addMember } from '../operator/directory.test-support'
+import {
+  seedOrg,
+  seedUser,
+  seedWorkspace,
+} from '../operator/overview.test-support'
 import {
   accountStats,
-  addMember,
-  seedOwnedWorkspace,
   seedRoutine,
   seedRun,
-  signedInUserId,
 } from './account-stats.test-support'
 
 const readAt = Date.parse('2026-11-16T14:32:10.250Z')
@@ -42,48 +44,43 @@ it('returns zero counts and thirty empty UTC days for a new account', async () =
 
 it('counts only the records of the person, without deleted orgs', async () => {
   const cookie = await harness.login()
-  const me = await signedInUserId(harness)
   await seedUser(harness, 100, 0)
-  const other = 'user-100'
   await seedOrg(harness, { id: 'acme' })
   await seedOrg(harness, { id: 'suspended' })
   await harness.env.DB.prepare(
     "UPDATE orgs SET suspended_at = 1 WHERE id = 'suspended'",
   ).run()
   await seedOrg(harness, { id: 'deleted', deletedAt: readAt - 1 })
-  await addMember(harness, 'acme', other)
+  await addMember(harness, 'acme', 100)
   const states = ['starting', 'working', 'stopped', 'error'] as const
   for (const state of states)
-    await seedOwnedWorkspace(harness, {
+    await seedWorkspace(harness, {
       id: state,
       orgId: 'acme',
-      ownerId: me,
       createdAt: 0,
       state,
     })
-  await seedOwnedWorkspace(harness, {
+  await seedWorkspace(harness, {
     id: 'archived',
     orgId: 'suspended',
-    ownerId: me,
     createdAt: 0,
     state: 'stopped',
     archivedAt: 0,
   })
-  await seedOwnedWorkspace(harness, {
+  await seedWorkspace(harness, {
     id: 'theirs',
     orgId: 'acme',
-    ownerId: other,
+    ownerGithubId: 100,
     createdAt: readAt,
   })
-  await seedOwnedWorkspace(harness, {
+  await seedWorkspace(harness, {
     id: 'gone',
     orgId: 'deleted',
-    ownerId: me,
     createdAt: readAt,
   })
-  await seedRoutine(harness, { id: 'mine', orgId: 'acme', ownerId: me })
-  await seedRoutine(harness, { id: 'their', orgId: 'acme', ownerId: other })
-  await seedRoutine(harness, { id: 'old', orgId: 'deleted', ownerId: me })
+  await seedRoutine(harness, { id: 'mine', orgId: 'acme' })
+  await seedRoutine(harness, { id: 'their', orgId: 'acme', ownerGithubId: 100 })
+  await seedRoutine(harness, { id: 'old', orgId: 'deleted' })
   const result = await accountStats(harness, cookie)
   expect(result.orgs).toBe(2)
   expect(result.workspaces).toEqual({ total: 5, lastWeek: 0 })
@@ -101,11 +98,10 @@ it('counts only the records of the person, without deleted orgs', async () => {
 
 it('counts the seven-day window and the runs of each UTC day', async () => {
   const cookie = await harness.login()
-  const me = await signedInUserId(harness)
   await seedUser(harness, 100, 0)
   await seedOrg(harness, { id: 'acme' })
   await seedOrg(harness, { id: 'deleted', deletedAt: readAt - 1 })
-  await addMember(harness, 'acme', 'user-100')
+  await addMember(harness, 'acme', 100)
   const times = [
     '2026-10-17T23:59:59.999Z',
     '2026-10-18T00:00:00.000Z',
@@ -115,26 +111,24 @@ it('counts the seven-day window and the runs of each UTC day', async () => {
     '2026-11-16T14:32:10.251Z',
   ].map((time) => Date.parse(time))
   for (const [index, createdAt] of times.entries())
-    await seedOwnedWorkspace(harness, {
+    await seedWorkspace(harness, {
       id: `workspace-${index}`,
       orgId: 'acme',
-      ownerId: me,
       createdAt,
     })
-  await seedRoutine(harness, { id: 'review', orgId: 'acme', ownerId: me })
-  await seedRoutine(harness, { id: 'old', orgId: 'deleted', ownerId: me })
+  await seedRoutine(harness, { id: 'review', orgId: 'acme' })
+  await seedRoutine(harness, { id: 'old', orgId: 'deleted' })
   const runs = [
     { id: 'first', createdAt: times[1] },
     { id: 'skipped', createdAt: times[1], state: 'skipped' },
     { id: 'failed', createdAt: times[4], state: 'failed' },
-    { id: 'theirs', createdAt: times[4], ownerId: 'user-100' },
+    { id: 'theirs', createdAt: times[4], ownerGithubId: 100 },
     { id: 'gone', createdAt: times[4], routineId: 'old', orgId: 'deleted' },
   ]
   for (const run of runs)
     await seedRun(harness, {
       routineId: 'review',
       orgId: 'acme',
-      ownerId: me,
       ...run,
       createdAt: run.createdAt ?? 0,
     })

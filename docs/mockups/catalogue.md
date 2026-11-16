@@ -200,7 +200,8 @@ settings are. Its child pages:
   workspaces and the routine runs of each UTC day of the last 30 days. Its
   `loading` variant shows the first load, with placeholders. Its `failed`
   variant shows a read that failed, with Try again and no number. Its
-  `empty` variant shows a new account, whose counts are all zero.
+  `empty` variant shows a new account with one org, whose other counts
+  are all zero.
 
 `app/account/own-endpoint` shows the form of Claude on the own endpoint
 kind, while Codex runs on an own endpoint. Its `typed` variant has a

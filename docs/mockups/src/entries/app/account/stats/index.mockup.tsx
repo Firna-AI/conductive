@@ -38,7 +38,7 @@ export const stats = defineScreen({
       slug: 'empty',
       title: 'New account',
       description:
-        'A new account with one org and no workspace or routine yet. Each count is zero, and the charts lie flat at zero.',
+        'A new account with one org and no workspace or routine yet. Orgs shows 1. Each other count is zero, and the charts lie flat at zero.',
       rationale:
         'Zero is a real count here, so the tab shows it in the same layout as the other states.',
       props: { stats: 'empty' },

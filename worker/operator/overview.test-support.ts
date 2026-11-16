@@ -84,6 +84,8 @@ export async function seedWorkspace(
     state?: WorkspaceState
     createdAt?: number
     archivedAt?: number
+    /** The GitHub ID of the owner, the signed-in test user by default. */
+    ownerGithubId?: number
   },
 ): Promise<void> {
   const createdAt = workspace.createdAt ?? TEST_TIME
@@ -91,7 +93,7 @@ export async function seedWorkspace(
     `INSERT INTO workspaces
      (id, org_id, repository_id, owner_user_id, name, branch, state,
       created_at, updated_at, archived_at)
-     SELECT ?, ?, ?, id, ?, 'main', ?, ?, ?, ? FROM users WHERE github_id = 7`,
+     SELECT ?, ?, ?, id, ?, 'main', ?, ?, ?, ? FROM users WHERE github_id = ?`,
   )
     .bind(
       workspace.id,
@@ -102,6 +104,7 @@ export async function seedWorkspace(
       createdAt,
       createdAt,
       workspace.archivedAt ?? null,
+      workspace.ownerGithubId ?? 7,
     )
     .run()
 }

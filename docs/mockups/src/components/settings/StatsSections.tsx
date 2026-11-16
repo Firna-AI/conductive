@@ -67,18 +67,15 @@ function StatsTiles(props: { stats: AccountStatsNumbers }) {
 
 /**
  * The Stats tab with its numbers: the tiles, the workspaces by state, and
- * the charts of the new workspaces and of the routine runs. While a read
- * runs, the charts keep their days, dimmed. It imports no fixture value, so
- * the app uses it too.
+ * the charts of the new workspaces and of the routine runs. It imports no
+ * fixture value, so the app uses it too.
  */
 export function StatsNumbers(props: {
   stats: AccountStatsNumbers
   /** The page is as narrow as a phone. */
   narrow: boolean
-  /** A read of the numbers runs. */
-  refreshing?: boolean
 }) {
-  const { stats, narrow, refreshing } = props
+  const { stats, narrow } = props
   return (
     <>
       <StatsTiles stats={stats} />
@@ -86,13 +83,11 @@ export function StatsNumbers(props: {
       <DailyChart
         days={stats.newWorkspacesByDay}
         narrow={narrow}
-        refreshing={refreshing}
         title="New workspaces"
       />
       <DailyChart
         days={stats.routineRunsByDay}
         narrow={narrow}
-        refreshing={refreshing}
         title="Routine runs"
       />
     </>
