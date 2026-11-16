@@ -412,23 +412,26 @@ Depends on: 2
 The sandbox side: the attach program, the support marker, and the close
 command.
 
-- [ ] Run ttyd with `--url-arg` and the attach program. Install the
+- [x] Run ttyd with `--url-arg` and the attach program. Install the
       program with the other terminal files in the system release.
-- [ ] Make the attach program accept no argument or one valid terminal ID,
+- [x] Make the attach program accept no argument or one valid terminal ID,
       and refuse each other argument list.
-- [ ] Make the start command write the support marker. Read it in the
+- [x] Make the start command write the support marker. Read it in the
       password read, and cache it beside the password. Add the migration
       that this needs.
-- [ ] Add the fixed close command for one terminal.
-- [ ] Test the attach program with the fakes of `worker/terminal`: no
+- [x] Add the fixed close command for one terminal.
+- [x] Test the attach program with the fakes of `worker/terminal`: no
       argument, a valid ID, an invalid ID, and two IDs. Test the marker
       and the close command.
-- [ ] Run the launcher once with the ttyd and tmux packages that the org
+- [x] Run the launcher once with the ttyd and tmux packages that the org
       image installs. Open two sockets with two terminal IDs, and check
       that each has its own shell. Save the output under
       `.context/terminal-tabs/`.
-- [ ] Update `worker/terminal/README.md` and `image/README.md` when it
+- [x] Update `worker/terminal/README.md` and `image/README.md` when it
       names the terminal files.
+
+Evidence: `.context/terminal-tabs/reports/m3.md` and
+`.context/terminal-tabs/m3-launcher-check.txt`.
 
 ## Milestone 4: Terminal list and its events
 

@@ -54,7 +54,11 @@ it('caches separate workspace secrets from run storage without exposing a passwo
     'workspace-two',
     harness.dependencies,
   )
-  expect(harness.requests[1].url).not.toBe(harness.requests[0].url)
+  const passwordRequests = harness.requests.filter((request) =>
+    new URL(request.url).searchParams.get('path')?.endsWith('/password'),
+  )
+  expect(passwordRequests).toHaveLength(2)
+  expect(passwordRequests[1].url).not.toBe(passwordRequests[0].url)
   expect(
     await harness.env.DB.prepare(
       'SELECT COUNT(*) AS count FROM terminal_credentials',
@@ -70,6 +74,7 @@ it('returns ready, starting, and stopped terminal states without exposing a pass
     seed.workspaceId,
     harness.dependencies,
   )
+  const startRequests = harness.requests.length
   const handler = createTerminalHandler(harness.env, harness.dependencies)
   const path = terminalPaths.connection(seed.orgId, seed.workspaceId)
   const ready = await handler.fetch(seed.request(path))
@@ -86,7 +91,7 @@ it('returns ready, starting, and stopped terminal states without exposing a pass
     const response = await handler.fetch(seed.request(path))
     expect(await response.json()).toEqual({ state, socketPath: null })
   }
-  expect(harness.requests).toHaveLength(1)
+  expect(harness.requests).toHaveLength(startRequests)
 })
 
 it('authenticates the ttyd handshake and forwards automatic replies without reporting activity', async () => {
@@ -113,7 +118,9 @@ it('authenticates the ttyd handshake and forwards automatic replies without repo
   expect(response.status).toBe(101)
   expect(response.headers.get('Sec-WebSocket-Protocol')).toBe('tty')
   expect(response.headers.get('Authorization')).toBe(null)
-  const upstreamRequest = harness.requests[2]
+  const upstreamRequest = harness.requests.filter(
+    (request) => request.headers.get('Upgrade') === 'websocket',
+  )[0]
   expect(upstreamRequest.url).toBe('https://sandbox-7681.on.boat.dev/ws')
   expect(upstreamRequest.headers.get('Cookie')).toBe(
     '_port_auth=server-port-token',

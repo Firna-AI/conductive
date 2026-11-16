@@ -1,6 +1,15 @@
 import { workspacePath } from './workspaces'
 
 export const TERMINAL_PORT = 7681
+export const FIRST_TERMINAL_ID = 'workspace'
+export const TERMINAL_ID_PATTERN = '[a-f0-9]{32}'
+
+/** Later terminals use 128 random bits, encoded as lowercase hexadecimal. */
+export function isAdditionalTerminalId(value: string): boolean {
+  return (
+    value.length === 32 && new RegExp(`^${TERMINAL_ID_PATTERN}$`).test(value)
+  )
+}
 
 export const terminalPaths = {
   connection: (orgId: string, id: string) =>

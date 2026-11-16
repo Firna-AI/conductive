@@ -10,6 +10,10 @@ import {
   TERMINAL_RUNTIME,
   TERMINAL_RUNTIME_VIEW,
   TERMINAL_RESTORE_MARKER,
+  TERMINAL_ATTACH_PROGRAM,
+  TERMINAL_ATTACH_NAME,
+  TERMINAL_SUPPORT_FILE,
+  TERMINAL_EXECUTABLE,
 } from './scripts'
 
 export function terminalPackagesCommand(): string {
@@ -25,13 +29,37 @@ systemctl mask ttyd.service`)
 /** The lifecycle launches this command detached after the startup script exits. */
 export function terminalStartCommand(): string {
   return privilegedCommand(`set -eu
-install -d -m 700 -o user -g user /run/conductive-terminal
-touch /run/conductive-terminal/enabled
+install -d -m 700 -o user -g user ${shellArgument(TERMINAL_RUNTIME)}
+touch ${shellArgument(`${TERMINAL_RUNTIME}/enabled`)}
 systemctl stop ttyd.service 2>/dev/null || true
 systemctl start conductive-terminal.service
 systemctl is-active --quiet conductive-terminal.service
-install -d -m 700 -o user -g user ${TERMINAL_RUNTIME_VIEW}
-mountpoint -q ${TERMINAL_RUNTIME_VIEW} || mount --bind ${TERMINAL_RUNTIME} ${TERMINAL_RUNTIME_VIEW}`)
+several=0
+if [ -x ${shellArgument(TERMINAL_ATTACH_PROGRAM)} ]; then
+  attempts=0
+  while [ "$attempts" -lt 50 ]; do
+    pid=$(systemctl show --property=MainPID --value conductive-terminal.service) || pid=
+    case "$pid" in
+      ''|*[!0-9]*) ;;
+      *)
+        executable=$(readlink "/proc/$pid/exe" 2>/dev/null) || executable=
+        if [ "$executable" = ${shellArgument(TERMINAL_EXECUTABLE)} ]; then
+          if grep -zFxq -- --url-arg "/proc/$pid/cmdline" 2>/dev/null &&
+            grep -zFxq -- ${shellArgument(TERMINAL_ATTACH_NAME)} "/proc/$pid/cmdline" 2>/dev/null; then
+            several=1
+          fi
+          break
+        fi
+        ;;
+    esac
+    attempts=$((attempts + 1))
+    [ "$attempts" -ge 50 ] || sleep 0.1
+  done
+fi
+printf '%s\\n' "$several" > ${shellArgument(`${TERMINAL_RUNTIME}/${TERMINAL_SUPPORT_FILE}`)}
+chmod 644 ${shellArgument(`${TERMINAL_RUNTIME}/${TERMINAL_SUPPORT_FILE}`)}
+install -d -m 700 -o user -g user ${shellArgument(TERMINAL_RUNTIME_VIEW)}
+mountpoint -q ${shellArgument(TERMINAL_RUNTIME_VIEW)} || mount --bind ${shellArgument(TERMINAL_RUNTIME)} ${shellArgument(TERMINAL_RUNTIME_VIEW)}`)
 }
 
 export async function markTerminalRestoreEnded(
@@ -72,5 +100,27 @@ export async function startWorkspaceTerminal(
   }
   if (file.file.sizeBytes !== 64 || !/^[a-f0-9]{64}$/.test(password))
     throw new ProviderError('invalid_response', 502)
-  await cacheTerminalPassword(env, target, password, dependencies.now())
+  let several = false
+  try {
+    const marker = await provider.readFile(
+      `${TERMINAL_RUNTIME_VIEW}/${TERMINAL_SUPPORT_FILE}`,
+      2,
+    )
+    if (marker.kind === 'file' && marker.file.sizeBytes === 2) {
+      const content =
+        marker.file.encoding === 'base64'
+          ? atob(marker.file.content)
+          : marker.file.content
+      several = content === '1\n'
+    }
+  } catch {
+    // Older releases have no marker. An unreadable marker keeps one terminal.
+  }
+  await cacheTerminalPassword(
+    env,
+    target,
+    password,
+    dependencies.now(),
+    several,
+  )
 }
