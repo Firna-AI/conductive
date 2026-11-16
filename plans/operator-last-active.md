@@ -201,7 +201,7 @@ Depends on: every other milestone
 - [x] Run the targeted tests and `npm run check`. Logs:
       `.context/operator-last-active/`.
 - [x] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
@@ -211,7 +211,10 @@ Depends on: every other milestone
         routines do not count (2), the Privacy wording (4), and the
         polling waits of the feature test (5). Finding 3, whether a press
         of Run now counts, waits for the user.
-  - [ ] Re-review the fixes once.
+  - [x] Round 2 on 16 November 2026: one finding, confirmed. The
+        backfill counted the run workspaces of a deleted routine (6). It
+        now counts only the 36-character first message IDs that only the
+        app makes.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the
@@ -220,5 +223,6 @@ Depends on: every other milestone
 
 ## Post-merge follow-up (non-blocking)
 
-- [ ] On the test deployment, send a message and check that the Users
-      tab shows the new time.
+- [ ] On the production deployment, send a message and check that the
+      Users tab shows the new time. Follow-up item:
+      `plans/follow-ups/last-active-deployed-check.md`.
