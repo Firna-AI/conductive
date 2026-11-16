@@ -68,10 +68,7 @@ export async function updateWorkspaceTitle(
     )
     .bind(name, ...branch.values, now, workspaceId)
     .first<{ orgId: string; placeholder: number }>()
-  return {
-    branchOrgId:
-      row?.placeholder === 1 && branch.values[0] !== '' ? row.orgId : null,
-  }
+  return { branchOrgId: row?.placeholder === 1 ? row.orgId : null }
 }
 
 export async function tokenWorkspace(

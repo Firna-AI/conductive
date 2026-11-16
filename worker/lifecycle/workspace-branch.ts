@@ -65,25 +65,31 @@ export async function workspaceBranch(
  * The SQL value of the branch after a name write. While the branch is a
  * placeholder, it takes the name part between its GitHub login and its
  * hyphen with four random characters. `workspaceBranch` gives each new
- * branch that form. Otherwise, or for an empty part, the branch stays.
+ * branch that form. An empty part puts back the city of the creation plan.
+ * Without a name, or after the placeholder, the branch stays.
  */
 export function namedBranchSql(name: string | null | undefined): {
   sql: string
-  values: [string, string]
+  values: [string | null, string]
 } {
-  const part = branchNamePart(name)
   return {
-    sql: `CASE WHEN branch_placeholder = 1 AND ? != ''
-      THEN substr(branch, 1, instr(branch, '/')) || ? || substr(branch, -5)
+    sql: `CASE WHEN branch_placeholder = 1 AND ? IS NOT NULL
+      THEN substr(branch, 1, instr(branch, '/'))
+        || COALESCE(
+          NULLIF(?, ''),
+          (SELECT p.city FROM workspace_creation_plans p WHERE p.workspace_id = workspaces.id),
+          substr(branch, instr(branch, '/') + 1, length(branch) - instr(branch, '/') - 5))
+        || substr(branch, -5)
       ELSE branch END`,
-    values: [part, part],
+    values: [name ?? null, branchNamePart(name)],
   }
 }
 
 /**
  * Ends the placeholder of the branch before the start uses it in the
  * sandbox, and gives the branch. One statement does both, so no name write
- * changes the branch after this read.
+ * changes the branch after this read. It gives null when the branch is no
+ * longer a placeholder, because no name write then changes it.
  */
 export async function settleWorkspaceBranch(
   db: D1Database,
@@ -91,7 +97,8 @@ export async function settleWorkspaceBranch(
 ): Promise<string | null> {
   const row = await db
     .prepare(
-      'UPDATE workspaces SET branch_placeholder = 0 WHERE id = ? RETURNING branch',
+      `UPDATE workspaces SET branch_placeholder = 0
+       WHERE id = ? AND branch_placeholder = 1 RETURNING branch`,
     )
     .bind(workspaceId)
     .first<{ branch: string }>()

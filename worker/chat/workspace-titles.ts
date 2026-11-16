@@ -4,7 +4,7 @@ import {
   textWithAttachmentNames,
 } from '../../src/shared/attachment-mentions'
 import type { AppEnv } from '../env'
-import { readWorkspace, workspaceRecord } from '../lifecycle/workspace-data'
+import { workspaceUpdate } from './workspace-update'
 import { warnWorker } from '../warnings'
 import { errorSummary } from '../warning-values'
 import { agentToolTaskText } from '../tools/message-text'
@@ -131,13 +131,10 @@ export class WorkspaceTitles {
     workspaceId: string,
     orgId: string,
   ): Promise<void> {
-    const workspace = workspaceRecord(
-      await readWorkspace(this.env.DB, orgId, workspaceId),
-    )
+    const update = await workspaceUpdate(this.env.DB, orgId, workspaceId)
     await this.store.change(
       workspaceId,
-      (transaction) =>
-        transaction.emit({ type: 'workspace.updated', workspace }),
+      (transaction) => transaction.emit(update),
       this.publish,
     )
   }

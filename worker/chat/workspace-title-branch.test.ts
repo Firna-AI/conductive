@@ -67,6 +67,9 @@ it.each([
     )
     // Open tabs learn only a branch that took the title.
     expect(updates).toEqual(settled ? [] : [branch])
-    expect(await settleWorkspaceBranch(db, WORKSPACE_ID)).toBe(branch)
+    // A settled branch gives null, because no name write changes it again.
+    expect(await settleWorkspaceBranch(db, WORKSPACE_ID)).toBe(
+      settled ? null : branch,
+    )
   },
 )

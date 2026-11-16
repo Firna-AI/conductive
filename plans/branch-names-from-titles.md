@@ -216,8 +216,8 @@ Depends on: 2
 Depends on: every other milestone
 
 - [ ] Run the targeted tests, then `npm run check`.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
@@ -227,6 +227,11 @@ Depends on: every other milestone
 - [ ] Open the pull request. Its description gives the decisions and the
       design calls of this plan with their dates, a permalink to this plan,
       and the follow-up items that the change adds.
+
+Review round 1, 16 November 2026: four findings, all fixed. A test now
+runs two Continues. The start settles the branch only while it is a
+placeholder. One helper publishes the workspace record. A name with no
+letter or digit puts back the city.
 
 ## Post-merge follow-up (non-blocking)
 
