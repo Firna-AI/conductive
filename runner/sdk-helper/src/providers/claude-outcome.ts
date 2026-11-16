@@ -8,7 +8,11 @@ import type { ProviderEvent } from '../generated/ProviderEvent'
 
 export type ClaudeOutcome =
   | { state: 'finished' | 'stopped' }
-  | { state: 'failed'; failure: Extract<ProviderEvent, { type: 'failed' }> }
+  | {
+      state: 'failed'
+      failure: Extract<ProviderEvent, { type: 'failed' }>
+      dropped: boolean
+    }
 
 const errorResults: readonly SDKResultError['subtype'][] = [
   'error_during_execution',
@@ -44,6 +48,7 @@ export function claudeOutcome(
   input: Record<string, unknown>,
   kind: SDKAssistantMessageError | null,
   stopped: boolean,
+  unfinished = false,
 ): ClaudeOutcome {
   if (stopped) return { state: 'stopped' }
   if (
@@ -56,8 +61,15 @@ export function claudeOutcome(
     kind === 'authentication_failed' ||
     kind === 'oauth_org_not_allowed' ||
     kind === 'cloud_credential_error'
+  const failure = login ? authenticationFailure() : failureCause(cause)
   return {
     state: 'failed',
-    failure: login ? authenticationFailure() : failureCause(cause),
+    failure,
+    dropped:
+      failure.code !== 'agent_authentication_failed' &&
+      (unfinished ||
+        /(?:mid-response|response stopped arriving|part of the response never arrived|response stream was malformed)\.\s+The response above may be incomplete\.|(?:before a response was produced|and no response was produced)\.\s+Try again\./i.test(
+          cause ?? '',
+        )),
   }
 }
