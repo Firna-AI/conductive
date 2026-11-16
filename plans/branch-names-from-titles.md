@@ -117,9 +117,10 @@ All design calls are agent calls of 16 November 2026.
 - Continue of a workspace without a name uses the city name with the
   version: `calummoore/lisbon-v2-7k2q`.
 - A marker in the workspace row says that the branch name can still
-  change. A new workspace sets it. A pull request run does not set it,
-  because its branch is the branch of the pull request (decision 505 A).
-  Existing rows get no marker, so their branches stay.
+  change. Each new workspace sets it, also the workspace of a routine run.
+  A pull request run creates a branch of its own from the pull request,
+  with the rule of every workspace (decision 505 A), so its branch takes
+  its title too. Existing rows get no marker, so their branches stay.
 - The branch step clears the marker and reads the branch in one SQL
   statement. A name write changes the branch only in a statement that
   requires the marker. Reason: D1 runs one statement at a time, so a
@@ -141,25 +142,28 @@ Depends on: none
 The mockups of the create flow and of Rename say that the branch keeps
 the city name. The fixture of Saved carts has a city branch.
 
-- [ ] Change the branch of the Saved carts fixture to a branch from its
+- [x] Change the branch of the Saved carts fixture to a branch from its
       title, and update its comment in
       `docs/mockups/src/fixtures/workspaces.ts`.
-- [ ] Update the texts of `new-workspace/creating`: the branch starts
+- [x] Update the texts of `new-workspace/creating`: the branch starts
       with a city name and takes the title with the name.
-- [ ] Update the texts of `new-workspace/first-turn` and
+- [x] Update the texts of `new-workspace/first-turn` and
       `workspace-menu/rename`.
-- [ ] Update the Continue mockup under `app/banner/continued` when it
+- [x] Update the Continue mockup under `app/banner/continued` when it
       shows the new branch name.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
-- [ ] Update this plan for each problem that the mockups show.
+- [x] Update the branch of the run workspace of `routines/run-workspace`.
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages.
+- [x] Update this plan for each problem that the mockups show. The run
+      workspace showed that a pull request run has a branch of its own.
+      No marketing picture shows a changed branch.
 
 ## Milestone 2: Documentation and protocol
 
 Depends on: 1
 
 - [ ] `create-a-workspace.md`: the placeholder branch, the branch from the
-      name before the branch step, the slug, the empty slug, and the pull
-      request run. Cite branch-name decisions 1 and 2.
+      name before the branch step, the slug, and the empty slug. Cite
+      branch-name decisions 1 and 2.
 - [ ] `continue.md`: the new branch takes the workspace name, the version,
       and random characters. Cite branch-name decision 3.
 - [ ] `workspace-and-session-names.md`, `workspace-menu.md`,
@@ -183,8 +187,8 @@ Depends on: 2
 - [ ] `worker/lifecycle/workspace-branch.ts`: the slug function, the
       branch from a name, the title branch that keeps the random
       characters, and the Continue branch with its version. Unit tests.
-- [ ] Create: a name in the create call gives the branch at once. A new
-      workspace sets the marker. A pull request run does not.
+- [ ] Create: a name in the create call gives the branch at once. Each
+      new workspace sets the marker.
 - [ ] Branch step: clear the marker and read the branch in one statement
       in `start-command-execution.ts`. Use that branch for the command.
       Check retries of the step.
@@ -201,7 +205,7 @@ Depends on: 2
       still names the branch, through the title repair.
 - [ ] Tests: a title before the branch step renames the branch; a title
       after it does not; a manual rename before and after; a create name;
-      a pull request run; Continue with a name, without a name, and twice.
+      Continue with a name, without a name, and twice.
 - [ ] Update the lifecycle and chat READMEs.
 
 ## Milestone 4: Verification, commit, review, and pull request
