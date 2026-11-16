@@ -3,11 +3,10 @@ import type { GatewayRuntime } from './route'
 import { codexGatewayAuth } from './codex-auth'
 import { GatewayRequestError } from './errors'
 import type { GatewayRequestLifetime } from './request-lifetime'
-import type { TurnTokenEndpoint } from './types'
 
 export function gatewayCodexAuth(
   runtime: GatewayRuntime,
-  endpoint: TurnTokenEndpoint,
+  workspaceId: string,
   token: string,
   loginOwnerId: string | undefined,
   lifetime: GatewayRequestLifetime,
@@ -20,13 +19,17 @@ export function gatewayCodexAuth(
           chatGptSignInCopy.causes.notRenewed,
         )
       const fresh = await runtime.codexLogin(loginOwnerId, failed)
-      const checked = await lifetime.wait(endpoint.checkTurnToken(token))
+      const checked = await lifetime.wait(
+        runtime.workspace(workspaceId).checkTurnToken(token),
+      )
       if (!checked.ok)
         throw new GatewayRequestError(checked.reason, 'The turn ended.')
       return fresh
     },
     async () => {
-      const checked = await endpoint.checkTurnToken(token, true)
+      const checked = await runtime
+        .workspace(workspaceId)
+        .checkTurnToken(token, true)
       if (!checked.ok)
         throw new GatewayRequestError(checked.reason, 'The turn ended.')
       return checked.codexRecoveryClaimed === true
@@ -48,20 +51,22 @@ export function gatewayCodexAuth(
       const rotation = await lifetime.wait(
         runtime.codexWaitForRotation(loginOwnerId, failed, async () => {
           const checked = await lifetime.wait(
-            endpoint.checkTurnToken(token, true),
+            runtime.workspace(workspaceId).checkTurnToken(token, true),
           )
           if (!checked.ok)
             throw new GatewayRequestError(checked.reason, 'The turn ended.')
           return checked.codexRecoveryPending === true
         }),
       )
-      const checked = await lifetime.wait(endpoint.checkTurnToken(token))
+      const checked = await lifetime.wait(
+        runtime.workspace(workspaceId).checkTurnToken(token),
+      )
       if (!checked.ok)
         throw new GatewayRequestError(checked.reason, 'The turn ended.')
       return rotation
     },
     async () => {
-      await endpoint.checkTurnToken(token, 'complete')
+      await runtime.workspace(workspaceId).checkTurnToken(token, 'complete')
     },
     runtime.codexTasks,
   )

@@ -24,7 +24,7 @@ export const privacyDocument: LegalDocument = {
   title: legalTitles.privacy,
   description: `The privacy notice of ${productName}.`,
   lead: text`This notice says which personal data ${productName} uses, why
-  it uses it, and who gets it. Effective date: 15 November 2026.`,
+  it uses it, and who gets it. Effective date: 16 November 2026.`,
   sections: [
     {
       title: 'Who is responsible',
@@ -95,12 +95,13 @@ export const privacyDocument: LegalDocument = {
           workspace before then.`,
         paragraph`${productName} keeps each file that you send with a message
           until it deletes the workspace of the message. It deletes an unsent
-          file 7 days after you upload it.`,
+          file 7 days after you upload it. A large text that you paste into
+          a message becomes such a file, and it uploads before you send it.`,
         paragraph`An account that waits for app access stays until you ask
           for its deletion, as every other account does.`,
-        paragraph`Account records, the latest Terms acceptance, and
-          suspension records do not automatically expire when you stop
-          using ${productName}. Workspace chat history and Mac command records
+        paragraph`Account records, the latest Terms acceptance, the time of
+          your last activity, and suspension records do not automatically
+          expire when you stop using ${productName}. Workspace chat history and Mac command records
           stay while their org exists, including while a cloud computer is
           stopped. When ${productName} passes on model requests and their
           answers, it keeps no copy of them.`,

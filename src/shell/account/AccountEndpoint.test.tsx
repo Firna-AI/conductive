@@ -24,7 +24,7 @@ import {
   holdAnimationFrames,
   MOUNTED_TEST_TIMEOUT,
 } from '../../test-support/mount'
-import { bodiesOf } from '../routines/routine-test-kit'
+import { bodiesOf } from '../automations/automation-test-kit'
 import { click, mountScreen, settle, typeText } from '../test-mount'
 import { startedApp, textOf } from '../test-render'
 import { fieldNamed } from '../workspace/kept-test-kit'
@@ -237,7 +237,7 @@ describe('an own endpoint login on the account', () => {
     const before = textOf(claude())
     const refresh = () =>
       byRole('button', 'Refresh the model list of Claude', view)
-    server.empty('POST', refreshPath)
+    server.json('POST', refreshPath, { modelListReadFailed: false })
     server.json('GET', ACCOUNT_PATHS.account, accountWith(endpointLogin([])))
     held.holdAnswer('GET', ACCOUNT_PATHS.account)
     click(refresh())

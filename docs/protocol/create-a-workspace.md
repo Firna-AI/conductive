@@ -10,7 +10,10 @@ provider, the org image, and the startup script.
 rest of the life of a workspace. The terms are those of the
 [architecture doc](../architecture.md#terms). A
 decision number names a dated record, as
-[Decision numbers](../architecture.md#decision-numbers) says.
+[Decision numbers](../architecture.md#decision-numbers) says. A
+branch-name decision number names a decision of the change that names a
+branch after its workspace. The pull request of that change keeps its
+record.
 
 ## New workspace
 
@@ -38,7 +41,7 @@ decision number names a dated record, as
   rejected, because the user then looks in two places.
 - Model and effort also saves fast mode, with the Fast switch of its menu.
   New workspace starts from the saved choice with its fast mode, as
-  [Fast mode](fast-mode.md#saved-defaults-new-workspaces-and-routines)
+  [Fast mode](fast-mode.md#saved-defaults-new-workspaces-and-automations)
   says.
 - The choice offers the page and the dialog. Each change saves at once, as
   a change of Model and effort does.
@@ -266,13 +269,45 @@ decision number names a dated record, as
 - The branch name starts with the GitHub login that the workspace owner has
   at the create (decision 53).
 - A city name and four random characters follow, such as
-  `calummoore/lisbon-7k2q`. The branch keeps the city name when the
-  workspace gets a name.
+  `calummoore/lisbon-7k2q`. This is the placeholder branch.
 - Reason: a GitHub login is unique, so the branches of each person stay
   together. A first name was rejected, because two people can share one.
+- When the workspace gets a name before the start creates the branch in
+  the sandbox, the branch takes the name (branch-name decision 1 A). The
+  name can be the automatic title, a name from Rename, or a name from a
+  create call. The branch keeps its GitHub login and its four random
+  characters, such as `calummoore/saved-carts-7k2q` (branch-name decision
+  2 A).
+- After the start creates the branch, a new name never changes the
+  branch.
+- Reason: the branch then gets a name that says what the work is, with no
+  Git rename, no GitHub rename, and no change under a running agent. A
+  rename of an existing branch was rejected. It must wait for each turn,
+  and GitHub closes an open pull request when its head branch gets a new
+  name.
+- A title that comes after the start created the branch names only the
+  workspace. The branch keeps the city name. This happens when the model
+  is slow or fails, or when the first message has no text.
+- Reason: the start does not wait for the title.
+- The name part of the branch has only the letters `a` to `z`, the digits,
+  and single hyphens. The app removes accents and makes letters
+  lowercase. Each other run of characters becomes one hyphen. The part
+  has no hyphen at its start or at its end, and at most 40 characters. A
+  longer part ends at its last hyphen within the limit.
+- When no letter or digit remains, the branch keeps the city name.
+- Reason: Git limits the characters of a branch name, and a short name
+  fits the pull request bar.
+- Two workspaces with the same name get two branches, because the random
+  characters differ.
+- Reason: the app finds the pull request of a workspace and routes its
+  GitHub events by the name of its branch. A clean name with a check for a
+  clash was rejected. It needs a read from GitHub, and two creates can
+  race.
+- A workspace keeps its branch from before branch-name decision 1.
 - The new branch of [Continue](continue.md#the-base-and-the-new-branch)
-  follows the same rule, with the GitHub login that the workspace owner has
-  at the Continue.
+  starts with the GitHub login that the workspace owner has at the
+  Continue. It takes the workspace name and a version, as that section
+  says.
 - A new workspace has no name, and the app shows "Untitled" in its place,
   as [Workspace and session names](agents-and-sessions.md#workspace-and-session-names)
   says (decision 182).
@@ -298,5 +333,5 @@ decision number names a dated record, as
   good org image, with the current startup script and env vars.
 - When that sandbox is ready, the agent gets the queued messages, as
   [Messages](messages-and-attachments.md#messages) says.
-- A routine run keeps its failed workspace and its cause, as
-  [Failed runs](routine-runs.md#failed-runs) says (decision 512 B).
+- An automation run keeps its failed workspace and its cause, as
+  [Failed runs](automation-runs.md#failed-runs) says (decision 512 B).

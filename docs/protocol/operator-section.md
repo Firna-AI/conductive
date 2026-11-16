@@ -79,6 +79,17 @@ names a dated record, as
 - The Users tab searches every user by GitHub login, name on GitHub, or
   numeric GitHub ID (decision 147).
 - The Users tab marks each person who waits as Waiting (decision 160).
+- The Users tab gives the last active time of each user, in a Last active
+  column on a desktop. The page of a user gives it too, as a date and a
+  time of day. The last active time is the time of the last real action
+  of the person: a new workspace, or a chat message that the person sends
+  or sends again from the app (the user's decision of 14 November 2026).
+  Reason: the operator sees which accounts still do work.
+- Sign-in, reads, and the other actions of the app do not count. An
+  action that an agent tool or an automation takes for the person does not
+  count either, because the person did not act.
+- The column gives the time of day for a time of today, and else the day,
+  as Joined does. A user with no recorded action shows Unknown.
 - With no search, the Orgs and Users tabs list the newest first, 20 at a
   time, with Show more (decision 147). A search lists its matches in the
   same way.
@@ -89,9 +100,10 @@ names a dated record, as
   members, each with their name on GitHub and their role
   (decisions 147 and 149).
 - The page of a user gives the GitHub login, the name on GitHub, the GitHub
-  ID, and the join day. It gives the number of workspaces that the user
-  owns, and how many of them run now. It lists the orgs of the user, each
-  with the role of the user (decisions 147 and 149).
+  ID, the join day, and the last active time. It gives the number of
+  workspaces that the user owns, and how many of them run now. It lists
+  the orgs of the user, each with the role of the user (decisions 147 and
+  149).
 - An account with no name on GitHub shows its login and no name
   (decision 149).
 - The page of a user also gives the primary verified email of the GitHub

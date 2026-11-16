@@ -70,6 +70,7 @@ export async function reserveContinue(
   const { branch } = await workspaceBranch(
     row.githubLogin,
     options.dependencies.randomToken,
+    { name: row.name, task: row.taskNumber + 1 },
   )
   const job: ContinueJob = {
     id: options.dependencies.randomToken(),

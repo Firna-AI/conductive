@@ -33,12 +33,29 @@ A failed read fails the build with a software-release error.
 The release program includes the workspace CLI and MCP server.
 The Worker installs no separate tool source files or launcher.
 
-The command installs `gh`, `ttyd`, and `tmux` with apt.
-It disables and masks the package's own ttyd service.
-It downloads the program archive with curl, checks its digest with
-`sha256sum`, and extracts `conductive` into a temporary folder.
-The root command uses `umask 022`, so services that run as `user` can read the release files.
-It then runs the root commands in [Release installation](#release-installation).
+The command first runs the apt part. It installs `ttyd` and `tmux` with
+`terminalPackagesCommand()`, then `gh`, with apt. It disables and masks the
+package's own ttyd service. `imagePackagesVersion()` hashes this part alone,
+so a new release does not change it. Each build job and each software image
+row records the version of the part that its command ran. A later build
+reads the version that its source image holds. When that version is
+current, the command first checks the image. When `dpkg-query` finds the
+three packages installed and `systemctl is-enabled ttyd.service` prints
+`masked`, the command skips apt. Otherwise, and for a software image build
+from the base image, it runs the apt part.
+
+The release part runs as root with `umask 022`, so services that run as
+`user` can read the release files. When `/opt/conductive/current/conductive`
+exists, that program runs `update check --bootstrap`. The check waits for a
+running background check and downloads only the parts that the image lacks.
+The installed program is used only when the check succeeds and
+`versions/<version>/complete` then exists for the release that the Worker
+read. Otherwise the command downloads the program archive with curl, checks its digest with `sha256sum`, and extracts `conductive`
+into a temporary folder. When an installed program exists but its check
+did not get the release, the command first prints a warning. That
+bootstrap program runs the check. The program
+that ran the check then runs the other root commands in
+[Release installation](#release-installation).
 A failure stops the build. The temporary folder is removed on exit.
 The release owns the terminal scripts and units. The build never overwrites
 them with the legacy terminal installer.
@@ -46,6 +63,7 @@ them with the legacy terminal installer.
 Every org build and refresh installs the newest release.
 A first build still uses a matching software image when one is ready.
 That build also runs the release install, so a newer release can apply.
+Each build and refresh still fails when no release is available.
 A refresh then snapshots the result without running the org install script.
 
 A workspace without `/opt/conductive/current/conductive` bootstraps at its
@@ -80,11 +98,12 @@ To check a sandbox, read `/sys/block/vda/queue/write_cache`. It reads
 ## Release installation
 
 The Worker installs releases through `conductive`. It runs these commands
-as root with a verified bootstrap executable:
+as root with the installed program, or with a verified bootstrap
+executable when the image has no program or its check fails:
 
 ```sh
-/path/to/bootstrap/conductive update check --bootstrap
-/path/to/bootstrap/conductive update apply
+/path/to/conductive update check --bootstrap
+/path/to/conductive update apply
 /opt/conductive/current/conductive update started
 ```
 
@@ -95,7 +114,9 @@ Downloads have a one-hour total timeout and a ten-second connect timeout.
 A build must stop when any command fails. A build must verify that `current/conductive` and
 `current/complete` exist after apply. A build confirms the initial
 installation with `update started`, because it starts no runner.
-The image build still installs `gh`, `ttyd`, and `tmux` through apt.
+The image build installs `gh`, `ttyd`, and `tmux` through apt when the
+image lacks one of them, when the ttyd service is not masked, or when the
+apt part changed.
 
 The program uses this layout under `/opt/conductive`:
 

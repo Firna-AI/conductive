@@ -120,6 +120,18 @@ with the search of its invite code.
 - A suspension of the operator's own account ends every session of the
   operator, so the app then shows the sign-in.
 
+## Last active
+
+- The Users tab gives the last active time of each user in a Last active
+  column on a desktop. A time of today shows its time of day, such as
+  14:32, and another time its day, as Joined does. The phone keeps User
+  and Workspaces.
+- The page of a user gives the same time in Details, as a day with its
+  year and a time of day.
+- A user with no recorded action shows Unknown in both places.
+  [Orgs and Users](../../../docs/protocol/operator-section.md#orgs-and-users)
+  says which actions count.
+
 ## Long runs
 
 - Long runs on the Overview lists the `longRuns` of the reply in their

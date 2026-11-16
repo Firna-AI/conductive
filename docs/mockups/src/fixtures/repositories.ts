@@ -32,7 +32,7 @@ export const repositories: Readonly<Record<RepositoryKey, Repository>> = {
 /**
  * A repository that Acme chose before. An admin removed it from the chosen
  * repositories, so it is not in `repositories`, and the Repositories tab
- * lists it as not used. A routine can still name it.
+ * lists it as not used. An automation can still name it.
  */
 export const formerRepository = {
   key: 'admin-dashboard',

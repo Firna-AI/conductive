@@ -3,14 +3,16 @@
 This doc holds the requirements and the decisions in force for the
 Markdown of agent messages in the chat, with their headings and lists.
 Its linked page [Chat tables](chat-tables.md) holds the rules of their
-tables. [Chat and events](chat-and-events.md) holds the messages, the live
-text, and the work of a turn. The terms are those of the
-[architecture doc](../architecture.md#terms). The
+tables. Its linked page [Chat links](chat-links.md) holds the rules of
+the links of chat text. [Chat and events](chat-and-events.md) holds the
+messages, the live text, and the work of a turn. The terms are those of
+the [architecture doc](../architecture.md#terms). The
 [mockup catalogue](../mockups/catalogue.md) draws tables in agent messages
 at `app/chat/tables`, and in the open work of a turn at
 `app/chat/work/table`. It draws lists inside list items at
 `app/chat/lists`. It draws headings at `app/chat/headings`, and in the
-open work of a turn at `app/chat/headings/work`.
+open work of a turn at `app/chat/headings/work`. It draws links at
+`app/chat/links`.
 
 ## Formatting
 
@@ -22,15 +24,17 @@ open work of a turn at `app/chat/headings/work`.
     or `1)`, with lists inside their items, as [Lists](#lists) says
   - code blocks between two lines that start with three backticks
   - inline code between backticks, and strong text between `**` marks
+  - Markdown links and bare web addresses, as
+    [Chat links](chat-links.md) says
   - tables, as [Chat tables](chat-tables.md) says
 - The lines of one paragraph show as one paragraph.
 - A workspace link outside code shows as a chip, as
   [Messages and answers](workspace-links.md#messages-and-answers) says.
-- Other Markdown shows as the text that the agent wrote, such as a link
-  that is not a workspace link, a quote, or emphasis with one `*`.
-- Inline code, strong text, and workspace chips also show in headings,
-  list items, and table cells. A code block shows its text with no
-  formatting.
+- Other Markdown shows as the text that the agent wrote, such as a quote,
+  an image, or emphasis with one `*`.
+- Inline code, strong text, links, and workspace chips also show in
+  headings, list items, and table cells. A code block shows its text with
+  no formatting.
 - Each code block of an agent message has a Copy code button in its top
   corner. The button copies the text of the code block exactly as the
   agent wrote it, with its tabs and blank lines, and without the fence
@@ -48,11 +52,11 @@ open work of a turn at `app/chat/headings/work`.
   [Trust boundaries](../architecture/data-and-trust.md#trust-boundaries) says, and it can
   shape the text of an agent message.
 - The chat keeps this small set of Markdown. The full Markdown of the file
-  preview was rejected for the chat, because it also changes the links and
-  the quotes of every agent message.
-- A Markdown library was rejected, because it adds a dependency that needs
-  a review of its safety. One parser with a setting for each view was
-  rejected, because it needs more compatibility work.
+  preview was rejected for the chat, because it also changes the quotes of
+  every agent message.
+- A Markdown library or a link library was rejected, because it adds a
+  dependency that needs a review of its safety. One parser with a setting
+  for each view was rejected, because it needs more compatibility work.
 
 ## Headings
 
@@ -150,15 +154,16 @@ open work of a turn at `app/chat/headings/work`.
 ## Saved history
 
 - The events and the saved history carry the text of each agent message.
-  They carry no heading data and no table data.
-- An agent message from the saved history shows the same formatting and
-  the same tables as the same agent message after its last live update.
+  They carry no heading data, no table data, and no link data.
+- An agent message from the saved history shows the same formatting, the
+  same tables, and the same links as the same agent message after its last
+  live update.
 - The text keeps the cells that a table does not show, such as the cells
   past the width of its header.
-- Reason: headings and tables need no change to the events or to the
-  saved history. Table data in the events was rejected, because it changes
-  the events and the saved history, and the browser still lays out each
-  table.
+- Reason: headings, tables, and links need no change to the events or to
+  the saved history. Table data or link data in the events was rejected,
+  because it changes the events and the saved history. The browser still
+  lays out each table and checks each link.
 
 ## Tables and headings in the work of a turn
 

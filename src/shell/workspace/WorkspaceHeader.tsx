@@ -22,7 +22,7 @@ import { CopyLink } from './CopyLink'
 import type { WorkspaceContext } from './features'
 import { RightColumnToggle } from './WorkspaceColumns'
 import { RunLine } from './RunLine'
-import { useRunRoutine } from './saved-view'
+import { useRunAutomation } from './saved-view'
 
 /** The owner of the workspace, without the menu that reassigns it. */
 function Owner(props: { workspace: Workspace; compact: boolean }) {
@@ -55,7 +55,7 @@ function State(props: { state: WorkspaceState }) {
  * takes the room that the other parts leave. On a phone it leads
  * the line under the name. The list groups workspaces by section, so the
  * header names the repository. On desktop the header ends with the toggle
- * of the right column. A run workspace links to its routine below it.
+ * of the right column. A run workspace links to its automation below it.
  * While the open of the workspace resumes its sandbox, the state shows
  * Starting at once, before the Resume reply.
  */
@@ -69,7 +69,7 @@ export function WorkspaceHeader(props: {
   const repositories = valueOf(useStore(model.repositories))
   const go = useGo()
   const bar = useMacBar()
-  const routine = useRunRoutine(props.context.savedView)
+  const automation = useRunAutomation(props.context.savedView)
   useEffect(() => model.watch('repositories'), [model])
   const repository =
     repositories?.find((item) => item.id === workspace.repositoryId)
@@ -115,11 +115,11 @@ export function WorkspaceHeader(props: {
       <RightColumnToggle />
     </header>
   )
-  if (!routine) return header
+  if (!automation) return header
   return (
     <>
       {header}
-      <RunLine orgId={org.id} routine={routine} />
+      <RunLine orgId={org.id} automation={automation} />
     </>
   )
 }

@@ -1,9 +1,10 @@
 import type { WorkspaceEventEnvelope } from './workspace-events'
 import {
   hasOwnWords,
-  textWithAttachmentNames,
+  titleSourceText,
 } from '../../src/shared/attachment-mentions'
 import type { AppEnv } from '../env'
+import { workspaceUpdate } from './workspace-update'
 import { warnWorker } from '../warnings'
 import { errorSummary } from '../warning-values'
 import { agentToolTaskText } from '../tools/message-text'
@@ -48,10 +49,7 @@ export class WorkspaceTitles {
       this.dependencies.waitUntil(
         this.request(
           workspaceId,
-          textWithAttachmentNames(
-            event.message.text,
-            event.message.attachments,
-          ),
+          titleSourceText(event.message.text, event.message.attachments),
         ).finally(() => {
           this.pending = false
         }),
@@ -75,7 +73,7 @@ export class WorkspaceTitles {
           const message = await view.message(first.messageId)
           if (!message) return null
           return hasOwnWords(message.text, message.attachments)
-            ? textWithAttachmentNames(message.text, message.attachments)
+            ? titleSourceText(message.text, message.attachments)
             : text
         }),
       )
@@ -108,12 +106,14 @@ export class WorkspaceTitles {
           },
           this.publish,
         )
-        if (envelope)
-          await projectWorkspaceTitle(
-            this.env.DB,
-            envelope,
-            this.dependencies.now(),
-          )
+        const branchOrgId = envelope
+          ? await projectWorkspaceTitle(
+              this.env.DB,
+              envelope,
+              this.dependencies.now(),
+            )
+          : null
+        if (branchOrgId) await this.publishBranch(workspaceId, branchOrgId)
       })
     } catch (error) {
       warnWorker({
@@ -121,5 +121,18 @@ export class WorkspaceTitles {
         error: errorSummary(error),
       })
     }
+  }
+
+  /** Open tabs learn the branch that took the title. */
+  private async publishBranch(
+    workspaceId: string,
+    orgId: string,
+  ): Promise<void> {
+    const update = await workspaceUpdate(this.env.DB, orgId, workspaceId)
+    await this.store.change(
+      workspaceId,
+      (transaction) => transaction.emit(update),
+      this.publish,
+    )
   }
 }

@@ -1,15 +1,15 @@
 import type { Workspace } from '../shared/generated/Workspace'
 import type { WorkspaceState } from '../shared/generated/WorkspaceState'
 import type { BuildsResponse } from '../shared/org-settings'
-import type { RoutineRun } from '../shared/routines'
+import type { AutomationRun } from '../shared/automations'
 
-import type { ListedRoutine } from './api/read-routines'
+import type { ListedAutomation } from './api/read-automations'
 import type { ListData } from './list-changes'
 import type { RefreshWait } from './refresh'
 
 /**
  * How soon a shown part of an org reads again. These are choices of the
- * app, not product limits: soon while a workspace, a routine run, or a
+ * app, not product limits: soon while a workspace, an automation run, or a
  * build is active, or while the checks of a pull request run, and slowly
  * otherwise, so that changes from other tabs, people, and GitHub show.
  */
@@ -41,16 +41,17 @@ export const workspacesWait: RefreshWait<readonly Workspace[]> = (
 ) => (workspaces?.some(readsSoon) ? activeWait : idleWait)
 
 /** A run that waits for its workspace counts as active, as a start does. */
-const activeRunStates: ReadonlySet<RoutineRun['state']> = new Set([
+const activeRunStates: ReadonlySet<AutomationRun['state']> = new Set([
   'queued',
   ...activeStates,
 ])
 
-export const routinesWait: RefreshWait<readonly ListedRoutine[]> = (
-  routines,
+export const automationsWait: RefreshWait<readonly ListedAutomation[]> = (
+  automations,
 ) =>
-  routines?.some(
-    (routine) => routine.lastRun && activeRunStates.has(routine.lastRun.state),
+  automations?.some(
+    (automation) =>
+      automation.lastRun && activeRunStates.has(automation.lastRun.state),
   )
     ? activeWait
     : idleWait

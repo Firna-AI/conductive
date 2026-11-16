@@ -46,7 +46,9 @@ marks of a draft text.
   or drop. Each gives the IDs of the new files at once, while their uploads
   run. These are the local IDs of `DraftFile.id`, not the attachment IDs of
   the upload replies. The field writes them in its marks, through
-  `FieldHandle.insertFiles`.
+  `FieldHandle.insertFiles`. A large paste in the field calls the same
+  attach through `onAttach` of the field, and the field writes the mark of
+  its file itself, as [The message field](message-field.md) says.
 - `files` holds only files. A file with no bytes is a file, and it
   uploads. `folders` is optional. It holds the names of the folders that
   the caller found, apart from its files. The state never takes a `File`

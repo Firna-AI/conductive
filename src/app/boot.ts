@@ -6,13 +6,18 @@ import { GET_STARTED_PATH, type GetStartedResponse } from '../shared/onboarding'
 import type { OrgSummary } from '../shared/orgs'
 import type { ApiClient, ApiError } from './api/client'
 import { items, record } from './api/parse'
+import { noteRefusals } from './api/refusals'
 import {
   readAccount,
   readGetStarted,
   readModel,
   readOrg,
 } from './api/read-core'
+import type { AppServices } from './services'
 import { asApiError } from './store'
+
+/** The code of the API for a request whose sign-in session ended. */
+const signInRequiredCode = 'sign_in_required'
 
 /** The first load of the app, and who it shows the app to. */
 export type Boot =
@@ -48,4 +53,21 @@ export function failedBoot(error: unknown): Boot {
   return failure.status === 401
     ? { state: 'signed-out' }
     : { state: 'failed', error: failure }
+}
+
+/**
+ * The services of the app, whose client calls `end` when the API refuses
+ * any request with `sign_in_required`. Every model and feature client
+ * sends through this client. So when the sign-in session ends while the
+ * app is open, the app shows the sign-in, and no screen stays whose
+ * requests all fail.
+ */
+export function watchSession(
+  services: AppServices,
+  end: () => void,
+): AppServices {
+  return {
+    ...services,
+    api: noteRefusals(services.api, signInRequiredCode, end),
+  }
 }

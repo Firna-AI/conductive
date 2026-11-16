@@ -12,7 +12,12 @@ import { useServices } from '../../app/services'
 import { roleLabels } from '../../members/people'
 import type { OperatorUserDetail } from '../../shared/operator'
 import { AppAccessSection, ReferralSection } from './AccessSections'
-import { formatAge, formatCount, formatLongDay } from './format'
+import {
+  formatAge,
+  formatCount,
+  formatLongDay,
+  formatLongMoment,
+} from './format'
 import { suspensionTitle } from './TargetPage'
 import { EmptyRows, TargetList, TargetRow } from './TargetParts'
 
@@ -75,6 +80,13 @@ export function UserDetails(props: {
             { term: 'GitHub ID', value: String(user.githubId), mono: true },
             { term: 'On GitHub', value: age },
             { term: 'Joined', value: formatLongDay(user.joinedAt, timeZone) },
+            {
+              term: 'Last active',
+              value:
+                user.lastActiveAt === null
+                  ? 'Unknown'
+                  : formatLongMoment(user.lastActiveAt, timeZone),
+            },
             {
               term: 'Workspaces',
               value: `${formatCount(total)} owned, ${formatCount(running)} running`,

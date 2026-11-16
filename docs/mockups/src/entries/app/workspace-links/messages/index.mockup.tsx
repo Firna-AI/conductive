@@ -35,9 +35,9 @@ export const workspaceLinkMessages = defineScreen({
       slug: 'other-org',
       title: 'Link of another org',
       description:
-        'Cal sent the link of a workspace of Futex, another org of Cal. It stays plain text, and the long link breaks to fit the line. A link to a workspace that was removed, or that the reader cannot see, stays plain text in the same way.',
+        'Cal sent the link of a workspace of Futex, another org of Cal. It is no chip, but a link, and the long link breaks to fit the line. A press opens that workspace of Futex in the app, in the same window, as a chip does. A link to a workspace that was removed, or that the reader cannot see, is such a link too. The mockups draw no workspace of Futex, so here the link opens no screen.',
       rationale:
-        'The chat finds a workspace only in the list of the org that it shows. So a link of another org stays plain text, also for a member of both orgs. The agent also acts only in its own org.',
+        'The chat finds a workspace only in the list of the org that it shows, so a link of another org is no chip, also for a member of both orgs. The user chose D of chat link decision 1 on 10 November 2026: each http and https address of chat text is a link, and a link to a page of the app opens in the app. The agent still acts only in its own org.',
       props: { conversation: 'other-org-link', composer: 'empty' },
     },
   ],

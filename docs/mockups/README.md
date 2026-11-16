@@ -53,7 +53,8 @@ desktop and the phone, the design tokens, and the parts that the screens
 share. Its linked pages give the parts of
 [the workspace](design-workspace.md), of [the chat](design-chat.md),
 of [the operator section](design-operator.md), and of
-[the pull request bar](design-bar.md). They also give [the marks](design-marks.md).
+[the pull request bar](design-bar.md). They also give [the marks](design-marks.md)
+and [the links in text](design-links.md).
 
 ## The catalogue
 
@@ -66,8 +67,8 @@ wait for a build. Its linked page,
 the pages of the waitlist, the child pages of `app/orgs/suspended`, and the
 operator section. Its linked page
 [the pull request bar](catalogue-bar.md) gives `app/banner` and its child
-pages. The [chat and routines](catalogue-chat-and-routines.md) page gives
-the child pages and flows of `app/chat` and `app/routines`. The
+pages. The [chat and automations](catalogue-chat-and-automations.md) page gives
+the child pages and flows of `app/chat` and `app/automations`. The
 [workspace links, file mentions, and tools](catalogue-workspace-tools.md)
 page gives the child pages and flows of `app/workspace-links`,
 `app/file-mentions`, and `app/tools`.
@@ -126,8 +127,8 @@ a dropped folder that the browser cannot read. [The chat](design-chat.md) gives 
 - An entry module in `src/entries/` exports one `defineScreen` with a named
   export. Its props and saved states (`variants`) choose the state. The
   workspace screen declares its states in `src/screens/workspaceState.ts`, so
-  `mockups:serve` offers a control for each part of the state. The routine
-  screen declares its states in `src/screens/routineState.ts` in the same
+  `mockups:serve` offers a control for each part of the state. The automation
+  screen declares its states in `src/screens/automationState.ts` in the same
   way. The tab and composer states of the workspace screen live in
   `src/screens/chatStates.ts`. `tabStates` covers the session, file, and
   image tabs of the centre column. `temporaryTabStates` covers the
@@ -192,16 +193,12 @@ waitlist, the commands that an agent runs on the Mac, and This Mac.
 ## The marketing site
 
 [The marketing site](marketing-site.md) gives the home page and its
-pictures, the header and the footer, and [the docs pages](marketing-site.md#the-docs).
-It also gives the Terms, Privacy, and not-found pages, the comparison page,
-and the page before GitHub. The comparison page is the chosen design at
-`marketing/from-conductor/one-table`.
-[Conductor comparison](../protocol/conductor-comparison.md)
-states its requirements. It draws the real rows: its rows, statuses, dates,
-and words come from `src/marketing/from-conductor/`, the modules that the
-site also reads, as
-[the marketing site README](../../src/marketing/README.md#the-comparison-page)
-says. The pictures are captures of
+pictures, the header and the footer, [the docs pages](marketing-site.md#the-docs),
+and [the pricing page](marketing-site.md#the-pricing-page).
+It also gives the Terms, Privacy, and not-found pages, and the page before
+GitHub. The pricing page reads its plans, its prices, and its words from
+`src/marketing/pricing.ts`, the module that the site also reads. The
+pictures are captures of
 real screens, such as the workspace
 screen with its chat and composer. A change to a screen or a shared part
 that a picture shows needs a new capture, with the

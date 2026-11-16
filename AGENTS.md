@@ -124,7 +124,7 @@ through a pull request. It requires no approval and does not require the
 branch to be up to date. It requires resolved review conversations, blocks
 force pushes, and restricts deletion of `main`.
 
-`.github/workflows/deploy.yml` deploys each push to `main` to the test
+`.github/workflows/deploy.yml` deploys each push to `main` to the production
 deployment at `conductive.build`. It does not wait for CI, as
 [Automatic deploys](docs/automatic-deploys.md) says.
 
@@ -173,12 +173,6 @@ Apple silicon Mac jobs on Blacksmith.
   restate a fact in other words.
   [Website docs](docs/protocol/website-docs.md) gives the rules for the
   words of a guide.
-- The comparison page at `conductive.build/from-conductor` gives each
-  listed Conductor feature a status. Its rows live in
-  `src/marketing/from-conductor/`. When a change ships, starts, or drops a
-  listed feature, update the status of its row in the same change. The
-  claim rules are in
-  [Conductor comparison](docs/protocol/conductor-comparison.md#statuses).
 
 - Rust owns the runner messages and their dependent types in
   `crates/cnd-runner-interface/`. `ts-rs` writes their TypeScript into
@@ -217,6 +211,9 @@ Apple silicon Mac jobs on Blacksmith.
 
 ## Status
 
-- This project is not in production.
-- Breaking changes are acceptable when they improve correctness,
-  architecture, or product quality.
+- This project is in production. Real users and their data use the
+  deployment at `conductive.build`.
+- Avoid breaking changes. A change that breaks stored data, the Worker
+  API, or the runner messages needs a migration or a compatible path.
+  Older copies of the Mac app and older runners in the sandboxes must keep
+  working. Name each breaking change in the pull request description.
