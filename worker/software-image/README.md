@@ -30,7 +30,11 @@ The Worker reads `releases/latest/conductive/x86_64-unknown-linux-musl`.
 `CONDUCTIVE_RELEASE_SERVER` sets the base URL and defaults to `https://runner.conductive.build`.
 The saved job captures the verified program URL, digest, release version, and server.
 The build uses the program for check, apply, and initial confirmation.
-It installs `gh`, `ttyd`, and `tmux` separately with apt.
+It always runs the apt part, which installs `gh`, `ttyd`, and `tmux`,
+because the base image holds none of them. The row records the version of
+that apt part when the command starts. A first org build from the image
+then skips apt while that version is current, as
+[The software step](../lifecycle/image-builds.md#the-software-step) says.
 A release lookup failure fails the deploy request with a clear software-release error.
 
 A ready image is reused. An older unfinished version fails before the new

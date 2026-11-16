@@ -1,6 +1,7 @@
 //! Session, output, restart, and cancellation integration tests.
 
 mod background_tests;
+mod busy_tests;
 mod failure_tests;
 mod helpers;
 mod input_tests;

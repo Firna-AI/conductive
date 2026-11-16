@@ -90,15 +90,25 @@ mark of the temporary tab, and the list. The kept chat loads it and saves it, an
 through the chat, so the view has one writer. The shell passes the view to
 the screens, with a `FilesNavigation`:
 
-- `href(target)` gives the address of a list, a file tab, or a diff tab.
-- `navigate(target)` handles a plain click. The shell saves the change in
-  the view, then moves the address. A file or a diff with no tab opens in
-  the temporary tab, as
-  [Temporary tabs](../../docs/protocol/temporary-tabs.md) says. A click
-  with a modifier key opens the address in a new browser tab.
+- `href(target, lines)` gives the address of a list, a file tab, or a diff
+  tab. A file tab with `lines` names them in the query, as `?line=42-50`.
+- `navigate(target, lines)` handles a plain click. The shell saves the
+  change in the view, then moves the address. A file or a diff with no tab
+  opens in the temporary tab, as
+  [Temporary tabs](../../docs/protocol/temporary-tabs.md) says. The view
+  keeps the tab without the lines. A click with a modifier key opens the
+  address in a new browser tab.
 - `keep(tab)` handles a double-click on a file row or on a tab. The shell
   makes the tab of that file or diff a kept tab when it is the temporary
   tab, and moves no address. Keep open in the tab menu calls it too.
+
+The shell reads the lines of the address with `useAddressLines`, which
+also counts each visit of an address with lines, and gives them to
+`FilePage`. So a second press on the same chip shows the lines again.
+`CodeView` then scrolls the first line to the middle of its view and
+marks each line of the range, as
+[Files and changes](../../docs/protocol/workspace-tools.md#files-and-changes)
+says. A file chip of an answer with a line target opens such an address.
 
 The screens:
 
@@ -166,6 +176,15 @@ the app's `ApiClient`, so the Mac app reads the file from its own Worker.
 The shell supplies the design tokens as `--ui-*` CSS variables and the
 `@firna/ui` theme provider, as `docs/mockups/src/theme.ts` builds them.
 
+The links of the Markdown preview open through the link opener of the app
+shell, `useTextLinks` of `../shell/ui/text-links.tsx`, which the chat uses
+too. The preview asks it to open a local address as a web link. The
+workspace screen gives the opener the pages of the app, on desktop and on
+a phone, as
+[The chat of the workspace](../shell/workspace/screen-parts.md#the-chat-of-the-workspace)
+says. Outside that screen, as on the development page, each link opens a
+new tab.
+
 ### Kept scroll offsets
 
 Each file and diff tab of the centre keeps its scroll offset, down and
@@ -180,6 +199,10 @@ the context, such as a file page on a phone, keeps nothing. Content that
 grows after the mount gets the offset again at each change of size, until
 the box reaches it or the reader scrolls. When a tab leaves the saved view,
 such as at a close, it forgets its offsets, so it opens at the top again.
+A view can give `useKeptScroll` an aim, a place that the address names,
+such as the lines of a file chip. The aim wins over the kept offset, and
+only a new key of the aim scrolls again, so a change of the file keeps the
+place of the reader. The hook is the one owner of the scroll of its box.
 The offsets live in a `TabPlaces` store of the web app, in
 `src/app/tab-places.ts`, and the chat files of the workspace screen give it
 each list of the file and diff tabs through `useFollowTabs`.
@@ -199,11 +222,28 @@ File content, Markdown, paths, and diffs are untrusted. The screens show
 them as React text only, apart from the picture of an image file. The
 Markdown renderer builds React elements from its own parse: HTML in a
 file shows as text, a Markdown image shows its alt text, and only
-absolute `http`, `https`, and `mailto` links become links. A link opens
-in a new tab with `noopener noreferrer`. Quotes and lists nest at most 16
-levels deep, and deeper content shows as text. The parse runs in the
-worker, off the thread of the page, so a long or crafted file cannot stop
-the page.
+absolute `http`, `https`, and `mailto` links become links. A bare address
+in the text stays text. Quotes and lists nest at most 16 levels deep, and
+deeper content shows as text. The parse runs in the worker, off the
+thread of the page, so a long or crafted file cannot stop the page.
+
+Each link of the preview has the look of the mockups' `TextLink`, and its
+title gives its whole address. The link opener of the app shell opens
+it, as
+[Files and changes](../../docs/protocol/workspace-tools.md#files-and-changes)
+says:
+
+- A link to a page of the app opens that page in the same window. A click
+  with a modifier key keeps the action of the browser.
+- Every other link opens a new tab with `noopener noreferrer`, so the
+  other site gets no address of the app.
+- Unlike chat text, the preview keeps each link that its parse accepts. A
+  `mailto` address, an address with a user name or a password, and an
+  address of the app that names no page open a new tab.
+
+A local address of a file, such as `http://localhost:3000`, opens a new
+tab too. It does not open the preview of its port, as a local address of
+chat text does.
 
 [The Markdown preview](markdown-preview.md#safety-limits) gives the
 limits of emphasis, of long runs of text, and of tables.
@@ -313,6 +353,9 @@ screen tests keep their static markup checks in Node.
   its `.table` class. Its headings take their look from the shared
   `MarkdownHeadings.module.css` of the mockups, which chat answers use
   too, and its own CSS sets only their margins.
+- `markdown/inline-render.tsx`: `inlineNodes`, the inline content of a
+  block as React elements. It draws each link with the mockups' `TextLink`
+  through the link opener of the app shell.
 - `code/`: the syntax colours and the code view. `code/file-kind.ts` gives
   `fileKind`, the kind of a file by its name: Markdown, code, or another
   file. A file is code when the code view gives it syntax colours.

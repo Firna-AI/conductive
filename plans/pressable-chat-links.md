@@ -1,6 +1,6 @@
 # Pressable links in the chat
 
-Status: Active. [PR #265](https://github.com/Firna-AI/conductive/pull/265) is open. The pull request that completes the work deletes this plan, as the `plans` skill says.
+Status: Active. [PR #386](https://github.com/Firna-AI/conductive/pull/386) is open. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
 The chat shows each web address of an agent answer or a sent message as
 plain text, except a link to a workspace of the same org, which shows as a
@@ -21,7 +21,8 @@ preview.
 
 Contract owners:
 
-- [Chat Markdown](../docs/protocol/chat-markdown.md).
+- [Chat Markdown](../docs/protocol/chat-markdown.md), and its linked page
+  [Chat links](../docs/protocol/chat-links.md).
 - [Workspace links](../docs/protocol/workspace-links.md).
 - [Port previews](../docs/protocol/port-previews.md).
 - [Workspace tools](../docs/protocol/workspace-tools.md), for the file
@@ -42,8 +43,8 @@ Replaced ways:
   `src/chat/links/workspace-links.ts` and the link reading of
   `docs/mockups/src/components/chat/workspaceLinks.ts` → the reader of
   `src/markdown/web-links.ts`. Consumers: `chatParts`, `textParts` of the
-  message field, `MessageText` of the mockups, and their tests. Moved and
-  deleted in Milestone 3.
+  message field, `MessageText`, `WebLinkText`, and `DraftText` of the
+  mockups, and their tests. Moved and deleted in Milestone 3.
 
 ## Terms
 
@@ -74,7 +75,8 @@ and added decisions 5 and 6. Its report is in
 - **Answer:** D, on 10 November 2026.
 - **Severity:** Medium. **Likelihood:** Common. **Effort:** Medium.
 - **Source:** Design. First recorded in
-  `plans/follow-ups/chat-links-not-pressable.md` on 9 November 2026.
+  [plans/follow-ups/chat-links-not-pressable.md](https://github.com/Firna-AI/conductive/blob/f21071297/plans/follow-ups/chat-links-not-pressable.md)
+  on 9 November 2026.
 - **Category:** Product bug.
 - **Location:** `src/chat/links/chat-parts.ts:165` and `:173`,
   `src/chat/links/LinkedText.tsx:79`, `docs/protocol/chat-markdown.md:27`.
@@ -360,6 +362,56 @@ and added decisions 5 and 6. Its report is in
 - **Action:** ask the user, because B adds a copy rule that no requirement
   covers.
 
+### 7. A Markdown link with a title shows as typed
+
+- **Answer:** B, on 16 November 2026.
+- **Severity:** Low. **Likelihood:** Rare. **Effort:** Small.
+- **Source:** Review, round 1, from the check of finding 1.
+- **Category:** Product bug.
+- **Location:** `src/chat/links/chat-tokens.ts`, `markdownLinkAt`.
+- **Background:** A link title is the quoted text after the address, as in
+  `[docs](https://example.com/a "Docs")`. The file preview reads a title
+  and shows the link as its label. Chat text read no title.
+- **Problem:** The chat showed such a link as raw Markdown, and its address
+  then read as a bare address that kept its backslash escapes.
+- **Root question:** How does chat text show a Markdown link that has a
+  title?
+- **Options:**
+  - **A.** Keep it as typed. Effort: Small.
+  - **B.** Read the title as the file preview does, and show the link as
+    its label. Drop the title, because the title of a link gives its real
+    address. Effort: Small.
+  - **C.** Do B, and show the title after the label. Effort: Small.
+- **Left out:** The link title as the tooltip, because the tooltip gives
+  the real address.
+- **Recommendation:** B. The chat and the file preview then read the same
+  Markdown the same way.
+
+### 8. A label that shows nothing gives an empty link
+
+- **Answer:** B, on 16 November 2026.
+- **Severity:** Low. **Likelihood:** Rare. **Effort:** Small.
+- **Source:** Implementation, Milestone 5.
+- **Category:** Product bug.
+- **Location:** `src/markdown/web-links.ts`, `readsAsAddress`.
+- **Background:** The label test shows the real address in place of a
+  label that reads as an address.
+- **Problem:** A label that shows nothing, such as `[](https://x.example)`,
+  `[**](https://x.example)`, or invisible characters only, gave a link with
+  no visible words that the keyboard could still focus.
+- **Root question:** What does a reader see for a link whose label shows
+  nothing?
+- **Options:**
+  - **A.** Keep the empty link. Effort: Small.
+  - **B.** Treat a label that shows nothing as a label that reads as an
+    address, and show the real address. Effort: Small.
+  - **C.** Show such a link as typed, with its brackets. Effort: Small.
+- **Left out:** Remove the link, because each address of chat text is a
+  link.
+- **Related:** Decision 5 sets the other label rules. B extends the label
+  test that every option of decision 5 keeps.
+- **Recommendation:** B. The reader then always sees where the link leads.
+
 ## Design calls
 
 These calls are mine, made on 10 November 2026 under the decision test.
@@ -380,7 +432,7 @@ These calls are mine, made on 10 November 2026 under the decision test.
 - An app address is the raw segments of the path, without decoding,
   joined with one slash, then the query and the hash of the link. Chips
   use it too. This applies option D of
-  `plans/follow-ups/chip-leading-slashes-wrong-host.md` to every page.
+  [plans/follow-ups/chip-leading-slashes-wrong-host.md](https://github.com/Firna-AI/conductive/blob/e31da6c90/plans/follow-ups/chip-leading-slashes-wrong-host.md) to every page.
 - The reader checks the app origin before the local hosts, because the
   app origin of `npm run dev`, `http://127.0.0.1:5173`, is a local address.
 - Every other link opens in a new tab with `noopener noreferrer`, so other
@@ -417,6 +469,61 @@ These calls are mine, made on 10 November 2026 under the decision test.
   Milestone 3 moves them to the shared reader, with no change to a screen,
   because the shared reader does not exist before Milestone 3.
 
+The mockups of Milestone 1 settled these details on 13 November 2026,
+under the same test:
+
+- In a sent message, only the address of a Markdown link is the link. Its
+  brackets and its label stay text, because each address of chat text is
+  a link, and a message of a member shows as typed.
+- A message line of the work of a turn reads its text as an answer does,
+  so its Markdown links show as their labels.
+- A label that reads as an address shows the address as the text has it,
+  as a bare address does. The title gives the address as the URL parser
+  writes it.
+- The label test ignores the spaces at the ends of a label and the case of
+  `www.`. The invisible characters are the default ignorable code points
+  of Unicode, such as a zero-width space.
+- A local address without a port names the default port of its scheme:
+  80 for `http`, and 443 for `https`.
+
+The protocol docs of Milestone 2 made this call of this change on 13
+November 2026, under the same test:
+
+- The Markdown of an image, such as `![alt](address)`, shows as typed, and
+  its address is a link. Its `[alt](address)` part is not a label link.
+  Reason: [Agent instructions](../docs/protocol/agent-instructions.md)
+  relies on the rule that the chat shows the Markdown of an image as text.
+
+The implementation of Milestones 5 and 6 made these calls on 13 November
+2026, under the same test:
+
+- The app origin of the opener is the origin of the app host, not the
+  origin of the workspace links. Reason: in `npm run dev`, the dev fake
+  writes workspace links with another origin.
+- The `web` reader of `chatParts` is required, so a caller without it
+  fails the typecheck and cannot drop links without notice.
+- One provider around each layout of the workspace screen gives the
+  opener to the chat and to the file preview, on desktop and on a phone.
+  Reason: the Files tab of a phone is outside the chat.
+- Until decision 4 has its answer, a local address of a file opens a new
+  tab, as before this change. An option of the opener sets this where the
+  file preview draws its links. This is no option of decision 4. It keeps
+  the behaviour of `main`.
+- A file keeps each address that its parser accepts as a link, also one
+  that chat text keeps as text. Reason: the file preview gets no stricter
+  rule, as the design calls above say.
+
+The implementation of the answers to decisions 7 and 8 made this call on
+16 November 2026, under the same test:
+
+- A Markdown link of a sent message and of the message field stands on
+  one line, as its label already does. A line break inside its
+  parentheses makes it no Markdown link, and its address reads as a bare
+  address, as on `main`. Reason: no chip then takes in a line break and
+  the text around it, and the spacing rule of the field reads one line.
+  An answer joins the lines of a paragraph before it reads them, so its
+  links read as in the file preview.
+
 ## Components
 
 - `src/markdown/web-links.ts`: the one reader of addresses for chat text,
@@ -444,31 +551,31 @@ Depends on: none
 Draw the links of chat text, the local address flow, and the changed link
 screen of another org, on desktop and on a phone.
 
-- [ ] Add `TextLink` with its CSS module in
+- [x] Add `TextLink` with its CSS module in
       `docs/mockups/src/components/common/`, as the design says.
-- [ ] Draw the link parts in `MessageText` and
+- [x] Draw the link parts in `MessageText` and
       `docs/mockups/src/components/chat/workspaceLinks.ts`: bare
       addresses, labels of Markdown links in answers, a label that is an
       address, an address alone in inline code, and a local address.
-- [ ] Add the page `app/chat/links`, with these five screens:
-  - [ ] An answer with a bare pull request address, a Markdown link as
+- [x] Add the page `app/chat/links`, with these five screens:
+  - [x] An answer with a bare pull request address, a Markdown link as
         its label, and an address alone in inline code.
-  - [ ] A Markdown link whose label is another address. The real address
+  - [x] A Markdown link whose label is another address. The real address
         shows.
-  - [ ] An answer with `http://localhost:3000`. A press opens
+  - [x] An answer with `http://localhost:3000`. A press opens
         `app/tools/preview`.
-  - [ ] A sent message with a bare address and a Markdown link as typed.
-  - [ ] A closed and an open message line of a folded turn, with a link.
+  - [x] A sent message with a bare address and a Markdown link as typed.
+  - [x] A closed and an open message line of a folded turn, with a link.
 - [ ] Draw the answer of decision 5, when it is B or C.
-- [ ] Add the user flow `user-flows/open-a-local-server`: the answer with
+- [x] Add the user flow `user-flows/open-a-local-server`: the answer with
       the local address, then the port preview of port 3000.
-- [ ] Update `app/workspace-links/messages`: the link to a workspace of
+- [x] Update `app/workspace-links/messages`: the link to a workspace of
       another org is now a link that opens in the app.
-- [ ] Update `docs/mockups/catalogue.md` for the new page, the flow, and
+- [x] Update `docs/mockups/catalogue.md` for the new page, the flow, and
       the changed screen.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages on both
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages on both
       sizes with `npm run mockups:serve`.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
 
 ## Milestone 2: Documentation and protocol
@@ -483,18 +590,24 @@ addresses, and of links in the file preview.
       reader can observe. Change the rule that other links show as typed,
       and the rejection that names links as a reason. Define the chat
       link decision number.
-- [ ] `docs/protocol/workspace-links.md`: a link that is not a chip is a
+  - The section is the linked page `docs/protocol/chat-links.md`, which
+    also defines the chat link decision number and holds the label test.
+    Waits for decision 5: each rule of a label link past the label test.
+    Waits for decision 6: what a copy of a label link gives.
+- [x] `docs/protocol/workspace-links.md`: a link that is not a chip is a
       link, and an address alone in inline code is a link in code. Change
       "No link makes the app send a request that reaches another org", so
       that only a press opens a page of another org.
-- [ ] `docs/protocol/port-previews.md`: a press on a local address of the
+- [x] `docs/protocol/port-previews.md`: a press on a local address of the
       chat opens its preview, as a press on a listed server does.
 - [ ] `docs/protocol/workspace-tools.md`: a link of the file preview opens
       as a link of the chat does, with the answer of decision 4.
-- [ ] Read both legal pages in full, `src/marketing/terms.ts` and
+  - Waits for decision 4: the rule for a link to a local address in a
+    file. The rest of the TODO is in the doc.
+- [x] Read both legal pages in full, `src/marketing/terms.ts` and
       `src/marketing/privacy.ts`. Update each sentence that restates a
       changed fact.
-- [ ] Read each public guide in `src/marketing/docs/` in full. Update
+- [x] Read each public guide in `src/marketing/docs/` in full. Update
       each sentence that restates a changed fact, as
       [Website docs](../docs/protocol/website-docs.md) says.
 - [x] Dropped: check the rows of the comparison page. The page at
@@ -508,20 +621,20 @@ Depends on: 2
 Add the one reader of addresses, and build each app address from the
 route.
 
-- [ ] Add `src/markdown/web-links.ts` with the kinds of the design and
+- [x] Add `src/markdown/web-links.ts` with the kinds of the design and
       the end rule of a bare address.
-- [ ] Move `chatParts` and `textParts` to its bare address reader. Delete
+- [x] Move `chatParts` and `textParts` to its bare address reader. Delete
       `bareLinkAt` and `bareLink` of `src/chat/links/workspace-links.ts`.
-- [ ] Move `docs/mockups/src/components/chat/workspaceLinks.ts` to the
+- [x] Move `docs/mockups/src/components/chat/workspaceLinks.ts` to the
       shared reader. Run `npm run mockups:check`. No screen changes.
-- [ ] Build the address of each chip with the app address builder. Add
+- [x] Build the address of each chip with the app address builder. Add
       the doubled-slash case of
-      `plans/follow-ups/chip-leading-slashes-wrong-host.md` to
+      [plans/follow-ups/chip-leading-slashes-wrong-host.md](https://github.com/Firna-AI/conductive/blob/e31da6c90/plans/follow-ups/chip-leading-slashes-wrong-host.md) to
       `src/chat/links/workspace-links.test.ts`. Delete that item.
-- [ ] Add `src/markdown/web-links.test.ts`: each kind, the refused schemes
+- [x] Add `src/markdown/web-links.test.ts`: each kind, the refused schemes
       and credentials, the end rule, the local hosts with and without a
       port, and an app origin on a local host.
-- [ ] Name the reader in [Agent text](../src/chat/agent-text.md).
+- [x] Name the reader in [Agent text](../src/chat/agent-text.md).
 
 ## Milestone 4: The Preview tool opens a port from its address
 
@@ -529,14 +642,14 @@ Tags: ui
 
 Depends on: 2
 
-- [ ] Read a port from the address of the Preview tool in
+- [x] Read a port from the address of the Preview tool in
       `src/shell/workspace/tools/tool-address.ts`, and build that address.
-- [ ] In `src/previews/PreviewTool.tsx`, open the port of the address with
+- [x] In `src/previews/PreviewTool.tsx`, open the port of the address with
       the same request and checks as a typed port. An open port shows its
       preview with no request. Then the address names the preview.
-- [ ] Test the open of a port from the address, the open port, and a
+- [x] Test the open of a port from the address, the open port, and a
       failed open.
-- [ ] Update the [previews README](../src/previews/README.md).
+- [x] Update the [previews README](../src/previews/README.md).
 
 ## Milestone 5: Links in chat text
 
@@ -544,23 +657,23 @@ Tags: ui
 
 Depends on: 1, 3, 4
 
-- [ ] Add the opener and its context in `src/shell/ui/`. The workspace
+- [x] Add the opener and its context in `src/shell/ui/`. The workspace
       screen gives the app origin, the navigation, and the address of a
       port.
-- [ ] Make `chatParts` give a link part for each address that is not a
+- [x] Make `chatParts` give a link part for each address that is not a
       chip, as the design and the answer of decision 5 say.
-- [ ] Draw the link parts in `LinkedText` with `TextLink`, also in the
+- [x] Draw the link parts in `LinkedText` with `TextLink`, also in the
       message lines of a folded turn. The hidden copy of a line uses the
       plain mode.
 - [ ] Apply the answer of decision 6 to a copy of chat text.
-- [ ] Update the tests that expect other links as text, such as
+- [x] Update the tests that expect other links as text, such as
       `src/shell/workspace/LinkChips.test.tsx` and
       `src/chat/links/workspace-links.test.ts`. Add tests for the link
       parts and for a press on each kind of link.
-- [ ] Update the [chat README](../src/chat/README.md) and
+- [x] Update the [chat README](../src/chat/README.md) and
       [Agent text](../src/chat/agent-text.md).
-- [ ] Delete `plans/follow-ups/chat-links-not-pressable.md`.
-- [ ] Smoke-test in `npm run dev`: a bare address, a Markdown link, a
+- [x] Delete `plans/follow-ups/chat-links-not-pressable.md`.
+- [x] Smoke-test in `npm run dev`: a bare address, a Markdown link, a
       local address, and an address in code.
 
 ## Milestone 6: Links in the file preview
@@ -569,14 +682,14 @@ Tags: ui
 
 Depends on: 3, 5
 
-- [ ] Draw each link of `inlineNodes` with `TextLink` and the opener of
+- [x] Draw each link of `inlineNodes` with `TextLink` and the opener of
       Milestone 5. Delete the anchor of `inlineNodes`. Keep the links
       that the design keeps for the file preview.
-- [ ] Give the file preview the opener context in the workspace screen.
+- [x] Give the file preview the opener context in the workspace screen.
 - [ ] Apply the answer of decision 4 to local addresses in a file.
-- [ ] Move the link test of `src/files/markdown/MarkdownView.test.tsx`
+- [x] Move the link test of `src/files/markdown/MarkdownView.test.tsx`
       to the shared link part, and add a link to an app page.
-- [ ] Update the safety rules of the [Files README](../src/files/README.md).
+- [x] Update the safety rules of the [Files README](../src/files/README.md).
 
 ## Milestone 7: Verification, commit, review, and pull request
 

@@ -2,9 +2,9 @@
 
 This page belongs to [the design](design.md), which gives the style, the
 layouts, the design tokens, and the shared parts. This page gives the
-tabs, the tables, the Waitlist tab, the codes, and the approval email of
-the operator section. It also gives Suspend, Lift, and Approve, the daily
-chart, the notice of a pause, and the waitlist switch.
+tabs, the tables, the long runs, the Waitlist tab, the codes, and the
+approval email of the operator section. It also gives Suspend, Lift, and
+Approve, the daily chart, the notice of a pause, and the waitlist switch.
 
 - The operator section has the tabs Overview, Orgs, Users, Waitlist, and
   Invite codes, from `OperatorPage` in `src/components/operator/`. On a
@@ -27,6 +27,25 @@ chart, the notice of a pause, and the waitlist switch.
   as 30 Sept 2026, on one line. A person shows on a disc and an org on a
   square, with `PersonAvatar` and `InitialsTile` from
   `src/components/orgs/`.
+- Long runs on the Overview is a table like the largest orgs, without an
+  org mark, so a narrow window keeps the org name and its state. The
+  login of the owner has the workspace number under it, such as `W-12`,
+  in the monospace font of the label in the header. A cloud computer ID
+  shows in the monospace font with Copy. A row without one has a dash,
+  which screen readers hear as "No cloud computer ID yet". The run length
+  has the state mark of the header under it: the glyph and its word. A
+  phone keeps the org, and the run length with the state mark.
+- An owner whom an operator suspended has the Suspended mark under the
+  login, as a suspended org has under its name. The workspace number then
+  moves to a third line. A phone leaves out the owner, so it adds a line
+  under the org with the login and the mark. The login keeps the mark
+  from reading as a mark of the org.
+- A run length gives its two largest units, such as 3d 4h or 5h 12m, as
+  the lengths of the chat do. A run under an hour gives its minutes, and
+  a run under a minute its seconds. The last activity uses the words of
+  the app for a past time: 3 minutes ago, Yesterday, or 5 Nov. The words
+  and the format live in `longRunsCopy.ts`, which imports no fixture, so
+  the app uses it too.
 - The Waitlist tab shows no picture. Each login opens the GitHub profile in
   a new tab, with a small mark for it. After Approve, the row keeps its
   place with Approved and the state of its email, in plain words.

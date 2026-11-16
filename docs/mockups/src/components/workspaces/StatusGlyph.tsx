@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react'
-import type { RunState } from '../../fixtures/routineRuns'
+import type { RunState } from '../../fixtures/automationRuns'
 import { classes } from '../common/classes'
 import { cells, MarkGrid, ring, ringDelay } from './MarkGrid'
 import styles from './StatusGlyph.module.css'
@@ -22,21 +22,21 @@ const shapes: Readonly<Record<RunState, readonly number[]>> = {
   /** Two columns, like a pause sign. */
   stopped: [0, 3, 6, 2, 5, 8],
   /**
-   * A cross: the sandbox could not start. A routine run whose first start
+   * A cross: the sandbox could not start. An automation run whose first start
    * failed keeps its workspace, so it shows this mark too.
    */
   error: [0, 2, 4, 6, 8],
   /** No cell lit: nothing runs, and nothing can start. */
   archived: [],
-  /** An hourglass: a routine run waits for its workspace. */
+  /** An hourglass: an automation run waits for its workspace. */
   queued: [0, 1, 2, 4, 6, 7, 8],
   /**
-   * A slash: a check failed a routine run before it had a workspace, or the
+   * A slash: a check failed an automation run before it had a workspace, or the
    * first turn of the run failed. The mark of that workspace would show the
    * turn as finished.
    */
   failed: [2, 4, 6],
-  /** A chevron that points on: a rule skipped a routine run. */
+  /** A chevron that points on: a rule skipped an automation run. */
   skipped: [0, 4, 6],
 }
 
@@ -57,7 +57,7 @@ function delay(status: RunState, cell: number): CSSProperties {
 
 /**
  * The state of the agent and the cloud computer of a workspace, as the
- * header shows it, or the state of a routine run: a 3 × 3 dot-matrix square
+ * header shows it, or the state of an automation run: a 3 × 3 dot-matrix square
  * whose lit cells draw the state. Working moves around the ring, starting
  * fills the middle row, and a workspace that needs input pulses.
  */

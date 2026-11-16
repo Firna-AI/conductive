@@ -122,7 +122,9 @@ export function ChatItemView(props: { item: SingleItem; viewer: PersonKey }) {
     case 'error':
       return (
         <Notice
-          action={<ActionButton>Try again</ActionButton>}
+          action={
+            item.older ? undefined : <ActionButton>Try again</ActionButton>
+          }
           body={item.text}
           icon={CircleAlert}
           title="This turn stopped"

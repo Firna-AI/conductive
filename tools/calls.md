@@ -208,7 +208,7 @@ A stop through the tools, also through a close, records the calling session as i
 - `sections create` puts the new section last. Its reply gives the ID,
   the name, and the default mark.
 - `sections delete` moves each workspace of the section, also an archived
-  one, and each of its routines to the default section.
+  one, and each of its automations to the default section.
 - A delete of the default section changes nothing and succeeds with
   `deleted: false`.
 - `previews list` gives the active previews of a workspace, also the

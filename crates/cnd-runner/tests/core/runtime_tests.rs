@@ -5,6 +5,7 @@ use std::sync::{Arc, Mutex};
 use async_trait::async_trait;
 use cnd_runner::error::Result;
 use cnd_runner::runtime::{CommandHandler, Runner, RunnerCore};
+use cnd_runner::update::NoUpdates;
 use cnd_runner_interface::runner_commands::{RunnerCommand, RunnerControlCommand, RunnerInterrupt};
 use futures_util::future::BoxFuture;
 use tokio::sync::{Notify, watch};
@@ -20,6 +21,9 @@ struct HeldReports {
 
 #[async_trait]
 impl CommandHandler for HeldReports {
+    async fn busy(&self) -> Result<bool> {
+        Ok(false)
+    }
     fn connected(&self) -> BoxFuture<'static, Result<()>> {
         self.started.notify_one();
         let release = self.release.clone();
@@ -65,6 +69,7 @@ async fn dispatches_commands_in_wire_order_while_initial_reports_wait() {
         h.store.clone(),
         Arc::new(FixedClock),
         handler.clone(),
+        Arc::new(NoUpdates),
     ));
     let running = tokio::spawn(async move { core.run(receiver).await });
     handler.started.notified().await;

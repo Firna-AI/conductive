@@ -41,6 +41,14 @@ const personNamed = (key: string): User =>
  * with a removed workspace, which the Worker also sends, and which the
  * workspace list leaves out.
  */
+/** The repository of the open workspace, which names its folder. */
+function openRepository(): string {
+  const open = workspaceList.find(
+    (workspace) => workspace.key === FAKE_IDS.workspace,
+  )
+  return open?.repository ?? 'repository'
+}
+
 export function workspaceFixtures(
   state: WorkspaceState = 'ready',
   github?: GitHubSummary | null,
@@ -212,6 +220,7 @@ export function workspaceFixtures(
       temporaryTab: null,
       tool: 'terminal',
     },
+    repositoryFolder: `/home/user/code/${openRepository()}`,
   }
   return { workspaces, detail, sessions, message, created, view }
 }

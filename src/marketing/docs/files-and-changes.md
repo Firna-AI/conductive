@@ -19,7 +19,7 @@ On a phone, open the workspace's **Files** view.
 - **Changes** lists changes against the workspace's base branch.
 - **Checks** shows the pull request's GitHub checks.
 
-An automatic software update brings `.context/` support to an older workspace at a later start.
+An [automatic software update](/docs/cloud-computer#apply-setup-changes) brings `.context/` support to an older workspace at a later start or when it is idle.
 
 An archived workspace keeps read-only chat, with no file lists or tools.
 Its computer and files can stay available for Restore for 14 days after Archive.
@@ -28,7 +28,7 @@ Then select **Resume** before you use the file tools.
 
 After 14 days, the workspace leaves **Archived** and the command palette.
 A direct link or a chat link still opens its read-only chat.
-Conductive keeps its chat history and attached files until the org is deleted.
+Conductive keeps its chat history until the org is deleted.
 File tools stay unavailable after removal.
 
 - [Restore an archived workspace](/docs/workspaces#restore-an-archived-workspace)
@@ -59,6 +59,10 @@ The file view also offers **Download** if the browser cannot draw an image withi
 
 These views let you read the files.
 Ask the agent to change a file, or use **Terminal**.
+
+You can open a file from its chip in an agent reply.
+A chip with a line, such as `app.ts:42`, opens the file as text with that line in view and marked.
+The address of the tab keeps the line.
 
 You can also open an attached file from its chip in a sent message.
 It opens the copy in the workspace's repository folder after the message reaches the agent.

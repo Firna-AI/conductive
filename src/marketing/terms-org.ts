@@ -11,7 +11,7 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
   title: 'Working in an org',
   blocks: [
     list(
-      text`Every member of an org sees all of its workspaces and routines.
+      text`Every member of an org sees all of its workspaces and automations.
         A removed workspace opens by direct link or chat link, with
         read-only chat.
         In an active org, members can send messages in workspaces that are
@@ -94,16 +94,16 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
         to the org, the turn ends at its next model request.`,
       text`The setting of your login does not change these risks. Work in
         an org only with people whom you trust with your logins.`,
-      text`A routine runs an agent without a person, on a schedule or when
+      text`An automation runs an agent without a person, on a schedule or when
         a pull request opens, gets new commits, or merges. Each run starts
-        a new workspace as the member who owns the routine. The run uses
+        a new workspace as the member who owns the automation. The run uses
         the agent login and the GitHub token of that member, so its pushes
         and pull requests show as that member.`,
-      text`Only the owner of a routine changes it or turns it on. An admin
+      text`Only the owner of an automation changes it or turns it on. An admin
         can turn it off or delete it. When the owner leaves the org, the
-        routine moves to the member who gets their workspaces. It stays
+        automation moves to the member who gets their workspaces. It stays
         off until that member turns it on, with their own logins.`,
-      text`The run of a routine for a pull request reads that pull request,
+      text`The run of an automation for a pull request reads that pull request,
         also the comments, reviews, and descriptions of other GitHub
         accounts. Such text can steer the agent while the run uses the
         owner's agent login and GitHub token, and the env vars of the org.

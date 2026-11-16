@@ -127,8 +127,8 @@ it('keeps an attachment-only session untitled until it accepts text', async () =
   )
   expect(nextResponse.status).toBe(202)
   const next: SendMessageResponse = await nextResponse.json()
-  expect(next.session.title).toBe('Explain screen.png with @src/login.ts')
+  expect(next.session.title).toBe('Explain with @src/login.ts')
   expect((await sessionRecord(fixture, later.id)).title).toBe(
-    'Explain screen.png with @src/login.ts',
+    'Explain with @src/login.ts',
   )
 })

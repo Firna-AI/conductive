@@ -95,16 +95,20 @@ export const privacyDocument: LegalDocument = {
           workspace before then. At the end of the 14 days, the workspace
           leaves the Archived group and the command palette.`,
         paragraph`Removing a workspace from the list keeps its chat history
-          and attached files. They stay until the org is deleted.
-          A direct link or a chat link still opens its read-only chat.
+          until the org is deleted. A direct link or a chat link still opens
+          its read-only chat.`,
+        paragraph`${productName} keeps each attached file until the cloud
+          computer of its workspace has it and its first start succeeds.
+          It then deletes its own copy. The file stays in the cloud computer.
+          The message keeps the file's name, type, size, and path.
           ${productName} deletes an unsent file 7 days after you upload it.
-          A large text that you paste into a message becomes an attached
-          file, and it uploads before you send it.`,
+          A large text that you paste into a message becomes such a file,
+          and it uploads before you send it.`,
         paragraph`An account that waits for app access stays until you ask
           for its deletion, as every other account does.`,
-        paragraph`Account records, the latest Terms acceptance, and
-          suspension records do not automatically expire when you stop
-          using ${productName}. Workspace chat history and Mac command records
+        paragraph`Account records, the latest Terms acceptance, the time of
+          your last activity, and suspension records do not automatically
+          expire when you stop using ${productName}. Workspace chat history and Mac command records
           stay while their org exists, including while a cloud computer is
           stopped or a workspace is removed. When ${productName} passes on model requests and their
           answers, it keeps no copy of them.`,

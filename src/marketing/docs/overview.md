@@ -86,7 +86,7 @@ Restore leaves the computer stopped.
 After 14 days, Conductive deletes the cloud computer and its files.
 The workspace leaves **Archived** and the command palette.
 A direct link or a chat link still opens its read-only chat.
-Conductive keeps its chat history and attached files until the org is deleted.
+Conductive keeps its chat history until the org is deleted.
 
 - [Review files and changes](/docs/files-and-changes)
 - [Use Terminal and previews](/docs/terminal-and-previews)

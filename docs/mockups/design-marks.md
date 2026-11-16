@@ -2,7 +2,7 @@
 
 This page belongs to [the design](design.md), which gives the style, the
 layouts, the design tokens, and the shared parts. This page gives the list
-mark, the mark of the header, and the marks of routine runs. It also gives
+mark, the mark of the header, and the marks of automation runs. It also gives
 the mark of an agent. [The workspace](design-workspace.md) gives the label
 of a workspace number with Copy link.
 
@@ -32,7 +32,7 @@ of a workspace number with Copy link.
   and ready is one bright cell on a faint green grid. A workspace whose
   agent waits for the user shows Needs input: a middle column in the accent
   colour that pulses.
-  A routine run takes the mark of the header of its workspace, not the
+  An automation run takes the mark of the header of its workspace, not the
   list mark. A run without a workspace shows an hourglass while it waits
   for one, and a chevron when a rule skipped it. A failed run shows the
   mark of its failure. It keeps that mark after Try again, because the run

@@ -133,6 +133,11 @@ it('pages active and suspended users with a numeric ID tie and reports their org
   )
     .bind(TEST_TIME)
     .run()
+  await harness.env.DB.prepare(
+    'UPDATE users SET last_active_at = ? WHERE github_id = 100',
+  )
+    .bind(TEST_TIME - 5)
+    .run()
   const first = await userList(harness, cookie)
   expect(first.total).toBe(23)
   expect(first.users.map((user) => user.githubId)).toEqual([
@@ -144,6 +149,7 @@ it('pages active and suspended users with a numeric ID tie and reports their org
     login: 'person-100',
     name: null,
     joinedAt: TEST_TIME + 1,
+    lastActiveAt: TEST_TIME - 5,
     appAccess: { state: 'waiting', waitingSince: TEST_TIME + 1 },
     approvalEmail: { state: 'none', updatedAt: null },
     hasVerifiedEmail: false,
@@ -154,6 +160,7 @@ it('pages active and suspended users with a numeric ID tie and reports their org
     status: 'suspended',
   })
   expect(first.users[0].status).toBe('active')
+  expect(first.users[0].lastActiveAt).toBeNull()
   expect(typeof first.nextCursor).toBe('string')
   const second = await userList(harness, cookie, {
     cursor: first.nextCursor ?? '',

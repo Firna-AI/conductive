@@ -198,9 +198,14 @@ keeps them after the merge.
   is lost.
 - The app deletes only the sandbox of a removed workspace, as
   [Archive](#archive) says. It keeps all the other data: the record of the
-  workspace, the chat history of its sessions, and the files attached to
-  its messages. They stay until the org is deleted, as
+  workspace, the chat history of its sessions, and the record of each file
+  attached to its messages. They stay until the org is deleted, as
   [Delete org](delete-org.md) says.
+- The removal deletes no attached file. The app deletes its stored copy of
+  each file after the sandbox has it, as
+  [The stored copy](attachment-transfers.md#the-stored-copy) says. So a
+  file that reached the sandbox goes with the sandbox at the end of the
+  14 days.
 - A delete of the chat and the files, at the end of the 14 days or later,
   was rejected (decision 518). An org setting for the days in the list was
   left out, because the list follows the end of Restore.
@@ -216,8 +221,8 @@ keeps them after the merge.
   without a reload.
 - No action puts a removed workspace back in the list.
 - Only a direct link opens a removed workspace (decision 519). A workspace
-  link, its chip in a chat, a session link, and the run row of a routine
-  still open its read-only chat.
+  link, its chip in a chat, a session link, and the run row of an
+  automation still open its read-only chat.
 - Reason: a link names the workspace by its ID, and the chat of the
   workspace stays.
 - While a removed workspace is open, no row of the list is selected, and

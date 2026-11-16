@@ -141,7 +141,7 @@ Restore ends after 14 days, even while Conductive retries deleting the computer.
 Archived chats stay read-only until Restore.
 After 14 days, the workspace leaves **Archived** and the command palette.
 A direct link or a chat link still opens its read-only chat.
-Conductive keeps its chat history and attached files until the org is deleted.
+Conductive keeps its chat history until the org is deleted.
 
 The workspace counts in **Members** leave out removed workspaces.
 

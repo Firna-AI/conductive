@@ -15,9 +15,10 @@ use crate::error::{Error, ErrorResultExt, Result};
 
 use super::control::Control;
 use super::finish::failure;
+use super::mailbox::Queued;
 use super::types::{End, Session, Work};
 
-pub(super) async fn run(mut session: Session, mut receiver: mpsc::UnboundedReceiver<Work>) {
+pub(super) async fn run(mut session: Session, mut receiver: mpsc::UnboundedReceiver<Queued>) {
     loop {
         let flush = session.active.as_ref().and_then(|turn| turn.output.due);
         if flush.is_some_and(|due| Instant::now() >= due) {
@@ -49,7 +50,11 @@ pub(super) async fn run(mut session: Session, mut receiver: mpsc::UnboundedRecei
                 continue;
             },
         };
-        let Some(work) = work else {
+        let Some(Queued {
+            work,
+            pending: _pending,
+        }) = work
+        else {
             break;
         };
         match work {

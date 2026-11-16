@@ -8,17 +8,17 @@ use cnd_runner_interface::sdk_helper::{HelperModelResult, HelperOutput};
 use cnd_runner_interface::sdk_helper_options::{
     HelperCredential, HelperOptions, ProviderInput, WorkspaceToolContext,
 };
-use tokio::sync::mpsc;
 use url::Url;
 
 use crate::error::{Error, ErrorResultExt, Result};
 use crate::helper::boundary::HelperEvents;
 
 use super::control::Control;
+use super::mailbox::Mailbox;
 use super::types::{Session, Work, identity};
 
 struct ForwardOutput {
-    mailbox: mpsc::UnboundedSender<Work>,
+    mailbox: Mailbox,
     generation: u64,
     control: Control,
 }

@@ -45,23 +45,39 @@ function buildsLine(builds: number, page: 'overview' | 'org'): string {
     : `${named} also ${builds === 1 ? 'runs' : 'run'} now.`
 }
 
-/** The states of a count, in their order, each with its number. */
-function countedStates(counts: StateCounts) {
-  return order.map((key) => ({ key, count: counts[key] }))
+/** One row of the list: a state and its number. */
+type StateRow = { key: WorkspaceStateKey; count: number }
+
+/**
+ * The states of a count, in their order, each with its number. A count
+ * without Removed has no Removed row.
+ */
+function countedStates(
+  counts: StateCounts | Omit<StateCounts, 'removed'>,
+): StateRow[] {
+  return order.flatMap((key): StateRow[] => {
+    if (key !== 'removed') return [{ key, count: counts[key] }]
+    return 'removed' in counts ? [{ key, count: counts.removed }] : []
+  })
 }
 
 /**
- * The workspaces of every org, or of one org, in each state, with the
- * glyph of the state of the cloud computer that the header draws, so that
- * a state never depends on colour alone. Removed comes after Archived, apart
- * from it. A line under the list names the running builds. It imports no
- * fixture value, so the app uses it too.
+ * The workspaces of every org, of one org, or of one person, in each
+ * state, with the glyph of the state of the cloud computer that the header
+ * draws, so that a state never depends on colour alone. Removed comes after
+ * Archived, apart from it. A count without Removed, such as the one of the
+ * Stats tab of the account, has no Removed row. A line under the list names
+ * the running builds, when the page counts builds. It imports no fixture
+ * value, so the app uses it too.
  */
 export function WorkspaceStates(props: {
-  counts: StateCounts
-  builds: number
-  /** The overview of every org, or the page of one org. */
-  page: 'overview' | 'org'
+  counts: StateCounts | Omit<StateCounts, 'removed'>
+  /**
+   * The builds that run now, and the page that counts them: the overview
+   * of every org, or the page of one org. The Stats tab of the account
+   * counts no builds.
+   */
+  builds?: { count: number; page: 'overview' | 'org' }
 }) {
   const rows = countedStates(props.counts)
   const total = rows.reduce((sum, row) => sum + row.count, 0)
@@ -77,8 +93,10 @@ export function WorkspaceStates(props: {
           </li>
         ))}
       </ul>
-      {props.builds > 0 ? (
-        <SectionText muted>{buildsLine(props.builds, props.page)}</SectionText>
+      {props.builds && props.builds.count > 0 ? (
+        <SectionText muted>
+          {buildsLine(props.builds.count, props.builds.page)}
+        </SectionText>
       ) : null}
     </Section>
   )

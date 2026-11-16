@@ -1,6 +1,7 @@
 # Operator overview
 
 This guide belongs to the [operator backend](README.md).
+The [Overview protocol](../../docs/protocol/operator-overview.md) gives its requirements.
 
 ## Overview
 
@@ -40,8 +41,22 @@ The reply is an `OperatorOverview` from
   The workspace count includes every workspace, also archived and removed workspaces.
   The order is workspace count first, largest first, then org name.
   This list leaves out deleted orgs.
+- `longRuns` gives up to ten running, unarchived workspaces with a known start.
+  It orders them by `runningSince`, oldest first, then by `workspaceId`.
+  Each entry gives `workspaceId`, `workspaceNumber`, `orgId`, and `orgName`.
+  Its `orgStatus` is `active`, `suspended`, or `deleted`. Deleted takes priority.
+  Its `ownerGithubId`, `ownerLogin`, and `ownerStatus` identify the owner.
+  Owner status is `active` or `suspended`.
+  `cloudComputerId` is the sandbox ID, or null until it is assigned.
+  `state` uses the shared workspace state type.
+  `runningSince` is the current run's start in Unix milliseconds.
+  `lastActivityAt` is the last activity in Unix milliseconds, or null without a saved time.
+  These entries have no workspace name or org initials.
+  The list includes deleted and suspended orgs and suspended owners.
 
-[`overview.ts`](overview.ts) reads every count from D1 in one batch.
+[`overview.ts`](overview.ts) reads the counts and long runs from D1 in one batch.
 The counts include all records that still exist, also those of deleted orgs.
 Only `largestOrgs` leaves deleted orgs out.
 The route keeps no history and calls no sandbox provider.
+The [Long runs protocol](../../docs/protocol/operator-overview.md#long-runs)
+gives the list rules and the limits of the saved workspace state.

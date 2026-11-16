@@ -154,6 +154,7 @@ Ask the org admin to check the GitHub App's repository access when needed.
 
 Every org member can select **Continue** after the workspace's pull request merges.
 It starts a branch from the latest default branch in the same workspace.
+The branch name uses the workspace name and a version, such as `v2`.
 That default branch becomes the workspace's new base branch.
 It keeps the computer, files, sessions, and workspace name.
 Your GitHub account supplies the repository access for that fetch.
@@ -181,7 +182,7 @@ Restore ends after 14 days.
 Conductive then deletes the computer and its files.
 The workspace leaves **Archived** and the command palette.
 A direct link or a chat link still opens its read-only chat.
-Conductive keeps its chat history and attached files until the org is deleted.
+Conductive keeps its chat history until the org is deleted.
 The merge alone does not archive the workspace.
 
 - [Archive a workspace](/docs/workspaces#archive-a-workspace)

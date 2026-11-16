@@ -79,7 +79,8 @@ The workspace can show **Untitled** before it receives an automatic name.
 The name comes from the first message.
 
 The branch name uses a GitHub login, a city, and a short suffix.
-It stays the same when the workspace receives a name.
+When the workspace receives its name before the cloud computer creates the branch, the city changes to the name.
+After that, the branch name stays the same, also when you rename the workspace.
 To see the checked-out branch, run this command in **Terminal**:
 
 ```bash
@@ -146,6 +147,7 @@ The **New workspace** action at the top of the list uses **General**.
 In the **New workspace** dialog, you can select another section.
 
 The section menu also offers **Rename section**, **Move section up**, **Move section down**, **New section**, and **Delete section**.
+**New section** asks for a name in a dialog, and adds the new section directly below this one.
 Deleting a section moves its workspaces to **General**.
 The default section stays available.
 
@@ -228,6 +230,8 @@ On a phone, open **Checks** from the pull request row to find **Continue**.
 The computer starts first if it is stopped.
 The new branch starts from the repository's latest default branch.
 That default branch becomes the workspace's base branch for its new task.
+The new branch name uses the workspace name, a version such as `v2`, and a new short suffix.
+A workspace without a name uses a city in place of the name.
 
 Continue keeps the same cloud computer, files, running servers, sessions, and workspace name.
 It also keeps the software installed by the org's install script.
@@ -313,7 +317,7 @@ A direct link or a chat link still opens its read-only chat.
 The bar says **Removed on** followed by the removal date.
 Its text says that the cloud computer is deleted or is being deleted.
 
-Conductive keeps the workspace's chat history and attached files until the org is deleted.
+Conductive keeps the workspace's chat history until the org is deleted.
 Keep work in GitHub if you need it after the Restore window ends.
 
 - [Review files and changes](/docs/files-and-changes)

@@ -9,8 +9,8 @@ Archived group at the end of the workspace list with no end, with its
 read-only chat (decision 16). Cal asked on 13 November 2026 that archived
 workspaces go away after 14 days. This change removes an archived
 workspace from the list when its Restore window ends. The app keeps all
-its data: the row, the chat, the sessions, and the attached files. A
-direct link still opens its read-only chat. The change does not delete
+its data: the row, the chat, the sessions, and the record of each
+attached file. A direct link still opens its read-only chat. The change does not delete
 any data, does not change when the app deletes the cloud computer, and
 does not add a way to bring a removed workspace back.
 
@@ -111,6 +111,90 @@ Contract owners:
   which 518 D closed.
 - **Chosen:** A. The words of the app then match what the app does.
 
+### 521. Removed workspaces on the Stats tab of the account
+
+Open. Found on 16 November 2026, in the merge of `origin/main` at
+`83585f007`. The options check added options D, E, and F, and changed the
+recommendation from B to B with E
+(`.context/archived-workspace-removal/options-check-521.md`).
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Implementation.
+- **Category:** Docs or spec.
+- **Location:** `worker/app-api/account-stats.ts`,
+  `docs/protocol/account-stats.md` (What the tab shows), and
+  `docs/protocol/operator-overview.md` (The counts).
+- **Terms:**
+  - **Stats tab:** the tab of the Account page at `/account/stats`, from
+    main's PR #405. It shows counts of the person's own work.
+- **Background:** The Stats tab shows the workspaces that the person owns,
+  by state: Running, Stopped, Failed, and Archived. Its doc says that they
+  add up to the workspace total, and that its states are those of the
+  operator Overview. Its code reuses the count query, the reader, and the
+  state list of the Overview. This change split the Archived row of the
+  Overview into Archived and Removed, for the operator only. It also keeps
+  removed workspaces out of each count of workspaces on the screens of an
+  org, as `orgs-and-members.md` says. The Stats tab is on the Account
+  page, not on a screen of an org. The Mac app bundles the web app, so an
+  older copy reads the replies of a newer Worker.
+- **Problem:** Two rules disagree for the tab. A removed workspace keeps
+  the state archived, and each rule of an archived workspace holds for it,
+  as `workspace-life.md` says. That rule counts it as Archived. The doc of
+  the tab ties its states to the Overview, which counts it apart. The
+  merge keeps the behaviour of main: the tab counts it as Archived.
+- **Impact if no action:** The Archived count of the tab holds every
+  archived workspace, also those that left the list. The doc sentence that
+  ties the states of the tab to the Overview stays wrong for Archived.
+- **Root question:** How does the Stats tab of a person count the
+  workspaces that the person owns and that left the list?
+- **Options:**
+  - **A.** Count them as Archived, as the merge does. Change the doc of
+    the tab to say so. The tab and the Overview then differ in one row.
+    Effort: Small.
+  - **B.** Show them in their own Removed row after Archived, as the
+    Overview does. The total keeps them. The reply keeps `archived` as
+    main counts it and adds `removed`, so an older copy of the Mac app
+    still shows rows that add up. The tab, its mockup, its reader, its dev
+    fake, and its tests get the fifth row. Effort: Medium.
+  - **C.** Leave them out of the tab, as the counts of the screens of an
+    org do. The total and the states leave them out. The chart of new
+    workspaces keeps each workspace, because it counts creations.
+    Effort: Medium.
+  - **D.** Drop the Removed row of the Overview and of the page of an org.
+    The operator then counts a removed workspace as Archived, as main
+    does, and the tab keeps the code of main. The operator loses the split
+    that this plan chose, so that the operator sees the data that the app
+    keeps. Effort: Medium.
+  - **E.** With A, B, or C: the doc of the tab names its own rows, its
+    7 days, and its 30 UTC days, from `workspace-life.md`, not from the
+    Overview. `AccountWorkspaceStates` gets its own fields. A later change
+    that reaches both pages then needs two edits. Effort: Small.
+  - **F.** A choice for each person: a switch on the tab shows removed
+    workspaces in their own row, as B does, or leaves them out, as C does.
+    The account keeps the choice. It needs a new column of the user
+    preferences with its migration, a save route, a control, and a new
+    rule in the doc. Effort: Large.
+- **Left out:** A line under the list that gives the removed count is
+  option B with another layout. A list without removed workspaces under a
+  total that keeps them breaks the rule that the rows add up to the total.
+  A tab without a list of states breaks the rule of `account-stats.md`
+  that the tab shows the workspaces by state.
+- **Wider fix:** E. A change of the Overview for the operator then no
+  longer changes a requirement of the tab without a decision.
+- **Previous examples:** The design calls "Member-facing counts count
+  only listed workspaces" and "Operator counts" of this plan.
+- **Related:** Item "Operator replies for an older Mac app" of Milestone 5
+  has the same cause: a count whose meaning changes for an older copy of
+  the app.
+- **Recommendation:** B with E. B marks a removed workspace Removed, as
+  the app does from day 14, and keeps each owned workspace in the total,
+  so the Workspaces tile does not drop 14 days after each Archive. E stops
+  a later change of the Overview from changing the tab without a decision.
+- **Action:** ask the user, because each option changes a requirement of
+  main's Stats tab, no recorded user decision covers removed workspaces
+  there, and the options trade the rule of the Overview against the rule
+  of the archived state.
+
 ## Design
 
 Each item is my call unless it names a decision. The date of each call is
@@ -178,7 +262,7 @@ Each item is my call unless it names a decision. The date of each call is
   an operator sees the data that the app keeps. This is an operator view
   only, so Cal can change it at review.
 - **No change** to Restore, which already refuses after 14 days. No
-  change to the routine run rows, which link by ID and so still open, or
+  change to the automation run rows, which link by ID and so still open, or
   to the GitHub webhook mapping, which already skips archived rows. No
   change to section delete, which moves removed rows to General with the
   other archived rows.
@@ -242,6 +326,14 @@ call of 13 November 2026.
   `plans/follow-ups/archived-computer-certainty.md` says. This change
   keeps those words before and after day 14, so that follow-up stays
   open.
+- **Attached files follow the stored copy rule of main.** Main's PR #377
+  deletes the stored copy of an attached file after the first transfer
+  into the cloud computer (large-upload decision 3 A, 12 November 2026).
+  So a file that reached the cloud computer goes with it at the end of
+  the 14 days, and the removal itself still deletes nothing. The record
+  of each file stays with its message. The merge of 16 November 2026 says
+  so in the protocol doc, the Terms, the Privacy page, and the guides,
+  which said that the attached files stay until the org is deleted.
 
 ## Milestone 1: Mockups
 
@@ -386,3 +478,13 @@ Depends on: 1, 2, 3, 4
 - [ ] Copy the justifications of the merge of `origin/main` from
       `.context/archived-workspace-removal/merge-resolutions.md` into the
       pull request description, as the `git-merge` skill says.
+- [ ] Apply the answer of decision 521 to the Stats tab: its doc, its
+      Worker route, its reader, its mockup and the mockup note, its dev
+      fake (`src/app/dev/account-stats.ts`), `worker/app-api/README.md`,
+      `worker/operator/README.md`, `docs/mockups/design.md`, and its tests.
+- [ ] Operator replies for an older Mac app: the Overview and the page of
+      an org now count `archived` without the removed workspaces, so an
+      older copy of the Mac app, which bundles the web app, shows four rows
+      that do not add up. `AGENTS.md` asks for a compatible path: keep
+      `archived` as main counts it and add `removed`, and let the new app
+      subtract. Else name the change as breaking in the pull request.

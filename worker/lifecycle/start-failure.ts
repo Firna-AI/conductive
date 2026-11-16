@@ -18,7 +18,7 @@ import {
 } from './cleanup'
 import { deleteProvisionalWorkspace } from './workspace-data'
 import { markCreationFailed } from './creation-attempt-data'
-import { failRoutineWorkspaceStart } from '../routines/run-outcome-data'
+import { failAutomationWorkspaceStart } from '../automations/run-outcome-data'
 import { startTimeLimitReached } from './start-provider-retry'
 import { JobTimeLimit } from './job-time-limit'
 import { WorkspaceStartError } from './workspace-start'
@@ -157,7 +157,7 @@ export async function finishFailedStart(
     providerAccount,
   )
   await markCreationFailed(env.DB, job.workspaceId, failure)
-  await failRoutineWorkspaceStart(
+  await failAutomationWorkspaceStart(
     env.DB,
     job.workspaceId,
     failure,

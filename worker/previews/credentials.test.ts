@@ -43,7 +43,7 @@ it('launches each browser context with a protected partitioned cookie across han
     'https://authorize.conductive-previews.test/.conductive/authorize',
   )
   expect(page.headers.get('Content-Security-Policy')).toBe(
-    `default-src 'none'; script-src 'nonce-${nonce}'; form-action ${new URL(form.action).origin} ${setup.previewUrl}; frame-ancestors ${TEST_ORIGIN} ${DESKTOP_ORIGIN}; base-uri 'none'`,
+    `default-src 'none'; script-src 'nonce-${nonce}'; style-src 'nonce-${nonce}'; form-action ${new URL(form.action).origin} ${setup.previewUrl}; frame-ancestors ${TEST_ORIGIN} ${DESKTOP_ORIGIN}; base-uri 'none'`,
   )
   const restarted = createPreviewHandler(harness.env, harness.dependencies)
   const handoff = await restarted.proxy(handoffRequest(form, TEST_ORIGIN))

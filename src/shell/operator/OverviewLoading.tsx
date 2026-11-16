@@ -2,9 +2,11 @@ import { StatTileRow } from '@firna/ui/chart'
 import { SkeletonBar, SkeletonGroup } from '@firna/ui/skeleton'
 import { Table } from '@firna/ui/table'
 import { Section } from '../../../docs/mockups/src/components/settings/Section'
+import { longRunsWords } from '../../../docs/mockups/src/components/operator/longRunsCopy'
 import tiles from '../../../docs/mockups/src/components/operator/OperatorTiles.module.css'
 import list from '../../../docs/mockups/src/components/operator/WorkspaceStates.module.css'
 import { useViewport } from '../ui/viewport'
+import { longRunColumns } from './LongRuns'
 import { largestOrgColumns, tableSize } from './OverviewParts'
 
 /** A placeholder tile takes the least width of a real tile. */
@@ -42,7 +44,7 @@ function TilePlaceholders() {
 /**
  * The first load of the Overview: the boxes and their titles in place,
  * with placeholders where the numbers come, so that nothing moves when
- * they arrive.
+ * they arrive. Long runs keeps the place of its 10 longest runs.
  */
 export function OverviewLoading() {
   const viewport = useViewport()
@@ -60,6 +62,18 @@ export function OverviewLoading() {
             </li>
           ))}
         </ul>
+      </Section>
+      <Section title={longRunsWords.title}>
+        <Table
+          accessibilityLabel={longRunsWords.title}
+          cell={() => null}
+          columns={longRunColumns[viewport]}
+          loading
+          loadingRowCount={10}
+          rowKey={(_, index) => String(index)}
+          rows={[]}
+          size={tableSize[viewport]}
+        />
       </Section>
       {chartTitles.map((title) => (
         <Section key={title} title={title}>
