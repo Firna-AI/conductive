@@ -174,7 +174,8 @@ The [software image backend](../worker/software-image/README.md) owns these reco
 `packages_version` column to `image_build_jobs` and `software_images`. It
 holds the version of the apt part of the software step that the image of
 the row holds. Existing rows keep `NULL`, so the next build from their image
-runs the apt part once.
+runs the apt part once. A build job also keeps an empty version when two
+starts of its software command carried different apt parts.
 [Image builds](../worker/lifecycle/image-builds.md#the-software-step) says
 how a build reads and writes it.
 

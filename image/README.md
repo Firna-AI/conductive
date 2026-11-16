@@ -33,7 +33,8 @@ packaging and a real-sandbox live check.
 The [terminal backend](../worker/terminal/README.md) supplies the terminal
 script sources. The release packages those scripts and their units.
 The build calls `terminalPackagesCommand()` for `ttyd` and `tmux` when the
-image lacks a package or when the apt part changed.
+image lacks a package, when the ttyd service is not masked, or when the apt
+part changed.
 The release installer owns the installed scripts and units.
 It enables services and starts none.
 

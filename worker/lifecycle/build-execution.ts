@@ -16,7 +16,10 @@ import type { ImageRuntime } from './image-builds'
 import { deleteSandboxIfPresent, deleteSnapshotIfPresent } from './cleanup'
 import { cleanupBuildImageSources } from './image-sources/cleanup'
 import { lifecycleCommand } from './command-intents'
-import { recordBuildCommand } from './build-command-data'
+import {
+  recordBuildCommand,
+  recordSoftwarePackages,
+} from './build-command-data'
 import { completeBuildPhase } from './build-phase-data'
 import { recoverImageBuildAllocation } from './image-allocation'
 import { liveBuildComputers } from './computer-ledger'
@@ -32,10 +35,15 @@ export async function advanceBuildCommand(
   if (!sandboxId) throw new Error('Missing build sandbox')
   if (job.processId === null) {
     let command: string
-    let packagesVersion: string | null = null
-    if (job.phase === 'software')
-      ({ command, packagesVersion } = await buildSoftwareCommand(runtime, job))
-    else
+    if (job.phase === 'software') {
+      const software = await buildSoftwareCommand(runtime, job)
+      command = software.command
+      await recordSoftwarePackages(
+        runtime.env.DB,
+        job.buildId,
+        software.packagesVersion,
+      )
+    } else
       command = `set -eu\n${savedScriptCommand('/tmp/conductive-install.sh', job.installScript, ['set -a', '. /run/ascii-secrets/env.sh', 'set +a'])}\nrm -f /tmp/conductive-install.sh`
     if (job.phase !== 'software' && job.phase !== 'install')
       throw new Error('Invalid image command phase')
@@ -49,7 +57,6 @@ export async function advanceBuildCommand(
       started.processId,
       phaseLabel(job.phase),
       runtime.dependencies.now(),
-      packagesVersion,
     )
     return false
   }

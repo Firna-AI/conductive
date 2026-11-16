@@ -89,7 +89,8 @@ image that a build of an org without an org image starts from.
 Org builds and refreshes install the newest sandbox release through `conductive`.
 A first build from a software image runs this step too.
 The step runs apt only when the source image lacks the current apt part or
-a package, as [The software step](image-builds.md#the-software-step) says.
+a package, or when its ttyd service is not masked, as
+[The software step](image-builds.md#the-software-step) says.
 An image that holds `conductive` updates through that program.
 Refreshes then snapshot without running the org install script.
 The Worker validates release metadata from `CONDUCTIVE_RELEASE_SERVER`,

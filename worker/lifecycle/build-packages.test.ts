@@ -12,7 +12,11 @@ const fixtureForTest = setupBackendTests()
 type Fixture = ReturnType<typeof fixtureForTest>
 
 /** Runs one build to its end and returns its software command and the version that it records. */
-async function runBuild(fixture: Fixture, kind: 'build' | 'refresh') {
+async function runBuild(
+  fixture: Fixture,
+  kind: 'build' | 'refresh',
+  earlierStart?: string,
+) {
   const { images, org, user, boat } = fixture
   boat.commands.length = 0
   const id = await startImageBuild(images, {
@@ -21,6 +25,12 @@ async function runBuild(fixture: Fixture, kind: 'build' | 'refresh') {
     kind,
     software: SOFTWARE,
   })
+  if (earlierStart !== undefined)
+    await images.env.DB.prepare(
+      'UPDATE image_build_jobs SET packages_version = ? WHERE build_id = ?',
+    )
+      .bind(earlierStart, id)
+      .run()
   await finishImageBuild(fixture, id)
   const software = boat.commands
     .map(lifecycleCommandBody)
@@ -95,3 +105,15 @@ it.each([
     expect(software.includes('dpkg-query -W')).toBe(current)
   },
 )
+
+it('keeps no version when an earlier start of the step carried another apt part', async () => {
+  const fixture = fixtureForTest()
+  await setOrgImagePackages(fixture, await imagePackagesVersion())
+  // A start from an older deploy may already run in the sandbox, and the
+  // command journal then keeps that command.
+  const first = await runBuild(fixture, 'build', 'older')
+  expect(first.recorded).toBe('')
+  const next = await runBuild(fixture, 'refresh')
+  expect(next.software).toContain('apt-get update')
+  expect(next.software).not.toContain('dpkg-query')
+})

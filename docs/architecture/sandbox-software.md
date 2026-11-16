@@ -52,8 +52,9 @@ The program also installs the other parts of the software:
   [Disk flushes](../protocol/workspaces-and-sandboxes.md#disk-flushes) says
 
 The image build installs the system packages, such as the terminal
-packages `ttyd` and `tmux`. It runs apt only when the image lacks a package
-or when the apt part of the build changed, as
+packages `ttyd` and `tmux`. It runs apt only when the image lacks a
+package, when the ttyd service is not masked, or when the apt part of the
+build changed, as
 [Installs in a build](../protocol/sandbox-software.md#installs-in-a-build)
 says.
 

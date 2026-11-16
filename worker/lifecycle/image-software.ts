@@ -57,8 +57,9 @@ export function readImageSoftware(value: unknown): ImageSoftwareArtifact {
 
 /**
  * The software step of an image build, as one command. `when-missing` runs
- * the apt part only when the image lacks a package. The Worker chooses it
- * only when the image holds the current apt part, as `build-software.ts` says.
+ * the apt part only when the image lacks a package or a masked ttyd
+ * service. The Worker chooses it only when the image holds the current apt
+ * part, as `build-software.ts` says.
  */
 export function installImageSoftware(
   release: SoftwareRelease,

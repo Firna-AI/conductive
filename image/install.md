@@ -50,9 +50,10 @@ exists, that program runs `update check --bootstrap`. The check waits for a
 running background check and downloads only the parts that the image lacks.
 The installed program is used only when the check succeeds and
 `versions/<version>/complete` then exists for the release that the Worker
-read. Otherwise the command prints a warning, downloads the program archive
-with curl, checks its digest with `sha256sum`, and extracts `conductive`
-into a temporary folder. That bootstrap program runs the check. The program
+read. Otherwise the command downloads the program archive with curl, checks its digest with `sha256sum`, and extracts `conductive`
+into a temporary folder. When an installed program exists but its check
+did not get the release, the command first prints a warning. That
+bootstrap program runs the check. The program
 that ran the check then runs the other root commands in
 [Release installation](#release-installation).
 A failure stops the build. The temporary folder is removed on exit.
@@ -114,7 +115,8 @@ A build must stop when any command fails. A build must verify that `current/cond
 `current/complete` exist after apply. A build confirms the initial
 installation with `update started`, because it starts no runner.
 The image build installs `gh`, `ttyd`, and `tmux` through apt when the
-image lacks one of them or when the apt part changed.
+image lacks one of them, when the ttyd service is not masked, or when the
+apt part changed.
 
 The program uses this layout under `/opt/conductive`:
 
