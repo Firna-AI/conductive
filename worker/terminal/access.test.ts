@@ -42,7 +42,7 @@ async function fixture() {
   const open = async (session = seed.session) => {
     const response = await handler.fetch(
       new Request(
-        `${TEST_ORIGIN}${terminalPaths.socket(seed.orgId, seed.workspaceId)}`,
+        `${TEST_ORIGIN}${terminalPaths.terminalSocket(seed.orgId, seed.workspaceId, 'workspace')}`,
         {
           headers: {
             Cookie: session,

@@ -462,18 +462,18 @@ The list in the workspace object, its routes, and its event.
 
 Depends on: 4
 
-- [ ] Add the socket route of one terminal. Refuse an ID that is not in
+- [x] Add the socket route of one terminal. Refuse an ID that is not in
       the list, or that a close has marked, with 404 `terminal_not_found`.
-- [ ] Add `arg=<terminalId>` to the ttyd address for each terminal except
+- [x] Add `arg=<terminalId>` to the ttyd address for each terminal except
       Terminal 1.
-- [ ] Keep `GET terminal/socket` and `socketPath` for the first terminal.
-- [ ] Give `several` in the terminal state from the cached marker.
-- [ ] Serve the new routes and the event in the fake API of
+- [x] Keep `GET terminal/socket` and `socketPath` for the first terminal.
+- [x] Give `several` in the terminal state from the cached marker.
+- [x] Serve the new routes and the event in the fake API of
       `src/test-support/`.
-- [ ] Test a socket for each terminal, a closed terminal, a socket during
+- [x] Test a socket for each terminal, a closed terminal, a socket during
       a close, an unknown ID, the old socket path, and a workspace without
       the attach program.
-- [ ] Update `worker/terminal/README.md` and
+- [x] Update `worker/terminal/README.md` and
       `src/test-support/README.md`.
 
 ## Milestone 6: Terminal tabs in the Terminal tool

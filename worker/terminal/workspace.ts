@@ -1,5 +1,6 @@
 import type { WorkspaceChat } from '../chat/backend'
 import { HttpError } from '../http'
+import { TerminalSocketLease, terminalNotFound } from './socket-lease'
 
 type TerminalChat = Pick<
   WorkspaceChat,
@@ -8,6 +9,7 @@ type TerminalChat = Pick<
 
 export class WorkspaceTerminals {
   private readonly closing = new Set<string>()
+  private readonly sockets = new Map<string, Set<TerminalSocketLease>>()
   private readonly chat: TerminalChat
 
   constructor(chat: TerminalChat) {
@@ -22,6 +24,25 @@ export class WorkspaceTerminals {
     return this.chat.readWorkspace(workspaceId, (view) =>
       view.terminals.list(orgId, workspaceId),
     )
+  }
+
+  openSocket(orgId: string, workspaceId: string, terminalId?: string) {
+    return this.chat.readWorkspace(workspaceId, async (view) => {
+      const terminals = await view.terminals.list(orgId, workspaceId)
+      const terminal =
+        terminalId === undefined
+          ? terminals[0]
+          : terminals.find((entry) => entry.id === terminalId)
+      if (!terminal || this.isClosing(terminal.id)) throw terminalNotFound()
+      const sockets = this.sockets.get(terminal.id) ?? new Set()
+      const lease = new TerminalSocketLease(terminal.id, () => {
+        sockets.delete(lease)
+        if (!sockets.size) this.sockets.delete(terminal.id)
+      })
+      sockets.add(lease)
+      this.sockets.set(terminal.id, sockets)
+      return lease
+    })
   }
 
   create(orgId: string, workspaceId: string, authorize: () => Promise<void>) {
@@ -71,6 +92,7 @@ export class WorkspaceTerminals {
           )
         this.closing.add(terminalId)
         marked = true
+        for (const socket of this.sockets.get(terminalId) ?? []) socket.cancel()
       })
       await authorize()
       await endShell()

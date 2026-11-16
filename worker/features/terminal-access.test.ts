@@ -1,6 +1,10 @@
 import { expect, it } from 'vitest'
 
-import { OUTER_WORKSPACE } from '../chat/integration/outer-seed.test-support'
+import { terminalPaths } from '../../src/shared/terminal'
+import {
+  OUTER_ORG,
+  OUTER_WORKSPACE,
+} from '../chat/integration/outer-seed.test-support'
 import { record } from '../chat/inputs'
 import {
   addTerminal,
@@ -40,11 +44,20 @@ it('gates terminal writes for suspended owners, suspended orgs, stopped workspac
     for (const [path, method] of [
       [terminalListPath, 'POST'],
       [terminalPath(second.id), 'DELETE'],
+      [
+        terminalPaths.terminalSocket(OUTER_ORG, OUTER_WORKSPACE, second.id),
+        'GET',
+      ],
     ]) {
       const response = await active.request(path, {
         method,
-        body: '{}',
-        headers: { Cookie: active.cookies.memberCookie },
+        ...(method === 'GET' ? {} : { body: '{}' }),
+        headers: {
+          Cookie: active.cookies.memberCookie,
+          ...(method === 'GET'
+            ? { Upgrade: 'websocket', 'Sec-WebSocket-Protocol': 'tty' }
+            : {}),
+        },
       })
       expect(response.status, scenario.code).toBe(scenario.status)
       expect(await response.json()).toMatchObject({
@@ -76,6 +89,30 @@ it('gates terminal writes for suspended owners, suspended orgs, stopped workspac
   expect(await active.actor().readChatWorkspaceSummary()).toMatchObject({
     throughEventNumber: 1,
   })
+})
+
+it('forwards terminal socket paths to the workspace gate, including invalid IDs', async () => {
+  const active = await suite.create()
+  for (const id of ['f'.repeat(32), 'INVALID', 'workspace/other', '%']) {
+    const response = await active.request(
+      terminalPaths.terminalSocket(OUTER_ORG, OUTER_WORKSPACE, id),
+      {
+        headers: { Upgrade: 'websocket', 'Sec-WebSocket-Protocol': 'tty' },
+      },
+    )
+    expect(response.status).toBe(404)
+    expect(await response.json()).toMatchObject({
+      error: { code: 'terminal_not_found' },
+    })
+  }
+  const protocol = await active.request(
+    terminalPaths.terminalSocket(OUTER_ORG, OUTER_WORKSPACE, 'workspace'),
+  )
+  expect(protocol.status).toBe(400)
+  expect(await protocol.json()).toMatchObject({
+    error: { code: 'terminal_protocol' },
+  })
+  expect(active.boat.commands).toEqual([])
 })
 
 it('rejects cross-site or originless terminal writes and keeps access scoped to the signed-in member', async () => {

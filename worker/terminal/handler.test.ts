@@ -197,11 +197,14 @@ it('authenticates the ttyd handshake and forwards automatic replies without repo
 it('rejects a ttyd socket without the tty protocol before contacting the sandbox', async () => {
   const seed = await harness.seed()
   const handler = createTerminalHandler(harness.env, harness.dependencies)
-  const response = await handler.fetch(
-    seed.request(terminalPaths.socket(seed.orgId, seed.workspaceId), {
-      headers: { Upgrade: 'websocket' },
-    }),
-  )
-  expect(response.status).toBe(400)
+  for (const path of [
+    terminalPaths.socket(seed.orgId, seed.workspaceId),
+    terminalPaths.terminalSocket(seed.orgId, seed.workspaceId, 'workspace'),
+  ]) {
+    const response = await handler.fetch(
+      seed.request(path, { headers: { Upgrade: 'websocket' } }),
+    )
+    expect(response.status).toBe(400)
+  }
   expect(harness.requests).toHaveLength(0)
 })

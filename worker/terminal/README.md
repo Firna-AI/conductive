@@ -7,7 +7,7 @@ This area owns the ttyd and tmux package install and the terminal script sources
 The [sandbox software](../../image/README.md) packages those scripts and their
 systemd units in each release.
 
-The production Worker forwards terminal state, list writes, and the legacy socket to the workspace object.
+The production Worker forwards terminal state, list writes, and both socket routes to the workspace object.
 Its feature handler keeps one terminal connection owner.
 The browser uses the [shared terminal contract](../../src/shared/terminal.ts).
 
@@ -38,12 +38,28 @@ It prevents concurrent closes from removing the last available terminal.
 A failed close clears its mark and keeps its entry.
 The list stays through Stop and resume. The existing payload purge deletes it.
 
-Entry socket paths name individual terminals. The handler currently accepts
-only `GET terminal/socket`, which still opens the `workspace` shell.
+`GET terminal/terminals/<terminalId>/socket` opens one listed terminal.
+An invalid, absent, or closing ID gets 404 `terminal_not_found` before any
+upstream connection. `GET terminal/socket` selects the first entry in number
+order, including after the original Terminal 1 closes. The state response
+keeps that legacy path in `socketPath`.
+
+`WorkspaceTerminals.openSocket` checks the list and registers a socket lease
+in the same queue that marks closes. A close cancels its pending and open
+leases before it ends the shell. A cancelled lease stays cancelled after
+the closing mark clears. The socket handler checks the lease before the
+upstream call and after its upgrade returns. It closes a late upstream
+socket without creating a browser connection. The lease also owns the
+bridge's close callback, so a close during the last access check ends both
+sides before any later browser handshake can reach ttyd.
 
 The handler opens the `/ws` path of the private ttyd port with the shared
 `portRequest` of the [preview backend](../previews/README.md). That request
-carries no browser cookie, header, or query. It carries the
+carries no browser cookie, header, or query. After that request is built,
+the terminal handler adds only `arg=<terminalId>` from the selected stored
+entry. The fixed `workspace` ID of Terminal 1 adds no argument, including
+on older software. A later terminal numbered 1 still carries its own ID.
+The request carries the
 [port credential](../sandbox/README.md#port-credentials) of the client, Basic
 auth with the workspace password, and the `tty` subprotocol.
 
@@ -109,7 +125,7 @@ the attach program selects `workspace`, the shell of Terminal 1.
 One URL argument must be exactly 32 lowercase hexadecimal characters.
 It selects the session `terminal-<id>`. Each other argument list exits
 with code 2 before it runs the bridge or a shell.
-The Worker chooses these arguments. The current socket handler passes none.
+The Worker chooses these arguments from the stored terminal list.
 When the selected session does not exist, the bridge creates it with a login Bash shell in the
 repository folder. It gives tmux the path of that folder, not its own
 current folder.
@@ -383,8 +399,10 @@ Terminal status reads remain available.
 
 - [handler.ts](handler.ts) exports `createTerminalHandler`.
 - [request.ts](request.ts) checks terminal paths through the app request gate.
+- [socket.ts](socket.ts) opens the selected terminal with trusted ttyd arguments and keeps the sandbox connection checks.
+- [socket-lease.ts](socket-lease.ts) cancels a pending or open terminal socket when its close starts.
 - [mutations.ts](mutations.ts) applies running and support checks to terminal writes.
-- [workspace.ts](workspace.ts) owns list operations and closing marks beside the chat queue.
+- [workspace.ts](workspace.ts) owns list operations, closing marks, and socket leases beside the chat queue.
 - [list-store.ts](list-store.ts) stores the list and emits its events through [chat/store.ts](../chat/store.ts).
 - [connections.ts](connections.ts) owns terminal registration, expiry, and scheduled access checks.
 - [The shared connection reader](../security/connection-access.ts) reads each session, membership, and sandbox identity in one batch.

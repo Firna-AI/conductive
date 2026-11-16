@@ -12,7 +12,6 @@ import {
 } from '../shared/messages'
 import { attachmentPath } from '../shared/attachment-paths'
 import { previewPath, previewsPath } from '../shared/previews'
-import { terminalPaths } from '../shared/terminal'
 import type { FakeRouteWriter } from './fake-api-routes'
 import { FAKE_IDS } from './fixtures/core'
 import {
@@ -134,7 +133,6 @@ export function fakeToolRoutes(
       201,
     )
   }
-  routes.json('GET', terminalPaths.connection(org, id), data.terminal)
   routes.json('GET', previewsPath(org, id), data.previews)
   routes.json('POST', previewsPath(org, id), data.preview, 201)
   routes.empty('DELETE', previewPath(org, id, FAKE_IDS.preview))

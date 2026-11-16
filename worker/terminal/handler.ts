@@ -1,23 +1,15 @@
-import {
-  TERMINAL_PORT,
-  terminalPaths,
-  type TerminalResponse,
-} from '../../src/shared/terminal'
+import { terminalPaths, type TerminalResponse } from '../../src/shared/terminal'
 import type { AppEnv } from '../env'
 import { HttpError, privateResponse } from '../http'
-import { requireRunning, toolError, verifyTarget } from '../previews/access'
-import { portRequest } from '../previews/headers'
-import { WorkspaceTools } from '../previews/provider'
-import { bridgeSocket } from '../previews/socket'
+import { toolError } from '../previews/access'
 import type { ToolDependencies } from '../previews/types'
-import { ProviderError } from '../sandbox/errors'
 import { terminalPassword, terminalSeveral } from './credentials'
 import { initialTerminals } from './list-store'
 import { mutateTerminal } from './mutations'
 import { terminalRequest } from './request'
+import { openTerminalSocket } from './socket'
 import type { WorkspaceTerminals } from './workspace'
-import { terminalFrames } from './protocol'
-import { TerminalConnections, type TerminalRegistration } from './connections'
+import { TerminalConnections } from './connections'
 
 export function createTerminalHandler(
   env: AppEnv,
@@ -27,7 +19,6 @@ export function createTerminalHandler(
   const connections = new TerminalConnections(env, dependencies)
   return {
     fetch: async (request: Request): Promise<Response> => {
-      let registration: TerminalRegistration | null = null
       try {
         const { context, target, route } = await terminalRequest(
           request,
@@ -101,60 +92,21 @@ export function createTerminalHandler(
               }
           return privateResponse(Response.json(response))
         }
-        requireRunning(target)
-        if (!password)
-          throw new HttpError(
-            409,
-            'terminal_starting',
-            'The terminal is starting. Try again.',
-          )
-        const provider = await WorkspaceTools.forWorkspace(
+        return await openTerminalSocket(
           env,
-          target,
-          dependencies.fetch,
-          context.user.id,
+          dependencies,
+          connections,
+          terminals,
+          {
+            request,
+            target,
+            userId: context.user.id,
+            sessionId: context.sessionId,
+            terminalId: route.terminalId,
+            password,
+          },
         )
-        const port = await provider.privatePort(TERMINAL_PORT, 'network')
-        await verifyTarget(env, target, context.user.id)
-        if (!target.sandboxId)
-          throw new HttpError(
-            409,
-            'terminal_starting',
-            'The terminal is starting. Try again.',
-          )
-        registration = await connections.add({
-          kind: 'sandbox',
-          sessionId: context.sessionId,
-          userId: context.user.id,
-          orgId: target.orgId,
-          workspaceId: target.workspaceId,
-          sandboxId: target.sandboxId,
-          providerAccount: target.providerAccount,
-        })
-        const auth = btoa(`conductive:${password}`)
-        let upstream: Response
-        try {
-          upstream = await dependencies.fetch(portRequest(request, port, auth))
-        } catch {
-          throw new ProviderError('unavailable', 503)
-        }
-        if (upstream.headers.get('Sec-WebSocket-Protocol') !== 'tty')
-          throw new ProviderError('invalid_response', 502)
-        const bridge = bridgeSocket(upstream, dependencies, {
-          headers: new Headers({
-            'Sec-WebSocket-Protocol': 'tty',
-            'Cache-Control': 'no-store',
-            'Referrer-Policy': 'no-referrer',
-          }),
-          authorize: registration.check,
-          onClose: registration.dispose,
-          fromBrowser: terminalFrames(auth),
-        })
-        registration.attach(bridge.close)
-        await registration.check()
-        return bridge.response
       } catch (error) {
-        registration?.dispose()
         return toolError(error)
       }
     },

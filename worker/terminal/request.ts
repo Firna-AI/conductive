@@ -4,10 +4,11 @@ import type { AppEnv } from '../env'
 import { HttpError } from '../http'
 import { workspaceTarget } from '../previews/access'
 import { gate } from '../security/gate'
+import { terminalNotFound } from './socket-lease'
 
 export type TerminalRoute =
   | { kind: 'state' }
-  | { kind: 'socket' }
+  | { kind: 'socket'; terminalId?: string }
   | { kind: 'create' }
   | { kind: 'close'; terminalId: string }
 
@@ -24,7 +25,7 @@ export async function terminalRequest(
   const path = new URL(request.url).pathname
   const match = path.match(
     new RegExp(
-      `^${API_PATHS.orgs}/([^/]+)/workspaces/([^/]+)/terminal(?:/(socket|terminals)(?:/([^/]+))?)?$`,
+      `^${API_PATHS.orgs}/([^/]+)/workspaces/([^/]+)/terminal(?:/(socket|terminals)(?:/([^/]+)(/socket)?)?)?$`,
     ),
   )
   if (!match) return notFound()
@@ -34,9 +35,15 @@ export async function terminalRequest(
   try {
     orgId = decodeURIComponent(match[1])
     workspaceId = decodeURIComponent(match[2])
+  } catch {
+    return notFound()
+  }
+  const individualSocket = match[3] === 'terminals' && match[5] === '/socket'
+  try {
     terminalId =
       match[4] === undefined ? undefined : decodeURIComponent(match[4])
   } catch {
+    if (individualSocket) throw terminalNotFound()
     return notFound()
   }
   let route: TerminalRoute
@@ -48,7 +55,10 @@ export async function terminalRequest(
     terminalId === undefined
   )
     route = { kind: 'socket' }
-  else if (
+  else if (request.method === 'GET' && individualSocket) {
+    if (!isTerminalId(terminalId)) throw terminalNotFound()
+    route = { kind: 'socket', terminalId }
+  } else if (
     request.method === 'POST' &&
     match[3] === 'terminals' &&
     terminalId === undefined
@@ -57,6 +67,7 @@ export async function terminalRequest(
   else if (
     request.method === 'DELETE' &&
     match[3] === 'terminals' &&
+    match[5] === undefined &&
     isTerminalId(terminalId)
   )
     route = { kind: 'close', terminalId }
