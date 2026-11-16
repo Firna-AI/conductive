@@ -238,11 +238,11 @@ Depends on: 2, 3
       release build named in `AGENTS.md`. Evidence:
       `.context/idle-update-restart/gate/`.
 - [x] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
-      once, and report.
+      once, and report. Round 1 found no findings.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the
