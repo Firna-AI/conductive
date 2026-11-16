@@ -31,7 +31,7 @@ function axisDays(chart: HTMLElement): string[] {
 }
 
 describe('the Overview of the operator section', () => {
-  test('shows the totals with their 7 days, the workspaces by state with the running builds, the 30-day totals, and the largest orgs, which open their pages', async () => {
+  test('shows the totals with their 7 days, the workspaces by state with Removed apart from Archived and the running builds, the 30-day totals, and the largest orgs, which open their pages', async () => {
     const server = new FakeApiServer()
     serveOperator(server)
     const { view } = await mountShell(server, '/operator')
@@ -55,7 +55,8 @@ describe('the Overview of the operator section', () => {
       header: 'Operator Updated at 08:00 Refresh',
       totals:
         'Users 1,284 +46 in 7 days 10 on the waitlist Orgs 312 +9 in 7 days Workspaces 2,481 +188 in 7 days Running now 39',
-      states: 'Running 37 1% Stopped 1,604 65% Failed 12 0.5% Archived 828 33%',
+      states:
+        'Running 37 1% Stopped 1,604 65% Failed 12 0.5% Archived 203 8% Removed 625 25%',
       lines,
       opened: 'Kestrel Labs',
     })

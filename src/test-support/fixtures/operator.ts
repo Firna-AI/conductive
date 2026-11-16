@@ -135,8 +135,8 @@ export function sampleUserDetail(
 }
 
 function totalOf(org: OperatorOrgDetail): number {
-  const { running, stopped, failed, archived } = org.workspaceStates
-  return running + stopped + failed + archived
+  const { running, stopped, failed, archived, removed } = org.workspaceStates
+  return running + stopped + failed + archived + (removed ?? 0)
 }
 
 /** The row of an org in the Orgs tab, from its page. */

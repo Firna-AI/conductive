@@ -49,6 +49,10 @@ export function readRunning(value: unknown) {
   }
 }
 
+/**
+ * The workspaces in each state. Archived counts the archived workspaces of
+ * the list, and Removed those whose Restore ended, which left it.
+ */
 export function readWorkspaceStates(value: unknown): OperatorWorkspaceStates {
   const states = record(value, 'workspaceStates')
   return {
@@ -56,6 +60,7 @@ export function readWorkspaceStates(value: unknown): OperatorWorkspaceStates {
     stopped: count(states, 'stopped'),
     failed: count(states, 'failed'),
     archived: count(states, 'archived'),
+    removed: count(states, 'removed'),
   }
 }
 

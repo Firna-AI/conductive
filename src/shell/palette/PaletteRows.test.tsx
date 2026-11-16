@@ -222,7 +222,8 @@ describe('the rows of the command palette', () => {
       kept: { text: 'storefront', groups: ['Checkout', 'Infra'] },
       sections: ['General', 'Checkout', 'Infra'],
       billing: ['invoice-fonts', 'webhook-retries', 'retry-queue'],
-      archivedBilling: 'Archived workspaces of acme/billing-service show here',
+      archivedBilling:
+        'Archived workspaces of acme/billing-service show here for 14 days',
       archived: { groups: ['Archived'], opens: [workspace] },
       focusBack: true,
       noMatch:

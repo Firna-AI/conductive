@@ -96,6 +96,7 @@ function sandboxParts(props: SessionChatProps): ChatHost {
           busy={snapshot.resuming}
           firstStart={firstStart}
           message={snapshot.savedError}
+          now={now}
           onResume={() => void controller.resume()}
           problem={problem}
         />

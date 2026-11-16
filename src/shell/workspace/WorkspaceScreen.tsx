@@ -14,6 +14,7 @@ import {
   type WorkspaceIdentity,
 } from '../../app/workspace-store'
 import { failedFirstStart } from '../../app/first-start'
+import { listEndOf } from '../../app/workspace-removal'
 import type { User } from '../../shared/api'
 import type { OrgSummary } from '../../shared/orgs'
 import { useApp, useOrgAccess } from '../context'
@@ -90,9 +91,14 @@ export function WorkspaceScreen(props: {
   const theme = useSharedUiTheme()
   const resume = useAction(() => model.resume(), "The sandbox didn't start.")
   const lifecycle = useArchiveActions(props.org.id, props.viewer)
-  // Restore ends at its last day while the page shows, with no other event.
+  // Restore ends at its last day while the page shows, with no other event,
+  // and the workspace then leaves the list, also without a kept cloud
+  // computer.
+  const shownWorkspace =
+    detail.state === 'ready' ? detail.value.workspace : null
   const passed = usePassedDeadlines([
-    detail.state === 'ready' ? detail.value.workspace.restoreUntil : null,
+    shownWorkspace?.restoreUntil ?? null,
+    shownWorkspace ? listEndOf(shownWorkspace) : null,
   ])
   if (detail.state === 'loading') {
     return (
@@ -141,6 +147,7 @@ export function WorkspaceScreen(props: {
     savedError: error?.message ?? null,
     firstStart: failedFirstStart(workspace, start),
     restore: archivedRestore(workspace, suspended, restoreEnded),
+    removed: passed(listEndOf(workspace)),
     opened,
   })
   const context: WorkspaceContext = {

@@ -45,12 +45,9 @@ function buildsLine(builds: number, page: 'overview' | 'org'): string {
     : `${named} also ${builds === 1 ? 'runs' : 'run'} now.`
 }
 
-/** The states that a count holds, in their order, each with its number. */
+/** The states of a count, in their order, each with its number. */
 function countedStates(counts: StateCounts) {
-  return order.flatMap((key) => {
-    const count = counts[key]
-    return count === undefined ? [] : [{ key, count }]
-  })
+  return order.map((key) => ({ key, count: counts[key] }))
 }
 
 /**

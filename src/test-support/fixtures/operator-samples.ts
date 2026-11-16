@@ -86,7 +86,9 @@ function org(
     initials,
     createdDaysAgo,
     repositories: fields.repositories,
-    states: { running, stopped, failed, archived },
+    // The sample orgs have no removed workspaces, as the org pages of the
+    // mockups show.
+    states: { running, stopped, failed, archived, removed: 0 },
     builds: fields.builds ?? 0,
     members: fields.members,
     computers: fields.computers ?? [],

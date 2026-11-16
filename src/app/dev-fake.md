@@ -27,6 +27,12 @@ the dev wiring in `dev/`, and what its fake routes do.
   stay through rename, delete, and restore. Settings changes during the
   first good build start one added build. The fake compares settings
   revisions with builds as the Worker does.
+- Acme also holds Postcode lookup for the shipping and billing forms,
+  `postcode-lookup`, which a member archived 3 weeks before the clock of
+  the fake starts. Its 14 days ended, so the workspace list and the
+  palette leave it out. The list route still sends it, as the Worker does,
+  so its link and its chip still open its read-only chat, at
+  `/orgs/acme/workspaces/postcode-lookup`, with the Removed bar.
 - The upload routes also keep the exact bytes of each upload, in a private
   store of the page. A send that names uploaded files gets a reply with its
   own message ID, text, model choice, and files. An archived workspace,

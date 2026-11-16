@@ -34,14 +34,8 @@ export const runningComputers = { workspaces: 37, builds: 2 } as const
 export type WorkspaceStateKey =
   'running' | 'stopped' | 'failed' | 'archived' | 'removed'
 
-/**
- * The workspaces of one scope in each state. The counts of the app have no
- * `removed` until its API counts removed workspaces, so the page then
- * shows the other four states.
- */
-export type StateCounts = Readonly<
-  Record<Exclude<WorkspaceStateKey, 'removed'>, number> & { removed?: number }
->
+/** The workspaces of one scope in each state. */
+export type StateCounts = Readonly<Record<WorkspaceStateKey, number>>
 
 /** The workspaces of every org in each state. They add up to the total. */
 export const workspaceStates: StateCounts = {

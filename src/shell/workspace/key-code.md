@@ -147,8 +147,12 @@ this guide.
 - `RunLine.tsx`: the line under the header of a run workspace, which links to its routine and the pull request of a pull request run. `RunLine.test.tsx` checks the line and its links.
 - `SandboxNotice.tsx`, `notice-copy.ts`, and `StartingCard.tsx`: the
   states of the cloud computer, their words, and the start steps. The bar
-  of an archived workspace offers Restore until its last day, then says
-  when Restore ended. `useArchiveActions.ts` runs Archive and Restore for
+  of an archived workspace offers Restore until its last day, and gives
+  the day when the workspace leaves the list, also without Restore. After
+  that day it has the title "Removed on" and the day, and its panels have
+  the title Removed. `notice-copy.ts` takes the stages of the mockups from
+  the `restore` and `removed` marks of the notice. `notice-copy.test.ts`
+  checks the words of each stage. `useArchiveActions.ts` runs Archive and Restore for
   each control, with their toasts. Archive from the row of the open
   workspace, by its shortcut or its menu, acts once, also during the first
   read, as [Archive](../../../docs/protocol/workspace-menu.md#archive)
@@ -162,9 +166,13 @@ this guide.
   Meanwhile `WorkspaceHeader.tsx` shows Starting in place of Stopped, and
   `contentState` gives the tools and the file pages the wait of a start,
   with no Resume. The lists keep their saved copy. A tab that opens then
-  sends no second Resume.
+  sends no second Resume. `WorkspaceScreen.tsx` sets the `removed` mark of
+  the bar at the end of Restore, from `archivedAt`, also without a kept
+  cloud computer.
   `ArchivedRestore.test.tsx` mounts the whole app
-  for Restore by a member and for its end at the last day.
+  for Restore by a member and for its end at the last day, when the
+  workspace also leaves the list. `LinkChips.test.tsx` opens a removed
+  workspace from its chip.
 - `dev/`: the development page, with its options in `dev-options.ts` and
   its controls in `DevControls.tsx`.
   `dev/main.tsx` supplies the real window host, keyboard, and key events

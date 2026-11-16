@@ -199,6 +199,8 @@ export function workspaceRoutes(backend: DevBackend): Route[] {
   const one = workspacePath(ID.org, ID.workspace)
   return [
     {
+      // The list keeps the removed workspaces, as the Worker does, so that
+      // their links still resolve. The app leaves them out of its groups.
       method: 'GET',
       path: workspacesPath(ID.org),
       answer: ({ params }) =>

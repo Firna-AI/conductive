@@ -30,7 +30,7 @@ export interface OperatorWorkspaceStates {
   stopped: number
   failed: number
   archived: number
-  removed?: number
+  removed: number
 }
 
 export interface OperatorDirectoryQuery {

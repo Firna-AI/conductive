@@ -339,33 +339,33 @@ Tags: ui
 
 Depends on: 1, 3
 
-- [ ] `groupWorkspaces` leaves out removed rows, with the timer for the
+- [x] `groupWorkspaces` leaves out removed rows, with the timer for the
       next end of Restore.
-- [ ] Count only listed rows in `OrgHome`, `LeaveOrg`, and `countOwners`
+- [x] Count only listed rows in `OrgHome`, `LeaveOrg`, and `countOwners`
       (`src/members/people.ts`).
-- [ ] The bar and the chat fallback bar give the Removed title and the
+- [x] The bar and the chat fallback bar give the Removed title and the
       notice before removal, from `archivedAt`, not from `restoreUntil`
       (`src/shell/workspace/notice-copy.ts`,
       `src/shell/workspace/sandbox-view.ts`,
       `src/shell/workspace/WorkspaceScreen.tsx`,
       `src/chat/components/SandboxState.tsx`).
-- [ ] The toast after Archive gives the day that the workspace leaves the
+- [x] The toast after Archive gives the day that the workspace leaves the
       list (`src/shell/workspace/useArchiveActions.ts`).
-- [ ] The operator overview shows the Removed count. Read `removed` in
+- [x] The operator overview shows the Removed count. Read `removed` in
       `readWorkspaceStates` (`src/app/api/read-operator.ts`), make
       `StateCounts.removed` required, add a fifth row to
       `OverviewLoading`, and update `OverviewTab.test.tsx`, which fails
       since Milestone 1 split the shared operator fixture.
-- [ ] Copy the Milestone 1 words into the palette empty line of the
+- [x] Copy the Milestone 1 words into the palette empty line of the
       Archived filter and its tests in `src/app/palette`.
-- [ ] Keep the removed rows in the dev and test fakes of the list, as
+- [x] Keep the removed rows in the dev and test fakes of the list, as
       the Worker does (`src/app/dev/workspace-routes.ts`,
       `src/test-support/fake-workspace-routes.ts`). Add a removed row to
       their seed data.
-- [ ] Tests: the group, the palette, the timer, the bar, the toast, and a
+- [x] Tests: the group, the palette, the timer, the bar, the toast, and a
       chip that opens a removed workspace.
-- [ ] Update `src/app/suspended-org.md`, which counts "from the list".
-- [ ] Check the list, the bar, and a chip link in the browser.
+- [x] Update `src/app/suspended-org.md`, which counts "from the list".
+- [x] Check the list, the bar, and a chip link in the browser.
 
 ## Milestone 5: Verification, commit, review, and pull request
 

@@ -6,9 +6,11 @@ import {
   SuspendedOrgAbove,
   SuspendedOrgPanel,
 } from '../../../docs/mockups/src/components/orgs/SuspendedOrgNotice'
+import { useListTime } from '../../app/deadlines'
 import { routes } from '../../app/router'
 import { useServices } from '../../app/services'
 import { useStore, valueOf } from '../../app/store'
+import { listedWorkspaces } from '../../app/workspace-removal'
 import { DeletedOrgPage } from '../../members/DeletedOrgPage'
 import type { User } from '../../shared/api'
 import type { OrgSummary } from '../../shared/orgs'
@@ -22,10 +24,16 @@ import { useGo } from '../ui/AppLink'
 import { HomeList } from './HomeList'
 import list from './list.module.css'
 
-/** The main area of a desktop list, which waits for the user's choice. */
+/**
+ * The main area of a desktop list, which waits for the user's choice. A
+ * list without a row asks for the first workspace, also when the org has
+ * removed workspaces.
+ */
 function ChooseWorkspace(props: { org: OrgSummary }) {
   const model = useOrgModel(props.org.id)
-  const workspaces = valueOf(useStore(model.workspaces))
+  const all = valueOf(useStore(model.workspaces))
+  const listTime = useListTime(all ?? [])
+  const workspaces = all ? listedWorkspaces(all, listTime) : undefined
   const repositories = valueOf(useStore(model.repositories))
   const go = useGo()
   const open = useNewWorkspace().open

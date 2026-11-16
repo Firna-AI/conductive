@@ -155,6 +155,17 @@ the Help row of the palette opens.
 - A control that ends at a time, such as Restore until its last day, ends
   at that time through `usePassedDeadlines` in `deadlines.ts`, with the
   clock and the timers of `AppServices`, and with no other event.
+- An archived workspace leaves the list at the end of its Restore, 14 days
+  after its Archive, as
+  [Removed workspaces](../../docs/protocol/workspace-life.md#removed-workspaces)
+  says. The list of the org keeps it, so its links still resolve.
+  `groupWorkspaces` in `sections.ts` leaves it out of the sections, the
+  Archived group, the keys, and the groups of the palette, through
+  `isListed` in `workspace-removal.ts`. The counts of the org page, of
+  Leave org, and of the Members tab leave it out too. `useListTime` in
+  `deadlines.ts` renders each such screen again at that time, also without
+  a kept cloud computer. No code reads `restoreUntil` to find the removal,
+  because that value is null whenever no cloud computer is kept.
 - A read mark counts no generation, because one request serves every
   visit of its kept model. An answer after a close still sets the
   confirmed number, which a later open uses. While the model stays closed,

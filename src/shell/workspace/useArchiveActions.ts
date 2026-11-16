@@ -4,6 +4,8 @@ import type { ArchiveAction } from '../../app/archive-model'
 import { mayRestore } from '../../app/permissions'
 import { useServices } from '../../app/services'
 import { useStore } from '../../app/store'
+import { formatDay } from '../../app/time'
+import { listEndOf } from '../../app/workspace-removal'
 import type { User } from '../../shared/api'
 import { nameLabel } from '../../shared/name-label'
 import type { Workspace } from '../../shared/workspaces'
@@ -25,7 +27,8 @@ export interface ArchiveActions {
  * runs sends nothing. Archive asks no question, and it shows as done at
  * once: the row moves to the Archived group, and the open workspace shows
  * as archived. A failed Archive brings both back. A done Archive shows a
- * toast that names the workspace. The toast offers Restore only while the
+ * toast that names the workspace and gives the day when it leaves the
+ * list, 14 days after the Archive. The toast offers Restore only while the
  * workspace can come back: it is still archived, its cloud computer is
  * kept, its last day of Restore has not passed, and the org is not
  * suspended. A failure shows a toast that names the workspace, with the
@@ -58,6 +61,12 @@ export function useArchiveActions(orgId: string, viewer: User): ArchiveActions {
     const suspended = org.suspension.suspended.get()
     return mayRestore({ suspended }, current, ended)
   }
+  /** The day when the archived workspace leaves the list, as a line. */
+  const leavesLine = (archived: Workspace) => {
+    const end = listEndOf(archived)
+    if (end === null) return undefined
+    return `It leaves the list on ${formatDay(end, services.timeZone)}.`
+  }
   const restore = (workspace: Workspace) => {
     flowOf(workspace).restore().catch(failed(workspace, 'restored'))
   }
@@ -69,6 +78,7 @@ export function useArchiveActions(orgId: string, viewer: User): ArchiveActions {
           if (!archived) return
           toast({
             title: `${nameLabel(workspace.name)} is archived.`,
+            description: leavesLine(archived),
             tone: 'success',
             action: restorable(archived)
               ? { label: 'Restore', onPress: () => restore(archived) }

@@ -1,5 +1,6 @@
 import type { Section } from '../shared/sections'
 import type { Workspace } from '../shared/workspaces'
+import { listedWorkspaces } from './workspace-removal'
 
 export interface SectionGroup {
   section: Section
@@ -35,16 +36,20 @@ function sectionOf(
 }
 
 /**
- * The sections of the list, each with its workspaces in the order of the
- * workspace list. Archived workspaces leave their sections for the
- * Archived group.
+ * The sections of the list at `now`, each with its workspaces in the order
+ * of the workspace list. Archived workspaces leave their sections for the
+ * Archived group. A removed workspace, whose Restore ended by `now`, shows
+ * in neither, as `isListed` says. This is the one place that leaves it out
+ * of the list, its counts, its keys, and the groups of the palette.
  */
 export function groupWorkspaces(
   sections: readonly Section[],
   workspaces: readonly Workspace[],
+  now: number,
 ): WorkspaceGroups {
   const fallback = defaultSection(sections)
-  const live = workspaces.filter((workspace) => workspace.state !== 'archived')
+  const listed = listedWorkspaces(workspaces, now)
+  const live = listed.filter((workspace) => workspace.state !== 'archived')
   return {
     sections: ordered(sections).map((section) => ({
       section,
@@ -52,7 +57,7 @@ export function groupWorkspaces(
         (workspace) => sectionOf(workspace, sections, fallback) === section.id,
       ),
     })),
-    archived: workspaces
+    archived: listed
       .filter((workspace) => workspace.state === 'archived')
       .sort((a, b) => (b.archivedAt ?? 0) - (a.archivedAt ?? 0)),
   }

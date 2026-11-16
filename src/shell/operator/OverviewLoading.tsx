@@ -14,7 +14,13 @@ const tileStyle = { flex: 1, minWidth: 120 }
 const rowStyle = { flex: 1 }
 
 const tileKeys = ['users', 'orgs', 'workspaces', 'running'] as const
-const stateKeys = ['running', 'stopped', 'failed', 'archived'] as const
+const stateKeys = [
+  'running',
+  'stopped',
+  'failed',
+  'archived',
+  'removed',
+] as const
 const chartTitles = ['New workspaces', 'New users'] as const
 
 function TilePlaceholders() {

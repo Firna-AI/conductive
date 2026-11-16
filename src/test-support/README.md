@@ -235,7 +235,7 @@ Replies, timers, and `waitFor` go on.
   Each run includes its agent and owner for the shared run contract. A member who left the org stays the owner of their runs, as the Worker keeps their user record.
   A run whose first start or first turn failed keeps its workspace, and a run that a check failed has none.
 - `fixtures/routine-triggers.ts` turns a trigger of a save into the trigger of a reply: a preset with its cron, and each login with a fake GitHub ID.
-- `fixtures/workspaces.ts` maps workspace and session samples, and `senderSnapshot` copies the identity of a person as a session starter.
+- `fixtures/workspaces.ts` maps workspace and session samples, and `senderSnapshot` copies the identity of a person as a session starter. Its list ends with the removed workspace of `fixtures/removed-workspace.ts`, Postcode lookup for the shipping and billing forms of the mockups, whose 14 days ended a week before `FAKE_TIME`. The fake API sends it in the list, as the Worker does, and the workspace list leaves it out.
 - `fixtures/tools.ts` maps file, GitHub, and tool samples. `FAKE_GITHUB_HEAD_SHA` is the head commit of each fake pull request.
 - `fixtures/devices.ts` maps the Mac command samples of the mockups: requests in each state, the pairing, and the Mac settings.
 - `fake-device-routes.ts` records the Mac command, pairing, answer, and Mac settings replies.

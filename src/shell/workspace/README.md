@@ -25,9 +25,14 @@ Archive shows as done before its reply: the row moves to the Archived
 group, and the open workspace shows as archived. A failed Archive brings
 both back and names the failure in a toast, as
 [Archive](../../../docs/protocol/workspace-menu.md#archive) says. The
-toast after the reply offers Restore. The archived bar, the row of the Archived group, and
+toast after the reply gives the day when the workspace leaves the list,
+and offers Restore. The archived bar, the row of the Archived group, and
 the palette offer Restore to each member until the last day, as
-[Restore](../../../docs/protocol/workspace-life.md#restore) says.
+[Restore](../../../docs/protocol/workspace-life.md#restore) says. On that
+day the workspace leaves the list. A link still opens its read-only chat,
+whose bar has the title "Removed on" and the day, as
+[Removed workspaces](../../../docs/protocol/workspace-life.md#removed-workspaces)
+says.
 
 ## The kept workspace
 

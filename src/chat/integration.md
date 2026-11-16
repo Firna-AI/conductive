@@ -193,9 +193,11 @@ members, and the workspace list of the org from the models of the app.
   ends the subscriptions. `hide` and `show` keep them.
 - A chat without sources reads the four values at each load.
 - The workspace list gives the chips their workspaces, with the archived
-  ones. The chat watches it from `start` or `show` until `hide` or `stop`,
-  through `watchWorkspaces`, which the app connects to
-  `OrgModel.watch('list')`. So the chips stay current on a phone, where no
-  list is on the screen, and a hidden chat reads nothing. A chat without
-  sources reads the list itself while it shows, with the wait of a shown
-  list of the app, in `state/workspace-list.ts`.
+  ones, also the removed ones that left the list. So the chip of a removed
+  workspace still opens its read-only chat. The chat watches the list from
+  `start` or `show` until `hide` or `stop`, through `watchWorkspaces`,
+  which the app connects to `OrgModel.watch('list')`. So the chips stay
+  current on a phone, where no list is on the screen, and a hidden chat
+  reads nothing. A chat without sources reads the list itself while it
+  shows, with the wait of a shown list of the app, in
+  `state/workspace-list.ts`.
