@@ -15,9 +15,9 @@ export type TerminalStore = ToolStore<
 >
 
 /**
- * The readiness of the terminal, its events, and its read. Each read number of
- * the state reads the terminal state once, so Try again, Reconnect, and a
- * running sandbox start a new read.
+ * The readiness of the terminals, their events, and their read. Each read
+ * number of the state reads the terminal state once, so Try again, a running
+ * sandbox, and a change of the list during a read start a new read.
  */
 const terminalTool: ToolDefinition<TerminalReadiness, TerminalReadinessAction> =
   {

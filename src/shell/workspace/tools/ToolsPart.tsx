@@ -16,6 +16,7 @@ import { useShortcutTerminal } from '../../shortcuts/shortcut-context'
 import { shortcutTip, useShortcutHint } from '../../shortcuts/shortcut-hints'
 import type { WorkspaceContext } from '../features'
 import { useTerminalLinks } from './terminal-links'
+import { useTerminalRoute } from './terminal-route'
 import { offeredToolTabs, type ToolKey } from './tool-address'
 import { useToolNavigation, type ToolNavigation } from './tool-navigation'
 import styles from './tools.module.css'
@@ -118,8 +119,9 @@ function useShownOnce(shown: boolean): boolean {
  * panel with their tabs on desktop, and the page of one tool on a phone.
  * Each tool reads the routes through the fetch of the org, and the events
  * of the workspace in order. The terminal and Preview each stay mounted
- * after their first show, so the connection of the terminal and the page
- * in the preview frame stay while another tool shows. The app hides
+ * after their first show, so the connections of the terminals and the page
+ * in the preview frame stay while another tool shows. The address and the
+ * saved view name the shown terminal, as `useTerminalRoute` says. The app hides
  * Desktop and keeps its mount for its return: it mounts at each show, so
  * it reads a new desktop address. A `placeholder`, such as the state of a
  * sandbox that does not run, takes the place of the tools: the tabs stay on
@@ -133,6 +135,7 @@ export function ToolsPart(props: {
   const services = useOrgServices(context.org.id)
   const { now } = useServices()
   const navigation = useToolNavigation(context)
+  const terminalRoute = useTerminalRoute(context)
   const connect = useTerminalConnect()
   const { org, workspace, toolEvents } = context
   const links = useTerminalLinks(org.id, workspace.id)
@@ -159,6 +162,7 @@ export function ToolsPart(props: {
           <TerminalTool
             connect={connect}
             links={links}
+            route={terminalRoute}
             screenRef={terminal}
             touch={touch}
             workspace={toolWorkspace}

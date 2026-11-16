@@ -1,25 +1,32 @@
 import { useCallback, type Ref } from 'react'
-import { CircleAlert, CirclePause, Unplug } from 'lucide-react'
+import { CircleAlert, CirclePause } from 'lucide-react'
 import { useWorkspaceStore } from '../app/workspace-store'
+import { OpenTerminals } from './OpenTerminals'
 import { ToolButton } from './tool-parts/ToolButtons'
 import { ToolRoot } from './tool-parts/ToolRoot'
 import { ToolMessage, ToolWaiting } from './tool-parts/ToolStates'
 import { workspaceKey, type ToolWorkspace } from './tool-parts/workspace'
 import { createTerminalStore, type TerminalStore } from './terminalStore'
 import type { TerminalLinks } from './terminalLinks'
-import { TerminalScreen, type ConnectTerminal } from './TerminalScreen'
-import styles from './TerminalTool.module.css'
+import type { TerminalRoute } from './terminalRoute'
+import type { ConnectTerminal } from './TerminalScreen'
 
 export interface TerminalToolProps {
   workspace: ToolWorkspace
   connect: ConnectTerminal
+  /**
+   * The shown terminal of the address and of the saved view, the address of
+   * each tab, and the show of a terminal. Keep it stable while it names the
+   * same terminals.
+   */
+  route: TerminalRoute
   /** A phone layout: touch sizes and the key row. */
   touch: boolean
   /** The user typed in the terminal. The workspace counts it as activity. */
   onActivity?: () => void
   /**
-   * The element of the xterm.js screen, where a shell reads the keys. The
-   * owner marks it, so the buttons of the tool keep no key.
+   * The element of the xterm.js screen of each terminal, where a shell reads
+   * the keys. The owner marks it, so the buttons of the tool keep no key.
    */
   screenRef?: Ref<HTMLDivElement>
   /**
@@ -30,9 +37,10 @@ export interface TerminalToolProps {
 }
 
 /**
- * The Terminal tool: a shell in the sandbox of the workspace. It reads the
- * terminal state, and connects only when the terminal is ready. A running
- * sandbox makes a waiting or loading terminal read its state again.
+ * The Terminal tool: the terminals of the workspace, each a shell in the
+ * sandbox, with their tabs. It reads the terminal state, and connects only
+ * when the terminal is ready. A running sandbox makes a waiting or loading
+ * terminal read its state again.
  */
 export function TerminalTool(props: TerminalToolProps) {
   return <TerminalToolBody key={workspaceKey(props.workspace)} {...props} />
@@ -83,26 +91,16 @@ function TerminalToolBody(props: TerminalToolProps) {
       break
     case 'ready':
       content = (
-        <>
-          <TerminalScreen
-            connect={props.connect}
-            ended={view.ended}
-            links={props.links}
-            onClosed={() => dispatch({ type: 'ended' })}
-            onInput={props.onActivity}
-            screenRef={props.screenRef}
-            terminal={view.terminal}
-          />
-          {view.ended ? (
-            <div className={styles.ended} role="status">
-              <span className={styles.endedLabel}>
-                <Unplug aria-hidden size={13} />
-                Disconnected
-              </span>
-              <ToolButton onPress={retry}>Reconnect</ToolButton>
-            </div>
-          ) : null}
-        </>
+        <OpenTerminals
+          connect={props.connect}
+          dispatch={dispatch}
+          links={props.links}
+          onActivity={props.onActivity}
+          ready={view}
+          route={props.route}
+          screenRef={props.screenRef}
+          workspace={props.workspace}
+        />
       )
       break
   }

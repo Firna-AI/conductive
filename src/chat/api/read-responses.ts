@@ -4,6 +4,7 @@ import type { AgentLoginStatus, EndpointModelList } from '../../shared/account'
 
 import type { Org, User } from '../../shared/api'
 import type { SendMessageResponse } from '../../shared/messages'
+import { isTerminalId } from '../../shared/terminal'
 import type {
   ChangeModelResponse,
   InterruptResponse,
@@ -200,6 +201,10 @@ function readTemporaryTab(
     : null
 }
 
+/**
+ * The saved view. Its shown terminal is optional, and a value that names no
+ * terminal leaves it out, as the Worker does.
+ */
 export function readView(value: unknown): WorkspaceView {
   const view = record(record(value, 'view response').view, 'view')
   const tabs = list(readTab)(view.tabs)
@@ -209,6 +214,7 @@ export function readView(value: unknown): WorkspaceView {
     temporaryTab: readTemporaryTab(view.temporaryTab, tabs),
     fileList: oneOf({ all: true, changes: true, checks: true })(view.fileList),
     tool: oneOf({ terminal: true, preview: true, desktop: true })(view.tool),
+    ...(isTerminalId(view.terminal) ? { terminal: view.terminal } : {}),
   }
 }
 

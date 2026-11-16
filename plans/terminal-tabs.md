@@ -482,29 +482,35 @@ Tags: ui
 
 Depends on: 1, 5
 
-- [ ] Read the list from the terminal state and from `terminals.updated`.
-- [ ] Draw the row of terminal tabs as the mockups show, on desktop and on
+- [x] Read the list from the terminal state and from `terminals.updated`.
+- [x] Draw the row of terminal tabs as the mockups show, on desktop and on
       a phone.
-- [ ] Open a terminal with the + button. Turn the + off at the limit, and
+- [x] Open a terminal with the + button. Turn the + off at the limit, and
       show its hint as visible text. Hide the + when `several` is false.
-- [ ] Close a terminal after the confirmation. Hide the close button on
+- [x] Close a terminal after the confirmation. Hide the close button on
       the last terminal.
-- [ ] Show a failed open or close in the failure toast of the app, with
+- [x] Show a failed open or close in the failure toast of the app, with
       the message of the server.
-- [ ] Keep each terminal that the user showed mounted and connected while
+- [x] Keep each terminal that the user showed mounted and connected while
       it is hidden.
 - [ ] Save the shown terminal in the saved view. Follow the address
       `terminal/<terminalId>`.
-- [ ] When the shown terminal closes, show the terminal before it, or the
+- [x] When the shown terminal closes, show the terminal before it, or the
       first.
-- [ ] Add the terminal events to the development page of the tools.
-- [ ] Test in `src/shell/workspace/tools/ToolsWiring.test.tsx`: open,
+- [x] Add the terminal events to the development page of the tools.
+- [x] Test in `src/shell/workspace/tools/ToolsWiring.test.tsx`: open,
       switch, close, the limit, a close by another member, a reload with a
       saved terminal, and a workspace without the attach program.
-- [ ] Smoke-test the tool with `npm run dev`. Save the screenshots under
+- [x] Smoke-test the tool with `npm run dev`. Save the screenshots under
       `.context/terminal-tabs/`.
-- [ ] Update `src/terminal/README.md` and
+- [x] Update `src/terminal/README.md` and
       `src/shell/workspace/screen-parts.md`.
+
+The tests are in `TerminalTabs.test.tsx` and `TerminalAddress.test.tsx`
+beside `ToolsWiring.test.tsx`, which would pass 300 lines with them. The
+save and the address work, except for an address that names a terminal
+that is not in the list, which waits for a decision of the user. Evidence:
+`.context/terminal-tabs/reports/m6.md` and `.context/terminal-tabs/m6-shots/`.
 
 ## Milestone 7: New terminal in the command palette
 

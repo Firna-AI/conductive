@@ -186,7 +186,8 @@ tools.
 
 | Address | What shows |
 | ------- | ---------- |
-| `terminal` | The Terminal tool |
+| `terminal` | The Terminal tool, with the saved terminal or the first |
+| `terminal/<terminalId>` | The Terminal tool, with that terminal |
 | `preview`, `preview/<previewId>` | The Preview tool, with that preview |
 | `preview/port/<port>` | The Preview tool, which shows or opens the preview of that port |
 | `desktop` | The Terminal tool, because Desktop is hidden |
@@ -211,14 +212,19 @@ tools.
 - On a phone each tool that the app offers is a page of the tab bar, with
   its own address.
 - The terminal and Preview each mount at their first show, then stay
-  mounted and hidden while another tool shows. So the terminal keeps its
-  connection, and the page in the preview frame does not load again when
-  the user goes back to Preview. The socket of the terminal opens at
-  the `socketPath` of the terminal state through `openSocket` of the app's
-  event source, so the Mac app reaches its own Worker.
+  mounted and hidden while another tool shows. So the terminals keep their
+  connections, and the page in the preview frame does not load again when
+  the user goes back to Preview. The socket of each terminal opens at the
+  `socketPath` of its entry of the terminal state, through `openSocket` of
+  the app's event source, so the Mac app reaches its own Worker.
+- `useTerminalRoute` of `tools/terminal-route.ts` gives the Terminal tool
+  the terminal of the address, else `terminal` of the saved view, and a
+  show that saves it. From an address of the Terminal tool, also
+  `desktop`, the address follows the shown terminal. From another address,
+  it stays. See [the tabs](../../terminal/terminal-tabs.md).
 - The mount of the Desktop tool stays for its return. It mounts at each
   show, so it reads a new desktop URL.
-- The tools part marks the xterm.js screen of the terminal for the
+- The tools part marks the xterm.js screen of each terminal for the
   [shortcut layer](../shortcuts/README.md), through the `screenRef` of
   `TerminalTool`. So the screen keeps the keys that its shell reads, such
   as Ctrl+K on Windows and Linux, as

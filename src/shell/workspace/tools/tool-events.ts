@@ -9,6 +9,7 @@ import type {
   WorkspaceEvent,
   WorkspaceEventEnvelope,
 } from '../../../shared/events'
+import { parseTerminalList } from '../../../terminal/terminalApi'
 import type { SubscribeWorkspaceEvents } from '../../../terminal/tool-parts/workspace'
 
 const reasons: readonly RunnerEventRefused['reason'][] = [
@@ -61,13 +62,23 @@ function portsEvent(envelope: StreamEnvelope): WorkspaceEvent | null {
 }
 
 /**
+ * The terminals of the workspace after a change of the list. A list that the
+ * app can't read leaves the last one in place.
+ */
+function terminalsEvent(envelope: StreamEnvelope): WorkspaceEvent | null {
+  const terminals = parseTerminalList(envelope.event.terminals)
+  return terminals === null ? null : { type: 'terminals.updated', terminals }
+}
+
+/**
  * The event of an envelope that a tool reads: an update of the workspace,
- * which the stream already read, the revoke of a preview, or a report of the
- * listening ports and the failed repair of that report. Null for the other
- * events, and for an event without its data.
+ * which the stream already read, the revoke of a preview, the list of the
+ * terminals, or a report of the listening ports and the failed repair of
+ * that report. Null for the other events, and for an event without its data.
  */
 function toolEvent(envelope: StreamEnvelope): WorkspaceEvent | null {
   if (envelope.shell?.type === 'workspace.updated') return envelope.shell
+  if (envelope.type === 'terminals.updated') return terminalsEvent(envelope)
   if (envelope.type !== 'preview.revoked') return portsEvent(envelope)
   const { previewId } = envelope.event
   return typeof previewId === 'string'
@@ -89,7 +100,8 @@ function byNumber(
  * gets the kept events first, in the order of their numbers, as its stored
  * history, then the live events. The kept events are each revoke, the
  * latest report of the listening ports, and the first failed repair of the
- * list since that report.
+ * list since that report. It keeps no list of terminals, because the
+ * Terminal tool reads the list with its state when it shows.
  */
 export class ToolEvents {
   private readonly revokes: WorkspaceEventEnvelope[] = []
