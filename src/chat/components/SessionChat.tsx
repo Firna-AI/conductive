@@ -23,6 +23,7 @@ import { ChatPane } from './ChatPane'
 import { placeMemory } from './chat-place'
 import { ActionNotice, BlockNotice, LinkedSessionNotice } from './ChatNotices'
 import { Composer, type ComposerFocus } from './Composer'
+import type { ComposerTool } from './ComposerTools'
 import { SandboxBar, StartingCard, type SandboxProblem } from './SandboxState'
 import {
   EarlierLoading,
@@ -45,6 +46,7 @@ function problemOf(state: WorkspaceState | undefined): SandboxProblem | null {
  * workspace: the start steps at the end of the history while the sandbox
  * starts, and the bar under the chat while the sandbox is down. Null leaves
  * the place empty. Without a host, the chat draws both from its own record.
+ * The app also gives the tools of the composer, such as Capabilities.
  */
 export interface ChatHost {
   starting: ReactNode | null
@@ -54,6 +56,8 @@ export interface ChatHost {
    * members can still queue messages. Otherwise the bar takes its place.
    */
   keepsComposer: boolean
+  /** The tools of the composer, as `ComposerTool` says. */
+  tools?: readonly ComposerTool[]
 }
 
 export interface SessionChatProps {
@@ -237,6 +241,7 @@ export function SessionChat(props: SessionChatProps) {
           sessionAgent={hasMessages(state) ? session.choice.agent : undefined}
           startsSession={login?.kind === 'linked'}
           stopping={state.stopping}
+          tools={props.host?.tools}
         />
       ) : null}
     </>

@@ -137,6 +137,7 @@ describe('the files of a New workspace draft', () => {
       failed: 'failed',
       sent: {
         repositoryId: 'storefront',
+        capabilities: { preapprovedSecretIds: [], macAccess: true },
         firstMessage: {
           id: messageId,
           text: `Fix the flaky cart test. ${mentionText(await attachmentPath({ id: 'draft-attachment-2', name: 'notes.txt' }), false)} `,

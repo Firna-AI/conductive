@@ -43,7 +43,8 @@ is relative to `src/chat/`, the folder of this guide.
   `components/tab-nodes.ts`: the elements of the tabs, which the drag, the
   scroll, and the menu share.
 - `components/SessionChat.tsx`: the chat of the open session, and
-  `ChatHost`, the start steps and the sandbox bar that the app can draw.
+  `ChatHost`, the start steps, the sandbox bar, and the tools of the
+  composer that the app can give.
 - `components/Composer.tsx`: the message box and its controls, with the
   steering prompt that [Messages](../../docs/protocol/messages-and-attachments.md#messages)
   states. It gives its field the `files` of the draft, and it holds the
@@ -52,6 +53,20 @@ is relative to `src/chat/`, the folder of this guide.
   the zips and the refused folders of a drop to `controller.attachFiles`,
   and keeps one
   source for each `Draft.id`, in `useDraftFiles`.
+- `components/ComposerTools.tsx`: `ComposerTool`, a tool of the host, such
+  as Capabilities, and `ToolButton`, its icon with its label as a native
+  tooltip, whose control opens above the icon on a computer. A second
+  press, a press outside, Escape, and the key of the command palette close
+  it.
+- `components/ComposerMenu.tsx`: `ComposerStart`, the start of the bar of
+  every composer. A computer shows the attach button and the icon of each
+  tool. A phone shows one + button, "More options", whose menu holds
+  Attach files and a row for each tool. A tool then opens its control as a
+  sheet, and the focus goes back to the + button when the sheet closes
+  (secrets decision 16 G).
+- `components/ComposerButtons.tsx`: `StopButton`, Stop with its word and
+  its key on a computer, and only its icon on a phone, where its spoken
+  name stays "Stop" (secrets decision 16 G).
 - `components/composer-drop.ts`: `useComposerDrop`, the drop of files on a
   message box, which the chat and both New workspace composers share.
   [The message field](message-field.md) gives its rules.

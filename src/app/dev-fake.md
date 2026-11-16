@@ -143,6 +143,18 @@ the dev wiring in `dev/`, and what its fake routes do.
   of its routine does not show.
   The dev backend records each run's agent and owner when Run now starts it.
 
+- `dev/secret-routes.ts` serves the secrets of each org, as the Worker
+  does. Acme starts with the secrets of the mockups, with made-up values,
+  and the other orgs with none (`dev/secret-store.ts`). The list holds no
+  value. A member changes only the own secrets, and only an admin sets the
+  mark for all agents or reveals a value, which the fake records. A Replace
+  of the value ends the record of the last reveal, and a Delete ends each
+  grant of the secret. A suspended org refuses each write, also a reveal.
+  `dev/capability-routes.ts` serves the Capabilities of each workspace:
+  `checkout-autocomplete` pre-approves FIGMA_TOKEN and has two approvals of
+  its sessions, and a create keeps the choices of its control. The fake
+  keeps no value for a workspace, and a reload starts the secrets again.
+
 The development fake keeps each org's workspace number counter.
 A create gets the next number and a web link on the fake API origin.
 Workspace readers keep the number and link that the Worker supplies.

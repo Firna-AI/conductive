@@ -230,6 +230,9 @@ Replies, timers, and `waitFor` go on.
 - `recorded-files.ts` supplies complete browser reports, runner parts, consecutive tree deltas, reads, diffs, and a size error.
 - `recorded-repairs.ts` supplies the first losses, failed repairs, complete reports, and tree deltas of the data without a session, and stores failed repairs in the fake history.
 - `fixtures/core.ts` maps account and org samples to the shared contracts.
+- `fixtures/secrets.ts` maps the secrets of Acme in the mockups to the
+  shared contracts, with a made-up value of each, and the grants of
+  `checkout-autocomplete`. The tests and the dev fake share them.
 - `suspended-org.ts` serves Acme as a suspended org, and gives the body of an `org_suspended` refusal.
 - `operator.ts` serves the operator section of the samples, and gives the body of an `operator_required` refusal.
 - `waitlist.ts` serves a person who waits for app access, and gives the reply of a refused code. `fixtures/waitlist.ts` gives the person, the waitlist states, and the codes of the mockups.

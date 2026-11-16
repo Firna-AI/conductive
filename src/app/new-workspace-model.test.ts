@@ -94,6 +94,7 @@ describe('NewWorkspaceModel', () => {
     expect(await server.requests.at(-1)?.json()).toEqual({
       repositoryId: 'billing-service',
       sectionId: 'checkout',
+      capabilities: { preapprovedSecretIds: [], macAccess: true },
       firstMessage: {
         id: 'client-1',
         text: `Let shoppers save their cart. ${mentionText(await attachmentPath({ id: 'draft-attachment-1', name: 'postcode-overlap.png' }), false)}  `,

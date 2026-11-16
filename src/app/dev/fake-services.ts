@@ -32,6 +32,7 @@ import { routineRoutes } from './routine-routes'
 import { devFileTransport } from './progress-fixture'
 import { routeFetch, RouteError, type Route } from './router'
 import { runRoutes } from './run-routes'
+import { secretRoutes } from './secret-routes'
 import { sectionRoutes } from './section-routes'
 import { seedState } from './seed'
 import { settingsRoutes } from './settings-routes'
@@ -77,6 +78,7 @@ export function createFakeServices(search: string): AppServices {
     ...attachmentRoutes(backend, options.upload),
     ...attachmentFileRoutes(backend),
     ...settingsRoutes(backend),
+    ...secretRoutes(backend),
     ...buildRoutes(backend),
     ...routineRoutes(backend),
     ...runRoutes(backend),

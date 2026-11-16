@@ -251,6 +251,30 @@ the Help row of the command palette opens.
   files of the draft follow its marks, and a create that succeeds or a
   sign-out ends them, as
   [Attached files of a draft](../chat/draft-files.md) says.
+- The page and the dialog have the Capabilities icon, the Blocks icon with
+  its label as a native tooltip (secrets decision 6 G). On a computer the
+  page shows it after the attach button, and the dialog before it. Its
+  control opens above the icon. On a phone, one + button, "More options",
+  holds Attach files and Capabilities, which opens the control as a sheet
+  (secrets decision 16 G). The control lists the secrets of the org, which
+  it reads each time that it opens, with a checkbox that pre-approves each
+  one for the new workspace, and the switch of Mac access, on by default.
+  A secret for all agents stays checked and off. The draft keeps the
+  choices, the create sends them, and a create that succeeds ends them, so
+  the next draft starts again from the defaults. The create leaves out
+  each pre-approved secret that the last read no longer lists, and a
+  refusal of a missing secret reads the secrets again for Try again.
+- The Secrets tab of the org settings follows Cloud computer (secrets
+  decisions 2, 3, and 6). Its rights come from `secretRights` in
+  `permissions.ts`: every member adds secrets, a member replaces and
+  deletes only the secrets that the member added, and an admin replaces
+  and deletes each one, switches the mark for all agents, and reveals one
+  value at a time. A suspended org shows the tab with no action. The list
+  shows each value as dots, and the reader of the list keeps no value from
+  a reply. A revealed value shows on its own line with Copy and Hide, and
+  a new reveal, a Replace of its value, and its Delete hide it. Replace
+  sends only the fields that changed, and an empty new value keeps the
+  stored value. Delete asks first.
 - A create request that fails keeps the message in the form, with "The
   workspace wasn't created". Try again sends the same message ID. A failed
   first start keeps its workspace instead, as

@@ -16,7 +16,7 @@ import {
   type IntakeRefusals,
 } from './draft-files'
 import { reconcileFiles, withoutFileMarks } from './draft-file-state'
-import type { Draft } from './new-workspace-model'
+import type { Draft } from './new-workspace-draft'
 import type { Store } from './store'
 
 /** What the uploads of a New workspace draft take from its form. */

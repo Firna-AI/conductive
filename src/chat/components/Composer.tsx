@@ -1,7 +1,7 @@
 import type { AgentModel } from '../../shared/generated/AgentModel'
 import { useEffect, useRef, useState, type RefObject } from 'react'
 import { Button } from '@firna/ui/button'
-import { ArrowUp, Paperclip, Square } from 'lucide-react'
+import { ArrowUp, Paperclip } from 'lucide-react'
 import type { Agent } from '../../shared/generated/Agent'
 import type { AgentChoice } from '../../shared/generated/AgentChoice'
 import {
@@ -20,7 +20,7 @@ import {
 } from '../../../docs/mockups/src/components/chat/SessionLogin'
 import { useShortcutOffer } from '../../shell/shortcuts/shortcut-context'
 import type { Draft } from '../state/chat-snapshot'
-import { ActionButton, IconButton } from '../ui/actions'
+import { IconButton } from '../ui/actions'
 import { FolderNotice, noticedFolder, OversizeNotice } from './AttachmentChips'
 import type { FieldFiles } from './chip-field/attached-files'
 import { ChipTextField } from './chip-field/ChipTextField'
@@ -28,6 +28,9 @@ import type { FieldHandle } from './chip-field/focus-plugins'
 import local from './chat.module.css'
 import { useDropAreaHandlers } from './chat-drop-area'
 import { useComposerDrop } from './composer-drop'
+import { StopButton } from './ComposerButtons'
+import { ComposerStart } from './ComposerMenu'
+import type { ComposerTool } from './ComposerTools'
 import { ModelPicker } from './ModelPicker'
 import { useSendKey } from './send-key'
 
@@ -83,6 +86,12 @@ export interface ComposerProps {
   onChooseModel: (choice: AgentChoice) => void
   /** The field takes the focus when it shows, as `ComposerFocus` says. */
   focus?: ComposerFocus | null
+  /**
+   * The tools of the host, such as Capabilities. A computer shows each icon
+   * after the attach button. A phone holds Attach files and the tools in
+   * the menu of one + button.
+   */
+  tools?: readonly ComposerTool[]
 }
 
 /**
@@ -120,7 +129,10 @@ function useComposerKeys(props: {
 
 /**
  * The message box: the text, with a chip for each attached file at its
- * place, then a bar with the attach button, the model picker, and Send. The
+ * place, then a bar with the attach button, the icons of the tools of the
+ * host, such as Capabilities, the model picker, and Send. A phone holds
+ * Attach files and the tools in the menu of one + button, and shows Stop as
+ * its icon, so the model and a login label stay readable. The
  * files of a pick go into the text at the caret, or at the end when the text
  * has no caret, and a chip that leaves the text takes its file off the
  * draft. The whole box takes a drop of files, as `useComposerDrop` says,
@@ -198,11 +210,17 @@ export function Composer(props: ComposerProps) {
               value={draft.text}
             />
             <div className={styles.bar}>
-              <IconButton
-                icon={Paperclip}
-                label="Attach files"
-                onPress={pick}
-                shortcut="attach-files"
+              <ComposerStart
+                attach={pick}
+                attachButton={
+                  <IconButton
+                    icon={Paperclip}
+                    label="Attach files"
+                    onPress={pick}
+                    shortcut="attach-files"
+                  />
+                }
+                tools={props.tools ?? []}
               />
               <input
                 aria-hidden
@@ -226,14 +244,7 @@ export function Composer(props: ComposerProps) {
               {props.login ? <SessionLoginLabel {...props.login} /> : null}
               <span className={styles.spacer} />
               {props.running ? (
-                <ActionButton
-                  busy={props.stopping}
-                  icon={Square}
-                  onPress={props.onStop}
-                  shortcut="stop-agent"
-                >
-                  Stop
-                </ActionButton>
+                <StopButton onStop={props.onStop} stopping={props.stopping} />
               ) : null}
               <Button
                 accessibilityLabel="Send"

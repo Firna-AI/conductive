@@ -132,7 +132,10 @@ the Help row of the palette opens.
 - A screen never sets a value of an org. The stores of `OrgModel` are
   read-only for screens, and writes go through the actions and models.
 - A secret goes out once, through `SecretForm`, and the field is empty after
-  the save. No answer brings a stored secret back.
+  the save. No answer brings a stored secret back, except Reveal on the
+  Secrets tab: an admin gets the value of one secret of the org, which the
+  Worker records. Only the row of that secret shows it, until Hide, another
+  reveal, a Replace of its value, or its Delete.
 - The browser keeps only the panel sizes (`panels.ts` and
   `column-split.ts`) and the last workspaces (`last-workspaces.ts`). The
   panel sizes are the widths of the sidebar and the right column, and the

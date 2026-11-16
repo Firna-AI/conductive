@@ -5,7 +5,7 @@ import { FakeApiServer } from '../test-support/fake-api'
 import { FAKE_IDS } from '../test-support/fixtures/core'
 import { createApiClient } from './api/client'
 import { fileMark, literalText } from './draft-marks'
-import { draftReady } from './new-workspace-model'
+import { draftReady } from './new-workspace-draft'
 import { OrgModel } from './org-model'
 import { HeldRequests, testServices } from './test-kit'
 
