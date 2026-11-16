@@ -2,6 +2,7 @@ import { advanceStartStop } from './durable-start-stop'
 import { reconciledLifecycle } from './durable-reconciliation'
 import { recoverLifecycleTurns } from './durable-turns'
 import { isConfirmedStopped } from './confirmed-stop'
+import { expiredRestartLifecycle } from './durable-restart'
 import {
   IDLE_MS,
   RESTORE_POLL_MS,
@@ -36,6 +37,7 @@ export async function advanceLifecycleAlarm(
   ) {
     state = reconciledLifecycle(state, await hooks.reconcile(), now())
   }
+  state = expiredRestartLifecycle(state, now())
   if (isConfirmedStopped(state)) {
     if (
       state.nextDiskKeepaliveAt !== null &&

@@ -8,6 +8,7 @@ import {
   type LifecyclePublisher,
 } from './durable-types'
 import { isConfirmedStopped } from './confirmed-stop'
+import { restartDeadline } from './durable-restart'
 
 export async function writeLifecycleState(
   storage: LifecycleStorage,
@@ -93,6 +94,7 @@ export async function scheduleLifecycleState(
     const next = Math.min(
       alarm,
       hooks.checkRestore ? (state.restoreWatchAt ?? Infinity) : Infinity,
+      restartDeadline(state) ?? Infinity,
     )
     await storage.setAlarm(
       !state.runnerConnected && !isConfirmedStopped(state) && hooks.reconcile

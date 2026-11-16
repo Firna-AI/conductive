@@ -62,7 +62,9 @@ names a decision of the change that shortens the software step of a build.
   starts, such as at each start of the sandbox. It also checks every hour
   while the runner runs (sandbox software decision 5).
 - It downloads a newer release in the background. A start never waits for
-  a download.
+  a download. Only Restart in the workspace header waits for one, with a
+  limit of 60 seconds, as
+  [Restart the software](workspace-life.md#restart-the-software) says.
 - An update downloads only the parts that changed since the release that
   the sandbox runs.
 - The program installs only a release with a higher version than the
@@ -78,7 +80,9 @@ names a decision of the change that shortens the software step of a build.
 - The next start of the agent runner applies the newest complete download,
   before the runner starts its work.
 - The program never restarts the software to apply an update. Reason: a
-  restart during a session stops each running turn.
+  restart during a session stops each running turn. A member can restart
+  it with Restart in the workspace header, which then applies the newest
+  download.
 - The sandbox keeps the previous release. When the software of a new
   release fails to start, the next start runs the previous release again.
 - A sandbox without the program gets the program at its next start. That

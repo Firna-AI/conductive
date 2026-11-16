@@ -198,6 +198,22 @@ Creating a session without a message starts no computer.
 **Stop** in chat interrupts an agent turn.
 It is separate from the computer's automatic stop.
 
+## Restart the software
+
+Select the state in the workspace header, such as **Ready**, then **Restart**.
+Restart restarts Conductive's agent software and the port previews in the running computer.
+Use it when an agent or a preview stops responding, or to apply a software update now.
+Any member can restart a workspace while it is ready, working, needs input, or has unread output.
+
+Restart first downloads the newest software, for up to 60 seconds.
+If that download fails, a message says so, and the restart uses the installed software.
+The header shows **Starting** until the agents are back.
+
+Restart stops each running agent turn, so it asks first while an agent works.
+Terminals and the commands in them keep running.
+Files, sessions, and chat history stay.
+If the restart fails, the workspace shows an error with **Try again**.
+
 ## Recover from a failed start
 
 A computer start has a 20-minute limit.

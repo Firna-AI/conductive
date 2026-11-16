@@ -179,6 +179,7 @@ export const paths = {
   sessionChips: 'app/workspace-links/session-chips',
   loginNotShared: 'app/composer/not-shared',
   reassign: 'app/reassign',
+  restart: 'app/restart',
   archive: 'app/archive',
   justArchived: 'app/archive/just-archived',
   restored: 'app/archive/restored',

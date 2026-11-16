@@ -148,6 +148,8 @@ It downloads a newer release in the background.
 A start never waits for a download.
 A downloaded release applies at the software's next start.
 Conductive does not restart the software during a session to apply an update.
+To apply the newest release now, select the state in the workspace header, then **Restart**.
+Restart first downloads the newest release, for up to 60 seconds, as [Restart the software](/docs/workspaces#restart-the-software) says.
 
 A failed check or download leaves the current release in use.
 Conductive checks each downloaded file against its expected digest and refuses a broken release.

@@ -213,6 +213,9 @@ decision number names a dated record, as
   [Agents and sessions](agents-and-sessions.md#agents) says.
 - Every member can move a workspace to another section and rename it,
   while the workspace is not archived.
+- Every member of an org that is not suspended can restart the software of
+  a running workspace, as
+  [Restart the software](workspace-life.md#restart-the-software) says.
 - Every member can move a section to another place in the list, as each
   member can create, rename, and delete a section.
 - A member who is not an admin sees the Members tab and the owner of each

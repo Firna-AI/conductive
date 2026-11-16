@@ -1,0 +1,74 @@
+import { restartCopy } from '../../docs/mockups/src/components/workspace/restartCopy'
+import type { WorkspaceState } from '../../src/shared/generated/WorkspaceState'
+import { HttpError } from '../http'
+import type { DurableLifecycleState } from './durable-types'
+
+/** The runner must be ready again within this time after Restart. */
+export const SOFTWARE_RESTART_LIMIT_MS = 3 * 60 * 1_000
+
+/** The states whose software runs, so that Restart can restart it. */
+const RESTARTABLE: ReadonlySet<WorkspaceState> = new Set([
+  'ready',
+  'working',
+  'input',
+  'unread',
+])
+
+export function workspaceNotRunning(): HttpError {
+  return new HttpError(
+    409,
+    'workspace_not_running',
+    'The cloud computer is not running. Open the workspace and try again.',
+  )
+}
+
+/**
+ * Restart begins: the workspace shows Starting until the runner is ready
+ * again, as `readyLifecycle` says, or until the time limit ends it.
+ */
+export function restartingLifecycle(
+  state: DurableLifecycleState,
+  workspaceId: string,
+  now: number,
+): DurableLifecycleState {
+  if (state.workspaceId !== workspaceId)
+    throw new HttpError(
+      404,
+      'workspace_not_found',
+      'The workspace is not available.',
+    )
+  if (!RESTARTABLE.has(state.state) || state.startStop !== undefined)
+    throw workspaceNotRunning()
+  return { ...state, state: 'starting', softwareRestartAt: now, error: null }
+}
+
+/** A restart that failed, or did not end in time, shows the error state. */
+export function failedRestartLifecycle(
+  state: DurableLifecycleState,
+): DurableLifecycleState {
+  if (state.softwareRestartAt === undefined || state.state !== 'starting')
+    return state
+  return {
+    ...state,
+    state: 'error',
+    softwareRestartAt: undefined,
+    error: { code: 'restart_failed', message: restartCopy.failed, log: null },
+  }
+}
+
+/** The time when the alarm ends a restart whose runner is not back. */
+export function restartDeadline(state: DurableLifecycleState): number | null {
+  return state.softwareRestartAt === undefined || state.state !== 'starting'
+    ? null
+    : state.softwareRestartAt + SOFTWARE_RESTART_LIMIT_MS
+}
+
+export function expiredRestartLifecycle(
+  state: DurableLifecycleState,
+  now: number,
+): DurableLifecycleState {
+  const deadline = restartDeadline(state)
+  return deadline !== null && deadline <= now
+    ? failedRestartLifecycle(state)
+    : state
+}

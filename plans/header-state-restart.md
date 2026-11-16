@@ -103,8 +103,10 @@ decision.
 - **Header:** the header shows Starting from the press. The Worker shows
   Starting until the new runner is ready. Reason: the runner is away
   during the restart, and Ready would be wrong.
-- **The update check:** the Worker runs `conductive update check` as root
-  with a time limit of 60 seconds, then the restart. The reply of the
+- **The update check:** the Worker starts the unit of the hourly update
+  check, `conductive-update-check.service`, with a time limit of 60
+  seconds, then the restart. Changed during Milestone 3 from a direct
+  `conductive update check`, so that the two checks never run at once. The reply of the
   route says whether the check succeeded. When it failed, a toast says
   "Couldn't check for updates. The restart uses the installed software."
 - **The restart command:** under the lock that each start uses, the
@@ -116,6 +118,11 @@ decision.
   ready 3 minutes after the press, the workspace shows Couldn't start
   with "The software didn't restart. Try again." Try again resumes it,
   as for each other failed start.
+- **Where it runs:** the route lives in `worker/app-api/restart.ts`, as
+  Continue does. Only the begin and the failure run in the lifecycle queue
+  of the workspace object. The commands run outside it, so a slow update
+  check does not hold the chat and the runner events. My call, during
+  Milestone 3.
 - **Refusals:** the route refuses a workspace in another state with HTTP
   409 and `workspace_not_running`. The app shows the refusal in a toast.
 - **Stored data:** the lifecycle state of the workspace object gets one
@@ -138,33 +145,34 @@ Depends on: none
 Draw the header state as a menu button, its menu, the confirm step, and
 the Starting state after Restart, on desktop and on a phone.
 
-- [ ] Make `State` in
+- [x] Make `State` in
       `docs/mockups/src/components/workspace/WorkspaceHeader.tsx` a button
       with the shared `Menu` for the states that offer Restart. Keep plain
       text for the other states.
-- [ ] Add catalogue screens: the open menu on desktop, the sheet on a
+- [x] Add catalogue screens: the open menu on desktop, the sheet on a
       phone, the confirm step while Working, the header after Restart, the
       update check toast, and the Couldn't start state after a failed
       restart.
-- [ ] Add the screens to `docs/mockups/catalogue.md`.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
-- [ ] Update the design and the TODOs of this plan for each problem that
-      the mockups show.
+- [x] Add the screens to `docs/mockups/catalogue.md`.
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages.
+      Screenshots: `.context/restart-menu/mock-*.png`.
+- [x] Update the design and the TODOs of this plan for each problem that
+      the mockups show. The mockups showed no problem.
 
 ## Milestone 2: Documentation and protocol
 
 Depends on: 1
 
-- [ ] Add the section Restart to `docs/protocol/workspace-life.md`, with
+- [x] Add the section Restart to `docs/protocol/workspace-life.md`, with
       the rules of the Design above.
-- [ ] In `docs/protocol/sandbox-software.md`, change "The program never
+- [x] In `docs/protocol/sandbox-software.md`, change "The program never
       restarts the software to apply an update" and "A start never waits
       for a download" so that they name the exception of Restart.
-- [ ] Add Restart to the rules of each role in
+- [x] Add Restart to the rules of each role in
       `docs/protocol/orgs-and-members.md`.
-- [ ] Read both legal pages in full. Update each sentence that restates a
+- [x] Read both legal pages in full. Update each sentence that restates a
       changed fact.
-- [ ] Read each public guide in full. Update
+- [x] Read each public guide in full. Update
       `src/marketing/docs/cloud-computer.md`,
       `src/marketing/docs/workspaces.md`, and each other guide sentence
       that restates a changed fact.
@@ -173,26 +181,26 @@ Depends on: 1
 
 Depends on: 2
 
-- [ ] Add `workspacePaths.restart` to `src/shared/workspaces.ts`, with its
+- [x] Add `workspacePaths.restart` to `src/shared/workspaces.ts`, with its
       reply type.
-- [ ] Add the route `POST …/workspaces/<id>/restart` to
+- [x] Add the route `POST …/workspaces/<id>/restart` to
       `worker/lifecycle/browser.ts`, with the checks of a resume and the
       state check.
-- [ ] Add a serial method to the workspace object that begins the
+- [x] Add a serial method to the workspace object that begins the
       restart: it checks the state, stores the restart time, and shows
       Starting. `readyLifecycle` clears the restart time.
-- [ ] Run the update check and the restart command through the Boat
+- [x] Run the update check and the restart command through the Boat
       `command` route. Put the command text in its own module, beside
       `image-software.ts`.
-- [ ] Make the workspace alarm turn a restart without a ready runner after
+- [x] Make the workspace alarm turn a restart without a ready runner after
       3 minutes into the failed state. Make a failed command do the same.
-- [ ] Check that Try again starts the workspace again from this failed
-      state while the cloud computer still runs. When Boat refuses, stop
-      the cloud computer first, as the failed start path does.
-- [ ] Add Worker tests: access, the refused states, the command text, the
+- [x] Check that Try again starts the workspace again from this failed
+      state while the cloud computer still runs. Result: the start skips
+      the provider resume of a running sandbox, so no stop is needed.
+- [x] Add Worker tests: access, the refused states, the command text, the
       update check result, the ready runner, the failed command, and the
       time limit.
-- [ ] Update `worker/lifecycle/README.md` and
+- [x] Update `worker/lifecycle/README.md` and
       `worker/lifecycle/routes.md`.
 
 ## Milestone 4: The header menu
@@ -201,14 +209,16 @@ Tags: ui
 
 Depends on: 3
 
-- [ ] Make `State` in `src/shell/workspace/WorkspaceHeader.tsx` open the
+- [x] Make `State` in `src/shell/workspace/WorkspaceHeader.tsx` open the
       menu of the mockups, on desktop and on a phone.
-- [ ] Add the restart call to the workspace model, with Starting at the
+- [x] Add the restart call to the workspace model, with Starting at the
       press, the confirm step, and the toasts.
-- [ ] Add tests for the menu, the confirm step, the toasts, and the
+- [x] Add tests for the menu, the confirm step, the toasts, and the
       states without a menu.
-- [ ] Update `src/shell/workspace/README.md`.
-- [ ] Smoke-test Restart on a real workspace in the browser.
+- [x] Update `src/shell/workspace/README.md`.
+- [x] Smoke-test Restart in the browser, with the dev fake of
+      `npm run dev`. A real cloud computer was not available. Screenshots:
+      `.context/restart-menu/2-menu.png` and the files beside it.
 
 ## Milestone 5: Verification, commit, review, and pull request
 
