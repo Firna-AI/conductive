@@ -64,20 +64,23 @@ export const attachFilesLabel = 'Attach files'
 
 /**
  * The preview of an attached file in the composer, which the browser draws
- * from its own copy of the file. It shows a picture or text. Other files
- * show the title of a file without a preview, with the kinds that preview.
+ * from its own copy of the file. It shows a picture or text. Each title
+ * gives the positive fact, and the limits stay in the body, as the copy
+ * rules of the product say.
  */
-export const noPreviewTitle = 'No preview for this file'
 
-/** The kinds of file that the preview shows. */
-export const previewKindsBody = 'Previews show pictures and text files.'
+/** The title of a file of another kind, such as a zip. */
+export const previewKindsTitle = 'Previews show pictures and text files'
+
+/** The body of that title: what happens to the file. */
+export const sentWithMessageBody = 'The agent gets this file with the message.'
 
 /** The title of a picture or a text file over the preview limit. */
-export const tooLargeToPreviewTitle = 'This file is too large to preview'
+export const smallerFilesTitle = 'Previews show smaller files'
 
 /** The limits of the preview, as the body of that title gives them. */
 export const previewLimitBody =
-  'Previews show pictures up to 20 MB and text files up to 1 MB.'
+  'Pictures up to 20 MB and text files up to 1 MB.'
 
 /** The button that closes the preview. */
 export const closePreviewLabel = 'Close preview'

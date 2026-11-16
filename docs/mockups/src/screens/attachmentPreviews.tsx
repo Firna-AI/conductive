@@ -6,6 +6,7 @@ import {
   PeekPicture,
   PeekText,
   PreviewPicture,
+  PreviewTooLarge,
 } from '../components/chat/FilePreview'
 import { closePreviewLabel } from '../components/chat/attachmentCopy'
 import { IconButton } from '../components/common/actions'
@@ -18,7 +19,8 @@ import { CheckoutPicture, screenshotSize } from '../fixtures/pictures'
 import { X } from 'lucide-react'
 
 /** The files of the draft whose preview a view opens. */
-export type PreviewedFile = 'screenshot' | 'console-log' | 'folder-zip'
+export type PreviewedFile =
+  'screenshot' | 'console-log' | 'folder-zip' | 'large-log'
 
 /** The lines of the console log that the card of the pointer shows. */
 const peekLines = 6
@@ -55,6 +57,8 @@ function bodyOf(file: PreviewedFile) {
       return <CodeView code={consoleLogText.trimEnd()} />
     case 'folder-zip':
       return <NoPreview />
+    case 'large-log':
+      return <PreviewTooLarge />
   }
 }
 
@@ -62,6 +66,7 @@ const fileOf: Record<PreviewedFile, Attachment> = {
   screenshot: previewFiles.screenshot,
   'console-log': previewFiles.consoleLog,
   'folder-zip': previewFiles.folderZip,
+  'large-log': previewFiles.serverLog,
 }
 
 /** The dialog of the preview of a file of the draft, over the workspace. */

@@ -95,12 +95,15 @@ const pointerStates = new Set<ComposerKey>([
 
 /**
  * The card of a pointer that rests on the chip of the first file of the
- * draft, in the state that draws it.
+ * draft, in the state that draws it. A phone has no pointer, so it shows
+ * no card.
  */
-function peekOf(state: WorkspaceState, fresh: boolean) {
+function peekOf(state: WorkspaceState, fresh: boolean, viewport: Viewport) {
   const [first] = draftAttachments
-  if (fresh || state.composer !== 'attachment-peek' || !first) return undefined
-  return attachmentPeek(first)
+  if (fresh || viewport !== 'desktop' || !first) return undefined
+  return state.composer === 'attachment-peek'
+    ? attachmentPeek(first)
+    : undefined
 }
 
 /** The draft and the tree of each state that opens the list of `@`. */
@@ -250,6 +253,6 @@ export function composerFor(
       viewport === 'desktop',
     caret: drop?.caret,
     pointer: !fresh && pointerStates.has(state.composer),
-    peek: peekOf(state, fresh),
+    peek: peekOf(state, fresh, viewport),
   }
 }

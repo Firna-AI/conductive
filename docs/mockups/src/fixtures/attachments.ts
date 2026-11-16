@@ -251,8 +251,22 @@ export const firstMessageDrafts = {
   'drop-over': [notes],
 } as const satisfies Record<string, readonly Attachment[]>
 
+/** A full server log over the 1 MB limit of a text preview. */
+const serverLog: Attachment = {
+  id: 'server-log',
+  name: 'checkout-server.log',
+  kind: 'file',
+  sizeBytes: 50_331_648,
+  path: '.context/attachments/2d7f9a4c6e1b8035f9a2c4d7e6b1f083/checkout-server.log',
+}
+
 /** The files of the draft whose preview the mockups open. */
-export const previewFiles = { screenshot, consoleLog, folderZip } as const
+export const previewFiles = {
+  screenshot,
+  consoleLog,
+  folderZip,
+  serverLog,
+} as const
 
 /** The text of the console log, which its preview shows. */
 export const consoleLogText = `[12:04:18.201] checkout: mounted AddressForm

@@ -13,7 +13,9 @@ const previewSchema = {
   properties: {
     ...workspaceStateSchema.properties,
     /** The file whose preview is open, or none. */
-    preview: { enum: ['none', 'screenshot', 'console-log', 'folder-zip'] },
+    preview: {
+      enum: ['none', 'screenshot', 'console-log', 'folder-zip', 'large-log'],
+    },
   },
 } as const
 
@@ -51,17 +53,26 @@ export const attachmentsPreview = defineScreen({
       description:
         'Cal pressed the name of the console log. The dialog shows the text of the log with line numbers, as the file tab shows a text file. A long text scrolls inside the dialog.',
       rationale:
-        'A text file of up to 1 MB shows its text, and a picture of up to 20 MB shows its picture. A larger file shows that it is too large to preview, so the tab of the browser never decodes a large file. The browser reads the file as UTF-8, and a file that is not UTF-8 text has no preview.',
+        'A text file of up to 1 MB shows its text, and a picture of up to 20 MB shows its picture. A larger file says that previews show smaller files, with the two limits, so the tab of the browser never decodes a large file. The browser reads the file as UTF-8, and a file that is not UTF-8 text has no preview.',
       props: { preview: 'console-log' },
     },
     {
       slug: 'none',
       title: 'File without a preview',
       description:
-        'Cal dropped a folder, which uploads as a zip, and pressed the name of the zip. The dialog says that this file has no preview, and that previews show pictures and text files. The preview opens also while the file uploads.',
+        'Cal dropped a folder, which uploads as a zip, and pressed the name of the zip. The dialog says that previews show pictures and text files, and that the agent gets this file with the message. The preview opens also while the file uploads.',
       rationale:
         'The browser can draw only pictures and text. Other files keep the same dialog, so a press on each chip works the same way.',
       props: { composer: 'dropped-folder', preview: 'folder-zip' },
+    },
+    {
+      slug: 'too-large',
+      title: 'File over the preview limit',
+      description:
+        'Cal pressed the name of a full server log of 48 MB in the message box. The dialog says that previews show smaller files: pictures up to 20 MB and text files up to 1 MB.',
+      rationale:
+        'The tab of the browser holds the whole text of a preview, and a picture loads from a data: address that holds all its bytes. The limits keep both small. The title gives the positive fact, and the limits stay in the body, as the copy rules of the product say.',
+      props: { composer: 'attachments', preview: 'large-log' },
     },
   ],
 })

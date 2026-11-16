@@ -84,9 +84,10 @@ text of the message box. `app/attachments/drop` shows a drop of files into
 the text, a dropped folder that attaches as its zip, and a folder that the
 browser cannot read, which the box does not attach.
 `app/attachments/open` shows the temporary tab that a press on a sent chip
-opens, with the picture of the screenshot. The other child pages show a
-failed upload, a file over 1 GB, the sent message, and the files of a
-queued first message. `app/attachments/missing` shows a Try again that
+opens, with the picture of the screenshot. `app/attachments/preview` shows
+the preview of a file of the draft before Send, and the card of a mouse
+that rests on its chip. The other child pages show a failed upload, a file
+over 1 GB, the sent message, and the files of a queued first message. `app/attachments/missing` shows a Try again that
 failed, because a file of its message is no longer in the cloud computer.
 `app/files/image` shows the picture of an image file in its tab, and an
 image that the browser cannot draw. The flow `user-flows/drop-a-file` goes

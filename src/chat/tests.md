@@ -197,9 +197,21 @@ and make no chip, also after the draft comes back. A picked file mention
 whose path holds such characters keeps its chip and its exact path beside
 an attached file. A drag moves a chip with its file and gives its
 mention, and a drop inside the dragged text keeps it.
+`components/chip-field/FilePreview.dom.test.tsx` opens the preview of an
+attached file from the name of its chip: the text of a text file, the
+state of a file without a preview, and the state of a picture over 20 MB.
+Escape and Close close it, and the field is inert while it shows. A mouse
+that rests 400 ms on a chip shows the card with the first lines, and a
+shorter rest or a touch shows none.
+`components/chip-field/local-preview.test.ts` checks the text rule of the
+preview, its limits, and the first lines of the card.
+`src/shell/new-workspace/NewWorkspacePreview.test.tsx` opens the preview
+inside the New workspace dialog: Tab stays on Close, and Escape or a press
+on the dimmed app closes only the preview.
 `components/chip-field/attached-field-test-kit.tsx` mounts the field with
 a store of draft files and an owner that can show another draft, and with
-the files of a workspace when a test gives a tree.
+the files of a workspace when a test gives a tree. It wraps the field in
+the overlay layer, which holds the preview dialog.
 `components/chip-field/attached-field-events.ts` drives the selection, the
 clipboard, and the drags of the field, and lays out a point, which
 happy-dom cannot do.

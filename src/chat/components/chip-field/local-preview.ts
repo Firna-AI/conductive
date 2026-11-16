@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { PictureSize } from '../../../../docs/mockups/src/components/files/ImageView'
 import { decodePicture } from '../../../files/page/decode-picture'
+import { decodeUtf8 } from '../../../shared/utf8'
 
 /**
  * The most bytes of a text file that the preview dialog shows. A larger
@@ -42,17 +43,14 @@ const loading: LocalPreview = { kind: 'loading' }
 
 /**
  * The text of bytes that are UTF-8 without a NUL character, as git decides
- * for a text file, or null. `partial` says that more bytes follow, so a
- * character that the end of the bytes cuts in two still counts as text.
+ * for a text file and as the file tab reads it, or null. `partial` says
+ * that more bytes follow. The text has no leading byte order mark, as the
+ * view text of the file tab.
  */
 export function textOf(bytes: Uint8Array, partial: boolean): string | null {
   if (bytes.includes(0)) return null
-  try {
-    const decoder = new TextDecoder('utf-8', { fatal: true })
-    return decoder.decode(bytes, { stream: partial })
-  } catch {
-    return null
-  }
+  const text = decodeUtf8(bytes, partial)
+  return text?.startsWith('\uFEFF') ? text.slice(1) : text
 }
 
 async function bytesOf(file: Blob, end: number): Promise<Uint8Array> {

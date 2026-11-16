@@ -5,10 +5,10 @@ import layer from '../common/ConfirmDialog.module.css'
 import { ImageView, type PictureSize } from '../files/ImageView'
 import { KindIcon, type ChipFile } from './attachedFileParts'
 import {
-  noPreviewTitle,
-  previewKindsBody,
+  previewKindsTitle,
   previewLimitBody,
-  tooLargeToPreviewTitle,
+  sentWithMessageBody,
+  smallerFilesTitle,
 } from './attachmentCopy'
 import { formatSize } from './sizes'
 import styles from './FilePreview.module.css'
@@ -78,7 +78,11 @@ export function PreviewPicture(props: {
 /** The body of a file that the preview does not show, such as a zip. */
 export function NoPreview() {
   return (
-    <EmptyState body={previewKindsBody} icon={FileBox} title={noPreviewTitle} />
+    <EmptyState
+      body={sentWithMessageBody}
+      icon={FileBox}
+      title={previewKindsTitle}
+    />
   )
 }
 
@@ -88,7 +92,7 @@ export function PreviewTooLarge() {
     <EmptyState
       body={previewLimitBody}
       icon={FileWarning}
-      title={tooLargeToPreviewTitle}
+      title={smallerFilesTitle}
     />
   )
 }

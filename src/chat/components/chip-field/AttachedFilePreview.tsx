@@ -1,4 +1,10 @@
-import { useEffect, useRef, type RefObject, type SyntheticEvent } from 'react'
+import {
+  useEffect,
+  useRef,
+  type DragEvent,
+  type RefObject,
+  type SyntheticEvent,
+} from 'react'
 import { X } from 'lucide-react'
 import type { ChipFile } from '../../../../docs/mockups/src/components/chat/attachedFileParts'
 import { closePreviewLabel } from '../../../../docs/mockups/src/components/chat/attachmentCopy'
@@ -67,11 +73,13 @@ function stop(event: SyntheticEvent) {
 
 /**
  * A drag over the dialog attaches nothing, and the browser opens no
- * dropped file in its tab.
+ * dropped file in its tab. The pointer shows that a drop does nothing, as
+ * the file drop guard of the app shows it elsewhere.
  */
-function refuseDrop(event: SyntheticEvent) {
+function refuseDrop(event: DragEvent) {
   event.stopPropagation()
   event.preventDefault()
+  if (event.dataTransfer) event.dataTransfer.dropEffect = 'none'
 }
 
 /** Makes `element` inert until the result runs, which restores it. */

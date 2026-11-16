@@ -96,26 +96,31 @@ export function FieldAttachedChip(props: { id: string; nodeKey: NodeKey }) {
     focusField(editor)
   }
   const file = { chip: chipFileOf(item), file: item.file }
+  // The dialog sits beside the hover box, not inside it: React passes the
+  // events of a portal to its React parents, so a pointer over the dimmed
+  // app would else count as a pointer that rests on the chip.
   return (
-    <span
-      onPointerDown={peek.hide}
-      onPointerEnter={peek.enter}
-      onPointerLeave={peek.hide}
-      ref={anchor}
-    >
-      <DraftFileChip
-        file={file.chip}
-        onOpen={() => {
-          peek.hide()
-          setOpen(true)
-        }}
-        onRetry={retry}
-        removal={{ name: nameOf(item), onRemove: remove }}
-        upload={chipUploadOf(item)}
-      />
-      {peek.shown && !open ? (
-        <FilePeekLayer anchor={anchor} file={file} />
-      ) : null}
+    <>
+      <span
+        onPointerDown={peek.hide}
+        onPointerEnter={peek.enter}
+        onPointerLeave={peek.hide}
+        ref={anchor}
+      >
+        <DraftFileChip
+          file={file.chip}
+          onOpen={() => {
+            peek.hide()
+            setOpen(true)
+          }}
+          onRetry={retry}
+          removal={{ name: nameOf(item), onRemove: remove }}
+          upload={chipUploadOf(item)}
+        />
+        {peek.shown && !open ? (
+          <FilePeekLayer anchor={anchor} file={file} />
+        ) : null}
+      </span>
       {open ? (
         <FilePreviewLayer
           close={() => setOpen(false)}
@@ -123,6 +128,6 @@ export function FieldAttachedChip(props: { id: string; nodeKey: NodeKey }) {
           file={file}
         />
       ) : null}
-    </span>
+    </>
   )
 }

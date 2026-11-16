@@ -27,6 +27,12 @@ shows only its canonical screen. Its child pages:
 - `app/attachments/sent` has the sent message, with each file as a chip at
   its place, while the agent answers. Its `listed` variant has a message
   whose text holds no mention of its files, so they show under it.
+- `app/attachments/preview` has the preview of the screenshot of the draft
+  before Send, in a dialog over the app. A press on the name of its chip
+  opens it. Its `peek` variant has the card of a mouse that rests on the
+  chip, with the picture. A phone shows no card. Its `text` variant has the
+  console log with line numbers, its `none` variant a zip without a
+  preview, and its `too-large` variant a log over the 1 MB limit.
 - `app/attachments/open` has the copy of the screenshot in the temporary
   tab, with its picture. A press on the sent chip of the screenshot opens
   it there.
