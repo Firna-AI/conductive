@@ -96,82 +96,101 @@ Check the numbers on `main` before the merge.
 
 Open. Asked on 16 November 2026.
 
-- **Severity:** High. **Effort:** Small.
+- **Severity:** High. **Effort:** Medium.
 - **Source:** Design.
 - **Category:** Docs or spec.
-- **Location:** `worker/previews/access.ts:105`
+- **Location:** `worker/previews/proxy.ts:103`
 - **Background:** A cloud computer stops after 30 minutes without user
-  activity, as [Stop and resume](../docs/protocol/workspace-life.md#stop-and-resume)
-  says. Today each request and each socket handshake of a preview counts
-  as activity, so a page that the user clicks through keeps the computer
-  running. A stop ends every process, also the dev server. Cal wrote that
-  previews "should never keep the cloud computer alive/awake".
-- **Problem:** The words can mean the preview record, or every request
-  through a preview. A request from the user's clicks in the page looks
-  the same to the server as a request from a page that polls by itself.
-- **Impact if no action:** A page that polls keeps the computer running
-  for as long as it stays open in a browser.
-- **Root question:** Which use of a preview, if any, counts as activity
-  that keeps the cloud computer running?
+  activity and without an agent turn, as
+  [Stop and resume](../docs/protocol/workspace-life.md#stop-and-resume)
+  says. A stop ends every process, also the dev server, and every preview.
+  Today each request and each socket handshake of a preview counts as
+  activity. Cal wrote that previews "should never keep the cloud computer
+  alive/awake".
+- **Problem:** To the server, a request from the user's click looks the
+  same as a request from a page that polls by itself. A page that polls
+  keeps the computer running for up to 24 hours. Kept pages of hidden tabs
+  make this worse.
+- **Impact if no action:** A forgotten page can keep a computer running
+  for a day.
+- **Root question:** How does the app tell the user's own work in a
+  preview from a page that runs by itself, so that only the user's work
+  keeps the computer running?
 - **Options:**
   - **A.** No preview request counts. The computer stops 30 minutes after
-    the last other activity, also while the user clicks through the page.
-    The dev server then ends. Effort: Small.
-  - **B.** Only a page load in the frame or the browser tab counts: a
-    request with `Sec-Fetch-Mode: navigate`. Background requests, such as
-    polling, do not count. A click in a single-page app that loads no page
-    does not count either. Effort: Small.
-  - **C.** Keep today: each request and each socket handshake counts. Only
-    the end of the preview record changes. A page that polls keeps the
-    computer running. Effort: Small.
-- **Left out:** A report from the app while the page shows. An open tab
+    the last other input, also while the user clicks through the page. The
+    stop ends the dev server and the preview, with its cookies. Effort:
+    Small.
+  - **B.** Only a page load that the user starts counts: a request with
+    `Sec-Fetch-User: ?1`. A click in a single-page app that loads no page
+    does not count. Effort: Small.
+  - **C.** Keep today: each request and each handshake counts. A page that
+    polls keeps the computer running. Effort: Small.
+  - **D.** Count the user's input in the preview, not its traffic. The
+    browser tells the app page when the user clicks or types in a frame.
+    The app counts that as its own input, as it counts terminal keys. In a
+    separate browser tab, B's rule applies. The browsers must be checked
+    for this signal. Scrolling alone does not count. Effort: Medium. Added
+    by the options check.
+  - **E.** A, and the app warns a few minutes before an idle stop, with
+    Keep running. It adds a notice to every workspace. Effort: Large.
+    Added by the options check.
+- **Left out:** A report from the app while a page shows. An open tab
   alone is not activity, by the rule of Stop and resume.
-- **Wider fix:** None.
-- **Previous examples:** Socket frames and open connections already do not
-  count, for the same reason.
-- **Recommendation:** A. It is the literal meaning of "never", and it is the
-  only option where no page can keep the computer running.
-- **Action:** ask the user, because A changes the rule of Stop and resume
-  and can stop a computer while the user works in the page.
+- **Wider fix:** E. It covers all quiet work that the app cannot see.
+- **Previous examples:** The terminal counts the user's keys, not its
+  socket frames.
+- **Recommendation:** D. Only the user's own clicks and keys in a preview
+  keep the computer running, and no page keeps it running by itself. If
+  the browser check fails, use B. The first recommendation was A.
+- **Action:** ask the user, because the options have real trade-offs and
+  the words "never keep the cloud computer awake" fit A and D.
 
-### 294. What keeps a preview open before it ends by itself
+### 294. Whether a preview has its own end before the computer stops
 
 Open. Asked on 16 November 2026.
 
-- **Severity:** Medium. **Effort:** Medium.
+- **Severity:** Medium. **Effort:** Small.
 - **Source:** Design.
 - **Category:** Docs or spec.
 - **Location:** `worker/previews/actions.ts:88`
-- **Background:** Today a preview ends after 24 hours, at a stop of the
-  computer, or when a user or an agent closes it. Cal chose an end after a
-  time without use (item 292). The app opens a new preview when the user
-  shows a tab whose preview ended. A new preview loads the page again, so
-  the page loses its state, such as a filled form.
-- **Problem:** No rule says what "use" of a preview is, or how long the
-  time is.
-- **Impact if no action:** The Worker cannot end a preview by itself.
-- **Root question:** What use keeps a preview open, so that a page that
-  the user reads does not end under them?
+- **Background:** Today a preview ends at a stop of the computer, after 24
+  hours, or when a user or an agent closes it. Cal chose an end after a
+  time without use, with no notice (item 292). A new preview gets a new
+  address. So a reopen loads the page again and loses the cookies, the
+  storage, and the sign-in of the previewed app.
+- **Problem:** No rule says whether a preview needs its own clock, or what
+  use keeps it open.
+- **Impact if no action:** Previews end only at a stop, after 24 hours, or
+  by an agent. That is option D.
+- **Root question:** Does a preview need its own end before the computer
+  stops? If it does, what use keeps it open?
 - **Options:**
-  - **A.** Each request and each socket handshake through the preview
-    resets a clock of 30 minutes. A user who reads one page for 30 minutes
-    finds a dead page. Effort: Small.
-  - **B.** A, and the app also reports while the tab of the preview shows
-    in a browser window that has the focus. The report keeps only the
-    preview open, not the computer. A hidden tab ends after 30 minutes and
-    loads again at its next show. Effort: Medium.
-  - **C.** A, and each socket message counts too. A page with live reload
-    stays open while any browser holds it, also a forgotten tab. Effort:
-    Small.
-- **Left out:** A clock without any use, such as a plain 30 minutes. It ends
-  pages in use.
-- **Wider fix:** None.
-- **Previous examples:** The idle stop of the computer, which counts input
-  and not open tabs.
-- **Recommendation:** B. A page on the screen never ends under the user,
-  and a hidden one ends soon.
-- **Action:** ask the user, because the options have real trade-offs and no
-  requirement covers the length or the signal.
+  - **A.** Each request and each handshake through the preview resets a
+    clock of 30 minutes. A user who reads one page for 30 minutes finds a
+    dead page. A hidden page that polls keeps its preview. Effort: Medium.
+  - **B.** A, and the app also reports while the tab of the preview shows.
+    The report keeps only the preview open, not the computer. Effort:
+    Large.
+  - **C.** A, and each socket message counts too. Effort: Medium.
+  - **D.** No clock for each preview. A preview ends when the computer
+    stops, after 24 hours, or when an agent closes it. The stop already
+    follows 30 minutes without use, so the preview ends after a time
+    without use. Only docs change. With 293 C, a page that polls keeps
+    both running. Effort: Small. Added by the options check.
+  - **E.** One address for each port of a workspace, kept across reopens.
+    A reopen keeps the cookies and the sign-in of the previewed app. It
+    changes an access rule. Effort: Large. Added by the options check.
+- **Left out:** A plain 30 minutes with no use signal. It ends pages in use.
+- **Wider fix:** E. It removes the main cost of every end, also of the end
+  at a stop. It is out of the scope of this change.
+- **Previous examples:** None found.
+- **Related:** Item 293. D fits 293 A, B, D, and E, not 293 C.
+- **Recommendation:** D. It meets item 292 through the stop, needs no new
+  code, and never reloads a page in use while the computer runs. The first
+  recommendation was B.
+- **Action:** ask the user, because the options have real trade-offs and
+  the answer depends on item 293.
 
 ## Design
 
