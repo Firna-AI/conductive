@@ -18,9 +18,14 @@ import {
  * last. From the layer itself, which takes the focus on a press outside its
  * controls, Tab goes to the first and Shift+Tab to the last. The layer
  * listens in the capture phase, because a text field stops its key events.
+ * A key of a layer that a part of this layer opens in the overlay, such as
+ * the preview of an attached file in the New workspace dialog, reaches
+ * this layer through React, but that layer keeps its own Tab.
  */
 export function trapTab(event: KeyboardEvent<HTMLElement>): void {
   if (event.key !== 'Tab') return
+  const target = event.target
+  if (target instanceof Node && !event.currentTarget.contains(target)) return
   const tabbable = Array.from(
     event.currentTarget.querySelectorAll<HTMLElement>(focusableSelector),
   ).filter((element) => element.tabIndex >= 0)

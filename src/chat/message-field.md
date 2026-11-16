@@ -203,7 +203,14 @@ that those chips show, from the attach to the send.
 - In `components/chip-field/`, `attached-files.tsx` holds `FieldFiles`,
   its provider, and what a chip shows of a draft file.
   `attached-file-node.tsx` holds the node of an attached file, whose text
-  is its mark, and `attached-file-chip.tsx` draws its live chip.
+  is its mark, and `attached-file-chip.tsx` draws its live chip, with the
+  card of a resting pointer and the preview dialog of a press on its name.
+  `AttachedFilePreview.tsx` holds that card and that dialog, and
+  `local-preview.ts` reads the picture or the text of the browser's own
+  copy of the file, as
+  [The chip in the field](../../docs/protocol/message-attachments.md#the-chip-in-the-field)
+  says. While the dialog shows, the field is inert, because its editor
+  takes the focus back at each update of its selection.
   `owned-files.ts` takes the chip of a file that leaves the draft out of
   the text. `insert-files.ts` puts the chips of `insertFiles` in place.
   `point-caret.ts` finds the caret and the box of the drop caret at a

@@ -250,3 +250,18 @@ export const firstMessageDrafts = {
   ready: firstMessageAttachments,
   'drop-over': [notes],
 } as const satisfies Record<string, readonly Attachment[]>
+
+/** The files of the draft whose preview the mockups open. */
+export const previewFiles = { screenshot, consoleLog, folderZip } as const
+
+/** The text of the console log, which its preview shows. */
+export const consoleLogText = `[12:04:18.201] checkout: mounted AddressForm
+[12:04:18.233] autocomplete: session started
+[12:04:21.870] autocomplete: query "12 Lime St" -> 5 suggestions
+[12:04:21.874] layout: suggestions list height 236px
+[12:04:21.875] layout: postcode field top 412px, list bottom 498px
+[12:04:22.412] warn: suggestions list overlaps the postcode field
+[12:04:24.019] autocomplete: selected "12 Lime Street, London"
+[12:04:24.020] checkout: postcode filled "EC3M 7AA"
+[12:04:24.731] checkout: validation passed
+`

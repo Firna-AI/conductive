@@ -1,0 +1,155 @@
+/*
+ * The preview of an attached file in the composer: a dialog over the
+ * dimmed app, and a small card above the chip under the pointer. The layer
+ * and the scrim of the dialog come from ConfirmDialog.module.css.
+ */
+
+/*
+ * The box of the dialog. It is as large as the frame allows, up to 960 by
+ * 720 px, so a picture and a text file both have room. A card with a full
+ * hairline outline, as every card of the app.
+ */
+.dialog {
+  display: flex;
+  position: relative;
+  flex-direction: column;
+  width: min(960px, 100%);
+  height: min(720px, 100%);
+  overflow: hidden;
+  border: 1px solid var(--ui-border2);
+  border-radius: var(--ui-radius-xl);
+  background: var(--ui-composer);
+  box-shadow: 0 24px 60px -24px var(--ui-shadow);
+  box-sizing: border-box;
+}
+
+/* The name and the size of the file, and Close at the end. */
+.header {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px 6px 14px;
+  border-bottom: 1px solid var(--ui-border);
+}
+
+.glyph {
+  display: inline-flex;
+  flex-shrink: 0;
+  color: var(--ui-muted);
+}
+
+/* A long name gives way at its end. */
+.name {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  color: var(--ui-ink);
+  font-size: var(--ui-text-md);
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.size {
+  flex-shrink: 0;
+  color: var(--ui-muted);
+  font-family: var(--ui-font-label);
+  font-size: var(--ui-text-sm);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.close {
+  display: inline-flex;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+/* The picture, the text, or the state of a file without a preview. */
+.body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--ui-surface);
+}
+
+/*
+ * The card above the chip under the pointer. It takes no pointer, so the
+ * pointer stays on the chip below it.
+ */
+.peek {
+  display: flex;
+  flex-direction: column;
+  width: 240px;
+  overflow: hidden;
+  border: 1px solid var(--ui-border2);
+  border-radius: var(--ui-radius-lg);
+  background: var(--ui-composer);
+  box-shadow: 0 12px 32px -12px var(--ui-shadow);
+  pointer-events: none;
+  box-sizing: border-box;
+}
+
+/* The picture of the card keeps its proportions in a box 140 px high. */
+.peekPicture {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 140px;
+  border-bottom: 1px solid var(--ui-border);
+  background: var(--ui-surface);
+}
+
+.peekPicture > img,
+.peekPicture > svg {
+  display: block;
+  max-width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* The first lines of a text file, cut at the end of the card. */
+.peekText {
+  max-height: 120px;
+  margin: 0;
+  padding: 8px 10px;
+  overflow: hidden;
+  border-bottom: 1px solid var(--ui-border);
+  background: var(--ui-surface);
+  color: var(--ui-ink2);
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-text-xs);
+  line-height: 1.5;
+  white-space: pre;
+}
+
+/* The name and the size of the file, under the picture or the text. */
+.peekFooter {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  font-size: var(--ui-text-sm);
+}
+
+.peekFooter .name {
+  font-size: var(--ui-text-sm);
+}
+
+/*
+ * A view of the mockups runs no script, so it draws the card in place:
+ * above the chip, at its start edge.
+ */
+.peekSpot {
+  position: absolute;
+  z-index: 5;
+  bottom: calc(100% + 6px);
+  left: 0;
+}
+
+/* The box of a chip with its card in a view, which places the card. */
+.peekAnchor {
+  position: relative;
+}

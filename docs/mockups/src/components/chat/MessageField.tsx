@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { InputFrame } from '@firna/ui/input'
 import type { Attachment } from '../../fixtures/attachments'
 import { noop } from '../../noop'
@@ -13,7 +14,8 @@ import { DraftText, holdsChips } from './DraftText'
  * `files` are the files of the draft, whose chips stand at their marks.
  * Any other draft shows in the plain text field. Both fields show at least
  * `lines` lines, and they grow up to `maxLines`. `pointer` draws the
- * pointer over the icon of the first chip, as a view cannot hover, and
+ * pointer over the icon of the first chip, as a view cannot hover, `peek`
+ * draws the card of a pointer that rests on the first attached file, and
  * `caret` draws the caret at that index of the text.
  */
 export function MessageField(props: {
@@ -23,6 +25,7 @@ export function MessageField(props: {
   maxLines: number
   files?: readonly Attachment[]
   pointer?: boolean
+  peek?: ReactNode
   caret?: number
 }) {
   const { field } = useControlSizes()
@@ -33,10 +36,12 @@ export function MessageField(props: {
         label="Message"
         lines={props.lines}
         maxLines={props.maxLines}
+        overflow={props.peek !== undefined}
       >
         <DraftText
           caret={props.caret}
           files={props.files}
+          peek={props.peek}
           pointer={props.pointer}
           text={props.text}
         />

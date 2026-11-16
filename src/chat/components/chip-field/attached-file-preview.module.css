@@ -1,0 +1,38 @@
+/*
+ * The app parts of the preview of an attached file. The mockups draw the
+ * dialog and the card in FilePreview.module.css.
+ */
+
+/* The wrapper of the dialog, which only stops its events, takes no box. */
+.events {
+  display: contents;
+}
+
+/* The picture of an image file, which fills the box of the image view. */
+.picture {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/*
+ * The layer of the card of the pointer: a manual popover in the top layer,
+ * which `PopoverSurface` places above the chip. It replaces the browser's
+ * popover style, and it takes no pointer, so the pointer stays on the chip.
+ * A closed popover keeps the browser's `display: none`.
+ */
+.peekLayer {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  padding: 0;
+  overflow: visible;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  pointer-events: none;
+}
+
+.peekLayer:popover-open {
+  display: flex;
+}

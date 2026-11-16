@@ -55,6 +55,9 @@ In a workspace chat, you can drop files anywhere on the chat, also on the transc
 The chat, **New workspace** page, and **New workspace** dialog all accept files.
 Each file appears as a file chip, a small box in the text.
 The chip shows the file's name and upload state.
+Rest the pointer on a chip to see a small preview of the file.
+Select the file's name to open a larger preview.
+The preview shows pictures and text files.
 
 A picked file goes at the text cursor, or at the end if the field has no cursor.
 A file dropped on the text goes where you drop it.

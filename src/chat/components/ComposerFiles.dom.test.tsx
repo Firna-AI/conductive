@@ -59,7 +59,7 @@ describe('the files of the chat composer', () => {
     })
   })
 
-  test('each chip shows the upload of its file: the measured percent, Uploading before a measurement, the size when it is ready, and Try again only on a failed upload', async () => {
+  test('each chip shows the upload of its file: the measured percent, Uploading before a measurement, the size when it is ready, and Try again only on a failed upload, and its name opens its preview', async () => {
     const view = await mountComposer()
     // Each pick has its own queue, so the upload of each starts at once.
     await pickFiles(view.root, [picked('sketch.png', 'png')])
@@ -100,9 +100,13 @@ describe('the files of the chat composer', () => {
       ],
       buttons: [
         'Remove sketch.png',
+        'Attached file sketch.png',
         'Remove notes.txt',
+        'Attached file notes.txt',
         'Remove overlap.png',
+        'Attached file overlap.png',
         'Remove console.log',
+        'Attached file console.log',
         'Upload console.log again',
       ],
       progress: [

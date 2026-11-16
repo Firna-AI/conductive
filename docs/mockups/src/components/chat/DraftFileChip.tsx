@@ -83,15 +83,19 @@ function label(file: ChipFile, upload: ChipUpload): string {
  * keyboard focus, and `onRetry` uploads the same file again.
  *
  * Under a pointer, a × takes the place of the glyph, and a press removes
- * the chip. Where no pointer hovers, a × ends the chip. A press on the name
- * opens nothing, because the cloud computer gets the file only when the
- * turn of its message starts. It takes no fixtures, so the app can draw it.
+ * the chip. Where no pointer hovers, a × ends the chip. With `onOpen`, a
+ * press on the name opens the preview of the file, which the browser draws
+ * from its own copy, because the cloud computer gets the file only when the
+ * turn of its message starts. The press takes no focus, so the caret stays
+ * in the field. It takes no fixtures, so the app can draw it.
  */
 export function DraftFileChip(props: {
   file: ChipFile
   upload: ChipUpload
   removal: ChipRemoval
   onRetry?: () => void
+  /** Opens the preview of the file. */
+  onOpen?: () => void
 }) {
   const { file, upload, removal } = props
   const failed = upload.state === 'failed'
@@ -107,7 +111,19 @@ export function DraftFileChip(props: {
       title={file.name}
     >
       <ChipIconCell icon={glyph} removal={removal} />
-      <AttachedName name={file.name} />
+      {props.onOpen ? (
+        <button
+          className={styles.open}
+          onClick={props.onOpen}
+          onMouseDown={(event) => event.preventDefault()}
+          tabIndex={-1}
+          type="button"
+        >
+          <AttachedName name={file.name} />
+        </button>
+      ) : (
+        <AttachedName name={file.name} />
+      )}
       <span className={classes(styles.label, failed && styles.failedLabel)}>
         {label(file, upload)}
       </span>

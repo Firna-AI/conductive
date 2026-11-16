@@ -3,6 +3,7 @@ import type { FileEntry } from '../../../shared/generated/FileEntry'
 import { ApiError } from '../../../app/api/client'
 import type { DraftFile } from '../../../app/draft-files'
 import { attachmentPath } from '../../../shared/attachment-paths'
+import { OverlayHost } from '../../../shell/ui/Overlay'
 import { accessibleName, byRole } from '../../../test-support/dom-queries'
 import { FAKE_IDS } from '../../../test-support/fixtures/core'
 import { mount } from '../../../test-support/mount'
@@ -18,7 +19,8 @@ import { FakeFiles } from './mention-field-test-kit'
 
 // Mounts the message field with the attached files of its draft, as a
 // composer does, and with the files of its workspace when a test gives a
-// tree, as the chat composer does. `attached-field-events.ts` drives its
+// tree, as the chat composer does. The overlay layer of the frame holds
+// the preview dialog of a file. `attached-field-events.ts` drives its
 // clipboard, its drags, and the layout of a point.
 
 /** The files of a draft, as the store of its owner keeps them. */
@@ -178,29 +180,31 @@ export async function mountAttachedField(
       }
     }, [])
     return (
-      <LinksProvider value={{ links }}>
-        <MentionsProvider value={mentions}>
-          <ChipTextField
-            editable={editable}
-            files={store}
-            handle={handle}
-            label="Message"
-            lines={2}
-            maxLines={8}
-            onAttach={attach}
-            onChangeText={(text) => setDraft((now) => ({ ...now, text }))}
-            onEnter={(event) => {
-              event.preventDefault()
-              counts.sends += 1
-              return true
-            }}
-            owner={draft.id}
-            placeholder="Message the agent"
-            value={draft.text}
-          />
-          <output>{draft.text}</output>
-        </MentionsProvider>
-      </LinksProvider>
+      <OverlayHost>
+        <LinksProvider value={{ links }}>
+          <MentionsProvider value={mentions}>
+            <ChipTextField
+              editable={editable}
+              files={store}
+              handle={handle}
+              label="Message"
+              lines={2}
+              maxLines={8}
+              onAttach={attach}
+              onChangeText={(text) => setDraft((now) => ({ ...now, text }))}
+              onEnter={(event) => {
+                event.preventDefault()
+                counts.sends += 1
+                return true
+              }}
+              owner={draft.id}
+              placeholder="Message the agent"
+              value={draft.text}
+            />
+            <output>{draft.text}</output>
+          </MentionsProvider>
+        </LinksProvider>
+      </OverlayHost>
     )
   }
   const { container } = await mount(<Field />)

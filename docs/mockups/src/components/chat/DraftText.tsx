@@ -1,10 +1,12 @@
 import type { Attachment } from '../../fixtures/attachments'
 import type { MentionEntry } from '../../fixtures/fileMentions'
 import { useChatWorkspaces, type ChatRow } from './chatWorkspaces'
+import type { ReactNode } from 'react'
 import { DraftFileChip, type ChipUpload } from './DraftFileChip'
 import { draftParts } from '../../../../../src/app/draft-marks'
 import { entryName } from './entryPaths'
 import { FileChip } from './FileChip'
+import { PeekSpot } from './FilePreview'
 import { iconOf, LinkChip } from './MessageText'
 import { linkTarget, textParts, type LinkTarget } from './workspaceLinks'
 import styles from './DraftText.module.css'
@@ -90,18 +92,20 @@ function uploadOf(file: Attachment): ChipUpload {
  * editable field. Each chip starts with the cell of its icon, which a
  * pointer turns into a × that removes it. In the app a press on the name of
  * a file chip opens the file, and a press on the name of an attached file
- * opens nothing.
+ * opens its preview.
  *
  * `files` are the files of the draft, by the draft IDs of their marks. A
  * view runs no script, so `caret` draws the caret at that index of the
  * text: where a drop puts its files while they hover over the box, or
  * where the caret stands after a drop or a pick. A view has no pointer, so
- * `pointer` draws it over the icon of the first chip.
+ * `pointer` draws it over the icon of the first chip, and `peek` draws the
+ * card of a pointer that rests on the first attached file above its chip.
  */
 export function DraftText(props: {
   text: string
   files?: readonly Attachment[]
   pointer?: boolean
+  peek?: ReactNode
   caret?: number
 }) {
   const rows = useChatWorkspaces()
@@ -116,6 +120,7 @@ export function DraftText(props: {
           ...itemsOf(text.slice(caret), files, rows),
         ]
   const firstChip = items.findIndex(isChip)
+  const firstFile = items.findIndex((item) => item.kind === 'file')
   return (
     <>
       {items.map((item, index) => {
@@ -125,16 +130,21 @@ export function DraftText(props: {
             return item.text
           case 'caret':
             return <span aria-hidden className={styles.caret} key={index} />
-          case 'file':
+          case 'file': {
+            const chip = (
+              <DraftFileChip
+                file={item.file}
+                removal={{ name: item.file.name, pointer }}
+                upload={uploadOf(item.file)}
+              />
+            )
+            const peek = index === firstFile ? props.peek : undefined
             return (
               <span contentEditable={false} key={index}>
-                <DraftFileChip
-                  file={item.file}
-                  removal={{ name: item.file.name, pointer }}
-                  upload={uploadOf(item.file)}
-                />
+                {peek ? <PeekSpot chip={chip} peek={peek} /> : chip}
               </span>
             )
+          }
           case 'mention':
             return (
               <span contentEditable={false} key={index}>

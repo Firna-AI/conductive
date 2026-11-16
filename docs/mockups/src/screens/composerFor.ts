@@ -25,6 +25,7 @@ import { sessionLinkDraft } from '../fixtures/sessionLinkConversations'
 import { workspaceLinkDraft } from '../fixtures/workspaceLinkConversations'
 import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
+import { attachmentPeek } from './attachmentPreviews'
 import { otherStarter, sessionLoginFor } from './sessionStarter'
 import { isNew } from './workspaceTabs'
 import type { WorkspaceState } from './workspaceState'
@@ -61,6 +62,7 @@ const composerFiles: Partial<Record<ComposerKey, readonly Attachment[]>> = {
   'too-large': draftAttachments,
   picker: draftAttachments,
   'attachment-pointer': draftAttachments,
+  'attachment-peek': draftAttachments,
   'drop-over': beforeDropAttachments,
   dropped: droppedAttachments,
   'dropped-folder': droppedFolderAttachments,
@@ -90,6 +92,16 @@ const pointerStates = new Set<ComposerKey>([
   'workspace-link-pointer',
   'attachment-pointer',
 ])
+
+/**
+ * The card of a pointer that rests on the chip of the first file of the
+ * draft, in the state that draws it.
+ */
+function peekOf(state: WorkspaceState, fresh: boolean) {
+  const [first] = draftAttachments
+  if (fresh || state.composer !== 'attachment-peek' || !first) return undefined
+  return attachmentPeek(first)
+}
 
 /** The draft and the tree of each state that opens the list of `@`. */
 const mentionLists: Partial<
@@ -238,5 +250,6 @@ export function composerFor(
       viewport === 'desktop',
     caret: drop?.caret,
     pointer: !fresh && pointerStates.has(state.composer),
+    peek: peekOf(state, fresh),
   }
 }

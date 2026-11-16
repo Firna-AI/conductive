@@ -8,7 +8,9 @@ import styles from './ChipTextField.module.css'
  * text, with each chip as one unit of it. It has the font and the line
  * height of the plain text field, and the same least and most numbers of
  * lines. It grows with its text up to `maxLines`, then scrolls. On a phone
- * its text is larger, as in the plain field.
+ * its text is larger, as in the plain field. With `overflow`, a card of
+ * the text, such as the card of a pointer over a chip, shows outside the
+ * field, as the top layer of the app shows it.
  */
 export function ChipTextField(props: {
   /** The spoken name of the field, such as "Message". */
@@ -17,6 +19,7 @@ export function ChipTextField(props: {
   lines: number
   /** The most lines that the field shows before its text scrolls. */
   maxLines: number
+  overflow?: boolean
   children: ReactNode
 }) {
   const { field } = useControlSizes()
@@ -24,7 +27,11 @@ export function ChipTextField(props: {
     <div
       aria-label={props.label}
       aria-multiline
-      className={classes(styles.field, field === 'lg' && styles.touch)}
+      className={classes(
+        styles.field,
+        field === 'lg' && styles.touch,
+        props.overflow && styles.overflow,
+      )}
       contentEditable
       role="textbox"
       style={{

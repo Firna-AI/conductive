@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { Button } from '@firna/ui/button'
 import { ArrowUp, Paperclip, Square } from 'lucide-react'
 import type { AgentChoice, AgentKey } from '../../fixtures/agents'
@@ -90,6 +91,11 @@ export type ComposerState = {
    * of the text.
    */
   pointer?: boolean
+  /**
+   * A view has no pointer, so this draws the card of a pointer that rests on
+   * the first attached file above its chip.
+   */
+  peek?: ReactNode
 }
 
 /** The query of the list of `@`: the text after the last `@` of the draft. */
@@ -156,6 +162,7 @@ export function Composer(props: ComposerState & { lines?: number }) {
             lines={props.lines ?? 2}
             maxLines={8}
             placeholder={placeholder}
+            peek={props.peek}
             pointer={props.pointer}
             text={props.draft}
           />
