@@ -18,8 +18,13 @@ interface Totals {
   routines: number
 }
 
-/** The orgs of the person that are not deleted. */
-const liveOrg = `SELECT o.id FROM orgs o WHERE o.deleted_at IS NULL`
+/**
+ * The join that keeps the rows of `table` in orgs that are not deleted.
+ * Each query finds the rows of the person through an owner index first.
+ */
+function inLiveOrg(table: string): string {
+  return `JOIN orgs o ON o.id = ${table}.org_id AND o.deleted_at IS NULL`
+}
 
 /**
  * Reads the counts of the Stats tab for one person in one D1 batch: the
@@ -39,33 +44,34 @@ export async function readAccountStats(
     db
       .prepare(
         `SELECT * FROM (
-           SELECT COUNT(*) AS orgs FROM org_members m
-           WHERE m.user_id = ?1 AND m.org_id IN (${liveOrg})
+           SELECT COUNT(*) AS orgs FROM org_members m ${inLiveOrg('m')}
+           WHERE m.user_id = ?1
          ) CROSS JOIN (
            SELECT COUNT(*) AS workspacesTotal,
              COUNT(CASE WHEN w.created_at BETWEEN ?2 AND ?3 THEN 1 END) AS workspacesLastWeek,
              ${workspaceStateCounts}
-           FROM workspaces w
-           WHERE w.owner_user_id = ?1 AND w.org_id IN (${liveOrg})
+           FROM workspaces w ${inLiveOrg('w')}
+           WHERE w.owner_user_id = ?1
          ) CROSS JOIN (
-           SELECT COUNT(*) AS routines FROM routines r
-           WHERE r.owner_user_id = ?1 AND r.org_id IN (${liveOrg})
+           SELECT COUNT(*) AS routines FROM routines r ${inLiveOrg('r')}
+           WHERE r.owner_user_id = ?1
          )`,
       )
       .bind(userId, weekStart, readAt),
     db
       .prepare(
-        `SELECT ${createdDay} AS date, COUNT(*) AS count FROM workspaces
-         WHERE owner_user_id = ?1 AND org_id IN (${liveOrg})
-           AND created_at BETWEEN ?2 AND ?3
+        `SELECT ${createdDay('w')} AS date, COUNT(*) AS count
+         FROM workspaces w ${inLiveOrg('w')}
+         WHERE w.owner_user_id = ?1 AND w.created_at BETWEEN ?2 AND ?3
          GROUP BY date ORDER BY date`,
       )
       .bind(userId, firstDay, readAt),
     db
       .prepare(
-        `SELECT ${createdDay} AS date, COUNT(*) AS count FROM routine_runs
-         WHERE owner_user_id = ?1 AND org_id IN (${liveOrg})
-           AND state != 'skipped' AND created_at BETWEEN ?2 AND ?3
+        `SELECT ${createdDay('r')} AS date, COUNT(*) AS count
+         FROM routine_runs r ${inLiveOrg('r')}
+         WHERE r.owner_user_id = ?1 AND r.state != 'skipped'
+           AND r.created_at BETWEEN ?2 AND ?3
          GROUP BY date ORDER BY date`,
       )
       .bind(userId, firstDay, readAt),

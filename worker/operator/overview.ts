@@ -57,14 +57,14 @@ export async function readOperatorOverview(
       .bind(weekStart, readAt),
     db
       .prepare(
-        `SELECT ${createdDay} AS date,
+        `SELECT ${createdDay()} AS date,
            COUNT(*) AS count FROM workspaces WHERE created_at BETWEEN ? AND ?
          GROUP BY date ORDER BY date`,
       )
       .bind(firstDay, readAt),
     db
       .prepare(
-        `SELECT ${createdDay} AS date,
+        `SELECT ${createdDay()} AS date,
            COUNT(*) AS count FROM users WHERE created_at BETWEEN ? AND ?
          GROUP BY date ORDER BY date`,
       )

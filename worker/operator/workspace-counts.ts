@@ -28,8 +28,14 @@ export function countWindows(readAt: number): {
   return { firstDay: day.getTime() - 29 * DAY, weekStart: readAt - 7 * DAY }
 }
 
-/** The SQL of the UTC day of `created_at`, as `YYYY-MM-DD`. */
-export const createdDay = `strftime('%Y-%m-%d', created_at / 1000, 'unixepoch')`
+/**
+ * The SQL of the UTC day of `created_at`, as `YYYY-MM-DD`. `table` names
+ * the table or its alias when a join makes the column ambiguous.
+ */
+export function createdDay(table?: string): string {
+  const column = table ? `${table}.created_at` : 'created_at'
+  return `strftime('%Y-%m-%d', ${column} / 1000, 'unixepoch')`
+}
 
 /**
  * The 30 UTC days from `firstDay`, oldest first, each with its count from

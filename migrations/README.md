@@ -303,3 +303,9 @@ UI and wiring milestones normally need no migration. Their ranges stay reserved.
 creation plans, account defaults, and routines. Each column starts at 0.
 Sessions and routine run choices keep fast mode in their existing JSON records.
 [Fast mode](../docs/protocol/fast-mode.md) gives the choice rules.
+
+`202611161600_owner_count_indexes.sql` adds indexes on the owner of
+workspaces, routines, and routine runs. The
+[Stats tab of the account](../docs/protocol/account-stats.md) counts the
+records of one person, and these indexes keep each read to that person's
+rows.
