@@ -38,14 +38,18 @@ each feature.
 - **Referral code:** the personal code of each user with app access. It
   gives app access to up to 5 people who wait. The screens of users call
   it an invite code.
-- **Workspace:** the work of an org on one repository, one task at a time.
-  It has one repository, one sandbox, one or more sessions, and one branch
-  at a time. After a merge, Continue moves it on to its next task.
+- **Workspace:** the work of an org on one repository and one task at a
+  time. It has one sandbox, one or more sessions, and one repository and
+  one branch at a time. After a merge, Continue moves it on to its next
+  task. A repository change moves it to another repository of the org.
 - **Workspace owner:** the person who is responsible for a workspace. It is
   the person who created the workspace, until an admin reassigns it.
 - **Continue:** the action after a merge that moves a workspace to a new
   branch from the latest default branch. The workspace keeps its sandbox
   and its sessions.
+- **Repository change:** the action that moves a workspace to a new branch
+  of another repository of its org, in the folder of that repository in
+  its sandbox. The workspace keeps its sandbox and its sessions.
 - **Local work:** work in the sandbox of a workspace that GitHub does not
   have: changed files that are not committed, also untracked files, and
   commits that no remote branch holds.

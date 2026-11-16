@@ -25,6 +25,8 @@ A preview shows a web server that runs there too.
 3. Enter the command you want to run.
 
 The shell starts in the workspace's repository folder.
+After a repository change, a new shell starts in the folder of the new repository.
+A shell that already runs stays in its folder.
 Its prompt shows the current folder name.
 Use `pwd` to see the full path.
 For a quick check, you can run:
@@ -103,6 +105,7 @@ The token can reach repositories that both that person and the GitHub App can ac
 This can include repositories outside the Conductive org.
 
 **Merge** and **Continue** in the pull request bar use the GitHub account of the member who selects them.
+A repository change fetches with the GitHub account of the member who changes the repository.
 The shared Terminal still uses the workspace owner's account.
 
 - [Use pull request actions](/docs/pull-requests)

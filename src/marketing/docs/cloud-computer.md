@@ -57,6 +57,7 @@ Until then, **New workspace** shows it as unavailable, with a note that says whe
 A removed repository stays in the setup until the next build.
 To apply a removal, select **Build computer** under **Cloud computer**.
 Existing workspaces keep the repositories and folders from the setup they started with.
+A workspace can move only to a repository that its computer holds, as [Change the repository](/docs/workspaces#change-the-repository) says.
 
 ## Install software
 

@@ -83,9 +83,9 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         their chats, and each Mac command request and result. They also see
         the automations of the org, with their prompts and their runs.
         A member with a terminal in a cloud computer can read
-        the GitHub token of a turn that runs there. During Continue, they
-        can also read the GitHub token of the member who clicked, while the
-        branch fetch runs. Outside an agent turn,
+        the GitHub token of a turn that runs there. During Continue or a
+        repository change, they can also read the GitHub token of the member
+        who started it, while the branch fetch runs. Outside an agent turn,
         the GitHub CLI uses the workspace owner's account. Each member with
         a terminal can get that owner's GitHub token without a running
         turn.`,

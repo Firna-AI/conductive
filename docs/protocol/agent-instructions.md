@@ -2,8 +2,9 @@
 
 This doc holds the requirements and the decisions in force for the
 instructions that the app gives each agent session. It covers the facts
-and the guidance in them, and the sender line and the branch line of each
-message. [Base prompts](base-prompts.md) states the base prompt of Claude
+and the guidance in them. [Message lines](message-lines.md) states the
+sender line, the repository line, and the branch line of each message.
+[Base prompts](base-prompts.md) states the base prompt of Claude
 agents. [Agents and sessions](agents-and-sessions.md#agents) states the
 agents and their sessions. [Agent tools](agent-tools.md) states the tools
 of the agents. The other terms are those of the
@@ -22,11 +23,17 @@ says.
   names the member who sent that message.
 - **Workspace branch:** the branch that the Worker's record of the
   workspace names. The app tracks this branch. Continue changes it after a
-  merge.
+  merge, and a [repository change](repository-change.md) changes it too.
 - **Target branch:** the base branch of the workspace, as
   [The base branch of a workspace](base-branches.md#the-base-branch-of-a-workspace)
   says. For a workspace that a member creates, it is the default branch of
   the repository.
+- **Repository folder:** the folder of the workspace's repository in the
+  sandbox, as [Repository folders](repository-folders.md) says. A
+  repository change moves the workspace to the folder of another
+  repository.
+- **Repository line:** one line after the sender line of a message. It
+  names the current repository folder.
 - **Branch line:** one line after the sender line of a message. It names
   the current workspace branch and the current target branch.
 - **Base prompt:** the general rules for work that a Claude agent gets
@@ -123,79 +130,26 @@ says.
   branch. The Worker's record then names the new branch, and the pull
   request bar follows it. Continue is a branch change of the app, not a
   rename by the agent.
+- A [repository change](repository-change.md) also moves the workspace to
+  a new branch, in the folder of another repository. It is a change of
+  the app too.
 
 ## The sender line
 
-- Each message that reaches the agent starts with a sender line. This
-  holds also for each message during a turn, and for each message of the
-  starter.
-- The sender line gives the display name, the GitHub login, and the
-  member ID of the member who sent the message (decision 283). For a
-  member without a display name, it gives only the GitHub login and the
-  member ID.
-- Reason: several members can write in one session while the starter
-  shares the login (decision 116). So the agent needs to know who sent
-  each message.
-- A message that joins a running turn gives its own sender, who can
-  differ from the sender of the turn.
-- Reason for the member ID: the owner filter of the
-  [workspace list](workspace-calls.md#list-the-workspaces) takes a member
-  ID, and a GitHub login can name two members after a GitHub rename.
-- The sender line of a message from the workspace tools names the sender
-  of the turn that made the call, as
-  [The sender](session-calls.md#the-sender) says.
-- The sender line exists only in the text that reaches the agent. The
-  stored message, the chat, and the titles from messages never hold it.
-- The chat never shows the sender line or the agent instructions. Reason:
-  they are for the agent.
+[The sender line](message-lines.md#the-sender-line) holds the
+requirements of the line that names the sender of each message, and
+[Access](message-lines.md#access) says that no access depends on it.
 
-### Access
+## The repository line
 
-- The sender line informs the agent only. No access depends on it, also
-  not on its member ID. The same holds for a `Sent by:` line, as
-  [The `Sent by:` line](session-calls.md#the-sent-by-line) says.
-- A Mac command of a turn goes to the Mac of the sender of the turn, the
-  member whose message started the turn. The GitHub token of the turn also
-  belongs to that member, as
-  [GitHub tokens](github-tokens.md) says. The commits of the turn name that
-  member too, as [Commit author](github-tokens.md#commit-author) says.
-- A message that another member sends during the turn changes none of
-  them.
-- Each write of the workspace tools acts for the sender of the turn too,
-  also while the agent answers a message of another member, as
-  [The sender](agent-tool-access.md#the-sender) says.
-- Reason: the Worker takes the sender of a Mac command, a Git operation,
-  or a write of the tools from its own record of the turn.
-  [The workspace token](tokens-and-secrets.md#the-workspace-token) states
-  this rule. Agent code runs in the sandbox, so a sender that the sandbox
-  names can be false.
-- Risk: a member can type a false sender line in a message, also with a
-  false member ID. The agent can then name the wrong member, or list the
-  workspaces of another member. No access changes, because each write
-  keeps the rights of the sender of the turn.
+[The repository line](message-lines.md#the-repository-line) holds the
+requirements of the line that names the current repository folder after
+a repository change.
 
 ## The branch line
 
-- The Worker sends the current workspace branch and the current target
-  branch with each message (decision 227).
-- When the agent instructions of a session name an earlier workspace
-  branch or an earlier target branch, each message to the agent gets a
-  branch line after its sender line. The line names the current branches.
-- A session whose instructions name the current branches gets no branch
-  line. A new session gets the current branches in its instructions.
-- The branch line exists only in the text that reaches the agent, as the
-  sender line does. The chat never shows it.
-- Reason: after Continue, each session keeps its context and its
-  instructions. The line reaches every session in each message, also after
-  a summary and in a session that starts later, and the instructions keep
-  their text and their prompt cache.
-- These ways were rejected (decision 227):
-  - One line only in the next message of each session. A later summary can
-    drop it.
-  - New instructions for each session at Continue. They rewrite the prompt
-    cache, and each agent must restart to read them.
-  - Only the note of Continue in the chat. The instructions then keep the
-    earlier branch.
+[The branch line](message-lines.md#the-branch-line) holds the
+requirements of the line that names the current branches.
 
 ## The same text for the life of a session
 
@@ -209,16 +163,22 @@ says.
 - A new session gets the instructions with the current facts and wording.
 - A session that started without agent instructions can get them once, at
   a later turn. It then keeps that text.
-- Apart from the branches, the instructions hold no fact that changes
+- Apart from the branches and the repository folder, the instructions
+  hold no fact that changes
   during the work, such as the date, the Git state, or the pull request
   state. The agent reads such facts with its tools.
 - Reason: a change of the text rewrites the prompt cache of the
   conversation. An agent can also keep the first instructions of a session
   until it summarizes the conversation.
-- The workspace branch and the target branch can change, by Continue or
-  by a new default branch. The instructions keep the branches of the start
-  of the session, and [the branch line](#the-branch-line) names the
-  current branches.
+- The workspace branch and the target branch can change, by Continue, by
+  a repository change, or by a new default branch. The instructions keep
+  the branches of the start of the session, and
+  [the branch line](message-lines.md#the-branch-line) names the current
+  branches.
+- The repository folder can change by a repository change. The
+  instructions keep the folder of the start of the session, and
+  [the repository line](message-lines.md#the-repository-line) names the
+  current folder.
 - A tool that returns facts that change, such as the pull request state,
   was rejected. It widens what the workspace token allows, and agents still
   need instructions to call it.
@@ -250,7 +210,8 @@ says.
     must skip the resume at each turn.
   - Instructions that the Worker builds and sends with each turn. The text
     of a session would then change with each fact. Each message carries
-    only the current branches, for the branch line.
+    only the current branches and the current repository folder, for the
+    branch line and the repository line.
   - Text that a model gateway adds to each model request. No such gateway
     exists yet.
   - Text for Claude only. It leaves out Codex, which also takes system

@@ -24,6 +24,9 @@ These docs belong to this doc:
   Continue.
 - [Continue](continue.md): the next task of a workspace after a merge, on
   a new branch with the same sandbox and sessions.
+- [Repository change](repository-change.md): the move of a workspace to
+  another repository of its org, on a new branch with the same sandbox and
+  sessions.
 - [Workspace menu](workspace-menu.md): the menu of a workspace row, which
   moves, reassigns, renames, and archives the workspace, and copies its
   link.
@@ -50,6 +53,9 @@ These docs belong to this doc:
 - Each workspace has its own sandbox with its own clone of its repository
   (decision 4). One worktree for each workspace in a shared sandbox was
   rejected, because each workspace gets its own sandbox.
+- A workspace works in one repository at a time. A
+  [repository change](repository-change.md) moves it to another repository
+  that its sandbox holds.
 - Every sandbox has one machine size for now: Boat's default size, with
   4 vCPU and 8 GB.
 
@@ -220,3 +226,8 @@ for, downloads, and applies an update.
 ## Continue
 
 [Continue](workspace-life.md#continue) holds these workspace requirements.
+
+## Repository change
+
+[Repository change](repository-change.md) holds the requirements of the
+move of a workspace to another repository of its org.

@@ -30,7 +30,7 @@ export const termsDocument: LegalDocument = {
   at ${appDomain}, and in the Mac app. You accept their current version
   each time that you continue with GitHub to sign in. ${productName} keeps
   the latest version that you accepted, and the time when you first
-  accepted it. Effective date: 13 November 2026.`,
+  accepted it. Effective date: 16 November 2026.`,
   sections: [
     {
       title: `Who runs ${productName}`,
@@ -213,9 +213,15 @@ export const termsDocument: LegalDocument = {
           of the repository. It keeps the cloud computer and its sessions.
           Changed files move to the new branch. Commits that are not pushed
           stay on their local branches.`,
+        paragraph`A repository change moves a workspace to a new branch of
+          another repository of the org. It keeps the cloud computer and
+          its sessions. The old branch, its pull request, and the files in
+          the folder of the old repository stay.`,
         paragraph`The agent actions in the pull request bar send messages as
           the member who clicks. The chat history keeps these messages and a
-          note that names who used Continue and the branches.`,
+          note that names who used Continue and the branches. It also keeps
+          a note that names who changed the repository of a workspace, the
+          new repository, and the new branch.`,
         paragraph`You keep any rights that you have in your repositories,
           files, messages, and other content. You give the operator
           permission to store, copy, process, and transmit that content as

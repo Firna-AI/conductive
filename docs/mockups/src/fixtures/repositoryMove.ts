@@ -14,10 +14,10 @@ export const movedRepository: RepositoryKey = 'billing-service'
 
 /**
  * The new branch in the folder of the new repository. It follows the
- * create rule: the GitHub login of the workspace owner, a city name, and
- * four random characters.
+ * rule of Continue: the GitHub login of the workspace owner, the name part
+ * from the workspace name, the version, and four random characters.
  */
-export const movedBranch = `${people.cal.login}/oslo-9c1e`
+export const movedBranch = `${people.cal.login}/checkout-address-autocomplete-v2-9c1e`
 
 /** The work that the question of the change lists. */
 export const repositoryWork = {

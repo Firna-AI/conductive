@@ -28,7 +28,7 @@ Contract owners:
 
 - A new protocol doc, [Repository change](../docs/protocol/repository-change.md),
   linked from [Workspaces and sandboxes](../docs/protocol/workspaces-and-sandboxes.md).
-- [Agent instructions](../docs/protocol/agent-instructions.md#the-branch-line),
+- [Message lines](../docs/protocol/message-lines.md#the-repository-line),
   for the line that names the new folder.
 - [Chat and events](../docs/protocol/chat-and-events.md#what-the-chat-shows),
   for the note in each session.
@@ -174,9 +174,13 @@ Design calls (my calls, 13 November 2026):
   its edits.
 - The change starts a stopped cloud computer first, as Continue does.
 - The new branch starts from the latest default branch of the new
-  repository. Its name follows the rule of a new workspace: the GitHub
-  login of the owner, a city name, and four random characters. Reason:
-  decision 53, as for Continue.
+  repository. Its name follows the rule of Continue (branch-name
+  decision 3 B): the GitHub login of the owner, the name part from the
+  workspace name, the version, and four random characters. A repository
+  change adds 1 to the task number, as Continue does. Reason: main
+  changed the rule of Continue on 16 November 2026, and the city name
+  was rejected there because it says nothing of the work. My call, 16
+  November 2026.
 - The old branch, its pull request, and its local work stay as they are.
   Nothing is deleted. The changed files stay in the old folder.
 - The change adds the `.context/` rule to the Git exclude file of the new
@@ -278,17 +282,34 @@ Mockup results (13 November 2026), merged into the design above:
 
 Depends on: 1
 
-- [ ] Write `docs/protocol/repository-change.md` with the requirements and
+- [x] Write `docs/protocol/repository-change.md` with the requirements and
       the decisions of this plan. Link it from
-      `docs/protocol/workspaces-and-sandboxes.md` and
-      `docs/protocol/README.md`.
-- [ ] Update the line about the repository of each workspace in
+      `docs/protocol/workspaces-and-sandboxes.md` and from the list of
+      protocol docs in `docs/architecture/protocol-docs.md`.
+      `docs/protocol/README.md` lists no doc, and links to that list.
+- [x] Update the line about the repository of each workspace in
       `docs/protocol/workspaces-and-sandboxes.md` and the architecture doc.
-- [ ] Add the repository line to `docs/protocol/agent-instructions.md`.
-- [ ] Add the note of the change to `docs/protocol/chat-and-events.md`.
-- [ ] Read both legal pages and each public guide in full. Update each
-      sentence that says a workspace keeps one repository.
-- [ ] Check the rows of the Conductor comparison for a repository change.
+      Add the term Repository change, and the repository change job to
+      `docs/architecture/components.md`.
+- [x] Add the repository line. `docs/protocol/agent-instructions.md`
+      passed the length target, so its sender line and branch line moved
+      to the new page `docs/protocol/message-lines.md`, with the
+      repository line. Stub sections keep the old anchors.
+- [x] Add the note of the change to `docs/protocol/chat-and-events.md`.
+- [x] Update `docs/protocol/repository-folders.md`,
+      `docs/protocol/github-tokens.md`, and `docs/protocol/base-branches.md`.
+- [x] Read both legal pages and each public guide in full. Update each
+      sentence that says a workspace keeps one repository, or that restates
+      a fact of Continue that a repository change shares.
+- [x] Check the rows of the Conductor comparison for a repository change.
+      The site no longer has that page, so no row exists.
+      Evidence: `.context/repository-change/m2-format.log`,
+      `m2-lint.log`, `m2-tests.log`, and `m2-site-build.log`.
+
+Not changed, because each doc passes the length target and is silent,
+not wrong: `docs/protocol/workspace-life.md`,
+`docs/protocol/orgs-and-members.md`, `docs/protocol/github-banner.md`,
+and `docs/protocol/workspace-tools.md`.
 
 ## Milestone 3: Worker and runner
 
@@ -313,6 +334,15 @@ Depends on: 2
       failed fetch, a retry after a lost reply, the context copy, and the
       publication.
 - [ ] Update the README of each changed Worker area.
+- [ ] Update `runner/agent-input.md` for the repository line.
+- [ ] Add the flow of a repository change to
+      `docs/architecture/flows.md`, beside the flow of Continue.
+- [ ] Settle what a failed copy of the context folder does: the change
+      stops, or it warns and goes on. Ask the user when it changes what
+      the member sees, and record it in `docs/protocol/repository-change.md`.
+- [ ] Check whether the change stops the programs that agents started,
+      such as a dev server, when it restarts the runner. Record the
+      result in the protocol doc, or ask the user when it is a choice.
 
 ## Milestone 4: Web app
 
@@ -328,6 +358,9 @@ Depends on: 1, 3
 - [ ] Close the file tabs of the old repository.
 - [ ] Add tests for the menu, the question, and the failure.
 - [ ] Update `src/shell/workspace/README.md`.
+- [ ] Check each guide sentence about the repository change against the
+      built screens, as the Claims rule of `src/marketing/docs-authoring.md`
+      says. The guides got these sentences in Milestone 2.
 - [ ] Check the header in a browser on desktop and on a phone.
 
 ## Milestone 5: Verification, commit, review, and pull request

@@ -30,7 +30,7 @@ says.
   reached it.
 - The text is the stored text, as the chat shows it. So the text of a tool
   message ends with its `Sent by:` line. No text holds a
-  [sender line](agent-instructions.md#the-sender-line).
+  [sender line](message-lines.md#the-sender-line).
 - Reason: Conductor's `message get` gives one message.
 - An unknown message, or a message of another session, gets HTTP 404 with
   the error code `message_not_found`.

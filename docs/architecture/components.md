@@ -114,8 +114,8 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
   refreshes, from the banner state that it holds at that moment. So a
   replay of an older GitHub delivery cannot write an older state.
 - A failed copy fails the refresh, so that a retry copies it again.
-- It runs the trusted jobs of its sandbox: the fetch of a create, and the
-  branch change of Continue.
+- It runs the trusted jobs of its sandbox: the fetch of a create, the
+  branch change of Continue, and the repository change.
 - For each start, it keeps the provider account with the org image and the
   sandbox. So the start continues after a restart.
 - Its storage keeps the chat history, so a stopped or archived workspace

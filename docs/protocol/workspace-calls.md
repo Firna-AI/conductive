@@ -106,7 +106,7 @@ number names a dated record, as
 - Reason: Conductor's `workspace list` filters in the same way.
 - The owner filter takes only a member ID (decision 283). The sender line
   of each message gives the member ID of its sender, as
-  [The sender line](agent-instructions.md#the-sender-line) says. So an
+  [The sender line](message-lines.md#the-sender-line) says. So an
   agent passes that ID for the workspaces of the member whose message it
   answers. It finds another owner in the entries, by GitHub login or
   display name, and passes the member ID of that entry.

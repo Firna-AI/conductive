@@ -51,7 +51,7 @@ export const repositoryChange = defineScreen({
       slug: 'changed',
       title: 'After the change',
       description:
-        'The workspace works in acme/billing-service, on the new branch calummoore/oslo-9c1e. The pull request bar starts again at the state without a pull request, and Changes is empty. The session keeps its chat, and a note at the place of the change names who changed it, the new repository, and the new branch.',
+        'The workspace works in acme/billing-service, on the new branch calummoore/checkout-address-autocomplete-v2-9c1e. The pull request bar starts again at the state without a pull request, and Changes is empty. The session keeps its chat, and a note at the place of the change names who changed it, the new repository, and the new branch.',
       rationale:
         'The agents keep their sessions. Each session shows the note, so every member sees why the repository changed. The old branch, its pull request #482, and the work in acme/storefront stay as they are.',
       props: {

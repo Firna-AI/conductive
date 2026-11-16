@@ -27,8 +27,9 @@ repositories of an image job in parallel.
   The terminal is shared, so this account is the same for each connection.
 - A supplied turn ID must name a current turn. An unknown or ended turn
   never falls back to the workspace owner.
-- A trusted Continue job is the one other case. Its fetch gets the token
-  of the member who pressed Continue, as [Continue](#continue) says.
+- A trusted Continue job and a trusted repository change job are the
+  other cases. Each fetch gets the token of the member who pressed the
+  action, as [Continue](#continue) says.
 - Each command that an agent runs in a turn has the ID of that turn. This
   holds also in a shell that loads the sandbox's own variables again, such
   as the login shell in which Codex runs each command.
@@ -236,6 +237,9 @@ repositories of an image job in parallel.
 - Every member may press Continue (decision 224). So the token of a member
   who is not the owner reaches the sandbox of the owner for the fetch, as
   it does for a message of that member.
+- A [repository change](repository-change.md) fetches the latest default
+  branch of the new repository in the same way, with the token of the
+  member who changes the repository.
 - These ways were rejected (decision 226):
   - The token of the workspace owner, through the mode that `gh` uses
     outside a turn. It works only in a workspace from a newer org image.

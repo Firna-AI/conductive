@@ -146,6 +146,7 @@ An org has two roles: **Admin** and **Member**.
 | Read workspaces and chats | All workspaces in the org | All workspaces in the org |
 | Send messages | Under the session's login rules | Under the session's login rules |
 | Continue after a merge | All workspaces in the org | All workspaces in the org |
+| Change the repository of a workspace | All workspaces in the org | All workspaces in the org |
 | Merge from the pull request bar | With GitHub write access or more | With GitHub write access or more |
 | Manage members and org settings | Yes | Read-only |
 | Reassign a workspace | Yes | No |
@@ -162,10 +163,12 @@ Archived chats stay read-only until Restore.
 
 Continue uses the GitHub account of the member who selects it to fetch the latest default branch.
 That account needs read access to the repository.
+A repository change uses the GitHub account of the member who changes it in the same way, for the new repository.
 Merge uses the clicking member's GitHub account, and GitHub checks its branch rules.
 An org role does not add GitHub access.
 
 - [Continue after a merge](/docs/workspaces#continue-after-a-merge)
+- [Change the repository](/docs/workspaces#change-the-repository)
 - [Merge a pull request](/docs/pull-requests#merge-the-pull-request)
 
 To reassign a workspace, select its owner in the workspace header.

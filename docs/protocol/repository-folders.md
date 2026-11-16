@@ -35,6 +35,12 @@ number names a dated record, as
 - The install script and the startup script get the folder variable of
   each repository. A workspace also gets `CONDUCTIVE_REPOSITORY_DIR`, with
   the folder of its own repository.
+- After a [repository change](repository-change.md),
+  `CONDUCTIVE_REPOSITORY_DIR` names the folder of the new repository. Each
+  process that starts after the change gets it: a new terminal, each
+  command of a later agent turn, and the startup script at the next start.
+  A process that already runs keeps its value.
+- A repository change changes no folder variable of a repository.
 - The sandbox of a build or a refresh gets only the folder variables, which
   hold no secret. Only the Git command that copies a repository gets a read
   token, as [GitHub tokens](tokens-and-secrets.md#github-tokens) says.
@@ -47,12 +53,19 @@ number names a dated record, as
 - A workspace keeps the folders and the variables of the org image that it
   starts from. Each resume, and each restart near day 14 of a stop, uses
   them, also after a later build or a change of the chosen repositories.
+- A repository change adds no folder. It moves the workspace to a folder
+  that its sandbox already holds.
 
 ## The context folder
 
 - Each workspace has a context folder, `.context`, at the top of the
   folder of its own repository (decision 243). Git ignores it. Agents keep
   notes, screenshots, and files for other sessions of the workspace there.
+- After a repository change, the context folder of the workspace is the
+  one in the new folder. The change copies the context folder of the old
+  folder there, as
+  [The context folder](repository-change.md#the-context-folder) in
+  Repository change says.
 - Its attachments folder, `.context/attachments/`, holds the attached
   files of each message, as
   [Attachments](messages-and-attachments.md#attachments) says

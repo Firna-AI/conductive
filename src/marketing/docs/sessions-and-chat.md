@@ -264,7 +264,12 @@ After a merge, **Continue** keeps these sessions and their conversation context 
 Each session shows a note with the member who continued, the new branch, and its starting branch.
 With current agent software, later messages tell the agent the current branch names when they change.
 
+A repository change also keeps these sessions and their conversation context.
+Each session shows a note with the member who changed the repository, the new repository, and the new branch.
+Later messages tell the agent the folder of the new repository and the new branch.
+
 - [Continue after a merge](/docs/workspaces#continue-after-a-merge)
+- [Change the repository](/docs/workspaces#change-the-repository)
 
 ## Copy a transcript
 

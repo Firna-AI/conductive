@@ -265,6 +265,53 @@ For another failure, follow the reason shown under the bar.
 - [Use pull request actions](/docs/pull-requests)
 - [Apply updated cloud computer software](/docs/cloud-computer#apply-setup-changes)
 
+## Change the repository
+
+Every org member can move a workspace to another repository of the org.
+The workspace keeps its cloud computer, number, link, name, sessions, and chat.
+It gets a new branch in the folder of the new repository.
+
+1. Open the workspace.
+2. Wait for every running agent turn in that workspace to finish.
+3. Select the repository in the workspace header.
+   On a phone, it is in the line under the workspace name.
+4. Select the new repository in the menu.
+5. Read the question if it lists work.
+6. Select **Change repository** to keep going, or **Cancel** to keep the current repository.
+
+The menu lists only the org's repositories that the workspace's cloud computer holds.
+A repository that the org added after the workspace started does not show.
+Create a new workspace to use it.
+
+The question lists the work that the workspace stops following.
+This work can be files not committed, commits not pushed, an open pull request, and pushed commits of the branch.
+That work stays with the old repository.
+The question also lists the changed files in the folder of the new repository.
+These files move to the new branch.
+Without such work, the change starts at once.
+
+The computer starts first if it is stopped.
+The new branch starts from the latest default branch of the new repository.
+That default branch becomes the workspace's base branch.
+Your GitHub account needs read access to fetch it.
+The new branch name uses the owner's GitHub login, a city, and a short suffix.
+The change copies the `.context/` folder into the folder of the new repository.
+A file that already exists there stays.
+
+Each session shows who changed the repository, the new repository, and the new branch.
+The agents keep their conversations and work in the new folder.
+The pull request bar then follows the new branch without a pull request.
+New terminals start in the new folder.
+A terminal that already runs stays in its folder.
+File tabs of the old repository close.
+The startup script runs in the new folder at the next start.
+The old branch, its pull request, and the files in the old folder stay.
+
+If the change fails, the workspace keeps its repository and branch, and a message names the reason.
+If changed files in the new folder clash with its latest default branch, commit or discard them, then try again.
+
+- [Continue after a merge](/docs/workspaces#continue-after-a-merge)
+
 ## Archive a workspace
 
 In an active org, only the workspace owner and org admins can archive it.

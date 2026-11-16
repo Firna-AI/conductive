@@ -29,6 +29,7 @@ A workspace you create uses the repository's default branch.
 For a pull request run, its first message names the initial target under **Your work goes to**.
 The pull request bar names the current target.
 After **Continue**, the workspace targets the latest default branch of its repository.
+After a repository change, it targets the latest default branch of the new repository.
 Your draft and its attached files stay unchanged.
 Conductive then shows the pull request's state for that branch.
 
