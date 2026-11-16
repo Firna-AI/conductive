@@ -13,7 +13,7 @@ points.
 
 ## Overview
 
-The [overview guide](overview.md) gives the route, access check, counts, and response.
+The [overview guide](overview.md) gives the route, access check, counts, long runs, and response.
 
 ## Orgs and users
 
@@ -291,7 +291,8 @@ The [operator test guide](tests.md) gives the commands and native provider setup
 
 ### Related Docs
 
-- [Operator section](../../docs/protocol/operator-section.md): access, overview numbers, and directory pages.
+- [Operator section](../../docs/protocol/operator-section.md): access and directory pages.
+- [Operator Overview](../../docs/protocol/operator-overview.md): overview numbers and long runs.
 - [Waitlist](../../docs/protocol/waitlist.md) and [codes](../../docs/protocol/waitlist-codes.md): app access and email rules.
 - [Sign-ups](../../docs/protocol/sign-ups.md): the pause of sign-ups and the waitlist switch.
 - [Operator actions](../../docs/protocol/operator-actions.md): the

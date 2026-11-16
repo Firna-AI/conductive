@@ -256,6 +256,13 @@ It also leaves out each workspace after the end of the last sign-in session, 7 d
 Chat messages live in Durable Object storage, so the migration cannot read them.
 A user with no such workspace keeps `NULL`.
 
+`202611161400_workspace_running_since.sql` adds the nullable Unix millisecond
+column `workspaces.running_since`. It keeps only the start of the current run.
+Existing rows keep null until their next lifecycle save. It guesses no time.
+The partial index `workspaces_running_since` holds running, unarchived rows
+with a non-null time. Its running states match `runningWorkspacePredicate`.
+The [operator Overview](../worker/operator/overview.md) uses this index to read the ten oldest runs.
+
 ## Reserved ranges
 
 Each milestone owns the complete inclusive range below.

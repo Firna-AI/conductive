@@ -4,6 +4,8 @@ This doc holds the requirements and the decisions in force for the
 operator section. In this part of the web app, an operator sees the whole
 app and acts on one org or one user (decision 142). The operator also runs
 the waitlist there (decision 160).
+[Operator section: the Overview](operator-overview.md) states the
+Overview tab, with its counts and its long runs.
 [Operator actions](operator-actions.md) states who is an operator, and
 what a suspension and a lift do. [Waitlist](waitlist.md) states the
 waitlist and the codes. [Sign-ups](sign-ups.md) states the pause, the
@@ -61,42 +63,8 @@ names a dated record, as
 
 ## The Overview
 
-- The Overview reads live counts across every org each time it opens, and
-  again on Refresh (decision 144). It keeps no history of the counts, and
-  it shows no costs.
-- It shows these counts:
-  - The users, the orgs, and the workspaces, each with the new ones of the
-    last 7 days.
-  - The people who wait, in a line under the users. The line opens the
-    Waitlist tab (decision 160). As that tab does, the count leaves out
-    suspended people.
-  - The cloud computers that run now, for the Running workspaces and for
-    each unfinished build or refresh of an org image.
-  - The workspaces by state: Running, Stopped, Failed, and Archived. They
-    add up to the workspace total.
-  - The new workspaces and the new users of each UTC day of the last 30
-    days, each with its total for the 30 days.
-  - The five orgs with the most workspaces, archived workspaces included.
-- The count of users keeps every account, by join day, also each person
-  who waits. Reason: decision 144 chose the counts, and the two numbers
-  still show who can use the app.
-- Running holds the
-  [workspace states](workspace-life.md#workspace-states)
-  starting, ready, working, needs input, and finished with unread output.
-  Failed holds the error state.
-- The 7 days are the 7 times 24 hours before the read.
-- The 30 days are UTC days, so that the counts need no time zone of the
-  operator. The last of them is the current UTC day.
-- The counts read only the records that exist now. So the count of a past
-  day can go down, for example after the purge of a deleted org or a
-  failed first start.
-- The counts include a deleted org and its workspaces while their records
-  exist. Only the five largest orgs leave out a deleted org.
-- Among the five largest orgs, a tie goes in the order of the org names.
-- The Overview lists no suspensions (decision 148). The Orgs and Users
-  tabs find a suspended org or user.
-- A failed read shows no number. Try again reads the counts again. Reason:
-  a count that did not load is not zero.
+- [Operator section: the Overview](operator-overview.md) states the live
+  counts of the Overview, and its long runs of cloud computers.
 
 ## Orgs and Users
 

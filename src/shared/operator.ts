@@ -1,4 +1,5 @@
 import type { OrgRole } from './api'
+import type { WorkspaceState } from './generated/WorkspaceState'
 import type { OperatorUserAccess } from './operator-waitlist'
 
 export function operatorOverviewPath(): string {
@@ -23,6 +24,22 @@ export interface OperatorOverview {
     workspaces: number
     running: number
   }[]
+  longRuns: readonly OperatorLongRun[]
+}
+
+export interface OperatorLongRun {
+  workspaceId: string
+  workspaceNumber: number
+  orgId: string
+  orgName: string
+  orgStatus: OperatorOrgSummary['status']
+  ownerGithubId: number
+  ownerLogin: string
+  ownerStatus: OperatorUserSummary['status']
+  cloudComputerId: string | null
+  state: WorkspaceState
+  runningSince: number
+  lastActivityAt: number | null
 }
 
 export interface OperatorWorkspaceStates {

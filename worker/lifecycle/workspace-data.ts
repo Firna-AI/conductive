@@ -1,6 +1,7 @@
 import type { WorkspaceRow } from './workspace-row'
 import type { Workspace } from '../../src/shared/generated/Workspace'
 import type { WorkspaceState } from '../../src/shared/generated/WorkspaceState'
+import type { WorkspaceStart } from '../../src/shared/generated/WorkspaceStart'
 import { activeOrgIdPredicate } from '../data/org-access'
 import { workspaceNameColumn } from '../data/workspace-name'
 import { presentWorkspace } from '../data/workspace-link'
@@ -219,6 +220,7 @@ export async function persistLifecycleState(
     workspaceId: string
     orgId: string
     state: WorkspaceState
+    start?: WorkspaceStart | null
     lastActivityAt: number
     stoppedAt: number | null
     nextDiskKeepaliveAt: number | null
@@ -228,13 +230,16 @@ export async function persistLifecycleState(
 ): Promise<void> {
   await db
     .prepare(
-      `UPDATE workspaces SET state = ?, last_activity_at = ?, stopped_at = ?,
+      `UPDATE workspaces SET state = ?, running_since = ?, last_activity_at = ?, stopped_at = ?,
      next_disk_keepalive_at = ?, last_error_code = ?, last_error_message = ?, updated_at = MAX(updated_at, ?)
      WHERE id = ? AND org_id = ? AND archived_at IS NULL AND state != 'archived'
        AND EXISTS (SELECT 1 FROM orgs WHERE orgs.id = workspaces.org_id AND orgs.deleted_at IS NULL)`,
     )
     .bind(
       input.state,
+      ['starting', 'ready', 'working', 'unread', 'input'].includes(input.state)
+        ? (input.start?.startedAt ?? null)
+        : null,
       input.lastActivityAt,
       input.stoppedAt,
       input.nextDiskKeepaliveAt,

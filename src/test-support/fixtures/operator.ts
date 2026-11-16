@@ -194,6 +194,7 @@ export function operatorOverview(
   orgs: readonly OperatorOrgDetail[],
   readAt = FAKE_TIME,
   waiting = 0,
+  sampledAt = readAt,
 ): OperatorOverview {
   const today = Math.floor(readAt / DAY)
   const dated = (days: readonly { count: number }[]) =>
@@ -225,7 +226,38 @@ export function operatorOverview(
       workspaces: totalOf(org),
       running: org.workspaceStates.running,
     })),
+    longRuns: orgs
+      .filter((org) => org.workspaceStates.running > 0 || org.deletion)
+      .slice(0, 10)
+      .map((org, index) => {
+        const owner =
+          org.members.find(
+            (member) => member.githubId === SAMPLE_IDS.suspendedUser,
+          ) ?? org.members[0]
+        if (!owner) throw new Error('The sample run has no owner.')
+        const source = sampleOrgs.find((sample) => sample.id === org.id)
+        if (!source) throw new Error('The sample run has no org.')
+        const pending = org.id === 'acme'
+        return {
+          workspaceId: `${org.id}-long-run`,
+          workspaceNumber: index + 1,
+          orgId: org.id,
+          orgName: org.name,
+          orgStatus: orgRow(org).status,
+          ownerGithubId: owner.githubId,
+          ownerLogin: owner.login,
+          ownerStatus: owner.suspended ? 'suspended' : 'active',
+          cloudComputerId: pending ? null : sampleComputerId(source),
+          state: pending ? 'starting' : 'ready',
+          runningSince: sampledAt - (pending ? 41_000 : (10 - index) * HOUR),
+          lastActivityAt: sampledAt - (pending ? 0 : (index + 1) * MINUTE),
+        }
+      }),
   }
+}
+
+export function sampleComputerId(org: SampleOrg): string {
+  return org.computers[0] ?? `sbx_${org.id}`
 }
 
 /** Every reply of the operator samples at `now`, with their records. */

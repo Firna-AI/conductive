@@ -69,7 +69,17 @@ shows stopped. Its child pages:
 `app/operator` shows the Overview tab of the operator, the person who runs
 the app for everyone, from decision 142. It holds live counts across every
 org, as decision 144 chose for now. A line under the users counts the
-people on the waitlist, from decision 160. The Orgs and Users tabs come from
+people on the waitlist, from decision 160. Long runs, under the workspaces
+by state, lists the 10 workspaces whose cloud computers have run the
+longest since their last start, from long runs decision 1. Each row gives
+the org, the owner with the workspace number, the cloud computer ID with
+Copy, the last activity, and the run length with the state mark under it.
+Copperline, a deleted org, and Hexwave, a suspended org whose 2 cloud
+computers still stop, show their mark under the name. The run of Lumen
+Works belongs to @pike-o, whom an operator suspended, so the Suspended
+mark shows under the login. A phone keeps the org, the run length, and
+the state mark. For a suspended owner, it adds the login and the mark
+under the org. The Orgs and Users tabs come from
 decision 147, and they find a suspended org or user. The Waitlist and
 Invite codes tabs come from decision 160. Its child pages:
 
@@ -101,8 +111,14 @@ Invite codes tabs come from decision 160. Its child pages:
   and the invite codes with their uses and states.
   Each code has Copy, and a code that works also has Copy join link. Its
   child pages are below.
+- `app/operator/long-runs` has the Overview at a quiet moment, when 3
+  workspaces run. The newest started 41 seconds ago, and its cloud
+  computer does not exist yet, so its row shows a dash and no Copy. Its
+  `empty` variant has no running workspace while 2 builds run. The list
+  then says which workspaces show in it, not that nothing runs.
 - `app/operator/error` has the numbers that could not load, with Try
-  again. Its `loading` variant has the page while it reads the numbers.
+  again. Its `loading` variant has the page while it reads the numbers,
+  with placeholder rows for Long runs.
 
 The child pages of `app/operator/user` follow. The first two were variants
 of `app/operator/user` and kept their paths:

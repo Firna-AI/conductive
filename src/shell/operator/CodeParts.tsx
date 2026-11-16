@@ -1,5 +1,4 @@
 import { Ban, Copy, Link } from 'lucide-react'
-import { useToast } from '@firna/ui/toast'
 import { StatusText } from '../../../docs/mockups/src/components/common/StatusText'
 import {
   codeStateLabels,
@@ -7,11 +6,11 @@ import {
   referralCodeName,
 } from '../../../docs/mockups/src/components/operator/codeCopy'
 import styles from '../../../docs/mockups/src/components/operator/codes.module.css'
-import { asApiError } from '../../app/store'
 import { useServices } from '../../app/services'
 import type { OperatorAccessCode } from '../../shared/operator-waitlist'
 import { joinPath } from '../../shared/waitlist'
 import { IconButton } from '../ui/actions'
+import { useCopyToast } from './useCopyToast'
 
 /** The state of a code as a glyph and a word. */
 export function CodeStateText(props: { state: OperatorAccessCode['state'] }) {
@@ -42,27 +41,15 @@ export function codeName(code: OperatorAccessCode): string {
  * or that it took nothing.
  */
 function useCopy() {
-  const { appOrigin, copy } = useServices()
-  const { toast } = useToast()
-  const put = (text: string, copied: string, failed: string) => {
-    copy(text).then(
-      () => toast({ title: copied, tone: 'success' }),
-      (error: unknown) =>
-        toast({
-          title: failed,
-          description: asApiError(error).message,
-          tone: 'error',
-        }),
-    )
-  }
+  const { appOrigin } = useServices()
+  const put = useCopyToast()
   return {
-    code: (code: string) => put(code, `Copied ${code}`, `${code} didn't copy`),
+    code: (code: string) => put(code),
     joinLink: (code: string) =>
-      put(
-        new URL(joinPath(code), appOrigin).href,
-        `Copied the join link of ${code}`,
-        `The join link of ${code} didn't copy`,
-      ),
+      put(new URL(joinPath(code), appOrigin).href, {
+        copied: `Copied the join link of ${code}`,
+        failed: `The join link of ${code} didn't copy`,
+      }),
   }
 }
 

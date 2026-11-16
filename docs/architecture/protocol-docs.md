@@ -116,6 +116,8 @@ This page lists each protocol doc and what it covers.
   reports.
 - [Operator section](../protocol/operator-section.md): the pages of the
   operator in the web app, their counts, and their searches.
+  - [Operator section: the Overview](../protocol/operator-overview.md): the
+    live counts of the Overview, and the long runs of cloud computers.
 - [Command palette](../protocol/command-palette.md): the key and the search
   that finds the workspaces, the actions, and the settings.
 - [Command palette: empty and unavailable states](../protocol/command-palette-states.md):

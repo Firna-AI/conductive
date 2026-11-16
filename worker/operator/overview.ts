@@ -1,4 +1,7 @@
-import type { OperatorOverview } from '../../src/shared/operator'
+import type {
+  OperatorLongRun,
+  OperatorOverview,
+} from '../../src/shared/operator'
 import {
   runningWorkspacePredicate,
   workspaceStateCounts,
@@ -22,7 +25,7 @@ interface Totals {
   archived: number
   builds: number
 }
-type OverviewRow = Totals | DailyCount | LargestOrg
+type OverviewRow = Totals | DailyCount | LargestOrg | OperatorLongRun
 
 function dailyCounts(rows: OverviewRow[], firstDay: number): DailyCount[] {
   const counts = new Map(
@@ -44,10 +47,11 @@ export async function readOperatorOverview(
   const day = new Date(readAt)
   day.setUTCHours(0, 0, 0, 0)
   const firstDay = day.getTime() - 29 * DAY
-  const [counts, workspaceDays, userDays, orgs] = await db.batch<OverviewRow>([
-    db
-      .prepare(
-        `SELECT * FROM (
+  const [counts, workspaceDays, userDays, orgs, runs] =
+    await db.batch<OverviewRow>([
+      db
+        .prepare(
+          `SELECT * FROM (
            SELECT COUNT(*) AS usersTotal,
              COUNT(CASE WHEN created_at BETWEEN ?1 AND ?2 THEN 1 END) AS usersLastWeek
            FROM users
@@ -67,37 +71,55 @@ export async function readOperatorOverview(
            SELECT COUNT(*) AS builds FROM image_builds b
            JOIN image_build_jobs j ON j.build_id = b.id WHERE j.phase != 'done'
          )`,
-      )
-      .bind(readAt - 7 * DAY, readAt),
-    db
-      .prepare(
-        `SELECT strftime('%Y-%m-%d', created_at / 1000, 'unixepoch') AS date,
+        )
+        .bind(readAt - 7 * DAY, readAt),
+      db
+        .prepare(
+          `SELECT strftime('%Y-%m-%d', created_at / 1000, 'unixepoch') AS date,
            COUNT(*) AS count FROM workspaces WHERE created_at BETWEEN ? AND ?
          GROUP BY date ORDER BY date`,
-      )
-      .bind(firstDay, readAt),
-    db
-      .prepare(
-        `SELECT strftime('%Y-%m-%d', created_at / 1000, 'unixepoch') AS date,
+        )
+        .bind(firstDay, readAt),
+      db
+        .prepare(
+          `SELECT strftime('%Y-%m-%d', created_at / 1000, 'unixepoch') AS date,
            COUNT(*) AS count FROM users WHERE created_at BETWEEN ? AND ?
          GROUP BY date ORDER BY date`,
-      )
-      .bind(firstDay, readAt),
-    db.prepare(
-      `SELECT o.id, o.name, o.initials,
+        )
+        .bind(firstDay, readAt),
+      db.prepare(
+        `SELECT o.id, o.name, o.initials,
          (SELECT COUNT(*) FROM org_members m WHERE m.org_id = o.id) AS members,
          COUNT(w.id) AS workspaces,
          COUNT(CASE WHEN ${runningWorkspacePredicate} THEN 1 END) AS running
        FROM orgs o LEFT JOIN workspaces w ON w.org_id = o.id
        WHERE o.deleted_at IS NULL GROUP BY o.id
        ORDER BY workspaces DESC, o.name LIMIT 5`,
-    ),
-  ])
+      ),
+      db.prepare(
+        `SELECT w.id AS workspaceId, w.number AS workspaceNumber,
+         o.id AS orgId, o.name AS orgName,
+         CASE WHEN o.deleted_at IS NOT NULL THEN 'deleted'
+           WHEN o.suspended_at IS NOT NULL THEN 'suspended' ELSE 'active' END AS orgStatus,
+         u.github_id AS ownerGithubId, u.github_login AS ownerLogin,
+         CASE WHEN u.suspended_at IS NULL THEN 'active' ELSE 'suspended' END AS ownerStatus,
+         w.sandbox_id AS cloudComputerId, w.state,
+         w.running_since AS runningSince, w.last_activity_at AS lastActivityAt
+       FROM workspaces w JOIN orgs o ON o.id = w.org_id
+       JOIN users u ON u.id = w.owner_user_id
+       WHERE ${runningWorkspacePredicate} AND w.running_since IS NOT NULL
+       ORDER BY w.running_since ASC, w.id ASC LIMIT 10`,
+      ),
+    ])
   const totals = counts.results[0]
   if (!totals || !('usersTotal' in totals))
     throw new Error('Invalid overview totals')
   const largestOrgs = orgs.results.map((row) => {
     if (!('id' in row)) throw new Error('Invalid overview org count')
+    return row
+  })
+  const longRuns = runs.results.map((row) => {
+    if (!('workspaceId' in row)) throw new Error('Invalid overview long run')
     return row
   })
   return {
@@ -119,5 +141,6 @@ export async function readOperatorOverview(
     newWorkspacesByDay: dailyCounts(workspaceDays.results, firstDay),
     newUsersByDay: dailyCounts(userDays.results, firstDay),
     largestOrgs,
+    longRuns,
   }
 }
