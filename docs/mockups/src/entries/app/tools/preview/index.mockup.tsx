@@ -21,6 +21,7 @@ export const portPreview = defineScreen({
     ports: 'open',
     focus: 'tool',
   },
+  useCasePaths: ['user-flows/open-a-local-server'],
   render: (props, context) => (
     <WorkspaceScreen state={props} viewport={context.viewport} />
   ),
