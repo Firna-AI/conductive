@@ -4,7 +4,7 @@ import {
   GITHUB_INSTALL_PATH,
   GITHUB_SETUP_PATH,
 } from '../src/shared/github-setup'
-import { HEALTH_PATH, type HealthResponse } from '../src/shared/health'
+import { HEALTH_PATH } from '../src/shared/health'
 import { SITE_FOLDER } from '../src/shared/site-build'
 import type { AppDependencies, AppEnv } from './env'
 import { githubInstallResponse, githubSetupResponse } from './github-setup'
@@ -64,6 +64,9 @@ import { cleanupCodexDevices } from './codex-auth/device-store'
 import { warnWorker } from './warnings'
 import { routineRunRuntime } from './routines/run-runtime'
 import { scanRoutineSchedules } from './routines/schedule-scan'
+import { healthResponse } from './health-response'
+import { isSecretMachinePath } from './secrets/routes'
+import { routeSecretTool } from './tools/secrets'
 
 export function createApp(overrides: Partial<AppDependencies> = {}) {
   const dependencies: AppDependencies = {
@@ -138,6 +141,8 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
           return respond(await routeMacCommand(request, env))
         }
         if (surface === 'machine') {
+          if (isSecretMachinePath(path))
+            return respond(await routeSecretTool(request, env))
           if (path === SOFTWARE_IMAGE_PATH)
             return respond(
               await handleSoftwareImage(request, env, dependencies),
@@ -292,9 +297,4 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
       }
     },
   }
-}
-
-function healthResponse(): Response {
-  const body: HealthResponse = { status: 'ok' }
-  return privateResponse(Response.json(body))
 }

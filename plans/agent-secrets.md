@@ -909,17 +909,17 @@ Merge resolutions and preservation evidence: `.context/agent-secrets/merge-main-
 
 Depends on: 3
 
-- [ ] Add the fixed routes under `/v1/tools/secrets` and add them to the
+- [x] Add the fixed routes under `/v1/tools/secrets` and add them to the
       token gate of the machine host.
-- [ ] Keep each waiting request in the Durable Object of the workspace.
+- [x] Keep each waiting request in the Durable Object of the workspace.
       Send it to the browsers, set needs input, and end it with its turn.
-- [ ] Add the answer route for members: allow, deny, a value for 15
+- [x] Add the answer route for members: allow, deny, a value for 15
       minutes or for this workspace, and Save.
-- [ ] End the tool call at the time limit of a request. Keep the request
+- [x] End the tool call at the time limit of a request. Keep the request
       open as a late request. Send the message of a late answer.
-- [ ] Return values only to a run call of an approved session whose turn
+- [x] Return values only to a run call of an approved session whose turn
       runs. Add each used value to the exact-copy filter.
-- [ ] Add tests beside the code.
+- [x] Add tests beside the code.
 
 ## Milestone 5: The workspace tools
 
@@ -941,10 +941,12 @@ Tags: ui
 
 Depends on: 3
 
-- [ ] Build the Secrets tab of the org settings from the mockup.
-- [ ] Build the Capabilities icon and control of New workspace from the
-      mockup, and of an existing workspace.
-- [ ] Add tests beside the code.
+- [x] Build the Secrets tab of the org settings from the mockup.
+- [x] Build the Capabilities icon and control of New workspace from the
+      mockup, and of an existing workspace. The "Values for this
+      workspace" group moved to Milestone 7, because it needs the
+      contract of Milestone 4. My call of 16 November 2026.
+- [x] Add tests beside the code.
 
 ## Milestone 7: Request card and chat results
 
@@ -954,6 +956,9 @@ Depends on: 4, 6
 
 - [ ] Build the request card, the late request widget, and the chat
       results from the mockup.
+- [ ] Add the "Values for this workspace" group, with Remove, to the
+      Capabilities control of a workspace. It reads `workspaceValues`
+      and calls `DELETE /secret-values/:id` of Milestone 4.
 - [ ] Run `npm run marketing:pictures`, because the composer now shows
       the Capabilities icon.
 - [ ] Add tests beside the code. Check the flow in a browser.

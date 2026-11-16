@@ -72,9 +72,11 @@ npm run test -- worker/chat/integration
   with Vite and starts it, with `https://api.conductive.test` as the
   machine origin. It sets a fake app-wide Boat key and Boat organization.
 - `createOuterRuntime` takes the model, archive, and GitHub App key
-  settings as `configuration`. With `persistencePath`, its `restart()`
+  settings as `configuration`. Each runtime has isolated persisted storage.
+  Its `restart()`
   starts a new runtime on the same stored data, and keeps the fake Boat
-  and GitHub state.
+  and GitHub state. The default storage stays outside the repository and
+  is removed on disposal. A caller can keep its own `persistencePath`.
 - `seedOuterRuntime` in `outer-seed.test-support.ts` adds three users with
   sessions, two orgs, two workspaces with tokens, stored agent logins, and
   a published org image.

@@ -1,10 +1,8 @@
-import type { DeviceCommandRecord } from '../generated/DeviceCommandRecord'
-
 import type { TranscriptItem } from './transcript'
 
 /** A command and the item that it follows, or null when it comes first. */
-export interface PlacedCommand {
-  request: DeviceCommandRecord
+export interface PlacedCommand<Request> {
+  request: Request
   after: string | null
 }
 
@@ -24,11 +22,13 @@ const endsTurn = (item: TranscriptItem) =>
  * no item in the transcript follows the last item. Commands with the same
  * place keep the order of `requests`.
  */
-export function placeCommands(
+export function placeCommands<
+  Request extends { turnId: string; createdAt: number },
+>(
   items: readonly TranscriptItem[],
   times: ReadonlyMap<string, number>,
-  requests: readonly DeviceCommandRecord[],
-): PlacedCommand[] {
+  requests: readonly Request[],
+): PlacedCommand<Request>[] {
   return requests.map((request) => {
     let last: string | null = null
     for (const [index, item] of items.entries()) {
