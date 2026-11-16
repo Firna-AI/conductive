@@ -246,6 +246,16 @@ It keeps every other preference and every saved view.
 An unset view now uses the dialog, so only accounts made after this migration get the dialog without a choice.
 [The preference](../docs/protocol/create-a-workspace.md#the-preference) gives the requirement.
 
+`202611161200_user_last_active.sql` adds the nullable `users.last_active_at` column.
+It holds the time of the last new workspace or chat message of the person, as [the Worker README](../worker/README.md#last-active-time) says.
+The migration fills each existing user from the creation time of the newest workspace that the person created in the app, from `workspace_runtime.created_by_user_id`.
+It counts only a workspace whose first message ID has the 36-character form of `crypto.randomUUID()`, which only the app makes.
+Routine runs and agent tools make 43-character IDs, and the ID form stays after a routine delete removes its runs.
+As a second guard, it also leaves out each workspace with a `created_by_workspace_id`, and each workspace of a routine run, by `routine_runs.workspace_id` or by its first message ID.
+It also leaves out each workspace after the end of the last sign-in session, 7 days after `users.updated_at`, because no session of the person could create it.
+Chat messages live in Durable Object storage, so the migration cannot read them.
+A user with no such workspace keeps `NULL`.
+
 ## Reserved ranges
 
 Each milestone owns the complete inclusive range below.
@@ -310,3 +320,12 @@ automations, as the product did. The `routines` table becomes
 `routine_id` column becomes `automation_id`. Each index gets the new name.
 The rows stay. Saved default names and stored failure codes and messages
 of runs and creation attempts use the new word, as new rows do.
+
+`202611161300_workspace_branch_names.sql` adds `workspaces.branch_placeholder`
+and `workspaces.task_number`. Existing rows get 0 and 1, so their branches stay.
+A new row starts with 1 in both. The start sets the placeholder to 0 before it
+uses the branch in the sandbox. Until then, a name renames the branch, as
+[The branch and the name](../docs/protocol/create-a-workspace.md#the-branch-and-the-name)
+says. Each Continue adds 1 to the task number. A row from before this file
+starts at task 1, also after an earlier Continue, because D1 holds no count
+of earlier Continues.

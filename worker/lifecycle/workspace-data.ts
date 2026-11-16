@@ -22,7 +22,7 @@ const columns = `w.id, w.number, w.org_id AS orgId, w.repository_id AS repositor
   w.provider_account AS providerAccount, w.state, w.github_summary AS github,
   w.created_at AS createdAt, w.updated_at AS updatedAt, w.archived_at AS archivedAt,
   w.stopped_at AS stoppedAt, w.next_disk_keepalive_at AS nextDiskKeepaliveAt,
-  r.agent, r.model, r.effort, r.fast, r.session_id AS sessionId, r.first_turn_id AS firstTurnId`
+  w.task_number AS taskNumber, r.agent, r.model, r.effort, r.fast, r.session_id AS sessionId, r.first_turn_id AS firstTurnId`
 
 export async function readWorkspace(
   db: D1Database,
@@ -132,8 +132,8 @@ export async function insertWorkspace(
     db
       .prepare(
         `INSERT INTO workspaces (id, org_id, repository_id, owner_user_id, section_id,
-       name, branch, base_branch, provider_account, state, created_at, updated_at, last_activity_at, position)
-       SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, 'starting', ?, ?, ?,
+       name, branch, branch_placeholder, base_branch, provider_account, state, created_at, updated_at, last_activity_at, position)
+       SELECT ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, 'starting', ?, ?, ?,
          (SELECT COALESCE(MIN(position) - 1, 0) FROM workspaces
           WHERE org_id = ? AND section_id = ? AND archived_at IS NULL AND state != 'archived')
        WHERE ${activeOrgIdPredicate('?')}`,

@@ -69,7 +69,7 @@ const reviewRun: Workspace = {
   name: 'Review address autocomplete',
   number: 403,
   link: workspaceLink('cm0YjhrB-DTIEJp6mtDjfkR-lAm76zVuKQRMXFPtTzg'),
-  branch: `${people.cal.login}/porto-3f8m`,
+  branch: `${people.cal.login}/review-address-autocomplete-3f8m`,
   repository: 'storefront',
   section: review.section,
   choice: review.choice,

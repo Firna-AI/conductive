@@ -162,3 +162,29 @@ it('fails missing agent and expired GitHub logins before any workspace create', 
   ).toBe(0)
   expect(fixture.boat.starts).toEqual([])
 })
+
+it('does not record a scheduled run as an action of the automation owner', async () => {
+  const fixture = await runFixture(harness)
+  const { runtime, org, user, seedRun } = fixture
+  await seedRun('run-one', {
+    kind: 'schedule',
+    schedule: 'daily',
+    scheduledAt: TEST_TIME,
+  })
+  const queued = fixture.nextQueued()
+  const starting = startAutomationRun(runtime, org.id, 'run-one')
+  await fixture.starts.get(await queued)!.advance()
+  await starting
+  expect(
+    await runtime.env.DB.prepare(
+      'SELECT COUNT(*) AS count FROM workspaces',
+    ).first('count'),
+  ).toBe(1)
+  expect(
+    await runtime.env.DB.prepare(
+      'SELECT last_active_at AS at FROM users WHERE id = ?',
+    )
+      .bind(user.id)
+      .first('at'),
+  ).toBeNull()
+})

@@ -171,7 +171,8 @@ number names a dated record, as
   replaces it, as
   [Workspace and session names](agents-and-sessions.md#workspace-and-session-names)
   says.
-- Rename keeps the branch, as
+- Rename changes the branch only before the start creates the branch in
+  the sandbox. After that, Rename keeps the branch, as
   [The branch and the name](create-a-workspace.md#the-branch-and-the-name)
   says.
 

@@ -215,6 +215,11 @@ The machine tools use the configured app origin instead.
   the index is 0.
 - A section move request holds `position`, the index in the section list.
   Each index counts the rows without the moved row.
+- A section create request can hold `afterSectionId`. The insert and a
+  move in the same batch then put the new section directly below that
+  section of the org. The move finds the place from the current rows.
+  Without `afterSectionId`, or when that section is gone, the new section
+  goes last.
 - A move ranks the current rows of its target from an `AS MATERIALIZED`
   snapshot, then puts the moved row at the index. That keyword makes
   SQLite compute the snapshot once, before the update changes a row.

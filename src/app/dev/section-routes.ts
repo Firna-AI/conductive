@@ -5,7 +5,7 @@ import {
   type SectionResponse,
   type SectionsResponse,
 } from '../../shared/sections'
-import { count, flag, record } from '../api/parse'
+import { count, flag, record, text } from '../api/parse'
 import { withoutSection } from '../sections'
 import { requireOrg, requireSection, type DevBackend } from './backend'
 import {
@@ -28,9 +28,14 @@ function numbered(sections: readonly Section[]): Section[] {
   return sections.map((section, position) => ({ ...section, position }))
 }
 
-/** A new section goes at the end of the list, open. */
+/**
+ * A new section goes at the end of the list, open, or directly below
+ * `afterSectionId`. A section that is gone puts it at the end.
+ */
 function createSection(org: OrgState, body: unknown): Response {
-  const name = requiredText(record(body), 'name')
+  const fields = record(body)
+  const name = requiredText(fields, 'name')
+  const after = optional(fields, 'afterSectionId', text)
   const section: Section = {
     id: uniqueId(
       slugify(name, 'section'),
@@ -42,8 +47,14 @@ function createSection(org: OrgState, body: unknown): Response {
     isDefault: false,
     collapsed: false,
   }
-  org.sections = [...org.sections, section]
-  return sectionReply(section, 201)
+  const below = org.sections.findIndex((item) => item.id === after)
+  const at = below === -1 ? org.sections.length : below + 1
+  org.sections = numbered([
+    ...org.sections.slice(0, at),
+    section,
+    ...org.sections.slice(at),
+  ])
+  return sectionReply(requireSection(org, section.id), 201)
 }
 
 /** Rename, collapse, and move. A move puts the section at `position`. */

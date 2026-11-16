@@ -39,9 +39,11 @@ admits a request in the chat queue:
 - Only one Continue runs at a time. A repeat by the same member from the
   same branch joins the running job. Any other request gets 409
   `workspace_continuing`.
-- The new branch takes the name rule of a create from `workspaceBranch` in
+- The new branch takes its name from `workspaceBranch` in
   [`workspace-branch.ts`](workspace-branch.ts), with the owner's current
-  GitHub login.
+  GitHub login, the workspace name, and the next task number. The publish
+  write adds 1 to `workspaces.task_number`. It matches the earlier branch,
+  so a repeated write changes nothing.
 - An admitted Continue counts as activity of the workspace.
 
 ## The reservation

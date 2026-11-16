@@ -11,7 +11,7 @@ import {
 import { useApp } from '../context'
 import type { Viewport } from '../ui/viewport'
 import { dayWidth, DirectoryList, type DirectoryKind } from './DirectoryList'
-import { formatCount, formatShortDay } from './format'
+import { formatCount, formatRecent, formatShortDay } from './format'
 import { OperatorPage } from './OperatorPage'
 import { SearchField } from './SearchField'
 import { NameCell, NameLink, TargetMark, TargetState } from './TargetParts'
@@ -20,6 +20,7 @@ const columns: Readonly<Record<Viewport, TableColumn[]>> = {
   desktop: [
     { key: 'user', label: 'User', flex: 1 },
     { key: 'joined', label: 'Joined', width: dayWidth },
+    { key: 'active', label: 'Last active', width: dayWidth },
     { key: 'orgs', label: 'Orgs', align: 'right', width: 56 },
     { key: 'workspaces', label: 'Workspaces', align: 'right', width: 92 },
   ],
@@ -51,7 +52,8 @@ function detailOf(row: OperatorUserSummary) {
  * The Users tab of the operator: a search over every user by GitHub login,
  * name, or numeric GitHub ID. With no search, it lists the newest users. The
  * line under a login gives the state of a suspended user or of a person who
- * waits, or else the name.
+ * waits, or else the name. Last active gives the time of the last new
+ * workspace or sent message of the user.
  */
 export function UsersTab(props: { search: string }) {
   const app = useApp()
@@ -86,6 +88,14 @@ export function UsersTab(props: { search: string }) {
         return (
           <TableCell muted>
             {formatShortDay(row.joinedAt, today, timeZone)}
+          </TableCell>
+        )
+      case 'active':
+        return (
+          <TableCell muted>
+            {row.lastActiveAt === null
+              ? 'Unknown'
+              : formatRecent(row.lastActiveAt, today, timeZone)}
           </TableCell>
         )
       case 'orgs':

@@ -32,7 +32,7 @@ number names a dated record, as
   the start and at the end gets HTTP 400 with the error code
   `invalid_input`, as the section route of the app does.
 - The new section comes at the end of the sections of the org, as New
-  section in the app does.
+  section in the command palette of the app does.
 - The reply gives the new section with its ID and its name, as the section
   list gives them.
 - `delete_section` takes a section of the org. It makes the same change as

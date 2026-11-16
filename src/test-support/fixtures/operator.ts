@@ -25,6 +25,7 @@ import { sampleAccessRecords } from './operator-access-records'
 import {
   daysBefore,
   SAMPLE_IDS,
+  sampleLastActiveAt,
   sampleOrgs,
   sampleUsers,
   type SampleOrg,
@@ -125,6 +126,7 @@ export function sampleUserDetail(
     name: user.name,
     email: access.hasVerifiedEmail ? `${user.login}@example.com` : null,
     joinedAt,
+    lastActiveAt: sampleLastActiveAt(user.login, now),
     ...access,
     workspaces: { total: user.owned, running: user.running },
     orgs: sampleOrgs.flatMap((org) => {
@@ -176,6 +178,7 @@ export function userRow(user: OperatorUserDetail): OperatorUserSummary {
     login: user.login,
     name: user.name,
     joinedAt: user.joinedAt,
+    lastActiveAt: user.lastActiveAt,
     orgs: user.orgs.length,
     workspaces: user.workspaces.total,
     status: user.suspension ? 'suspended' : 'active',

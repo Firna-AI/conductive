@@ -230,8 +230,8 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
         const chatResponse = await routeChat(
           request,
           env,
-          dependencies.now,
-          dependencies.randomToken,
+          dependencies,
+          execution,
         )
         if (chatResponse) return respond(chatResponse)
         const featureResponse = await routeWorkspaceFeatures(
