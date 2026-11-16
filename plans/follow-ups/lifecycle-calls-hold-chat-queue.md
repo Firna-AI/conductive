@@ -22,7 +22,7 @@
   - The start phases also write the workspace token with `ensureWorkspaceToken` of `worker/lifecycle/tokens.ts` in the queue. Archive revokes that token in a turn of the same object, so a late token write from an outside call could make it active again.
   - These also make calls in the queue: the admission of a start, the runner readiness check, disk retention, Archive, cleanup, and the authorization reads of Continue.
 - **Problem:** Each of these calls holds the chat queue for the time of the call. A Boat request can take up to 30 seconds, and a command up to 610 seconds. During that time, the chat reads, the messages, and the runner receipts of the workspace wait.
-- **Impact if no action:** After each start, the restore watch delays the chat reads of the workspace every 5 seconds. A slow Boat reply or D1 query delays them for its whole time. The turn token check of the model gateway also waits in the queue. A call that holds the queue for longer than about 15 seconds ends each streaming model answer of the workspace when its 30-second lease ends, as `plans/model-stream-drops.md` says.
+- **Impact if no action:** After each start, the restore watch delays the chat reads of the workspace every 5 seconds. A slow Boat reply or D1 query delays them for its whole time.
 - **Root question:** How does the other lifecycle work of a workspace make its slow calls without holding the chat queue?
 - **Options:**
   - **A.** Change nothing. The start progress phases, the most frequent callers, already step outside. Effort: Small.

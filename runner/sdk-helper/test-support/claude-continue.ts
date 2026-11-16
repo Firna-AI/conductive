@@ -47,12 +47,11 @@ export async function continueFixture() {
         user_message_uuids: [uuid],
         ...fields,
       }),
-    stream: (event: unknown, fields: Record<string, unknown> = {}) =>
+    stream: (event: unknown, fields: Record<string, unknown> | null = {}) =>
       sdk.raw({
         type: 'stream_event',
-        user_message_uuid: uuid,
+        ...(fields === null ? {} : { user_message_uuid: uuid, ...fields }),
         event,
-        ...fields,
       }),
     tasks: () =>
       sdk.raw({
@@ -61,4 +60,95 @@ export async function continueFixture() {
         tasks: [{ task_id: 'watch', task_type: 'local_bash' }],
       }),
   }
+}
+
+export async function wakeContinueFixture() {
+  const h = await continueFixture()
+  await h.tasks()
+  await h.sdk.raw({
+    type: 'result',
+    is_error: false,
+    user_message_uuid: h.uuid,
+  })
+  await h.drop({
+    origin: { kind: 'task-notification' },
+    user_message_uuids: [],
+  })
+  return { ...h, continued: string((await h.sdk.nextUser()).uuid) }
+}
+
+export async function claudeReply(
+  h: Awaited<ReturnType<typeof continueFixture>>,
+  id: string,
+  options: {
+    uuids?: readonly string[]
+    text: string
+    thinking?: boolean
+    tool?: string
+  },
+) {
+  const stamp = options.uuids
+    ? {
+        user_message_uuid: options.uuids.at(-1),
+        user_message_uuids: options.uuids,
+      }
+    : null
+  await h.stream({ type: 'message_start', message: { id } }, stamp)
+  let index = 0
+  if (options.thinking) {
+    await h.stream(
+      {
+        type: 'content_block_start',
+        index,
+        content_block: { type: 'thinking', thinking: '' },
+      },
+      null,
+    )
+    await h.sdk.raw({
+      type: 'assistant',
+      message: { id, content: [{ type: 'thinking', thinking: 'Think.' }] },
+      ...stamp,
+    })
+    index++
+  }
+  await h.stream(
+    {
+      type: 'content_block_start',
+      index,
+      content_block: { type: 'text', text: '' },
+    },
+    null,
+  )
+  await h.stream(
+    {
+      type: 'content_block_delta',
+      index,
+      delta: { type: 'text_delta', text: options.text },
+    },
+    null,
+  )
+  await h.sdk.raw({
+    type: 'assistant',
+    message: { id, content: [{ type: 'text', text: options.text }] },
+    ...(options.thinking ? {} : stamp),
+  })
+  if (options.tool)
+    await h.sdk.raw({
+      type: 'assistant',
+      message: {
+        id,
+        content: [
+          { type: 'tool_use', id: options.tool, name: 'Bash', input: {} },
+        ],
+      },
+    })
+  await h.stream({ type: 'message_stop' }, null)
+  if (options.tool)
+    await h.sdk.raw({
+      type: 'user',
+      message: {
+        role: 'user',
+        content: [{ type: 'tool_result', tool_use_id: options.tool }],
+      },
+    })
 }

@@ -183,9 +183,10 @@ complete.
   try either. The gateway answers HTTP 503 with
   `model_gateway_unavailable`. Reason: no part of the answer exists yet.
   Claude then sends the request again by itself.
-- A check that accepts the token does not wait for other work of the
+- A check first reads the turn without waiting for other work of the
   workspace, such as a start or a stop of its sandbox (stream drop
-  decision 1). Reason: such work can take more than 30 seconds.
+  decision 1). When that read accepts the token, the check does not wait.
+  Reason: such work can take more than 30 seconds.
 - A refusal always comes from a check that waited for that work. So no
   check refuses a turn that is only half saved. A check that saves the
   renewal claim of a ChatGPT sign-in also waits.

@@ -35,7 +35,8 @@ they are complete. The gateway side of a drop is in
 - A drop in a reply after a notification of
   [background work](agent-runner.md#background-work) gets a continue
   message too. The reply to it then answers no message, as the cut reply
-  did.
+  did. When the agent takes in a member message in the same reply, the
+  reply answers that message.
 - Each start of the agent program gets at most one continue message. A
   second drop fails the turn, which names the cause.
 - A Codex turn gets no continue message. Reason: Codex connects again by

@@ -11,7 +11,8 @@ first.
   queued browser requests.
 - `workspace-binding.ts`: `ChatWorkspaceBinding`, which binds chat to one workspace and checks the object identity.
 - [../model-gateway/workspace.ts](../model-gateway/workspace.ts): `WorkspaceTurnTokens`, available through `WorkspaceChat.turnTokens`.
-  It derives a running turn's token and checks the starter's current login in the chat queue.
+  It derives a running turn's token and checks the starter's current login.
+  A check with no Codex claim reads outside the chat queue first. Every refusal and every write comes from a check in the queue.
   Runner delivery gets the token of each `turn` command from `forRunningTurn`.
 - `dependencies.ts`: the default seams of `WorkspaceChat`, which a feature
   owner can replace. The login resolver always wraps an override.

@@ -20,8 +20,12 @@ function userUuids(input: Record<string, unknown>): string[] {
 
 interface Continuation {
   uuid: string
-  userMessageIds: readonly string[]
   wake: boolean
+}
+
+interface Reply {
+  uuids: readonly string[]
+  userMessageIds: readonly string[]
 }
 
 /**
@@ -38,7 +42,7 @@ function mcpTool(name: string): string | null {
 export class ClaudeEvents {
   private messageId = ''
   private readonly tools = new Map<string, ReturnType<typeof mapTool>>()
-  private userIds: string[] = []
+  private reply: Reply = { uuids: [], userMessageIds: [] }
   private errorKind: ReturnType<typeof assistantError> = null
   private unfinished = false
   private continued = false
@@ -72,10 +76,26 @@ export class ClaudeEvents {
   accept(value: unknown): readonly string[] | undefined {
     const input = object(value)
     const uuids = userUuids(input)
-    const continuation = this.continuationFor(input, uuids)
+    const continuation =
+      input.type === 'result' ? this.continuationFor(input, uuids) : null
+    const completed =
+      continuation && !uuids.length ? [continuation.uuid] : uuids
+    let reply = this.reply
+    if (
+      Array.isArray(input.user_message_uuids) ||
+      (typeof input.user_message_uuid === 'string' &&
+        this.ids.has(input.user_message_uuid))
+    )
+      reply = this.association(uuids)
+    if (continuation && !uuids.length)
+      reply = this.reply.uuids.includes(continuation.uuid)
+        ? this.reply
+        : this.association(completed)
     const wake =
       input.type === 'result' &&
-      (continuation?.wake ?? !this.answersOutstandingInput(input))
+      (continuation
+        ? continuation.wake && !reply.userMessageIds.length
+        : !this.answersOutstandingInput(input))
     if (wake && !this.background.waited && !continuation) return
     if (
       this.background.waited &&
@@ -84,23 +104,12 @@ export class ClaudeEvents {
       input.state === 'running' &&
       ![...this.ids.keys()].some(this.hasOutstanding)
     )
-      this.userIds = []
+      this.reply = this.association([])
     if (this.background.accept(input)) return
+    if (wake) reply = this.association([])
+    this.reply = reply
     if (typeof input.session_id === 'string')
       this.emit({ type: 'conversation', id: input.session_id })
-    if (wake) this.userIds = []
-    else if (
-      Array.isArray(input.user_message_uuids) ||
-      (typeof input.user_message_uuid === 'string' &&
-        this.ids.has(input.user_message_uuid))
-    ) {
-      const ids = uuids.flatMap((id) => this.ids.get(id) ?? [])
-      this.userIds = [
-        ...new Set(
-          ids.length || !continuation ? ids : continuation.userMessageIds,
-        ),
-      ]
-    } else if (continuation) this.userIds = [...continuation.userMessageIds]
     if (input.parent_tool_use_id) return
     this.speed.accept(input)
     if (input.type === 'stream_event') this.partial(object(input.event))
@@ -118,7 +127,7 @@ export class ClaudeEvents {
       const message = object(input.message)
       const id = string(message.id)
       const blocks = array(message.content, object)
-      this.messages.frame(id, blocks, this.userIds)
+      this.messages.frame(id, blocks, this.reply.userMessageIds)
       for (const block of blocks) {
         if (block.type === 'tool_use') this.beginTool(block)
       }
@@ -160,8 +169,7 @@ export class ClaudeEvents {
         if (outcome.dropped && !this.continued && this.continueInput) {
           this.continued = true
           this.continuation = {
-            uuid: this.continueInput(this.userIds),
-            userMessageIds: [...this.userIds],
+            uuid: this.continueInput(reply.userMessageIds),
             wake,
           }
         } else this.emit(outcome.failure)
@@ -174,9 +182,9 @@ export class ClaudeEvents {
       this.emit({
         type: 'result',
         state: outcome.state,
-        userMessageIds: this.userIds,
+        userMessageIds: reply.userMessageIds,
       })
-      return continuation ? [continuation.uuid, ...uuids] : uuids
+      return completed
     }
   }
 
@@ -194,10 +202,18 @@ export class ClaudeEvents {
     return typeof origin === 'object' &&
       origin !== null &&
       'kind' in origin &&
-      origin.kind === 'task-notification' &&
-      !continuation.wake
+      origin.kind === 'task-notification'
       ? null
       : continuation
+  }
+
+  private association(uuids: readonly string[]): Reply {
+    return {
+      uuids,
+      userMessageIds: [
+        ...new Set(uuids.flatMap((uuid) => this.ids.get(uuid) ?? [])),
+      ],
+    }
   }
 
   private answersOutstandingInput(input: Record<string, unknown>): boolean {
@@ -216,7 +232,7 @@ export class ClaudeEvents {
     if (event.type === 'message_start') {
       this.unfinished = true
       this.messageId = string(object(event.message).id)
-      this.messages.start(this.messageId, this.userIds)
+      this.messages.start(this.messageId, this.reply.userMessageIds)
     }
     if (event.type === 'message_stop') {
       this.unfinished = false
@@ -229,7 +245,7 @@ export class ClaudeEvents {
           this.messageId,
           event.index,
           typeof block.text === 'string' ? block.text : '',
-          this.userIds,
+          this.reply.userMessageIds,
         )
       if (block.type === 'tool_use') this.beginTool(block)
     }
@@ -245,7 +261,7 @@ export class ClaudeEvents {
           this.messageId,
           typeof event.index === 'number' ? event.index : null,
           delta.text,
-          this.userIds,
+          this.reply.userMessageIds,
         )
         this.emit({
           type: 'delta',

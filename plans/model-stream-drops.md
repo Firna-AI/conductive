@@ -222,7 +222,9 @@ decision.
   member message IDs marks every message of the turn as answered.
 - A drop in a wake-up reply during a background wait gets a continue
   message too. Its answer counts as a wake-up reply, like the reply that
-  dropped.
+  dropped. When the same reply also takes in a member message, its answer
+  answers that message. My call after review finding 1, on 16 November
+  2026.
 - The continue message says: "The connection to the model dropped before
   your last response finished. Continue from where you stopped. Do not
   repeat work that is already done. Start your reply with one short

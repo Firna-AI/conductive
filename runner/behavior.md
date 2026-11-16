@@ -114,7 +114,9 @@ These facts belong to this implementation, not to the protocol docs.
   request that dropped. So its result frees the same held input, and the
   runner ends the turn only when the agent finishes. A drop in a wake-up
   reply during a background wait also gets a continue message. Its result
-  then counts as a wake-up reply, like the reply that dropped.
+  then counts as a wake-up reply, like the reply that dropped, unless the
+  reply also takes in a member message. Then its result answers that
+  message.
 - Each agent process gets at most one continue message. A second drop
   fails the turn. A Stop before or during the continue message ends the
   turn as stopped. An automatic release update gives an existing
