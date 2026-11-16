@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Post-merge task.
 - **Added:** 2026-11-16, from the post-merge follow-up of the branch-name change on the branch `calummoore/riga-aumm`.
-- **Location:** `worker/lifecycle/workspace-branch.ts`, `worker/lifecycle/start-command-execution.ts`, `worker/chat/workspace-titles.ts`, and `migrations/202611161200_workspace_branch_names.sql`.
+- **Location:** `worker/lifecycle/workspace-branch.ts`, `worker/lifecycle/start-command-execution.ts`, `worker/chat/workspace-titles.ts`, and `migrations/202611161300_workspace_branch_names.sql`.
 - **Reason:** The check needs the deployed Worker, the applied migration, and a real title model and cloud computer.
 
 - **Terms:**
