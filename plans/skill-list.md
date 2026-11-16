@@ -146,13 +146,13 @@ Each call below is my call, made on 2026-11-13.
   change that the repository watcher sees:
   - Claude: a scan of `<repository>/.claude/skills/*/SKILL.md`, because the
     runner starts Claude with the project settings only
-    (`runner/src/providers/claude.ts:146`).
+    (`runner/sdk-helper/src/providers/claude.ts`).
   - Codex: the `skills/list` answer of the Codex app server for the
     repository folder, with the shared Codex home `~/.conductive/codex`.
     Reason: it follows the exact rules of Codex, and it gives the path that
     the structured input needs. A session with a gateway token has its own
     Codex home without a `skills` folder
-    (`runner/src/providers/codex-credentials.ts`), so the list uses the
+    (`runner/sdk-helper/src/providers/codex-credentials.ts`), so the list uses the
     shared home. When the app server gives no answer, the runner scans
     `<repository>/.agents/skills` and `<repository>/.codex/skills`, and it
     warns.
@@ -461,6 +461,16 @@ Depends on: 1, 5
       × in the icon cell under a pointer was not seen. The chip uses the
       shared `ChipIconCell` of the file chips.
 - [x] Update the READMEs of `src/chat/`.
+
+### Integration with the Rust runner
+
+My call on 2026-11-16: preserve the skill feature in the Rust runner that
+main now uses. The Rust runner owns report scheduling, filtering, durable
+reports, and refresh receipts. Its private SDK helper reads the skill
+sources and supplies Codex skill inputs. The interface crate owns the skill
+wire types, and the app imports their generated TypeScript directly.
+This changes the implementation, not the skill requirements or the open
+manual-only Claude decision.
 
 ## Milestone 7: Verification, commit, review, and pull request
 

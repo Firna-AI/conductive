@@ -6,7 +6,7 @@ import {
   type LexicalEditor,
 } from 'lexical'
 import { allFilesUnavailable } from '../../../../docs/mockups/src/components/chat/lostCopy'
-import type { FileEntry } from '../../../shared/files'
+import type { FileEntry } from '../../../shared/generated/FileEntry'
 import { useChatLinks } from '../../links/LinksContext'
 import { MentionIcon } from '../../mentions/MentionIcon'
 import { folderLabel, mentionRows } from '../../mentions/mention-rows'

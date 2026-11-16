@@ -14,8 +14,8 @@ pages:
   copy. Try again." in the danger colour.
 - `app/workspace-links/messages` has a pasted link as a chip in the
   message box. Its `sent` variant has the sent message while the agent
-  works, and its `other-org` variant has a link of another org as plain
-  text.
+  works, and its `other-org` variant has a link of another org, which is
+  a link of the app and no chip.
 - `app/workspace-links/session-chips` has the second session of `W-395`,
   Debounce the address lookups to 250 ms, after its agent sent two
   messages. Its answer names the first session and the session of Saved
@@ -64,7 +64,9 @@ Desktop:
   tab, on hover, and while the focus is in the tab, and a hidden one keeps
   its place. The bar has no Close of its own. Two named tabs do not fit
   beside the actions of the frame, so the end of the tab row fades, as the
-  centre tab row does. Its variants:
+  centre tab row does. A press on the local address of port 3000 in an
+  answer opens this preview, as the flow `user-flows/open-a-local-server`
+  shows. Its variants:
   - `detected` has the port form with no preview open. Each server that
     the runner detects is a button with its port, its name, and its
     folder. A folder that does not fit keeps its end, after "…". The

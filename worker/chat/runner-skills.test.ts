@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
-import type { RunnerEvent } from '../../src/shared/runner'
+import type { RunnerEvent } from '../../src/shared/generated/RunnerEvent'
 import { createHarness, type TestHarness } from '../test-support/harness'
 import { createChatFixture, WORKSPACE_ID } from './harness.test-support'
 import { captureEnvironment } from './runner-output.test-support'

@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
-import type { RunnerEvent } from '../../src/shared/runner'
-import type { SkillsUpdated } from '../../src/shared/skills'
+import type { RunnerEvent } from '../../src/shared/generated/RunnerEvent'
+import type { SkillsUpdated } from '../../src/shared/generated/SkillsUpdated'
 import { createHarness, type TestHarness } from '../test-support/harness'
 import {
   createChatFixture,

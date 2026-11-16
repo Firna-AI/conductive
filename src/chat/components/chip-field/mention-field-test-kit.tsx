@@ -1,6 +1,6 @@
 import { act, useState } from 'react'
-import type { Agent } from '../../../shared/agents'
-import type { FileEntry } from '../../../shared/files'
+import type { Agent } from '../../../shared/generated/Agent'
+import type { FileEntry } from '../../../shared/generated/FileEntry'
 import { accessibleName, byRole } from '../../../test-support/dom-queries'
 import { filesAfterHistory, startFiles } from '../../../files/files-test-kit'
 import type { FakeApiServer } from '../../../test-support/fake-api'

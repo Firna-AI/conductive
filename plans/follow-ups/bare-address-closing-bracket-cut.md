@@ -1,0 +1,32 @@
+# Bare addresses lose a closing square bracket
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-14, from `calummoore/riga-m3j3`, review round 1, finding 2.
+- **Location:** `src/markdown/web-links.ts`, `endMarks` and `bareAddressAt`. `src/markdown/web-links.test.ts`, the end rule test. `docs/protocol/chat-links.md`, "Bare addresses and Markdown links". `docs/mockups/design-links.md`, the end rule. `src/chat/agent-text.md`, the end rule.
+- **Reason:** Only an IPv6 address with no port and no path, or a path that ends in a balanced `[...]`, meets the bug.
+
+- **Terms:**
+  - **Bare address:** a web address in chat text with no Markdown around it.
+  - **Shared reader:** `src/markdown/web-links.ts`, which finds the addresses of chat text, the message field, and the mockups.
+  - **Local address:** in chat text, an address whose host is `localhost`, `127.0.0.1`, `[::1]`, or `0.0.0.0`. A press opens the port preview of its port.
+- **Background:**
+  - Each `http` and `https` address of chat text is a link. The user chose this on 10 November 2026.
+  - `bareAddressAt` finds a bare address, then cuts end marks off its end. `endMarks` holds `.,;:!?'"*_~]`.
+  - A `)` at the end stays only when it closes a `(` inside the address. `docs/protocol/chat-links.md` states this rule, and it also says that a `]` at the end stays out.
+  - `[::1]` counts as a local host. With no port, the port is 80 for `http` and 443 for `https`.
+- **Problem:**
+  - `http://[::1]` loses its `]`. The URL parser then refuses `http://[::1`, so the text gets no link, in plain text and in inline code.
+  - `http://example.com/a[1]` loses its `]` and links `http://example.com/a[1`, another page.
+  - `http://[::1]/` and `http://[::1]:3000` work, because the `]` is not at the end.
+- **Impact if no action:** A member cannot press such an address. A path that ends in `[...]` opens the wrong page.
+- **Root question:** How does a bare address that holds square brackets become a link to its whole address?
+- **Options:**
+  - **A.** Find the bracketed host before the end marks are cut, and keep its `]`. Cost: a path that ends in `[...]` still loses its `]`. Effort: Small.
+  - **B.** Use a URL linkify library. Cost: a new dependency. `linkify-it` 5.0.0 reads no bracketed IPv6 host, so `http://[::1]:3000` would stop being a link. Effort: Medium.
+  - **C.** Give a `]` at the end the rule of a `)`: it stays only when it closes a `[` inside the address. Remove `]` from `endMarks`, and count `[` and `]` as the loop counts `(` and `)`. Change the end rule sentence in `docs/protocol/chat-links.md`, `docs/mockups/design-links.md`, and `src/chat/agent-text.md` to: "A `)` or a `]` at its end stays in only when it closes a `(` or a `[` inside the address." Add `http://[::1]`, `(https://[::1]).`, and `http://example.com/a[1]` to the end rule test. Cost: a balanced `[...]` at the end of a path stays in the link. Effort: Small.
+- **Left out:** A rule that asks for a slash after the host breaks the local address rule. A repair when the link is drawn comes too late, because the reader already moved the `]` into the next text part. A reader that puts back cut characters until the URL parser accepts the address is worse than C on every point.
+- **Wider fix:** C. It keeps each balanced `]`, in the host, the path, the query, or the hash, with no special case for a host.
+- **Previous examples:** None found. On `main` before this change, the old reader also cut a trailing `]`, but a bare address was a link only when it named a workspace.
+- **Recommendation:** C. One rule, the same as the rule for `)`, at the effort of A.
+- **Action:** fix after merge, apply C, because only an unusual input meets the bug.

@@ -1,5 +1,5 @@
 import type { LexicalNode } from 'lexical'
-import type { AgentSkill } from '../../../shared/skills'
+import type { AgentSkill } from '../../../shared/generated/AgentSkill'
 import { skillTextAt, type SkillText } from '../../../shared/skill-text'
 import type { MentionSkills } from '../../mentions/mention-skills'
 import { $createMentionTextNode } from './file-mention-nodes'

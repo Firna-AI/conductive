@@ -1,4 +1,4 @@
-import type { AgentSkill } from '../../shared/skills'
+import type { AgentSkill } from '../../shared/generated/AgentSkill'
 
 /** The most rows that the list of `/` shows. A longer query narrows it. */
 const SKILL_ROW_LIMIT = 100

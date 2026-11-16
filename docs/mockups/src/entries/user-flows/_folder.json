@@ -19,6 +19,7 @@
     "open-a-session-link",
     "mention-a-file",
     "use-a-skill",
-    "drop-a-file"
+    "drop-a-file",
+    "open-a-local-server"
   ]
 }

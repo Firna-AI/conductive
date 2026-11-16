@@ -1,6 +1,7 @@
 import { useCallback, useSyncExternalStore } from 'react'
-import type { Agent } from '../../shared/agents'
-import type { AgentSkill, SkillLists } from '../../shared/skills'
+import type { Agent } from '../../shared/generated/Agent'
+import type { AgentSkill } from '../../shared/generated/AgentSkill'
+import type { SkillLists } from '../../shared/generated/SkillLists'
 import { useChatMentions } from './MentionsContext'
 
 /**

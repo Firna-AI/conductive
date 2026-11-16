@@ -6,7 +6,7 @@ import { PlainTextPlugin } from '@lexical/react/LexicalPlainTextPlugin'
 import fieldStyles from '../../../../docs/mockups/src/components/chat/ChipTextField.module.css'
 import { classes } from '../../../../docs/mockups/src/components/common/classes'
 import { useControlSizes } from '../../../../docs/mockups/src/components/common/touch'
-import type { Agent } from '../../../shared/agents'
+import type { Agent } from '../../../shared/generated/Agent'
 import { useChatLinks } from '../../links/LinksContext'
 import { useMentionSkills } from '../../mentions/mention-skills'
 import { useMentionTree } from '../../mentions/MentionsContext'
@@ -14,7 +14,7 @@ import { AttachedFileNode } from './attached-file-node'
 import { FieldFilesProvider, type FieldFiles } from './attached-files'
 import { LinkTextNode, WorkspaceChipNode } from './chip-nodes'
 import local from './chip-field.module.css'
-import { ClipboardPlugin } from './clipboard-plugins'
+import { ClipboardPlugin, type FieldAttach } from './clipboard-plugins'
 import { DropCaretLayer, type DropCaretControl } from './drop-caret'
 import { $setFieldText } from './field-nodes'
 import { FileMentionNode, MentionTextNode } from './file-mention-nodes'
@@ -77,6 +77,13 @@ export interface ChipTextFieldProps {
    * before, and treats each character of a mark as plain text.
    */
   files?: FieldFiles
+  /**
+   * Attaches files to the draft, as a pick of the composer does, and gives
+   * their IDs at once. With `files`, a large paste then becomes an attached
+   * plain text file with a chip, as `ClipboardPlugin` says. Without it, each
+   * paste stays text.
+   */
+  onAttach?: FieldAttach
   /**
    * The field takes the focus from the keyboard with the caret where it
    * was, or at the end of the text, as the message of New workspace does
@@ -185,7 +192,10 @@ export function ChipTextField(props: ChipTextFieldProps) {
             value={props.value}
           />
           {files ? <OwnedFilesPlugin files={files} /> : null}
-          <ClipboardPlugin owner={props.owner} />
+          <ClipboardPlugin
+            attach={files ? props.onAttach : undefined}
+            owner={props.owner}
+          />
           <EnterPlugin onEnter={props.onEnter} />
           <EditablePlugin editable={editable} />
           <ReconcilePlugin />

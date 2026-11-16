@@ -44,8 +44,8 @@ states the requirements.
   A rewritten interpreter title without an identifiable script has no name.
 - `PortReporter` keeps two successful scans for each addition or removal.
   A failed table read keeps the last list and writes a local warning.
-- Production `main.ts` supplies a scan every 2 seconds. Its timer stops at
-  shutdown. The optional `RunnerOptions.ports` boundary lets tests inject
+- The Rust watch service supplies a scan every 2 seconds. Its timer stops at
+  shutdown. The `PortReports` boundary lets tests inject
   scans and scheduling without reading the host socket tables.
 - The port scan queue is separate from the repository scan queue. Agent
   commands do not wait for either queue.
@@ -67,11 +67,10 @@ states the filters, labels, limits, and scan timing.
 
 ## Skills
 
-- `SkillReporter` in `src/skills.ts` makes the skill list of each agent.
-  It sends the lists in one `skills.updated` event. The optional
-  `RunnerOptions.skills` boundary gives the `SkillLists` that the agent
-  providers read, and lets tests start a fake Codex app server. Production
-  `main.ts` always gives it.
+- The Rust `SkillReporter` owns each `skills.updated` report and its
+  ordered scan queue. It asks a separate SDK helper to scan the skills
+  through private JSON lines. The helper keeps discovery caches. It
+  writes no state and sends no workspace event.
 - Each connect reads both lists and sends the full report before
   `runner.ready`, also when both lists are empty.
 - The repository watcher of the file reports also signals the skills
@@ -96,7 +95,8 @@ states the filters, labels, limits, and scan timing.
   Codex home without a `skills` folder, so the list does not use it.
 - The runner asks the app server after each connect, after a change of a
   `SKILL.md` in the Codex folders, and for a repository change or a refresh
-  that comes 30 seconds or more after the last question. Each question
+  that comes 30 seconds or more after the last question. A requested full
+  refresh always asks again. Each question
   starts one app server process.
 - When the app server gives no answer within 5 seconds, ends, or refuses,
   the Codex list holds each `SKILL.md` below `.agents/skills` and
@@ -123,9 +123,13 @@ states the filters, labels, limits, and scan timing.
   descriptions in list order, Claude first. A description that does not fit
   becomes an empty string, with a local warning. The names alone stay
   within that budget.
-- The report holds no path. `SkillLists` keeps the reported skills with
-  the absolute path of each `SKILL.md`, for the skill input of Codex, as
+- The report holds no path. The Rust report owner keeps the absolute
+  path of each reported Codex skill in memory, for its skill input, as
   [Skills of a message](agent-input.md#skills-of-a-message) says.
+
+The durable store keeps the latest skills report after confirmations and
+restarts. Each report answer saves its command receipt with the report.
+The outbox replays an unconfirmed report with its original event number.
 
 [The skills report](../docs/protocol/skill-mentions.md#the-skills-report)
 states the folders, the limits, the filters, and when the report goes.

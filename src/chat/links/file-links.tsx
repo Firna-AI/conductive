@@ -1,7 +1,7 @@
 import { entryName } from '../../../docs/mockups/src/components/chat/entryPaths'
 import { FileChip } from '../../../docs/mockups/src/components/chat/FileChip'
 import { SentFileChip } from '../../../docs/mockups/src/components/chat/SentFileChip'
-import type { FileEntry } from '../../shared/files'
+import type { FileEntry } from '../../shared/generated/FileEntry'
 import { isPlainClick } from '../../shell/ui/AppLink'
 import { MentionIcon } from '../mentions/MentionIcon'
 import { useChatMentions } from '../mentions/MentionsContext'

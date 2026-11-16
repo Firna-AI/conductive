@@ -1,8 +1,8 @@
 import { useMemo } from 'react'
 import { SkillIcon } from '../../../../docs/mockups/src/components/chat/SkillChip'
 import { skillListCopy } from '../../../../docs/mockups/src/components/chat/skillCopy'
-import type { Agent } from '../../../shared/agents'
-import type { AgentSkill } from '../../../shared/skills'
+import type { Agent } from '../../../shared/generated/Agent'
+import type { AgentSkill } from '../../../shared/generated/AgentSkill'
 import {
   agentSkills,
   useMentionSkills,

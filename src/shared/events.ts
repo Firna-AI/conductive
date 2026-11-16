@@ -1,15 +1,12 @@
-import type { Timestamp } from './api'
+import type { Workspace } from './generated/Workspace'
+import type { Timestamp } from './generated/Timestamp'
+import type { WorkspaceStart } from './generated/WorkspaceStart'
 import type { ChatEvent } from './chat-events'
 import type { FileEvent } from './files'
 import type { GitHubBanner, GitHubChecksResponse } from './github'
 import type { PortsUpdated } from './ports'
-import type { SkillsUpdated } from './skills'
-import {
-  workspacePath,
-  type Workspace,
-  type WorkspaceResponse,
-  type WorkspaceStart,
-} from './workspaces'
+import type { SkillsUpdated } from './generated/SkillsUpdated'
+import { workspacePath, type WorkspaceResponse } from './workspaces'
 
 export function workspaceEventsPath(
   orgId: string,

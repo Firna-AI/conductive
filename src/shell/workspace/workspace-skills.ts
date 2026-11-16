@@ -10,7 +10,7 @@ import type {
   MentionSkills,
   SkillsStore,
 } from '../../chat/mentions/mention-skills'
-import type { AgentSkill } from '../../shared/skills'
+import type { AgentSkill } from '../../shared/generated/AgentSkill'
 
 function readSkill(value: unknown): AgentSkill {
   const skill = record(value, 'skill')

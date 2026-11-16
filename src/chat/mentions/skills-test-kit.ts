@@ -1,5 +1,6 @@
 import { act } from 'react'
-import type { AgentSkill, SkillLists } from '../../shared/skills'
+import type { AgentSkill } from '../../shared/generated/AgentSkill'
+import type { SkillLists } from '../../shared/generated/SkillLists'
 import type { MentionSkills, SkillsStore } from './mention-skills'
 
 // A store of the skill lists for the tests of the chat, with the three

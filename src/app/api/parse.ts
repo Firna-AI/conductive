@@ -46,6 +46,12 @@ export function maybeCount(object: JsonObject, key: string): number | null {
     : count(object, key)
 }
 
+export function maybeFlag(object: JsonObject, key: string): boolean | null {
+  return object[key] === null || object[key] === undefined
+    ? null
+    : flag(object, key)
+}
+
 export function choice<T extends string>(
   object: JsonObject,
   key: string,

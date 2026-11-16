@@ -1,6 +1,6 @@
 import { skills as sampleSkills } from '../../../docs/mockups/src/fixtures/skills'
 import { devTree } from '../../files/dev/dev-fixtures'
-import type { SkillLists } from '../../shared/skills'
+import type { SkillLists } from '../../shared/generated/SkillLists'
 import type { MentionSkills } from '../mentions/mention-skills'
 import type { ChatMentions } from '../mentions/MentionsContext'
 import type { DevOptions } from './dev-options'

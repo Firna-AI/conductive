@@ -1,7 +1,5 @@
-import type {
-  RunnerSkillsUpdated,
-  SkillsUpdated,
-} from '../../src/shared/skills'
+import type { RunnerSkillsUpdated } from '../../src/shared/generated/RunnerSkillsUpdated'
+import type { SkillsUpdated } from '../../src/shared/generated/SkillsUpdated'
 import { presentSkillReport } from './skill-reports'
 import { chatKey } from './storage-keys'
 import type { ChatData } from './types'

@@ -1,10 +1,10 @@
 import {
   SKILL_DESCRIPTION_MAX_CHARACTERS,
   isSkillName,
-  type AgentSkill,
-  type RunnerSkillsUpdated,
-  type SkillsUpdated,
 } from '../../src/shared/skills'
+import type { AgentSkill } from '../../src/shared/generated/AgentSkill'
+import type { RunnerSkillsUpdated } from '../../src/shared/generated/RunnerSkillsUpdated'
+import type { SkillsUpdated } from '../../src/shared/generated/SkillsUpdated'
 import { array } from './agent-events'
 import { invalidInput, record, string } from './inputs'
 

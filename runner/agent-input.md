@@ -8,7 +8,7 @@ the runner.
 
 ## The context folder
 
-Before its first file report, `prepareContextFolder` asks Git for its
+Before its first file report, the repository setup asks Git for its
 local exclude path with `git rev-parse --git-path info/exclude`. It adds
 `/.context/` once, then makes `.context/` and `.context/attachments/` in
 the workspace repository. It keeps existing exclude rules and tracked
@@ -16,17 +16,17 @@ files. It leaves a file or link named `.context` alone. A failed step
 warns and lets the runner continue.
 
 Each file report then adds the untracked files of `.context/` to the
-tree, also the files that Git ignores. `contextFolderFiles` lists them
+tree, also the files that Git ignores. the repository scanner lists them
 with `git ls-files --others` and no ignore rules. The changes report
 does not take them, so Changes leaves them out.
 
 [The context folder](../docs/protocol/repository-folders.md#the-context-folder)
-states its use and limits. A new org image build installs the runner with this
-startup step and the instruction text below.
+states its use and limits. The runner and its instruction text follow the
+[sandbox software update rules](../docs/protocol/sandbox-software.md#updates).
 
 ## Agent instructions
 
-`agentInstructions` builds the agent instructions of each agent from the
+The Rust instruction builder builds the agent instructions of each agent from the
 configuration. Claude gets its seven base rules and that text as
 `systemPrompt`. Codex keeps its default base instructions and gets the
 text as `developerInstructions` on `thread/start` and `thread/resume`.
@@ -74,8 +74,9 @@ chat never shows the sender line.
 - The branch line exists only in the text that reaches the agent. The
   stored message, its events, and the titles from messages use only the
   text that the member wrote.
-- Each sandbox keeps the runner of the org image that it starts from. An
-  older runner reads no `branches`, so its sessions get no branch line.
+- Until an update applies, an older runner reads no `branches`, so its
+  sessions get no branch line. Existing sessions keep their saved instructions
+  after an update.
 
 A message with attached files adds one read instruction after the
 member's text, then one JSON line per file. Each line gives its original
@@ -105,16 +106,17 @@ text.
   read instruction and the lines of the attached files follow.
 - `turn/start` and `turn/steer` get the same items, so a message during a
   turn gets them too. The provider reads the list at each send.
-- `main.ts` gives one `SkillLists` to the skills report and to
-  `createCodexFactory`. A Codex factory without the list, such as the one
-  of the first-start measurement, adds no skill item.
+- The Rust report owner keeps the current private Codex paths. The
+  helper driver sends them with each member input. The helper supplies
+  that list to `createCodexFactory`. A factory without the list, such as
+  the first-start measurement, adds no skill item.
 - A name that the Codex list does not hold adds nothing. The text keeps
   it.
 - Claude gets the text unchanged. Claude runs a skill that the text names
   as `/name`, also after the sender line.
-- How Claude gets a manual-only skill (`disable-model-invocation: true`)
-  waits for skill list decision 3. Its form goes into `send` of
-  `src/providers/claude.ts`, where a comment marks the place.
+- The invocation form of a Claude manual-only skill
+  (`disable-model-invocation: true`) is still open. Its message text stays
+  unchanged.
 
 [Skills of a message](../docs/protocol/agent-instructions.md#skills-of-a-message)
 states these requirements. [Skills](reports.md#skills) in the report guide
@@ -122,22 +124,13 @@ says how the runner makes each list.
 
 ## Key code
 
-- `src/context-folder.ts`: `prepareContextFolder` adds the local exclude
-  rule and makes the context folders before startup reports.
-  `contextFolderFiles` lists the files of the folder for the file tree.
-- `src/instructions.ts`: `agentInstructions`, with Claude's base rules.
-- `src/instruction-state.ts`: the built text with its branches, the parser
-  of saved branches, and the reader of the branches of older saved text.
-- `src/engine-input.ts`: the instructions and the saved pair of a session
-  at its first input.
-- `src/providers/message.ts`: `providerMessage`, the sender line and the
-  branch line.
-- `src/providers/codex-input.ts`: `codexInput`, the input items of one
-  Codex message.
-- `src/providers/skill-input.ts`: `codexSkillInputs`, the skill inputs of
-  Codex, and `SkillSource`, the current list of each agent.
-- `src/providers/skill-input.test.ts`: the skill inputs of Codex, also
-  during a turn and from the scan of the Codex folders, and the text of
-  Claude.
-- `src/providers/instructions.test.ts` and `src/providers/branches.test.ts`:
-  the saved text, the sender line, and the branch line of both agents.
+- [setup.rs](../crates/cnd-runner/src/repository/setup.rs) prepares the context folder and local Git exclusion.
+- [instructions.rs](../crates/cnd-runner/src/engine/instructions.rs) builds session instructions and reads legacy branches.
+- [input.rs](../crates/cnd-runner/src/engine/input.rs) keeps session instructions and the turn's original context.
+- [reporter.rs](../crates/cnd-runner/src/skills/reporter.rs) keeps current private Codex paths.
+- [codex-input.ts](sdk-helper/src/providers/codex-input.ts) builds Codex text, skill, and file input items.
+- [skill-input.ts](sdk-helper/src/providers/skill-input.ts) finds each distinct named skill in member text.
+- [message.ts](sdk-helper/src/providers/message.ts) formats sender lines, branch lines, and attachments.
+- [instructions.test.ts](sdk-helper/src/providers/instructions.test.ts) and
+  [branches.test.ts](sdk-helper/src/providers/branches.test.ts) check the helper input text.
+- [context_tests.rs](../crates/cnd-runner/tests/repository/context_tests.rs) checks ordinary and linked Git worktrees.
