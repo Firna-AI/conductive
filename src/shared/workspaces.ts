@@ -34,6 +34,7 @@ export const workspacePaths = {
   continueResult: (orgId: string, id: string, continueId: string) =>
     `${workspacePath(orgId, id)}/continue/${encodeURIComponent(continueId)}`,
   restore: (orgId: string, id: string) => `${workspacePath(orgId, id)}/restore`,
+  restart: (orgId: string, id: string) => `${workspacePath(orgId, id)}/restart`,
 } as const
 
 export interface WorkspaceResponse {
@@ -76,3 +77,12 @@ export type ContinueWorkspaceResponse =
       localWork: LocalWork
     }
   | { state: 'continued'; workspace: Workspace; eventNumber: number }
+
+/**
+ * The reply of Restart: whether the cloud computer downloaded the newest
+ * software before the restart. When the check failed, the restart used the
+ * installed software.
+ */
+export interface RestartWorkspaceResponse {
+  updateCheck: 'ok' | 'failed'
+}
