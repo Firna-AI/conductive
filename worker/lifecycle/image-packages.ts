@@ -12,7 +12,7 @@ const PACKAGES = ['ttyd', 'tmux', 'gh'] as const
  * installs and upgrades them. The step also masks the package's own ttyd
  * service, which holds the terminal port.
  */
-export function imagePackagesCommand(): string {
+function imagePackagesCommand(): string {
   return [
     terminalPackagesCommand(),
     privilegedCommand('set -eu\numask 022\napt-get install -y gh'),

@@ -5,7 +5,7 @@ import type { SoftwareRelease } from './software-release'
 export type StartupBootstrap =
   { release: SoftwareRelease } | { warning: string }
 
-export function bootstrapDownload(release: SoftwareRelease): string {
+function bootstrapDownload(release: SoftwareRelease): string {
   return [
     'conductive_bootstrap=$(mktemp -d)',
     'trap \'rm -rf "$conductive_bootstrap"\' EXIT',
