@@ -182,6 +182,7 @@ export function createWorkspaceController(
     ): Promise<boolean> {
       return (await accessStop.check(workspaceId, ownerUserId)) === true
     },
+    changeLifecycle: (change) => lifecycle.update(change),
     async reconcileLifecycleAccess(workspaceId: string): Promise<void> {
       await archive.repair(workspaceId)
       await accessStop.ownerChanged(workspaceId)

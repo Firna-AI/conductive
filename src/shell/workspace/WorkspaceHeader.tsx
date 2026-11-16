@@ -1,10 +1,7 @@
 import type { Workspace } from '../../shared/generated/Workspace'
-import type { WorkspaceState } from '../../shared/generated/WorkspaceState'
 import { useEffect, type ReactNode } from 'react'
 import { ChevronLeft, FolderGit2 } from 'lucide-react'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
-import { StatusGlyph } from '../../../docs/mockups/src/components/workspaces/StatusGlyph'
-import { activityPresentation } from '../../../docs/mockups/src/components/workspaces/status'
 import owner from '../../../docs/mockups/src/components/workspace/OwnerPicker.module.css'
 import styles from '../../../docs/mockups/src/components/workspace/WorkspaceHeader.module.css'
 import { personName } from '../../app/people'
@@ -19,6 +16,7 @@ import { useGo } from '../ui/AppLink'
 import { PersonAvatar } from '../ui/Avatars'
 import ui from '../ui/ui.module.css'
 import { CopyLink } from './CopyLink'
+import { HeaderState } from './HeaderState'
 import type { WorkspaceContext } from './features'
 import { RightColumnToggle } from './WorkspaceColumns'
 import { RunLine } from './RunLine'
@@ -38,15 +36,6 @@ function Owner(props: { workspace: Workspace; compact: boolean }) {
   )
 }
 
-function State(props: { state: WorkspaceState }) {
-  return (
-    <span className={styles.state}>
-      <StatusGlyph status={props.state} />
-      {activityPresentation[props.state].label}
-    </span>
-  )
-}
-
 /**
  * The name, number, repository, owner, and state of the open
  * workspace. A workspace
@@ -57,7 +46,8 @@ function State(props: { state: WorkspaceState }) {
  * header names the repository. On desktop the header ends with the toggle
  * of the right column. A run workspace links to its automation below it.
  * While the open of the workspace resumes its sandbox, the state shows
- * Starting at once, before the Resume reply.
+ * Starting at once, before the Resume reply. While the software runs, the
+ * state opens the menu with Restart.
  */
 export function WorkspaceHeader(props: {
   context: WorkspaceContext
@@ -80,6 +70,9 @@ export function WorkspaceHeader(props: {
   const ownerView = props.ownerControl ?? (
     <Owner compact={phone} workspace={workspace} />
   )
+  const stateView = (
+    <HeaderState context={props.context} key={workspace.id} state={state} />
+  )
   const copyLink = (
     <CopyLink inline={phone} key={workspace.link} workspace={workspace} />
   )
@@ -98,7 +91,7 @@ export function WorkspaceHeader(props: {
         </span>
       </div>
       {ownerView}
-      <State state={state} />
+      {stateView}
     </header>
   ) : (
     <header className={classes(styles.bar, bar)}>
@@ -111,7 +104,7 @@ export function WorkspaceHeader(props: {
         </span>
       </span>
       {ownerView}
-      <State state={state} />
+      {stateView}
       <RightColumnToggle />
     </header>
   )

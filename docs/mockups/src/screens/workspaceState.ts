@@ -155,7 +155,9 @@ export const workspaceStateSchema = {
      * Continue with work that is not pushed. Or the question before a
      * terminal closes, or the toast of a terminal that did not open or close.
      * Or the sheet of the values of a request, which Give a value opens on
-     * a phone.
+     * a phone. Or the menu of the header state, the question of Restart
+     * while an agent works, the time after Restart until the agents are
+     * back, or that time with the toast of a failed update check.
      */
     overlay: {
       enum: [
@@ -169,6 +171,10 @@ export const workspaceStateSchema = {
         'terminal-open-failed',
         'terminal-close-failed',
         'value-sheet',
+        'restart',
+        'restart-confirm',
+        'restarting',
+        'restart-update-failed',
       ],
     },
     /**

@@ -16,6 +16,7 @@ import { membersRoute } from './members/route'
 import { productionMembersHooks } from './members/composition'
 import { archiveRoute } from './app-api/archive'
 import { continueRoute } from './app-api/continue'
+import { restartRoute } from './app-api/restart'
 import { automationsRoute } from './automations/route'
 import { automationRunsRoute } from './automations/run-route'
 import { hasAppAccess } from './waitlist/data'
@@ -97,6 +98,8 @@ export async function route(
   if (archive) return archive
   const continued = await continueRoute(request, env, context)
   if (continued) return continued
+  const restart = await restartRoute(request, env, context, dependencies)
+  if (restart) return restart
   const boot = await bootRoute(request, env, context, dependencies)
   if (boot) return boot
   const shell = await shellRoute(request, env, context, dependencies)

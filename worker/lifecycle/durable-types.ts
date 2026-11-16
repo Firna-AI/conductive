@@ -37,6 +37,8 @@ export interface DurableLifecycleState {
   startupPrepared?: boolean
   restoreWatchAt?: number
   startStop?: 'pending' | 'stopped' | 'error'
+  /** The time of a Restart whose runner is not ready again yet. */
+  softwareRestartAt?: number
   stoppedAt: number | null
   nextDiskKeepaliveAt: number | null
   diskRetentionDeadlineAt?: number

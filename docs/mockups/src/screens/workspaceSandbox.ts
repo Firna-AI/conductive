@@ -32,6 +32,9 @@ export function activityOf(state: WorkspaceState): ActivityStatus {
   // A refused start leaves the sandbox stopped.
   if (state.sandbox === 'refused') return 'stopped'
   if (state.sandbox !== 'ready') return state.sandbox
+  // After Restart the workspace starts until the agents are back.
+  if (state.overlay === 'restarting') return 'starting'
+  if (state.overlay === 'restart-update-failed') return 'starting'
   if (conversations[state.conversation].some(waitsForAnswer)) return 'input'
   const works = isRunning(state) || otherSessionWorks.has(state.conversation)
   return works ? 'working' : 'ready'

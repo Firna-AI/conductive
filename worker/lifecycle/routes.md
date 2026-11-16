@@ -96,6 +96,35 @@ trusted `sender` as its last argument. The agent tools need it for a
 workspace that an agent creates. The `user` stays the owner, and the first
 turn and the branch step use the sender.
 
+## Restart
+
+`restartRoute` in [`../app-api/restart.ts`](../app-api/restart.ts) serves
+`POST` at `workspacePaths.restart`. It calls `restartWorkspaceSoftware` of
+[`software-restart.ts`](software-restart.ts), which does these steps:
+
+1. It runs the checks of a resume: an active org, a member, a workspace
+   that is not archived and has a sandbox, and an active owner.
+2. `softwareRestart(id, 'begin')` of the workspace object runs in its
+   lifecycle queue. It refuses a pending Continue. `restartingLifecycle`
+   of [`durable-restart.ts`](durable-restart.ts) refuses each state other
+   than ready, working, input, and unread with HTTP 409 and
+   `workspace_not_running`. Otherwise it shows Starting and stores
+   `softwareRestartAt`.
+3. Outside that queue, the route runs `UPDATE_CHECK_COMMAND` through the
+   Boat `command` route. It starts the unit of the periodic update check,
+   with a limit of 60 seconds. Its result is the `updateCheck` of the reply.
+4. It runs `RESTART_COMMAND`, which restarts the runner under the start
+   lock, so that its pre-start step applies a complete download, and then
+   the preview relay.
+5. When that command fails, `softwareRestart(id, 'fail')` shows the error
+   state with `restart_failed`, and the route answers HTTP 502.
+
+`readyLifecycle` clears `softwareRestartAt` when the new runner is ready.
+A turn end keeps Starting meanwhile. The alarm ends a restart whose runner
+is not ready after `SOFTWARE_RESTART_LIMIT_MS` with the same error state.
+Try again then resumes the workspace. The start skips the provider resume
+of a running sandbox. The commands hold no user input.
+
 ## Input activity
 
 [Stop and resume](../../docs/protocol/workspace-life.md#stop-and-resume)
