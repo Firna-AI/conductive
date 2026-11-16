@@ -1,0 +1,58 @@
+.svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  font-family: var(--ui-font-sans);
+}
+
+.screen {
+  fill: var(--ui-panel);
+  stroke: var(--ui-border2);
+  stroke-width: 1.5;
+}
+
+.base {
+  fill: var(--ui-raised);
+  stroke: var(--ui-border2);
+}
+
+.caption {
+  fill: var(--ui-muted);
+  font-family: var(--ui-font-label);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+}
+
+.label,
+.value {
+  fill: var(--ui-ink);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.agent {
+  fill: var(--ui-ink2);
+  font-family: var(--ui-font-mono);
+  font-size: 9.5px;
+}
+
+.note {
+  fill: var(--ui-muted);
+  font-size: 11px;
+}
+
+.tile {
+  fill: var(--ui-primary-soft);
+  stroke: var(--ui-primary-border);
+}
+
+.link {
+  fill: none;
+  stroke: var(--ui-primary-border);
+  stroke-width: 1.5;
+}
+
+.dot {
+  fill: var(--ui-primary);
+}

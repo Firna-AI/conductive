@@ -1,0 +1,123 @@
+/*
+ * The fills of the parts of a worktree. They use the deeper fill tokens,
+ * which keep the marks inside the lightness band of a chart in both
+ * schemes. Source files stay neutral, because they are small and the same
+ * with or without dependencies.
+ */
+.source {
+  background: var(--ui-faint);
+  fill: var(--ui-faint);
+}
+
+.dependencies {
+  background: var(--ui-merged-fill);
+  fill: var(--ui-merged-fill);
+}
+
+.build {
+  background: var(--ui-warning-fill);
+  fill: var(--ui-warning-fill);
+}
+
+.cloud {
+  background: var(--ui-primary);
+  fill: var(--ui-primary);
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ui-ink2);
+  font-size: var(--ui-text-sm);
+}
+
+.swatch {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+.folder {
+  color: var(--ui-muted);
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-text-xs);
+}
+
+/* A small label in capitals, as the app labels its sections. */
+.caption {
+  color: var(--ui-muted);
+  font-family: var(--ui-font-label);
+  font-size: var(--ui-text-label);
+  letter-spacing: var(--ui-tracking-label);
+  text-transform: var(--ui-label-case);
+}
+
+.figure {
+  color: var(--ui-ink);
+  font-size: 28px;
+  font-weight: var(--ui-weight-heading);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.figureCloud {
+  color: var(--ui-primary);
+}
+
+/* Two panels side by side: the computer of the visitor, then Conductive. */
+.compare {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  width: 100%;
+}
+
+.compareMobile {
+  grid-template-columns: 1fr;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid var(--ui-border2);
+  border-radius: 10px;
+  background: var(--ui-surface);
+}
+
+.panelCloud {
+  border-color: var(--ui-primary-border);
+}
+
+.panelHead {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sub {
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+}
+
+/* A graphic with its legend under it. */
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: 100%;
+}

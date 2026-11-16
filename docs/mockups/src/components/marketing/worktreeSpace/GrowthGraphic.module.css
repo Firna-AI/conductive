@@ -1,0 +1,64 @@
+.svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  font-family: var(--ui-font-sans);
+}
+
+.grid {
+  stroke: var(--ui-border);
+}
+
+.guide {
+  stroke: var(--ui-border2);
+  stroke-dasharray: 3 3;
+}
+
+.tick {
+  fill: var(--ui-muted);
+  font-family: var(--ui-font-mono);
+  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.axis,
+.end {
+  fill: var(--ui-ink2);
+  font-size: 12px;
+}
+
+.callout {
+  fill: var(--ui-ink);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.local,
+.cloud {
+  fill: none;
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.local {
+  stroke: var(--ui-warning-fill);
+}
+
+.cloud {
+  stroke: var(--ui-primary);
+}
+
+/* Each marker keeps a 2 px ring of the stage, so it stands off the line. */
+.localDot,
+.cloudDot {
+  stroke: var(--ui-sidebar);
+  stroke-width: 2;
+}
+
+.localDot {
+  fill: var(--ui-warning-fill);
+}
+
+.cloudDot {
+  fill: var(--ui-primary);
+}
