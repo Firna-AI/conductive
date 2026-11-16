@@ -156,7 +156,9 @@ function listOf(
     return { sections: withTrees(afterMove(flat, toGeneral), parentOf) }
   }
   // Cal archived Places API client a minute ago, after its merge. It left
-  // its tree for the Archived group, the last archived first.
+  // its tree for the Archived group, the last archived first. Its record
+  // keeps its place for a Restore. So the trees get the archived row at
+  // that place, and its sub-workspaces take that place in the list.
   const archived: WorkspaceRow = {
     ...rowOf({ ...placesClient, updated: '1m' }),
     status: 'archived',
@@ -164,7 +166,9 @@ function listOf(
   }
   const sections = flat.map((item) => ({
     ...item,
-    rows: item.rows.filter((row) => row.workspace.key !== placesClient.key),
+    rows: item.rows.map((row) =>
+      row.workspace.key === placesClient.key ? archived : row,
+    ),
   }))
   return {
     sections: withTrees(sections, parentOf),

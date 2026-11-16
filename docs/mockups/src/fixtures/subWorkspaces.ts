@@ -13,19 +13,15 @@ import { codex, workspace, type Workspace } from './workspaces'
  * the places provider under the API, and the rate limits under the client,
  * at depth 3, the deepest level.
  */
-export const addressSearchApi = workspace(
-  'address-search-api',
-  'Address search API',
-  {
-    number: 403,
-    id: 'p4urIwZaBtQl-P9v9LAnPrv-XJf-LBtl57g3BcL_jLU',
-    repository: 'storefront',
-    section: 'checkout',
-    status: 'working',
-    github: 'checks-running',
-    updated: 'now',
-  },
-)
+const addressSearchApi = workspace('address-search-api', 'Address search API', {
+  number: 403,
+  id: 'p4urIwZaBtQl-P9v9LAnPrv-XJf-LBtl57g3BcL_jLU',
+  repository: 'storefront',
+  section: 'checkout',
+  status: 'working',
+  github: 'checks-running',
+  updated: 'now',
+})
 
 /** The middle row of the deepest tree, whose pull request is merged. */
 export const placesClient = workspace('places-client', 'Places API client', {

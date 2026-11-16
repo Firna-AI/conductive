@@ -648,6 +648,15 @@ The `non-ui implementor` proposed them, and the orchestrator accepted them.
   with the shared rule. The review of Milestone 7 weighs its cost in a
   large org.
 
+Milestone 3a led to these calls, of 16 November 2026, by the
+`ui implementor`, accepted by the orchestrator.
+
+- `withTrees` gives the shared rule each archived row at its place in its
+  section, as the list query of the app does.
+- The older rows of the mockup's Archived group stay out of the input of
+  the shared rule. Reason: the fixtures give them no place and no link, so
+  they cannot change a row.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -777,11 +786,16 @@ puts them in the place of the archived row. The drawn screens are the same
 under both rules. The orchestrator found this while it checked
 Milestone 1.
 
-- [ ] Let `withTrees` place the rows with the shared rule of Milestone 3,
+- [x] Let `withTrees` place the rows with the shared rule of Milestone 3,
       so that the catalogue and the app use one rule. Keep each drawn
       screen as it is.
-- [ ] Run `npm run mockups:check`, and confirm that the pages of
+- [x] Run `npm run mockups:check`, and confirm that the pages of
       `app/sub-workspaces` look as before.
+
+Done on 16 November 2026 by the `ui implementor`. All 32 generated files of
+the pages of `app/sub-workspaces` stayed byte-identical. The milestone also
+dropped the unused export `addressSearchApi` of Milestone 1, which failed
+`npm run exports:check`. Evidence: `.context/sub-workspaces/m3a/`.
 
 ## Milestone 4: The moves of a tree
 
