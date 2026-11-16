@@ -16,6 +16,7 @@ import type { ExtraKey } from './terminalKeys'
 import type { TerminalLinks } from './terminalLinks'
 import { linkKey } from './terminalLinks'
 import { fittedFontSize } from './sharedSize'
+import { focusUnmoved, type TerminalFocusRequest } from './terminalFocus'
 import { TerminalSession } from './terminalSession'
 import { cssTokens, terminalFont, terminalTheme } from './terminalTheme'
 import { watchLinks } from './xtermLinks'
@@ -69,6 +70,10 @@ export function TerminalScreen(props: {
   screenRef?: Ref<HTMLDivElement>
   /** Opens the links of the output. Without it, no link opens. */
   links?: TerminalLinks
+  /** Moves the keyboard focus to the screen once the screen exists. */
+  focusRequest?: TerminalFocusRequest | null
+  /** The screen took the focus request, or dropped it after a focus move. */
+  onFocusDone?: () => void
 }) {
   const hostRef = useRef<HTMLDivElement>(null)
   const xtermRef = useRef<Terminal | null>(null)
@@ -83,6 +88,15 @@ export function TerminalScreen(props: {
   const currentTheme = useEffectEvent((host: Element) =>
     terminalTheme(cssTokens(host), scheme),
   )
+  // A request waits for the screen. StrictMode makes a second screen at
+  // once, and the request then still holds, so that screen takes it too.
+  const takeFocus = useEffectEvent(() => {
+    const request = props.focusRequest
+    const xterm = xtermRef.current
+    if (!request || !xterm) return
+    if (focusUnmoved(request)) xterm.focus()
+    props.onFocusDone?.()
+  })
 
   useEffect(() => {
     const host = hostRef.current
@@ -154,6 +168,7 @@ export function TerminalScreen(props: {
     observer.observe(host)
     xtermRef.current = xterm
     sessionRef.current = session
+    takeFocus()
     return () => {
       observer.disconnect()
       outputLinks?.dispose()
@@ -179,6 +194,8 @@ export function TerminalScreen(props: {
     const xterm = xtermRef.current
     if (xterm) xterm.options.disableStdin = ended
   }, [ended])
+
+  useEffect(() => takeFocus(), [props.focusRequest])
 
   const press = (key: RowKey) => {
     const session = sessionRef.current

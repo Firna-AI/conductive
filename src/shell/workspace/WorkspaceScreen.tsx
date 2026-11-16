@@ -1,4 +1,4 @@
-import { useCallback, type ReactNode } from 'react'
+import { useCallback, useState, type ReactNode } from 'react'
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
 import { CircleAlert } from 'lucide-react'
@@ -33,19 +33,15 @@ import { SandboxPanel } from './SandboxNotice'
 import { MissingWorkspace, useRememberWorkspace } from './remember-workspace'
 import { OpenSessionAddress } from './session-address'
 import { shownWorkspaces } from './tab-memory'
+import { TerminalFocus } from './tools/terminal-focus'
 import { ToolsPart } from './tools/ToolsPart'
 import { useArchiveActions } from './useArchiveActions'
 import { PhoneTabBar, phoneView, RightColumn } from './WorkspaceColumns'
 import { WorkspaceHeader } from './WorkspaceHeader'
 import { WorkspaceMacBar } from './WorkspaceMacBar'
 import { WorkspacePaletteActions } from './WorkspacePaletteActions'
-import type { WorkspaceView } from './workspace-view'
+import { connectView } from './workspace-view'
 import workspaceStyles from './workspace.module.css'
-
-/** Shows the kept parts of the workspace while the screen shows it. */
-function connectView(view: WorkspaceView): () => void {
-  return view.connect()
-}
 
 /**
  * An open workspace. On desktop the chat column sits beside the right column.
@@ -85,6 +81,7 @@ export function WorkspaceScreen(props: {
     { create, connect: connectView },
   )
   const { model, notices, chat, toolEvents } = shown
+  const [terminalFocus] = useState(() => new TerminalFocus())
   const startError = useStore(model.startError)
   const opened = useStore(model.opened)
   const features = useFeatures()
@@ -168,6 +165,7 @@ export function WorkspaceScreen(props: {
     savedView: chat,
     chat,
     toolEvents: toolEvents.subscribe,
+    terminalFocus,
     archive: mayArchive(access, workspace, props.viewer)
       ? () => lifecycle.archive(workspace)
       : null,

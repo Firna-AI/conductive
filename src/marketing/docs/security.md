@@ -136,7 +136,9 @@ That token can use the session starter's login through Conductive while the turn
 It also works from outside the cloud computer during that turn.
 
 After **Stop**, the token can start no new request.
-Any request that still runs ends within 30 seconds after the turn ends.
+A request that still runs ends at the first turn check that answers after the turn ends.
+Conductive checks the turn every 15 seconds.
+While no check answers, the request can run to the end of its answer.
 Changing or removing the session starter's login ends the turn at its next model request.
 The same happens if that member loses org access.
 A program that keeps running can read or copy the tokens of later turns, including turns in other members' sessions.

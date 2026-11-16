@@ -10,6 +10,7 @@ import type { OrgSummary } from '../../shared/orgs'
 import type { SubscribeWorkspaceEvents } from '../../terminal/tool-parts/workspace'
 import type { Action } from '../ui/useAction'
 import type { Viewport } from '../ui/viewport'
+import type { TerminalFocus } from './tools/terminal-focus'
 import { appFeatures } from './app-features'
 
 /** The cloud computer of the open workspace, as the panels show it. */
@@ -80,6 +81,11 @@ export interface WorkspaceContext {
    * revokes of its previews, the stored revokes first.
    */
   toolEvents: SubscribeWorkspaceEvents
+  /**
+   * The request to move the keyboard focus to the terminal, after a choice
+   * of Terminal on desktop.
+   */
+  terminalFocus: TerminalFocus
   /** Archives at once, or `null` when the viewer may not archive. */
   archive: (() => void) | null
   /**

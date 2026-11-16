@@ -30,6 +30,10 @@
     - `worker/tools/session-management-reads.test.ts`: `gets exact session and stored-message facts across workspaces and permits removed session reads`.
     - `worker/tools/workspace-reads.test.ts`: `reads archived workspace facts with only its token and excludes another org`.
   - A serial rerun of both files passed all four tests. The first test took 5,356 ms. Resource contention from the concurrent mockup build is the suspected source.
+  - On 16 November 2026, the merge of main commit `e12c3cb3d` into pull request #420 passed every static check. The local full suite reported failures in 53 files before it was interrupted after more than 30 minutes. All 53 test files matched main.
+  - A selected rerun from an identical source copy under `/tmp`, with `--maxWorkers=1`, still timed out in `worker/features/continue-routes.test.ts`. The test was `resumes Continue through real routes and socket wake, fences sends and Archive, expires recovered credentials, and routes new-branch GitHub events`.
+  - The same command on untouched main commit `e12c3cb3d`, from a separate checkout under `/tmp`, failed that one test with `Error: Test timed out in 15000ms.` The run took 19.77 seconds. No source, assertion, or timeout changed.
+  - This failure persists outside the home folder and without concurrent test files. Its cause remains unknown. The earlier path and load observations do not fully explain this reproduction.
 - **Task:** Find the source of these timeouts. Compare focused and full runs at the same path, then compare paths with the same test set. Make the tests deterministic with readiness signals, event order, or isolated state. Keep each assertion. Add no retry, sleep, skip, or longer timeout.
 - **Impact if no action:** A complete check can fail while a focused run passes. This can hide a real regression or delay another branch.
 - **Needs:** Node 24 and a Conductive workspace that can run the full suite.
