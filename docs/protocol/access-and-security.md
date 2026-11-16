@@ -52,8 +52,9 @@ These docs belong to this doc:
   and inside the signed sign-in state. Only the exact path of a preview
   launch on the app origin counts. Reason: any other return address could
   send a person to a page that they did not ask for.
-- A Mac app sign-in and a sign-in that ends on another page, such as an
-  invite error, ignore the return address.
+- A Mac app sign-in, a sign-in that ends on another page, such as an
+  invite error, and a sign-in of a person without app access ignore the
+  return address. The person without app access sees the waitlist.
 - A sign-in creates a new account only with the agreement to the current
   revision.
 - Each sign-in with the agreement records the revision. It records the

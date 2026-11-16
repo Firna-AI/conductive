@@ -88,6 +88,8 @@ it('keeps the JSON refusal for a signed-out page load of another API address', a
 })
 
 it('carries the return address through Terms and back to the preview launch', async () => {
+  // The first sign-in creates the account and gives it app access.
+  await harness.login()
   harness.env.ASSETS = fakeSite()
   const consent = await harness.fetch(
     withReturn(API_PATHS.githubSignIn, launch),
@@ -101,6 +103,14 @@ it('carries the return address through Terms and back to the preview launch', as
   const callback = await finish(await harness.fetch(continuation))
   expect(callback.status).toBe(302)
   expect(callback.headers.get('Location')).toBe(`${TEST_ORIGIN}${launch}`)
+})
+
+it('keeps a person without app access at the waitlist of the app root', async () => {
+  const callback = await finish(
+    await harness.fetch(withReturn(acceptedTermsSignInPath(), launch)),
+  )
+  expect(callback.status).toBe(302)
+  expect(callback.headers.get('Location')).toBe(TEST_ORIGIN)
 })
 
 it('ignores a return address that is not a preview launch', async () => {

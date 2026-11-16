@@ -38,6 +38,9 @@ decision number names a dated record, as
 - A browser tab that opens the launch address without a sign-in session
   goes to the GitHub sign-in. After the sign-in, the browser comes back
   to the launch address. Reason: a JSON error gave no way to sign in.
+- A person without app access goes to the app root after the sign-in,
+  which shows the [waitlist](waitlist.md). Reason: the launch refuses
+  that person, and the waitlist gives the ways in.
 - Only a top-level page load gets this redirect. A frame, a fetch, a
   socket, and a browser that sends no fetch metadata keep the JSON
   refusal. Reason: GitHub refuses to show its sign-in in a frame.

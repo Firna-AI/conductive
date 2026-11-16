@@ -130,8 +130,9 @@ A signed-out browser tab that opens a preview launch address goes to sign-in, th
 - `startSignIn` keeps a valid `return_to` in the Terms Continue address and in the signed OAuth state cookie.
   It ignores `return_to` for a Mac app sign-in.
 - `finishSignIn` reads the return address from the signed state only, and checks it again.
-  It sends the browser there only when the sign-in would otherwise open the app root.
-  So an invite error page keeps its address.
+  `signInAppAccess` returns a `SignInOutcome`: `ready`, `waiting`, or `invite_error`.
+  The callback sends the browser to the return address only for `ready`.
+  So a person who waits sees the waitlist at the app root, and an invite error page keeps its address.
 
 ## Suspended users
 
@@ -158,6 +159,8 @@ this order:
 So an operator keeps the `operator` source, and open sign-up takes no use
 of a join code. A failed code still creates a sign-in session.
 Its browser redirect keeps the code and the reason on the join path.
+The step returns a `SignInOutcome` with that address and its result, so the
+callback knows whether the user now has app access.
 The Mac handoff follows the same access grant before its session exchange.
 
 Each new account starts without app access unless its operator identity,

@@ -149,7 +149,7 @@ export async function finishSignIn(
   )
   await saveGitHubTokens(env, user.id, tokens, now)
   await saveVerifiedEmails(env.DB, user.id, profile.verifiedEmails)
-  const location = await signInAppAccess(env, user, stored.inviteCode, now)
+  const outcome = await signInAppAccess(env, user, stored.inviteCode, now)
   if (typeof stored.desktopChallenge === 'string') {
     return new Response(null, {
       status: 302,
@@ -172,12 +172,14 @@ export async function finishSignIn(
     'session',
     env.SESSION_SIGNING_KEY,
   )
+  // Only a person with app access can open a preview. A person who waits
+  // sees the waitlist at the app root, and an invite error keeps its page.
   const returnTo = signInReturnPath(stored.returnTo)
   const headers = new Headers({
     Location:
-      returnTo && location === env.APP_ORIGIN
+      returnTo && outcome.kind === 'ready'
         ? new URL(returnTo, env.APP_ORIGIN).href
-        : location,
+        : outcome.location,
   })
   headers.append('Set-Cookie', cookie(SESSION_COOKIE, session, SESSION_SECONDS))
   headers.append('Set-Cookie', cookie(OAUTH_COOKIE, '', 0))
