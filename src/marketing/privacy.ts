@@ -24,7 +24,7 @@ export const privacyDocument: LegalDocument = {
   title: legalTitles.privacy,
   description: `The privacy notice of ${productName}.`,
   lead: text`This notice says which personal data ${productName} uses, why
-  it uses it, and who gets it. Effective date: 15 November 2026.`,
+  it uses it, and who gets it. Effective date: 16 November 2026.`,
   sections: [
     {
       title: 'Who is responsible',
@@ -161,10 +161,12 @@ export const privacyDocument: LegalDocument = {
         paragraph`This site sets no cookies. The web app and the Mac app each
           set their own cookie that keeps you signed in. Only the Mac app's
           cookie store holds its session cookie. Another cookie protects the
-          GitHub sign-in while it runs. When the web app sends you to GitHub
-          to install the GitHub App or change its access, a third cookie
-          keeps the screen that you left, so that the app can return you
-          there.`,
+          GitHub sign-in while it runs. When you start the sign-in from a
+          preview, that cookie also keeps the preview's address, so that
+          the app can open the preview after the sign-in. When the web app
+          sends you to GitHub to install the GitHub App or change its
+          access, a third cookie keeps the screen that you left, so that
+          the app can return you there.`,
         paragraph`Each sign-in cookie lasts for up to 7 days. The GitHub
           sign-in protection cookie lasts for up to 10 minutes. The GitHub
           return cookie lasts for up to 1 hour, and the app deletes it when

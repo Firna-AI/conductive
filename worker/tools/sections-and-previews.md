@@ -70,9 +70,12 @@ The CLI and the MCP server offer these routes, as
   relay, port, and provider checks apply. A stopped computer gives HTTP 409
   `sandbox_not_ready`, and the call starts no computer. A suspended owner
   gives HTTP 403 `user_suspended` before any provider call.
-- Each open makes a new preview. Its `url` is the normal app launch
-  address. Each load of it needs a member's sign-in, so the workspace token
-  cannot launch it. No request field makes a preview public.
+- Each open makes a new preview. Each reply preview is an `AgentPreview`.
+  `agentPreview` in [preview-link.ts](preview-link.ts) gives it a `link`
+  to the app page of the preview, `routes.workspace(org, workspace,
+  'preview', id)`, in place of the launch address. The chat opens that
+  page in the app. Each load of it needs a member's sign-in, so the
+  workspace token cannot open it. No request field makes a preview public.
 - A close revokes the preview and cancels its proxy connections. It waits
   for the stored `preview.revoked` event. `closed` is false for a preview
   that is already closed, expired, unknown, or of another workspace. A
@@ -95,6 +98,6 @@ The [Rust tools crate](../../crates/cnd-tools/README.md) tests CLI and MCP reque
   archived workspace moves, routines, metadata publication, and a sender
   who left.
 - `previews.test.ts`, with `previews.test-support.ts`: agent and member
-  opens, signed-in launch links, list facts, close publication, repeated
+  opens, app page links, signed-in launch addresses, list facts, close publication, repeated
   and wrong-workspace closes, cross-org refusal, a suspended owner, and a
   stopped computer.

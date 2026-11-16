@@ -10,6 +10,7 @@ import {
   previewsPath,
   PREVIEW_RELAY_PORT,
 } from '../../src/shared/previews'
+import { routes } from '../../src/app/router'
 import { workspaceEventsPath } from '../../src/shared/events'
 import { closeSockets, SocketInbox } from '../chat/adapter-sockets.test-support'
 import { outerWorkerBundle } from '../chat/integration/outer-runtime.test-support'
@@ -51,11 +52,11 @@ it('opens signed-in preview links and lists and closes member previews through t
   expect(opened.status).toBe(201)
   const preview = record(record(await opened.json()).preview)
   const id = string(preview.id)
-  const url = string(preview.url)
+  const url = `${active.env.APP_ORIGIN}${previewPath(OUTER_ORG, OTHER_WORKSPACE, id)}`
   expect(preview).toEqual({
     id,
     port: 3000,
-    url: `${active.env.APP_ORIGIN}${previewPath(OUTER_ORG, OTHER_WORKSPACE, id)}`,
+    link: `${active.env.APP_ORIGIN}${routes.workspace(OUTER_ORG, OTHER_WORKSPACE, 'preview', id)}`,
     expiresAt: DEVICE_TEST_NOW + 86_400_000,
   })
   expect(opened.headers.get('Cache-Control')).toBe('no-store')
@@ -86,7 +87,15 @@ it('opens signed-in preview links and lists and closes member previews through t
   const list = await machineRead(active, agentPreviewsPath(OTHER_WORKSPACE))
   expect(list.status).toBe(200)
   expect(record(await list.json()).previews).toEqual(
-    expect.arrayContaining([preview, appPreview]),
+    expect.arrayContaining([
+      preview,
+      {
+        id: appPreview.id,
+        port: appPreview.port,
+        link: `${active.env.APP_ORIGIN}${routes.workspace(OUTER_ORG, OTHER_WORKSPACE, 'preview', string(appPreview.id))}`,
+        expiresAt: appPreview.expiresAt,
+      },
+    ]),
   )
   const tab = await active.request(
     workspaceEventsPath(OUTER_ORG, OTHER_WORKSPACE),

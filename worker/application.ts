@@ -9,12 +9,7 @@ import { SITE_FOLDER } from '../src/shared/site-build'
 import type { AppDependencies, AppEnv } from './env'
 import { githubInstallResponse, githubSetupResponse } from './github-setup'
 import { hostStub, hostSurface, marketingResponse } from './hosts'
-import {
-  errorResponse,
-  HttpError,
-  previewResponse,
-  privateResponse,
-} from './http'
+import { HttpError, previewResponse, privateResponse } from './http'
 import { requestBodyEntry } from './http/request-body'
 import { chatGptEgress } from './model-gateway/egress'
 import { routeModelGateway } from './model-gateway/route'
@@ -38,6 +33,7 @@ import {
   SOFTWARE_IMAGE_PATH,
 } from './software-image/route'
 import { finishSignIn, startSignIn } from './security/auth'
+import { appErrorResponse } from './security/preview-sign-in'
 import { appContentSecurityPolicy } from './security/content-security'
 import { cookie, OAUTH_COOKIE } from './security/cookies'
 import { randomToken } from './security/crypto'
@@ -252,7 +248,7 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
           ),
         )
       } catch (error) {
-        const response = errorResponse(error)
+        const response = appErrorResponse(request, error, env?.APP_ORIGIN)
         if (path === API_PATHS.githubCallback) {
           response.headers.append('Set-Cookie', cookie(OAUTH_COOKIE, '', 0))
         }

@@ -35,6 +35,12 @@ decision number names a dated record, as
 - The API gives each preview a launch address on the app's hostname. The
   address holds no secret, because each load needs the sign-in and access
   to the workspace.
+- A browser tab that opens the launch address without a sign-in session
+  goes to the GitHub sign-in. After the sign-in, the browser comes back
+  to the launch address. Reason: a JSON error gave no way to sign in.
+- Only a top-level page load gets this redirect. A frame, a fetch, a
+  socket, and a browser that sends no fetch metadata keep the JSON
+  refusal. Reason: GitHub refuses to show its sign-in in a frame.
 - Each load of the launch address, in a frame or in a tab, gets a new
   grant. A form on the launch page posts the grant to the authorizer, a
   fixed hostname on the preview domain. The authorizer sets the credential

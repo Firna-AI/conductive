@@ -84,6 +84,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     tools::device::DeviceCommandInput::export_all(&cfg)?;
     tools::device::DeviceCommandResponse::export_all(&cfg)?;
     tools::previews::OpenPreviewRequest::export_all(&cfg)?;
+    tools::previews::Preview::export_all(&cfg)?;
     tools::previews::AgentListPreviewsResponse::export_all(&cfg)?;
     tools::previews::AgentOpenPreviewResponse::export_all(&cfg)?;
     tools::previews::AgentClosePreviewResponse::export_all(&cfg)?;

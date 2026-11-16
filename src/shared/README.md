@@ -238,6 +238,7 @@ In the Mac app, a new tab opens in the default browser through `PreviewLaunchRes
 That JSON reply of `Preview.url` holds an authorizer `url` and the `expiresAt` of its grant.
 The `url` carries the preview hostname and a 60-second grant only in its fragment.
 [Port previews](../../docs/protocol/terminal-previews-and-desktop.md#port-previews) states its access rules.
+The agent preview calls give `AgentPreview` instead, with the `link` of the preview's app page and no launch address.
 Each open of a port preview gets a new preview ID, and the API never gives out
 a revoked ID again. The Preview tool hides revoked previews by their ID.
 The git credential payload is not defined yet.

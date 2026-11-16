@@ -25,6 +25,7 @@ import { saveGitHubTokens } from './github-tokens'
 import { createDesktopHandoff, desktopChallenge } from './desktop-auth'
 import { desktopSessionCookie } from './desktop-contract'
 import { signInAppAccess } from './sign-in-access'
+import { SIGN_IN_RETURN_PARAMETER, signInReturnPath } from './preview-sign-in'
 
 const OAUTH_SECONDS = 600
 const SESSION_SECONDS = 7 * 24 * 60 * 60
@@ -39,12 +40,20 @@ export async function startSignIn(
     request && new URL(request.url).searchParams.get(INVITE_CODE_PARAMETER)
   const termsVersion =
     request && new URL(request.url).searchParams.get(TERMS_VERSION_PARAMETER)
+  const returnTo = challenge
+    ? null
+    : signInReturnPath(
+        request &&
+          new URL(request.url).searchParams.get(SIGN_IN_RETURN_PARAMETER),
+      )
   if (termsVersion !== TERMS_VERSION) {
     const continuation = new URL(
       acceptedTermsSignInPath(inviteCode ?? undefined),
       env.APP_ORIGIN,
     )
     if (challenge) continuation.searchParams.set('desktop_challenge', challenge)
+    if (returnTo)
+      continuation.searchParams.set(SIGN_IN_RETURN_PARAMETER, returnTo)
     return await termsConsentResponse(
       continuation.pathname + continuation.search,
       env.MARKETING_ORIGIN ?? `https://${productDomain}`,
@@ -63,6 +72,7 @@ export async function startSignIn(
       desktopChallenge: challenge,
       termsVersion,
       inviteCode,
+      returnTo,
     },
     'github-state',
     env.SESSION_SIGNING_KEY,
@@ -162,7 +172,13 @@ export async function finishSignIn(
     'session',
     env.SESSION_SIGNING_KEY,
   )
-  const headers = new Headers({ Location: location })
+  const returnTo = signInReturnPath(stored.returnTo)
+  const headers = new Headers({
+    Location:
+      returnTo && location === env.APP_ORIGIN
+        ? new URL(returnTo, env.APP_ORIGIN).href
+        : location,
+  })
   headers.append('Set-Cookie', cookie(SESSION_COOKIE, session, SESSION_SECONDS))
   headers.append('Set-Cookie', cookie(OAUTH_COOKIE, '', 0))
   return new Response(null, { status: 302, headers })

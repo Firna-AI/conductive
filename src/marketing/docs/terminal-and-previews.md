@@ -155,6 +155,7 @@ Ask an agent to list, open, or close previews.
 To open a preview, give the agent your server's port.
 It can do this in any workspace of the same org.
 Previews that agents open need sign-in and workspace access.
+The agent's preview link opens the preview in the Preview tool of its workspace.
 
 ## Recover from a connection error
 

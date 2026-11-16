@@ -102,7 +102,7 @@ Each GitHub sign-in starts after an agreement to the current Terms.
   `termsConsentResponse` in [`marketing/consent.ts`](../marketing/consent.ts) reads it from the Astro build.
   It fills the Continue address and site origin as escaped text.
   It keeps the site's security headers and `Cache-Control: no-store`.
-  Its Continue with GitHub link adds the current revision and keeps the `desktop_challenge` of the Mac app and the `invite_code` of a join link.
+  Its Continue with GitHub link adds the current revision and keeps the `desktop_challenge` of the Mac app, the `invite_code` of a join link, and the `return_to` of a [preview sign-in](#preview-sign-in).
   Its links lead to the Terms and Privacy pages on `MARKETING_ORIGIN`, or on the product domain without that setting.
 - The signed OAuth state cookie carries the revision to the callback. A `terms_version` value in the callback address counts for nothing.
 - The signed state also carries the join code. A code in the callback address counts for nothing.
@@ -115,6 +115,23 @@ Each GitHub sign-in starts after an agreement to the current Terms.
 - No session or request checks the revision after the sign-in.
   A new `TERMS_VERSION` applies to each user at the next sign-in, and `SESSION_SECONDS` in `auth.ts` and `desktop-auth.ts` keeps each session to 7 days.
   [Sign-in](../../docs/protocol/access-and-security.md#sign-in) states the rule.
+
+## Preview sign-in
+
+A signed-out browser tab that opens a preview launch address goes to sign-in, then back to the launch.
+[preview-sign-in.ts](preview-sign-in.ts) holds the rules.
+
+- The Worker entry answers each refusal with `appErrorResponse`.
+  For a 401 `sign_in_required` on a top-level page load of the exact launch path, it answers with a 302 to `API_PATHS.githubSignIn` with `return_to` set to that path.
+  A top-level page load has `Sec-Fetch-Mode: navigate` and `Sec-Fetch-Dest: document`.
+  A frame, a fetch, a socket, and a request without these headers keep the JSON refusal, because GitHub refuses to show its sign-in in a frame.
+- `signInReturnPath` accepts only the exact path of a preview launch, with no query and no hash, as `isPreviewLaunchPath` defines it.
+  So a return address never leaves the app origin and never names another API address.
+- `startSignIn` keeps a valid `return_to` in the Terms Continue address and in the signed OAuth state cookie.
+  It ignores `return_to` for a Mac app sign-in.
+- `finishSignIn` reads the return address from the signed state only, and checks it again.
+  It sends the browser there only when the sign-in would otherwise open the app root.
+  So an invite error page keeps its address.
 
 ## Suspended users
 
@@ -199,7 +216,7 @@ The tests of its callers check it.
 After a change to the reader, run `npm run test -- worker/chat/tab-access.test.ts worker/chat/tab-deadlines.test.ts worker/chat/security.test.ts worker/terminal/access.test.ts`.
 After a change to the alarm deadlines of open connections, also run `npm run test -- worker/chat/adapter.test.ts worker/chat/browser-native-access.test.ts worker/chat/runner-native-access.test.ts worker/features/security-alarms.test.ts worker/devices`.
 
-After a change to the terms consent or to the suspension checks of sign-in, run `npm run test -- worker/security/terms.test.ts worker/security/auth.test.ts worker/operator/route.test.ts`.
+After a change to the terms consent, the preview sign-in, or the suspension checks of sign-in, run `npm run test -- worker/security/terms.test.ts worker/security/auth.test.ts worker/security/preview-sign-in.test.ts worker/operator/route.test.ts`.
 Run `npm run test -- worker/security/waitlist-auth.test.ts worker/security/waitlist-join.test.ts` for the access grants and their order, primary email, and signed join codes.
 Run `npm run test -- worker/security/waitlist-gate.test.ts worker/security/waitlist-open-signup.test.ts worker/security/waitlist-desktop.test.ts worker/devices/waitlist.test.ts` for the waiting-session gate, its open sign-up grant, and Mac access transitions.
 

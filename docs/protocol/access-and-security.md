@@ -46,6 +46,14 @@ These docs belong to this doc:
   the agreement before GitHub.
 - The agreement goes to the sign-in callback inside the signed sign-in
   state. A revision in the address of the callback counts for nothing.
+- A browser sign-in can carry a return address, so that a
+  [preview launch](terminal-previews-and-desktop.md#port-previews) opens
+  again after the sign-in. The return address goes through the Terms page
+  and inside the signed sign-in state. Only the exact path of a preview
+  launch on the app origin counts. Reason: any other return address could
+  send a person to a page that they did not ask for.
+- A Mac app sign-in and a sign-in that ends on another page, such as an
+  invite error, ignore the return address.
 - A sign-in creates a new account only with the agreement to the current
   revision.
 - Each sign-in with the agreement records the revision. It records the

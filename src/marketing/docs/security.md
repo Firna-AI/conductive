@@ -212,6 +212,7 @@ Some displayed path labels hide values, but the browser still receives real file
 
 Preview apps run on a separate domain from Conductive.
 Opening a preview needs your sign-in and workspace access.
+If you open a preview in a browser tab while signed out, Conductive asks you to sign in with GitHub, then opens the preview.
 Its address alone does not grant access to another person.
 Closing a preview or stopping the computer ends that preview's access.
 Your browser can still keep the preview files that it loaded, as the preview app's cache rules allow.

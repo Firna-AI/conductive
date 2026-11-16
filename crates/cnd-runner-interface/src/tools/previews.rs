@@ -30,6 +30,20 @@ pub struct Preview {
     pub expires_at: Timestamp,
 }
 
+/// A preview in an agent tool reply.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+pub struct AgentPreview {
+    /// New for each open; revoked IDs are never reused.
+    pub id: String,
+    /// port.
+    pub port: u16,
+    /// App page that shows this preview in the Preview tool of its workspace.
+    pub link: String,
+    /// expires at.
+    pub expires_at: Timestamp,
+}
+
 /// AgentListPreviewsResponse wire fields.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
@@ -37,8 +51,8 @@ pub struct AgentListPreviewsResponse {
     /// workspace.
     pub workspace: AgentWorkspaceSummary,
     /// previews.
-    #[ts(as = "ReadonlyVec<Preview>")]
-    pub previews: Vec<Preview>,
+    #[ts(as = "ReadonlyVec<AgentPreview>")]
+    pub previews: Vec<AgentPreview>,
 }
 
 /// AgentOpenPreviewResponse wire fields.
@@ -48,7 +62,7 @@ pub struct AgentOpenPreviewResponse {
     /// workspace.
     pub workspace: AgentWorkspaceSummary,
     /// preview.
-    pub preview: Preview,
+    pub preview: AgentPreview,
 }
 
 /// AgentClosePreviewResponse wire fields.

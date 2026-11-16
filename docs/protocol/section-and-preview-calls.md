@@ -58,10 +58,17 @@ number names a dated record, as
   [Port previews](port-previews.md). Reason: Conductor's `preview set`
   opens a preview.
 - Each call opens a new preview, as each open in the app does.
-- The reply gives the preview with its link. The link is the launch
-  address of the preview on the app origin. So each load of the link needs
-  a sign-in and access to the workspace, as
+- The reply gives the preview with its link. The link is the app page
+  that shows that preview in the Preview tool of its workspace, as
+  `/orgs/<org>/workspaces/<workspace>/preview/<preview>` on the app
+  origin. So each load of the link needs a sign-in and access to the
+  workspace, as
   [Port previews](terminal-previews-and-desktop.md#port-previews) says.
+  The reply gives no launch address.
+- Reason: the chat opens an app page inside the app, also in the Mac app,
+  as [Chat links](chat-links.md) says. The chat shows a launch address as
+  text, because it is an address of the API. A browser tab without a
+  session gets the sign-in of the app on an app page.
 - Each preview that `open_preview` opens needs a sign-in. The call has no
   choice that opens a preview without a sign-in.
 - Reason: sandbox code must not make its own server public through an

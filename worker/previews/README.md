@@ -8,6 +8,7 @@ A marker commits with each revocation event, so retries keep one stored event fo
 The close response waits for that commit. Lifecycle callbacks use the queue-owned publisher.
 The browser uses the [shared preview contract](../../src/shared/previews.ts).
 The app API and the trusted agent preview calls share `PreviewActions` in [actions.ts](actions.ts).
+The agent calls replace `Preview.url` with the link of the preview's app page.
 They use the same live private-port cache and proxy registry, as [the agent preview calls](../tools/sections-and-previews.md#previews) say.
 
 Create one `createPreviewHandler(env, dependencies)` for the route owner.
@@ -42,7 +43,8 @@ The Worker does not read or write `listener_mode`.
 `Preview.url` is the absolute app address from `previewPath`. It holds no secret.
 Each frame load, reload, and new tab starts there, because a frame under the
 app and a top-level tab use different cookie partitions. The app gate checks
-the session. The handler then checks the membership, the running workspace,
+the session. A signed-out top-level tab goes to sign-in and then comes back, as
+[Preview sign-in](../security/README.md#preview-sign-in) says. The handler then checks the membership, the running workspace,
 and the active preview. The GET returns trusted HTML that posts the preview
 hostname and a 60-second grant to the authorizer.
 A create or a launch for a workspace whose owner is suspended gets 403

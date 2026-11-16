@@ -7,6 +7,8 @@ import { createTerminalHandler } from '../terminal/handler'
 import { createPreviewHandler } from '../previews/handler'
 import { workspaceRepositoryLocations } from '../lifecycle/repository-location-data'
 import { repositoryLocation } from '../lifecycle/repository-locations'
+import type { Preview } from '../../src/shared/generated/Preview'
+import { agentPreview } from '../tools/preview-link'
 import { toolSessionWorkspace } from '../tools/session-access'
 import { toolUser } from '../tools/composition-data'
 import type { ToolPreviewCall } from '../tools/services'
@@ -112,17 +114,25 @@ export class WorkspaceFeatures {
       input.workspaceId,
       input.kind === 'list' ? undefined : input.senderUserId,
     )
+    const linked = (preview: Preview) =>
+      agentPreview(preview, origin, input.orgId, input.workspaceId)
     try {
       const result =
         input.kind === 'list'
-          ? { previews: await this.previews.actions.list(target, origin) }
+          ? {
+              previews: (await this.previews.actions.list(target, origin)).map(
+                linked,
+              ),
+            }
           : input.kind === 'open'
             ? {
-                preview: await this.previews.actions.open(
-                  target,
-                  input.senderUserId,
-                  input.port,
-                  origin,
+                preview: linked(
+                  await this.previews.actions.open(
+                    target,
+                    input.senderUserId,
+                    input.port,
+                    origin,
+                  ),
                 ),
               }
             : {
