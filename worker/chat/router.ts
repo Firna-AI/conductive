@@ -1,9 +1,14 @@
 import { MACHINE_PATHS } from '../../src/shared/agent-tools'
-import type { AppEnv } from '../env'
+import type { AppDependencies, AppEnv } from '../env'
 import { HttpError } from '../http'
 import { tokenWorkspace } from './queries'
 import { sessionGate } from '../security/gate'
 import { attachmentRoute } from './attachment-routes'
+import { recordUserActivity } from '../data/user-activity'
+
+/** A chat message that the person sends, or sends again after a failure. */
+const SENT_MESSAGE =
+  /^\/api\/orgs\/[^/]+\/workspaces\/[^/]+\/sessions\/[^/]+\/messages(?:\/[^/]+\/retry)?$/
 
 export async function routeRunner(
   request: Request,
@@ -26,16 +31,23 @@ export async function routeRunner(
 export async function routeChat(
   request: Request,
   env: AppEnv,
-  now: () => number = Date.now,
-  newId?: () => string,
+  dependencies: Pick<AppDependencies, 'now' | 'randomToken'>,
+  execution?: Pick<ExecutionContext, 'waitUntil'>,
 ): Promise<Response | null> {
-  const attachment = await attachmentRoute(request, env, now, newId)
+  const { now } = dependencies
+  const attachment = await attachmentRoute(
+    request,
+    env,
+    now,
+    dependencies.randomToken,
+  )
   if (attachment) return attachment
-  const match = new URL(request.url).pathname.match(
+  const path = new URL(request.url).pathname
+  const match = path.match(
     /^\/api\/orgs\/[^/]+\/workspaces\/([^/]+)\/(?:events|history|sessions(?:\/.*)?)$/,
   )
   if (!match) return null
-  await sessionGate(request, env, now())
+  const person = await sessionGate(request, env, now())
   let workspaceId: string
   try {
     workspaceId = decodeURIComponent(match[1])
@@ -46,7 +58,10 @@ export async function routeChat(
       'The workspace is not available.',
     )
   }
-  return forwardWorkspaceRequest(request, env, workspaceId)
+  const response = await forwardWorkspaceRequest(request, env, workspaceId)
+  if (request.method === 'POST' && response.ok && SENT_MESSAGE.test(path))
+    await recordUserActivity(env.DB, person, now(), execution)
+  return response
 }
 
 /** @public The feature router forwards workspace requests through this boundary. */
