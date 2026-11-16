@@ -14,7 +14,7 @@ Each handler returns `null` for a path that it does not own. The
 | `endpointModelsRoute` in [`endpoint-models.ts`](endpoint-models.ts) | `POST /api/account/agent-logins/:agent/models/refresh` |
 | `codexDeviceRoute` in [`codex-device.ts`](codex-device.ts) | `POST /api/account/agent-logins/codex/device` starts a ChatGPT sign-in. `POST` of its `/:handle` polls and exchanges it |
 | `shellRoute` in [`shell.ts`](shell.ts) | `GET` of the sections, the repositories, the members, and the workspace list of an org. `GET` and `PUT` of the view of a workspace, and `PUT` of its read mark |
-| `featureShellRoute` in [`feature-shell.ts`](feature-shell.ts) | GitHub installations and available repositories of the account; Create org with initials and repositories; settings reads and writes; repository choices; section writes; workspace names and moves |
+| `featureShellRoute` in [`feature-shell.ts`](feature-shell.ts) | GitHub installations and available repositories of the account; Create org with initials and repositories; settings reads and writes; `GET /api/orgs/:orgId/settings/skills`; repository choices; section writes; workspace names and moves |
 | `archiveRoute` in [`archive.ts`](archive.ts) | `POST` of a workspace’s `archive` and `restore` |
 | `chatLifecycleRoute` in [`lifecycle.ts`](lifecycle.ts) | `POST` of the workspace list, which creates a workspace. `GET` of a workspace, `POST` of its `resume` and `activity`, and image build, refresh, and log routes |
 | `feedbackRoute` in [`feedback.ts`](feedback.ts) | `GET` and `POST` of `/api/feedback`. [Feedback routes](feedback.md) gives their checks, their errors, and the email |
@@ -141,6 +141,14 @@ View writes cannot change this branch.
   warning through `warnWorker`. The account and Get started still load. The
   installation list of the account shows its own error.
 - A repository without a GitHub installation is not in the list.
+- Settings reads and saves return `skillsRepository`. Admins save it through
+  `PATCH /api/orgs/:orgId/settings`. A GitHub link becomes `owner/name`.
+  Empty text removes it. Other text stays as typed.
+- `GET /api/orgs/:orgId/settings/skills` reads the saved repository for any
+  org member. Call it when the Skills section loads and after Save.
+  It returns `SkillsRepositoryLookupResponse` from the shared settings types.
+  It stores no list. GitHub failures leave settings reads and saves available.
+  An expired GitHub sign-in keeps the existing sign-in error.
 - Each member has a view of their own. A read mark only moves forward, and
   it stops at the last event number of the workspace.
 - The list and the lifecycle replies give each reader one state.
@@ -264,6 +272,9 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
   the org's saved choices with repositories that its reader can access,
   and starts a build after an add.
   Their `*-data.ts` files keep queries and guarded writes.
+- [`feature-skills.ts`](feature-skills.ts) checks membership and the saved
+  name. [`skills-github.ts`](skills-github.ts) reads only the repository
+  record and recursive default-branch tree, with the viewer's fresh user token.
 - [`feedback.ts`](feedback.ts), [`feedback-input.ts`](feedback-input.ts),
   [`feedback-data.ts`](feedback-data.ts), and
   [`feedback-mail.ts`](feedback-mail.ts): the feedback routes, the checked

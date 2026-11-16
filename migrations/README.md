@@ -231,6 +231,9 @@ It keeps every other preference and every saved view.
 An unset view now uses the dialog, so only accounts made after this migration get the dialog without a choice.
 [The preference](../docs/protocol/create-a-workspace.md#the-preference) gives the requirement.
 
+`202611160000_org_skills_repository.sql` adds `settings.skills_repository`.
+Existing orgs and new orgs without a choice get empty text.
+
 ## Reserved ranges
 
 Each milestone owns the complete inclusive range below.

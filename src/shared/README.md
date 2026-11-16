@@ -20,6 +20,18 @@ It has no runtime import, so the tool image can embed it.
 `nameLabel` in `name-label.ts` gives the display label "Untitled" for null.
 
 Each area owns its paths and payloads. Import from that area directly.
+`OrgSettings.skillsRepository` in `org-settings.ts` gives the saved text.
+Older replies may omit it. `UpdateOrgSettingsRequest.skillsRepository`
+changes it. `orgSettingsPaths.skills` names the separate lookup route.
+`SkillsRepositoryLookupResponse` gives the saved `repository`, sorted skill
+names, `notice`, and name `clashes`. No repository means empty names and no
+notice. The notice is `private`, `not-found`, `no-skills`, `incomplete`,
+`failed`, or null. An incomplete list can still have skill names.
+`findSkillFolders` in `skill-folders.ts` takes relative repository file
+paths and the repository name. It returns sorted `{ name, path }` skills
+and `{ name, keptPath, skippedPath }` clashes. A root skill has path `.`.
+`isSkillsRepository` checks the strict `owner/name` form before a URL or
+command uses it. Both functions have no runtime imports.
 `OrgSettings.envVars` in `org-settings.ts` returns only names and secret marks.
 Its `set` change carries a value and an optional mark. An omitted mark
 keeps the stored mark inside each compare-and-swap attempt. A missing or

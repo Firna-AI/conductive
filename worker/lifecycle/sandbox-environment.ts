@@ -3,6 +3,7 @@ import {
   commitAuthor,
   type CommitAuthor,
 } from '../../src/shared/commit-author'
+import { isSkillsRepository } from '../../src/shared/skill-folders'
 import { TOOL_ENV } from '../../tools/context'
 import { readUser } from '../data/users'
 import type { AppEnv } from '../env'
@@ -13,6 +14,7 @@ import {
   type RepositoryLocation,
 } from './repository-locations'
 import { readWorkspaceToken } from './tokens'
+import { readImageSettings } from './settings-data'
 import type { WorkspaceRow } from './workspace-data'
 
 /**
@@ -37,6 +39,7 @@ export async function sandboxEnvironment(
 ): Promise<Record<string, string>> {
   const { workspace, environment, locations } = input
   const token = await readWorkspaceToken(env, workspace.id)
+  const { skillsRepository } = await readImageSettings(env.DB, workspace.orgId)
   return {
     ...Object.fromEntries(
       Object.entries(environmentValues(environment)).filter(
@@ -49,6 +52,9 @@ export async function sandboxEnvironment(
     CONDUCTIVE_MACHINE_ORIGIN: env.MACHINE_ORIGIN ?? '',
     CONDUCTIVE_DEFAULT_BRANCH: input.defaultBranch,
     CONDUCTIVE_WORKSPACE_BRANCH: workspace.branch,
+    CONDUCTIVE_SKILLS_REPOSITORY: isSkillsRepository(skillsRepository)
+      ? skillsRepository
+      : '',
     CONDUCTIVE_REPOSITORY_DIR: repositoryLocation(
       locations,
       workspace.repositoryId,

@@ -13,6 +13,7 @@ import {
 } from './feature-repositories'
 import { featureSectionWrite } from './feature-sections'
 import { featureSettings } from './feature-settings'
+import { featureSkills } from './feature-skills'
 import { shellChildId } from './feature-shell-access'
 import { featureWorkspaceWrite } from './feature-workspaces'
 import { workspaceChildId } from './workspace-path'
@@ -45,6 +46,8 @@ export async function featureShellRoute(
     return createShellOrg(env, context, dependencies)
   if (!context.org) return null
   const orgId = context.org.id
+  if (path === orgSettingsPaths.skills(orgId) && request.method === 'GET')
+    return featureSkills(env, context, dependencies)
   if (
     path === orgSettingsPaths.settings(orgId) &&
     ['GET', 'PATCH'].includes(request.method)

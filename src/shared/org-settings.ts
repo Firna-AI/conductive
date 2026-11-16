@@ -1,9 +1,11 @@
 import { orgPath, type Timestamp } from './api'
 import type { BaseImage } from './base-image'
+import type { SkillFolderClash } from './skill-folders'
 
 export const orgSettingsPaths = {
   repositories: (orgId: string) => `${orgPath(orgId)}/repositories`,
   settings: (orgId: string) => `${orgPath(orgId)}/settings`,
+  skills: (orgId: string) => `${orgPath(orgId)}/settings/skills`,
   builds: (orgId: string) => `${orgPath(orgId)}/builds`,
   refresh: (orgId: string) => `${orgPath(orgId)}/image/refresh`,
 } as const
@@ -38,6 +40,8 @@ export interface OrgSettings {
   baseImage?: BaseImage
   installScript: string
   startupScript: string
+  /** Older replies may omit the skills repository. */
+  skillsRepository?: string
   /** A stored value never goes back to the browser. */
   envVars: readonly { name: string; secret: boolean }[]
   updatedAt: Timestamp
@@ -48,11 +52,22 @@ export interface OrgSettingsResponse {
 export interface UpdateOrgSettingsRequest {
   installScript?: string
   startupScript?: string
+  skillsRepository?: string
   envVars?: readonly (
     | { operation: 'set'; name: string; value: string; secret?: boolean }
     | { operation: 'classify'; name: string; secret: boolean }
     | { operation: 'remove'; name: string }
   )[]
+}
+
+type SkillsRepositoryNotice =
+  'private' | 'not-found' | 'no-skills' | 'incomplete' | 'failed'
+
+export interface SkillsRepositoryLookupResponse {
+  repository: string
+  skills: readonly string[]
+  notice: SkillsRepositoryNotice | null
+  clashes: readonly SkillFolderClash[]
 }
 
 export interface ImageBuild {

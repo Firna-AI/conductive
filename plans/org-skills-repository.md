@@ -466,25 +466,30 @@ Depends on: 2
 
 Depends on: 3
 
-- [ ] Add a D1 migration with a `skills_repository` column on `settings`.
-- [ ] Read and write the setting in `worker/app-api/feature-settings.ts`
+- [x] Add a D1 migration with a `skills_repository` column on `settings`.
+- [x] Read and write the setting in `worker/app-api/feature-settings.ts`
       and `feature-settings-data.ts`. Only an admin writes it. Normalize a
       GitHub link to `owner/name`. An empty value removes it.
-- [ ] Add the lookup of decision 7 H: the repository record and the file
+- [x] Add the lookup of decision 7 H: the repository record and the file
       tree of its default branch, with the viewer's GitHub sign-in. Return
       the skill names, or the cause of a notice. Run it at Save and at each
       load of the settings.
-- [ ] Add the field to `src/shared/org-settings.ts`.
-- [ ] Pass `CONDUCTIVE_SKILLS_REPOSITORY` in
+  - Agent call on 2026-11-16: use `GET /api/orgs/:orgId/settings/skills`.
+    A separate route keeps a GitHub failure out of the settings read and
+    Save. Milestone 6 calls it on section load and after Save.
+- [x] Add the field to `src/shared/org-settings.ts`.
+- [x] Pass `CONDUCTIVE_SKILLS_REPOSITORY` in
       `worker/lifecycle/sandbox-environment.ts`, at create and at resume,
       always, and empty without a repository. List it in the start
       variable table of `image/README.md`.
-- [ ] Put the folder rule of the design calls in one pure function under
+- [x] Put the folder rule of the design calls in one pure function under
       `src/shared/`, which takes a list of file paths. The lookup and the
       runner both use it.
-- [ ] Tests: the admin rule, the normalized value, the start variable, and
+- [x] Tests: the admin rule, the normalized value, the start variable, and
       the lookup with a fake GitHub server: skills found in each layout, a
       private repository, not found, no skills, a cut tree, and a failure.
+  - Verification and the existing commit-author fixture failure are in
+    `.context/org-skills-repository/m4/test-evidence.md`.
 
 ## Milestone 5: Runner skills copy
 

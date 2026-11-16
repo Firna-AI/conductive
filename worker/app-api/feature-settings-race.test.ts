@@ -64,3 +64,32 @@ it('preserves the authoritative secret mark after a value replacement loses its 
     settings: { envVars: [{ name: 'TOKEN', secret: false }] },
   })
 })
+
+it('preserves a concurrent skills repository change when another settings save retries', async () => {
+  const cookie = await harness.login()
+  const org = await harness.createOrg(cookie)
+  const update = settingsData.updateShellSettings
+  const writes = vi.spyOn(settingsData, 'updateShellSettings')
+  writes.mockImplementationOnce(async (db, input) => {
+    await db
+      .prepare('UPDATE settings SET skills_repository = ? WHERE org_id = ?')
+      .bind('concurrent/skills', org.id)
+      .run()
+    return update(db, input)
+  })
+  const response = await harness.request(
+    orgSettingsPaths.settings(org.id),
+    cookie,
+    {
+      method: 'PATCH',
+      body: JSON.stringify({ startupScript: 'echo start' }),
+    },
+  )
+  expect(response.status).toBe(200)
+  expect(await response.json()).toMatchObject({
+    settings: {
+      startupScript: 'echo start',
+      skillsRepository: 'concurrent/skills',
+    },
+  })
+})
