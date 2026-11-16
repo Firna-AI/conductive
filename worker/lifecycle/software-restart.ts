@@ -22,7 +22,7 @@ import { readWorkspace } from './workspace-data'
 export type RestartStep = 'begin' | 'fail'
 
 /**
- * Download the newest release with the unit of the hourly check, so that
+ * Download the newest release with the unit of the periodic check, so that
  * the two never run at once. The download goes on in the background after
  * the limit, and the restart applies only a complete download.
  */

@@ -12,6 +12,16 @@ use crate::clock::Clock;
 use crate::error::Result;
 use crate::link::ports::{LinkUpdate, RunnerLink};
 use crate::state::store::EventStore;
+use crate::update::{IdleUpdate, ReleaseReadiness};
+
+/// Why the runner completed its normal shutdown path.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum RunExit {
+    /// A shutdown signal or a closed shutdown channel stopped the runner.
+    Shutdown,
+    /// Idle work and local release readiness permit an in-place release change.
+    Swap,
+}
 
 /// File and turn owners receive commands without blocking socket confirmations.
 #[cfg_attr(test, unimock::unimock(api = CommandHandlerMock))]
@@ -25,6 +35,8 @@ pub trait CommandHandler: Send + Sync {
     fn connected(&self) -> BoxFuture<'static, Result<()>>;
     /// Queue one command in wire order. The handler owns its asynchronous work.
     fn command(&self, command: RunnerCommand) -> Result<()>;
+    /// Report active turns, queued work, unfinished accepted turns, and report requests.
+    async fn busy(&self) -> Result<bool>;
     /// End accepted live turns before the final persist and socket close.
     async fn shutdown(&self) -> Result<()>;
 }
@@ -33,7 +45,7 @@ pub trait CommandHandler: Send + Sync {
 #[async_trait]
 pub trait Runner: Send + Sync {
     /// Run until shutdown is true or its sender closes. Startup errors propagate.
-    async fn run(&self, shutdown: watch::Receiver<bool>) -> Result<()>;
+    async fn run(&self, shutdown: watch::Receiver<bool>) -> Result<RunExit>;
 }
 
 /// Connection runtime. Repository scans and agents belong to injected handlers.
@@ -42,6 +54,7 @@ pub struct RunnerCore {
     store: Arc<dyn EventStore>,
     clock: Arc<dyn Clock>,
     handler: Arc<dyn CommandHandler>,
+    releases: Arc<dyn ReleaseReadiness>,
 }
 
 impl RunnerCore {
@@ -51,12 +64,14 @@ impl RunnerCore {
         store: Arc<dyn EventStore>,
         clock: Arc<dyn Clock>,
         handler: Arc<dyn CommandHandler>,
+        releases: Arc<dyn ReleaseReadiness>,
     ) -> Self {
         Self {
             link,
             store,
             clock,
             handler,
+            releases,
         }
     }
 
@@ -65,12 +80,15 @@ impl RunnerCore {
         shutdown: &mut watch::Receiver<bool>,
         jobs: &mut JoinSet<(u64, Result<()>)>,
         round: u64,
-    ) {
+    ) -> bool {
         let mut step = self.link.step();
+        let mut check = self.clock.update_delay();
+        let mut idle = IdleUpdate::default();
+        let mut welcomed = false;
         loop {
             tokio::select! {
                 biased;
-                _ = async { let _ = shutdown.wait_for(|stopped| *stopped).await; } => return,
+                _ = async { let _ = shutdown.wait_for(|stopped| *stopped).await; } => return false,
                 finished = jobs.join_next(), if !jobs.is_empty() => {
                     match finished {
                         Some(Ok((job_round, Err(_)))) => {
@@ -78,7 +96,7 @@ impl RunnerCore {
                             if job_round == round {
                                 drop(step);
                                 let _ = self.link.close().await;
-                                return;
+                                return false;
                             }
                         },
                         Some(Err(_)) => tracing::warn!("The runner command task could not finish."),
@@ -88,25 +106,49 @@ impl RunnerCore {
                 update = &mut step => {
                     match update {
                         Ok(LinkUpdate::Connected) => {
+                            welcomed = true;
                             let connected = self.handler.connected();
                             jobs.spawn(async move { (round, connected.await) });
                         },
                         Ok(LinkUpdate::Command(command)) => {
+                            idle.reset();
                             if self.handler.command(*command).is_err() { tracing::warn!("The runner command could not finish."); }
                         },
                         Ok(LinkUpdate::Progress) => {},
-                        Ok(LinkUpdate::Disconnected) | Err(_) => return,
+                        Ok(LinkUpdate::Disconnected) | Err(_) => return false,
                     }
                     step = self.link.step();
                 },
+                _ = &mut check => {
+                    check = self.clock.update_delay();
+                    if !welcomed || !jobs.is_empty() {
+                        idle.reset();
+                        continue;
+                    }
+                    match self.check_update(&mut idle).await {
+                        Ok(true) => return true,
+                        Ok(false) => {},
+                        Err(error) => {
+                            idle.reset();
+                            tracing::warn!(%error, "The runner could not check its idle update.");
+                        }
+                    }
+                },
             }
         }
+    }
+
+    async fn check_update(&self, idle: &mut IdleUpdate) -> Result<bool> {
+        let busy = self.handler.busy().await?;
+        let now = self.clock.monotonic();
+        let release = self.releases.status()?;
+        Ok(idle.observe(now, busy, release))
     }
 }
 
 #[async_trait]
 impl Runner for RunnerCore {
-    async fn run(&self, mut shutdown: watch::Receiver<bool>) -> Result<()> {
+    async fn run(&self, mut shutdown: watch::Receiver<bool>) -> Result<RunExit> {
         let now = self.clock.now()?;
         if self.store.recover(now).await.is_err() {
             self.store.persist().await?;
@@ -115,6 +157,8 @@ impl Runner for RunnerCore {
         self.handler.start().await?;
         let mut jobs = JoinSet::new();
         let mut round = 0;
+        let mut exit = RunExit::Shutdown;
+        let mut swap_close = Ok(());
         while !*shutdown.borrow() && shutdown.has_changed().is_ok() {
             round += 1;
             let connected = tokio::select! {
@@ -122,8 +166,10 @@ impl Runner for RunnerCore {
                 _ = async { let _ = shutdown.wait_for(|stopped| *stopped).await; } => break,
                 connected = self.link.connect() => connected,
             };
-            if connected.is_ok() {
-                self.connected(&mut shutdown, &mut jobs, round).await;
+            if connected.is_ok() && self.connected(&mut shutdown, &mut jobs, round).await {
+                swap_close = self.link.close().await;
+                exit = RunExit::Swap;
+                break;
             }
             if *shutdown.borrow() || shutdown.has_changed().is_err() {
                 break;
@@ -145,10 +191,16 @@ impl Runner for RunnerCore {
         let closed = self.link.close().await;
         ended?;
         saved?;
-        closed
+        closed?;
+        swap_close?;
+        Ok(exit)
     }
 }
 
 #[cfg(test)]
 #[path = "_tests_/runtime_tests.rs"]
 mod runtime_tests;
+
+#[cfg(test)]
+#[path = "_tests_/idle_runtime/mod.rs"]
+mod idle_runtime;

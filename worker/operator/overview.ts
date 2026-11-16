@@ -3,13 +3,14 @@ import type {
   OperatorOverview,
 } from '../../src/shared/operator'
 import {
+  countWindows,
+  createdDay,
+  dailyCounts,
   runningWorkspacePredicate,
   workspaceStateCounts,
+  type DailyCount,
 } from './workspace-counts'
 
-const DAY = 24 * 60 * 60 * 1_000
-
-type DailyCount = OperatorOverview['newUsersByDay'][number]
 type LargestOrg = OperatorOverview['largestOrgs'][number]
 interface Totals {
   usersTotal: number
@@ -27,26 +28,11 @@ interface Totals {
 }
 type OverviewRow = Totals | DailyCount | LargestOrg | OperatorLongRun
 
-function dailyCounts(rows: OverviewRow[], firstDay: number): DailyCount[] {
-  const counts = new Map(
-    rows.map((row) => {
-      if (!('date' in row)) throw new Error('Invalid overview daily count')
-      return [row.date, row.count]
-    }),
-  )
-  return Array.from({ length: 30 }, (_, index) => {
-    const date = new Date(firstDay + index * DAY).toISOString().slice(0, 10)
-    return { date, count: counts.get(date) ?? 0 }
-  })
-}
-
 export async function readOperatorOverview(
   db: D1Database,
   readAt: number,
 ): Promise<OperatorOverview> {
-  const day = new Date(readAt)
-  day.setUTCHours(0, 0, 0, 0)
-  const firstDay = day.getTime() - 29 * DAY
+  const { firstDay, weekStart } = countWindows(readAt)
   const [counts, workspaceDays, userDays, orgs, runs] =
     await db.batch<OverviewRow>([
       db
@@ -72,17 +58,17 @@ export async function readOperatorOverview(
            JOIN image_build_jobs j ON j.build_id = b.id WHERE j.phase != 'done'
          )`,
         )
-        .bind(readAt - 7 * DAY, readAt),
+        .bind(weekStart, readAt),
       db
         .prepare(
-          `SELECT strftime('%Y-%m-%d', created_at / 1000, 'unixepoch') AS date,
+          `SELECT ${createdDay()} AS date,
            COUNT(*) AS count FROM workspaces WHERE created_at BETWEEN ? AND ?
          GROUP BY date ORDER BY date`,
         )
         .bind(firstDay, readAt),
       db
         .prepare(
-          `SELECT strftime('%Y-%m-%d', created_at / 1000, 'unixepoch') AS date,
+          `SELECT ${createdDay()} AS date,
            COUNT(*) AS count FROM users WHERE created_at BETWEEN ? AND ?
          GROUP BY date ORDER BY date`,
         )

@@ -246,6 +246,29 @@ It keeps every other preference and every saved view.
 An unset view now uses the dialog, so only accounts made after this migration get the dialog without a choice.
 [The preference](../docs/protocol/create-a-workspace.md#the-preference) gives the requirement.
 
+`202611161200_parallel_image_sources.sql` rebuilds `image_source_jobs` with the primary key `(build_id, source_index)`, so an image job keeps one row for each repository.
+It copies every column of each older row, including the encrypted token, process, output offsets, source index, and provider account.
+The new `estimate_bytes` column holds the memory estimate of the Git commands of a repository, 256 MiB by default.
+The new `image_source_runs` table holds one row for each job.
+That row keeps the job phase, the process and output of its first command, and the memory budget.
+Its `metadata_plan_json` column saves the metadata batches before the first token: one installation and at most 500 repositories in each.
+`metadata_batch_index` and `metadata_repository_index` save the read progress.
+The size estimates and the repository cursor save together, in one D1 batch.
+A later call goes on from that plan and that progress.
+Only one metadata token lives at a time.
+It temporarily belongs to source row 0, with the original source-token context and no grant, and that row keeps its phase.
+The previous cleanup reader can therefore revoke it before suspension or deletion continues.
+A failed revocation keeps the token there, and blocks the next token and every copy.
+Neither table has a foreign key, so each token stays owned until GitHub confirms its revocation.
+Each older job gets a run in the `legacy` phase.
+A job that the previous Worker starts during a deploy gets one at its next call.
+The source loader finishes the confirmed process of such a job with the original encryption context of its token.
+Then it moves the job once to one row for each repository, at a point with no token or grant.
+SQLite drops the triggers of a dropped table, so the migration recreates both computer ledger triggers of `image_source_jobs`.
+A Worker with the serial source loader cannot safely resume a parallel job.
+After a parallel job starts, deploy fixes forward instead of rolling back to that loader, as [When a deploy fails](../docs/automatic-deploys.md#when-a-deploy-fails) describes.
+The [source loader](../worker/lifecycle/repository-layout.md#the-source-loader) gives the rules of these records.
+
 `202611161200_user_last_active.sql` adds the nullable `users.last_active_at` column.
 It holds the time of the last new workspace or chat message of the person, as [the Worker README](../worker/README.md#last-active-time) says.
 The migration fills each existing user from the creation time of the newest workspace that the person created in the app, from `workspace_runtime.created_by_user_id`.
@@ -308,6 +331,7 @@ UI and wiring milestones normally need no migration. Their ranges stay reserved.
 | Automations: pull request runs | `202611101500`–`202611101559` |
 | Keyboard shortcuts storage | `202611101600`–`202611101659` |
 | Agent workspace calls | `202611111200`–`202611111259` |
+| Parallel image sources | `202611161200`–`202611161259` |
 
 `202611131221_attachment_download_tokens.sql` adds one-use attachment download grants.
 Each row holds a token digest, the file and destination identities, its expiry, and its claim time.
@@ -345,3 +369,9 @@ uses the branch in the sandbox. Until then, a name renames the branch, as
 says. Each Continue adds 1 to the task number. A row from before this file
 starts at task 1, also after an earlier Continue, because D1 holds no count
 of earlier Continues.
+
+`202611161600_owner_count_indexes.sql` adds indexes on the owner of
+workspaces, automations, and automation runs. The
+[Stats tab of the account](../docs/protocol/account-stats.md) counts the
+records of one person, and these indexes keep each read to that person's
+rows.

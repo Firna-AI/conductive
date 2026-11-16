@@ -1,7 +1,7 @@
 //! Compose file commands and report repairs with the existing connection handler.
 
 use std::collections::BTreeSet;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 
 use async_trait::async_trait;
@@ -53,6 +53,15 @@ pub struct ReportCommandHandler {
     seen: Mutex<BTreeSet<String>>,
     jobs: Mutex<Vec<JoinHandle<()>>>,
     stopped: Arc<AtomicBool>,
+    initial: Arc<AtomicUsize>,
+}
+
+struct InitialReport(Arc<AtomicUsize>);
+
+impl Drop for InitialReport {
+    fn drop(&mut self) {
+        self.0.fetch_sub(1, Ordering::AcqRel);
+    }
 }
 
 impl ReportCommandHandler {
@@ -63,12 +72,27 @@ impl ReportCommandHandler {
             seen: Mutex::new(saved_commands.into_iter().collect()),
             jobs: Mutex::new(vec![]),
             stopped: Arc::new(AtomicBool::new(false)),
+            initial: Arc::new(AtomicUsize::new(0)),
         }
     }
 }
 
 #[async_trait]
 impl CommandHandler for ReportCommandHandler {
+    async fn busy(&self) -> Result<bool> {
+        if self.initial.load(Ordering::Acquire) != 0
+            || self
+                .jobs
+                .lock()
+                .or(Err(Error::InvalidCommand))?
+                .iter()
+                .any(|job| !job.is_finished())
+        {
+            return Ok(true);
+        }
+        self.dependencies.next.busy().await
+    }
+
     async fn start(&self) -> Result<()> {
         self.dependencies.files.start().await?;
         self.dependencies.next.start().await?;
@@ -82,11 +106,14 @@ impl CommandHandler for ReportCommandHandler {
         if self.stopped.load(Ordering::Acquire) {
             return Box::pin(async { Ok(()) });
         }
+        self.initial.fetch_add(1, Ordering::AcqRel);
+        let initial_report = InitialReport(self.initial.clone());
         let welcomed = self.dependencies.next.connected();
         let initial = self.dependencies.files.refresh(true, None, None);
         let dependencies = self.dependencies.clone();
         let stopped = self.stopped.clone();
         Box::pin(async move {
+            let _initial_report = initial_report;
             welcomed.await?;
             if let Some(watches) = &dependencies.watches {
                 watches.start().await?;
@@ -211,3 +238,7 @@ impl CommandHandler for ReportCommandHandler {
         turns
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/busy_tests.rs"]
+mod busy_tests;

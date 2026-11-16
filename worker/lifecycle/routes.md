@@ -111,7 +111,7 @@ turn and the branch step use the sender.
    `workspace_not_running`. Otherwise it shows Starting and stores
    `softwareRestartAt`.
 3. Outside that queue, the route runs `UPDATE_CHECK_COMMAND` through the
-   Boat `command` route. It starts the unit of the hourly update check,
+   Boat `command` route. It starts the unit of the periodic update check,
    with a limit of 60 seconds. Its result is the `updateCheck` of the reply.
 4. It runs `RESTART_COMMAND`, which restarts the runner under the start
    lock, so that its pre-start step applies a complete download, and then
