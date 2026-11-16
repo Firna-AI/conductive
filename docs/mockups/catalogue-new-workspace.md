@@ -40,9 +40,14 @@ Its child pages:
   same state.
 - `app/new-workspace/start-branch/stacked` has Saved carts after a start
   that stacks on calummoore/checkout-autocomplete, and its pull request bar
-  names that base. Its `base-moved` variant has the bar of decision 294:
-  GitHub deleted that branch, so the base moved to main, and a line under
-  the bar says so.
+  names that base. Its `create-pr` variant has changed files that are not
+  committed, so the bar offers Create PR. On a phone the top of the Checks
+  tab names the branch and that base where Create PR stands, from decision
+  296, which Cal chose on 16 November 2026. The base takes a line of its
+  own, so both names show in full. Its `base-moved` variant has the bar of
+  decision 294: GitHub deleted that branch, so the base moved to main, and
+  a line under the bar says so. On a phone that line stands above the
+  branch and main.
 
 The `branch`, `target`, and `branchMenu` controls of the New workspace page
 and of the dialog draw these states. The `base` control of the workspace

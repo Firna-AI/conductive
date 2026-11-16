@@ -52,4 +52,6 @@ workspace dialog.
   the two parts, so the app can share them. No word says "fork", because on
   GitHub a fork is a copy of the repository.
 - [The pull request bar](design-bar.md) gives the line under the bar after
-  GitHub deleted the stored base of a workspace.
+  GitHub deleted the stored base of a workspace. It also gives the branch
+  and its base at the top of the Checks tab of a phone, which name a
+  picked branch that a workspace stacks on.

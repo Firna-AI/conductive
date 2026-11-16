@@ -374,6 +374,38 @@ Design calls from the UI of Milestone 8, made on 13 November 2026:
   rule that puts "the branch" before a branch name. The first mockup copy
   left it out.
 
+Design calls from the mockups of Milestone 10, made on 16 November 2026:
+
+- The top of the Checks tab of a phone names the branch and its base with
+  the parts of the desktop bar: the branch icon, the branch, an arrow, and
+  the base, in the same font and colours. It adds no words. Reason: the
+  desktop bar already names the branch and its base in this way, so the
+  two layouts look the same.
+- On a phone the names wrap. When the two names do not fit on one line,
+  the base takes a line of its own with its arrow. A name that is longer
+  than the line breaks. Reason: a phone has no tooltip, and decision 296
+  rejected option B because long names get cut.
+- The branch and its base stand in the group of Create PR, on the line
+  above the button. The line of a moved base (decision 294) stays first,
+  above them. Reason: the base is the target of Create PR, and the top of
+  the Checks tab keeps its order: the message, then the actions.
+- The branch and its base show in each state without a pull request, also
+  without an action: a branch without commits, a member with read access,
+  and a suspended org. Reason: decision 296 gives one rule for every
+  workspace, and the desktop bar names the branches in each of these
+  states.
+- The compact row of a phone does not change. Reason: decision 296
+  rejected the base in the row.
+- The `create-pr` variant of `app/new-workspace/start-branch/stacked`
+  draws a stacked base. `app/banner`, `app/banner/no-commits` with its
+  `local-work` variant, and `app/banner/continued/moved-files` draw a base
+  that is the default branch. Reason: these pages already show the phone
+  Checks tab of a workspace that targets main, so a copy under the stacked
+  page would show the same screen twice.
+- The styles are new classes in `BarActions.module.css`, which the app
+  already imports for the top of the Checks tab. Reason: Milestone 13 can
+  use them without a copy, and no rule that the app reads today changes.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -569,15 +601,18 @@ Depends on: 8
 
 Draw decision 296 on a phone.
 
-- [ ] Draw the top of the Checks tab on a phone with the branch and its
+- [x] Draw the top of the Checks tab on a phone with the branch and its
       base while the branch has no pull request, for a stacked workspace
       and for a workspace that targets the default branch, under
       `app/new-workspace/start-branch/stacked` and the pull request bar
       pages that show the phone Checks tab.
-- [ ] Update `docs/mockups/catalogue*.md` and `docs/mockups/design*.md`.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Update `docs/mockups/catalogue*.md` and `docs/mockups/design*.md`.
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages.
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
+
+Evidence: `.context/start-from-branch/mockups-296/`, with the check logs,
+the list of changed views against a baseline build, and the screenshots.
 
 ## Milestone 11: Documentation of the review fixes
 
@@ -590,7 +625,10 @@ Depends on: 10
       the new base before it changes the target (decision 297), and the one
       retry owner (decision 298).
 - [ ] In `docs/protocol/github-banner.md`, state decision 296 under
-      "Layouts".
+      "Layouts", with the design calls of the mockups of Milestone 10: on
+      a phone the names wrap and show in full, the branch and its base
+      stand above Create PR and under the line of a moved base, and they
+      show in each state without a pull request.
 - [ ] Read the Terms page, the Privacy page with its data uses, and each
       public guide in full. Update each sentence that restates a changed
       fact, such as when Conductive uses a member's GitHub token. Bump
@@ -625,7 +663,9 @@ Depends on: 10
 
 - [ ] Show the branch and its base at the top of the Checks tab on a phone
       while the branch has no pull request (decision 296), as the mockups
-      of Milestone 10 show.
+      of Milestone 10 show. They show also when the bar has no action, so
+      the top of the Checks tab is no longer empty then. Take the styles
+      from the shared `BarActions.module.css`.
 - [ ] Test it, and compare it with its mockup on a phone.
 
 ## Milestone 9: Verification, commit, review, and pull request

@@ -1,15 +1,17 @@
 import type { LucideIcon } from 'lucide-react'
 import {
   Archive,
+  ArrowRight,
   CircleAlert,
   Clock,
+  GitBranch,
   GitBranchPlus,
   GitMerge,
   Info,
 } from 'lucide-react'
 import { pullRequest } from '../../fixtures/pullRequests'
 import { repositories } from '../../fixtures/repositories'
-import type { Workspace } from '../../fixtures/workspaces'
+import { baseBranchOf, type Workspace } from '../../fixtures/workspaces'
 import { barPaths, paths } from '../../paths'
 import { ActionButton } from '../common/actions'
 import { classes } from '../common/classes'
@@ -27,7 +29,7 @@ import {
 import { agentIcons } from './barIcons'
 import type { BarAction, BarModel } from './barModel'
 import { BarGitHubLink, GitHubLink } from './barParts'
-import { barTint } from './prStatus'
+import { barTint, hasPullRequest } from './prStatus'
 import styles from './BarActions.module.css'
 
 /**
@@ -192,21 +194,47 @@ export function BarMessage(props: {
 }
 
 /**
- * The actions of the bar at the top of the Checks tab of a phone, with the
- * message of the bar and its link to GitHub. The row above opens this tab,
- * because a button cannot sit inside the link of the row.
+ * The branch and its base at the top of the Checks tab of a phone, where
+ * Create PR stands (decision 296). They take the parts of the desktop bar.
+ * The names wrap, and the base keeps its arrow on a line of its own, so
+ * each name shows in full: a phone has no tooltip.
+ */
+function ChecksBranches(props: { workspace: Workspace }) {
+  const { workspace } = props
+  return (
+    <div className={styles.branches}>
+      <GitBranch className={styles.branchIcon} size={13} />
+      <span className={styles.names}>
+        <span className={styles.branch}>{workspace.branch}</span>
+        <span className={styles.base}>
+          <ArrowRight className={styles.branchIcon} size={12} />
+          <span className={styles.baseName}>{baseBranchOf(workspace)}</span>
+        </span>
+      </span>
+    </div>
+  )
+}
+
+/**
+ * The top of the Checks tab of a phone: the message of the bar, then its
+ * actions and its link to GitHub. While the branch has no pull request, the
+ * branch and its base stand above the actions, also when the bar has none.
+ * The row above opens this tab, because a button cannot sit inside the link
+ * of the row.
  */
 export function ChecksActions(props: { bar: BarModel; workspace: Workspace }) {
   const { bar } = props
-  if (!bar.message && bar.actions.length === 0 && !bar.link) return null
+  const branches = !hasPullRequest(bar.banner)
+  const buttons = bar.actions.length > 0 || bar.link !== undefined
+  if (!bar.message && !buttons && !branches) return null
   return (
     <div aria-label="Pull request actions" className={styles.top} role="group">
       {bar.message ? (
         <BarMessage kind={bar.message} workspace={props.workspace} />
       ) : null}
-      {/* A message without an action, such as a moved base, stands alone. */}
-      {bar.actions.length > 0 || bar.link ? (
+      {buttons || branches ? (
         <div className={styles.buttons}>
+          {branches ? <ChecksBranches workspace={props.workspace} /> : null}
           <BarButtons bar={bar} />
           {bar.link ? <BarGitHubLink /> : null}
         </div>
