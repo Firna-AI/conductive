@@ -33,8 +33,8 @@ export interface TerminalScriptOptions {
  * If the real folder differs from `$PWD`, it moves there and keeps `OLDPWD`.
  * The check flag stays local to this shell, so new shells check for themselves.
  * Bash also appends each new history line to `$HISTFILE` before each prompt.
- * The provider saves the disk while the sandbox runs, not after its shutdown,
- * so a history file that Bash writes only at exit is lost at a stop. An empty
+ * Bash otherwise writes the file only at exit, during the shutdown at a stop,
+ * and a stop lost that write. See the terminal README. An empty
  * or unset `HISTFILE` turns the append off, and a failed append stays silent.
  * Keep the `HISTFILE` test: without `HISTFILE`, `history -a` appends to the
  * readline file `~/.history` when that file exists.

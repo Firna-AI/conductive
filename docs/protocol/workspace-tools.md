@@ -294,9 +294,10 @@ The [mockup catalogue](../mockups/catalogue.md) draws the tools at
   prompt. A command that still runs at the stop, such as a dev server, does
   not go in. An empty or unset `HISTFILE` keeps the history out of the
   file.
-- Reason: the sandbox provider saves the disk while the sandbox runs, not
-  after the shutdown at a stop. Bash writes its history file only when the
-  shell exits, which is during that shutdown, so the history was lost. A
+- Reason: Bash writes its history file only when the shell exits. The
+  shell exits only during the shutdown at a stop, and a test on
+  16 November 2026 found no history file after the resume. The append
+  writes each command while the sandbox runs. A
   shell that also reads the new commands of the other shells at each
   prompt was rejected, because it changes the order of the Up arrow while
   the user works.

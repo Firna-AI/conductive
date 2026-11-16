@@ -129,12 +129,19 @@ The hook has these limits:
   shows the prompt. Bash keeps `$?`.
 
 The hook also runs `history -a` at each prompt, so Bash appends each new
-command to `$HISTFILE` when the command ends. Boat's file watcher saves the
-disk about once a minute while the sandbox runs, and the stop keeps the
-last save. Bash writes its history file at exit, which for a workspace
-shell is the shutdown at a stop, after that last save. Without the append,
-the commands of the shell were lost at each stop. The append has these
-limits:
+command to `$HISTFILE` when the command ends. Without the append, Bash
+writes its history file only at exit. A workspace shell exits only at a
+stop, during the shutdown. On 16 November 2026, a workspace had no history
+file after such a stop and its resume, so the commands of its shell were
+lost. The cause in Boat is not confirmed. Boat's file watcher logs a save
+of the disk about once a minute while the sandbox runs, and the write
+during the shutdown can come after the last save. The
+[disk flush rules](../../docs/protocol/workspaces-and-sandboxes.md#disk-flushes)
+say that a normal stop loses nothing, which this loss contradicts for
+writes during the shutdown. With the append, the write comes while the
+sandbox runs. An idle stop comes at least 30 minutes after the last input,
+so each finished command is on the disk well before it. The append has
+these limits:
 
 - A command that still runs at the stop, such as a dev server, does not
   go in.
@@ -143,6 +150,9 @@ limits:
   prints no error.
 - The append keeps the history settings of `~/.bashrc`, such as
   `HISTCONTROL` and `histappend`.
+- If Boat keeps only its last save of the disk, a command that ends less
+  than about a minute before a stop that does not wait for idle time, such
+  as an Archive, can still be lost. This is not confirmed.
 
 So every connection of a workspace attaches to the same session, with its
 running commands and its screen. Concurrent connections share it too. A
