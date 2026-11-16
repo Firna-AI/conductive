@@ -54,7 +54,8 @@ share. Its linked pages give the parts of
 [the workspace](design-workspace.md), of [the chat](design-chat.md),
 of [the operator section](design-operator.md), and of
 [the pull request bar](design-bar.md). They also give [the marks](design-marks.md),
-and [secrets and Capabilities](design-secrets.md).
+[secrets and Capabilities](design-secrets.md), and
+[the links in text](design-links.md).
 
 ## The catalogue
 

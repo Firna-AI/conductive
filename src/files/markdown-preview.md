@@ -20,6 +20,12 @@ a new worker. A static render, as in a test, cannot wait for a worker. It
 passes `parseMarkdown` as `markdownParser` of `FileContent`, or as
 `parser` of `MarkdownView`, and the parse runs on the calling thread.
 
+`readInlineTarget` in `src/markdown/markdown-destination.ts` reads the
+target of each inline link for the file preview and chat text, after the
+`(` of the link. It reads the spaces and line breaks around the address,
+the address with balanced parentheses, angle bracket syntax, and
+backslash escapes, an optional title, and the closing `)`.
+
 ## Safety limits
 
 Emphasis and strong emphasis pair their `*` and `_` markers by the
