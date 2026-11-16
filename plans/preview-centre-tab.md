@@ -129,10 +129,13 @@ covers them.
   tabs for each member, so they stay after a reload and on the other
   devices of the member. The Worker accepts the new kind with a port from 1
   to 65535. It rejects nothing that it accepts today. My call.
-- **Addresses.** `preview/<port>` names a port, on desktop and on a phone.
-  On desktop it shows the centre tab of that port and saves it as open and
-  active, as a file address does. On a phone it shows the Preview page with
-  that port. `preview` alone shows the tool. My call.
+- **Addresses.** `preview/port/<port>`, which `main` added for local
+  addresses in chat and the terminal, is the address of the Preview tab of
+  a port on desktop. It shows that tab, saves it as open and active, as a
+  file address does, and keeps naming the port. `preview/<previewId>` on
+  desktop shows the tab of the port of that preview. On a phone both
+  addresses keep their meaning of today. `preview` alone shows the tool.
+  My call, dated 16 November 2026.
 - **The tool on desktop.** The tool has no bar, no frame, and no "+". It
   lists each port: each server of the report, then each port with a tab or
   an open preview that the report does not name, as `Port 8080`. The Other
@@ -232,33 +235,33 @@ Depends on: 2
 Summary: the docs state the Preview tabs, the tool list, the end of a
 preview, and the activity rule.
 
-- [ ] Update `docs/protocol/port-previews.md`: a centre tab for each port
+- [x] Update `docs/protocol/port-previews.md`: a centre tab for each port
       (decisions 288 and 291), Close of a tab ends no preview (decision
       289), the tool list (decision 290), the bar of the tab (the request),
       and the end and the reopen of a preview (decision 292). The phone
       keeps its frame.
-- [ ] Update [Stop and resume](../docs/protocol/workspace-life.md#stop-and-resume):
+- [x] Update [Stop and resume](../docs/protocol/workspace-life.md#stop-and-resume):
       requests to a port preview are no longer activity (decision 293).
-- [ ] Update the revoke rules in
+- [x] Update the revoke rules in
       `docs/protocol/terminal-previews-and-desktop.md`: a preview stays open
       until the computer stops, 24 hours pass, or an agent closes it
       (decision 294). Users close no preview on desktop (decision 292).
-- [ ] Update [The tab row](../docs/protocol/agents-and-sessions.md#the-tab-row):
+- [x] Update [The tab row](../docs/protocol/agents-and-sessions.md#the-tab-row):
       the row also holds Preview tabs.
-- [ ] Check `docs/protocol/desktop-app.md`,
+- [x] Check `docs/protocol/desktop-app.md`,
       `docs/protocol/section-and-preview-calls.md`, and the architecture docs
       for sentences on the frame in the panel, on the 24-hour end, and on
       Close. Update each one.
-- [ ] Read both legal pages in full, `src/marketing/terms.ts` and
+- [x] Read both legal pages in full, `src/marketing/terms.ts` and
       `src/marketing/privacy.ts`. Update each sentence that restates a
       changed fact.
-- [ ] Read each public guide in `src/marketing/docs/` in full. Update
+- [x] Read each public guide in `src/marketing/docs/` in full. Update
       `terminal-and-previews.md`: the tabs and their bar, the tool list,
       the end of a preview, and "+" on a phone only.
-- [ ] Check the rows of `src/marketing/from-conductor/` that name previews.
-      Update a status or a note that the change makes wrong.
-- [ ] Update `src/previews/README.md`, `src/shell/workspace/screen-parts.md`,
-      `src/shared/README.md`, and `worker/previews/README.md`.
+- [x] Check the rows of `src/marketing/from-conductor/` that name previews.
+      Not needed: `main` removed the comparison page in #380.
+- [x] Move the README updates to the milestones that change their code,
+      so that each README matches its code.
 
 ## Milestone 4: Saved Preview tabs
 
@@ -274,6 +277,7 @@ shows them yet.
 - [ ] Give the kind its key `preview:<port>` in
       `src/chat/state/tab-order.ts`, and handle it in each `switch` over the
       tab kinds, such as `equalTabs` of `view-tabs.ts`. Add tests.
+- [ ] Update `src/shared/README.md` for the new tab kind.
 - [ ] Run `npm run typecheck` and the targeted tests.
 
 ## Milestone 5: Preview use is not activity
@@ -286,6 +290,8 @@ Summary: a request through a preview no longer keeps the computer running
 - [ ] Remove the activity report of the preview proxy at
       `worker/previews/proxy.ts`, and its wiring when nothing else uses it.
       Change the tests that expect it.
+- [ ] Update `worker/previews/README.md` and the lifecycle docs that name
+      preview activity.
 - [ ] Run `npm run typecheck` and the targeted tests.
 
 ## Milestone 6: Preview tabs and the tool
@@ -302,7 +308,7 @@ lists the ports.
 - [ ] Draw each Preview tab in the centre row through `renderTab`, with its
       label, tooltip, Close, and the key of Close tab.
 - [ ] Draw the bar of a Preview tab with Reload and Open.
-- [ ] Show the frame of a tab at `preview/<port>`, kept mounted while
+- [ ] Show the frame of a tab at `preview/port/<port>`, kept mounted while
       hidden. Save the tab as open and active on a visit.
 - [ ] Open a preview for a shown tab whose port has none, with no notice.
       Use the oldest open preview of a port.
@@ -314,6 +320,8 @@ lists the ports.
 - [ ] Add DOM and wiring tests: a click on a port with and without a tab,
       Reload and Open, Close of a tab, a revoke and the reopen at the next
       show, a session click, and the phone page.
+- [ ] Update `src/previews/README.md` and
+      `src/shell/workspace/screen-parts.md`.
 - [ ] Check the screen in a browser with `npm run dev`. Save screenshots
       under `.context/preview-centre-tab/`.
 

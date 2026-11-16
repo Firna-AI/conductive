@@ -107,10 +107,17 @@ The shared Terminal still uses the workspace owner's account.
 2. Open **Preview**.
 3. Select your server in the list.
 
+On a computer, the preview opens in its own tab beside your sessions and files.
+Select another server to open it in another tab.
+Select a server that already has a tab to show that tab.
+
 Each row shows a port and can also show a short program name and repository folder.
 The list updates as servers start and stop.
-Servers that already have an open preview appear in their tabs.
+The row of the shown preview tab is highlighted.
 When the list is empty, the form asks you to start a server in **Terminal** or ask the agent.
+
+On a phone, the preview opens on the **Preview** page.
+Servers that already have an open preview appear in its tabs, not in the list.
 
 When the terminal shows the local address of your server, open it from there.
 
@@ -136,17 +143,23 @@ This can help when its cookies or sign-in do not work inside the frame.
 
 ## Manage previews
 
-Each preview tab shows its port and a program name when available.
+Each preview tab shows a globe, its port, and a program name when available.
 The program name uses at most 10 characters, including **…** when shortened.
 Its tooltip and screen reader label give the full name and folder.
-Use **+**, named **Preview another port**, to choose another server or enter its port.
-Use **Reload** to load the selected preview again.
-Use the **×** after the name of a preview tab to close that preview.
-It shows on the selected tab, and on another tab when you point to it.
+Drag a preview tab to move it, as with other tabs.
+Use **Reload** in the bar above the page to load the page again.
+Use **Open** in the same bar to show the app in a new browser tab.
+Use the **×** on a preview tab to close the tab.
+The preview stays open, so select its server again to bring the tab back.
 
-A preview expires after 24 hours.
-Stopping the workspace's computer also closes its previews.
-Open a new preview after the computer resumes.
+On a phone, use **+**, named **Preview another port**, to choose another server or enter its port.
+Use the **×** after the name of a phone preview tab to close that preview.
+
+A preview stays open until the workspace's computer stops.
+Using a preview does not keep the computer running.
+A preview also closes 24 hours after it opens.
+When you show a preview tab after its preview closed, Conductive opens a new preview.
+The page then loads again, and the app in it can lose its cookies and sign-in.
 
 Preview access follows your sign-in and workspace access.
 A copied preview address grants no access by itself.
@@ -164,7 +177,8 @@ Then open **Terminal** again.
 
 If a preview does not open, check that its server is running.
 Check the port number.
-Try **Reload**, or close the preview before opening it again.
+Try **Reload**.
+On a phone, you can also close the preview and open it again.
 Use **Open** if only the framed view fails.
 
 ## Understand access to the computer
