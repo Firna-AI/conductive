@@ -73,13 +73,16 @@ export function namedBranchSql(name: string | null | undefined): {
   values: [string | null, string]
 } {
   return {
+    // Each create writes its creation plan before the row. Without that
+    // plan and without a name part, the branch stays.
     sql: `CASE WHEN branch_placeholder = 1 AND ? IS NOT NULL
-      THEN substr(branch, 1, instr(branch, '/'))
-        || COALESCE(
-          NULLIF(?, ''),
-          (SELECT p.city FROM workspace_creation_plans p WHERE p.workspace_id = workspaces.id),
-          substr(branch, instr(branch, '/') + 1, length(branch) - instr(branch, '/') - 5))
-        || substr(branch, -5)
+      THEN COALESCE(
+        substr(branch, 1, instr(branch, '/'))
+          || COALESCE(
+            NULLIF(?, ''),
+            (SELECT p.city FROM workspace_creation_plans p WHERE p.workspace_id = workspaces.id))
+          || substr(branch, -5),
+        branch)
       ELSE branch END`,
     values: [name ?? null, branchNamePart(name)],
   }

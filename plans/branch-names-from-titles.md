@@ -116,6 +116,11 @@ All design calls are agent calls of 16 November 2026.
   a title such as "Upgrade to Node v24". The first task has no version.
 - Continue of a workspace without a name uses the city name with the
   version: `calummoore/lisbon-v2-7k2q`.
+- A workspace from before this change starts at task 1, also after an
+  earlier Continue. So its next Continue gives `v2`. Reason: D1 holds no
+  count of earlier Continues, and the product is not in production. A
+  count from the chat history of each old workspace was rejected, because
+  it adds a code path only for old rows.
 - A marker in the workspace row says that the branch name can still
   change. Each new workspace sets it, also the workspace of a routine run.
   A pull request run creates a branch of its own from the pull request,
@@ -231,7 +236,9 @@ Depends on: every other milestone
 Review round 1, 16 November 2026: four findings, all fixed. A test now
 runs two Continues. The start settles the branch only while it is a
 placeholder. One helper publishes the workspace record. A name with no
-letter or digit puts back the city.
+letter or digit puts back the city. Review round 2: two Low findings,
+both fixed. The plan records the task number of older workspaces, and the
+rename SQL states its fallback plainly.
 
 ## Post-merge follow-up (non-blocking)
 

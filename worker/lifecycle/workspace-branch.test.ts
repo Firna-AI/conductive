@@ -74,7 +74,9 @@ it('renames a placeholder branch with Rename until the start settles it', async 
     db.prepare("SELECT branch FROM workspaces WHERE id = 'w'").first('branch')
   expect(await rename('Saved carts', TEST_TIME + 1)).toBe(true)
   expect(await branch()).toBe('list-owner/saved-carts-k2q7')
-  // A move and a name without a letter or a digit keep the branch.
+  // A move keeps the branch. A name without a letter or a digit puts back
+  // the city of the creation plan, and this row has no plan, so the branch
+  // stays. workspace-branch-start.test.ts checks the city with a real create.
   expect(await rename(undefined, TEST_TIME + 2)).toBe(true)
   expect(await rename('…', TEST_TIME + 3)).toBe(true)
   expect(await branch()).toBe('list-owner/saved-carts-k2q7')
