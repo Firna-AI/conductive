@@ -23,7 +23,7 @@ repository, and a status of the last copy in the app.
 
 Contract owners:
 
-- `docs/protocol/org-skills.md`, a new protocol doc that Milestone 2
+- `docs/protocol/org-skills.md`, a new protocol doc that Milestone 3
   writes.
 - [Workspaces and sandboxes](../docs/protocol/workspaces-and-sandboxes.md).
 - [GitHub tokens](../docs/protocol/github-tokens.md).
@@ -124,7 +124,8 @@ A and no rules file loads.
 
 ### Decision 6: Private skills repositories
 
-Open. Added on 2026-11-16, from the mockup milestone.
+Answered on 2026-11-16: **A**, public repositories only. Added on
+2026-11-16, from the mockup milestone.
 
 - **Severity:** High. **Effort:** Small.
 - **Source:** Implementation.
@@ -193,9 +194,6 @@ Open. Added on 2026-11-16, from the mockup milestone.
   narrowest token, and decision 7 can check that same access. The first
   recommendation was B, which stays the Small fallback. The options check
   changed it.
-- If the user chooses B or C, the description in `skillsCopy.ts` must not
-  promise skills in every workspace, because a workspace owner or sender
-  without access gets none.
 - The options check report is in
   `.context/org-skills-repository/options-check-decisions-6-7.txt`.
 - **Action:** Ask the user, because the recommended option changes the
@@ -203,7 +201,16 @@ Open. Added on 2026-11-16, from the mockup milestone.
 
 ### Decision 7: A wrong skills repository
 
-Open. Added on 2026-11-16, from the mockup milestone.
+Answered on 2026-11-16 with a new option, **H**: "when you add the repo, it
+should find the skills available". The section looks up the repository and
+lists the skills that it finds. Added on 2026-11-16, from the mockup
+milestone.
+
+- **H.** When an admin adds the repository, the section looks it up on
+  GitHub and lists the skills that it holds. A repository that is not
+  found, is private, or holds no skills shows a notice in place of the
+  list. Chosen. Under decision 6 A, this is option G with the list of
+  skills added.
 
 - **Severity:** Medium. **Effort:** Medium.
 - **Source:** Implementation.
@@ -266,7 +273,28 @@ Open. Added on 2026-11-16, from the mockup milestone.
 ## Design calls
 
 Each call was made by the agent on 2026-11-13, or on 2026-11-16 for the
-calls from the mockup milestone.
+calls from the mockup milestone and from decisions 6 and 7.
+
+- The runner reads the repository with no GitHub token. It runs Git with
+  no credential helper and no prompt, so a private or missing repository
+  fails at once and the runner warns. Reason: decision 6 A.
+- The Worker looks up the repository when an admin saves it and each time
+  the section loads. It stores no list. Reason: the list then follows the
+  repository, as the copies of the runner do.
+- The lookup reads the repository record and the file tree of its default
+  branch through the GitHub API, with the GitHub sign-in of the member who
+  views the section. Reason: one tree request finds every skill, and a
+  sign-in gives a higher GitHub rate limit than no token.
+- The list gives the name of each skill folder that the runner loads, in
+  name order. It gives no descriptions. Reason: a description needs one
+  more request for each skill.
+- A repository that is private, not found, or holds no skill gives a
+  notice in place of the list. Save still stores the value. Reason: a
+  refusal at Save is a new rejection, and the user did not ask for one.
+- A file tree that GitHub cuts short gives the skills that it holds, and a
+  note says that the list can be incomplete.
+- A failed lookup, such as a GitHub outage, gives a notice that the skills
+  cannot be listed now. The saved repository stays.
 
 - The setting holds one repository as `owner/name`. The form also takes a
   `https://github.com/owner/name` link and saves it as `owner/name`. Reason:
@@ -279,8 +307,7 @@ calls from the mockup milestone.
   then gains no new call (tokens-and-secrets.md).
 - The runner keeps its copy in `~/.conductive/skills/repository`, outside
   every repository folder. Reason: the copy then shows in no Changes list.
-- The runner copies and fetches with Git. A public repository needs no
-  token. Decision 6 says how the runner reads a private one.
+- The runner copies and fetches with Git.
 - A failed copy or fetch keeps the last good copy, writes a warning to the
   runner log, and fails no start and no turn. Reason: the graceful-handling
   rule, and the precedent of the context folder (repository-folders.md).
@@ -330,15 +357,34 @@ The Cloud computer tab of the org settings gets a Skills section.
 - [x] Update the design and the TODOs of this plan for each problem that the
       mockups show. This added decisions 6 and 7 and three design calls.
 
-## Milestone 2: Documentation and protocol
+## Milestone 2: Mockups of the skills list
+
+Tags: mockup
 
 Depends on: 1
 
+Decisions 6 A and 7 H add states to the Skills section.
+
+- [ ] Say in the description of the section that the repository must be
+      public.
+- [ ] Show the list of skills that the lookup finds, for an admin and for a
+      member.
+- [ ] Add the notices for a private repository, a repository that is not
+      found, a repository with no skills, a list that can be incomplete,
+      and a lookup that fails. Keep each page at five screens or fewer.
+- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
+- [ ] Update the design and the TODOs of this plan for each problem that the
+      mockups show.
+
+## Milestone 3: Documentation and protocol
+
+Depends on: 2
+
 - [ ] Write `docs/protocol/org-skills.md` with the requirements and
-      decisions 1 to 3. Link it from `docs/protocol/README.md` and from
+      decisions 1, 2, 3, 6, and 7. Link it from `docs/protocol/README.md` and from
       `workspaces-and-sandboxes.md`.
-- [ ] Update `github-tokens.md` and `tokens-and-secrets.md` as decision 6
-      says.
+- [ ] Update `github-tokens.md`: the skills copy uses no GitHub token, and
+      the lookup uses the viewer's GitHub sign-in.
 - [ ] Update `orgs-and-members.md` and `command-palette-actions.md` when the
       new section needs a row or an admin rule.
 - [ ] State the two folder layouts that load in a public guide under
@@ -350,23 +396,28 @@ Depends on: 1
       `src/marketing/from-conductor/areas/`.
 - [ ] Add the new variable to `runner/configuration.md`.
 
-## Milestone 3: Worker setting
+## Milestone 4: Worker setting
 
-Depends on: 2
+Depends on: 3
 
 - [ ] Add a D1 migration with a `skills_repository` column on `settings`.
 - [ ] Read and write the setting in `worker/app-api/feature-settings.ts`
       and `feature-settings-data.ts`. Only an admin writes it. Normalize a
       GitHub link to `owner/name`. An empty value removes it.
-- [ ] Apply decision 7 at Save.
+- [ ] Add the lookup of decision 7 H: the repository record and the file
+      tree of its default branch, with the viewer's GitHub sign-in. Return
+      the skill names, or the cause of a notice. Run it at Save and at each
+      load of the settings.
 - [ ] Add the field to `src/shared/org-settings.ts`.
 - [ ] Pass `CONDUCTIVE_SKILLS_REPOSITORY` in
       `worker/lifecycle/sandbox-environment.ts`, at create and at resume.
-- [ ] Tests: the admin rule, the normalized value, and the start variable.
+- [ ] Tests: the admin rule, the normalized value, the start variable, and
+      the lookup with a fake GitHub server: skills found in each layout, a
+      private repository, not found, no skills, a cut tree, and a failure.
 
-## Milestone 4: Runner skills copy
+## Milestone 5: Runner skills copy
 
-Depends on: 3
+Depends on: 4
 
 - [ ] Confirm with the installed Agent SDK (0.3.318) and Codex (0.167.0)
       how each agent loads skills from a folder outside the repository.
@@ -374,29 +425,31 @@ Depends on: 3
       this plan.
 - [ ] Add `runner/src/skills-repository.ts`: copy at start, check every
       5 minutes, swap to a new commit only after a complete fetch, warn on
-      failure. Read a private repository as decision 6 says. Delete the copy
-      of a removed or replaced repository.
+      failure. Run Git with no credential helper and no prompt. Delete the
+      copy of a removed or replaced repository.
 - [ ] Give the skill folders to Claude in `runner/src/providers/claude.ts`
       and to Codex in `runner/src/providers/codex.ts`.
 - [ ] Tests with a local Git repository: first copy, update, failed fetch
       keeps the last copy, no setting, and a turn that does not wait.
 - [ ] Update `runner/README.md`.
 
-## Milestone 5: Skills section in the app
+## Milestone 6: Skills section in the app
 
 Tags: ui
 
-Depends on: 1, 3
+Depends on: 1, 2, 4
 
 - [ ] Add the Skills section to `src/shell/settings/ComputerTab.tsx`, as the
       mockup shows. Admins edit it. Use the words of
       `docs/mockups/src/components/settings/skillsCopy.ts`.
 - [ ] Add the read-only section to the member view in
       `src/members/ComputerSections.tsx` and `MemberComputerView.tsx`.
-- [ ] DOM tests for the admin state, the empty state, a pasted link, and the
-      read-only state.
+- [ ] Show the skills list and its notices, as the mockups of Milestone 2
+      show.
+- [ ] DOM tests for the admin state, the empty state, a pasted link, the
+      read-only state, the skills list, and each notice.
 
-## Milestone 6: Verification, commit, review, and pull request
+## Milestone 7: Verification, commit, review, and pull request
 
 Depends on: every other milestone
 
