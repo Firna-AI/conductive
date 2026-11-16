@@ -106,7 +106,7 @@ decision number names a dated record, as
 
 - Add trigger offers two groups. Scheduled has Hourly, Daily, Weekdays,
   Weekly, and Custom (cron). GitHub has PR opened, PR pushed, and PR merged.
-- Reason: these are the triggers of Conductor's automations. Run now lets the
+- Reason: these are the triggers of Conductor's routines. Run now lets the
   owner test an automation at once.
 - Hourly asks for a minute. Daily and Weekdays ask for a time. Weekly asks
   for a day and a time. Times use the 24-hour clock.
