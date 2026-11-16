@@ -15,7 +15,9 @@ The user asked for the change on 13 November 2026, with a screenshot of
 the header. The user chose the approach in a brainstorm on the same day:
 repository change decisions 1 A, 2 B, and 3 B. The user also asked to
 copy the context folder to the new repository. After the options check,
-the user chose decisions 3 D and 4 D on the same day. The brainstorm notes are
+the user chose decisions 3 D and 4 D on the same day. On 16 November
+2026 the user changed decision 4 to G, which hides a repository that the
+cloud computer does not hold. The brainstorm notes are
 in `.context/repository-change/brainstorm-notes.md`.
 
 This change does not cover a workspace with more than one repository, a
@@ -117,7 +119,7 @@ Answered on 13 November 2026: B. Changed on the same day to D, after the options
 
 ### 4. A repository that the cloud computer does not have
 
-Answered on 13 November 2026: D. Added on the same day, from the design of decision 1 A.
+Answered on 13 November 2026: D. Added on the same day, from the design of decision 1 A. Changed on 16 November 2026 to G: hide such a repository. The message of that day called this option A. The user removed the notes of the menu, which D needed, and chose to hide it.
 
 - **Severity:** Medium. **Effort:** Small.
 - **Source:** Design.
@@ -140,11 +142,12 @@ Answered on 13 November 2026: D. Added on the same day, from the design of decis
   - **C.** B, and the change also runs the install script of the org. The script runs for every folder and can take minutes. It can change the other folders of the cloud computer. Effort: Large.
   - **D.** A, and the row opens New workspace with that repository picked, in the section of this workspace. A waiting repository gets the same row. New workspace then shows its own waiting notice. The row replaces the repository of a kept draft in that section. Added by the options check. Effort: Small.
   - **E.** For this case only, the change starts a new cloud computer from the newest org image for the same workspace, as Try again does, after the question of decision 3. The chat, the number, and the link stay. The files, the local work, and the processes of the old cloud computer are lost. No such reset exists today for a workspace that has run. Added by the options check. Effort: Large.
+  - **G.** Hide such a repository, also a waiting repository. The menu lists only the chosen repositories that this cloud computer holds. Added on 16 November 2026. Effort: Small.
   - **F.** A helper cloud computer from the newest org image packs the prepared folder of the repository. The Worker writes it into this cloud computer, then the change makes the branch. Each change costs one more start. Work of the install script outside the folder does not come with it. Added by the options check. Effort: Large.
-- **Left out:** Hiding such a repository, because the member then cannot see why it is missing. An install script for each repository, because it breaks the one install script of the org image only for a rare case. A copy of each new repository into every running cloud computer at each build, because only this change needs the repository.
+- **Left out:** An install script for each repository, because it breaks the one install script of the org image only for a rare case. A copy of each new repository into every running cloud computer at each build, because only this change needs the repository.
 - **Wider fix:** E, made general in a later change: a move of any workspace to a new cloud computer from the newest org image. It would also give old workspaces the newest software. A follow-up item records it if the user wants it.
 - **Previous examples:** A waiting repository is off in the picker of New workspace, with a note.
-- **Recommendation:** D. The first recommendation was A. D keeps A, gives a waiting repository a true note, and turns the dead end into one press. The case is rare, because a new workspace starts from the newest org image.
+- **Recommendation:** G. The first recommendation was A, then D. After the user removed the notes of the menu, G needs no extra text. The case is rare, because a new workspace starts from the newest org image.
 - **Action:** ask the user, because the options differ in what the member can do.
 
 ## Design
@@ -157,9 +160,9 @@ Design calls (my calls, 13 November 2026):
 
 - The repository button opens a menu with the chosen repositories of the
   org, in the order of New workspace. The current repository has a check.
-  The menu lists only the repositories that the org chose, and has no
-  notes (user request, 16 November 2026). Decision 4 needs an answer
-  again for a chosen repository that this cloud computer does not hold.
+  The menu lists only the repositories that the org chose and that this
+  cloud computer holds, and has no notes (user request and decision 4 G,
+  16 November 2026). A waiting repository does not show.
 - A workspace without a record of its folders holds only its current
   repository, for the menu. Reason: the Worker knows no other folder of
   it.
