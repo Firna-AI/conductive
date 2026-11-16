@@ -107,6 +107,19 @@ of a manual-only skill in Milestone 3.
 - **C.** Add the text of the `SKILL.md` to the message. Skill settings such
   as `allowed-tools` and `$ARGUMENTS` then do nothing.
 - **D.** Put `/name` before the sender line for every Claude skill.
+- **E.** Added on 2026-11-16 after the user asked for a change of the
+  message protocol. Claude gets the sender line and the branch line as
+  context from a `UserPromptSubmit` hook, and the message text is only
+  the member's text. Claude ran a manual-only skill at the start of the
+  text in 3 of 3 runs, and the model still saw the sender. It did not run
+  one in the middle of the text.
+- **F.** Added on 2026-11-16 for the same request. The sender line and the
+  branch line go in a first text block, and the member's text goes in the
+  last text block. Claude ran a manual-only skill at the start of the
+  last block in 3 of 3 runs, and the model still saw the sender. With the
+  skill in the first block, it did not run.
+- E and F work only when the skill starts the member's text. Evidence:
+  `.context/skill-list/spike2-report.md`.
 - Left out: a separate `/name` message before the member's message,
   because the skill then runs before the agent sees the request.
 - Recommendation: B. It is the only tested form that runs a manual-only
