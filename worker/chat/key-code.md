@@ -104,7 +104,9 @@ first.
   with the record folder from `branch-data.ts`. It sends one
   `repository.move` to each capable connection in the stored folder of
   another repository, and holds turns until the folders match. A
-  refused move fails the held turns.
+  refused move fails the held turns. `RunnerChannel.checkRepository` runs
+  the same check for the connected runner with no turn, after a
+  [repository change](../lifecycle/repository-change.md#publication).
 - `runner-connections.ts` and `runner-connection-store.ts`:
   `RunnerConnections`, the native acceptance, restore, close, and idle
   alarm of the current runner, and the chunked durable record of a

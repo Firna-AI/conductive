@@ -407,37 +407,79 @@ Findings (16 November 2026):
 
 ### M3c: Worker change job
 
-- [ ] Refuse a change when the runner has no `repositoryFolder`, with
+- [x] Refuse a change when the runner has no `repositoryFolder`, with
       "Restart the software, then try again.", as decision 5 A says.
-- [ ] Add the change job in the workspace Durable Object, beside the
+      Admission refuses a connected runner. The `runner` phase refuses a
+      runner that says hello after a resume.
+- [x] Add the change job in the workspace Durable Object, beside the
       Continue job: admission, local-work check, fetch, branch, context
-      copy, publication, and progress.
-- [ ] Add the request and response types in `src/shared/workspaces.ts`,
+      copy, publication, and progress. `worker/lifecycle/repository-change*.ts`,
+      and `workspace-jobs.ts`, which owns both jobs.
+- [x] Add the request and response types in `src/shared/workspaces.ts`,
       and the route in `worker/app-api/`.
-- [ ] Store the new repository, installation, branch, and base branch in
-      one update that checks the old values.
-- [ ] Emit `workspace.updated` and the note event for each session.
+- [x] Store the new repository, installation, branch, and base branch in
+      one update that checks the old values. The installation follows the
+      repository row, so the update writes `repository_id`.
+- [x] Emit `workspace.updated` and the note event for each session.
       Schedule the GitHub refresh of the new branch.
-- [ ] Clear or mark old the stored file reports of the old folder at
-      publication.
-- [ ] Add tests: access, a refused change during a turn, local work, a
+- [x] Clear or mark old the stored file reports of the old folder at
+      publication. `markFilesMoved` marks the tree unavailable and drops
+      the changes.
+- [x] Add tests: access, a refused change during a turn, local work, a
       failed fetch, a retry after a lost reply, the context copy, and the
-      publication.
-- [ ] Update the README of each changed Worker area.
-- [ ] Add the flow of a repository change to
+      publication. Also a clash, a failed copy, a lost exit result, the
+      hold of Continue, Restart, and Archive, the runner move, and the
+      real routes with GitHub events of the new repository.
+- [x] Update the README of each changed Worker area.
+- [x] Add the flow of a repository change to
       `docs/architecture/flows.md`, beside the flow of Continue.
-- [ ] Settle what a failed copy of the context folder does: the change
-      stops, or it warns and goes on. Ask the user when it changes what
-      the member sees, and record it in `docs/protocol/repository-change.md`.
-- [ ] Check whether the change stops the programs that agents started,
+- [x] Settle what a failed copy of the context folder does: the change
+      stops, or it warns and goes on. The change stops and names the
+      reason. The copy comes before the new branch, so the workspace keeps
+      the old repository and branch. Recorded in
+      `docs/protocol/repository-change.md`. A second copy after
+      publication, for a file attached during the change, only warns.
+- [x] Check whether the change stops the programs that agents started,
       such as a dev server. The in-process move of M3a keeps them
-      running. Record the result in the protocol doc, or ask the user when
-      it is a choice.
+      running in the old folder. Recorded in the protocol doc as a design
+      call, with decision 5 A and the hold of Continue, Restart, and
+      Archive.
+- [x] Give the app the repositories that the sandbox holds, for the menu
+      of decision 4 G: `heldRepositoryIds` in the view read.
+- [x] Fix the guide sentence about the name of the new branch. It still
+      named a city after branch-name decision 3 B.
+
+Found in M3c (16 November 2026):
+
+- [ ] Milestone 4: read `workspace.repository-changed` in
+      `src/chat/api/read-chat.ts`, and draw it. The transcript fold keeps
+      no item for it yet. Older apps skip it, because `readEnvelope` keeps
+      the number of an event that it cannot read.
+- [ ] Milestone 4: after a `workspace.updated` with another
+      `repositoryId`, read Files and Changes again. The stored tree has
+      the unavailable mark until the runner reports the new folder, and
+      the stored changes are gone.
+- [ ] A running merge of the old pull request is not refused. The Worker
+      keeps no running state for a merge job. GitHub goes on with the
+      merge, and a later poll of that merge answers that it is not
+      available, because the workspace follows the new branch.
+- [ ] A file that a turn attaches while the change runs goes to the old
+      folder. The settle command copies the context folder again after
+      publication. A copy that is still running at that moment can miss
+      the second copy.
 
 ### M3d: Terminal and startup script
 
-- [ ] Give new terminals the new folder. The startup script needs no
+- [x] Give new terminals the new folder. The startup script needs no
       change, because the next start reads the new folder from `env.sh`.
+      The Worker writes `/run/conductive/repository` and sets
+      `CONDUCTIVE_REPOSITORY_DIR` in the global tmux environment after
+      publication. The terminal bridge reads the file when it creates the
+      session. The startup command deletes the file at each start.
+- [ ] The Terminal tab attaches to the shell that runs, so it keeps the
+      old folder until the member ends that shell. The protocol doc and
+      the guides now say so. Ask the user whether a new terminal should
+      instead mean a new shell for each open of the tab.
 
 ## Milestone 4: Web app
 

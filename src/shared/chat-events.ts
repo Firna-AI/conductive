@@ -69,6 +69,15 @@ export type ChatEvent =
       branch: string
       baseBranch: string
     }
+  | {
+      /** The note of a repository change in one session. */
+      type: 'workspace.repository-changed'
+      sessionId: string
+      member: MessageSender
+      repository: { id: string; fullName: string }
+      branch: string
+      baseBranch: string
+    }
   | RunnerEventRefused
   | { type: 'message.accepted'; message: UserMessage }
   | {

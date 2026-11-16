@@ -17,6 +17,7 @@ export async function runWorkspaceAlarms(
   now: () => number,
   tasks: {
     continuation?(): Promise<void>
+    repositoryChange?(): Promise<void>
     lifecycleAllowed?(): Promise<boolean>
     lifecycle(): Promise<void>
     github(): Promise<void>
@@ -38,6 +39,8 @@ export async function runWorkspaceAlarms(
   try {
     if (tasks.continuation)
       await alarms.run('continue', startedAt, tasks.continuation)
+    if (tasks.repositoryChange)
+      await alarms.run('repository-change', startedAt, tasks.repositoryChange)
     if (
       (!due.size && options.fallbackLifecycle !== false) ||
       [...due].some((source) => source.startsWith('lifecycle'))

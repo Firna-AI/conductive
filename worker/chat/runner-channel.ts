@@ -213,6 +213,23 @@ export class RunnerChannel {
     await this.flush()
   }
 
+  /**
+   * Moves a connected runner to the record folder, as after a repository
+   * change. A runner that cannot move, or that is already there, gets no
+   * command. A failed send closes the connection, and the next hello
+   * moves the runner. Call inside the store queue.
+   */
+  async checkRepository(): Promise<void> {
+    const active = this.connections.current
+    if (!active || active.protocolVersion === null) return
+    if (!(await active.peer.authorize())) return
+    try {
+      await this.moves.check(active)
+    } catch {
+      this.close()
+    }
+  }
+
   async flush(): Promise<void> {
     const active = this.connections.current
     if (active) {

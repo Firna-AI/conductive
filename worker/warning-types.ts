@@ -73,6 +73,7 @@ export type WorkerWarning =
       workspaceId: WarningId
       reason: 'unknown_folder' | 'not_repository' | 'other'
     }
+  | { kind: 'repository_change_settle_failed'; workspaceId: WarningId }
   | {
       kind: 'workspace_title_request_failed' | 'workspace_title_save_failed'
       error: ErrorSummary

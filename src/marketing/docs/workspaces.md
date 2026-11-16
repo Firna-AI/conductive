@@ -272,7 +272,7 @@ The workspace keeps its cloud computer, number, link, name, sessions, and chat.
 It gets a new branch in the folder of the new repository.
 
 1. Open the workspace.
-2. Wait for every running agent turn in that workspace to finish.
+2. Wait for every running agent turn, **Continue**, and **Restart** in that workspace to finish.
 3. Select the repository in the workspace header.
    On a phone, it is in the line under the workspace name.
 4. Select the new repository in the menu.
@@ -290,19 +290,26 @@ The question also lists the changed files in the folder of the new repository.
 These files move to the new branch.
 Without such work, the change starts at once.
 
+If the message says "Restart the software, then try again.", the computer needs newer software first.
+Use **Restart**, as [Restart the software](/docs/workspaces#restart-the-software) says, then change the repository again.
+
 The computer starts first if it is stopped.
 The new branch starts from the latest default branch of the new repository.
 That default branch becomes the workspace's base branch.
 Your GitHub account needs read access to fetch it.
-The new branch name uses the owner's GitHub login, a city, and a short suffix.
+The new branch name uses the owner's GitHub login, the workspace name, a version such as `v2`, and a new short suffix.
 The change copies the `.context/` folder into the folder of the new repository.
 A file that already exists there stays.
+If the copy fails, the change stops before the new branch, and a message names the reason.
+While the change runs, new agent turns wait, and **Continue**, **Restart**, and **Archive** are not available.
 
 Each session shows who changed the repository, the new repository, and the new branch.
 The agents keep their conversations and work in the new folder.
+Programs that already run, such as development servers, keep running in the old folder.
+Their previews show the old repository until you start them again in the new folder.
 The pull request bar then follows the new branch without a pull request.
-New terminals start in the new folder.
-A terminal that already runs stays in its folder.
+The **Terminal** tab keeps its running shell, in the old folder.
+A shell that starts after the change, such as after you end that shell, starts in the new folder.
 File tabs of the old repository close.
 The startup script runs in the new folder at the next start.
 The old branch, its pull request, and the files in the old folder stay.

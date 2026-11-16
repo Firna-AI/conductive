@@ -27,6 +27,7 @@ A preview shows a web server that runs there too.
 The shell starts in the workspace's repository folder.
 After a repository change, a new shell starts in the folder of the new repository.
 A shell that already runs stays in its folder.
+The **Terminal** tab attaches to the shell that runs, so end that shell to start a new one in the new folder.
 Its prompt shows the current folder name.
 Use `pwd` to see the full path.
 For a quick check, you can run:
@@ -52,6 +53,7 @@ Reconnect to return to the same shell and running commands.
 **Restart** in the workspace header also drops the connection until the agents are back.
 A stop of the cloud computer ends those commands.
 After a resume, start any needed server again.
+After a repository change, a server that already runs keeps the old folder, so start it again in the new folder.
 
 The commands that you typed stay in the shell's command history after a stop.
 After a resume, press the Up arrow or Ctrl-R to find them.

@@ -114,6 +114,8 @@ it('serves real shell lists and keeps workspace views private to each member', a
     automation: null,
     baseBranch: 'main',
     repositoryFolder: folder,
+    // Without a record of its folders, the menu holds only this repository.
+    heldRepositoryIds: null,
   })
   expect(
     await (
@@ -132,6 +134,7 @@ it('serves real shell lists and keeps workspace views private to each member', a
     automation: null,
     baseBranch: 'main',
     repositoryFolder: folder,
+    heldRepositoryIds: null,
   })
   const outsider = await fixture.request(path, {
     headers: { Cookie: fixture.cookies.outsiderCookie },

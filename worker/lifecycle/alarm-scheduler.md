@@ -14,7 +14,8 @@ a failed create, the access stop, and the image coordinator are lifecycle
 owners too. Archive owns `lifecycle:archive` separately. Its saved phases keep
 allocation recovery, stop confirmation, retention, and deletion across reconstruction.
 Its publication retries include confirmed deletion, even while the state stays archived.
-The previews, GitHub, and Continue store their due times there too. So do
+The previews, GitHub, Continue, and the repository change store their due
+times there too. So do
 the `browser`, `runner`, and `devices` security sources, on raw storage, as
 [Alarms](../README.md#alarms) says.
 
@@ -25,17 +26,21 @@ the `browser`, `runner`, and `devices` security sources, on raw storage, as
 - A due time stays stored until its owner clears it. So a run that fails
   or ends early still leaves the next alarm, also after a restart of the
   object.
-- The scheduler clears the due time of a security source, and of
-  Continue, after its run succeeds, unless that run stored a new one.
+- The scheduler clears the due time of a security source, of Continue,
+  and of the repository change, after its run succeeds, unless that run
+  stored a new one.
 - `WorkspaceAlarmRunner` in [`workspace-alarm.ts`](../features/workspace-alarm.ts)
   runs the due security sources first. After the member fence checks, its
   regular task calls `runWorkspaceAlarms` in
   [`workspace-alarms.ts`](../workspace-alarms.ts), the outer run. The outer
-  run first advances a running [Continue](continue.md#phases). It runs the
+  run first advances a running [Continue](continue.md#phases), then a
+  running [repository change](repository-change.md#phases), each with its
+  own due time. It runs the
   previews and GitHub. It also starts the lifecycle run,
   `runWorkspaceAlarm` in [`workspace-alarm.ts`](workspace-alarm.ts). The
   lifecycle run runs the lifecycle owners.
-- While a Continue job is pending, the outer run starts the lifecycle run
+- While a Continue job or a repository change is pending, the outer run
+  starts the lifecycle run
   only when a start is saved, as
   [The reservation](continue.md#the-reservation) says. Otherwise it moves
   the lifecycle due times that had come, as the steps at the end of each

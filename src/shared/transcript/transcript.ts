@@ -139,6 +139,9 @@ export function foldEvent(
   switch (event.type) {
     case 'workspace.continued':
       return foldContinued(transcript, event)
+    case 'workspace.repository-changed':
+      // The app does not read this note yet, so the transcript keeps no item.
+      return transcript
     case 'session.updated':
       return foldRecord(transcript, event.session)
     case 'runner.event-refused':

@@ -104,6 +104,19 @@ names a decision of the change that added this action.
 - The app refuses the change while a turn runs in a session of the
   workspace. Reason: a folder change under a running agent can mix its
   edits into the new branch.
+- The app refuses the change while Continue or Restart runs. While the
+  change runs, the app refuses Continue, Restart, and Archive, and new
+  turns wait until it ends. Reason: each of them changes the branch or the
+  software under the change.
+- When the agent runner of the sandbox cannot move to another folder yet,
+  the app refuses the change with "Restart the software, then try again."
+  Nothing stops (repository change decision 5 A). Reason: Restart installs
+  the newest software, and a refusal stops no program without a warning.
+- These ways were rejected (repository change decision 5):
+  - A Restart that the change runs first. Each program that an agent
+    started, such as a dev server, stops with no warning.
+  - A menu that is off for such a workspace. The member does not learn
+    why.
 - A refused change keeps the workspace as it is. The member sees the
   reason.
 - The change starts a stopped sandbox first, because the change runs in
@@ -179,6 +192,11 @@ names a decision of the change that added this action.
 - A file of the new folder with the same path stays, and the copy skips
   it.
 - The context folder of the old folder stays.
+- When the copy fails, the change stops and names the reason. The copy
+  comes before the new branch, so the workspace keeps the old repository
+  and the old branch. Reason: a chip of an earlier attached file must open
+  its copy, and a change that goes on without the copy loses that link
+  with no notice.
 - Reason: notes and attached files stay with the workspace, as the member
   asked. A skip loses no file. The rule comes first, so that Changes lists
   no copied file.
@@ -213,6 +231,14 @@ names a decision of the change that added this action.
 - `CONDUCTIVE_REPOSITORY_DIR` names the new folder, as
   [Folder variables](repository-folders.md#folder-variables) says.
 - Each new terminal starts in the new folder. A terminal that already
-  runs keeps its folder.
+  runs keeps its folder. The Terminal tab attaches to the shell that runs,
+  as [Terminal](workspace-tools.md#terminal) says, so that shell keeps the
+  old folder. A shell that starts after the change, such as after the
+  member ends that shell, starts in the new folder.
+- The change stops no program that an agent or a member started, such as
+  a dev server. Such a program keeps working in the old folder, and its
+  preview shows the old repository. Reason: the agent runner moves in its
+  own process, and a stop of such a program can lose work with no
+  warning.
 - Each open file tab and diff tab of the old repository closes. Reason:
   its path is no longer a path of the workspace's repository.

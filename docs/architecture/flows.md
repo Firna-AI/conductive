@@ -83,6 +83,29 @@ record, as [Decision numbers](../architecture.md#decision-numbers) says.
 4. The Durable Object pushes the new state and the note of Continue to
    every open tab. Each later message carries the new branch to the agent.
 
+## Repository change
+
+1. A member picks another repository in the header. The Durable Object
+   refuses the change while a turn runs, while Continue or Restart runs,
+   and when the agent runner of the sandbox cannot move. It starts the
+   sandbox when it is stopped.
+2. The Durable Object reads the work that the workspace stops following:
+   the local work of the old folder, and the open pull request and the
+   pushed commits of the old branch. It also reads the changed files of
+   the new folder. When it finds work, the app asks the member first.
+3. The Durable Object runs a trusted job in the sandbox, as for Continue.
+   Its fetch of the default branch of the new repository gets the GitHub
+   token of that member, only while the fetch runs. The job adds the
+   exclude rule of the context folder, copies the context folder, and
+   creates the new branch in the new folder with its changed files.
+4. The Worker stores the new repository, branch, and base branch in D1 in
+   one guarded write. The Durable Object pushes the new state and one note
+   to each session, and reads the GitHub state of the new branch.
+5. The Durable Object sends the move to the agent runner. The runner moves
+   to the new folder in its own process, so agent processes keep running.
+   Held turns go out after the runner names the new folder.
+   [Repository change](../protocol/repository-change.md) states the rules.
+
 ## Automation runs
 
 1. A trigger fires: the minute Cron Trigger finds a due schedule, a pull

@@ -132,6 +132,13 @@ function warningFields(warning: WorkerWarning) {
         workspaceId: warning.workspaceId.text,
         reason: warning.reason,
       }
+    case 'repository_change_settle_failed':
+      return {
+        kind: warning.kind,
+        message:
+          'A step after a repository change failed: the second context copy or the terminal folder.',
+        workspaceId: warning.workspaceId.text,
+      }
     case 'lifecycle_repair_limited':
       return {
         kind: warning.kind,
