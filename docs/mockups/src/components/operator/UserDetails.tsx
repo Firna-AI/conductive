@@ -5,7 +5,7 @@ import { Notice } from '../common/Notice'
 import { DetailList } from '../settings/DetailList'
 import { Section } from '../settings/Section'
 import { AppAccessSection, ReferralSection } from './AccessSections'
-import { waitingNotice } from './accessCopy'
+import { noVerifiedEmail, waitingNotice } from './accessCopy'
 import { suspendedTitle, suspendedUserBody } from './operatorCopy'
 import { TargetList, TargetRow } from './targets'
 
@@ -40,7 +40,8 @@ function UserNotice(props: { user: UserPage }) {
  * referral code, the workspaces that they own, and their orgs with their
  * roles. Each org opens the page of that org. A user
  * without a name on GitHub has no Name row, and a person who waits has no
- * app access, code, or org yet.
+ * app access, code, or org yet. The Email row gives the primary verified
+ * email on GitHub, or says that the account has none.
  */
 export function UserDetails(props: {
   user: UserPage
@@ -55,6 +56,7 @@ export function UserDetails(props: {
         <DetailList
           rows={[
             ...(user.name ? [{ term: 'Name', value: user.name }] : []),
+            { term: 'Email', value: user.email ?? noVerifiedEmail },
             { term: 'GitHub ID', value: String(user.githubId), mono: true },
             { term: 'On GitHub', value: user.githubAge },
             { term: 'Joined', value: user.joined },

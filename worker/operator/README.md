@@ -92,6 +92,7 @@ The state buckets match the overview.
 Running separates workspaces from unfinished builds and refreshes.
 
 The user page gives their identity, name, join time, last active time, and owned workspace counts.
+Its `email` gives the primary verified email, or null without one.
 Its `workspaces` gives `total` and `running`.
 Its `orgs` gives each org's identity, initials, and the user's role.
 It also gives the suspension, or null.
@@ -104,7 +105,8 @@ All times use Unix milliseconds.
 
 An unknown org gets 404 `org_not_found`.
 An unknown or non-numeric GitHub ID gets 404 `user_not_found`.
-These reads return no chat, file, env value, agent login, or email address.
+These reads return no chat, file, env value, or agent login.
+Only the `email` of the user page holds an email address.
 
 ## Waitlist, codes, and sign-ups
 

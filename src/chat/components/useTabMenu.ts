@@ -1,3 +1,4 @@
+import type { TranscriptDetail } from '../../shared/generated/TranscriptDetail'
 import { useCallback, useState } from 'react'
 import type { LucideIcon } from 'lucide-react'
 import {
@@ -7,13 +8,14 @@ import {
   Copy,
   CopyPlus,
   Pencil,
+  X,
 } from 'lucide-react'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import { linkItem } from '../../../docs/mockups/src/components/workspace/linkCopy'
 import { transcriptItems } from '../../../docs/mockups/src/components/workspace/transcriptCopy'
 import styles from '../../../docs/mockups/src/components/workspace/WorkspaceTabs.module.css'
 import { useLongPress } from '../../app/long-press'
-import type { TranscriptDetail } from '../../shared/sessions'
+
 import { opensMenu } from '../../shell/ui/menu-keys'
 import type { MenuEntry, MenuPoint } from '../ui/Menu'
 import { rowKey, type RowTab, type TabItemProps } from './tab-row'
@@ -41,6 +43,8 @@ interface TabMenuItem {
 interface TabMenuActions {
   onRename: (id: string) => void
   onStep: (tab: RowTab, by: -1 | 1) => void
+  /** Closes every tab after the tab, as Close tabs to the right says. */
+  onCloseRight: (tab: RowTab) => void
   /** Keeps the temporary tab in its place, through the `keep` of its host. */
   onKeep: (tab: RowTab) => void
   /** Copies the transcript of a session, during the press of its item. */
@@ -65,8 +69,8 @@ const copyIcons: Readonly<Record<TranscriptDetail, LucideIcon>> = {
  * The groups of items of the menu of the tab at `index` of the row. A
  * session tab has Rename session, Copy link and its two transcript copies,
  * and the moves. The temporary tab has Keep open and the moves, and a kept
- * file or diff tab has the moves. A move that the place of the tab rules
- * out is off.
+ * file or diff tab has the moves. Every tab ends with Close tabs to the
+ * right. A move or a close that the place of the tab rules out is off.
  */
 function groupsOf(
   tabs: readonly RowTab[],
@@ -99,8 +103,21 @@ function groupsOf(
       changes: true,
     },
   ]
+  const closeRight: TabMenuItem[] = [
+    {
+      entry: {
+        kind: 'item',
+        key: 'close-right',
+        label: 'Close tabs to the right',
+        icon: X,
+        disabled: index === tabs.length - 1,
+        onSelect: act(() => actions.onCloseRight(tab)),
+      },
+      changes: true,
+    },
+  ]
   if (tab.kind === 'host') {
-    if (tab.keep === null) return [moves]
+    if (tab.keep === null) return [moves, closeRight]
     // The icon is a bookmark with a check, as the mockups draw it, because
     // a pin names the pinned tabs of a browser.
     const keep: TabMenuItem = {
@@ -113,7 +130,7 @@ function groupsOf(
       },
       changes: true,
     }
-    return [[keep], moves]
+    return [[keep], moves, closeRight]
   }
   const copy = (detail: TranscriptDetail): TabMenuItem => ({
     entry: {
@@ -149,7 +166,7 @@ function groupsOf(
     },
     changes: true,
   }
-  return [[rename], [...link, copy('concise'), copy('full')], moves]
+  return [[rename], [...link, copy('concise'), copy('full')], moves, closeRight]
 }
 
 /**
@@ -178,10 +195,10 @@ function entriesOf(
  * press of a drag that ends with no move. A read-only row leaves out each
  * item that changes the workspace, so a session tab keeps only Copy link
  * and its transcript copies, and the temporary tab loses Keep open with its
- * moves. That row binds no drag, so a finger opens the menu with the long
- * press of `useLongPress`, which lifts no tab. A tab with no item, such as a
- * file tab of a read-only row, and a tab that shows its rename field open no
- * menu, so the browser shows its own.
+ * moves and Close tabs to the right. That row binds no drag, so a finger
+ * opens the menu with the long press of `useLongPress`, which lifts no tab.
+ * A tab with no item, such as a file tab of a read-only row, and a tab that
+ * shows its rename field open no menu, so the browser shows its own.
  */
 export function useTabMenu(
   props: {

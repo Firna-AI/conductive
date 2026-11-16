@@ -77,6 +77,7 @@ export function readOperatorUser(value: unknown): OperatorUserDetail {
     githubId: count(user, 'githubId'),
     login: text(user, 'login'),
     name: maybeText(user, 'name'),
+    email: maybeText(user, 'email'),
     joinedAt: count(user, 'joinedAt'),
     lastActiveAt: maybeCount(user, 'lastActiveAt'),
     workspaces: nested(user, 'workspaces', (item) => {

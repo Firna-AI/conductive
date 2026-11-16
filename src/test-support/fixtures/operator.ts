@@ -119,13 +119,15 @@ export function sampleUserDetail(
   now = FAKE_TIME,
 ): OperatorUserDetail {
   const joinedAt = daysBefore(now, user.joinedDaysAgo)
+  const access = sampleUserAccess(user, records, now)
   return {
     githubId: user.githubId,
     login: user.login,
     name: user.name,
+    email: access.hasVerifiedEmail ? `${user.login}@example.com` : null,
     joinedAt,
     lastActiveAt: sampleLastActiveAt(user.login, now),
-    ...sampleUserAccess(user, records, now),
+    ...access,
     workspaces: { total: user.owned, running: user.running },
     orgs: sampleOrgs.flatMap((org) => {
       const role = org.members[user.login]

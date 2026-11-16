@@ -142,6 +142,8 @@ export interface OperatorUserDetail extends OperatorUserAccess {
   githubId: number
   login: string
   name: string | null
+  /** The primary verified email on GitHub, or null without one. */
+  email: string | null
   joinedAt: number
   /**
    * The time of the last new workspace or chat message of the person, or

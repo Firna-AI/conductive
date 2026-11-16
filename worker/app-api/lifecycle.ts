@@ -4,7 +4,6 @@ import {
   workspacesPath,
 } from '../../src/shared/workspaces'
 import { orgSettingsPaths } from '../../src/shared/org-settings'
-import { runnerSoftware } from '../configuration'
 import type { AppDependencies, AppEnv } from '../env'
 import { recordUserActivity } from '../data/user-activity'
 import { handleLifecycleRequest } from '../lifecycle/browser'
@@ -83,9 +82,6 @@ export async function chatLifecycleRoute(
       images: imageRuntime(lifecycleEnv, dependencies),
     },
     {
-      get software() {
-        return runnerSoftware(env)
-      },
       acceptFirstMessage: (first) =>
         binding
           .getByName(first.workspaceId, { locationHint: 'weur' })

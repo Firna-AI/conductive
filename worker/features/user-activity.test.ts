@@ -8,7 +8,6 @@ import { outerWorkerBundle } from '../chat/integration/outer-runtime.test-suppor
 import {
   OUTER_ORG,
   OUTER_REPOSITORY,
-  OUTER_SOFTWARE,
   OUTER_WORKSPACE,
 } from '../chat/integration/outer-seed.test-support'
 import { featureFixture, type FeatureFixture } from './fixture.test-support'
@@ -26,10 +25,7 @@ afterEach(async () => {
 
 it('records the last active time of a new workspace and a sent message, and not of a new session', async () => {
   const active = (fixture = await featureFixture(bundle, {
-    configuration: {
-      CONDUCTIVE_RUNNER_ARCHIVE_URL: OUTER_SOFTWARE.url,
-      CONDUCTIVE_RUNNER_ARCHIVE_SHA256: OUTER_SOFTWARE.sha256,
-    },
+    configuration: {},
   }))
   const lastActive = async (userId: string) => {
     const row = await active.env.DB.prepare(

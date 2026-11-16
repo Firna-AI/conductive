@@ -27,6 +27,15 @@ export const proxyModelCheck: ModelListCheck = {
 }
 
 /**
+ * The last Claude list of Cal's proxy that the app read, from the day
+ * before the reads that failed. A failed read keeps the list and its time.
+ */
+export const keptModelCheck: ModelListCheck = {
+  unlisted: [fable],
+  checked: 'yesterday',
+}
+
+/**
  * The labels of the models that the pickers of Cal leave out, because the
  * list of the proxy does not name them. A model that the proxy serves but
  * does not list is left out too.

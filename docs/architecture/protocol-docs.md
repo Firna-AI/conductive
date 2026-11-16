@@ -7,6 +7,9 @@ This page lists each protocol doc and what it covers.
 
 - [Workspaces and sandboxes](../protocol/workspaces-and-sandboxes.md): the org
   image, the life of a workspace, and the disk flushes of a sandbox.
+  - [Sandbox software](../protocol/sandbox-software.md): the releases of the
+    app's own software, the updates of each sandbox, the install in a
+    build, and the software image.
   - [Create a workspace](../protocol/create-a-workspace.md): New workspace as a
     page or as a dialog, the create, the branch, and a failed first start.
   - [Repository folders](../protocol/repository-folders.md): the folder and the
@@ -156,9 +159,6 @@ This page lists each protocol doc and what it covers.
 - [Website docs](../protocol/website-docs.md): the public guides of the
   marketing site, their addresses and navigation, and the rules for their
   words.
-- [Conductor comparison](../protocol/conductor-comparison.md): the public
-  page for people who move from Conductor, with the status of each
-  Conductor feature.
 - [Routines](../protocol/routines.md): routines and their schedules, with the
   linked pages [Routine runs](../protocol/routine-runs.md),
   [Pull request runs](../protocol/pull-request-runs.md), and
