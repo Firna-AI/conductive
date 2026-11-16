@@ -67,7 +67,7 @@ says.
    (sandbox software decision 4). It writes the JSON file of the newest
    release last.
 3. In each sandbox, the updater reads that JSON file when the runner
-   starts and every hour. It uses the `cli-updater` crate of
+   starts and every 10 minutes. It uses the `cli-updater` crate of
    `futex-ai/cli-release` (sandbox software decision 1).
 4. The updater downloads a newer release in the background, with only the
    parts that changed. The next start of the runner applies it (sandbox

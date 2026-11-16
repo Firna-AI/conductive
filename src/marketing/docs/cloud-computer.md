@@ -143,7 +143,7 @@ A new build does not replace the existing computer.
 
 Conductive's own software updates itself in existing cloud computers.
 Fixes need no new workspace or manual install.
-The software checks for a newer release when it starts, including at each cloud computer start, and every hour while it runs.
+The software checks for a newer release when it starts, including at each cloud computer start, and every 10 minutes while it runs.
 It downloads a newer release in the background.
 A start never waits for a download.
 A downloaded release applies at the software's next start.

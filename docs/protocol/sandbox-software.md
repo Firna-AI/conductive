@@ -11,7 +11,9 @@ architecture docs describes its parts. The terms are those of the
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
 says. A sandbox software decision number, such as sandbox software
 decision 5, names a decision of the change that makes the sandbox software
-update itself. A build time decision number, such as build time decision 1,
+update itself. An idle update decision number, such as idle update
+decision 2, names a decision of the change that installs a new release
+while the workspace is idle. A build time decision number, such as build time decision 1,
 names a decision of the change that shortens the software step of a build.
 
 ## Releases
@@ -59,8 +61,12 @@ names a decision of the change that shortens the software step of a build.
   fix then reaches each sandbox with no new workspace and no manual
   install.
 - The program checks for a newer release each time that the agent runner
-  starts, such as at each start of the sandbox. It also checks every hour
-  while the runner runs (sandbox software decision 5).
+  starts, such as at each start of the sandbox. It also checks every 10
+  minutes while the runner runs (idle update decision 2). Reason: the
+  check reads one small static file, so a fix reaches a running sandbox
+  sooner for almost no cost.
+- An hourly check was rejected, because a running sandbox then learns of a
+  fix up to an hour late.
 - It downloads a newer release in the background. A start never waits for
   a download.
 - An update downloads only the parts that changed since the release that

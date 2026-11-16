@@ -18,7 +18,7 @@ The state file stays at `~/.conductive/runner-state.json` across release changes
 The Rust reader accepts the Node state format.
 
 The runner requests a background update check after each start.
-The check timer also runs after boot and every hour.
+The check timer also runs after boot and every 10 minutes.
 A start never waits for its download.
 The next start applies a complete newer release before the runner works.
 

@@ -160,7 +160,7 @@ check timer. It starts no service and changes no package.
 The release units are:
 
 - `conductive-update-check.service`: root background download.
-- `conductive-update-check.timer`: boot and hourly checks.
+- `conductive-update-check.timer`: boot checks and a check every 10 minutes.
 - `conductive-runner.service`: root activation in pre-start, then the Rust runner as `user`.
 - `conductive-preview-relay.service` and `.socket`: Rust relay as `user`.
 - `conductive-terminal.service` and `conductive-terminal-sessions.service`: terminal services as `user`.

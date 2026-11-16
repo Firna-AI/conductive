@@ -80,7 +80,7 @@ The runner service applies a staged release in its root pre-start step.
 It applies only when `/run/conductive/workspace-ready` exists.
 Relay and terminal restarts do not apply or roll back releases.
 The runner requests a background check after each start. `conductive-update-check.timer` also checks after
-30 seconds of boot and every hour. The root check service runs the program
+30 seconds of boot and every 10 minutes. The root check service runs the program
 and then exits. No separate updater process remains resident.
 
 The Rust runner calls `update started` only after its first valid Worker

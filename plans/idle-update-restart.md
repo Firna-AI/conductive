@@ -14,8 +14,9 @@ latest conductive code").
 The change makes the runner install a complete newer download as soon as
 the workspace is idle, with no running turn in any session and no waiting
 command. The sandbox also checks for a release every 10 minutes, not every
-hour. Decision 1 is open again: the options check found a way to swap the
-release in place, so that no process stops. Decision 3 is new.
+hour. The runner swaps to the new release in place (decision 1 F), so no
+process stops. No guard checks a new release that cannot connect
+(decision 3 A).
 
 Contract owners:
 
@@ -28,8 +29,8 @@ Contract owners:
 
 ### 1. How a running workspace installs a new release
 
-Open. Cal chose **B** on 2026-11-16. The options check of the same day
-added F and G, and recommends F. Cal must confirm B or choose again.
+Decided by Cal on 2026-11-16: **F**. Cal first chose B. The options check
+of the same day added F and G and recommended F, and Cal then chose F.
 
 - Root question (from the options check): how does a workspace that stays
   on get each new release within minutes, without ending a turn or a
@@ -89,7 +90,8 @@ Decided by Cal on 2026-11-16: **B**, every 10 minutes.
 
 ### 3. A new release that cannot connect
 
-Open. Added on 2026-11-16 by the options check.
+Decided by Cal on 2026-11-16: **A**, no guard. The options check of the
+same day raised this decision.
 
 - Problem: a release that starts but never connects to the Worker now
   reaches every idle running workspace within about 12 minutes. Today it
@@ -112,13 +114,13 @@ Open. Added on 2026-11-16 by the options check.
   outage of more than 5 minutes during an update can reject a good
   release. The next deploy replaces it. The update runs only while the old
   runner is connected, so the Worker was reachable just before.
-- Recommendation: **C**. The release that is known to work decides.
+- Recommendation: C, because the release that is known to work decides.
+  Cal chose A.
 
 ## Design
 
-Each item is my design call, dated 2026-11-16. Items 1 to 6 hold for F,
-the recommended option of decision 1. Under A or B, item 1 changes to a
-restart of the service with exit status 75, and B adds a process probe.
+Each item is my design call, dated 2026-11-16, for option F of
+decision 1.
 
 1. **The runner owns the swap.** Only the runner knows when no turn runs,
    and it reads the commands. It decides in its connection loop, where no
@@ -165,16 +167,16 @@ swaps, so a rollback to it needs nothing new.
 
 ## Milestone 1: Documentation and protocol
 
-Depends on: none. Waits for decisions 1 and 3.
+Depends on: none
 
 Update the requirements and the decisions in force for decisions 1, 2,
 and 3.
 
 - [ ] Update [Updates](../docs/protocol/sandbox-software.md#updates): the
-      check every 10 minutes, the update at idle with its conditions, the
-      guard of decision 3, and the rejected options. Replace "The program
-      never restarts the software to apply an update" with the rule of the
-      chosen option.
+      check every 10 minutes, the swap at idle with its conditions, no
+      guard for a release that cannot connect, and the rejected options.
+      Replace "The program never restarts the software to apply an
+      update" with the rule of option F.
 - [ ] Update [The agent runner](../docs/protocol/agent-runner.md#the-agent-runner):
       a sandbox updates its runner at a later start or when it is idle.
 - [ ] Update `docs/architecture/sandbox-software.md`, the
@@ -189,15 +191,16 @@ and 3.
 
 Depends on: 1
 
-- [ ] Set `OnUnitActiveSec=10min` in `image/conductive-update-check.timer`.
-- [ ] Check whether `daemon-reload` applies the new interval to a running
+- [x] Set `OnUnitActiveSec=10min` in `image/conductive-update-check.timer`.
+- [x] Check whether `daemon-reload` applies the new interval to a running
       timer. When it does not, restart the timer in `install-system.sh`.
-- [ ] Update each test that reads the timer.
+      It does, so the script needs no change. Evidence:
+      `.context/idle-update-restart/timer-reload-probe.txt`.
+- [x] Update each test that reads the timer. No test reads it.
 
 ## Milestone 3: Install a new release at idle
 
-Depends on: 1. Waits for decisions 1 and 3. The TODOs below are for F
-and C.
+Depends on: 1
 
 - [ ] Add `CommandHandler::busy`, with the idle rules of design item 2,
       in `AgentEngine` and `ReportCommandHandler`. Test each rule.
@@ -211,9 +214,6 @@ and C.
 - [ ] In `runner_command`, run `update apply` through `sudo -n`, check
       `current`, and exec the new `runner-start.sh`. When `current` did not
       change, connect again. Test the decision with fakes.
-- [ ] Add the guard of decision 3: a one-time check with the old release's
-      program, 5 minutes after the swap, that restarts the runner service
-      when the new release is still not confirmed. Test the check.
 - [ ] Prove design item 5 with a Worker test: a command sent to a
       connection that closes unread reaches the next connection once.
 - [ ] Check that the terminal bridge keeps its command-line arguments, as
