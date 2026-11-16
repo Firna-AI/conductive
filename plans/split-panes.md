@@ -21,14 +21,13 @@ tab in two panes.
 
 Contract owners:
 
-- [The tab row](../docs/protocol/agents-and-sessions.md#the-tab-row), which
-  Milestone 2 moves to its own page.
+- [The tab row](../docs/protocol/tab-row.md), which Milestone 2 moved out
+  of `agents-and-sessions.md`.
+- [Split panes](../docs/protocol/split-panes.md).
 - [Temporary tabs](../docs/protocol/temporary-tabs.md).
 - [Keyboard shortcuts](../docs/protocol/keyboard-shortcuts.md).
 - [Messages](../docs/protocol/messages-and-attachments.md), for the prompts
   of the pull request bar.
-- [Conductor comparison](../docs/protocol/conductor-comparison.md), the row
-  `layout-and-zen-mode`.
 - The [chat README](../src/chat/README.md) and its
   [tab row guide](../src/chat/tab-row.md).
 - The [workspace README](../src/shell/workspace/README.md).
@@ -209,6 +208,26 @@ as [Decision numbers](../docs/architecture.md#decision-numbers) says.
 - **Recommendation:** G, in place of D, which the options check of 13 November 2026 recommended in place of B. G meets the user input with one rule: everything shrinks with the window, and nothing hides or changes shape at a fixed width. H is better if a pane under 220 px is too narrow to use, at the cost of a panel that hides itself.
 - **Action:** ask the user, because the options trade the width of a pane against a panel or a pane that hides itself, and no option is clearly best.
 
+### 7. The pane of a session that the member did not open
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Implementation. Milestone 2 found it on 16 November 2026.
+- **Category:** Docs or spec.
+- **Location:** `docs/protocol/split-panes.md`, "Where a tab opens".
+- **Background:** Decision 3 B sends a new or reopened session to the focused pane. The docs apply it to "+", New session, the session history, and Reopen closed session. Other sessions also open without that press: a session that another member or an agent starts, and a session that a send opens, such as a message to a model of the other agent, or Try again.
+- **Problem:** No rule says which row gets these sessions. A send can come from the pane that is not focused, through the session keys or the pull request bar.
+- **Impact if no action:** The code puts these tabs in a row that it chooses by guess.
+- **Root question:** Which pane gets a session that the member did not open with "+", New session, or the history?
+- **Options:**
+  - **A.** Every new session goes to the end of the row of the focused pane, as decision 3 B reads. A session from another member opens there without showing. Effort: Small.
+  - **B.** Do A, but a session that a send opens goes to the pane of the session that sent it, and shows there. Effort: Small.
+  - **C.** Every such session goes to the end of the right row. Effort: Small.
+- **Left out:** A row that the agent chooses. The agent has no link to the layout of a member.
+- **Wider fix:** None.
+- **Previous examples:** None found.
+- **Recommendation:** B. The moved draft and the reply then stay beside the chat that the user typed in.
+- **Action:** ask the user, because no requirement covers these sessions. No options check ran over this item yet.
+
 ## Design
 
 These are design calls of the agent, made on 13 November 2026, unless a
@@ -336,6 +355,37 @@ first draft, and this text closes them.
 - A read-only workspace shows only session tabs. So a saved pane with no
   session tab does not show there, and the other pane fills the column.
   The saved split stays for a Restore. The mockups found this gap.
+
+### Calls from the documentation milestone
+
+These are design calls of the agent, made on 16 November 2026, when
+Milestone 2 wrote the protocol docs.
+
+- When no pane shows a session, the prompts of the pull request bar and
+  the phone Chat tab use the session that the focused pane showed last,
+  else the session that the other pane showed last. With no session tab,
+  nothing sends, as today. Reason: it keeps the rule of one pane, "the
+  session that the member saw last".
+- The divider between the panes takes the keys of the other panel
+  dividers: Left, Right, Home, and End. Reason: every divider of the app
+  then works the same way, and the list of fixed keys already holds these
+  keys for dividers.
+- In the phone layout, Previous tab and Next tab step through the one row
+  as it shows. A step across the border makes the other pane the focused
+  pane. Reason: a press on a tab of the other part already does this.
+- The split rules live on their own page, `docs/protocol/split-panes.md`,
+  because one page would pass about 250 lines.
+- Only an archived workspace hides a pane with no session tab. A workspace
+  of a suspended org shows its file tabs today, so its panes all show.
+- A move of a tab that did not show leaves the shown tab of the pane that
+  it left.
+- The session keys are Focus the message field, Attach files, Model
+  picker, Next effort level, Fast mode, Stop the agent, and the two copy
+  keys.
+- Close tabs to the right, which main added on 16 November 2026, closes
+  only tabs of the row of its tab. Reason: each pane has its own row.
+- A session link to a closed session, which main now reopens, reopens it in
+  the focused pane, as the session history does.
 
 ### The chat state
 
@@ -492,10 +542,6 @@ Depends on: 7
       one.
 - [ ] Make the address, Back and Forward, and the session address follow
       the focused pane.
-- [ ] Set the comparison row `layout-and-zen-mode` in
-      `src/marketing/from-conductor/areas/navigation-and-appearance.ts` to
-      the status that [Statuses](../docs/protocol/conductor-comparison.md#statuses)
-      gives for shipped split views.
 - [ ] Check the split in a browser and take screenshots for the pull
       request.
 
