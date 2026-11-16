@@ -23,7 +23,7 @@ Contract owners:
   the Mac app.
 - [Command palette actions](../docs/protocol/command-palette-actions.md)
   and [Keyboard shortcuts: the keys](../docs/protocol/keyboard-shortcuts-keys.md),
-  for the Hide or show the sidebar command, when decision 5 changes them.
+  for the Hide or show the sidebar command, which decision 5 changes.
 - The [mockup catalogue](../docs/mockups/catalogue.md).
 
 ## Decisions
@@ -36,18 +36,20 @@ The numbers are local to this plan.
      another org opens that org first, as it does now. A second click on
      it then opens the popover. **Chosen.**
    - C. Every tile opens its org, and the popover opens on top. Rejected.
-2. **Which hidden states count.** Open again, see below. The user first
-   chose A on 13 November 2026, on the belief that a narrow window already
-   leads to the list. PR #353 merged on the same day, and it changed that.
+2. **Which hidden states count.** The user chose B on 16 November 2026,
+   after the item below. The user first chose A on 13 November 2026, on the
+   belief that a narrow window already leads to the list. PR #353 merged on
+   the same day and changed that, so the item went back to the user.
 3. **What the popover holds.** The user chose A on 13 November 2026.
-   - A. The full sidebar: the org name, Settings, New workspace, Routines,
+   - A. The full sidebar: the org name, Settings, New workspace, Automations,
      Search, and the sections with their rows and row menus. **Chosen.**
    - B. The org name and the workspace rows only. Rejected.
 4. **A sidebar toggle in the browser.** The user asked for it on
    13 November 2026, "next to settings on web". The browser has no toggle
-   today. The toggle is an icon button beside the Settings link at the top
+   today. The toggle is an icon button beside the Settings cog at the top
    of the sidebar.
-5. **The command and the keys in the browser.** Open, see below.
+5. **The command and the keys in the browser.** The user chose A on
+   16 November 2026, as the item below gives it.
 
 ### 2. Which hidden states count as collapsed
 
@@ -59,7 +61,7 @@ The numbers are local to this plan.
 - **Background:** Below 900 px the sidebar hides, and the list page of an
   org shows the list in the main area. Since PR #353, a tile opens the last
   workspace of its org, not its list page. A narrow desktop window has no
-  back link to the list on a workspace, Settings, Routines, or New
+  back link to the list on a workspace, Settings, Automations, or New
   workspace page. The Switch to rows of the palette leave out the current
   org. So only the Workspace list key leads to the list there.
 - **Problem:** In a narrow window, a click on the tile of the current org
@@ -89,8 +91,7 @@ The numbers are local to this plan.
   org would lose the open workspace.
 - **Recommendation:** B. It gives one rule for each way that the sidebar
   hides, and the workspace stays in view while the person chooses.
-- **Action:** ask the user, because the user chose A before PR #353
-  changed the facts.
+- **Outcome:** the user chose B on 16 November 2026.
 
 ### 5. The command and the keys in the browser
 
@@ -129,8 +130,7 @@ The numbers are local to this plan.
   hidden sidebar.
 - **Recommendation:** A. It follows the key rules in force, and its palette
   row is a visible way back to a hidden sidebar.
-- **Action:** ask the user, because a new key in every browser changes a
-  requirement in force.
+- **Outcome:** the user chose A on 16 November 2026.
 
 The options check of
 13 November 2026 added options C and D of decision 2 and option D of
@@ -148,9 +148,10 @@ otherwise.
   the browser toggle both change it. Reason: one rule for both hosts. The
   state lasts until the page closes, as for the right column and the Mac
   app today.
-- The popover opens when the page has a sidebar, the sidebar does not
-  show, and the person clicks the tile of the current org. The rule for a
-  narrow window waits for decision 2. Another click on the tile, Escape, a
+- The popover opens when the page has a sidebar, no workspace list shows,
+  and the person clicks the tile of the current org, as decision 2 B says.
+  The list page of a narrow window shows its list, so its tile opens no
+  popover. In a narrow window the popover shows no toggle. Another click on the tile, Escape, a
   click outside the popover, and a page that opens from the popover close
   it. The focus goes back to the tile as it closes.
 - A click with a modifier key on the tile still opens the org in a new tab.
@@ -176,7 +177,7 @@ otherwise.
   beside the window buttons and shows none beside Settings. Reason: one
   toggle in each host.
 - In the browser, a hidden sidebar shows again through the toggle in the
-  popover, through the palette row when decision 5 gives one, and after a
+  popover, through the palette row of decision 5, and after a
   reload. Reason: the user placed the toggle beside Settings, and the
   popover holds that place while the sidebar is hidden.
 - The list page of a narrow window shows no toggle, because it has no
@@ -215,7 +216,8 @@ Depends on: 1
       `docs/protocol/desktop-app.md` where the toggle is no longer the
       Mac app's only one.
 - [ ] Update `command-palette-actions.md`, `keyboard-shortcuts-keys.md`,
-      and `keyboard-shortcuts-tab.md` for decision 5.
+      and `keyboard-shortcuts-tab.md` for decision 5: the command and its
+      palette row in every host, and Ctrl+B and [ on Windows and Linux.
 - [ ] Update the mockup catalogue for the new variants, and the rule for
       a narrow window in `docs/mockups/README.md:42`.
 - [ ] Update the code comments that still say the tile opens the list
