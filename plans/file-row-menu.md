@@ -550,9 +550,13 @@ Depends on: every other milestone
 
 - [ ] Run the targeted tests and `npm run check`, after
       `npm --prefix desktop ci` and `npm ci --prefix runner`.
-- [ ] Check the menu in a browser on desktop and in a phone layout.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+      - The static checks and every test outside `worker/` passed on
+        16 November 2026. The Worker integration tests time out on this
+        machine, also on a clean `origin/main`. The CI of the pull request
+        runs the complete gate. Evidence: `.context/file-row-menu/`.
+- [x] Check the menu in a browser on desktop and in a phone layout.
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
