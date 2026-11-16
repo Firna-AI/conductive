@@ -117,13 +117,15 @@ Depends on: none
 State the parallel copies, the memory budget, the metadata tokens, the
 barrier for every token, and the retry rule.
 
-- [ ] Update `docs/protocol/github-tokens.md`, "Image builds and
+- [x] Update `docs/protocol/github-tokens.md`, "Image builds and
       refreshes", from the branch text of `bd59b1bc8`, without the bullet of
       its clean refresh milestone. Keep the "Risk" bullet of `main`.
-- [ ] Update `worker/lifecycle/image-builds.md` with the retry sentence.
-- [ ] Read the Terms and Privacy pages and every public guide in full.
+- [x] Update `worker/lifecycle/image-builds.md` with the retry sentence.
+- [x] Read the Terms and Privacy pages and every public guide in full.
       Update each sentence that restates a changed fact.
-- [ ] Check each relative link of each changed Markdown file.
+- [x] Check each relative link of each changed Markdown file.
+
+Evidence: `.context/parallel-copies/m1-docs-check.txt`.
 
 ## Milestone 2: Port the parallel loader
 
