@@ -246,3 +246,23 @@ it('appends no history without a history file and stays silent when the append f
   }
   await expect(readdir(fixture.root)).resolves.not.toContain('.bash_history')
 })
+
+it('appends no history after the user unsets HISTFILE', async () => {
+  const fixture = await scriptFixture()
+  // Without HISTFILE, `history -a` falls back to the readline file ~/.history.
+  await writeFile(`${fixture.root}/.history`, '')
+  const result = await runInteractiveBash(
+    ['unset HISTFILE', 'echo one', 'exit'],
+    {
+      folder: fixture.repository,
+      home: fixture.root,
+      promptCommand: terminalPromptCommand(fixture.options.restoreMarker),
+      historyFile: `${fixture.root}/history`,
+    },
+  )
+  expect(result.code).toBe(0)
+  expect(result.stdout).toBe('one\n')
+  expect(await readFile(`${fixture.root}/.history`, 'utf8')).toBe('')
+  await expect(readdir(fixture.root)).resolves.not.toContain('history')
+  await expect(readdir(fixture.root)).resolves.not.toContain('.bash_history')
+})

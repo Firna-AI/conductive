@@ -36,6 +36,8 @@ export interface TerminalScriptOptions {
  * The provider saves the disk while the sandbox runs, not after its shutdown,
  * so a history file that Bash writes only at exit is lost at a stop. An empty
  * or unset `HISTFILE` turns the append off, and a failed append stays silent.
+ * Keep the `HISTFILE` test: without `HISTFILE`, `history -a` appends to the
+ * readline file `~/.history` when that file exists.
  */
 export function terminalPromptCommand(
   restoreMarker = TERMINAL_RESTORE_MARKER,

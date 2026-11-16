@@ -238,7 +238,10 @@ the folder. It also checks that the hook exports no variable. Two more
 tests run the hook with a history file. They check that each command is in
 the file before the shell exits, also when the shell is killed, and that
 the hook keeps `$?`. They also check that an empty `HISTFILE` writes
-nothing and that a failed append prints no error. The package
+nothing and that a failed append prints no error. A third test unsets
+`HISTFILE` in the shell. Without `HISTFILE`, `history -a` appends to the
+readline file `~/.history` when that file exists, so the hook must check
+`HISTFILE` first. The test checks that `~/.history` stays empty. The package
 test runs `terminalPackagesCommand()` with fake `sudo`, `apt-get`, and
 `systemctl` commands. The unit tests read the release units and system installer.
 The bridge release test packages and extracts the system archive. It checks
