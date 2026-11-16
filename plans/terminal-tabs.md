@@ -262,7 +262,10 @@ All design calls are of 10 November 2026, by the agent.
   or the first. Reason: the tool always shows a terminal.
 - A workspace whose image has no attach program shows one terminal and no
   + button. Reason: its launcher cannot choose a shell, so a + would open a
-  copy of the first shell. It gets terminal tabs when the automatic software update applies.
+  copy of the first shell. It gets terminal tabs at a later start of its
+  cloud computer, after the automatic software update. Corrected on
+  16 November 2026 by review finding 201: an install while the workspace
+  is idle leaves the old terminal service running until the next start.
 - The terminal state keeps `socketPath` of the first terminal. Reason:
   the Mac app bundles the web app, so an older Mac app build keeps one
   working terminal until it updates.
@@ -573,8 +576,8 @@ Evidence: `.context/terminal-tabs/reports/m8.md`.
 
 Depends on: every other milestone
 
-- [ ] Run the targeted tests and the complete gate, `npm run check`.
-- [ ] Commit with Conventional Commits and push the branch.
+- [x] Run the targeted tests and the complete gate, `npm run check`.
+- [x] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
@@ -585,8 +588,64 @@ Depends on: every other milestone
 - [ ] Open the pull request. Its description gives the decisions and the
       design calls of this plan with their dates, a permalink to this plan,
       and the follow-up items that the change adds. It says that an
-      existing workspace gets terminal tabs when the automatic software
-      update applies.
+      existing workspace gets terminal tabs at a start of its cloud
+      computer after the automatic software update.
+
+Evidence: the gate log `.context/terminal-tabs/gate2.log`, and the review
+reports in `.context/reviews/calummoore/terminal-tabs-implementation-l5ml/`.
+
+## Milestone 10: Review fixes in the mockups
+
+Tags: mockup
+
+Depends on: 9
+
+Round 1 of the review found that an update while the workspace is idle
+leaves the old terminal service running, so tabs come at a later start
+(finding 201).
+
+- [x] Change the description and the rationale of `app/tools/older-software`
+      to say that terminal tabs come at a later start of the cloud computer.
+- [x] Run `npm run mockups:check`.
+
+## Milestone 11: Review fixes in the Worker
+
+Depends on: 9
+
+- [ ] Finding 1: require the terminal owner in the handler, the socket,
+      and the mutations. Move the tests that call the handler without an
+      owner to the real owner. Delete the helpers that only that path used.
+- [ ] Finding 2: remove the tests of the fake terminal API. Move each
+      production check of its connector case to the transport tests first.
+- [ ] Finding 101, server side: give the terminal state read and the
+      create and close replies the event number of the list that they hold.
+      Do the same in the fake API.
+- [ ] Finding 201: correct the `terminals_unavailable` message.
+
+## Milestone 12: Review fixes in the app
+
+Tags: ui
+
+Depends on: 11
+
+- [ ] Finding 102: add a mounted test for the Reconnect of one terminal.
+- [ ] Finding 103: give the screen and the connector the socket path, with
+      no rebuilt state response.
+- [ ] Finding 101, app side: apply each terminal list only when its event
+      number is newer than the list that shows, from reads, replies, and
+      events. Show a new terminal only while it is in the list.
+
+## Milestone 13: Review fixes in the docs
+
+Depends on: 9
+
+- [x] Finding 201: say in `docs/protocol/terminal.md`, the guide, and this
+      plan that terminal tabs come at a later start of the cloud computer,
+      with a link to the update rule.
+- [x] Finding 202: limit the palette steps of the guide to a computer with
+      the right column, and reword the New terminal requirement of the
+      palette so that its place comes first.
+- [ ] Re-review the fixes once, as the `implementation-review` skill says.
 
 ## Post-merge follow-up (non-blocking)
 

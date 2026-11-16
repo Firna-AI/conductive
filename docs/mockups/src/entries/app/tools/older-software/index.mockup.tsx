@@ -8,9 +8,9 @@ import {
 export const terminalOlderSoftware = defineScreen({
   title: 'Older cloud computer software',
   description:
-    'A workspace whose cloud computer has older software opens one terminal only, so the Terminal tool shows no tabs and no +. The workspace gets terminal tabs when the automatic software update applies.',
+    'A workspace whose cloud computer has older software opens one terminal only, so the Terminal tool shows no tabs and no +. The workspace gets terminal tabs at a later start of its cloud computer, after the automatic software update.',
   rationale:
-    'Older cloud computer software cannot open a second shell, so a + there would open a copy of the first shell. Each software release brings the terminal software, so the automatic update brings the tabs.',
+    'Older cloud computer software cannot open a second shell, so a + there would open a copy of the first shell. An update while the workspace runs leaves the terminal service on its old software until the next start, so the tabs come at that start.',
   relatedDocs: [],
   propSchema: workspaceStateSchema,
   props: {

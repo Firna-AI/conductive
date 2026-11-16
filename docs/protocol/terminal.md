@@ -111,10 +111,12 @@ terminals at `app/tools` and its child pages.
 
 ## Older software
 
-- A workspace whose sandbox software opens only one shell shows one
-  terminal, with no row of tabs. This lasts until an automatic software
-  update applies, as [Updates](sandbox-software.md#updates) says. The
-  server refuses a new terminal there.
+- A workspace whose terminal service opens only one shell shows one
+  terminal, with no row of tabs. The server refuses a new terminal there.
+  This lasts until the sandbox starts the terminal service of a newer
+  release. An automatic software update brings that release, and the
+  terminal service runs it from its next start, as
+  [Installs at idle](sandbox-software.md#installs-at-idle) says.
 - Reason: a + there would open a copy of the first shell. A row with one
   tab, no close button, and no + gives the user nothing.
 - Terminal 1 is the shell that such software opens. So an update of the

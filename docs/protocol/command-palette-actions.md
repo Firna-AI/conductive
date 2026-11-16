@@ -31,10 +31,13 @@ actions at `app/command-palette/actions`, and the settings at
   [saved view of New workspace](create-a-workspace.md#page-or-dialog).
 - New section shows only where the page shows the workspace list.
 - The Go to rows show only where the page shows the right column.
-- New terminal shows only while the Terminal tool offers its + button
-  (terminal tabs decision 3 B). So it shows where the Go to rows show,
-  while the cloud computer runs, and below the limit of terminals, as
-  [Terminal tabs](terminal.md#terminal-tabs) says.
+- New terminal shows only where the Go to rows show (terminal tabs
+  decision 3 B). There, it shows only while the + of the Terminal tool
+  takes a press: while the cloud computer runs, its terminal service
+  opens more than one shell, and the workspace has fewer than 10
+  terminals, as [Terminal tabs](terminal.md#terminal-tabs) says.
+- A phone shows the + on its Terminal page, but its palette offers no New
+  terminal, because a phone has no Go to rows.
 - New terminal opens a terminal, as that + button does. It then shows the
   new terminal in the Terminal tool, also when another tool showed.
 - Reason: the palette offers each control of an open workspace, as it

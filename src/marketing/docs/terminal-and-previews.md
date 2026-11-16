@@ -59,6 +59,11 @@ Stopping the cloud computer ends every terminal's shell and running commands.
 The terminal tabs stay after a resume.
 Start any needed server again in its terminal.
 
+The commands that you typed stay in the shell's command history after a stop.
+After a resume, press the Up arrow or Ctrl-R to find them.
+A command that still runs at the stop, such as a server, is not kept.
+A workspace with older cloud computer software gets this with an automatic software update at a later start.
+
 ## Use terminal tabs
 
 The row above the terminal shows tabs named **Terminal 1** to **Terminal 10**.
@@ -74,13 +79,14 @@ On a phone, the tabs appear at the top of **Terminal**.
 Scroll the row sideways if a tab is out of view.
 A new terminal takes the lowest free number.
 
-You can also use the command palette:
+On a computer, you can also use the command palette while the right column shows:
 
 1. Select **Search** above the workspace list.
 2. Search for `terminal`.
 3. Select **New terminal**.
 
-The palette offers this action while **+** is available.
+The palette offers this action only while the right column shows, the cloud computer runs with terminal tabs, and the workspace has fewer than 10 terminals.
+A phone does not offer it in the palette, so use **+** there.
 **New terminal** has no default keyboard shortcut.
 
 At the workspace limit, **+** turns off.
@@ -102,14 +108,10 @@ The last terminal has no close button.
 
 An older cloud computer can show one terminal with no tab row or **+** button.
 Its existing terminal still works.
-Terminal tabs become available when an automatic software update applies.
+Terminal tabs become available at a later start of the cloud computer, after an automatic software update.
 
 - [Understand cloud computer software updates](/docs/cloud-computer#apply-setup-changes)
 
-The commands that you typed stay in the shell's command history after a stop.
-After a resume, press the Up arrow or Ctrl-R to find them.
-A command that still runs at the stop, such as a server, is not kept.
-A workspace with older cloud computer software gets this with an automatic software update at a later start.
 
 ## Copy output
 
