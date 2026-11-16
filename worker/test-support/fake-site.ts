@@ -38,9 +38,7 @@ export function fakeSite(styles: readonly string[] = [css]) {
   const link = `<a href="${SITE_MARKERS.appOrigin}/">Sign in</a>`
   add(
     'index.html',
-    document(
-      `Home <h1>Give every coding task its own cloud computer.</h1>${link}${footer}`,
-    ),
+    document(`Home <h1>Ship code faster.</h1>${link}${footer}`),
     'text/html',
   )
   add('terms.html', document(`Terms ${link}${footer}`), 'text/html')

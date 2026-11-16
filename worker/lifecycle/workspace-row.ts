@@ -14,6 +14,8 @@ export interface WorkspaceRow {
   name: string | null
   branch: string
   baseBranch?: string | null
+  /** The number of the current task. Each Continue adds 1. */
+  taskNumber: number
   sandboxId: string | null
   providerAccount: string
   state: WorkspaceState

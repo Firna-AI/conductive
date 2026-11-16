@@ -11,7 +11,8 @@ architecture docs describes its parts. The terms are those of the
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
 says. A sandbox software decision number, such as sandbox software
 decision 5, names a decision of the change that makes the sandbox software
-update itself.
+update itself. A build time decision number, such as build time decision 1,
+names a decision of the change that shortens the software step of a build.
 
 ## Releases
 
@@ -112,8 +113,27 @@ update itself.
 - The terminal scripts and their units are parts of each release (sandbox
   software decision 1). So an update brings a fix of the terminal to each
   sandbox.
-- The image build still installs the terminal packages `ttyd` and `tmux`.
+- The software step installs the system packages `ttyd`, `tmux`, and the
+  GitHub CLI `gh` with apt. It also masks the ttyd service of the package.
   Reason: Ubuntu owns these packages.
+- A build or a refresh runs this apt part only when one of these packages
+  is missing, when the ttyd service is not masked, or when the apt part
+  changed since the image last ran it (build time decision 1). Reason: the
+  step then takes about 20 seconds less in each build and each refresh, and
+  a change of the apt part still upgrades the packages.
+- The app keeps the version of the apt part alone for each image. A new
+  release does not change it. Reason: a version that includes the release
+  changes at each deploy, so each build then runs apt again.
+- A skip of the apt part with no rerun was rejected, because the packages
+  then never upgrade. No change was rejected, because each build and each
+  refresh then spends about 20 seconds on parts that the image already
+  holds.
+- When the image holds the program `conductive`, the step installs the
+  newest release through that program. So the step downloads only the parts
+  that changed, as [Updates](#updates) says. When the program is missing,
+  or its update fails, the step downloads the full program and installs
+  the release with it. Reason: either way, each build and each refresh end
+  with the newest release.
 
 ## The software image
 
@@ -130,7 +150,9 @@ update itself.
 - Reason: the first build of a new org then installs only the parts that a
   newer release changed.
 - In place of the software image, a skip of the parts that each org image
-  already holds was rejected. It does not make a first build faster.
+  already holds was rejected. It does not make a first build faster. A
+  later build and a refresh still skip the apt part when their org image
+  holds it, as [Installs in a build](#installs-in-a-build) says.
 - Without a ready software image of the current version, such a build
   starts from the base image. It copies the repositories, installs the
   app's own software, then runs the install script. A missing software

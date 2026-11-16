@@ -10,7 +10,9 @@ message carries. The terms are those of the
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
 says. An own endpoint decision number names a decision of the change that
 adds the own endpoint logins, as [Tokens and secrets](tokens-and-secrets.md)
-says.
+says. A title image decision number, such as title image decision 1, names
+the dated record of one decision of the change that leaves the names of
+attached images out of titles.
 
 ## Messages
 
@@ -169,11 +171,25 @@ says.
 - The model writes the title from the text of that message. It leaves out
   the `---` line and the `Sent by:` line of a message from the agent tools.
   Reason: the title names the task, not its sender.
-- In that text, each mention of one of its attached files becomes the name
-  of the file (decision 262 D). The request holds no other data of the
+- In that text, each mention of one of its attached files that is not an
+  image becomes the name of the file (decision 262 D). The request holds no other data of the
   workspace. It uses no agent login of a member. The chat does not show it.
 - Reason: a path makes a poor title. A request with the copy path of each
   file was rejected for that reason.
+- Each mention of an attached image goes out of that text, with no name
+  (title image decision 1 A). An image is an attached file of the kind
+  `image`, such as a screenshot. The spaces and tabs after the mention go
+  out with it.
+- Reason: image names such as "Screenshot 2026-11-16 at 10.23.45.png" do
+  not name the task. The model put "Screenshot" in many titles. The text
+  of the message says what the image shows.
+- The names of all attached files out of the text were rejected, because
+  names such as `crash.log` can name the task. Images sent to a model that
+  reads images were rejected, because each title then needs a larger model,
+  and costs more and takes longer. A filter for only generic names, such as
+  "Screenshot", was rejected, because the operating system translates them.
+  A request that asks the model to ignore the names was rejected, because
+  the small model does not follow such rules reliably.
 - The reply to the message does not wait for the title. The workspace
   then takes the title as its name, as
   [Workspace and session names](agents-and-sessions.md#workspace-and-session-names) says.

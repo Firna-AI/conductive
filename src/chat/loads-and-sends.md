@@ -78,7 +78,15 @@ The session history stays open. The tab keeps its old name, and the sandbox bar 
   again. The steps after an action, such as a view save, the focus, or a
   free Resume button, still run when its reply is older. The header of
   [`state/session-records.ts`](state/session-records.ts) gives the pending
-  edits of a rename or a model change.
+  edits of a rename, a model change, or a close.
+- A close of a session tab shows at once, as a pending edit that sets
+  `closedAt`. The tab moves to the session history and the next tab shows
+  before the reply. The reply confirms the close and saves the view. A
+  failed close puts the tab back at its place in the row. When the close
+  moved the user off that tab and the user chose no other tab since, the
+  tab shows again. The notice "The session didn't close" shows with the
+  tab, or on the shown tab when the restored tab stays hidden.
+  [`state/close-actions.ts`](state/close-actions.ts) holds these steps.
 
 ## Sends and Stop
 

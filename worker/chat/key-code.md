@@ -31,7 +31,8 @@ first.
 - `session-titles.ts`: the empty-name rule for the first session's workspace
   title and each later session's first message with text. A text with only
   the mentions of its own attached files counts as no text. In a title, each
-  such mention becomes the original name of its file.
+  such mention of an image goes out, and each other such mention becomes
+  the original name of its file.
 - `workspace-titles.ts`, `title-model.ts`, and `workspace-title.ts`: the
   background model request and the shared title storage and D1 projection.
   The shared writer checks the empty name and workspace access before it

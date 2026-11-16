@@ -170,6 +170,15 @@ one building attempt per account. `image_build_jobs.software_image_name`
 pins the ready software image that a first build uses.
 The [software image backend](../worker/software-image/README.md) owns these records.
 
+`202611161200_image_packages_version.sql` adds the nullable
+`packages_version` column to `image_build_jobs` and `software_images`. It
+holds the version of the apt part of the software step that the image of
+the row holds. Existing rows keep `NULL`, so the next build from their image
+runs the apt part once. A build job also keeps an empty version when two
+starts of its software command carried different apt parts.
+[Image builds](../worker/lifecycle/image-builds.md#the-software-step) says
+how a build reads and writes it.
+
 `202611101300_routines.sql` adds org-scoped routines and their run records.
 Routine owners reference users, so membership removal can transfer their records.
 Org deletion cascades to both tables.
@@ -294,3 +303,12 @@ UI and wiring milestones normally need no migration. Their ranges stay reserved.
 creation plans, account defaults, and routines. Each column starts at 0.
 Sessions and routine run choices keep fast mode in their existing JSON records.
 [Fast mode](../docs/protocol/fast-mode.md) gives the choice rules.
+
+`202611161300_workspace_branch_names.sql` adds `workspaces.branch_placeholder`
+and `workspaces.task_number`. Existing rows get 0 and 1, so their branches stay.
+A new row starts with 1 in both. The start sets the placeholder to 0 before it
+uses the branch in the sandbox. Until then, a name renames the branch, as
+[The branch and the name](../docs/protocol/create-a-workspace.md#the-branch-and-the-name)
+says. Each Continue adds 1 to the task number. A row from before this file
+starts at task 1, also after an earlier Continue, because D1 holds no count
+of earlier Continues.

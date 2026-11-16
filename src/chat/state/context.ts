@@ -23,7 +23,7 @@ export interface ChatContext {
   readonly stream: WorkspaceStream
   /** The running history load of each session, so that loads are shared. */
   readonly loading: Map<string, HistoryLoad>
-  /** The rename and model edits that wait for their replies, by session. */
+  /** The rename, model, and close edits that wait for their replies, by session. */
   readonly edits: Map<string, readonly PendingEdit[]>
   /**
    * The event number of the workspace record that shows, so an older reply

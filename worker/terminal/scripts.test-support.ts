@@ -58,6 +58,8 @@ printf '%s\\0' "$PWD" "$CONDUCTIVE_LAUNCH_TEST" "$@"
     entropyCommand: [entropy, '-An', '-v', '-N32', '-tx1', entropyInput],
     terminalCommand: [terminal],
     multiplexerCommand: [multiplexer],
+    // No bridge exists here, so the launcher runs the plain tmux client.
+    bridgeCommand: [`${root}/node`, `${root}/bridge.ts`],
   }
   return {
     root,

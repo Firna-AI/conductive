@@ -17,7 +17,7 @@ import type { ImageCoordinatorState } from './lifecycle/image-timers'
 import type { GitHubRefresh, GitHubWorkspace } from './github/contracts'
 import { handleGitHubRead } from './github/app-handler'
 import { hostSurface } from './hosts'
-import { readWorkspace, workspaceRecord } from './lifecycle/workspace-data'
+import { workspaceUpdate } from './chat/workspace-update'
 import { featureResult } from './features/result'
 import { archiveWorkspace } from './lifecycle/archive-workspace'
 import { continueBusy } from './lifecycle/continue-admission'
@@ -181,13 +181,10 @@ export class Workspace extends AgentSessionWorkspace {
   ): Promise<void> {
     if (!this.env.WORKSPACES.idFromName(workspaceId).equals(this.ctx.id)) return
     await this.chat.runLifecycle(async () => {
-      const workspace = workspaceRecord(
-        await readWorkspace(this.env.DB, orgId, workspaceId),
+      await this.chat.commitWorkspaceEvent(
+        workspaceId,
+        await workspaceUpdate(this.env.DB, orgId, workspaceId),
       )
-      await this.chat.commitWorkspaceEvent(workspaceId, {
-        type: 'workspace.updated',
-        workspace,
-      })
     })
   }
 

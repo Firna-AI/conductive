@@ -1,9 +1,9 @@
 import { Fragment, type ReactNode } from 'react'
+import type { WebAddressLink } from '../../../../../src/markdown/web-links'
 import { nameLabel } from '../../../../../src/shared/name-label'
 import type { Attachment } from '../../fixtures/attachments'
 import type { MentionEntry } from '../../fixtures/fileMentions'
 import { paths } from '../../paths'
-import inline from '../common/InlineText.module.css'
 import { ScreenLink } from '../common/ScreenLink'
 import { EntryIcon } from '../files/fileIcons'
 import { previewPaths } from '../files/previewPaths'
@@ -16,7 +16,9 @@ import { entryName } from './entryPaths'
 import { SentFileChip } from './SentFileChip'
 import { SessionChip, type ChipSession } from './SessionChip'
 import { strongRuns } from './strongText'
+import { CodeText, WebLinkPart } from './WebLinkText'
 import {
+  linkPage,
   linkTarget,
   textParts,
   type LinkTarget,
@@ -54,17 +56,6 @@ function filePage(entry: MentionEntry): string | undefined {
 
 /** The file tab of the copy of an attached file, when the mockups draw it. */
 const attachedTabs = { picture: paths.attachmentOpen } as const
-
-/**
- * The page that a press on the chip of a link opens, when the mockups draw
- * it: the session of a session link, or the page of the workspace. A link
- * to a closed session opens the page of its workspace, so a press reopens
- * no tab for the other members.
- */
-function linkPage(target: LinkTarget): string | undefined {
-  const { row, session } = target
-  return session && !session.closed ? session.to : row.to
-}
 
 /**
  * The chip of a link to a workspace of the org: a session chip when the
@@ -108,15 +99,39 @@ export function LinkChip(props: {
 }
 
 /**
- * One part of the text of a message: text, code, or a chip. While its
- * message `waits` for the cloud computer, the chip of an attached file opens
- * nothing, because its copy does not exist yet.
+ * The chip of the workspace or the session that a link names. A press on
+ * the chip opens its page, when the mockups draw it.
  */
-function Part(props: { part: TextPart; waits?: boolean }) {
+function TargetChip(props: { target: LinkTarget }) {
+  const to = linkPage(props.target)
+  return (
+    <LinkChip
+      opener={to ? (chip) => <ScreenLink {...chip} to={to} /> : undefined}
+      target={props.target}
+    />
+  )
+}
+
+/**
+ * A link of chat text: the chip of a workspace of the org, or a link that
+ * `WebLinkPart` draws. `answer` shows a Markdown link as its label.
+ */
+function ChatLink(props: { part: WebAddressLink; answer: boolean }) {
+  const target = linkTarget(props.part.href, useChatWorkspaces())
+  if (target) return <TargetChip target={target} />
+  return <WebLinkPart answer={props.answer} part={props.part} />
+}
+
+/**
+ * One part of the text of a message: text, code, a chip, or a link. While
+ * its message `waits` for the cloud computer, the chip of an attached file
+ * opens nothing, because its copy does not exist yet.
+ */
+function Part(props: { part: TextPart; answer: boolean; waits?: boolean }) {
   const { part } = props
   if (part.kind === 'text') return part.text
   if (part.kind === 'code') {
-    return <code className={inline.code}>{part.text}</code>
+    return <CodeText href={part.href} text={part.text} />
   }
   if (part.kind === 'attached') {
     const tab = props.waits === true ? undefined : part.file.tab
@@ -140,27 +155,19 @@ function Part(props: { part: TextPart; waits?: boolean }) {
       />
     )
   }
-  return <LinkText href={part.href} source={part.source} />
+  return <ChatLink answer={props.answer} part={part} />
 }
 
 /**
- * One link as the chat shows it: the chip of the workspace that the link
- * names, or a session chip when the chat read the session. A press on the
- * chip opens its page, when the mockups draw it. A link that the chat does
- * not find stays text: `source`, the link as the text has it, else `href`.
- * A message shows each of its links so, and the line of a stop from a
- * session shows the link of that session so.
+ * The link of a session, as the line of a stop from a session shows it:
+ * the chip of the session, or of its workspace while the chat did not read
+ * the session. A link that the chat does not find stays text: `source`,
+ * the link as the text has it, else `href`.
  */
 export function LinkText(props: { href: string; source?: string }) {
   const target = linkTarget(props.href, useChatWorkspaces())
   if (!target) return props.source ?? props.href
-  const to = linkPage(target)
-  return (
-    <LinkChip
-      opener={to ? (chip) => <ScreenLink {...chip} to={to} /> : undefined}
-      target={target}
-    />
-  )
+  return <TargetChip target={target} />
 }
 
 /**
@@ -168,10 +175,12 @@ export function LinkText(props: { href: string; source?: string }) {
  * and each link to a workspace of the org is a chip that opens the
  * workspace, when the mockups draw its screen. A link to a session that the
  * chat read is a session chip that opens the session. A Markdown link to a
- * workspace or a session shows as the chip alone. Other links stay plain
- * text, and so does a link in code. With `strong`, as in an answer, `**`
- * marks bold. In the text of a member, `mentions` makes each mention of a
- * file or a folder of the tree a chip that opens the file.
+ * workspace or a session shows as the chip alone. Each other `http` and
+ * `https` address is a link, as `WebLinkPart` says. Code that holds only an
+ * address shows it as a link in its code box, and other code stays code.
+ * With `strong`, as in an answer, `**` marks bold, and a Markdown link
+ * shows as its label. In the text of a member, `mentions` makes each
+ * mention of a file or a folder of the tree a chip that opens the file.
  *
  * `files` are the attached files of a sent message. A mention of the copy
  * path of one of them shows as the chip of that file, which opens the file
@@ -185,11 +194,12 @@ export function MessageText(props: {
   files?: readonly Attachment[]
   waits?: boolean
 }) {
+  const answer = props.strong === true
   const parts = textParts(props.text, true, props.mentions, props.files)
-  const runs = props.strong ? strongRuns(parts) : [{ strong: false, parts }]
+  const runs = answer ? strongRuns(parts) : [{ strong: false, parts }]
   return runs.map((run, index) => {
     const content = run.parts.map((part, inner) => (
-      <Part key={inner} part={part} waits={props.waits} />
+      <Part answer={answer} key={inner} part={part} waits={props.waits} />
     ))
     return run.strong ? (
       <strong key={index}>{content}</strong>

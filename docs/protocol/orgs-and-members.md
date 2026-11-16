@@ -47,12 +47,14 @@ decision number names a dated record, as
   it gives no link when no account has the app, and it cannot install the
   app on another account.
 - The org rail and General settings show the saved initials.
-- Use of the product is free. The app and the site have no plans, no
-  prices, no billing, and no checkout. The app has no limits of its own on
-  workspaces, hours, or members.
-- Reason: on 13 November 2026, the user chose not to release Conductive
-  commercially. So the paid plans with included cloud hours, the billing,
-  and the pricing page were dropped.
+- Use of the product is free until billing starts, as
+  [Before billing starts](pricing.md#before-billing-starts) says. Until
+  then, the app has no billing, and no limits of its own on workspaces,
+  hours, or members.
+- When billing starts, each org has a plan, and the org pays for its
+  members and its cloud hours (decision 250).
+  [The plans](pricing.md#the-plans) give the price, the hours, and the
+  limits of each plan.
 - A waitlist stands in front of the app (decision 160). Except during
   [open sign-up](sign-ups.md#open-sign-up), a new account waits for app
   access, as [Waitlist](waitlist.md) says (decision 230).
@@ -118,6 +120,13 @@ decision number names a dated record, as
   Move section up, Move section down, New section, and Delete section, in
   that order. The first section has no Move section up, and the last
   section has no Move section down.
+- New section opens the New section dialog, which asks for the name of
+  the section. New section in the menu of a section puts the new section
+  directly below that section. New section in the command palette puts
+  it at the end of the list. When the section of the menu is gone at the
+  create, the new section goes at the end. Reason: the user asked on 16
+  November 2026 that a new section show where the user made it, because
+  a field at the end of the list was far from the menu.
 - The order of the sections is the same for each member of the org. A
   collapse is for the member only. Reason: a section is a grouping that
   the people of the org define, as its name is.

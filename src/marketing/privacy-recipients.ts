@@ -12,8 +12,9 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
       text`Cloudflare runs ${productName} and stores its data.
         If a workspace has no name, Cloudflare's AI model service can
         write a short name from the text of its first message.
-        For that request, ${productName} replaces each path mention of a file
-        attached to that message with the file's original name. The model
+        For that request, ${productName} removes each path mention of an
+        image attached to that message. It replaces each path mention of
+        another attached file with the file's original name. The model
         requests and answers of the agents pass through ${productName} on
         Cloudflare. Agent settings
         in the repository can send these requests to another address
@@ -23,7 +24,11 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         a cloud computer carries its author's GitHub display name or login
         and GitHub no-reply address. That address contains the author's GitHub
         user ID and login. GitHub and each reader of the repository see
-        that name and address. The Mac app also checks
+        that name and address. Each workspace branch name starts with the
+        GitHub login of the workspace owner. It can also hold a short form
+        of the workspace name, which can come from the text of the first
+        message. A push sends the branch name to GitHub, and each reader of
+        the repository sees it. The Mac app also checks
         GitHub for updates and downloads new versions. These requests
         send your network address to GitHub.`,
       text`Resend sends the org invitations, approval emails, and feedback
@@ -61,8 +66,9 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         its sender. They get the
         names of the workspace branch and the branch that a pull request
         targets. Later messages give the current names when either branch
-        changes. Each workspace branch starts with the GitHub login of the
-        workspace owner when that branch is created. The agents send them
+        changes. Each workspace branch name starts with the GitHub login of
+        the workspace owner. It can also hold a short form of the workspace
+        name. The agents send them
         through ${productName}, which adds the agent login.
         Agent settings in the repository can send them to another address
         instead. Each session uses the

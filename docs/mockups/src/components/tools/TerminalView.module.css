@@ -24,6 +24,34 @@
   min-height: 1.6em;
 }
 
+/* A shared size: lines break only where the shared size breaks them. */
+.fixed {
+  white-space: pre;
+  overflow-wrap: normal;
+}
+
+/* The shared size is larger than the panel, so the text gets smaller. */
+.larger {
+  font-size: 9px;
+}
+
+/*
+ * The shared size is smaller than the panel, so empty space follows it. The
+ * newest lines stay at the bottom, as on a terminal.
+ */
+.smaller {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  justify-content: flex-end;
+  box-sizing: content-box;
+  width: 36ch;
+  height: calc(1.6em * 12);
+  overflow: hidden;
+  border-right: 1px solid var(--ui-border);
+  border-bottom: 1px solid var(--ui-border);
+}
+
 .prompt {
   color: var(--ui-term-prompt);
   font-weight: 600;
@@ -48,6 +76,33 @@
 
 .error {
   color: var(--ui-rose);
+}
+
+/* A link under the mouse pointer, with its hint below it. */
+.hovered {
+  position: relative;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.hint {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 1;
+  padding: 2px 6px;
+  border: 1px solid var(--ui-border);
+  border-radius: 4px;
+  background: var(--ui-bar);
+  color: var(--ui-ink);
+  font-family: var(--ui-font-sans);
+  font-size: var(--ui-text-xs);
+  font-weight: 400;
+  line-height: 1.5;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px var(--ui-shadow);
+  pointer-events: none;
 }
 
 .cursor {
