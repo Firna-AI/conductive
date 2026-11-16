@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.19.0](https://github.com/Firna-AI/conductive/compare/v0.18.0...v0.19.0) (2026-11-16)
+
+
+### Features
+
+* **marketing:** bring back the pricing page and the billing plans ([#389](https://github.com/Firna-AI/conductive/issues/389)) ([f9e7385](https://github.com/Firna-AI/conductive/commit/f9e7385e74a0f1c63336fc0fa1ad03551e4cadf3))
+* **operator:** show the last active time of each user ([#398](https://github.com/Firna-AI/conductive/issues/398)) ([196da17](https://github.com/Firna-AI/conductive/commit/196da1706f4345ba1035f25189f404bd77f40803))
+* **sections:** name a new section in a dialog, below its section ([#392](https://github.com/Firna-AI/conductive/issues/392)) ([078cd6d](https://github.com/Firna-AI/conductive/commit/078cd6d6374209e3c70c56ec197cbd8e83664a24))
+* **terminal:** open terminal links with Cmd+click or a tap ([#366](https://github.com/Firna-AI/conductive/issues/366)) ([0cb4fca](https://github.com/Firna-AI/conductive/commit/0cb4fca25b1734b22a418151b5269cf86e855c6e))
+* **workspaces:** name a new branch after its workspace title ([#396](https://github.com/Firna-AI/conductive/issues/396)) ([30e00d3](https://github.com/Firna-AI/conductive/commit/30e00d326143f388b0ba5195b4719b3035ebe108))
+
+
+### Bug Fixes
+
+* **chat:** leave attached image names out of titles ([#395](https://github.com/Firna-AI/conductive/issues/395)) ([e5ed12b](https://github.com/Firna-AI/conductive/commit/e5ed12bb0e824854d9a6f189ec748fd3f468eeb4))
+* **relay:** keep the provider's connection open after each reply ([#394](https://github.com/Firna-AI/conductive/issues/394)) ([14bc9d6](https://github.com/Firna-AI/conductive/commit/14bc9d6b03166d9c5b576a4550ae9ef2429271a0))
+
+
+### Performance Improvements
+
+* **images:** skip the parts of the software step that the image holds ([#390](https://github.com/Firna-AI/conductive/issues/390)) ([4373e14](https://github.com/Firna-AI/conductive/commit/4373e1450b6d31cd09af2b44674c9a4d49dcb44d))
+
 ## [0.18.0](https://github.com/Firna-AI/conductive/compare/v0.17.0...v0.18.0) (2026-11-16)
 
 
