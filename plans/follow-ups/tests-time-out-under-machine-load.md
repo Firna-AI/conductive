@@ -64,6 +64,14 @@
   `worker/lifecycle/workspace-runtime.test.ts:47` timed out at its own 20-second limit, at about 21 s.
   It did so in 2 of 2 runs on the branch, and in 1 of 1 run on its merge base `c194159bf`.
   The branch changes no line of that test. Machine load is the suspected source.
+- On 16 November 2026, the main merge into `calummoore/lima-gc9c` ran the complete gate without another test run beside it.
+  The suite passed 3,310 tests and reported two lifecycle timeouts:
+  - `worker/lifecycle/ownership-maintenance.test.ts`, "retries a revoked-token stop after active ownership and preserves maintenance before a fresh resume": `Error: Test timed out in 15000ms.`
+  - `worker/lifecycle/disk-retention-time-limit.test.ts`, "ends an unready retention restart at its original deadline through phase changes, reconstruction, and stop retries, then permits user resume": `Error: Test timed out in 15000ms.`
+  Both files match `main` at `eedd836791eaf1793563a4fc4ad207398cdc60a1`.
+  Both files then passed unchanged together: six tests, no failures or skips.
+  The same rerun included the marketing site file, which failed setup with the separate known cross-device rename error.
+  Machine contention during native fixture work is suspected. The blocked await and the cause are not established.
 - On 16 November 2026, the merge of `origin/main` at `a20746b99` into
   `calummoore/quito-oqn7` passed every static check and 54 targeted endpoint
   tests. The local complete gate was interrupted after repeated timeouts

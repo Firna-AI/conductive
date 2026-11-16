@@ -179,6 +179,7 @@ describe('session parts', () => {
             id: 'a',
             title: 'Address autocomplete',
             name: 'Address autocomplete',
+            running: false,
             selected: true,
           },
         ]}
