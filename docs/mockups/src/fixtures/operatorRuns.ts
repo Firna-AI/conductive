@@ -15,7 +15,7 @@ import type { TargetStatus } from './operatorDirectory'
 import type { ActivityStatus } from './workspaces'
 
 /** The states of a workspace whose cloud computer runs. */
-export type RunningState = Extract<
+type RunningState = Extract<
   ActivityStatus,
   'starting' | 'ready' | 'working' | 'unread' | 'input'
 >

@@ -194,6 +194,17 @@ Contract owners:
     words and the run length format. It imports no fixture, so the app
     uses it too, as it uses `operatorCopy.ts`.
 
+- Design calls from the app section, 16 November 2026:
+  - The run length is the read time of the reply minus `runningSince`,
+    and the last activity uses the same read time. Reason: both then agree
+    with "Updated at" in the header, and a render stays stable.
+  - A row without a last activity shows "Unknown" as muted text. Reason:
+    the Waitlist tab and the user page already use that word for an
+    unknown time. Each start saves a last activity, so the case is rare.
+  - Copy shows the toast of Copy of an invite code. A long cloud computer
+    ID ends in an ellipsis, and Copy copies the whole ID. The provider's
+    IDs, such as `bx_23456789`, fit the column.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -263,16 +274,16 @@ Tags: ui
 
 Depends on: 3
 
-- [ ] Add the section to `src/shell/operator/`, as the mockup shows. Keep
+- [x] Add the section to `src/shell/operator/`, as the mockup shows. Keep
       each file under 300 lines. Take its words and the run length format
       from `longRunsCopy.ts` in `docs/mockups/src/components/operator/`.
-- [ ] Keep the place of the section in the loading view of the Overview,
+- [x] Keep the place of the section in the loading view of the Overview,
       with 10 placeholder rows, as `app/operator/error/loading` shows.
-- [ ] Add tests beside the code for the rows, the links, Copy, the empty
+- [x] Add tests beside the code for the rows, the links, Copy, the empty
       list, the loading rows, and the phone layout. Test the mark of a
       suspended owner on a desktop and on a phone. Test the run length
       format for seconds, minutes, hours, and days.
-- [ ] Check the section in a browser with `npm run dev`, on a desktop and
+- [x] Check the section in a browser with `npm run dev`, on a desktop and
       a phone width.
 
 ## Milestone 5: Verification, commit, review, and pull request
