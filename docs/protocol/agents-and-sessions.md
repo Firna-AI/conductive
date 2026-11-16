@@ -266,11 +266,20 @@ says.
 - A session link opens its workspace and shows that session. The address
   then becomes the link of the workspace. Reason: the session tabs keep
   their behaviour, and the address does not follow the shown tab.
-- A link to a closed or an unknown session opens the page of its
-  workspace, as a workspace link does. When that workspace already shows,
-  its shown tab stays. The link reopens no session.
-- Reason: the members share the sessions of a workspace, so a reopen would
-  show the tab again to every member.
+- A link to a closed session reopens that session and shows it, as an
+  entry of the session history does. In a read-only workspace, the link
+  shows the stored chat of the session as a tab in this browser only, and
+  reopens nothing. The user chose this on 13 November 2026.
+- Reason: a press on a session chip must show its session, and agents
+  close the sessions that they start when the work ends. A link that
+  opens only the workspace of a closed session was rejected, because the
+  press then shows nothing. A reopen only for a press on a chip was
+  rejected, so that each session link works the same way.
+- A reopen shows the tab again to every member, because the members share
+  the sessions of a workspace.
+- A link to an unknown session opens the page of its workspace, as a
+  workspace link does. When that workspace already shows, its shown tab
+  stays.
 - A session link in chat text shows as a session chip, as
   [Session chips](workspace-links.md#session-chips) says.
 - The agent tools give the link of each session that they name, as
