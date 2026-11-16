@@ -240,7 +240,9 @@ An unset view now uses the dialog, so only accounts made after this migration ge
 `202611161200_user_last_active.sql` adds the nullable `users.last_active_at` column.
 It holds the time of the last new workspace or chat message of the person, as [the Worker README](../worker/README.md#last-active-time) says.
 The migration fills each existing user from the creation time of the newest workspace that the person created in the app, from `workspace_runtime.created_by_user_id`.
-It leaves out each workspace of an agent tool, which has a `created_by_workspace_id`, and each workspace of a routine run, by `routine_runs.workspace_id` or by its first message ID.
+It counts only a workspace whose first message ID has the 36-character form of `crypto.randomUUID()`, which only the app makes.
+Routine runs and agent tools make 43-character IDs, and the ID form stays after a routine delete removes its runs.
+As a second guard, it also leaves out each workspace with a `created_by_workspace_id`, and each workspace of a routine run, by `routine_runs.workspace_id` or by its first message ID.
 It also leaves out each workspace after the end of the last sign-in session, 7 days after `users.updated_at`, because no session of the person could create it.
 Chat messages live in Durable Object storage, so the migration cannot read them.
 A user with no such workspace keeps `NULL`.

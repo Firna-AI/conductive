@@ -98,6 +98,9 @@ otherwise.
   Changed on 16 November 2026 after review finding 1: the first backfill
   took the newest owned workspace, also one of a routine, an agent tool,
   or another member.
+  Changed again on 16 November 2026 after review finding 6: a workspace
+  counts only when its first message ID has the 36-character form that
+  only the app makes, because a routine delete removes its run rows.
 - **Signed-in write.** The write takes the signed-in person that the
   session gate returns, with the sign-in session ID, and writes only
   while that session exists. Reason: shared code of agent tools and
