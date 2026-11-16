@@ -1,0 +1,22 @@
+.anchor {
+  display: flex;
+  position: relative;
+  flex-shrink: 0;
+}
+
+/* The glyph and the words of the state, as text or inside the button. */
+.state {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 7px;
+  color: var(--ui-ink2);
+  font-size: var(--ui-text-sm);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.chevron {
+  flex-shrink: 0;
+  color: var(--ui-muted);
+}
