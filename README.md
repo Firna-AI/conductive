@@ -20,9 +20,9 @@ Today the repository holds:
 - the Mac app in `desktop/`, with signed packages and update support, as
   [Mac app](#mac-app) says
 
-A test deployment runs at `conductive.build`. Each push to `main` deploys
-it, as [Automatic deploys](docs/automatic-deploys.md) says. The project is
-not in production yet. [Deployment inputs](docs/deployment.md) lists what a
+The production deployment runs at `conductive.build`. Each push to `main`
+deploys it, as [Automatic deploys](docs/automatic-deploys.md) says. The
+project is in production. [Deployment inputs](docs/deployment.md) lists what a
 deployment needs.
 
 ## Features

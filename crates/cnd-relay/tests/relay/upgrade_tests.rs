@@ -156,10 +156,12 @@ async fn marks_refused_upgrades_and_gateway_errors_after_target_stops() -> TestR
     assert!(refused.starts_with("HTTP/1.1 403"));
     assert!(refused.ends_with("App refused the upgrade."));
     assert!(refused.contains("x-conductive-relay: 1\r\n"));
+    assert!(refused.contains("connection: close\r\n"), "{refused}");
     served.await??;
     let stopped = relay.send(&headers).await?;
     assert!(stopped.starts_with("HTTP/1.1 502"));
     assert!(stopped.ends_with("The server did not answer."));
     assert!(stopped.contains("x-conductive-relay: 1\r\n"));
+    assert!(stopped.contains("connection: close\r\n"), "{stopped}");
     Ok(())
 }

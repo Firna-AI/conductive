@@ -6,7 +6,7 @@ settings the Worker gives to each workspace sandbox.
 [Architecture](architecture.md) describes the Worker and its hostnames.
 The [Worker README](../worker/README.md#routes) lists the routes that the
 Worker serves now. [Automatic deploys](automatic-deploys.md) says how each
-push to `main` deploys the test deployment. Two linked pages hold the
+push to `main` deploys the production deployment. Two linked pages hold the
 [model inputs](deployment/models.md) and the
 [Conductive releases and software image](deployment/runner-archive.md).
 

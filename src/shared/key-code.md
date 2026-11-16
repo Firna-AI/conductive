@@ -55,10 +55,11 @@ page.
 - [Attachment mentions](attachment-mentions.ts): `attachmentForMention`
   finds the attached file that a file mention of the message names.
   `textWithAttachmentNames` puts the original name of each such file in
-  place of its mention. `hasOwnWords` says whether the text holds more than
-  spaces and those mentions.
-- [Session title](session-title.ts): `sessionTitleFrom` puts in those names
-  before it takes the first line and cuts it to 60 code points. It gives
+  place of its mention. `titleSourceText` does the same for titles, but it
+  leaves out each mention of an attached image. `hasOwnWords` says whether
+  the text holds more than spaces and those mentions.
+- [Session title](session-title.ts): `sessionTitleFrom` applies
+  `titleSourceText` before it takes the first line and cuts it to 60 code points. It gives
   null when the text holds nothing but those mentions. `modelTitleFrom`
   first changes each underscore of a model answer to a space.
 - [Port reports](ports.ts) carry sorted listening ports and their safe labels.
