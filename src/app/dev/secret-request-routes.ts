@@ -1,5 +1,9 @@
 import type { MessageSender } from '../../shared/generated/MessageSender'
 import {
+  lateAnswerParts,
+  lateAnswerText,
+} from '../../shared/secret-late-answer'
+import {
   secretAnswerPath,
   secretRequestsPath,
   workspaceSecretValuePath,
@@ -60,16 +64,7 @@ function grantsOf(request: SecretRequest): SecretRunGrant[] {
 /** The text that the Worker gives the agent for a late Allow. */
 function noticeText(request: SecretRequest, member: MessageSender): string {
   const name = member.displayName ?? member.githubLogin
-  const names = request.secrets.map((secret) => secret.name).join(', ')
-  const scope =
-    request.lifetime === '15-minutes'
-      ? 'for 15 minutes in this session'
-      : request.lifetime === 'workspace'
-        ? 'in this workspace'
-        : request.lifetime === 'save'
-          ? 'as saved secrets, approved for this session'
-          : 'in this session'
-  return `App: ${name} made ${names} available ${scope}.`
+  return lateAnswerText(lateAnswerParts(request, name, 'this org'))
 }
 
 /** Keeps a value for the workspace, or a new secret of the org for Save. */

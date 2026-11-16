@@ -3,6 +3,10 @@ import type {
   SecretNoticeFailure,
 } from '../../src/shared/secret-requests'
 import type { UserMessage } from '../../src/shared/generated/UserMessage'
+import {
+  lateAnswerParts,
+  lateAnswerText,
+} from '../../src/shared/secret-late-answer'
 import { readUser } from '../data/users'
 import { memberSender } from '../tools/store'
 import type { AppEnv } from '../env'
@@ -62,16 +66,12 @@ export async function acceptSecretNotice(
     request.answeredBy?.displayName ??
     request.answeredBy?.githubLogin ??
     'A member'
-  const names = request.secrets.map((secret) => secret.name).join(', ')
-  const scope =
-    request.lifetime === '15-minutes'
-      ? 'for 15 minutes in this session'
-      : request.lifetime === 'workspace'
-        ? 'in this workspace'
-        : request.lifetime === 'save'
-          ? 'as saved secrets, approved for this session'
-          : 'in this session'
-  const text = `App: ${name} made ${names} available ${scope}.`
+  const org = await env.DB.prepare('SELECT name FROM orgs WHERE id = ?')
+    .bind(record.orgId)
+    .first<{ name: string }>()
+  const text = lateAnswerText(
+    lateAnswerParts(request, name, org?.name ?? 'this org'),
+  )
   return operation.change(async (view) => {
     const session = await view.session(source.id)
     if (!session || session.closedAt !== null)

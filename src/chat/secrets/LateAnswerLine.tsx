@@ -2,7 +2,7 @@ import { Fragment } from 'react'
 import { KeyRound } from 'lucide-react'
 import styles from '../../../docs/mockups/src/components/chat/LateAnswerLine.module.css'
 import lineStyles from '../../../docs/mockups/src/components/chat/LinkedLine.module.css'
-import type { LateAnswerPart } from './secret-words'
+import type { LateAnswerPart } from '../../shared/secret-late-answer'
 
 /**
  * The line of a late Allow, at the place where its turn starts (secrets

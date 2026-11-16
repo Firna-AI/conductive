@@ -149,6 +149,8 @@ decision number names a decision of the change that adds
   what the answer gives. It never holds a value. It is not a message of
   the member who answered.
 - The agent gets the same text, with the name of the member who answered.
+  One shared function writes these words for the chat and for the agent,
+  so the two texts cannot drift apart.
 - The line starts a turn in that session. The turn acts for the sender of
   the turn that asked, under the login rules of that sender. So its GitHub
   token, its Mac requests, and the writes of its workspace tools follow
@@ -160,6 +162,12 @@ decision number names a decision of the change that adds
   gone, and a sender who left the org.
 - The late request then says that the agent learns of the answer at the
   next message. The grant of the answer stays.
+- When the login of the starter is gone, the late request instead names
+  the action that gets the agent going again, such as "The agent learns of
+  it when Cal connects Claude again."
+- Reason: a message of another member then opens a new session, as
+  [Messages](messages-and-attachments.md#messages) says, so the next
+  message does not reach this agent.
 - Reason: the answer then acts as an answer in time does, and the share
   setting of each login keeps its rule.
 - A turn on the login of the starter, also while the starter does not

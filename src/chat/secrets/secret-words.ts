@@ -4,10 +4,15 @@ import {
   endedLine,
   grantNote,
   lateAnswerNote,
+  reconnectNote,
   lifetimeHint,
   lifetimeLabels,
 } from '../../../docs/mockups/src/components/chat/secretRunCopy'
 import { personName } from '../../app/people'
+import {
+  lateAnswerParts as sharedLateAnswerParts,
+  type LateAnswerPart,
+} from '../../shared/secret-late-answer'
 import type {
   SecretRequest,
   SecretRequestEnd,
@@ -53,13 +58,6 @@ export function lifetimeLine(
   org: string,
 ): string {
   return lifetimeHint(mockupLifetimes[lifetime], names, org)
-}
-
-/** The names of a request that the org has no secret for. */
-export function missingNames(request: SecretRequest): string[] {
-  return request.secrets
-    .filter((secret) => secret.secretId === null)
-    .map((secret) => secret.name)
 }
 
 /**
@@ -109,6 +107,7 @@ export function endLine(
   request: SecretRequest,
   viewerId: string | null,
   org: string,
+  starter: { person: MessageSender | null; agent: string } | null = null,
 ): string | null {
   if (request.state === 'not-answered') {
     return request.endedBy ? endedWords(request.endedBy, org) : null
@@ -121,6 +120,10 @@ export function endLine(
   if (notice?.state === 'sent') return lateAnswerNote(who, 'turn')
   if (notice?.state === 'not-sent' && notice.reason !== 'login-unavailable') {
     return lateAnswerNote(who, 'next-message')
+  }
+  if (notice?.state === 'not-sent' && starter) {
+    const person = whoOf(starter.person, viewerId).object
+    return reconnectNote(who, person, starter.agent)
   }
   return `${who} answered.`
 }
@@ -190,52 +193,18 @@ export function runNote(
     .join(' · ')
 }
 
-/** A part of the line of a late answer: words, then the names in code. */
-export interface LateAnswerPart {
-  lead: string
-  names: readonly string[]
-  tail: string
-}
-
 /**
- * The line of a late Allow (secrets decision 10 B), with the words of
- * `lateAnswerWords` of the mockups: the member who answered, each secret,
- * and what the answer gives, never a value. A request that also names
- * secrets of the org says that they are allowed for the session too.
+ * The line of a late Allow, with "You" for the person signed in. The
+ * shared words are the text that the agent gets too.
  */
 export function lateAnswerParts(
   request: SecretRequest,
   viewerId: string | null,
   org: string,
 ): LateAnswerPart[] {
-  const who = whoOf(request.answeredBy, viewerId).subject
-  const all = request.secrets.map((secret) => secret.name)
-  const missing = missingNames(request)
-  const stored = all.filter((name) => !missing.includes(name))
-  const also = {
-    lead: `${who} also allowed`,
-    names: stored,
-    tail: 'for this session.',
-  }
-  switch (request.lifetime) {
-    case null:
-      return [{ lead: `${who} allowed`, names: all, tail: 'for this session.' }]
-    case '15-minutes':
-      return [
-        { lead: `${who} gave`, names: missing, tail: 'for 15 minutes.' },
-        ...(stored.length > 0 ? [also] : []),
-      ]
-    case 'workspace':
-      return [
-        { lead: `${who} gave`, names: missing, tail: 'for this workspace.' },
-        ...(stored.length > 0 ? [also] : []),
-      ]
-    case 'save': {
-      const kind = missing.length === 1 ? 'a secret' : 'secrets'
-      return [
-        { lead: `${who} saved`, names: missing, tail: `as ${kind} of ${org}.` },
-        ...(stored.length > 0 ? [also] : []),
-      ]
-    }
-  }
+  return sharedLateAnswerParts(
+    request,
+    whoOf(request.answeredBy, viewerId).subject,
+    org,
+  )
 }

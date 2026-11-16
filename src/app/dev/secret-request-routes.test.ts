@@ -122,7 +122,7 @@ describe('the secret requests of the dev fake', () => {
         sessionId: session,
         turnId,
         requestId: 'dev-late-value',
-        text: `App: ${who} made MAPBOX_TOKEN available in this workspace.`,
+        text: `${who} gave MAPBOX_TOKEN for this workspace.`,
       },
       kept: [['MAPBOX_TOKEN', fake.member]],
       removed: [],

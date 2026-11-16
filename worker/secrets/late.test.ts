@@ -74,7 +74,7 @@ it('ends the call at 90 seconds, keeps needs input and delivers a late allow int
     sessionId: 'first-session',
     turnId: 'first-turn',
     requestId: pending.request.id,
-    text: 'App: member made TOKEN available in this session.',
+    text: 'member allowed TOKEN for this session.',
   })
   expect(JSON.stringify(events)).not.toContain('late-value')
 })
@@ -108,7 +108,7 @@ it('turns an unfinished request late at turn end and starts its notice for the o
     const command = record(await active.runner.inbox.next())
     if (command.type !== 'turn') continue
     expect(record(command.message).text).toBe(
-      'App: member made TOKEN available in this workspace.',
+      'member gave TOKEN for this workspace.',
     )
     break
   }

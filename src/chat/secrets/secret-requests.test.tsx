@@ -89,7 +89,7 @@ describe('secret requests in the chat', () => {
     })
   })
 
-  test('a late request says that the agent stopped waiting, a late answer says who answered and what followed, with the line of the app, and an ended request says what ended it', async () => {
+  test('a late request says that the agent stopped waiting, a late answer says who answered and what followed, also when the login of the starter is gone, with the line of the app, and an ended request says what ended it', async () => {
     const asked = { turnId: SECRET_TURN }
     const open = request('open', asks.database, inWork, {
       ...late(inWork),
@@ -103,6 +103,14 @@ describe('secret requests in the chat', () => {
       updatedAt: start + 90 * second,
       notice: { state: 'not-sent', reason: 'login-not-shared' },
     })
+    const gone = request('gone', asks.preview, inWork + 150, {
+      ...asked,
+      state: 'allowed',
+      late: true,
+      answeredBy: priya,
+      updatedAt: start + 91 * second,
+      notice: { state: 'not-sent', reason: 'login-unavailable' },
+    })
     const ended = request('ended', asks.mapbox, inWork + 200, {
       ...late(inWork + 200),
       ...asked,
@@ -113,6 +121,7 @@ describe('secret requests in the chat', () => {
       events: secretTurn(start, [
         updated(open),
         updated(unshared),
+        updated(gone),
         updated(ended),
       ]),
     })
@@ -123,6 +132,7 @@ describe('secret requests in the chat', () => {
       open: textOfCard(page, 'Request for PROD_DATABASE_URL'),
       buttons: buttonsOf(page, 'Request for PROD_DATABASE_URL'),
       unshared: textOfCard(page, 'Request for VERCEL_TOKEN'),
+      gone: textOfCard(page, 'Request for VERCEL_TOKEN, MAPBOX_TOKEN'),
       ended: textOfCard(page, 'Request for MAPBOX_TOKEN'),
       given: textOfCard(results, 'Request for MAPBOX_TOKEN'),
       line: textOf(results.innerHTML),
@@ -133,6 +143,9 @@ describe('secret requests in the chat', () => {
       buttons: ['Deny', 'Allow for this session'],
       unshared: expect.stringMatching(
         /^VERCEL_TOKEN Allowed for this session .* Priya Raman answered\. The agent learns of it at the next message\.$/,
+      ),
+      gone: expect.stringMatching(
+        /Priya Raman answered\. The agent learns of it when you connect Claude again\.$/,
       ),
       ended: expect.stringMatching(
         /^MAPBOX_TOKEN Not answered .* It ended when the workspace was archived\.$/,

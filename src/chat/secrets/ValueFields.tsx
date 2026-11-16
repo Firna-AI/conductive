@@ -11,7 +11,8 @@ import type {
   SecretRequest,
   SecretValueLifetime,
 } from '../../shared/secret-requests'
-import { lifetimeChoices, lifetimeLine, missingNames } from './secret-words'
+import { missingNames } from '../../shared/secret-late-answer'
+import { lifetimeChoices, lifetimeLine } from './secret-words'
 
 /** The values that a member types for a request, and how long they last. */
 export interface ValueDraft {

@@ -228,6 +228,17 @@ The second group settle items that the mockups showed.
   My call of 14 November 2026.
 - Replace changes the description too, with the rights of secrets
   decision 3 B.
+- One shared function, `src/shared/secret-late-answer.ts`, writes the
+  words of a late answer for the chat line and for the agent. Reason: the
+  protocol says that the agent gets the same text, and two copies had
+  drifted apart. My call of 16 November 2026.
+- The protocol doc now states the gone-login line of the late request,
+  which the call of 14 November chose and the doc had missed. My call of
+  16 November 2026.
+- The chat reads secret state only from the workspace events. One region
+  above the composer holds the waiting Mac commands and secret requests,
+  oldest first. A failed answer keeps the typed value. Calls of the UI
+  agent on 16 November 2026, which the orchestrator kept.
 - The reveal route is a POST with the Origin check, because it writes a
   record. My call of 14 November 2026.
 - After a Replace of the value, the row no longer shows the last reveal
@@ -954,7 +965,7 @@ Tags: ui
 
 Depends on: 4, 6
 
-- [ ] Build the request card, the late request widget, and the chat
+- [x] Build the request card, the late request widget, and the chat
       results from the mockup.
 - [x] Add the "Values for this workspace" group, with Remove, to the
       Capabilities control of a workspace. It reads `workspaceValues`

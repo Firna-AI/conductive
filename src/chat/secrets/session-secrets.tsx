@@ -11,6 +11,7 @@ import { isOpen } from './secret-snapshot'
 import { lateAnswerParts } from './secret-words'
 import { SecretRequestCard } from './SecretRequestCard'
 import { SecretRunCard } from './SecretRunCard'
+import { agentNames } from '../../shell/account/labels'
 
 /** A part that waits just above the composer, in the order of its time. */
 export interface WaitingItem {
@@ -52,6 +53,12 @@ export function sessionSecrets(
   const { requests, runs, notices, answers } = snapshot.secrets
   const viewerId = snapshot.account?.user.id ?? null
   const org = snapshot.org?.name ?? 'This org'
+  const session = [...snapshot.sessions, ...snapshot.history].find(
+    (item) => item.id === sessionId,
+  )
+  const starter = session
+    ? { person: session.startedBy, agent: agentNames[session.choice.agent] }
+    : null
   const card = (request: SecretRequest) => (
     <SecretRequestCard
       answering={answers[request.id] ?? null}
@@ -60,6 +67,7 @@ export function sessionSecrets(
       onAnswer={(answer) => props.onAnswer(request.id, answer)}
       org={org}
       request={request}
+      starter={starter}
       viewerId={viewerId}
     />
   )
