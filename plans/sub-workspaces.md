@@ -810,20 +810,20 @@ Depends on: 3
 The new variables of the cloud computer, the lines of the agent
 instructions, and the new fields of the Rust workspace tools.
 
-- [ ] Give the five new variables at each start of the cloud computer, in
+- [x] Give the five new variables at each start of the cloud computer, in
       `worker/lifecycle/sandbox-environment.ts`. Update the variable table
       in `image/start.md`.
-- [ ] Read the variables in `crates/cnd-runner/src/config.rs`, and add the
+- [x] Read the variables in `crates/cnd-runner/src/config.rs`, and add the
       lines of the design in `crates/cnd-runner/src/engine/instructions.rs`.
       Warn and leave the lines out when the variables are missing. Update
       `runner/agent-input.md`, `runner/configuration.md`, and the README of
       `cnd-runner`.
-- [ ] Add `parentId` to `create_workspace` and `list_workspaces` in
+- [x] Add `parentId` to `create_workspace` and `list_workspaces` in
       `crates/cnd-tools/`: the MCP schema, the CLI options, and the help.
       Keep the new reply fields.
-- [ ] Update `tools/README.md`, `tools/calls.md`, and the README of
+- [x] Update `tools/README.md`, `tools/calls.md`, and the README of
       `cnd-tools`.
-- [ ] Add the tests: the instructions of a top-level workspace and of a
+- [x] Add the tests: the instructions of a top-level workspace and of a
       sub-workspace, a runner without the variables, and the new fields of
       the MCP server and the CLI.
 

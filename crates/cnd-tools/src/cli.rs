@@ -107,3 +107,7 @@ mod cli_tests;
 #[cfg(test)]
 #[path = "_tests_/mac_adapter_tests.rs"]
 mod mac_adapter_tests;
+
+#[cfg(test)]
+#[path = "_tests_/workspace_tests.rs"]
+mod workspace_tests;

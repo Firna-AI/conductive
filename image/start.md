@@ -12,6 +12,11 @@ each resume, together with the org's env vars:
 | --- | --- |
 | `WORKSPACE_TOKEN` | The workspace token. |
 | `CONDUCTIVE_WORKSPACE_ID` | The workspace ID. |
+| `CONDUCTIVE_WORKSPACE_LINK` | The canonical workspace link, from the app origin and the workspace record. |
+| `CONDUCTIVE_WORKSPACE_DEPTH` | The number of parent links above the workspace, as a decimal number. A top-level workspace has depth `0`. |
+| `CONDUCTIVE_WORKSPACE_MAX_DEPTH` | The deepest permitted depth, from `MAX_WORKSPACE_DEPTH`. |
+| `CONDUCTIVE_PARENT_WORKSPACE_ID` | The direct parent's workspace ID, for a sub-workspace only. |
+| `CONDUCTIVE_PARENT_WORKSPACE_LINK` | The direct parent's canonical workspace link, for a sub-workspace only. |
 | `CONDUCTIVE_MACHINE_ORIGIN` | The origin of the machine hostname. |
 | `CONDUCTIVE_DEFAULT_BRANCH` | The workspace base branch, with the repository default as a fallback. |
 | `CONDUCTIVE_WORKSPACE_BRANCH` | The workspace branch that the app tracks, from the Worker's record of the workspace. |

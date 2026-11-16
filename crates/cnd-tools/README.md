@@ -16,6 +16,14 @@ safe text on stderr and exit status 1. Mac command results remain JSON;
 only a completed command with exit code 0 returns success. MCP returns the
 same result as text and structured content, with the matching `isError`.
 
+Workspace create and list accept `--parent ID`, or `parentId` through MCP.
+Create nests a workspace under that parent and uses the parent's section.
+List selects only the direct sub-workspaces of that parent.
+The create help describes the depth limit and sibling advice.
+Both adapters preserve `parentId` in workspace records and list entries.
+Workspace details also keep `parent`, `depth`, and `children`.
+Create and move replies keep their optional `notice`.
+
 The server negotiates MCP `2025-11-25`. It requires initialization before
 tool calls, ignores notifications, answers ping while HTTP calls wait,
 and finishes outstanding replies before it exits at EOF.
@@ -38,6 +46,7 @@ Run from the repository root:
 
 ```sh
 cargo run -p cnd-cli -- workspaces list --limit 20
+cargo run -p cnd-cli -- workspaces create --repository repo-id --parent workspace-id --message 'Build the subtask.'
 cargo run -p cnd-cli -- sessions send --session session-id --message-file task.md
 cargo run -p cnd-cli -- mcp
 ```
@@ -74,3 +83,4 @@ Unit tests replace HTTP, file/stdin reads, UUIDs, polling, and output with
 - [Agent tools](../../docs/protocol/agent-tools.md)
 - [Workspace commands](../../tools/README.md)
 - [Runner registration](../../runner/agent-tools.md)
+- [Sub-workspaces](../../docs/protocol/sub-workspaces.md)
