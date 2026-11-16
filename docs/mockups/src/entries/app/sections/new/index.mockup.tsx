@@ -7,8 +7,11 @@ const newSectionSchema = {
   additionalProperties: false,
   required: ['from'],
   properties: {
-    /** The menu of Checkout or the command palette, which opened the dialog. */
-    from: { enum: ['menu', 'palette'] },
+    /**
+     * The dialog from the menu of Checkout, the same dialog after its
+     * create failed, or the dialog from the command palette.
+     */
+    from: { enum: ['menu', 'failed', 'palette'] },
   },
 } as const
 
@@ -24,14 +27,19 @@ export const sectionsNew = defineScreen({
   render: (props, context) => (
     <WorkspaceListScreen
       overlay={
-        props.from === 'menu' ? (
+        props.from === 'palette' ? (
+          <NewSectionDialog viewport={context.viewport} />
+        ) : (
           <NewSectionDialog
             below="Checkout"
+            failed={
+              props.from === 'failed'
+                ? 'The app could not reach the server. Try again.'
+                : undefined
+            }
             name="Payments"
             viewport={context.viewport}
           />
-        ) : (
-          <NewSectionDialog viewport={context.viewport} />
         )
       }
       state={{ list: 'workspaces', menu: 'none', palette: 'closed' }}
@@ -39,6 +47,15 @@ export const sectionsNew = defineScreen({
     />
   ),
   variants: [
+    {
+      slug: 'failed',
+      title: 'Create failed',
+      description:
+        'The create of Payments failed, because the app could not reach the server. A notice below the field names the failure with the message of the app. The dialog stays open and keeps the name, so Create section or Enter tries again, and Cancel closes it.',
+      rationale:
+        'The failure shows beside the name that the user typed, so nothing needs to be typed again. Before, a failed create showed only a toast, and the field was gone.',
+      props: { from: 'failed' },
+    },
     {
       slug: 'palette',
       title: 'From the command palette',

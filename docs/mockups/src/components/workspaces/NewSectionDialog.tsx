@@ -1,9 +1,10 @@
 import type { Viewport } from '@mokly/mokly'
-import { FolderPlus } from 'lucide-react'
+import { CircleAlert, FolderPlus } from 'lucide-react'
 import { Input } from '@firna/ui/input'
 import { noop } from '../../noop'
 import { ActionButton } from '../common/actions'
 import { ConfirmDialog, DialogText } from '../common/ConfirmDialog'
+import { Notice } from '../common/Notice'
 import { useControlSizes } from '../common/touch'
 import { newSectionWords } from './sectionCopy'
 
@@ -12,12 +13,14 @@ import { newSectionWords } from './sectionCopy'
  * From the menu of a section, `below` names that section, and the new
  * section goes directly below it. Without `below`, as from the command
  * palette, the new section goes at the end of the list. Create section
- * stays off until the name holds text.
+ * stays off until the name holds text. `failed` is the message of a create
+ * that failed: it shows below the field, and the dialog keeps the name.
  */
 export function NewSectionDialog(props: {
   viewport: Viewport
   below?: string
   name?: string
+  failed?: string
 }) {
   const { field } = useControlSizes()
   const name = props.name ?? ''
@@ -50,6 +53,14 @@ export function NewSectionDialog(props: {
         size={field}
         value={name}
       />
+      {props.failed === undefined ? null : (
+        <Notice
+          body={props.failed}
+          icon={CircleAlert}
+          title={newSectionWords.failed}
+          tone="danger"
+        />
+      )}
     </ConfirmDialog>
   )
 }
