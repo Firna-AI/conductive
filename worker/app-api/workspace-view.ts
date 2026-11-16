@@ -1,7 +1,8 @@
-import type {
-  TemporaryTab,
-  WorkspaceTab,
-  WorkspaceView,
+import {
+  isTabPort,
+  type TemporaryTab,
+  type WorkspaceTab,
+  type WorkspaceView,
 } from '../../src/shared/workspace-view'
 import { identifier, record } from '../chat/inputs'
 import { HttpError } from '../http'
@@ -23,6 +24,8 @@ function viewTab(value: unknown): WorkspaceTab {
   if (tab.kind === 'diff') return { kind: 'diff', path: identifier(tab.path) }
   if (tab.kind === 'file' && (tab.mode === 'preview' || tab.mode === 'source'))
     return { kind: 'file', path: identifier(tab.path), mode: tab.mode }
+  if (tab.kind === 'preview' && isTabPort(tab.port))
+    return { kind: 'preview', port: tab.port }
   return invalidView()
 }
 
@@ -36,7 +39,9 @@ function temporaryTab(
     const path = identifier(tab.path)
     return tabs.some(
       (open) =>
-        open.kind !== 'session' && open.kind === tab.kind && open.path === path,
+        (open.kind === 'file' || open.kind === 'diff') &&
+        open.kind === tab.kind &&
+        open.path === path,
     )
       ? { kind: tab.kind, path }
       : null

@@ -11,11 +11,12 @@ import type {
   SessionsResponse,
   SessionTranscriptResponse,
 } from '../../shared/sessions'
-import type {
-  TemporaryTab,
-  WorkspaceTab,
-  WorkspaceView,
-  WorkspaceViewResponse,
+import {
+  isTabPort,
+  type TemporaryTab,
+  type WorkspaceTab,
+  type WorkspaceView,
+  type WorkspaceViewResponse,
 } from '../../shared/workspace-view'
 import {
   count,
@@ -27,6 +28,7 @@ import {
   optional,
   record,
   text,
+  UnreadableResponse,
 } from './json'
 import {
   readAgent,
@@ -170,6 +172,9 @@ function readTab(value: unknown): WorkspaceTab {
       return { kind: 'session', sessionId: text(source.sessionId) }
     case 'diff':
       return { kind: 'diff', path: text(source.path) }
+    case 'preview':
+      if (!isTabPort(source.port)) throw new UnreadableResponse('port')
+      return { kind: 'preview', port: source.port }
     default:
       return {
         kind: oneOf({ file: true })(source.kind),
@@ -192,7 +197,7 @@ function readTemporaryTab(
     return null
   return tabs.some(
     (tab) =>
-      tab.kind !== 'session' &&
+      (tab.kind === 'file' || tab.kind === 'diff') &&
       tab.kind === value.kind &&
       tab.path === value.path,
   )

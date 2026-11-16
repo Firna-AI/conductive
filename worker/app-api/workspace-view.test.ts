@@ -137,3 +137,33 @@ it('loads a mark with no matching open kind and path as null', async () => {
     })
   }
 })
+
+it('keeps Preview tabs through a save and a load', async () => {
+  const previewTabs: readonly WorkspaceTab[] = [
+    ...tabs,
+    { kind: 'preview', port: 3000 },
+    { kind: 'preview', port: 65535 },
+  ]
+  const withPreviews = {
+    ...view,
+    tabs: previewTabs,
+    activeTab: previewTabs[2],
+    temporaryTab: null,
+  }
+  const saved = await requestView('PUT', withPreviews)
+  expect(saved.status).toBe(200)
+  expect(await saved.json()).toMatchObject({ view: withPreviews })
+  expect(await (await requestView()).json()).toMatchObject({
+    view: withPreviews,
+  })
+})
+
+it('refuses a Preview tab without a port from 1 to 65535', async () => {
+  for (const port of [0, 65536, 3000.5, '3000', null, undefined]) {
+    const saved = await requestView('PUT', {
+      ...view,
+      tabs: [...tabs, { kind: 'preview', port }],
+    })
+    expect(saved.status, String(port)).toBe(400)
+  }
+})

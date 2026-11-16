@@ -8,6 +8,18 @@ export type WorkspaceTab =
   | { kind: 'session'; sessionId: string }
   | { kind: 'file'; path: string; mode: 'preview' | 'source' }
   | { kind: 'diff'; path: string }
+  /** The Preview tab of one port of the sandbox. A port has at most one. */
+  | { kind: 'preview'; port: number }
+
+/** Whether a value is a port that a Preview tab can name: 1 to 65535. */
+export function isTabPort(value: unknown): value is number {
+  return (
+    typeof value === 'number' &&
+    Number.isInteger(value) &&
+    value >= 1 &&
+    value <= 65535
+  )
+}
 
 export type TemporaryTab = { kind: 'file' | 'diff'; path: string }
 
