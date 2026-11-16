@@ -103,6 +103,15 @@ that those chips show, from the attach to the send.
   another draft, or when the draft no longer holds one of its files, a
   paste takes the plain text, as the next rule says. The name of an absent
   file then stays text.
+- With `files` and `onAttach`, a large paste of other plain text becomes
+  an attached file, as
+  [Large pastes](../../docs/protocol/message-attachments.md#large-pastes)
+  says. `pasted-text.ts` holds the limits and the name of the file.
+  `ClipboardPlugin` calls `onAttach` with the file, as a pick of the
+  composer attaches its files, and puts the chip of each returned ID in
+  place of the selection. Each composer of a chat gives `onAttach`, with
+  the same attach as its pick. A refused file gives no ID, and the text
+  stays as it was.
 - With `files`, a paste of other plain text is literal text, so it never
   makes a mark. Each mention of the copy path of a ready file of the draft
   becomes the chip of that file, also when its chip left the text. A
@@ -185,7 +194,8 @@ that those chips show, from the attach to the send.
   of undo. `field-text.ts` joins the parts of a text with the separator
   rule. `field-plugins.tsx` holds the value, Enter, editable, and
   reconcile plugins. `clipboard-plugins.tsx` holds the copy, the cut, the
-  paste, the drag, and the drop. `focus-plugins.tsx` holds `FieldHandle`,
+  paste, the drag, and the drop. `pasted-text.ts` decides which paste is
+  large and names its file. `focus-plugins.tsx` holds `FieldHandle`,
   `HandlePlugin`, and the plugin of the `caretAtEnd` option. At each focus
   without a press of the pointer, such as from Tab, that plugin puts the
   caret back where it was, or at the end of a kept draft. The chat

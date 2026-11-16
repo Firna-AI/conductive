@@ -67,50 +67,6 @@ const featureIcons = {
   ],
 } as const satisfies IconShapes
 
-/**
- * The icons of the Conductor comparison page, and of its link from the home
- * page.
- */
-const comparisonIcons = {
-  'circle-check': [circle(12, 12, 10), path('m9 12 2 2 4-4')],
-  contrast: [circle(12, 12, 10), path('M12 18a6 6 0 0 0 0-12v12z')],
-  'circle-dashed': [
-    path('M10.1 2.182a10 10 0 0 1 3.8 0'),
-    path('M13.9 21.818a10 10 0 0 1-3.8 0'),
-    path('M17.609 3.721a10 10 0 0 1 2.69 2.7'),
-    path('M2.182 13.9a10 10 0 0 1 0-3.8'),
-    path('M20.279 17.609a10 10 0 0 1-2.7 2.69'),
-    path('M21.818 10.1a10 10 0 0 1 0 3.8'),
-    path('M3.721 6.391a10 10 0 0 1 2.7-2.69'),
-    path('M6.391 20.279a10 10 0 0 1-2.69-2.7'),
-  ],
-  'arrow-right-left': [
-    path('m16 3 4 4-4 4'),
-    path('M20 7H4'),
-    path('m8 21-4-4 4-4'),
-    path('M4 17h16'),
-  ],
-  'circle-ellipsis': [
-    circle(12, 12, 10),
-    path('M17 12h.01'),
-    path('M12 12h.01'),
-    path('M7 12h.01'),
-  ],
-  'circle-minus': [circle(12, 12, 10), path('M8 12h8')],
-  'calendar-check': [
-    path('M8 2v4'),
-    path('M16 2v4'),
-    rect(3, 4, [18, 18], 2),
-    path('M3 10h18'),
-    path('m9 16 2 2 4-4'),
-  ],
-  'arrow-right': [path('M5 12h14'), path('m12 5 7 7-7 7')],
-  link: [
-    path('M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71'),
-    path('M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71'),
-  ],
-} as const satisfies IconShapes
-
 /** The icons of actions, such as the downloads of the Mac app. */
 const actionIcons = {
   download: [
@@ -138,7 +94,6 @@ const docsIcons = {
 export const lucideIcons = {
   ...featureIcons,
   ...actionIcons,
-  ...comparisonIcons,
   ...docsIcons,
 }
 

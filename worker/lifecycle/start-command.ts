@@ -1,9 +1,10 @@
-import type { CommitAuthor } from '../../src/shared/commit-author'
+import type { CommitAuthor } from '../../src/shared/generated/CommitAuthor'
 import { shellQuote } from './commands'
 import { defaultBranchCommand } from './default-branch-command'
 import { repositoryLocation } from './repository-locations'
+import type { StartupBootstrap } from './software-bootstrap'
 import { workspaceStartupCommand } from './image-software'
-import type { WorkspaceRow } from './workspace-data'
+import type { WorkspaceRow } from './workspace-row'
 import type { WorkspaceStartJob } from './start-types'
 import { workspaceBaseCommand } from './workspace-base-command'
 
@@ -13,6 +14,7 @@ export function workspacePhaseCommand(
   job: WorkspaceStartJob,
   owner: CommitAuthor | null,
   preserveBase = false,
+  bootstrap?: StartupBootstrap,
 ): string {
   const directory = repositoryLocation(
     job.repositoryLocations,
@@ -30,7 +32,12 @@ export function workspacePhaseCommand(
               baseBranch: row.baseBranch ?? job.baseBranch ?? job.defaultBranch,
             })} || :`,
           ]),
-      workspaceStartupCommand(job.startupScript, owner),
+      workspaceStartupCommand(
+        job.startupScript,
+        owner,
+        'workspace',
+        bootstrap,
+      ),
     ].join('\n')
   const startBranch = job.startBranch ?? job.baseBranch ?? job.defaultBranch
   if (job.phase === 'fetch') {

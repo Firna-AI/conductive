@@ -1,7 +1,6 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
-
+import type { Agent } from '../../src/shared/generated/Agent'
 import { ACCOUNT_PATHS, agentLoginPath } from '../../src/shared/account'
-import type { Agent } from '../../src/shared/agents'
 import { GET_STARTED_PATH } from '../../src/shared/onboarding'
 import { agentLoginContext } from '../chat/queries'
 import { decrypt } from '../security/crypto'
@@ -54,7 +53,11 @@ it.each(['claude', 'codex'] as const)(
       noReuse: false,
       updatedAt: TEST_TIME,
     }
-    expect(await saved.json()).toEqual(metadata)
+    expect(await saved.json()).toEqual({
+      ...metadata,
+      endpointV1Added: false,
+      modelListReadFailed: true,
+    })
     const account = await harness.request(ACCOUNT_PATHS.account, cookie)
     const body = await account.text()
     expect(JSON.parse(body)).toMatchObject({
@@ -116,7 +119,11 @@ it('preserves the saved host name login when an IP, non-public, or malformed rep
     noReuse: false,
     updatedAt: TEST_TIME,
   }
-  expect(await accepted.json()).toEqual(metadata)
+  expect(await accepted.json()).toEqual({
+    ...metadata,
+    endpointV1Added: false,
+    modelListReadFailed: true,
+  })
   for (const address of [
     'https://8.8.8.8',
     'https://[2606:4700:4700::1111]',

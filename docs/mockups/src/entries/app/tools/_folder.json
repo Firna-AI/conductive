@@ -2,6 +2,7 @@
   "order": [
     "terminals",
     "disconnected",
+    "shared-size",
     "older-software",
     "preview",
     "preview-repair",

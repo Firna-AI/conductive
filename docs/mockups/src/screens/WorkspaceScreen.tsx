@@ -35,7 +35,7 @@ import { viewerOf } from './sessionStarter'
 import { barOf, baseOf, branchOf } from './workspaceBar'
 import {
   FilesContent,
-  filesPlaceholder,
+  filePlaceholder,
   openFile,
   startingLogFor,
   ToolContent,
@@ -274,7 +274,7 @@ export function WorkspaceScreen(props: {
       <WorkspaceBody
         center={
           file ? (
-            <FilePage placeholder={filesPlaceholder(state, true)} view={file} />
+            <FilePage placeholder={filePlaceholder(state, true)} view={file} />
           ) : (
             chat
           )

@@ -6,7 +6,6 @@ export const paths = {
   terms: 'marketing/terms',
   privacy: 'marketing/privacy',
   notFound: 'marketing/not-found',
-  fromConductor: 'marketing/from-conductor/one-table',
   signIn: 'app/sign-in',
   signInTerms: 'app/sign-in/terms',
   waitlist: 'app/sign-in/waitlist',

@@ -1,6 +1,8 @@
+import type { AgentModel } from '../../shared/generated/AgentModel'
 import { useRef, type RefObject } from 'react'
 import { Button } from '@firna/ui/button'
 import { ArrowUp, Paperclip } from 'lucide-react'
+import type { AgentChoice } from '../../shared/generated/AgentChoice'
 import styles from '../../../docs/mockups/src/components/chat/Composer.module.css'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
@@ -15,7 +17,7 @@ import { ChipTextField } from '../../chat/components/chip-field/ChipTextField'
 import type { FieldHandle } from '../../chat/components/chip-field/focus-plugins'
 import { useComposerDrop } from '../../chat/components/composer-drop'
 import { useSendKey } from '../../chat/components/send-key'
-import type { AgentChoice, AgentModel } from '../../shared/agents'
+
 import { IconButton } from '../ui/actions'
 import { ModelPicker } from '../ui/ModelPicker'
 import ui from '../ui/ui.module.css'
@@ -73,6 +75,7 @@ export function Composer(props: {
             label="Message"
             lines={2}
             maxLines={8}
+            onAttach={(files) => props.model.attach(files)}
             onChangeText={(text) => props.model.setText(text)}
             onEnter={sendKey}
             owner={props.model}
