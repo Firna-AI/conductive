@@ -56,6 +56,26 @@ export function withSessionPlace(
   return { ...view, tabs: [...view.tabs, { kind: 'session', sessionId }] }
 }
 
+/**
+ * Puts the tab of a session back at an index of the saved order, such as
+ * after a failed close. A view that holds the tab already stays the same.
+ */
+export function withSessionTabAt(
+  view: WorkspaceView,
+  sessionId: string,
+  index: number,
+): WorkspaceView {
+  if (
+    view.tabs.some(
+      (tab) => tab.kind === 'session' && tab.sessionId === sessionId,
+    )
+  )
+    return view
+  const tabs = [...view.tabs]
+  tabs.splice(Math.min(index, tabs.length), 0, { kind: 'session', sessionId })
+  return { ...view, tabs }
+}
+
 /** Keeps one place per open session, and appends missing places in creation order. */
 export function withSessionPlaces(
   view: WorkspaceView | null,

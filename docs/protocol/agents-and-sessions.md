@@ -132,6 +132,10 @@ says.
   the session history (decision 31).
 - Closing the tab of a session whose turn runs asks first. After the
   confirm, the app stops the turn and moves the session to the history.
+- A close shows at once. The tab moves to the session history before the
+  server confirms the close. When the close fails, the tab returns to its
+  place in the row, and a notice says that the session did not close. The
+  user asked for this on 16 November 2026.
 - One close of several tabs, such as Close tabs to the right, asks one
   question for all the running sessions among them. The question names
   each of these sessions. The other sessions close at once. Cancel keeps
