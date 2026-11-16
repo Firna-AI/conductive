@@ -127,6 +127,12 @@
   color: var(--ui-primary);
 }
 
+/* The key of the command of a switch row, between its label and its switch. */
+.keys {
+  display: flex;
+  flex-shrink: 0;
+}
+
 .danger,
 .danger .icon {
   color: var(--ui-rose);

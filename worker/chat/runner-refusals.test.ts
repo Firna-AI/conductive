@@ -147,7 +147,7 @@ it('refuses late invalid message acknowledgements without partial writes', async
       sessionId: context.sessionId,
       text: 'Hello',
       attachments: [],
-      choice: { agent: 'claude', model: 'test', effort: 'high' },
+      choice: { agent: 'claude', model: 'test', effort: 'high', fast: false },
       createdAt: 25,
       state: 'queued',
       sender: {

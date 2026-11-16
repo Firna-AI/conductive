@@ -1,9 +1,9 @@
+import type { Agent } from '../../src/shared/generated/Agent'
 import {
   ACCOUNT_PATHS,
   agentLoginPath,
   refreshAgentLoginModelsPath,
 } from '../../src/shared/account'
-import type { Agent } from '../../src/shared/agents'
 import { readAccount } from '../../src/app/api/read-core'
 import { createApp } from '../application'
 import { FakeModelUpstream } from '../test-support/fake-model-upstream'
@@ -50,6 +50,7 @@ export function endpointModelApi(harness: TestHarness) {
     agent: 'claude',
     model: 'test-claude',
     effort: 'high',
+    fast: false,
   })
   const app = createApp({
     now: () => now,

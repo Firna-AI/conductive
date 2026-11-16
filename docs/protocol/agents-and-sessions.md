@@ -83,7 +83,9 @@ says.
   its features. Reason: Anthropic forbids that use for a product that builds
   on its Agent SDK.
 - The model picker names the model and the effort, such as "Opus 5.5 Max".
-  It does not show the words Claude or Codex.
+  While [fast mode](fast-mode.md) is on, it adds Fast, such as "Opus 5.5
+  Max Fast". A screen reader hears Fast too. The picker does not show the
+  words Claude or Codex.
 - The app marks each agent with a small mark of its own. It shows no brand
   logo of an agent.
 
@@ -177,6 +179,15 @@ says.
 - A menu of the hidden tabs was rejected, because the shown tab and the
   drop places could still hide. A row that wraps onto more lines was
   rejected, because the chat would move down when a tab opens.
+- Each tab of the row keeps the reader's place while another tab or another
+  workspace shows. A session tab keeps the row that the user read, as
+  [The scroll of the chat](chat-and-events.md#the-scroll-of-the-chat)
+  says. A file or diff tab keeps its scroll offset, one for each of its
+  views, such as the code and the preview of a Markdown file. A reload
+  forgets the places. The user chose this on 13 November 2026.
+- A tab that closes forgets its place, also when another member closes its
+  session. When it opens again, a session tab shows the bottom, and a file
+  or diff tab shows the top. The user chose this on 13 November 2026.
 - A right click on a tab opens its tab menu (decision 188).
 - On a focused tab, Shift and F10, or the Menu key, also opens the tab
   menu. This holds on every system.
@@ -255,11 +266,20 @@ says.
 - A session link opens its workspace and shows that session. The address
   then becomes the link of the workspace. Reason: the session tabs keep
   their behaviour, and the address does not follow the shown tab.
-- A link to a closed or an unknown session opens the page of its
-  workspace, as a workspace link does. When that workspace already shows,
-  its shown tab stays. The link reopens no session.
-- Reason: the members share the sessions of a workspace, so a reopen would
-  show the tab again to every member.
+- A link to a closed session reopens that session and shows it, as an
+  entry of the session history does. In a read-only workspace, the link
+  shows the stored chat of the session as a tab in this browser only, and
+  reopens nothing. The user chose this on 13 November 2026.
+- Reason: a press on a session chip must show its session, and agents
+  close the sessions that they start when the work ends. A link that
+  opens only the workspace of a closed session was rejected, because the
+  press then shows nothing. A reopen only for a press on a chip was
+  rejected, so that each session link works the same way.
+- A reopen shows the tab again to every member, because the members share
+  the sessions of a workspace.
+- A link to an unknown session opens the page of its workspace, as a
+  workspace link does. When that workspace already shows, its shown tab
+  stays.
 - A session link in chat text shows as a session chip, as
   [Session chips](workspace-links.md#session-chips) says.
 - The agent tools give the link of each session that they name, as

@@ -24,7 +24,7 @@ export const privacyDocument: LegalDocument = {
   title: legalTitles.privacy,
   description: `The privacy notice of ${productName}.`,
   lead: text`This notice says which personal data ${productName} uses, why
-  it uses it, and who gets it. Effective date: 12 November 2026.`,
+  it uses it, and who gets it. Effective date: 15 November 2026.`,
   sections: [
     {
       title: 'Who is responsible',
@@ -105,8 +105,8 @@ export const privacyDocument: LegalDocument = {
           stopped. When ${productName} passes on model requests and their
           answers, it keeps no copy of them.`,
         paragraph`A connected agent login stays until you remove or replace
-          it. Panel sizes stay in your browser until you clear its saved
-          data. The providers above can keep their own records under their
+          it. Panel sizes and the last workspace of each org stay in your
+          browser until you clear its saved data. The providers above can keep their own records under their
           terms and privacy notices.`,
         paragraph`The team keeps each feedback email in its inbox while it
           helps to improve ${productName}. It deletes the email when it no

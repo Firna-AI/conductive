@@ -9,7 +9,7 @@ import {
 } from './shortcuts/layout-switch'
 import type { Readable } from './store'
 
-/** The storage of the panel sizes, such as `localStorage`. */
+/** The storage of the panel sizes and the last workspaces, such as `localStorage`. */
 export interface KeyValueStorage {
   getItem(key: string): string | null
   setItem(key: string, value: string): void

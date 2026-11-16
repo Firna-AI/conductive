@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
+import type { AgentChoice } from '../../shared/generated/AgentChoice'
 import { pickChatFiles } from './draft-files.test-support'
-import type { AgentChoice } from '../../shared/agents'
 import { filePaths } from '../../shared/files'
 import { retryMessagePath, sessionPaths } from '../../shared/sessions'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
@@ -12,7 +12,12 @@ const ws = FAKE_IDS.workspace
 const id = FAKE_IDS.session
 const messages = sessionPaths.messages(org, ws, id)
 const model = sessionPaths.model(org, ws, id)
-const opus: AgentChoice = { agent: 'claude', model: 'Opus 5.5', effort: 'high' }
+const opus: AgentChoice = {
+  agent: 'claude',
+  model: 'Opus 5.5',
+  effort: 'high',
+  fast: false,
+}
 
 describe('ChatController actions', () => {
   it('accepts a message before the sandbox is ready, and shows it as queued until it is sent', async () => {
@@ -142,6 +147,7 @@ describe('ChatController actions', () => {
       agent: 'codex',
       model: 'GPT-6.1 Sol',
       effort: 'medium',
+      fast: false,
     }
     const chat = chatFor({
       conversation: 'history',

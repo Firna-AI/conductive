@@ -1,7 +1,8 @@
+import type { TranscriptDetail } from '../../shared/generated/TranscriptDetail'
+import type { AgentChoice } from '../../shared/generated/AgentChoice'
 import type { IntakeRefusals } from '../../app/draft-files'
-import type { AgentChoice } from '../../shared/agents'
 import type { DeviceApprovalAction } from '../../shared/device'
-import type { TranscriptDetail } from '../../shared/sessions'
+
 import type { WorkspaceTab, WorkspaceView } from '../../shared/workspace-view'
 import { createChatApi, type WorkspaceTarget } from '../api/client'
 import type { SessionReads } from '../links/session-reads'
@@ -76,6 +77,8 @@ export class ChatController {
   readonly workspaceList: WorkspaceList
   private readonly options: ChatControllerOptions
   private readonly store = new ChatStore()
+  /** The reader's place in each session tab, while the app keeps the chat. */
+  readonly places = this.store.places
   private context: ChatContext
   private run = 0
   private started = false
@@ -198,9 +201,8 @@ export class ChatController {
       ? showLocally(this.context, sessionId)
       : selectSession(this.context, sessionId)
   /**
-   * Shows the open session that an app address names, as
-   * `showAddressSession` says. An abort of `signal`, such as at a newer
-   * address, makes the lookup show nothing.
+   * Shows or reopens the addressed session, as `showAddressSession` says.
+   * An aborted signal makes the pending lookup show nothing.
    */
   readonly showAddress = (sessionId: string, signal: AbortSignal) =>
     showAddressSession(
@@ -208,6 +210,7 @@ export class ChatController {
       sessionId,
       () => !signal.aborted,
       (id) => void this.select(id),
+      this.reopen,
     )
   readonly newSession = () => this.write(() => newSession(this.context))
   readonly startRename = (sessionId: string) =>

@@ -1,3 +1,8 @@
+import type { AgentModel } from '../../shared/generated/AgentModel'
+import type { Agent } from '../../shared/generated/Agent'
+import type { AgentChoice } from '../../shared/generated/AgentChoice'
+import type { Effort } from '../../shared/generated/Effort'
+import type { MessageSender } from '../../shared/generated/MessageSender'
 import {
   NEW_WORKSPACE_VIEWS,
   type AccountResponse,
@@ -10,14 +15,8 @@ import {
   type SetNewWorkspaceViewResponse,
   type StartCodexDeviceResponse,
 } from '../../shared/account'
-import type {
-  Agent,
-  AgentChoice,
-  AgentModel,
-  Effort,
-} from '../../shared/agents'
+
 import type { OrgRole, User } from '../../shared/api'
-import type { MessageSender } from '../../shared/messages'
 import type { GetStartedResponse } from '../../shared/onboarding'
 import type { OrgSummary } from '../../shared/orgs'
 import type { Section } from '../../shared/sections'
@@ -110,6 +109,7 @@ export function readChoice(value: unknown): AgentChoice {
     agent: choice(fields, 'agent', AGENTS),
     model: text(fields, 'model'),
     effort: choice(fields, 'effort', EFFORTS),
+    fast: fields.fast === true,
   }
 }
 
@@ -119,6 +119,7 @@ export function readModel(value: unknown): AgentModel {
     agent: choice(model, 'agent', AGENTS),
     model: text(model, 'model'),
     label: text(model, 'label'),
+    ...(typeof model.fast === 'boolean' && { fast: model.fast }),
     efforts: items(model, 'efforts', (effort) =>
       choice({ effort }, 'effort', EFFORTS),
     ),

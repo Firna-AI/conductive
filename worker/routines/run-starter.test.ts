@@ -38,7 +38,7 @@ it('creates a run workspace with the routine owner, repository, section, model, 
     await runtime.env.DB.prepare(
       `SELECT w.owner_user_id AS owner, w.repository_id AS repository,
     w.section_id AS section, w.state, r.created_by_user_id AS sender, r.agent, r.model, r.effort,
-    r.first_message_id AS message FROM workspaces w JOIN workspace_runtime r ON r.workspace_id = w.id`,
+    r.fast, r.first_message_id AS message FROM workspaces w JOIN workspace_runtime r ON r.workspace_id = w.id`,
     ).first(),
   ).toEqual({
     owner: user.id,
@@ -50,6 +50,7 @@ it('creates a run workspace with the routine owner, repository, section, model, 
     model: 'run-model',
     effort: 'high',
     message: 'message-run-one',
+    fast: 0,
   })
   expect(fixture.acceptFirstMessage).toHaveBeenCalledWith(
     expect.objectContaining({
@@ -58,7 +59,12 @@ it('creates a run workspace with the routine owner, repository, section, model, 
         id: 'message-run-one',
         text: 'Summarize the work.\n\n---\nRoutine: Morning summary\nTrigger: Run now',
         attachmentIds: [],
-        choice: { agent: 'codex', model: 'run-model', effort: 'high' },
+        choice: {
+          agent: 'codex',
+          model: 'run-model',
+          effort: 'high',
+          fast: false,
+        },
       },
     }),
   )

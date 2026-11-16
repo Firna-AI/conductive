@@ -17,6 +17,7 @@ import { turnFilesUnavailable, unlistedFiles } from './lostCopy'
 import { MacCommand } from './MacCommand'
 import { filesWithoutPlace, LinkText, MessageText } from './MessageText'
 import { SentFiles } from './SentFiles'
+import { standardSpeedText } from './speedCopy'
 import { StopLine, type StopSource } from './StopLine'
 import { memberStopped, stoppedUnnamed } from './stopCopy'
 import { TurnEnd } from './TurnEnd'
@@ -39,9 +40,14 @@ function stopSource(item: StoppedItem, viewer: PersonKey): StopSource {
   return { kind: 'words', text: memberStopped(who) }
 }
 
-/** The notes after who stopped a turn: the files that it does not list. */
+/**
+ * The notes after who stopped a turn: the speed of a fast turn that ran at
+ * standard speed, as a finished turn shows it before its files, then the
+ * files that the line does not list.
+ */
 function stopNotes(item: StoppedItem): string[] {
   return [
+    ...(item.standardSpeed ? [standardSpeedText(item.standardSpeed)] : []),
     ...(item.omittedFiles ? [unlistedFiles(item.omittedFiles)] : []),
     ...(item.filesUnavailable ? [turnFilesUnavailable] : []),
   ]
@@ -88,6 +94,7 @@ export function ChatItemView(props: { item: SingleItem; viewer: PersonKey }) {
           files={item.files}
           filesUnavailable={item.filesUnavailable}
           omittedFiles={item.omittedFiles}
+          standardSpeed={item.standardSpeed}
         />
       )
     case 'lost':

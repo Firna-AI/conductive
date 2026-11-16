@@ -52,6 +52,26 @@
   This reproduces the failure outside the merge diff and outside the home folder.
   The blocked await and the cause remain unknown.
   Machine load is not established as the cause of these failures.
+- On 13 November 2026, a selected device suite on `calummoore/porto-4ubu` timed out in two unchanged Worker cases:
+  - `worker/devices/lifecycle.test.ts`, "relays all four approval choices only from the paired desktop session": `Error: Test timed out in 15000ms.`
+  - `worker/devices/request-key.test.ts`, "uses hashed URL keys for dot retry IDs while device frames keep their exact IDs": `Error: Test timed out in 15000ms.`
+  The files match main at `b409ef7f2a63de3065ed756e66871a3a3491aa85`.
+  Both files then passed unchanged together: 9 tests, no failures or skips, in 59.72 seconds.
+  Machine contention during native fixture work is suspected. The blocked await and the cause are not established.
+  The selected suite also found a malformed Extend result in the branch's settings relay test data. That test data was corrected separately.
+- On 13 November 2026, the branch `calummoore/oslo-tq4m`, which then changed no Worker file, ran the complete gate on a machine with 4 CPUs and 8 GB of memory, beside a dev server and a headless Chrome. 113 Worker test files failed, most with `Test timed out in 15000ms`. The 440 files of the web app and the 88 files of the runner passed. A rerun of the 113 files with `--maxWorkers=2`, beside two review agents, failed each of the first 71 files again. Then a test worker hung for over an hour next to a defunct `workerd` process, with a load average near 0, and the run was stopped. `worker/app-api/feature-shell-sections.test.ts` passed alone two times, and a reviewer saw it time out alone while the rerun ran. `worker/lifecycle/continue-native.test.ts` failed for another reason: its test helper rewrote each `/home/user` of a command, also the fixture folders of a checkout under `/home/user`. The same branch fixed that helper.
+- On 13 November 2026, the branch `calummoore/milan-ofz5` ran test files on 4 CPUs that other sessions shared, with a load near 5.
+  `worker/lifecycle/workspace-runtime.test.ts:47` timed out at its own 20-second limit, at about 21 s.
+  It did so in 2 of 2 runs on the branch, and in 1 of 1 run on its merge base `c194159bf`.
+  The branch changes no line of that test. Machine load is the suspected source.
+- On 16 November 2026, the main merge into `calummoore/lima-gc9c` ran the complete gate without another test run beside it.
+  The suite passed 3,310 tests and reported two lifecycle timeouts:
+  - `worker/lifecycle/ownership-maintenance.test.ts`, "retries a revoked-token stop after active ownership and preserves maintenance before a fresh resume": `Error: Test timed out in 15000ms.`
+  - `worker/lifecycle/disk-retention-time-limit.test.ts`, "ends an unready retention restart at its original deadline through phase changes, reconstruction, and stop retries, then permits user resume": `Error: Test timed out in 15000ms.`
+  Both files match `main` at `eedd836791eaf1793563a4fc4ad207398cdc60a1`.
+  Both files then passed unchanged together: six tests, no failures or skips.
+  The same rerun included the marketing site file, which failed setup with the separate known cross-device rename error.
+  Machine contention during native fixture work is suspected. The blocked await and the cause are not established.
 - **Problem:** These tests depend on wall-clock time limits, so a busy machine can fail them with no defect in the code.
 - **Impact if no action:** A slow CI runner or a busy developer machine can fail the gate now and then, and a person must rerun it.
 - **Root question:** How do these tests stay correct on a slow or busy machine?

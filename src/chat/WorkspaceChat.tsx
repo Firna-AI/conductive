@@ -1,13 +1,15 @@
+import type { Workspace } from '../shared/generated/Workspace'
 import {
   useCallback,
   useEffect,
   useSyncExternalStore,
   type ReactNode,
 } from 'react'
-import type { Agent } from '../shared/agents'
+import type { Agent } from '../shared/generated/Agent'
 import type { WorkspaceView } from '../shared/workspace-view'
-import type { Workspace } from '../shared/workspaces'
+
 import { TouchScreen } from '../../docs/mockups/src/components/common/touch'
+import { useFollowTabs } from '../app/tab-places'
 import {
   ChatDropAreaProvider,
   useChatDropArea,
@@ -40,7 +42,7 @@ import styles from './WorkspaceChat.module.css'
 
 /** How the chat shows, and what it tells the app. */
 export interface ChatViewProps {
-  /** The phone layout takes 44 px touch targets and sheets for menus. */
+  /** The phone layout takes 40 px touch targets and sheets for menus. */
   viewport: 'desktop' | 'mobile'
   /** The time source for durations and relative times. */
   clock?: Clock
@@ -150,6 +152,12 @@ function ChatBody(
   useMentionCopy()
   useReport(snapshot.workspace, props.onWorkspaceChange)
   useReport(snapshot.view, props.onViewChange)
+  useFollowTabs(
+    controller.places,
+    snapshot.load.state === 'ready'
+      ? tabSessions(snapshot).map((session) => session.id)
+      : null,
+  )
   const reopen = useCallback(
     (sessionId: string) => void controller.reopen(sessionId),
     [controller],

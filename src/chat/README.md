@@ -59,13 +59,14 @@ chips.
 
 - [The tab row](tab-row.md) gives the rules of the one order of the
   tabs, the mark of the temporary tab, the drag, the tab menu, and the
-  scroll of the row. A move of the temporary tab to another place keeps
-  it, and so does Keep open in its tab menu, through the `keep` that the
+  scroll of the row, and the reader's place that each tab keeps. A move of
+  the temporary tab to another place keeps it, and so does Keep open in its tab menu, through the `keep` that the
   host gives that tab.
 - [Transcript rules](transcript.md) give the rules of the stream cursor,
   the session logs, the transcript items and their counts, the changed
   files that the cloud computer could not read, the end reason of a
-  finished turn, the lost lines, the turns, the open run of tool calls of
+  finished turn, the standard speed of a fast turn, the lost lines, the
+  turns, the open run of tool calls of
   a running turn, the work fold of each ended turn, and Try again.
 - [The work of a turn](../../docs/protocol/chat-and-events.md#the-work-of-a-turn)
   says what folds when a turn ends. It also says that the line of each fold

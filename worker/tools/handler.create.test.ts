@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
-import { TOOL_TURN_HEADER } from '../../tools/context'
+import { TOOL_TURN_HEADER } from '../../src/shared/agent-tools'
 import { sessionLink } from '../../src/shared/session-link'
 import { configuredDefaultChoice } from '../app-api/models'
 import { HttpError } from '../http'
@@ -100,7 +100,12 @@ it('uses the chosen model, effort, and org section without looking up unresolved
   expect(fixture.services.createWorkspace).toHaveBeenCalledWith(
     expect.objectContaining({
       sectionId: 'chosen-a',
-      choice: { agent: 'claude', model: 'chosen-model', effort: 'max' },
+      choice: {
+        agent: 'claude',
+        model: 'chosen-model',
+        effort: 'max',
+        fast: false,
+      },
     }),
   )
   expect(fixture.services.ownerDefaultChoice).not.toHaveBeenCalled()
@@ -210,6 +215,7 @@ it('uses the account default policy when needed and exposes unresolved defaults 
     agent: 'claude',
     model: 'account-default',
     effort: 'medium',
+    fast: false,
   })
   const fromPolicy = await fixture.create({
     repositoryId: 'repo-a',
@@ -220,7 +226,12 @@ it('uses the account default policy when needed and exposes unresolved defaults 
   expect(fixture.services.ownerDefaultChoice).toHaveBeenCalledWith('owner')
   expect(fixture.services.createWorkspace).toHaveBeenLastCalledWith(
     expect.objectContaining({
-      choice: { agent: 'claude', model: 'account-default', effort: 'low' },
+      choice: {
+        agent: 'claude',
+        model: 'account-default',
+        effort: 'low',
+        fast: false,
+      },
     }),
   )
 })
@@ -257,6 +268,7 @@ it('uses the configured model for an owner who saved only the workspace view', a
     agent: 'claude',
     model: 'configured-model',
     effort: 'medium',
+    fast: false,
   })
   fixture.services.ownerDefaultChoice.mockImplementation(async () =>
     configuredDefaultChoice(harness.env),
@@ -269,7 +281,12 @@ it('uses the configured model for an owner who saved only the workspace view', a
   expect(response.status).toBe(201)
   expect(fixture.services.createWorkspace).toHaveBeenCalledWith(
     expect.objectContaining({
-      choice: { agent: 'claude', model: 'configured-model', effort: 'medium' },
+      choice: {
+        agent: 'claude',
+        model: 'configured-model',
+        effort: 'medium',
+        fast: false,
+      },
     }),
   )
 })

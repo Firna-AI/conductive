@@ -31,7 +31,8 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         verified email addresses of your GitHub account, and which one is
         primary. An org invitation reaches you through one of them. The
         approval email goes to the primary one. The team uses the same
-        address to reply to your feedback.`,
+        address to reply to your feedback. The operator sees the primary
+        one on the page of your account.`,
       text`Your GitHub token: the sign-in gives ${productName} a GitHub
         token for your account. ${productName} stores it encrypted, for
         every account, also while you wait for app access. It uses the
@@ -133,8 +134,10 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         They record the command, its folder, its reason, its time limit,
         and the output. A request also names the Mac that gets it.
         The result says how the command ended. They let you and the
-        agent follow the command. Always-allowed commands and 15-minute
-        permissions stay only on your Mac.`,
+        agent follow the command. Always-allowed commands and workspace
+        permissions stay only on your Mac. The Mac saves timed permissions,
+        including the end time set by Extend. Permission until you stop
+        stays only in memory and ends when you quit the Mac app or sign out.`,
       text`Your code: your repositories and files live in the cloud
         computers that ${productName} runs for your org. ${productName}
         reads a file or a diff when you open it, to show it to you. The
@@ -164,6 +167,12 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         on GitHub, when available.`,
       text`Panel sizes: your browser keeps the sizes of the panels of the
         app. They stay in your browser.`,
+      text`Last workspaces: your browser keeps the address of the last
+        workspace page that you opened in each org. The address holds the
+        IDs of the org, the workspace, and the session or the preview. It
+        can also hold the name of a tool and the path of an open file. A
+        switch to the org opens that page again. The addresses stay in your
+        browser, also after you sign out, until you clear its saved data.`,
     ),
     paragraph`Where data protection law requires a lawful basis, the
       operator relies on performance of a contract to provide the

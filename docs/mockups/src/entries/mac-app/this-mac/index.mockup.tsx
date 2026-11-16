@@ -4,14 +4,14 @@ import { MacAppScreen, macAppSchema } from '../../../screens/MacAppScreen'
 export const thisMac = defineScreen({
   title: 'This Mac',
   description:
-    'The account in the Mac app, with the This Mac section: the name of the Mac, its state, the commands that always run on it without asking, each with Remove, and the workspaces whose commands all run without asking, each with the time left or Until you stop, and Stop. After a Remove, its result shows under the lists. The Mac app keeps the sidebar of the org beside the account.',
+    'The This Mac tab of the account in the Mac app, after Keyboard shortcuts: the name of the Mac, its state, and the commands that always run on it without asking, each with Remove, and the workspaces whose commands all run without asking, each with the time left or Until you stop, and Stop. A long command shows its first three lines, and its last line fades out, with Show all under it. Show all shows the whole command, and then Show less makes it short again. After a Remove, its result shows under the list. The Mac app keeps the sidebar of the org beside the account.',
   rationale:
-    'Always allow covers the exact text of one command on this Mac, so the list shows each command as it was allowed (decision 62). One list holds the 15 minutes and the grants until Stop, because both cover every command of one workspace (Mac until-stop decision 0). The web app in a browser has no This Mac section.',
+    'Always allow covers the exact text of one command on this Mac, so the list shows each command as it was allowed (decision 62). On 12 November 2026 the user asked for This Mac in its own tab, and for long commands cut short with a fade and Show all, so that more commands show at once. The tab comes last, so the tabs that a browser also shows keep their places. One list holds the 15 minutes and the grants until Stop, because both cover every command of one workspace (Mac until-stop decision 0). The web app in a browser has no This Mac tab.',
   relatedDocs: [],
   propSchema: macAppSchema,
   props: {
     window: 'window',
-    page: 'account',
+    page: 'this-mac',
     command: 'none',
     change: 'none',
     palette: 'closed',

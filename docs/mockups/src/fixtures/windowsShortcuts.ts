@@ -13,8 +13,9 @@ import type { CommandId } from './shortcutCommands'
  * 197 add no key. Decision 199 C of 11 November 2026 follows the same rule,
  * with one key chosen by hand: Fix checks has Alt+Shift+X, the twin of ⌥⌘X,
  * because Firefox switches the text direction of a text field on
- * Ctrl+Shift+X. Only the Mac app has the sidebar toggle, Back, and Forward,
- * so they have no key here.
+ * Ctrl+Shift+X. Fast mode decision 258 C of 12 November 2026 gives Fast mode
+ * Ctrl+Shift+E by the same rule. Only the Mac app has the sidebar toggle,
+ * Back, and Forward, so they have no key here.
  */
 export const windowsKeys: Readonly<Record<CommandId, readonly Shortcut[]>> = {
   'command-palette': ['Ctrl+K'],
@@ -82,6 +83,7 @@ export const windowsKeys: Readonly<Record<CommandId, readonly Shortcut[]>> = {
   'attach-files': ['Ctrl+U'],
   'model-picker': ['Alt+Shift+M'],
   'next-effort': ['Ctrl+Shift+/'],
+  'fast-mode': ['Ctrl+Shift+E'],
   'stop-agent': ['Alt+Shift+S'],
   'copy-concise-transcript': ['Alt+Shift+C'],
   'copy-full-transcript': [],

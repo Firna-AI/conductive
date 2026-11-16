@@ -103,7 +103,7 @@ describe('the Actions and Settings tabs of the palette', () => {
     })
   })
 
-  test('the Settings tab shows the tabs of the org settings, then the Account rows in the order of the Account page, with This Mac after Sign-in in the Mac app and Keyboard shortcuts last, and a search finds their pages', () => {
+  test('the Settings tab shows the tabs of the org settings, then the Account rows in the order of the Account page, with Keyboard shortcuts after New workspaces and This Mac last in the Mac app, and a search finds their pages', () => {
     const tab = (overrides: Partial<PaletteSource>, text = '') =>
       paletteResults(query({ tab: 'settings', text }), source(overrides))
     const general = tab({}).groups[0]?.rows[0]
@@ -117,6 +117,9 @@ describe('the Actions and Settings tabs of the palette', () => {
       generalOpens: general?.kind === 'command' ? general.href : null,
       preferencesOpens: account('new-workspaces')?.href,
       shortcutsOpens: account('keyboard-shortcuts')?.href,
+      thisMacOpens: tab({ mac: true }).groups[1]?.rows.find(
+        (row) => row.key === 'account:this-mac',
+      )?.href,
     }).toEqual({
       browser: [
         [
@@ -129,11 +132,11 @@ describe('the Actions and Settings tabs of the palette', () => {
         'Account',
         [
           'Sign-in',
-          'This Mac',
           'GitHub',
           'Agents',
           'New workspaces',
           'Keyboard shortcuts',
+          'This Mac',
         ],
       ],
       search: [['Acme settings', ['Cloud computer · Acme settings']]],
@@ -141,6 +144,7 @@ describe('the Actions and Settings tabs of the palette', () => {
       generalOpens: routes.settings(acme.id, 'general'),
       preferencesOpens: routes.accountTab('preferences'),
       shortcutsOpens: routes.accountTab('shortcuts'),
+      thisMacOpens: routes.accountTab('this-mac'),
     })
   })
 })

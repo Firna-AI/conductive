@@ -61,7 +61,7 @@ const api = createMembersApi((input, init) => fetch(input, init))
 The host gives the components `SharedUiThemeProvider` from `@firna/ui/theme`
 and the `--ui-*` design tokens, as `dev/main.tsx` does with `themeFor` and
 `tokensCss` of the mockups. Each component takes `viewport: 'desktop' |
-'mobile'`. The phone layout uses 44 px controls and opens menus and
+'mobile'`. The phone layout uses 40 px controls and opens menus and
 questions as sheets. Each component shows its own loading and error states,
 with the message of the API.
 

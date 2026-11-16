@@ -1,7 +1,8 @@
+import type { Session } from '../../shared/generated/Session'
 import { describe, expect, it, vi } from 'vitest'
-import type { AgentChoice } from '../../shared/agents'
+import type { AgentChoice } from '../../shared/generated/AgentChoice'
 import { chatHistoryPath } from '../../shared/events'
-import type { Session } from '../../shared/sessions'
+
 import { sessionsPath } from '../../shared/sessions'
 import { FAKE_IDS, FAKE_TIME, fakeUser } from '../../test-support/fixtures/core'
 import { senderSnapshot } from '../../test-support/fixtures/workspaces'
@@ -10,7 +11,12 @@ import { chatFor, shown } from './test-kit'
 
 const org = FAKE_IDS.org
 const ws = FAKE_IDS.workspace
-const opus: AgentChoice = { agent: 'claude', model: 'Opus 5.5', effort: 'high' }
+const opus: AgentChoice = {
+  agent: 'claude',
+  model: 'Opus 5.5',
+  effort: 'high',
+  fast: false,
+}
 const recordedHistory = [
   'user: Add address autocomplete to the checkout form. Keep the manual fields as a fallback.',
   'agent: The checkout form now suggests addresses. Manual entry still works.',

@@ -40,10 +40,15 @@ View writes cannot change this branch.
 
 ## Rules
 
-- The model list and the default choice come from `CONDUCTIVE_MODELS` and
-  `CONDUCTIVE_DEFAULT_CHOICE`, as
-  [Deployment inputs](../../docs/deployment.md#models) says. A missing or
-  invalid value gives a 503 on its own route only.
+- [Model configuration dependencies](../../docs/deployment/models.md#configuration-failures)
+  states which operations need `CONDUCTIVE_MODELS` and
+  `CONDUCTIVE_DEFAULT_CHOICE`, and their failures.
+- Each model of the list can carry the `fast` mark.
+  `PUT /api/account/default-model` saves fast mode with the model and the
+  effort. It stores fast mode as off for a model without the mark, and a
+  saved default without fast mode reads as off.
+  [Fast mode](../../docs/protocol/fast-mode.md#the-models-with-fast-mode)
+  states the rules.
 - An account reply reads `user_preferences`, `user_shortcuts`, and the records of the agent
   logins. It also gives the page of the GitHub App from `GITHUB_APP_SLUG`,
   so a screen links to that page without a GitHub read. A login write
@@ -162,8 +167,8 @@ View writes cannot change this branch.
 - A workspace path decodes its workspace ID once.
 - An archived workspace keeps its view readable. A view write, a read mark,
   and a lifecycle action other than Restore get `409 workspace_archived`.
-- `chatLifecycleRoute` gives the lifecycle handler the runner archive as a
-  getter, so only a build or a refresh reads it. It gives the first message
+- The lifecycle handler reads validated release metadata only for a build or
+  refresh. `chatLifecycleRoute` gives the first message
   of a create to `acceptLifecycleFirstMessage` of the workspace object.
 
 Org suspension keeps shell reads available.

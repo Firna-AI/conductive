@@ -1,3 +1,4 @@
+import type { MessageSender } from '../../shared/generated/MessageSender'
 import { routineRows } from '../../../docs/mockups/src/fixtures/routineRows'
 import type { RunState } from '../../../docs/mockups/src/fixtures/routineRuns'
 import {
@@ -5,7 +6,6 @@ import {
   routines as mockupRoutines,
   type Routine as MockupRoutine,
 } from '../../../docs/mockups/src/fixtures/routines'
-import type { MessageSender } from '../../shared/messages'
 import type {
   Routine,
   RoutineInactiveReason,
@@ -95,7 +95,7 @@ function record(routine: MockupRoutine, index: number, orgId: string): Routine {
     repositoryId: routine.repository,
     sectionId: routine.section,
     prompt: routine.prompt,
-    choice: routine.choice,
+    choice: { ...routine.choice, fast: routine.choice.fast ?? false },
     active: routine.active,
     inactiveReason: inactiveReason(routine),
     failedRunsInARow: routine.failedRunsInARow ?? 0,

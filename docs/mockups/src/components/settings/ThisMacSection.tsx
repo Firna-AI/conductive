@@ -3,6 +3,7 @@ import {
   allowedWorkspaces,
   alwaysAllowed,
   failedMessage,
+  longAllowed,
   notSavedMessage,
   removedCommand,
   thisMac,
@@ -42,6 +43,7 @@ const removals: Partial<
  * its state, the commands that always run on it, each with Remove, and the
  * workspaces whose commands all run without asking, each with the time
  * left or Until you stop, and Stop (Mac until-stop decision 0).
+ * A long command shows three lines with a fade and Show all.
  * After a Remove, the result of the change shows under the list until the
  * next Remove of the same command. A command that the Mac removed, also
  * without saving, leaves the list, so a removal that the Mac did not save
@@ -65,7 +67,18 @@ export function ThisMacSection() {
       <ul aria-label="Always allowed commands" className={styles.list}>
         {commands.map((command) => (
           <li className={styles.row} key={command}>
-            <code className={styles.command}>{command}</code>
+            {command === longAllowed ? (
+              <div className={styles.allowed}>
+                <code className={`${styles.command} ${styles.cut}`}>
+                  {command}
+                </code>
+                <span className={styles.more}>
+                  <ActionButton tone="plain">Show all</ActionButton>
+                </span>
+              </div>
+            ) : (
+              <code className={styles.command}>{command}</code>
+            )}
             <ActionButton accessibilityLabel={`Remove ${command}`} tone="plain">
               Remove
             </ActionButton>

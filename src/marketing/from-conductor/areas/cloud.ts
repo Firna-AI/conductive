@@ -69,14 +69,14 @@ export const cloudFeatures: readonly ParityFeature[] = [
     area: 'cloud',
     name: 'Managed Git identity',
     status: 'available',
-    note: 'Git and the GitHub CLI use the message sender’s GitHub account, and commits name that person. The terminal uses the workspace owner’s account. Updating older workspaces, which name the owner in commits, is in progress.',
+    note: 'Git and the GitHub CLI use the message sender’s GitHub account, and commits name that person. The terminal uses the workspace owner’s account. Older workspaces name the owner in agent commits until an automatic software update applies at a later start.',
   },
   {
     id: 'organization-environment-and-secrets',
     area: 'cloud',
     name: 'Organization environment and secrets',
     status: 'available',
-    note: 'Admins set org environment variables and secrets. Saved values stay hidden in settings. Personal cloud variables are under consideration.',
+    note: 'Admins set org environment values, hidden in settings after saving. Separate secrets for agent commands are planned, while personal cloud variables remain under consideration.',
   },
   {
     id: 'cloud-agent-credentials',
@@ -142,7 +142,7 @@ export const cloudFeatures: readonly ParityFeature[] = [
     area: 'cloud',
     name: 'Sleep and wake',
     status: 'different',
-    note: 'Idle computers stop after 30 minutes, keep files and sessions, and resume when opened. Agent wake-ups that can keep computers running are planned.',
+    note: 'Idle computers stop after 30 minutes and resume with files and sessions. Background work from agents powered by Claude keeps computers running.',
   },
   {
     id: 'cloud-desktop',

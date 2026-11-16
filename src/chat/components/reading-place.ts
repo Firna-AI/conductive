@@ -5,6 +5,7 @@ import {
   useRef,
   type RefObject,
 } from 'react'
+import { placeAt, showPlace, type PlaceMemory } from './chat-place'
 
 /** What a part of the chat asks of the keeper of the reader's place. */
 export interface RowKeeper {
@@ -55,21 +56,34 @@ class ReadingPlace implements RowKeeper {
   private kept: Kept | null = null
   /** The height of the transcript at the last `settle`. */
   private height: number
+  private readonly memory: PlaceMemory | null
 
-  constructor(scroller: HTMLElement, transcript: HTMLElement) {
+  /**
+   * Shows the place that `memory` kept for the shown session, or the bottom
+   * when it kept none, then keeps the place there at each note.
+   */
+  constructor(
+    scroller: HTMLElement,
+    transcript: HTMLElement,
+    memory: PlaceMemory | null,
+  ) {
     this.scroller = scroller
     this.transcript = transcript
+    this.memory = memory
     this.height = heightOf(transcript)
+    if (memory) showPlace(scroller, transcript, memory.read())
     this.note()
   }
 
   /**
-   * Notes the top row in view, or no row at the bottom. While a change of
-   * size waits for `settle`, the row noted before it stays.
+   * Notes the top row in view, or no row at the bottom, and keeps it as the
+   * place of the session. While a change of size waits for `settle`, the row
+   * noted before it stays.
    */
   note(): void {
     if (heightOf(this.transcript) !== this.height) return
     this.kept = atBottom(this.scroller) ? null : this.topRow()
+    this.memory?.write(placeAt(this.scroller, this.kept?.row ?? null))
   }
 
   keep(row: Element): void {
@@ -91,6 +105,7 @@ class ReadingPlace implements RowKeeper {
   bottom(): void {
     this.kept = null
     this.scroller.scrollTop = 0
+    this.memory?.write(placeAt(this.scroller, null))
   }
 
   /** A size changed: the transcript's, which settles, or the box's. */
@@ -135,20 +150,26 @@ class ReadingPlace implements RowKeeper {
  * Each new ID shows the bottom of the chat, also while the reader is
  * scrolled up. A message of another member comes as an event, not as a
  * sent ID, so it moves no reader.
+ *
+ * `memory` keeps the place of the shown session while another tab shows. A
+ * new `memory`, for another session, shows the place that it kept. The IDs
+ * in `sent` that the session already had then move nothing.
  */
 export function useReadingPlace(
   scroller: RefObject<HTMLElement | null>,
   transcript: RefObject<HTMLElement | null>,
   shown: boolean,
   sent: readonly string[],
+  memory: PlaceMemory | null = null,
 ): RowKeeper {
   const place = useRef<ReadingPlace | null>(null)
   const seen = useRef<ReadonlySet<string>>(new Set(sent))
+  const seenMemory = useRef(memory)
   useLayoutEffect(() => {
     const box = scroller.current
     const rows = transcript.current
     if (!shown || !box || !rows) return
-    const current = new ReadingPlace(box, rows)
+    const current = new ReadingPlace(box, rows, memory)
     const note = () => current.note()
     const observer = new ResizeObserver(() => current.resized())
     box.addEventListener('scroll', note, { passive: true })
@@ -160,12 +181,14 @@ export function useReadingPlace(
       observer.disconnect()
       box.removeEventListener('scroll', note)
     }
-  }, [scroller, transcript, shown])
+  }, [scroller, transcript, shown, memory])
   useLayoutEffect(() => {
+    const sameSession = seenMemory.current === memory
     const fresh = sent.some((id) => !seen.current.has(id))
     seen.current = new Set(sent)
-    if (fresh) place.current?.bottom()
-  }, [sent])
+    seenMemory.current = memory
+    if (fresh && sameSession) place.current?.bottom()
+  }, [sent, memory])
   return useMemo(
     () => ({
       keep: (row: Element) => place.current?.keep(row),

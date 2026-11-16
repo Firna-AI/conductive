@@ -74,6 +74,29 @@ it('keeps a known optional end reason and reads older or unknown reasons without
   }
 })
 
+it('keeps the speed of a fast turn, and reads an end with no speed or an unreadable one without it', () => {
+  const event = { ...completed, state: 'finished' }
+  const read = (speed: unknown) =>
+    readEnvelope(envelope({ ...event, speed })).event
+  const kept = [
+    { state: 'fast' },
+    { state: 'standard' },
+    { state: 'standard', cause: 'fast_limit' },
+    { state: 'standard', cause: 'out_of_credits' },
+  ]
+  const dropped = [
+    undefined,
+    null,
+    'standard',
+    { state: 'slow' },
+    { state: 'standard', cause: 'Fast limit reached' },
+  ]
+  expect({ kept: kept.map(read), dropped: dropped.map(read) }).toEqual({
+    kept: kept.map((speed) => ({ ...event, speed })),
+    dropped: dropped.map(() => event),
+  })
+})
+
 it('reads a workspace with no name, as a new workspace has until its title comes', () => {
   const { workspace } = workspaceFixtures().created
   const owner = senderSnapshot(workspace.owner)

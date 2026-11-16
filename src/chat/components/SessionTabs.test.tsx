@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
-import type { AgentChoice } from '../../shared/agents'
+import type { AgentChoice } from '../../shared/generated/AgentChoice'
 import { startedTurn } from '../../shared/transcript/turn-records'
 import { newSessionRecord } from '../state/test-kit'
 import { textOf } from './render-kit'
@@ -11,6 +11,7 @@ const choice: AgentChoice = {
   agent: 'claude',
   model: 'Opus 5.5',
   effort: 'high',
+  fast: false,
 }
 
 /** The tab bar with one session that has no title, as the row draws it. */

@@ -8,7 +8,7 @@ The [Worker README](../worker/README.md#routes) lists the routes that the
 Worker serves now. [Automatic deploys](automatic-deploys.md) says how each
 push to `main` deploys the test deployment. Two linked pages hold the
 [model inputs](deployment/models.md) and the
-[runner archive and software image](deployment/runner-archive.md).
+[Conductive releases and software image](deployment/runner-archive.md).
 
 Each input names the routes that read it. A route that does not read an
 input works without it. Keep secrets out of the repository and out of
@@ -78,11 +78,10 @@ examples.
 | `GITHUB_CLIENT_ID` | GitHub sign-in, each refresh of a stored GitHub user token, the GitHub banner and Checks, the workspace refreshes of verified GitHub webhooks, and image builds that copy a repository | The client ID of the GitHub App. |
 | `GITHUB_APP_SLUG` | The links to the GitHub App: Install in Get started, Manage on GitHub in the account, and Manage access of the repository lists | Optional. The slug of the GitHub App, as in `https://github.com/apps/<slug>`. Without it, or with a value that is not a slug, the links use `conductive`, and the Worker logs a warning for a wrong value. It is not a secret. |
 | `BOAT_ORG_ID` | Each call to Boat | The ID of the app's Boat organization, as [The app's Boat account](#the-apps-boat-account) says. It is not a secret. |
-| `CONDUCTIVE_MODELS` | `GET /api/models` and `GET /v1/tools/models` | The JSON model list, as [Models](deployment/models.md#models) says. |
-| `CONDUCTIVE_DEFAULT_CHOICE` | `GET /api/account`, `POST /v1/tools/workspaces`, and `GET /v1/tools/models`, for a user with no saved default | The JSON default choice, as [Models](deployment/models.md#models) says. |
+| `CONDUCTIVE_MODELS` | [Model configuration dependencies](deployment/models.md#configuration-failures) | The JSON model list, as [Models](deployment/models.md#models) says. |
+| `CONDUCTIVE_DEFAULT_CHOICE` | [Default choice dependencies](deployment/models.md#configuration-failures) | The JSON default choice, as [Models](deployment/models.md#models) says. |
 | `CONDUCTIVE_TITLE_MODEL` | The title of a workspace that has no name | Optional. The Workers AI model ID of the title model, as [The title model](deployment/models.md#the-title-model) says. Without it, the app shows "Untitled" until a name is set. It is not a secret. |
-| `CONDUCTIVE_RUNNER_ARCHIVE_URL` | Image builds and refreshes | The public HTTPS URL of the runner archive. |
-| `CONDUCTIVE_RUNNER_ARCHIVE_SHA256` | Image builds and refreshes | The SHA-256 digest of that archive, as 64 hexadecimal characters. |
+| `CONDUCTIVE_RELEASE_SERVER` | Image builds, refreshes, and workspace bootstrap | Optional release base URL. The default is `https://runner.conductive.build`. |
 | `CONDUCTIVE_DEPLOY_TOKEN_SHA256` | The software image route of the deploy run | The SHA-256 digest of the deploy token of the deploy run that made the Worker version, as 64 hexadecimal characters. Each deploy from `main` sets it, as [The software image](deployment/runner-archive.md#the-software-image) says. It is not a secret. |
 | `CONDUCTIVE_FRAME_SOURCES` | The Desktop tab, through the content security policy of each page of the app | Optional. The trusted HTTPS origins of the desktop streams, separated by spaces, as [Frame sources](#frame-sources) says. It is not a secret. |
 | `OPERATOR_GITHUB_IDS` | The operator section and the suspension of users and orgs | Optional. The numeric GitHub user IDs of the operators, separated by commas. It is not a secret. Without it, each operator request gets `403 operator_required`, as the [operator area](../worker/operator/README.md#overview) says. |
@@ -91,10 +90,6 @@ examples.
   hostname. Each sandbox gets the value as `CONDUCTIVE_MACHINE_ORIGIN`. Both
   credential routes refuse every request without it, and a build cannot
   copy a repository.
-- The two runner archive variables are public metadata of the archive. They
-  hold no secret.
-  [The runner archive](deployment/runner-archive.md#the-runner-archive)
-  says how to supply them.
 
 ## Secrets
 
@@ -170,28 +165,27 @@ above.
 
 [Models](deployment/models.md#models) gives the model list of
 `CONDUCTIVE_MODELS` and the default choice of `CONDUCTIVE_DEFAULT_CHOICE`:
-their shape, and the routes that read them.
+their shape, the operations that need them, and their configuration failures.
 
 ## The title model
 
 [The title model](deployment/models.md#the-title-model) gives the model
 that `CONDUCTIVE_TITLE_MODEL` names, and what happens without it.
 
-## The runner archive
+## Conductive release files
 
-[The runner archive](deployment/runner-archive.md#the-runner-archive) says
-how each image build gets the runner archive, and how to supply an archive
-by hand.
+[Conductive release files](deployment/runner-archive.md#conductive-release-files)
+gives the release server and parts.
 
-### The archive in each deploy
+### The release in each deploy
 
-[The archive in each deploy](deployment/runner-archive.md#the-archive-in-each-deploy)
-says how each deploy from `main` publishes the archive of its commit.
+[The release in each deploy](deployment/runner-archive.md#the-release-in-each-deploy)
+gives the public paths and publication order.
 
 ### The software image
 
-[The software image](deployment/runner-archive.md#the-software-image) says
-how each deploy from `main` builds the software image of its version.
+[The software image](deployment/runner-archive.md#the-software-image) describes
+the software image that each deploy builds.
 
 ## Frame sources
 

@@ -6,9 +6,10 @@ import a11y from '../common/a11y.module.css'
 import { classes } from '../common/classes'
 import { Menu } from '../common/Menu'
 import { ArchivedGroup } from './ArchivedGroup'
-import { sectionMenu } from './menus'
+import { sectionMenu, type SectionPlace } from './menus'
 import { mayArchiveWorkspace } from './permissions'
 import { rowControls, type RowContext, type RowFocus } from './rowControls'
+import { SectionDrop } from './SectionDrop'
 import type {
   ListDrag,
   ListMenu,
@@ -33,6 +34,7 @@ function SectionHeader(props: {
   menuStyle: MenuStyle
   /** The org is suspended, so its sections have no menu. */
   readOnly: boolean
+  place: SectionPlace
 }) {
   const { section, rows } = props.item
   const Chevron = section.collapsed ? ChevronRight : ChevronDown
@@ -69,7 +71,7 @@ function SectionHeader(props: {
       )}
       {props.open && props.menuStyle === 'anchored' ? (
         <Menu
-          entries={sectionMenu}
+          entries={sectionMenu(props.place)}
           label={section.name}
           placement="below-end"
         />
@@ -106,7 +108,9 @@ function DropTarget(props: {
 /**
  * The sections of the org, each a group of workspaces that the user made.
  * A collapsed section shows only its header and its count. A workspace
- * moves to another section by drag and drop. The sidebar uses compact
+ * moves to another section by drag and drop, and a section moves to
+ * another place by a drag of its header. A dragged section stays faint in
+ * its place, and a line between two sections shows where it lands. The sidebar uses compact
  * rows; the list page uses taller rows for touch. `archived` adds the
  * Archived group at the end, open unless `archivedCollapsed`. `readOnly`
  * drops the menus of the sections and of the rows, for a suspended org.
@@ -126,10 +130,21 @@ export function SectionList(props: {
   viewer: Membership
   focus?: RowFocus
 }) {
-  const { drag, viewer } = props
+  const { viewer } = props
+  const drag = props.drag?.kind === 'workspace' ? props.drag : undefined
+  const sectionDrag = props.drag?.kind === 'section' ? props.drag : undefined
   const dragged = props.sections
     .flatMap((item) => item.rows)
     .find((row) => row.workspace.key === drag?.workspace)
+  const liftedSection = props.sections.find(
+    (item) => item.section.key === sectionDrag?.section,
+  )
+  /** The sections without the dragged one, where the drop line counts. */
+  const rest = props.sections.filter((item) => item !== liftedSection)
+  const sectionLine = (index: number) =>
+    liftedSection && sectionDrag?.index === index ? (
+      <SectionDrop item={liftedSection} place={index + 1} />
+    ) : null
   const context: RowContext = {
     viewer,
     sections: props.sections.map((item) => item.section.key),
@@ -140,59 +155,69 @@ export function SectionList(props: {
     rowControls(row, props.focus, context)
   return (
     <div className={styles.sections}>
-      {props.sections.map((item) => {
+      {props.sections.map((item, position) => {
         const { section } = item
         const target = drag?.section === section.key ? drag : undefined
+        const lifted = item === liftedSection
         return (
-          <section
-            aria-label={section.name}
-            className={styles.section}
-            key={section.key}
-          >
-            <SectionHeader
-              item={item}
-              menuStyle={props.menuStyle ?? 'anchored'}
-              open={props.menu?.section === section.key}
-              readOnly={props.readOnly ?? false}
-              variant={props.variant}
-            />
-            {section.collapsed ? null : (
-              <ul className={styles.rows}>
-                {item.rows.map((row, index) => (
-                  <Fragment key={row.workspace.key}>
-                    {target && dragged && index === target.index ? (
-                      <DropTarget
-                        row={dragged}
-                        section={section.name}
-                        variant={props.variant}
-                      />
-                    ) : null}
-                    <li>
-                      <WorkspaceRowView
-                        archivable={
-                          !props.readOnly &&
-                          mayArchiveWorkspace(viewer, row.workspace.owner)
-                        }
-                        controls={controlsOf(row)}
-                        drag={
-                          row.workspace.key === drag?.workspace
-                            ? 'placeholder'
-                            : undefined
-                        }
-                        row={row}
-                        variant={props.variant}
-                      />
+          <Fragment key={section.key}>
+            {lifted ? null : sectionLine(rest.indexOf(item))}
+            <section
+              aria-label={section.name}
+              className={classes(styles.section, lifted && styles.faint)}
+            >
+              <SectionHeader
+                item={item}
+                menuStyle={props.menuStyle ?? 'anchored'}
+                open={props.menu?.section === section.key}
+                place={{
+                  first: position === 0,
+                  last: position === props.sections.length - 1,
+                }}
+                readOnly={props.readOnly ?? false}
+                variant={props.variant}
+              />
+              {section.collapsed ? null : (
+                <ul className={styles.rows}>
+                  {item.rows.map((row, index) => (
+                    <Fragment key={row.workspace.key}>
+                      {target && dragged && index === target.index ? (
+                        <DropTarget
+                          row={dragged}
+                          section={section.name}
+                          variant={props.variant}
+                        />
+                      ) : null}
+                      <li>
+                        <WorkspaceRowView
+                          archivable={
+                            !props.readOnly &&
+                            mayArchiveWorkspace(viewer, row.workspace.owner)
+                          }
+                          controls={controlsOf(row)}
+                          drag={
+                            row.workspace.key === drag?.workspace
+                              ? 'placeholder'
+                              : undefined
+                          }
+                          row={row}
+                          variant={props.variant}
+                        />
+                      </li>
+                    </Fragment>
+                  ))}
+                  {item.rows.length === 0 ? (
+                    <li className={styles.empty}>
+                      New workspaces appear here.
                     </li>
-                  </Fragment>
-                ))}
-                {item.rows.length === 0 ? (
-                  <li className={styles.empty}>New workspaces appear here.</li>
-                ) : null}
-              </ul>
-            )}
-          </section>
+                  ) : null}
+                </ul>
+              )}
+            </section>
+          </Fragment>
         )
       })}
+      {sectionLine(rest.length)}
       {props.archived ? (
         <ArchivedGroup
           controlsOf={controlsOf}

@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
-
+import type { AgentChoice } from '../../src/shared/generated/AgentChoice'
 import { ACCOUNT_PATHS, agentLoginPath } from '../../src/shared/account'
-import { MODELS_PATH, type AgentChoice } from '../../src/shared/agents'
+import { MODELS_PATH } from '../../src/shared/agents'
 import { API_PATHS } from '../../src/shared/api'
 import { GET_STARTED_PATH } from '../../src/shared/onboarding'
 import { readAccount } from '../../src/app/api/read-core'
@@ -23,11 +23,13 @@ const choice: AgentChoice = {
   agent: 'claude',
   model: 'operator-claude',
   effort: 'high',
+  fast: false,
 }
 const otherChoice: AgentChoice = {
   agent: 'codex',
   model: 'operator-codex',
   effort: 'low',
+  fast: false,
 }
 let harness: TestHarness
 beforeAll(async () => {
@@ -150,6 +152,18 @@ it('reports missing operator model configuration without blocking unrelated rout
   const modelsResponse = await harness.request(MODELS_PATH, cookie)
   expect(modelsResponse.status).toBe(503)
   expect(await modelsResponse.json()).toMatchObject({
+    error: { code: 'models_unavailable' },
+  })
+  const fastDefault = await harness.request(
+    ACCOUNT_PATHS.defaultModel,
+    cookie,
+    {
+      method: 'PUT',
+      body: JSON.stringify({ choice: { ...choice, fast: true } }),
+    },
+  )
+  expect(fastDefault.status).toBe(503)
+  expect(await fastDefault.json()).toMatchObject({
     error: { code: 'models_unavailable' },
   })
   const account = await harness.request(ACCOUNT_PATHS.account, cookie)

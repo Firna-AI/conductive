@@ -1,13 +1,11 @@
+import type { GitHubSummary } from '../shared/generated/GitHubSummary'
+import type { WorkspaceState } from '../shared/generated/WorkspaceState'
 import type { PathState } from '../../docs/mockups/src/fixtures/maskedFiles'
 import type { SessionResponse } from '../shared/account'
 import { API_PATHS, type OrgRole, type User } from '../shared/api'
 import { chatHistoryPath } from '../shared/events'
-import {
-  githubSummary,
-  type BannerState,
-  type GitHubSummary,
-} from '../shared/github'
-import type { WorkspaceState } from '../shared/workspaces'
+import { githubSummary, type BannerState } from '../shared/github'
+
 import { chatEventsOf } from '../shared/transcript/session-events'
 import type { FakeMethod, FakeRouteWriter } from './fake-api-routes'
 import { fakeCoreRoutes } from './fake-core-routes'
@@ -47,6 +45,11 @@ export interface FakeApiOptions {
    * the labels of the mockups, to the file lists and to each finished turn.
    */
   paths?: PathState
+  /**
+   * `false` leaves the file reports out of the event history, as a new
+   * workspace whose runner has not reported its lists yet.
+   */
+  savedLists?: boolean
 }
 
 /**
@@ -96,7 +99,9 @@ export class FakeApiServer implements FakeRouteWriter {
         : recorded
     this.events = new FakeWorkspaceEvents([
       ...chat,
-      ...recordedFileEvents(FAKE_IDS.workspace, chat.length + 1, paths),
+      ...(options.savedLists === false
+        ? []
+        : recordedFileEvents(FAKE_IDS.workspace, chat.length + 1, paths)),
     ])
     fakeCoreRoutes(this, options.role ?? 'admin')
     fakeWorkspaceRoutes(

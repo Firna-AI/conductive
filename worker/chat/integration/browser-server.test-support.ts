@@ -43,6 +43,7 @@ export async function startBrowserHarness(
         agent: 'claude',
         model: 'test-claude',
         effort: 'high',
+        fast: false,
       }),
     },
   })

@@ -1,4 +1,4 @@
-import type { Session } from '../../src/shared/sessions'
+import type { Session } from '../../src/shared/generated/Session'
 
 type OptionalSessionFields =
   | 'startedBy'
@@ -13,6 +13,7 @@ export type StoredSession = Omit<Session, OptionalSessionFields> &
 export function normalizeSession(session: StoredSession): Session {
   return {
     ...session,
+    choice: { ...session.choice, fast: session.choice.fast ?? false },
     activeTurnStartedAt: session.activeTurnId
       ? (session.activeTurnStartedAt ?? null)
       : null,

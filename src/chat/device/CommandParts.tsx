@@ -1,5 +1,6 @@
+import type { DeviceCommandRecord } from '../../shared/generated/DeviceCommandRecord'
 import { ChevronDown } from 'lucide-react'
-import type { DeviceCommandRecord } from '../../shared/device'
+
 import { nameLabel } from '../../shared/name-label'
 import { StatusText } from '../../../docs/mockups/src/components/common/StatusText'
 import card from '../../../docs/mockups/src/components/chat/MacCommand.module.css'
@@ -27,6 +28,7 @@ export function CommandLine(props: { command: string }) {
           ${' '}
         </span>
       }
+      syntax="shell"
       text={props.command}
     />
   )
