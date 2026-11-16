@@ -4,6 +4,7 @@ import {
   textWithAttachmentNames,
 } from '../../src/shared/attachment-mentions'
 import type { AppEnv } from '../env'
+import { readWorkspace, workspaceRecord } from '../lifecycle/workspace-data'
 import { warnWorker } from '../warnings'
 import { errorSummary } from '../warning-values'
 import { agentToolTaskText } from '../tools/message-text'
@@ -108,12 +109,14 @@ export class WorkspaceTitles {
           },
           this.publish,
         )
-        if (envelope)
-          await projectWorkspaceTitle(
-            this.env.DB,
-            envelope,
-            this.dependencies.now(),
-          )
+        const branchOrgId = envelope
+          ? await projectWorkspaceTitle(
+              this.env.DB,
+              envelope,
+              this.dependencies.now(),
+            )
+          : null
+        if (branchOrgId) await this.publishBranch(workspaceId, branchOrgId)
       })
     } catch (error) {
       warnWorker({
@@ -121,5 +124,21 @@ export class WorkspaceTitles {
         error: errorSummary(error),
       })
     }
+  }
+
+  /** Open tabs learn the branch that took the title. */
+  private async publishBranch(
+    workspaceId: string,
+    orgId: string,
+  ): Promise<void> {
+    const workspace = workspaceRecord(
+      await readWorkspace(this.env.DB, orgId, workspaceId),
+    )
+    await this.store.change(
+      workspaceId,
+      (transaction) =>
+        transaction.emit({ type: 'workspace.updated', workspace }),
+      this.publish,
+    )
   }
 }

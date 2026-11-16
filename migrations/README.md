@@ -294,3 +294,10 @@ UI and wiring milestones normally need no migration. Their ranges stay reserved.
 creation plans, account defaults, and routines. Each column starts at 0.
 Sessions and routine run choices keep fast mode in their existing JSON records.
 [Fast mode](../docs/protocol/fast-mode.md) gives the choice rules.
+
+`202611161200_workspace_branch_names.sql` adds `workspaces.branch_placeholder`
+and `workspaces.task_number`. Existing rows get 0 and 1, so their branches stay.
+A new row starts with 1 in both. The start sets the placeholder to 0 before it
+uses the branch in the sandbox. Until then, a name renames the branch, as
+[The branch and the name](../docs/protocol/create-a-workspace.md#the-branch-and-the-name)
+says. Each Continue adds 1 to the task number.

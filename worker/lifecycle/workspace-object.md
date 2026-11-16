@@ -196,7 +196,12 @@ create and resume. The workspace object runs that start:
   lifecycle due time from the saved state.
 - The progress phases of a start are `records`, `machine`, `ready`,
   `fetch`, `branch`, `startup`, `terminal`, `terminal-password`, and
-  `runner`, up to the success of the start. They make most of their D1 and
+  `runner`, up to the success of the start. Each command phase after
+  `fetch` first calls `settleWorkspaceBranch` in
+  [`workspace-branch.ts`](workspace-branch.ts). One D1 statement ends the
+  placeholder of the branch and reads the branch for the command. Before
+  that, a name write renames a placeholder branch with `namedBranchSql`.
+  They make most of their D1 and
   Boat calls outside the chat queue. The start guard in
   [`start-guard.ts`](start-guard.ts) runs each group of these calls with
   `outside`, as [History and event order](../chat/history.md) says. So

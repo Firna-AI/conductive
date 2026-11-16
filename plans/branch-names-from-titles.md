@@ -184,32 +184,32 @@ Depends on: 1
 
 Depends on: 2
 
-- [ ] Migration: add the marker and the task number to `workspaces`. Add
+- [x] Migration: add the marker and the task number to `workspaces`. Add
       the marker to the creation plan table when the create copies the
       row from it.
-- [ ] `worker/lifecycle/workspace-branch.ts`: the slug function, the
+- [x] `worker/lifecycle/workspace-branch.ts`: the slug function, the
       branch from a name, the title branch that keeps the random
       characters, and the Continue branch with its version. Unit tests.
-- [ ] Create: a name in the create call gives the branch at once. Each
+- [x] Create: a name in the create call gives the branch at once. Each
       new workspace sets the marker.
-- [ ] Branch step: clear the marker and read the branch in one statement
+- [x] Branch step: clear the marker and read the branch in one statement
       in `start-command-execution.ts`. Use that branch for the command.
       Check retries of the step.
-- [ ] Automatic title (`worker/chat/workspace-title.ts`,
+- [x] Automatic title (`worker/chat/workspace-title.ts`,
       `worker/chat/queries.ts`): change the branch in the same statement
       when the marker is set. Publish `workspace.updated` so that open
       tabs show the new branch.
-- [ ] Manual rename (`worker/app-api/feature-workspaces-data.ts`) and
+- [x] Manual rename (`worker/app-api/feature-workspaces-data.ts`) and
       `rename_workspace`: the same rule, and the same publication.
-- [ ] Continue (`worker/lifecycle/continue-admission.ts`,
+- [x] Continue (`worker/lifecycle/continue-admission.ts`,
       `continue-data.ts`): the branch from the name and the next task
       number. Store the task number with the branch.
-- [ ] Check that a title that arrives before the workspace row exists
+- [x] Check that a title that arrives before the workspace row exists
       still names the branch, through the title repair.
-- [ ] Tests: a title before the branch step renames the branch; a title
+- [x] Tests: a title before the branch step renames the branch; a title
       after it does not; a manual rename before and after; a create name;
       Continue with a name, without a name, and twice.
-- [ ] Update the lifecycle and chat READMEs.
+- [x] Update the lifecycle and chat READMEs.
 
 ## Milestone 4: Verification, commit, review, and pull request
 
