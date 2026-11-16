@@ -186,7 +186,8 @@ as [Decision numbers](../docs/architecture.md#decision-numbers) says.
   - The app already narrows the right column so that one chat keeps 360 px. The user does not touch it for that.
 - **Problem:** With the default panels, two panes of 320 px show only in a window of 1363 px or wider. In a 1280 px window, the centre column is 563 px, so the split shows as one row.
 - **Impact if no action:** On a common 1280 px window, the split seems to be missing until the user hides or narrows a panel.
-- **Root question:** When the window has too little room for two usable panes beside the panels, what gives way: the panes, the right column, or the split? The options check of 13 November 2026 wrote this question again, because the first one asked only for a pane width.
+- **User input:** On 16 November 2026 the user wrote: "i think its confusing if split stops working at a specific viewport though (outside of mobile ofc)". So on desktop the split never turns into one row. Only the phone layout, below 640 px, shows one row. Options A, B, and D as first written fail this goal, and C fails it below 690 px. Options G, H, and I were added on the same day to meet it.
+- **Root question:** How does the split keep showing two panes at every desktop width, while each pane stays usable? The question changed on 16 November 2026, after the user input.
 - **Options:**
   - **A.** Keep 320 px. The split needs a window of 1363 px with the default panels. A pane of code shows about 39 characters of a line. Effort: Small.
   - **B.** Lower the least width to 280 px. Two panes then show from 1241 px with the default panels, so a 1280 px window fits them with 1.8 px to spare. A wider stored panel stops it. A pane of code shows about 33 characters. Effort: Small.
@@ -194,15 +195,19 @@ as [Decision numbers](../docs/architecture.md#decision-numbers) says.
   - **D.** Added by the options check. Keep 320 px. While two panes show, the right column gives way to them, down to 280 px. The split then shows from 1179 px, also with stored panel widths. At 1280 px the right column narrows from 436 px to 358 px, so the pull request bar drops its detail and the terminal loses about 11 columns. At 1440 px nothing changes. Effort: Small.
   - **E.** Added by the options check. Use with A or B. In a column too narrow for two panes, a drop on a half still saves the split, and the one row shows it. A wider window then shows both panes. The user can still think that the split failed. Effort: Small.
   - **F.** Added by the options check. Use with A, B, or D. A pane narrower than 360 px gives its chat the paddings of a phone. A 320 px pane then gives its text as much room as a 320 px phone. The chat changes its look at that width. Effort: Small.
+  - **G.** Added on 16 November 2026. The split never turns into one row on desktop. While two panes show, the right column first narrows to 280 px, as D says. Then the two panes shrink with the window, with no least width. A pane narrower than 360 px uses the paddings of a phone, as F says. Each pane is 320 px or wider from 1179 px. The narrowest pane is about 180 px, in a window of 640 px or of 900 px, where the sidebar still shows. There a pane shows about 19 characters of a code line and one tab. The user can hide the right column to give the panes room. Effort: Small.
+  - **H.** Added on 16 November 2026. Do G, but keep each pane at least 220 px wide, as VS Code keeps an editor group. When the room runs out, the right column hides itself while two panes show, and it comes back when the window grows or one pane closes. With the sidebar shown, this happens from 900 to 978 px. Without it, it happens from 640 to 769 px. A panel then hides at a width that the user did not choose. Effort: Medium.
+  - **I.** Added on 16 November 2026. Do G down to a least width of 220 px. Below it, the pane that is not focused shrinks to a strip of about 48 px that shows the icon of its shown tab. A press on the strip makes that pane focused and full width, and the other pane becomes the strip. A new pattern that VS Code does not have, and a pane that is a strip shows nothing of its content. Effort: Medium.
 - **Left out:**
   - A split by share alone, with no least width. A pane can then get too narrow to use.
   - A least width of 360 px, the chat floor of the app. Two panes then need 1443 px, so a 1440 px window loses the split.
   - A sidebar that narrows for the split. It frees only 24 px, which is not enough at 1280 px.
   - Panes one above the other in a narrow column. It breaks decision 2 A.
+  - A centre column that scrolls sideways to show two panes of a fixed width. Half of the split is then out of view, which fails the user input as much as one row does.
 - **Wider fix:** D. One rule then says how the centre and the right column share the room, for one pane and for two.
 - **Previous examples:** The app keeps one chat at least 360 px wide in `src/shell/workspace/workspace.module.css:28-31`. VS Code keeps an editor group at least 220 px wide. The right column narrows to 280 px in a narrow window.
-- **Recommendation:** D, in place of B, which the first draft recommended. D keeps 320 px panes and brings the split to 1280 px windows with any stored panel widths. If no panel may narrow, B with F is the next best.
-- **Action:** ask the user, because the options trade the reach of the split against the width of a pane and of the right column, and no option is clearly best.
+- **Recommendation:** G, in place of D, which the options check of 13 November 2026 recommended in place of B. G meets the user input with one rule: everything shrinks with the window, and nothing hides or changes shape at a fixed width. H is better if a pane under 220 px is too narrow to use, at the cost of a panel that hides itself.
+- **Action:** ask the user, because the options trade the width of a pane against a panel or a pane that hides itself, and no option is clearly best.
 
 ## Design
 
@@ -302,16 +307,18 @@ first draft, and this text closes them.
   session keys. When no pane shows a session, they go to the last session
   of the focused row.
 
-### One pane on a small screen
+### One pane on a phone
 
-- A phone, and a centre column narrower than two panes of 320 px, show one
-  row and one content area. The row holds the tabs of the left pane, then
+- On desktop, the split never turns into one row, as the user wrote on
+  16 November 2026. Decision 6 says how the panes and the right column
+  share a narrow window.
+- A phone shows one row and one content area. The row holds the tabs of the left pane, then
   the tabs of the right pane. The phone row still shows only session tabs.
 - The content area shows the shown tab of the focused pane. A press on a
   tab of the other pane makes that pane the focused pane.
 - So a drop on the content moves no tab between panes there, and the
   saved split stays.
-- A drop on a half of the content does nothing there, and the item of
+- A drop on a half of the content does nothing on a phone, and the item of
   decision 4 is off. A drag or Move left and Move right across the border
   of the two parts moves the tab to the other pane, at that place.
 - The one row has one "+", which opens a session in the focused pane, and
@@ -366,8 +373,9 @@ and of a narrow centre column. They live under `app/tabs/split`.
       screenshots are in `.context/split-panes/mockups/`.
 - [x] Update the design and the TODOs of this plan for each problem that
       the mockups show. Decision 6 and seven design calls came from them.
-- [ ] Draw the least width of a pane as decision 6 says, when it changes
-      the drawn screens.
+- [ ] Redraw `app/tabs/split/narrow` and its `file` page as a narrow
+      desktop window with two panes, as decision 6 says. Keep their phone
+      views. Draw the least width of a pane there.
 
 ## Milestone 2: Documentation and protocol
 
@@ -445,8 +453,8 @@ Depends on: 5
 - [ ] Add the divider, with the share kept in the browser.
 - [ ] Mark the focused pane, and set it on a click, on typing, and on a
       drop.
-- [ ] Show one pane on a phone and in a narrow centre column, as the design
-      says.
+- [ ] Show one row and one pane on a phone, and share a narrow desktop
+      window as decision 6 says.
 - [ ] Delete the old single-row paths that Milestone 4 left.
 
 ## Milestone 7: The drag between panes
