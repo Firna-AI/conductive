@@ -194,6 +194,7 @@ export const paths = {
   code: 'app/files/code',
   codeAtLine: 'app/files/code/at-line',
   diff: 'app/files/diff',
+  diffFile: 'app/files/diff/file',
   image: 'app/files/image',
   imageNotDrawn: 'app/files/image/cannot-draw',
   maskedPaths: 'app/chat/masked-paths',

@@ -48,6 +48,8 @@ export function openFile(state: WorkspaceState): FileTabView | undefined {
       return state.tab
     case 'diff':
       return state.paths === 'masked' ? 'masked-diff' : 'diff'
+    case 'diff-file':
+      return state.tab
     case 'unnamed-file':
       return 'unnamed'
     case 'image':
@@ -74,6 +76,7 @@ function backFrom(open: FileTabView): BackLink {
     case 'code':
     case 'code-lines':
     case 'markdown':
+    case 'diff-file':
     case 'image':
     case 'image-not-drawn':
     case 'attachment':

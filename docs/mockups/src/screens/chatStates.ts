@@ -4,7 +4,8 @@
  * the second session, or a file, a Markdown preview, a diff, or a file
  * whose name the app does not know, such as a file that moved.
  * `code-lines` is the code file at the lines that a chip of an answer
- * names, with the lines in view and marked. An image of
+ * names, with the lines in view and marked. `diff-file` is the current
+ * text of the changed file of `diff`, in a file tab. An image of
  * the branch shows as its picture, or with the state of an image that the
  * browser cannot draw. `attachment` is the copy of an attached screenshot,
  * which a press on its sent chip opens. A phone shows a file in Files.
@@ -18,6 +19,7 @@ export const tabStates = [
   'code-lines',
   'markdown',
   'diff',
+  'diff-file',
   'unnamed-file',
   'image',
   'image-not-drawn',

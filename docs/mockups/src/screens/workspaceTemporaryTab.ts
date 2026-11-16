@@ -6,13 +6,14 @@ import type { WorkspaceState } from './workspaceState'
 
 /**
  * The tabs of the centre column that a press opens at the end of the row:
- * a Markdown preview, a diff, a picture, an image that the browser cannot
+ * a Markdown preview, a diff, the current text of a changed file, a picture, an image that the browser cannot
  * draw, the copy of an attached screenshot, and a file whose name the app
  * does not know. The code file stays a kept tab.
  */
 const pressedTabs: ReadonlySet<WorkspaceState['tab']> = new Set([
   'markdown',
   'diff',
+  'diff-file',
   'image',
   'image-not-drawn',
   'attachment',

@@ -28,6 +28,7 @@ function starterOf(state: WorkspaceState, workspace: Workspace): PersonKey {
     case 'code-lines':
     case 'markdown':
     case 'diff':
+    case 'diff-file':
     case 'unnamed-file':
     case 'image':
     case 'image-not-drawn':

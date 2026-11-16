@@ -162,6 +162,15 @@ export function tabsFor(
       selected: true,
     })
   }
+  if (state.tab === 'diff-file') {
+    tabs.push({
+      key: 'address-form',
+      kind: 'code',
+      title: 'AddressForm.tsx',
+      to: paths.diffFile,
+      selected: true,
+    })
+  }
   const picture = pictureTab(state)
   if (picture) tabs.push(picture)
   if (state.tab === 'unnamed-file') {

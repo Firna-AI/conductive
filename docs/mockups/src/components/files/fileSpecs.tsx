@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import { screenshotCopy } from '../../fixtures/attachments'
 import {
+  addressForm,
   addressFormDiff,
   autocompleteHook,
   readme,
@@ -25,6 +26,7 @@ import { DiffView } from './DiffView'
 import type { FileTabView } from './FilesPanel'
 import { ImageView } from './ImageView'
 import { MarkdownView } from './MarkdownView'
+import { fileModes, type FileSwitch, type FileTabMode } from './ViewSwitch'
 
 /** What the page of a file shows: its header and its content. */
 export type FileSpec = {
@@ -37,6 +39,17 @@ export type FileSpec = {
   closed?: true
   /** The file is not text, so the header keeps Download, and Copy is off. */
   binary?: true
+  /** The switch between the views of the tab, when it has more than one. */
+  views?: FileSwitch
+}
+
+/** The switch of a file, with the view that shows. */
+function views(
+  changed: boolean,
+  markdown: boolean,
+  shown: FileTabMode,
+): FileSwitch {
+  return { modes: fileModes(changed, markdown), shown }
 }
 
 /**
@@ -91,6 +104,7 @@ export function specFor(view: FileTabView): FileSpec {
         icon: FileCode,
         meta: `${autocompleteHook.split('\n').length} lines`,
         content: <CodeView code={autocompleteHook} />,
+        views: views(true, false, 'file'),
       }
     case 'code-lines':
       return {
@@ -98,12 +112,14 @@ export function specFor(view: FileTabView): FileSpec {
         icon: FileCode,
         meta: `${autocompleteHook.split('\n').length} lines`,
         content: <CodeView code={autocompleteHook} marked={answerLines} />,
+        views: views(true, false, 'file'),
       }
     case 'markdown':
       return {
         path: 'README.md',
         icon: FileText,
         content: <MarkdownView blocks={readme} />,
+        views: views(true, true, 'preview'),
       }
     case 'diff':
       return {
@@ -111,6 +127,15 @@ export function specFor(view: FileTabView): FileSpec {
         icon: FileDiff,
         meta: <DiffStat added={38} removed={6} />,
         content: <DiffView hunks={addressFormDiff} />,
+        views: views(true, false, 'changes'),
+      }
+    case 'diff-file':
+      return {
+        path: 'src/app/checkout/AddressForm.tsx',
+        icon: FileCode,
+        meta: `${addressForm.split('\n').length} lines`,
+        content: <CodeView code={addressForm} />,
+        views: views(true, false, 'file'),
       }
     case 'masked-diff':
       return {
@@ -118,6 +143,7 @@ export function specFor(view: FileTabView): FileSpec {
         icon: FileDiff,
         meta: <DiffStat added={6} removed={0} />,
         content: <DiffView hunks={seedScriptDiff} />,
+        views: views(true, false, 'changes'),
       }
     case 'unnamed':
       return {

@@ -14,7 +14,7 @@ export type TreeEntry = {
   open?: boolean
   change?: ChangeKind
   /** The tab that opening this file shows, when the mockups draw one. */
-  preview?: 'code' | 'markdown' | 'image' | 'image-not-drawn'
+  preview?: 'code' | 'markdown' | 'diff-file' | 'image' | 'image-not-drawn'
 }
 
 export const fileTree: readonly TreeEntry[] = [
@@ -26,7 +26,13 @@ export const fileTree: readonly TreeEntry[] = [
   { name: 'app', depth: 1, folder: true, open: true },
   { name: 'api', depth: 2, folder: true },
   { name: 'checkout', depth: 2, folder: true, open: true },
-  { name: 'AddressForm.tsx', depth: 3, folder: false, change: 'modified' },
+  {
+    name: 'AddressForm.tsx',
+    depth: 3,
+    folder: false,
+    change: 'modified',
+    preview: 'diff-file',
+  },
   { name: 'page.tsx', depth: 3, folder: false },
   {
     name: 'useAddressAutocomplete.ts',

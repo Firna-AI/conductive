@@ -1,33 +1,14 @@
 import type { ReactNode } from 'react'
-import { SegmentedControl } from '@firna/ui/segmented'
-import { ChevronLeft, Code, Copy, Download, Eye } from 'lucide-react'
+import { ChevronLeft, Copy, Download } from 'lucide-react'
 import { splitPath } from '../../fixtures/files'
-import { noop } from '../../noop'
 import { ScreenLink } from '../common/ScreenLink'
 import { IconButton } from '../common/actions'
-import { useControlSizes } from '../common/touch'
+import { useTouch } from '../common/touch'
 import type { BackLink } from '../layout/Page'
 import { specFor } from './fileSpecs'
 import type { FileTabView } from './FilesPanel'
+import { ViewSwitch } from './ViewSwitch'
 import styles from './FilePage.module.css'
-
-/** The switch between the rendered Markdown and its source. */
-function ViewSwitch() {
-  const { field } = useControlSizes()
-  return (
-    <SegmentedControl
-      accessibilityLabel="Show"
-      iconOnly
-      onChange={noop}
-      options={[
-        { label: 'Preview', value: 'preview', icon: Eye },
-        { label: 'Source', value: 'source', icon: Code },
-      ]}
-      size={field}
-      value="preview"
-    />
-  )
-}
 
 /** The page shows the diff of a changed file. */
 function isDiff(view: FileTabView): boolean {
@@ -45,6 +26,11 @@ function isDiff(view: FileTabView): boolean {
  * sandbox that starts. The page then reads nothing, so its header has no
  * Download, no Copy, and no line count. A diff keeps its changed lines,
  * which come from the list of changes.
+ *
+ * The switch at the end of the header changes the view of the tab in its
+ * place: the changes of a changed file, or the current file. A Markdown
+ * file shows its current state rendered or as its source. On a phone the
+ * switch sits in its own bar below the header, with the names.
  */
 export function FilePage(props: {
   view: FileTabView
@@ -57,6 +43,7 @@ export function FilePage(props: {
   const waiting = props.placeholder !== undefined
   const closed = spec.closed === true || waiting
   const meta = waiting && !isDiff(props.view) ? undefined : spec.meta
+  const phone = useTouch()
   return (
     <section aria-label={name} className={styles.page}>
       <div className={styles.header}>
@@ -83,9 +70,10 @@ export function FilePage(props: {
             icon={Copy}
             label={`Copy the text of ${name}`}
           />
-          {props.view === 'markdown' ? <ViewSwitch /> : null}
+          {spec.views && !phone ? <ViewSwitch {...spec.views} /> : null}
         </div>
       </div>
+      {spec.views && phone ? <ViewSwitch {...spec.views} bar /> : null}
       <div className={styles.body}>{props.placeholder ?? spec.content}</div>
     </section>
   )

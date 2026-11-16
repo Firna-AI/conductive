@@ -59,6 +59,12 @@ the middle of the view, on desktop and on a phone.
 `app/files/markdown` has README.md and `app/files/diff` has the diff of
 AddressForm.tsx, each in the temporary tab that a press opened, beside the
 kept tab of the code file of `app/files/code`.
+The header of the tab of a changed file has a switch between Changes and
+the current file, from file view decision 1 of 16 November 2026. A
+Markdown file shows its current state as Preview or Source, so its switch
+has three views.
+`app/files/diff/file` has the current text of AddressForm.tsx, which a
+press in All files opened, with File selected in the switch.
 `app/files/image` has a picture of the branch in the temporary tab, from
 decision 265 B. Its `cannot-draw` variant has an image whose bytes the
 browser cannot draw, with "Download this file to open it".

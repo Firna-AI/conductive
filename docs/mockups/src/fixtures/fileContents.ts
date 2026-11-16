@@ -86,6 +86,48 @@ export function useAddressAutocomplete(query: string) {
   return { suggestions, loading }
 }`
 
+/**
+ * The current text of `AddressForm.tsx`, after the change that
+ * `addressFormDiff` shows. Its lines keep the numbers of the new side of
+ * the diff.
+ */
+export const addressForm = `'use client'
+
+import { useState } from 'react'
+import { useAddressAutocomplete } from './useAddressAutocomplete'
+import { Field } from '@/components/Field'
+
+type Address = { line1: string; city: string }
+
+type Props = {
+  onSubmit: (address: Address) => void
+}
+
+/**
+ * The address step of the checkout. It suggests addresses while the
+ * customer types the first line.
+ */
+export function AddressForm({ onSubmit }: Props) {
+  const submit = () => onSubmit({ line1, city })
+  const [line1, setLine1] = useState('')
+  const [city, setCity] = useState('')
+  const { suggestions } = useAddressAutocomplete(line1)
+
+  return (
+    <form onSubmit={submit}>
+      <Field
+        label="Address"
+        value={line1}
+        onChange={setLine1}
+        autoComplete="off"
+      />
+      <Suggestions items={suggestions} />
+      <Field label="City" value={city} onChange={setCity} />
+      <button type="submit">Continue</button>
+    </form>
+  )
+}`
+
 export type DiffLine =
   | { kind: 'hunk'; text: string }
   | { kind: 'context' | 'added' | 'removed'; text: string }
