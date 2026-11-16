@@ -1,5 +1,4 @@
 import type { WorkspaceView } from '../../shared/workspace-view'
-import { isRunning } from './chat-snapshot'
 import { showNotice, type ChatContext } from './context'
 import { hydrate } from './history'
 import { beginEdit, confirmRecord } from './session-records'
@@ -121,56 +120,6 @@ export async function renameSession(
     edit.fail()
     showNotice(context, sessionId, "The new name didn't save", error)
   }
-}
-
-async function closeSession(
-  context: ChatContext,
-  sessionId: string,
-  stopRunningTurn: boolean,
-): Promise<void> {
-  try {
-    const closed = await context.api.closeSession(sessionId, stopRunningTurn)
-    if (!context.live()) return
-    confirmRecord(context, closed.session, closed.eventNumber)
-    const { view, activeSessionId } = context.store.get()
-    if (view) context.saveView(view)
-    if (activeSessionId) await hydrate(context, activeSessionId)
-  } catch (error) {
-    showNotice(context, sessionId, "The session didn't close", error)
-  }
-}
-
-/**
- * Closing tabs moves their sessions to the history. Each session with no
- * running turn closes at once. The sessions whose turns run ask first, in
- * one question, because closing stops their turns.
- */
-export async function requestClose(
-  context: ChatContext,
-  sessionIds: readonly string[],
-): Promise<void> {
-  const snapshot = context.store.get()
-  const running = sessionIds.filter((id) => isRunning(snapshot, id))
-  if (running.length > 0) {
-    context.store.update((current) => ({
-      ...current,
-      overlay: { kind: 'close', sessionIds: running },
-    }))
-  }
-  const idle = sessionIds.filter((id) => !running.includes(id))
-  await Promise.all(idle.map((id) => closeSession(context, id, false)))
-}
-
-export async function confirmClose(context: ChatContext): Promise<void> {
-  const { overlay } = context.store.get()
-  if (overlay.kind !== 'close') return
-  context.store.update((snapshot) => ({
-    ...snapshot,
-    overlay: { kind: 'none' },
-  }))
-  await Promise.all(
-    overlay.sessionIds.map((id) => closeSession(context, id, true)),
-  )
 }
 
 /** Reopens a session of the history as a tab, with its chat. */
