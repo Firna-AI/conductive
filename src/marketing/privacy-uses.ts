@@ -55,6 +55,10 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         waitlist off. ${productName} also keeps the time and operator of
         the last change to the waitlist setting. These records let the
         operator trace misuse back to a code or a person.`,
+      text`Your last activity: ${productName} keeps one time for your
+        account. It is the time when you last created a workspace or sent a
+        chat message in the app. It keeps no history. The operator sees
+        this time, to know which accounts are still in use.`,
       text`Invite codes: each account with app access has an invite code
         with 5 invites. ${productName} keeps who used each code, and when.
         You see how many of your invites are left, but not who used them.

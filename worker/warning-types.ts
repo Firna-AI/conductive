@@ -38,6 +38,7 @@ export const SIMPLE_WARNINGS = {
   attachment_upload_cleanup_retry: 'An attachment upload cleanup will retry.',
   activity_timestamp_failed: 'Workspace activity timestamp could not be saved.',
   activity_update_failed: 'Workspace activity update failed.',
+  user_activity_failed: 'The last active time of a user could not be saved.',
   workspace_title_unconfigured:
     'The workspace title request was skipped: Workers AI is not configured.',
   shortcut_keys_skipped:

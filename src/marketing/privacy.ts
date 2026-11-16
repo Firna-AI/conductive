@@ -102,9 +102,9 @@ export const privacyDocument: LegalDocument = {
           and it uploads before you send it.`,
         paragraph`An account that waits for app access stays until you ask
           for its deletion, as every other account does.`,
-        paragraph`Account records, the latest Terms acceptance, and
-          suspension records do not automatically expire when you stop
-          using ${productName}. Workspace chat history and Mac command records
+        paragraph`Account records, the latest Terms acceptance, the time of
+          your last activity, and suspension records do not automatically
+          expire when you stop using ${productName}. Workspace chat history and Mac command records
           stay while their org exists, including while a cloud computer is
           stopped. When ${productName} passes on model requests and their
           answers, it keeps no copy of them.`,

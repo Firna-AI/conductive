@@ -86,9 +86,12 @@ Invite codes tabs come from decision 160. Its child pages:
   restore a suspended org, and that a lift leaves the org deleted.
 - `app/operator/users` has the Users tab: the newest users, with Waiting
   under a person on the waitlist, a search, and a search with no match.
+  Its Last active column gives the time of the last new workspace or sent
+  message: the time of day for today, the day for another day, or Unknown.
 - `app/operator/user` has the page of a user, with the name, the email
-  address, the age of the GitHub account, how and when they got app access, their referral
-  code with Copy, Copy join link, and who used it, and Suspend user. Its
+  address, the age of the GitHub account, the time of their last new
+  workspace or sent message, how and when they got app access, their
+  referral code with Copy, Copy join link, and who used it, and Suspend user. Its
   child pages are below.
 - `app/operator/waitlist` has the Waitlist tab: the people who wait, oldest
   first, a search, the question before Approve, the list after two
