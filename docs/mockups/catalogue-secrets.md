@@ -26,13 +26,16 @@ suspended org, with no action.
 
 `app/new-workspace/capabilities` has the Capabilities control open on the
 New workspace page: the secrets of Acme with FIGMA_TOKEN pre-approved, and
-Mac access on. A phone opens it as a sheet. Its `no-secrets` variant has
-Firna without secrets. `app/new-workspace/dialog/capabilities` has the same
-control in the dialog.
+Mac access on. A phone opens it as a sheet from the menu of the + button.
+Its `no-secrets` variant has Firna without secrets, and its `menu` variant
+has that menu open on a phone. `app/new-workspace/dialog/capabilities` has
+the same control in the dialog.
 
 `app/capabilities` has the control of Checkout address autocomplete, with
 the approvals of its sessions and its value for the workspace, each with
-Remove. Its `mac-access-off` variant has Mac access off. The
+Remove. Its `mac-access-off` variant has Mac access off. Its `menu` variant
+has the menu of the + button of a phone, with Attach files and
+Capabilities. The
 `mac-access-off` variant of `app/mac-commands` has a Mac command that the
 workspace refused for that reason.
 

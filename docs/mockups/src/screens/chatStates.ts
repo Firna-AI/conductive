@@ -69,7 +69,9 @@ export const temporaryTabStates = [
  * The `capabilities` states open the Capabilities control of the icon
  * beside the attach button (secrets decision 8): with Mac access on, and
  * after a member turned it off. A computer draws it above the icon, and a
- * phone as a sheet.
+ * phone as a sheet. `menu` opens the menu of the one button of a phone,
+ * which holds Attach files and Capabilities (secrets decision 16 G). A
+ * computer has no such menu, so it draws the composer as it is.
  */
 export const composerStates = [
   'empty',
@@ -100,4 +102,5 @@ export const composerStates = [
   'unreadable-folder',
   'capabilities',
   'capabilities-mac-off',
+  'menu',
 ] as const

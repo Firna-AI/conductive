@@ -51,10 +51,18 @@ except to an admin who reveals one.
 
 - `CapabilitiesButton` in `src/components/capabilities/` draws the small
   Capabilities icon, the Blocks icon of lucide, with its label as the
-  tooltip. It stands right after the attach button in the bar of every
-  composer, and right before the attach button in the footer of the New
-  workspace dialog. A press opens the control, which a computer draws
-  above the icon, as an open menu of the app, and a phone draws as a sheet.
+  tooltip. On a computer it stands right after the attach button in the bar
+  of every composer, and right before the attach button in the footer of
+  the New workspace dialog. A press opens the control, which a computer
+  draws above the icon, as an open menu of the app.
+- A phone has one + button in place of the attach button and the
+  Capabilities icon, from `ComposerMenu` in `src/components/chat/`. Its
+  menu opens above it, as the menu of the model picker does, with Attach
+  files and Capabilities, and Capabilities opens the control as a sheet.
+  Stop shows only its icon, from `ComposerButtons.tsx`, and keeps the
+  spoken name Stop. So the model and the label of a login stay readable at
+  360 px (secrets decision 16 G). Later tools of the composer join the
+  menu.
 - `CapabilitiesPanel` draws the control: its title, a line about what it
   holds, then each part. A part has a title in the label font, a control
   at the end of the title, a hint, and its content. Secrets and Mac access

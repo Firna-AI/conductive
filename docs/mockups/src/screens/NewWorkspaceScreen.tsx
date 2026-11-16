@@ -136,6 +136,11 @@ function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
             ? paths.newWorkspaceNoSecrets
             : paths.newWorkspaceCapabilities,
         ),
+        // The menu of a phone: Firna has no page with it open.
+        menu: {
+          open: state.capabilities === 'menu',
+          to: state.org === 'new' ? undefined : paths.newWorkspaceMenu,
+        },
         attachTo:
           state.files === 'none' && !failed && !linked && state.org !== 'new'
             ? paths.newWorkspaceFiles

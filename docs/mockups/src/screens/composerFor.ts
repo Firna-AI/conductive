@@ -191,7 +191,7 @@ export function isRunning(state: WorkspaceState): boolean {
  * only the caret, where the attach button puts the files.
  *
  * The Capabilities icon beside the attach button opens what the agents of
- * the workspace can use.
+ * the workspace can use. A phone holds both in the menu of one button.
  */
 export function composerFor(
   state: WorkspaceState,
@@ -259,5 +259,6 @@ export function composerFor(
     caret: drop?.caret,
     pointer: !fresh && pointerStates.has(state.composer),
     capabilities: workspaceCapabilities(state, viewport),
+    menu: { open: state.composer === 'menu', to: paths.capabilitiesMenu },
   }
 }

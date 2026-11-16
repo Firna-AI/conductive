@@ -16,7 +16,7 @@ import { paths } from '../paths'
 
 /** The parts of the state of New workspace that the control reads. */
 type DraftState = {
-  capabilities: 'closed' | 'open'
+  capabilities: 'closed' | 'open' | 'menu'
   org: 'active' | 'suspended' | 'new'
   viewer: 'admin' | 'member'
 }
@@ -56,13 +56,13 @@ export function newWorkspaceCapabilities(
   viewport: Viewport,
   to: string | undefined,
 ): CapabilitiesControl {
-  if (state.capabilities === 'closed') return { to }
+  if (state.capabilities !== 'open') return { to }
   if (viewport === 'mobile') return { expanded: true }
   return { panel: panelOf(state, false) }
 }
 
 /** The open control of New workspace as a sheet, on a phone. */
 export function newWorkspaceCapabilitiesSheet(state: DraftState): ReactNode {
-  if (state.capabilities === 'closed') return null
+  if (state.capabilities !== 'open') return null
   return <Sheet title={capabilitiesLabel}>{panelOf(state, true)}</Sheet>
 }

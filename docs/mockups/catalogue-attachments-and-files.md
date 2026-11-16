@@ -13,7 +13,8 @@ shows only its canonical screen. Its child pages:
 
 - `app/attachments/drop` has a screenshot that hovers over the message box:
   the drop state of the box, and the drop caret in the text. A phone has no
-  drag, so its view has the caret where a pick from the paperclip goes. Its
+  drag, so its view has the caret where a pick from Attach files in the
+  menu of its + button goes. Its
   `dropped` variant has the screenshot at the place of the drop, with the
   caret after it. On a phone it has the picked screenshot at the caret. Its
   `folder` variant has a drop with a folder, which the notice over the box
