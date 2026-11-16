@@ -127,8 +127,9 @@ mount the chat.
   shows its history, as an archived workspace does, and the host's bar
   takes the place of the composer.
 - `composerFocus` asks the message field of the composer to take the focus
-  once, as `ComposerFocus` in `components/Composer.tsx` says. The app gives
-  it after a click on the workspace in the sidebar, from
+  once, as `ComposerFocus` in `components/composer-requests.ts` says. The
+  app gives it after a click on the workspace in the sidebar, and after
+  Add to chat of the Files panel on desktop, from
   `AppModel.composerFocus`. The request waits until the composer shows,
   such as after the first load of the chat. The field then takes the focus
   only while the focus is still on the element of the request, or on no

@@ -75,7 +75,10 @@ describe('Copy path in the row menu of the Files panel', () => {
       address: navigation.href(),
       requests: requestLines(server).slice(from),
     }).toEqual({
-      items: [{ name: 'Copy path', off: false }],
+      items: [
+        { name: 'Add to chat', off: false },
+        { name: 'Copy path', off: false },
+      ],
       copied: [FAKE_FILE_PATH, 'src/lib'],
       fileToasts: ['Path copied'],
       address: all,

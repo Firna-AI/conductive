@@ -2,7 +2,8 @@
 
 This guide belongs to [the chat](README.md). It gives the rules of the
 history loads, the read-only chats, the order of the records, the sends,
-and Stop. [The message field](message-field.md) gives the rules of the
+Stop, the fixed prompts, and Add to chat.
+[The message field](message-field.md) gives the rules of the
 message field of each composer.
 [Attached files of a draft](draft-files.md) gives the rules of the files
 of a draft.
@@ -175,3 +176,37 @@ says. `sendPrompt` of the controller, in
 - A reply that names a linked session shows the prompt there. No draft
   moves, and the tab moves only as for a draft that cannot move.
 - A read-only workspace sends nothing.
+
+## Add to chat
+
+Add to chat of the menu of a row of the Files panel puts the chip of a
+file or a folder into a message field, as
+[Add to chat](../../docs/protocol/file-mentions.md#add-to-chat) says.
+`addToChat` of the controller, in
+[`state/mention-actions.ts`](state/mention-actions.ts), takes the path
+of the entry and whether it is a folder:
+
+- The chip goes to the session of the chat, as for a fixed prompt: the
+  session that the member saw last, also while a file, a diff, or another
+  tab of a phone shows. The chat shows that session, so a file or diff tab
+  of the centre gives way to the chat, as for a click on a session tab.
+- Without an open session, a new session starts, as "+" starts one.
+  `newSession` gives the ID of the new session just before the chat shows
+  it, so the chip goes into its field.
+- The controller keeps the request for the chip in `mentionRequest` of
+  the snapshot, with the session. A newer request takes its place. The
+  composer of that session takes the request once, when it shows, and puts
+  the chip into its field with `FieldHandle.insertMention`. Then it ends
+  the request with `takeMention`. A field that mounts again has no caret,
+  so the chip goes to the end of the text.
+- The request changes no draft. The field puts the chip in as an edit, so
+  the draft gets the mention from `onChangeText`, and the chip is one step
+  of undo. A draft write from the owner would replace the content and
+  clear the undo history, as [The message field](message-field.md) says.
+- The request holds no focus. On desktop, the shell also makes a focus
+  request of the app. While that request still stands, the field takes the
+  focus with the chip, and the caret stands after it, as
+  `useRequestedMention` of `components/composer-requests.ts` says. A phone
+  makes no focus request, so the field takes no focus, and no keyboard
+  opens.
+- Before the chat loads, and in a read-only workspace, nothing happens.

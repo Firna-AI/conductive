@@ -200,7 +200,7 @@ recommended F.
   then Copy path. Reason: the tab menu groups its items by kind
   (decision 188), and an action comes before a copy item, as Rename
   session comes before Copy link. Working agent's call, 16 November 2026.
-- Until Milestone 5 lands, the menu holds only Copy path.
+- Milestone 5 adds Add to chat. Before it, the menu held only Copy path.
 - Escape, Tab, or a press outside closes the menu. The focus goes back to
   the row. The row of an open menu gets the mark that a tab with an open
   menu has: the fill of a hover. A phone keeps that fill on the row under
@@ -324,6 +324,33 @@ Decision 4 A sets the target. Milestone 5 builds it.
 - On a phone, the field does not take the focus after Add to chat, so no
   keyboard opens by itself. On desktop, the field takes the focus. Working
   agent's call.
+- On desktop, the field takes the focus through the focus request of the
+  app, which a click on a workspace in the sidebar also makes. So the
+  field takes the focus unless the focus moved to another element before
+  the field shows, as
+  [the sidebar rule](../docs/protocol/orgs-and-members.md#sections)
+  says. This matters only while a new session starts, because each other
+  case shows the field at once. To give the request the row as its
+  element, the row menu gives the focus back to the row before an item
+  runs, and not only after the menu closes. Working agent's call, 16
+  November 2026. Reason: the field never takes the focus from a later
+  choice of the member.
+- The item shows only after the chat loads. Before then, the chat does not
+  know its session tabs, so a press could start a needless new session,
+  and no field can take the chip. A failed load of the chat shows no
+  field either. Working agent's call, 16 November 2026, from the rule for
+  a bar that takes the place of the field.
+- The chat keeps the chip as a request until the field of its session
+  shows, and that field puts it in as an edit. So the draft gets the
+  mention as typed text does, and the chip is one step of undo. A newer
+  Add to chat takes the place of a request that still waits. An entry
+  that leaves the list of `@` before its field shows, such as while a new
+  session starts, gets no chip. Working agent's call, 16 November 2026,
+  from decision 4 A, which writes through the field and not into the
+  draft.
+- A deleted file of Changes has no Add to chat, also while the tree still
+  holds that file. The tree and Changes come from their own reports, so
+  they can disagree for a while. Working agent's call, 16 November 2026.
 
 ## Milestone 1: Mockups (completed)
 
@@ -476,27 +503,46 @@ Depends on: 3
       `src/shell/workspace/files/TabCopyPath.test.tsx`, and the updated
       menus of `src/shell/workspace/files/TemporaryTabMenu.test.tsx`.
 
-## Milestone 5: Add to chat
+## Milestone 5: Add to chat (completed)
 
 Tags: ui
 
 Depends on: 3
 
-- [ ] Add Add to chat to the row menu, before Copy path, with a line
-      between them.
-- [ ] Show the session tab that the member saw last, or start a new
+- [x] Add Add to chat to the row menu, before Copy path, with a line
+      between them. `useAddToChat` of
+      `src/shell/workspace/files/add-to-chat.ts` gives the first group of
+      `useRowMenuItems`.
+- [x] Show the session tab that the member saw last, or start a new
       session when no session tab is open. On a phone, switch to its chat.
-- [ ] Put the chip into its message field with the insertion of a pick
+      `addToChat` of `src/chat/state/mention-actions.ts` does it behind
+      `ChatController.addToChat`. `newSession` gives it the ID of the new
+      session. `controller.ts` reached the length limit, so its runs moved
+      to `ChatRuns` of `src/chat/state/chat-runs.ts`, which the controller
+      extends. Working agent's call, 16 November 2026.
+- [x] Put the chip into its message field with the insertion of a pick
       from the `@` list, once the field shows. Give the field the focus on
-      desktop only.
-- [ ] Leave the item out while a bar of the computer replaces the field,
+      desktop only. `FieldHandle.insertMention` puts the chip in, and
+      `useRequestedMention` of `src/chat/components/composer-requests.ts`
+      takes the request of `ChatSnapshot.mentionRequest`. The focus comes
+      from the focus request of the app, as the section "Add to chat"
+      says. The smoke test in Chrome found that a field that kept its
+      caret took the focus on a phone at a later commit of the editor. So
+      a field that takes no focus keeps no caret.
+- [x] Leave the item out while a bar of the computer replaces the field,
       on a deleted file of Changes, and on a path that `findMentioned`
       refuses. A read-only workspace shows no rows, and its bar replaces
       the field too. Working agent's call, 16 November 2026, from the
-      mockups.
-- [ ] Tests: a file chip, a folder chip, a shown session, a session behind
+      mockups. It also stays out until the chat loads, as the section
+      "Add to chat" says. `barReplacesComposer` of
+      `src/shell/workspace/sandbox-view.ts` gives the rule of the bar.
+- [x] Tests: a file chip, a folder chip, a shown session, a session behind
       a file tab, no open session, the phone, and each row that leaves the
-      item out.
+      item out. The tests are
+      `src/shell/workspace/files/RowAddToChat.test.tsx` and
+      `src/chat/components/chip-field/InsertMention.dom.test.tsx`. The
+      first case of `src/shell/workspace/files/RowCopyPath.test.tsx` now
+      expects Add to chat before Copy path.
 
 ## Milestone 6: Verification, commit, review, and pull request
 

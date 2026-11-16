@@ -108,6 +108,11 @@ and in the flow `user-flows/mention-a-file`.
 - On desktop, the field then takes the focus, and the caret stands after
   the chip. On a phone, the field does not take the focus, so no keyboard
   opens by itself.
+- When the field shows only later, such as after a new session starts, it
+  takes the focus unless the focus moved to another element before then.
+  Reason: the message box never takes the focus from a later choice of the
+  member, as [Sections](orgs-and-members.md#sections) says for a press on
+  a workspace row.
 - Reason: one press puts the chip where the member writes next, and the
   member sees it at once. The agent actions of the pull request bar send
   to the same session, as

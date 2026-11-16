@@ -6,6 +6,8 @@ import {
 } from '../../../../docs/mockups/src/components/files/rowMenuCopy'
 import type { RowMenuItems } from '../../../files/panel/row-menu'
 import { useOrgServices } from '../../context'
+import type { WorkspaceContext } from '../features'
+import { useAddToChat } from './add-to-chat'
 
 /**
  * Copies a real path from the root of the repository, during the press of
@@ -29,15 +31,19 @@ export function useCopyPath(orgId: string): (path: string) => void {
 }
 
 /**
- * The items of the menu of a row of All files or Changes: Copy path, with
- * the copy icon of the mockups. It copies the path of the row as the list
- * holds it, such as `src/lib` for a folder, with no `./` and no final `/`.
- * The Files screens leave out each row whose label hides a secret value.
+ * The items of the menu of a row of All files or Changes: Add to chat, as
+ * `useAddToChat` says, then a line, then Copy path, with the copy icon of
+ * the mockups. Copy path copies the path of the row as the list holds it,
+ * such as `src/lib` for a folder, with no `./` and no final `/`. A row
+ * without Add to chat has only Copy path, with no line. The Files screens
+ * leave out each row whose label hides a secret value.
  */
-export function useRowMenuItems(orgId: string): RowMenuItems {
-  const copyPath = useCopyPath(orgId)
+export function useRowMenuItems(context: WorkspaceContext): RowMenuItems {
+  const copyPath = useCopyPath(context.org.id)
+  const addToChat = useAddToChat(context)
   return useCallback<RowMenuItems>(
     (row) => [
+      addToChat(row),
       [
         {
           kind: 'item',
@@ -47,6 +53,6 @@ export function useRowMenuItems(orgId: string): RowMenuItems {
         },
       ],
     ],
-    [copyPath],
+    [addToChat, copyPath],
   )
 }

@@ -10,6 +10,9 @@ is relative to `src/chat/`, the folder of this guide.
   through `useWorkspaceStore`.
 - `state/controller.ts`: `ChatController`, the public boundary of the chat
   state and its actions, with `show` and `hide` for a kept chat.
+  `state/chat-runs.ts`: `ChatRuns`, which the controller extends: the
+  store of the snapshot, the context of each run, and `start`, `stop`,
+  `show`, and `hide`.
 - `state/controller-context.ts`: the context of one controller run. It
   holds the local IDs of drafts and files, the upload generations, the
   devices, and the event stream. Each draft ID holds the run.
@@ -103,6 +106,9 @@ is relative to `src/chat/`, the folder of this guide.
 - `mentions/`: `mention-rows.ts` gives the entries that the list offers and
   their order. `MentionsContext.tsx` gives the files that the chat gets and
   the tree that the list and the chips find, with one value for each tree.
+  Its `useFilesMentionTree` gives that tree to a part outside the chat,
+  such as Add to chat of the Files panel, and `MentionTarget` names a file
+  or a folder of a mention.
   `MentionIcon.tsx` gives the icon of All files for an entry.
   [`mention-text.ts`](../shared/mention-text.ts) in the shared contracts
   owns the text of a mention, which the chat shares with the Worker.
@@ -129,6 +135,13 @@ is relative to `src/chat/`, the folder of this guide.
 - `state/prompt-actions.ts`: `sendPrompt`, a fixed prompt to the session of
   the chat, which changes no draft, as
   [Fixed prompts](loads-and-sends.md#fixed-prompts) says.
+- `state/mention-actions.ts`: `addToChat`, which shows the session of the
+  chat, or starts a new one, and asks its message field for the chip of a
+  file or a folder, and `takeMention`, which ends the request, as
+  [Add to chat](loads-and-sends.md#add-to-chat) says.
+  `components/composer-requests.ts`: the requests that parts outside the
+  composer make of its field, `useRequestedFocus` and
+  `useRequestedMention`, with `ComposerFocus`.
 - `state/attachment-actions.ts`: attach and Try again for the files of a
   draft. `attachFiles` gives the IDs of a pick at once, and queues its
   uploads. It puts the names that it refuses in the draft, as

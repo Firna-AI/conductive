@@ -41,8 +41,9 @@ const noMenu: RowMenuBinding['handlers'] = {}
 
 /**
  * The open row menu: at its point on desktop, or on a phone in a sheet
- * with the name of the row as its title. A press on an item closes it
- * first, then runs the item.
+ * with the name of the row as its title. A press on an item closes the
+ * menu and gives the focus back to the row, then runs the item. So an item
+ * that moves the focus, such as Add to chat, finds the focus on the row.
  */
 function RowMenuLayer(props: {
   name: string
@@ -51,7 +52,18 @@ function RowMenuLayer(props: {
   phone: boolean
   close: () => void
 }) {
-  const { name, entries, opening, close } = props
+  const { name, opening, close } = props
+  const entries = props.entries.map((entry): MenuEntry =>
+    entry.kind === 'item'
+      ? {
+          ...entry,
+          onSelect: () => {
+            opening.back()
+            entry.onSelect()
+          },
+        }
+      : entry,
+  )
   if (!props.phone) {
     return (
       <PointMenu
@@ -87,9 +99,10 @@ function RowMenuLayer(props: {
  * below the focused row. A long press of a finger that ends with no move
  * opens it as a sheet on a phone, and at the press elsewhere. A mouse binds
  * no long press, so it still selects text. Escape, Tab, or a press outside
- * closes it, and the focus goes back to the row. `items` gives the items of
- * each row, and a row with no item, such as one whose label hides a secret
- * value, opens no menu. A row that leaves the list closes its menu.
+ * closes it, and the focus goes back to the row, as before each item that a
+ * press runs. `items` gives the items of each row, and a row with no item,
+ * such as one whose label hides a secret value, opens no menu. A row that
+ * leaves the list closes its menu.
  */
 export function useRowMenu(
   items: RowMenuItems | undefined,

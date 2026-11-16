@@ -59,6 +59,14 @@ this guide.
   row menu of the Files panel. `files/RowCopyPath.test.tsx` copies the path
   of a file, a folder, and a deleted file of Changes, also from the lists
   of a stopped sandbox, with each toast and no request.
+- `files/add-to-chat.ts`: `useAddToChat`, Add to chat of the row menu,
+  which gives the entry of a row to the kept chat, and the rules of the
+  rows and the states that offer it. `files/RowAddToChat.test.tsx` checks
+  the items of a file row, the chip at the caret of the shown session, a
+  folder chip behind a file tab, a new session, and a phone. It checks the
+  focus on desktop and none on a phone, and the item left out while the
+  chat loads, while a stopped sandbox shows its bar, on a path that the
+  list of `@` does not offer, and on a deleted file of Changes.
   `files/TabCopyPath.test.tsx` copies the path of a diff tab, and checks
   the tab menu of a read-only file tab, with only Copy path, and of a tab
   whose label is not known yet, with none.

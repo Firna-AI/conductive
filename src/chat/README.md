@@ -55,9 +55,12 @@ Add to chat in the menu of a row of the Files panel puts the chip of a
 file or a folder into the message field of the session that the member
 saw last, as
 [Add to chat](../../docs/protocol/file-mentions.md#add-to-chat) says. The
-shell asks the kept `ChatController` for it. The controller shows that
-session, or starts a new one when no session tab is open. Its message
-field then puts the chip in as a pick from the list of `@` does.
+shell asks the kept `ChatController` for it with `addToChat`. The
+controller shows that session, or starts a new one when no session tab is
+open, as [Add to chat](loads-and-sends.md#add-to-chat) says. Its message
+field then puts the chip in as a pick from the list of `@` does, with
+`FieldHandle.insertMention`, as [The message field](message-field.md)
+says.
 
 ### A chat that the app keeps
 
@@ -98,8 +101,8 @@ chips.
   opens a new tab.
 - [Loads, records, and sends](loads-and-sends.md) gives the rules of
   the history loads, the read-only chats, the order of the records, the
-  sends, the fixed prompts of the pull request bar, and Stop with the line
-  of each stop.
+  sends, the fixed prompts of the pull request bar, Stop with the line of
+  each stop, and Add to chat of the Files panel.
 - [The message field](message-field.md) gives the rules of the message
   field of each composer. They cover its chips, the chips of attached
   files, the copy, the paste, and the drag. They also cover the drop of

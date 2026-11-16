@@ -121,19 +121,22 @@ The screens:
   each list, as a tooltip and a name for `aria-keyshortcuts` of its tab.
 - The `rowMenu` prop of `FilesPanel` gives the items of the row menu of
   each row of All files and Changes, in groups that a line parts, from the
-  real path, the kind, and the change of the row. The shell gives Copy
-  path, so the Files code holds no item and imports nothing from the chat.
-  Without the prop, no row has a menu. `useRowMenu` of the lists opens the
-  menu as [File row menu](../../docs/protocol/file-row-menu.md) says,
-  through `PointMenu`, `Sheet`, `MenuList`, and `opensMenu` of the app
-  shell and `useLongPress` of the web app: a right click at the pointer,
-  Shift and F10 or the Menu key below the focused row, and a long press of
-  a finger in a sheet on a phone, else at the press. The row of the open
-  menu keeps the fill of a hover, and the focus goes back to it as the
-  menu closes. A row whose label hides a secret value gets no item, so it
-  opens no menu, as [Labels of paths](labels.md) says. The menu shows
-  only labels: the name of the row titles it, and an item reads the real
-  path only at its press.
+  real path, the kind, and the change of the row. The shell gives Add to
+  chat and Copy path, so the Files code holds no item and imports nothing
+  from the chat. Without the prop, no row has a menu. `useRowMenu` of the
+  lists opens the menu as
+  [File row menu](../../docs/protocol/file-row-menu.md) says, through
+  `PointMenu`, `Sheet`, `MenuList`, and `opensMenu` of the app shell and
+  `useLongPress` of the web app: a right click at the pointer, Shift and
+  F10 or the Menu key below the focused row, and a long press of a finger
+  in a sheet on a phone, else at the press. The row of the open menu keeps
+  the fill of a hover, and the focus goes back to it as the menu closes. A
+  press on an item gives the focus back to the row before the item runs,
+  so an item that moves the focus, such as Add to chat, finds it on the
+  row. A row whose label hides a secret value gets no item, so it opens no
+  menu, as [Labels of paths](labels.md) says. The menu shows only labels:
+  the name of the row titles it, and an item reads the real path only at
+  its press.
 - `FilePage` shows one file tab. Markdown starts rendered, and its view
   switch navigates to the same tab with the other mode. The page knows an
   image file by the name of its real path, as

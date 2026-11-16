@@ -145,13 +145,15 @@ function useListKeys(): Partial<Record<FileListKind, CommandKey>> {
  * GitHub state of the workspace screen, also while the sandbox shows in
  * place of the lists. On a phone, the actions of the bar top the Checks tab,
  * and their keys run while it shows them. The menu of each row of the
- * lists holds Copy path, also on the lists that a stopped sandbox keeps.
+ * lists holds Add to chat and Copy path, as `useRowMenuItems` says. The
+ * lists that a stopped sandbox keeps offer Copy path only, because its bar
+ * takes the place of the composer.
  */
 function FilesPart(props: { context: WorkspaceContext }) {
   const { context } = props
   const files = useKeptFiles(context)
   const navigation = useFilesNavigation(context)
-  const rowMenu = useRowMenuItems(context.org.id)
+  const rowMenu = useRowMenuItems(context)
   const github = useGitHubFeed()
   const bar = useScreenBar()
   const { now } = useServices()

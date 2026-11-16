@@ -175,6 +175,13 @@ the files, and checks that Enter then sends nothing.
 `components/chip-field/FileChips.dom.test.tsx` restores file chips from a
 draft, opens a file and a folder, removes a chip with its ×, also as the
 first change, pastes a mention, and follows the tree.
+`components/chip-field/InsertMention.dom.test.tsx` puts the chip of Add to
+chat with `insertMention` at the caret of a field without the focus, with
+a space, as one step of undo. With `focus`, the field takes the focus with
+the caret after the chip. Without it, a field with no caret takes the chip
+at the end, and a later commit of the editor gives the field no focus, also
+with the caret rule of Chrome from `chromeFocusOnCaret`. A folder chip ends
+with `/`, and an entry that the list does not offer gets no chip.
 `components/chip-field/AttachedFiles.dom.test.tsx` attaches files and puts
 their chips at the caret in the same event: in order, each with a space,
 as one step of undo, with the focus. A point over the text puts the chips
