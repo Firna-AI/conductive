@@ -245,7 +245,7 @@ Restore returns the workspace stopped.
 
 Restore ends after 14 days.
 Conductive then deletes the computer and its files.
-The workspace leaves **Archived**, the command palette, and member workspace counts.
+The workspace leaves **Archived**, the command palette, and the workspace counts of the org.
 A direct link or a chat link still opens its read-only chat.
 The bar says **Removed on** followed by the removal date.
 Conductive keeps its chat history until the org is deleted.

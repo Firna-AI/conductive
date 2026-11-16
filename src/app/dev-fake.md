@@ -173,4 +173,6 @@ The next account read returns both keyboards.
 The Stats tab of the account reads its counts from `dev/account-stats.ts`.
 It counts the orgs of the fake that are not deleted, the workspaces and
 the automations that the person owns in them, and the automation runs of the
-person that were not skipped, by the rules of the Worker.
+person that were not skipped, by the rules of the Worker. Its reply keeps
+the removed workspaces in `archived` and counts them again in `removed`,
+as the Worker does. So Cal's tab shows Postcode lookup in its Removed row.

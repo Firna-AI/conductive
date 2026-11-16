@@ -193,7 +193,8 @@ sessions as tabs above the chat, and four tabs at the bottom.
 - Stats uses the parts of the operator Overview: a box of tiles, the
   workspaces by state, and the daily charts. Its tiles are Workspaces with
   the new ones of 7 days, Running now, Automations, and Orgs. Its list of
-  states has no Removed row, so a removed workspace counts as Archived.
+  states has Removed after Archived, as the Overview has, for the
+  workspaces that left the list. The Workspaces tile still counts them.
 - `ShortcutsSections` in `src/components/settings/` draws the Keyboard
   shortcuts tab, in the Mac app and in each browser. It shows the keys of
   a host: the Mac app, a normal tab of Chrome or Firefox, or the installed

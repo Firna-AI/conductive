@@ -312,7 +312,7 @@ If that owner is suspended, ask an org admin to reassign the workspace before re
 
 Restore ends after 14 days, even while the computer's deletion is still in progress.
 Conductive deletes the cloud computer and the files on it.
-The workspace leaves **Archived**, the command palette, and member workspace counts.
+The workspace leaves **Archived**, the command palette, and the workspace counts of the org.
 A direct link or a chat link still opens its read-only chat.
 The bar says **Removed on** followed by the removal date.
 Its text says that the cloud computer is deleted or is being deleted.

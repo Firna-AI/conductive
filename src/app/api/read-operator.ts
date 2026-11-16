@@ -1,4 +1,3 @@
-import type { AccountWorkspaceStates } from '../../shared/account'
 import type {
   OperatorOrgMatch,
   OperatorOrgSummary,
@@ -52,34 +51,25 @@ export function readRunning(value: unknown) {
 }
 
 /**
- * The workspaces in the states of the Stats tab of the account: each state
- * of the operator except Removed.
- */
-export function readAccountWorkspaceStates(
-  value: unknown,
-): AccountWorkspaceStates {
-  const states = record(value, 'workspaceStates')
-  return {
-    running: count(states, 'running'),
-    stopped: count(states, 'stopped'),
-    failed: count(states, 'failed'),
-    archived: count(states, 'archived'),
-  }
-}
-
-/**
- * The workspaces in each state. The reply counts every archived workspace
+ * The workspaces in each state, of the Overview, the page of an org, and
+ * the Stats tab of the account. The reply counts every archived workspace
  * in `archived`, so that an older app adds up, and the removed ones also in
  * `removed`. Archived here counts the archived workspaces of the list, and
  * Removed those whose Restore ended, which left it.
  */
 export function readWorkspaceStates(value: unknown): OperatorWorkspaceStates {
   const states = record(value, 'workspaceStates')
+  const archived = count(states, 'archived')
   const removed = count(states, 'removed')
-  const counts = readAccountWorkspaceStates(states)
-  if (removed > counts.archived)
+  if (removed > archived)
     throw new Error('The removed workspaces exceed the archived ones.')
-  return { ...counts, archived: counts.archived - removed, removed }
+  return {
+    running: count(states, 'running'),
+    stopped: count(states, 'stopped'),
+    failed: count(states, 'failed'),
+    archived: archived - removed,
+    removed,
+  }
 }
 
 /** The counts of the 30 UTC days of a list of days. */

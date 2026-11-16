@@ -14,13 +14,13 @@ import { Section } from './Section'
  * The numbers of the Stats tab of the account, for the person signed in:
  * the orgs of the person, the workspaces that the person owns, the
  * automations that the person owns, and the new workspaces and the automation
- * runs of each UTC day of the last 30 days. The tab has no Removed state,
- * so a removed workspace counts as Archived.
+ * runs of each UTC day of the last 30 days. Of the archived workspaces,
+ * Archived counts those in the list, and Removed those that left it.
  */
 export type AccountStatsNumbers = {
   orgs: number
   workspaces: { total: number; lastWeek: number }
-  workspaceStates: Omit<StateCounts, 'removed'>
+  workspaceStates: StateCounts
   automations: number
   newWorkspacesByDay: readonly DailyCount[]
   automationRunsByDay: readonly DailyCount[]
@@ -36,7 +36,13 @@ const placeholderTileStyle = { flex: 1, minWidth: 120 }
 const rowStyle = { flex: 1 }
 
 const tileKeys = ['workspaces', 'running', 'automations', 'orgs'] as const
-const stateKeys = ['running', 'stopped', 'failed', 'archived'] as const
+const stateKeys = [
+  'running',
+  'stopped',
+  'failed',
+  'archived',
+  'removed',
+] as const
 const chartTitles = ['New workspaces', 'Automation runs'] as const
 
 /**

@@ -1,10 +1,6 @@
 import type { AccountStats } from '../../shared/account'
 import { count, nested, record } from './parse'
-import {
-  readAccountWorkspaceStates,
-  readDays,
-  readWeekly,
-} from './read-operator'
+import { readDays, readWeekly, readWorkspaceStates } from './read-operator'
 
 /** The counts of the Stats tab of the account, which the Worker reads in one batch. */
 export function readAccountStats(value: unknown): AccountStats {
@@ -15,11 +11,7 @@ export function readAccountStats(value: unknown): AccountStats {
     workspaces: nested(stats, 'workspaces', (item) =>
       readWeekly(item, 'workspaces'),
     ),
-    workspaceStates: nested(
-      stats,
-      'workspaceStates',
-      readAccountWorkspaceStates,
-    ),
+    workspaceStates: nested(stats, 'workspaceStates', readWorkspaceStates),
     automations: count(stats, 'automations'),
     newWorkspacesByDay: readDays(stats, 'newWorkspacesByDay'),
     automationRunsByDay: readDays(stats, 'automationRunsByDay'),

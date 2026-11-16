@@ -359,6 +359,29 @@ call of 13 November 2026.
   so in the protocol doc, the Terms, the Privacy page, and the guides,
   which said that the attached files stay until the org is deleted.
 
+The items below apply decision 521 to the Stats tab of the account. Each
+is the agent's call of 16 November 2026.
+
+- **One reader for the state counts.** The reply of `/api/account/stats`
+  keeps `archived` as main counts it and adds `removed`, as the operator
+  replies do. The app reads it with `readWorkspaceStates` of
+  `src/app/api/read-operator.ts`, which takes Removed out of Archived.
+  Reason: the subtraction and its check stay in one place.
+  `AccountWorkspaceStates` has its own five fields, as option E asks.
+  `readAccountWorkspaceStates` had no other caller, so it went.
+- **Every count of `WorkspaceStates` has Removed.** No page sends a count
+  without `removed` now, so the shared part drops the path that drew four
+  rows. The first load of the tab has five placeholder rows, as the first
+  load of the Overview has.
+- **The mockup fixture.** The Stats tab of Cal splits the 49 archived
+  workspaces into 9 in the list and 40 removed, so the rows still add up
+  to the 64 workspaces.
+- **The counts of the org in the Terms and the guides.** The Terms page and
+  the guides `workspaces.md` and `security.md` said that a removed
+  workspace leaves "member workspace counts". The Stats tab of a person
+  counts it in Removed, so the three now say "the workspace counts of the
+  org", as `orgs-and-members.md` says for the screens of an org.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -504,7 +527,7 @@ Depends on: 1, 2, 3, 4
       pull request description, as the `git-merge` skill says.
 - [x] Apply the answer of decision 522 to the org switch and to
       `docs/protocol/workspace-life.md` and `docs/protocol/org-rail-order.md`.
-- [ ] Apply the answer of decision 521 to the Stats tab: its doc, its
+- [x] Apply the answer of decision 521 to the Stats tab: its doc, its
       Worker route, its reader, its mockup and the mockup note, its dev
       fake (`src/app/dev/account-stats.ts`), `worker/app-api/README.md`,
       `worker/operator/README.md`, `docs/mockups/design.md`, and its tests.

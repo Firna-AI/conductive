@@ -198,8 +198,9 @@ settings are. Its child pages:
 - `app/account/stats` shows the Stats tab, after Keyboard shortcuts. The
   user chose the tab and its counts on 16 November 2026. It holds the counts of the person signed in: the
   workspaces that the person owns, the workspaces that run now, the
-  automations, and the orgs, then the workspaces by state, and the new
-  workspaces and the automation runs of each UTC day of the last 30 days. Its
+  automations, and the orgs, then the workspaces by state, with Removed
+  after Archived from decision 521, and the new workspaces and the
+  automation runs of each UTC day of the last 30 days. Its
   `loading` variant shows the first load, with placeholders. Its `failed`
   variant shows a read that failed, with Try again and no number. Its
   `empty` variant shows a new account with one org, whose other counts

@@ -213,7 +213,8 @@ export const termsDocument: LegalDocument = {
           for 14 days. Members of an active org can restore it during
           those 14 days while its computer is kept. When the 14 days end, ${productName} deletes
           the cloud computer and its files. The workspace leaves the
-          Archived group, the command palette, and member workspace counts.
+          Archived group, the command palette, and the workspace counts of
+          the org.
           Its read-only chat still opens through a direct link or a chat
           link.`,
         paragraph`${productName} keeps the removed workspace's chat history

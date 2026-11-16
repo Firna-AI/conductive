@@ -35,14 +35,14 @@ stats decision" names a decision of the change that added the tab. The
   - The workspaces that run now.
   - The automations that the person owns.
   - The orgs of the person.
-  - The workspaces by state: Running, Stopped, Failed, and Archived. They
-    add up to the workspace total.
+  - The workspaces by state, as
+    [The workspaces by state](#the-workspaces-by-state) says.
   - The new workspaces of each UTC day of the last 30 days, with their
     total for the 30 days.
   - The automation runs of the person on each UTC day of the last 30 days,
     with their total for the 30 days.
-- The states, the 7 days, and the 30 UTC days are those of
-  [The Overview](operator-section.md#the-overview) of the operator section.
+- The 7 days are the 7 times 24 hours before the read.
+- The 30 days are UTC days. The last of them is the current UTC day.
 - A workspace counts for the person who owns it now. Reason: an admin can
   reassign a workspace, and the owner is the person who is responsible for
   it.
@@ -55,6 +55,40 @@ stats decision" names a decision of the change that added the tab. The
 - The counts leave out deleted orgs and their workspaces and automations.
   Reason: the person can no longer open them.
 - The counts include each org of the person, also a suspended org.
+
+## The workspaces by state
+
+- The tab shows the workspaces that the person owns in five rows, in this
+  order: Running, Stopped, Failed, Archived, and Removed (decision 521).
+- Running holds the [workspace states](workspace-life.md#workspace-states)
+  starting, ready, working, needs input, and finished with unread output.
+  Stopped holds the stopped state, and Failed holds the error state.
+- Removed holds the
+  [removed workspaces](workspace-life.md#removed-workspaces), with the mark
+  of Archived. Archived holds the other archived workspaces.
+- Each workspace that the person owns counts in one row. So the rows add
+  up to the workspace total, and the total keeps the removed workspaces.
+- Reason: the app keeps the data of a removed workspace, and it shows the
+  workspace as Removed from the end of its Restore. The total then does
+  not go down 14 days after each Archive.
+- These ways were rejected (decision 521):
+  - A removed workspace in the Archived row. The tab then counts as
+    Archived a workspace that the app shows as Removed.
+  - No removed workspace on the tab, as on the
+    [screens of an org](orgs-and-members.md#sections). The total then goes
+    down 14 days after each Archive.
+  - A switch for each person between the Removed row and no removed
+    workspaces. It needs a new saved choice of each person, with its save
+    and its control.
+  - No Removed row anywhere, so that the
+    [Overview](operator-overview.md#the-counts) of the operator section
+    and the page of an org also count a removed workspace as Archived. The
+    operator then no longer sees the removed workspaces apart from the
+    other archives.
+- The rows, the 7 days, and the 30 UTC days of the tab are its own. Taking
+  them from the Overview of the operator section was rejected
+  (decision 521). Reason: a change of the Overview for the operator then
+  changes the tab of each person without a decision.
 
 ## Reads
 
