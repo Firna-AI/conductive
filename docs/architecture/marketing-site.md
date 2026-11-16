@@ -8,8 +8,7 @@ decision number names a dated record, as
 ## Responsibilities
 
 - Static pages at the root of `conductive.build`: the home page, the public
-  docs, the Terms and Privacy pages, and the Conductor comparison page.
-  Visitors see them without a sign-in.
+  docs, and the Terms and Privacy pages. Visitors see them without a sign-in.
 - The site has no pricing page and sells nothing, because the product is
   free, as [Orgs and members](../protocol/orgs-and-members.md#orgs) says.
 - Astro builds these pages ahead of time. The Worker serves the built files
@@ -48,20 +47,3 @@ decision number names a dated record, as
 - The public docs are guides to the product, at `/docs`. The team writes
   them in Markdown, and the site builds them with a docs layout of its own.
   [Website docs](../protocol/website-docs.md) states their requirements.
-
-## The comparison page
-
-- The page at `conductive.build/from-conductor` shows people who move from
-  Conductor the status of each Conductor feature in Conductive, local and
-  cloud. [Conductor comparison](../protocol/conductor-comparison.md)
-  states its requirements.
-- Its rows and the time of their last full check are content of the site.
-  The team checks the rows against the product and sets that time. A
-  change to either is a change to the repository.
-- No component computes a status or the check time while the site runs.
-  The page reads nothing from the app, the API, or a sandbox.
-- The site build and the mockup catalogue read the same rows, so the page
-  and its mockup show the same words.
-- The page shows a status and a short note for each row. The evidence
-  behind a status stays out of the page and out of its rows.
-
