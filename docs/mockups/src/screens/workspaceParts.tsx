@@ -31,6 +31,7 @@ import type { ShortcutChanges } from '../fixtures/shortcutChanges'
 import { terminalSets } from '../fixtures/terminals'
 import type { ActivityStatus, Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
+import { rowMenuOf } from './workspaceRowMenu'
 import { freshPromptFor, runStartingLog } from './workspaceRun'
 import { panelState } from './workspaceSandbox'
 import { isNew } from './workspaceTabs'
@@ -142,7 +143,7 @@ function listsPlaceholder(state: WorkspaceState, phone: boolean): ReactNode {
  * first start. On a phone, an open file shows as a page of the Files tab,
  * with the sandbox state in place of its content, as on desktop. An
  * archived workspace has no file lists: its files went with the cloud
- * computer.
+ * computer. A row of the lists can show its open menu.
  */
 export function FilesContent(props: {
   state: WorkspaceState
@@ -171,6 +172,7 @@ export function FilesContent(props: {
       banner={state.banner}
       checksTop={props.checksTop}
       edited={!isNew(state)}
+      menu={rowMenuOf(state, props.viewport)}
       only={changedPaths(state)}
       open={open}
       paths={state.paths}

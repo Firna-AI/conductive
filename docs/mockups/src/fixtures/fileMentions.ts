@@ -76,6 +76,14 @@ export const mentionDrafts = {
 export const mentionChipsDraft =
   'Move the lookup in @src/app/checkout/useAddressAutocomplete.ts into @src/lib/ and keep its tests green.'
 
+/**
+ * The draft of Address autocomplete after Add to chat on the row of
+ * AddressForm.tsx: the chip at the end of the text, with a space after it,
+ * as a pick from the list of `@` puts it.
+ */
+export const addedChipDraft =
+  'Add a test for the postcode check in @src/app/checkout/AddressForm.tsx '
+
 /** The message that Cal sent with a file chip and a folder chip. */
 const mentionAsk =
   'Move the lookup in @src/app/checkout/useAddressAutocomplete.ts into @src/lib/ so the cart can reuse it.'

@@ -1,0 +1,7 @@
+/*
+ * The item of the row whose menu is open places the menu at the pointer,
+ * which `PointMenu.module.css` draws over the rows below it.
+ */
+.anchor {
+  position: relative;
+}
