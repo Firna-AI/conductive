@@ -27,15 +27,16 @@ record.
 
 ### The preference
 
-- The Account page has four tabs, General, Agents, Preferences, and
-  Keyboard shortcuts, each with its own address. Agents holds the logins
+- The Account page has five tabs, General, Agents, Preferences, Keyboard
+  shortcuts, and Stats, each with its own address. Agents holds the logins
   of Claude and Codex (the user asked on 13 November 2026). Preferences
   holds the New workspaces section, with Model and effort and the choice
   of how New workspace opens (decision 142 of PR #73). General holds the
   other sections of the account.
   [Keyboard shortcuts: the settings tab](keyboard-shortcuts-tab.md) gives
-  the fourth tab. The Mac app adds [This Mac](desktop-commands.md#saved-choices)
-  as the fifth tab.
+  the fourth tab. [Account stats](account-stats.md) gives the fifth tab.
+  The Mac app adds [This Mac](desktop-commands.md#saved-choices) as the
+  sixth tab.
 - Reason: all the settings of new workspaces then sit together. The
   section on General, with only the new choice on Preferences, was
   rejected, because the user then looks in two places.

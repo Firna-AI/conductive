@@ -141,6 +141,8 @@ This page lists each protocol doc and what it covers.
   - [Keyboard shortcuts: the hosts](../protocol/keyboard-shortcuts-hosts.md)
   - [Keyboard shortcuts: matching a press](../protocol/keyboard-shortcuts-matching.md)
   - [Keyboard shortcuts: the settings tab](../protocol/keyboard-shortcuts-tab.md)
+- [Account stats](../protocol/account-stats.md): the Stats tab of the
+  Account page, its counts of the person signed in, and its reads.
 - [Org image](../protocol/org-image.md): the org image, its builds and its
   refreshes, and the first build of a new org.
 - [Agents and sessions](../protocol/agents-and-sessions.md): the agents and
@@ -160,7 +162,8 @@ This page lists each protocol doc and what it covers.
     and links in code.
 - [GitHub tokens](../protocol/github-tokens.md): the git and CLI account
   scope of a cloud computer, the author of each commit in a sandbox, and the
-  GitHub actions of the Worker as a member.
+  GitHub actions of the Worker as a member, and the GitHub tokens that an
+  image job uses to copy the repositories.
 - [Agent instructions](../protocol/agent-instructions.md): the text that each
   agent session gets, and the sender line and the branch line of each
   message.

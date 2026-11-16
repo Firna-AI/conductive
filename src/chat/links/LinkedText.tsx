@@ -9,6 +9,7 @@ import {
   type ChipOpener,
 } from '../../../docs/mockups/src/components/chat/WorkspaceChip'
 import { routes } from '../../app/router'
+import { lineLabel } from '../../shared/line-target'
 import { sessionLink } from '../../shared/session-link'
 import { isPlainClick } from '../../shell/ui/AppLink'
 import { useTextLinks } from '../../shell/ui/text-links'
@@ -17,13 +18,17 @@ import {
   findMentioned,
   useChatMentions,
   useMentionTree,
+  useRepositoryFolder,
 } from '../mentions/MentionsContext'
 import {
   chatParts,
   type AttachmentPart,
   type ChatPart,
-  type MentionLookup,
+  type EntryLookup,
+  type FilePart,
 } from './chat-parts'
+import { fileOpener, fileTitle } from './file-opener'
+import { FileTextLink } from './FileTextLink'
 import { chipOf, useChatLinks } from './LinksContext'
 import { sessionChipOf, useLinkedSession } from './session-links'
 import { CodeText, WebLinkText } from './WebLinkText'
@@ -79,37 +84,30 @@ export function SessionLinkText(props: {
 }
 
 /**
- * A file or a folder in a sent message: a link of the app to the file, or
- * to All files with the folder open, as a press in All files opens them.
- * A click with a modifier key stays with the browser.
+ * A file or a folder in a sent message or an answer: a link of the app to
+ * the file, or to All files with the folder open, as a press in All files
+ * opens them. A file with `lines` opens as text at the lines, and its name
+ * and title end with them, as in `app.ts:42`. A click with a modifier key
+ * stays with the browser.
  */
-function FileLink(props: { entry: FileEntry; source: string }) {
+function FileLink(props: { part: FilePart }) {
   const mentions = useChatMentions()
-  const { entry } = props
+  const { entry, lines } = props.part
   const folder = entry.kind === 'directory'
+  const at = lines ? `:${lineLabel(lines)}` : ''
   return (
     <FileChip
       entry={{ path: entry.path, folder }}
       icon={<MentionIcon entry={entry} size={12} />}
-      mention={props.source}
+      mention={props.part.source}
+      lines={at || undefined}
       name={entry.name}
       opener={
         mentions
-          ? (chip) => (
-              <a
-                {...chip}
-                href={mentions.href(entry)}
-                onClick={(event) => {
-                  if (!isPlainClick(event)) return
-                  event.preventDefault()
-                  if (folder) mentions.showFolder(entry.path)
-                  else mentions.openFile(entry.path)
-                }}
-              />
-            )
+          ? (chip) => <a {...chip} {...fileOpener(mentions, entry, lines)} />
           : undefined
       }
-      title={folder ? `${entry.path}/` : entry.path}
+      title={fileTitle(entry, lines)}
     />
   )
 }
@@ -138,17 +136,7 @@ function AttachmentLink(props: { part: AttachmentPart; opens: boolean }) {
       mention={props.part.source}
       opener={
         files
-          ? (chip) => (
-              <a
-                {...chip}
-                href={files.href(copy)}
-                onClick={(event) => {
-                  if (!isPlainClick(event)) return
-                  event.preventDefault()
-                  files.openFile(path)
-                }}
-              />
-            )
+          ? (chip) => <a {...chip} {...fileOpener(files, copy, null)} />
           : undefined
       }
     />
@@ -160,9 +148,8 @@ function Part(props: { part: ChatPart; opens: boolean }) {
   if (part.kind === 'text') return part.text
   if (part.kind === 'code') return <CodeText part={part} />
   if (part.kind === 'link') return <WebLinkText part={part} />
-  if (part.kind === 'file') {
-    return <FileLink entry={part.entry} source={part.source} />
-  }
+  if (part.kind === 'file') return <FileLink part={part} />
+  if (part.kind === 'file-link') return <FileTextLink part={part} />
   if (part.kind === 'attachment') {
     return <AttachmentLink opens={props.opens} part={part} />
   }
@@ -185,11 +172,23 @@ function runsOf(parts: readonly ChatPart[]): Run[] {
   return runs
 }
 
-/** The lookup of the mentions of a message, while the chat has a tree. */
-function useMentionLookup(read: boolean): MentionLookup | undefined {
+/** The lookup of the entries of the tree, while the chat has a tree. */
+function useEntryLookup(read: boolean): EntryLookup | undefined {
   const tree = useMentionTree(read)
   if (!tree) return undefined
-  return (mention) => findMentioned(tree, mention.path, mention.folder)
+  return (path, folder) => findMentioned(tree, path, folder)
+}
+
+/**
+ * Whether a text can hold a chip or a link of a file, so that it follows
+ * the tree. A mention needs `@`, a path in code needs a backtick, and a
+ * Markdown link needs `](`. So a change of the tree draws only the texts
+ * that can change.
+ */
+function namesFiles(text: string, reading: TextReading): boolean {
+  if (!reading.mentions) return false
+  if (text.includes('@')) return true
+  return reading.paths === true && (text.includes('`') || text.includes(']('))
 }
 
 /** How the chat reads a text: as an answer, or as a message of a member. */
@@ -198,6 +197,11 @@ export interface TextReading {
   strong?: boolean
   /** Each mention of an entry of the file tree is a file chip. */
   mentions?: boolean
+  /**
+   * Inline code that is the path of an entry of the tree is a file chip,
+   * as in an answer. It needs `mentions`.
+   */
+  paths?: boolean
   /** The files of a sent message. The mention of each is its chip. */
   attachments?: readonly Attachment[]
 }
@@ -209,12 +213,14 @@ export interface TextReading {
  */
 export function useChatParts(text: string, reading: TextReading): ChatPart[] {
   const { links } = useChatLinks()
+  const lookup = useEntryLookup(namesFiles(text, reading))
+  const root = useRepositoryFolder()
   const { linkOf } = useTextLinks()
-  const lookup = useMentionLookup(reading.mentions ?? false)
   return chatParts(text, links, {
     strong: reading.strong ?? false,
     web: linkOf,
     mentions: lookup,
+    code: reading.paths ? { root } : undefined,
     attachments: reading.attachments,
   })
 }
@@ -247,18 +253,12 @@ export function ChatText(props: {
   )
 }
 
+const answerReading: TextReading = { strong: true, mentions: true, paths: true }
+
 /**
- * Text of a sent message or of an answer, as `chatParts` reads it: code,
- * each workspace link as a chip, and each other web address as a link.
- * With `strong`, as in an answer, `**` marks bold, one `<strong>` holds
- * each run of bold text, chips, and links, and a Markdown link shows as its
- * label. With `mentions`, as in a message of a member, each mention of an
- * entry of the file tree is a file chip.
+ * Text of an answer: bold, workspace chips, and a file chip for each
+ * mention of an entry of the tree and for each path of one in inline code.
  */
-export function LinkedText(props: {
-  text: string
-  strong?: boolean
-  mentions?: boolean
-}) {
-  return <ChatText parts={useChatParts(props.text, props)} />
+export function AnswerText(props: { text: string }) {
+  return <ChatText parts={useChatParts(props.text, answerReading)} />
 }

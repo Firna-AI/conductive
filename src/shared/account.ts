@@ -2,6 +2,7 @@ import type { Agent } from './generated/Agent'
 import type { AgentChoice } from './generated/AgentChoice'
 import type { Timestamp } from './generated/Timestamp'
 import type { User } from './api'
+import type { OperatorWorkspaceStates } from './operator'
 import type { ShortcutPreferences } from './shortcuts'
 
 export interface SessionResponse {
@@ -19,7 +20,27 @@ export const ACCOUNT_PATHS = {
   githubInstallations: '/api/account/github-installations',
   githubRepositories: '/api/account/github-repositories',
   deleteAccount: '/api/account/delete',
+  stats: '/api/account/stats',
 } as const
+
+/**
+ * The counts of the Stats tab of the account, for the person signed in.
+ * Deleted orgs and their records count nowhere. `readAt` is the read time.
+ * Each list of days holds the 30 UTC days through `readAt`, oldest first.
+ */
+export interface AccountStats {
+  readAt: Timestamp
+  /** The orgs of the person. */
+  orgs: number
+  /** The workspaces that the person owns, and the new ones of 7 days. */
+  workspaces: { total: number; lastWeek: number }
+  workspaceStates: OperatorWorkspaceStates
+  /** The automations that the person owns. */
+  automations: number
+  newWorkspacesByDay: readonly { date: string; count: number }[]
+  /** The runs that were not skipped, by the owner at the time of the run. */
+  automationRunsByDay: readonly { date: string; count: number }[]
+}
 
 export const NEW_WORKSPACE_VIEWS = ['page', 'dialog'] as const
 export type NewWorkspaceView = (typeof NEW_WORKSPACE_VIEWS)[number]

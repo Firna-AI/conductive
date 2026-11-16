@@ -171,6 +171,8 @@ impl Session {
                 }
             }
         };
-        self.emit(vec![event]).await
+        let result = self.emit(vec![event]).await;
+        self.mailbox.active(false);
+        result
     }
 }

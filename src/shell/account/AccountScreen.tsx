@@ -14,6 +14,7 @@ import { GitHubSection } from './GitHubSection'
 import { InviteCodeSection } from './InviteCodeSection'
 import { DefaultsSection } from './PreferencesSections'
 import { ShortcutsTab } from './shortcuts/ShortcutsTab'
+import { StatsTab } from './StatsTab'
 
 /**
  * The tabs of the account, in their order. Only the Mac app has This Mac,
@@ -24,6 +25,7 @@ const tabs = [
   { tab: 'agents', label: 'Agents' },
   { tab: 'preferences', label: 'Preferences' },
   { tab: 'shortcuts', label: 'Keyboard shortcuts' },
+  { tab: 'stats', label: 'Stats' },
   { tab: 'this-mac', label: 'This Mac' },
 ] as const satisfies readonly { tab: AccountTab; label: string }[]
 
@@ -42,6 +44,8 @@ function TabContent(props: {
       return <DefaultsSection />
     case 'shortcuts':
       return <ShortcutsTab />
+    case 'stats':
+      return <StatsTab />
     case 'this-mac':
       return <ThisMac />
   }
@@ -83,13 +87,14 @@ function GeneralTab(props: { user: User }) {
 }
 
 /**
- * The account, in four tabs, and five in the Mac app. Each tab is a link with its own address.
+ * The account, in five tabs, and six in the Mac app. Each tab is a link with its own address.
  * General holds the GitHub sign-in, the GitHub App, and the invite code of
  * the user. Agents holds the logins of Claude and Codex, which every org
  * shares. `connect` opens the Connect form of an agent at first, as the
  * link of a missing login does. Preferences holds how new workspaces
  * start: their model, and how New workspace opens. Keyboard shortcuts
- * holds the keys of the commands. A phone moves a tab that does not fit to a second line.
+ * holds the keys of the commands. Stats holds the counts of the person,
+ * which it reads each time that it opens. A phone moves a tab that does not fit to a second line.
  * The Mac app adds This Mac last. A browser shows General at its address.
  * The product is free, so the page shows no plan and no billing.
  */

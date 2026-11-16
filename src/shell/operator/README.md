@@ -247,7 +247,9 @@ year than the last day has its year there.
   to a GitHub profile, and the formats of counts, days, and the age of a
   GitHub account.
 - `../../app/operator-read.ts`: `OperatorRead`, the read of the Overview
-  and of a page, and the refusal of a person who is not an operator.
+  and of a page, and the refusal of a person who is not an operator. It
+  is the `PageRead` of `../../app/page-read.ts`, which the Stats tab of
+  the account also uses.
 - `../../app/operator-directory.ts`: `OperatorDirectory`, a search, its
   pages, Show more, a new read after a write, and `write`, a write that
   changes one row, such as Approve or Disable. It also gives the count

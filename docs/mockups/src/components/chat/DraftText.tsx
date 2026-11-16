@@ -7,7 +7,8 @@ import { draftParts } from '../../../../../src/app/draft-marks'
 import { entryName } from './entryPaths'
 import { FileChip } from './FileChip'
 import { PeekSpot } from './FilePreview'
-import { iconOf, LinkChip } from './MessageText'
+import { iconOf } from './MentionChip'
+import { LinkChip } from './MessageText'
 import { linkTarget, textParts, type LinkTarget } from './workspaceLinks'
 import styles from './DraftText.module.css'
 
@@ -46,6 +47,7 @@ function itemsOf(
             : { kind: 'text', text: piece.source }
         }
         case 'attached':
+        case 'file-link':
           return { kind: 'text', text: piece.source }
         case 'text':
         case 'code':

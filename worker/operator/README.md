@@ -253,7 +253,7 @@ The [operator test guide](tests.md) gives the commands and native provider setup
 - [`user-access-data.ts`](user-access-data.ts): user grant sources, email state, and referral recipients.
 - [`org-directory.ts`](org-directory.ts) and [`user-directory.ts`](user-directory.ts): list queries and cursors.
 - [`org-detail.ts`](org-detail.ts) and [`user-detail.ts`](user-detail.ts): page queries and reply mapping.
-- [`workspace-counts.ts`](workspace-counts.ts): the state buckets shared by the overview and org page.
+- [`workspace-counts.ts`](workspace-counts.ts): the state buckets shared by the overview, the org page, and the account stats, and the 7-day and 30-day windows and daily counts of the overview and the account stats.
 - [`lift.ts`](lift.ts): the lifts and the checks of affected workspaces.
 - [`repair.ts`](../lifecycle/repair.ts): bounded Cron repair of overdue disk and image alarms.
 - [`events-data.ts`](events-data.ts): the shared atomic writer for suspension state, events, and access revocations.

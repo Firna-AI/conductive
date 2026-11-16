@@ -11,8 +11,11 @@ architecture docs describes its parts. The terms are those of the
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
 says. A sandbox software decision number, such as sandbox software
 decision 5, names a decision of the change that makes the sandbox software
-update itself. A build time decision number, such as build time decision 1,
-names a decision of the change that shortens the software step of a build.
+update itself. An idle update decision number, such as idle update
+decision 2, names a decision of the change that installs a new release
+while the workspace is idle. A build time decision number, such as build
+time decision 1, names a decision of the change that shortens the software
+step of a build.
 
 ## Releases
 
@@ -59,8 +62,16 @@ names a decision of the change that shortens the software step of a build.
   fix then reaches each sandbox with no new workspace and no manual
   install.
 - The program checks for a newer release each time that the agent runner
-  starts, such as at each start of the sandbox. It also checks every hour
-  while the runner runs (sandbox software decision 5).
+  starts, such as at each start of the sandbox. It also checks every 10
+  minutes while the runner runs (idle update decision 2). Reason: the
+  check reads one small static file, so a fix reaches a running sandbox
+  sooner for almost no cost.
+- An hourly check was rejected, because a running sandbox then learns of a
+  fix up to an hour late.
+- A check that the Worker asks for after each deploy, and a check soon
+  after each new connection, were rejected. Reason: each needs more work.
+  The first also needs a new command, and an older runner closes its
+  connection at an unknown command.
 - It downloads a newer release in the background. A start never waits for
   a download.
 - An update downloads only the parts that changed since the release that
@@ -77,10 +88,16 @@ names a decision of the change that shortens the software step of a build.
   tool call and the running runner then never mix two releases.
 - The next start of the agent runner applies the newest complete download,
   before the runner starts its work.
-- The program never restarts the software to apply an update. Reason: a
-  restart during a session stops each running turn.
+- While the sandbox runs, the runner also installs a newer release when
+  its workspace is idle, as [Installs at idle](#installs-at-idle) says.
+- The program never restarts the runner service to apply an update.
+  Reason: a restart stops each running turn, and each process that an
+  agent started, such as a dev server.
 - The sandbox keeps the previous release. When the software of a new
   release fails to start, the next start runs the previous release again.
+- A new runner confirms its release when it first connects to the Worker.
+  A new release without that confirmation at the next start counts as a
+  failed start. The program never installs that release again.
 - A sandbox without the program gets the program at its next start. That
   start changes nothing else. The program then updates the rest of the
   software by these rules.
@@ -96,6 +113,63 @@ names a decision of the change that shortens the software step of a build.
   each part.
 - A check at each command was rejected, because each command then waits
   for a request to the release address.
+
+### Installs at idle
+
+- The runner installs a newer release when its workspace is idle (idle
+  update decision 1). Reason: a fix then reaches each running workspace
+  within minutes.
+- The workspace is idle when no turn runs in any session and no command
+  waits or runs in the runner. A turn that waits for its
+  [background work](agent-runner.md#background-work) is a running turn.
+  Input in a terminal or a port preview does not count.
+- The runner installs only when the workspace was idle for 2 minutes.
+  Reason: the next message most likely comes just after a turn ends.
+- It installs only when its own release is confirmed, and never a release
+  that failed to start. Reason: an install then never goes back or loops.
+- The runner swaps to the new release in place. It closes its connection
+  and ends its work as at a shutdown. It then installs the release and
+  runs the new release in the same process.
+- So the runner service keeps running. Each process that an agent started
+  keeps running, such as a dev server or a build daemon. Each terminal
+  keeps running too.
+- The app shows nothing new for the install. The runner is away for a few
+  seconds, as after a short drop of its connection. A command that the
+  runner did not read before the install reaches the new release once.
+- The install restarts neither the preview relay nor the terminal service.
+  They run the new release from their next start, such as at the next
+  start of the sandbox.
+- After a failed install that changed nothing, the runner logs a warning.
+  It then connects again on its own release. It does not install at idle
+  again until its next start. Reason: the same failure then does not
+  disconnect the runner every 2 minutes.
+- A new release that exits at its start is a failed start. The runner
+  service then starts again within seconds, on the previous release. That
+  restart stops each process that an agent started.
+- A runner that cannot install at idle gets each update at a later start.
+- No check guards a new release that runs but never connects to the
+  Worker (idle update decision 3). Reason: the app relies on CI and on the
+  software image build of each deploy to find a broken release.
+- Risk: such a release reaches each idle running workspace within minutes
+  of its deploy. No agent of such a workspace can then work until the next
+  start of the sandbox, which runs the previous release again.
+- A rollback when the new release has not connected after some minutes
+  was rejected, as a check by the new release and as a check by the
+  previous release. Reason: the rollback stops that release for good, so
+  an outage of the Worker can keep a good fix away until the next deploy.
+  A broken release can also break its own check.
+- A restart only when no process of an agent runs was rejected, because a
+  build daemon can then hold the update back for hours. A restart that
+  stops only the runner process was rejected, because systemd advises
+  against it, and a crash then also leaves processes behind.
+- Installs only at a later start, and a notice in the app that asks a
+  member to restart, were rejected, because a workspace that stays on then
+  keeps its old release.
+- An install by the check every 10 minutes was rejected, because that
+  check cannot tell whether a turn runs.
+- A service of its own for the processes that agents start, so that a
+  restart of the runner stops none of them, was not chosen for updates.
+  Reason: the install in place already stops no such process.
 
 ## Installs in a build
 

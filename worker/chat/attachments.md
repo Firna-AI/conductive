@@ -126,6 +126,7 @@ A folder at the final path makes the move fail.
 It removes its temporary file on failure and prints no output.
 The token appears only in the Authorization header of the download.
 `SandboxProvider.startCommand` starts it, and `getCommandStatus` polls it to completion.
+[attachment-download-process.ts](attachment-download-process.ts) waits 100, 200, 400, and 800 ms between the first status checks, then 1 second, so a small file does not wait a full second after its curl exits.
 A failed command gives `attachment_copy_failed` through the normal failed-turn path.
 The helper checks the sandbox and provider account before and after the transfer.
 After a successful download, [attachment-transfer-data.ts](attachment-transfer-data.ts) records `transferred_sandbox_id` before the message proof.

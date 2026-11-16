@@ -33,9 +33,14 @@ It enables the ttyd unit, which requires the shell server unit.
 It starts nothing and puts no password in the image.
 
 Release updates bring terminal script and unit changes to existing workspaces.
-The program downloads them in the background and applies them at a later
-runner start. A workspace without the program receives the background
-bootstrap at its next normal start. Apt packages remain part of image builds.
+The program downloads them in the background. The runner applies them at a
+later start, or in place when its workspace is idle. The running terminal
+services keep their old units and scripts until their next start. But each
+new terminal connection runs the bridge from `/opt/conductive/current` at
+once, under the old ttyd command line. So the bridge keeps its command-line
+arguments compatible across releases. A workspace without the program
+receives the background bootstrap at its next normal start. Apt packages
+remain part of image builds.
 
 The system release includes the terminal bridge at
 `/opt/conductive/current/system/terminal-bridge`, with its repository paths
