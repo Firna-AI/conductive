@@ -40,6 +40,9 @@ pub struct AgentPreview {
     pub port: u16,
     /// App page that shows this preview in the Preview tool of its workspace.
     pub link: String,
+    /// The same app page as `link`. Older `conductive` programs in the
+    /// sandboxes need this field, so the reply keeps it.
+    pub url: String,
     /// expires at.
     pub expires_at: Timestamp,
 }

@@ -67,6 +67,7 @@ export async function toolRouteFixture(harness: TestHarness) {
     id: 'preview / one',
     port: 4321,
     link: `${harness.env.APP_ORIGIN}/preview/one`,
+    url: `${harness.env.APP_ORIGIN}/preview/one`,
     expiresAt: TEST_TIME,
   }
   fixture.services.previewCall.mockImplementation(async (input) =>

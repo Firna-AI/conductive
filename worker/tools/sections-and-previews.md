@@ -73,7 +73,8 @@ The CLI and the MCP server offer these routes, as
 - Each open makes a new preview. Each reply preview is an `AgentPreview`.
   `agentPreview` in [preview-link.ts](preview-link.ts) gives it a `link`
   to the app page of the preview, `routes.workspace(org, workspace,
-  'preview', id)`, in place of the launch address. The chat opens that
+  'preview', id)`, in place of the launch address. Its `url` repeats the
+  link for older `conductive` programs, which need that field. The chat opens that
   page in the app. Each load of it needs a member's sign-in, so the
   workspace token cannot open it. No request field makes a preview public.
 - A close revokes the preview and cancels its proxy connections. It waits

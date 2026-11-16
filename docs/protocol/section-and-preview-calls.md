@@ -64,7 +64,8 @@ number names a dated record, as
   origin. So each load of the link needs a sign-in and access to the
   workspace, as
   [Port previews](terminal-previews-and-desktop.md#port-previews) says.
-  The reply gives no launch address.
+  The reply gives no launch address. Its `url` field repeats the link,
+  because older `conductive` programs in the sandboxes need that field.
 - Reason: the chat opens an app page inside the app, also in the Mac app,
   as [Chat links](chat-links.md) says. The chat shows a launch address as
   text, because it is an address of the API. A browser tab without a

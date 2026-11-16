@@ -22,6 +22,8 @@ function previewLink(
 /**
  * A preview as an agent tool reply gives it: with the link of its app
  * page in place of the launch address, which the chat shows as text.
+ * `url` repeats the link, because older `conductive` programs in the
+ * sandboxes need that field. So they also give the app page.
  */
 export function agentPreview(
   preview: Preview,
@@ -29,10 +31,12 @@ export function agentPreview(
   orgId: string,
   workspaceId: string,
 ): AgentPreview {
+  const link = previewLink(origin, orgId, workspaceId, preview.id)
   return {
     id: preview.id,
     port: preview.port,
-    link: previewLink(origin, orgId, workspaceId, preview.id),
+    link,
+    url: link,
     expiresAt: preview.expiresAt,
   }
 }

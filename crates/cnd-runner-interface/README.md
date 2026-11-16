@@ -77,6 +77,7 @@ One test compares the TypeScript runtime limits with their Rust constants.
 - [JSON decoder](src/json/decoder.rs) reads JavaScript JSON strings for the runner and workspace tools.
 - [Export example](examples/export_bindings.rs) registers and formats every shared type.
 - [Wire snapshots](tests/wire_1.rs) starts the message serialization cases.
+- [Preview replies](tests/preview_replies.rs) checks that older `conductive` programs still read agent preview replies.
 
 ### Related Docs
 

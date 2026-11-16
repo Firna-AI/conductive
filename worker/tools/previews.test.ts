@@ -50,13 +50,16 @@ it('opens signed-in preview links and lists and closes member previews through t
     senderUserId: 'outsider',
   })
   expect(opened.status).toBe(201)
+  const pageLink = (previewId: string) =>
+    `${active.env.APP_ORIGIN}${routes.workspace(OUTER_ORG, OTHER_WORKSPACE, 'preview', previewId)}`
   const preview = record(record(await opened.json()).preview)
   const id = string(preview.id)
   const url = `${active.env.APP_ORIGIN}${previewPath(OUTER_ORG, OTHER_WORKSPACE, id)}`
   expect(preview).toEqual({
     id,
     port: 3000,
-    link: `${active.env.APP_ORIGIN}${routes.workspace(OUTER_ORG, OTHER_WORKSPACE, 'preview', id)}`,
+    link: pageLink(id),
+    url: pageLink(id),
     expiresAt: DEVICE_TEST_NOW + 86_400_000,
   })
   expect(opened.headers.get('Cache-Control')).toBe('no-store')
@@ -92,7 +95,8 @@ it('opens signed-in preview links and lists and closes member previews through t
       {
         id: appPreview.id,
         port: appPreview.port,
-        link: `${active.env.APP_ORIGIN}${routes.workspace(OUTER_ORG, OTHER_WORKSPACE, 'preview', string(appPreview.id))}`,
+        link: pageLink(string(appPreview.id)),
+        url: pageLink(string(appPreview.id)),
         expiresAt: appPreview.expiresAt,
       },
     ]),

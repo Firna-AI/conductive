@@ -18,6 +18,11 @@ export type AgentPreview = {
    */
   link: string
   /**
+   * The same app page as `link`. Older `conductive` programs in the
+   * sandboxes need this field, so the reply keeps it.
+   */
+  url: string
+  /**
    * expires at.
    */
   expiresAt: Timestamp
