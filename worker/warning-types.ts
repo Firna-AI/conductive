@@ -3,6 +3,8 @@ import type { RepairKind } from './lifecycle/repair-data'
 import type { WorkspaceStartJob } from './lifecycle/start-types'
 import type { WorkspaceArchiveState } from './lifecycle/archive-types'
 import type { ErrorSummary, WarningCode, WarningId } from './warning-values'
+import type { GatewayCheckErrorKind } from './model-gateway/check-error'
+import type { GatewayRefusal } from './model-gateway/errors'
 
 export const SIMPLE_WARNINGS = {
   workspace_alarm_failed:
@@ -47,6 +49,16 @@ export const SIMPLE_WARNINGS = {
 
 /** Each kind permits only its fixed text and the safe values that it needs. */
 export type WorkerWarning =
+  | {
+      kind: 'model_gateway_check_failed' | 'model_gateway_check_retry'
+      workspaceId: WarningId
+      errorKind: GatewayCheckErrorKind
+    }
+  | {
+      kind: 'model_gateway_answer_ended'
+      workspaceId: WarningId
+      code: GatewayRefusal | GatewayCheckErrorKind | 'lease_expired'
+    }
   | {
       kind: 'workspace_archive_failed'
       workspaceId: WarningId

@@ -40,6 +40,8 @@ This page lists each protocol doc and what it covers.
     - [Fast mode](../protocol/fast-mode.md): the Fast switch of the model
       menu, the models that show it, who may turn it on, and the speed of a
       turn that cannot run fast.
+    - [Dropped answers](../protocol/dropped-answers.md): the continue
+      message of a Claude turn after its model answer drops.
   - [File mentions](../protocol/file-mentions.md): the list of `@` in the
     composer, the chips of files and folders, the sent chips of attached
     files, and the removal of each chip of the composer.

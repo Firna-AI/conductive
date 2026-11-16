@@ -139,6 +139,8 @@ says.
   starter after a stop continues the same session. The next message of
   another member does the same while the starter shares the login.
 - A turn that fails names the cause, and Try again retries the turn.
+- A Claude turn does not fail at the first drop of its model answer, as
+  [Dropped answers](dropped-answers.md) says.
 - When the cloud computer cannot run a turn's login kind, the turn fails
   with a cause and sends no credential to its runner (decision 174).
 - For a ChatGPT sign-in, the cause offers two ways to continue. An admin
@@ -262,6 +264,11 @@ says.
   session.
 - The [mockup catalogue](../mockups/catalogue.md) draws the line at
   `app/chat/agent-stops`, with its words.
+
+### Dropped answers
+
+- [Dropped answers](dropped-answers.md) states what a Claude turn does
+  when its model answer drops before it is complete.
 
 ## Attachments
 

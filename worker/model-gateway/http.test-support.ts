@@ -131,7 +131,10 @@ export async function gatewayHttp(
         ),
       workspace(id) {
         workspaceCalls.push(id)
-        return endpoint
+        return {
+          checkTurnToken: (token, claim) =>
+            endpoint.checkTurnToken(token, claim),
+        }
       },
     })
     return response ?? new Response(null, { status: 404 })

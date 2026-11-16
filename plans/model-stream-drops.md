@@ -241,15 +241,15 @@ Depends on: none
 Update the docs so that they state the new rules. Decision 3, answer C,
 adds no chat line, so the change has no mockup work.
 
-- [ ] Update `docs/protocol/model-gateway-requests.md#streams`: the retry
+- [x] Update `docs/protocol/model-gateway-requests.md#streams`: the retry
       of a check that throws, the check outside the chat queue, and the
       warning. Fix both sentences of the
       deploy risk.
-- [ ] Update `docs/protocol/messages-and-attachments.md` with the rule of
+- [x] Update `docs/protocol/messages-and-attachments.md` with the rule of
       the continue message of a Claude turn.
-- [ ] Update `worker/model-gateway/README.md`, `runner/behavior.md`, and
+- [x] Update `worker/model-gateway/README.md`, `runner/behavior.md`, and
       `runner/sdk-helper/README.md` when they describe the changed code.
-- [ ] Read both legal pages and each public guide in full. Update each
+- [x] Read both legal pages and each public guide in full. Update each
       sentence that restates a changed fact. Check the rows of the
       Conductor comparison page.
 
@@ -257,12 +257,12 @@ adds no chat line, so the change has no mockup work.
 
 Depends on: 1
 
-- [ ] In `worker/model-gateway/request-lifetime.ts`, retry a periodic
+- [x] In `worker/model-gateway/request-lifetime.ts`, retry a periodic
       check that throws, with backoff, until the lease ends.
-- [ ] Get a new Durable Object handle for each check, in `route.ts` and
+- [x] Get a new Durable Object handle for each check, in `route.ts` and
       `codex-request-auth.ts`.
-- [ ] Write the warning of each thrown check, retry, and ended answer.
-- [ ] Add cases to `worker/model-gateway/lease.test.ts`: a check that
+- [x] Write the warning of each thrown check, retry, and ended answer.
+- [x] Add cases to `worker/model-gateway/lease.test.ts`: a check that
       throws once keeps the answer open, and a check that keeps throwing
       ends the answer when the lease ends. See each case fail first.
 
@@ -272,21 +272,21 @@ Depends on: 2
 
 Decision 1, answer F.
 
-- [ ] Let the periodic check read the turn outside the chat queue, with
+- [x] Let the periodic check read the turn outside the chat queue, with
       no half-written turn visible to it.
-- [ ] Add a test: a check while a lifecycle call holds the queue keeps
+- [x] Add a test: a check while a lifecycle call holds the queue keeps
       the answer open.
 
 ## Milestone 4: Claude continue message
 
 Depends on: 1
 
-- [ ] Find the drop in `runner/sdk-helper/src/providers/claude-events.ts`
+- [x] Find the drop in `runner/sdk-helper/src/providers/claude-events.ts`
       and `claude-outcome.ts`.
-- [ ] Send one continue message from `claude.ts` in place of the failure.
+- [x] Send one continue message from `claude.ts` in place of the failure.
       Map it to the member messages of the request that dropped, in
       `claude-input-window.ts`.
-- [ ] Add helper tests: a drop sends one continue message and no failure.
+- [x] Add helper tests: a drop sends one continue message and no failure.
       The answer to the continue message answers the original messages. A
       second drop fails the turn. A drop in a wake-up reply stays a
       wake-up. Another error and a Stop keep today's outcome. See each
@@ -296,8 +296,8 @@ Depends on: 1
 
 Depends on: every other milestone
 
-- [ ] Run the targeted tests, the runner checks, and the complete gate
-      named in `AGENTS.md`.
+- [x] Run the targeted tests, the runner checks, and the complete gate
+      named in `AGENTS.md`. Evidence: `.context/model-stream-drops/gate.log`.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
