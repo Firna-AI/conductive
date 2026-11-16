@@ -270,15 +270,15 @@ Depends on: 3
 Summary: the shared type and the Worker accept Preview tabs. No screen
 shows them yet.
 
-- [ ] Add `{ kind: 'preview'; port: number }` to `WorkspaceTab` in
+- [x] Add `{ kind: 'preview'; port: number }` to `WorkspaceTab` in
       `src/shared/workspace-view.ts`.
-- [ ] Accept the kind in `viewTab` of `worker/app-api/workspace-view.ts`,
+- [x] Accept the kind in `viewTab` of `worker/app-api/workspace-view.ts`,
       with a port from 1 to 65535, with a test of a save and a read.
-- [ ] Give the kind its key `preview:<port>` in
+- [x] Give the kind its key `preview:<port>` in
       `src/chat/state/tab-order.ts`, and handle it in each `switch` over the
       tab kinds, such as `equalTabs` of `view-tabs.ts`. Add tests.
-- [ ] Update `src/shared/README.md` for the new tab kind.
-- [ ] Run `npm run typecheck` and the targeted tests.
+- [x] Update `src/shared/README.md` for the new tab kind.
+- [x] Run `npm run typecheck` and the targeted tests.
 
 ## Milestone 5: Preview use is not activity
 
@@ -287,12 +287,12 @@ Depends on: 3
 Summary: a request through a preview no longer keeps the computer running
 (decision 293). A preview keeps its ends of today (decision 294).
 
-- [ ] Remove the activity report of the preview proxy at
+- [x] Remove the activity report of the preview proxy at
       `worker/previews/proxy.ts`, and its wiring when nothing else uses it.
       Change the tests that expect it.
-- [ ] Update `worker/previews/README.md` and the lifecycle docs that name
+- [x] Update `worker/previews/README.md` and the lifecycle docs that name
       preview activity.
-- [ ] Run `npm run typecheck` and the targeted tests.
+- [x] Run `npm run typecheck` and the targeted tests.
 
 ## Milestone 6: Preview tabs and the tool
 
@@ -303,27 +303,27 @@ Depends on: 4
 Summary: the desktop screen shows a Preview tab for each port, and the tool
 lists the ports.
 
-- [ ] Move the previews store to the workspace screen, so the tool and the
+- [x] Move the previews store to the workspace screen, so the tool and the
       tabs read one store. Keep its connection rules.
-- [ ] Draw each Preview tab in the centre row through `renderTab`, with its
+- [x] Draw each Preview tab in the centre row through `renderTab`, with its
       label, tooltip, Close, and the key of Close tab.
-- [ ] Draw the bar of a Preview tab with Reload and Open.
-- [ ] Show the frame of a tab at `preview/port/<port>`, kept mounted while
+- [x] Draw the bar of a Preview tab with Reload and Open.
+- [x] Show the frame of a tab at `preview/port/<port>`, kept mounted while
       hidden. Save the tab as open and active on a visit.
-- [ ] Open a preview for a shown tab whose port has none, with no notice.
+- [x] Open a preview for a shown tab whose port has none, with no notice.
       Use the oldest open preview of a port.
-- [ ] Resume a stopped computer at the show of a tab. Show the state of the
+- [x] Resume a stopped computer at the show of a tab. Show the state of the
       computer in place of the bar and the page while it does not run. Show
       no Preview tab in an archived workspace.
-- [ ] Change the desktop tool: the list of each port, with no bar, no
+- [x] Change the desktop tool: the list of each port, with no bar, no
       frame, no "+", and no Close. Keep the phone Preview page as today.
-- [ ] Add DOM and wiring tests: a click on a port with and without a tab,
+- [x] Add DOM and wiring tests: a click on a port with and without a tab,
       Reload and Open, Close of a tab, a revoke and the reopen at the next
       show, a session click, and the phone page.
-- [ ] Update `src/previews/README.md` and
+- [x] Update `src/previews/README.md` and
       `src/shell/workspace/screen-parts.md`.
-- [ ] Check the screen in a browser with `npm run dev`. Save screenshots
-      under `.context/preview-centre-tab/`.
+- [x] Check the screen in a browser with the workspace development page.
+      Screenshots: `.context/preview-centre-tab/app/`.
 
 ## Milestone 7: Verification, commit, review, and pull request
 

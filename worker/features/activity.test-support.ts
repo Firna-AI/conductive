@@ -113,7 +113,6 @@ export async function activityFixture(
 
 export type ActivityFixture = Awaited<ReturnType<typeof activityFixture>>
 
-
 export async function hostedActivityPort(
   request: Request,
 ): Promise<Response | undefined> {

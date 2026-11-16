@@ -10,8 +10,8 @@ import { nameLabel } from '../../shared/name-label'
 import type { WorkspaceTab, WorkspaceView } from '../../shared/workspace-view'
 import { rowTabs, tabKey } from '../state/tab-order'
 
-/** A file or diff tab of the saved view. The host of the chat draws it. */
-type HostTab = Exclude<WorkspaceTab, { kind: 'session' }>
+/** A file, diff, or Preview tab of the saved view. The host draws it. */
+export type HostTab = Exclude<WorkspaceTab, { kind: 'session' }>
 
 /**
  * The props that the row gives the list item of a tab: the handlers and the
@@ -60,7 +60,7 @@ export type TabDraw =
  * in its place, as a double-click on the tab does, for Keep open of its tab
  * menu. It is null for each kept tab, whose menu has no Keep open.
  */
-interface RenderedTab {
+export interface RenderedTab {
   title: string
   draw: (draw: TabDraw) => ReactNode
   show: () => void

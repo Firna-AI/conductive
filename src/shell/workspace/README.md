@@ -113,7 +113,7 @@ A new `create` makes a new view, so keep `app` and `viewer` stable.
   tab no longer keeps.
 
 The context of the features gives the kept chat as `savedView` and as
-`chat`, and the tool events as `toolEvents`. `KeptFilesConnection`
+`chat`, and the tool events as `toolEvents`. `KeptConnections`
 connects the kept files of the tab through `useWorkspaceStore`, as
 [the Files screens](../../files/README.md#integration) show, and the parts
 that show files read the same store.

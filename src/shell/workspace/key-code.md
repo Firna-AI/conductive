@@ -109,8 +109,10 @@ this guide.
   another branch as loading. `github/bar-keys.tsx`: `BarKeys`, the keys of
   the bar, beside the bar of the right column and beside the actions at
   the top of the Checks tab of a phone.
-- `files/kept-files.tsx`: `KeptFilesConnection`, the one connection of the
-  kept files for the whole screen.
+- `kept-connections.tsx`: `KeptConnections`, the one connection of the
+  kept files and of the kept previews for the whole screen.
+- `previews/kept-previews.ts`: the kept previews store of the open
+  workspace, its snapshot, and its connection while the sandbox runs.
 - `ContinueDialog.tsx`: the question of Continue with the local work, which
   `LocalWorkList` of the mockups lists.
 - `github/BarMerge.test.tsx`, `github/BarAgent.test.tsx`,

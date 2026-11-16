@@ -261,7 +261,11 @@ The git credential payload is not defined yet.
   without a display mode, or is null. The Worker and browser readers use
   null for an absent or invalid mark, or one that names no open tab.
   [The saved view](../../docs/protocol/temporary-tabs.md#the-saved-view)
-  gives the requirements.
+  gives the requirements. A Preview tab names a port from 1 to 65535,
+  which `isTabPort` checks for the Worker and the browser readers. A port
+  has at most one tab, as
+  [Port previews](../../docs/protocol/port-previews.md#preview-tabs-and-the-end-of-a-preview)
+  says.
 - [Shortcut commands](shortcut-commands.ts) define the stable command IDs.
   The app and Worker share this list, including Copy link, pull request
   actions, and both transcript copies. Account reads and saves accept

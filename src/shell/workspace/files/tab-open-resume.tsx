@@ -1,6 +1,7 @@
 import { useEffect, useEffectEvent } from 'react'
 import { routeOf, useNavigation } from '../../../app/navigation'
 import type { WorkspaceContext } from '../features'
+import { toolPlace } from '../tools/tool-address'
 import { filesPlace, tabOf } from './files-address'
 
 /**
@@ -22,8 +23,16 @@ function resumesAtTabOpen(context: WorkspaceContext): boolean {
   )
 }
 
-/** The file or diff tab of this workspace that an address names, as a key. */
-function tabAt(href: string, orgId: string, workspaceId: string) {
+/**
+ * The file, diff, or Preview tab of this workspace that an address names,
+ * as a key. Only the desktop has Preview tabs, at `preview/port/<port>`.
+ */
+function tabAt(
+  href: string,
+  orgId: string,
+  workspaceId: string,
+  desktop: boolean,
+) {
   const route = routeOf(href)
   if (
     route.screen !== 'workspace' ||
@@ -33,12 +42,16 @@ function tabAt(href: string, orgId: string, workspaceId: string) {
     return null
   }
   const tab = tabOf(filesPlace(route.view))
-  return tab ? `${tab.kind}:${tab.path}` : null
+  if (tab) return `${tab.kind}:${tab.path}`
+  const place = toolPlace(route.view)
+  return desktop && place?.tool === 'preview' && place.port !== null
+    ? `preview:${place.port}`
+    : null
 }
 
 /**
- * Resumes the sandbox at each visit that opens a file or diff tab, so that
- * the tab can read its file. A visit opens a tab when it moves to another
+ * Resumes the sandbox at each visit that opens a file, diff, or Preview
+ * tab, so that the tab can read its file or open its preview. A visit opens a tab when it moves to another
  * tab, or when it visits the address of the tab again, as a second click on
  * the tab or on its file does. Each click, link, and move back or forward
  * is a visit. A switch between the preview and the source of one file
@@ -48,20 +61,21 @@ function tabAt(href: string, orgId: string, workspaceId: string) {
 export function ResumeOnTabOpen(props: { context: WorkspaceContext }): null {
   const navigation = useNavigation()
   const { org, workspace } = props.context
+  const desktop = props.context.viewport !== 'phone'
   const resumeIfDown = useEffectEvent(() => {
     if (resumesAtTabOpen(props.context)) props.context.resume.run()
   })
   useEffect(() => {
     let href = navigation.href()
-    let tab = tabAt(href, org.id, workspace.id)
+    let tab = tabAt(href, org.id, workspace.id, desktop)
     return navigation.subscribe(() => {
       const visited = navigation.href()
-      const opened = tabAt(visited, org.id, workspace.id)
+      const opened = tabAt(visited, org.id, workspace.id, desktop)
       const opens = opened !== null && (opened !== tab || visited === href)
       href = visited
       tab = opened
       if (opens) resumeIfDown()
     })
-  }, [navigation, org.id, workspace.id])
+  }, [navigation, org.id, workspace.id, desktop])
   return null
 }
