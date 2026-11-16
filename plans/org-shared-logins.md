@@ -1,4 +1,4 @@
-# Logins shared with an org
+# Org agent logins
 
 Status: Active. On branch `calummoore/delft-zjk2`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
@@ -14,16 +14,22 @@ sharing".
 On 15 November 2026 the user asked: "allow user to share their
 credentials with the org, so other members can use them - i.e. custom url
 or api key". A brainstorm on that day gave three approaches. On
-16 November 2026 the user chose decisions 1 to 3, 5, and 6 below. The user also
-said: "if an org has a shared credential, the user does not need to enter
-their own credentials at all". Decision 4 records that rule.
+16 November 2026 the user first chose decision 1 A, member shares. Later
+that day the user asked for "a separate workspace configuration", and
+asked for the agent's opinion. The agent recommended an org login. The
+user then said: "we can basically copy the same screen but with less
+options" and "it should be its own tab". So decision 1 changed to B. The
+user also said: "if an org has a shared credential, the user does not
+need to enter their own credentials at all". Decision 4 records that rule.
 
-This change lets a member share an API key or an own endpoint login with
-each of their orgs. Other members of such an org start their own
-sessions and workspaces on it. A member with a usable shared login needs
-no login of their own. The change does not cover Claude subscription
-tokens or ChatGPT sign-ins, logins that an org owns, use counts, limits,
-or admin control of endpoints.
+This change adds an org login for each agent. An admin connects an API key
+or an own endpoint on a new Agents tab of the org settings. The tab reuses
+the form of the account page with fewer options. A member of the org with
+no usable login of their own for that agent runs on the org login. Such a
+member needs no login of their own. The change does not cover Claude
+subscription tokens or ChatGPT sign-ins as org logins, member shares with
+an org, use counts, or limits. Today's share switch of personal logins
+stays as it is.
 
 Contract owners:
 
@@ -45,39 +51,35 @@ Contract owners:
 
 Replaced ways:
 
-- The share setting `agent_logins.no_reuse` of an API key or an own
-  endpoint login → one share for each org, in a new table. Consumers:
-  `senderLoginAccess` in `worker/chat/queries.ts`, `readLoginMetadata` in
-  `worker/chat/login-availability.ts`, `SessionLogins.observe` in
-  `worker/chat/session-login.ts`, `worker/app-api/account-data.ts`, the
-  defaults `defaultAgentLoginNoReuse` in `src/shared/account.ts`,
-  `setNoReuse` of the account store, and `LoginShareSetting.tsx`. Moved in
-  Milestones 3, 4, and 5. The `no_reuse` value of API keys and own
-  endpoints is deleted in Milestone 3. The column stays for subscription
-  tokens and ChatGPT sign-ins, by decision 2.
-- The starter of a session as the source of its login → the login owner
-  of the session. Consumers: `worker/chat/session-login.ts`,
-  `worker/model-gateway/workspace.ts`, `worker/chat/delivery-state.ts`,
-  `worker/chat/model-changes.ts`, the targets of `readLoginMetadata`, and
+- The starter of a session as the source of its login → the login of the
+  session, which names a member or the org. Consumers:
+  `worker/chat/session-login.ts`, `worker/model-gateway/workspace.ts`,
+  `worker/model-gateway/login.ts`, `worker/chat/delivery-state.ts`,
+  `worker/chat/model-changes.ts`, the targets of `readLoginMetadata` in
+  `worker/chat/login-availability.ts`, and
   `src/chat/state/session-login.ts`. Moved and deleted in Milestones 4
-  and 5.
-- Two share checks, the `reuseDenied` query of `senderLoginAccess` and the
-  check of `SessionLogins.observe` → one access rule in one helper.
-  Moved and deleted in Milestone 4.
+  and 6.
+- The "own login or refuse" check of a first message, a tool session, and
+  a linked session → one default login resolver. Consumers:
+  `worker/chat/first-message.ts:117-125`, `worker/chat/send-message.ts:46-56`,
+  `worker/chat/tool-session-write.ts:131-139`,
+  `worker/routines/run-starter.ts:69`, and
+  `worker/app-api/get-started-data.ts:30`. Moved and deleted in
+  Milestone 4.
 
 ## Terms
 
-- **Agent login:** the key, token, or sign-in that a turn of an agent
-  runs on. Rows live in the D1 table `agent_logins`, one for each member
-  and agent.
+- **Agent login:** the key, token, or sign-in that a turn of an agent runs
+  on. Personal logins live in the D1 table `agent_logins`, one for each
+  member and agent.
 - **Own endpoint login:** an agent login that holds the address of a
-  gateway or a proxy that its owner chose, and its key.
-- **Shareable login:** an API key or an own endpoint login. Only these
-  logins can be shared with an org.
-- **Org share:** the owner's choice that the members of one org may use a
-  shareable login.
-- **Login owner:** the member whose login a session runs on. Before this
-  change, it was always the starter.
+  gateway or a proxy, and its key.
+- **Org login:** an API key or an own endpoint login that an admin
+  connects for one org and one agent.
+- **Personal login:** an agent login that a member connects on the account
+  page.
+- **Login of a session:** the personal login of one member, or the org
+  login, that every turn of the session runs on.
 - **Default login:** the login that a member's new session takes, by the
   rule of decision 6.
 - **Share switch:** today's account setting "Let other members use this
@@ -85,8 +87,8 @@ Replaced ways:
 
 ## Decisions
 
-The options check of decisions 5 and 6 ran on 16 November 2026. Its
-report is in `.context/org-shared-logins/options-check-decisions-5-6.md`.
+The options check of the first decisions 5 and 6 ran on 16 November 2026.
+Its report is in `.context/org-shared-logins/options-check-decisions-5-6.md`.
 
 ### 1. Who owns a login that the org can use
 
@@ -103,74 +105,49 @@ report is in `.context/org-shared-logins/options-check-decisions-5-6.md`.
   never reaches a cloud computer.
 - **Problem:** No rule lets a member start work on a login that another
   member or the org owns.
-- **Impact if no action:** A teammate without a key cannot use the app,
-  also when a colleague wants to lend one.
-- **Root question:** How does a member run agents on an API key or an own
-  endpoint that someone else made available to the org?
+- **Impact if no action:** A teammate without a key cannot use the app.
+- **Root question:** Where does the credential that the members of an org
+  use live, and who manages it?
 - **Options:**
-  - **A.** The owner gets one share switch for each of their orgs under
-    each shareable login. A member of such an org starts sessions on it.
-    The composer names it, such as "Cal's login". It changes decisions 105
-    and 116. The owner's account pays for all use. Effort: Large.
-  - **B.** An admin connects an API key or an endpoint in the org
-    settings. It stays when that admin leaves. It changes decision 21 and
-    adds a new store of org secrets. Effort: Large.
-  - **C.** Both A and B, on one model where a member or the org owns each
-    login. Effort: Large.
+  - **A.** The owner of a personal login gets one share switch for each
+    of their orgs. A member of such an org starts sessions on it. It
+    changes decisions 105 and 116. Effort: Large.
+  - **B.** An admin connects an API key or an own endpoint for the org. It
+    stays when that admin leaves. It changes decision 21 and adds a store
+    of org secrets. Effort: Large.
+  - **C.** Both A and B. Effort: Large.
 - **Left out:**
   - Change nothing: it fails the goal.
   - Org env vars that set up the agents: they put the key in the sandbox,
     against decision 120.
   - The workspace owner's login for every session: a member still cannot
     start a workspace.
-  - A copy of the shared login in each member's account: a copy keeps
+  - A copy of a personal login in each member's account: a copy keeps
     working after the owner stops sharing.
+  - A login for each workspace: workspaces are short-lived, so members
+    would set the same login again and again.
   - Subscriptions too: the consumer terms forbid it.
 - **Wider fix:** None. This is a new feature.
 - **Previous examples:** Decision 502 E offered an org login for
-  routines. The user chose 502 B on 8 November 2026. Decision 105 H
-  offered the workspace owner's login. The user chose F on 7 November
-  2026.
-- **Recommendation:** A. It does what the user asked, and the owner can
-  stop it at any time.
-- **Decision:** The user chose A on 16 November 2026.
+  routines. The user chose 502 B on 8 November 2026. Decision 21 left out
+  a login for each org, because Boat credential profiles needed
+  `account.admin`, as `plans/boat-native-remote-workspaces.md:890-893`
+  records. Decision 120 later moved every login into the Worker, so that
+  reason is gone.
+- **Recommendation:** B. A company key belongs to the org, an admin then
+  chooses where the org's code goes, and the rules are the simplest.
+- **Decision:** The user chose A on 16 November 2026. Later that day the
+  user changed it to B, with the org login on its own tab of the org
+  settings, as a copy of the account form with fewer options.
 
 ### 2. Today's share switch
 
-- **Severity:** Medium. **Effort:** Small.
-- **Source:** Design.
-- **Category:** Product bug.
-- **Location:** `src/shell/account/LoginShareSetting.tsx`,
-  `worker/chat/queries.ts:180-181`, and
-  `plans/follow-ups/remove-share-switch.md`.
-- **Background:** The share switch lets other members continue the
-  owner's sessions in all of the owner's orgs. API keys and own endpoints
-  are shared by default.
-- **Problem:** With decision 1 A, two kinds of sharing would exist.
-- **Impact if no action:** Members see two controls with overlapping
-  meanings.
-- **Root question:** How does an owner control all use of their login by
-  others?
-- **Options:**
-  - **a.** One switch for each org covers new sessions and continuations.
-    Each switch starts off. Today's "on" values reset to off.
-    Subscription tokens and ChatGPT sign-ins keep today's switch until
-    the removal item is decided. Effort: Small.
-  - **b.** As a, but a switch that is on today becomes "shared with every
-    current org". Use grows to new sessions without the owner's choice.
-    Effort: Small.
-  - **c.** Keep today's switch for continuations, and add a share for each
-    org for new sessions. Effort: Small.
-- **Left out:** None.
-- **Wider fix:** a. One control removes the overlap.
-- **Previous examples:** Decision 116, and
-  `plans/follow-ups/remove-share-switch.md`.
-- **Recommendation:** a. It gives one control, and no use happens that
-  the owner did not choose.
-- **Decision:** The user chose a on 16 November 2026. This changes own
-  endpoint decision 4: a new API key or own endpoint is not shared by
-  default. It also answers option B of
-  `plans/follow-ups/share-setting-spans-all-orgs.md`.
+- **Decision:** On 16 November 2026 the user first chose a: one switch for
+  each org that covers new sessions and continuations. That choice
+  depended on decision 1 A. With decision 1 B, no member shares with an
+  org, so the item no longer applies. Today's share switch of personal
+  logins stays as it is on `main`. The open item
+  `plans/follow-ups/remove-share-switch.md` still covers its future.
 
 ### 3. Models of a shared endpoint
 
@@ -181,10 +158,11 @@ report is in `.context/org-shared-logins/options-check-decisions-5-6.md`.
 - **Background:** The picker of an endpoint's owner hides the models that
   the endpoint does not list. The pickers of other members show every
   model.
-- **Problem:** A member on a shared endpoint can pick a model that fails.
+- **Problem:** A member on an endpoint of someone else can pick a model
+  that fails.
 - **Impact if no action:** Some turns fail, and the cause names the model.
-- **Root question:** Which models does a member see when they use someone
-  else's endpoint?
+- **Root question:** Which models does a member see when they use an
+  endpoint that someone else connected?
 - **Options:**
   - **A.** The picker follows the last model list of the endpoint, as it
     does for the owner. Effort: Small.
@@ -193,18 +171,21 @@ report is in `.context/org-shared-logins/options-check-decisions-5-6.md`.
 - **Wider fix:** None.
 - **Previous examples:** Own endpoint decision 5.
 - **Recommendation:** A. A member then picks only models that work.
-- **Decision:** The user chose A on 16 November 2026.
+- **Decision:** The user chose A on 16 November 2026. With decision 1 B, it
+  applies to an org endpoint: each picker of a session or a new session
+  on the org login follows the last model list of the org endpoint.
 
-### 4. A shared login replaces the member's own login
+### 4. An org login replaces the member's own login
 
 - **Source:** Design. The user stated this rule on 16 November 2026: "if
   an org has a shared credential, the user does not need to enter their
   own credentials at all".
-- **Rule:** In an org with a usable shared login for an agent, a member
-  with no login for that agent works as if they had one. The agent step
-  of Get started is complete. The composer, the new workspace form, and
-  the agent tools show no Connect notice and refuse no message for a
-  missing login.
+- **Rule:** In an org with a usable org login for an agent, a member with
+  no usable login of their own for that agent works as if they had one. A
+  personal login that the app can no longer use counts as none. The agent step of Get
+  started is complete. The composer, the new workspace form, and the
+  agent tools show no Connect notice and refuse no message for a missing
+  login.
 
 ### 5. Routine runs of an owner without a login
 
@@ -220,180 +201,219 @@ report is in `.context/org-shared-logins/options-check-decisions-5-6.md`.
     created it.
 - **Background:** A routine run starts its first session as the routine
   owner, on the owner's own login. `docs/protocol/routine-runs.md:41-42`
-  takes that rule from decision 105, the login of the starter, and
-  decision 50, pushes as the sender. This plan separates the login owner
-  from the starter, so the reason from decision 105 is gone. The reason
-  from decision 50 still holds for GitHub access. The routines doc
+  takes that rule from decision 105 and decision 50. The routines doc
   rejects "org routines on an agent login of the org". Today a run of an
   owner without a login stops with `agent_login_required`.
-- **Problem:** Decision 4 says that a member with a shared login needs no
-  own login. No rule says whether a routine run of such a member can use
-  the shared login.
-- **Impact if no action:** A member who relies on a shared login can save
-  a routine whose runs all fail.
+- **Problem:** No rule says whether a routine run of an owner without a
+  login can use a login that the org makes available.
+- **Impact if no action:** A member who relies on that login can save a
+  routine whose runs all fail.
 - **Root question:** May a routine run, which no person watches, spend a
-  login that another member shared with the org, and who decides that?
-  The options check of 16 November 2026 wrote this root question in place
-  of "Which login does a routine run use when its owner has no login of
-  their own?".
+  login that the owner did not connect, and who decides that?
 - **Options:**
   - **A.** A run takes the owner's default login, as a new session of the
-    owner does. So a run can use a login shared with the org. The sharer's
-    key then pays for runs that no person watches. Effort: Small.
-  - **B.** A run uses only the owner's own login. The routine form warns
-    an owner without one, and runs fail as today. Effort: Small.
-  - **C.** The org share has a second switch that allows routines. A run
-    uses a shared login only when its owner allowed routines. It adds a
-    control and a mockup state. Effort: Medium.
-  - **D.** The routine saves the login of its runs. The form selects the
-    owner's default login first and offers each other usable login. A run
-    uses the saved login, and fails with a cause when that login is no
-    longer usable. Cost: a migration, and a form control with mockup
-    states. Risk: a saved shared login keeps paying after the owner
-    connects their own login, until the owner edits the routine.
+    owner does. Effort: Small.
+  - **B.** A run uses only the owner's own login. Effort: Small.
+  - **C.** A second switch allows routines on the login. Effort: Medium.
+  - **D.** The routine saves the login of its runs. Effort: Medium.
+  - **E.** As A, and the login's page lists the routines that use it.
     Effort: Medium.
-  - **E.** As A. The sharer's account page also lists the routines whose
-    runs use each org share, with their owners. Cost: an account query and
-    a mockup state. It is a view of use, which this plan otherwise leaves
-    out. Effort: Medium.
-- **Left out:** A spend cap, because the owner can limit spend at the
-  provider or at the endpoint, and limits are out of scope. An org login
-  for routines, because decision 1 A chose logins that members own.
-- **Assumptions:** Each option takes the run's login when the run starts,
-  except D. The sessions that a run's agent starts through the agent
-  tools take the owner's default login under every option. So B and C
-  also need the same limit on those tool calls.
+- **Left out:** A spend cap, because the provider and the endpoint can
+  limit spend, and limits are out of scope.
 - **Wider fix:** A. One default login rule serves sessions, the agent
   tools, and routines.
 - **Previous examples:** Decision 502 B chose who sees and changes a
   routine. Decision 502 E, an org login for routines, was not chosen.
-- **Recommendation:** A. It follows the rule of decision 4, and the sharer
-  can stop it at any time with the org share.
-- **Action:** ask the user, because the options change the routine run
-  rule of `docs/protocol/routine-runs.md`, and the options have real
-  trade-offs on unattended spend.
-- **Decision:** The user chose A on 16 November 2026.
+- **Recommendation:** A. It follows the rule of decision 4.
+- **Decision:** The user chose A on 16 November 2026. With decision 1 B, a
+  run uses the owner's default login: the own login, or else the org
+  login. The run still acts as its owner for GitHub, so its pushes show as
+  the owner. So the rejection of org routines in
+  `docs/protocol/routines.md:94-96` stays, because its reason is decision
+  50, and the org login changes only the model login.
 
 ### 6. A member with more than one usable login
 
 - **Severity:** Medium. **Effort:** Small.
 - **Source:** Design.
 - **Category:** Docs or spec.
-- **Location:** `worker/chat/first-message.ts:117-125` and
-  `docs/protocol/messages-and-attachments.md`.
-- **Background:** After decision 1 A, a member can have an own login and
-  one or more logins that other members shared with the org, for the
-  same agent.
+- **Location:** `worker/chat/first-message.ts:117-125`.
+- **Background:** A member can have a personal login and the org login
+  for the same agent.
 - **Problem:** No rule says which login a new session of that member
   takes.
-- **Impact if no action:** The implementation picks a rule that the user
-  did not choose. A member can spend a colleague's key without knowing it.
 - **Root question:** Which login does a member's new session use, when
   more than one login can serve it?
 - **Options:**
   - **A.** The member's own login comes first. Without one, the session
-    takes the shared login whose org share is oldest. A member who wants
-    the shared login must remove their own. Effort: Small.
-  - **B.** As A for the default. The composer and the new workspace form
-    get a login menu, so the member can choose any usable login for a new
-    session. It adds a control and mockup states. Effort: Medium.
-  - **C.** As A for the default. The account page gets one setting for
-    each org that names the member's default login there. Effort: Medium.
-  - **D.** The shared login comes first, before the member's own login,
-    as a fixed rule. Cost: a lent key also pays for members who have
-    their own login. Effort: Small.
-  - **E.** Each org share gets a second setting. The share serves only
-    members without their own login, as in A, or every member before their
-    own login. Cost: a control and a mockup state on the share.
+    takes the other login. Effort: Small.
+  - **B.** As A, with a login menu in the composer and the new workspace
+    form. Effort: Medium.
+  - **C.** As A, with a setting for each org on the account page.
     Effort: Medium.
-  - **F.** This works with each rule above. The account response names
-    the default login for each org and agent, from the Worker's resolver.
-    The composer, the new workspace form, the routine form, and Get
-    started show that value. They do not compute the order themselves.
-    Cost: one more field in a planned response. Effort: Small.
-- **Left out:** An org default that an admin sets, because admin control
-  is out of scope and E gives the same effect through the sharer. Another
-  fixed order of several shared logins, because the oldest share is the
-  only order that a new share never changes.
-- **Assumptions:** Each option keeps one login for the life of a session,
-  by decision 105. An own login that the app can no longer use counts as
-  none, so the session falls back to a shared login.
-- **Wider fix:** F. One source of the default serves each rule, so a later
-  move to B, C, D, or E needs no second copy of the order in the browser.
-- **Previous examples:** None found.
-- **Recommendation:** A with F. A meets the goal with no new control, and
-  F makes every screen name the login that the Worker picks. The first
-  recommendation was A alone. The options check of 16 November 2026 added
-  F.
-- **Action:** ask the user, because B and C add new controls, and no
-  option is clearly best until members use the feature.
-- **Decision:** The user chose A on 16 November 2026. F changes no
-  behaviour, so the plan keeps it as a design call.
+  - **D.** The other login comes first. Effort: Small.
+  - **E.** The owner of the other login sets which order applies.
+    Effort: Medium.
+  - **F.** With each rule, the server names the default login, and the
+    screens show that value. Effort: Small.
+- **Wider fix:** F.
+- **Recommendation:** A with F.
+- **Decision:** The user chose A on 16 November 2026. With decision 1 B,
+  the member's own login comes first, and the org login otherwise. The
+  user chose 6 A while decision 1 was still A. Decision 7 asks again
+  whether the own login comes first in an org with an org login. F changes no behaviour, so the plan keeps it as a
+  design call.
+
+### 7. The org login for every member
+
+The options check of 16 November 2026 changed the root question, added
+options D, E, and F, moved C to Left out, and changed the recommendation
+from A to B. Its report is in
+`.context/org-shared-logins/options-check-decision-7.md`.
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Design.
+- **Category:** Docs or spec.
+- **Location:** The default login rule of decision 6,
+  `src/app/get-started.ts:39-42`, and
+  `plans/follow-ups/org-control-of-own-endpoints.md`.
+- **Background:**
+  - By decision 6 A, a member's own login comes first. The user chose 6 A
+    while decision 1 was A. Its reason was that a member must not spend a
+    colleague's lent key. An org login is the org's own key, so that
+    reason is weaker now.
+  - Get started asks each person to connect an agent before the first
+    workspace. So most members already have a personal login, and under
+    6 A they never use the org login.
+  - A personal login serves all of the member's orgs. A member who removes
+    it to use the org login loses it in every org.
+- **Problem:** An admin who connects an org login cannot make the sessions
+  of the org use it. So the org cannot choose where its code goes.
+- **Impact if no action:** Most members keep their personal logins in the
+  org. The org login then serves only new members.
+- **Root question:** Who decides which login runs a member's work in an
+  org that has an org login: the member or an admin?
+- **Options:**
+  - **A.** The member. The own login comes first, by decision 6 A. The org
+    login serves only members without a usable login. Effort: Small.
+  - **B.** An admin. A switch on the Agents tab, "Use for every member",
+    starts off. When it is on, each new session in the org takes the org
+    login, also for a member with their own login. While the org login
+    cannot be used, the own login serves. Older sessions keep their login.
+    Effort: Medium.
+  - **D.** As B, and the next message in an older session on a personal
+    login starts a linked session on the org login. The composer says so
+    before Send. The new session has no copy of the earlier history.
+    Effort: Medium.
+  - **E.** As B, and older sessions move to the org login with their
+    history. Each moved session rewrites its prompt cache once. It changes
+    the rule that a session never moves to another login, in
+    `docs/protocol/agents-and-sessions.md:26-28` and
+    `docs/protocol/messages-and-attachments.md:42-43`. Effort: Medium.
+  - **F.** The org login always comes first in an org that has one, with
+    no switch. It changes decision 6 A for the org login. A member's
+    subscription then serves no org with an org login. Effort: Small.
+- **Left out:**
+  - The first option C: as B, and messages on personal logins in older
+    sessions are refused. D reaches the same sessions with no new
+    rejection.
+  - An admin list of allowed endpoint hosts for personal logins. It
+    limits only personal endpoints, and it makes no session use the org
+    login. `plans/follow-ups/org-control-of-own-endpoints.md` keeps it.
+  - A choice that each member makes for each org or session. The user
+    chose decision 6 A over a login menu and an account setting.
+  - A check at each gateway request. It only adds the last requests of
+    running turns, and it fails those turns in the middle.
+- **Assumptions:** Every way to start a session, also a routine run and
+  an agent tool call, takes its login from the one default login resolver.
+  So B, D, E, and F also apply to routine runs and agent tool sessions.
+- **Wider fix:** D. The rule then lives in the resolver and the access
+  helper, which check each message, so it covers older sessions too.
+- **Previous examples:** Option E of decision 6, an order that the owner of
+  the other login sets, in commit `9e64d6997`. The rejected "login of the
+  workspace owner for all sessions" in
+  `docs/protocol/agents-and-sessions.md:47-48`.
+- **Recommendation:** B. The org decides where its code goes, members keep
+  their own logins where the admin allows it, and it adds no rejection. D
+  protects the most, because it also covers older sessions.
+- **Action:** ask the user, because the options add new controls for
+  orgs, or change decision 6 A, and no requirement covers them.
 
 ## Design calls
 
 Each call is the agent's call, made on 16 November 2026.
 
-- A session takes its login owner when it accepts its first message. A
-  session with no message that changes its agent takes the login owner
-  of the new agent. Reason: the default login of decision 6 can change
-  between a "+" and the first message.
-- A stored session without a login owner reads its starter, in
+- One org login for each agent, as one personal login for each agent.
+- Only an admin connects, replaces, or removes an org login. Every member
+  sees the Agents tab read-only: the agent, the kind, and the host of an
+  own endpoint, as members see the other org settings. Nobody sees the
+  key or the full address. Reason: decision 57 for the org settings, and
+  the write-only rule for secrets.
+- The Agents tab reuses the parts of the account form,
+  `AgentConnectForm`, `EndpointFields`, `LoginEndpoint`, and
+  `EndpointModels`, with only the API key and the own endpoint kinds. It
+  has no share switch. Reason: the user asked to copy the screen with
+  fewer options.
+- The org login survives the admin who connected it. Deleting the org
+  deletes it.
+- The Worker encrypts an org login with a context that names the org, as
+  a personal login has a context that names the user. Reason: a copied
+  ciphertext then cannot pass as another org's login or a user's login.
+- A session takes its login when it accepts its first message. A session
+  with no message that changes its agent takes the login of the new agent.
+- A stored session without a login reads its starter, in
   `normalizeSession` of `worker/chat/session-storage.ts`. Reason: that
   function already gives a default to each stored field that an older
   record lacks.
-- A message of another member runs on the login owner's login while that
-  login can serve the sender: the sender is the owner, or the owner shares
-  it with the org of the workspace. For a subscription token or a ChatGPT
-  sign-in, today's share switch still decides. Otherwise the message
-  starts a linked session on the sender's default login, as today.
-- Every member may share their own shareable logins. Reason: an admin gate
-  would be a new restriction.
-- Only the owner changes an org share. Removing the login or changing its
-  kind to a subscription token or a ChatGPT sign-in deletes its org
-  shares. A save of the same kind keeps them. A change between an API key
-  and an own endpoint keeps them too. Reason: the owner chose the org, not
-  the secret.
-- When the owner leaves an org or is removed, the Worker deletes the
-  owner's shares with that org. The checks at use still require the
-  owner's membership and no suspension, as today.
-- A member sees the owner's name, the agent, and the kind of each login
-  that is shared with the org. A member never sees the key or the address.
-  Reason: own endpoint decision 5.
-- The workspace checks the access rule when it accepts each message and
-  before it gives the credential of a turn to the runner, as today. A
-  running turn finishes after the owner stops sharing. The gateway still
-  checks membership only, at each request. Reason: a check at each
-  gateway request would be a new rejection.
+- Every message of a member of the org runs on the org login of a session,
+  with no share switch. A session on a personal login keeps today's rules
+  of the share switch and the linked session.
+- The composer names the org login with the name of the org, such as
+  "Acme's login", where it names "Cal's login" for another member's login.
+- When an admin replaces the org login, its sessions keep it. A running
+  turn fails with the cause of a changed login, and Try again uses the new
+  key, as for a personal login today. When an admin removes it, a message
+  in such a session starts a linked session on the sender's default
+  login, as a message does today when the starter's login is not
+  available. No session moves to another login.
+- A session on the org login serves each member of the org, also after
+  its starter leaves the org. Today's checks of the starter's membership
+  apply only to a session on a personal login.
+- The workspace checks the login when it accepts each message and before
+  it gives the credential of a turn to the runner, as today.
 - The agent tools follow the default login of the sender when a call
   starts a session.
-- The account response names the default login for each org and agent,
-  from the Worker's resolver, as option F of decision 6 says. The screens
-  show that value and do not compute the order. Reason: one source of the
-  rule, and F changes no behaviour.
-- One helper decides whether a login can serve a sender in a workspace.
-  Each caller uses it.
-- No use counts, limits, or admin view in this change. The open items
-  `plans/follow-ups/org-control-of-own-endpoints.md` and
+- The account response and the org settings response name the default
+  login for each org and agent, from the Worker's resolver, as option F of
+  decision 6 says. The screens show that value and do not compute it.
+- The Terms page says that the admin who connects an org login must have
+  permission to use it, and that the account of the key or the endpoint
+  pays.
+- No use counts, limits, or admin view of personal endpoints in this
+  change. `plans/follow-ups/org-control-of-own-endpoints.md` and
   `plans/follow-ups/member-changes-session-choice.md` stay open.
 
 ## Components
 
-- D1: a table `agent_login_shares` with `user_id`, `agent`, `org_id`, and
-  `created_at`, keyed by all three, with a foreign key to `agent_logins`
-  that cascades on delete. It holds no secret.
-- Account API: the account response gives each shareable login the IDs of
-  its shared orgs. A route sets or clears one org share. The account
-  response also lists each login that another member shares with one of
-  the viewer's orgs: the org, the owner, the agent, the kind, and, for an
-  endpoint, the model list of decision 3. It names the default login for
-  each org and agent, from the Worker's resolver, by decision 6 F.
-- Session: a `loginOwner` field next to `startedBy` in
-  `src/shared/sessions.ts`.
+- D1: a table `org_agent_logins` keyed by `org_id` and `agent`, with
+  `kind` (`api-key` or `endpoint`), `ciphertext`, `endpoint_origin`,
+  `failure_cause`, `created_by`, `created_at`, and `updated_at`. It also
+  has the model list columns that
+  `migrations/202611110407_agent_login_models.sql` adds to personal
+  logins. It cascades on the delete of the org. When decision 7 adds a
+  switch, a save of the switch leaves `updated_at` unchanged, as
+  `worker/app-api/account-data.ts:182` does for the share switch.
+  Reason: `updated_at` is the login version that running turns check.
+- Org API: routes for admins that save and remove an org login, and a read
+  for members that gives each org login without its secret, with the
+  model list of an endpoint and the time of its last read.
+- Model lists: the endpoint model refresh of
+  `worker/model-gateway/endpoint-model-refresh.ts` gets an org owner.
+- Session: a `login` field next to `startedBy` in `src/shared/sessions.ts`
+  that names a member or the org.
 - Worker: one default login resolver and one access helper in
   `worker/chat/`, which the first message, the send, the linked session,
-  the agent tools, the gateway, the Get started data, and routine runs
-  use.
+  the agent tools, the gateway, Get started, and routine runs use.
 
 ## Milestone 1: Mockups
 
@@ -401,29 +421,36 @@ Tags: mockup
 
 Depends on: none
 
-The account page, the composer, the new workspace form, Get started, and
-the model picker change. Mockups follow the
-[mockups README](../docs/mockups/README.md).
+A first mockup round for the member shares of the first decision 1 A left
+uncommitted work in the working tree. Its copy is in
+`.context/org-shared-logins/milestone-1-partial.patch`. This milestone
+keeps the parts that still fit, and moves the account shares to the org
+settings.
 
-- [ ] Account page, `app/account/agents`: under each API key and own
-      endpoint login, one share switch for each org of the owner, with
-      the org name. A subscription token and a ChatGPT sign-in keep
-      today's switch.
-- [ ] Account page: a state where one org share does not save, from
-      `app/account/share-not-saved`.
-- [ ] Account page: a list of the logins that other members share with
-      the viewer's orgs, with the org, the owner, the agent, and the kind.
-- [ ] Get started, `app/account/setup`: the agent step is complete with
-      only a shared login, and it names that login.
-- [ ] Composer: a new session of a member without an own login names the
-      shared login, such as "Cal's login", from `app/composer/login`.
-- [ ] Composer: the `app/composer/not-shared` notice when the login owner
-      stops sharing with the org.
-- [ ] New workspace form: no Connect notice with a shared login.
-- [ ] Model picker: a session on a shared endpoint shows only the models
-      of its last list, from `app/account/endpoint-models`. The routine
-      form does the same for a run on a shared endpoint.
-- [ ] Routine form: the state that decision 5 chooses.
+- [ ] Org settings: an Agents tab after Cloud computer, in
+      `docs/mockups/src/components/settings/OrgSections.tsx`. An admin
+      sees Claude and Codex, each with Connect, or with its kind, the host
+      of an endpoint, the model list, Replace, and Remove. The form offers
+      only API key and own endpoint.
+- [ ] Org settings: the read-only Agents tab of a member, as
+      `app/org-settings/member` shows the General tab.
+- [ ] Org settings: the endpoint model list, an endpoint that the app does
+      not accept, and a save that fails, on child pages when the page
+      would pass five screens.
+- [ ] Account page: remove the org share switches and the "Shared with
+      you" list of the first round. Each personal login keeps today's
+      share switch. Show a short line for each org whose org login serves
+      an agent that the member did not connect.
+- [ ] Get started: the agent step is complete with only an org login, and
+      it names the org login.
+- [ ] Composer: a session on the org login names it, such as "Acme's
+      login". The `not-shared` and `no-agent` states keep today's rules for
+      personal logins.
+- [ ] New workspace form and routine form: no Connect notice with an org
+      login, and the form names the org login.
+- [ ] Model picker: a session or a routine on an org endpoint shows only
+      the models of its last list.
+- [ ] The state that decision 7 chooses, when it adds a control.
 - [ ] Update `docs/mockups/catalogue.md`,
       `docs/mockups/orgs-and-logins.md`, and
       `docs/mockups/own-endpoint-logins.md`.
@@ -435,112 +462,102 @@ the model picker change. Mockups follow the
 
 Depends on: 1
 
-The protocol docs state decisions 1 to 6 and the design calls that set
-requirements. The legal pages and the guides follow.
-
-- [ ] `docs/protocol/agents-and-sessions.md`: each session runs on the
-      login of its login owner. The starter never changes.
-- [ ] `docs/protocol/isolation.md`: the org shares, the access rule,
-      the defaults of decision 2, and the risks of a shared key.
-- [ ] `docs/protocol/tokens-and-secrets.md`: a shareable login also serves
-      the sessions of members of the orgs it is shared with.
+- [ ] `docs/protocol/tokens-and-secrets.md`: the org login, its admins, its
+      encryption, and that it serves the members of its org.
+- [ ] `docs/protocol/orgs-and-members.md`: the Agents tab, who changes it,
+      and that decision 21 now has an exception. Change lines 197-199 and
+      238-239, which say that each session runs on its starter's login.
+- [ ] `docs/protocol/agents-and-sessions.md`: each session runs on its
+      login, a personal login or the org login. The starter never changes.
+- [ ] `docs/protocol/isolation.md`: the org login never reaches a sandbox,
+      and the access rule.
 - [ ] `docs/protocol/own-endpoint-logins.md`: drop the rejection of an
-      org endpoint that cites decisions 21 and 105. State decision 3 and
-      the new default of decision 2.
+      org endpoint. State decision 3 for the org endpoint.
 - [ ] `docs/protocol/messages-and-attachments.md`: the default login of
-      decision 6 and the linked session. Under decision 6 A, the ChatGPT
-      recovery cause at lines 144-146 also says that a shared OpenAI key
-      serves the member only after they remove their ChatGPT sign-in.
-- [ ] `docs/protocol/orgs-and-members.md`: logins and org shares, and
-      the share removal when a member leaves.
+      decision 6.
 - [ ] `docs/protocol/routines.md` and `docs/protocol/routine-runs.md`:
       decision 5.
 - [ ] `docs/protocol/session-calls.md`: the agent tools use the default
       login of the sender.
 - [ ] `docs/protocol/model-gateway.md` and
-      `docs/protocol/model-gateway-requests.md`: the login owner of the
-      session.
-- [ ] Read `src/marketing/terms.ts` and `src/marketing/privacy.ts` in
-      full. Update each sentence that restates a changed fact, such as
-      "Each session uses the login of the member who started it".
+      `docs/protocol/model-gateway-requests.md`: the login of the session.
+- [ ] Read `src/marketing/terms.ts`, `src/marketing/terms-org.ts`, and
+      `src/marketing/privacy.ts` with its parts in full. Update each
+      sentence that restates a changed fact, such as "Each session uses the
+      login of the member who started it".
 - [ ] Read each guide in `src/marketing/docs/` in full, at least
       `agent-logins.md`, `get-started.md`, `sessions-and-chat.md`,
       `security.md`, and `overview.md`. Update each sentence that
       restates a changed fact.
 - [ ] Update the rows of `src/marketing/from-conductor/areas/cloud.ts:86`
       and `plans-and-pricing.ts` that the change makes wrong.
-- [ ] Follow-up items: delete
-      `plans/follow-ups/share-setting-spans-all-orgs.md`, which decision 2
-      answers. Limit `plans/follow-ups/remove-share-switch.md` to
-      subscription tokens and ChatGPT sign-ins. Update the background of
-      `login-rotation-resets-share-setting.md`,
-      `login-replacement-sharing-choice.md`,
-      `org-control-of-own-endpoints.md`, and
-      `member-changes-session-choice.md`.
-- [ ] Update `worker/README.md`, `worker/chat/access.md`, `src/app/README.md`,
-      and `src/chat/README.md`, when they describe the share switch or the login
-      of a session.
+- [ ] Update the background of `plans/follow-ups/org-control-of-own-endpoints.md`
+      and `plans/follow-ups/member-changes-session-choice.md`.
+- [ ] Update `worker/README.md`, `worker/chat/access.md`,
+      `src/app/README.md`, and `src/chat/README.md`, when they describe the
+      login of a session.
 - [ ] Check each relative link of each changed Markdown file.
 
-## Milestone 3: Org shares in the data and the account API
+## Milestone 3: Org logins in the data and the org API
 
 Depends on: 2
 
-- [ ] Add the migration for `agent_login_shares`. Set `no_reuse` to its
-      default for every API key and own endpoint row, and stop reading it
-      for those kinds.
-- [ ] Remove a member's shares with an org when the member leaves or is
-      removed. Delete the shares on a kind change to a subscription token
-      or a ChatGPT sign-in.
-- [ ] Account API: the org IDs of each shareable login, the route that
-      sets or clears one org share, and the logins shared with the
-      viewer's orgs. No response holds a key or an address.
-- [ ] Remove the API key and own endpoint entries of
-      `defaultAgentLoginNoReuse`.
-- [ ] Tests: share, unshare, a share with an org of which the owner is not
-      a member, leave, kind change, and a response with no secret.
+- [ ] Add the migration for `org_agent_logins`.
+- [ ] Add the save, the remove, and the read of an org login, with the
+      address rule of `docs/protocol/own-endpoint-logins.md` and the org
+      encryption context. Only an admin saves or removes.
+- [ ] Give the endpoint model refresh an org owner.
+- [ ] Tests: an admin save, a member refused, a response with no secret,
+      an endpoint that the rule refuses, the delete of the org, and a
+      ciphertext of another org that does not decrypt.
 
-## Milestone 4: Sessions and turns on a shared login
+## Milestone 4: Sessions and turns on the org login
 
 Depends on: 3
 
-- [ ] Add `loginOwner` to the session, and its default in
-      `normalizeSession`.
-- [ ] Add the default login resolver of decision 6 and the access helper.
-      Delete the `reuseDenied` query and the second check in
-      `SessionLogins.observe`.
+- [ ] Add `login` to the session, and its default in `normalizeSession`.
+- [ ] Add the default login resolver of decisions 6 and 7, and the access
+      helper.
 - [ ] Move the first message, the send, the linked session, and
-      `worker/chat/tool-session-write.ts` to the resolver. A member with
-      only a shared login is not refused.
+      `worker/chat/tool-session-write.ts` to the resolver.
 - [ ] Move `worker/model-gateway/workspace.ts`,
-      `worker/chat/delivery-state.ts`, `worker/chat/model-changes.ts`, and
-      `readLoginMetadata` to the login owner.
+      `worker/model-gateway/login.ts`, `worker/chat/delivery-state.ts`,
+      `worker/chat/model-changes.ts`, and `readLoginMetadata` to the login
+      of the session.
 - [ ] Move `worker/app-api/get-started-data.ts` to decision 4.
 - [ ] Move `worker/routines/run-starter.ts` to decision 5.
-- [ ] Tests: a first message on a shared login, a continuation by another
-      member, an unshare during a waiting message, a turn after the owner
-      leaves, decision 6 order, decision 5, and an older stored session.
+- [ ] Tests: a first message on the org login, a message of another member
+      in that session, an org login replaced during a turn, removed before
+      a waiting message, decision 6 order, decision 5, and an older stored
+      session.
 
-## Milestone 5: Account page, composer, and Get started
+## Milestone 5: The Agents tab of the org settings
+
+Tags: ui
+
+Depends on: 1, 3
+
+- [ ] Add the Agents tab to the org settings under `src/shell/settings/`,
+      with the parts of the account form, as the mockups show.
+- [ ] Show the read-only tab to a member.
+- [ ] Check the tab in a browser against the mockups.
+
+## Milestone 6: Account page, composer, Get started, and forms
 
 Tags: ui
 
 Depends on: 1, 4
 
-- [ ] Replace `LoginShareSetting` for shareable logins with the org
-      switches of the mockup. Keep it for the other kinds.
-- [ ] Show the logins that other members share with the viewer's orgs.
 - [ ] Move `src/chat/state/session-login.ts` and the composer blockers to
-      the login owner and decision 4.
+      the login of the session and decision 4.
 - [ ] Move `src/app/setup-steps.ts` to decision 4.
-- [ ] Make the model picker follow the list of a shared endpoint, by
-      decision 3. This includes the routine form, whose picker follows only
-      the owner's own lists at `src/shell/routines/RoutineEditor.tsx:72`.
-- [ ] Show the default login from the account response. Do not compute
-      the order in the browser.
+- [ ] Show the default login from the server in the new workspace form,
+      the routine form, and the account page.
+- [ ] Make the model pickers follow the list of the org endpoint, by
+      decision 3, also in `src/shell/routines/RoutineEditor.tsx:72`.
 - [ ] Check the changed screens in a browser against the mockups.
 
-## Milestone 6: Verification, commit, review, and pull request
+## Milestone 7: Verification, commit, review, and pull request
 
 Depends on: every other milestone
 
@@ -559,5 +576,5 @@ Depends on: every other milestone
 
 ## Post-merge follow-up (non-blocking)
 
-- [ ] On the test deployment, share an API key with an org. Then send a
+- [ ] On the test deployment, connect an org login as an admin. Then send a
       first message as a member with no login of their own.
