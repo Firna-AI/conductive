@@ -167,7 +167,34 @@ decision of the change that lets a message carry files of up to 1 GB. The
 - A dropped file over the size limit gets no chip. The composer refuses it
   as it refuses a picked file, as [Attachments](#attachments) says.
 - A paste of a file or an image, such as a screenshot from the clipboard,
-  attaches no file. The field takes only the plain text of a paste.
+  attaches no file. The field takes only the plain text of a paste, as
+  [Large pastes](#large-pastes) says.
+
+### Large pastes
+
+- A paste of a large plain text attaches that text as a file, in place of
+  the text in the field. Reason: the user asked for this. A long log or
+  file then keeps the message field short, and the agent reads it as a
+  file.
+- A paste is large when it has at least 2,000 characters or at least 40
+  lines. A smaller paste stays text in the field.
+- The file holds the exact text of the paste, with the media type
+  `text/plain`. The first pasted file of a draft has the name
+  `Pasted text.txt`. Each later one has the next number, such as
+  `Pasted text 2.txt`, so that two chips of one draft show different names.
+- The file is an attached file, as a picked file is. Its chip goes in place
+  of the selected text, or at the caret, with a space after it. The chip,
+  the upload, the size limit, and the send follow the rules of the other
+  attached files. The paste is one step of undo, and undo takes the chip
+  and its file off the draft.
+- A paste of the last copy, cut, or drag of the same field stays text with
+  its chips, as [The chip in the field](#the-chip-in-the-field) says, also
+  when it is large. Reason: a move of text inside the field must not turn
+  the text into a file.
+- When the composer refuses the file, such as one over the size limit, the
+  paste changes nothing. The notice of the composer names the file.
+- The Feedback dialog takes no attached files, so a large paste there stays
+  text.
 
 ### The chip in the field
 

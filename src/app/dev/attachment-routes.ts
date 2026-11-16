@@ -1,4 +1,4 @@
-import type { Attachment } from '../../shared/messages'
+import type { Attachment } from '../../shared/generated/Attachment'
 import { attachmentPath } from '../../shared/attachment-paths'
 import { PART_RETRIES } from '../upload-parts'
 import type { DevBackend } from './backend'

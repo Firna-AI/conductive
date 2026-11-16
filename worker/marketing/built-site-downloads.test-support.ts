@@ -2,8 +2,8 @@ import { expect } from 'vitest'
 
 import { macDmgNames } from '../../docs/mockups/src/brand'
 import { macAppSection } from '../../src/marketing/features'
-import { parityPageCopy } from '../../src/marketing/from-conductor/copy'
 import { sitePaths, sourceRepositoryHref } from '../../src/marketing/links'
+import { pricingPageCopy } from '../../src/marketing/pricing'
 import { links } from './html.test-support'
 
 /** The address that always gives the file `name` of the latest release. */
@@ -15,7 +15,7 @@ export async function checkMacDownloads(
   siteOrigin: string,
 ) {
   const home = await (await get('/')).text()
-  const comparison = await (await get(sitePaths.fromConductor)).text()
+  const pricing = await (await get(sitePaths.pricing)).text()
   /** The last call to action of a page: from its title to the footer. */
   const closing = (page: string, title: string) =>
     page.slice(page.indexOf(title), page.indexOf('<footer'))
@@ -29,8 +29,8 @@ export async function checkMacDownloads(
       'Download for Mac',
     ],
     [
-      'comparison closing',
-      closing(comparison, parityPageCopy.closing.title),
+      'pricing closing',
+      closing(pricing, pricingPageCopy.closing.title),
       'Download for Mac',
     ],
     ['footer', home.slice(home.indexOf('<footer')), 'Mac app'],

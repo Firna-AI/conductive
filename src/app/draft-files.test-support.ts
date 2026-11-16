@@ -1,4 +1,5 @@
-import { ATTACHMENT_PART_BYTES, type Attachment } from '../shared/messages'
+import type { Attachment } from '../shared/generated/Attachment'
+import { ATTACHMENT_PART_BYTES } from '../shared/messages'
 import { FAKE_ORIGIN } from '../test-support/fixtures/core'
 import { deferred } from '../test-support/mount'
 import type { FetchLike, FileReply, FileTransport } from './api/client'

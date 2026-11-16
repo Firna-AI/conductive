@@ -1,8 +1,8 @@
+import type { Attachment } from '../shared/generated/Attachment'
 import {
   attachmentUploadCompletePath,
   attachmentUploadPartPath,
   attachmentUploadStartPath,
-  type Attachment,
   type AttachmentUploadTarget,
 } from '../shared/messages'
 import {

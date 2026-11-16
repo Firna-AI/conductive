@@ -35,8 +35,8 @@ export function chatDependencies(
 ): ChatDependencies {
   return {
     normalizeChoice: (choice) => modelChoice(env, choice),
-    refreshEndpointModels: (userId, agent) =>
-      refreshEndpointModels(
+    refreshEndpointModels: async (userId, agent) => {
+      await refreshEndpointModels(
         env,
         userId,
         agent,
@@ -45,7 +45,8 @@ export function chatDependencies(
           now: overrides.now ?? Date.now,
         },
         { background: true },
-      ),
+      )
+    },
     readBranches: (id) => readRunnerBranches(env.DB, id),
     readCommitAuthor: async (userId) => {
       const user = await readUser(env.DB, userId)

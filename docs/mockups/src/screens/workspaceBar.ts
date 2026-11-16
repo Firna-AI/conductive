@@ -2,6 +2,7 @@ import { barModel, type BarModel } from '../components/workspace/barModel'
 import { continuedBranch, viewerMergeMethod } from '../fixtures/barActions'
 import type { Workspace } from '../fixtures/workspaces'
 import { isRunning } from './composerFor'
+import { isNew } from './workspaceTabs'
 import type { WorkspaceState } from './workspaceState'
 
 /**
@@ -28,7 +29,13 @@ export function barOf(
   })
 }
 
-/** The branch of the workspace: its first one, or the one after Continue. */
+/**
+ * The branch of the workspace: its first one, or the one after Continue. A
+ * new workspace without its title is still on its placeholder branch.
+ */
 export function branchOf(state: WorkspaceState, workspace: Workspace): string {
-  return state.branch === 'continued' ? continuedBranch : workspace.branch
+  if (state.branch === 'continued') return continuedBranch
+  if (state.name === 'untitled' && isNew(state))
+    return workspace.placeholderBranch ?? workspace.branch
+  return workspace.branch
 }

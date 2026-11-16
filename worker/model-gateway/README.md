@@ -23,33 +23,8 @@ The [model gateway protocol](../../docs/protocol/model-gateway.md) states the re
 | `/v1/model/codex`, ChatGPT sign-in only | `GET /backend-api/wham/config/bundle`, `GET /backend-api/wham/accounts/check`, `GET /backend-api/codex/models` | `https://chatgpt.com` |
 | `/v1/model/codex`, ChatGPT sign-in only | `POST /backend-api/codex/responses` | The workspace's HTTPS backend origin, or `https://chatgpt.com` |
 
-An own endpoint login replaces the native upstream base in this table.
-[`readEndpointAddress`](../../src/shared/endpoint-address.ts) validates and builds that address at save, dispatch, and fetch time.
-It accepts only public HTTPS addresses with host names.
-It refuses every IPv4 and IPv6 address, credentials, internal names, and the app and preview domains.
-It normalizes the base path.
-The host check reads the product domain from `productDomain` in `docs/mockups/src/brand.ts`.
-The gateway runtime supplies `env.PREVIEW_DOMAIN` as an extra refused domain before each fetch.
-It preserves the endpoint query and appends the model request query.
-Claude drops a final `/v1` from the base before its route is added.
-Codex keeps its API base, including `/v1` when present.
-The builder also supports model-list addresses, but this gateway exposes no model-list route.
-
-The Worker reads an own endpoint's model list through
-[`endpoint-model-refresh.ts`](endpoint-model-refresh.ts).
-Save and account Refresh request a read immediately.
-Runner delivery schedules a background read after it sends a turn.
-[`endpoint-model-data.ts`](endpoint-model-data.ts) claims each attempt in D1.
-The claim limits background reads to once in ten minutes, including failed reads.
-[`endpoint-models.ts`](endpoint-models.ts) builds the agent's GET address and key headers.
-It follows no redirect and allows ten seconds and 1 MiB for the complete response.
-Claude requests `limit=1000` after the saved endpoint query.
-A Claude reply with `has_more: true` fails the read, so a partial list never replaces the cached list.
-It reads only `data[].id` and keeps no error body or diagnostic text.
-A failure keeps the previous IDs and successful read time.
-Writes check the login ciphertext and attempt ID, so an old response cannot replace a newer read or login.
-The account API compares those IDs with the app catalogue.
-No model discovery route becomes available to sandbox code.
+[Own endpoints](own-endpoints.md) describes address validation, model list reads,
+the save replies, and Refresh.
 
 Each fetch uses manual redirects.
 A connection failure returns `model_endpoint_unreachable` without the host.

@@ -76,7 +76,7 @@ function suspendPath(page: PageKey): string | undefined {
  * approval, that email waits to go, or, without one, never goes.
  */
 function approvePaths(user: UserPage): { question: string; done: string } {
-  if (user.verifiedEmail) {
+  if (user.email !== null) {
     return {
       question: paths.operatorUserApprove,
       done: paths.operatorUserApproved,
@@ -165,7 +165,7 @@ function UserDialog(props: {
         <ApproveDialog
           cancel={paths.operatorUserWaiting}
           done={approvePaths(user).done}
-          person={user}
+          person={{ ...user, verifiedEmail: user.email !== null }}
           viewport={viewport}
         />
       )

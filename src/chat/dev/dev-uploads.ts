@@ -2,7 +2,7 @@ import { attachmentFiles } from '../../app/dev/attachment-files'
 import { DevPartUploads, uploadRoutes } from '../../app/dev/attachment-parts'
 import { match } from '../../app/dev/router'
 import { attachmentPath } from '../../shared/attachment-paths'
-import type { Attachment } from '../../shared/messages'
+import type { Attachment } from '../../shared/generated/Attachment'
 import { readAttachment } from '../api/read-chat'
 import type { DevBackend } from './dev-backend'
 

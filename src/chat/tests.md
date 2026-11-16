@@ -100,6 +100,17 @@ opens no menu on that tab. `state/tab-order.test.ts` moves tabs through
 the controller and checks the saved order. A move that changes the place
 of the temporary tab drops its mark in the same save. A move of another
 tab, and a move to its own place, keep the mark.
+`components/CloseRight.dom.test.tsx` presses Close tabs to the right on
+the first tab of a row with a file tab and a session tab. The file tab
+leaves the view in one save, with its temporary mark, the session closes
+with no stop, and the shown tab stays. When the shown tab is to the right,
+the tab of the menu shows first. The item is off on the last tab.
+`state/controller.test.ts` closes an idle and a running session in one
+close: the idle one closes at once, and the running one waits for one
+question. `components/CloseQuestion.dom.test.tsx` checks the words of
+that question for one and for two running sessions, and
+`state/sessions.test.ts` drops a session that another member closes from
+the question.
 `components/TranscriptCopy.dom.test.tsx` copies the transcript of a tab
 that never showed, through the real controller, client, and menu, with
 the copy of the app's test services. Copy full transcript asks for the
@@ -205,7 +216,7 @@ read the draft that the owner keeps.
 `../shared/attachment-mentions.test.ts` finds the attached file of a file
 mention, and leaves a folder mention and other mentions alone. It puts the
 original names in place of those mentions, and checks for words outside
-them.
+them. For a title, it leaves out the mentions of attached images.
 `links/chat-parts-mentions.test.ts` reads mentions in a sent message. A
 mention of a file of the message is its chip, also when the tree holds
 that path, and also without a tree. A folder mention of that path stays
@@ -226,9 +237,20 @@ also renders the files under a sent message, with their sizes and no
 Remove.
 `links/workspace-links.test.ts` reads links with and without a tab path,
 Markdown links, a code label in a sent message, code, `..`, other origins
-and orgs, unknown workspaces, and punctuation. `links/LinkedText.test.tsx`
+and orgs, which are links and no chips, unknown workspaces, and
+punctuation. `links/LinkedText.test.tsx`
 mounts an answer with chips: in bold, in a list, with a bold or a code
 label, and a link in inline code and in a code block.
+`links/chat-parts-links.test.ts` reads the web links of an answer and of a
+sent message: a bare address in bold, a label with its code and bold, a
+label that reads as an address, a Markdown link that shows as typed, the
+Markdown of an image, and code that holds one address alone.
+`links/WebLinkText.dom.test.tsx` mounts an answer in a screen that opens
+links. It checks the words, the title, and the target of each kind of
+link, a plain press and a press with a modifier key on each, a workspace
+that runs no server, the links outside such a screen, and the links of a
+message line. `links/links-test-kit.ts` holds the helpers of the link
+tests.
 `components/AgentStop.dom.test.tsx` mounts the chat with its controller,
 workspace list, and session reads, and draws four stops through the
 workspace tools. The stopping sessions are a session of the chat's
@@ -240,7 +262,11 @@ the read, the known session shows its session chip, and the other
 workspace got one request. The last stop keeps the session link as text.
 `state/workspace-list.test.ts` checks that a chat without sources reads the
 list while it shows, and not while it is hidden. The workspace screen's
-`LinkChips.test.tsx` checks the chips of a kept chat on a phone, and its
+`LinkChips.test.tsx` checks the chips of a kept chat on a phone, and a
+link of another origin there. Its `TextLinks.test.tsx` presses a local
+address and a link of the app on desktop, and a link of the app to the
+address that shows, which replaces that address. It checks that an
+archived workspace keeps a local address as text. Its
 `FileMentions.test.tsx` lists the files on a phone before a visit to
 Files, and opens a file and a folder from their chips, also into a hidden
 right column.

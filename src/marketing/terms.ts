@@ -51,8 +51,8 @@ export const termsDocument: LegalDocument = {
           Mac app. Each workspace has its own cloud computer, where agents
           powered by Claude and Codex work. A workspace can hold one task
           after another, with one branch at a time.`,
-        paragraph`${productName} is free. The operator charges no fee for
-          it.`,
+        paragraph`${productName} is free until billing starts. Nobody pays
+          until they choose a plan.`,
       ],
     },
     {
@@ -201,6 +201,7 @@ export const termsDocument: LegalDocument = {
           you can read it while the cloud computer is stopped.`,
         paragraph`The cloud computer downloads a new attachment when the
           agent starts work on its message.
+          A large text that you paste becomes an attached file.
           ${productName} keeps each attached file until the cloud
           computer of its workspace has it and its first start succeeds.
           It then deletes its own copy. The file stays in the cloud computer.

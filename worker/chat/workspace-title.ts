@@ -33,16 +33,21 @@ export async function storeWorkspaceTitle(
   return envelope
 }
 
+/**
+ * Stores the title in D1. It gives the org of the workspace when the
+ * placeholder branch took the title, so that the caller can publish it.
+ */
 export async function projectWorkspaceTitle(
   db: D1Database,
   envelope: WorkspaceEventEnvelope,
   now: number,
-): Promise<void> {
-  if (envelope.event.type === 'workspace.title')
-    await updateWorkspaceTitle(
-      db,
-      envelope.workspaceId,
-      envelope.event.name,
-      now,
-    )
+): Promise<string | null> {
+  if (envelope.event.type !== 'workspace.title') return null
+  const { branchOrgId } = await updateWorkspaceTitle(
+    db,
+    envelope.workspaceId,
+    envelope.event.name,
+    now,
+  )
+  return branchOrgId
 }

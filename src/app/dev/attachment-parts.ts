@@ -1,3 +1,4 @@
+import type { Attachment } from '../../shared/generated/Attachment'
 import { tooLargeBody } from '../../../docs/mockups/src/components/chat/attachmentCopy'
 import {
   ATTACHMENT_MAX_BYTES,
@@ -5,7 +6,6 @@ import {
   attachmentUploadCompletePath,
   attachmentUploadPartPath,
   attachmentUploadStartPath,
-  type Attachment,
   type AttachmentUploadPart,
   type AttachmentUploadTarget,
   type StartAttachmentUploadResponse,

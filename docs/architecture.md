@@ -61,7 +61,8 @@ each feature.
 - **Org image:** the saved snapshot that every new sandbox of an org starts
   from. It holds a prepared copy of each repository that the org chose
   when the build of the image began.
-- **Build:** a run of the install script on a copy of the org image. An org
+- **Build:** a run of the install script on a copy of the org image. A
+  build also installs the newest release of the sandbox software. An org
   without an org image builds on a copy of the software image. A build
   replaces the org image only when it succeeds.
 - **Software image:** the saved snapshot of the base image with the app's
@@ -70,9 +71,13 @@ each feature.
 - **Refresh:** an update of the org image that fetches the new commits of
   each repository that the org image holds. It does not run the install
   script.
-- **Agent runner:** our program in each sandbox. It runs the agents through
-  the agent SDKs, and it reports the files, the changes, and the listening
-  ports of its workspace.
+- **Sandbox software:** the app's own software in each sandbox. It is the
+  program `conductive` and the parts that the program installs. Each deploy
+  from `main` publishes a release of it. Each sandbox updates it by itself,
+  as [Sandbox software](protocol/sandbox-software.md) says.
+- **Agent runner:** the part of the sandbox software that runs the agents.
+  It runs them through the agent SDKs, and it reports the files, the
+  changes, and the listening ports of its workspace.
 - **Session:** one agent conversation in a workspace. It shows as a tab.
 - **Turn:** the work of the agent on a message, from the message to the
   end of the agent's reply. A Claude turn stays open after that reply
@@ -88,6 +93,11 @@ each feature.
 - **Start:** each create or resume of a sandbox, also the sandbox of a
   build, a refresh, or a software image build. The app's Boat account
   limits the starts of all orgs.
+- **Plan:** what an org pays for each month, with the cloud hours that it
+  includes: Free, Plus, Pro, or Ultra. [Pricing](protocol/pricing.md)
+  states the plans. Billing has not started, so no org has a plan yet.
+- **Cloud hour:** one hour of one cloud computer that runs. Each plan
+  includes a number of cloud hours each month.
 
 - **Routine:** a saved prompt of an org that runs an agent without a
   person. A schedule, a GitHub pull request event, or Run now starts each
@@ -101,16 +111,19 @@ each feature.
 
 The [components page](architecture/components.md) describes each
 component and its responsibilities. It covers the apps, the Worker and
-its storage, Boat, the sandbox software, and the external services.
+its storage, Boat, the sandbox software, and the external services. The
+[sandbox software page](architecture/sandbox-software.md) describes the two
+programs in each sandbox, their releases, and their updates.
 
 ## Hostnames
 
-| Hostname               | What it serves                                                                                                                                                       |
-| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `conductive.build`     | The marketing site, with the public docs and the Terms, Privacy, and comparison pages                                                                                |
-| `app.conductive.build` | The web app, the API, the chat sockets, and the terminal                                                                                                             |
-| `api.conductive.build` | The GitHub webhooks, the agent tools, the runner, the credential helper, the model gateway, the software image route of the deploy run, and the attachment downloads |
-| `*.conductive.page`    | One random hostname for each open port preview, one level deep                                                                                                       |
+| Hostname                  | What it serves                                                                                                                             |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `conductive.build`        | The marketing site, with the public docs and the pricing, Terms, and Privacy pages                                                         |
+| `app.conductive.build`    | The web app, the API, the chat sockets, and the terminal                                                                                   |
+| `api.conductive.build`    | The GitHub webhooks, the agent tools, the runner, the credential helper, the model gateway, the software image route of the deploy run, and the attachment downloads |
+| `*.conductive.page`       | One random hostname for each open port preview, one level deep                                                                             |
+| `runner.conductive.build` | The public files of each [release](protocol/sandbox-software.md#releases) of the sandbox software, from an R2 bucket                       |
 
 `api.conductive.build` is the hostname for machines. Each of its routes has
 a path under `/v1/` (decision 102). The preview domain, `conductive.page`,

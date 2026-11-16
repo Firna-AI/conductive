@@ -1,12 +1,12 @@
 /** The catalogue paths that screens link to. */
 export const paths = {
   marketing: 'marketing',
+  pricing: 'marketing/pricing',
   docs: 'marketing/docs',
   docsGetStarted: 'marketing/docs/get-started',
   terms: 'marketing/terms',
   privacy: 'marketing/privacy',
   notFound: 'marketing/not-found',
-  fromConductor: 'marketing/from-conductor/one-table',
   signIn: 'app/sign-in',
   signInTerms: 'app/sign-in/terms',
   waitlist: 'app/sign-in/waitlist',

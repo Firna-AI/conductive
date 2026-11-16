@@ -95,9 +95,7 @@ it('captures the current dark workspace into the approved share composition', as
   expect(composition.content).toContain(
     'data:image/png;base64,Y3VycmVudCB3b3Jrc3BhY2U=',
   )
-  expect(composition.content).toContain(
-    'Give every coding task its own cloud computer.',
-  )
+  expect(composition.content).toContain('Ship code faster.')
   expect(composition.url).toBe('')
   expect(harness.closed).toEqual(['workspace', 'composition'])
 })

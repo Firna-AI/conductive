@@ -1,3 +1,5 @@
+import type { ChangesResponse } from '../../src/shared/generated/ChangesResponse'
+import type { FileTreeResponse } from '../../src/shared/generated/FileTreeResponse'
 import type { WorkspaceChat } from '../chat/backend'
 import type { WorkspaceController } from '../lifecycle/workspace-controller-types'
 import type { WorkspaceEventPublication } from '../lifecycle/workspace-platform'
@@ -13,7 +15,6 @@ import type {
   WorkspaceEvent,
   WorkspaceEventEnvelope,
 } from '../chat/workspace-events'
-import type { ChangesResponse, FileTreeResponse } from '../../src/shared/files'
 import type { NativeQuery } from './native-d1'
 import type { NativeLifecycleControls } from './native-lifecycle-controls'
 import type { TurnTokenCheck } from '../model-gateway/types'

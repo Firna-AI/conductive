@@ -49,6 +49,12 @@ export function waitingNotice(
   }
 }
 
+/**
+ * The Email row of the page of a user whose GitHub account has no
+ * primary verified email.
+ */
+export const noVerifiedEmail = 'No verified email'
+
 /** The state of an approval that the operator made from the Waitlist tab. */
 export const approvedLabel = 'Approved'
 

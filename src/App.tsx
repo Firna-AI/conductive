@@ -34,7 +34,7 @@ export function App(props: {
   const viewport = useViewport()
   useFileDropGuard()
   return (
-    <ServicesContext.Provider value={props.services}>
+    <ServicesContext.Provider value={app.services}>
       <AppModelContext.Provider value={app}>
         <NavigationContext.Provider value={props.navigation}>
           <PanelContext.Provider value={panels}>

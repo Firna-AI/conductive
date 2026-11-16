@@ -1,4 +1,4 @@
-import type { Agent } from '../../src/shared/agents'
+import type { Agent } from '../../src/shared/generated/Agent'
 import type { AppEnv } from '../env'
 import { CODEX_RECONNECT_CAUSE, parseCodexTokens } from '../codex-auth/tokens'
 import { failCodexRefresh } from '../codex-auth/token-store'
@@ -8,6 +8,7 @@ import {
 } from '../data/workspace-token-access'
 import { decrypt, hash } from '../security/crypto'
 import { workspaceNameColumn } from '../data/workspace-name'
+import { namedBranchSql } from '../lifecycle/workspace-branch'
 import {
   agentLoginKind,
   type AgentLogin,
@@ -48,19 +49,26 @@ export function findChatWorkspace(
     .first<WorkspaceRecord & { number: number }>()
 }
 
+/**
+ * Stores the automatic title. While the branch is a placeholder, the branch
+ * takes the title too, and the reply gives the org of the workspace.
+ */
 export async function updateWorkspaceTitle(
   db: D1Database,
   workspaceId: string,
   name: string,
   now: number,
-): Promise<void> {
-  await db
+): Promise<{ branchOrgId: string | null }> {
+  const branch = namedBranchSql(name)
+  const row = await db
     .prepare(
-      `UPDATE workspaces SET name = ?, updated_at = MAX(updated_at, ?)
-    WHERE id = ? AND name = '' AND ${automaticTitleWorkspacePredicate}`,
+      `UPDATE workspaces SET name = ?, branch = ${branch.sql}, updated_at = MAX(updated_at, ?)
+    WHERE id = ? AND name = '' AND ${automaticTitleWorkspacePredicate}
+    RETURNING org_id AS orgId, branch_placeholder AS placeholder`,
     )
-    .bind(name, now, workspaceId)
-    .run()
+    .bind(name, ...branch.values, now, workspaceId)
+    .first<{ orgId: string; placeholder: number }>()
+  return { branchOrgId: row?.placeholder === 1 ? row.orgId : null }
 }
 
 export async function tokenWorkspace(

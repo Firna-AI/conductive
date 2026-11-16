@@ -18,6 +18,8 @@ sign-in gate.
 The composer lists the files of the Files development page after `@`, and
 a press on a file chip notes what the app opens. The page has no file tab,
 so a press on the chip of a sent attached file also only notes its path.
+The page has no workspace screen, so each link of chat text opens a new
+tab, also a local address and a link of the app.
 As in the app, the chat takes a drop of files anywhere on its column for
 its message box, and a drop of files elsewhere on the page does nothing.
 
@@ -115,7 +117,8 @@ workspace and its first session take the title.
 Each other session takes the first line of its first message with own words
 as its title. The rule is `sessionTitleFrom` in
 `src/shared/session-title.ts`, which the Worker uses too. That rule first
-puts the original name of each attached file in place of its mention.
+leaves out each mention of an attached image. It puts the original name of
+each other attached file in place of its mention.
 
 ## Key code
 

@@ -218,7 +218,7 @@ A cleanup failure keeps the record retryable and leaves the successful turn unch
 After the member's text, the runner adds one line: "The sender attached these files. Read each file, or the parts of a large file that you need, before you answer."
 The runner then gives the agent the original name, media type, copied absolute path, and `sizeBytes` of each file.
 It takes the size from the metadata of the message, with no file read.
-`attachmentDescription` in [attachment-description.ts](../../runner/src/providers/attachment-description.ts) writes that description for the Claude and Codex adapters.
+`attachmentDescription` in [attachment-description.ts](../../runner/sdk-helper/src/providers/attachment-description.ts) writes that description for the Claude and Codex adapters.
 Each description is one line with a JSON object, so a name with quotes or a line break stays inside its value.
 Codex also gets each image of at most `ATTACHMENT_IMAGE_MAX_BYTES`, 25,000,000 bytes, as a local image input after its file line.
 A larger image gets only its file line.

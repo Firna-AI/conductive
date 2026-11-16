@@ -80,7 +80,7 @@
 - **Left out:**
   - Change nothing: it fails the goal. The Terms keep a promise that the app does not deliver, and each rotation resets the setting.
   - Make every new login private by default: it fails the goal. A shared key then turns private at each rotation, which is the same reset in the other direction. Every first API key changes too.
-  - A rotation route outside the app: it fails the goal, because users have no API access to Conductive. The comparison page lists personal API keys as under consideration (`src/marketing/from-conductor/areas/automation-and-api.ts:12-16`).
+  - A rotation route outside the app: it fails the goal, because users have no API access to Conductive.
 - **Wider fix:** None. The `documentation` skill already says that a protocol doc must let a reader tell whether the code meets each behaviour at the boundary. It also says that a missing requirement found in a review becomes a decision. Each option adds that requirement for the Account page.
 - **Previous examples:**
   - Commit `3f3d7b9c`, on 7 November 2026, corrected claims about agent logins in the Terms and Privacy pages. They now name the member who started the session.
