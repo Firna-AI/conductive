@@ -7,8 +7,8 @@ import { saveView, useSavedView, useViewKnown } from '../saved-view'
 import {
   shownTool,
   toolHref,
+  panelToolPlace,
   toolOffered,
-  toolPlace,
   type ToolKey,
 } from './tool-address'
 
@@ -41,8 +41,8 @@ export function useToolSelect(
 ): Pick<ToolNavigation, 'href' | 'select'> {
   const navigation = useNavigation()
   const { org, workspace, viewport, savedView } = context
-  const placeTool = toolPlace(context.view)?.tool ?? null
   const phone = viewport === 'phone'
+  const placeTool = panelToolPlace(context.view, !phone)?.tool ?? null
   const href = useCallback(
     (tool: ToolKey) => toolHref(org.id, workspace.id, tool),
     [org.id, workspace.id],
@@ -73,7 +73,7 @@ export function useToolSelect(
 export function useToolNavigation(context: WorkspaceContext): ToolNavigation {
   const navigation = useNavigation()
   const { org, workspace, savedView } = context
-  const place = toolPlace(context.view)
+  const place = panelToolPlace(context.view, context.viewport !== 'phone')
   const placeTool = place?.tool ?? null
   const placePreview = place?.previewId ?? null
   const placePort = place?.port ?? null

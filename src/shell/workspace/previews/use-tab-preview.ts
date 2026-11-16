@@ -6,6 +6,7 @@ import type { ToolError } from '../../../terminal/tool-parts/request'
 import type { ToolRequests } from '../../../terminal/tool-parts/workspace'
 import { useOrgServices } from '../../context'
 import type { WorkspaceContext } from '../features'
+import { useTabVisits } from '../tab-visits'
 import { usePreviewsState } from './kept-previews'
 
 /** The preview of the shown Preview tab, and how it opens. */
@@ -27,8 +28,8 @@ export interface TabPreview {
  * a click on the tab or on its port, a visit to its address, or a return of
  * the sandbox. It waits while the sandbox does not run, while the list
  * loads, and while an open runs. After a failed open, it asks again only
- * when the tab shows again, or at `retry`, so a refused port sends no loop
- * of requests.
+ * at the next visit that shows the tab, as `useTabVisits` says, or at
+ * `retry`, so a refused port sends no loop of requests.
  */
 export function useTabPreview(
   context: WorkspaceContext,
@@ -45,13 +46,16 @@ export function useTabPreview(
     port: number
     error: ToolError
   } | null>(null)
-  // Another tab, or no tab, ends the failure of the last show, so the next
-  // show of the port asks again.
+  // Another tab, or no tab, ends the failure of the last show. So does each
+  // visit that shows the tab again, such as a click on the tab or its port.
   const [lastPort, setLastPort] = useState(port)
   if (port !== lastPort) {
     setLastPort(port)
     setFailed(null)
   }
+  useTabVisits(context, (tab) => {
+    if (port !== null && tab === `preview:${port}`) setFailed(null)
+  })
   /** The port whose open runs, so a second run of the effect sends none. */
   const asking = useRef<number | null>(null)
   const preview =

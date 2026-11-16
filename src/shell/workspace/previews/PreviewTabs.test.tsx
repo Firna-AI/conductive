@@ -19,7 +19,7 @@ import {
 import { nextEnvelope } from '../../../test-support/recorded-repairs'
 import { click, settle } from '../../test-mount'
 import { bodiesOf } from '../kept-test-kit'
-import { currents, linksTo, openTab } from '../wiring-test-kit'
+import { currents, linksTo, linkTo, openTab } from '../wiring-test-kit'
 import { previewPortHref, toolHref } from '../tools/tool-address'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
@@ -158,6 +158,48 @@ describe('the Preview tabs of the desktop', () => {
       opens: await bodiesOf(server, 'POST', previewsPath(org, id), 0),
       page: frameOf(view, 3000) !== null,
     }).toEqual({ opens: [{ port: 3000 }], page: true })
+  })
+
+  test('after a refused open, a click on the port of the shown tab asks again', async () => {
+    holdAnimationFrames()
+    const server = new FakeApiServer()
+    server.json(
+      'POST',
+      previewsPath(org, id),
+      { error: { code: 'invalid_port', message: 'Port 7682 is reserved.' } },
+      400,
+    )
+    const { view, navigation } = await openTab(server, tabOf(7682))
+    await waitFor(
+      () =>
+        view.textContent?.includes('Port 7682 is reserved.') ? true : null,
+      'the refusal',
+    )
+    const once = (await bodiesOf(server, 'POST', previewsPath(org, id), 0))
+      .length
+    // A second click on the shown tab is a new show.
+    click(linkTo(rowOf(view), tabOf(7682)))
+    await settle()
+    expect({
+      once,
+      again: (await bodiesOf(server, 'POST', previewsPath(org, id), 0)).length,
+      at: navigation.href(),
+    }).toEqual({ once: 1, again: 2, at: tabOf(7682) })
+  })
+
+  test('a click on the Terminal tab of the tools keeps the Preview tab shown, and the panel shows Terminal', async () => {
+    holdAnimationFrames()
+    const server = new FakeApiServer()
+    const { view, navigation } = await openTab(server, tabOf(3000))
+    const frame = await waitFor(() => frameOf(view, 3000), 'the page')
+
+    click(linkTo(toolsPanel(view), toolHref(org, id, 'terminal')))
+    await settle()
+    expect({
+      at: navigation.href(),
+      hidden: frame.closest('[hidden]') !== null,
+      terminal: currents(toolsPanel(view), toolHref(org, id, 'terminal')),
+    }).toEqual({ at: tabOf(3000), hidden: false, terminal: ['page'] })
   })
 
   test('a click on a session tab goes back to the chat, and the Preview tab stays', async () => {

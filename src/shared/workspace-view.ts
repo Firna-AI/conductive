@@ -1,3 +1,4 @@
+import type { WorkspaceViewWire } from './workspace-view-wire'
 import { workspacePath } from './workspaces'
 
 export function workspaceViewPath(orgId: string, workspaceId: string): string {
@@ -36,7 +37,8 @@ export interface WorkspaceView {
   tool: 'terminal' | 'preview' | 'desktop'
 }
 export interface WorkspaceViewResponse {
-  view: WorkspaceView
+  /** The view in the shape of the route, as `WorkspaceViewWire` says. */
+  view: WorkspaceViewWire
   baseBranch?: string
   /**
    * The folder of the workspace repository in the cloud computer, such as
@@ -50,4 +52,4 @@ export interface WorkspaceViewResponse {
     pullRequest?: { number: number; url: string } | null
   } | null
 }
-export type UpdateWorkspaceViewRequest = WorkspaceView
+export type UpdateWorkspaceViewRequest = WorkspaceViewWire

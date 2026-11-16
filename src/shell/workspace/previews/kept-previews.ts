@@ -46,6 +46,22 @@ export function usePreviewsConnection(context: WorkspaceContext): void {
   const runs = context.sandbox === 'ready'
   useEffect(() => {
     if (!runs) return undefined
-    return store.connect({ fetch, subscribe })
+    return connectPreviews(store, { fetch, subscribe })
   }, [store, fetch, subscribe, runs])
+}
+
+/**
+ * Connects the kept previews, and reads the list again when an earlier
+ * connection read it. No event announces a preview that opened while the
+ * store was not connected, such as one that an agent opened while another
+ * workspace showed. So the list of an earlier connection can miss it. The
+ * read shows as loading, so no Preview tab opens a second preview of a
+ * port before the list is current.
+ */
+export function connectPreviews(
+  store: PreviewsStore,
+  source: Parameters<PreviewsStore['connect']>[0],
+): () => void {
+  if (store.getSnapshot().load === null) store.dispatch({ type: 'load' })
+  return store.connect(source)
 }

@@ -122,6 +122,15 @@ Check the numbers on `main` before the merge.
 Design calls are mine, dated 16 November 2026, unless a decision above
 covers them.
 
+- **Older copies of the app.** The view route keeps `tabs` and `activeTab`
+  free of Preview tabs, because an older copy of the app, such as an older
+  Mac app with its bundled web app, refuses a tab kind that it does not
+  know. Two optional fields, `previewTabs` with the port and the place of
+  each tab, and `activePreview`, carry the Preview tabs. A save without
+  `previewTabs` keeps the stored Preview tabs. Review finding 1 found the
+  risk. Negotiation by a request header or a query was rejected, because
+  the API client sends no headers and a query changes every route of the
+  fake API. My call, dated 16 November 2026.
 - **Saved tabs.** The workspace view gets a new tab kind,
   `{ kind: 'preview'; port: number }`. A tab names a port, not a preview,
   because a preview ends and a new one takes its place. The key of the tab
@@ -166,8 +175,11 @@ covers them.
   menu, as a file tab does.
 - **Close.** Close on a Preview tab removes the tab and ends no preview
   (decision 289). The preview ends by itself later. When the tab shows,
-  the next tab of the row shows after the close. The key of Close tab does
-  the same.
+  the next Preview tab shows after the close, else the one before, else the
+  chat, as the rule of file tabs says for file tabs. The key of Close tab
+  does the same. Review finding 5 read the earlier words "the next tab of
+  the row" as every kind of tab. The rule of file tabs stays. My call,
+  dated 16 November 2026.
 - **The phone.** A phone keeps its Preview page as today: the bar with the
   tabs, "+", Reload, Open, and the frame. A tab there shows a port. Close on
   a phone tab ends the preview, as today. My call.
@@ -329,9 +341,10 @@ lists the ports.
 
 Depends on: every other milestone
 
-- [ ] Run `npm --prefix desktop ci` and `npm ci --prefix runner`, then the
-      complete gate, `npm run check`.
-- [ ] Commit with Conventional Commits and push the branch.
+- [x] Run `npm --prefix desktop ci` and `npm ci --prefix runner`, then the
+      complete gate, `npm run check`. Evidence:
+      `.context/preview-centre-tab/gate.md`.
+- [x] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record

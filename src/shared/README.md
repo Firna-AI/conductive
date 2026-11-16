@@ -266,6 +266,13 @@ The git credential payload is not defined yet.
   has at most one tab, as
   [Port previews](../../docs/protocol/port-previews.md#preview-tabs-and-the-end-of-a-preview)
   says.
+- [The shape of the view route](workspace-view-wire.ts) keeps `tabs` and
+  `activeTab` free of Preview tabs, so an older copy of the app, such as an
+  older Mac app, still reads the view. `previewTabs` gives the port and the
+  place of each Preview tab, and `activePreview` the port of the active one.
+  A save without `previewTabs` comes from an older copy, and the Worker
+  keeps the stored Preview tabs. `viewToWire` and `viewFromWire` convert
+  between the route and the whole view.
 - [Shortcut commands](shortcut-commands.ts) define the stable command IDs.
   The app and Worker share this list, including Copy link, pull request
   actions, and both transcript copies. Account reads and saves accept
