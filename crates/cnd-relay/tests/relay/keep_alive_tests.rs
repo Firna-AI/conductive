@@ -1,10 +1,10 @@
 //! Connection reuse by the provider's proxy, with large replies.
 
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::net::{TcpListener, TcpStream};
+use tokio::io::AsyncWriteExt;
+use tokio::net::TcpListener;
 
 use crate::support::fixture::Fixture;
-use crate::support::wire::{TestResult, head};
+use crate::support::wire::{TestResult, head, read_reply};
 
 /// Larger than one socket buffer, as the script of a dev server often is.
 const BODY_BYTES: usize = 600 * 1024;
@@ -17,19 +17,6 @@ async fn serve_large(target: &TcpListener, fill: u8) -> TestResult<String> {
         .await?;
     stream.write_all(&vec![fill; BODY_BYTES]).await?;
     Ok(request.to_lowercase())
-}
-
-async fn read_reply(client: &mut TcpStream) -> TestResult<(String, Vec<u8>)> {
-    let headers = head(client).await?;
-    let length = headers
-        .lines()
-        .find_map(|line| line.strip_prefix("content-length: "))
-        .ok_or("missing content length")?
-        .trim()
-        .parse::<usize>()?;
-    let mut body = vec![0; length];
-    client.read_exact(&mut body).await?;
-    Ok((headers, body))
 }
 
 #[tokio::test]
