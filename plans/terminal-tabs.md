@@ -534,15 +534,17 @@ Depends on: 6
 
 Depends on: 6
 
-- [ ] Read each public guide under `src/marketing/docs/` in full. Update
+- [x] Read each public guide under `src/marketing/docs/` in full. Update
       each sentence that restates a changed fact, such as "the shared
       Terminal" in `security.md`.
-- [ ] Add how to open, switch, and close terminals to
+- [x] Add how to open, switch, and close terminals to
       `src/marketing/docs/terminal-and-previews.md`, with the limit and
       what to do at the limit.
 - [x] Dropped: rewrite the note of the `workspace-terminal` row of the
       comparison page. The page at `/from-conductor` was removed on
       2026-11-13, with its rows and the follow-up item about long notes.
+
+Evidence: `.context/terminal-tabs/reports/m8.md`.
 
 ## Milestone 9: Verification, commit, review, and pull request
 
