@@ -12,10 +12,21 @@ export type MentionEntry = {
 }
 
 /**
+ * The folder of the repository of Checkout address autocomplete in its
+ * cloud computer. An absolute path in an answer names an entry of the tree
+ * only under this folder.
+ */
+export const repositoryFolder = '/home/user/code/storefront'
+
+/**
  * The files and folders of Checkout address autocomplete. All files draws
- * the same tree, with some folders closed.
+ * the same tree, with some folders closed. The context folder holds a
+ * screenshot that an agent took.
  */
 export const mentionEntries: readonly MentionEntry[] = [
+  { path: '.context', folder: true },
+  { path: '.context/shots', folder: true },
+  { path: '.context/shots/after.png', folder: false },
   { path: '.github', folder: true },
   { path: '.github/workflows', folder: true },
   { path: '.github/workflows/ci.yml', folder: false },
@@ -69,9 +80,12 @@ export const mentionChipsDraft =
 const mentionAsk =
   'Move the lookup in @src/app/checkout/useAddressAutocomplete.ts into @src/lib/ so the cart can reuse it.'
 
-/** The answer of the agent. Paths in an answer stay text. */
+/**
+ * The answer of the agent. Its mentions and the path `src/lib` in code show
+ * as file chips, and the function name stays code.
+ */
 const mentionAnswer: readonly string[] = [
-  'I moved the lookup into `src/lib/addressLookup.ts` and kept the hook as a thin wrapper, so the address form did not change.',
+  'I moved the lookup into a new `lookupAddress` function in @src/lib/ and kept @src/app/checkout/useAddressAutocomplete.ts as a thin wrapper, so the address form did not change.',
   'The cart can now import `lookupAddress` from `src/lib`. The checkout tests still pass.',
 ]
 

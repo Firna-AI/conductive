@@ -1,0 +1,25 @@
+/* A code block of an answer keeps room for its Copy code button. */
+.block {
+  position: relative;
+}
+
+.block > pre {
+  box-sizing: border-box;
+  min-height: calc(var(--copy-size) + 8px);
+  padding-right: calc(var(--copy-size) + 12px);
+}
+
+/*
+ * The button sits inside the border of the block. Its background fills the
+ * space up to that border, so code that scrolls sideways does not show
+ * beside it.
+ */
+.copy {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  display: flex;
+  padding: 3px;
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-raised);
+}

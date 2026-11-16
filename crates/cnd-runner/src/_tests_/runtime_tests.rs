@@ -15,6 +15,7 @@ use crate::error::{Error, Result};
 use crate::link::ports::RunnerLinkMock;
 use crate::runtime::{CommandHandler, Runner, RunnerCore};
 use crate::test_support::{Memory, clock};
+use crate::update::NoUpdates;
 
 #[unimock::unimock(api = HandlerMock)]
 #[async_trait]
@@ -37,6 +38,9 @@ impl Clock for TestClock {
 struct HandlerAdapter(Unimock);
 #[async_trait]
 impl CommandHandler for HandlerAdapter {
+    async fn busy(&self) -> Result<bool> {
+        Ok(false)
+    }
     async fn start(&self) -> Result<()> {
         Handler::start(&self.0).await
     }
@@ -78,6 +82,7 @@ async fn reconnects_after_one_second_and_saves_before_shutdown_close() {
         store,
         Arc::new(TestClock),
         Arc::new(HandlerAdapter(link)),
+        Arc::new(NoUpdates),
     ));
     let running = tokio::spawn(async move { core.run(receiver).await });
     tokio::task::yield_now().await;

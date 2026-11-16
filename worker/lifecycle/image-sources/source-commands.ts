@@ -4,6 +4,15 @@ import type {
   SandboxProvider,
   StartedCommand,
 } from '../../sandbox/provider'
+import { ProviderError } from '../../sandbox/errors'
+
+export function refusedSourceStart(error: unknown): error is ProviderError {
+  return (
+    error instanceof ProviderError &&
+    ((error.kind === 'rate_limited' && error.status === 429) ||
+      (error.kind === 'conflict' && error.status === 409))
+  )
+}
 
 class UncertainSourceCommandStart extends Error {
   constructor() {
@@ -11,7 +20,7 @@ class UncertainSourceCommandStart extends Error {
   }
 }
 
-/** Starts fail closed. Polls retain typed errors for the saved process. */
+/** Only confirmed refusals can retry. Polls retain typed provider errors. */
 export class SourceCommandPort {
   private readonly provider: Pick<
     SandboxProvider,
@@ -30,7 +39,8 @@ export class SourceCommandPort {
   async start(command: string): Promise<StartedCommand> {
     try {
       return await this.provider.startCommand(this.sandboxId, command)
-    } catch {
+    } catch (error) {
+      if (refusedSourceStart(error)) throw error
       throw new UncertainSourceCommandStart()
     }
   }

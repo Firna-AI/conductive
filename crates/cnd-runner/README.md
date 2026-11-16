@@ -51,6 +51,15 @@ The handler queues commands in wire order. It must stop its work when shutdown s
 The runtime keeps each socket step across report completions.
 A failed report releases that step before closing the socket.
 
+While connected, the runtime checks the injected release store every minute.
+`CommandHandler::busy` covers active turns, background waits, queued and executing
+mailbox work, accepted turns without saved ends, and report requests.
+Two minutes of observed idle time permit a swap only when a newer complete
+release exists and the running release is confirmed. The clock supplies
+monotonic time for that interval. A command or a busy check resets it.
+The runtime closes the link, shuts down its handlers, and persists before
+returning `RunExit::Swap`. The caller owns activation and process replacement.
+
 The repository runs Git child processes with literal paths and cancellation.
 Comparisons preserve the real index and object store. Reads check the opened
 descriptor, reject escaped paths and Git metadata, and preserve binary bytes.
@@ -79,8 +88,10 @@ Compose `Arc<dyn Disk>`, `Arc<dyn EventStore>`, `Arc<dyn Clock>`,
 `Arc<dyn Connector>`, and `Arc<dyn RunnerLink>`. Give `DurableStore` a fresh
 random stream ID for a missing file. Call `EventStore::load` once before
 sharing the store. An existing file supplies its saved stream ID.
-Give `RunnerCore` the loaded store, link, clock, and a `CommandHandler`.
-Drive `Runner::run` with a Tokio watch channel for shutdown.
+Give `RunnerCore` the loaded store, link, clock, a `CommandHandler`, and a
+`ReleaseReadiness` port. `NoUpdates` disables swaps for other embeddings.
+Drive `Runner::run` with a Tokio watch channel for shutdown. Handle its
+`RunExit::Shutdown` and `RunExit::Swap` results after graceful cleanup.
 
 Compose `GitRepository` with `GitRunner` and `RepositoryIo` boundaries. Give
 `FileReporter` the loaded file revisions and a shared `ReportFilter`.
@@ -140,6 +151,7 @@ and connection drops. It does not run the Worker.
 - [socket.rs](src/socket.rs): `WebSocketConnector` supplies the production TLS socket.
 - [emitter.rs](src/emitter.rs): `SavingEmitter` applies the failed-save retry policy.
 - [runtime.rs](src/runtime.rs): `RunnerCore` recovers turns and owns reconnection and shutdown.
+- [update.rs](src/update.rs): `ReleaseReadiness` supplies local release conditions for an idle swap.
 - [handler.rs](src/engine/handler.rs): `AgentEngine` routes turns and Stop to independent session actors.
 - [service.rs](src/filter/service.rs): `CredentialFilter` filters chat, report labels, and helper warnings.
 - [driver.rs](src/helper/driver.rs): `HelperConnection` correlates requests while agent events stream.

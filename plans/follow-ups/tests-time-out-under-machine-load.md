@@ -102,6 +102,23 @@
   test files match that main commit. The other failures were not checked
   on a clean main checkout. Native runtime or storage delays are a
   suspected source; neither the blocked await nor the cause is known.
+- On 16 November 2026, the main merge into `calummoore/delft-i3g7`
+  passed every static gate step and 275 selected tests.
+  The complete Vitest run was stopped after 39 failed cases across
+  16 completed Worker test files. The run is partial.
+  The files cover Continue, startup retries, device approval, publication,
+  archive, workspace lifecycle, image sources, model endpoints, and previews.
+  All 16 files match main at `699027931e00f214ef4ba734cdfd0907093590a7`.
+  `worker/features/continue-routes.test.ts` then failed alone on the
+  merged tree with `Error: Test timed out in 15000ms.`
+  Its only case, "resumes Continue through real routes and socket wake,
+  fences sends and Archive, expires recovered credentials, and routes
+  new-branch GitHub events", also failed alone in a clean detached checkout
+  of that main commit with the same error.
+  The merged-tree rerun took 26.15 seconds. The main run took 22.65 seconds.
+  This proves that the Continue timeout occurs without the merge.
+  The other failures were not reproduced on main in this attempt.
+  The blocked await and cause remain unknown.
 - **Problem:** These tests depend on wall-clock time limits, so a busy machine can fail them with no defect in the code.
 - **Impact if no action:** A slow CI runner or a busy developer machine can fail the gate now and then, and a person must rerun it.
 - **Root question:** How do these tests stay correct on a slow or busy machine?

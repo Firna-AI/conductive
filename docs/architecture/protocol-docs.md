@@ -162,7 +162,8 @@ This page lists each protocol doc and what it covers.
     and links in code.
 - [GitHub tokens](../protocol/github-tokens.md): the git and CLI account
   scope of a cloud computer, the author of each commit in a sandbox, and the
-  GitHub actions of the Worker as a member.
+  GitHub actions of the Worker as a member, and the GitHub tokens that an
+  image job uses to copy the repositories.
 - [Agent instructions](../protocol/agent-instructions.md): the text that each
   agent session gets, and the sender line and the branch line of each
   message.

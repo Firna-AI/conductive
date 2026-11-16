@@ -33,6 +33,28 @@
   white-space: pre;
 }
 
+/*
+ * A view runs no script, so a tab opened at a line draws the code as the
+ * app scrolls it: the first marked line sits in the middle of the view. A
+ * line near the top of the file keeps the top in view.
+ */
+.atLine {
+  container-type: size;
+}
+
+.atLine > .code {
+  margin-top: min(0px, calc(50cqh - (var(--first-line) - 0.5) * 1.6em - 10px));
+}
+
+/* The lines that the line target names. */
+.marked {
+  background: var(--ui-amber-soft);
+}
+
+.marked .number {
+  color: var(--ui-ink2);
+}
+
 .keyword {
   color: var(--ui-code-keyword);
 }
