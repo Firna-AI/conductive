@@ -95,8 +95,10 @@ export const workspaceStateSchema = {
     /**
      * The terminals of the Terminal tool, from decisions 1 and 2 of the
      * terminal tabs change: the one terminal that a workspace starts with, three terminals,
-     * the limit of ten, three terminals whose shown connection ended, or the
-     * one terminal of older cloud computer software, which shows no tabs.
+     * the limit of ten, three terminals whose shown connection ended, the
+     * one terminal of older cloud computer software, which shows no tabs, or
+     * a link of the output under the mouse pointer, from the terminal links
+     * change.
      */
     terminals: { enum: terminalStates },
     /**

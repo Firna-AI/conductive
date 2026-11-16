@@ -6,6 +6,7 @@ import { ToolRoot } from './tool-parts/ToolRoot'
 import { ToolMessage, ToolWaiting } from './tool-parts/ToolStates'
 import { workspaceKey, type ToolWorkspace } from './tool-parts/workspace'
 import { createTerminalStore, type TerminalStore } from './terminalStore'
+import type { TerminalLinks } from './terminalLinks'
 import { TerminalScreen, type ConnectTerminal } from './TerminalScreen'
 import styles from './TerminalTool.module.css'
 
@@ -21,6 +22,11 @@ export interface TerminalToolProps {
    * owner marks it, so the buttons of the tool keep no key.
    */
   screenRef?: Ref<HTMLDivElement>
+  /**
+   * Opens the links of the output: a click with Cmd on a Mac or Ctrl
+   * elsewhere, or a touch. Without it, no link opens.
+   */
+  links?: TerminalLinks
 }
 
 /**
@@ -81,6 +87,7 @@ function TerminalToolBody(props: TerminalToolProps) {
           <TerminalScreen
             connect={props.connect}
             ended={view.ended}
+            links={props.links}
             onClosed={() => dispatch({ type: 'ended' })}
             onInput={props.onActivity}
             screenRef={props.screenRef}
