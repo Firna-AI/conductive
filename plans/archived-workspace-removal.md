@@ -383,3 +383,6 @@ Depends on: 1, 2, 3, 4
 - [ ] Open the pull request. Its description gives the decisions and the
       design calls of this plan with their dates, a permalink to this plan,
       and the follow-up items that the change adds.
+- [ ] Copy the justifications of the merge of `origin/main` from
+      `.context/archived-workspace-removal/merge-resolutions.md` into the
+      pull request description, as the `git-merge` skill says.

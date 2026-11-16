@@ -59,7 +59,7 @@ export function AppFrame(props: {
 
 /**
  * The mobile app: one full-height column. Every control in it takes the
- * touch sizes, at least 44px high.
+ * touch sizes, at least 40px high.
  */
 export function MobileFrame(props: { children: ReactNode }) {
   return (

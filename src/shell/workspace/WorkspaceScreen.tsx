@@ -6,7 +6,6 @@ import { EmptyState } from '../../../docs/mockups/src/components/common/EmptySta
 import { SuspendedOrgNotice } from '../../../docs/mockups/src/components/orgs/SuspendedOrgNotice'
 import body from '../../../docs/mockups/src/components/workspace/WorkspaceBody.module.css'
 import page from '../../../docs/mockups/src/screens/WorkspaceScreen.module.css'
-import { usePassedDeadlines } from '../../app/deadlines'
 import { mayArchive, mayRestore } from '../../app/permissions'
 import { useStore } from '../../app/store'
 import {
@@ -14,13 +13,13 @@ import {
   type WorkspaceIdentity,
 } from '../../app/workspace-store'
 import { failedFirstStart } from '../../app/first-start'
-import { listEndOf } from '../../app/workspace-removal'
 import type { User } from '../../shared/api'
 import type { OrgSummary } from '../../shared/orgs'
 import { useApp, useOrgAccess } from '../context'
 import { ActionButton } from '../ui/actions'
 import { useAction } from '../ui/useAction'
 import { useViewport } from '../ui/viewport'
+import { useArchiveEnds } from './archive-ends'
 import { ChatArea } from './ChatArea'
 import { ContinueDialog } from './ContinueDialog'
 import { sandboxState, useFeatures, type WorkspaceContext } from './features'
@@ -30,10 +29,10 @@ import { WorkspaceGitHub } from './github/WorkspaceGitHub'
 import { HeaderNoticeBars } from './HeaderNoticeBars'
 import { archivedRestore, contentState, sandboxView } from './sandbox-view'
 import { SandboxPanel } from './SandboxNotice'
+import { MissingWorkspace, useRememberWorkspace } from './remember-workspace'
 import { OpenSessionAddress } from './session-address'
 import { shownWorkspaces } from './tab-memory'
 import { ToolsPart } from './tools/ToolsPart'
-import { Unavailable } from './Unavailable'
 import { useArchiveActions } from './useArchiveActions'
 import { PhoneTabBar, phoneView, RightColumn } from './WorkspaceColumns'
 import { WorkspaceHeader } from './WorkspaceHeader'
@@ -91,15 +90,18 @@ export function WorkspaceScreen(props: {
   const theme = useSharedUiTheme()
   const resume = useAction(() => model.resume(), "The sandbox didn't start.")
   const lifecycle = useArchiveActions(props.org.id, props.viewer)
-  // Restore ends at its last day while the page shows, with no other event,
-  // and the workspace then leaves the list, also without a kept cloud
-  // computer.
-  const shownWorkspace =
-    detail.state === 'ready' ? detail.value.workspace : null
-  const passed = usePassedDeadlines([
-    shownWorkspace?.restoreUntil ?? null,
-    shownWorkspace ? listEndOf(shownWorkspace) : null,
-  ])
+  useRememberWorkspace(
+    {
+      orgId: props.org.id,
+      workspaceId: props.workspaceId,
+      view: props.view,
+      session: props.session,
+    },
+    detail,
+  )
+  const { restoreEnded, removed } = useArchiveEnds(
+    detail.state === 'ready' ? detail.value.workspace : null,
+  )
   if (detail.state === 'loading') {
     return (
       <div className={workspaceStyles.center}>
@@ -114,9 +116,9 @@ export function WorkspaceScreen(props: {
   if (detail.state === 'failed') {
     if (detail.error.status === 404) {
       return (
-        <Unavailable
-          body="It may have moved to another org."
+        <MissingWorkspace
           orgId={props.org.id}
+          workspaceId={props.workspaceId}
         />
       )
     }
@@ -136,7 +138,6 @@ export function WorkspaceScreen(props: {
   const { workspace, start, error } = detail.value
   const sandbox = sandboxState(workspace)
   const { suspended } = access
-  const restoreEnded = passed(workspace.restoreUntil)
   // A failed first start keeps the workspace, its chat, and its queue for
   // every member, with its saved cause and Try again. The open resumes a
   // stopped sandbox, so its bar waits until the open ends.
@@ -147,7 +148,7 @@ export function WorkspaceScreen(props: {
     savedError: error?.message ?? null,
     firstStart: failedFirstStart(workspace, start),
     restore: archivedRestore(workspace, suspended, restoreEnded),
-    removed: passed(listEndOf(workspace)),
+    removed,
     opened,
   })
   const context: WorkspaceContext = {

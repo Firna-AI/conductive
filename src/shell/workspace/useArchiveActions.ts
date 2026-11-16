@@ -1,3 +1,4 @@
+import type { Workspace } from '../../shared/generated/Workspace'
 import { useToast } from '@firna/ui/toast'
 import { errorMessage } from '../../app/api/client'
 import type { ArchiveAction } from '../../app/archive-model'
@@ -8,7 +9,7 @@ import { formatDay } from '../../app/time'
 import { listEndOf } from '../../app/workspace-removal'
 import type { User } from '../../shared/api'
 import { nameLabel } from '../../shared/name-label'
-import type { Workspace } from '../../shared/workspaces'
+
 import { useApp, useOrgModel } from '../context'
 import { shownWorkspaces } from './tab-memory'
 

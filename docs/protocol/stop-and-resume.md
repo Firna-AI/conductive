@@ -30,7 +30,8 @@ says.
   reply of that Resume.
 - Meanwhile the tools, and a file or diff tab without content, show that
   they wait for the sandbox, with no Resume, also on a phone. The file
-  lists keep their saved copy.
+  lists keep their saved copy, as during the start that follows, which
+  [Start steps](workspace-life.md#start-steps) describes.
 - Reason: the open already resumes the sandbox, so a bar that offers
   Resume for a moment is noise, and so is a Stopped state. Cal asked for
   these on 12 November 2026. Cal chose to keep the saved lists. A wait in

@@ -138,6 +138,8 @@ export interface OperatorUserDetail extends OperatorUserAccess {
   githubId: number
   login: string
   name: string | null
+  /** The primary verified email on GitHub, or null without one. */
+  email: string | null
   joinedAt: number
   workspaces: { total: number; running: number }
   orgs: readonly OperatorUserOrg[]

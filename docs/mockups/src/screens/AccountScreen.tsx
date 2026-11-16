@@ -68,6 +68,7 @@ function TabContent(props: {
     case 'preferences':
       return (
         <DefaultsSection
+          fastMenu={state.modelMenu === 'open-fast'}
           saveFailed={state.save === 'failed'}
           view={state.view}
         />

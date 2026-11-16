@@ -1,5 +1,6 @@
+import type { Workspace } from '../../shared/generated/Workspace'
 import { helpGroupLabel } from '../../../docs/mockups/src/components/feedback/feedbackCopy'
-import type { Workspace } from '../../shared/workspaces'
+
 import { routes } from '../router'
 import { groupWorkspaces } from '../sections'
 import { valueOf } from '../store'
@@ -108,7 +109,11 @@ export function actionGroups(source: PaletteBase): PaletteGroup[] {
       rows: [
         linkRow('create-org', source.createOrgHref),
         ...others.map((other) =>
-          switchRow(other, switchCommand(source.orgs, other, org)),
+          switchRow(
+            other,
+            switchCommand(source.orgs, other, org),
+            source.orgHref(other.id),
+          ),
         ),
       ],
     },

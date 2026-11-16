@@ -31,7 +31,8 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         verified email addresses of your GitHub account, and which one is
         primary. An org invitation reaches you through one of them. The
         approval email goes to the primary one. The team uses the same
-        address to reply to your feedback.`,
+        address to reply to your feedback. The operator sees the primary
+        one on the page of your account.`,
       text`Your GitHub token: the sign-in gives ${productName} a GitHub
         token for your account. ${productName} stores it encrypted, for
         every account, also while you wait for app access. It uses the
@@ -104,9 +105,13 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         ${productName} starts turns only with supported agent software.`,
       text`Endpoint models: ${productName} reads the endpoint's model list
         with its key when you save the login or press Refresh on your account
-        page. It also reads the list in the background when a turn on that
-        login starts, at most once in 10 minutes. It stores the model IDs
-        from the last list it could read to set the models in your pickers.`,
+        page. When you save a Codex endpoint whose address gives no model
+        list, it can read the list a second time, at that address with /v1
+        added. When only that read gives a list, it saves the address with
+        /v1 added. It also reads the list in the background when a turn on
+        that login starts, at most once in 10 minutes. It stores the model
+        IDs from the last list it could read to set the models in your
+        pickers.`,
       text`Own endpoints: ${productName} sends each model request of a turn
         on an own endpoint login to that endpoint, with its key. The endpoint
         gets the messages, the files, and the command results of each turn
@@ -168,6 +173,12 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         on GitHub, when available.`,
       text`Panel sizes: your browser keeps the sizes of the panels of the
         app. They stay in your browser.`,
+      text`Last workspaces: your browser keeps the address of the last
+        workspace page that you opened in each org. The address holds the
+        IDs of the org, the workspace, and the session or the preview. It
+        can also hold the name of a tool and the path of an open file. A
+        switch to the org opens that page again. The addresses stay in your
+        browser, also after you sign out, until you clear its saved data.`,
     ),
     paragraph`Where data protection law requires a lawful basis, the
       operator relies on performance of a contract to provide the

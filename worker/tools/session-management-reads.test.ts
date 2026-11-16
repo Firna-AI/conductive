@@ -8,8 +8,9 @@ import {
 } from '../../src/shared/agent-session-paths'
 import { DEVICE_TEST_NOW } from '../devices/clock.test-support'
 import { sessionLink } from '../../src/shared/session-link'
+import type { AgentListSessionsResponse } from '../../src/shared/generated/AgentListSessionsResponse'
+import type { AgentReadSessionResponse } from '../../src/shared/generated/AgentReadSessionResponse'
 import { WORKSPACE_RESTORE_MS } from '../../src/shared/workspaces'
-import { listedSessions, readSession } from '../../tools/session-responses'
 import {
   OTHER_WORKSPACE,
   OUTER_WORKSPACE,
@@ -48,9 +49,10 @@ it('pages all sessions in stable creation order with explicit bounds and more fl
   ] as const) {
     const response = await machineRead(active, path + query)
     expect(response.status).toBe(200)
-    const result = listedSessions(await response.json())
+    const result = record(await response.json())
+    if (!Array.isArray(result.sessions)) throw new Error('Missing sessions.')
     expect(
-      result.sessions.map(({ id }) => id),
+      result.sessions.map((session: unknown) => string(record(session).id)),
       query,
     ).toEqual(ids)
     expect(result.hasMore, query).toBe(more)
@@ -145,7 +147,7 @@ it('gets exact session and stored-message facts across workspaces and permits re
     agentSessionsPath(OTHER_WORKSPACE),
   )
   expect(listedResponse.status).toBe(200)
-  const listed = listedSessions(await listedResponse.json())
+  const listed = (await listedResponse.json()) as AgentListSessionsResponse
   expect(listed.workspace).toMatchObject({
     id: OTHER_WORKSPACE,
     state: 'archived',
@@ -159,7 +161,8 @@ it('gets exact session and stored-message facts across workspaces and permits re
     agentSessionTranscriptPath(OTHER_WORKSPACE, sessionId),
   )
   expect(transcriptResponse.status).toBe(200)
-  const transcript = readSession(await transcriptResponse.json())
+  const transcript =
+    (await transcriptResponse.json()) as AgentReadSessionResponse
   expect(transcript.workspace).toMatchObject({
     id: OTHER_WORKSPACE,
     state: 'archived',

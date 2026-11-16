@@ -1,5 +1,7 @@
+import type { AgentModel } from '../shared/generated/AgentModel'
 import { describe, expect, test } from 'vitest'
-import type { AgentChoice, AgentModel } from '../shared/agents'
+import type { AgentChoice } from '../shared/generated/AgentChoice'
+
 import {
   offeredModels,
   unlistedModels,
@@ -31,6 +33,7 @@ const choice = (target: AgentModel): AgentChoice => ({
   agent: target.agent,
   model: target.model,
   effort: 'high',
+  fast: false,
 })
 
 /** The IDs of the models that a picker offers, in their order. */

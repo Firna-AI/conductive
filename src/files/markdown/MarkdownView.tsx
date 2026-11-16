@@ -9,6 +9,7 @@ import type { MdBlock, MdListItem } from './markdown-blocks'
 import type { MarkdownDocument, MarkdownParser } from './markdown-document'
 import type { MdInline } from './markdown-inline'
 import { textChunks } from './text-chunks'
+import { useKeptScroll } from '../ui/kept-scroll'
 import { parseInWorker, type WorkerParse } from './worker-parse'
 import styles from './MarkdownView.module.css'
 
@@ -105,11 +106,13 @@ function Blocks(props: { blocks: readonly ParsedBlock[] }) {
 /**
  * One parsed document. A new render of the same document, as after Copy,
  * renders and splits the text of no block again. The headings take the
- * heading style that the chat shares, with the margins of the preview.
+ * heading style that the chat shares, with the margins of the preview. A
+ * file tab keeps its scroll offset.
  */
 const Document = memo(function Document(props: { document: MarkdownDocument }) {
+  const box = useKeptScroll('preview')
   return (
-    <div className={styles.scroll}>
+    <div className={styles.scroll} ref={box}>
       <article className={classes(styles.doc, headingStyles.headings)}>
         <Blocks blocks={props.document.blocks} />
       </article>

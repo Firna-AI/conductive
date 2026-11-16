@@ -1,10 +1,11 @@
 // @vitest-environment happy-dom
 
 import { describe, expect, test } from 'vitest'
-import type { AgentChoice } from '../../shared/agents'
+import type { AgentChoice } from '../../shared/generated/AgentChoice'
+import type { FileEntry } from '../../shared/generated/FileEntry'
+import type { Attachment } from '../../shared/generated/Attachment'
+import type { UserMessage } from '../../shared/generated/UserMessage'
 import { attachmentPath } from '../../shared/attachment-paths'
-import type { FileEntry } from '../../shared/files'
-import type { Attachment, UserMessage } from '../../shared/messages'
 import { queryAllByRole } from '../../test-support/dom-queries'
 import { FAKE_IDS, FAKE_TIME, fakeUser } from '../../test-support/fixtures/core'
 import { senderSnapshot } from '../../test-support/fixtures/workspaces'
@@ -18,7 +19,12 @@ import {
 import { textOf } from './render-kit'
 import { UserBubble } from './TranscriptItem'
 
-const opus: AgentChoice = { agent: 'claude', model: 'Opus 5.5', effort: 'high' }
+const opus: AgentChoice = {
+  agent: 'claude',
+  model: 'Opus 5.5',
+  effort: 'high',
+  fast: false,
+}
 
 const readme: FileEntry = {
   path: 'README.md',

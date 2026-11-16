@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from 'vitest'
+import type { AgentChoice } from '../../shared/generated/AgentChoice'
 import { pickChatFiles } from './draft-files.test-support'
 import { readyIds } from '../../app/draft-files'
 import { fileMark } from '../../app/draft-marks'
-import type { AgentChoice } from '../../shared/agents'
 import { filePaths } from '../../shared/files'
 import { sessionPaths } from '../../shared/sessions'
 import type { WorkspaceTab, WorkspaceView } from '../../shared/workspace-view'
@@ -16,6 +16,7 @@ const codex: AgentChoice = {
   agent: 'codex',
   model: 'GPT-6.1 Sol',
   effort: 'medium',
+  fast: false,
 }
 /** The ID of the new session: the first client ID that the chat takes. */
 const created = 'client-1'

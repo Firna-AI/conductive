@@ -27,6 +27,7 @@ export const accountSchema = {
     'shortcutSearch',
     'shortcuts',
     'host',
+    'modelMenu',
     'deletedOrgs',
   ],
   properties: {
@@ -88,11 +89,25 @@ export const accountSchema = {
      * with an empty address, with a typed address that the shared rule
      * changes before the save, or with an address that the rule refused, or
      * the logins after the connect. `unlisted` has those logins when the
-     * model list of the proxy lacks a Claude model of the app. Except for
-     * `none`, every connected login runs on Cal's proxy.
+     * model list of the proxy lacks a Claude model of the app. `v1-added`
+     * has them after a Codex save that added /v1 to the typed address, with
+     * the note. `read-failed` has them after the last read of each model
+     * list failed, and `read-failed-unlisted` also keeps a Claude list that
+     * lacks a Claude model of the app. Except for `none`, every connected
+     * login runs on Cal's proxy.
      */
     ownEndpoint: {
-      enum: ['none', 'form', 'typed', 'refused', 'connected', 'unlisted'],
+      enum: [
+        'none',
+        'form',
+        'typed',
+        'refused',
+        'connected',
+        'unlisted',
+        'v1-added',
+        'read-failed',
+        'read-failed-unlisted',
+      ],
     },
     /**
      * The change of a shortcut on Keyboard shortcuts, in progress or last:
@@ -122,6 +137,11 @@ export const accountSchema = {
      * app of Chrome on a Mac. The Mac app draws its own pages.
      */
     host: { enum: browserHosts },
+    /**
+     * The Model and effort picker of Preferences: closed, or open with
+     * fast mode on.
+     */
+    modelMenu: { enum: ['closed', 'open-fast'] },
     /**
      * The orgs that the user deleted and can still restore: none, so the
      * General tab has no Deleted orgs section, Acme Labs with Restore, Acme
@@ -160,6 +180,7 @@ export const accountGeneral: AccountState = {
   shortcutSearch: 'none',
   shortcuts: 'default',
   host: 'chrome-mac',
+  modelMenu: 'closed',
   deletedOrgs: 'none',
 }
 

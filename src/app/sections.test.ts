@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import type { Workspace } from '../shared/workspaces'
+import type { Workspace } from '../shared/generated/Workspace'
 import { coreFixtures, FAKE_TIME } from '../test-support/fixtures/core'
 import { workspaceFixtures } from '../test-support/fixtures/workspaces'
 import { groupWorkspaces, stepTarget } from './sections'

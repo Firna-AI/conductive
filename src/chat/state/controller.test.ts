@@ -52,7 +52,12 @@ describe('ChatController', () => {
       ...turn,
       type: 'turn.started',
       senderId: 'cal',
-      choice: { agent: 'claude', model: 'Opus 5.5', effort: 'high' },
+      choice: {
+        agent: 'claude',
+        model: 'Opus 5.5',
+        effort: 'high',
+        fast: false,
+      },
       startedAt: FAKE_TIME,
       messageIds: [],
     })
@@ -104,7 +109,12 @@ describe('ChatController', () => {
           id: 'autocomplete',
           workspaceId: ws,
           title: 'Address autocomplete',
-          choice: { agent: 'claude', model: 'Opus 5.5', effort: 'high' },
+          choice: {
+            agent: 'claude',
+            model: 'Opus 5.5',
+            effort: 'high',
+            fast: false,
+          },
           createdAt: FAKE_TIME,
           closedAt: null,
           activeTurnId: null,
@@ -120,7 +130,12 @@ describe('ChatController', () => {
         id: `closed-${closedAt}`,
         workspaceId: ws,
         title: 'Old',
-        choice: { agent: 'codex', model: 'GPT-6.1 Sol', effort: 'medium' },
+        choice: {
+          agent: 'codex',
+          model: 'GPT-6.1 Sol',
+          effort: 'medium',
+          fast: false,
+        },
         createdAt: 1,
         closedAt,
         activeTurnId: null,
@@ -140,7 +155,12 @@ describe('ChatController', () => {
       id: 'third',
       workspaceId: ws,
       title: null,
-      choice: { agent: 'claude', model: 'Opus 5.5', effort: 'high' },
+      choice: {
+        agent: 'claude',
+        model: 'Opus 5.5',
+        effort: 'high',
+        fast: false,
+      },
       createdAt: FAKE_TIME,
       closedAt: null,
       activeTurnId: null,
@@ -163,7 +183,14 @@ describe('ChatController', () => {
     })
     await chat.controller.newSession()
     expect(await chat.bodies('POST', sessionsPath(org, ws))).toEqual([
-      { choice: { agent: 'claude', model: 'Opus 5.5', effort: 'high' } },
+      {
+        choice: {
+          agent: 'claude',
+          model: 'Opus 5.5',
+          effort: 'high',
+          fast: false,
+        },
+      },
     ])
     expect(chat.controller.getSnapshot().activeSessionId).toBe('third')
     const views = await chat.bodies('PUT', workspaceViewPath(org, ws))
@@ -186,7 +213,7 @@ describe('ChatController', () => {
     await chat.controller.requestClose('autocomplete')
     expect(chat.controller.getSnapshot().overlay).toEqual({
       kind: 'close',
-      sessionId: 'autocomplete',
+      sessionIds: ['autocomplete'],
     })
     chat.controller.dismissOverlay()
     expect(chat.requests('POST', close)).toHaveLength(0)
@@ -204,5 +231,44 @@ describe('ChatController', () => {
     expect(snapshot.sessions.map((session) => session.id)).toEqual(['debounce'])
     expect(snapshot.history[0].id).toBe('autocomplete')
     expect(snapshot.activeSessionId).toBe('debounce')
+  })
+
+  it('closes the idle sessions of one close at once, and asks once for the running ones', async () => {
+    const chat = chatFor({ conversation: 'history' })
+    await chat.controller.start()
+    chat.emit({
+      sessionId: FAKE_IDS.session,
+      turnId: 'turn-2',
+      type: 'turn.started',
+      senderId: 'cal',
+      choice: {
+        agent: 'claude',
+        model: 'Opus 5.5',
+        effort: 'high',
+        fast: false,
+      },
+      startedAt: FAKE_TIME,
+      messageIds: [],
+    })
+    const running = sessionPaths.close(org, ws, 'autocomplete')
+    const idle = sessionPaths.close(org, ws, 'debounce')
+    const [, debounce] = chat.controller.getSnapshot().sessions
+    chat.server.json('POST', idle, {
+      session: { ...debounce, closedAt: FAKE_TIME + 1 },
+      eventNumber: chat.nextEventNumber(),
+    })
+    await chat.controller.requestClose('autocomplete', 'debounce')
+    const snapshot = chat.controller.getSnapshot()
+    expect({
+      overlay: snapshot.overlay,
+      running: chat.requests('POST', running).length,
+      idle: await chat.bodies('POST', idle),
+      open: snapshot.sessions.map((session) => session.id),
+    }).toEqual({
+      overlay: { kind: 'close', sessionIds: ['autocomplete'] },
+      running: 0,
+      idle: [{ stopRunningTurn: false }],
+      open: ['autocomplete'],
+    })
   })
 })

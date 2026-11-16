@@ -1,4 +1,5 @@
-import type { Session, ChangeModelResponse } from '../../src/shared/sessions'
+import type { Session } from '../../src/shared/generated/Session'
+import type { ChangeModelResponse } from '../../src/shared/sessions'
 import type { User } from '../../src/shared/api'
 import { HttpError } from '../http'
 import { choice, draft, identifier } from './inputs'
@@ -20,7 +21,7 @@ export async function changeModel(
   user: User,
   dependencies: ChatDependencies,
 ): Promise<ChangeModelResponse> {
-  const next = choice(body?.choice)
+  const next = dependencies.normalizeChoice(choice(body?.choice))
   const savedDraft = draft(body?.draft)
   const otherAgent = next.agent !== session.choice.agent
   if (!otherAgent || !(await transaction.newestTurn(session.id))) {
@@ -62,6 +63,7 @@ export async function changeModel(
       original.choice.agent !== next.agent ||
       original.choice.model !== next.model ||
       original.choice.effort !== next.effort ||
+      (original.choice.fast ?? false) !== next.fast ||
       original.draft.text !== savedDraft.text ||
       JSON.stringify(original.draft.attachmentIds) !==
         JSON.stringify(savedDraft.attachmentIds)

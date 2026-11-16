@@ -1,3 +1,4 @@
+import type { Workspace } from '../../shared/generated/Workspace'
 // @vitest-environment happy-dom
 
 import { act, useState } from 'react'
@@ -7,11 +8,8 @@ import { routes } from '../../app/router'
 import { groupWorkspaces } from '../../app/sections'
 import { ManualDelay } from '../../app/test-kit'
 import type { Section } from '../../shared/sections'
-import {
-  WORKSPACE_RESTORE_MS,
-  workspacesPath,
-  type Workspace,
-} from '../../shared/workspaces'
+
+import { WORKSPACE_RESTORE_MS, workspacesPath } from '../../shared/workspaces'
 import { byLabel, byRole } from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
@@ -60,6 +58,7 @@ const [first, second, , kept, removed] = start as Workspace[]
 const noActions = {
   toggle: () => undefined,
   rename: () => undefined,
+  moveTo: () => undefined,
   newWorkspace: () => undefined,
   newSection: () => undefined,
   remove: () => undefined,

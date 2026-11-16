@@ -1,5 +1,6 @@
-import type { UserMessage } from '../../src/shared/messages'
-import type { Session } from '../../src/shared/sessions'
+import type { Session } from '../../src/shared/generated/Session'
+import type { UserMessage } from '../../src/shared/generated/UserMessage'
+
 import { attachmentCopyKey } from './attachment-record'
 import { normalizeSession, type StoredSession } from './session-storage'
 import { CHAT_ROOT, chatKey } from './storage-keys'
@@ -47,8 +48,14 @@ export class ChatRecords {
     return session
   }
 
-  message(id: string): Promise<UserMessage | undefined> {
-    return this.data.get(chatKey('message', id))
+  async message(id: string): Promise<UserMessage | undefined> {
+    const message = await this.data.get<UserMessage>(chatKey('message', id))
+    return message
+      ? {
+          ...message,
+          choice: { ...message.choice, fast: message.choice.fast ?? false },
+        }
+      : undefined
   }
   turn(id: string): Promise<StoredTurn | undefined> {
     return this.data.get(chatKey('turn', id))

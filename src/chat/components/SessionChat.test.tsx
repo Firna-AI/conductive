@@ -169,7 +169,7 @@ describe('session parts', () => {
       sourceSessionId: null,
       loginAvailable: true,
       loginShared: true,
-      choice: { agent, model: 'Model', effort: 'high' as const },
+      choice: { agent, model: 'Model', effort: 'high' as const, fast: false },
     }))
     const html = renderToStaticMarkup(
       <SessionTabs
@@ -178,6 +178,7 @@ describe('session parts', () => {
         mobile={false}
         onCancelRename={() => {}}
         onClose={() => {}}
+        onCloseTabs={() => {}}
         onCopy={() => {}}
         onMove={() => {}}
         onNew={() => {}}
@@ -208,7 +209,12 @@ describe('session parts', () => {
       renderToStaticMarkup(
         <Composer
           blocked={false}
-          choice={{ agent: 'claude', model: 'Opus 5.5', effort: 'high' }}
+          choice={{
+            agent: 'claude',
+            model: 'Opus 5.5',
+            effort: 'high',
+            fast: false,
+          }}
           draft={{
             ...blankDraft('draft'),
             text: `See the screenshot. ${files.map(({ id }) => fileMark(id)).join(' ')}`,

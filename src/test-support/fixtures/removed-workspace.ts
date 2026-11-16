@@ -1,6 +1,7 @@
 import { postcodeLookup } from '../../../docs/mockups/src/fixtures/archivedWorkspaces'
 import { routes } from '../../app/router'
-import { WORKSPACE_RESTORE_MS, type Workspace } from '../../shared/workspaces'
+import type { Workspace } from '../../shared/generated/Workspace'
+import { WORKSPACE_RESTORE_MS } from '../../shared/workspaces'
 import { FAKE_IDS, FAKE_ORIGIN, FAKE_TIME, fakeUser, fakeUsers } from './core'
 
 const DAY = 86_400_000
@@ -30,7 +31,10 @@ export function removedWorkspace(): Workspace {
       fakeUsers.find((user) => user.id === postcodeLookup.owner) ?? fakeUser,
     name: postcodeLookup.name,
     branch: postcodeLookup.branch,
-    choice: postcodeLookup.choice,
+    choice: {
+      ...postcodeLookup.choice,
+      fast: postcodeLookup.choice.fast ?? false,
+    },
     state: 'archived',
     github: postcodeLookup.github,
     createdAt: REMOVED_ARCHIVED_AT - 5 * DAY,

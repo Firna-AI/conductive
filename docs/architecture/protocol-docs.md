@@ -7,6 +7,9 @@ This page lists each protocol doc and what it covers.
 
 - [Workspaces and sandboxes](../protocol/workspaces-and-sandboxes.md): the org
   image, the life of a workspace, and the disk flushes of a sandbox.
+  - [Sandbox software](../protocol/sandbox-software.md): the releases of the
+    app's own software, the updates of each sandbox, the install in a
+    build, and the software image.
   - [Create a workspace](../protocol/create-a-workspace.md): New workspace as a
     page or as a dialog, the create, the branch, and a failed first start.
   - [Repository folders](../protocol/repository-folders.md): the folder and the
@@ -37,6 +40,9 @@ This page lists each protocol doc and what it covers.
       limit, the upload, the storage, the copy into the cloud computer, and
       the deletion of the files of a message, and their chips and their
       drop in the message field.
+    - [Fast mode](../protocol/fast-mode.md): the Fast switch of the model
+      menu, the models that show it, who may turn it on, and the speed of a
+      turn that cannot run fast.
   - [File mentions](../protocol/file-mentions.md): the list of `@` in the
     composer, the chips of files and folders, the sent chips of attached
     files, and the removal of each chip of the composer.
@@ -66,6 +72,8 @@ This page lists each protocol doc and what it covers.
       endpoint and the key of each agent, the model list of the endpoint,
       and the addresses that the app accepts.
   - [Terminal, previews, and desktop](../protocol/terminal-previews-and-desktop.md)
+  - [Step timing](../protocol/step-timing.md): the `Server-Timing` header of
+    the preview replies and of the create reply, and what it may hold.
 - [Model gateway](../protocol/model-gateway.md): the turn token, and the
   Worker routes that add the agent login to each model request.
   - [Model gateway: requests and answers](../protocol/model-gateway-requests.md):
@@ -156,9 +164,6 @@ This page lists each protocol doc and what it covers.
 - [Website docs](../protocol/website-docs.md): the public guides of the
   marketing site, their addresses and navigation, and the rules for their
   words.
-- [Conductor comparison](../protocol/conductor-comparison.md): the public
-  page for people who move from Conductor, with the status of each
-  Conductor feature.
 - [Routines](../protocol/routines.md): routines and their schedules, with the
   linked pages [Routine runs](../protocol/routine-runs.md),
   [Pull request runs](../protocol/pull-request-runs.md), and

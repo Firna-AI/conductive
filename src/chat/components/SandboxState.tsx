@@ -2,10 +2,10 @@ import { Loader } from '@firna/ui/loader'
 import { useSharedUiTheme } from '@firna/ui/theme'
 import type { LucideIcon } from 'lucide-react'
 import { Archive, CircleAlert, CirclePause } from 'lucide-react'
+import type { WorkspaceStart } from '../../shared/generated/WorkspaceStart'
 import {
   WORKSPACE_RESTORE_MS,
   workspaceRemovedAt,
-  type WorkspaceStart,
 } from '../../shared/workspaces'
 import { Notice } from '../../../docs/mockups/src/components/common/Notice'
 import styles from '../../../docs/mockups/src/components/workspace/StartingCard.module.css'

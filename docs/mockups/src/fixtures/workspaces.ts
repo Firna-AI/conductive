@@ -2,7 +2,7 @@ import { appDomain } from '../brand'
 import { defaultChoice, type AgentChoice } from './agents'
 import { people, type PersonKey } from './members'
 import { orgs, type Org } from './orgs'
-import type { GitHubSummary } from './pullRequests'
+import type { GitHubSummary } from '../../../../src/shared/generated/GitHubSummary'
 import { repositories, type RepositoryKey } from './repositories'
 import type { SectionKey } from './sections'
 
@@ -280,6 +280,7 @@ export const workspaceList: readonly Workspace[] = [
 
 /** The workspace that the drag state moves, and where it lands. */
 export const workspaceDrag = {
+  kind: 'workspace',
   workspace: 'webhook-retries',
   section: 'general',
   index: 1,

@@ -1,8 +1,5 @@
-import {
-  WORKSPACE_RESTORE_MS,
-  workspaceRemovedAt,
-  type Workspace,
-} from '../shared/workspaces'
+import type { Workspace } from '../shared/generated/Workspace'
+import { WORKSPACE_RESTORE_MS, workspaceRemovedAt } from '../shared/workspaces'
 
 /** What the removal of a workspace reads: the time of its Archive. */
 export type ArchiveTime = Pick<Workspace, 'archivedAt'>

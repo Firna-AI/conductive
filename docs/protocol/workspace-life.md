@@ -35,8 +35,20 @@ keeps them after the merge.
   [The branch of a pull request run](base-branches.md#the-branch-of-a-pull-request-run)
   gives its steps.
 - A resume shows that the files come back as the user left them.
-- The chat history shows at once while a sandbox starts. The files and the
-  tools wait until the sandbox is ready.
+- The chat history shows at once while a sandbox starts. The tools wait
+  until the sandbox is ready.
+- All files and Changes show the lists that the workspace saved while a
+  sandbox starts. A list without a saved copy, such as at the first start
+  of a new workspace, shows that it waits for the sandbox in its place.
+- A file or diff tab keeps the file that it shows while the sandbox
+  starts. A tab without content shows that it waits for the sandbox, as
+  [Files and changes](workspace-tools.md#files-and-changes) says.
+- Reason: the files of a stopped sandbox do not change, so the saved lists
+  are the latest ones. Cal asked for them during each resume on
+  13 November 2026. A wait in place of the saved lists was rejected,
+  because the lists can still be read. A notice that the lists are a saved
+  copy was rejected, because the copy is the latest one and the header
+  already shows Starting.
 
 ## Time limits of builds and starts
 

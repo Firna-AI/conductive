@@ -1,5 +1,7 @@
+import type { AgentModel } from '../../shared/generated/AgentModel'
+import type { AgentChoice } from '../../shared/generated/AgentChoice'
 import type { AgentLoginStatus, EndpointModelList } from '../../shared/account'
-import type { AgentChoice, AgentModel } from '../../shared/agents'
+
 import type { Org, User } from '../../shared/api'
 import type { SendMessageResponse } from '../../shared/messages'
 import type {
@@ -111,6 +113,7 @@ export function readModels(value: unknown): readonly AgentModel[] {
       agent: readAgent(source.agent),
       model: text(source.model),
       label: text(source.label),
+      ...(typeof source.fast === 'boolean' && { fast: source.fast }),
       efforts: list(readEffort)(source.efforts),
     }
   })(record(value, 'models').models)

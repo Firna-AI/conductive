@@ -13,7 +13,7 @@ export const FIRST_MESSAGE: SendMessageRequest = {
   id: 'message-one',
   text: 'Keep the first draft.',
   attachmentIds: [],
-  choice: { agent: 'codex', model: 'gpt-5.5', effort: 'high' },
+  choice: { agent: 'codex', model: 'gpt-5.5', effort: 'high', fast: false },
 }
 
 export function lifecycleFixture() {

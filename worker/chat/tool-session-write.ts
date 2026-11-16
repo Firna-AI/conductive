@@ -1,6 +1,7 @@
+import type { AgentSessionAccepted } from '../../src/shared/generated/AgentSessionAccepted'
+import type { AgentChoice } from '../../src/shared/generated/AgentChoice'
 import type { User } from '../../src/shared/api'
-import type { AgentChoice } from '../../src/shared/agents'
-import type { AgentSessionAccepted } from '../../src/shared/agent-sessions'
+
 import type { SendMessageResponse } from '../../src/shared/messages'
 import { sessionLink } from '../../src/shared/session-link'
 import { sessionTitleFrom } from '../../src/shared/session-title'
@@ -85,7 +86,13 @@ export async function acceptToolSessionWrite(
       'default_model_unavailable',
       'The default model is not available. Choose a model and effort.',
     )
-  const choice: AgentChoice = { ...model, effort }
+  const choice: AgentChoice = dependencies.normalizeChoice({
+    ...model,
+    effort,
+    fast:
+      input.input.fast ??
+      (input.kind === 'send' ? (defaults?.fast ?? false) : false),
+  })
   const text =
     input.kind === 'send' ? input.input.text : input.input.firstMessage
   const message =

@@ -66,6 +66,16 @@ still ran at the time limit, so the turn ends as finished, with
 files. Its `waiting` variant draws the same turn before the limit, which
 shows as any running turn.
 
+`app/chat/standard-speed` draws a fast turn that ran at standard speed,
+from fast mode decision 257. Fast is on in the trigger. Claude reached its
+fast limit, so the end line shows the duration, then "Standard speed · Fast
+limit reached", with the files of the turn under that note. Its
+`older-software` variant has a cloud computer with older software, which
+ignores fast mode, so the note says "Standard speed · Older cloud computer
+software". Its `stopped` variant has a stopped turn, whose line ends with
+the same words after a dot. A fast turn at fast speed ends as any turn
+does, as `app/fast-mode/trigger` shows.
+
 `app/routines` lists the routines of Acme, which the Routines link below
 New workspace opens. Its child pages:
 

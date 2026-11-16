@@ -6,9 +6,9 @@ options of the workspace list, and the replay of a create.
 [Workspace calls](../../docs/protocol/workspace-calls.md) states their
 requirements. [Agent tool access](../../docs/protocol/agent-tool-access.md)
 states the reach, the turn rule, and the rights of the sender.
-[agent-workspaces.ts](../../src/shared/agent-workspaces.ts) holds the
-request and reply types and the path builders `agentWorkspacePath` and
-`agentWorkspacePaths`.
+[Rust tool contracts](../../crates/cnd-runner-interface/src/tools/mod.rs) own the request and reply types.
+[agent-workspaces.ts](../../src/shared/agent-workspaces.ts) holds the path builders
+`agentWorkspacePath` and `agentWorkspacePaths`.
 
 The CLI and the MCP server offer each of these routes, the list options,
 the first session title, and the create request ID, as
@@ -143,6 +143,9 @@ the first session title, and the create request ID, as
 
 ## Tests
 
+[handler.management.test.ts](handler.management.test.ts) checks the management route inputs and replies.
+The [Rust tools crate](../../crates/cnd-tools/README.md) tests CLI and MCP request construction.
+
 - `workspace-reads.test.ts`: token-only reads of archived and removed
   workspace facts, the removal time, and the refusal of another org.
 - `workspace-actions.test.ts`: a rename that automatic naming keeps, stale
@@ -154,8 +157,10 @@ the first session title, and the create request ID, as
   edges and `hasMore`, and malformed options.
 - `session-management-reads.test.ts`: session lists, session and message
   reads, and transcripts by ID after workspace removal.
-- `cli.test.ts` and `mcp.test.ts`, with `adapter-cases.test-support.ts`:
-  the list filter and removal time through both tool adapters.
+- `handler.management.test.ts`, with `management-cases.test-support.ts`:
+  the `removed` filter through the list route.
+- The Rust tools crate: the `removed` filter of the CLI and the MCP
+  server, and the removal time in a `get_workspace` reply.
 - `workspace-creation.test.ts`, with `workspace-creation.test-support.ts`:
   overlapping creates, a lost reply after a restart or changed defaults, a
   titled first session, and the replay of a failed first start.
@@ -169,7 +174,7 @@ the first session title, and the create request ID, as
   the injected clock to list and detail reads.
 - [workspaces.ts](../../src/shared/workspaces.ts) owns the Restore interval
   and the shared `workspaceRemovedAt` helper.
-- [agent-workspaces.ts](../../src/shared/agent-workspaces.ts) defines the
-  list filters and workspace reply fields.
+- [workspaces.rs](../../crates/cnd-runner-interface/src/tools/workspaces.rs)
+  defines the list filters and workspace reply fields.
 - [Workspace tool adapters](../../tools/README.md) expose the same calls
   through CLI and MCP.

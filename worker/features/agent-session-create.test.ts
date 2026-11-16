@@ -45,7 +45,12 @@ it('creates sessions for the stored sender and replays empty and first-message c
   expect(first).toMatchObject({
     session: {
       title: 'Review this',
-      choice: { agent: 'claude', model: 'member-model', effort: 'max' },
+      choice: {
+        agent: 'claude',
+        model: 'member-model',
+        effort: 'max',
+        fast: false,
+      },
       startedBy: { id: 'member' },
     },
     message: null,

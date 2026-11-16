@@ -1,16 +1,22 @@
+import type { Workspace } from '../../shared/generated/Workspace'
 import { describe, expect, it, vi } from 'vitest'
-import type { AgentChoice } from '../../shared/agents'
+import type { AgentChoice } from '../../shared/generated/AgentChoice'
 import { chatHistoryPath } from '../../shared/events'
 import type { FakeApiServer } from '../../test-support/fake-api'
 import { sessionsPath } from '../../shared/sessions'
-import { workspacePaths, type Workspace } from '../../shared/workspaces'
+import { workspacePaths } from '../../shared/workspaces'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
 import { recordedChatEvents } from '../../test-support/recorded-chat'
 import { renderChat } from './render-kit'
 
 const org = FAKE_IDS.org
 const ws = FAKE_IDS.workspace
-const opus: AgentChoice = { agent: 'claude', model: 'Opus 5.5', effort: 'high' }
+const opus: AgentChoice = {
+  agent: 'claude',
+  model: 'Opus 5.5',
+  effort: 'high',
+  fast: false,
+}
 const history = chatHistoryPath(org, ws, 'debounce')
 const failure = {
   error: { code: 'internal_error', message: 'The server is busy.' },

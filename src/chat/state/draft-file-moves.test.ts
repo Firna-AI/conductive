@@ -11,6 +11,7 @@ const codex = {
   agent: 'codex',
   model: 'GPT-6.1 Sol',
   effort: 'medium',
+  fast: false,
 } as const
 const modelPath = sessionPaths.model(FAKE_IDS.org, FAKE_IDS.workspace, session)
 

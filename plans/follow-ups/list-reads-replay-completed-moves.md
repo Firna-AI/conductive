@@ -1,0 +1,40 @@
+# A delayed list read can show a wrong order
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-13, from branch `calummoore/oslo-tq4m`, review finding 3, with the workspace case that its check found on `main`.
+- **Location:** `Resource.answered` and `Resource.write` in `src/app/resource.ts`; `moveSection` and `moveToSection` in `src/app/section-actions.ts`; `sectionMoved` and `workspaceMoved` in `src/app/list-changes.ts`.
+- **Reason:** The wrong order clears at the next list read, the defect needs a read that crosses completed moves, and the fix needs no stored format or API change.
+
+- **Terms:**
+  - **Section:** a named group of workspaces in the workspace list of an org. General is the default section.
+  - **Resource:** the client class in `src/app/resource.ts` that shows a value from the server: the answer of the newest read, then the changes that the server confirmed after that read started, then the writes that wait.
+  - **Move:** a list write that puts a section, or a workspace in a section, at an index. The index counts the other items. The Worker renumbers the other items around it.
+- **Background:**
+  - The list reads itself again now and then, and after some events (`src/app/org-model.ts`, `src/app/refresh.ts`).
+  - A write shows its change at once. Its answer turns the change into the fields that the answer confirms, and that change stays over each read that started before the answer (`Resource.answered` keeps each layer with a count newer than the read).
+  - Since 13 November 2026, the writes of a value go out one at a time, in order (`src/app/data-lifecycle.md`).
+  - A move is not safe to apply twice in a row with another move. Applying "General to index 1" and then "Checkout to index 2" over an order that already holds both moves gives a different order.
+- **Problem:** A list read can start before two moves finish and answer after them, with an order that already holds both. Resource then applies both moves again over that answer.
+  - Two section moves: the server holds General, Infra, Checkout. The list shows Infra, General, Checkout.
+  - Two workspace moves in one section, also on `main` before 13 November 2026: the server holds rows A, C, B. The list shows C, A, B.
+  - One section move of this tab, and a later move by another member in the same read: the server holds Infra, Checkout, General. The list shows Infra, General, Checkout.
+  - A reviewer and a checker reproduced each case with the real `Resource` and the real move functions. The comment on `workspaceMoved` in `src/app/list-changes.ts`, which says that a move stays right over a newer read, is false for two moves.
+- **Impact if no action:** Until the next read, the list shows an order that the server does not hold. A move in that time sends an index against the wrong order, so the server can save an order that the member did not see.
+- **Root question:** How does the list show the order that the server saved when a read crosses completed moves of this tab?
+- **Options:**
+  - **A.** After each move, drop any running list read and read the list again. Keep the waiting changes in view. The drop goes through the `current` callback of `Resource.read`, because `refresh` joins a running read that can be older than the move. Effort: Small.
+  - **B.** Make `Resource` note the writes that complete while a read runs. When such a read answers, drop its answer and read again, before it applies those writes. Keep a read that answers while a write only waits. Effort: Medium.
+  - **C.** Return a revision of the list with each read and each write, and match answers to writes by revision. This needs storage, API, and client changes. Effort: Large.
+  - **D.** Return every section with its position in the answer of a section move, and let the commit set each position from it. The same for workspace moves. A late move by another member then shows one read late. Effort: Medium.
+  - **E.** Send the reads of the list through the queue of its writes, so no read crosses a write. A write that never answers then stops each refresh of the list. It overrides the rule that reads run beside writes in `src/app/data-lifecycle.md`, and the test "a row rename confirms its name and keeps newer fields from a list read" in `src/app/workspace-actions.test.ts`, so it needs the user. Effort: Medium.
+  - **F.** Store a sort key for each section and workspace in place of dense positions, so a move writes one key of one row. This needs a migration and a rule for equal keys. Effort: Large.
+- **Left out:**
+  - Keep only the write queue: the reproductions ran with it.
+  - Let the commit set the whole order that the page computed: the page can miss a move of another member.
+  - An API that saves the whole order of the page: a stale page saves its order over another member's move.
+  - Drop each completed move whose answer came before the read answered: a read that the server served before the move then shows the old order until the next read.
+- **Wider fix:** B. It fixes the class in the one value manager, whatever the shape of the move, and it needs no API change.
+- **Previous examples:** `plans/follow-ups/builds-reload-joins-stale-read.md` records a related timing problem of a read and a write. A prototype of B during the check fixed the section case, the workspace case, and the case of another member, with one more read.
+- **Recommendation:** B.
+- **Action:** fix after merge, apply B, because the defect needs a read that crosses completed moves, it clears at the next read, and the fix gets no harder after the merge.

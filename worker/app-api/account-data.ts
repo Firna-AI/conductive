@@ -1,10 +1,13 @@
+import type { AgentModel } from '../../src/shared/generated/AgentModel'
+import type { Agent } from '../../src/shared/generated/Agent'
+import type { AgentChoice } from '../../src/shared/generated/AgentChoice'
 import {
   defaultAgentLoginNoReuse,
   type AgentLoginStatus,
   type NewWorkspaceView,
   type SaveAgentLoginRequest,
 } from '../../src/shared/account'
-import type { Agent, AgentChoice, AgentModel } from '../../src/shared/agents'
+
 import { agentLoginKind } from '../chat/login-kind'
 import { endpointModelList } from './account-models'
 
@@ -67,17 +70,18 @@ export async function accountLogins(
   })
 }
 
-export function accountDefault(
+export async function accountDefault(
   db: D1Database,
   userId: string,
 ): Promise<AgentChoice | null> {
-  return db
+  const row = await db
     .prepare(
-      `SELECT default_agent AS agent, default_model AS model, default_effort AS effort
+      `SELECT default_agent AS agent, default_model AS model, default_effort AS effort, default_fast AS fast
        FROM user_preferences WHERE user_id = ? AND default_agent IS NOT NULL`,
     )
     .bind(userId)
-    .first<AgentChoice>()
+    .first<Omit<AgentChoice, 'fast'> & { fast: number }>()
+  return row ? { ...row, fast: row.fast === 1 } : null
 }
 
 /** The saved New workspace view. A new account has none and gets the dialog. */
@@ -118,12 +122,19 @@ export async function saveAccountDefault(
 ): Promise<void> {
   await db
     .prepare(
-      `INSERT INTO user_preferences (user_id, default_agent, default_model, default_effort, updated_at)
-       VALUES (?, ?, ?, ?, ?) ON CONFLICT(user_id) DO UPDATE SET
+      `INSERT INTO user_preferences (user_id, default_agent, default_model, default_effort, default_fast, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(user_id) DO UPDATE SET
        default_agent = excluded.default_agent, default_model = excluded.default_model,
-       default_effort = excluded.default_effort, updated_at = excluded.updated_at`,
+       default_effort = excluded.default_effort, default_fast = excluded.default_fast, updated_at = excluded.updated_at`,
     )
-    .bind(userId, choice.agent, choice.model, choice.effort, now)
+    .bind(
+      userId,
+      choice.agent,
+      choice.model,
+      choice.effort,
+      choice.fast ? 1 : 0,
+      now,
+    )
     .run()
 }
 
@@ -135,16 +146,23 @@ export async function saveAccountLogin(
   ciphertext: string,
   now: number,
   endpointOrigin: string | null = null,
+  endpointModels: {
+    ids: readonly string[] | null
+    attemptedAt: number
+  } | null = null,
 ): Promise<boolean> {
+  const ids = endpointModels?.ids ?? null
   const noReuse = await db
     .prepare(
-      `INSERT INTO agent_logins (user_id, agent, kind, ciphertext, endpoint_origin, no_reuse, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(user_id, agent) DO UPDATE SET
+      `INSERT INTO agent_logins (user_id, agent, kind, ciphertext, endpoint_origin, no_reuse, created_at, updated_at,
+       endpoint_model_ids, endpoint_models_read_at, endpoint_models_attempted_at, endpoint_models_attempt_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(user_id, agent) DO UPDATE SET
        kind = excluded.kind, ciphertext = excluded.ciphertext, endpoint_origin = excluded.endpoint_origin,
        no_reuse = CASE WHEN agent_logins.kind = excluded.kind
          THEN agent_logins.no_reuse ELSE excluded.no_reuse END,
-       endpoint_model_ids = NULL, endpoint_models_read_at = NULL,
-       endpoint_models_attempted_at = NULL, endpoint_models_attempt_id = NULL,
+       endpoint_model_ids = excluded.endpoint_model_ids, endpoint_models_read_at = excluded.endpoint_models_read_at,
+       endpoint_models_attempted_at = excluded.endpoint_models_attempted_at,
+       endpoint_models_attempt_id = excluded.endpoint_models_attempt_id,
        updated_at = excluded.updated_at, refresh_claim = NULL,
        refresh_claim_until = NULL, failure_cause = NULL RETURNING no_reuse`,
     )
@@ -157,6 +175,10 @@ export async function saveAccountLogin(
       defaultAgentLoginNoReuse(agent, kind) ? 1 : 0,
       now,
       now,
+      ids === null ? null : JSON.stringify(ids),
+      ids === null ? null : now,
+      endpointModels?.attemptedAt ?? null,
+      endpointModels ? crypto.randomUUID() : null,
     )
     .first<number>('no_reuse')
   return noReuse === 1

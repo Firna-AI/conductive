@@ -6,7 +6,9 @@ which opens the command palette. Each person can change the keys of the
 commands on the Keyboard shortcuts tab of the Account page. The terms are
 those of the [architecture doc](../architecture.md#terms) and the terms
 below. A decision number names a dated record, as
-[Decision numbers](../architecture.md#decision-numbers) says.
+[Decision numbers](../architecture.md#decision-numbers) says. A fast mode
+decision number names a decision of the change that adds
+[fast mode](fast-mode.md), as that doc says.
 
 Five pages belong to this doc:
 
@@ -105,7 +107,8 @@ app.
   - Reopen closed session reopens the session that closed last. The
     session history lists that session first.
   - Switch to org 1 to 9 opens the org at that place in the org rail,
-    counted from the top.
+    counted from the top, as
+    [Opening an org](org-rail-order.md#opening-an-org) says.
   - Open workspace 1 to 9 opens the workspace at that place among the rows
     that the workspace list shows, counted from the top. A collapsed
     section and a closed Archived group add no row.
@@ -118,6 +121,8 @@ app.
     workspace.
   - Next effort level chooses the next effort of the model in the model
     picker.
+  - Fast mode turns fast mode on or off, as the Fast row of the model menu
+    of the shown session does.
   - Each action of the pull request bar does what a click on its button
     does. So Merge PR merges at once, with no question.
   - Open PR on GitHub opens the pull request on GitHub, as a link to it
@@ -206,7 +211,9 @@ app.
 - The tooltip of a control shows the first key of its command that works
   where the page runs. A screen reader hears that key too.
 - A menu item shows no key, such as Copy concise transcript in the tab menu
-  of a session. Reason: the menus have no place for a key.
+  of a session. Reason: the menus have no place for a key. Only the Fast row
+  of the model menu shows a key, as in Conductor (fast mode decision 258).
+  At its end, it shows the key of Fast mode that a tooltip would show.
 - Each hint shows the keys of the person, with their changes.
 - In the phone layout, no hint shows outside the Keyboard shortcuts tab.
 - The keys work in every layout. Reason: the phone layout also serves a
@@ -217,7 +224,8 @@ app.
 - The changes of a person belong to the account (decision 190). So they
   apply in every browser and in the Mac app.
 - Reason: the keys then work the same everywhere, and the browser still
-  stores only the panel sizes. Changes that stay on each device were
+  stores only the panel sizes and the
+  [last workspaces](org-rail-order.md#opening-an-org). Changes that stay on each device were
   rejected, because a new browser, a private window, and the Mac app would
   each start from the default keys.
 - One set of keys for the whole org was rejected, because the keys are a

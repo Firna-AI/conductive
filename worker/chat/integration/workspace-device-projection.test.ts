@@ -9,7 +9,7 @@ import {
   workspacePaths,
   workspacesPath,
 } from '../../../src/shared/workspaces'
-import { TOOL_TURN_HEADER } from '../../../tools/context'
+import { TOOL_TURN_HEADER } from '../../../src/shared/agent-tools'
 import { deleteOrgPath } from '../../../src/shared/orgs'
 import { listToolWorkspaces } from '../../tools/workspace-data'
 import { DEVICE_TEST_NOW } from '../../devices/clock.test-support'

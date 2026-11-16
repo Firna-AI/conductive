@@ -52,8 +52,11 @@ Each path is relative to `src/app/`, the folder of this page.
 - `app-model.ts`: the session, the orgs, the models list, Get started,
   `putOrg`, which takes a confirmed org record, `moveOrg`, which moves an
   org in the person's own order, and `admit`, which opens the app when app
-  access arrives. `boot.ts`: `Boot`, the states of the first load, and
-  `readShared`, what every screen of the app shares.
+  access arrives. `boot.ts`: `Boot`, the states of the first load,
+  `readShared`, what every screen of the app shares, and `watchSession`,
+  the client that shows the sign-in after a `sign_in_required` refusal.
+- `api/refusals.ts`: `noteRefusals`, a client that reports each refusal
+  with one error code, also the replies of its fetch.
 - `org-list.ts`: `OrgList`, the orgs of the person in their own order, as
   `AppModel.orgs` gives them: the list that the server confirmed, then the
   moves that wait for their answer.
@@ -120,15 +123,17 @@ Each path is relative to `src/app/`, the folder of this page.
   default model, the New workspace view, the shortcut changes of each
   keyboard, the GitHub App installations, and the repositories that
   Create org offers. `saveShortcuts` saves one batch of changes for one
-  keyboard and keeps the confirmed changes of the reply. The save of an own endpoint
-  login and `refreshModels` read the account again for the model list of
-  the endpoint, which only the account holds. A later change of the same
-  login makes that read old, so it does not show. A screen watches the
+  keyboard and keeps the confirmed changes of the reply. A screen watches the
   installations: they read at once, and again with the steps of Get started
   each time that the user comes back to the page. It also reads the
   waitlist state for the invite code of the account.
   `../shell/account/InviteCodeSection.tsx`: that invite code, in each
   state of the code, of the pause, and of open sign-up.
+  `account-login-writes.ts`: the writes of the logins. The save of an own
+  endpoint login and `refreshModels` read the account again for the model
+  list of the endpoint, which only the account holds. A later change of the
+  same login makes that read old, so it does not show. `endpoint-reads.ts`
+  keeps the flags of their answers for the note and the warning.
   `startCodexSignIn` and `pollCodexSignIn` send the requests of the
   ChatGPT sign-in of Codex. `../shell/account/codex-sign-in.ts`:
   `CodexSignIn`, the steps, the polls, and the timer of that sign-in.
@@ -184,8 +189,12 @@ Each path is relative to `src/app/`, the folder of this page.
   a phone. On desktop it opens on `PopoverSurface.tsx`, in the top layer,
   which places it beside its button with the dropdown placement of
   `@firna/ui`, and flips it when it does not fit. The member menus use the
-  same surface. `MenuList.tsx` draws the items, also an item that shows
-  choices. `PointMenu.tsx` draws a menu at a point above the page, with its
+  same surface. `MenuList.tsx` draws the items, also a switch row, such as
+  Fast in the model menu, which keeps the menu open, and an item that shows
+  choices. While the owner of a `MenuButton` saves a change, its `busy`
+  state turns off the trigger and the items and switches of the open menu.
+  These rows keep the focus, and the menu stays open.
+  `PointMenu.tsx` draws a menu at a point above the page, with its
   choices beside it, and `menu-place.ts` keeps both inside the window.
   `menu-keys.ts`: `opensMenu`, the menu keys of a row and of a tab.
 - `workspace-model.ts` and `archive-model.ts`: an open workspace, its
@@ -307,6 +316,15 @@ Each path is relative to `src/app/`, the folder of this page.
 - `kept-org.ts`: `keptOrg`, the org of a page without one: the org that
   the tab opened last, from `AppModel.lastOrg`, or else the first org that
   is not deleted.
+- `last-workspaces.ts`: `LastWorkspaces`, the last workspace page of each
+  org of the person, which the browser keeps, as
+  [Opening an org](../../docs/protocol/org-rail-order.md#opening-an-org)
+  says. `AppModel.lastWorkspaces` follows the person signed in.
+  `orgEntry` gives the page that opens an org: the org tile and its keys
+  (`../shell/orgs/useOrgEntry.ts`) and the palette's Switch to rows use
+  it. `startPage` gives the page of `/`. The workspace screen
+  remembers and forgets its workspace through
+  `../shell/workspace/remember-workspace.tsx`.
 - [Key code: the palette, the layers, and the dialogs](key-code-layers.md)
   names the entry points of the command palette, the layers of each
   frame, New workspace as a dialog, and feedback with its screenshots.

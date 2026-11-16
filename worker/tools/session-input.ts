@@ -1,7 +1,6 @@
-import type {
-  AgentCreateSessionRequest,
-  AgentSendMessageRequest,
-} from '../../src/shared/agent-sessions'
+import type { AgentCreateSessionRequest } from '../../src/shared/generated/AgentCreateSessionRequest'
+import type { AgentSendMessageRequest } from '../../src/shared/generated/AgentSendMessageRequest'
+
 import {
   effort,
   identifier,
@@ -12,7 +11,7 @@ import {
 
 function sessionChoice(
   fields: Record<string, unknown>,
-): Pick<AgentCreateSessionRequest, 'model' | 'effort' | 'requestId'> {
+): Pick<AgentCreateSessionRequest, 'model' | 'effort' | 'fast' | 'requestId'> {
   const model = fields.model === undefined ? undefined : record(fields.model)
   if (model && model.agent !== 'claude' && model.agent !== 'codex')
     return invalidInput()
@@ -23,6 +22,7 @@ function sessionChoice(
         model: { agent, model: identifier(model.model) },
       }),
     ...(fields.effort !== undefined && { effort: effort(fields.effort) }),
+    ...(fields.fast !== undefined && { fast: fields.fast === true }),
     ...(fields.requestId !== undefined && {
       requestId: identifier(fields.requestId),
     }),

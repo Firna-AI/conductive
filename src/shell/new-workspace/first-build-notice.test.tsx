@@ -136,7 +136,12 @@ async function newWorkspace(
     )
     await draft.send({
       repositoryId: 'storefront',
-      choice: { agent: 'claude', model: 'Opus 5.5', effort: 'high' },
+      choice: {
+        agent: 'claude',
+        model: 'Opus 5.5',
+        effort: 'high',
+        fast: false,
+      },
     })
   }
   const view = mountScreen(

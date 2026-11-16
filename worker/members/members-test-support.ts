@@ -1,6 +1,7 @@
+import type { Workspace } from '../../src/shared/generated/Workspace'
 import { API_PATHS, type Org, type User } from '../../src/shared/api'
 import { workspaceLink } from '../data/workspace-link'
-import type { Workspace } from '../../src/shared/workspaces'
+
 import { workspaceRestoreUntil } from '../../src/shared/workspaces'
 import type { AppDependencies } from '../env'
 import { errorResponse, HttpError, privateResponse } from '../http'
@@ -231,7 +232,12 @@ async function readWorkspace(
     updatedAt: row.updatedAt,
     archivedAt: row.archivedAt,
     restoreUntil: workspaceRestoreUntil(row.archivedAt, row.sandboxId),
-    choice: { agent: 'codex', model: 'test-model', effort: 'medium' },
+    choice: {
+      agent: 'codex',
+      model: 'test-model',
+      effort: 'medium',
+      fast: false,
+    },
     owner: {
       id: row.userId,
       githubLogin: row.githubLogin,

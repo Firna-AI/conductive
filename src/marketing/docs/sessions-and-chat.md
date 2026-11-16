@@ -66,6 +66,11 @@ A file dropped on the text goes where you drop it.
 A drop elsewhere uses the text cursor or the end.
 The text cursor then moves after the new chips.
 
+A paste of a long text, with 2,000 characters or 40 lines, attaches as a text file.
+Its chip, such as **Pasted text.txt**, goes in place of the pasted text.
+Undo takes the chip off, and the pasted text does not come back.
+To keep the text in the message, paste it in smaller parts.
+
 Each file can be up to 100 MB.
 Wait for uploads to finish before you send.
 If an upload fails, use **Try again** or remove its chip.
@@ -87,10 +92,11 @@ After removal, Conductive keeps the attached files, but the workspace's file too
 
 Attached files arrive in `.context/attachments/` in the workspace's repository folder.
 Each file keeps the same path when you retry its message.
-New workspaces from a new computer build also get a `.context/` folder for agent notes, screenshots, and files for other sessions.
+With current cloud computer software, workspaces also get a `.context/` folder for agent notes, screenshots, and files for other sessions.
 Git ignores the folder's files unless your repository already tracks them.
-After a new computer build, **All files** lists them, so you can open them there.
+**All files** lists them, so you can open them there.
 **Changes** does not list them.
+An older workspace gets this folder and its file list with an automatic software update at a later start.
 
 - [Read files and pictures](/docs/files-and-changes#read-a-file)
 
@@ -98,7 +104,7 @@ After a new computer build, **All files** lists them, so you can open them there
 
 Open the session you want before selecting an agent action in the pull request bar.
 The action sends a fixed message from you to the session you viewed last.
-It uses that session's model, effort, and login rules.
+It uses that session's model, effort, **Fast** setting, and login rules.
 This also works while you view a file or **Checks**.
 
 Your draft, attached files, and uploads stay as they were.
@@ -123,7 +129,9 @@ The link shows the workspace's state, number, a session icon, and the session ti
 A session without a title shows **Untitled**.
 
 Select the link to open that session.
-A closed or unknown session opens the workspace page without reopening the session.
+A closed session reopens, as it does from **Session history**, and its tab shows again for every member.
+In an archived or other read-only workspace, the session shows only in your browser and stays closed.
+An unknown session opens the workspace page.
 If that workspace is already open, its selected tab stays.
 The title of a session in another workspace updates when the chat loads.
 Session links also show as small boxes in agent answers and pasted message drafts.
@@ -148,6 +156,18 @@ Your draft moves to it.
 The earlier conversation stays in its original session.
 The new session starts without a copy of that conversation.
 In a session with no messages, a model of the other agent stays in that session.
+
+Some models offer **Fast** at the end of the picker's menu.
+Turn it on for faster output.
+Fast output can cost more on the session's login.
+The picker then shows **Fast** after the effort.
+Press **⇧⌘E** on a Mac or **Ctrl+Shift+E** on another computer to turn it on or off.
+**Fast** stays on for later messages in the session until someone turns it off.
+Choosing a model without **Fast** turns it off.
+
+A turn with **Fast** on can still run at standard speed, for example when the agent reaches its fast limit.
+The turn then continues, and its end shows **Standard speed** with the cause.
+**Fast** stays on, so later turns run fast when the cause ends.
 
 If the chosen agent has no usable login, the message box offers **Connect** for that agent.
 Connect the login in **Account** before you send.
@@ -205,7 +225,7 @@ In the folded work of a turn, open a message line to read its table.
 
 ## Manage session tabs
 
-Use a tab's menu to rename or move it, or to copy its link.
+Use a tab's menu to rename or move it, to copy its link, or to close the tabs after it.
 Open the menu with a right click on a computer.
 You can also use **Shift+F10** while the tab has focus.
 On a phone, use a long press.
@@ -213,13 +233,21 @@ On a phone, use a long press.
 - **Rename session** changes the tab's title.
 - **Copy link** copies a link that opens the workspace with that session shown.
 - **Move left** and **Move right** move it one place.
+- **Close tabs to the right** closes every tab after it in the row.
+  If the shown tab closes, this tab shows.
 - Drag a tab to place it elsewhere in the row.
 
 File and diff tabs share the row on a computer.
 A phone shows the session tabs there.
 
+Each tab in the row keeps your place when you open another tab or another workspace.
+A session tab returns to the message you read.
+If you were at the end of the chat, it shows the newest messages.
+Closing a tab or reloading the page forgets these places.
+
 Closing a session keeps its conversation in **Session history**.
 If its agent is working, closing asks first because it stops the turn.
+When you close several working sessions at once, one question names them all.
 Open **Session history** to reopen the conversation.
 
 After a merge, **Continue** keeps these sessions and their conversation context on the workspace's new branch.
@@ -271,6 +299,9 @@ The chat does not show the endpoint's host.
 If the login is private or unavailable, your message starts a new session on your own login.
 That session links back to the earlier conversation.
 It has no copy of the earlier history.
+
+Any member who can send in a session can change its model, effort, and **Fast** setting.
+That choice also applies to the messages of the member whose login the session uses.
 
 GitHub operations follow the person whose message started the running turn.
 Commits name that person as both author and committer.

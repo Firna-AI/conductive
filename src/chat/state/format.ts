@@ -1,4 +1,6 @@
-import { effortLabels, type AgentModel, type Effort } from '../../shared/agents'
+import type { AgentModel } from '../../shared/generated/AgentModel'
+import type { Effort } from '../../shared/generated/Effort'
+import { effortLabels } from '../../shared/agents'
 
 const effortOrder = Object.keys(effortLabels)
 
@@ -36,4 +38,16 @@ export function effortFor(model: AgentModel, wanted: Effort): Effort {
     sorted[0] ??
     wanted
   )
+}
+
+/**
+ * The fast mode that a model keeps: on only when it was on and the model
+ * list marks the model as fast. A model that the list does not hold has
+ * fast mode off, so the picker shows only a speed that the agent can give.
+ */
+export function fastFor(
+  model: AgentModel | undefined,
+  wanted: boolean,
+): boolean {
+  return wanted && model?.fast === true
 }

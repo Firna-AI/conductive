@@ -497,8 +497,9 @@ addresses, and of links in the file preview.
 - [ ] Read each public guide in `src/marketing/docs/` in full. Update
       each sentence that restates a changed fact, as
       [Website docs](../docs/protocol/website-docs.md) says.
-- [ ] Check the rows of `src/marketing/from-conductor/` for a feature that
-      this change ships, and update its status or note.
+- [x] Dropped: check the rows of the comparison page. The page at
+      `/from-conductor` was removed on 2026-11-13, so no row is left to
+      update.
 
 ## Milestone 3: The shared link reader
 

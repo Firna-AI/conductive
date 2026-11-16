@@ -1,3 +1,4 @@
+import type { Workspace } from '../../shared/generated/Workspace'
 import { useEffect } from 'react'
 import { useListTime } from '../../app/deadlines'
 import { inFirstRun } from '../../app/get-started'
@@ -20,9 +21,10 @@ import {
   type Readable,
 } from '../../app/store'
 import type { Section } from '../../shared/sections'
-import type { Workspace } from '../../shared/workspaces'
+
 import { useApp } from '../context'
 import { useMacApp } from '../mac/mac-app'
+import { useOrgEntry } from '../orgs/useOrgEntry'
 import { usePalette } from './palette-context'
 
 /** The parts of an org that a palette without an org does not read. */
@@ -58,6 +60,7 @@ export function usePaletteBase(): PaletteBase {
   const getStarted = useStore(app.getStarted)
   const offers = useStore(usePalette().offers)
   const mac = useMacApp() !== null
+  const orgHref = useOrgEntry()
   const org = paletteOrg(route, orgs, lastOrg)
   const open =
     route.screen === 'workspace' && route.orgId === org?.id
@@ -71,6 +74,7 @@ export function usePaletteBase(): PaletteBase {
     createOrgHref: inFirstRun(getStarted)
       ? routes.getStarted()
       : routes.createOrg(),
+    orgHref,
     offers,
     mac,
   }
