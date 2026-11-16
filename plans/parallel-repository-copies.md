@@ -135,26 +135,26 @@ Apply `bd59b1bc8` to `main` and resolve its conflicts. The production code
 applies with no conflict. The plan, two docs, the migration README, and
 one test conflict.
 
-- [ ] Apply the commit. Drop its change to `plans/software-image.md`.
-- [ ] Rename `202611110200_parallel_image_sources.sql` so that it sorts
+- [x] Apply the commit. Drop its change to `plans/software-image.md`.
+- [x] Use `202611161200_parallel_image_sources.sql`, which sorts
       after the newest migration on `main`, and update
       `migrations/README.md`.
-- [ ] Resolve `poll-recovery.test.ts` and `repository-layout.md` for the
+- [x] Resolve `poll-recovery.test.ts` and `repository-layout.md` for the
       phases of `main`, which has no tools step before the software step.
-- [ ] Run the image-source tests and the typecheck.
+- [x] Run the image-source tests and the typecheck.
 
 ## Milestone 3: Scheduler fixes
 
 Depends on: 2
 
-- [ ] Poll and start the commands of one run at the same time (design
+- [x] Poll and start the commands of one run at the same time (design
       call 6). Save each result. A transient error of one call still lets
       the other results save.
-- [ ] Start the imports in the run that passes the barrier (design call 7).
-- [ ] Tests: one run polls two running copies and starts two imports. The
+- [x] Start the imports in the run that passes the barrier (design call 7).
+- [x] Tests: one run polls two running copies and starts two imports. The
       run that confirms the last revocation starts the imports. No import
       starts before every revocation.
-- [ ] Measure a local build with the test harness, or say why it cannot
+- [x] Measure a local build with the test harness, or say why it cannot
       run. Save the result in `.context/parallel-copies/`.
 
 ## Milestone 4: Verification, commit, review, and pull request
