@@ -170,6 +170,15 @@ one building attempt per account. `image_build_jobs.software_image_name`
 pins the ready software image that a first build uses.
 The [software image backend](../worker/software-image/README.md) owns these records.
 
+`202611161200_image_packages_version.sql` adds the nullable
+`packages_version` column to `image_build_jobs` and `software_images`. It
+holds the version of the apt part of the software step that the image of
+the row holds. Existing rows keep `NULL`, so the next build from their image
+runs the apt part once. A build job also keeps an empty version when two
+starts of its software command carried different apt parts.
+[Image builds](../worker/lifecycle/image-builds.md#the-software-step) says
+how a build reads and writes it.
+
 `202611101300_routines.sql` adds org-scoped automations and their run records.
 Automation owners reference users, so membership removal can transfer their records.
 Org deletion cascades to both tables.

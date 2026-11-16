@@ -9,11 +9,13 @@ starts one background title request for a workspace with a saved first
 session and no name or stored title. The request holds no chat queue while it waits for
 the model. Send and create do not wait for the answer.
 
-Before the request, `textWithAttachmentNames` in
-`src/shared/attachment-mentions.ts` puts the original name of each attached
-file of the message in place of its mention. A mention that names no file
-of the message stays as it is. So the model can get the file names, but it
-gets no attachment bytes.
+Before the request, `titleSourceText` in
+`src/shared/attachment-mentions.ts` removes each mention of an attached
+image of the message, with the spaces and tabs after it. It puts the
+original name of each other attached file of the message in place of its
+mention. A mention that names no file of the message stays as it is. So
+the model can get the names of files that are not images, but it gets no
+image names and no attachment bytes.
 
 `title-model.ts` reads `CONDUCTIVE_TITLE_MODEL` and calls the `AI` binding
 through the replaceable `runTitleModel` dependency. It sends only the first
@@ -40,9 +42,9 @@ as own words.
 
 The next accepted message with own words can try again. Each retry reads
 the stored first message through the message ID saved with the first
-session. If that message has own words, the retry uses its text with its
-file names. Otherwise it uses the text of the message that starts the
-retry, with the file names of that message. An existing title ends the
+session. If that message has own words, the retry uses its text from
+`titleSourceText`. Otherwise it uses the text of the message that starts
+the retry, from `titleSourceText` too. An existing title ends the
 requests. The first-message record keeps old workspaces outside this path.
 
 `workspace-title.ts` stores both Worker and runner titles through one
@@ -82,8 +84,10 @@ A later workspace title leaves the session unchanged.
 
 `messages.ts` uses the same session rule for each other session. It checks
 workspace access before it sets the title. `sessionTitleFrom` in
-`src/shared/session-title.ts` first puts the original name of each attached
-file of the message in place of its mention. It then makes a title from the
+`src/shared/session-title.ts` first applies `titleSourceText`. So it
+leaves out each mention of an attached image, and it puts the original name
+of each other attached file of the message in place of its mention. It
+then makes a title from the
 first line with text and limits it to 60 Unicode code points. So the names
 go in before the cut. It keeps underscores, because a member wrote that
 text. A message without own words leaves the title for the next message

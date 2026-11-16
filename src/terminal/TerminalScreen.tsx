@@ -13,9 +13,12 @@ import { ToolButton } from './tool-parts/ToolButtons'
 import { useTouch } from './tool-parts/ToolRoot'
 import type { ReadyTerminal } from './terminalApi'
 import type { ExtraKey } from './terminalKeys'
+import type { TerminalLinks } from './terminalLinks'
+import { linkKey } from './terminalLinks'
 import { fittedFontSize } from './sharedSize'
 import { TerminalSession } from './terminalSession'
 import { cssTokens, terminalFont, terminalTheme } from './terminalTheme'
+import { watchLinks } from './xtermLinks'
 import { XtermScreen } from './xtermScreen'
 import styles from './TerminalScreen.module.css'
 
@@ -64,6 +67,8 @@ export function TerminalScreen(props: {
   onInput?: () => void
   /** The element of the xterm.js screen, without the key row. */
   screenRef?: Ref<HTMLDivElement>
+  /** Opens the links of the output. Without it, no link opens. */
+  links?: TerminalLinks
 }) {
   const hostRef = useRef<HTMLDivElement>(null)
   const xtermRef = useRef<Terminal | null>(null)
@@ -74,6 +79,7 @@ export function TerminalScreen(props: {
   const { terminal, connect, ended, screenRef } = props
   const onClosed = useEffectEvent(() => props.onClosed())
   const onInput = useEffectEvent(() => props.onInput?.())
+  const currentLinks = useEffectEvent(() => props.links)
   const currentTheme = useEffectEvent((host: Element) =>
     terminalTheme(cssTokens(host), scheme),
   )
@@ -105,7 +111,12 @@ export function TerminalScreen(props: {
     xterm.loadAddon(fit)
     xterm.open(host)
     fitVisible(host, fit)
-    const screen = new XtermScreen(xterm)
+    const screen = new XtermScreen(xterm, { links: true })
+    const outputLinks = watchLinks(xterm, {
+      links: () => currentLinks(),
+      linkKey: linkKey(navigator.platform),
+      hintClass: styles.linkHint,
+    })
     const normalFont = xterm.options.fontSize ?? 12
     let shared: BridgeSize | null = null
     const layout = () => {
@@ -145,6 +156,7 @@ export function TerminalScreen(props: {
     sessionRef.current = session
     return () => {
       observer.disconnect()
+      outputLinks?.dispose()
       session.dispose()
       screen.dispose()
       xterm.dispose()
