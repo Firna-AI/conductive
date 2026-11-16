@@ -59,10 +59,23 @@ function branchOf(state: WorkspaceState, workspace: Workspace): string {
   return workspace.branch
 }
 
-/** The state of the repository button in the header, if any. */
-export function repositoryControlOf(
-  state: WorkspaceState,
-): 'open' | 'changing' | undefined {
-  if (state.repositoryMove === 'changing') return 'changing'
-  return state.overlay === 'repository' ? 'open' : undefined
+/**
+ * The menus of the header that the state opens: the owner, the header
+ * state, and the repository, or the change of the repository that runs.
+ */
+export function headerMenusOf(state: WorkspaceState): {
+  ownerOpen: boolean
+  stateOpen: boolean
+  repositoryControl?: 'open' | 'changing'
+} {
+  return {
+    ownerOpen: state.overlay === 'reassign',
+    stateOpen: state.overlay === 'restart',
+    repositoryControl:
+      state.repositoryMove === 'changing'
+        ? 'changing'
+        : state.overlay === 'repository'
+          ? 'open'
+          : undefined,
+  }
 }

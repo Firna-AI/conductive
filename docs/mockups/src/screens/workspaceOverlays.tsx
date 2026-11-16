@@ -20,6 +20,11 @@ import {
   repositoryFailure,
   repositoryMenu,
 } from '../components/workspace/repositoryMoveCopy'
+import {
+  RestartDialog,
+  RestartSheet,
+  UpdateCheckToast,
+} from '../components/workspace/RestartParts'
 import type { WorkspaceTab } from '../components/workspace/TabItem'
 import { TabMenuSheet } from '../components/workspace/TabMenu'
 import { transcriptToasts } from '../components/workspace/transcriptCopy'
@@ -160,7 +165,14 @@ export function workspaceOverlay(
   const mobile = viewport === 'mobile'
   switch (state.overlay) {
     case 'none':
+    case 'restarting':
       return null
+    case 'restart':
+      return mobile ? <RestartSheet name={workspace.name} /> : null
+    case 'restart-confirm':
+      return <RestartDialog viewport={viewport} />
+    case 'restart-update-failed':
+      return <UpdateCheckToast viewport={viewport} />
     case 'close-session':
       return <CloseSessionDialog viewport={viewport} />
     case 'continue-unpushed':

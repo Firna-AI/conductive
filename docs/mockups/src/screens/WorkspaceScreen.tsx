@@ -32,7 +32,7 @@ import { composerNotice } from './composerNotice'
 import { placeLostUpdate } from './lostUpdates'
 import { changedWorkspaces, chatWorkspacesOf } from './orgWorkspaces'
 import { viewerOf } from './sessionStarter'
-import { barOf, placeOf, repositoryControlOf } from './workspaceBar'
+import { barOf, headerMenusOf, placeOf } from './workspaceBar'
 import {
   FilesContent,
   filePlaceholder,
@@ -151,10 +151,10 @@ export function WorkspaceScreen(props: {
     <WorkspaceHeader
       back={suspended ? paths.suspendedOrg : undefined}
       canReassign={admin && !readOnly}
+      canRestart={!readOnly}
       copy={state.copyLink === 'none' ? undefined : state.copyLink}
       name={workspace.name}
-      ownerOpen={state.overlay === 'reassign'}
-      repositoryControl={repositoryControlOf(state)}
+      {...headerMenusOf(state)}
       run={open.run}
       rightHidden={rightHidden}
       status={status}
@@ -209,6 +209,7 @@ export function WorkspaceScreen(props: {
     archivable,
     restorable,
     rightColumn: !rightHidden,
+    sidebar: true,
     mac: mac !== undefined,
     shortcuts: props.shortcuts,
   })
@@ -257,6 +258,7 @@ export function WorkspaceScreen(props: {
         suspended: suspended ? suspendedOrg : undefined,
         person: admin ? undefined : people[memberViewer],
       }}
+      sidebarView={state.sidebar}
       sidebar={workspaceSidebar({
         // The toast of an Archive shows at once, so the row shows that Archive.
         workspace:

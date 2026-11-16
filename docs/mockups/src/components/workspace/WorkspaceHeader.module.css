@@ -10,6 +10,17 @@
   box-sizing: border-box;
 }
 
+/*
+ * The window controls of the Mac app sit in the top left corner while no
+ * sidebar shows, so the bar starts after them: the width of the controls
+ * less the width of the rail.
+ */
+.cornerBar {
+  padding-left: calc(
+    var(--mac-corner-width, 164px) - var(--ui-rail-width) + var(--ui-pad-x)
+  );
+}
+
 .title {
   overflow: hidden;
   min-width: 0;

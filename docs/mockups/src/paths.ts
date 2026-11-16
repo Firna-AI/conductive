@@ -185,6 +185,7 @@ export const paths = {
   repositoryChanging: 'app/repository-change/changing',
   repositoryFailed: 'app/repository-change/failed',
   repositoryChanged: 'app/repository-change/changed',
+  restart: 'app/restart',
   archive: 'app/archive',
   justArchived: 'app/archive/just-archived',
   restored: 'app/archive/restored',

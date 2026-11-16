@@ -34,7 +34,7 @@ export function listPalette(view: PaletteView, viewport: Viewport): ReactNode {
   if (view === 'closed') return null
   return (
     <CommandPalette
-      context={{ archivable: false }}
+      context={{ archivable: false, sidebar: viewport !== 'mobile' }}
       view={view}
       viewport={viewport}
     />

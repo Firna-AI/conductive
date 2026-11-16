@@ -43,8 +43,7 @@ app.
 - Navigation says "The orgs count from the top of the rail." Workspace says
   "The workspaces count from the top of the list."
 - A browser leaves out the rows and the group that only the Mac app has:
-  Hide or show the sidebar, Back, Forward, Paste and match style, and the
-  Mac app group.
+  Back, Forward, Paste and match style, and the Mac app group.
 - Each key of a row is a button that records a new key in its place.
 - A row without a key shows Add shortcut. A row with one, two, or three
   keys shows + after its keys, because a command holds at most four keys.

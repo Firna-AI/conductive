@@ -61,6 +61,7 @@ export function beginningLifecycleStart(
     restoreWatchAt: undefined,
     startStop: undefined,
     diskRetentionCommand: undefined,
+    softwareRestartAt: undefined,
   }
 }
 
@@ -83,6 +84,7 @@ export function readyLifecycle(
             ? state.state
             : 'ready',
     runnerConnected: true,
+    softwareRestartAt: undefined,
     error: null,
     stoppedAt: null,
     nextDiskKeepaliveAt: null,
