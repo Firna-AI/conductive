@@ -11,8 +11,8 @@
   - **`chatParts`:** the reader of chat text in `src/chat/links/chat-parts.ts`. It splits a sent message or an answer into text, code, bold, workspace chips, and file chips.
 - **Background:**
   - The app reads chat text with `chatParts`. The mockups read the same text with their own readers: the mention reader in `fileMentions.ts`, the bold rule in `strongText.ts`, and the link reader in `workspaceLinks.ts`.
-  - On 13 November 2026 the mockups started to use the path and line rules of the app, through `docs/mockups/src/components/chat/answerPaths.ts`. The other rules stay copies.
-- **Problem:** The copies already differ. The app ends a mention before the next `**`, so `**Read @src/app.ts**` gives a bold chip. The mockup shows it as text with no chip. Each change of a rule needs two edits, and the visual spec can show what the app does not show.
+  - On 13 November 2026 the mockups started to use the path and line rules of the app, through `docs/mockups/src/components/chat/answerPaths.ts`. The other rules stay copies, such as `mentionPattern` and `markedMentionPattern` in `fileMentions.ts`.
+- **Problem:** Each rule of the reader lives twice: the start and the end of a mention, its end mark, the bold rule, and the web links. Each change of a rule needs two edits, and the visual spec can show what the app does not show. On 16 November 2026 the start of a mention after `**` needed an edit of both readers.
 - **Impact if no action:** The catalogue drifts from the app at each change of the chat reader.
 - **Root question:** How do the mockups read an answer, with its mentions, code, line targets, and bold, by the same rules as the app?
 - **Options:**

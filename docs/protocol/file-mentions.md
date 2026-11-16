@@ -109,7 +109,11 @@ names a decision of the change that added file chips to answers.
   [The send](message-attachments.md#the-send) states where the composer
   writes it.
 - A mention starts at the start of the text, or after a space or a line
-  break.
+  break. Where the chat reads Markdown marks, as in an answer, a mention
+  can also start right after a mark, such as in `**@src/app.ts**` (answer
+  chip decision 5). Today `**` is the only mark that the chat reads.
+- Reason: agents often write a file name in bold. A start after any
+  character was rejected, because `a@b.com` would then start a mention.
 - A mention of a file can end with a line target, such as
   `@src/app.ts:42`, as [Line targets](#line-targets) says.
 - When a mention names no entry, and its last character is `.`, `,`, `;`,

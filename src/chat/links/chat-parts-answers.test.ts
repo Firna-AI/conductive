@@ -181,4 +181,14 @@ describe('file chips in an answer', () => {
       { text: ' [c](src/my app.ts)' },
     ])
   })
+
+  test('a mention can start right after a bold mark, and stays bold', () => {
+    expect(
+      answer('- **@src/app.ts**: added the hook, mail a@src/app.ts'),
+    ).toEqual([
+      { text: '- ' },
+      { file: 'src/app.ts', source: '@src/app.ts', strong: true },
+      { text: ': added the hook, mail a@src/app.ts' },
+    ])
+  })
 })

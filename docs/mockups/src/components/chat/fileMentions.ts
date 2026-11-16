@@ -36,6 +36,13 @@ export type AttachedPart = {
  */
 const mentionPattern = /(?<=^|\s)@(?:"([^"\n]+)"|(\S+))/g
 
+/**
+ * A mention where `**` marks bold, as in an answer: it can also start
+ * right after a mark, as in `**@src/app.ts**`, and it ends before the next
+ * mark (answer chip decision 5).
+ */
+const markedMentionPattern = /(?<=^|\s|\*\*)@(?:"([^"\n]+)"|((?:(?!\*\*)\S)+))/g
+
 /** The marks that can end a sentence after a mention, as in "See @a.ts." */
 const endMarks = '.,;:!?)'
 
@@ -78,11 +85,13 @@ function mentionAt(
 export function mentionParts(
   text: string,
   files: readonly Attachment[] = [],
+  marks = false,
 ): ({ kind: 'text'; text: string } | MentionPart | AttachedPart)[] {
   const parts: ({ kind: 'text'; text: string } | MentionPart | AttachedPart)[] =
     []
   let end = 0
-  for (const match of text.matchAll(mentionPattern)) {
+  const pattern = marks ? markedMentionPattern : mentionPattern
+  for (const match of text.matchAll(pattern)) {
     const mention = mentionAt(match, files)
     if (!mention) continue
     if (match.index > end) {

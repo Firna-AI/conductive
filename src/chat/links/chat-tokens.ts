@@ -113,7 +113,9 @@ function bareAddressTokenAt(
  * The tokens of a chat text, from left to right. A backtick starts code,
  * which runs to the next backtick, or to the end of the text. Outside code,
  * a Markdown link, a bare web address, and a `**` mark each start where
- * they stand, so code and bold in a link label stay in the link.
+ * they stand, so code and bold in a link label stay in the link. A mention
+ * starts at the start of the text, after a space or a line break, or right
+ * after a mark. It ends before the next mark.
  */
 export function tokens(text: string, reading: Reading): Token[] {
   const found: Token[] = []
@@ -139,7 +141,13 @@ export function tokens(text: string, reading: Reading): Token[] {
       continue
     }
     const mark = reading.marks ? text.indexOf('**', index) : -1
-    const mention = mentionAt(mark === -1 ? text : text.slice(0, mark), index)
+    const scope = mark === -1 ? text : text.slice(0, mark)
+    // Right after a mark that the reader reads, a mention can start too,
+    // as in `**@src/app.ts**` (answer chip decision 5).
+    const afterMark = plain === '' && found.at(-1)?.kind === 'mark'
+    const mention = afterMark
+      ? mentionAt(scope.slice(index), 0)
+      : mentionAt(scope, index)
     if (mention && reading.mentions(mention)) {
       index += add({ kind: 'mention', mention }, mention.source.length)
       continue

@@ -71,9 +71,10 @@ function plainParts(
   text: string,
   mentions: boolean,
   files: readonly Attachment[],
+  marks = false,
 ): TextPart[] {
   if (!mentions) return webAddressParts(text)
-  return mentionParts(text, files).flatMap((part): TextPart[] =>
+  return mentionParts(text, files, marks).flatMap((part): TextPart[] =>
     part.kind === 'text' ? webAddressParts(part.text) : [part],
   )
 }
@@ -123,7 +124,7 @@ export function textParts(
       index % 2 === 1
         ? [codePart(part, answer)]
         : answer
-          ? fileLinkParts(part, (rest) => plainParts(rest, true, files))
+          ? fileLinkParts(part, (rest) => plainParts(rest, true, files, true))
           : plainParts(part, mentions, files),
     )
 }
