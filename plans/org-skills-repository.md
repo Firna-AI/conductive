@@ -122,9 +122,151 @@ A and no rules file loads.
   `.context/org-skills-repository/options-check-decision-5.txt`.
 - A later change that loads a rules file starts from these records.
 
+### Decision 6: Private skills repositories
+
+Open. Added on 2026-11-16, from the mockup milestone.
+
+- **Severity:** High. **Effort:** Small.
+- **Source:** Implementation.
+- **Category:** Product bug.
+- **Location:** `image/git-credential-helper.mjs:45-48`.
+- **Background:** The runner fetches the skills repository at its start
+  and every 5 minutes, outside any agent turn (decision 1). Outside a turn,
+  the Git credential helper refuses with "Git gets GitHub access in an
+  agent turn". Only `gh` gets a token outside a turn: the workspace owner's
+  GitHub user token (github-tokens.md). A user token reaches only the
+  repositories where the GitHub App is installed.
+- **Problem:** A private skills repository cannot be copied or updated.
+- **Impact if no action:** An org with private skills gets no skills, and
+  only the runner log says why.
+- **Root question:** Whose GitHub access reads a private skills repository
+  for every workspace of the org, and where does that access live? The
+  options check replaced the first question, "How does the cloud computer
+  read a private skills repository when no agent turn runs?", because it
+  named the rule of the credential helper.
+- **Options:**
+  - **A.** Public repositories only. The section says so. A private
+    repository gives no skills. Effort: Small.
+  - **B.** The runner asks the credential helper for the owner's token, as
+    `gh` does outside a turn, only for the skills copy and fetch. This
+    changes the rule that Git gets no GitHub access outside a turn. Any
+    process in the cloud computer can already get this token, so the
+    exposure does not grow. The owner must be able to read the repository.
+    Effort: Small.
+  - **C.** The runner fetches in the background at the start of each agent
+    turn, with the token of the turn's sender. No token rule changes. A
+    private repository then updates only while agents work, and its first
+    copy waits for the first turn. Effort: Medium.
+  - **D.** The admin stores a read-only token or deploy key for the
+    repository in the section, as a secret. The runner uses it. Every
+    member with a terminal can read it, and someone must renew it. Effort:
+    Medium.
+  - **E.** The Worker reads the repository with a read-only GitHub App
+    installation token for that one repository, and sends the files to the
+    runner. No token reaches the cloud computer. It needs a new storage
+    path, a size limit, and the GitHub App on the repository. The Worker
+    must check at Save that the admin's own sign-in reaches the repository.
+    Otherwise an admin could read a private repository of another GitHub
+    account. Effort: Large.
+  - **F.** The Worker streams the repository archive from GitHub to the
+    runner through a new machine route, with a read-only installation
+    token, and stores nothing. It needs a new call of the workspace token,
+    and archives in place of Git. Added by the options check. Effort:
+    Large.
+  - **G.** At Save, the Worker records the GitHub App installation and the
+    repository ID, only when the admin's own sign-in reaches the
+    repository, as the Repositories tab does. Each copy and fetch gets an
+    installation token that reads only that repository. Every workspace
+    gets the same skills, whatever its owner can read. It changes two
+    rules: a workspace sandbox then gets an installation token
+    (github-tokens.md), and the workspace token gains one call
+    (tokens-and-secrets.md). The token reads only what the copy holds.
+    Added by the options check. Effort: Medium.
+- **Left out:** The token of the admin who saved the repository, because G
+  gives the same result with a token for one repository only.
+- **Wider fix:** G. No owner, sender, or turn then changes the read. E and
+  F also prevent the class, at Large effort.
+- **Previous examples:** `gh` already uses the owner's token outside a
+  turn. The image build reads each repository with an installation token
+  for that one repository.
+- **Recommendation:** G. It gives every workspace the same skills with the
+  narrowest token, and decision 7 can check that same access. The first
+  recommendation was B, which stays the Small fallback. The options check
+  changed it.
+- If the user chooses B or C, the description in `skillsCopy.ts` must not
+  promise skills in every workspace, because a workspace owner or sender
+  without access gets none.
+- The options check report is in
+  `.context/org-skills-repository/options-check-decisions-6-7.txt`.
+- **Action:** Ask the user, because the recommended option changes the
+  token rules of github-tokens.md and tokens-and-secrets.md.
+
+### Decision 7: A wrong skills repository
+
+Open. Added on 2026-11-16, from the mockup milestone.
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Implementation.
+- **Category:** Product bug.
+- **Location:** `docs/mockups/src/components/settings/SkillsSection.tsx`.
+- **Background:** An admin types or pastes the repository. The plan shows
+  no status of the copy in the app, and the runner log holds every
+  warning. No member reads that log.
+- **Problem:** A typo, a repository that the owner cannot read, or a
+  repository with no skill folders gives no skills, and nobody sees why.
+- **Impact if no action:** Admins believe that agents have skills that they
+  do not have.
+- **Root question:** How does an admin learn, at Save and later, whether
+  each workspace gets skills from the repository, and why not? The options
+  check replaced the first question, "How does an admin learn that the
+  skills repository gives no skills?", because under decision 6 B or C the
+  result can differ for each workspace.
+- **Options:**
+  - **A.** No sign in the app. The runner log holds the warning. Save takes
+    any text. Effort: Small.
+  - **B.** Save stays off for text that is not `owner/name` or a GitHub
+    link. At Save, the Worker asks GitHub, with the admin's sign-in,
+    whether the repository exists, and refuses the Save when it does not.
+    This is a new rejection. It cannot see what the owner can read.
+    Effort: Medium.
+  - **C.** As B, but Save still stores the value, and a notice under the
+    field says that the repository was not found or has no skills. No
+    rejection beyond the text format. Effort: Medium.
+  - **D.** Each runner reports the result of its last copy: the commit, the
+    number of skills, or the failure. The section shows the newest result
+    of the org. It shows each real failure, also an owner without access.
+    It adds a new report from the runner to the Worker. Effort: Large.
+  - **E.** The field lists the repositories that the admin's sign-in
+    reaches, as the Repositories tab does, and still takes typed text. A
+    picked repository cannot be a typo. It needs a mockup change, and the
+    list is slow for many installations. Added by the options check.
+    Effort: Medium.
+  - **F.** As D, but the Worker keeps the last result of each workspace.
+    The section lists each workspace without skills and its cause, also a
+    workspace whose older runner sends no result. Added by the options
+    check. Effort: Large.
+  - **G.** As C, but the check uses the access of the copy, not the
+    admin's. Under decision 6 G, it uses the org installation. Under
+    decision 6 A, it checks that the repository is public. It runs again
+    each time the section loads. Added by the options check. Effort:
+    Medium.
+- **Left out:** None.
+- **Wider fix:** F. It reports every cause of a missing skill in each
+  workspace. The newest result of the org, in D, can hide a failed copy in
+  another workspace.
+- **Previous examples:** The install script shows its build log and its
+  result on the Cloud computer tab.
+- **Recommendation:** G. C uses the admin's own access, so it can call a
+  private repository found when the copy cannot read it. If decision 6
+  takes B or C, choose F, because only F shows an owner without access.
+  The first recommendation was C. The options check changed it.
+- **Action:** Ask the user, because B and C add new checks at Save, and D
+  adds a new report.
+
 ## Design calls
 
-Each call was made by the agent on 2026-11-13.
+Each call was made by the agent on 2026-11-13, or on 2026-11-16 for the
+calls from the mockup milestone.
 
 - The setting holds one repository as `owner/name`. The form also takes a
   `https://github.com/owner/name` link and saves it as `owner/name`. Reason:
@@ -137,19 +279,25 @@ Each call was made by the agent on 2026-11-13.
   then gains no new call (tokens-and-secrets.md).
 - The runner keeps its copy in `~/.conductive/skills/repository`, outside
   every repository folder. Reason: the copy then shows in no Changes list.
-- The runner copies and fetches with Git. Git gets a token from the existing
-  credential helper only when GitHub asks for one. Outside a turn, the
-  helper gives the workspace owner's token (github-tokens.md). So a public
-  repository needs no token, and a private one needs an owner who can read
-  it.
+- The runner copies and fetches with Git. A public repository needs no
+  token. Decision 6 says how the runner reads a private one.
 - A failed copy or fetch keeps the last good copy, writes a warning to the
   runner log, and fails no start and no turn. Reason: the graceful-handling
   rule, and the precedent of the context folder (repository-folders.md).
 - The runner moves its copy to a new commit only after a complete fetch.
   A fetch never leaves a half-written skill folder.
-- The runner loads only the folders under `skills/` that hold a `SKILL.md`.
-  It loads no hooks, MCP servers, agents, commands, or settings. Reason:
-  those run code that no agent chose.
+- The runner loads each folder under `skills/` that holds a `SKILL.md`. A
+  repository without a `skills/` folder gives each folder at its top level
+  that holds a `SKILL.md`. It loads no hooks, MCP servers, agents,
+  commands, or settings. Reason: `anthropics/skills`, `openai/skills`, and
+  `futex-ai/skills` use `skills/`, and `ComposioHQ/awesome-claude-skills`
+  uses top-level folders. Hooks and the rest run code that no agent chose.
+- An empty Save removes the repository. At its next start, the runner
+  deletes its copy, and the agents get no skills from it.
+- The runner keeps its copy under the name of its repository. When the
+  start variable names another repository, the runner deletes the old copy
+  before it copies the new one. A failed first copy gives no skills. It
+  never keeps the skills of the old repository.
 - When a skill of the workspace's own repository has the same name, the
   repository's skill wins, as Claude's own order gives it.
 - Skills change at the next turn of each session.
@@ -166,16 +314,21 @@ Depends on: none
 
 The Cloud computer tab of the org settings gets a Skills section.
 
-- [ ] Add a Skills section to the Cloud computer tab mockup, in
-      `docs/mockups/src/components/settings/ComputerTab.tsx`, after the
-      startup script section.
-  - [ ] Admin state: a repository field with `owner/name` text, a short
-        description, and Save.
-  - [ ] Empty state: no repository chosen.
-  - [ ] Read-only state for a member who is not an admin.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
-- [ ] Update the design and the TODOs of this plan for each problem that the
-      mockups show.
+- [x] Add a Skills section to the Cloud computer tab mockup, in
+      `docs/mockups/src/components/settings/ComputerTab.tsx`, last, after
+      Environment variables. Its words are in `skillsCopy.ts`.
+  - [x] Admin state: a repository field with `owner/name` text, a short
+        description, and Save. Page `cloud-computer`.
+  - [x] Empty state: no repository chosen. Pages `cloud-computer/skills`
+        and `cloud-computer/first-build`.
+  - [x] A pasted GitHub link. Page `cloud-computer/skills/pasted-link`.
+  - [x] Read-only state for a member who is not an admin. Pages
+        `cloud-computer/member` and `cloud-computer/member/no-skills`, and
+        the suspended org page.
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages. The
+      screenshots are in `.context/org-skills-repository/screens/`.
+- [x] Update the design and the TODOs of this plan for each problem that the
+      mockups show. This added decisions 6 and 7 and three design calls.
 
 ## Milestone 2: Documentation and protocol
 
@@ -184,10 +337,12 @@ Depends on: 1
 - [ ] Write `docs/protocol/org-skills.md` with the requirements and
       decisions 1 to 3. Link it from `docs/protocol/README.md` and from
       `workspaces-and-sandboxes.md`.
-- [ ] Update `github-tokens.md`: the runner's copy of the skills repository
-      uses the credential helper outside a turn.
+- [ ] Update `github-tokens.md` and `tokens-and-secrets.md` as decision 6
+      says.
 - [ ] Update `orgs-and-members.md` and `command-palette-actions.md` when the
       new section needs a row or an admin rule.
+- [ ] State the two folder layouts that load in a public guide under
+      `src/marketing/docs/`.
 - [ ] Read both legal pages and every public guide in full. Update each
       sentence that the change makes wrong.
 - [ ] Update the rows `skills`, `instruction-files-and-skills`, and
@@ -202,7 +357,8 @@ Depends on: 2
 - [ ] Add a D1 migration with a `skills_repository` column on `settings`.
 - [ ] Read and write the setting in `worker/app-api/feature-settings.ts`
       and `feature-settings-data.ts`. Only an admin writes it. Normalize a
-      GitHub link to `owner/name`.
+      GitHub link to `owner/name`. An empty value removes it.
+- [ ] Apply decision 7 at Save.
 - [ ] Add the field to `src/shared/org-settings.ts`.
 - [ ] Pass `CONDUCTIVE_SKILLS_REPOSITORY` in
       `worker/lifecycle/sandbox-environment.ts`, at create and at resume.
@@ -218,7 +374,8 @@ Depends on: 3
       this plan.
 - [ ] Add `runner/src/skills-repository.ts`: copy at start, check every
       5 minutes, swap to a new commit only after a complete fetch, warn on
-      failure.
+      failure. Read a private repository as decision 6 says. Delete the copy
+      of a removed or replaced repository.
 - [ ] Give the skill folders to Claude in `runner/src/providers/claude.ts`
       and to Codex in `runner/src/providers/codex.ts`.
 - [ ] Tests with a local Git repository: first copy, update, failed fetch
@@ -232,9 +389,12 @@ Tags: ui
 Depends on: 1, 3
 
 - [ ] Add the Skills section to `src/shell/settings/ComputerTab.tsx`, as the
-      mockup shows. Admins edit it. Other members see it read-only.
-- [ ] DOM tests for the admin state, the empty state, and the read-only
-      state.
+      mockup shows. Admins edit it. Use the words of
+      `docs/mockups/src/components/settings/skillsCopy.ts`.
+- [ ] Add the read-only section to the member view in
+      `src/members/ComputerSections.tsx` and `MemberComputerView.tsx`.
+- [ ] DOM tests for the admin state, the empty state, a pasted link, and the
+      read-only state.
 
 ## Milestone 6: Verification, commit, review, and pull request
 
