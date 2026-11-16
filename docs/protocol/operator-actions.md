@@ -150,9 +150,13 @@ whoever owns or started it (decision 129).
   keeps their sign-in sessions in the browser and in the Mac app.
 - Each member keeps their account and their other orgs. The org
   suspension changes nothing in another org.
-- The org suspension takes away no access to read. Members can still open
-  the org and its workspaces, also archived ones, and read the chat
-  history of each workspace.
+- Members keep read access, except for the sandbox access above and
+  [Reveal](secrets.md#reveal). Members can still open the org and its
+  workspaces, also archived ones, and read the chat history of each
+  workspace.
+- The Worker refuses Reveal with `org_suspended` through the write gate
+  of other changes (secrets decision 14 B). Reason: each reveal writes a
+  record.
 - Members can also read the routines of the org and their runs. The
   routine pages show no actions.
 - The org and each of its workspaces show a notice. It says that the org

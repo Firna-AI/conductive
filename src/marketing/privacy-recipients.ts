@@ -80,9 +80,9 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         their chats, and each Mac command request and result. They also see
         the routines of the org, with their prompts and their runs. They see
         each secret request and result, without a value. They see the name
-        and the description of each secret, who added it, and who revealed
-        it last. An admin can reveal the value of each secret, also of a
-        secret that you added.
+        and the description of each secret, who added it, and who last
+        revealed its current value. In an active org, an admin can reveal
+        the value of each secret, also of a secret that you added.
         A member with a terminal in a cloud computer can read
         the GitHub token of a turn that runs there. They can also read the
         value of a secret while a command runs with it there. During Continue, they

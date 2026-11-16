@@ -19,7 +19,22 @@ Object storage, so their approval rows carry the workspace and session IDs.
 
 The settings API uses the existing member and admin permission helpers.
 Each SQL write repeats its membership, suspension, and role checks.
-The settings routes return metadata only. They serve no reveal operation.
+List, create, Replace, and all-agents replies return metadata only.
+Reveal uses `POST /api/orgs/:orgId/secrets/:secretId/reveal` with the common
+Origin and org write gates. Only an admin can reveal one value.
+The reply holds only `value`. Secret metadata includes `lastReveal`, with
+`revealedByUserId`, `revealedBy`, and `revealedAt`, or null.
+One SQL statement records the reveal and reads its ciphertext,
+so an overlapping Replace cannot change which value the record names.
+
+`org_secret_reveals` keeps the org, secret ID, secret name, value version,
+admin ID, and time of each reveal. Its org foreign key deletes the records
+when the org is purged. Secret and admin IDs are opaque, so deleting a
+secret or account keeps the records. No reveal record holds a value.
+The last reveal in metadata joins the secret's current value version.
+Replace increments that version only when it replaces the value.
+Description and all-agents changes keep the version and last reveal.
+
 Secret requests and temporary values are not wired here.
 
 ## Key code
@@ -27,6 +42,7 @@ Secret requests and temporary values are not wired here.
 - [data.ts](data.ts): `listSecrets`, `readSecret`, and the encryption context.
 - [access.ts](access.ts): the creator and admin rights and guarded SQL access.
 - [writes.ts](writes.ts): secret creation, replacement, deletion, and the all-agents mark.
+- [reveals.ts](reveals.ts): `recordSecretReveal`, the guarded reveal record and ciphertext read.
 - [capabilities-data.ts](capabilities-data.ts): workspace capabilities and session approval metadata.
 - [capabilities-writes.ts](capabilities-writes.ts): workspace pre-approvals and removal of session approvals.
 - [capabilities-input.ts](capabilities-input.ts): capability request parsing and create defaults.
@@ -35,7 +51,7 @@ Secret requests and temporary values are not wired here.
 
 ## Development
 
-Run `npm run test -- worker/app-api/secrets.test.ts worker/app-api/capabilities.test.ts worker/app-api/create-capabilities.test.ts worker/lifecycle/create-capabilities.test.ts worker/devices/mac-access.test.ts` from the repository root.
+Run `npm run test -- worker/app-api/secrets.test.ts worker/app-api/secrets-reveal.test.ts worker/app-api/secrets-reveal-lifetime.test.ts worker/app-api/capabilities.test.ts worker/app-api/create-capabilities.test.ts worker/lifecycle/create-capabilities.test.ts worker/devices/mac-access.test.ts` from the repository root.
 
 See [Secrets](../../docs/protocol/secrets.md) and
 [Secret requests](../../docs/protocol/secret-requests.md) for the requirements.

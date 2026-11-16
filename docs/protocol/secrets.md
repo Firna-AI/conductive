@@ -132,10 +132,25 @@ while the change is open. Its pull request keeps them after the merge.
 
 - An admin reveals the value of one secret at a time (secrets decision
   2 A). The Worker then returns that value only.
+- Reveal uses POST with the Origin check of other changes.
 - A member who is not an admin never gets a value back, also of a secret
   that the member added.
-- The app records each reveal with the admin and the time. The row of the
-  secret shows the last reveal.
+- The app records each reveal with the admin, the time, the secret ID,
+  and the secret name. The record holds no value.
+- The row shows the last reveal of the current value. Every member sees
+  who revealed it and when.
+- After a Replace of the value, the row no longer shows the last reveal
+  of the old value. A change of description alone keeps that reveal.
+- The Worker refuses each reveal in a suspended org with `org_suspended`,
+  through the write gate of other changes (secrets decision 14 B).
+- Reason: each reveal writes a record. An exception that permits Reveal
+  during a suspension was rejected for that reason.
+- The app keeps every reveal record while the org exists, also after its
+  secret is deleted (secrets decision 15 B). The secret name stays in the
+  record. The records go when the app deletes the org.
+- Reason: after a leak, the operator can still find who read a value that
+  may still work. Records that go with their secret were rejected for
+  that reason.
 - A revealed value shows on its own line, with Copy and Hide.
 - Reason: the task asks that admins can view values. Values that stay
   write-only for each person, as the env var values are, were rejected for

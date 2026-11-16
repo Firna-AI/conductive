@@ -131,7 +131,7 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
       text`Admins manage the members, the repositories, the scripts, and
         the env vars of the org.`,
       text`Every member can add secrets, and replace or delete the secrets
-        that they added. Admins can replace and delete each secret, mark a
+        that they added. In an active org, admins can replace and delete each secret, mark a
         secret for all agents, and reveal one value at a time. Every member
         can change what each workspace allows, such as its pre-approved
         secrets and its Mac access.`,

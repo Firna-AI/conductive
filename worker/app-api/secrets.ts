@@ -1,9 +1,11 @@
 import {
   secretAllAgentsPath,
   secretPath,
+  secretRevealPath,
   secretsPath,
   type CreateSecretRequest,
   type ReplaceSecretRequest,
+  type RevealSecretResponse,
   type SecretResponse,
   type SecretsResponse,
   type SetSecretAllAgentsRequest,
@@ -13,13 +15,14 @@ import { HttpError, requiredString } from '../http'
 import { requireOrgMember } from '../members/permissions'
 import { requireSecretWriter } from '../secrets/access'
 import { listSecrets, readSecret, secretValueContext } from '../secrets/data'
+import { recordSecretReveal } from '../secrets/reveals'
 import {
   deleteSecret,
   insertSecret,
   replaceSecret,
   setSecretAllAgents,
 } from '../secrets/writes'
-import { encrypt } from '../security/crypto'
+import { decrypt, encrypt } from '../security/crypto'
 import type { RequestContext } from '../security/gate'
 import { shellChildId } from './feature-shell-access'
 
@@ -34,10 +37,8 @@ export async function secretsRoute(
   const userId = context.user.id
   const path = new URL(request.url).pathname
   const root = secretsPath(orgId)
-  const id = shellChildId(
-    path.endsWith('/all-agents') ? path.slice(0, -'/all-agents'.length) : path,
-    root,
-  )
+  const suffix = ['/all-agents', '/reveal'].find((end) => path.endsWith(end))
+  const id = shellChildId(suffix ? path.slice(0, -suffix.length) : path, root)
   if (path !== root && !id) return null
   if (path === root && request.method === 'GET') {
     await requireOrgMember(env.DB, orgId, userId)
@@ -86,6 +87,31 @@ export async function secretsRoute(
     )
   }
   if (!id) return null
+  if (path === secretRevealPath(orgId, id) && request.method === 'POST') {
+    await requireSecretWriter(env.DB, orgId, userId, id, true)
+    const ciphertext = await recordSecretReveal(
+      env.DB,
+      orgId,
+      id,
+      userId,
+      dependencies.now(),
+    )
+    if (ciphertext === null) {
+      await requireSecretWriter(env.DB, orgId, userId, id, true)
+      throw new HttpError(
+        404,
+        'secret_not_found',
+        'The secret is not available.',
+      )
+    }
+    return Response.json({
+      value: await decrypt(
+        ciphertext,
+        secretValueContext(orgId, id),
+        env.BOAT_KEY_ENCRYPTION_KEY,
+      ),
+    } satisfies RevealSecretResponse)
+  }
   if (
     path === secretPath(orgId, id) &&
     ['PATCH', 'DELETE'].includes(request.method)

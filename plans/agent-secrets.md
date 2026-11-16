@@ -900,7 +900,7 @@ Merge resolutions and preservation evidence: `.context/agent-secrets/merge-main-
       pre-approved secrets and Mac access. Refuse Mac command requests of a
       workspace with Mac access off.
 - [x] Add tests beside the code.
-- [ ] Add the reveal route and the reveal records under secrets
+- [x] Add the reveal route and the reveal records under secrets
       decisions 2 A, 14 B, and 15 B, with tests. State 14 B in
       `docs/protocol/secrets.md` and `docs/protocol/operator-actions.md`,
       and 15 B in the Privacy page.

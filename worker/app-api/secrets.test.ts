@@ -192,6 +192,7 @@ it('keeps values encrypted and out of replies, uses org-unique names, and blocks
     'createdByUserId',
     'description',
     'id',
+    'lastReveal',
     'name',
     'updatedAt',
   ])

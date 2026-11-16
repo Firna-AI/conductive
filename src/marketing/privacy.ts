@@ -109,6 +109,10 @@ export const privacyDocument: LegalDocument = {
           member who may delete it deletes it. A value that a member gives
           an agent for 15 minutes stays for 15 minutes. A value for a
           workspace stays until the workspace is archived.`,
+        paragraph`${productName} keeps each reveal record while its org
+          exists, also after the secret is deleted. Each record keeps the
+          secret ID and name, the admin, and the time. The records go when
+          ${productName} deletes the org.`,
         paragraph`A connected agent login stays until you remove or replace
           it. Panel sizes and the last workspace of each org stay in your
           browser until you clear its saved data. The providers above can keep their own records under their
@@ -137,11 +141,11 @@ export const privacyDocument: LegalDocument = {
             to your browser. For an own endpoint login, your browser gets
             only its host and any non-default port, without the full address
             or key.`,
-          text`An admin of an org can reveal the value of one secret in its
+          text`An admin of an active org can reveal the value of one secret in its
             Secrets settings at a time, also of a secret that another member
             added. ${productName} records each reveal with the admin and the
-            time, and every member sees the last reveal. A member who is not
-            an admin never gets a secret value back.`,
+            time, and every member sees the last reveal of the current
+            value. A member who is not an admin never gets a secret value back.`,
           text`An agent can ask to run one command with a secret in the
             Secrets settings. The command gets the value, and the agent gets
             only the name of the secret. ${productName} hides each exact copy

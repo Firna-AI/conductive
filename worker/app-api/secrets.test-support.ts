@@ -61,3 +61,18 @@ export async function storedSecretValue(
     ),
   }
 }
+
+export async function secretRevealRecords(fixture: OuterRuntime) {
+  const { results } = await fixture.env.DB.prepare(
+    `SELECT org_id AS orgId, secret_id AS secretId, secret_name AS secretName,
+     revealed_by_user_id AS revealedByUserId, revealed_at AS revealedAt
+     FROM org_secret_reveals ORDER BY id`,
+  ).all<{
+    orgId: string
+    secretId: string
+    secretName: string
+    revealedByUserId: string
+    revealedAt: number
+  }>()
+  return results
+}

@@ -52,11 +52,13 @@ export async function replaceSecret(
   const row = await db
     .prepare(
       `UPDATE org_secrets SET description = COALESCE(?, description),
-       value_ciphertext = COALESCE(?, value_ciphertext), updated_at = ?
+       value_ciphertext = COALESCE(?, value_ciphertext),
+       value_version = value_version + CASE WHEN ? IS NULL THEN 0 ELSE 1 END, updated_at = ?
      WHERE org_id = ? AND id = ? AND ${secretEditorPredicate} RETURNING id`,
     )
     .bind(
       input.description ?? null,
+      input.ciphertext ?? null,
       input.ciphertext ?? null,
       input.now,
       input.orgId,

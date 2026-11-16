@@ -14,6 +14,10 @@ export function secretAllAgentsPath(orgId: string, secretId: string): string {
   return `${secretPath(orgId, secretId)}/all-agents`
 }
 
+export function secretRevealPath(orgId: string, secretId: string): string {
+  return `${secretPath(orgId, secretId)}/reveal`
+}
+
 export function workspaceCapabilitiesPath(orgId: string, id: string): string {
   return `${workspacePath(orgId, id)}/capabilities`
 }
@@ -27,6 +31,17 @@ export interface OrgSecret {
   allAgents: boolean
   createdAt: number
   updatedAt: number
+  lastReveal: SecretReveal | null
+}
+
+export interface SecretReveal {
+  revealedByUserId: string
+  revealedBy: MessageSender | null
+  revealedAt: number
+}
+
+export interface RevealSecretResponse {
+  value: string
 }
 
 export interface SecretsResponse {
