@@ -1,11 +1,13 @@
 # Orgs and members
 
 This doc holds the requirements and the decisions in force for orgs, their
-sections, and their members. It also covers the first run and the end of
-an org. A linked page covers [the order of the org rail](org-rail-order.md).
-The terms are those of the [architecture doc](../architecture.md#terms). A
-decision number names a dated record, as
-[Decision numbers](../architecture.md#decision-numbers) says.
+sections, and their members. Linked pages cover
+[the order of the org rail](org-rail-order.md), the first run in
+[Get started](get-started.md), and the end of an org in
+[Delete org](delete-org.md). The terms are those of the
+[architecture doc](../architecture.md#terms). A decision number names a
+dated record, as [Decision numbers](../architecture.md#decision-numbers)
+says.
 
 ## Orgs
 
@@ -66,54 +68,16 @@ decision number names a dated record, as
 
 ## Get started
 
-- Get started is the only first run.
-- Get started opens only after app access. A person who waits sees the
-  [waitlist screen](waitlist.md#the-waitlist-screen) instead. Reason: the
-  steps of Get started need app access.
-- It has three steps, in this order (decisions 33 and 80):
-  1. Install the GitHub App.
-  2. Create the first org.
-  3. Connect Claude or Codex.
-- Get started asks for no Boat account and no Boat key.
-- [Chat and events](messages-and-attachments.md#messages) states the notice for a
-  missing agent login.
-- The second step, the org step, shows the cloud computer of the org once
-  the org exists (decision 150 of PR #92). Create org starts its first build, as
-  [The first build](org-image.md#the-first-build) says.
-- While the org has no good image, the org step shows the state of the
-  newest build of the org:
-  - While a build runs, the step says that the cloud computer is being
-    prepared, with the time since the build began.
-  - After a failed build, the step shows the failure with the message
-    that the app saved for the build. An admin gets Try again and a link
-    to the log of the build on the Cloud computer tab.
-  - With no build, such as after a first build that could not start, the
-    step says that the org has no build yet. An admin gets Build computer.
-- Once the org has a good image, the step says that the cloud computer is
-  ready. A later build does not change that, also when it fails
-  (decision 9).
-- A member who is not an admin sees each state with no action. Reason:
-  only an admin builds (decision 57).
-- The person can connect an agent while the build runs.
-- While the person has a deleted org, Get started lists it before the
-  steps, with Restore, as [Delete org](#delete-org) says.
-- When every step is done, Get started shows its finish: a line about the
-  org, and an Open button for the org, such as "Open Acme".
-- The Open button stays on in every state of the build (decision 150 of PR #92).
-  New workspace also shows the state of the build, as
-  [Create a workspace](workspaces-and-sandboxes.md#create-a-workspace)
-  says.
-- The finish says that the org is ready for a new workspace only once the
-  org has a good image. Before that, it says that the cloud computer of the
-  org is still being prepared, did not build, or needs a build.
-- Reason: the person sees the build where it starts. The person never
-  waits in Get started for the build, which can run for up to 60 minutes.
-  A fourth step for the build was rejected for that reason.
+- [Get started](get-started.md) holds the requirements of the first run:
+  its steps, the state of the first build in its org step, and its finish.
 
 ## Sections
 
 - Sections are groupings of workspaces that the people of the org define.
   A section is not tied to a repository.
+- A section can hold trees of workspaces. Each sub-workspace shows nested
+  under the row of its parent, as [The list](sub-workspaces.md#the-list)
+  says.
 - Each section collapses, and has a menu with New workspace, Rename section,
   Move section up, Move section down, New section, and Delete section, in
   that order. The first section has no Move section up, and the last
@@ -138,6 +102,9 @@ decision number names a dated record, as
   [Fixed keys](keyboard-shortcuts-fixed-keys.md#fixed-keys) gives the keys.
 - Move to section in the
   [menu of a workspace row](workspace-menu.md#move-to-section) moves it too.
+- Each of these moves of a row also moves each workspace nested under it.
+  A nested row has none of these moves, as
+  [Moves](sub-workspaces.md#moves) says.
 - Deleting a section moves its workspaces to General, also the archived
   ones. Reason: no workspace gets lost, and a Restore always has a section
   to go back to.
@@ -267,54 +234,5 @@ decision number names a dated record, as
 
 ## Delete org
 
-- Delete org asks for the name of the org.
-- It stops every sandbox of the org and hides the org at once
-  (decision 30).
-- The app deletes everything of the org after 7 days, unless an admin
-  restores the org.
-- Reason: the work of every member stays safe for 7 days, and a stopped
-  sandbox costs no machine time.
-- A delete at once was rejected, because an admin could then delete the
-  unpushed work of a member.
-- The delete also removes the saved snapshots of the org, with the org
-  image.
-- A deleted org leaves the org rail at once. Its other members cannot
-  open it.
-- For 7 days, the General tab of the Account page lists the deleted org
-  for its admins, with Restore. The section shows only while the user has
-  a deleted org.
-- The address of a deleted org still opens its page, and that page also
-  offers Restore. So an old link to the org is not a dead end.
-- Reason: the faded tiles of deleted orgs stayed in the way after a
-  delete, as the user said on 12 November 2026. A faded tile in the rail
-  was the earlier rule. A new tab of the Account page was rejected,
-  because it is empty on most days.
-- Delete org then opens the next org that is not deleted, else Get
-  started. Its question says that an admin restores the org from Account
-  settings.
-- A person whose orgs are all deleted counts as a person without an org.
-  So the app opens Get started, as for a new person, and its org step
-  offers Create org.
-- While the person has a deleted org, Get started also lists it before
-  its steps, with Restore, as the Account page does. Restore there opens
-  the org. Without a deleted org, Get started shows no such list.
-- Reason: a phone shows Get started without the rail, so it has no other
-  way to the Account page. The user chose this on 13 November 2026.
-  Opening the page of a deleted org, as before, was rejected, because a
-  person who wants a new org then meets the deleted org first. A link to
-  the Account page on the phone layout of Get started was rejected,
-  because Restore then sits one page away from where the person lands.
-- A suspended deleted org offers no Restore, in the Account page or on
-  its page, because a suspended org refuses a restore.
-- Restore brings the org back as it was. Its workspaces start again when
-  they open. A workspace whose owner is suspended does not start, as
-  [Operator actions](operator-actions.md#starts-stops-and-builds) says.
-- The routines of a deleted org start no runs. After a Restore, each runs
-  once for the schedule times that it missed, as
-  [Suspensions and deleted orgs](routines.md#suspensions-and-deleted-orgs)
-  says.
-- An unfinished create continues when its workspace opens after Restore.
-  It then gets a new start limit of 20 minutes, the limit of each start in
-  [Time limits of builds and starts](workspace-life.md#time-limits-of-builds-and-starts).
-  The workspace keeps its original creation date.
-- Reason: the create makes no progress while its org is deleted.
+- [Delete org](delete-org.md) holds the requirements of the delete of an
+  org, its 7 days, and its Restore.

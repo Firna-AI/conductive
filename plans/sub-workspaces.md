@@ -599,6 +599,36 @@ The `ui implementor` proposed them, and the orchestrator accepted them.
   member saw them, and a Restore puts the archived row back with no jump.
   The mockups found this gap.
 
+The documentation of Milestone 2 led to these calls, all of 16 November
+2026. The `docs implementor` proposed them, and the orchestrator accepted
+them.
+
+- For an archived workspace, `get_workspace` gives its own section. Reason:
+  the list shows an archived workspace only in the Archived group, so the
+  rule of the shown section covers live workspaces only.
+- A notice of a create names the section of the parent row's own record.
+  In one rare case, after a Restore above a moved parent row, that section
+  can differ from the section where the list shows the parent. The notice
+  does no harm, so the docs keep the simple rule.
+- An unknown workspace in the parent filter of the list gives an empty
+  list, not HTTP 404. Reason: the list rule "A filter that matches no
+  workspace gives an empty list" already settles it.
+- `move_workspace` on a nested row adds no refusal, and the other checks of
+  the call stay. So an unknown section still gets HTTP 404.
+- The docs also state rules that the plan settles but that the brief did
+  not list: the help text of `create_workspace`, a runner start without
+  the new facts, the count of a collapsed section, the rejected refusals,
+  and that New workspace in the app and routine runs make top-level
+  workspaces.
+- Four protocol docs passed about 250 lines, so the documentation skill
+  split them. Whole sections moved, word for word, to
+  `docs/protocol/create-call-lists.md`,
+  `docs/protocol/agent-instructions-delivery.md`,
+  `docs/protocol/stop-and-resume.md`, `docs/protocol/get-started.md`, and
+  `docs/protocol/delete-org.md`. A stub under each old heading keeps each
+  old anchor. The orchestrator checked that every moved line still exists
+  and that every inbound link resolves.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -640,29 +670,35 @@ Depends on: 1
 
 The requirements and the decisions of this change, in the protocol docs.
 
-- [ ] Write `docs/protocol/sub-workspaces.md`: the parent link, the depth
+- [x] Write `docs/protocol/sub-workspaces.md`: the parent link, the depth
       and its limit, the error and its advice, the section and the moves,
       the list and the archived parent, and the agent context. Link it from
       `docs/architecture/protocol-docs.md`.
-- [ ] Add the terms sub-workspace and parent to `docs/architecture.md`.
-- [ ] Update `docs/protocol/workspace-calls.md`: `parentId` of a create, the
+- [x] Add the terms sub-workspace and parent to `docs/architecture.md`.
+- [x] Update `docs/protocol/workspace-calls.md`: `parentId` of a create, the
       `parentId` filter and field of the list, the `parent`, `depth`, and
       `children` of a get, the `notice` of a create and a move, and the move
       of a tree.
-- [ ] Update `docs/protocol/agent-instructions.md` with the new facts and
+- [x] Update `docs/protocol/agent-instructions.md` with the new facts and
       guidance.
-- [ ] Update the Sections of `docs/protocol/orgs-and-members.md`,
+- [x] Update the Sections of `docs/protocol/orgs-and-members.md`,
       `docs/protocol/workspace-menu.md`, `docs/protocol/workspace-life.md`,
       and `docs/protocol/keyboard-shortcuts-fixed-keys.md` for the trees,
       as items 4 F and 5 C say.
-- [ ] Read both legal pages in full, `src/marketing/terms.ts` and
+- [x] Read both legal pages in full, `src/marketing/terms.ts` and
       `src/marketing/privacy.ts`. Update each sentence that restates a
       changed fact.
-- [ ] Read each public guide under `src/marketing/docs/` in full. Update
+- [x] Read each public guide under `src/marketing/docs/` in full. Update
       each sentence that restates a changed fact. Add sub-workspaces to
       "Let an agent manage workspaces" and "Organize work with sections"
       in `workspaces.md`. Give this TODO to the `external docs implementor`.
-- [ ] Check each relative link of each changed Markdown file.
+- [x] Check each relative link of each changed Markdown file.
+
+Done on 16 November 2026. The `docs implementor` wrote the protocol docs, and
+the `external docs implementor` wrote the guides. The legal pages restate no
+changed fact. Evidence: the link checks of
+`.context/sub-workspaces/check-links.py` and
+`.context/sub-workspaces/check-moves.py`.
 
 ## Milestone 3: The parent link, the create, and the reads
 
@@ -699,6 +735,25 @@ and the reads of the app and of the tools.
       shared rule, the list filter, and the get.
 - [ ] Update `worker/tools/README.md`, `worker/tools/workspaces.md`, and
       the README of `cnd-runner-interface`.
+
+## Milestone 3a: The mockup list on the shared rule
+
+Tags: mockup
+
+Depends on: 3
+
+The mockup helper `withTrees` in
+`docs/mockups/src/components/workspaces/trees.ts` orders the rows that move
+up after an Archive by their creation among their new siblings. The plan
+puts them in the place of the archived row. The drawn screens are the same
+under both rules. The orchestrator found this while it checked
+Milestone 1.
+
+- [ ] Let `withTrees` place the rows with the shared rule of Milestone 3,
+      so that the catalogue and the app use one rule. Keep each drawn
+      screen as it is.
+- [ ] Run `npm run mockups:check`, and confirm that the pages of
+      `app/sub-workspaces` look as before.
 
 ## Milestone 4: The moves of a tree
 
@@ -748,7 +803,7 @@ instructions, and the new fields of the Rust workspace tools.
 
 Tags: ui
 
-Depends on: 1, 3, 4
+Depends on: 1, 3, 3a, 4
 
 The trees in the sidebar and on the list page, as the mockups draw them.
 

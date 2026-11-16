@@ -19,7 +19,7 @@ number names a dated record, as
 | Open a preview | `open_preview` | `conductive previews open` | `POST /v1/tools/workspaces/{workspaceId}/previews` | An active turn |
 | Close a preview | `close_preview` | `conductive previews close` | `POST /v1/tools/workspaces/{workspaceId}/previews/{previewId}/close` | An active turn |
 
-- [Sections](workspace-calls.md#sections) states the list of the sections.
+- [Sections](create-call-lists.md#sections) states the list of the sections.
 
 ## Sections
 

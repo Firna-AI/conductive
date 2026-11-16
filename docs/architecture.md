@@ -43,6 +43,12 @@ each feature.
   at a time. After a merge, Continue moves it on to its next task.
 - **Workspace owner:** the person who is responsible for a workspace. It is
   the person who created the workspace, until an admin reassigns it.
+- **Sub-workspace:** a workspace that an agent created under another
+  workspace, its parent workspace. The workspace list shows it under the
+  row of its parent, as [Sub-workspaces](protocol/sub-workspaces.md) says.
+- **Parent workspace:** the workspace that a sub-workspace is nested
+  under. The docs also call it the parent. A workspace has at most one
+  parent workspace.
 - **Continue:** the action after a merge that moves a workspace to a new
   branch from the latest default branch. The workspace keeps its sandbox
   and its sessions.

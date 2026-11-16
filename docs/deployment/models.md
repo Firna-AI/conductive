@@ -75,7 +75,7 @@ The shape of the two values, with placeholders in place of real values:
   The tool model list also reads the app default when the calling
   workspace's owner has no saved default. For that list, a missing or
   invalid app default gives a null default choice instead of an error.
-  [Models](../protocol/workspace-calls.md#models) states the tool list.
+  [Models](../protocol/create-call-lists.md#models) states the tool list.
 
 ## The title model
 
