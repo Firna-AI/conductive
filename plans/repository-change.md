@@ -17,7 +17,8 @@ repository change decisions 1 A, 2 B, and 3 B. The user also asked to
 copy the context folder to the new repository. After the options check,
 the user chose decisions 3 D and 4 D on the same day. On 16 November
 2026 the user changed decision 4 to G, which hides a repository that the
-cloud computer does not hold. The brainstorm notes are
+cloud computer does not hold. The user chose decisions 5 A and 6 B on
+16 November 2026. The brainstorm notes are
 in `.context/repository-change/brainstorm-notes.md`.
 
 This change does not cover a workspace with more than one repository, a
@@ -149,6 +150,49 @@ Answered on 13 November 2026: D. Added on the same day, from the design of decis
 - **Previous examples:** A waiting repository is off in the picker of New workspace, with a note.
 - **Recommendation:** G. The first recommendation was A, then D. After the user removed the notes of the menu, G needs no extra text. The case is rare, because a new workspace starts from the newest org image.
 - **Action:** ask the user, because the options differ in what the member can do.
+
+### 5. A cloud computer whose agent runner cannot move yet
+
+Answered on 16 November 2026: A.
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Implementation.
+- **Category:** Product bug.
+- **Location:** `worker/chat/runner-repository-move.ts`, and the change job of M3c.
+- **Background:** A runner from a release before M3a has no `repositoryFolder` in its `hello`. It closes its connection at an unknown command, so the Worker never sends it `repository.move`. It updates only at idle or at its next start.
+- **Problem:** A member can pick another repository while the runner cannot move.
+- **Impact if no action:** The change fails, or the agents keep working in the old folder.
+- **Root question:** What happens when a member changes the repository and the runner cannot move yet?
+- **Options:**
+  - **A.** Refuse the change with "Restart the software, then try again." Nothing stops. Effort: Small.
+  - **B.** Run Restart first, then the change. Each agent process, such as a dev server, stops with no warning. Effort: Medium.
+  - **C.** Turn off the menu for such a workspace. The member does not learn why. Effort: Small.
+- **Left out:** A change of the record only, because the agents would then edit the wrong repository.
+- **Wider fix:** None. The case ends when old cloud computers update.
+- **Previous examples:** None found.
+- **Recommendation:** A. It stops nothing without a warning, and it uses the Restart action that exists.
+- **Action:** ask the user, because the options change what a member sees.
+
+### 6. The Terms version after the Terms text changed
+
+Answered on 16 November 2026: B.
+
+- **Severity:** Low. **Effort:** Small.
+- **Source:** Implementation.
+- **Category:** Docs or spec.
+- **Location:** `src/shared/terms.ts:4`.
+- **Background:** Milestone 2 added Terms sentences: every member can move a workspace to another repository, and the change fetches with the GitHub token of the member who starts it. `TERMS_VERSION` decides when users accept the Terms again.
+- **Problem:** The Terms text changed, but the version did not.
+- **Impact if no action:** Users are not asked to accept the new Terms text.
+- **Root question:** Must each user accept the Terms again because of this change?
+- **Options:**
+  - **A.** Keep the current version. Effort: Small.
+  - **B.** Change the version when the feature ships. Each user accepts again at the next sign-in. Effort: Small.
+- **Left out:** None.
+- **Wider fix:** None.
+- **Previous examples:** The Continue pull request changed the version for a similar Terms change.
+- **Recommendation:** B. The Terms now let other members change a workspace's repository with a member's GitHub token.
+- **Action:** ask the user, because consent to the Terms is a legal choice.
 
 ## Design
 
@@ -363,6 +407,8 @@ Findings (16 November 2026):
 
 ### M3c: Worker change job
 
+- [ ] Refuse a change when the runner has no `repositoryFolder`, with
+      "Restart the software, then try again.", as decision 5 A says.
 - [ ] Add the change job in the workspace Durable Object, beside the
       Continue job: admission, local-work check, fetch, branch, context
       copy, publication, and progress.
@@ -416,6 +462,8 @@ Depends on: 1, 3
 
 Depends on: every other milestone
 
+- [ ] Change `TERMS_VERSION` in `src/shared/terms.ts`, as decision 6 B
+      says.
 - [ ] Run the targeted tests and `npm run check`.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
