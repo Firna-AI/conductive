@@ -3,6 +3,7 @@ import { createChatApi, type WorkspaceTarget } from '../api/client'
 import type { StreamEnvelope } from '../api/read-workspace'
 import { DeviceReads, refreshDevices } from '../device/device-actions'
 import { createDeviceApi } from '../device/device-api'
+import { createSecretApi } from '../secrets/secret-actions'
 import { SessionReads } from '../links/session-reads'
 import {
   WorkspaceStream,
@@ -73,6 +74,7 @@ export function createChatContext(
       api: createDeviceApi(options.client),
       reads: new DeviceReads(),
     },
+    secrets: createSecretApi(options.client),
     sessionReads: new SessionReads((workspaceId) =>
       createChatApi(options.client, { ...target, workspaceId }).sessions(),
     ),

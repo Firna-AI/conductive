@@ -956,12 +956,12 @@ Depends on: 4, 6
 
 - [ ] Build the request card, the late request widget, and the chat
       results from the mockup.
-- [ ] Add the "Values for this workspace" group, with Remove, to the
+- [x] Add the "Values for this workspace" group, with Remove, to the
       Capabilities control of a workspace. It reads `workspaceValues`
       and calls `DELETE /secret-values/:id` of Milestone 4.
-- [ ] Run `npm run marketing:pictures`, because the composer now shows
+- [x] Run `npm run marketing:pictures`, because the composer now shows
       the Capabilities icon.
-- [ ] Add tests beside the code. Check the flow in a browser.
+- [x] Add tests beside the code. Check the flow in a browser.
 
 ## Milestone 8: Verification, commit, review, and pull request
 

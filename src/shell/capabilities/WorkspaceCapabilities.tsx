@@ -6,7 +6,6 @@ import {
   capabilitiesLabel,
 } from '../../../docs/mockups/src/components/capabilities/capabilitiesCopy'
 import { CapabilitiesPanel } from '../../../docs/mockups/src/components/capabilities/CapabilitiesPanel'
-import type { WorkspaceGrants } from '../../app/api/read-secrets'
 import { WorkspaceCapabilitiesModel } from '../../app/capabilities-model'
 import { nameInSentence } from '../../app/people'
 import {
@@ -26,7 +25,7 @@ import { useOrgModel } from '../context'
 import { inSentence, useWhen } from '../settings/when'
 import { useAction } from '../ui/useAction'
 import { capabilityParts } from './capability-parts'
-import { GrantList, type ShownApproval } from './GrantList'
+import { GrantList, type ShownApproval, type ShownValue } from './GrantList'
 
 /** The title of each session of the workspace, open or closed, or Untitled. */
 function useSessionTitles(chat: ChatController): (id: string) => string {
@@ -41,16 +40,17 @@ function useSessionTitles(chat: ChatController): (id: string) => string {
 }
 
 /**
- * The secrets as the control shows them: a load until the capabilities of
- * the workspace load, the failure of their read, and else the secrets of
- * the org as their own read gives them.
+ * The secrets as the control shows them: a load until the capabilities and
+ * the values of the workspace load, the failure of one of their reads, and
+ * else the secrets of the org as their own read gives them.
  */
 function shownSecrets(
-  grants: Loadable<WorkspaceGrants>,
+  reads: readonly Loadable<unknown>[],
   list: Loadable<readonly OrgSecret[]>,
 ): Loadable<readonly OrgSecret[]> {
-  if (grants.state === 'ready') return list
-  return grants.state === 'failed' ? grants : loading
+  const failed = reads.find((read) => read.state === 'failed')
+  if (failed?.state === 'failed') return failed
+  return reads.every((read) => read.state === 'ready') ? list : loading
 }
 
 /**
@@ -72,8 +72,8 @@ function useChange() {
 
 /**
  * The open control of a workspace (secrets decision 8 B): the secrets of
- * the org that it pre-approves, the approvals of its sessions, each with
- * Remove, and Mac access. It reads the secrets and the capabilities each
+ * the org that it pre-approves, the approvals of its sessions and the values
+ * that members gave for it, each with Remove, and Mac access. It reads the secrets and the capabilities each
  * time that it opens, and every member changes them. A change applies to
  * each session of the workspace from that moment.
  */
@@ -97,6 +97,7 @@ function WorkspaceCapabilitiesPanel(props: {
   )
   const list = useStore(secrets.list.store)
   const grants = useStore(model.grants.store)
+  const values = useStore(model.values.store)
   const title = useSessionTitles(props.chat)
   const { when } = useWhen(60_000)
   const change = useChange()
@@ -122,9 +123,15 @@ function WorkspaceCapabilitiesPanel(props: {
       return [{ approval, secret, session, who, when: at }]
     },
   )
+  const given = (valueOf(values) ?? []).map((value): ShownValue => ({
+    id: value.id,
+    name: value.name,
+    who: nameInSentence(value.suppliedBy, value.suppliedBy.id, viewer.id),
+    when: inSentence(when(value.createdAt)),
+  }))
   const parts = capabilityParts({
     org,
-    secrets: shownSecrets(grants, list),
+    secrets: shownSecrets([grants, values], list),
     retry: async () => {
       await Promise.all([secrets.read(), model.read()])
     },
@@ -142,7 +149,14 @@ function WorkspaceCapabilitiesPanel(props: {
       <GrantList
         approvals={approvals}
         disabled={change.pending}
-        remove={(item) =>
+        removeValue={(item) =>
+          change.run(
+            () => model.removeValue(item.id),
+            `The value of ${item.name} was not removed`,
+          )
+        }
+        values={given}
+        removeApproval={(item) =>
           change.run(
             () =>
               model.removeApproval(

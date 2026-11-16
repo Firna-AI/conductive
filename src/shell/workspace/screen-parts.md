@@ -19,7 +19,7 @@ says.
   capabilities of the workspace each time that it opens. Every member
   changes the pre-approved secrets and Mac access there, and removes each
   approval of a session, which names its session by the title that the
-  chat holds. The control shows only where the composer shows.
+  chat holds, and each value that a member gave for the workspace. The control shows only where the composer shows.
 - An open reads the workspace, shows it, and starts the stream. Only then
   does a stopped or failed workspace resume. A Resume answers when the
   server queued the start, with the state `starting`. The stored chat

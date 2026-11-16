@@ -2,11 +2,13 @@ import type { TranscriptDetail } from '../../shared/generated/TranscriptDetail'
 import type { AgentChoice } from '../../shared/generated/AgentChoice'
 import type { IntakeRefusals } from '../../app/draft-files'
 import type { DeviceApprovalAction } from '../../shared/device'
+import type { AnswerSecretRequest } from '../../shared/secret-requests'
 
 import type { WorkspaceTab, WorkspaceView } from '../../shared/workspace-view'
 import { createChatApi, type WorkspaceTarget } from '../api/client'
 import type { SessionReads } from '../links/session-reads'
 import { answerCommand, refreshDevices } from '../device/device-actions'
+import { answerSecret } from '../secrets/secret-actions'
 import { browserTimers } from '../stream/workspace-stream'
 import { copyTranscript, type CopyServices } from '../transcript-copy'
 import {
@@ -26,7 +28,7 @@ import {
 import { hydrate, watchShownSession } from './history'
 import { followSources, withSources } from './sources'
 import { loadChat } from './load'
-import { endDraftFiles } from './drafts'
+import { withEndedDraftFiles } from './drafts'
 import {
   interruptTurn,
   resumeWorkspace,
@@ -129,15 +131,7 @@ export class ChatController {
     this.context.sessionReads.close()
     for (const upload of this.context.uploads.values()) upload.abort()
     this.context.uploads.clear()
-    this.store.update((snapshot) => ({
-      ...snapshot,
-      sessionStates: Object.fromEntries(
-        Object.entries(snapshot.sessionStates).map(([id, state]) => [
-          id,
-          { ...state, draft: endDraftFiles(state.draft) },
-        ]),
-      ),
-    }))
+    this.store.update(withEndedDraftFiles)
     this.unwatch?.()
     this.unwatch = null
     this.unfollow?.()
@@ -265,6 +259,9 @@ export class ChatController {
     this.write(() => answerCommand(this.context, requestId, action))
   /** Reads the Mac commands and the pairing again, such as after a failure. */
   readonly loadDevices = () => refreshDevices(this.context)
+  /** Sends the answer of a member to a secret request, as `answerSecret` says. */
+  readonly answerSecret = (requestId: string, answer: AnswerSecretRequest) =>
+    this.write(() => answerSecret(this.context, requestId, answer))
   /**
    * Changes the saved view with a change of the app, such as an open file
    * tab, through the one writer of the view. Until the load reads the view,

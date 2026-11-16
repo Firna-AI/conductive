@@ -272,6 +272,11 @@ for the API tests of the uploaded bytes and their copies in both
 development fakes. `dev/attachment-test-kit.ts` gives them a stub
 `window`, fake timers, a sample image, and a check of the exact bytes.
 
+`dev/secret-request-routes.test.ts` answers the secret requests of the dev
+fake. A waiting request gives the workspace the state `input` until an
+Allow in time sends its run. A late Allow of a value sends the line of the
+app, and the value stays for the workspace until Remove.
+
 ## Key code
 
 [Key code](key-code.md) names the files, the types, and the functions to

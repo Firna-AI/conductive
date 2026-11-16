@@ -135,6 +135,8 @@ is relative to `src/chat/`, the folder of this guide.
   `holderOf` finds the session that holds a draft now. `afterSend`,
   `keepFiles`, and `endDraftFiles` take files off a draft with their
   marks, as [Attached files of a draft](draft-files.md) says.
+  `withEndedDraftFiles` does it for each draft when `ChatController.stop`
+  runs.
 - `state/message-actions.ts`: `setDraftText`, which makes the files of a
   draft follow the marks of each new text, and `sendDraft`, the send of a
   draft. It also holds Try again of a failed turn, Stop, and Resume.
@@ -242,6 +244,10 @@ is relative to `src/chat/`, the folder of this guide.
   shares with the page and the dialog of New workspace in the app shell.
 - `device/`: the Mac commands. Their [README](device/README.md) names
   their key code.
+- `secrets/`: the secret requests, their answers, the runs, and the line of
+  a late answer. Their [README](secrets/README.md) names their key code.
+- `components/WaitingRequests.tsx`: the region just above the composer of
+  the Mac commands and the secret requests that wait, the oldest first.
 - `dev/`: the development page, its fake writes, its scripted agent, its
   Mac, the `loss` scenario in `dev/dev-loss.ts`, and the `starter` option
   in `dev/dev-logins.ts`. `dev/dev-answers.ts` holds the plans and the

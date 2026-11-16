@@ -1,8 +1,15 @@
 import {
+  secretRequestsPath,
+  workspaceSecretValuePath,
+  type WorkspaceSecretValue,
+} from '../shared/secret-requests'
+import { readSecretRequestsResponse } from '../shared/secret-requests-read'
+import {
   workspaceCapabilitiesPath,
   type UpdateWorkspaceCapabilitiesRequest,
 } from '../shared/secrets'
 import type { ApiClient } from './api/client'
+import { ignore, ParseError } from './api/parse'
 import { readWorkspaceGrants, type WorkspaceGrants } from './api/read-secrets'
 import { Resource, type Change } from './resource'
 import { valueOf } from './store'
@@ -19,25 +26,50 @@ export function withPreapproval(
 
 /**
  * The Capabilities of one workspace that exists (secrets decision 8 B):
- * the secrets that it pre-approves, the approvals of its sessions, and Mac
- * access. Every member changes them. A change shows at once and saves, and
+ * the secrets that it pre-approves, the approvals of its sessions, the
+ * values that members gave for the workspace, and Mac access. Every member
+ * changes them. A change shows at once and saves, and
  * its answer is the whole value. A failed change shows the saved value
  * again, and throws. A change applies to each session of the workspace from
  * that moment.
  */
 export class WorkspaceCapabilitiesModel {
   readonly grants: Resource<WorkspaceGrants>
+  /**
+   * The values that members gave for the workspace, by name, with no value.
+   * A value for 15 minutes is not in the list: it ends by itself.
+   */
+  readonly values: Resource<readonly WorkspaceSecretValue[]>
   private readonly api: ApiClient
   private readonly path: string
+  private readonly valuePath: (id: string) => string
 
   constructor(api: ApiClient, orgId: string, workspaceId: string) {
     this.api = api
     this.path = workspaceCapabilitiesPath(orgId, workspaceId)
+    this.valuePath = (id) => workspaceSecretValuePath(orgId, workspaceId, id)
     this.grants = new Resource(() => api.get(this.path, readWorkspaceGrants))
+    this.values = new Resource<readonly WorkspaceSecretValue[]>(() =>
+      api.get(secretRequestsPath(orgId, workspaceId), readValues),
+    )
   }
 
   read(): Promise<void> {
-    return this.grants.read()
+    return Promise.all([this.grants.read(), this.values.read()]).then(
+      () => undefined,
+    )
+  }
+
+  /**
+   * Removes a value of the workspace, which ends its grant. The row goes at
+   * once, and comes back after a failure.
+   */
+  async removeValue(id: string): Promise<void> {
+    await this.values.write(
+      (values) => values.filter((value) => value.id !== id),
+      () => this.api.send('DELETE', this.valuePath(id), {}, ignore),
+      () => (values) => values.filter((value) => value.id !== id),
+    )
   }
 
   private async change(
@@ -86,5 +118,14 @@ export class WorkspaceCapabilitiesModel {
     return this.change((grants) => ({ ...grants, macAccess: on }), {
       macAccess: on,
     })
+  }
+}
+
+/** The values of the workspace from the list of its requests. */
+function readValues(value: unknown): readonly WorkspaceSecretValue[] {
+  try {
+    return readSecretRequestsResponse(value).workspaceValues
+  } catch {
+    throw new ParseError('The secret requests are not readable.')
   }
 }

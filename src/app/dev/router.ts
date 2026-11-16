@@ -16,6 +16,8 @@ export const ID = {
   user: ':user',
   invite: ':invite',
   secret: ':secret',
+  request: ':request',
+  value: ':value',
 } as const
 
 /** The IDs in a path, by name, such as `params.org` for `:org`. */

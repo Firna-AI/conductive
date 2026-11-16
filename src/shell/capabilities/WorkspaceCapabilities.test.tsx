@@ -12,7 +12,13 @@ import {
   queryAllByRole,
   queryByRole,
 } from '../../test-support/dom-queries'
+import {
+  secretRequestsPath,
+  workspaceSecretValuePath,
+} from '../../shared/secret-requests'
 import { FakeApiServer } from '../../test-support/fake-api'
+import { FAKE_TIME } from '../../test-support/fixtures/core'
+import { priya } from '../../test-support/fixtures/secret-requests'
 import { secretFixtures } from '../../test-support/fixtures/secrets'
 import { MOUNTED_TEST_TIMEOUT } from '../../test-support/mount'
 import { openTab } from '../new-workspace/dialog-test-kit'
@@ -151,5 +157,44 @@ describe('the Capabilities control of a workspace', () => {
       sheet: queryByRole('dialog', 'Capabilities'),
       focus: document.activeElement?.getAttribute('aria-label'),
     }).toEqual({ sheet: null, focus: 'More options' })
+  })
+
+  test('lists each value for the workspace with who gave it and when, and Remove ends the value', async () => {
+    const server = capabilitiesServer(new FakeApiServer())
+    server.json('GET', secretRequestsPath(org, id), {
+      requests: [],
+      workspaceValues: [
+        {
+          id: 'value-1',
+          name: 'MAPBOX_TOKEN',
+          suppliedBy: priya,
+          createdAt: FAKE_TIME - 3 * 3_600_000,
+        },
+      ],
+    })
+    const valuePath = workspaceSecretValuePath(org, id, 'value-1')
+    server.empty('DELETE', valuePath)
+    const tab = await openTab(server)
+    click(byRole('button', 'Capabilities', tab.view))
+    await settle()
+    const control = byRole('dialog', 'Capabilities', tab.view)
+    const groups = () =>
+      Array.from(control.querySelectorAll('h4'), (title) => title.textContent)
+    expect({ rows: approvals(control).at(-1), groups: groups() }).toEqual({
+      rows: 'MAPBOX_TOKEN | Given by Priya Raman, 3 hours ago',
+      groups: ['Allowed in sessions', 'Values for this workspace'],
+    })
+    const from = server.requests.length
+    click(byRole('button', 'Remove the value of MAPBOX_TOKEN', control))
+    await settle()
+    expect({
+      removed: server.requests
+        .slice(from)
+        .map((item) => `${item.method} ${new URL(item.url).pathname}`),
+      after: groups(),
+    }).toEqual({
+      removed: [`DELETE ${valuePath}`],
+      after: ['Allowed in sessions'],
+    })
   })
 })

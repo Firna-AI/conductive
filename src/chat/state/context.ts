@@ -2,6 +2,7 @@ import { ApiError } from '../../app/api/client'
 import type { WorkspaceView } from '../../shared/workspace-view'
 import type { ChatApi, WorkspaceTarget } from '../api/client'
 import type { DeviceChannel } from '../device/device-actions'
+import type { SecretApi } from '../secrets/secret-actions'
 import type { SessionReads } from '../links/session-reads'
 import type { WorkspaceStream } from '../stream/workspace-stream'
 import { withSession, type ChatSnapshot, type ChatStore } from './chat-snapshot'
@@ -60,6 +61,8 @@ export interface ChatContext {
   readonly owned: boolean
   /** The routes of Mac commands, and the number of their latest read. */
   readonly devices: DeviceChannel
+  /** The route of the answers to secret requests. */
+  readonly secrets: SecretApi
   /**
    * The one read of the sessions of each other workspace that a session
    * link names, for this run, as `SessionReads` says.

@@ -3,7 +3,8 @@ import { useMemo, type ReactNode } from 'react'
 import type { Agent } from '../../shared/generated/Agent'
 import { modelLabel } from '../../shared/agents'
 
-import { PendingCommands } from '../device/PendingCommands'
+import { pendingCommandItems } from '../device/PendingCommands'
+import { sessionSecrets } from '../secrets/session-secrets'
 import { DeviceLoadNotice, sessionCommands } from '../device/session-commands'
 import { tabSessions } from '../state/archive-view'
 import { sendBlock } from '../state/blockers'
@@ -34,6 +35,7 @@ import {
 } from './SessionStatus'
 import { sourceInsert } from './SourceLine'
 import { TranscriptView } from './TranscriptView'
+import { WaitingRequests } from './WaitingRequests'
 
 function problemOf(state: WorkspaceState | undefined): SandboxProblem | null {
   return state === 'stopped' || state === 'error' || state === 'archived'
@@ -166,6 +168,11 @@ export function SessionChat(props: SessionChatProps) {
   const content = showsContent(state, starting !== null)
   const viewerId = snapshot.account?.user.id ?? null
   const commands = sessionCommands(snapshot, id, state)
+  const secrets = sessionSecrets(snapshot, id, state, {
+    choices: !readOnly,
+    onAnswer: (requestId, answer) =>
+      void controller.answerSecret(requestId, answer),
+  })
   const login = session ? sessionLoginOf(session, viewerId) : null
   const openSession = (sessionId: string) => {
     const open = snapshot.sessions.some((item) => item.id === sessionId)
@@ -203,14 +210,18 @@ export function SessionChat(props: SessionChatProps) {
       {snapshot.devices.load === 'failed' ? (
         <DeviceLoadNotice onRetry={() => void controller.loadDevices()} />
       ) : null}
-      <PendingCommands
-        devices={snapshot.devices}
-        onAnswer={(requestId, action) =>
-          void controller.answerCommand(requestId, action)
-        }
-        readOnly={readOnly}
-        readers={{ viewerId, orgName: snapshot.org?.name ?? null }}
-        requests={commands.waiting}
+      <WaitingRequests
+        items={[
+          ...pendingCommandItems({
+            devices: snapshot.devices,
+            onAnswer: (requestId, action) =>
+              void controller.answerCommand(requestId, action),
+            readOnly,
+            readers: { viewerId, orgName: snapshot.org?.name ?? null },
+            requests: commands.waiting,
+          }),
+          ...secrets.waiting,
+        ]}
       />
       {sandboxBar}
       {!down && session && snapshot.load.state === 'ready' ? (
@@ -261,7 +272,11 @@ export function SessionChat(props: SessionChatProps) {
     >
       {content && status === 'loading' ? <EarlierLoading /> : null}
       <TranscriptView
-        inserts={source ? [source, ...commands.inserts] : commands.inserts}
+        inserts={[
+          ...(source ? [source] : []),
+          ...commands.inserts,
+          ...secrets.inserts,
+        ]}
         now={now}
         onOpenDiff={props.onOpenDiff}
         onRetry={(messageId) => id && void controller.retry(id, messageId)}

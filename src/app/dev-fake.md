@@ -154,6 +154,23 @@ the dev wiring in `dev/`, and what its fake routes do.
   `checkout-autocomplete` pre-approves FIGMA_TOKEN and has two approvals of
   its sessions, and a create keeps the choices of its control. The fake
   keeps no value for a workspace, and a reload starts the secrets again.
+- `dev/secret-request-routes.ts` serves the secret requests of each
+  workspace: the list with the values of the workspace, the answer of a
+  member, and the removal of a value. An Allow in time sends the run of
+  its request, and a late Allow sends the line of the app with the notice
+  of a new turn. A value for this workspace joins the list of the
+  workspace, and Save adds a secret of the org. `?secrets=<state>` puts a
+  state into the session of `checkout-autocomplete`, from
+  `dev/secret-request-seed.ts`. `waiting`, `value`, and `mixed` wait for an
+  answer above the composer, so use them with `conversation=running`.
+  `late`, `late-value`, `results`, and `ended` sit in a short turn after
+  the recorded one: a late request, a late request for a value, the runs
+  with a denied request and a late Allow with its line, and a request that
+  an Archive ended. The results also give MAPBOX_TOKEN a value for the
+  workspace, which Capabilities lists. As the Worker does, a request that
+  waits or is late gives the workspace the state `input`, so the header
+  says Needs input. The last answer gives back the state from before
+  (`followOpenRequests` of `dev/secret-store.ts`).
 
 The development fake keeps each org's workspace number counter.
 A create gets the next number and a web link on the fake API origin.
