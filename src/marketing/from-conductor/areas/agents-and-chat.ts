@@ -112,7 +112,7 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     area: 'agents-and-chat',
     name: 'Skills',
     status: 'available',
-    note: 'Agents powered by Claude load repository skills. Personal Mac skills are not copied.',
+    note: 'Agents powered by Claude load repository skills. Sharing skills from one public GitHub repository across the org is planned for Claude and Codex.',
   },
   {
     id: 'skill-use-indicators',

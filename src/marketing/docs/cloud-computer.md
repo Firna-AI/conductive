@@ -129,6 +129,74 @@ The author of a commit does not prove who made it.
 The **Secret** mark hides exact copies of a value in displayed agent output, start logs, and program names and folders in **Preview**.
 It does not hide values in file content, diffs, or Terminal.
 
+## Share agent skills across the org
+
+Org skills repositories are planned.
+Today, keep project skills in your workspace's repository.
+The planned setting will give agents powered by Claude and Codex shared skills in every workspace of the org.
+
+An org admin will choose one repository under **Skills** in **Settings**, on the **Cloud computer** tab.
+The repository must be public on GitHub.
+The **Repository** field will accept `owner/repository` or a link such as `https://github.com/owner/repository`.
+**Save repository** will save that choice.
+Other members will see the saved repository and its skills without being able to change it.
+An admin will clear the field and save to remove the repository.
+
+### Prepare the skill folders
+
+Each skill needs its own folder with a `SKILL.md` file.
+When the repository has a `skills/` folder, agents will use skill folders at any depth inside it.
+This includes hidden folders such as `.curated/` and `.system/`.
+For example, these layouts will load:
+
+```text
+skills/review/SKILL.md
+skills/.curated/testing/SKILL.md
+skills/.system/writing/SKILL.md
+```
+
+When the repository has no `skills/` folder, agents will use skill folders at its top level instead:
+
+```text
+review/SKILL.md
+testing/SKILL.md
+```
+
+The setting will load skills only.
+It will load no hooks, MCP servers, agents, rules files such as `AGENTS.md`, commands, or settings from that repository.
+Keep project instruction files in your workspace's own repository.
+
+### Get skill updates
+
+A changed repository will apply at the next start or resume of each workspace.
+The cloud computer will copy the repository when it starts.
+It will follow the repository's default branch and check for new commits every 5 minutes.
+Agent turns will not wait for a copy or an update check.
+Updated skills will apply at the next turn of each session.
+A failed update will keep the last successful copy.
+
+An older cloud computer will need software that supports org skills.
+
+- [Apply updated cloud computer software](/docs/cloud-computer#apply-setup-changes)
+
+### Check the skills list
+
+The section will look up the saved repository on GitHub when an admin saves it and each time the section loads.
+It will show the names of the skill folders that it finds.
+The list will describe the current repository contents on GitHub.
+
+A private repository will give no skills.
+An admin will need to choose a public repository.
+If the repository is not found, an admin will need to check its name and save again.
+GitHub can also report a private repository as not found.
+If no skills are found, check the folder layouts above.
+
+GitHub can cut short the file list of a large repository.
+The section will then say that its skills list can be incomplete.
+Agents will still get all skill folders from the full repository copy.
+If the list does not load, use **Try again**.
+A failed lookup will keep the saved repository.
+
 ## Apply setup changes
 
 A successful build updates the starting setup for new workspaces.

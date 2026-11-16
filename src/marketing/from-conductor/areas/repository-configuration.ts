@@ -62,7 +62,7 @@ export const repositoryConfigurationFeatures: readonly ParityFeature[] = [
     area: 'repository-configuration',
     name: 'Instruction files and skills',
     status: 'available',
-    note: 'Keep instruction files and skills in the repository. Personal Mac configuration files are not copied.',
+    note: 'Keep instruction files and skills in the workspace repository. Planned org sharing will add skills only, with instruction files kept in workspace repositories.',
   },
   {
     id: 'git-behaviour-settings',

@@ -350,6 +350,20 @@ Milestone 2.
   top-level folders. Hooks and the rest run code that no agent chose.
   Changed on 2026-11-16 by the agent, from `skills/<name>/` only, after
   the mockups found the layout of `openai/skills`.
+- A repository without a `skills/` folder that holds a `SKILL.md` at its
+  top level is one skill. Added on 2026-11-16 by the agent, from the
+  documentation milestone.
+- Text that is neither `owner/name` nor a GitHub link is saved as typed.
+  The lookup shows the notice of a repository that is not found, and the
+  runner copies nothing and warns. The runner and the lookup check the
+  name before they use it in a URL or a command. Reason: a refusal at Save
+  is a new rejection. Added on 2026-11-16 by the agent.
+- A lookup whose viewer has an expired GitHub sign-in shows the app's
+  existing sign-in error, not the notice that GitHub is not available.
+  Added on 2026-11-16 by the agent.
+- The Worker always sets the start variable, empty when the org has no
+  repository. Reason: an org env var with the same name then cannot
+  choose a repository. Added on 2026-11-16 by the agent.
 - An empty Save removes the repository. At its next start, the runner
   deletes its copy, and the agents get no skills from it.
 - The runner keeps its copy under the name of its repository. When the
@@ -423,21 +437,30 @@ Decisions 6 A and 7 H add states to the Skills section.
 
 Depends on: 2
 
-- [ ] Write `docs/protocol/org-skills.md` with the requirements and
+- [x] Write `docs/protocol/org-skills.md` with the requirements and
       decisions 1, 2, 3, 6, and 7. Link it from `docs/protocol/README.md` and from
       `workspaces-and-sandboxes.md`.
-- [ ] Update `github-tokens.md`: the skills copy uses no GitHub token, and
+  - `docs/protocol/README.md` links the list of protocol docs in
+    `docs/architecture/protocol-docs.md`, so the link went into that list.
+    The doc cites the decisions of this plan as skills decisions.
+- [x] Update `github-tokens.md`: the skills copy uses no GitHub token, and
       the lookup uses the viewer's GitHub sign-in.
-- [ ] Update `orgs-and-members.md` and `command-palette-actions.md` when the
+- [x] Update `orgs-and-members.md` and `command-palette-actions.md` when the
       new section needs a row or an admin rule.
-- [ ] State the folder layouts that load in a public guide under
+  - `orgs-and-members.md` and `workspaces-and-sandboxes.md` got the admin
+    rule. `orgs-and-members.md` passed 250 lines, so its Delete org
+    section moved to `delete-org.md`.
+  - The palette needs no new row. Its Settings tab has one row for each
+    tab of the org settings, and the Cloud computer row opens the tab that
+    holds the Skills section.
+- [x] State the folder layouts that load in a public guide under
       `src/marketing/docs/`.
-- [ ] Read both legal pages and every public guide in full. Update each
+- [x] Read both legal pages and every public guide in full. Update each
       sentence that the change makes wrong.
-- [ ] Update the rows `skills`, `instruction-files-and-skills`, and
+- [x] Update the rows `skills`, `instruction-files-and-skills`, and
       `sync-agent-configs` of the comparison page under
       `src/marketing/from-conductor/areas/`.
-- [ ] Add the new variable to `runner/configuration.md`.
+- [x] Add the new variable to `runner/configuration.md`.
 
 ## Milestone 4: Worker setting
 
@@ -453,7 +476,12 @@ Depends on: 3
       load of the settings.
 - [ ] Add the field to `src/shared/org-settings.ts`.
 - [ ] Pass `CONDUCTIVE_SKILLS_REPOSITORY` in
-      `worker/lifecycle/sandbox-environment.ts`, at create and at resume.
+      `worker/lifecycle/sandbox-environment.ts`, at create and at resume,
+      always, and empty without a repository. List it in the start
+      variable table of `image/README.md`.
+- [ ] Put the folder rule of the design calls in one pure function under
+      `src/shared/`, which takes a list of file paths. The lookup and the
+      runner both use it.
 - [ ] Tests: the admin rule, the normalized value, the start variable, and
       the lookup with a fake GitHub server: skills found in each layout, a
       private repository, not found, no skills, a cut tree, and a failure.
@@ -469,7 +497,11 @@ Depends on: 4
 - [ ] Add `runner/src/skills-repository.ts`: copy at start, check every
       5 minutes, swap to a new commit only after a complete fetch, warn on
       failure. Run Git with no credential helper and no prompt. Delete the
-      copy of a removed or replaced repository.
+      copy of a removed or replaced repository. Use the shared folder
+      function of Milestone 4.
+- [ ] Confirm which skill each agent loads when the workspace's own
+      repository has a skill with the same name. Make the workspace's skill
+      win, or record what the agents allow and update `org-skills.md`.
 - [ ] Give the skill folders to Claude in `runner/src/providers/claude.ts`
       and to Codex in `runner/src/providers/codex.ts`.
 - [ ] Tests with a local Git repository: first copy, update, failed fetch
@@ -488,7 +520,10 @@ Depends on: 1, 2, 4
 - [ ] Add the read-only section to the member view in
       `src/members/ComputerSections.tsx` and `MemberComputerView.tsx`.
 - [ ] Show the skills list and its notices, as the mockups of Milestone 2
-      show.
+      show. An expired GitHub sign-in shows the app's existing sign-in
+      error.
+- [ ] Add the search word `skills` to the Cloud computer row of the command
+      palette.
 - [ ] DOM tests for the admin state, the empty state, a pasted link, the
       read-only state, the skills list, and each notice.
 
@@ -498,6 +533,9 @@ Depends on: every other milestone
 
 - [ ] Run `npm --prefix desktop ci` and `npm ci --prefix runner`, then the
       targeted tests and `npm run check`.
+- [ ] Change the "planned" wording of the Cloud computer guide, the
+      Terms, the Privacy page, and the three comparison rows to the
+      shipped feature.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,

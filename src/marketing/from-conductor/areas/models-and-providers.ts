@@ -111,7 +111,8 @@ export const modelsAndProvidersFeatures: readonly ParityFeature[] = [
     id: 'sync-agent-configs',
     area: 'models-and-providers',
     name: 'Sync agent configs',
-    status: 'considering',
-    note: 'Copying skills, commands, and MCP servers between Claude and Codex is under consideration. Keep shared instructions in the repository.',
+    status: 'planned',
+    note: 'Sharing skills from one public GitHub repository with agents powered by Claude and Codex is planned. Commands, MCP servers, and settings will stay separate.',
+    due: null,
   },
 ]

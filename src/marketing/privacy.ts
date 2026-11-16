@@ -24,7 +24,7 @@ export const privacyDocument: LegalDocument = {
   title: legalTitles.privacy,
   description: `The privacy notice of ${productName}.`,
   lead: text`This notice says which personal data ${productName} uses, why
-  it uses it, and who gets it. Effective date: 11 November 2026.`,
+  it uses it, and who gets it. Effective date: 16 November 2026.`,
   sections: [
     {
       title: 'Who is responsible',
@@ -42,6 +42,26 @@ export const privacyDocument: LegalDocument = {
     },
     privacyUsesSection,
     privacyRecipientsSection,
+    {
+      title: 'Org skills repositories',
+      blocks: [
+        paragraph`${productName} keeps the public GitHub repository that an
+          org admin chooses as the source of agent skills. Other members
+          can read this setting. The saved choice stays until an admin
+          clears or replaces it, or ${productName} deletes the org.`,
+        paragraph`When an admin saves the repository, and each time the
+          Skills section loads, ${productName} reads its repository details
+          and file tree on GitHub. It uses the GitHub sign-in of the member
+          who views the section. It shows the skill names or a notice.
+          It stores no list of skills.`,
+        paragraph`The cloud computer copies and updates the public repository
+          without a GitHub token. GitHub receives the repository name and
+          the network address with these requests. The copied skill folders
+          guide agents powered by Claude and Codex in that workspace. A changed
+          choice applies when each workspace next starts or resumes.
+          Its cloud computer then removes the old repository copy.`,
+      ],
+    },
     {
       title: 'Transfers to other countries',
       blocks: [

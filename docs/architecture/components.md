@@ -182,6 +182,10 @@ App Server (decision 36).
 The runner finds the listening ports in the sandbox itself, with no Boat
 call (decision 220).
 
+The runner also copies the skills repository of the org from GitHub, with
+no GitHub token, and gives its skills to both agents.
+[Org skills](../protocol/org-skills.md) states the rules.
+
 A runner of protocol version 2 or later makes both agent programs send
 their model requests to the [model gateway](../protocol/model-gateway.md). It
 gives each agent program the turn token of its turn, and no agent login. A

@@ -12,6 +12,9 @@ This page lists each protocol doc and what it covers.
   - [Repository folders](../protocol/repository-folders.md): the folder and the
     shell variable of each repository in a sandbox, and the context folder
     of each workspace.
+  - [Org skills](../protocol/org-skills.md): the skills repository of an
+    org, its copy in each cloud computer, the skills that load, and the
+    list of skills in the Skills section of the org settings.
   - [Life of a workspace](../protocol/workspace-life.md): the start steps,
     the time limits, the states, the stop and resume, the archive, the
     restore, and Continue.
@@ -85,9 +88,11 @@ This page lists each protocol doc and what it covers.
   - [Names from the workspace tools](../protocol/tool-names.md): the rule
     for the names and titles that the calls give.
 - [Orgs and members](../protocol/orgs-and-members.md): orgs, sections,
-  roles, the first run, and the end of an org.
+  roles, and the first run.
   - [Org rail order](../protocol/org-rail-order.md): the order of the orgs
     in the rail that each person keeps, and how the person changes it.
+  - [Delete org](../protocol/delete-org.md): the delete of an org, the 7
+    days before the app deletes it, and Restore.
 - [Pricing](../protocol/pricing.md): the plans and their cloud hours, the
   extra hours, the seller and the tax, the pricing page, and the planned
   billing changes. Use is free until billing starts.
@@ -132,8 +137,9 @@ This page lists each protocol doc and what it covers.
     messages, their short rows and wide tables, and the table rules that
     they share with the file preview.
 - [GitHub tokens](../protocol/github-tokens.md): the git and CLI account
-  scope of a cloud computer, the author of each commit in a sandbox, and the
-  GitHub actions of the Worker as a member.
+  scope of a cloud computer, the author of each commit in a sandbox, the
+  copy and the lookup of the skills repository, and the GitHub actions of
+  the Worker as a member.
 - [Agent instructions](../protocol/agent-instructions.md): the text that each
   agent session gets, and the sender line and the branch line of each
   message.

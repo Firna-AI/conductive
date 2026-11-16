@@ -30,7 +30,7 @@ export const termsDocument: LegalDocument = {
   at ${appDomain}, and in the Mac app. You accept their current version
   each time that you continue with GitHub to sign in. ${productName} keeps
   the latest version that you accepted, and the time when you first
-  accepted it. Effective date: 11 November 2026.`,
+  accepted it. Effective date: 16 November 2026.`,
   sections: [
     {
       title: `Who runs ${productName}`,
@@ -51,6 +51,14 @@ export const termsDocument: LegalDocument = {
           Mac app. Each workspace has its own cloud computer, where agents
           powered by Claude and Codex work. A workspace can hold one task
           after another, with one branch at a time.`,
+        paragraph`An org admin can choose one public GitHub repository of
+          agent skills for every workspace of the org. Agents powered by
+          Claude and Codex can use its skill folders. Other members can
+          read this setting. The cloud computer copies the repository at
+          start and checks for new commits every 5 minutes. A changed
+          repository applies at the next start or resume of each workspace.`,
+        paragraph`This setting loads only skill folders. It loads no hooks,
+          MCP servers, agents, rules files, commands, or settings from that repository.`,
         paragraph`${productName} is free until billing starts. Nobody pays
           until they choose a plan.`,
       ],
@@ -64,6 +72,11 @@ export const termsDocument: LegalDocument = {
             install its GitHub App and have access. It reads your repository
             rights and merge method from GitHub. It shows Merge only when
             your GitHub rights let you merge.`,
+          text`When an admin saves a skills repository, and when a member
+            opens Skills, ${productName} reads its repository details and
+            file tree on GitHub. The lookup uses that member's GitHub
+            sign-in. The cloud computer copies and updates the public
+            repository without a GitHub token.`,
           text`${productName} runs the cloud computers of every org in its
             own account with its cloud computer provider. You need no
             account or key of your own for them.`,
