@@ -130,3 +130,10 @@ draws the row menu at `app/files/menu`, on desktop and on a phone.
   such as the stopped bar with Resume, no row has Add to chat. Reason: no
   field can take the chip, and Add to chat writes into the field, not into
   the draft (file row menu decision 4 A).
+- Until the chat of the workspace loads, and after its load fails, no row
+  has Add to chat. Copy path stays. Reason: the app does not yet know the
+  session tabs, so it cannot choose the session that gets the chip. The
+  user chose this rule on 16 November 2026.
+- A press that acts at once while the chat loads was rejected, because it
+  can start an extra session when session tabs exist. An item that waits
+  for the load was not chosen either.

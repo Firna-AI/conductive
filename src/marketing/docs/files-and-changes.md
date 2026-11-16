@@ -100,6 +100,7 @@ Select **Send** when it is ready.
 **Add to chat** is available only for files and folders that the `@` list can mention.
 The menu leaves it out for deleted files in **Changes**.
 It also leaves it out while a cloud computer status bar replaces the message field, such as while the computer is stopped.
+It also leaves it out until the chat of the workspace loads.
 
 A row whose path label hides a secret value offers neither item.
 A right click on that row opens the browser's own menu.

@@ -352,6 +352,13 @@ Decision 4 A sets the target. Milestone 5 builds it.
   holds that file. The tree and Changes come from their own reports, so
   they can disagree for a while. Working agent's call, 16 November 2026.
 
+### Add to chat while the chat loads
+
+The implementor left Add to chat out until the chat loads, and after a
+failed load. On 16 November 2026 the user chose to state this rule in
+`docs/protocol/file-row-menu.md` (option A). Not chosen: change nothing
+(B), and an item that waits for the load (C).
+
 ## Milestone 1: Mockups (completed)
 
 Tags: mockup
@@ -561,7 +568,7 @@ Depends on: every other milestone
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
       once, and report.
-- [ ] Delete this plan when the `plans` skill says, under "Deleting the
+- [x] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the
       design calls of this plan with their dates, a permalink to this plan,
