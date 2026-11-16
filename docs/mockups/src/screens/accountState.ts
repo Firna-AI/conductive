@@ -29,14 +29,15 @@ export const accountSchema = {
     'host',
     'modelMenu',
     'deletedOrgs',
+    'stats',
   ],
   properties: {
     /**
      * The tab: General, with the sign-in and GitHub, Agents, with the
-     * logins of Claude and Codex, Preferences, or Keyboard shortcuts. Each
-     * tab has its own address.
+     * logins of Claude and Codex, Preferences, Keyboard shortcuts, or Stats,
+     * with the person's own counts. Each tab has its own address.
      */
-    tab: { enum: ['general', 'agents', 'preferences', 'shortcuts'] },
+    tab: { enum: ['general', 'agents', 'preferences', 'shortcuts', 'stats'] },
     /** GitHub and the agents are connected, or not yet, as at the first run. */
     connections: { enum: ['connected', 'not-connected'] },
     /** The kind of the Codex login while Codex is connected. */
@@ -148,6 +149,11 @@ export const accountSchema = {
      * Labs after the operator suspended it, or a Restore that failed.
      */
     deletedOrgs: { enum: deletedOrgStates },
+    /**
+     * The numbers of the Stats tab: shown, loading when the tab opens, failed
+     * to load, or shown for a new account with no workspace and no routine.
+     */
+    stats: { enum: ['ready', 'loading', 'failed', 'empty'] },
   },
 } as const
 
@@ -182,6 +188,7 @@ export const accountGeneral: AccountState = {
   host: 'chrome-mac',
   modelMenu: 'closed',
   deletedOrgs: 'none',
+  stats: 'ready',
 }
 
 /** The Agents tab of a connected account, in Chrome on a Mac. */
@@ -194,4 +201,10 @@ export const accountAgents: AccountState = {
 export const accountShortcuts: AccountState = {
   ...accountGeneral,
   tab: 'shortcuts',
+}
+
+/** The Stats tab of a connected account, in Chrome on a Mac. */
+export const accountStatsTab: AccountState = {
+  ...accountGeneral,
+  tab: 'stats',
 }

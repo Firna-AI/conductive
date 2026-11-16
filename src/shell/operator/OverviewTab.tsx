@@ -29,9 +29,8 @@ function OverviewNumbers(props: {
     <>
       <OverviewTiles overview={overview} />
       <WorkspaceStates
-        builds={overview.running.builds}
+        builds={{ count: overview.running.builds, page: 'overview' }}
         counts={overview.workspaceStates}
-        page="overview"
       />
       <DailyChart
         days={overview.newWorkspacesByDay}

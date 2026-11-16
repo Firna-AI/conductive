@@ -22,6 +22,7 @@ export const ACCOUNT_TABS = [
   'agents',
   'preferences',
   'shortcuts',
+  'stats',
   'this-mac',
 ] as const
 

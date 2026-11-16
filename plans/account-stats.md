@@ -39,7 +39,11 @@ My calls, 16 November 2026:
 - A workspace counts for the person who owns it now, as the operator's
   page of a user counts it. Reason: D1 has no creator column, and an admin
   can reassign a workspace.
-- A routine counts for its routine owner now. Its runs count with it.
+- A routine counts for its routine owner now. A routine run counts for
+  the owner in its own row, the owner whose logins the run used. Reason: a
+  later change of the routine owner then does not move past runs. This
+  call replaced "its runs count with the routine owner now" during
+  Milestone 3, after the read of `routine_runs.owner_user_id`.
 - The routine runs leave out skipped runs, because a skipped run started
   no agent.
 - The days are UTC days, and the 7 days are the 7 times 24 hours before
@@ -52,6 +56,13 @@ My calls, 16 November 2026:
   palette rows hold settings, and Stats holds no setting.
 - The app reader of the operator, `OperatorRead`, becomes a generic page
   reader with a failure hook, so that the Stats tab reuses it.
+- The state list of the operator takes its builds as one optional value,
+  so that the Stats tab shows no build line.
+- No public guide and no legal page changes. A full read of each found no
+  sentence that the tab makes wrong.
+- The chart axis of a 30-day chart with only zeros shows 0.2 to 1. The
+  operator Overview has the same axis, and the Firna chart has no axis
+  setting, so this change leaves it.
 
 Contract owners:
 
@@ -70,28 +81,28 @@ The Stats tab of the Account page, on desktop and on a phone, with its
 numbers, its first load, a failed read, and a new account with no
 activity. The tab row of the account in a browser and in the Mac app.
 
-- [ ] Add the `stats` tab to the account state and to `AccountTabs`.
-- [ ] Add a Stats tab component, with fixtures, that the app can import.
-- [ ] Add the catalogue entries `app/account/stats`,
+- [x] Add the `stats` tab to the account state and to `AccountTabs`.
+- [x] Add a Stats tab component, with fixtures, that the app can import.
+- [x] Add the catalogue entries `app/account/stats`,
       `app/account/stats/loading`, `app/account/stats/failed`, and
       `app/account/stats/empty`.
-- [ ] Update `docs/mockups/catalogue.md` and the description of
+- [x] Update `docs/mockups/catalogue.md` and the description of
       `app/account`.
-- [ ] Run `npm run mockups:check`. Look at the built pages.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Run `npm run mockups:check`. Look at the built pages.
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
 
 ## Milestone 2: Documentation and protocol
 
 Depends on: 1
 
-- [ ] Add `docs/protocol/account-stats.md` with the requirements and the
+- [x] Add `docs/protocol/account-stats.md` with the requirements and the
       decisions above, and link it from `docs/protocol/README.md`.
-- [ ] Update the tab lists of the Account page in
+- [x] Update the tab lists of the Account page in
       `docs/protocol/create-a-workspace.md`,
       `docs/protocol/desktop-commands.md`, and
       `docs/protocol/command-palette-actions.md`.
-- [ ] Read the Terms page, the Privacy page, and each public guide in
+- [x] Read the Terms page, the Privacy page, and each public guide in
       full. Update each sentence that restates the tabs of the Account
       page or what the app shows to a person.
 
@@ -99,14 +110,14 @@ Depends on: 1
 
 Depends on: 2
 
-- [ ] Add the `AccountStats` type, its reader, and the path
+- [x] Add the `AccountStats` type, its reader, and the path
       `/api/account/stats` to `src/shared/account.ts`.
-- [ ] Add `worker/app-api/account-stats.ts`. It reads every count in one
+- [x] Add `worker/app-api/account-stats.ts`. It reads every count in one
       D1 batch. Share the workspace state SQL with the operator Overview.
-- [ ] Answer `GET /api/account/stats` in `worker/app-api/boot.ts`.
-- [ ] Add Worker tests: the counts of the person only, no deleted org,
+- [x] Answer `GET /api/account/stats` in `worker/app-api/boot.ts`.
+- [x] Add Worker tests: the counts of the person only, no deleted org,
       no other person's records, the 30 UTC days, and no skipped run.
-- [ ] Update the README of the Worker app API.
+- [x] Update the README of the Worker app API.
 
 ## Milestone 4: App tab
 
@@ -114,11 +125,11 @@ Tags: ui
 
 Depends on: 1, 3
 
-- [ ] Add `stats` to `ACCOUNT_TABS` and to the tabs of `AccountScreen`.
-- [ ] Make `OperatorRead` a generic page reader with a failure hook.
-- [ ] Add the Stats tab: loading, failed with Try again, and the numbers.
-- [ ] Add the route to the dev server of the app.
-- [ ] Add app tests: the tab and its address, the numbers, and a failed
+- [x] Add `stats` to `ACCOUNT_TABS` and to the tabs of `AccountScreen`.
+- [x] Make `OperatorRead` a generic page reader with a failure hook.
+- [x] Add the Stats tab: loading, failed with Try again, and the numbers.
+- [x] Add the route to the dev server of the app.
+- [x] Add app tests: the tab and its address, the numbers, and a failed
       read with Try again.
 
 ## Milestone 5: Verification, commit, review, and pull request

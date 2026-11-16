@@ -48,9 +48,8 @@ function OperatorBody(props: { state: OperatorState; viewport: Viewport }) {
         <>
           <OperatorTiles />
           <WorkspaceStates
-            builds={runningComputers.builds}
+            builds={{ count: runningComputers.builds, page: 'overview' }}
             counts={workspaceStates}
-            page="overview"
           />
           <DailyChart
             days={newWorkspacesByDay}

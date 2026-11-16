@@ -152,3 +152,8 @@ It checks the whole batch with the shared reader before it changes state.
 It keeps each keyboard separate, preserves empty key lists, and removes
 an override when the request sends null keys.
 The next account read returns both keyboards.
+
+The Stats tab of the account reads its counts from `dev/account-stats.ts`.
+It counts the orgs of the fake that are not deleted, the workspaces and
+the routines that the person owns in them, and the routine runs of the
+person that were not skipped, by the rules of the Worker.
