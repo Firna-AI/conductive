@@ -32,6 +32,7 @@ and the separate preview domain.
 | The records of attached files | D1 |
 | The repository, the files, and the agent sessions                            | The home folder of the sandbox           |
 | The prepared repositories and the installed software                         | The org image, in the app's Boat account |
+| The releases of the [sandbox software](sandbox-software.md) | An R2 bucket, public at `runner.conductive.build` |
 | Panel sizes                                                                  | The browser, or the Mac app              |
 | The address of the last workspace page of each org                           | The browser, or the Mac app              |
 
@@ -49,6 +50,10 @@ and the separate preview domain.
   into a saved snapshot.
 - Sandbox code is untrusted. Agents write and run it, and previews show it
   only on the preview domain.
+- Each writer of the R2 bucket of the sandbox software releases is as
+  trusted as the Worker deploy, because each sandbox installs the newest
+  release from it. Today only the deploy token writes it, as
+  [Releases](../protocol/sandbox-software.md#releases) says.
 - A sandbox gets none of the secrets of the app's Boat account. At a
   start, it gets only the secrets of its workspace and its org.
 - The value of a [secret](../protocol/secrets.md) of the Secrets tab

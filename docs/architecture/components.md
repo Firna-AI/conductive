@@ -165,6 +165,7 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
 
 ## Sandbox software
 
+<<<<<<< HEAD
 Every org image holds the app's own sandbox software:
 
 - the agent runner, a Node program that runs as an always-on service
@@ -212,6 +213,11 @@ The Worker gives each sandbox the commit author of its workspace owner.
 The agent runner gives each agent the commit author of the sender of its
 turn. [Commit author](../protocol/github-tokens.md#commit-author) states
 the rules.
+=======
+The [sandbox software page](sandbox-software.md) describes the app's own
+software in each sandbox: its two programs, its releases and updates, and
+the software image.
+>>>>>>> origin/main
 
 ## External services
 

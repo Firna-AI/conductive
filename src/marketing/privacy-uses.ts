@@ -31,7 +31,8 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         verified email addresses of your GitHub account, and which one is
         primary. An org invitation reaches you through one of them. The
         approval email goes to the primary one. The team uses the same
-        address to reply to your feedback.`,
+        address to reply to your feedback. The operator sees the primary
+        one on the page of your account.`,
       text`Your GitHub token: the sign-in gives ${productName} a GitHub
         token for your account. ${productName} stores it encrypted, for
         every account, also while you wait for app access. It uses the

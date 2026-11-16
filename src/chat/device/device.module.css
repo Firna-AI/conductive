@@ -1,4 +1,4 @@
-/* On a phone, the arrow beside Allow is a 44 px touch target. */
+/* On a phone, the arrow beside Allow is a 40 px touch target. */
 .arrow {
   min-width: max(22px, var(--ui-touch-min, 0px));
 }
@@ -65,7 +65,7 @@
   gap: 6px;
 }
 
-/* A phone raises every local touch target of the section to 44 px. */
+/* A phone raises every local touch target of the section to 40 px. */
 .phone {
-  --ui-touch-min: 44px;
+  --ui-touch-min: 40px;
 }

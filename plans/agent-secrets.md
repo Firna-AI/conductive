@@ -809,6 +809,15 @@ the name readable at both widths and keeps the words of the label, and
 its menu gives later tools a place on a phone. Action: ask the user,
 because each option changes an existing screen.
 
+### Secrets decision 17: The name of the Capabilities icon
+
+Cal chose A on 16 November 2026: the label stays "Capabilities".
+Alternatives: "Tools", which the app already uses for the tool calls in
+the chat, the Tools column, and the workspace tools. "Agent access",
+which says what the control does. "Permissions", which the Mac app
+already uses for macOS permissions. Reason: Cal kept his own name for
+the control.
+
 The options check of decisions 5, 6, and 7 is in
 `.context/agent-secrets/options-check.md`. The check of decisions 8 and 9
 is in `.context/agent-secrets/options-check-8-9.md`. The check of

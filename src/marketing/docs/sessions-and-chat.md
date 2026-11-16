@@ -81,10 +81,11 @@ Restore an archived workspace before opening its attached files.
 
 Attached files arrive in `.context/attachments/` in the workspace's repository folder.
 Each file keeps the same path when you retry its message.
-New workspaces from a new computer build also get a `.context/` folder for agent notes, screenshots, and files for other sessions.
+With current cloud computer software, workspaces also get a `.context/` folder for agent notes, screenshots, and files for other sessions.
 Git ignores the folder's files unless your repository already tracks them.
-After a new computer build, **All files** lists them, so you can open them there.
+**All files** lists them, so you can open them there.
 **Changes** does not list them.
+An older workspace gets this folder and its file list with an automatic software update at a later start.
 
 - [Read files and pictures](/docs/files-and-changes#read-a-file)
 
@@ -117,7 +118,9 @@ The link shows the workspace's state, number, a session icon, and the session ti
 A session without a title shows **Untitled**.
 
 Select the link to open that session.
-A closed or unknown session opens the workspace page without reopening the session.
+A closed session reopens, as it does from **Session history**, and its tab shows again for every member.
+In an archived or other read-only workspace, the session shows only in your browser and stays closed.
+An unknown session opens the workspace page.
 If that workspace is already open, its selected tab stays.
 The title of a session in another workspace updates when the chat loads.
 Session links also show as small boxes in agent answers and pasted message drafts.
