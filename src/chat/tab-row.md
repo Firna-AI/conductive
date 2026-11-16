@@ -7,8 +7,8 @@ Close tabs to the right, and the scroll of the row, and the reader's place
 that each tab keeps.
 [The tab row](../../docs/protocol/tab-row.md) states the requirements.
 [Split panes](../../docs/protocol/split-panes.md) states the requirements
-of two panes, each with its own row. The chat draws one row and one pane,
-and it does not draw two panes yet.
+of two panes, each with its own row. The chat draws one row and one pane.
+It does not draw two panes yet, and its tab menu has no pane item yet.
 
 - The state keeps one saved order for session, file, and diff tabs. The row
   order includes each tab once. A host with no file or diff tabs leaves

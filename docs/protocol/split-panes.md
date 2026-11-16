@@ -2,10 +2,10 @@
 
 This doc holds the requirements and the decisions in force for split
 panes: the one or two panes of the centre column of a workspace. It covers
-the panes and their focus, the pane that a press uses, the moves of tabs
-between the panes, the message fields, the saved view, the address, the
-phone, and read-only workspaces. It belongs to [The tab row](tab-row.md),
-which states the rules of each row.
+the panes, their width, and their focus, the pane where a tab opens, the
+moves of tabs between the panes, the message fields, the saved view, the
+address, the phone, and read-only workspaces. It belongs to
+[The tab row](tab-row.md), which states the rules of each row.
 
 The terms are those of the [architecture doc](../architecture.md#terms)
 and the terms below. A decision number names a dated record, as
@@ -55,14 +55,30 @@ the change that adds split panes. The
   share of the left pane with the sizes of the panels, as
   [Storage](keyboard-shortcuts.md#storage) says. Reason: the sizes of the
   panels already stay in the browser.
+- A pane that is not focused still shows its session live. Each event
+  shows once and in order in each pane, as [Events](chat-and-events.md#events)
+  says.
+
+## The width of the panes
+
 - On desktop, the split never turns into one row. Only the phone layout
   shows one row, as [On a phone](#on-a-phone) says. The user asked for
   this on 16 November 2026.
 - Reason: a split that stops at a fixed width of the window confuses the
   user.
-- A pane that is not focused still shows its session live. Each event
-  shows once and in order in each pane, as [Events](chat-and-events.md#events)
-  says.
+- When the window narrows while two panes show, the right column narrows
+  first, down to 280 px, so that each pane keeps 320 px. Then both panes
+  shrink with the window. A pane has no least width (split panes decision
+  6 G).
+- Reason: everything then shrinks with the window, and no panel or pane
+  hides at a fixed width.
+- A least width of a pane was not chosen. Below that width, the column
+  would show one row, the right column would hide itself, or the pane that
+  is not focused would shrink to a strip. Each of these changes the layout
+  at a width that the user did not choose.
+- While two panes show, a pane narrower than 360 px gives its chat the
+  paddings of the phone layout. Reason: the text of a narrow pane then
+  gets as much room as on a phone of the same width.
 
 ## The focus
 
@@ -81,11 +97,29 @@ the change that adds split panes. The
   history, and Reopen closed session. The "+" of a row opens its session
   in the pane of that row, because the press makes that pane the focused
   pane.
+- Each other session that opens also goes to the end of the row of the
+  focused pane (split panes decision 7 B). A session that another member
+  or an agent starts opens there without showing.
+- A session that opens from an action of the member in another session is
+  the exception. It goes to the end of the row of the pane of that other
+  session. It shows there while that pane still shows the other session.
+  These actions are a message or a Try again that starts a new session,
+  and a change to a model of the other agent, as
+  [Messages](messages-and-attachments.md#messages) says.
+- Reason: the moved draft and the reply then stay beside the chat that the
+  member typed in. Such an action can come from the pane that is not
+  focused, through the session keys or a prompt of the pull request bar. A
+  rule that sends these sessions to the focused pane too, or that sends
+  each of them to the right row, was not chosen.
 - A press on a file or a diff without a tab opens it in the pane that
   shows a file or a diff (split panes decision 3 B). When no pane or both
   panes show one, the press uses the focused pane.
   [Temporary tabs](temporary-tabs.md#open-a-file-or-a-diff) lists these
   presses.
+- The press replaces the temporary tab of that pane only, and it never
+  changes the other pane (split panes decision 5 B), as
+  [The temporary tab of each pane](temporary-tabs.md#the-temporary-tab-of-each-pane)
+  says.
 - A press on a file, a diff, or a session that already has a tab shows
   that tab in its pane.
 - Reason: a press on a file then does not hide the chat beside it, when
@@ -103,6 +137,9 @@ the change that adds split panes. The
 - With two panes, a drop on the content of the pane that does not hold the
   tab moves the tab to the end of the row of that pane. A drop in the row
   of that pane puts the tab at the drop place.
+- The pane item of the tab menu moves a tab to the other pane without a
+  drag, as [The tab menu](tab-row.md#the-tab-menu) says (split panes
+  decision 4 B). With one pane, it opens the second pane on the right.
 - A drop that changes nothing shows no mark and moves nothing. These drops
   change nothing:
   - with two panes, a drop on the content of the pane that holds the tab
@@ -112,8 +149,8 @@ the change that adds split panes. The
 - The drop mark is an accent outline over a light accent tint, as the drop
   of files on the chat shows. Reason: every drop in the app then looks the
   same.
-- A move to the other pane shows the moved tab in its new pane. That pane
-  becomes the focused pane.
+- A move to the other pane, by a drop or by the pane item, shows the moved
+  tab in its new pane. That pane becomes the focused pane.
 - Reason: in the editor groups of VS Code, a tab that moves to another
   group shows there (split panes decision 1 C).
 - When the moved tab was the shown tab of the pane that it left, that pane
@@ -145,15 +182,32 @@ the change that adds split panes. The
 
 - The saved view of each member holds the panes: the tabs of each pane in
   their order, and the shown tab of each pane. It also holds which pane is
-  the focused pane.
+  the focused pane. [The saved view](temporary-tabs.md#the-saved-view) of
+  Temporary tabs states the mark of the temporary tab of each pane.
 - So the split and the focus stay after a reload. The other devices of
   that member load them, as they load the order of the tabs.
-- The Worker reads a saved view without panes as one pane, with its tabs
+- The Worker reads a stored view without panes as one pane, with its tabs
   in their order and its shown tab.
 - The Worker reads a pane list that is not valid as one pane with all the
   tabs of the view. It refuses no saved view because of its panes.
 - Reason: a pane list that does not fit then costs only the split, not the
   tabs.
+- A save without panes keeps the panes of the stored view (split panes
+  decision 8 B). Such a save comes from an older copy of the app, such as
+  a browser tab that was open before a deploy.
+- The Worker fits the tabs of such a save onto the stored panes. Each tab
+  stays in its pane. A new tab goes to the focused pane. A tab that the
+  save leaves out leaves its pane. Each pane keeps its own temporary tab.
+- Such a save changes only which tabs are open. Each pane keeps its shown
+  tab and its temporary tab, and the focused pane stays. A new tab of such
+  a save stays kept, also when the save marks it temporary.
+- Each reply of the saved view also holds the view as one row: all tabs in
+  one order, the left pane first, with the shown tab and the temporary tab
+  of the focused pane. An older copy reads that row, and shows it as one
+  pane.
+- Reason: real members use the product, so stored data needs a compatible
+  path. A save from an older copy then does not undo the split of the
+  member, and an older copy keeps working until it reloads.
 
 ## Keys
 
@@ -191,7 +245,8 @@ the change that adds split panes. The
   the session that the focused pane showed last. Reason: a phone shows
   files only in its Files tab.
 - A drop on the content moves no tab between the panes on a phone, also a
-  drop on a half. So the saved split stays.
+  drop on a half, and the pane item of the tab menu is off. So the saved
+  split stays.
 - A drag, Move left, or Move right across the border line moves the tab to
   the other pane, at that place.
 

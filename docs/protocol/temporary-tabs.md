@@ -1,8 +1,9 @@
 # Temporary tabs
 
 This doc holds the requirements and the decisions in force for the
-temporary tab of a workspace. It covers what opens the temporary tab, how
-it shows, what keeps it, and its mark in the saved view. It belongs to
+temporary tabs of a workspace. It covers what opens a temporary tab, the
+temporary tab of each pane, how it shows, what keeps it, and its mark in
+the saved view. It belongs to
 [Files and changes](workspace-tools.md#files-and-changes).
 [The tab row](tab-row.md) states its place in the row, its tab menu, and
 its moves. The terms are those of the
@@ -15,18 +16,22 @@ temporary tab at `app/files/temporary`.
 
 ## Terms
 
-- **Temporary tab:** the one file or diff tab of the tab row that the next
-  press on another file or diff replaces.
+- **Temporary tab:** the one file or diff tab of a pane that the next
+  press on another file or diff replaces, when the press uses that pane.
 - **Kept tab:** a file or diff tab that is not temporary. It stays until
   the user closes it.
-- **Saved view:** what one member sees in one workspace: the open tabs in
-  their order, the shown tab, the file list, and the tool. The Worker
-  saves it.
+- **Saved view:** what one member sees in one workspace: the panes, each
+  with its open tabs in their order and its shown tab, the focused pane,
+  the file list, and the tool. The Worker saves it.
+- **Pane:** one part of the centre column, with its own tab row. The
+  **focused pane** is the pane that the user used last.
+  [Split panes](split-panes.md#terms) gives both terms.
 
 ## Open a file or a diff
 
-- The tab row of the centre column holds at most one temporary tab
-  (decision 284 B). Only a file or diff tab can be temporary.
+- Each tab row of the centre column holds at most one temporary tab
+  (decision 284 B and split panes decision 5 B). Only a file or diff tab
+  can be temporary.
 - A press on a file or a diff without a tab opens it in the temporary tab.
   It replaces the file or the diff that the temporary tab showed. The
   temporary tab then shows.
@@ -63,23 +68,42 @@ temporary tab at `app/files/temporary`.
 - Enter on a focused file row is a press too.
 - Reason: each press follows one rule. A chip already opens its file as a
   press in All files does.
-- With two panes, each of these presses uses the pane that shows a file or
-  a diff. When no pane or both panes show one, the press uses the focused
-  pane (split panes decision 3 B).
-  [Where a tab opens](split-panes.md#where-a-tab-opens) gives the reason.
 - An address that names a file or a diff without a tab also opens it in
   the temporary tab. This holds for Back, Forward, a reload, a pasted
   address, and a link that opens in a new browser tab.
 - Reason: a visit by address is a look at the file too.
-- With two panes, a visit by address uses the same pane as a press on that
-  file or diff, as [The address](split-panes.md#the-address) says.
 - On a phone, a press also opens the file or the diff in the temporary
-  tab. So the presses on a phone add at most one tab to the row. A phone
+  tab. So the presses on a phone add at most one tab to each row. A phone
   has no way to keep a file tab.
 - Reason: a phone row shows only the session tabs. So the files that a
-  member opens on a phone do not fill the tab row on a computer.
+  member opens on a phone do not fill the tab rows on a computer.
 - No setting turns the temporary tab off. Reason: the user asked for this
   behaviour.
+
+## The temporary tab of each pane
+
+- With two panes, each pane has its own temporary tab, as each editor
+  group of VS Code has its own preview tab (split panes decision 5 B). So
+  the centre column holds at most two temporary tabs.
+- Each rule of this doc applies inside its own pane: the replace in place,
+  the keep, and the check of the mark in the saved view.
+- A press on a file or a diff without a tab uses the pane that shows a
+  file or a diff. When no pane or both panes show one, the press uses the
+  focused pane (split panes decision 3 B).
+  [Where a tab opens](split-panes.md#where-a-tab-opens) gives the reason.
+- The press replaces the temporary tab of that pane. When that pane has no
+  temporary tab, the press opens a new one in the row of that pane.
+- A press never moves, hides, or closes a tab of the other pane.
+- Reason: the panes follow the editor groups of VS Code (split panes
+  decision 1 C), and a press then never changes the other pane.
+- One temporary tab for the workspace was not chosen. A press that goes to
+  the other pane would then move that tab to the row of the other pane. So
+  a press could change what the other pane shows, or close that pane.
+- A press that uses the pane of the temporary tab, when no pane or both
+  panes show a file, was not chosen either. It changes the rule of split
+  panes decision 3 B.
+- A visit by address uses the same pane as a press on that file or diff,
+  as [The address](split-panes.md#the-address) says.
 
 ## The title of the tab
 
@@ -135,13 +159,14 @@ temporary tab at `app/files/temporary`.
 
 ## The saved view
 
-- The saved view of each member marks which tab is temporary. So the mark
-  stays after a reload, and the other devices of that member load it.
+- The saved view of each member marks the temporary tab of each pane. So
+  the marks stay after a reload, and the other devices of that member load
+  them.
 - A mark only in the memory of the browser was rejected. A reload or a
   second window would then turn the temporary tab into a kept tab.
-- A saved view without a mark has no temporary tab, so each of its tabs is
-  kept.
+- A pane without a mark has no temporary tab, so each of its tabs is kept.
 - The Worker reads a mark that is not valid, or that names no open file or
-  diff tab, as no mark. It refuses no saved view because of its mark.
+  diff tab of its pane, as no mark. It refuses no saved view because of a
+  mark.
 - Reason: a mark that does not fit then costs only the mark, not the saved
   view.

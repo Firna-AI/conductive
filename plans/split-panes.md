@@ -398,6 +398,33 @@ Milestone 2 wrote the protocol docs.
 - A session link to a closed session, which main now reopens, reopens it in
   the focused pane, as the session history does.
 
+### Calls from the second documentation round
+
+These are design calls of the agent, made on 16 November 2026, when the
+protocol docs took decisions 4 to 8.
+
+- An older copy of the app reads a view with panes too. Each reply of the
+  view keeps the old fields: all tabs in one order with the left pane
+  first, and the shown and temporary tab of the focused pane. The older
+  copy then shows one row. Reason: the repository rules require that older
+  copies of the app keep working after a change to the Worker API.
+- A session that a send opens shows in the pane of the sending session
+  only while that pane still shows the sending session. Reason: this keeps
+  the behaviour of today, so a send never moves the member away from a tab
+  that they chose.
+- "Move to the other pane" puts the tab at the end of the other row.
+  Reason: a drop on the content of the other pane does the same, so the
+  keyboard and the drag give one result.
+- A save from an older copy changes only which tabs are open. Each pane
+  keeps its shown tab and its temporary tab, and the focus stays. A new tab
+  stays kept, also when the save marks it temporary. Reason: an older copy
+  cannot see the panes, so it must not change them. A pane can then never
+  get two temporary tabs, which decision 5 B forbids.
+- A change to a model of the other agent counts as a send under decision
+  7 B, because the app opens that session when the member picks the model.
+- The paddings of a phone apply only while two panes show, as decision 6 G
+  is about two panes.
+
 ### The chat state
 
 - The chat state replaces `activeSessionId` with the shown tab of each pane
@@ -453,11 +480,12 @@ moves to its own page first, as
       to `docs/protocol/tab-row.md`. Replace the one-order rule of decision
       186, and the rule that a drag does not change the shown tab. The
       panes went to the linked page `docs/protocol/split-panes.md`.
-- [ ] Update `docs/protocol/temporary-tabs.md` with decisions 3 B and 5.
-      Decision 3 B is done. (blocked: decision 5)
-- [ ] Update `docs/protocol/keyboard-shortcuts.md` for keys that act on the
+- [x] Update `docs/protocol/temporary-tabs.md` with decisions 3 B and 5.
+- [x] Update `docs/protocol/keyboard-shortcuts.md` for keys that act on the
       focused pane, and with decision 4 C or 4 F if the user chooses one.
-      The keys that act on the focused pane are done. (blocked: decision 4)
+      The user chose 4 B, which adds no key.
+- [x] State decisions 4 B, 6 G, 7 B, and 8 B in `docs/protocol/tab-row.md`
+      and `docs/protocol/split-panes.md`.
 - [x] Update the prompts of the pull request bar in
       `docs/protocol/messages-and-attachments.md`.
 - [x] Read the Terms and Privacy pages and each guide in
@@ -560,6 +588,13 @@ Depends on: 7
       one.
 - [ ] Make the address, Back and Forward, and the session address follow
       the focused pane.
+- [ ] Update the guide sentences that the split makes wrong or incomplete:
+      `src/marketing/docs/files-and-changes.md` lines 37, 39, 80, and 82,
+      `src/marketing/docs/sessions-and-chat.md` lines 109, 245, 248, and
+      250, and `src/marketing/docs/pull-requests.md` line 90. Read each
+      guide in full first, because the lines can move.
+- [ ] Add the share of the left pane to the panel sizes in
+      `docs/architecture/components.md`.
 - [ ] Check the split in a browser and take screenshots for the pull
       request.
 

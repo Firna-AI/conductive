@@ -86,15 +86,17 @@ panes decision number names a decision of the change that adds
   a sheet.
 - The tab menu of a session tab holds four groups, with a line between
   them: Rename session, then Copy link, Copy concise transcript, and Copy
-  full transcript, then Move left and Move right, then Close tabs to the
-  right. The tab menu of a kept file or diff tab holds Move left and Move
-  right, then Close tabs to the right.
+  full transcript, then Move left, Move right, and the pane item, then
+  Close tabs to the right. The tab menu of a kept file or diff tab holds
+  Move left, Move right, and the pane item, then Close tabs to the right.
+- The pane item reads Move to the other pane with two panes, and Open in a
+  new pane with one pane (split panes decision 4 B).
 - Copy link copies the link of the session of its tab, as
   [Session links](agents-and-sessions.md#session-links) says. The user
   added it on 12 November 2026.
 - The tab menu of the temporary tab holds three groups, with a line
-  between them: Keep open, then Move left and Move right (decision 286 B),
-  then Close tabs to the right.
+  between them: Keep open, then Move left, Move right (decision 286 B),
+  and the pane item, then Close tabs to the right.
 - Reason: the tab menu groups its items by kind (decision 188).
 - [Session transcripts](session-transcripts.md) states what each copy item
   copies (decisions 213 and 215).
@@ -102,6 +104,26 @@ panes decision number names a decision of the change that adds
   tab, Move left is off. On the last tab, Move right is off.
 - On a phone, Move left and Move right also move a tab across the border of
   the two panes, as [On a phone](split-panes.md#on-a-phone) says.
+- The pane item moves the tab to the end of the row of the other pane.
+  With one pane, it opens the second pane on the right, with the tab in
+  it.
+- Reason: the tab menu holds each keyboard path of a tab (decisions 188
+  and 286 B). So a user who cannot drag can still split the column and
+  move a tab to the other pane.
+- The pane item is off when the tab is the only tab of the only pane,
+  because the move then changes nothing. It is off on a phone, as
+  [On a phone](split-panes.md#on-a-phone) says.
+- After a move with the pane item, the tab shows in its new pane, and that
+  pane becomes the focused pane, as
+  [Moves between panes](split-panes.md#moves-between-panes) says. The
+  focus goes to the tab in its new row. A screen reader user hears the
+  name of the tab, its new pane, and its new place, such as "app.ts moves
+  to the right pane, place 2 of 3".
+- The pane item opens a new pane on the right only. So a keyboard user
+  must move the other tabs to the right pane to get a left pane. Labels
+  that name the side, with an item for each side, were not chosen. A split
+  button at the end of each row was not chosen either, because it adds a
+  control to each row.
 - Close tabs to the right closes each tab after the tab in its row, of
   each kind, as the same item of a browser does. On the last tab of the
   row, it is off. The user asked for it on 16 November 2026.
@@ -112,9 +134,9 @@ panes decision number names a decision of the change that adds
   its session moves to the history for every member.
 - On a phone, the row shows only the session tabs, so Close tabs to the
   right closes only the session tabs after the tab. Each file tab stays.
-- After a move from the tab menu, a screen reader user hears the name of
-  the tab and its new place, such as "Address autocomplete moves to place
-  2 of 4". The focus then goes back to the tab.
+- After a move with Move left or Move right, a screen reader user hears
+  the name of the tab and its new place, such as "Address autocomplete
+  moves to place 2 of 4". The focus then goes back to the tab.
 - Keep open keeps the temporary tab, and the tab stays in its place. The
   focus then goes back to the tab. A screen reader user hears that the tab
   stays open, such as "README.md stays open".
@@ -122,8 +144,9 @@ panes decision number names a decision of the change that adds
   open.
 - A move of the temporary tab to another place keeps it (decision
   287 B). A move of another tab leaves it temporary. This holds for a drag,
-  Move left, Move right, and a move to the other pane. A drag that Escape
-  cancels, or that ends in the same place, leaves the tab temporary.
+  also to the other pane, and for Move left, Move right, and the pane item.
+  A drag that Escape cancels, or that ends in the same place, leaves the
+  tab temporary.
 - Reason: a move shows that the user wants the file at that place. A
   temporary tab that stays temporary after a move was rejected. The next
   press would then replace the file at that place.
@@ -138,6 +161,12 @@ panes decision number names a decision of the change that adds
 - Keys that move a tab were rejected, because the user chose the menu. Alt
   with Left or Right also goes Back and Forward in browsers on Windows and
   Linux.
+- No key and no row of the command palette moves a tab to the other pane,
+  or puts the focus in the other pane (split panes decision 4 B). Commands
+  for these, with no default key, were not chosen. They would reverse this
+  rejection of keys, and the rule of
+  [Actions](command-palette-actions.md#actions) that the palette has no
+  view commands.
 
 ## Read-only workspaces
 
@@ -147,8 +176,8 @@ panes decision number names a decision of the change that adds
 - The tab menu of a read-only workspace leaves out each item that changes
   the workspace, and keeps each item that changes nothing (decision 214).
   So the tab menu of a session tab there holds only Copy link, Copy
-  concise transcript, and Copy full transcript. It leaves out Close tabs to
-  the right. A file or diff tab there opens no tab menu.
+  concise transcript, and Copy full transcript. It leaves out the pane item
+  and Close tabs to the right. A file or diff tab there opens no tab menu.
 - Reason: a read-only workspace accepts no change, but a member can still
   copy there, as
   [Read-only workspaces](session-transcripts.md#read-only-workspaces)

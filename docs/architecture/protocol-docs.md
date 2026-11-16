@@ -25,9 +25,9 @@ This page lists each protocol doc and what it covers.
   - [Workspace menu](../protocol/workspace-menu.md): the menu of a workspace
     row, which moves, reassigns, renames, and archives the workspace.
   - [Workspace tools](../protocol/workspace-tools.md)
-    - [Temporary tabs](../protocol/temporary-tabs.md): the one file or diff
-      tab that the next press replaces, what opens and keeps it, and its
-      mark in the saved view.
+    - [Temporary tabs](../protocol/temporary-tabs.md): the file or diff tab
+      of each pane that the next press replaces, what opens and keeps it,
+      and its mark in the saved view.
     - [Port previews](../protocol/port-previews.md): detected servers, manual
       opening, the open from a local address in the chat, preview tabs,
       and the relay requirement.
@@ -153,8 +153,8 @@ This page lists each protocol doc and what it covers.
     centre column, their drag, the scroll of the row, the reader's place of
     each tab, and the tab menu.
     - [Split panes](../protocol/split-panes.md): the one or two panes of
-      the centre column, their focus, the pane that a press uses, the moves
-      between panes, the saved split, and the phone.
+      the centre column, their width and their focus, the pane where a tab
+      opens, the moves between panes, the saved split, and the phone.
 - [Workspace links](../protocol/workspace-links.md): Copy link, and the chips
   that show workspace links in chat.
 - [Chat Markdown](../protocol/chat-markdown.md): the formatting of agent
