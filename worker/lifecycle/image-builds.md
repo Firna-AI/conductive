@@ -115,6 +115,30 @@ The line `[N output bytes omitted]` takes their place in the event order.
   `withImageSourceCleanup(env, fetch, hooks)` from `image-sources/members.ts`,
   as the [source loader](repository-layout.md#the-source-loader) says.
 
+## The software step
+
+`buildSoftwareCommand` in [`build-software.ts`](build-software.ts) composes
+the software command of a build or refresh. It reads the newest release.
+It also reads the apt part version that the source image of the build
+holds. For an org image, that version is `image_build_jobs.packages_version`
+of the succeeded build that saved the image. For a pinned software image,
+it is `software_images.packages_version`. The base image holds none.
+
+When that version equals `imagePackagesVersion()` from
+[`image-packages.ts`](image-packages.ts), the command runs the apt part only
+when the sandbox lacks a package or the ttyd service is not masked.
+Otherwise it runs the apt part. A NULL version, as in a row from before the
+column, also runs it. Either way the command installs the newest release, as
+[Installation](../../image/install.md) says. `recordSoftwarePackages` in
+[`build-command-data.ts`](build-command-data.ts) stores the current version
+before each start of the software command, so a succeeded build records the
+apt part that its image holds. A repeated start reaches the command of the
+first start, as the command journal says. So when two starts carry
+different versions, the job keeps an empty version, and the next build from
+its image runs the apt part.
+`buildSource` gives the source image of a build. The sandbox request uses
+it too, so the version and the snapshot always come from the same image.
+
 ## Provider retries
 
 Builds, refreshes, and workspace starts share one saved policy for a
@@ -232,6 +256,8 @@ states the rule.
 - [`image-coordinator.ts`](image-coordinator.ts): `ImageCoordinator`.
 - [Software images](../software-image/README.md): the shared software builds and their cleanup.
 - [`image-software.ts`](image-software.ts): the release install and workspace startup commands.
+- [`build-software.ts`](build-software.ts): the software command of a build, with the source image and its apt part version.
+- [`image-packages.ts`](image-packages.ts): the apt part, its version, and the check that skips it.
 - [`software-release.ts`](software-release.ts): release metadata lookup and validation.
 - [`software-bootstrap.ts`](software-bootstrap.ts): verified downloads and startup activation locking.
 - [`image-runtime.ts`](image-runtime.ts): `IMAGE_NODE_RUNTIME`, the pinned

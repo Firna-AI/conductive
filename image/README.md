@@ -16,7 +16,8 @@ packaging and a real-sandbox live check.
 
 - Install the pinned private Node after a check of its SHA-256 digest, or
   reuse it when the image already holds it.
-- Install the newest release through a verified bootstrap program.
+- Install the newest release through the installed program, or through a
+  verified bootstrap program when the image has none.
 - Install and enable the systemd services of the agent runner and preview relay.
 - Install and enable the preview relay's socket unit.
 - Install the udev rule that stops disk flushes at each boot, as
@@ -31,7 +32,9 @@ packaging and a real-sandbox live check.
 
 The [terminal backend](../worker/terminal/README.md) supplies the terminal
 script sources. The release packages those scripts and their units.
-The build calls `terminalPackagesCommand()` for `ttyd` and `tmux`.
+The build calls `terminalPackagesCommand()` for `ttyd` and `tmux` when the
+image lacks a package, when the ttyd service is not masked, or when the apt
+part changed.
 The release installer owns the installed scripts and units.
 It enables services and starts none.
 
