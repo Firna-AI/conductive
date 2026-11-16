@@ -157,11 +157,9 @@ Design calls (my calls, 13 November 2026):
 
 - The repository button opens a menu with the chosen repositories of the
   org, in the order of New workspace. The current repository has a check.
-  A repository that this cloud computer does not hold, also a waiting
-  repository, shows New workspace as its detail, and a note under the
-  menu says that such a repository is not in this cloud computer. A press
-  on its row opens New workspace with that repository picked, in the
-  section of this workspace, as decision 4 D says.
+  The menu lists only the repositories that the org chose, and has no
+  notes (user request, 16 November 2026). Decision 4 needs an answer
+  again for a chosen repository that this cloud computer does not hold.
 - A workspace without a record of its folders holds only its current
   repository, for the menu. Reason: the Worker knows no other folder of
   it.
@@ -253,6 +251,11 @@ note in the chat, on desktop and on a phone.
       the mockups show.
       Evidence: `.context/repository-change/mockups-check.log` and the
       screenshots in `.context/repository-change/shots/`.
+
+On 16 November 2026 the user asked to remove the two notes under the
+menu and to show only the repositories that the org chose. The mockup of
+13 November showed acme/admin-dashboard, which the sample org had not
+chosen. The menu now lists only the chosen repositories, with no notes.
 
 Mockup results (13 November 2026), merged into the design above:
 

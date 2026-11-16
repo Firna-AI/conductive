@@ -398,9 +398,8 @@ pages:
 
 `app/repository-change` draws the repository change of Checkout address
 autocomplete, from repository change decisions 1 to 4. Its canonical
-screen has the open repository menu of the header. A chosen repository
-that the cloud computer does not hold shows New workspace as its detail.
-Its saved states:
+screen has the open repository menu of the header, with the repositories
+that the org chose. Its saved states:
 
 - `app/repository-change/question` has the question before the change,
   with the work that stays with the old repository and the work that

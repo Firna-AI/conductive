@@ -3,10 +3,7 @@ import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
 import { ChevronDown, FolderGit2 } from 'lucide-react'
 import { repositories, type RepositoryKey } from '../../fixtures/repositories'
-import {
-  missingRepository,
-  movedRepository,
-} from '../../fixtures/repositoryMove'
+import { movedRepository } from '../../fixtures/repositoryMove'
 import { noop } from '../../noop'
 import { paths } from '../../paths'
 import { Menu, type MenuEntry } from '../common/Menu'
@@ -16,11 +13,10 @@ import { repositoryMenu, repositoryProgress } from './repositoryMoveCopy'
 import styles from './RepositoryPicker.module.css'
 
 /**
- * The chosen repositories of the org, with the current one marked. A pick
- * moves the workspace to a new branch of that repository. A chosen
- * repository that the cloud computer does not hold keeps its place, with
- * New workspace as its detail. A press on it opens New workspace with that
- * repository. The rows have no icons, as in the menu of New workspace.
+ * The repositories that the org chose, with the current one marked. A pick
+ * moves the workspace to a new branch of that repository. The menu lists
+ * no other repository. The rows have no icons, as in the menu of New
+ * workspace.
  */
 export function repositoryMenuEntries(current: RepositoryKey): MenuEntry[] {
   return [
@@ -31,14 +27,6 @@ export function repositoryMenuEntries(current: RepositoryKey): MenuEntry[] {
       checked: repository.key === current,
       highlighted: repository.key === movedRepository,
     })),
-    {
-      kind: 'item',
-      label: missingRepository,
-      detail: repositoryMenu.missing,
-    },
-    { kind: 'divider' },
-    { kind: 'note', text: repositoryMenu.note },
-    { kind: 'note', text: repositoryMenu.missingNote },
   ]
 }
 

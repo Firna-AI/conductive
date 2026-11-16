@@ -1,14 +1,13 @@
 /**
  * The facts of the repository change of Checkout address autocomplete:
- * the repository that Cal picks, the new branch, the chosen repository
- * that its cloud computer does not hold, and the work that the question
- * lists.
+ * the repository that Cal picks, the new branch, and the work that the
+ * question lists.
  */
 
 import { unpushedWork } from './barActions'
 import { people } from './members'
 import { pullRequest } from './pullRequests'
-import { addedRepository, type RepositoryKey } from './repositories'
+import type { RepositoryKey } from './repositories'
 
 /** The repository that Cal moves the workspace to. */
 export const movedRepository: RepositoryKey = 'billing-service'
@@ -19,12 +18,6 @@ export const movedRepository: RepositoryKey = 'billing-service'
  * four random characters.
  */
 export const movedBranch = `${people.cal.login}/oslo-9c1e`
-
-/**
- * A chosen repository that the cloud computer of the workspace does not
- * hold, because a build added it after the workspace started.
- */
-export const missingRepository = addedRepository
 
 /** The work that the question of the change lists. */
 export const repositoryWork = {

@@ -8,9 +8,9 @@ import {
 export const repositoryChange = defineScreen({
   title: 'Change the repository',
   description:
-    'Cal opens the repository in the header of Checkout address autocomplete, which works in acme/storefront. The menu lists the chosen repositories of Acme, with a check on acme/storefront. acme/admin-dashboard is not in the cloud computer of this workspace, so its row says so, and a press opens New workspace with that repository. On a phone the repository sits in the line under the name, and the menu is a sheet.',
+    'Cal opens the repository in the header of Checkout address autocomplete, which works in acme/storefront. The menu lists only the repositories that Acme chose, with a check on acme/storefront. On a phone the repository sits in the line under the name, and the menu is a sheet.',
   rationale:
-    'The user asked on 13 November 2026 to change the repository from the header. In repository change decision 1 the user chose A: the workspace keeps its cloud computer, its sessions, and its chat, and moves to a new branch of the new repository. Decision 2 B lets every member change it, as for Continue. Decision 4 D shows a chosen repository that the cloud computer does not hold, also a waiting repository, with a note, and its row opens New workspace.',
+    'The user asked on 13 November 2026 to change the repository from the header. In repository change decision 1 the user chose A: the workspace keeps its cloud computer, its sessions, and its chat, and moves to a new branch of the new repository. Decision 2 B lets every member change it, as for Continue. The user asked on 16 November 2026 to show no note under the menu, and only the repositories that the org chose.',
   relatedDocs: [],
   propSchema: workspaceStateSchema,
   props: {

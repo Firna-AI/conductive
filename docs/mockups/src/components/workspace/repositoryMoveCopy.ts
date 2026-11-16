@@ -9,15 +9,6 @@ export const repositoryMenu = {
   label: 'Repository',
   /** The spoken name of the button in the header. */
   button: (repository: string) => `Repository: ${repository}`,
-  /**
-   * The detail of a chosen repository that this cloud computer does not
-   * hold. A press opens New workspace with that repository.
-   */
-  missing: 'New workspace',
-  note: 'The workspace moves to a new branch of the repository that you pick.',
-  /** The second note, only when a chosen repository is missing. */
-  missingNote:
-    'A repository marked New workspace is not in this cloud computer.',
 } as const
 
 export const repositoryQuestion = {
