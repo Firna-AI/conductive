@@ -5,6 +5,7 @@ import type { UserMessage } from '../../shared/generated/UserMessage'
 import type { WorkspaceStart } from '../../shared/generated/WorkspaceStart'
 import { TabPlaces } from '../../app/tab-places'
 import type { ChatPlace } from '../components/chat-place'
+import type { MentionTarget } from '../mentions/MentionsContext'
 import type { DraftFile } from '../../app/draft-files'
 
 import type { WorkspaceView } from '../../shared/workspace-view'
@@ -88,6 +89,16 @@ export interface ChatNotice {
   message: string
 }
 
+/**
+ * A chip that Add to chat asks the message field of a session for, as
+ * `addToChat` says. The field of that session takes it once, when it shows.
+ * Each request is a new object.
+ */
+export interface MentionRequest {
+  sessionId: string
+  target: MentionTarget
+}
+
 type LoadState =
   | { state: 'loading' }
   | { state: 'ready' }
@@ -125,10 +136,18 @@ export interface ChatSnapshot {
    * Null for a workspace that a person created, and until the view reads.
    */
   automation: RunAutomation | null
+  /**
+   * The folder of the workspace repository in the cloud computer, from the
+   * read of the view. The chat reads a path under it as a file of the tree.
+   * Null until the view reads, and when the reply gives no folder.
+   */
+  repositoryFolder: string | null
   activeSessionId: string | null
   sessionStates: Readonly<Record<string, SessionState>>
   overlay: Overlay
   notice: ChatNotice | null
+  /** The chip that waits for the message field of its session, if any. */
+  mentionRequest: MentionRequest | null
   resuming: boolean
   /** The Mac commands of the workspace, as `device/device-snapshot.ts` says. */
   devices: DeviceSnapshot
@@ -172,10 +191,12 @@ export const initialSnapshot: ChatSnapshot = {
   archiveTabs: null,
   view: null,
   automation: null,
+  repositoryFolder: null,
   activeSessionId: null,
   sessionStates: {},
   overlay: { kind: 'none' },
   notice: null,
+  mentionRequest: null,
   resuming: false,
   devices: initialDevices,
 }

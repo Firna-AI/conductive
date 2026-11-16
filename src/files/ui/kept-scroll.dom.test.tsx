@@ -24,6 +24,20 @@ function View(props: { view: string }) {
   )
 }
 
+/** A box whose address names a place at `top`, under `key`. */
+function AimView(props: { aim: string; top: number; text: string }) {
+  const { top } = props
+  const box = useKeptScroll('code', {
+    key: props.aim,
+    offset: () => ({ top, left: 0 }),
+  })
+  return (
+    <div data-view="code" ref={box}>
+      <p>{props.text}</p>
+    </div>
+  )
+}
+
 /** The px that the content of each box passes it sideways. */
 const width = 400
 
@@ -170,5 +184,36 @@ describe('the scroll offset of a file or diff tab', () => {
       top: 50,
       left: 0,
     })
+  })
+})
+
+describe('a place that the address names', () => {
+  const aimed = (tab: KeptScrollTab, aim: string, top: number, text = 'v1') => (
+    <KeptScroll.Provider value={tab}>
+      <AimView aim={aim} text={text} top={top} />
+    </KeptScroll.Provider>
+  )
+
+  it('wins over the kept offset, also when the content grows later', async () => {
+    places = new TabPlaces<ScrollOffset>()
+    const layout = layOut(1000)
+    const code = tabOf('file:app.ts')
+    places.set('file:app.ts', { top: 700, left: 0 }, 'code')
+    const page = await mount(aimed(code, '42-42', 300))
+    expect(boxOf(page).scrollTop).toBe(300)
+    await layout.grow(1000)
+    expect(boxOf(page).scrollTop).toBe(300)
+  })
+
+  it('keeps the place of the reader when the content changes, and scrolls again for a new place', async () => {
+    places = new TabPlaces<ScrollOffset>()
+    layOut(1000)
+    const code = tabOf('file:app.ts')
+    const page = await mount(aimed(code, '42-42', 300))
+    read(boxOf(page), 500)
+    await page.rerender(aimed(code, '42-42', 310, 'v2'))
+    expect(boxOf(page).scrollTop).toBe(500)
+    await page.rerender(aimed(code, '80-90', 640, 'v2'))
+    expect(boxOf(page).scrollTop).toBe(640)
   })
 })

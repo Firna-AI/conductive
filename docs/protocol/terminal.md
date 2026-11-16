@@ -2,7 +2,8 @@
 
 This doc holds the requirements and the decisions in force for the Terminal
 tool of a workspace. It covers the terminals of a workspace and their tabs,
-the shell of each terminal, its screen, and its links. It belongs to
+the shell of each terminal, and its screen. [Terminal links](terminal-links.md)
+gives the links in its output. It belongs to
 [Tools of a workspace](workspace-tools.md#terminal).
 [Terminal](terminal-previews-and-desktop.md#terminal) in the security docs
 states how the terminals stay safe. The terms are those of the
@@ -129,6 +130,17 @@ terminals at `app/tools` and its child pages.
   workspace's repository (decision 94).
 - The default shell prompt shows only the current folder name, such as
   `mokly`, in place of the full path.
+- On desktop, a click on the Terminal tab of the tools panel moves the
+  keyboard focus to the shown terminal. So does Go to Terminal, from its
+  row of the command palette or its key, ⌘J on a Mac or Ctrl+J elsewhere.
+  A terminal that still connects takes the focus when it shows, unless the
+  user moved the focus in the meantime. A choice of another tool drops
+  that wait. The user asked for the tab on 16 November 2026, and chose the
+  same for Go to Terminal on the same day.
+- Reason: a click on the tab says that the user wants to type in the
+  shell, so a second click in the terminal is a wasted step. A terminal
+  that takes the focus after the user chose another field was rejected,
+  because the user's keys then go to the shell.
 - The shell of each terminal keeps running when its connection drops. Each
   new connection of the terminal attaches to that shell, with its running
   commands and its current screen (decision 118).
@@ -142,6 +154,21 @@ terminals at `app/tools` and its child pages.
   as [Stop and resume](workspace-life.md#stop-and-resume) says. The list
   of terminals stays. The first connection of each terminal after the
   resume opens a new shell.
+- The commands that the user typed in a shell stay in the command
+  history after a stop. The new shell after the resume finds them, such as
+  with the Up arrow or Ctrl-R (terminal history decision 1). Terminal
+  history decisions are the decisions of the change that added this rule.
+- Each command goes into the history file when it ends, before the next
+  prompt. A command that still runs at the stop, such as a dev server, does
+  not go in. An empty or unset `HISTFILE` keeps the history out of the
+  file.
+- Reason: Bash writes its history file only when the shell exits. The
+  shell exits only during the shutdown at a stop, and a test on
+  16 November 2026 found no history file after the resume. The append
+  writes each command while the sandbox runs. A
+  shell that also reads the new commands of the other shells at each
+  prompt was rejected, because it changes the order of the Up arrow while
+  the user works.
 - After a start from a saved snapshot, the sandbox provider restores the
   disk in the background. A shell that starts after the restore ends opens
   in the live repository folder. A shell that started earlier moves to the
@@ -216,37 +243,6 @@ terminals at `app/tools` and its child pages.
 
 ## Links
 
-- Each `http` and `https` address in the output is a link. A held Cmd on
-  a Mac, or Ctrl on Windows and Linux, and a click open it (terminal links
-  decision 2 A). Such a click does not reach a program that uses the
-  mouse.
-- Reason: a plain click starts a selection, so a plain click that opens a
-  link was rejected. A rule that gives the click to a program that uses
-  the mouse was rejected, because the same click would then act in two
-  ways.
-- A local address opens the Preview tool at its port, as
-  [Port previews](port-previews.md) says. Its host is `localhost`,
-  `127.0.0.1`, `[::1]`, or `0.0.0.0`. Every other link opens in a new tab
-  of the browser, or in the default browser from the Mac app (terminal
-  links decision 1 B).
-- Reason: a local address in the terminal names the cloud computer, not
-  the user's computer. A new tab with the preview was rejected, because
-  the Preview tool keeps the user in the workspace.
-- A link under the mouse pointer shows an underline and a hint with the
-  key, such as "⌘-click to open".
-- A touch on a link opens it with no key, on each screen size. A mouse
-  always needs the key (terminal links decision 3 D).
-- Reason: a touch screen has no Cmd or Ctrl key. A rule by screen size
-  was rejected, because a narrow desktop window has a mouse, and a tablet
-  has the desktop layout. A menu, a long press, and Ctrl of the key row
-  then a tap were rejected, because each needs a second step or is hard
-  to find.
-- A program can print a link with a label, an OSC 8 link. The hint of
-  such a link also names the host of its real address, such as
-  "⌘-click to open reports.storefront.dev" (terminal links decision 4 B).
-- Reason: a label can hide where its link leads, and code in the sandbox
-  is untrusted. A dialog before each such link was rejected, because it
-  adds a step. A rule that such links open nothing was rejected, because
-  tools such as `ls --hyperlink` lose their links.
-- An address with a user name or a password, and an address with another
-  scheme, open nothing and show no hint.
+[Terminal links](terminal-links.md) gives the rules of the links in the
+output of each terminal: which addresses open, how they open, and the hint
+of each link.

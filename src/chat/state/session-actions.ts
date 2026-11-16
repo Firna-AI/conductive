@@ -72,9 +72,13 @@ async function showIfOpen(context: ChatContext, sessionId: string) {
 
 /**
  * "+" starts a session on the same branch and cloud computer, with the
- * default model of the user's account.
+ * default model of the user's account. `opened` gets the ID of the new
+ * session just before the chat shows it, as Add to chat needs.
  */
-export async function newSession(context: ChatContext): Promise<void> {
+export async function newSession(
+  context: ChatContext,
+  opened?: (sessionId: string) => void,
+): Promise<void> {
   const snapshot = context.store.get()
   const shown = snapshot.sessions.find(
     (item) => item.id === snapshot.activeSessionId,
@@ -87,7 +91,9 @@ export async function newSession(context: ChatContext): Promise<void> {
   try {
     const { session, eventNumber } = await context.api.createSession(choice)
     confirmRecord(context, session, eventNumber)
-    if (context.live()) await showIfOpen(context, session.id)
+    if (!context.live()) return
+    opened?.(session.id)
+    await showIfOpen(context, session.id)
   } catch (error) {
     showNotice(context, null, "The new session didn't open", error)
   }

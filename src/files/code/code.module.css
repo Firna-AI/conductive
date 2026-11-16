@@ -90,3 +90,12 @@
 .removed .sign {
   color: var(--ui-rose);
 }
+
+/* The lines that a line target names, as the mockups mark them. */
+.marked {
+  background: var(--ui-amber-soft);
+}
+
+.marked .number {
+  color: var(--ui-ink2);
+}

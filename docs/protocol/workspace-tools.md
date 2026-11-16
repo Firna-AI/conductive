@@ -25,6 +25,23 @@ makes each web address of chat text a link, as
   the temporary tab, as [Temporary tabs](temporary-tabs.md) says.
 - Markdown shows rendered, with a switch to its source. Code shows with line
   numbers and syntax colours.
+- A file tab can open at a line or a range of lines, such as from a file
+  chip of an answer with a line target, as
+  [Line targets](file-mentions.md#line-targets) says (answer chip
+  decision 2). The tab then shows the text of the file, also for a
+  Markdown file. It scrolls the first line to the middle of the view, and
+  marks each line of the range with a background colour.
+- The address of such a tab names the lines in its query, as
+  `?line=42` or `?line=42-50`. So a link opened in a new browser tab
+  shows the same lines. Each new address with lines scrolls again.
+- The lines win over the scroll place that the tab keeps. A later change
+  of the file does not scroll the tab again, so the reader keeps the
+  place.
+- The saved view of the workspace keeps the tab without the lines.
+  Reason: the view follows the member in each browser tab, and another
+  tab must not jump.
+- A range that runs past the end of the file stops at its last line. A
+  first line past the end shows the top of the file and marks nothing.
 - A link of the Markdown preview has the look and the title of a
   [link of chat text](chat-links.md) (chat link decision 1 D). A link to a
   page of the app opens that page in the app, in the same window, as in
@@ -76,6 +93,8 @@ makes each web address of chat text a link, as
 - A new temporary tab opens at the end of the tab row of the centre column.
   A replaced one keeps its place, as
   [The tab row](agents-and-sessions.md#the-tab-row) says.
+- A right click on a row of All files or Changes opens its row menu, with
+  Add to chat and Copy path, as [File row menu](file-row-menu.md) says.
 - The agent runner watches the repository and reports both lists.
   Branch changes count uncommitted and untracked work too.
 - The report of the branch changes also gives the number of commits of

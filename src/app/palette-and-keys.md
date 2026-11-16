@@ -67,7 +67,7 @@ state what they do.
 - A part of the page offers its actions to the palette while it shows,
   through `usePaletteOffer`: the workspace screen, its Terminal tool with
   New terminal, the workspace list that the page shows, and the sidebar
-  toggle of the Mac app. A row
+  toggle of the frame, in every host. A row
   closes the palette first. Its action runs once the palette has left
   the page, so a field that the action opens can take the focus, and a
   question shows alone. `useRowAction` gives the action of a row, for a

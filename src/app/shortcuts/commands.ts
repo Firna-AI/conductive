@@ -65,7 +65,6 @@ export const shortcutCommands: readonly ShortcutCommand[] = [
     'palette',
     'Hide or show the sidebar',
     actionTexts['hide-sidebar'].words,
-    'mac-app',
   ),
   command(
     'toggle-right-column',

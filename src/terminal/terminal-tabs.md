@@ -34,6 +34,10 @@ states the requirements.
   close that the user confirmed, the focus goes to the tab of the terminal
   that then shows, because the close button went away with its tab. A
   failed close keeps the focus on its close button.
+- A focus request of the owner, after a choice of the Terminal tool, goes
+  to the screen of the shown terminal only, as `focusRequest` in
+  [Mount the tool](README.md#mount-the-tool) says. The +, a press on a
+  tab, and New terminal of the palette move no focus.
 - An open and a close that worked change the tabs at once, before their
   event. The + and the close button of a terminal turn busy while their
   write runs.

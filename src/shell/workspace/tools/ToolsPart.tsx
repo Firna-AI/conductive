@@ -4,6 +4,7 @@ import tabs from '../../../../docs/mockups/src/components/common/LinkTabs.module
 import { PanelBar } from '../../../../docs/mockups/src/components/workspace/PanelBar'
 import panel from '../../../../docs/mockups/src/components/workspace/ToolsPanel.module.css'
 import { useServices } from '../../../app/services'
+import { useStore } from '../../../app/store'
 import { createTerminalConnector } from '../../../app/terminal-transport'
 import { DesktopTool } from '../../../desktop/DesktopTool'
 import { PreviewTool } from '../../../previews/PreviewTool'
@@ -161,6 +162,9 @@ export function ToolsPart(props: {
   const { tool } = navigation
   const terminalShown = useShownOnce(tool === 'terminal')
   const previewShown = useShownOnce(tool === 'preview')
+  // A choice of Terminal on desktop moves the focus to the terminal, also
+  // when the terminal connects later. A hidden terminal does not take it.
+  const focusRequest = useStore(context.terminalFocus.request)
   // A phone offers no New terminal, so its terminals load at the first show.
   const body = props.placeholder ?? (
     <>
@@ -168,9 +172,11 @@ export function ToolsPart(props: {
         <TerminalPart
           connect={connect}
           context={context}
+          focusRequest={tool === 'terminal' ? focusRequest : null}
           key={workspaceKey(toolWorkspace)}
           links={links}
           navigation={navigation}
+          onFocusDone={context.terminalFocus.clear}
           route={terminalRoute}
           screenRef={terminal}
           shown={terminalShown}

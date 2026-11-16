@@ -4,6 +4,7 @@ import type { TerminalEntry } from '../shared/terminal'
 import { CloseTerminalQuestion } from './CloseTerminalQuestion'
 import type { ReadyTerminals, ReadyTerminalsAction } from './readyTerminals'
 import type { ReadyTerminal } from './terminalApi'
+import type { TerminalFocusRequest } from './terminalFocus'
 import type { TerminalLinks } from './terminalLinks'
 import { shownTerminal, type TerminalRoute } from './terminalRoute'
 import { TerminalScreen, type ConnectTerminal } from './TerminalScreen'
@@ -18,6 +19,8 @@ interface ScreenProps {
   links?: TerminalLinks
   onActivity?: () => void
   screenRef?: Ref<HTMLDivElement>
+  /** The screen took the focus request, or dropped it after a focus move. */
+  onFocusDone?: () => void
 }
 
 /**
@@ -30,6 +33,8 @@ function TerminalPane(
     terminal: TerminalEntry
     hidden: boolean
     ended: boolean
+    /** The focus request of the owner, for the shown terminal only. */
+    focusRequest: TerminalFocusRequest | null
     /** The connection of the terminal. A new one mounts a new screen. */
     connection: number
     dispatch: (action: ReadyTerminalsAction) => void
@@ -47,9 +52,11 @@ function TerminalPane(
       <TerminalScreen
         connect={props.connect}
         ended={props.ended}
+        focusRequest={props.focusRequest}
         key={props.connection}
         links={props.links}
         onClosed={() => dispatch({ type: 'ended', terminalId: id })}
+        onFocusDone={props.onFocusDone}
         onInput={props.onActivity}
         screenRef={props.screenRef}
         terminal={terminal}
@@ -79,8 +86,9 @@ function TerminalPane(
  * another member, the terminal before it shows, and the route follows it.
  * Each terminal that the user showed stays mounted and connected while
  * another one shows. A terminal that the user never showed opens no
- * connection. Older software opens one shell, so the tool shows the first
- * terminal, with no row.
+ * connection. A focus request of the owner goes to the screen of the shown
+ * terminal only. Older software opens one shell, so the tool shows the
+ * first terminal, with no row.
  */
 export function OpenTerminals(
   props: ScreenProps & {
@@ -88,6 +96,8 @@ export function OpenTerminals(
     dispatch: (action: ReadyTerminalsAction) => void
     actions: TerminalActions
     route: TerminalRoute
+    /** Moves the keyboard focus to the screen of the shown terminal. */
+    focusRequest?: TerminalFocusRequest | null
   },
 ) {
   const { ready, dispatch, actions, route } = props
@@ -137,10 +147,14 @@ export function OpenTerminals(
           connection={ready.connections.get(each.id) ?? 0}
           dispatch={dispatch}
           ended={ready.ended.has(each.id)}
+          focusRequest={
+            each.id === terminal.id ? (props.focusRequest ?? null) : null
+          }
           hidden={each.id !== terminal.id}
           key={each.id}
           links={props.links}
           onActivity={props.onActivity}
+          onFocusDone={props.onFocusDone}
           screenRef={props.screenRef}
           terminal={each}
         />

@@ -15,7 +15,7 @@ import {
   useChatDropArea,
 } from './components/chat-drop-area'
 import { ChatOverlays, historyEntries } from './components/ChatOverlays'
-import type { ComposerFocus } from './components/Composer'
+import type { ComposerFocus } from './components/composer-requests'
 import { SessionChat, type ChatHost } from './components/SessionChat'
 import { CodeCopyProvider, useCodeCopyAction } from './components/code-copy'
 import { useSessionLinkCopy } from './components/session-link-copy'
@@ -230,7 +230,7 @@ function ChatBody(
   if (!mobile) {
     return (
       <LinksProvider value={links}>
-        <MentionsProvider value={mentions}>
+        <MentionsProvider root={snapshot.repositoryFolder} value={mentions}>
           <div className={styles.column} {...drops.handlers}>
             {body}
           </div>
@@ -240,7 +240,7 @@ function ChatBody(
   }
   return (
     <LinksProvider value={links}>
-      <MentionsProvider value={mentions}>
+      <MentionsProvider root={snapshot.repositoryFolder} value={mentions}>
         <TouchScreen>
           <div className={styles.phone} {...drops.handlers}>
             {body}

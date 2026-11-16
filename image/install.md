@@ -165,13 +165,20 @@ warning, and the installer still succeeds.
 The release units are:
 
 - `conductive-update-check.service`: root background download.
-- `conductive-update-check.timer`: boot and hourly checks.
+- `conductive-update-check.timer`: boot checks and a check every 10 minutes.
 - `conductive-runner.service`: root activation in pre-start, then the Rust runner as `user`.
 - `conductive-preview-relay.service` and `.socket`: Rust relay as `user`.
 - `conductive-terminal.service` and `conductive-terminal-sessions.service`: terminal services as `user`.
 
 The runner pre-start step runs apply only when `/run/conductive/workspace-ready` exists.
 Relay and terminal restarts do not change the selected release.
+A running runner also runs apply itself, through `sudo -n`, when its
+workspace is idle and its own release is confirmed. It then executes the new
+`current/system/runner-start.sh` in the same process, as the
+[runner service guide](../runner/service/README.md) says. That apply runs the
+same system installer, which restarts no unit. So a changed runner unit
+applies at the next start of the service, and the relay and terminal keep
+their running release until they start again.
 The runner, relay, and terminal entry points use `current/system/`.
 The runner executes `/opt/conductive/current/conductive runner`. It resolves
 its private Node and SDK helper beside that executable. The relay executes

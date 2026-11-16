@@ -48,6 +48,22 @@ The workspace keeps accepted messages for the agent.
 The org must have a successful build before you create a new workspace.
 That first build is separate from the start of an existing workspace's computer.
 
+## Mention a repository file
+
+Use a mention for a file or folder already in the workspace.
+
+1. Type `@` at the start of your message, or after a space or line break.
+2. Type part of the file or folder name.
+3. Select its entry from the list.
+
+The entry becomes a chip, a small box with its name, in the message field.
+Your message gives the agent its path, such as `@src/app.ts` or `@src/lib/`.
+Use **Attach files** for a file from your own computer.
+
+You can also select **Add to chat** from a row's menu in **All files** or **Changes**.
+
+- [Copy a path or add a file to chat](/docs/files-and-changes#copy-a-path-or-add-a-file-to-chat)
+
 ## Attach files
 
 Use **Attach files** to pick files, or drop files into the message box.
@@ -99,7 +115,7 @@ With current cloud computer software, workspaces also get a `.context/` folder f
 Git ignores the folder's files unless your repository already tracks them.
 **All files** lists them, so you can open them there.
 **Changes** does not list them.
-An older workspace gets this folder and its file list with an automatic software update at a later start.
+An older workspace gets this folder and its file list with an [automatic software update](/docs/cloud-computer#apply-setup-changes) at a later start or when it is idle.
 
 - [Read files and pictures](/docs/files-and-changes#read-a-file)
 
@@ -214,9 +230,18 @@ The answer stays visible beside it.
 
 ## Read replies and tables
 
-Agent replies can contain headings, paragraphs, lists, code, and tables.
+Agent replies can contain headings, paragraphs, lists, code, tables, and file chips.
 A wide table scrolls sideways inside the message.
 The text around it keeps the width of the chat.
+
+Agents name the files of your repository as `@` and a path, such as `@src/app.ts`.
+Each one shows as a file chip.
+Code that holds only the path of a file of the workspace also shows as a file chip.
+Select a chip to open its file.
+A Markdown link or image to a file of the workspace shows as a link with its label.
+Select the link to open the file.
+A path can end with a line or a range of lines, such as `@src/app.ts:42` or `src/app.ts:42-50`.
+Its chip opens the file as text, with those lines in view and marked.
 To copy a code block, select **Copy code** in its top corner.
 With a mouse, the button shows when you point at the block.
 **Code copied** confirms the copy.

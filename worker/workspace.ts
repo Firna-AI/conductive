@@ -24,6 +24,7 @@ import { continueBusy } from './lifecycle/continue-admission'
 import type { WorkspaceContinue } from './lifecycle/continue'
 import { createWorkspaceContinue } from './lifecycle/continue-composition'
 import { pendingContinue } from './lifecycle/continue-types'
+import { changeRestart, type RestartStep } from './lifecycle/software-restart'
 import type { User } from '../src/shared/api'
 import type { ContinueWorkspaceRequest } from '../src/shared/workspaces'
 import { resumeCreationCheckpoint } from './members/creation-checkpoint'
@@ -249,6 +250,14 @@ export class Workspace extends AgentSessionWorkspace {
     return featureResult(() =>
       this.run(() =>
         this.controller.restoreWorkspace(orgId, workspaceId, userId, origin),
+      ),
+    )
+  }
+
+  softwareRestart(workspaceId: string, step: RestartStep) {
+    return featureResult(() =>
+      this.run(() =>
+        changeRestart(this.integration, workspaceId, step, this.now()),
       ),
     )
   }

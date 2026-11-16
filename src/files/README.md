@@ -90,15 +90,25 @@ mark of the temporary tab, and the list. The kept chat loads it and saves it, an
 through the chat, so the view has one writer. The shell passes the view to
 the screens, with a `FilesNavigation`:
 
-- `href(target)` gives the address of a list, a file tab, or a diff tab.
-- `navigate(target)` handles a plain click. The shell saves the change in
-  the view, then moves the address. A file or a diff with no tab opens in
-  the temporary tab, as
-  [Temporary tabs](../../docs/protocol/temporary-tabs.md) says. A click
-  with a modifier key opens the address in a new browser tab.
+- `href(target, lines)` gives the address of a list, a file tab, or a diff
+  tab. A file tab with `lines` names them in the query, as `?line=42-50`.
+- `navigate(target, lines)` handles a plain click. The shell saves the
+  change in the view, then moves the address. A file or a diff with no tab
+  opens in the temporary tab, as
+  [Temporary tabs](../../docs/protocol/temporary-tabs.md) says. The view
+  keeps the tab without the lines. A click with a modifier key opens the
+  address in a new browser tab.
 - `keep(tab)` handles a double-click on a file row or on a tab. The shell
   makes the tab of that file or diff a kept tab when it is the temporary
   tab, and moves no address. Keep open in the tab menu calls it too.
+
+The shell reads the lines of the address with `useAddressLines`, which
+also counts each visit of an address with lines, and gives them to
+`FilePage`. So a second press on the same chip shows the lines again.
+`CodeView` then scrolls the first line to the middle of its view and
+marks each line of the range, as
+[Files and changes](../../docs/protocol/workspace-tools.md#files-and-changes)
+says. A file chip of an answer with a line target opens such an address.
 
 The screens:
 
@@ -119,6 +129,24 @@ The screens:
   gives the clock of the ages. Pass a stable function. The default is
   `Date.now`. The `listKeys` prop gives the key of the command that opens
   each list, as a tooltip and a name for `aria-keyshortcuts` of its tab.
+- The `rowMenu` prop of `FilesPanel` gives the items of the row menu of
+  each row of All files and Changes, in groups that a line parts, from the
+  real path, the kind, and the change of the row. The shell gives Add to
+  chat and Copy path, so the Files code holds no item and imports nothing
+  from the chat. Without the prop, no row has a menu. `useRowMenu` of the
+  lists opens the menu as
+  [File row menu](../../docs/protocol/file-row-menu.md) says, through
+  `PointMenu`, `Sheet`, `MenuList`, and `opensMenu` of the app shell and
+  `useLongPress` of the web app: a right click at the pointer, Shift and
+  F10 or the Menu key below the focused row, and a long press of a finger
+  in a sheet on a phone, else at the press. The row of the open menu keeps
+  the fill of a hover, and the focus goes back to it as the menu closes. A
+  press on an item gives the focus back to the row before the item runs,
+  so an item that moves the focus, such as Add to chat, finds it on the
+  row. A row whose label hides a secret value gets no item, so it opens no
+  menu, as [Labels of paths](labels.md) says. The menu shows only labels:
+  the name of the row titles it, and an item reads the real path only at
+  its press.
 - `FilePage` shows one file tab. Markdown starts rendered, and its view
   switch navigates to the same tab with the other mode. The page knows an
   image file by the name of its real path, as
@@ -189,6 +217,10 @@ the context, such as a file page on a phone, keeps nothing. Content that
 grows after the mount gets the offset again at each change of size, until
 the box reaches it or the reader scrolls. When a tab leaves the saved view,
 such as at a close, it forgets its offsets, so it opens at the top again.
+A view can give `useKeptScroll` an aim, a place that the address names,
+such as the lines of a file chip. The aim wins over the kept offset, and
+only a new key of the aim scrolls again, so a change of the file keeps the
+place of the reader. The hook is the one owner of the scroll of its box.
 The offsets live in a `TabPlaces` store of the web app, in
 `src/app/tab-places.ts`, and the chat files of the workspace screen give it
 each list of the file and diff tabs through `useFollowTabs`.
@@ -200,7 +232,9 @@ workspace screen.
 ## Labels of paths
 
 [Labels of paths](labels.md) gives the label that each screen shows in
-place of a real path, because a path can hold a secret value.
+place of a real path, because a path can hold a secret value. It also
+gives the check that leaves out the items of the row menu, and Copy path
+of the tab menu, for such a path.
 
 ## Safety
 
@@ -297,7 +331,8 @@ screen tests keep their static markup checks in Node.
 - `navigation.ts`: `FilesTarget`, `FilesNavigation`, and the tab types of
   the workspace view.
 - `model/file-labels.ts`: `pathLabel`, `pageLabel`, and `tabLabel`, the
-  label that a screen shows for a real path.
+  label that a screen shows for a real path, and `hidesSecret` and
+  `tabHidesSecret`, the shared check of a label that hides a secret value.
 - `panel/FilesPanel.tsx`, `page/FilePage.tsx`, `page/DiffPage.tsx`, and
   `tabs/FileTabItem.tsx`: the screens.
 - `page/file-view.ts`: `fileView`, what a file page shows of one read:
@@ -309,6 +344,9 @@ screen tests keep their static markup checks in Node.
   the label of its path. `page/decode-picture.ts` gives `decodePicture`,
   which loads a picture apart from the page to learn its size, or finds
   that the browser cannot draw it.
+- `panel/useRowMenu.tsx`: `useRowMenu`, the row menu of a list, and its
+  drawing at a point or in a sheet. `panel/row-menu.ts` gives the types of
+  the `rowMenu` prop and the groups of its entries.
 - `panel/UnavailableLists.tsx`: the notices of the failed repairs under
   the lists, with the mockups' `LostUpdateRow` and their ages, and the
   notice of a saved tree that the cloud computer could not read.

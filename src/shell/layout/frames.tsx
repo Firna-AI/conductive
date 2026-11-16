@@ -2,7 +2,7 @@ import { useRef, type ReactNode } from 'react'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import frame from '../../../docs/mockups/src/components/layout/AppFrame.module.css'
 import { useStore } from '../../app/store'
-import { useMacApp, useNarrowWindow, type MacChrome } from '../mac/mac-app'
+import { useMacApp, type MacChrome } from '../mac/mac-app'
 import mac from '../mac/mac.module.css'
 import { WindowControls, WindowStrip } from '../mac/WindowControls'
 import { FeedbackLayer } from '../feedback/FeedbackLayer'
@@ -12,6 +12,7 @@ import { DesktopLayers } from './DesktopLayers'
 import layout from './layout.module.css'
 import { usePanelLayout } from './panels'
 import { ResizeHandle } from './ResizeHandle'
+import { useSidebarOffer, useSidebarToggle } from './sidebar-toggle'
 
 interface FrameProps {
   rail: ReactNode
@@ -19,12 +20,11 @@ interface FrameProps {
   children: ReactNode
 }
 
-/** The sidebar of the org, which the user resizes. The Mac app can hide it. */
-function SidebarPanel(props: {
-  children: ReactNode
-  /** The Mac app marks the sidebar that the user hid. */
-  hidden?: boolean
-}) {
+/**
+ * The sidebar of the org, which the user resizes. Its toggle hides it. A
+ * hidden sidebar stays mounted, so its list keeps its state.
+ */
+function SidebarPanel(props: { children: ReactNode; hidden: boolean }) {
   const widths = useStore(usePanelLayout().widths)
   const sidebar = useRef<HTMLElement>(null)
   return (
@@ -46,8 +46,11 @@ function SidebarPanel(props: {
   )
 }
 
-/** The desktop app in a browser. */
+/** The desktop app in a browser. Its sidebar toggle sits beside Settings. */
 function BrowserFrame(props: FrameProps) {
+  const toggle = useSidebarToggle(Boolean(props.sidebar))
+  useSidebarOffer(toggle)
+  const shown = useStore(usePanelLayout().sidebarShown)
   return (
     <div className={frame.frame}>
       <DesktopLayers
@@ -55,7 +58,7 @@ function BrowserFrame(props: FrameProps) {
           <>
             {props.rail}
             {props.sidebar ? (
-              <SidebarPanel>{props.sidebar}</SidebarPanel>
+              <SidebarPanel hidden={!shown}>{props.sidebar}</SidebarPanel>
             ) : null}
           </>
         }
@@ -74,10 +77,10 @@ function BrowserFrame(props: FrameProps) {
  */
 function MacFrame(props: FrameProps & { chrome: MacChrome }) {
   const { mode } = useStore(props.chrome.window.state)
-  const hidden = useStore(props.chrome.sidebarHidden)
-  const narrow = useNarrowWindow()
-  const sidebar = Boolean(props.sidebar) && !narrow
-  const shown = sidebar && !hidden
+  const hidden = !useStore(usePanelLayout().sidebarShown)
+  const toggle = useSidebarToggle(Boolean(props.sidebar))
+  useSidebarOffer(toggle)
+  const shown = toggle === 'hide'
   return (
     <div
       className={classes(
@@ -92,7 +95,7 @@ function MacFrame(props: FrameProps & { chrome: MacChrome }) {
             <WindowControls
               chrome={props.chrome}
               placement={shown ? 'panel' : 'corner'}
-              toggle={!sidebar ? 'off' : hidden ? 'show' : 'hide'}
+              toggle={toggle}
             />
             <div className={frame.leftBody}>
               {props.rail}
@@ -111,9 +114,10 @@ function MacFrame(props: FrameProps & { chrome: MacChrome }) {
 
 /**
  * The desktop app: the org rail, the sidebar of the org, and the main area.
- * Below 900 px the sidebar hides, and the org in the rail leads to its
- * list. A page can leave out the sidebar. Its layers come from
- * `DesktopLayers`, as for a page alone.
+ * The sidebar toggle hides the sidebar, and below 900 px it hides too.
+ * Then the tile of the current org opens the list as a popover, as
+ * `ListPopover` says. A page can leave out the sidebar. Its layers come
+ * from `DesktopLayers`, as for a page alone.
  */
 export function AppFrame(props: FrameProps) {
   const chrome = useMacApp()

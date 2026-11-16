@@ -12,7 +12,7 @@ and a darker accent.
 
 The desktop layout has four columns. The org rail holds the mark, the orgs
 as squares with their initials, Create org, and the account at the bottom.
-The sidebar shows the org name with its Settings link, New workspace, Automations, Search, and
+The sidebar shows the org name with its Settings cog, New workspace, Automations, Search, and
 the sections that the user made. Each workspace is one line: a dot-matrix
 mark in the colour of its GitHub state, the name, and the time, and it
 moves to another section by drag and drop. Archive covers the time on
@@ -70,8 +70,10 @@ sessions as tabs above the chat, and four tabs at the bottom.
   the icon on each model of the other agent say it.
 - A view runs no script, so a screen draws an open menu in place: `Menu` in
   `src/components/common/` beside its button or its tab, at the pointer of
-  a right click, or in a `Sheet` on a phone. Firna's own menu rows are
-  taller than the dense design. A row can lead with a mark, such as an
+  a right click, or in a `Sheet` on a phone. `PointMenu` beside it draws
+  the menu of a right click on a row at the pointer, with an open submenu
+  beside it, for a workspace row and a row of All files or Changes.
+  Firna's own menu rows are taller than the dense design. A row can lead with a mark, such as an
   avatar, and end with a muted detail and an icon. An item that is off
   keeps its place, greyed, and its detail keeps the muted colour, so that
   the reason stays readable. An item with choices ends with an arrow, and
@@ -89,7 +91,8 @@ sessions as tabs above the chat, and four tabs at the bottom.
   has a menu. `linkCopy.ts` in `src/components/workspace/` gives the words
   of Copy link and of its result. The app
   reads the same list, so `workspaceMenu.ts` imports no fixture. A right
-  click opens the menu at the pointer, from `RowMenu.tsx` beside it.
+  click opens the menu at the pointer, from `RowMenu.tsx` beside it, which
+  draws it with `PointMenu`.
   Shift+F10 and the Menu key on a focused row open it below the row. No
   row has a button for the menu. The row under the pointer keeps its
   hover, with Archive over the time when the person can archive the
@@ -98,8 +101,9 @@ sessions as tabs above the chat, and four tabs at the bottom.
   menu and its choices in a sheet. A
   long press on a phone still lifts the row for a drag, and opens no menu.
   Rename puts a field in place of the name and the time, with the name
-  selected. `RowMenu.module.css` styles the field and the menu at the
-  pointer.
+  selected. `RowMenu.module.css` styles the field, and
+  `PointMenu.module.css` in `src/components/common/` styles the menu at
+  the pointer.
 - `OrgRail` in `src/components/layout/` draws the order of the orgs that
   each person keeps, from decisions 515 to 517, as `app/orgs/reorder`
   shows. A drag of a tile looks like the drag of a tab and of a workspace
@@ -116,9 +120,10 @@ sessions as tabs above the chat, and four tabs at the bottom.
 - `FailureToast` in `src/components/common/` draws the toast that names a
   change of the list that failed, with the message of the server, in the
   `ToastLayer` beside it, as `app/workspace-menu/rename/failed` shows.
-  Transcript copy uses the same layer. A copy that worked shows the
-  success mark. A copy that failed shows the error mark with the words
-  "Try again", as `app/transcripts` shows.
+  Transcript copy and Copy path use the same layer. A copy that worked
+  shows the success mark. A copy that failed shows the error mark with the
+  words "Try again", as `app/transcripts` and `app/files/menu/copied`
+  show.
 - `SignInFrame` in `src/screens/signInFrame.tsx` draws the pages before the
   app opens: the wordmark, one card in the middle, and the legal links. The
   sign-in, the sign-in of an invite link, and the waitlist share it, without
@@ -180,14 +185,17 @@ sessions as tabs above the chat, and four tabs at the bottom.
   and the attach button and Create, with the hint of the Enter key, at the
   bottom right. A phone always opens the page, so the dialog has no phone
   layout.
-- The account has four tabs, General, Agents, Preferences, and Keyboard
-  shortcuts, as links, as the org settings have. The Mac app adds This Mac
-  as its fifth tab. On a phone, a tab that
+- The account has five tabs, General, Agents, Preferences, Keyboard
+  shortcuts, and Stats, as links, as the org settings have. The Mac app
+  adds This Mac as its sixth tab. On a phone, a tab that
   does not fit moves to a second line. Preferences holds the New
   workspaces section, whose rows put each label beside its control in two
   columns. A segmented control chooses how New workspace opens, with a
   helper line under it, and a narrow section puts it under its label. A
   failed save shows its error under the control.
+- Stats uses the parts of the operator Overview: a box of tiles, the
+  workspaces by state, and the daily charts. Its tiles are Workspaces with
+  the new ones of 7 days, Running now, Automations, and Orgs.
 - `ShortcutsSections` in `src/components/settings/` draws the Keyboard
   shortcuts tab, in the Mac app and in each browser. It shows the keys of
   a host: the Mac app, a normal tab of Chrome or Firefox, or the installed
@@ -311,6 +319,12 @@ sessions as tabs above the chat, and four tabs at the bottom.
   panel gets an accent edge. The same handle lies across the top edge of the
   tools panel, and moves the split between the file lists and the tools, as
   `app/panels/split` shows.
+- The sidebar toggle hides the sidebar. In the browser it sits beside the
+  cog of Settings, and in the Mac app beside the window buttons. While the
+  sidebar is hidden, the tile of the current org opens the whole sidebar as
+  a popover beside the rail, as `app/panels/list-popover` shows. In the Mac
+  app the window controls then keep their width in the top left corner, as
+  `mac-app/window/sidebar-popover` shows.
 - A state tints a whole bar or box, and its edges stay neutral. No box has
   an accent strip on any edge.
 - `sizes.ts` in `src/components/chat/` holds the one size formatter.

@@ -20,6 +20,7 @@ import { PanelBar } from '../ui/PanelBar'
 import { ChangeList } from './ChangeList'
 import { FileTree } from './FileTree'
 import styles from './FilesPanel.module.css'
+import type { RowMenuItems } from './row-menu'
 import { UnavailableLists } from './UnavailableLists'
 
 /** The live snapshot of the files of a workspace. */
@@ -57,6 +58,7 @@ interface ListProps {
   navigation: FilesNavigation
   /** Shows in place of a list without a saved copy, as `FilesPanel` says. */
   waiting?: ReactNode
+  rowMenu?: RowMenuItems
 }
 
 function AllFiles(props: ListProps) {
@@ -111,6 +113,7 @@ function AllFiles(props: ListProps) {
         openMode={open?.kind === 'file' ? open.mode : 'preview'}
         openPath={openPath}
         revealed={snapshot.revealed}
+        rowMenu={props.rowMenu}
         rows={rows}
       />
     </div>
@@ -145,6 +148,7 @@ function Changes(props: ListProps) {
       changes={changes}
       navigation={props.navigation}
       openPath={open?.kind === 'diff' ? open.path : null}
+      rowMenu={props.rowMenu}
     />
   )
 }
@@ -181,6 +185,12 @@ export function FilesPanel(props: {
    * tab shows and its link names to a screen reader.
    */
   listKeys?: Partial<Record<FileListKind, CommandKey>>
+  /**
+   * The items of the menu of each row of All files and Changes, from the
+   * real path and the kind of the row, such as Copy path. A row whose label
+   * hides a secret value gets none. Without it, no row has a menu.
+   */
+  rowMenu?: RowMenuItems
 }) {
   const { files, list, navigation, listKeys } = props
   const snapshot = useFilesSnapshot(files)
@@ -213,6 +223,7 @@ export function FilesPanel(props: {
     open,
     navigation,
     waiting: props.waiting,
+    rowMenu: props.rowMenu,
   }
   let body: ReactNode = props.placeholder
   if (list === 'checks') body = props.checks

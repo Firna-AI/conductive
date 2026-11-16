@@ -39,7 +39,7 @@ const [autocomplete, debounce] = workspaceFixtures().sessions.sessions.map(
 const form: FilesTab = { kind: 'file', path: FAKE_FILE_PATH, mode: 'preview' }
 
 describe('the tab menu of the temporary tab in the workspace', () => {
-  test('Keep open keeps the temporary tab in its place with an upright title, gives the focus back to it, and says that it stays open, and the kept tab has no Keep open', async () => {
+  test('Keep open keeps the temporary tab in its place with an upright title, gives the focus back to it, and says that it stays open, and the kept tab has no Keep open, while both keep Copy path before the moves', async () => {
     holdAnimationFrames()
     const server = new FakeApiServer()
     const viewPath = workspaceViewPath(org, id)
@@ -77,6 +77,7 @@ describe('the tab menu of the temporary tab in the workspace', () => {
     }).toEqual({
       temporaryMenu: [
         { name: 'Keep open', off: false },
+        { name: 'Copy path', off: false },
         { name: 'Move left', off: false },
         { name: 'Move right', off: false },
         { name: 'Close tabs to the right', off: false },
@@ -85,6 +86,7 @@ describe('the tab menu of the temporary tab in the workspace', () => {
       focus: 'AddressForm.tsx',
       status: 'AddressForm.tsx stays open',
       keptMenu: [
+        { name: 'Copy path', off: false },
         { name: 'Move left', off: false },
         { name: 'Move right', off: false },
         { name: 'Close tabs to the right', off: false },

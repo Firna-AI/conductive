@@ -44,6 +44,17 @@ tools.
   and the address keeps the tab of the centre. Only a tool address follows
   the new tool. A preview tab changes the address only from a preview
   address, and otherwise picks the preview in the panel.
+- On desktop, a choice of Terminal moves the keyboard focus to the shown
+  terminal, as [The shell](../../../docs/protocol/terminal.md#the-shell)
+  says. The `select` of `useToolSelect` runs for a click on its tab and for
+  Go to Terminal of the palette or its key. It asks `terminalFocus` of the
+  workspace context, a `TerminalFocus` that each workspace screen keeps.
+  The request holds the element with the focus at the choice. A choice of
+  another tool drops it. The tools part passes it through `TerminalPart`
+  to the `focusRequest` of the Terminal tool, only while Terminal shows,
+  and clears it once the terminal took it. Only the screen of the shown
+  terminal takes it, also when that terminal still loads or connects. A
+  phone asks for no focus, because its keyboard would cover the page.
 - On a phone each tool that the app offers is a page of the tab bar, with
   its own address.
 - The terminal and Preview each mount at their first show, then stay
@@ -101,6 +112,8 @@ The command palette offers New terminal after the Go to rows, as
   does. It shows no terminal before the open ends, so a terminal that the
   user never showed opens no connection. A failed open shows the failure
   toast of the +.
+- New terminal moves no focus, as the + moves none: it shows the tool with
+  `select('terminal', { focus: false })`.
 - A key that the person gives New terminal on the Keyboard shortcuts tab
   runs the row, as for each command that the palette lists. It has no
   default key.

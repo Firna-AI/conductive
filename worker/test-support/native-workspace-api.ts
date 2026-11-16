@@ -103,6 +103,7 @@ export interface NativeWorkspaceApi {
       | 'scheduleImage'
       | 'archiveWorkspace'
       | 'restoreWorkspace'
+      | 'softwareRestart'
       | 'resumeMemberCreation'
       | 'reportRunnerLifecycle'
       | 'registerLifecycleTurn'

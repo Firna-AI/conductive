@@ -21,8 +21,13 @@ A preview shows a web server that runs there too.
 ## Open Terminal
 
 1. Open **Terminal** in the workspace.
-2. Select the terminal area to give it focus.
-3. Enter the command you want to run.
+2. Enter the command you want to run.
+
+On a computer, select the **Terminal** tab to give the terminal focus.
+**Go to Terminal** in the command palette does the same.
+So does its keyboard shortcut, by default **⌘J** on a Mac or **Ctrl+J** on another computer.
+If the terminal is still connecting, it gets focus when it appears.
+On a phone, or after you select something else, select the terminal area to give it focus.
 
 A new workspace starts with **Terminal 1**.
 Each terminal starts its own shell in the workspace's repository folder.
@@ -48,6 +53,7 @@ When a program shows a link with a label, its hint names the website that it ope
 
 Each terminal's shell keeps running when its connection drops.
 Select **Reconnect** to return to the same shell and running commands.
+**Restart** in the workspace header also drops the connection until the agents are back.
 If you end its shell with `exit`, **Reconnect** opens a new shell in the same tab.
 Stopping the cloud computer ends every terminal's shell and running commands.
 The terminal tabs stay after a resume.
@@ -99,6 +105,11 @@ Its existing terminal still works.
 Terminal tabs become available when an automatic software update applies.
 
 - [Understand cloud computer software updates](/docs/cloud-computer#apply-setup-changes)
+
+The commands that you typed stay in the shell's command history after a stop.
+After a resume, press the Up arrow or Ctrl-R to find them.
+A command that still runs at the stop, such as a server, is not kept.
+A workspace with older cloud computer software gets this with an automatic software update at a later start.
 
 ## Copy output
 

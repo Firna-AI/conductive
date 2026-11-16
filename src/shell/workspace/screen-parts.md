@@ -22,9 +22,9 @@ says.
 - Connect, on the notice of a missing agent login, opens the Connect form
   of the account.
 - A plain click on a workspace row of the sidebar puts a request in
-  `AppModel.composerFocus`. `ChatArea` gives the request of its workspace
-  to the chat as `composerFocus`, so the message field takes the focus
-  when it shows, as
+  `AppModel.composerFocus`, and so does Add to chat of the Files panel on
+  desktop. `ChatArea` gives the request of its workspace to the chat as
+  `composerFocus`, so the message field takes the focus when it shows, as
   [Chat integration](../../chat/integration.md) says. A phone gets no
   request, so no keyboard opens on its own.
 - On desktop, the chat shows the file and diff tabs of the saved view
@@ -120,6 +120,31 @@ Each folder of a path is a part of the address. Another address under
   same way: the shell gives only that tab a `keep` for the chat. A move of
   the temporary tab to another place in the row clears the mark too, in
   the chat's save of the new order.
+- The row menu of each row of All files and Changes holds Add to chat,
+  a line, and Copy path, as
+  [File row menu](../../../docs/protocol/file-row-menu.md) says. The shell
+  gives them to the Files panel as its `rowMenu`, and gives each file and
+  diff tab a `copyPath` for Copy path of its tab menu. Both Copy path
+  items copy the real path with the clipboard of the org, so the Mac app
+  copies too, and a toast says the result. A copy sends no request and
+  starts no sandbox, so it also works from the lists that a stopped
+  sandbox keeps. A tab whose label hides a secret value, or is not known
+  yet, gets no `copyPath`.
+- Add to chat gives the file or the folder of its row to `addToChat` of
+  the kept chat, which puts its chip into the message field of the
+  session that the member saw last, or of a new session, as
+  [Add to chat](../../chat/loads-and-sends.md#add-to-chat) says. On
+  desktop, the chat leaves a file or diff tab for that session, as for a
+  click on a session tab, and the field takes the focus through the focus
+  request of the app. The row menu gives the focus back to the row before
+  the item runs, so that request names the row. A phone switches to the
+  chat, with no focus request.
+- Add to chat shows only on a row whose entry the list of `@` offers, so a
+  deleted file of Changes has none. It shows only after the chat loads,
+  and not while a bar of the sandbox takes the place of the composer, as
+  `barReplacesComposer` of `sandbox-view.ts` says. So the lists that a
+  stopped sandbox keeps offer Copy path only. The items follow each
+  change of these states, also in a menu that is open.
 - A click on a list saves the list. On desktop the list belongs to the
   right column, so the address keeps the tab of the centre. On a phone a
   list is a page with its own address. An address that names a list saves
@@ -179,7 +204,9 @@ The workspace screen keeps one GitHub store, through `useGitHubState` of
 [the GitHub screens](../../github/README.md), for the pull request bar or
 row and the Checks tab of the Files part. It reads with the `fetch` of
 the org, waits with the timer of the app, and takes the GitHub events of
-the ordered stream of the workspace.
+the ordered stream of the workspace. Of the old GitHub states that a replay
+of the stream holds, it takes only the newest, so the bar does not flicker
+through them while the workspace loads.
 
 - The screen keeps one action state for the bar on desktop and the top of
   the Checks tab on a phone, as

@@ -83,6 +83,7 @@ describe('This Mac in the account', () => {
           'Agents',
           'Preferences',
           'Keyboard shortcuts',
+          'Stats',
           'This Mac',
         ],
         open: ['This Mac'],
@@ -128,7 +129,13 @@ describe('This Mac in the account', () => {
       requests: macRequests(server),
     }).toEqual({
       tabs: {
-        all: ['General', 'Agents', 'Preferences', 'Keyboard shortcuts'],
+        all: [
+          'General',
+          'Agents',
+          'Preferences',
+          'Keyboard shortcuts',
+          'Stats',
+        ],
         open: ['General'],
       },
       sections: ['GitHub', 'Invite code'],

@@ -9,7 +9,7 @@
 - **Terms:**
   - **Link addon:** `@xterm/addon-web-links`, which finds web addresses in the terminal output.
   - **Shared address reader:** `src/markdown/web-links.ts`, which finds and sorts addresses for the chat, and sorts them for the terminal.
-- **Background:** Each `http` and `https` address in the terminal is a link, as `docs/protocol/terminal.md#links` says. The link addon never ends an address with `]`.
+- **Background:** Each `http` and `https` address in the terminal is a link, as `docs/protocol/terminal-links.md` says. The link addon never ends an address with `]`.
 - **Problem:**
   - `http://[::1]`, `https://[2001:db8::1]`, and any other IPv6 host with no port and no path are not links. `http://[::1]:8080` and `http://[::1]/` work. The chat reader drops a final `]` too (finding 2).
   - An address that opens nothing, such as `https://user:pw@example.com/` or an app address that is no page, still gets the xterm.js underline and pointer, because the addon gives it to xterm.js before the app checks it (finding 6).

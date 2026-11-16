@@ -204,7 +204,7 @@ export const shortcutSpecs: readonly GroupSpec[] = [
   {
     label: 'View',
     rows: [
-      macAppCommand('toggle-sidebar', 'Hide or show the sidebar', '⌘B', '['),
+      command('toggle-sidebar', 'Hide or show the sidebar', '⌘B', '['),
       command(
         'toggle-right-column',
         'Hide or show the right column',

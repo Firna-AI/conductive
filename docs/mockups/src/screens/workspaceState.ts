@@ -18,6 +18,11 @@ import {
   feedbackStateKeys,
   feedbackStateProperties,
 } from './feedbackState'
+import {
+  rowMenuStateDefaults,
+  rowMenuStateKeys,
+  rowMenuStateProperties,
+} from './rowMenuState'
 
 /**
  * The state of the workspace screen. Each catalogue entry of the screen is a
@@ -46,6 +51,7 @@ export const workspaceStateSchema = {
     'modelChoice',
     'resize',
     'rightColumn',
+    'sidebar',
     'overlay',
     'archive',
     'viewer',
@@ -55,6 +61,7 @@ export const workspaceStateSchema = {
     'org',
     'palette',
     ...feedbackStateKeys,
+    ...rowMenuStateKeys,
     ...barStateKeys,
   ],
   properties: {
@@ -149,11 +156,20 @@ export const workspaceStateSchema = {
      */
     rightColumn: { enum: ['shown', 'hidden'] },
     /**
+     * The sidebar of the desktop: shown, hidden with its toggle, or hidden
+     * with the workspace list open as a popover of the tile of the org.
+     */
+    sidebar: { enum: ['shown', 'hidden', 'popover'] },
+    /**
      * What lies open over the workspace: the session history, the question
      * before a running session closes, the owner of the workspace, the tab
-     * menu of the first session or of the temporary tab, or the question of
-     * Continue with work that is not pushed. Or the question before a
-     * terminal closes, or the toast of a terminal that did not open or close.
+     * menu of the first session or of the shown file or diff tab, such as
+     * the temporary tab, or the question of Continue with work that is not
+     * pushed. Or the question before a terminal closes, or the toast of a
+     * terminal that did not open or close. Or the menu of the header state,
+     * the question of Restart while an agent works, the time after Restart
+     * until the agents are back, or that time with the toast of a failed
+     * update check.
      */
     overlay: {
       enum: [
@@ -166,6 +182,10 @@ export const workspaceStateSchema = {
         'close-terminal',
         'terminal-open-failed',
         'terminal-close-failed',
+        'restart',
+        'restart-confirm',
+        'restarting',
+        'restart-update-failed',
       ],
     },
     /**
@@ -224,6 +244,7 @@ export const workspaceStateSchema = {
      */
     palette: { enum: paletteViews },
     ...feedbackStateProperties,
+    ...rowMenuStateProperties,
     ...barStateProperties,
   },
 } as const
@@ -251,6 +272,7 @@ export const readyWorkspace: WorkspaceState = {
   modelChoice: 'workspace',
   resize: 'none',
   rightColumn: 'shown',
+  sidebar: 'shown',
   overlay: 'none',
   archive: 'kept',
   viewer: 'admin',
@@ -260,6 +282,7 @@ export const readyWorkspace: WorkspaceState = {
   org: 'active',
   palette: 'closed',
   ...feedbackStateDefaults,
+  ...rowMenuStateDefaults,
   ...barStateDefaults,
 }
 

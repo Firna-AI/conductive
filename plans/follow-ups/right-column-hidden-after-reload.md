@@ -20,6 +20,6 @@
   - **C.** On every device of the user. The Worker keeps the choice as a setting of the user. It needs a field in the account API, a D1 migration, a write at each press of the toggle, and the same doc changes as B. Effort: Medium.
 - **Left out:** A choice for each workspace, because the widths are one choice for the tab, and a choice for each workspace makes the column jump at each switch. The toggle keeps one choice for the tab, as a design call of 2026-11-08.
 - **Wider fix:** None, because this is one choice, not a class of problem.
-- **Previous examples:** The sidebar toggle of the Mac app keeps its state in memory for one run of the app, in `MacChrome.sidebarHidden` of `src/shell/mac/mac-app.tsx`. The panel widths survive a reload.
+- **Previous examples:** The sidebar toggle keeps its state in memory until the page closes, in `PanelLayout.sidebarShown` of `src/app/panels.ts`, in the browser and in the Mac app. The same question applies to it. The panel widths survive a reload.
 - **Recommendation:** B. The width of the same column already survives a reload, so a column that comes back at each reload surprises the user.
 - **Action:** ask the user, because B changes the architecture rule that the browser stores only the panel widths, and the Privacy notice, and no user decision covers that change.
