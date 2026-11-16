@@ -75,6 +75,11 @@ export type PaletteContext = {
   archivable: boolean
   restorable?: boolean
   rightColumn?: boolean
+  /**
+   * The page under the palette can show the sidebar, so the Window group
+   * offers Hide the sidebar. A phone has no sidebar, so it leaves it out.
+   */
+  sidebar?: boolean
   mac?: boolean
   /**
    * The person's changes to the shortcuts (decision 190). On desktop, each
@@ -139,7 +144,7 @@ function actionsOf(context: PaletteContext): Command[] {
     ...openActions(context),
     ...orgActions,
     ...appActions,
-    ...windowActions,
+    ...(context.sidebar ? windowActions : []),
     ...helpActions,
   ]
 }
@@ -231,7 +236,9 @@ function groupsOf(
         ...own,
         { label: orgs.acme.name, rows: commandRows(orgActions) },
         { label: 'Orgs', rows: commandRows(appActions) },
-        { label: 'Window', rows: commandRows(windowActions) },
+        ...(context.sidebar
+          ? [{ label: 'Window', rows: commandRows(windowActions) }]
+          : []),
         { label: helpGroupLabel, rows: commandRows(helpActions) },
       ]
     }

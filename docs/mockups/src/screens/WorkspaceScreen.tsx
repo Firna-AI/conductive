@@ -208,6 +208,7 @@ export function WorkspaceScreen(props: {
     archivable,
     restorable,
     rightColumn: !rightHidden,
+    sidebar: true,
     mac: mac !== undefined,
     shortcuts: props.shortcuts,
   })

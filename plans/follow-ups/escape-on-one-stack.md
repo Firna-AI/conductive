@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-16, from branch `calummoore/milan-hmhx`, the wider fix of review item 1.
-- **Location:** `src/shell/ui/Overlay.tsx`, `useEscapeLayer`. `src/shell/list/WorkspaceNameField.tsx`. `src/shell/list/SectionHeader.tsx`, `RenameField`. `src/shell/palette/PalettePanel.tsx`, `onKeyDown`. `src/shell/layout/ListPopover.tsx`, `useDismiss`.
+- **Location:** `src/shell/ui/Overlay.tsx`, `useEscapeLayer`. `src/app/pointer-drag.ts`, the Escape listener on `window`. `src/shell/list/WorkspaceNameField.tsx`. `src/shell/list/SectionHeader.tsx`, `RenameField`. `src/shell/palette/PalettePanel.tsx`, `onKeyDown`. `src/shell/layout/ListPopover.tsx`, `useDismiss`.
 - **Reason:** The wider fix changes the Escape handling of the palette, the rename fields, and the shared layer helper, outside the files of the branch.
 
 - **Terms:**
@@ -13,13 +13,14 @@
   - Menus and dialogs close on Escape through the Escape stack. The rename fields and the palette handle Escape in their own key handlers, which run after the capture phase.
   - The list popover first used the Escape stack too. Then it took Escape before a rename field inside it, and the field saved the typed name on blur. The branch fixed this directly: the popover now listens for Escape after the page, and leaves a key that a handler took, a key that an input method composes, and a key in its own text field.
   - So two Escape mechanisms stay. Each new layer must choose one, and a layer on the stack can still take a key that a newer field owns.
+  - The pointer drag of `src/app/pointer-drag.ts` is a third mechanism. During a drag of a row or a section, it listens for Escape on `window`, and it calls no `preventDefault`. A key reaches `document` before `window`, so Escape during a drag in the list popover ends the drag and also closes the popover. In the visible sidebar, the same Escape ends only the drag. Review item 11 of 2026-11-16 confirmed it with a test.
   - `useEscapeLayer` also takes Escape while an input method composes, so an open dialog or menu closes on a key that the input method needs, against `docs/protocol/keyboard-shortcuts.md`.
-- **Problem:** Escape has two mechanisms, and an older layer on the stack can take a key that a newer field or palette owns.
+- **Problem:** Escape has three mechanisms, and an older layer can take a key that a newer field, palette, or drag owns.
 - **Impact if no action:** A later layer on the stack, opened over a rename field or under the palette, can drop a rename or need two presses of Escape.
 - **Root question:** How does Escape always reach the newest field or layer that the person opened?
 - **Options:**
   - **A.** Keep the two mechanisms, and add a comment in `Overlay.tsx` that says when a layer must not use the stack. Effort: Small.
-  - **B.** Put every Escape handler on the Escape stack. The palette closes through `useEscapeLayer`, each rename field adds a layer that cancels it, and the list popover moves back to the stack. `useEscapeLayer` leaves a key during text composition to the text. Keep the tests of `src/shell/layout/ListPopoverLayers.test.tsx` green. Effort: Medium.
+  - **B.** Put every Escape handler on the Escape stack. The palette closes through `useEscapeLayer`, each rename field adds a layer that cancels it, the pointer drag adds a layer while a press is lifted, and the list popover moves back to the stack. `useEscapeLayer` leaves a key during text composition to the text. Keep the tests of `src/shell/layout/ListPopoverLayers.test.tsx` and `ListPopoverGuards.test.tsx` green, and add a test that Escape during a drag in the popover ends only the drag. Effort: Medium.
 - **Left out:** A marker that the stack honours on the elements that own their Escape. It keeps two mechanisms, so B is better on every point.
 - **Wider fix:** B. One stack for every layer prevents the class.
 - **Recommendation:** B. One stack gives each Escape to the newest field or layer, and it fixes the text composition gap of dialogs and menus.

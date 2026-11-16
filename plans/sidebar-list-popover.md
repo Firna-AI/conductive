@@ -290,12 +290,16 @@ Depends on: every other milestone
       the load of the full run and pass alone, and the site build test
       needs its temporary folder on the disk of the repository. The log
       is in `.context/sidebar-list-popover/gate.md`.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
-      once, and report.
+      once, and report. Round 1 found 9 items and round 2 found 4. Items
+      3 and 13 wait for the user, in
+      `plans/follow-ups/recorded-keys-lose-to-new-defaults.md` and
+      `plans/follow-ups/popover-menu-dialogs-rule.md`. The reports are in
+      `.context/reviews/calummoore/milan-hmhx/`.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the
