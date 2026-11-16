@@ -39,7 +39,21 @@ export function restartingLifecycle(
     )
   if (!RESTARTABLE.has(state.state) || state.startStop !== undefined)
     throw workspaceNotRunning()
-  return { ...state, state: 'starting', softwareRestartAt: now, error: null }
+  return {
+    ...state,
+    state: 'starting',
+    softwareRestartAt: now,
+    lastActivityAt: Math.max(state.lastActivityAt, now),
+    error: null,
+  }
+}
+
+/**
+ * A failed restart leaves its cloud computer running, so that Try again can
+ * use it. Unlike the other errors, it keeps the idle stop.
+ */
+export function isFailedRestart(state: DurableLifecycleState): boolean {
+  return state.state === 'error' && state.error?.code === 'restart_failed'
 }
 
 /** A restart that failed, or did not end in time, shows the error state. */

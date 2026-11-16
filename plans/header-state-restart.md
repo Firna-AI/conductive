@@ -225,12 +225,18 @@ Depends on: 3
 Depends on: every other milestone
 
 - [ ] Run the targeted tests and the complete gate named in `CLAUDE.md`.
-- [ ] Commit with Conventional Commits and push the branch.
+- [x] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
       once, and report.
+  - Round 1 found three items. Item 1, a failed restart with no idle
+    stop, is fixed with A. Item 3, no route test, is fixed with B. Item 2,
+    terminals disconnect during Restart, waits for the user. Follow-ups:
+    `plans/follow-ups/restart-keeps-terminal-access.md`,
+    `plans/follow-ups/sandbox-may-run-idle-stop.md`, and
+    `plans/follow-ups/workspace-action-route-access-test.md`.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the

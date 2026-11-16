@@ -4,6 +4,7 @@ import { requireFeatureResult } from '../features/result'
 import { HttpError } from '../http'
 import { setupBackendTests } from './backend-test-hooks'
 import { SOFTWARE_RESTART_LIMIT_MS } from './durable-restart'
+import { IDLE_MS } from './durable-types'
 import { startRetryFixture } from './retry-test-support'
 import {
   RESTART_COMMAND,
@@ -81,8 +82,8 @@ it('restarts with the installed software when the update check fails', async () 
   expect((await lifecycle())?.state).toBe('starting')
 })
 
-it('shows the error state with Try again when the restart command fails', async () => {
-  const { fixture, restart, lifecycle } = await readyWorkspace()
+it('shows the error state with Try again when the restart command fails, and still stops when idle', async () => {
+  const { fixture, workspaceId, restart, lifecycle } = await readyWorkspace()
   fixture.boat.synchronousExitCode = 1
   const error = await refusal(restart())
   expect([error.status, error.code]).toEqual([502, 'restart_failed'])
@@ -94,6 +95,12 @@ it('shows the error state with Try again when the restart command fails', async 
     },
   })
   expect((await lifecycle())?.softwareRestartAt).toBeUndefined()
+  // The cloud computer still runs for Try again, and it keeps its idle stop.
+  expect(fixture.boat.stopIds).toEqual([])
+  const idleAt = ((await lifecycle())?.lastActivityAt ?? 0) + IDLE_MS
+  await fixture.advanceTo(idleAt, workspaceId)
+  expect(fixture.boat.stopIds).toEqual(['bx_1'])
+  expect((await lifecycle())?.state).toBe('stopped')
 })
 
 it('ends a restart whose runner is not ready within the time limit', async () => {
