@@ -3,6 +3,7 @@ import { resolve } from 'node:path'
 import { _electron, chromium, expect, test } from '@playwright/test'
 import type { Browser, ElectronApplication } from '@playwright/test'
 
+import { previewOpeningCopy } from '../../docs/mockups/src/components/tools/previewCopy.js'
 import {
   DESKTOP_ORIGIN,
   DESKTOP_SESSION_COOKIE,
@@ -120,9 +121,10 @@ test('opens a Mac preview frame and hands its new tab to a browser without a sig
     ).toBe(true)
     server.reject()
     await tab.goto(handoff)
-    await expect(tab.getByRole('status')).toHaveText(
-      'The preview is not available. Open it again from the workspace.',
-    )
+    await expect(tab.getByRole('status').getByRole('paragraph')).toHaveText([
+      previewOpeningCopy.failedTitle,
+      previewOpeningCopy.failedBody,
+    ])
     await expect(tab).toHaveURL(server.authorizer)
     expect(electron.windows()).toHaveLength(1)
   } finally {
