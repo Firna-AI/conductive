@@ -78,7 +78,7 @@ function TimeZoneField(props: { timeZone: string }) {
   return (
     <div className={styles.zone}>
       <DropdownSelector
-        hint="Every schedule of this routine uses it."
+        hint="Every schedule of this automation uses it."
         label="Time zone"
         onValueChange={noop}
         options={timeZones}

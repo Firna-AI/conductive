@@ -204,7 +204,7 @@ describe('OrgModel', () => {
     release()
   })
 
-  test('shown routines read again on a timer that is faster while a last run is queued or works', async () => {
+  test('shown automations read again on a timer that is faster while a last run is queued or works', async () => {
     const server = new FakeApiServer()
     const delay = new ManualDelay()
     const model = new OrgModel(

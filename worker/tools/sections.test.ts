@@ -24,7 +24,7 @@ afterEach(async () => {
   await fixture?.dispose()
 })
 
-it('uses sender section rights and returns live archived and routine work to General on delete', async () => {
+it('uses sender section rights and returns live archived and automation work to General on delete', async () => {
   const active = (fixture = await agentWriteFixture(bundle))
   const first = await active.post(MACHINE_PATHS.sections, {
     name: '  Review  board  ',

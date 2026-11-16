@@ -15,6 +15,6 @@ export async function recordRunChoice(
     .bind(JSON.stringify(choice), orgId, runId)
     .first<{ choiceJson: string }>()
   const recorded = row && readRunChoice(row.choiceJson)
-  if (!recorded) throw new Error('The routine run choice was not saved.')
+  if (!recorded) throw new Error('The automation run choice was not saved.')
   return recorded
 }

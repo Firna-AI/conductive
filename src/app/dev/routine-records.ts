@@ -8,7 +8,7 @@ export function requireRoutine(org: OrgState, routineId: string): Routine {
     throw new RouteError(
       404,
       'routine_not_found',
-      'The routine is not available.',
+      'The automation is not available.',
     )
   }
   return routine
@@ -18,7 +18,7 @@ export function ownerRequired(): RouteError {
   return new RouteError(
     403,
     'routine_owner_required',
-    'Only the owner can change this routine.',
+    'Only the owner can change this automation.',
   )
 }
 

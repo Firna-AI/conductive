@@ -134,7 +134,7 @@ it('reports a queued first turn failure when its login disappears before dispatc
   await fixture.chat.closeConnections()
 })
 
-it('uses the routine owners unshared login through the gateway and reports its loss once after the runner ends', async () => {
+it('uses the automation owners unshared login through the gateway and reports its loss once after the runner ends', async () => {
   const fixture = await createChatFixture(harness)
   await fixture.env.DB.prepare(
     "UPDATE agent_logins SET no_reuse = 1 WHERE user_id = ? AND agent = 'claude'",

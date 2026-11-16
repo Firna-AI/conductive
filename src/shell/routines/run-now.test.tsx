@@ -57,12 +57,12 @@ describe('Run now', () => {
     })
   })
 
-  test('shows for the owner of a routine with a schedule, also while it is off, and for no one else', async () => {
+  test('shows for the owner of an automation with a schedule, also while it is off, and for no one else', async () => {
     const shown = async (role: 'admin' | 'member', routineId: string) => {
       const server = new FakeApiServer({ role })
       const { view } = await openApp(server, routes.routine(org, routineId))
       await waitFor(
-        () => queryByText('Routine', view),
+        () => queryByText('Automation', view),
         `the page of ${routineId}`,
       )
       await runRows(view)

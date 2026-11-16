@@ -100,7 +100,7 @@ it('keeps a failed start workspace and cause, counts the failure, and retries in
   ).toBe(1)
 })
 
-it('skips queued runs whose routine, owner, or org cannot start them and does not count them as failures', async () => {
+it('skips queued runs whose automation, owner, or org cannot start them and does not count them as failures', async () => {
   const fixture = await runFixture(harness)
   const { runtime, org, user, seedRun } = fixture
   const db = runtime.env.DB
@@ -245,7 +245,7 @@ it('does not run a queued manual request on the replacement owners logins after 
   ).toBe(0)
 })
 
-it('counts each failed run once and turns the routine off at three failures', async () => {
+it('counts each failed run once and turns the automation off at three failures', async () => {
   const fixture = await runFixture(harness)
   const { runtime, org, user, seedRun } = fixture
   await runtime.env.DB.prepare('DELETE FROM agent_logins WHERE user_id = ?')

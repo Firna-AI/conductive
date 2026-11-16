@@ -134,7 +134,7 @@ export function RoutineEditor(
         />
       }
       tabs={routine ? { routineId: routine.id, current: props.tab } : undefined}
-      title={routine ? routine.name : 'New routine'}
+      title={routine ? routine.name : 'New automation'}
     >
       {routine ? (
         <RoutineNote
@@ -178,7 +178,7 @@ export function RoutineEditor(
       {routine && phone ? (
         <div className={styles.phoneDelete}>
           <ActionButton icon={Trash2} onPress={deletion.ask} tone="danger">
-            Delete routine
+            Delete automation
           </ActionButton>
         </div>
       ) : null}

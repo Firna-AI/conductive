@@ -26,7 +26,7 @@ function Waiting(props: { org: OrgSummary; title?: string }) {
     <RoutineFrame org={props.org} title={props.title}>
       <div className={ui.center}>
         <Spinner
-          accessibilityLabel="Loading the routine"
+          accessibilityLabel="Loading the automation"
           color={theme.colors.muted}
           size={13}
         />
@@ -46,11 +46,11 @@ function Missing(props: { org: OrgSummary }) {
             onPress={() => go(routes.routines(props.org.id))}
             tone="primary"
           >
-            Open Routines
+            Open Automations
           </ActionButton>
         }
         icon={SearchX}
-        title="This routine is not available"
+        title="This automation is not available"
       />
     </RoutineFrame>
   )
@@ -82,7 +82,7 @@ function SavedRoutine(props: {
         <LoadFailure
           error={routine.error}
           retry={() => model.reload()}
-          title="The routine didn't load"
+          title="The automation didn't load"
         />
       </RoutineFrame>
     )
@@ -142,13 +142,13 @@ function NewRoutine(props: { org: OrgSummary; user: User }) {
   const { suspended } = useOrgAccess(org)
   const { timeZone } = useServices()
   useEffect(() => orgModel.watch('repositories', 'list', 'members'), [orgModel])
-  if (suspended) return <RoutineFrame org={org} title="New routine" />
+  if (suspended) return <RoutineFrame org={org} title="New automation" />
   if (
     !account ||
     repositories.state === 'loading' ||
     sections.state === 'loading'
   ) {
-    return <Waiting org={org} title="New routine" />
+    return <Waiting org={org} title="New automation" />
   }
   const lists = {
     repositories: repositories.state === 'ready' ? repositories.value : [],

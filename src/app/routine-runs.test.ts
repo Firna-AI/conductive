@@ -94,7 +94,7 @@ function setup(fetch?: (server: FakeApiServer) => FetchLike) {
   return { server, delay, focus, runs }
 }
 
-describe('the runs of a routine', () => {
+describe('the runs of an automation', () => {
   test('read again every 10 seconds while the page shows, and at each return to the page', async () => {
     const { server, delay, focus, runs } = setup()
     server.json('GET', routinePaths.runs(org, routineId), page([], null))

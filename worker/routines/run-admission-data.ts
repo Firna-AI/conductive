@@ -32,14 +32,14 @@ export async function runAdmission(
     (run.ownerUserId !== null && run.ownerUserId !== routine.owner.id) ||
     row.member !== 1
   )
-    return { code: 'owner_left', message: 'The routine owner left the org.' }
+    return { code: 'owner_left', message: 'The automation owner left the org.' }
   if (row.userSuspended !== null)
     return {
       code: 'user_suspended',
-      message: 'The routine owner is suspended.',
+      message: 'The automation owner is suspended.',
     }
   if (!routine.active && run.trigger.kind !== 'run-now')
-    return { code: 'routine_off', message: 'The routine is off.' }
+    return { code: 'routine_off', message: 'The automation is off.' }
   return {
     owner: {
       id: row.id,

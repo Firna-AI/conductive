@@ -15,7 +15,7 @@ afterAll(async () => {
   await harness.dispose()
 })
 
-it('starts an exactly due routine once across overlapping scans and leaves future times alone', async () => {
+it('starts an exactly due automation once across overlapping scans and leaves future times alone', async () => {
   const fixture = await scanFixture(harness)
   await fixture.schedule('routine-one', SCAN_TIME, [
     { kind: 'hourly', minute: 0 },

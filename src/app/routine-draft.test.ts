@@ -41,8 +41,8 @@ const saved: Routine = {
   updatedAt: 1_799_000_000_000,
 }
 
-describe('the draft of a routine', () => {
-  test('a saved routine becomes a draft with logins, and without the cron of a preset', () => {
+describe('the draft of an automation', () => {
+  test('a saved automation becomes a draft with logins, and without the cron of a preset', () => {
     expect(draftOf(saved)).toEqual({
       name: 'Triage new errors',
       active: false,

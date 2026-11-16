@@ -39,7 +39,7 @@ const org = orgs.acme
 
 /** What a routine does, in the words of the page. */
 const routineWords =
-  'A routine runs a saved prompt on a schedule or on a pull request event, each time in a new workspace.'
+  'An automation runs a saved prompt on a schedule or on a pull request event, each time in a new workspace.'
 
 /** The routine pages that the mockups draw, as Cal opens them. */
 const routineLinks: Readonly<Record<string, string>> = {
@@ -56,7 +56,7 @@ const suspendedLinks: Readonly<Record<string, string>> = {
 const newRoutine = (
   <ScreenLink asChild to={paths.newRoutine}>
     <ActionButton icon={Plus} tone="primary">
-      New routine
+      New automation
     </ActionButton>
   </ScreenLink>
 )
@@ -81,7 +81,7 @@ export function RoutinesScreen(props: {
       back={mobile ? { label: 'Workspaces', to: list } : undefined}
       fill={empty}
       subtitle={org.name}
-      title="Routines"
+      title="Automations"
       viewport={viewport}
     >
       {empty ? (
@@ -89,7 +89,7 @@ export function RoutinesScreen(props: {
           action={newRoutine}
           body={routineWords}
           icon={Repeat}
-          title={`Create the first routine in ${org.name}`}
+          title={`Create the first automation in ${org.name}`}
         />
       ) : (
         <>

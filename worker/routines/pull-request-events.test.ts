@@ -52,7 +52,7 @@ it('stores all three signed events before starting their work in the background'
   expect((await h.rows()).results).toHaveLength(3)
 })
 
-it('ignores unrelated actions, forks, repositories, installations, and off routines', async () => {
+it('ignores unrelated actions, forks, repositories, installations, and off automations', async () => {
   const h = await pullRequestFixture(harness)
   const fork = h.payload()
   fork.pull_request.head.repo.id = 999
@@ -73,7 +73,7 @@ it('ignores unrelated actions, forks, repositories, installations, and off routi
   expect(h.background).toEqual([])
 })
 
-it('isolates routine storage and banner refresh failures and keeps deliveries retryable', async () => {
+it('isolates automation storage and banner refresh failures and keeps deliveries retryable', async () => {
   const h = await pullRequestFixture(harness)
   await h.db
     .prepare(

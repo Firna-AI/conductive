@@ -24,7 +24,7 @@ const { org } = FAKE_IDS
 
 function fixture(id: string): Routine {
   const routine = routineFixtures().routines.find((item) => item.id === id)
-  if (!routine) throw new Error(`The fixtures have no routine ${id}.`)
+  if (!routine) throw new Error(`The fixtures have no automation ${id}.`)
   return routine
 }
 
@@ -60,7 +60,7 @@ async function reviewRuns(
   return openApp(server, routes.routine(org, 'review-prs'))
 }
 
-describe('the Runs list of a routine', () => {
+describe('the Runs list of an automation', () => {
   test('shows each state of a run with its trigger, pull request, and time, and adds the older runs', async () => {
     const { view } = await openApp(
       new FakeApiServer(),
@@ -194,7 +194,7 @@ describe('the Runs list of a routine', () => {
     })
   })
 
-  test('a routine without runs says that each run opens a workspace', async () => {
+  test('an automation without runs says that each run opens a workspace', async () => {
     const { view } = await openApp(
       new FakeApiServer(),
       routes.routine(org, 'morning-summary'),
@@ -217,7 +217,7 @@ describe('the Runs list of a routine', () => {
     )
     const shown = await rows(view)
     const tabs = () => ({
-      routine: byRole('link', 'Routine', view).getAttribute('aria-current'),
+      routine: byRole('link', 'Automation', view).getAttribute('aria-current'),
       runs: byRole('link', 'Runs', view).getAttribute('aria-current'),
     })
     const onRuns = {
@@ -225,10 +225,10 @@ describe('the Runs list of a routine', () => {
       first: shown[0],
       save: queryByRole('button', 'Save', view),
     }
-    await press(byRole('link', 'Routine', view))
+    await press(byRole('link', 'Automation', view))
     await waitFor(
       () => queryByRole('textbox', 'Name', view),
-      'the fields on the Routine tab',
+      'the fields on the Automation tab',
     )
     expect({
       onRuns,

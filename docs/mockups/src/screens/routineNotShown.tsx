@@ -25,18 +25,21 @@ type Pages = { routine: string; routines: string }
 function Content(props: { read: NotShown; pages: Pages }) {
   if (props.read === 'failed') {
     return (
-      <LoadFailure title="The routine didn't load" to={props.pages.routine} />
+      <LoadFailure
+        title="The automation didn't load"
+        to={props.pages.routine}
+      />
     )
   }
   return (
     <EmptyState
       action={
         <ScreenLink asChild to={props.pages.routines}>
-          <ActionButton tone="primary">Open Routines</ActionButton>
+          <ActionButton tone="primary">Open Automations</ActionButton>
         </ScreenLink>
       }
       icon={SearchX}
-      title="This routine is not available"
+      title="This automation is not available"
     />
   )
 }
@@ -65,9 +68,9 @@ export function RoutineNotShown(props: {
   )
   return (
     <Page
-      back={{ label: 'Routines', to: pages.routines }}
+      back={{ label: 'Automations', to: pages.routines }}
       fill
-      title="Routine"
+      title="Automation"
       viewport={props.viewport}
     >
       {props.viewport === 'mobile' ? (

@@ -70,7 +70,7 @@ export function RoutineFields(props: { routine: Routine; viewport: Viewport }) {
           <Input
             label="Name"
             onChangeText={noop}
-            placeholder="Untitled routine"
+            placeholder="Untitled automation"
             size={field}
             value={routine.name}
           />

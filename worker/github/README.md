@@ -8,7 +8,7 @@ It also keeps a copy of the GitHub summary of each workspace in D1, as [The summ
 The production Worker mounts the browser reads, the member merge routes, and the signed webhook route.
 The workspace object owns one state adapter and its durable retry requests.
 Verified default-branch pushes also notify image refresh.
-Verified pull request events also store [routine runs](../routines/README.md).
+Verified pull request events also store [automation runs](../routines/README.md).
 The run callback and banner refresh have separate error boundaries.
 The production composition starts stored runs through `waitUntil` after webhook handling.
 Without a request execution context, the minute scan recovers the queued runs.
@@ -252,7 +252,7 @@ The retry of a committed delivery replays its receipt and copies again, without 
 ### Key Code
 
 - [Production composition](../features/github.ts) owns the state adapter and retry alarm, and the reads that Continue asks for.
-- [composition.ts](composition.ts) mounts verified webhooks, image refresh, and background routine starts.
+- [composition.ts](composition.ts) mounts verified webhooks, image refresh, and background automation starts.
 - [contracts.ts](contracts.ts) defines the server-side integration ports.
 - [webhook.ts](webhook.ts) verifies deliveries, stores pull request runs, and starts workspace refreshes.
 - [webhook-routing.ts](webhook-routing.ts) reads pull request facts, GitHub account IDs, and available author and sender logins after signature verification.

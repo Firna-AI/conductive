@@ -47,17 +47,17 @@ export function RoutineFrame(props: {
   return (
     <Page
       actions={props.actions}
-      back={{ label: 'Routines', to: routes.routines(org.id) }}
+      back={{ label: 'Automations', to: routes.routines(org.id) }}
       backOnDesktop
       fill
-      subtitle={props.title === undefined ? undefined : 'Routine'}
+      subtitle={props.title === undefined ? undefined : 'Automation'}
       tabs={
         phone && tabs ? (
           <LinkTabs
-            label="Routine"
+            label="Automation"
             tabs={[
               {
-                label: 'Routine',
+                label: 'Automation',
                 to: routes.routine(org.id, tabs.routineId),
                 selected: tabs.current === 'routine',
               },
@@ -70,7 +70,7 @@ export function RoutineFrame(props: {
           />
         ) : undefined
       }
-      title={props.title ?? 'Routine'}
+      title={props.title ?? 'Automation'}
     >
       {phone ? (
         <div className={styles.phoneScroll}>

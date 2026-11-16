@@ -56,7 +56,7 @@ export function useRoutineSave(args: {
       const problem = asApiError(error)
       if (problem.code !== unknownLogin) {
         toast({
-          title: 'The routine was not saved',
+          title: 'The automation was not saved',
           description: problem.message,
           tone: 'error',
         })

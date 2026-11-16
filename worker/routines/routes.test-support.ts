@@ -77,7 +77,7 @@ export async function routineFixture(harness: TestHarness) {
     )
     if (response.status !== 201)
       throw new Error(
-        `Routine create: ${response.status}: ${await response.text()}`,
+        `Automation create: ${response.status}: ${await response.text()}`,
       )
     const result: RoutineResponse = await response.json()
     return result.routine

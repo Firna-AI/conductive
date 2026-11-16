@@ -49,7 +49,7 @@ export async function routineRunsRoute(
     throw new HttpError(
       409,
       'routine_pull_request_required',
-      'This routine runs from a pull request event.',
+      'This automation runs from a pull request event.',
     )
   const input: RunRoutineRequest = {
     requestId: requiredString(context.body?.requestId),

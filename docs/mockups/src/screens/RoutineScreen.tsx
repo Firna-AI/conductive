@@ -129,11 +129,11 @@ export function RoutineScreen(props: {
           ...links,
         })}
         back={{
-          label: 'Routines',
+          label: 'Automations',
           to: suspended ? paths.suspendedRoutines : paths.routines,
         }}
         fill
-        subtitle="Routine"
+        subtitle="Automation"
         tabs={
           mobile && routine.saved ? (
             <RoutineTabs

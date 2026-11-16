@@ -40,7 +40,7 @@ function senderOf(backend: DevBackend): MessageSender {
 function createRoutine(backend: DevBackend, org: OrgState, body: unknown) {
   const fields = record(body)
   const now = backend.now()
-  const name = optional(fields, 'name', text)?.trim() || 'Untitled routine'
+  const name = optional(fields, 'name', text)?.trim() || 'Untitled automation'
   const routine: Routine = {
     id: uniqueId(
       slugify(name, 'routine'),
@@ -76,7 +76,7 @@ function updated(org: OrgState, routine: Routine, fields: JsonObject): Routine {
   return {
     ...routine,
     name: has('name')
-      ? text(fields, 'name').trim() || 'Untitled routine'
+      ? text(fields, 'name').trim() || 'Untitled automation'
       : routine.name,
     repositoryId: has('repositoryId')
       ? repositoryOf(org, fields)

@@ -34,10 +34,10 @@ export function RoutineTabs(props: {
     : (tabPages[props.routine.key] ?? {})
   return (
     <LinkTabs
-      label="Routine"
+      label="Automation"
       tabs={[
         {
-          label: 'Routine',
+          label: 'Automation',
           to: pages.routine,
           selected: props.tab === 'routine',
         },

@@ -13,7 +13,7 @@ import type {
 
 /** What a routine does, in the words of the Routines page. */
 export const routineWords =
-  'A routine runs a saved prompt on a schedule or on a pull request event, each time in a new workspace.'
+  'An automation runs a saved prompt on a schedule or on a pull request event, each time in a new workspace.'
 
 /** The states of a run that has no workspace, before it or in place of it. */
 const runOnlyLabels = {

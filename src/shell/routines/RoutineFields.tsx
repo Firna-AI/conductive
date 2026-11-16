@@ -108,7 +108,7 @@ export function RoutineFields(props: {
           <Input
             label="Name"
             onChangeText={(name) => change({ ...draft, name })}
-            placeholder="Untitled routine"
+            placeholder="Untitled automation"
             size={field}
             value={draft.name}
           />

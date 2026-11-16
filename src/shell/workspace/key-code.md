@@ -85,7 +85,7 @@ this guide.
   members UI, and the bar of the 15 minutes in the Mac app.
 - `saved-view.ts`: the saved view of the kept chat, `saveView`, which
   writes a change only once the chat read the view, and `useRunRoutine`,
-  the routine of a run workspace, which the chat reads with the view.
+  the automation of a run workspace, which the chat reads with the view.
 - `tools/ToolsPart.tsx`, `tools/tool-navigation.ts`, and
   `tools/tool-address.ts`: the tools panel and its `placeholder`, which
   takes the place of the tools inside the tabs, the tool of the address or
@@ -162,7 +162,7 @@ this guide.
   does while the button shows, and on desktop the tooltip names the key.
   `CopyLink.test.tsx` mounts the whole app and presses the button for a
   copy and for a failed copy, and the key.
-- `RunLine.tsx`: the line under the header of a run workspace, which links to its routine and the pull request of a pull request run. `RunLine.test.tsx` checks the line and its links.
+- `RunLine.tsx`: the line under the header of a run workspace, which links to its automation and the pull request of a pull request run. `RunLine.test.tsx` checks the line and its links.
 - `SandboxNotice.tsx`, `notice-copy.ts`, and `StartingCard.tsx`: the
   states of the cloud computer, their words, and the start steps. The bar
   of an archived workspace offers Restore until its last day, then says

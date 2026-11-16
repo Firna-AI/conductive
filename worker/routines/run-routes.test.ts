@@ -35,7 +35,7 @@ const routineUrl = routinePath(OUTER_ORG, 'outer-routine')
 const nowUrl = routinePaths.runNow(OUTER_ORG, 'outer-routine')
 const runsUrl = routinePaths.runs(OUTER_ORG, 'outer-routine')
 
-it('lets only the owner use Run now while off, deduplicates request IDs, and refuses pull-request-only routines', async () => {
+it('lets only the owner use Run now while off, deduplicates request IDs, and refuses pull-request-only automations', async () => {
   fixture = await createOuterRuntime(bundle)
   await seedOuterRoutine(fixture)
   const post = (requestId: unknown, cookie = fixture.cookies.ownerCookie) =>
@@ -91,7 +91,7 @@ it('lets only the owner use Run now while off, deduplicates request IDs, and ref
   expect((await post('admin-not-owner')).status).toBe(403)
 })
 
-it('lists 50 newest runs and reaches older runs with a stable cursor inside the same org and routine', async () => {
+it('lists 50 newest runs and reaches older runs with a stable cursor inside the same org and automation', async () => {
   fixture = await createOuterRuntime(bundle)
   await seedOuterRoutine(fixture)
   for (let index = 0; index < 52; index++)
@@ -140,7 +140,7 @@ it('projects queued, skipped, live workspace, removed-start, and failed-first-tu
   await seedOuterRun(fixture, 'skipped', {
     state: 'skipped',
     code: 'routine_off',
-    message: 'The routine is off.',
+    message: 'The automation is off.',
   })
   await seedOuterRun(fixture, 'workspace', {
     state: 'started',
@@ -200,7 +200,7 @@ it('projects queued, skipped, live workspace, removed-start, and failed-first-tu
       expect.objectContaining({
         id: 'skipped',
         state: 'skipped',
-        error: { code: 'routine_off', message: 'The routine is off.' },
+        error: { code: 'routine_off', message: 'The automation is off.' },
       }),
       expect.objectContaining({
         id: 'removed-start',
@@ -222,7 +222,7 @@ it('projects queued, skipped, live workspace, removed-start, and failed-first-tu
   })
 })
 
-it('joins the routine into workspace views and removes its line after routine deletion', async () => {
+it('joins the automation into workspace views and removes its line after automation deletion', async () => {
   fixture = await createOuterRuntime(bundle)
   await seedShellWorkspaceRuntime(fixture)
   await seedOuterRoutine(fixture)

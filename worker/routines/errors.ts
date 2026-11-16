@@ -16,7 +16,7 @@ export function routineNotFound(): HttpError {
   return new HttpError(
     404,
     'routine_not_found',
-    'The routine is not available.',
+    'The automation is not available.',
   )
 }
 
@@ -24,6 +24,6 @@ export function routineOwnerRequired(): HttpError {
   return new HttpError(
     403,
     'routine_owner_required',
-    'Only the owner can change this routine.',
+    'Only the owner can change this automation.',
   )
 }

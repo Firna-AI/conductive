@@ -16,7 +16,7 @@ export function routineRunText(
             custom: 'Custom (cron)',
           }[trigger.schedule]
         : `PR ${trigger.event}`
-  const facts = [`Routine: ${routine.name}`, `Trigger: ${label}`]
+  const facts = [`Automation: ${routine.name}`, `Trigger: ${label}`]
   if (trigger.kind === 'pull-request')
     facts.push(
       `Pull request: #${trigger.number} ${trigger.url}`,

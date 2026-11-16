@@ -1,7 +1,7 @@
-# Routine runs
+# Automation runs
 
 This doc holds the requirements and the decisions in force for the runs of
-a routine. It belongs to [Routines](routines.md), which covers a routine,
+an automation. It belongs to [Automations](routines.md), which covers an automation,
 its access, and its schedules. [Pull request runs](pull-request-runs.md)
 adds the rules of the runs that pull request events start. The terms are
 those of the [architecture doc](../architecture.md#terms). A decision
@@ -12,13 +12,13 @@ number names a dated record, as
 
 - Each run creates a new workspace (decision 501 A). The workspace gets the
   repository, the section, the model, the effort, and the
-  [fast mode](fast-mode.md) of the routine.
+  [fast mode](fast-mode.md) of the automation.
 - A run workspace is a normal workspace (decision 504 A). It shows in the
   workspace list of its section, and it stays until someone archives it.
 - Every member can open a run workspace and send messages there, as in
   each workspace.
 - A workspace list that hides run workspaces was rejected. The section of
-  the routine groups them instead.
+  the automation groups them instead.
 - Automatic archives of clean run workspaces were rejected, because they
   change the archive rule and the restart near day 14 (decisions 16
   and 43).
@@ -27,13 +27,13 @@ number names a dated record, as
 - So the restarts of kept run workspaces stay a cost, as
   [Limits](routines.md#limits) says.
 - A line under the header of a run workspace says "Run of" and the name of
-  the routine, with a link to the routine.
+  the automation, with a link to the automation.
 - For a pull request run, the line adds "for" and the number of the pull
   request, with a link to the pull request on GitHub.
 
 ## A run acts as its owner
 
-- The owner of the routine is the workspace owner of each run workspace.
+- The owner of the automation is the workspace owner of each run workspace.
   The owner is also the starter of its first session and the sender of its
   first message.
 - So the first turn uses the owner's agent login and the owner's GitHub
@@ -48,17 +48,17 @@ number names a dated record, as
 
 ## When a run starts
 
-- A schedule starts a run at each of its times, while the routine is on.
-- A pull request event starts a run while the routine is on, as
+- A schedule starts a run at each of its times, while the automation is on.
+- A pull request event starts a run while the automation is on, as
   [Pull request runs](pull-request-runs.md) says.
-- Run now starts a run at once, also while the routine is off. Its answer
+- Run now starts a run at once, also while the automation is off. Its answer
   holds the new run.
 - A run starts once for each schedule time, each GitHub delivery, and each
   Run now request. A repeat gives the same run and one workspace.
 - Missed schedule times give one run, not one for each missed time.
 - Reason: after an outage, one late run does the work, and a burst of runs
   only spends starts.
-- Each minute, the app starts at most 50 due routines and at most 50 queued
+- Each minute, the app starts at most 50 due automations and at most 50 queued
   runs. The rest wait for a later minute.
 - A run that stays queued for more than a minute gets another start. This
   covers a Worker that stopped before the create.
@@ -75,8 +75,8 @@ number names a dated record, as
   a turn token, as [Agent logins in a sandbox](isolation.md#agent-logins-in-a-sandbox)
   says.
 - A run takes the agent, the model, the effort, and the fast mode of its
-  routine at its first start, and keeps them for its check and its create.
-- Reason: a change of the routine during the start cannot give the check
+  automation at its first start, and keeps them for its check and its create.
+- Reason: a change of the automation during the start cannot give the check
   and the create two different agents.
 - A missing agent login fails the run with the code `agent_login_required`.
   Expired GitHub access fails it with the code `github_reconnect_required`.
@@ -88,7 +88,7 @@ number names a dated record, as
 
 - The first message of a run is the run text: the prompt, a separator line
   `---`, and the trigger facts.
-- Each fact is one line with a label. `Routine:` names the routine, and
+- Each fact is one line with a label. `Automation:` names the automation, and
   `Trigger:` names the trigger.
 - A pull request run adds four facts:
   - `Pull request:` the number and the address of the pull request
@@ -122,12 +122,12 @@ number names a dated record, as
 - The owner sees the one action that fixes the cause, when one exists, such
   as Connect Claude. Another member reads whose login or access it is.
 - The cause names the agent and the owner of the run, also after the
-  routine changes its agent or its owner.
+  automation changes its agent or its owner.
 - A run is skipped when the author or the sender of its pull request event
   is outside the org.
   [Who may start a run](pull-request-runs.md#who-may-start-a-run) states
   that rule.
-- A queued run becomes skipped when it cannot start, because its routine
+- A queued run becomes skipped when it cannot start, because its automation
   is off, its owner left or is suspended, or its org is suspended or
   deleted. Its row shows that reason, and the app stops its attempts to
   start it.
@@ -157,21 +157,21 @@ number names a dated record, as
 
 ## Turn off after failed runs
 
-- A routine turns off after three runs in a row fail (decision 513 B).
+- An automation turns off after three runs in a row fail (decision 513 B).
 - Each failed run counts: a failed check, a failed start, and a failed
   first turn. A failure that clears by itself counts too.
 - A run whose first turn finishes resets the count. A skipped run and a
   queued run do not count.
-- The routine page then says that the routine turned off after three
+- The automation page then says that the automation turned off after three
   failed runs in a row. The owner reads that they can fix the cause and
   turn it on. Another member reads that only the owner can turn it on.
-- Only the owner turns the routine on again. That resets the count.
+- Only the owner turns the automation on again. That resets the count.
 - Reason: runs that keep failing for one cause would go on spending starts
   until a person fixes the cause.
 - A count that leaves out the failures that clear by themselves was
   rejected.
 - A wait that grows after each failed run was rejected, because a forgotten
-  routine still adds a run each day. A notice to the owner alone was
+  automation still adds a run each day. A notice to the owner alone was
   rejected, because the cost goes on while the owner is away.
 
 ## The Runs list
@@ -183,5 +183,5 @@ number names a dated record, as
 - A failed run shows its cause, and a skipped run shows its reason.
 - The row of a pull request run names the pull request, with a link to it
   on GitHub.
-- While the routine page shows, it reads the runs again every 10 seconds,
+- While the automation page shows, it reads the runs again every 10 seconds,
   and also when it gets the focus.

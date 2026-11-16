@@ -209,7 +209,7 @@ at `app/workspace-links/sent-by`.
 - The title request of a new workspace reads only the text before these
   lines, as [Messages](messages-and-attachments.md#messages) says.
 - Reason: members and agents see which session sent the message. The run
-  text of a routine also puts its facts after a `---` line, as
+  text of an automation also puts its facts after a `---` line, as
   [The run text](routine-runs.md#the-run-text) says.
 - Risk: a member or an agent can type the same lines. So the lines inform
   the reader only, and no access depends on them.

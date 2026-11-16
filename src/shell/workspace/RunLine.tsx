@@ -19,7 +19,7 @@ export function RunLine(props: { orgId: string; routine: RunRoutine }) {
       <Repeat aria-hidden className={styles.icon} size={13} />
       <span className={styles.words}>Run of</span>{' '}
       <AppLink
-        aria-label={`Routine: ${routine.name}`}
+        aria-label={`Automation: ${routine.name}`}
         className={styles.routine}
         title={routine.name}
         to={routes.routine(props.orgId, routine.id)}

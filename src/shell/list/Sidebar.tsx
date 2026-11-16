@@ -124,7 +124,7 @@ export function RoutinesLink(props: {
     <OrgPageLink
       current={props.current}
       icon={Repeat}
-      label="Routines"
+      label="Automations"
       to={routes.routines(props.orgId)}
       variant={props.variant}
     />

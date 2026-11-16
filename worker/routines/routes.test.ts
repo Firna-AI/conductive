@@ -25,7 +25,7 @@ afterAll(async () => {
   await harness.dispose()
 })
 
-it('lets every org member read routine data and lets a member create with defaults', async () => {
+it('lets every org member read automation data and lets a member create with defaults', async () => {
   const { org, member, other, input, seed } = await routineFixture(harness)
   const path = await seed()
   const read = await harness.request(path, other.session)
@@ -76,7 +76,7 @@ it('lets every org member read routine data and lets a member create with defaul
   expect(created.status).toBe(201)
   expect(await created.json()).toMatchObject({
     routine: {
-      name: 'Untitled routine',
+      name: 'Untitled automation',
       sectionId: 'general-members-org',
       owner: { id: member.user.id },
       active: true,

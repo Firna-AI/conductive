@@ -34,32 +34,32 @@ function sidebarOf(view: HTMLElement): HTMLElement | null {
 }
 
 const routineWords =
-  'A routine runs a saved prompt on a schedule or on a pull request event, each time in a new workspace.'
+  'An automation runs a saved prompt on a schedule or on a pull request event, each time in a new workspace.'
 
-describe('the Routines page', () => {
-  test('the Routines link of the sidebar opens the page, which lists the routines of the API with a link to each', async () => {
+describe('the Automations page', () => {
+  test('the Automations link of the sidebar opens the page, which lists the automations of the API with a link to each', async () => {
     const server = new FakeApiServer()
     const { navigation, view } = await openApp(server, routes.org(org))
     const link = await waitFor(() => {
       const sidebar = sidebarOf(view)
-      return sidebar && queryByRole('link', 'Routines', sidebar)
-    }, 'the Routines link of the sidebar')
+      return sidebar && queryByRole('link', 'Automations', sidebar)
+    }, 'the Automations link of the sidebar')
     await press(link)
     const list = await waitFor(
-      () => queryByRole('list', 'Routines', view),
-      'the routines of Acme',
+      () => queryByRole('list', 'Automations', view),
+      'the automations of Acme',
     )
     expect({
       address: navigation.href(),
       current: link.getAttribute('aria-current'),
       title: view.querySelector('main h1')?.textContent,
       about: queryByText(routineWords, view) !== null,
-      newRoutine: queryAllByRole('button', 'New routine', view).length,
+      newRoutine: queryAllByRole('button', 'New automation', view).length,
       rows: rowsOf(list),
     }).toEqual({
       address: routes.routines(org),
       current: 'page',
-      title: 'Routines',
+      title: 'Automations',
       about: true,
       newRoutine: 1,
       rows: [
@@ -92,27 +92,27 @@ describe('the Routines page', () => {
     })
   })
 
-  test('the Routines link of the phone list opens the page of an org without routines, which says what a routine does and offers one New routine', async () => {
+  test('the Automations link of the phone list opens the page of an org without automations, which says what an automation does and offers one New automation', async () => {
     const server = new FakeApiServer()
     server.json('GET', routinesPath(org), {
       routines: [],
     } satisfies RoutinesResponse)
     const { navigation, view } = await openApp(server, routes.org(org), 'phone')
     const link = await waitFor(
-      () => queryByRole('link', 'Routines', view),
-      'the Routines link of the list',
+      () => queryByRole('link', 'Automations', view),
+      'the Automations link of the list',
     )
     await press(link)
     await waitFor(
-      () => queryByText('Create the first routine in Acme', view),
-      'the empty Routines page',
+      () => queryByText('Create the first automation in Acme', view),
+      'the empty Automations page',
     )
     expect({
       address: navigation.href(),
       about: queryByText(routineWords, view) !== null,
-      newRoutine: queryAllByRole('button', 'New routine', view).length,
+      newRoutine: queryAllByRole('button', 'New automation', view).length,
       back: queryByRole('button', 'Workspaces', view) !== null,
-      list: queryByRole('list', 'Routines', view),
+      list: queryByRole('list', 'Automations', view),
     }).toEqual({
       address: routes.routines(org),
       about: true,
@@ -122,26 +122,26 @@ describe('the Routines page', () => {
     })
   })
 
-  test('a suspended org keeps its Routines link, and its page shows the notice of the org and the routines without New routine', async () => {
+  test('a suspended org keeps its Automations link, and its page shows the notice of the org and the automations without New automation', async () => {
     const server = new FakeApiServer()
     serveSuspendedAcme(server)
     const { view } = await openApp(server, routes.routines(org))
     const list = await waitFor(
-      () => queryByRole('list', 'Routines', view),
-      'the routines of the suspended Acme',
+      () => queryByRole('list', 'Automations', view),
+      'the automations of the suspended Acme',
     )
     const sidebar = sidebarOf(view)
     const main = view.querySelector('main')
     if (!sidebar || !main) throw new Error('The desktop frame is not drawn.')
     expect({
-      routines: byRole('link', 'Routines', sidebar).getAttribute(
+      routines: byRole('link', 'Automations', sidebar).getAttribute(
         'aria-current',
       ),
       newWorkspace: queryByRole('link', 'New workspace', sidebar),
       notice: wordsOf(main).includes(
         'Acme is suspended Its workspaces and settings are read-only.',
       ),
-      newRoutine: queryAllByRole('button', 'New routine', view).length,
+      newRoutine: queryAllByRole('button', 'New automation', view).length,
       rows: rowsOf(list).map((row) => row.to),
       writes: requestLines(server).filter((line) => !line.startsWith('GET ')),
     }).toEqual({

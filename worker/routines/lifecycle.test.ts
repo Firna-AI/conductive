@@ -24,7 +24,7 @@ afterAll(async () => {
   await harness.dispose()
 })
 
-it('moves departed owners routines to the workspace recipient, disabled, within that org only', async () => {
+it('moves departed owners automations to the workspace recipient, disabled, within that org only', async () => {
   const { org, member, other, admin, seed, members } =
     await routineFixture(harness)
   const path = await seed()
@@ -125,7 +125,7 @@ it('moves departed owners routines to the workspace recipient, disabled, within 
   ).toMatchObject({ routine: { active: true, inactiveReason: null } })
 })
 
-it('moves a deleted sections routines to General and keeps their active state', async () => {
+it('moves a deleted sections automations to General and keeps their active state', async () => {
   const { org, member, seed } = await routineFixture(harness)
   const path = await seed()
   await harness.env.DB.batch([
@@ -155,7 +155,7 @@ it('moves a deleted sections routines to General and keeps their active state', 
   })
 })
 
-it('turns routines off when their repository is deselected and refuses reactivation', async () => {
+it('turns automations off when their repository is deselected and refuses reactivation', async () => {
   const { org, member, admin, seed } = await routineFixture(harness)
   const path = await seed()
   const removed = await harness.request(
@@ -184,7 +184,7 @@ it('turns routines off when their repository is deselected and refuses reactivat
   })
 })
 
-it('deletes a routines history while retaining its normal run workspaces', async () => {
+it('deletes an automations history while retaining its normal run workspaces', async () => {
   const { org, member, seed } = await routineFixture(harness)
   const path = await seed()
   await seedWorkspace(

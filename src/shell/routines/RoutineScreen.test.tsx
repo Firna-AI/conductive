@@ -30,7 +30,7 @@ const { org } = FAKE_IDS
 
 function fixture(id: string): Routine {
   const routine = routineFixtures().routines.find((item) => item.id === id)
-  if (!routine) throw new Error(`The fixtures have no routine ${id}.`)
+  if (!routine) throw new Error(`The fixtures have no automation ${id}.`)
   return routine
 }
 
@@ -51,7 +51,7 @@ function page(view: HTMLElement): string {
   return wordsOf(form)
 }
 
-describe('the routine page', () => {
+describe('the automation page', () => {
   test('the owner gets the fields and Delete, and Save stays off until a change', async () => {
     const { view } = await openApp(
       new FakeApiServer(),
@@ -95,14 +95,14 @@ describe('the routine page', () => {
     })
   })
 
-  test('a member reads the routine without fields and without actions', async () => {
+  test('a member reads the automation without fields and without actions', async () => {
     const { view } = await openApp(
       new FakeApiServer({ role: 'member' }),
       routes.routine(org, 'review-prs'),
     )
     await waitFor(
-      () => queryByText('Only Cal can change this routine.', view),
-      'the routine as a member reads it',
+      () => queryByText('Only Cal can change this automation.', view),
+      'the automation as a member reads it',
     )
     expect({
       name: queryByRole('textbox', 'Name', view),
@@ -111,19 +111,19 @@ describe('the routine page', () => {
     }).toEqual({
       name: null,
       words:
-        "Routines Review pull requests Routine Only Cal can change this routine. State Active Repository acme/storefront Section General By Cal Triggers PR opened PR pushed Prompt Review this pull request for bugs, missing tests, and unclear names. Post your findings as one review on the pull request, and push no commits. Opus 5.5 High Runs use Cal's Claude login and GitHub access.",
+        "Automations Review pull requests Automation Only Cal can change this automation. State Active Repository acme/storefront Section General By Cal Triggers PR opened PR pushed Prompt Review this pull request for bugs, missing tests, and unclear names. Post your findings as one review on the pull request, and push no commits. Opus 5.5 High Runs use Cal's Claude login and GitHub access.",
       actions: [],
     })
   })
 
-  test("an admin reads another member's routine, and turns it off", async () => {
+  test("an admin reads another member's automation, and turns it off", async () => {
     const server = new FakeApiServer()
     const id = 'dependency-updates'
     const { view } = await openApp(server, routes.routine(org, id))
-    const note = 'Only Priya Raman can change this routine.'
+    const note = 'Only Priya Raman can change this automation.'
     await waitFor(
       () => queryByText(`${note} You can turn it off or delete it.`, view),
-      'the routine as an admin reads it',
+      'the automation as an admin reads it',
     )
     const before = actions(view)
     server.json('PATCH', routinePath(org, id), {
@@ -132,7 +132,7 @@ describe('the routine page', () => {
     await press(byRole('button', 'Turn off', view))
     await waitFor(
       () => queryByText(`${note} You can delete it.`, view),
-      'the routine after Turn off',
+      'the automation after Turn off',
     )
     expect({
       before,
@@ -147,7 +147,7 @@ describe('the routine page', () => {
     })
   })
 
-  test('Delete asks first, then deletes the routine and opens the Routines list without it', async () => {
+  test('Delete asks first, then deletes the automation and opens the Automations list without it', async () => {
     const server = new FakeApiServer()
     const { navigation, view } = await openApp(
       server,
@@ -167,10 +167,10 @@ describe('the routine page', () => {
     server.json('GET', routinesPath(org), {
       routines: rest,
     } satisfies RoutinesResponse)
-    await press(byRole('button', 'Delete routine', question))
+    await press(byRole('button', 'Delete automation', question))
     const list = await waitFor(
-      () => queryByRole('list', 'Routines', view),
-      'the Routines list',
+      () => queryByRole('list', 'Automations', view),
+      'the Automations list',
     )
     expect({
       asked,
@@ -183,7 +183,7 @@ describe('the routine page', () => {
       listed: wordsOf(list).includes('Review pull requests'),
     }).toEqual({
       asked:
-        'Delete Review pull requests? Its triggers and prompt are deleted. Its run workspaces stay. Cancel Delete routine',
+        'Delete Review pull requests? Its triggers and prompt are deleted. Its run workspaces stay. Cancel Delete automation',
       address: routes.routines(org),
       deleted: 1,
       listed: false,

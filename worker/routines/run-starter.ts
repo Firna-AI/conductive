@@ -67,7 +67,7 @@ export async function startRoutineRun(
         throw new HttpError(
           409,
           'agent_login_required',
-          `Connect ${choice.agent === 'claude' ? 'Claude' : 'Codex'} to run this routine.`,
+          `Connect ${choice.agent === 'claude' ? 'Claude' : 'Codex'} to run this automation.`,
         )
       await freshGitHubUserToken(env, admission.owner.id, dependencies)
       routine = await readRoutine(env.DB, orgId, run.routineId)

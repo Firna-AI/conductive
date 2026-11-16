@@ -27,7 +27,7 @@ const { org } = FAKE_IDS
 
 function fixture(id: string): Routine {
   const routine = routineFixtures().routines.find((item) => item.id === id)
-  if (!routine) throw new Error(`The fixtures have no routine ${id}.`)
+  if (!routine) throw new Error(`The fixtures have no automation ${id}.`)
   return routine
 }
 
@@ -56,13 +56,13 @@ async function addLogin(view: HTMLElement, list: string, login: string) {
 const frequent =
   'This runs more than once an hour. Set the first field to one minute, such as 0.'
 
-describe('a save of the routine page', () => {
-  test('the owner saves a new routine with each kind of trigger, and its page opens', async () => {
+describe('a save of the automation page', () => {
+  test('the owner saves a new automation with each kind of trigger, and its page opens', async () => {
     const server = new FakeApiServer()
     const { navigation, view } = await openApp(server, routes.newRoutine(org))
     const prompt = await waitFor(
       () => queryByRole('textbox', 'Prompt', view),
-      'the form of a new routine',
+      'the form of a new automation',
     )
     const save = () => byRole('button', 'Save', view)
     await typeText(byRole('textbox', 'Name', view), 'Morning summary')
@@ -97,7 +97,7 @@ describe('a save of the routine page', () => {
     await press(save())
     await waitFor(
       () => navigation.href() === routes.routine(org, 'morning-summary'),
-      'the page of the new routine',
+      'the page of the new automation',
     )
     expect({
       blank,
@@ -172,7 +172,7 @@ describe('a save of the routine page', () => {
     await press(byRole('button', 'Save', view))
     await waitFor(
       () => isOff(byRole('button', 'Save', view)),
-      'the saved routine',
+      'the saved automation',
     )
     expect({
       refused,

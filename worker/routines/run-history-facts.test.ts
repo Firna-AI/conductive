@@ -25,7 +25,7 @@ afterAll(async () => {
   await harness.dispose()
 })
 
-it('keeps a failed runs agent after the routine changes agent', async () => {
+it('keeps a failed runs agent after the automation changes agent', async () => {
   const h = await runFixture(harness)
   const db = h.runtime.env.DB
   await h.seedRun()
@@ -48,14 +48,14 @@ it('keeps a failed runs agent after the routine changes agent', async () => {
         agent: 'codex',
         error: {
           code: 'agent_login_required',
-          message: 'Connect Codex to run this routine.',
+          message: 'Connect Codex to run this automation.',
         },
       },
     ],
   })
 })
 
-it('keeps a failed runs owner after membership removal moves the routine', async () => {
+it('keeps a failed runs owner after membership removal moves the automation', async () => {
   const h = await runFixture(harness)
   const db = h.runtime.env.DB
   await h.seedRun()
@@ -98,7 +98,7 @@ it('keeps a failed runs owner after membership removal moves the routine', async
   })
 })
 
-it('uses one recorded agent choice when the routine changes between its login check and create', async () => {
+it('uses one recorded agent choice when the automation changes between its login check and create', async () => {
   const h = await runFixture(harness)
   await h.seedRun()
   const originalFetch = h.runtime.dependencies.fetch

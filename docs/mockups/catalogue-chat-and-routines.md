@@ -1,7 +1,7 @@
-# Chat and routines
+# Chat and automations
 
 This page belongs to [the catalogue](catalogue.md). It gives the child
-pages of the chat and of routines.
+pages of the chat and of automations.
 
 `app/chat` shows a finished turn, whose work folds into one line. Its child
 pages: `app/chat/turns` has the running turn, steer, interrupt, and a
@@ -97,28 +97,28 @@ software". Its `stopped` variant has a stopped turn, whose line ends with
 the same words after a dot. A fast turn at fast speed ends as any turn
 does, as `app/fast-mode/trigger` shows.
 
-`app/routines` lists the routines of Acme, which the Routines link below
+`app/routines` lists the automations of Acme, which the Automations link below
 New workspace opens. Its child pages:
 
-- `app/routines/empty` has an org without routines.
-- `app/routines/routine` has the owner's view of a saved routine. Its
-  child pages: `new` has a new routine, `member` the view of a member,
-  `admin` the view of an admin with Turn off and Delete, `owner-left` a
-  routine that moved, turned off, to Cal, the admin who got the
-  workspaces of a member who left, `turned-off` a routine that turned
+- `app/routines/empty` has an org without automations.
+- `app/routines/routine` has the owner's view of a saved automation. Its
+  child pages: `new` has a new automation, `member` the view of a member,
+  `admin` the view of an admin with Turn off and Delete, `owner-left` an
+  automation that moved, turned off, to Cal, the admin who got the
+  workspaces of a member who left, `turned-off` an automation that turned
   off after three runs in a row failed, and `delete` the question that
-  Delete asks first, because a deleted routine cannot come back. The first
+  Delete asks first, because a deleted automation cannot come back. The first
   four were saved states of the page. They moved into their own folders
   and kept their paths, so the page shows only its canonical screen.
-  `unavailable` has the page of a routine that the org no longer has,
-  because it was deleted or the address is wrong, with Open Routines.
-  `not-loaded` has the page after the read of the routine failed, with
+  `unavailable` has the page of an automation that the org no longer has,
+  because it was deleted or the address is wrong, with Open Automations.
+  `not-loaded` has the page after the read of the automation failed, with
   the load failure of the other lists of the app and Try again. The
-  `read` state of the routine screen draws both. `repository-removed` has
-  a routine that turned off when an admin removed its repository from the
+  `read` state of the automation screen draws both. `repository-removed` has
+  an automation that turned off when an admin removed its repository from the
   chosen repositories of Acme. While Acme does not choose that repository,
   the notice names it, for Cal and, in the `member` variant, for Priya.
-  The `chosen-again` and `chosen-again-member` variants have the routine
+  The `chosen-again` and `chosen-again-member` variants have the automation
   after an admin chose the repository again: it stays off until Cal turns
   it on, and the notice names no repository, because the page cannot tell
   that repository from another one that Cal saved.
@@ -132,10 +132,10 @@ New workspace opens. Its child pages:
 - `app/routines/runs` has the newest 50 runs, in each state of their
   workspaces, with Show older runs at the end. Its variants have a failed
   run for each cause, skipped runs, and, as `saved` and `run-now`, the
-  routine of the flow before and after Run now. In `failed`, a run that a
+  automation of the flow before and after Run now. In `failed`, a run that a
   check failed has no workspace, and a run whose first start or first
-  turn failed opens its workspace. A phone shows a saved routine in two
-  tabs, Routine and Runs. These pages open on the Runs tab, except
+  turn failed opens its workspace. A phone shows a saved automation in two
+  tabs, Automation and Runs. These pages open on the Runs tab, except
   `saved`.
 - `app/routines/run-workspace` has the workspace of a pull request run,
   its start, and the workspace of a run of Run now. Its `start-failed`

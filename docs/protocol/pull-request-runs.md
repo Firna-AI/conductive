@@ -2,7 +2,7 @@
 
 This doc holds the requirements and the decisions in force for the runs
 that GitHub pull request events start. It belongs to
-[Routines](routines.md). [Routine runs](routine-runs.md) states the rules
+[Automations](routines.md). [Automation runs](routine-runs.md) states the rules
 of every run. [Base branches](base-branches.md) states the branch and the
 base branch of a pull request run. The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
@@ -16,7 +16,7 @@ says.
   starts a run when a pull request merges.
 - In the GitHub webhook, these are the actions `opened`, `synchronize`, and
   `closed` with `merged` set to true. Other actions start no run.
-- An event can start a run of each routine that is on, has the repository
+- An event can start a run of each automation that is on, has the repository
   of the pull request, and has a matching trigger. The rules below decide
   whether it does.
 - The GitHub App sends the pull request webhooks, as
@@ -83,11 +83,11 @@ says.
 
 ## Loops
 
-- A routine starts no run for a pull request whose head branch is the
+- An automation starts no run for a pull request whose head branch is the
   branch of one of its run workspaces.
 - Reason: a run that opens or pushes to its own pull request must not start
-  its routine again.
-- A routine ignores the events that its owner sends for a pull request,
+  its automation again.
+- An automation ignores the events that its owner sends for a pull request,
   while one of its runs for that pull request starts or works.
 - Reason: a run pushes with the owner's GitHub access. So its push to the
   pull request that started it has the owner as its sender.

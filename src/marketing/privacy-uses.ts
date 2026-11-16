@@ -80,20 +80,20 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         second cookie protects the GitHub sign-in while it runs. A third
         cookie keeps the screen that you left for GitHub, for up to 1 hour.`,
       text`Your orgs: the orgs, members, roles, invites, sections,
-        repositories, workspaces, routines, scripts, and settings that you and your
+        repositories, workspaces, automations, scripts, and settings that you and your
         team make. Each invite includes the invited email address. They
         run the service.`,
-      text`Routines: the prompt, the triggers, and the author filters of
-        each routine, with the GitHub accounts that a filter names. Each
+      text`Automations: the prompt, the triggers, and the author filters of
+        each automation, with the GitHub accounts that a filter names. Each
         run keeps its owner, its agent, its trigger, its state, and its pull
         request. A skipped
         run keeps the GitHub login of the account outside the org whose
-        event it skipped. They run the routines and show their runs.`,
+        event it skipped. They run the automations and show their runs.`,
       text`Keys and logins: the env var values of each org, and your
         agent logins. An own endpoint login holds the endpoint address and
         its key. ${productName} stores these values encrypted. It
         uses your login only for the turns of the sessions that you start,
-        also the sessions that the runs of your routines start. The one
+        also the sessions that the runs of your automations start. The one
         exception is that ${productName} reads an own endpoint's model list
         with its key, at the times in Endpoint models below.
         The messages of other members in those sessions use it only when
@@ -156,7 +156,7 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         of them to its logs. ${productName} still keeps the chat history and
         the Mac command records above.`,
       text`GitHub events: the state of the pull requests and the checks
-        of your branches, which GitHub sends to ${productName}. A routine
+        of your branches, which GitHub sends to ${productName}. An automation
         also uses the GitHub accounts that open, push to, or merge a pull
         request, to decide whether the event starts a run.`,
       text`Feedback: your message and any screenshots help the team answer

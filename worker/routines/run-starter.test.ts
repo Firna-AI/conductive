@@ -20,7 +20,7 @@ afterAll(async () => {
   await harness.dispose()
 })
 
-it('creates a run workspace with the routine owner, repository, section, model, and first message before the start', async () => {
+it('creates a run workspace with the automation owner, repository, section, model, and first message before the start', async () => {
   const fixture = await runFixture(harness)
   const { runtime, org, user, repositoryId, boat, seedRun } = fixture
   await seedRun()
@@ -57,7 +57,7 @@ it('creates a run workspace with the routine owner, repository, section, model, 
       sender: user,
       request: {
         id: 'message-run-one',
-        text: 'Summarize the work.\n\n---\nRoutine: Morning summary\nTrigger: Run now',
+        text: 'Summarize the work.\n\n---\nAutomation: Morning summary\nTrigger: Run now',
         attachmentIds: [],
         choice: {
           agent: 'codex',

@@ -68,7 +68,7 @@ export async function prepareRoutine(
     orgId,
     owner: previous?.owner ?? user,
     movedFrom: previous?.movedFrom ?? null,
-    name: name.trim() || 'Untitled routine',
+    name: name.trim() || 'Untitled automation',
     repositoryId,
     sectionId: section,
     prompt,

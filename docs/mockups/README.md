@@ -67,7 +67,7 @@ wait for a build. Its linked page,
 the pages of the waitlist, the child pages of `app/orgs/suspended`, and the
 operator section. Its linked page
 [the pull request bar](catalogue-bar.md) gives `app/banner` and its child
-pages. The [chat and routines](catalogue-chat-and-routines.md) page gives
+pages. The [chat and automations](catalogue-chat-and-routines.md) page gives
 the child pages and flows of `app/chat` and `app/routines`. The
 [workspace links, file mentions, and tools](catalogue-workspace-tools.md)
 page gives the child pages and flows of `app/workspace-links`,
@@ -127,7 +127,7 @@ a dropped folder that the browser cannot read. [The chat](design-chat.md) gives 
 - An entry module in `src/entries/` exports one `defineScreen` with a named
   export. Its props and saved states (`variants`) choose the state. The
   workspace screen declares its states in `src/screens/workspaceState.ts`, so
-  `mockups:serve` offers a control for each part of the state. The routine
+  `mockups:serve` offers a control for each part of the state. The automation
   screen declares its states in `src/screens/routineState.ts` in the same
   way. The tab and composer states of the workspace screen live in
   `src/screens/chatStates.ts`. `tabStates` covers the session, file, and

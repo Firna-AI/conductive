@@ -72,7 +72,7 @@ function lastRun(
       run.state === 'failed'
         ? {
             code: 'agent_login_required',
-            message: 'Connect Claude to run this routine.',
+            message: 'Connect Claude to run this automation.',
           }
         : null,
     createdAt: at,

@@ -80,7 +80,7 @@ it.each(['link write', 'accept'])(
       expect(warning).toHaveBeenCalledWith({
         kind: 'routine_queued_start_failed',
         message:
-          'A queued routine run could not start. The next scan will try again.',
+          'A queued automation run could not start. The next scan will try again.',
       })
       if (failure === 'link write')
         await h.db.prepare('DROP TRIGGER refuse_run_link').run()
@@ -110,7 +110,7 @@ it.each(['link write', 'accept'])(
   },
 )
 
-it('links an admitted queued run after its routine turns off without skipping or creating another workspace', async () => {
+it('links an admitted queued run after its automation turns off without skipping or creating another workspace', async () => {
   const h = await pullRequestFixture(harness)
   await h.seedRun('already-admitted', {
     kind: 'schedule',

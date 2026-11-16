@@ -56,7 +56,7 @@ it('keeps local preset and custom times across the start and end of summer time'
   }
 })
 
-it('chooses the earliest schedule and removes the next time for inactive and unscheduled routines', () => {
+it('chooses the earliest schedule and removes the next time for inactive and unscheduled automations', () => {
   const triggers = [
     { kind: 'daily', time: { hour: 9, minute: 0 } },
     { kind: 'hourly', minute: 15 },

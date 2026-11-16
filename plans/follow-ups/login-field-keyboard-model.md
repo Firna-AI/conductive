@@ -7,7 +7,7 @@
 - **Reason:** The best option sets a keyboard model for the field that no requirement covers.
 
 - **Terms:**
-  - **Author filter:** the two lists of GitHub accounts of a pull request trigger of a routine, "Author is" and "Author is not". The owner adds accounts by login.
+  - **Author filter:** the two lists of GitHub accounts of a pull request trigger of an automation, "Author is" and "Author is not". The owner adds accounts by login.
   - **Login field:** the text box of the author filter. As the owner types, it shows suggestions: org members with their avatars, a divider, and the entry "Members of <org>".
   - **Combobox model:** the focus stays in the text box. Up and Down move a highlight over the suggestions, and Enter adds the highlighted row. The command palette works this way, as `docs/protocol/command-palette.md` ("Keys inside the palette") says.
   - **Menu model:** Down moves the focus from the text box into the suggestion buttons, and Escape closes them.

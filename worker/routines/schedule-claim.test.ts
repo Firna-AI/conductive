@@ -113,7 +113,7 @@ it('rechecks access and the saved schedule when it claims a due time', async () 
   }
 })
 
-it('rolls back a claim if the batch fails and continues other due routines and queued runs', async () => {
+it('rolls back a claim if the batch fails and continues other due automations and queued runs', async () => {
   const fixture = await scanFixture(harness)
   const { db } = fixture
   await fixture.schedule()
@@ -142,7 +142,7 @@ it('rolls back a claim if the batch fails and continues other due routines and q
     expect(warning).toHaveBeenCalledWith({
       kind: 'routine_schedule_failed',
       message:
-        'A routine schedule could not run. The next scan will try again.',
+        'An automation schedule could not run. The next scan will try again.',
     })
   } finally {
     warning.mockRestore()

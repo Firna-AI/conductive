@@ -43,7 +43,7 @@ function mainWords(view: HTMLElement): string {
 const gone = {
   error: {
     code: 'routine_not_found',
-    message: 'The routine is not available.',
+    message: 'The automation is not available.',
   },
 }
 
@@ -66,27 +66,27 @@ function routineReads(server: FakeApiServer): number {
   ).length
 }
 
-const unavailable = 'This routine is not available'
+const unavailable = 'This automation is not available'
 
-describe('a routine that the org no longer has', () => {
+describe('an automation that the org no longer has', () => {
   test('shows as not available at a return to its page, and on an open page after its runs read gets the refusal', async () => {
     const first = new FakeApiServer()
     const returned = await openApp(first, routes.routine(org, id))
     await waitFor(
       () => queryByRole('textbox', 'Name', returned.view),
-      'the routine',
+      'the automation',
     )
     // The owner opens the Routines list, while another tab deletes the routine.
     act(() => returned.navigation.push(routes.routines(org)))
     await waitFor(
-      () => queryByRole('list', 'Routines', returned.view),
-      'the Routines list',
+      () => queryByRole('list', 'Automations', returned.view),
+      'the Automations list',
     )
     deleteElsewhere(first)
     act(() => returned.navigation.push(routes.routine(org, id)))
     await waitFor(
       () => queryByText(unavailable, returned.view),
-      'the page of the deleted routine',
+      'the page of the deleted automation',
     )
     const words = mainWords(returned.view)
     returned.view.remove()
@@ -105,12 +105,12 @@ describe('a routine that the org no longer has', () => {
       'the open page after its runs read',
     )
     expect({ words, open: mainWords(open.view) }).toEqual({
-      words: `Routines Routine ${unavailable} Open Routines`,
-      open: `Routines Routine ${unavailable} Open Routines`,
+      words: `Automations Automation ${unavailable} Open Automations`,
+      open: `Automations Automation ${unavailable} Open Automations`,
     })
   })
 
-  test('a failed read keeps the routine, and a Save that gets the refusal shows that it is not available', async () => {
+  test('a failed read keeps the automation, and a Save that gets the refusal shows that it is not available', async () => {
     const server = new FakeApiServer()
     const focus = new ManualFocus()
     const { view } = await openApp(server, routes.routine(org, id), 'desktop', {
@@ -118,7 +118,7 @@ describe('a routine that the org no longer has', () => {
     })
     const name = await waitFor(
       () => queryByRole('textbox', 'Name', view),
-      'the routine',
+      'the automation',
     )
     // The read at a return to the page fails, as when the server is down.
     server.json(
@@ -133,7 +133,7 @@ describe('a routine that the org no longer has', () => {
     await settle()
     const kept = {
       name: queryByRole('textbox', 'Name', view) !== null,
-      failure: queryByText("The routine didn't load", view),
+      failure: queryByText("The automation didn't load", view),
     }
     await typeText(name, 'Review every pull request')
     deleteElsewhere(server)

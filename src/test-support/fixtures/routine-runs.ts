@@ -67,7 +67,7 @@ const failures: Readonly<
 > = {
   'agent-login': {
     code: 'agent_login_required',
-    message: 'Connect Claude to run this routine.',
+    message: 'Connect Claude to run this automation.',
   },
   'github-access': {
     code: 'github_reconnect_required',

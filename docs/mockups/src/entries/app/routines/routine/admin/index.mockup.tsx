@@ -8,9 +8,9 @@ import {
 export const adminRoutine = defineScreen({
   title: 'Seen by an admin',
   description:
-    "Cal, an admin, reads Priya's weekly routine, which uses a Codex model. Turn off and Delete are the only actions.",
+    "Cal, an admin, reads Priya's weekly automation, which uses a Codex model. Turn off and Delete are the only actions.",
   rationale:
-    'An admin can turn a routine off and delete it, from decision 502 B, but cannot change it or turn it on, because its runs use the logins of its owner.',
+    'An admin can turn an automation off and delete it, from decision 502 B, but cannot change it or turn it on, because its runs use the logins of its owner.',
   relatedDocs: [],
   propSchema: routineStateSchema,
   props: { ...ownerRoutine, routine: 'dependency-updates', runs: 'weekly' },

@@ -50,7 +50,7 @@ On the app hostname, the Worker serves these API routes:
 - The start and poll of a Codex ChatGPT device code sign-in, through
   [Codex authentication](codex-auth/README.md).
 - The sections, the repositories, the members, and the workspace list of an org.
-- The list, read, create, update, and delete routes of an org's routines, Run now, and run history.
+- The list, read, create, update, and delete routes of an org's automations, Run now, and run history.
 - Leave org, under the existing last-active-admin rule.
 - The create, read, resume, and activity routes of a workspace.
 - The view and the read mark of a workspace.
@@ -91,12 +91,12 @@ The [feature shell](app-api/feature-shell.ts) implements the shared shell writes
 The [workspace features](features/workspace.ts) dispatch files, terminal,
 previews, and desktop inside the real workspace object.
 The [GitHub composition](features/github.ts) stores banner updates in the common chat stream.
-The [routines area](routines/README.md) stores saved prompts and their triggers.
+The [automations area](routines/README.md) stores saved prompts and their triggers.
 It validates schedules and resolves author-filter logins at save.
 Its owner-only Run now starts a stored run as a new workspace.
 The run starter joins repeated creates through a stable first-message ID and returns before the workspace start ends.
 The runs list projects the current workspace state and retains failed-start and first-turn causes.
-Three failed runs in a row turn the routine off.
+Three failed runs in a row turn the automation off.
 The minute schedule scan calls the same starter.
 Signed pull request webhooks store matching runs before the reply.
 Their background tasks call the same starter.
@@ -130,7 +130,7 @@ It then advances unfinished software image builds and retries their cleanup
 in the default provider account.
 The repair checks at most 50 workspaces and 50 orgs per run.
 It defers failed calls and logs counts when either limit leaves work pending.
-The `* * * * *` Cron Trigger runs routine schedules and recovers old queued runs each minute.
+The `* * * * *` Cron Trigger runs automation schedules and recovers old queued runs each minute.
 The scheduled entry dispatches each trigger by its cron expression.
 The [member composition](members/composition.ts) supplies the durable lifecycle hooks.
 
@@ -271,11 +271,11 @@ Call other parts of the app through a binding or an RPC method, not a global `fe
 - [features/alarm-tasks.ts](features/alarm-tasks.ts): `WorkspaceAlarmTasks`, the tracked background work of an alarm.
 - [members/workspace-receiver.ts](members/workspace-receiver.ts) fences suspension, Restore, and payload deletion.
 - [operator/route.ts](operator/route.ts) serves the operator routes after the request gate.
-- [routines/route.ts](routines/route.ts) serves routine records after the request gate.
+- [routines/route.ts](routines/route.ts) serves automation records after the request gate.
 - [routines/run-route.ts](routines/run-route.ts) serves Run now and paginated run history.
 - [routines/run-starter.ts](routines/run-starter.ts) starts queued runs with the owner's logins.
 - [routines/pull-request-dispatch.ts](routines/pull-request-dispatch.ts) applies author filters, trust, and loop guards before it stores pull request runs.
-- [routines/schedule-scan.ts](routines/schedule-scan.ts) claims up to 50 due routines and retries up to 50 old queued runs each minute.
+- [routines/schedule-scan.ts](routines/schedule-scan.ts) claims up to 50 due automations and retries up to 50 old queued runs each minute.
 - [operator/approval-email.ts](operator/approval-email.ts) sends approval messages and retries pending deliveries from the scheduled entry.
 - [mail-sender.ts](mail-sender.ts) shares Resend transport and local logging between the approval, invitation, and feedback emails.
   It writes the sender address, and the name and the media type of each attachment from a `CheckedImage`.
@@ -297,4 +297,4 @@ Call other parts of the app through a binding or an RPC method, not a global `fe
 - [Chat and events](../docs/protocol/chat-and-events.md)
 - [Agent runner](../docs/protocol/agent-runner.md)
 - [Workspaces and sandboxes](../docs/protocol/workspaces-and-sandboxes.md)
-- [Routines](../docs/protocol/routines.md)
+- [Automations](../docs/protocol/routines.md)

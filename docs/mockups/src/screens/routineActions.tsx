@@ -98,7 +98,7 @@ export function PhoneDelete(props: { to?: string }) {
     <div className={styles.phoneDelete}>
       {linked(
         <ActionButton icon={Trash2} tone="danger">
-          Delete routine
+          Delete automation
         </ActionButton>,
         props.to,
       )}

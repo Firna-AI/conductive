@@ -24,7 +24,7 @@ function ReadOnlyNote(props: { routine: Routine; access: RoutineAccess }) {
   }
   return (
     <SectionText muted>
-      {`Only ${personName(routine.owner)} can change this routine.${actions}`}
+      {`Only ${personName(routine.owner)} can change this automation.${actions}`}
     </SectionText>
   )
 }
@@ -65,7 +65,7 @@ function RepositoryRemovedNotice(props: {
     <Notice
       body={body}
       icon={FolderX}
-      title="This routine turned off"
+      title="This automation turned off"
       tone="danger"
     />
   )
@@ -98,7 +98,7 @@ export function RoutineNote(props: {
             : `Three runs in a row failed. Only ${owner} can turn it on again.`
         }
         icon={PowerOff}
-        title="This routine turned off"
+        title="This automation turned off"
         tone="danger"
       />
     )
@@ -121,7 +121,7 @@ export function RoutineNote(props: {
     <Notice
       body={`${routine.movedFrom} left ${org.name}. It stays off until you turn it on.`}
       icon={UserX}
-      title="This routine moved to you"
+      title="This automation moved to you"
     />
   )
 }

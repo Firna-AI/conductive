@@ -24,7 +24,7 @@ export function DeleteRoutineDialog(props: {
           </ScreenLink>
           <ScreenLink asChild to={paths.routines}>
             <ActionButton icon={Trash2} tone="danger">
-              Delete routine
+              Delete automation
             </ActionButton>
           </ScreenLink>
         </>

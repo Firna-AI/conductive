@@ -41,7 +41,7 @@ export function RoutinesScreen(props: { org: OrgSummary }) {
       onPress={() => go(routes.newRoutine(org.id))}
       tone="primary"
     >
-      New routine
+      New automation
     </ActionButton>
   )
   let body: ReactNode
@@ -50,14 +50,14 @@ export function RoutinesScreen(props: { org: OrgSummary }) {
       <LoadFailure
         error={routines.error}
         retry={() => model.reload('routines')}
-        title="The routines didn't load"
+        title="The automations didn't load"
       />
     )
   } else if (listed === null || repositories.state === 'loading') {
     body = (
       <div className={ui.center}>
         <Spinner
-          accessibilityLabel="Loading the routines"
+          accessibilityLabel="Loading the automations"
           color={theme.colors.muted}
           size={13}
         />
@@ -69,7 +69,7 @@ export function RoutinesScreen(props: { org: OrgSummary }) {
         action={newRoutine}
         body={routineWords}
         icon={Repeat}
-        title={`Create the first routine in ${org.name}`}
+        title={`Create the first automation in ${org.name}`}
       />
     )
   } else {
@@ -98,7 +98,7 @@ export function RoutinesScreen(props: { org: OrgSummary }) {
       back={{ label: 'Workspaces', to: routes.org(org.id) }}
       fill={empty}
       subtitle={org.name}
-      title="Routines"
+      title="Automations"
     >
       {suspended ? <SuspendedOrgNotice org={org} /> : null}
       {body}

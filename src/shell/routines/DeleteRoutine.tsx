@@ -27,7 +27,7 @@ export function useDeleteRoutine(
     if (!routine) return
     await deleteRoutine(orgModel, routine.id)
     navigation.replace(routes.routines(org.id))
-  }, 'The routine was not deleted')
+  }, 'The automation was not deleted')
   const close = () => setAsked(false)
   const question =
     asked && routine ? (
@@ -41,7 +41,7 @@ export function useDeleteRoutine(
               onPress={() => remove.run()}
               tone="danger"
             >
-              Delete routine
+              Delete automation
             </ActionButton>
           </>
         }

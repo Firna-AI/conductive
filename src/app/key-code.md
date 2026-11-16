@@ -86,7 +86,7 @@ Each path is relative to `src/app/`, the folder of this page.
 - [getStartedCopy.ts](../../docs/mockups/src/screens/getStartedCopy.ts): the
   setup text that the app and mockups share.
 - `org-model.ts`: the sections, workspaces, repositories, builds, members,
-  routines, and computer settings of one org, with `watch`. `org-waits.ts`
+  automations, and computer settings of one org, with `watch`. `org-waits.ts`
   gives the wait of each part, such as `workspacesWait`.
   `OrgModel.startBuild` sends Build computer and Try again for each screen
   that offers them.
@@ -95,18 +95,18 @@ Each path is relative to `src/app/`, the folder of this page.
   workspace show until the org has a good image. `changedScriptNotice`
   gives the words of the notice of a changed install script, which the
   Cloud computer tab of an admin and of a member show.
-- `api/read-routines.ts`: the readers of the routines, each with its newest run, and of one routine. `api/read-routine-runs.ts`: the readers of the runs.
-- `routine-model.ts`: `RoutineModel`, one routine with its reads, its
+- `api/read-routines.ts`: the readers of the automations, each with its newest run, and of one automation. `api/read-routine-runs.ts`: the readers of the runs.
+- `routine-model.ts`: `RoutineModel`, one automation with its reads, its
   saves, and its runs, and `routineModel`, the model that the org keeps for
-  each routine. Its `client` sends the other requests of the routine page,
-  and a `routine_not_found` from any of them reads the routine again.
+  each automation. Its `client` sends the other requests of the automation page,
+  and a `routine_not_found` from any of them reads the automation again.
   `routine-actions.ts`: create, update, Turn off, Delete, and Run now,
-  which also update the Routines list.
-- `routine-runs.ts`: `RoutineRuns`, the Runs list of one routine: the
+  which also update the Automations list.
+- `routine-runs.ts`: `RoutineRuns`, the Runs list of one automation: the
   pages that it shows, which each read gets again from the newest run
   while the page shows them, Show older runs, which adds a page, and Run
   now.
-- `routine-draft.ts`: the draft of the routine page, the equality of each
+- `routine-draft.ts`: the draft of the automation page, the equality of each
   of its fields, its create and update requests, and whether Save can send
   it. `routine-triggers.ts`: the
   defaults of a new trigger and the edits of an author filter.
@@ -322,18 +322,18 @@ Each path is relative to `src/app/`, the folder of this page.
   names the entry points of the command palette, the layers of each
   frame, New workspace as a dialog, and feedback with its screenshots.
 - `../shell/Shell.tsx` and `../shell/OrgRoutes.tsx`: the screen of each address.
-- `../shell/routines/RoutinesScreen.tsx`: the Routines page, which the
-  Routines link of the sidebar and of the phone list opens.
-  [Routines](../../docs/protocol/routines.md#the-routine-pages) states what
+- `../shell/routines/RoutinesScreen.tsx`: the Automations page, which the
+  Automations link of the sidebar and of the phone list opens.
+  [Automations](../../docs/protocol/routines.md#the-automation-pages) states what
   it shows.
-- `../shell/routines/RoutineScreen.tsx`: the routine page and the page of
-  a new routine. `RoutineEditor.tsx` is the form of the owner, and
+- `../shell/routines/RoutineScreen.tsx`: the automation page and the page of
+  a new automation. `RoutineEditor.tsx` is the form of the owner, and
   `RoutineReader.tsx` the read-only view of every other member, with Turn
   off and Delete for an admin. `useRoutineSave.ts` is Save, with the login
   that a save refused. `RoutineFrame.tsx` puts the Runs list beside the
   form on desktop, and on the Runs tab of a phone. It alone shows the
   notice of a suspended org, in every view of the page. `RoutineNote.tsx`
-  is the note above a routine, which reads the saved repository from the
+  is the note above an automation, which reads the saved repository from the
   repository list of the org.
 - `../shell/routines/RunsPanel.tsx` and `RunList.tsx`: the Runs list, with
   the mark, the state, the trigger, the pull request, and the time of each
@@ -342,7 +342,7 @@ Each path is relative to `src/app/`, the folder of this page.
   itself, and the reason of a skipped run, with the login of an account
   outside the org. `RunNow.tsx`: Run now of the owner.
 - `../shell/workspace/RunLine.tsx`: the line under the header of a run
-  workspace, which links to its routine, and to the pull request of a pull
+  workspace, which links to its automation, and to the pull request of a pull
   request run.
 - `../shell/ui/useSavedDraft.ts`: the draft of an editor of a saved value,
   as one value or field by field (`eachField`).

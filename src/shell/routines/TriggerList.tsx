@@ -99,7 +99,7 @@ export function TriggerEditor(props: {
       </div>
       {triggers.length === 0 ? (
         <p className={styles.empty}>
-          No triggers. The routine runs only when you use Run now.
+          No triggers. The automation runs only when you use Run now.
         </p>
       ) : (
         <ul aria-label="Triggers" className={styles.list}>

@@ -219,7 +219,7 @@ export function TimeZoneField(props: {
   return (
     <div className={list.zone}>
       <DropdownSelector
-        hint="Every schedule of this routine uses it."
+        hint="Every schedule of this automation uses it."
         label="Time zone"
         onValueChange={props.change}
         options={options}

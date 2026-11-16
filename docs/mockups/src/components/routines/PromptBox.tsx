@@ -47,7 +47,7 @@ export function PromptBox(props: {
             multiline
             numberOfLines={4}
             onChangeText={noop}
-            placeholder="What should this routine do?"
+            placeholder="What should this automation do?"
             size={field}
             value={props.prompt}
             variant="seamless"

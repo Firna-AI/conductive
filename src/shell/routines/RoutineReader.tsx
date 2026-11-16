@@ -51,7 +51,7 @@ export function RoutineReader(props: {
     routine.sectionId
   const turnOff = useAction(
     () => turnOffRoutine(orgModel, routine.id),
-    'The routine was not turned off',
+    'The automation was not turned off',
   )
   const deletion = useDeleteRoutine(org, routine)
   const actions =

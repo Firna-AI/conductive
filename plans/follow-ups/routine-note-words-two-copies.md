@@ -1,4 +1,4 @@
-# The words of the routine notes have two copies
+# The words of the automation notes have two copies
 
 - **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
@@ -7,14 +7,14 @@
 - **Reason:** The words work today, and one shared module is a structure change outside the findings of the fix round.
 
 - **Terms:**
-  - **Routine notes:** the notes of the routine page: why a routine turned off (three failed runs, an owner who left, a removed repository) and who can change it.
+  - **Automation notes:** the notes of the automation page: why an automation turned off (three failed runs, an owner who left, a removed repository) and who can change it.
   - **Mockups:** the visual spec in `docs/mockups/`. The app takes its words from them, and it may import a mockup component or module, but not a mockup screen, fixture, `paths.ts`, `ScreenLink`, or Mokly.
-- **Background:** The app and the mockups each write the words of the routine notes. Other routine words already have one shared home that both import, such as `docs/mockups/src/components/routines/triggerCopy.ts`, which `src/shell/routines/AuthorFilter.tsx` imports.
+- **Background:** The app and the mockups each write the words of the automation notes. Other automation words already have one shared home that both import, such as `docs/mockups/src/components/routines/triggerCopy.ts`, which `src/shell/routines/AuthorFilter.tsx` imports.
 - **Problem:** A change of a note's words in the mockups does not reach the app, and the two copies can drift.
 - **Impact if no action:** The app can show words that the visual spec no longer holds.
-- **Root question:** How do the app and the mockups share the words of the routine notes?
+- **Root question:** How do the app and the mockups share the words of the automation notes?
 - **Options:**
-  - **A.** Move the words of the routine notes into one module under `docs/mockups/src/components/routines/`, which imports no fixture, and use it in the mockup note and in `RoutineNote`. Effort: Small.
+  - **A.** Move the words of the automation notes into one module under `docs/mockups/src/components/routines/`, which imports no fixture, and use it in the mockup note and in `RoutineNote`. Effort: Small.
 - **Left out:** A test that compares the two copies, because a structural move removes the copy.
 - **Wider fix:** A.
 - **Previous examples:** `triggerCopy.ts`, which both sides import.

@@ -29,7 +29,7 @@ export const authorFilter = defineScreen({
       slug: 'unknown-login',
       title: 'Unknown login refused',
       description:
-        'Save refused the routine, because renovate-bot names no GitHub account. Its chip is marked, and the line under the list names the login and what to do. Members of Acme and dependabot[bot] stay in the list.',
+        'Save refused the automation, because renovate-bot names no GitHub account. Its chip is marked, and the line under the list names the login and what to do. Members of Acme and dependabot[bot] stay in the list.',
       rationale:
         'The app turns each login into the ID of its GitHub account when it saves. A login that names no account has no ID, so the save is refused.',
       props: { triggers: 'unknown-login' },

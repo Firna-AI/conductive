@@ -66,8 +66,8 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         through ${productName}, which adds the agent login.
         Agent settings in the repository can send them to another address
         instead. Each session uses the
-        login of the member who started it. Each run of a routine sends
-        its prompt on the login of the member who owns the routine.
+        login of the member who started it. Each run of an automation sends
+        its prompt on the login of the member who owns the automation.
         Your messages in another
         member's session use that member's login only when that member
         lets other members use it. When that member does not share the
@@ -75,7 +75,7 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         terms of that provider or endpoint apply.`,
       text`The members of your orgs see the workspaces of the org,
         their chats, and each Mac command request and result. They also see
-        the routines of the org, with their prompts and their runs.
+        the automations of the org, with their prompts and their runs.
         A member with a terminal in a cloud computer can read
         the GitHub token of a turn that runs there. During Continue, they
         can also read the GitHub token of the member who clicked, while the
@@ -99,7 +99,7 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         seconds after the turn ends. If the member who started the session
         removes or changes the login, or loses access to the org, the turn
         ends at its next model request.`,
-      text`The run of your routine for a pull request reads the comments,
+      text`The run of your automation for a pull request reads the comments,
         reviews, and descriptions of other GitHub accounts. Such text can
         steer the agent while the run uses your agent login and GitHub
         token, and the env vars of the org. Such text can also steer the

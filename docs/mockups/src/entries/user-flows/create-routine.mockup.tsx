@@ -1,22 +1,22 @@
 import { defineUseCase } from '@mokly/mokly'
 
 export const createRoutine = defineUseCase({
-  title: 'Create a routine',
+  title: 'Create an automation',
   description:
     'The user saves a prompt that runs an agent on a schedule, and starts its first run with Run now. The run opens a new workspace.',
   relatedDocs: [],
   steps: [
     {
       screenPath: 'app/routines',
-      title: 'Open Routines',
+      title: 'Open Automations',
       description:
-        'Routines sits below New workspace in the sidebar. New routine opens an empty routine.',
+        'Automations sits below New workspace in the sidebar. New automation opens an empty automation.',
     },
     {
       screenPath: 'app/routines/routine/new',
-      title: 'Start a routine',
+      title: 'Start an automation',
       description:
-        'The new routine has no name, no trigger, and no prompt. The user names it Morning summary and writes the prompt.',
+        'The new automation has no name, no trigger, and no prompt. The user names it Morning summary and writes the prompt.',
     },
     {
       screenPath: 'app/routines/triggers',
@@ -26,7 +26,7 @@ export const createRoutine = defineUseCase({
     },
     {
       screenPath: 'app/routines/runs/saved',
-      title: 'The routine is saved',
+      title: 'The automation is saved',
       description:
         'Morning summary runs each weekday at 09:00 in Europe/London. It has no runs yet, so the user tries it with Run now.',
     },
@@ -40,7 +40,7 @@ export const createRoutine = defineUseCase({
       screenPath: 'app/routines/run-workspace/run-now',
       title: 'The agent works',
       description:
-        'The run workspace opens in General, on a new branch. The agent works on the prompt, and the header links back to the routine.',
+        'The run workspace opens in General, on a new branch. The agent works on the prompt, and the header links back to the automation.',
     },
   ],
 })

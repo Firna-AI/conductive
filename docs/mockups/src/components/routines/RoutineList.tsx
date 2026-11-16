@@ -101,7 +101,7 @@ export function RoutineList(props: {
   viewport: Viewport
 }) {
   return (
-    <ul aria-label="Routines" className={styles.list}>
+    <ul aria-label="Automations" className={styles.list}>
       {props.rows.map((row) => (
         <Row
           key={row.routine.key}

@@ -42,8 +42,8 @@ export const runLinks: Readonly<Record<string, string>> = {
 
 /** The name in the header: "New routine" until the routine is saved. */
 export function titleOf(routine: Routine): string {
-  if (!routine.saved) return 'New routine'
-  return routine.name === '' ? 'Untitled routine' : routine.name
+  if (!routine.saved) return 'New automation'
+  return routine.name === '' ? 'Untitled automation' : routine.name
 }
 
 /** Why the person signed in reads the routine without fields. */
@@ -57,7 +57,7 @@ function ReadOnlyNote(props: { routine: Routine; access: RoutineAccess }) {
   }
   return (
     <SectionText muted>
-      {`Only ${routine.owner.name} can change this routine.${actions}`}
+      {`Only ${routine.owner.name} can change this automation.${actions}`}
     </SectionText>
   )
 }
@@ -76,7 +76,7 @@ function FailedRunsNotice(props: { routine: Routine; ownerViews: boolean }) {
           : `Three runs in a row failed. Only ${props.routine.owner.name} can turn it on again.`
       }
       icon={PowerOff}
-      title="This routine turned off"
+      title="This automation turned off"
       tone="danger"
     />
   )
@@ -114,7 +114,7 @@ function RepositoryRemovedNotice(props: {
     <Notice
       body={body}
       icon={FolderX}
-      title="This routine turned off"
+      title="This automation turned off"
       tone="danger"
     />
   )
@@ -150,7 +150,7 @@ function Note(props: {
     <Notice
       body={`${routine.movedFrom} left ${orgs.acme.name}. It stays off until you turn it on.`}
       icon={UserX}
-      title="This routine moved to you"
+      title="This automation moved to you"
     />
   )
 }
@@ -189,7 +189,7 @@ export function RoutineForm(props: {
         emptyText={
           readOnly
             ? 'No triggers.'
-            : 'No triggers. The routine runs only when you use Run now.'
+            : 'No triggers. The automation runs only when you use Run now.'
         }
         menu={props.menu}
         readOnly={readOnly}

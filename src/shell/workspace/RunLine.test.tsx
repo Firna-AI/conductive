@@ -56,7 +56,7 @@ async function openWorkspace(server: FakeApiServer) {
 }
 
 describe('the header of a workspace', () => {
-  test('a pull request run links to its routine and to its pull request under the header', async () => {
+  test('a pull request run links to its automation and to its pull request under the header', async () => {
     const server = new FakeApiServer()
     const url = 'https://github.com/acme/storefront/pull/482'
     server.json(
@@ -70,8 +70,8 @@ describe('the header of a workspace', () => {
     )
     const { navigation, view } = await openWorkspace(server)
     const link = await waitFor(
-      () => queryByRole('link', 'Routine: Review pull requests', view),
-      'the link to the routine',
+      () => queryByRole('link', 'Automation: Review pull requests', view),
+      'the link to the automation',
     )
     const pullRequest = byRole('link', 'Pull request #482 on GitHub', view)
     const shown = {
@@ -92,7 +92,7 @@ describe('the header of a workspace', () => {
     })
   })
 
-  test('a run of a schedule links to its routine only', async () => {
+  test('a run of a schedule links to its automation only', async () => {
     const server = new FakeApiServer()
     server.json(
       'GET',
@@ -105,8 +105,8 @@ describe('the header of a workspace', () => {
     )
     const { view } = await openWorkspace(server)
     const link = await waitFor(
-      () => queryByRole('link', 'Routine: Triage new errors', view),
-      'the link to the routine',
+      () => queryByRole('link', 'Automation: Triage new errors', view),
+      'the link to the automation',
     )
     expect(link.closest('p')?.textContent).toBe('Run of Triage new errors')
   })

@@ -1,4 +1,4 @@
-# A routine run can ask for commands on a Mac
+# An automation run can ask for commands on a Mac
 
 - **Severity:** High. **Effort:** Medium. **Confidence:** High. **Harder later:** Yes.
 - **Kind:** Needs decision.
@@ -7,11 +7,11 @@
 - **Reason:** Each option adds a refusal or a new rule to the Mac command contract, and the user has not chosen one.
 
 - **Terms:**
-  - **Routine:** a saved prompt that starts an agent run in a new workspace, on a schedule, on a GitHub pull request event, or with Run now. The owner of the routine sends the first message of each run, so the run acts with the owner's logins.
+  - **Automation:** a saved prompt that starts an agent run in a new workspace, on a schedule, on a GitHub pull request event, or with Run now. The owner of the automation sends the first message of each run, so the run acts with the owner's logins.
   - **Mac command request:** an agent asks to run a command on the Mac of the person who sent its turn. The Mac app asks that person first.
   - **Always allow:** a choice that a person saves in the Mac app. A later request with the same command text then runs without a question.
 - **Background:**
-  - On 8 November 2026 the user chose option A of the decision "what one routine run works in": each run creates a new workspace, and the owner sends its first message.
+  - On 8 November 2026 the user chose option A of the decision "what one automation run works in": each run creates a new workspace, and the owner sends its first message.
   - A Mac command request goes to the Mac of the sender of the turn (decision 62 of the project). The Worker accepts a request only while that turn runs in the calling workspace.
   - The agent of a pull request run reads text that other GitHub accounts write: the code, the title, and the description of the pull request.
   - A workspace that a run's agent creates with the agent tools also sends its first turn as the owner (`worker/tools/create.ts:34`).
@@ -27,7 +27,7 @@
   - **D.** Each message records whether a person started it. A message that a member sends counts. The first message of a workspace that the agent tools create, and each message of the session calls, copies the record of the calling turn. The Mac route serves a turn only when a person started its first message, and refuses every other turn with its reason. It needs a field on stored messages and a change to the create and send paths of the agent tools. Effort: Medium.
   - **E.** The Mac route refuses each request from a run workspace, and from each workspace that its agent created, whoever sends the turn. No member can use a Mac there. A turn that its agent starts in another workspace with the session calls still reaches the owner's Mac. Effort: Medium.
   - **F.** Always allow covers the command text in one workspace only. A run workspace then has no saved command, so each request asks. It changes the Mac app, This Mac, a mockup, and protocol text, and an older Mac app keeps the old scope. Effort: Medium.
-  - **G.** D, and the routine page gets a switch, "Runs can ask for commands on my Mac", off by default. Effort: Large.
+  - **G.** D, and the automation page gets a switch, "Runs can ask for commands on my Mac", off by default. Effort: Large.
 - **Left out:** A refusal of the create call and the session calls of the agent tools in a turn that no person started, because D closes the same paths and keeps the calls. A rule for pull request runs only, because a scheduled run can read pull requests too, and no person watches it. An instruction in the run text not to use a Mac, because pull request text can override it.
 - **Wider fix:** D. It gives a Mac only to a turn that a person started, so a later path without a person gets no Mac.
 - **Previous examples:** None found.

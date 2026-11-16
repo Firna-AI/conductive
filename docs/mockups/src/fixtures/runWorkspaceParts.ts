@@ -39,7 +39,7 @@ export function runMessage(routine: Routine, facts: readonly string[]): string {
     routine.prompt,
     '',
     separator,
-    `Routine: ${routine.name}`,
+    `Automation: ${routine.name}`,
     ...facts,
   ].join('\n')
 }

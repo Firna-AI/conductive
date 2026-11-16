@@ -142,7 +142,7 @@ it('resolves member and bot logins to account IDs in both author lists at each s
   })
 })
 
-it('returns the unknown login, trigger index, and author list without changing the routine', async () => {
+it('returns the unknown login, trigger index, and author list without changing the automation', async () => {
   const { org, member, admin, input, seed } = await authorsFixture()
   const path = await seed()
   for (const [list, authors] of [

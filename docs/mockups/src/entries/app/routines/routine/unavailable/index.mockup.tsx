@@ -8,9 +8,9 @@ import {
 export const unavailableRoutine = defineScreen({
   title: 'Not available',
   description:
-    'The page of a routine that Acme no longer has, because someone deleted it or the address is wrong. The page keeps Routine as its name, and it says that this routine is not available. Open Routines opens the list of the routines of Acme. The page has no tabs, no Runs list, and no actions.',
+    'The page of an automation that Acme no longer has, because someone deleted it or the address is wrong. The page keeps Automation as its name, and it says that this automation is not available. Open Automations opens the list of the automations of Acme. The page has no tabs, no Runs list, and no actions.',
   rationale:
-    'A deleted routine cannot come back, so the page offers only the way to the list. A read of the routine that finds no routine shows this page, also on a page that was open when someone deleted the routine elsewhere. The run workspaces of a deleted routine stay, because they are normal workspaces, from decision 504 A.',
+    'A deleted automation cannot come back, so the page offers only the way to the list. A read of the automation that finds no automation shows this page, also on a page that was open when someone deleted the automation elsewhere. The run workspaces of a deleted automation stay, because they are normal workspaces, from decision 504 A.',
   relatedDocs: [],
   propSchema: routineStateSchema,
   props: { ...ownerRoutine, read: 'unavailable' },

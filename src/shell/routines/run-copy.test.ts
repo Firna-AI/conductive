@@ -28,7 +28,7 @@ const workerWords: Readonly<Record<string, string>> = {
   sender_not_allowed:
     'The event sender is outside the org and is not in Author is.',
   org_suspended: 'The org is suspended.',
-  owner_left: 'The routine owner left the org.',
+  owner_left: 'The automation owner left the org.',
 }
 
 /** A skipped run of a pull request event, with the login that it names. */
@@ -112,11 +112,11 @@ function failed(
 }
 
 /** The words that the Worker stores for each cause of a failed check. */
-const loginWords = 'Connect Claude to run this routine.'
+const loginWords = 'Connect Claude to run this automation.'
 const githubWords = 'GitHub access expired. Sign in with GitHub again.'
 
 describe('the words of a failed run', () => {
-  test('name the owner of the run after the routine moved to another owner, who gets no action', () => {
+  test('name the owner of the run after the automation moved to another owner, who gets no action', () => {
     const before = { agent: 'claude', owner: lena, workspaceId: null } as const
     expect({
       login: failureCopy(

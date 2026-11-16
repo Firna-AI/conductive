@@ -25,7 +25,7 @@ export function RunLinks(props: { run: RunSource }) {
       <Repeat aria-hidden className={styles.icon} size={13} />
       <span className={styles.words}>Run of</span>
       <ScreenLink
-        aria-label={`Routine: ${run.routine}`}
+        aria-label={`Automation: ${run.routine}`}
         className={styles.routine}
         to={run.routineTo}
       >

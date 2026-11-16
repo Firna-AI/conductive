@@ -5,11 +5,11 @@ import {
 } from '../../../../screens/RoutinesScreen'
 
 export const emptyRoutines = defineScreen({
-  title: 'No routines yet',
+  title: 'No automations yet',
   description:
-    'An org without routines. The page says what a routine does, and New routine starts the first one.',
+    'An org without automations. The page says what an automation does, and New automation starts the first one.',
   rationale:
-    'The empty state names the outcome and has one action, so the header has no second New routine.',
+    'The empty state names the outcome and has one action, so the header has no second New automation.',
   relatedDocs: [],
   propSchema: routinesSchema,
   props: { list: 'empty', org: 'active' },

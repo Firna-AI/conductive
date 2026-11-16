@@ -47,7 +47,7 @@ function runsReply(org: OrgState, routineId: string, before: string | null) {
 
 /** The first message of a run: the prompt, a line, and the facts of the trigger. */
 function runText(routine: Routine): string {
-  return `${routine.prompt}\n\n---\nRoutine: ${routine.name}\nTrigger: Run now`
+  return `${routine.prompt}\n\n---\nAutomation: ${routine.name}\nTrigger: Run now`
 }
 
 /**
@@ -70,7 +70,7 @@ function startRun(
     (item) => item.agent === agent,
   )
   if (!login?.connected) {
-    const message = `Connect ${agentNames[agent]} to run this routine.`
+    const message = `Connect ${agentNames[agent]} to run this automation.`
     const error = { code: 'agent_login_required', message }
     return { ...run, state: 'failed', error }
   }
@@ -120,7 +120,7 @@ function runNow(
     throw new RouteError(
       409,
       'routine_pull_request_required',
-      'This routine runs from a pull request event.',
+      'This automation runs from a pull request event.',
     )
   }
   const id = `run-${routineId}-${requestId}`

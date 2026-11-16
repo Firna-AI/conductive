@@ -12,7 +12,7 @@ afterAll(async () => {
   await harness.dispose()
 })
 
-it('stores routine speed and turns it off when the chosen model has no fast mark', async () => {
+it('stores automation speed and turns it off when the chosen model has no fast mark', async () => {
   const fixture = await routineFixture(harness)
   harness.env.CONDUCTIVE_MODELS = JSON.stringify([
     {

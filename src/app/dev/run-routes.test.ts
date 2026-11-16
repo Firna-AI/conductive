@@ -95,7 +95,7 @@ describe('the runs of the dev fake', () => {
     })
   })
 
-  test('Run now starts a workspace in the section of the routine, once for each request ID', async () => {
+  test('Run now starts a workspace in the section of the automation, once for each request ID', async () => {
     const { api, acme } = setup()
     const before = acme.workspaces.length
     const run = await runNow(api, 'error-triage', 'request-1')
@@ -130,7 +130,7 @@ describe('the runs of the dev fake', () => {
     })
   })
 
-  test('Run now refuses another owner and a routine of pull requests, fails without an agent login, and keeps the workspace of a start that failed', async () => {
+  test('Run now refuses another owner and an automation of pull requests, fails without an agent login, and keeps the workspace of a start that failed', async () => {
     const { api } = setup()
     await expect(
       runNow(api, 'dependency-updates', 'request-1'),
@@ -156,7 +156,7 @@ describe('the runs of the dev fake', () => {
       workspaceId: null,
       error: {
         code: 'agent_login_required',
-        message: 'Connect Claude to run this routine.',
+        message: 'Connect Claude to run this automation.',
       },
     })
     expect({
@@ -183,7 +183,7 @@ describe('the runs of the dev fake', () => {
     })
   })
 
-  test('the view of a run workspace names its routine and the pull request of its run', async () => {
+  test('the view of a run workspace names its automation and the pull request of its run', async () => {
     const path = workspaceViewPath(orgId, FAKE_IDS.workspace)
     const routineOf = async (search: string) =>
       (await setup(search).api.get(path, readViewReply)).routine

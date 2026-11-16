@@ -34,8 +34,8 @@ says.
     [Messages](messages-and-attachments.md#messages) says
   - through a call of the agent tools in a turn that the member sent, as
     [The sender](session-calls.md#the-sender) says
-- A routine run starts the first session of its workspace in the name of
-  the routine owner, as
+- An automation run starts the first session of its workspace in the name of
+  the automation owner, as
   [A run acts as its owner](routine-runs.md#a-run-acts-as-its-owner) says.
 - The session record names its starter in `startedBy`. A session without a
   known starter has no login that can be used.

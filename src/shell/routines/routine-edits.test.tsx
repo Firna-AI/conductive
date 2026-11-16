@@ -31,7 +31,7 @@ const path = routinePath(org, id)
 
 function saved(): Routine {
   const routine = routineFixtures().routines.find((item) => item.id === id)
-  if (!routine) throw new Error(`The fixtures have no routine ${id}.`)
+  if (!routine) throw new Error(`The fixtures have no automation ${id}.`)
   return routine
 }
 
@@ -85,8 +85,8 @@ async function ownerPage() {
     server.json('GET', path, { routine: turnedOff() })
     act(() => focus.focus())
     await waitFor(
-      () => queryByText('This routine turned off', view),
-      'the newer routine',
+      () => queryByText('This automation turned off', view),
+      'the newer automation',
     )
   }
   return { server, held, view, comeBack }
@@ -95,8 +95,8 @@ async function ownerPage() {
 /** The prompt that the owner types in the tests. */
 const edited = 'Review this pull request for bugs only.'
 
-describe('an edit of the routine page', () => {
-  test('keeps the edited field when a newer routine arrives, shows the other fields of the newer routine, and saves only the edit', async () => {
+describe('an edit of the automation page', () => {
+  test('keeps the edited field when a newer automation arrives, shows the other fields of the newer automation, and saves only the edit', async () => {
     const { server, view, comeBack } = await ownerPage()
     await typeText(byRole('textbox', 'Prompt', view), edited)
     await comeBack()
@@ -105,7 +105,7 @@ describe('an edit of the routine page', () => {
     await press(byRole('button', 'Save', view))
     await waitFor(
       () => isOff(byRole('button', 'Save', view)),
-      'the saved routine',
+      'the saved automation',
     )
     expect({
       shown,
@@ -151,7 +151,7 @@ describe('an edit of the routine page', () => {
     })
   })
 
-  test('keeps the edited prompt when a newer routine arrives while its save waits and the save fails, shows the newer Active, and the next save sends only the edit', async () => {
+  test('keeps the edited prompt when a newer automation arrives while its save waits and the save fails, shows the newer Active, and the next save sends only the edit', async () => {
     const { server, held, view, comeBack } = await ownerPage()
     await typeText(byRole('textbox', 'Prompt', view), edited)
     const failure = { code: 'server_error', message: 'The request failed.' }
@@ -165,7 +165,7 @@ describe('an edit of the routine page', () => {
     const failed = {
       prompt: textOf(view, 'Prompt'),
       active: activeOf(view),
-      toast: queryByText('The routine was not saved') !== null,
+      toast: queryByText('The automation was not saved') !== null,
     }
     server.json('PATCH', path, { routine: { ...turnedOff(), prompt: edited } })
     await press(byRole('button', 'Save', view))
@@ -184,7 +184,7 @@ describe('an edit of the routine page', () => {
     })
   })
 
-  test('keeps the edited prompt while its save waits and a newer routine arrives, so text typed then builds on the edit and stays after the answer', async () => {
+  test('keeps the edited prompt while its save waits and a newer automation arrives, so text typed then builds on the edit and stays after the answer', async () => {
     const { server, held, view, comeBack } = await ownerPage()
     const prompt = () => byRole('textbox', 'Prompt', view)
     await typeText(prompt(), edited)
@@ -239,11 +239,11 @@ describe('an edit of the routine page', () => {
       note: note && wordsOf(note),
     }).toEqual({
       picked: true,
-      note: 'This routine turned off acme/admin-dashboard is no longer a chosen repository of Acme. Choose another repository, then turn it on.',
+      note: 'This automation turned off acme/admin-dashboard is no longer a chosen repository of Acme. Choose another repository, then turn it on.',
     })
   })
 
-  test('keeps a login that the save refuses in its filter when a newer routine arrives while the save waits', async () => {
+  test('keeps a login that the save refuses in its filter when a newer automation arrives while the save waits', async () => {
     const { server, held, view, comeBack } = await ownerPage()
     const pushed = byRole('button', 'Authors of PR pushed', view)
     await press(pushed)
