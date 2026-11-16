@@ -2,6 +2,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { testNavigation } from '../../files/files-test-kit'
 import { sessionPaths } from '../../shared/sessions'
+import type { WorkspaceTab } from '../../shared/workspace-view'
 import { byRole, queryByText } from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
@@ -55,11 +56,18 @@ function closes(server: FakeApiServer, index = 1): Promise<unknown[]> {
   )
 }
 
-/** Mounts the row with a session tab, the temporary file tab, and a session tab. */
-async function mountRow(server: FakeApiServer) {
+/**
+ * Mounts the row with the two session tabs and the temporary file tab, in
+ * the order of `tabs`: by default a session tab, the file tab, and a
+ * session tab.
+ */
+async function mountRow(
+  server: FakeApiServer,
+  tabs: readonly WorkspaceTab[] = [first, file, second],
+) {
   await mountChat({
     server,
-    tabs: [first, file, second],
+    tabs: [...tabs],
     temporaryTab: temporaryFile,
     viewport: 'desktop',
     renderTab: fileTabs(testNavigation(), temporaryFile),
@@ -68,11 +76,11 @@ async function mountRow(server: FakeApiServer) {
     () => queryByText('app-[redacted].ts'),
     'the file tab',
   )
-  layOut(
-    byRole('button', 'Address autocomplete'),
-    fileTab,
-    byRole('button', debounce),
-  )
+  const node = (tab: WorkspaceTab) =>
+    tab === file
+      ? fileTab
+      : byRole('button', tab === first ? 'Address autocomplete' : debounce)
+  layOut(...tabs.map(node))
   return fileTab
 }
 
@@ -140,12 +148,12 @@ describe('Close tabs to the right', () => {
 })
 
 describe('Close other tabs', () => {
-  it('closes every other file and session tab, shows the tab of the menu first, and is then off', async () => {
+  it('closes the tabs on both sides, of each kind, shows the tab of the menu first, and is then off', async () => {
     const server = new FakeApiServer()
     answerClose(server, 0)
-    await mountRow(server)
+    await mountRow(server, [first, second, file])
 
-    rightClick(byRole('button', debounce), { clientX: 250, clientY: 12 })
+    rightClick(byRole('button', debounce), { clientX: 150, clientY: 12 })
     const items = menuItems(debounce).slice(-2)
     await press(byRole('menuitem', 'Close other tabs'))
     await waitFor(
@@ -166,7 +174,7 @@ describe('Close other tabs', () => {
     }).toEqual({
       items: [
         { name: 'Close other tabs', off: false },
-        { name: 'Close tabs to the right', off: true },
+        { name: 'Close tabs to the right', off: false },
       ],
       closes: [[{ stopRunningTurn: false }], []],
       lastSave: [second],

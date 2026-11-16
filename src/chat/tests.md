@@ -106,9 +106,10 @@ the first tab of a row with a file tab and a session tab. The file tab
 leaves the view in one save, with its temporary mark, the session closes
 with no stop, and the shown tab stays. When the shown tab is to the right,
 the tab of the menu shows first. The item is off on the last tab. The
-same file presses Close other tabs on the last tab: the shown session and
-the file tab close, the tab of the menu shows, and its session gets no
-close. Then the item is off, because the row holds only that tab.
+same file presses Close other tabs on the middle tab of a row with a
+session tab, which shows, before it and the file tab after it. Both other
+tabs close, the tab of the menu shows, and its session gets no close.
+Then the item is off, because the row holds only that tab.
 `state/controller.test.ts` closes an idle and a running session in one
 close: the idle one closes at once, and the running one waits for one
 question. `components/CloseQuestion.dom.test.tsx` checks the words of

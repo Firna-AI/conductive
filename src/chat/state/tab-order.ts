@@ -142,8 +142,9 @@ export function moveTab(
  * The view without the given file and diff tabs, as Close other tabs and
  * Close tabs to the right of the tab menu close them. A session tab closes
  * through the server instead, so this keeps each session tab. A closed
- * temporary tab loses its mark. A closed active tab leaves no active tab, so close it after the
- * row shows another tab. A change that closes nothing gives the same view.
+ * temporary tab loses its mark. A closed active tab leaves no active tab,
+ * so close it after the row shows another tab. A change that closes
+ * nothing gives the same view.
  */
 export function withoutTabs(
   view: WorkspaceView,
