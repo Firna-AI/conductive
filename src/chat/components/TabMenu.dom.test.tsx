@@ -71,6 +71,7 @@ describe('the tab menu', () => {
           { name: 'Copy full transcript', off: false },
           { name: 'Move left', off: true },
           { name: 'Move right', off: false },
+          { name: 'Close other tabs', off: false },
           { name: 'Close tabs to the right', off: false },
         ],
         place: { left: '0px', top: '34px' },
@@ -136,6 +137,7 @@ describe('the tab menu', () => {
       items: [
         { name: 'Move left', off: false },
         { name: 'Move right', off: true },
+        { name: 'Close other tabs', off: false },
         { name: 'Close tabs to the right', off: true },
       ],
       place: { left: '250px', top: '12px' },
@@ -200,6 +202,7 @@ describe('the tab menu', () => {
           { name: 'Keep open', off: false },
           { name: 'Move left', off: false },
           { name: 'Move right', off: false },
+          { name: 'Close other tabs', off: false },
           { name: 'Close tabs to the right', off: false },
         ],
         lines: 2,
@@ -251,6 +254,7 @@ describe('the tab menu', () => {
       { name: 'Copy full transcript', off: false },
       { name: 'Move left', off: false },
       { name: 'Move right', off: true },
+      { name: 'Close other tabs', off: false },
       { name: 'Close tabs to the right', off: true },
     ])
     await press(byRole('menuitem', 'Rename session'))

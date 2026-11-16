@@ -79,6 +79,7 @@ describe('the tab menu of the temporary tab in the workspace', () => {
         { name: 'Keep open', off: false },
         { name: 'Move left', off: false },
         { name: 'Move right', off: false },
+        { name: 'Close other tabs', off: false },
         { name: 'Close tabs to the right', off: false },
       ],
       names: [autocomplete, 'AddressForm.tsx', debounce],
@@ -87,6 +88,7 @@ describe('the tab menu of the temporary tab in the workspace', () => {
       keptMenu: [
         { name: 'Move left', off: false },
         { name: 'Move right', off: false },
+        { name: 'Close other tabs', off: false },
         { name: 'Close tabs to the right', off: false },
       ],
       saved: [{ ...saved, temporaryTab: null }],
