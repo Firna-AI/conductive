@@ -35,5 +35,6 @@ When a runner start applies a release, the system installer restarts a running r
 So the relay runs the active release, and not the release that was active at boot.
 The release system part installs its start script and units.
 The script executes `/opt/conductive/current/conductive relay`.
-A workspace downloads newer software in the background and applies it at a
-later start, as [Release updates](../image/README.md#release-updates) describes.
+A workspace downloads newer software in the background. The relay runs it
+from its next start, also when the runner installs it earlier at idle, as
+[Release updates](../image/README.md#release-updates) describes.

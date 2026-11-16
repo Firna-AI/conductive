@@ -9,7 +9,9 @@ states the rules of the releases and the updates. A decision number names
 a dated record, as [Decision numbers](../architecture.md#decision-numbers)
 says. A sandbox software decision number, such as sandbox software
 decision 3, names a decision of the change that makes the sandbox software
-update itself.
+update itself. An idle update decision number, such as idle update
+decision 1, names a decision of the change that installs a new release
+while the workspace is idle.
 
 ## Programs
 
@@ -67,12 +69,19 @@ says.
    (sandbox software decision 4). It writes the JSON file of the newest
    release last.
 3. In each sandbox, the updater reads that JSON file when the runner
-   starts and every hour. It uses the `cli-updater` crate of
+   starts and every 10 minutes. It uses the `cli-updater` crate of
    `futex-ai/cli-release` (sandbox software decision 1).
 4. The updater downloads a newer release in the background, with only the
-   parts that changed. The next start of the runner applies it (sandbox
-   software decision 5).
-5. Each build of an org image or of the software image installs the newest
+   parts that changed. It never changes the release that runs.
+5. The runner decides when its own release changes, because only the
+   runner knows whether a turn runs. When its workspace is idle, the
+   runner closes its connection, runs the updater as root to install the
+   release, and runs the new release in the same process (idle update
+   decision 1). So its service keeps running, and so does each process
+   that an agent started. Otherwise, the next start of the runner applies
+   the release (sandbox software decision 5). The preview relay and the
+   terminal run a new release from their next start.
+6. Each build of an org image or of the software image installs the newest
    release through the same program. When the image already holds the
    program, the build uses its updater, which downloads only the parts
    that changed.

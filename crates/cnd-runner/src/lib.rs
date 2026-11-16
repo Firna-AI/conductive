@@ -18,6 +18,7 @@ pub mod repository;
 pub mod runtime;
 pub mod socket;
 pub mod state;
+pub mod update;
 pub mod watcher;
 
 #[cfg(test)]
