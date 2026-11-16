@@ -154,13 +154,33 @@ Open. Added on 2026-11-13.
   protects against a later move of the file.
 - The options check report is in
   `.context/org-skills-repository/options-check-decision-4.txt`.
+- Research on 2026-11-16, at the user's question about a common pattern.
+  The root files of 12 popular skills repositories show no common path for
+  always-on rules:
+  - No always-on file: `anthropics/skills`, `openai/skills`, and
+    `ComposioHQ/awesome-claude-skills`.
+  - A root `AGENTS.md`, often with `CLAUDE.md` as a link to it, that holds
+    the rules for work on the repository itself: `vercel-labs/agent-skills`,
+    `wshobson/agents`, `K-Dense-AI/claude-scientific-skills`,
+    `supabase/agent-skills`, `github/awesome-copilot`, and
+    `obra/superpowers`.
+  - A root `Agents.md` with rules for the users of the skills:
+    `microsoft/skills`.
+  - A path that a manifest names: `huggingface/skills` names
+    `agentsmd/AGENTS.md`, and `obra/superpowers` names `GEMINI.md`, in the
+    `contextFileName` field of `gemini-extension.json`. The `GEMINI.md` of
+    `obra/superpowers` holds only `@` imports of a skill file.
+  - A start hook that adds the text of one skill: the Claude and Cursor
+    hooks of `obra/superpowers`.
+  - A file that the install script links: `futex-ai/skills`, with
+    `global/AGENTS.md`.
 - **Action:** Ask the user, because the options trade a field in the
   settings against a guess of the repository layout.
 
 ### Decision 5: Size of the rules text
 
-Open. Added on 2026-11-13, from a problem that the options check of
-decision 4 found.
+Answered on 2026-11-16: **D**. Added on 2026-11-13, from a problem that the
+options check of decision 4 found.
 
 - **Severity:** Medium. **Effort:** Small.
 - **Source:** Design.
