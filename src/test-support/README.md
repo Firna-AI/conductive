@@ -69,6 +69,10 @@ paths hold a fake secret value, and their records carry the labels of the
 mockups as display paths, in the file lists, the reads of the seed script,
 and the end of each finished turn. `fixtures/masked-paths.ts` holds them.
 
+`savedLists: false` leaves the recorded file reports out of the event
+history, as for a new workspace whose runner has not reported its lists.
+Override the tree and changes routes too, such as with a 503 reply.
+
 Writes return recorded replies, except org moves.
 `fake-org-order-routes.ts` serves `PUT /api/org-order` and saves its order for later org list reads.
 It validates the shared move request and returns 204, or the Worker's validation and visibility errors.

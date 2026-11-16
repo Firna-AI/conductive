@@ -41,7 +41,7 @@ export interface PullRequestRowProps {
  * The compact pull request row at the top of a workspace on a phone. It is
  * one link to the Checks tab, whose top holds the actions of the bar and
  * its links to GitHub. A branch without a commit and without local work is
- * not a link. The row is at least 44 px high.
+ * not a link. The row is at least 40 px high.
  */
 export function PullRequestRow(props: PullRequestRowProps) {
   const { state, retry } = props.github

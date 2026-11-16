@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import type { Preview } from '../shared/previews'
+import type { Preview } from '../shared/generated/Preview'
 import type { ToolRequests } from '../terminal/tool-parts/workspace'
 import { useAddressPort } from './addressPort'
 import type { PreviewRoute } from './PreviewTool'

@@ -100,6 +100,9 @@ it('retries the same failed workspace with a fresh token and dispatches every st
     })
   const response = await create()
   expect(response.status).toBe(201)
+  expect(response.headers.get('Server-Timing')).toMatch(
+    /^create;dur=\d+, message;dur=\d+, project;dur=\d+$/,
+  )
   const created = readCreated(await response.json())
   expect(created.firstMessage).toMatchObject({
     id: 'kept-first',

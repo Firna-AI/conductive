@@ -1,7 +1,8 @@
 // @vitest-environment happy-dom
 import { describe, expect, it, vi } from 'vitest'
 import { ToolEvents } from '../shell/workspace/tools/tool-events'
-import { previewsPath, type Preview } from '../shared/previews'
+import type { Preview } from '../shared/generated/Preview'
+import { previewsPath } from '../shared/previews'
 import { queryByRole, queryByText } from '../test-support/dom-queries'
 import { FakeApiServer } from '../test-support/fake-api'
 import { FAKE_IDS, FAKE_TIME } from '../test-support/fixtures/core'
