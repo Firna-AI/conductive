@@ -91,7 +91,8 @@ Desktop:
   page stands beside `app/tools/preview`, which already shows five
   screens. Its variant:
   - `closed` has the row after Close of both Preview tabs, from decision
-    289. The previews end by themselves later, from decision 292.
+    289. The previews end when the cloud computer stops, from decisions
+    292 and 294.
 - `app/tools/preview-repair` has the port form after a failed repair of
   the list, from decision 96. The form keeps its last list and the Other
   port row. Under them, the row of a file list that is not the latest one

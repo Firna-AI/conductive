@@ -111,7 +111,8 @@ function PhonePreview(props: { adding: boolean }) {
  * Reload and Open in the bar of that tab. The tool lists each port, also
  * the ports that have a tab. A click on a port shows its tab, or opens one.
  * The row of the shown tab is the current one. The user does not end a
- * preview: it ends by itself after a time without use (decision 292).
+ * preview: it ends by itself when the cloud computer stops (decisions 292
+ * and 294).
  */
 function PanelPreview(props: { shown: number | null }) {
   return (

@@ -30,9 +30,9 @@ export const previewTab = defineScreen({
       slug: 'closed',
       title: 'After Close of the tab',
       description:
-        'The user closed both Preview tabs, and the first session shows. Close removes only a tab, and the previews end by themselves later. A click on a port in the Preview tool opens its Preview tab again at the end of the row. When its preview has ended, the app opens a new one, with no notice.',
+        'The user closed both Preview tabs, and the first session shows. Close removes only a tab, and the previews end when the cloud computer stops. A click on a port in the Preview tool opens its Preview tab again at the end of the row. When its preview has ended, the app opens a new one, with no notice.',
       rationale:
-        'The user chose on 13 November 2026, with decision 289 A, that Close of a Preview tab ends no preview. On 16 November 2026, with decision 292, the user chose that a preview ends by itself after a time without use, and that nothing shows the time left.',
+        'The user chose on 13 November 2026, with decision 289 A, that Close of a Preview tab ends no preview. On 16 November 2026, with decisions 292 and 294, the user chose that a preview ends by itself when the cloud computer stops, and that nothing shows the time left.',
       props: { tab: 'session' },
     },
   ],
