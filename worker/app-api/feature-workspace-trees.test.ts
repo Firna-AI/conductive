@@ -16,13 +16,13 @@ import {
 
 const fixtureForTest = setupShellListTests()
 
-function move(
+async function move(
   fixture: ShellListFixture,
   workspaceId: string,
   sectionId: string,
   position: number,
 ) {
-  return updateShellWorkspace(fixture.db, {
+  const result = await updateShellWorkspace(fixture.db, {
     orgId: fixture.orgId,
     userId: fixture.user.id,
     workspaceId,
@@ -30,6 +30,7 @@ function move(
     position,
     now: TEST_TIME + 200,
   })
+  return result.updated
 }
 
 it('moves every live and archived descendant with its top-level row', async () => {

@@ -78,12 +78,14 @@ states the rule.
 - A move puts the workspace first in its destination section. A move to
   the section that already holds the workspace changes nothing.
 - A top-level row moves with every descendant, including archived ones.
-  `readWorkspaceMove` in [feature-workspaces-data.ts](../app-api/feature-workspaces-data.ts)
-  uses the shared placement rule to select the tree and the top-level rows.
-  The batch ranks only those top-level rows and writes each descendant's section.
+  `writeWorkspaceTree` in [feature-workspaces-data.ts](../app-api/feature-workspaces-data.ts)
+  selects the current descendants and top-level rows with recursive SQL
+  inside its D1 batch. It ranks those top-level rows and writes each
+  descendant's section. `RETURNING` supplies the moved IDs for metadata
+  publication. The current-section check also runs inside the batch.
 - A nested row changes nothing. The route still runs the existing member,
-  workspace, and section checks. It reads the shown top-level workspace
-  with the shared rule and adds `notice` to `AgentWorkspaceResponse`:
+  workspace, and section checks. `readWorkspaceMove` reads the shown
+  top-level workspace with the shared rule for the reply's `notice`:
   "Move W-<number> to move this workspace."
 - A top-level row whose parent is archived moves independently.
   Restore of an ancestor shows it under the nearest live ancestor again.
@@ -96,6 +98,9 @@ states the rule.
 - Only the workspace owner or an org admin can archive. Any other sender
   gets HTTP 403 `archive_forbidden`, and nothing changes.
 - An archive of an archived workspace changes nothing.
+- The Archive batch selects its first live descendants through archived
+  rows and gives them the archived row's section and place.
+  The shared tree-write helper runs this promotion only when Archive wrote.
 - An archive of the calling workspace stops its sandbox and revokes its
   token. So the calling turn ends, and the caller can miss the reply.
 

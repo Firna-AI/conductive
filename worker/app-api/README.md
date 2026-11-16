@@ -223,12 +223,16 @@ The machine tools use the configured app origin instead.
   row takes no index. The request can omit `sectionId`. Then the move uses the stored
   section of the workspace, inside the transaction. Without `position`,
   the index is 0.
-- `readWorkspaceMove` selects the shown top-level rows and the moved tree
-  with [the shared placement rule](../../src/shared/workspace-tree.ts).
-  It includes archived descendants when it selects the tree.
-  A move writes every tree member's section in one guarded D1 batch.
+- `writeWorkspaceTree` selects the current top-level rows and descendants
+  with recursive SQL inside its D1 batch. The selection follows
+  [the shared placement rule](../../src/shared/workspace-tree.ts), including
+  archived ancestors and the default section for an unknown section.
+  A move writes every descendant's section, including archived descendants.
+  `RETURNING` gives the workspace IDs for metadata publication after the batch.
   A move of a nested row changes no placement or activity time.
   A name write still works for a nested row.
+  A tool move to the current section also changes nothing, as checked
+  inside the batch. `readWorkspaceMove` reads only the tool reply's notice.
 - A section move request holds `position`, the index in the section list.
   Each index counts the rows without the moved row.
 - A section create request can hold `afterSectionId`. The insert and a
@@ -242,7 +246,8 @@ The machine tools use the configured app origin instead.
   SQLite compute the snapshot once, before the update changes a row.
 - `markWorkspaceArchived` gives each first live descendant, reached
   through archived rows, the archived workspace's section and position.
-  This write follows Archive in the same D1 batch and checks `changes()`.
+  `writeWorkspaceTree` selects these descendants inside the Archive batch.
+  Its write follows Archive and checks `changes()`.
   It runs only when Archive wrote. Promoted top-level rows then keep their
   initial places and can move independently. Restore shows them under
   their nearest live ancestor again.
@@ -294,8 +299,9 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
   it. A tool move to the current section of a workspace changes nothing.
 - [`feature-workspaces-data.ts`](feature-workspaces-data.ts):
   `readWorkspaceTree` and `readWorkspaceMove` read the org's tree and its
-  shown places. `updateShellWorkspace` saves the rename, the tree's sections,
-  and the top-level ranks in one D1 batch.
+  shown places for reads and notices. `updateShellWorkspace` prepares the
+  guarded metadata write. `writeWorkspaceTree` saves tree moves and Archive
+  promotions in one D1 batch, with current membership and places.
   [`archive-data.ts`](archive-data.ts) guards Archive and its promoted rows.
   [`feature-sections-data.ts`](feature-sections-data.ts): the
   section writes `insertShellSection`, `updateShellSection`, and

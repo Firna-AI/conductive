@@ -4,7 +4,7 @@ import { HttpError } from '../http'
 import { requireOrgMember } from '../members/permissions'
 import { requireActiveOrg } from '../data/user-access'
 import { activeOrgPredicate } from '../data/org-access'
-import { readWorkspaceTree } from './feature-workspaces-data'
+import { writeWorkspaceTree } from './feature-workspaces-data'
 
 export async function archiveWorkspaceAccess(
   env: AppEnv,
@@ -31,11 +31,9 @@ export async function markWorkspaceArchived(
   userId: string,
   now: number,
 ): Promise<void> {
-  const { rows } = await readWorkspaceTree(env.DB, orgId)
-  const promoted = rows
-    .filter(({ parentId }) => parentId === id)
-    .map(({ workspace }) => workspace.id)
-  await env.DB.batch([
+  await writeWorkspaceTree(
+    env.DB,
+    { kind: 'archive', orgId, workspaceId: id },
     env.DB.prepare(
       `UPDATE workspaces SET archived_at = ?, state = 'archived', running_since = NULL,
       updated_at = MAX(?, updated_at + 1) WHERE id = ? AND org_id = ? AND archived_at IS NULL
@@ -45,17 +43,12 @@ export async function markWorkspaceArchived(
         AND ${activeOrgPredicate('o')}
         AND (m.role = 'admin' OR workspaces.owner_user_id = m.user_id))`,
     ).bind(now, now, id, orgId, userId),
-    env.DB.prepare(
-      `UPDATE workspaces SET
-       section_id = (SELECT section_id FROM workspaces WHERE id = ? AND org_id = ?),
-       position = (SELECT position FROM workspaces WHERE id = ? AND org_id = ?)
-       WHERE changes() > 0 AND org_id = ? AND archived_at IS NULL AND state != 'archived'
-         AND id IN (SELECT value FROM json_each(?))`,
-    ).bind(id, orgId, id, orgId, orgId, JSON.stringify(promoted)),
-    env.DB.prepare(
-      `UPDATE workspace_tokens SET revoked_at = COALESCE(revoked_at, ?)
+    [
+      env.DB.prepare(
+        `UPDATE workspace_tokens SET revoked_at = COALESCE(revoked_at, ?)
       WHERE workspace_id = ? AND EXISTS (SELECT 1 FROM workspaces WHERE id = ? AND state = 'archived')`,
-    ).bind(now, id, id),
-  ])
+      ).bind(now, id, id),
+    ],
+  )
   await requireActiveOrg(env.DB, orgId)
 }

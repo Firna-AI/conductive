@@ -30,26 +30,138 @@ export async function readWorkspaceMove(
   orgId: string,
   workspaceId: string,
 ) {
-  const { workspaces, sections, rows } = await readWorkspaceTree(db, orgId)
+  const { rows } = await readWorkspaceTree(db, orgId)
   const placement = rows.find(({ workspace }) => workspace.id === workspaceId)
   let root = placement
   while (root?.parentId)
     root = rows.find(({ workspace }) => workspace.id === root?.parentId)
-  const workspaceIds = new Set([workspaceId])
-  // Include archived descendants by placing the stored tree with every row live.
-  for (const row of placeWorkspaces(
-    workspaces.map((workspace) => ({ ...workspace, state: 'ready' as const })),
-    sections,
-  ))
-    if (row.parentId !== null && workspaceIds.has(row.parentId))
-      workspaceIds.add(row.workspace.id)
   return {
     root: root?.workspace,
     nested: placement !== undefined && placement.parentId !== null,
-    workspaceIds: [...workspaceIds],
-    topLevelIds: rows
-      .filter(({ parentId }) => parentId === null)
-      .map(({ workspace }) => workspace.id),
+  }
+}
+
+export const workspaceTreeSql = `WITH RECURSIVE tree_rows AS MATERIALIZED (
+  SELECT w.*, archived_at IS NULL AND state != 'archived' AS live,
+    COALESCE(
+      (SELECT id FROM sections WHERE org_id = ?1 AND id = w.section_id),
+      (SELECT id FROM sections WHERE org_id = ?1 ORDER BY is_default DESC, position LIMIT 1),
+      section_id) AS shown_section_id
+  FROM workspaces w WHERE org_id = ?1
+), ancestors(id, ancestor_id) AS (
+  SELECT id, parent_workspace_id FROM tree_rows WHERE parent_workspace_id IS NOT NULL
+  UNION ALL
+  SELECT a.id, p.parent_workspace_id FROM ancestors a
+  JOIN tree_rows p ON p.id = a.ancestor_id WHERE p.parent_workspace_id IS NOT NULL
+), top_level AS MATERIALIZED (
+  SELECT w.* FROM tree_rows w WHERE live AND NOT EXISTS (
+    SELECT 1 FROM ancestors a JOIN tree_rows p ON p.id = a.ancestor_id
+    WHERE a.id = w.id AND p.live
+  )
+), subtree(id) AS (
+  SELECT id FROM tree_rows WHERE id = ?2
+  UNION ALL
+  SELECT w.id FROM tree_rows w JOIN subtree t ON w.parent_workspace_id = t.id
+), promotion_path(id, live) AS (
+  SELECT id, live FROM tree_rows WHERE parent_workspace_id = ?2
+  UNION ALL
+  SELECT w.id, w.live FROM tree_rows w
+  JOIN promotion_path p ON w.parent_workspace_id = p.id WHERE NOT p.live
+), promoted AS MATERIALIZED (
+  SELECT id FROM promotion_path WHERE live
+)`
+
+type TreeWrite = {
+  orgId: string
+  workspaceId: string
+} & (
+  | { kind: 'archive' }
+  | {
+      kind: 'move'
+      userId: string
+      sectionId?: string
+      position?: number
+      keepCurrentSection?: boolean
+      now: number
+    }
+)
+
+export async function writeWorkspaceTree(
+  db: D1Database,
+  operation: TreeWrite,
+  first: D1PreparedStatement,
+  last: D1PreparedStatement[] = [],
+) {
+  const { orgId, workspaceId } = operation
+  const statements: D1PreparedStatement[] = []
+  if (operation.kind === 'archive') {
+    statements.push(
+      db
+        .prepare(
+          `${workspaceTreeSql} UPDATE workspaces SET
+           section_id = (SELECT section_id FROM tree_rows WHERE id = ?2),
+           position = (SELECT position FROM tree_rows WHERE id = ?2)
+           WHERE changes() > 0 AND org_id = ?1 AND id IN (SELECT id FROM promoted)
+           RETURNING id`,
+        )
+        .bind(orgId, workspaceId),
+    )
+  } else {
+    const moving = `${workspaceTreeSql}, moving AS MATERIALIZED (
+      SELECT id, COALESCE(?3, section_id) AS destination FROM top_level
+      WHERE id = ?2 AND (?4 = 0 OR section_id != ?3)
+        AND ${activeShellMemberPredicate}
+        AND EXISTS (SELECT 1 FROM sections WHERE org_id = ?1 AND id = COALESCE(?3, section_id))
+    )`
+    const bindings = [
+      orgId,
+      workspaceId,
+      operation.sectionId ?? null,
+      operation.keepCurrentSection ? 1 : 0,
+      orgId,
+      operation.userId,
+    ]
+    statements.push(
+      db
+        .prepare(
+          `${moving}, siblings AS MATERIALIZED (
+             SELECT id, ROW_NUMBER() OVER (ORDER BY position, created_at, id) - 1 AS rank
+             FROM top_level WHERE shown_section_id = (SELECT destination FROM moving) AND id != ?2
+           ), destination AS MATERIALIZED (
+             SELECT MIN(?, COUNT(*)) AS position FROM siblings
+           ), ranks AS MATERIALIZED (
+             SELECT siblings.id, rank + (rank >= destination.position) AS position
+             FROM siblings CROSS JOIN destination
+             UNION ALL SELECT moving.id, destination.position FROM moving CROSS JOIN destination
+           ) UPDATE workspaces SET position = (
+             SELECT ranks.position FROM ranks WHERE ranks.id = workspaces.id
+           ) WHERE org_id = ?1 AND id IN (SELECT id FROM ranks) AND EXISTS (SELECT 1 FROM moving)`,
+        )
+        .bind(...bindings, operation.position ?? 0),
+      db
+        .prepare(
+          `${moving} UPDATE workspaces SET
+           section_id = (SELECT destination FROM moving), updated_at = MAX(updated_at, ?)
+           WHERE org_id = ?1 AND id IN (SELECT id FROM subtree) AND EXISTS (SELECT 1 FROM moving)
+           RETURNING id`,
+        )
+        .bind(...bindings, operation.now),
+    )
+  }
+  const result = await db.batch<{ id: string; changed?: number }>([
+    first,
+    ...statements,
+    ...last,
+  ])
+  return {
+    updated: result[0].meta.changes > 0,
+    workspaceIds: [
+      ...new Set(
+        result.flatMap(({ results }) =>
+          results.filter(({ changed }) => changed !== 0).map(({ id }) => id),
+        ),
+      ),
+    ],
   }
 }
 
@@ -73,101 +185,41 @@ export async function updateShellWorkspace(
     sectionId?: string
     name?: string
     position?: number
+    keepCurrentSection?: boolean
     now: number
   },
-  movement?: Awaited<ReturnType<typeof readWorkspaceMove>>,
-): Promise<boolean> {
-  const { orgId, userId, workspaceId, name, now } = input
-  let { sectionId, position } = input
-  const move =
-    movement ??
-    (sectionId !== undefined || position !== undefined
-      ? await readWorkspaceMove(db, orgId, workspaceId)
-      : undefined)
-  if (move?.nested) {
-    if (name === undefined) return true
-    sectionId = undefined
-    position = undefined
-  }
-  const guard = `org_id = ? AND archived_at IS NULL AND state != 'archived'
+) {
+  const { orgId, userId, workspaceId, name, now, sectionId, position } = input
+  const moving = sectionId !== undefined || position !== undefined
+  const guard = `org_id = ?1 AND archived_at IS NULL AND state != 'archived'
     AND ${activeShellMemberPredicate}
-    AND EXISTS (SELECT 1 FROM sections WHERE org_id = ? AND id = COALESCE(?, workspaces.section_id))`
+    AND EXISTS (SELECT 1 FROM sections WHERE org_id = ?1 AND id = COALESCE(?5, workspaces.section_id))`
   const branch = namedBranchSql(name)
-  const statements = [
-    db
-      .prepare(
-        `UPDATE workspaces SET name = COALESCE(?, name), branch = ${branch.sql}, section_id = COALESCE(?, section_id), updated_at = MAX(updated_at, ?)
-     WHERE id = ? AND ${guard}`,
-      )
-      .bind(
-        name ?? null,
-        ...branch.values,
-        sectionId ?? null,
-        now,
-        workspaceId,
-        orgId,
-        orgId,
-        userId,
-        orgId,
-        sectionId ?? null,
-      ),
-  ]
-  if (sectionId !== undefined || position !== undefined)
-    statements.push(
-      db
-        .prepare(
-          `WITH moving AS MATERIALIZED (
-           SELECT section_id FROM workspaces WHERE id = ? AND ${guard}
-         ) UPDATE workspaces SET section_id = (SELECT section_id FROM moving), updated_at = MAX(updated_at, ?)
-         WHERE org_id = ? AND id != ? AND id IN (SELECT value FROM json_each(?))
-           AND EXISTS (SELECT 1 FROM moving)`,
-        )
-        .bind(
-          workspaceId,
-          orgId,
-          orgId,
-          userId,
-          orgId,
-          sectionId ?? null,
-          now,
-          orgId,
-          workspaceId,
-          JSON.stringify(move?.workspaceIds ?? []),
-        ),
-      db
-        .prepare(
-          `WITH moving AS MATERIALIZED (
-             SELECT id, section_id FROM workspaces WHERE id = ? AND ${guard}
-           ), siblings AS MATERIALIZED (
-             SELECT id, ROW_NUMBER() OVER (ORDER BY position, created_at, id) - 1 AS rank
-             FROM workspaces WHERE org_id = ? AND section_id = (SELECT section_id FROM moving)
-               AND id != ? AND archived_at IS NULL AND state != 'archived'
-               AND id IN (SELECT value FROM json_each(?))
-           ), destination AS MATERIALIZED (
-             SELECT MIN(?, COUNT(*)) AS position FROM siblings
-           ), ranks AS MATERIALIZED (
-             SELECT siblings.id, rank + CASE WHEN rank >= destination.position THEN 1 ELSE 0 END AS position
-             FROM siblings CROSS JOIN destination
-             UNION ALL SELECT moving.id, destination.position FROM moving CROSS JOIN destination
-           ) UPDATE workspaces SET position = (
-             SELECT ranks.position FROM ranks WHERE ranks.id = workspaces.id
-           ) WHERE org_id = ? AND section_id = (SELECT section_id FROM moving)
-             AND id IN (SELECT id FROM ranks)`,
-        )
-        .bind(
-          workspaceId,
-          orgId,
-          orgId,
-          userId,
-          orgId,
-          sectionId ?? null,
-          orgId,
-          workspaceId,
-          JSON.stringify(move?.topLevelIds ?? []),
-          position ?? 0,
-          orgId,
-        ),
+  const first = db
+    .prepare(
+      `${workspaceTreeSql}, changing AS MATERIALIZED (
+         SELECT id FROM tree_rows WHERE id = ?2 AND (?3 IS NOT NULL OR
+           (${moving ? 'id IN (SELECT id FROM top_level)' : '1'} AND (?6 = 0 OR section_id != ?5)))
+       ) UPDATE workspaces SET name = COALESCE(?3, name), branch = ${branch.sql},
+         updated_at = CASE WHEN id IN (SELECT id FROM changing) THEN MAX(updated_at, ?4) ELSE updated_at END
+       WHERE id = ?2 AND ${guard}
+       RETURNING id, id IN (SELECT id FROM changing) AS changed`,
     )
-  const result = await db.batch(statements)
-  return result[0].meta.changes > 0
+    .bind(
+      orgId,
+      workspaceId,
+      name ?? null,
+      now,
+      sectionId ?? null,
+      input.keepCurrentSection ? 1 : 0,
+      ...branch.values,
+      orgId,
+      userId,
+    )
+  if (moving) return writeWorkspaceTree(db, { ...input, kind: 'move' }, first)
+  const result = await db.batch<{ id: string }>([first])
+  return {
+    updated: result[0].meta.changes > 0,
+    workspaceIds: result[0].results.map(({ id }) => id),
+  }
 }

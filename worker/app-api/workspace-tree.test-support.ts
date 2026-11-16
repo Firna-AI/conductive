@@ -4,6 +4,8 @@ import {
   readArchiveResource,
   restoreArchiveRecord,
 } from '../lifecycle/archive-data'
+import { FIRST_MESSAGE } from '../lifecycle/durable-test-support'
+import { assignSandbox, insertWorkspace } from '../lifecycle/workspace-data'
 import { shellSections, shellWorkspaces } from './shell-data'
 import {
   seedListWorkspaces,
@@ -82,4 +84,44 @@ export async function restoreTreeWorkspace(
     fixture.user.id,
     TEST_TIME + 300,
   )
+}
+
+export async function createTreeWorkspace(
+  fixture: ShellListFixture,
+  id: string,
+  sectionId: string,
+  parentId?: string,
+) {
+  const { db, orgId, user, repositoryId } = fixture
+  await db.batch([
+    db
+      .prepare(
+        `INSERT INTO workspace_creation_attempts
+         (workspace_id, org_id, sender_user_id, first_message_id, created_at)
+         VALUES (?, ?, ?, ?, ?)`,
+      )
+      .bind(id, orgId, user.id, id, TEST_TIME + 100),
+    db
+      .prepare(
+        `INSERT INTO image_leases (workspace_id, org_id, snapshot_name)
+         VALUES (?, ?, 'test-image')`,
+      )
+      .bind(id, orgId),
+  ])
+  await insertWorkspace(db, {
+    id,
+    orgId,
+    user,
+    repositoryId,
+    sectionId,
+    parentId,
+    providerAccount: 'boat',
+    city: 'Lisbon',
+    branch: `list-owner/${id}`,
+    sessionId: `session-${id}`,
+    turnId: `turn-${id}`,
+    message: { ...FIRST_MESSAGE, id },
+    now: TEST_TIME + 100,
+  })
+  await assignSandbox(db, orgId, id, `computer-${id}`, 'boat')
 }

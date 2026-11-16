@@ -926,7 +926,7 @@ Depends on: every other milestone
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
       once, and report.
-- [ ] Add the checks of this change to
+- [x] Add the checks of this change to
       `plans/follow-ups/full-image-build-for-agent-tools.md`.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".

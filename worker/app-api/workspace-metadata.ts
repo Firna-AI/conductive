@@ -4,7 +4,6 @@ import { readWorkspace } from '../lifecycle/workspace-data'
 import { requireShellWriter } from './feature-shell-access'
 import {
   shellSectionExists,
-  readWorkspaceMove,
   updateShellWorkspace,
 } from './feature-workspaces-data'
 import { requireWritableWorkspace, workspaceBinding } from './workspace-state'
@@ -27,36 +26,22 @@ export async function changeWorkspaceMetadata(
     !(await shellSectionExists(env.DB, orgId, input.sectionId))
   )
     throw sectionNotFound()
-  const moving = input.sectionId !== undefined || input.position !== undefined
-  const move = moving
-    ? await readWorkspaceMove(env.DB, orgId, workspaceId)
-    : undefined
-  if (move?.nested) {
-    if (input.name === undefined) return
-    input.sectionId = undefined
-    input.position = undefined
-  }
-  if (keepCurrentSection && input.sectionId === current.sectionId) return
   const binding = workspaceBinding(env)
-  if (
-    !(await updateShellWorkspace(
-      env.DB,
-      {
-        ...input,
-        orgId,
-        userId,
-        workspaceId,
-        now: dependencies.now(),
-      },
-      move,
-    ))
-  ) {
+  const result = await updateShellWorkspace(env.DB, {
+    ...input,
+    orgId,
+    userId,
+    workspaceId,
+    keepCurrentSection,
+    now: dependencies.now(),
+  })
+  if (!result.updated) {
     await requireShellWriter(env.DB, orgId, userId)
     requireWritableWorkspace(await readWorkspace(env.DB, orgId, workspaceId))
     throw sectionNotFound()
   }
   await Promise.all(
-    (move && !move.nested ? move.workspaceIds : [workspaceId]).map((id) =>
+    result.workspaceIds.map((id) =>
       binding.getByName(id).publishWorkspaceMetadata(orgId, id),
     ),
   )
