@@ -241,7 +241,10 @@ tools.
 - The tab keeps one previews store for each shown workspace.
   `KeptConnections` of the screen connects it while the sandbox runs. The
   Preview tool of a phone, the list of the desktop, and the Preview tabs
-  read the same store.
+  read the same store. The end of a connection marks the list as loading,
+  because no event announces a preview that opens meanwhile, so the next
+  connection reads it again before a Preview tab opens a preview. An open
+  or a close that ends after its page left still reaches the store.
 
 ### Preview tabs
 
@@ -261,7 +264,9 @@ tabs, the page in place of the chat, and the kept pages.
   again only at the next show of the tab, or at Reload or Try again. A
   port with two open previews shows the oldest one.
 - The bar of the shown tab holds Reload and Open. Reload loads the page
-  again, or asks for a new open after a failure. While the sandbox does
+  again, or asks again after a failure: it reads the list again after a
+  failed read, and else asks for a new open. A failed read of the list
+  shows in the tab, with Try again. While the sandbox does
   not run, the state of the sandbox takes the place of the bar and the
   page.
 - Each page mounts at the first show of its tab, under the chat, through

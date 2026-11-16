@@ -118,6 +118,7 @@ export function usePreviewCentre(context: WorkspaceContext): PreviewCentre {
     ) : (
       <PreviewTabPage
         error={shown.error}
+        listFailed={shown.listFailed}
         onReload={reload}
         port={port}
         preview={shown.preview}

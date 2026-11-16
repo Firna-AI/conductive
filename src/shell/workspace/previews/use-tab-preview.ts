@@ -15,9 +15,14 @@ export interface TabPreview {
   preview: Preview | null
   /** An open of the port runs. */
   opening: boolean
-  /** The open of this show failed, or null. */
+  /** The open of this show failed, or the read of the list, or null. */
   error: ToolError | null
-  /** Asks for a new open after a failure, as Reload and Try again do. */
+  /** The read of the list failed, so no open can start. */
+  listFailed: boolean
+  /**
+   * Asks again after a failure, as Reload and Try again do: it reads the
+   * list again after a failed read, and else allows a new open.
+   */
   retry: () => void
 }
 
@@ -62,10 +67,15 @@ export function useTabPreview(
     port === null ? null : previewOfPort(visiblePreviews(state), port)
   const ready =
     context.sandbox === 'ready' && state.load === null && !state.opening
-  const error = failed !== null && failed.port === port ? failed.error : null
+  const openError =
+    failed !== null && failed.port === port ? failed.error : null
+  const listError =
+    port !== null && state.load?.state === 'failed' ? state.load.error : null
 
   useEffect(() => {
-    if (port === null || preview !== null || !ready || error !== null) return
+    if (port === null || preview !== null || !ready || openError !== null) {
+      return
+    }
     if (asking.current === port) return
     asking.current = port
     store.dispatch({ type: 'open' })
@@ -78,12 +88,16 @@ export function useTabPreview(
       store.dispatch({ type: 'open-failed', error: result.error })
       setFailed({ port, error: result.error })
     })
-  }, [port, preview, ready, error, store, requests])
+  }, [port, preview, ready, openError, store, requests])
 
   return {
     preview,
     opening: state.opening,
-    error,
-    retry: () => setFailed(null),
+    error: listError ?? openError,
+    listFailed: listError !== null,
+    retry: () => {
+      if (listError !== null) store.dispatch({ type: 'load' })
+      setFailed(null)
+    },
   }
 }

@@ -5,7 +5,7 @@ import { routes } from '../../../app/router'
 import { readView } from '../../../chat/api/read-responses'
 import { previewsPath } from '../../../shared/previews'
 import { workspaceViewPath } from '../../../shared/workspace-view'
-import { requestLines } from '../../../app/test-kit'
+import { HeldRequests, requestLines } from '../../../app/test-kit'
 import { byLabel, byRole } from '../../../test-support/dom-queries'
 import { FakeApiServer } from '../../../test-support/fake-api'
 import { FAKE_IDS, FAKE_TIME } from '../../../test-support/fixtures/core'
@@ -185,6 +185,56 @@ describe('the Preview tabs of the desktop', () => {
       again: (await bodiesOf(server, 'POST', previewsPath(org, id), 0)).length,
       at: navigation.href(),
     }).toEqual({ once: 1, again: 2, at: tabOf(7682) })
+  })
+
+  test('a failed read of the list shows in the tab, and Reload reads it again', async () => {
+    holdAnimationFrames()
+    const server = new FakeApiServer()
+    server.json(
+      'GET',
+      previewsPath(org, id),
+      { error: { code: 'unavailable', message: 'The list is unavailable.' } },
+      503,
+    )
+    const { view } = await openTab(server, tabOf(3000))
+    await waitFor(
+      () =>
+        view.textContent?.includes("The previews couldn't load") ? true : null,
+      'the failure of the list',
+    )
+    server.json('GET', previewsPath(org, id), { previews: [listed] })
+
+    click(byRole('button', 'Reload', view))
+    await waitFor(() => frameOf(view, 3000), 'the page after Reload')
+    expect(await bodiesOf(server, 'POST', previewsPath(org, id), 0)).toEqual([])
+  })
+
+  test('on a phone, an open that ends while the Preview page is away still reaches the kept previews', async () => {
+    holdAnimationFrames()
+    const server = serverOpening(8080, 'preview-8080')
+    const held = new HeldRequests(server)
+    held.holdAnswer('POST', previewsPath(org, id))
+    const { view, navigation } = await openTab(server, tabOf(8080), {
+      viewport: 'phone',
+      fetch: held.fetch,
+    })
+    await waitFor(
+      () =>
+        requestLines(server).includes(`POST ${previewsPath(org, id)}`)
+          ? true
+          : null,
+      'the open of port 8080',
+    )
+    navigation.push(routes.workspace(org, id))
+    await settle()
+    held.release('POST', previewsPath(org, id))
+    await settle()
+    navigation.push(toolHref(org, id, 'preview'))
+    await settle()
+
+    expect(
+      linksTo(view, toolHref(org, id, 'preview', 'preview-8080')),
+    ).toHaveLength(1)
   })
 
   test('a click on the Terminal tab of the tools keeps the Preview tab shown, and the panel shows Terminal', async () => {

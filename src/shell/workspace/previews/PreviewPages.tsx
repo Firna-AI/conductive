@@ -29,14 +29,16 @@ function PreviewBar(props: { preview: Preview | null; onReload: () => void }) {
 
 /**
  * What a Preview tab shows in place of the chat: its bar, and while its
- * port has no preview yet, the wait of the open or its failure under the
- * bar. The page itself lives in `KeptPreviewFrames`, so it stays loaded
+ * port has no preview yet, the wait of the open under the bar, or the
+ * failure of the open or of the read of the list, with Try again. The page itself lives in `KeptPreviewFrames`, so it stays loaded
  * while another tab shows.
  */
 export function PreviewTabPage(props: {
   port: number
   preview: Preview | null
   error: ToolError | null
+  /** The read of the list failed, rather than the open of the port. */
+  listFailed: boolean
   onReload: () => void
 }) {
   let state: ReactNode = null
@@ -47,7 +49,11 @@ export function PreviewTabPage(props: {
         alert
         body={props.error.message}
         icon={CircleAlert}
-        title="The preview couldn't open"
+        title={
+          props.listFailed
+            ? "The previews couldn't load"
+            : "The preview couldn't open"
+        }
       />
     )
   } else if (!props.preview) {

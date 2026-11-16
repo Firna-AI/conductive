@@ -27,6 +27,9 @@ it('reads the list again at each new connection, so a preview that opened meanwh
   const stop = connectPreviews(store, source)
   await loaded(store)
   stop()
+  // The end of the connection marks the list as not current at once, so no
+  // Preview tab takes it as current before the next read.
+  const stale = store.getSnapshot().load
   // An agent opened port 8080 while the store was not connected.
   const opened = { ...listed, id: 'preview-8080', port: 8080 }
   server.json('GET', previewsPath(org, workspace), {
@@ -42,7 +45,8 @@ it('reads the list again at each new connection, so a preview that opened meanwh
       new URL(request.url).pathname === previewsPath(org, workspace),
   )
   expect({
+    stale,
     reads: reads.length,
     ports: visiblePreviews(store.getSnapshot()).map((each) => each.port),
-  }).toEqual({ reads: 2, ports: [3000, 8080] })
+  }).toEqual({ stale: { state: 'loading' }, reads: 2, ports: [3000, 8080] })
 })

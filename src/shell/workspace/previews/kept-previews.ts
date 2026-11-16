@@ -51,17 +51,21 @@ export function usePreviewsConnection(context: WorkspaceContext): void {
 }
 
 /**
- * Connects the kept previews, and reads the list again when an earlier
- * connection read it. No event announces a preview that opened while the
- * store was not connected, such as one that an agent opened while another
- * workspace showed. So the list of an earlier connection can miss it. The
- * read shows as loading, so no Preview tab opens a second preview of a
- * port before the list is current.
+ * Connects the kept previews. When the connection ends, the list is no
+ * longer current: no event announces a preview that opens while the store
+ * is not connected, such as one that an agent opens while another
+ * workspace shows. So the end marks the list as loading at once, before a
+ * Preview tab of a later show can take the old list as current, and the
+ * next connection reads it again. No Preview tab opens a second preview of
+ * a port while the list loads.
  */
 export function connectPreviews(
   store: PreviewsStore,
   source: Parameters<PreviewsStore['connect']>[0],
 ): () => void {
-  if (store.getSnapshot().load === null) store.dispatch({ type: 'load' })
-  return store.connect(source)
+  const stop = store.connect(source)
+  return () => {
+    stop()
+    store.dispatch({ type: 'load' })
+  }
 }
