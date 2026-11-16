@@ -6,7 +6,7 @@ import { RunsPanel } from '../components/routines/RunsPanel'
 import { offersRunNow } from '../components/routines/triggerCopy'
 import { orgs, suspendedOrg } from '../fixtures/orgs'
 import { editsOf } from '../fixtures/routineTriggers'
-import { routines, type Routine } from '../fixtures/routines'
+import type { Routine } from '../fixtures/routines'
 import { hasOlderRuns, runLists } from '../fixtures/runLists'
 import { paths } from '../paths'
 import { PhoneDelete, routineActions } from './routineActions'
@@ -15,6 +15,7 @@ import { RoutineNotShown } from './routineNotShown'
 import { PhoneSheet, RoutineForm, runLinks, titleOf } from './routineParts'
 import {
   accessOf,
+  routineOf,
   saveStateOf,
   viewerOf,
   type RoutineState,
@@ -68,7 +69,7 @@ export function RoutineScreen(props: {
       </RoutineFrame>
     )
   }
-  const routine = routines[state.routine]
+  const routine = routineOf(state)
   const access = accessOf(state, routine)
   const edits = editsOf(state.triggers, routine.triggers)
   const menu = state.triggers === 'menu'
@@ -83,9 +84,12 @@ export function RoutineScreen(props: {
     <RoutineForm
       access={access}
       edits={edits}
+      login={state.login}
       menu={menu}
+      modelMenu={state.modelMenu === 'open'}
       routine={routine}
       suspended={suspended}
+      viewer={viewerOf(state)}
       viewport={viewport}
     />
   )

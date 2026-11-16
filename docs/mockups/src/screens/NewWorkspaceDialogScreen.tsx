@@ -15,6 +15,7 @@ import { FirstBuildNotice } from './firstBuildNotice'
 import { NewOrgEmpty } from './listParts'
 import { pageOrg, railOf, sidebarOf } from './newWorkspacePageParts'
 import {
+  formLoginLabel,
   formNotices,
   hasWords,
   newWorkspaceDraft,
@@ -140,6 +141,7 @@ export function NewWorkspaceDialogScreen(props: {
       caret={ownDraft ? undefined : draft.caret}
       choice={page.choice}
       drop={state.files === 'drop-over'}
+      login={formLoginLabel(state)}
       notices={notices}
       place={`${org.name} · ${sections[defaultSection].name}`}
       section={sections[defaultSection].name}
@@ -166,10 +168,11 @@ export function NewWorkspaceDialogScreen(props: {
       </AppFrame>
     )
   }
+  // The workspace behind the dialog is the one of the person signed in.
   return (
     <WorkspaceScreen
       overlay={dialog}
-      state={readyWorkspace}
+      state={{ ...readyWorkspace, viewer: state.viewer }}
       viewport="desktop"
     />
   )

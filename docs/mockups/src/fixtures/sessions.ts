@@ -1,8 +1,9 @@
 /**
  * The agent sessions of a workspace. Each session is a chat with its own
  * model, on the same branch and the same cloud computer. A session runs on
- * the agent login of its starter, the member who started it, whoever sends
- * a message.
+ * its login, whoever sends a message: the agent login of its starter, the
+ * member who started it, or the org login (decision 1 B of the org logins
+ * plan).
  */
 
 import { sessionTitleFrom } from '../../../../src/shared/session-title'

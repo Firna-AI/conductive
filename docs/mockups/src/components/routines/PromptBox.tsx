@@ -9,19 +9,39 @@ import form from './form.module.css'
 import styles from './PromptBox.module.css'
 
 /**
+ * Whose logins the runs use, in words: "Runs use your Claude login and
+ * GitHub access." When the agent login is not the one of the owner of the
+ * GitHub access, the line names both, such as "Runs use Acme's Claude login
+ * and your GitHub access." for the org login.
+ */
+function loginsLine(agent: string, github: string, login: string): string {
+  if (login === github) {
+    return `Runs use ${github} ${agent} login and GitHub access.`
+  }
+  return `Runs use ${login} ${agent} login and ${github} GitHub access.`
+}
+
+/**
  * The prompt of a routine, with the model and the effort of its runs at
  * the bottom of the box, as in a composer. The owner edits both. Another
  * member reads them. The line under the box names whose logins the runs
- * use (decision 502).
+ * use (decision 502). A run takes the default login of the owner, which
+ * can be the org login (decision 5 A of the org logins plan), so the line
+ * can name the org. `open` draws the menu of the picker open, and the menu
+ * leaves out `hiddenModels`.
  */
 export function PromptBox(props: {
   prompt: string
   choice: AgentChoice
   readOnly: boolean
-  /** Whose logins the runs use, such as "your" or "Cal's". */
+  /** Whose GitHub access the runs use, such as "your" or "Cal's". */
   whose?: string
+  /** Whose agent login the runs use, such as "Acme's", when it differs. */
+  loginWhose?: string
   /** The name of the agent of the model, such as "Claude". */
   agent: string
+  open?: boolean
+  hiddenModels?: readonly string[]
 }) {
   const { field } = useControlSizes()
   const { choice } = props
@@ -53,7 +73,11 @@ export function PromptBox(props: {
             variant="seamless"
           />
           <div className={styles.bar}>
-            <ModelPicker choice={choice} />
+            <ModelPicker
+              choice={choice}
+              hiddenModels={props.hiddenModels}
+              open={props.open}
+            />
           </div>
         </div>
       )}
@@ -61,7 +85,11 @@ export function PromptBox(props: {
         <p className={styles.logins}>
           <Plug aria-hidden className={styles.icon} size={12} />
           <span>
-            {`Runs use ${props.whose} ${props.agent} login and GitHub access.`}
+            {loginsLine(
+              props.agent,
+              props.whose,
+              props.loginWhose ?? props.whose,
+            )}
           </span>
         </p>
       ) : null}

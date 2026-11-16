@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { ConnectAgentNotice } from '../components/chat/ConnectAgentNotice'
+import type { SessionLogin } from '../components/chat/SessionLogin'
 import { fileMark, withoutMarks } from '../../../../src/app/draft-marks'
 import { CreateFailedNotice } from '../components/new-workspace/notices'
 import { repositoryWaits } from '../components/settings/repositoryChangeCopy'
@@ -9,6 +10,7 @@ import {
   firstMessageDrafts,
   type Attachment,
 } from '../fixtures/attachments'
+import { orgWithLogin } from '../fixtures/orgLogins'
 import { savedCartsMessage } from '../fixtures/newWorkspaceConversations'
 import { followUpTask } from '../fixtures/workspaceLinkConversations'
 import { savedCarts } from '../fixtures/workspaces'
@@ -35,9 +37,13 @@ export const newWorkspaceFormProperties = {
   files: { enum: ['none', 'uploading', 'ready', 'drop-over'] },
   /**
    * The agent of the chosen model: connected, or not connected. Then a
-   * notice leads to its Connect form, and the message waits.
+   * notice leads to its Connect form, and the message waits. `org` has the
+   * org login of Acme as the default login of the viewer: the viewer has
+   * no login of their own, or an admin turned on "Use for every member".
+   * The message goes, and the bar names that login (decisions 4, 6 A, and
+   * 7 B of the org logins plan).
    */
-  login: { enum: ['connected', 'missing'] },
+  login: { enum: ['connected', 'missing', 'org'] },
   /**
    * The repositories of the org. `chosen` has the three that the cloud
    * computer of Acme holds. `waiting` adds acme/admin-dashboard, which waits
@@ -117,6 +123,19 @@ export function hasWords(text: string): boolean {
 
 /** The model and the effort of the first message. */
 export const newWorkspaceChoice = savedCarts.choice
+
+/**
+ * The login label of the form: the name of the org while the default login
+ * of the viewer is the org login, such as "Acme's login". The account names
+ * that default login, so the form shows it and does not work it out. The
+ * own login of the viewer gets no label.
+ */
+export function formLoginLabel(
+  state: NewWorkspaceFormState,
+): SessionLogin | undefined {
+  if (state.login !== 'org') return undefined
+  return { starter: orgWithLogin.name }
+}
 
 /**
  * Whether the message waits: its agent is not connected, or the org has no

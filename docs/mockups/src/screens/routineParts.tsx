@@ -17,6 +17,9 @@ import {
 import { eventLabels, hasSchedule } from '../components/routines/triggerCopy'
 import { SectionText } from '../components/settings/Section'
 import { agents } from '../fixtures/agents'
+import { unlistedLabels } from '../fixtures/endpointModels'
+import { people, type PersonKey } from '../fixtures/members'
+import { orgWithLogin } from '../fixtures/orgLogins'
 import { orgs } from '../fixtures/orgs'
 import type { TriggerEdit } from '../fixtures/routineTriggers'
 import {
@@ -25,7 +28,7 @@ import {
   type Routine,
 } from '../fixtures/routines'
 import { paths } from '../paths'
-import type { RoutineAccess } from './routineState'
+import type { RoutineAccess, RoutineState } from './routineState'
 import styles from './RoutineScreen.module.css'
 
 /**
@@ -156,11 +159,33 @@ function Note(props: {
 }
 
 /**
+ * Whose logins the runs use, as the person signed in reads them, such as
+ * "your", "Cal's", or "Acme's": the agent login, and the GitHub access of
+ * the owner. A run takes the default login of its owner (decision 5 A of
+ * the org logins plan): the own login, or the org login. A suspended org
+ * starts no run, so the line names none.
+ */
+function runLogins(props: {
+  routine: Routine
+  viewer: PersonKey
+  login: RoutineState['login']
+  suspended: boolean
+}): { login: string; github: string } | undefined {
+  if (props.suspended) return undefined
+  const owner = props.routine.owner.key
+  const github = owner === props.viewer ? 'your' : `${people[owner].name}'s`
+  const login = props.login === 'org' ? `${orgWithLogin.name}'s` : github
+  return { login, github }
+}
+
+/**
  * The form of a routine: its fields, its triggers, and its prompt. Only the
  * owner gets fields. Every other member reads the same facts. In a
  * suspended org every person reads them under the notice of the org, which
  * the page draws, and no line names the logins of runs, because no run
- * starts.
+ * starts. On the org login of Acme, the model picker of the prompt hides
+ * the models that the model list of its gateway does not name, except the
+ * current model (decision 3 A of the org logins plan).
  */
 export function RoutineForm(props: {
   routine: Routine
@@ -168,14 +193,19 @@ export function RoutineForm(props: {
   edits: readonly TriggerEdit[]
   menu: boolean
   suspended: boolean
+  viewer: PersonKey
+  login: RoutineState['login']
+  modelMenu: boolean
   viewport: Viewport
 }) {
   const { routine, access } = props
   const readOnly = access !== 'owner'
   const schedules = hasSchedule(props.edits.map((edit) => edit.trigger))
-  let whose: string | undefined = `${routine.owner.name}'s`
-  if (access === 'owner') whose = 'your'
-  if (props.suspended) whose = undefined
+  const logins = runLogins(props)
+  const hidden =
+    props.login === 'org'
+      ? unlistedLabels.filter((label) => label !== routine.choice.model)
+      : undefined
   return (
     <>
       <Note access={access} routine={routine} suspended={props.suspended} />
@@ -199,9 +229,12 @@ export function RoutineForm(props: {
       <PromptBox
         agent={agents[routine.choice.agent].name}
         choice={routine.choice}
+        hiddenModels={hidden}
+        loginWhose={logins?.login}
+        open={props.modelMenu}
         prompt={routine.prompt}
         readOnly={readOnly}
-        whose={whose}
+        whose={logins?.github}
       />
     </>
   )

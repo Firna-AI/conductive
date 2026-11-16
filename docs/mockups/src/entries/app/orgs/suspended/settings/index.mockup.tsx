@@ -33,6 +33,15 @@ export const suspendedOrgSettings = defineScreen({
       props: { tab: 'computer' },
     },
     {
+      slug: 'agents',
+      title: 'Agents',
+      description:
+        'The org logins of Acme, without Connect, Replace, Remove, switches, or model list, also for Cal, an admin. The Claude login shows its host and the value of its switch in words.',
+      rationale:
+        'Decision 1 B of the org logins plan of 16 November 2026 adds the Agents tab. A suspended org starts no turn, so its org logins serve nobody until the operator lifts the suspension, and nothing on the tab can change.',
+      props: { tab: 'agents' },
+    },
+    {
       slug: 'members',
       title: 'Members',
       description:

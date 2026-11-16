@@ -97,8 +97,10 @@ export const sharedByDefault: Readonly<
 }
 
 /**
- * The cause of a change of the share setting that the app did not save: the
- * message of a failed save of the server.
+ * The cause of a save that the app did not make: the message of a failed
+ * save of the server. A change of the share setting, a change of the switch
+ * "Use for every member" of an org login, and an org login whose Connect
+ * failed show it.
  */
 export const shareNotSavedCause = 'The request failed. Try again.'
 

@@ -43,6 +43,7 @@ export const workspaceStateSchema = {
     'tabRow',
     'temporary',
     'composer',
+    'login',
     'modelChoice',
     'resize',
     'rightColumn',
@@ -130,6 +131,13 @@ export const workspaceStateSchema = {
     temporary: { enum: temporaryTabStates },
     /** The composer, as `composerStates` says. */
     composer: { enum: composerStates },
+    /**
+     * The login of the open session: the login of its starter, or the org
+     * login of Acme (decisions 1 B, 6 A, and 7 B of the org logins plan). A
+     * new session takes the default login of the viewer, here the org login.
+     * With `no-starter-login`, an admin removed the org login.
+     */
+    login: { enum: ['starter', 'org'] },
     /**
      * The model, the effort, and the speed of the next message: those of
      * the workspace, the same with fast mode on, or Sonnet 5.5 High, a model
@@ -246,6 +254,7 @@ export const readyWorkspace: WorkspaceState = {
   tabRow: 'opened',
   temporary: 'none',
   composer: 'empty',
+  login: 'starter',
   modelChoice: 'workspace',
   resize: 'none',
   rightColumn: 'shown',

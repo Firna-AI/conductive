@@ -1,8 +1,8 @@
 import type { SchemaProps } from '@mokly/mokly'
-import { memberViewer, you, type PersonKey } from '../fixtures/members'
+import { memberViewer, people, you, type PersonKey } from '../fixtures/members'
 import { runListKeys } from '../fixtures/runLists'
 import { triggerViewKeys } from '../fixtures/routineTriggers'
-import { routineKeys, type Routine } from '../fixtures/routines'
+import { routineKeys, routines, type Routine } from '../fixtures/routines'
 
 /**
  * The state of the routine screen. Each catalogue entry of the screen is a
@@ -20,6 +20,8 @@ export const routineStateSchema = {
     'tab',
     'org',
     'dialog',
+    'login',
+    'modelMenu',
   ],
   properties: {
     /** A new routine, a draft of one, or a saved routine of Acme. */
@@ -61,6 +63,19 @@ export const routineStateSchema = {
      * first, because a deleted routine cannot come back.
      */
     dialog: { enum: ['none', 'delete'] },
+    /**
+     * The agent login that the runs use, the default login of the owner
+     * (decision 5 A of the org logins plan): the own login of the owner, or
+     * the Claude login of Acme on its gateway, for an owner with no login of
+     * their own or while "Use for every member" is on.
+     */
+    login: { enum: ['own', 'org'] },
+    /**
+     * The model picker of the prompt: closed, or open. On the gateway of
+     * Acme, it hides Fable 5.1, which the model list of the gateway does not
+     * name (decision 3 A).
+     */
+    modelMenu: { enum: ['closed', 'open'] },
   },
 } as const
 
@@ -76,6 +91,8 @@ export const ownerRoutine: RoutineState = {
   tab: 'routine',
   org: 'active',
   dialog: 'none',
+  login: 'own',
+  modelMenu: 'closed',
 }
 
 /**
@@ -88,6 +105,16 @@ export type RoutineAccess = 'owner' | 'admin' | 'member'
 /** The person signed in. */
 export function viewerOf(state: RoutineState): PersonKey {
   return state.viewer === 'admin' ? you : memberViewer
+}
+
+/**
+ * The routine of a state. A new routine belongs to the person who creates
+ * it, so its owner is the person signed in.
+ */
+export function routineOf(state: RoutineState): Routine {
+  const routine = routines[state.routine]
+  if (routine.saved) return routine
+  return { ...routine, owner: people[viewerOf(state)] }
 }
 
 export function accessOf(state: RoutineState, routine: Routine): RoutineAccess {

@@ -49,8 +49,8 @@ shows stopped. Its child pages:
   the Files tab of a phone, whose panel shows the words of the org.
 - `app/orgs/suspended/new-workspace` has the New workspace page, which an
   old tab can still open. The refused bar takes the place of the composer.
-- `app/orgs/suspended/settings` has the four tabs, read-only also for an
-  admin.
+- `app/orgs/suspended/settings` has the five tabs, read-only also for an
+  admin. Its `agents` variant has the Agents tab of the org logins.
 - `app/orgs/suspended/routines` has the routines of the org under its
   notice, without New routine, because a suspension takes away no read.
   Its child page `app/orgs/suspended/routines/routine` has a routine

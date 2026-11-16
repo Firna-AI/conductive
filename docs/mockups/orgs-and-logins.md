@@ -23,31 +23,45 @@ the screens show no plans, no billing, no seats, and no plan limits.
   waitlist screen, where Accept invitation also gives app access, as
   `app/sign-in/waitlist/invited` shows.
 - Only an admin renames the org, and changes the repositories, the scripts,
-  and the env vars, from decisions 54 and 57. A member sees the General,
-  Repositories, and Cloud computer tabs read-only: the values, without edit
-  fields, Save, or Build computer. The General tab of a member is the child
-  page `app/org-settings/member`, because `app/org-settings` has child
-  pages. `DetailList` in `src/components/settings/` shows such values.
-- Each session runs on the agent login of the member who started it. The
-  messages of other members use that login only while that member shares
-  it, with the switch under each login of the account. So a reassign
-  changes no login, and the cloud computer keeps running.
+  the env vars, and the org logins, from decisions 54 and 57. A member sees
+  the General, Repositories, Cloud computer, and Agents tabs read-only: the
+  values, without edit fields, Save, Build computer, or Connect. The
+  General tab of a member is the child page `app/org-settings/member`,
+  because `app/org-settings` has child pages. `DetailList` in
+  `src/components/settings/` shows such values.
+- Each session runs on its login: the agent login of the member who
+  started it, or the org login of its org, from decision 1 B of the org
+  logins plan, which the user chose on 16 November 2026. A session takes
+  its login at its first message and keeps it. The messages of other
+  members use the login of a member only while that member shares it, with
+  the switch under each login of the account. The org login has no such
+  switch, so every member of the org sends on it, also after its starter
+  leaves the org. So a reassign changes no login, and the cloud computer
+  keeps running. The owner menu says "Each session keeps its agent login."
+  in `app/reassign`.
 - When a message uses the login of another member, the bar of the
   composer names that login after the model picker, such as "Cal's login"
   in `app/composer/login`. So the box keeps its place. The label names an
   own endpoint login in the same way, with no host, as [Logins](#logins)
-  says. A message on
-  the own login of the viewer shows no name. When the login of the member who
-  started a session is not available, a message of another member starts
-  a new session. The notice over the composer of the first session says
-  so, and its chat stays as it was, as `app/sessions/no-starter-login`
-  shows. The same happens when that member does not share the login. The
-  notice then says that the login is for the messages of that member only,
-  as `app/composer/not-shared` shows. In both cases, a message does not
-  steer a running turn. A viewer without a login for the agent sees the
-  notice that asks to connect, as `app/composer/no-agent` shows. The new
-  session starts with a line that links back to the first session, then
-  the new message, as `app/sessions/linked` shows. The parts live in
+  says. A session on the org login names the org, such as "Acme's login",
+  for every member, also for its starter, as `app/composer/org-login`
+  shows. A new session names the org login while it is the default login
+  of the viewer, as its `new-session` and `every-member` variants show. A
+  message on the own login of the viewer shows no name. When the login of
+  the member who started a session is not available, a message of another
+  member starts a new session. The notice over the composer of the first
+  session says so, and its chat stays as it was, as
+  `app/sessions/no-starter-login` shows. The same happens when that member
+  does not share the login. The notice then says that the login is for the
+  messages of that member only, as `app/composer/not-shared` shows. After
+  an admin removed the org login of a session, the notice says that the
+  login of the org is not available, as `app/composer/org-login/removed`
+  shows. In each case, a message does not steer a running turn, and the
+  new session runs on the default login of the sender. A viewer whom no
+  login serves for the agent sees the notice that asks to connect, as
+  `app/composer/no-agent` shows. The new session starts with a line that
+  links back to the first session, then the new message, as
+  `app/sessions/linked` shows. The parts live in
   `src/components/chat/SessionLogin.tsx` and `LinkedLine.tsx`.
 - A stopped turn names the member who pressed Stop, from decision 72,
   because all members of an org see the same chat. That member sees "You
@@ -143,6 +157,35 @@ the screens show no plans, no billing, no seats, and no plan limits.
   say what to paste and where to make it.
 - [Own endpoint login mockups](own-endpoint-logins.md) describes the fields,
   connected host, model list, and address refusal for both agents.
+- An admin connects an org login for each agent of an org, an API key or
+  an own endpoint, on the Agents tab of the org settings, after Cloud
+  computer, as `app/org-settings/agents` shows. This comes from decision
+  1 B of the org logins plan, which the user chose on 16 November 2026.
+  The tab is a copy of the Agents tab of the account with fewer options:
+  its form offers only API key and Own endpoint, and asks for a key of the
+  account of the org, as `app/org-settings/agents/form` shows. It has no
+  share switch. A connected org login shows its kind, the host of an own
+  endpoint, the models that the model list of the endpoint lacks, Replace,
+  and Remove. Replace opens the form under the login, which serves until
+  the new one saves, as `app/org-settings/agents/form/replace` shows. A
+  failed save keeps the key in its field and names the cause over the
+  buttons, as `app/org-settings/agents/form/not-saved` shows.
+  `OrgAgents.tsx` in `src/components/settings/` draws the tab, with
+  `AgentConnectForm`, `EndpointFields`, `LoginEndpoint`, and
+  `EndpointModels` of the account.
+- Under each org login, the switch "Use for every member" of decision 7 B
+  starts off. While it is off, the org login serves each member with no
+  usable login of their own (decisions 4 and 6 A). While it is on, each new
+  session in the org takes the org login, also for a member with a login
+  of their own, as `app/org-settings/agents/every-member` shows. Older
+  sessions keep their login. The switch saves at once, and a change that
+  the app did not save shows its cause beside it, as its `not-saved`
+  variant shows. `SettingSwitch.tsx` draws this switch and the share switch
+  of a personal login.
+- A member sees the Agents tab read-only: the agent, the kind, the host of
+  an own endpoint, and the value of the switch as its hint, as
+  `app/org-settings/agents/member` shows. Nobody sees the key or the full
+  address, and only an admin sees the model list with Refresh.
 - ChatGPT plan has no field. Its words say that Codex then runs on the
   plan, and that device code sign-in must be on first in the ChatGPT
   security settings, as `app/account/connect-codex/chatgpt` shows. They
@@ -185,7 +228,16 @@ the screens show no plans, no billing, no seats, and no plan limits.
   `app/account/codex-token` shows. The switch saves at once. A
   change that the app did not save shows its cause beside the switch, as
   `app/account/share-not-saved` shows. The part lives in
-  `src/components/settings/LoginShare.tsx`.
+  `src/components/settings/LoginShare.tsx`. The org logins plan keeps this
+  switch as it is (decision 2).
+- Under an agent, the account names each org whose org login serves the
+  new sessions of the user: "Your new sessions in Acme use Acme's login."
+  It shows while the user has no usable login of their own for the agent,
+  as `app/account/agents/org-login` shows, and while an admin of that org
+  turned on "Use for every member", as `app/account/agents/every-member`
+  shows. The account names the default login of each org and agent, so the
+  page shows that value and does not work it out. The part lives in
+  `src/components/settings/OrgLoginLines.tsx`.
 - Get started has three steps: install the GitHub App, create an org, and
   connect Claude or Codex, from decision 33. The next step opens its form.
   It opens only after app access, so a person who waits sees the
@@ -193,6 +245,11 @@ the screens show no plans, no billing, no seats, and no plan limits.
   the own endpoint, and it shows no share switch. Its text says that the
   agents run on the own Claude or OpenAI account of the person, or on
   their own endpoint (decision 7 B of the own endpoint plan).
+- A person with no login of their own, in an org whose org login serves
+  an agent, needs none (decision 4 of the org logins plan). The agent step
+  is then done with "Ready". Its words say that the person can start now
+  with the login of the org, and a line under the agent names that login,
+  as `app/sign-in/get-started/org-login` shows.
 - Create org starts the first build of the cloud computer of the org, from
   decision 150. The org step shows that build under the org: preparing
   with its time, then ready, or the failure with its saved message, Try
@@ -214,9 +271,9 @@ the screens show no plans, no billing, no seats, and no plan limits.
   Only an admin gets the link to the Cloud computer tab. The app and the
   mockups take the words of that notice from
   `src/screens/firstBuildCopy.ts`.
-- A login belongs to the person, so the agent step has its own state. A
-  person who leaves the last org returns to Get started with the agent
-  still connected, as `app/sign-in/get-started/no-org` shows.
+- A personal login belongs to the person, so the agent step has its own
+  state. A person who leaves the last org returns to Get started with the
+  agent still connected, as `app/sign-in/get-started/no-org` shows.
 - A person whose orgs are all deleted counts as a person with no org.
   While a deleted org exists, Get started shows the Deleted orgs list with
   Restore before its steps, as `app/sign-in/get-started/deleted-orgs`
@@ -224,10 +281,21 @@ the screens show no plans, no billing, no seats, and no plan limits.
 - The app and the mockups take the words of Get started from
   `src/screens/getStartedCopy.ts`. The words make no claim about earlier
   use.
-- The composer shows a notice when the agent of the chosen model is not
-  connected. In a session that another member started, a message uses the
-  available login of that member while that member shares it, so no agent
-  notice shows.
+- The composer and the New workspace form show a notice when no login
+  serves the agent of the chosen model: no usable login of the viewer, and
+  no usable org login (decision 4 of the org logins plan). A form whose
+  first message runs on the org login names it after the model picker,
+  such as "Acme's login", as `app/new-workspace/dialog/org-login` shows.
+  In a session on the login of another member or on the org login, a
+  message uses that login while it serves the sender, so no agent notice
+  shows.
+- A routine run takes the default login of the owner of its routine: the
+  own login, or the org login (decision 5 A of the org logins plan). It
+  keeps the GitHub access of the owner. The line under the prompt names
+  both, such as "Runs use Acme's Claude login and your GitHub access.", as
+  `app/routines/routine/new/org-login` shows. The model picker of the form
+  follows the model list of the org endpoint (decision 3 A), as its
+  `org-models` variant shows.
 
 ## The waitlist
 

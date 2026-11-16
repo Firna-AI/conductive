@@ -35,6 +35,12 @@ export const orgSettings: readonly Command[] = [
     to: paths.cloudComputer,
   },
   {
+    label: 'Agents',
+    lead: icon(Bot),
+    words: ['claude', 'codex', 'org login', 'api key', 'endpoint'],
+    to: paths.orgAgents,
+  },
+  {
     label: 'Members',
     lead: icon(Users),
     words: ['invite', 'admin', 'role'],

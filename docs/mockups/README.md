@@ -76,7 +76,9 @@ pages of `app/command-palette` and `app/feedback`, the Feedback dialog,
 and the flow that sends feedback.
 The [attachments and files](catalogue-attachments-and-files.md) page
 gives the child pages of `app/attachments` and `app/files`, and the flow
-`user-flows/drop-a-file`.
+`user-flows/drop-a-file`. The [org logins](catalogue-org-logins.md) page
+gives the child pages of `app/org-settings/agents`, and the states of the
+other pages that name the org login of an org.
 
 `app/attachments` shows each attached file as a chip at its place in the
 text of the message box. `app/attachments/drop` shows a drop of files into
@@ -175,8 +177,8 @@ workspace screen draws them, as `app/chat/masked-paths` shows.
 ## Logins
 
 [Logins](orgs-and-logins.md#logins) gives the agent logins of the account,
-the steps of Get started, and the notice for an agent that is not
-connected.
+the org logins of the Agents tab of the org settings, the steps of Get
+started, and the notice for an agent that is not connected.
 
 ## The waitlist
 

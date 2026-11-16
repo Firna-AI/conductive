@@ -1,5 +1,6 @@
 import { MembersTab } from '../components/members/MembersTab'
 import { ComputerTab } from '../components/settings/ComputerTab'
+import { OrgAgentsTab } from '../components/settings/OrgAgents'
 import {
   DeleteOrgSection,
   LeaveOrgSection,
@@ -17,6 +18,7 @@ import {
   type Membership,
   type PersonKey,
 } from '../fixtures/members'
+import { orgAgentsFor } from './orgAgentsState'
 import type { OrgSettingsState } from './OrgSettingsScreen'
 import { settingsOrg } from './settingsOrgs'
 import { settingsRepositoryNotice } from './settingsRepositoryNotice'
@@ -103,6 +105,8 @@ export function TabBody(props: { state: OrgSettingsState }) {
           script={state.script}
         />
       )
+    case 'agents':
+      return <OrgAgentsTab {...orgAgentsFor(state, org.name, readOnly)} />
     case 'members':
       return (
         <MembersTab

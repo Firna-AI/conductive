@@ -12,6 +12,11 @@ import { Sidebar } from '../components/workspaces/Sidebar'
 import { memberViewer, people, viewerMembership } from '../fixtures/members'
 import { type Org, orgList } from '../fixtures/orgs'
 import { repositoryChanges } from '../fixtures/repositories'
+import {
+  orgAgentsDefaults,
+  orgAgentsKeys,
+  orgAgentsProperties,
+} from './orgAgentsState'
 import { settingsViewer, TabBody } from './orgSettingsTabs'
 import { settingsOrg } from './settingsOrgs'
 
@@ -27,9 +32,12 @@ export const orgSettingsSchema = {
     'dialog',
     'viewer',
     'org',
+    ...orgAgentsKeys,
   ],
   properties: {
-    tab: { enum: ['general', 'repositories', 'computer', 'members'] },
+    tab: {
+      enum: ['general', 'repositories', 'computer', 'agents', 'members'],
+    },
     /**
      * The builds of the cloud computer, which its tab shows. `time-limit` is
      * a build that the app stopped at its 60-minute limit. `none` is an org
@@ -65,7 +73,7 @@ export const orgSettingsSchema = {
     /**
      * The person signed in: an admin, or a member who is not an admin. A
      * member sees no actions on the members, no Delete org, and the name,
-     * the repositories, and the cloud computer read-only.
+     * the repositories, the cloud computer, and the agents read-only.
      */
     viewer: { enum: ['admin', 'member'] },
     /**
@@ -77,6 +85,7 @@ export const orgSettingsSchema = {
      * lets leave.
      */
     org: { enum: ['active', 'suspended', 'new'] },
+    ...orgAgentsProperties,
   },
 } as const
 
@@ -92,12 +101,14 @@ export const acmeSettings: OrgSettingsState = {
   dialog: 'none',
   viewer: 'admin',
   org: 'active',
+  ...orgAgentsDefaults,
 }
 
 /**
  * The settings of an org: its name and initials, the repositories that it
- * uses, its cloud computer, and its members. The app-wide connections live
- * in the account. Only an admin changes the members and deletes the org. A
+ * uses, its cloud computer, its org logins, and its members. The personal
+ * logins and the other app-wide connections live in the account. Only an
+ * admin changes the members, the org logins, and deletes the org. A
  * suspended org shows its notice first, and nobody changes its settings.
  */
 export function OrgSettingsScreen(props: {

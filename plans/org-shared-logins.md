@@ -396,6 +396,49 @@ Each call is the agent's call, made on 16 November 2026.
   change. `plans/follow-ups/org-control-of-own-endpoints.md` and
   `plans/follow-ups/member-changes-session-choice.md` stay open.
 
+The mockups of Milestone 1 showed the problems below. Each call is the
+agent's call, made on 16 November 2026.
+
+- Replace opens the form under the org login, and the login serves until
+  the new one saves. Replace keeps the switch "Use for every member", also
+  with another kind, because the switch belongs to the org login, not to
+  its key.
+- Remove asks no question first, as the Remove of a personal login and the
+  delete of an env var do not. Reason: a new org login serves the sessions
+  on the org login again, because the login of a session names the org.
+- A member reads the value of the switch "Use for every member" as its
+  hint on the read-only Agents tab, as a member reads the Secret mark of an
+  env var. Reason: the value decides which login the member's sessions
+  use. Only an admin sees the model list and Refresh.
+- The account shows "Your new sessions in Acme use Acme's login." under an
+  agent for each org whose org login is the default login of the member.
+  It shows also under a connected login while the switch of that org is
+  on. Reason: the same default login from the server decides both cases.
+  The account keeps "Every org uses these agents."
+- Get started names the org login with the state "Ready", the words "You
+  can start now with Acme's login. Connect your own at any time in your
+  account.", and the line of the account under the agent.
+- The mockups draw no org login that the app can no longer use. The Worker
+  marks only a ChatGPT sign-in as not usable, and an org login is never
+  one. So the column `failure_cause` of `org_agent_logins` has no writer,
+  and Milestone 3 adds it only for a writer.
+- The owner menu of a workspace says "Each session keeps its agent login."
+  in place of "Each session runs on the agent login of the member who
+  started it.", which the org login makes wrong.
+- The hint of the share switch, "Their messages in your sessions start a
+  new session on their own login.", is wrong for a member whose default
+  login is the org login. The app renders the same part, and app tests
+  assert its words, so Milestone 6 changes it to "Their messages in your
+  sessions start a new session." with those tests.
+- The command palette lists the Agents tab in the group of the settings of
+  the org, after Cloud computer.
+- The form of the account said "tests it once" under a key, but the app
+  stores a key without a test. The mockups now say "keeps it encrypted,
+  and never shows it again.", as the app does.
+- `SessionLogin` in `docs/mockups/src/components/chat/` keeps its field
+  `starter` for the name of the org, because the app imports the type.
+  Milestone 6 renames it to `owner`.
+
 ## Components
 
 - D1: a table `org_agent_logins` keyed by `org_id` and `agent`, with
@@ -430,40 +473,44 @@ uncommitted work in the working tree. Its copy is in
 keeps the parts that still fit, and moves the account shares to the org
 settings.
 
-- [ ] Org settings: an Agents tab after Cloud computer, in
+- [x] Org settings: an Agents tab after Cloud computer, in
       `docs/mockups/src/components/settings/OrgSections.tsx`. An admin
       sees Claude and Codex, each with Connect, or with its kind, the host
       of an endpoint, the model list, Replace, and Remove. The form offers
       only API key and own endpoint.
-- [ ] Org settings: the read-only Agents tab of a member, as
+- [x] Org settings: the read-only Agents tab of a member, as
       `app/org-settings/member` shows the General tab.
-- [ ] Org settings: the endpoint model list, an endpoint that the app does
+- [x] Org settings: the endpoint model list, an endpoint that the app does
       not accept, and a save that fails, on child pages when the page
       would pass five screens.
-- [ ] Account page: remove the org share switches and the "Shared with
+- [x] Account page: remove the org share switches and the "Shared with
       you" list of the first round. Each personal login keeps today's
       share switch. Show a short line for each org whose org login serves
       an agent that the member did not connect.
-- [ ] Get started: the agent step is complete with only an org login, and
+- [x] Get started: the agent step is complete with only an org login, and
       it names the org login.
-- [ ] Composer: a session on the org login names it, such as "Acme's
+- [x] Composer: a session on the org login names it, such as "Acme's
       login". The `not-shared` and `no-agent` states keep today's rules for
       personal logins.
-- [ ] New workspace form and routine form: no Connect notice with an org
+- [x] New workspace form and routine form: no Connect notice with an org
       login, and the form names the org login.
-- [ ] Model picker: a session or a routine on an org endpoint shows only
+- [x] Model picker: a session or a routine on an org endpoint shows only
       the models of its last list.
-- [ ] Agents tab: the switch "Use for every member" of decision 7 under
+- [x] Agents tab: the switch "Use for every member" of decision 7 under
       each org login, off by default, with its hint and a save that fails.
-- [ ] Composer and new workspace form: a member with their own login, in
+- [x] Composer and new workspace form: a member with their own login, in
       an org whose switch is on, sees the org login named, such as "Acme's
       login".
-- [ ] Update `docs/mockups/catalogue.md`,
+- [x] Update `docs/mockups/catalogue.md`,
       `docs/mockups/orgs-and-logins.md`, and
       `docs/mockups/own-endpoint-logins.md`.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages.
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
+
+Evidence of the second round: `.context/org-shared-logins/round-2-*` holds
+the logs of the checks, the screenshots, and the compare with `main`. The
+first round's complete copy is in `.context/org-shared-logins/round-1-backup/`.
 
 ## Milestone 2: Documentation and protocol
 
@@ -498,6 +545,9 @@ Depends on: 1
       restates a changed fact.
 - [ ] Update the rows of `src/marketing/from-conductor/areas/cloud.ts:86`
       and `plans-and-pricing.ts` that the change makes wrong.
+- [ ] Capture the marketing pictures again with `npm run marketing:pictures`.
+      The `org` picture shows the tab row of the org settings, which gains
+      Agents in Milestone 1.
 - [ ] Update the background of `plans/follow-ups/org-control-of-own-endpoints.md`
       and `plans/follow-ups/member-changes-session-choice.md`.
 - [ ] Update `worker/README.md`, `worker/chat/access.md`,
@@ -516,6 +566,8 @@ Depends on: 2
 - [ ] Give the endpoint model refresh an org owner.
 - [ ] Add the switch of decision 7: a column, and an admin route that saves
       it without a change of `updated_at`.
+- [ ] Keep the switch of decision 7 when an admin replaces the org login,
+      also with another kind, from the design calls of the mockups.
 - [ ] Tests: an admin save, a member refused, a response with no secret,
       an endpoint that the rule refuses, the delete of the org, and a
       ciphertext of another org that does not decrypt.
@@ -550,6 +602,14 @@ Depends on: 1, 3
 - [ ] Add the Agents tab to the org settings under `src/shell/settings/`,
       with the parts of the account form, as the mockups show.
 - [ ] Show the read-only tab to a member.
+- [ ] Add the Agents tab to the routes in `src/app/router.ts`, to the tab
+      list in `src/shell/settings/OrgSettingsScreen.tsx`, and to the rows of
+      `src/app/palette/commands.ts`, as `app/command-palette/settings`
+      shows.
+- [ ] Take the words of the tab from `orgAgentsCopy` in
+      `docs/mockups/src/components/settings/OrgAgents.tsx`. Replace opens
+      the form under the login, as `app/org-settings/agents/form/replace`
+      shows.
 - [ ] Check the tab in a browser against the mockups.
 
 ## Milestone 6: Account page, composer, Get started, and forms
@@ -562,7 +622,19 @@ Depends on: 1, 4
       the login of the session and decision 4.
 - [ ] Move `src/app/setup-steps.ts` to decision 4.
 - [ ] Show the default login from the server in the new workspace form,
-      the routine form, and the account page.
+      the routine form, the account page, and Get started. Take the words
+      from `docs/mockups/src/components/settings/OrgLoginLines.tsx` and
+      `docs/mockups/src/screens/getStartedCopy.ts`.
+- [ ] Change the note of the owner menu in `src/members/OwnerChoices.tsx`
+      to "Each session keeps its agent login.", as `app/reassign` shows.
+- [ ] Change the hint of the share switch in
+      `docs/mockups/src/components/settings/LoginShare.tsx` to "Their
+      messages in your sessions start a new session.", with the app tests
+      that assert it, such as `src/shell/account/AccountScreen.test.tsx`.
+      The app renders this part, so the words change in the app change.
+- [ ] Rename the field `starter` of `SessionLogin` in
+      `docs/mockups/src/components/chat/SessionLogin.tsx` to `owner`, with
+      its users in `src/chat/`, because it can name the org.
 - [ ] Make the model pickers follow the list of the org endpoint, by
       decision 3, also in `src/shell/routines/RoutineEditor.tsx:72`.
 - [ ] Check the changed screens in a browser against the mockups.

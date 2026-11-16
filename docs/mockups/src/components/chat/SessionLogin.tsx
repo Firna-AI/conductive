@@ -2,20 +2,26 @@ import { Plug } from 'lucide-react'
 import styles from './SessionLogin.module.css'
 
 /**
- * The agent login of another member that a session uses: the login of its
- * starter, with the name that the app shows for that member.
+ * The agent login of a session when it is not the own login of the viewer:
+ * the login of another member, its starter, or the org login (decision 1 B
+ * of the org logins plan), with the name that the app shows for its owner.
  */
 export type SessionLogin = {
-  /** The name of the starter, such as "Cal". */
+  /**
+   * The name of the owner of the login: the starter, such as "Cal", or the
+   * org, such as "Acme". The field keeps the name `starter`, because the
+   * app imports this type.
+   */
   starter: string
 }
 
 /**
  * The label in the bar of the composer, after the model picker, that names
- * the login of another member, such as "Cal's login". So a member sees that
- * a message spends the login of the starter. The label sits inside the box,
- * so the box keeps its place and its height. A message on the own login of
- * the viewer gets no label.
+ * the login of another member, such as "Cal's login", or the org login,
+ * such as "Acme's login". So a member sees that a message spends a login
+ * that is not their own. The label sits inside the box, so the box keeps
+ * its place and its height. A message on the own login of the viewer gets
+ * no label.
  */
 export function SessionLoginLabel(props: SessionLogin) {
   return (

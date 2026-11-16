@@ -7,11 +7,20 @@ import styles from './EndpointModels.module.css'
 /** Names in a sentence, such as "A", "A and B", or "A, B, and C". */
 const names = new Intl.ListFormat('en', { type: 'conjunction' })
 
-/** Says which models the pickers of the owner hide, and why. */
-function hiddenText(labels: string, count: number): string {
+/**
+ * The pickers that hide the models: those of the owner of a personal login,
+ * or every picker on an org login (decision 3 A of the org logins plan).
+ */
+const pickerNames = {
+  personal: 'your model pickers',
+  org: 'the model pickers on this login',
+} as const
+
+/** Says which models the pickers hide, and why. */
+function hiddenText(labels: string, count: number, pickers: string): string {
   return count === 1
-    ? `${labels} is hidden from your model pickers, because this endpoint does not list it.`
-    : `${labels} are hidden from your model pickers, because this endpoint does not list them.`
+    ? `${labels} is hidden from ${pickers}, because this endpoint does not list it.`
+    : `${labels} are hidden from ${pickers}, because this endpoint does not list them.`
 }
 
 /**
@@ -20,20 +29,23 @@ function hiddenText(labels: string, count: number): string {
  * the line says so, with their IDs as code that the owner can copy into the
  * setup of the endpoint, and the time of the last read of the list. Refresh
  * reads the list again. `agent` is the name of the agent, for the spoken
- * name of Refresh.
+ * name of Refresh. On an org login, `owner` is `org`: every picker on the
+ * login hides the models, and only an admin sees the line.
  */
 export function EndpointModels(props: {
   agent: string
   check: ModelListCheck
+  owner?: keyof typeof pickerNames
 }) {
   const { unlisted, checked } = props.check
   const labels = names.format(unlisted.map((model) => model.label))
   const ids = names.formatToParts(unlisted.map((model) => model.id))
+  const pickers = pickerNames[props.owner ?? 'personal']
   return (
     <div className={styles.models}>
       <div className={styles.text}>
         <span className={styles.label}>
-          {hiddenText(labels, unlisted.length)}
+          {hiddenText(labels, unlisted.length, pickers)}
         </span>
         <span className={styles.hint}>
           {unlisted.length === 1 ? 'Its model ID is ' : 'Their model IDs are '}

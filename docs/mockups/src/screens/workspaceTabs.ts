@@ -96,8 +96,9 @@ function pictureTab(state: WorkspaceState): WorkspaceTab | undefined {
  * name as the header, Untitled before the title comes. While the login of
  * the starter of the first session is not available, that first session
  * leads to its view for the member, beside the linked session. While the
- * starter keeps the login for their own messages, the first session leads
- * to that view. After the second session sent its messages, the second
+ * starter keeps the login for their own messages, or after an admin removed
+ * the org login of the session, the first session leads to that view.
+ * After the second session sent its messages, the second
  * session can show, and each session tab leads to its chat of that time.
  * The file or the diff that the state opens can be the temporary tab, as
  * `withTemporaryTab` draws it.
@@ -116,6 +117,9 @@ export function tabsFor(
   const sent = sessionLinkStates(state)
   let firstPath: string = linked ? paths.noStarterLogin : paths.app
   if (state.composer === 'not-shared') firstPath = paths.loginNotShared
+  if (state.composer === 'no-starter-login' && state.login === 'org') {
+    firstPath = paths.orgLoginRemoved
+  }
   if (sent) firstPath = paths.sentBy
   const tabs: WorkspaceTab[] = [
     {

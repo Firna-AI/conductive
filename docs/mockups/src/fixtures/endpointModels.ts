@@ -27,8 +27,18 @@ export const proxyModelCheck: ModelListCheck = {
 }
 
 /**
- * The labels of the models that the pickers of Cal leave out, because the
- * list of the proxy does not name them. A model that the proxy serves but
+ * The last read of the list of the gateway of Acme for Claude, the endpoint
+ * of the org login of Acme. It lacks Fable 5.1 too.
+ */
+export const gatewayModelCheck: ModelListCheck = {
+  unlisted: [fable],
+  checked: '12 minutes ago',
+}
+
+/**
+ * The labels of the models that a picker leaves out, because the list of
+ * the endpoint does not name them: the pickers of Cal on his proxy, and the
+ * pickers on the org login of Acme. A model that the endpoint serves but
  * does not list is left out too.
  */
 export const unlistedLabels: readonly string[] = proxyModelCheck.unlisted.map(
