@@ -51,7 +51,8 @@ sessions as tabs above the chat, and four tabs at the bottom.
   `ActionButton` keeps the border of the secondary tone without its fill, so
   the tint of a bar shows through, as on Stop of the 15 minutes bar and on
   Archive of the pull request bar.
-- On a phone every touch target is at least 44 px high. `MobileFrame` gives
+- On a phone every touch target is at least 40 px high, as the user chose
+  on 13 November 2026 for a thinner tab row. `MobileFrame` gives
   the Firna controls the touch sizes through `useControlSizes` in
   `src/components/common/touch.tsx`, and local controls read the
   `--ui-touch-min` variable, which is 0 on desktop.
@@ -325,8 +326,10 @@ sessions as tabs above the chat, and four tabs at the bottom.
   not have, and the files that the cloud computer could not read.
 - The app frame is a size container (`app-frame`), so the layout follows the
   width of the frame, not of the window. In the app the two are the same. A
-  screen is as high as `--ui-screen-height`, which is the window, or the
-  frame of a picture on the marketing site.
+  screen is as high as `--ui-screen-height`, which is the visible part of
+  the window (`100dvh`, so that a phone page does not scroll behind the
+  app while the browser bars show), or the frame of a picture on the
+  marketing site.
 - [The operator section](design-operator.md) gives its tabs, its tables,
   the Waitlist tab, the codes, and the approval email. It also gives
   Suspend, Lift, and Approve, the daily chart, the notice of a pause, and
@@ -334,4 +337,5 @@ sessions as tabs above the chat, and four tabs at the bottom.
 - On a phone the org settings put their four tabs in three columns, so every
   tab shows. The session tabs all shrink, and the current one keeps the start
   of its title beside its close button. When the session tabs still do not
-  fit, their row scrolls sideways.
+  fit, their row scrolls sideways. A phone tab stays 40 px high to touch,
+  but its fill is 32 px high, with 4 px of the row above and below it.

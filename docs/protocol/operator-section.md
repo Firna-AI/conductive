@@ -50,8 +50,12 @@ names a dated record, as
 - The section has the tabs Overview, Orgs, Users, Waitlist, and Invite
   codes (decisions 147 and 160).
 - The section shows only counts, names, IDs, dates, roles, states, and
-  codes. It shows no chat, file, env value, agent login, or email address.
-  Reason: the section then holds the least personal data.
+  codes. It shows no chat, file, env value, or agent login. Reason: the
+  section then holds the least personal data.
+- The only email address that the section shows is the primary verified
+  email of a user, on the page of that user. The lists of the Users tab
+  and of the Waitlist tab show no email address. Reason: the user asked on
+  15 November 2026 for the email address on the page of a user.
 - While the pause is on or the waitlist is off, each tab starts with a
   notice, as [The notices](sign-ups.md#the-notices) says.
 
@@ -122,6 +126,9 @@ names a dated record, as
   with the role of the user (decisions 147 and 149).
 - An account with no name on GitHub shows its login and no name
   (decision 149).
+- The page of a user also gives the primary verified email of the GitHub
+  account. An account without one shows "No verified email". This is the
+  address of [the approval email](waitlist.md#the-approval-email).
 - The page of a user also gives the age of the GitHub account
   (decision 160). Reason: Approve on that page then has the same facts as
   the Waitlist tab.

@@ -142,7 +142,9 @@ the screens show no plans, no billing, no seats, and no plan limits.
   API key, ChatGPT plan, and Own endpoint for Codex. For a token or a key, the words above the field
   say what to paste and where to make it.
 - [Own endpoint login mockups](own-endpoint-logins.md) describes the fields,
-  connected host, model list, and address refusal for both agents.
+  connected host, model list, and address refusal for both agents. It also
+  describes the note after a Codex save that added `/v1`, and the warning
+  after a model list read that failed.
 - ChatGPT plan has no field. Its words say that Codex then runs on the
   plan, and that device code sign-in must be on first in the ChatGPT
   security settings, as `app/account/connect-codex/chatgpt` shows. They

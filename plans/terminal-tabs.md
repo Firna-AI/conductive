@@ -261,8 +261,7 @@ All design calls are of 10 November 2026, by the agent.
   or the first. Reason: the tool always shows a terminal.
 - A workspace whose image has no attach program shows one terminal and no
   + button. Reason: its launcher cannot choose a shell, so a + would open a
-  copy of the first shell. It gets terminal tabs in a new workspace after
-  the next image build, as each change of the terminal files does.
+  copy of the first shell. It gets terminal tabs when the automatic software update applies.
 - The terminal state keeps `socketPath` of the first terminal. Reason:
   the Mac app bundles the web app, so an older Mac app build keeps one
   working terminal until it updates.
@@ -291,9 +290,6 @@ All design calls are of 10 November 2026, by the agent.
 
 - `plans/follow-ups/terminal-disconnected-mockup.md`: Milestone 1 drew
   the Disconnected state and deleted the item.
-- `plans/follow-ups/comparison-notes-over-two-sentences.md`: Milestone 8
-  rewrites the note of `workspace-terminal` and removes that row from the
-  item.
 - `plans/follow-ups/hidden-terminal-line-spacing.md`: each hidden terminal
   tab can meet the same defect. Its fix covers every terminal, so this
   change does not take it.
@@ -393,7 +389,7 @@ The sandbox side: the attach program, the support marker, and the close
 command.
 
 - [ ] Run ttyd with `--url-arg` and the attach program. Install the
-      program with the other terminal files in each image build.
+      program with the other terminal files in the system release.
 - [ ] Make the attach program accept no argument or one valid terminal ID,
       and refuse each other argument list.
 - [ ] Make the start command write the support marker. Read it in the
@@ -501,7 +497,7 @@ Depends on: 6
 - [ ] Update `src/app/key-code.md` and `src/shell/workspace/README.md`,
       which list the palette actions.
 
-## Milestone 8: Public guide and comparison page
+## Milestone 8: Public guide
 
 Depends on: 6
 
@@ -511,10 +507,9 @@ Depends on: 6
 - [ ] Add how to open, switch, and close terminals to
       `src/marketing/docs/terminal-and-previews.md`, with the limit and
       what to do at the limit.
-- [ ] Rewrite the note of `workspace-terminal` in
-      `src/marketing/from-conductor/areas/terminal-scripts-and-previews.ts`
-      in one or two sentences, with at most 25 words. Remove that row from
-      `plans/follow-ups/comparison-notes-over-two-sentences.md`.
+- [x] Dropped: rewrite the note of the `workspace-terminal` row of the
+      comparison page. The page at `/from-conductor` was removed on
+      2026-11-13, with its rows and the follow-up item about long notes.
 
 ## Milestone 9: Verification, commit, review, and pull request
 
@@ -532,16 +527,16 @@ Depends on: every other milestone
 - [ ] Open the pull request. Its description gives the decisions and the
       design calls of this plan with their dates, a permalink to this plan,
       and the follow-up items that the change adds. It says that an
-      existing workspace gets terminal tabs only in a new workspace after
-      the next image build.
+      existing workspace gets terminal tabs when the automatic software
+      update applies.
 
 ## Post-merge follow-up (non-blocking)
 
-- [ ] After the deploy and an org image build, open a new workspace. Open
+- [ ] After the deploy and a software update, open a workspace. Open
       three terminals and run a different command in each. Reload, and
       check that each terminal kept its command. Close one, and reach the
       limit.
-- [ ] Open a workspace from an older image. Check that it shows one
+- [ ] Open a workspace whose software has not updated. Check that it shows one
       terminal and no + button.
 - [ ] After the next Mac app release, repeat the first check in the Mac
       app.

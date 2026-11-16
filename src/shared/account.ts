@@ -1,5 +1,7 @@
-import type { Agent, AgentChoice } from './agents'
-import type { Timestamp, User } from './api'
+import type { Agent } from './generated/Agent'
+import type { AgentChoice } from './generated/AgentChoice'
+import type { Timestamp } from './generated/Timestamp'
+import type { User } from './api'
 import type { ShortcutPreferences } from './shortcuts'
 
 export interface SessionResponse {
@@ -138,7 +140,17 @@ export interface AccountResponse {
   githubAppUrl: string
 }
 
-export type SaveAgentLoginResponse = AgentLoginStatus
+export type SaveAgentLoginResponse = AgentLoginStatus & {
+  /** Endpoint saves only: true when a second model read selected a /v1 base. */
+  endpointV1Added?: boolean
+  /** Endpoint saves only: true when neither read produced a readable model list. */
+  modelListReadFailed?: boolean
+}
+
+export interface RefreshAgentLoginModelsResponse {
+  /** True when Refresh read no list, including a missing or native login. */
+  modelListReadFailed: boolean
+}
 export interface UpdateAgentLoginRequest {
   noReuse: boolean
 }

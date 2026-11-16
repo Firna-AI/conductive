@@ -4,113 +4,22 @@ import { WorkspaceTools } from '../previews/provider'
 import type { ToolDependencies } from '../previews/types'
 import { ProviderError } from '../sandbox/errors'
 import type { SandboxProvider } from '../sandbox/provider'
-import { writeFileCommand } from '../lifecycle/commands'
-import { BRIDGE_FILES, BRIDGE_ROOT } from './bridge-files'
 import { cacheTerminalPassword } from './credentials'
 import { privilegedCommand, shellArgument } from './privileged'
 import {
-  credentialScript,
-  launcherScript,
-  sessionServerScript,
   TERMINAL_RUNTIME,
   TERMINAL_RUNTIME_VIEW,
   TERMINAL_RESTORE_MARKER,
 } from './scripts'
 
-/** Writes the bridge files fresh, so no file of an older bridge stays. */
-function bridgeInstallCommand(): string {
-  const folders = new Set(
-    Object.keys(BRIDGE_FILES).map((path) =>
-      `${BRIDGE_ROOT}/${path}`.replace(/\/[^/]+$/, ''),
-    ),
-  )
-  return [
-    `rm -rf ${shellArgument(BRIDGE_ROOT)}`,
-    ...[...folders].map(
-      (folder) => `install -d -m 755 ${shellArgument(folder)}`,
-    ),
-    ...Object.entries(BRIDGE_FILES).map(([path, text]) =>
-      writeFileCommand(`${BRIDGE_ROOT}/${path}`, text, '644'),
-    ),
-  ].join('\n')
-}
-
-export function terminalInstallCommand(): string {
+export function terminalPackagesCommand(): string {
   return privilegedCommand(`set -eu
 apt-get update
 apt-get install -y ttyd tmux
 # The ttyd package enables its own service on port 7681, which the
 # workspace terminal needs. Stop it and keep it from starting.
 systemctl disable --now ttyd.service 2>/dev/null || true
-systemctl mask ttyd.service
-install -d -m 755 /usr/local/lib/conductive
-cat > /usr/local/lib/conductive/terminal <<'CONDUCTIVE_TERMINAL'
-${launcherScript()}
-CONDUCTIVE_TERMINAL
-chmod 755 /usr/local/lib/conductive/terminal
-cat > /usr/local/lib/conductive/terminal-password <<'CONDUCTIVE_PASSWORD'
-${credentialScript()}
-CONDUCTIVE_PASSWORD
-chmod 755 /usr/local/lib/conductive/terminal-password
-cat > /usr/local/lib/conductive/terminal-sessions <<'CONDUCTIVE_SESSIONS'
-${sessionServerScript()}
-CONDUCTIVE_SESSIONS
-chmod 755 /usr/local/lib/conductive/terminal-sessions
-${bridgeInstallCommand()}
-cat > /etc/systemd/system/conductive-terminal-sessions.service <<'CONDUCTIVE_SESSION_SERVICE'
-[Unit]
-Description=Conductive terminal shell server
-ConditionPathExists=/run/conductive-terminal/enabled
-
-[Service]
-Type=forking
-User=user
-Group=user
-WorkingDirectory=/home/user
-RuntimeDirectory=conductive-terminal
-RuntimeDirectoryMode=0700
-RuntimeDirectoryPreserve=yes
-ExecStart=/usr/local/lib/conductive/terminal-sessions
-Restart=on-failure
-RestartSec=1
-KillMode=control-group
-CONDUCTIVE_SESSION_SERVICE
-cat > /etc/systemd/system/conductive-terminal.service <<'CONDUCTIVE_SERVICE'
-[Unit]
-Description=Conductive terminal
-After=network.target conductive-terminal-sessions.service
-Requires=conductive-terminal-sessions.service
-ConditionPathExists=/run/conductive-terminal/enabled
-
-[Service]
-Type=simple
-User=user
-Group=user
-WorkingDirectory=/home/user
-RuntimeDirectory=conductive-terminal
-RuntimeDirectoryMode=0700
-RuntimeDirectoryPreserve=yes
-ExecStartPre=+/usr/local/lib/conductive/terminal-password
-ExecStart=/usr/local/lib/conductive/terminal
-Restart=on-failure
-RestartSec=1
-KillMode=control-group
-
-[Install]
-WantedBy=multi-user.target
-CONDUCTIVE_SERVICE
-systemctl daemon-reload
-systemctl enable conductive-terminal.service`)
-}
-
-/** Call during each org image build. It enables the service without a credential. */
-export async function installTerminalService(
-  provider: Pick<SandboxProvider, 'runCommand'>,
-  sandboxId: string,
-): Promise<void> {
-  const result = await provider.runCommand(sandboxId, terminalInstallCommand())
-  if (result.exitCode !== 0 || result.timedOut)
-    throw new ProviderError('unavailable', 502)
+systemctl mask ttyd.service`)
 }
 
 /** The lifecycle launches this command detached after the startup script exits. */

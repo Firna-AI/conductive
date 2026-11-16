@@ -4,7 +4,6 @@ import {
 } from '../../src/shared/restore-marker'
 import { TERMINAL_PORT } from '../../src/shared/terminal'
 import { TERMINAL_HISTORY_LINES } from '../../src/shared/terminal-bridge'
-import { imageNodeExecutable } from '../lifecycle/image-runtime'
 import { BRIDGE_MAIN } from './bridge-files'
 import { shellArgument } from './privileged'
 
@@ -50,7 +49,7 @@ const terminalScriptDefaults: TerminalScriptOptions = {
   entropyCommand: ['od', '-An', '-v', '-N32', '-tx1', '/dev/urandom'],
   terminalCommand: ['/usr/bin/ttyd'],
   multiplexerCommand: ['/usr/bin/tmux'],
-  bridgeCommand: [imageNodeExecutable(), BRIDGE_MAIN],
+  bridgeCommand: ['/opt/conductive/current/node/bin/node', BRIDGE_MAIN],
 }
 
 const validation = `valid_password() {

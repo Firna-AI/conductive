@@ -141,21 +141,24 @@ async function closeSession(
 }
 
 /**
- * Closing a tab moves its session to the history. A session whose turn runs
- * asks first, because closing stops the turn.
+ * Closing tabs moves their sessions to the history. Each session with no
+ * running turn closes at once. The sessions whose turns run ask first, in
+ * one question, because closing stops their turns.
  */
 export async function requestClose(
   context: ChatContext,
-  sessionId: string,
+  sessionIds: readonly string[],
 ): Promise<void> {
-  if (isRunning(context.store.get(), sessionId)) {
-    context.store.update((snapshot) => ({
-      ...snapshot,
-      overlay: { kind: 'close', sessionId },
+  const snapshot = context.store.get()
+  const running = sessionIds.filter((id) => isRunning(snapshot, id))
+  if (running.length > 0) {
+    context.store.update((current) => ({
+      ...current,
+      overlay: { kind: 'close', sessionIds: running },
     }))
-    return
   }
-  await closeSession(context, sessionId, false)
+  const idle = sessionIds.filter((id) => !running.includes(id))
+  await Promise.all(idle.map((id) => closeSession(context, id, false)))
 }
 
 export async function confirmClose(context: ChatContext): Promise<void> {
@@ -165,7 +168,9 @@ export async function confirmClose(context: ChatContext): Promise<void> {
     ...snapshot,
     overlay: { kind: 'none' },
   }))
-  await closeSession(context, overlay.sessionId, true)
+  await Promise.all(
+    overlay.sessionIds.map((id) => closeSession(context, id, true)),
+  )
 }
 
 /** Reopens a session of the history as a tab, with its chat. */

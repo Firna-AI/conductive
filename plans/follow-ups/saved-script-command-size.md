@@ -14,9 +14,9 @@
 - **Root question:** How does a saved script of any accepted size reach the sandbox?
 - **Options:**
   - **A.** Limit saved scripts to a size that fits the command. It adds a new rejection. Effort: Small.
-  - **B.** Upload the script with the provider's file write route, as `plans/follow-ups/image-files-through-upload.md` proposes for the image files. Effort: Medium.
+  - **B.** Upload the script with the provider's file write route, so its content does not ride in a command. Effort: Medium.
 - **Left out:** Change nothing, because an org gets no reason for the failure.
-- **Wider fix:** B, with `plans/follow-ups/image-files-through-upload.md`.
+- **Wider fix:** B. It keeps script content out of process arguments.
 - **Previous examples:** `0ab26e0d` split the tools install for the same limit.
 - **Recommendation:** B. It keeps the accepted size and fixes the cause.
 - **Action:** ask the user, because the review found it outside the branch.
