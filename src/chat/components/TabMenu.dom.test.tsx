@@ -216,7 +216,7 @@ describe('the tab menu', () => {
     })
   })
 
-  it('leaves Keep open out of a read-only row, so the temporary tab opens no menu, and the browser shows its own', async () => {
+  it('leaves Keep open out of a read-only row, so the temporary tab, whose label hides a secret value and so has no Copy path, opens no menu, and the browser shows its own', async () => {
     await mountChat({
       server: new FakeApiServer(),
       tabs: [first, file, second],

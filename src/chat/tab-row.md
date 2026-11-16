@@ -2,9 +2,9 @@
 
 This guide belongs to [the chat](README.md). It gives the rules of the one
 order of the session, file, and diff tabs, the mark of the temporary tab
-and the moves that keep it, the drag, the tab menu with Keep open, Close
-other tabs, and Close tabs to the right, and the scroll of the row, and
-the reader's place that each tab keeps.
+and the moves that keep it, the drag, the tab menu with Keep open, Copy
+path, Close other tabs, and Close tabs to the right, and the scroll of the
+row, and the reader's place that each tab keeps.
 [The tab row](../../docs/protocol/agents-and-sessions.md#the-tab-row) states
 the requirements.
 
@@ -71,23 +71,29 @@ the requirements.
   Copy link, Copy concise transcript, and Copy full transcript, a line,
   then Move left and Move right, a line, then Close other tabs and Close
   tabs to the right, with the icons of the mockups. The temporary tab has
-  Keep open, with the bookmark icon of the mockups, a line, Move left and
-  Move right, a line, then the two closes. A kept file or diff tab has
-  Move left and Move right, a line, then the two closes. The host tells
-  the row which tab is temporary: only that tab gets a `keep` from
-  `renderTab`. A move or a close that the row rules out is off: it keeps
-  its place at half opacity, and the arrow keys skip it. Close other tabs
-  is off when the row holds only the tab. Escape or a press outside closes
-  the menu.
+  Keep open, with the bookmark icon of the mockups, a line, Copy path, with
+  the copy icon, a line, Move left and Move right, a line, then the two
+  closes. A kept file or diff tab has Copy path, a line, Move left and
+  Move right, a line, then the two closes. The host tells the row which
+  tab is temporary: only that tab gets a `keep` from `renderTab`. The host
+  also gives each file or diff tab a `copyPath` through `renderTab`, which
+  Copy path calls during its press, because the chat knows only the title
+  of the tab. A tab whose label can hide a secret value gets none, so its
+  menu has no Copy path. `components/tab-menu-items.ts` gives the groups.
+  A move or a close that the row rules out is off: it keeps its place at
+  half opacity, and the arrow keys skip it. Close other tabs is off when
+  the row holds only the tab. Escape or a press outside closes the menu.
 - Each item that changes the workspace carries a mark: Rename session,
   Keep open, the moves, and the two closes. A read-only chat leaves out
-  the marked items, and a group with no item left loses its line. So a session tab there has only its three copy items, and a file
-  or diff tab, also the temporary tab, has no item, so it opens no menu
-  and the browser shows its own. A read-only chat binds no drag, so a finger opens the menu with
-  `useLongPress` of the web app: a hold of 450 ms that ends within 8 px. It
-  lifts no tab, sends no write, and selects no tab, because the click after
-  it reaches nothing. A finger that moves first scrolls the row, and the
-  tab takes the touch CSS of a drag.
+  the marked items, and a group with no item left loses its line. So a
+  session tab there has only its three copy items, and a file or diff tab,
+  also the temporary tab, has only Copy path. A tab with no item, such as
+  a file tab without Copy path, opens no menu, and the browser shows its
+  own. A read-only chat binds no drag, so a finger opens the menu with
+  `useLongPress` of the web app: a hold of 450 ms that ends within 8 px.
+  It lifts no tab, sends no write, and selects no tab, because the click
+  after it reaches nothing. A finger that moves first scrolls the row, and
+  the tab takes the touch CSS of a drag.
 - Move left and Move right call `moveTab` with the neighbour of the tab.
   The focus goes back to the link of the tab, and the status of the row
   says the new place, such as "app.ts moves to place 2 of 3". Keep open

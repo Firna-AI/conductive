@@ -58,10 +58,13 @@ export const temporaryTabStates = [
  *
  * The `mention-` states open the list of `@`: with a query, without one,
  * with no match, while the tree loads, and with no tree. `file-chips` holds
- * a file chip and a folder chip. The `-pointer` states draw the pointer
- * over the icon of the first chip of the text, where a × takes the place of
- * the icon. A phone has no pointer, so it shows the × at the end of each
- * chip instead.
+ * a file chip and a folder chip. `file-added` holds the chip that Add to
+ * chat of a row menu put at the end of the draft, with a space after it.
+ * The field takes the focus on desktop, so the caret stands after the
+ * space. A phone draws no caret, because the field does not take the focus
+ * there. The `-pointer` states draw the pointer over the icon of the first
+ * chip of the text, where a × takes the place of the icon. A phone has no
+ * pointer, so it shows the × at the end of each chip instead.
  *
  * The `drop` states draw a drop of files on the box: a screenshot that
  * hovers over it with the drop caret in the text, the screenshot at that
@@ -89,6 +92,7 @@ export const composerStates = [
   'mention-loading',
   'mention-unavailable',
   'file-chips',
+  'file-added',
   'file-chip-pointer',
   'workspace-link-pointer',
   'attachment-pointer',

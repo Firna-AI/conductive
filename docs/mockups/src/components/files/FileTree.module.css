@@ -22,6 +22,16 @@ a.row:hover {
   color: var(--ui-ink);
 }
 
+/*
+ * The row of an open menu keeps the fill of a hover, as a tab with an open
+ * menu does, also under the sheet of a phone. The row of the open file
+ * keeps its own fill.
+ */
+.menuOpen {
+  background: var(--ui-soft);
+  color: var(--ui-ink);
+}
+
 .open,
 a.open:hover {
   background: var(--ui-selected);

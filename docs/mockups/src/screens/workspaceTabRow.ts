@@ -8,7 +8,6 @@ import {
   type Session,
 } from '../fixtures/sessions'
 import type { WorkspaceState } from './workspaceState'
-import { hasTemporaryTab } from './workspaceTemporaryTab'
 
 const [firstSession, secondSession] = workspaceSessions
 
@@ -71,16 +70,19 @@ function dragOf(
 }
 
 /**
- * The tab whose menu is open: the temporary tab when the state draws one,
- * or else the first session. A phone row shows no file tabs, so a phone
- * opens no menu for the temporary tab.
+ * The tab whose menu is open: the shown file or diff tab, such as the
+ * temporary tab, or else the first session. A phone row and the row of an
+ * archived workspace show no file tabs, so they open no menu for a shown
+ * file.
  */
 function menuTabOf(
   state: WorkspaceState,
   tabs: readonly WorkspaceTab[],
 ): string | undefined {
   if (state.overlay !== 'tab-menu') return undefined
-  return hasTemporaryTab(state) ? temporaryKey(tabs) : firstSession.key
+  const shown = tabs.find((tab) => tab.selected)
+  if (shown === undefined) return undefined
+  return shown.kind === 'session' ? firstSession.key : shown.key
 }
 
 /**
@@ -89,7 +91,7 @@ function menuTabOf(
  */
 export type TabRow = {
   drag?: TabDrag
-  /** The tab whose menu is open: the first session, or the temporary tab. */
+  /** The tab whose menu is open: the first session, or the shown file tab. */
   menuTab?: string
   /** The tab that shows the rename field: the first session too. */
   renaming?: string
@@ -101,9 +103,9 @@ export type TabRow = {
  * The tab row of the state, for the tabs that the viewport shows. A
  * read-only workspace moves no tab and renames no session. Its tab menu
  * leaves out the items that change the workspace, so a session tab opens
- * only its copy items. On a phone, the tab with the rename field and the
- * shown tab do not fit beside each other, so the row is full and keeps the
- * field in view.
+ * only its copy items, and a file or diff tab only Copy path. On a phone,
+ * the tab with the rename field and the shown tab do not fit beside each
+ * other, so the row is full and keeps the field in view.
  */
 export function tabRowOf(
   state: WorkspaceState,

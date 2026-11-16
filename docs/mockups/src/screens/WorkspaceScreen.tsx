@@ -42,7 +42,7 @@ import {
   workspaceSidebar,
 } from './workspaceParts'
 import {
-  transcriptToast,
+  copyToast,
   workspaceOverlay,
   workspacePalette,
   workspaceToast,
@@ -176,7 +176,7 @@ export function WorkspaceScreen(props: {
           menuTab: row.menuTab,
           readOnly,
         })}
-      {transcriptToast(state, viewport)}
+      {copyToast(state, viewport)}
     </ChatWorkspaces>
   )
   const tabRow = (
