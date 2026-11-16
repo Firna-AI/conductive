@@ -5,6 +5,7 @@ import type { WorkspaceToRunner } from '../../src/shared/generated/WorkspaceToRu
 import type { RunnerProtocolVersion } from '../../src/shared/generated/RunnerProtocolVersion'
 import type { RunnerLoginKind } from '../../src/shared/generated/RunnerLoginKind'
 import type { RunnerFileResponse } from '../../src/shared/generated/RunnerFileResponse'
+import type { RunnerRepositoryMoveRefused } from '../../src/shared/generated/RunnerRepositoryMoveRefused'
 import type {
   RunnerConnection,
   RunnerConnectionRequest,
@@ -17,6 +18,8 @@ export interface FakeRunnerOptions {
   now?: () => number
   protocolVersion?: RunnerProtocolVersion
   loginKinds?: readonly RunnerLoginKind[]
+  /** A runner that accepts repository.move names its folder. */
+  repositoryFolder?: string
 }
 
 /**
@@ -58,6 +61,9 @@ export class FakeRunner {
       ...(this.options.loginKinds
         ? { loginKinds: this.options.loginKinds }
         : {}),
+      ...(this.options.repositoryFolder
+        ? { repositoryFolder: this.options.repositoryFolder }
+        : {}),
     })
   }
 
@@ -83,7 +89,7 @@ export class FakeRunner {
     return structuredClone([...this.outbox.values()])
   }
 
-  reply(response: RunnerFileResponse): void {
+  reply(response: RunnerFileResponse | RunnerRepositoryMoveRefused): void {
     if (!this.connection)
       throw new Error('Connect the fake runner before replying.')
     this.connection.send(response)

@@ -83,6 +83,14 @@ pub(super) fn build(
     ))
 }
 
+/// The repository folder that a saved text names, for sessions saved without it.
+pub(super) fn legacy_folder(text: &str) -> Option<String> {
+    let folder = text
+        .lines()
+        .find_map(|line| line.strip_prefix("Workspace repository folder: "))?;
+    serde_json::from_str(folder).ok()
+}
+
 pub(super) fn legacy(text: &str) -> Option<RunnerBranches> {
     let workspace = text
         .lines()

@@ -53,6 +53,24 @@ export async function workspaceRepositoryLocations(
 }
 
 /**
+ * The stored folders of a workspace, or null while it has none, such as
+ * before its first start. Any other failure warns and also gives null, so
+ * its callers go on without the folders.
+ */
+export async function storedRepositoryLocations(
+  db: D1Database,
+  workspaceId: string,
+): Promise<RepositoryLocation[] | null> {
+  try {
+    return await workspaceRepositoryLocations(db, workspaceId)
+  } catch (error) {
+    if (!(error instanceof Error && error.message === MISSING_FOLDERS))
+      console.warn('Unreadable repository folder', error)
+    return null
+  }
+}
+
+/**
  * The folder of the workspace's own repository in its cloud computer, for
  * the chat, which reads paths under it as files of the tree. Null while the
  * workspace has no stored folders, such as before its first start.
@@ -61,14 +79,14 @@ export async function workspaceRepositoryFolder(
   db: D1Database,
   workspace: { id: string; repositoryId: string },
 ): Promise<string | null> {
+  const locations = await storedRepositoryLocations(db, workspace.id)
+  if (!locations) return null
   try {
-    const locations = await workspaceRepositoryLocations(db, workspace.id)
     return repositoryLocation(locations, workspace.repositoryId)
   } catch (error) {
-    // A workspace that has not started has no folders yet. Any other
-    // failure only costs the chips of absolute paths, so the reply goes on.
-    if (!(error instanceof Error && error.message === MISSING_FOLDERS))
-      console.warn('Unreadable repository folder', error)
+    // A missing folder only costs the chips of absolute paths, so the
+    // reply goes on.
+    console.warn('Unreadable repository folder', error)
     return null
   }
 }

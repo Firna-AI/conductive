@@ -258,6 +258,8 @@ token mints, size reads, and revokes, and tracks each token's scope and life.
   `repositoryEnvironment`, and `legacyRepositoryDirectory`.
 - [`repository-location-data.ts`](repository-location-data.ts):
   `workspaceRepositoryLocations`, the map of one workspace.
+  `storedRepositoryLocations` gives null in place of an error, for the
+  runner folder check and the chat paths.
 - [`image-sources/materialize.ts`](image-sources/materialize.ts): `createGitHubImageSourceMaterializer`,
   the source work of one call, through [`SourceCommandPort`](image-sources/source-commands.ts).
 - [`image-sources/schedule.ts`](image-sources/schedule.ts): `scheduleSources`,

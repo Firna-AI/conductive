@@ -124,6 +124,14 @@ function warningFields(warning: WorkerWarning) {
           'The runner closes because its protocol version is not supported or does not meet the workspace version pin.',
         workspaceId: warning.workspaceId.text,
       }
+    case 'runner_repository_move_refused':
+      return {
+        kind: warning.kind,
+        message:
+          'The runner refused to move to the repository folder of its workspace.',
+        workspaceId: warning.workspaceId.text,
+        reason: warning.reason,
+      }
     case 'lifecycle_repair_limited':
       return {
         kind: warning.kind,

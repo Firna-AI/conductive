@@ -125,6 +125,7 @@ export class RunnerConnections {
       streamId: record.streamId,
       protocolVersion,
       loginKinds: record.loginKinds,
+      repositoryFolder: record.repositoryFolder,
       ready: record.ready,
       peer: new AuthenticatedRunner(
         source,
@@ -219,6 +220,7 @@ export class RunnerConnections {
     record.streamId = active.streamId
     record.protocolVersion = active.protocolVersion
     record.loginKinds = active.loginKinds
+    record.repositoryFolder = active.repositoryFolder
     record.ready = active.ready
     if (this.retained) await this.saved?.save(record, record.generation)
   }

@@ -12,6 +12,7 @@ import type { WorkspaceTurnTokens } from '../model-gateway/workspace'
 import { storeRunnerReceipt } from './runner-receipt'
 import { RepairDelivery } from './repair-delivery'
 import { prepareRunnerHello } from './runner-handshake'
+import { RepositoryMoves } from './runner-repository-move'
 import type {
   ChatDependencies,
   ChatCallbackPublisher,
@@ -24,6 +25,7 @@ export class RunnerChannel {
   readonly connections: RunnerConnections
   private readonly delivery: RunnerDelivery
   private readonly repairs: RepairDelivery
+  private readonly moves: RepositoryMoves
   private readonly store: ChatStore
   private readonly dependencies: ChatDependencies
   private readonly publish: (events: readonly WorkspaceEventEnvelope[]) => void
@@ -47,6 +49,7 @@ export class RunnerChannel {
       forRunningTurn,
     )
     this.repairs = new RepairDelivery(store, publish)
+    this.moves = new RepositoryMoves(dependencies)
     this.connections = new RunnerConnections(
       store,
       dependencies,
@@ -107,6 +110,7 @@ export class RunnerChannel {
       active.streamId = message.streamId
       active.protocolVersion = welcome.protocolVersion
       active.loginKinds = message.loginKinds
+      active.repositoryFolder = message.repositoryFolder
       active.ready = welcome.ready
       await this.connections.persist(active)
       if (active.ready) this.connections.attachFiles(active)
@@ -117,6 +121,7 @@ export class RunnerChannel {
         confirmedThrough: welcome.cursor,
       })
       await this.repairs.flush(active)
+      await this.moves.check(active)
       await this.dependencies.runnerHello(
         active.workspace.id,
         this.publisher(active.workspace.id),
@@ -146,6 +151,11 @@ export class RunnerChannel {
     ) {
       if (active.id)
         await this.dependencies.receiveFileResult(message.value, active.id)
+      return
+    }
+    if (message.type === 'repository.move.refused') {
+      this.moves.refused(active, message)
+      await this.flush()
       return
     }
     if (message.streamId !== active.streamId)

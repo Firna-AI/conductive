@@ -315,8 +315,54 @@ and `docs/protocol/workspace-tools.md`.
 
 Depends on: 2
 
-- [ ] Find how the runner and each engine can move to the new folder and
+The design report `.context/repository-change/backend-design.md` splits
+this milestone into four parts. M3a and M3b change nothing that a member
+sees, because the folders differ only after a repository change.
+
+Findings (16 November 2026):
+
+- A runner restart reads `/run/ascii-secrets/env.sh` again, and only a
+  resume rewrites it. So the runner moves in process on a new control
+  command, `repository.move`. It names its folder in `hello` as
+  `repositoryFolder`, and only such a runner gets the command, because an
+  older runner closes its socket on an unknown command. Agent processes
+  keep running.
+- At each `hello`, the Worker compares the runner folder with the record
+  folder, and sends the move when they differ. So a later restart or idle
+  update, which reads `env.sh` again, also ends in the record folder.
+- Claude keeps its saved sessions in a project folder for each working
+  folder. The SDK helper moves the session file and its folder before a
+  resume. Codex keeps its sessions by date and thread ID, and
+  `thread/resume` takes the new `cwd`, so Codex needs no step.
+
+### M3a: Runner (inert)
+
+- [x] Find how the runner and each engine can move to the new folder and
       keep each session. Record the result in this plan.
+- [x] Add `hello.repositoryFolder`, the `repository.move` command, and the
+      `repository.move.refused` reply in `crates/cnd-runner-interface/`.
+- [x] Move the runner in process after its turns end. Refuse a folder that
+      is not a repository folder of the sandbox or holds no Git work tree.
+- [x] Give the SDK helper, and so each agent command, the folder and
+      branch variables of the current folder.
+- [x] Move a saved Claude session to the project folder of the new folder
+      before a resume.
+- [x] Add the repository line for a session whose instructions name an
+      earlier folder. Update `runner/agent-input.md` for it.
+- [x] Store `repositoryFolder` in the runner connection record.
+
+### M3b: Worker runner check
+
+- [x] At each `hello` of a runner that can move, send `repository.move`
+      when its folder differs from the record folder. Hold turns until the
+      folders match. Fail the held turns after a refused move.
+- [x] Send the current repository with each turn and message to such a
+      runner, for the repository line.
+- [x] Add tests: a move after a reconnect, a runner that cannot move, and
+      a refused move.
+
+### M3c: Worker change job
+
 - [ ] Add the change job in the workspace Durable Object, beside the
       Continue job: admission, local-work check, fetch, branch, context
       copy, publication, and progress.
@@ -326,23 +372,26 @@ Depends on: 2
       one update that checks the old values.
 - [ ] Emit `workspace.updated` and the note event for each session.
       Schedule the GitHub refresh of the new branch.
-- [ ] Give the runner, the terminal, and the startup script the new
-      folder.
-- [ ] Send the repository line with each message to a session whose
-      instructions name the old folder.
+- [ ] Clear or mark old the stored file reports of the old folder at
+      publication.
 - [ ] Add tests: access, a refused change during a turn, local work, a
       failed fetch, a retry after a lost reply, the context copy, and the
       publication.
 - [ ] Update the README of each changed Worker area.
-- [ ] Update `runner/agent-input.md` for the repository line.
 - [ ] Add the flow of a repository change to
       `docs/architecture/flows.md`, beside the flow of Continue.
 - [ ] Settle what a failed copy of the context folder does: the change
       stops, or it warns and goes on. Ask the user when it changes what
       the member sees, and record it in `docs/protocol/repository-change.md`.
 - [ ] Check whether the change stops the programs that agents started,
-      such as a dev server, when it restarts the runner. Record the
-      result in the protocol doc, or ask the user when it is a choice.
+      such as a dev server. The in-process move of M3a keeps them
+      running. Record the result in the protocol doc, or ask the user when
+      it is a choice.
+
+### M3d: Terminal and startup script
+
+- [ ] Give new terminals the new folder. The startup script needs no
+      change, because the next start reads the new folder from `env.sh`.
 
 ## Milestone 4: Web app
 

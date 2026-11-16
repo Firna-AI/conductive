@@ -70,6 +70,38 @@ it('reads positive integer protocol versions before the handshake owns support',
     )
 })
 
+it('reads the repository folder of hello and the reply to a refused move', () => {
+  const hello = {
+    type: 'hello',
+    protocolVersion: 2,
+    workspaceId: 'workspace',
+    streamId: 'stream',
+  }
+  const folder = '/home/user/code/billing'
+  expect(parseRunnerTransport({ ...hello, repositoryFolder: folder })).toEqual({
+    ...hello,
+    repositoryFolder: folder,
+  })
+  for (const repositoryFolder of ['code/billing', '', 7, null])
+    expect(parseRunnerTransport({ ...hello, repositoryFolder })).toEqual(hello)
+  for (const [reason, read] of [
+    ['unknown_folder', 'unknown_folder'],
+    ['not_repository', 'not_repository'],
+    ['later_reason', 'other'],
+  ])
+    expect(
+      parseRunnerTransport({
+        type: 'repository.move.refused',
+        commandId: 'move',
+        reason,
+      }),
+    ).toEqual({
+      type: 'repository.move.refused',
+      commandId: 'move',
+      reason: read,
+    })
+})
+
 it('preserves omission counts and a known optional turn end reason in runner chat events', () => {
   for (const event of [
     tool,

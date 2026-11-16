@@ -10,6 +10,8 @@ mod disk_tests;
 mod envelope_tests;
 #[path = "core/recovery_tests.rs"]
 mod recovery_tests;
+#[path = "core/relocation_tests.rs"]
+mod relocation_tests;
 #[path = "core/reports/mod.rs"]
 mod reports;
 #[path = "core/runtime_tests.rs"]

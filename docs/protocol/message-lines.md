@@ -68,7 +68,9 @@ that added the [repository change](repository-change.md).
 - When the agent instructions of a session name an earlier repository
   folder, each message to the agent gets a repository line after its
   sender line. The line names the current repository and the absolute
-  path of its folder, and says that the workspace now works there.
+  path of its folder, and says that the workspace now works there. It
+  also names the context folder in that folder, because the instructions
+  of the session name the context folder of the earlier folder.
 - A repository change also gives the workspace a new branch and a new
   target branch. So such a message also gets the branch line, which names
   them.

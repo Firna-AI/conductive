@@ -69,6 +69,11 @@ export type WorkerWarning =
   | { kind: keyof typeof SIMPLE_WARNINGS }
   | { kind: 'runner_protocol_version_mismatch'; workspaceId: WarningId }
   | {
+      kind: 'runner_repository_move_refused'
+      workspaceId: WarningId
+      reason: 'unknown_folder' | 'not_repository' | 'other'
+    }
+  | {
       kind: 'workspace_title_request_failed' | 'workspace_title_save_failed'
       error: ErrorSummary
     }
