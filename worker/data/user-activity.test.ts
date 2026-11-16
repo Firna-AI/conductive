@@ -13,7 +13,10 @@ import {
   TEST_TIME,
   type TestHarness,
 } from '../test-support/harness'
+import type { User } from '../../src/shared/api'
 import { ACTIVITY_WRITE_INTERVAL_MS, recordUserActivity } from './user-activity'
+
+type SignedIn = Parameters<typeof recordUserActivity>[1]
 
 let harness: TestHarness
 let cookie: string
@@ -26,12 +29,17 @@ beforeEach(async () => {
 })
 afterAll(async () => harness.dispose())
 
-async function userId(): Promise<string> {
+/** The signed-in person of the harness, with their sign-in session. */
+async function signedIn(): Promise<SignedIn> {
   const row = await harness.env.DB.prepare(
-    'SELECT id FROM users WHERE github_id = 7',
-  ).first<{ id: string }>()
+    `SELECT u.id, u.github_id AS githubId, u.github_login AS githubLogin,
+       u.display_name AS displayName, u.avatar_url AS avatarUrl,
+       s.id AS sessionId
+     FROM users u JOIN sessions s ON s.user_id = u.id WHERE u.github_id = 7`,
+  ).first<User & { sessionId: string }>()
   if (!row) throw new Error('The signed-in user is missing.')
-  return row.id
+  const { sessionId, ...user } = row
+  return { user, sessionId }
 }
 
 async function lastActive(): Promise<number | null> {
@@ -42,20 +50,35 @@ async function lastActive(): Promise<number | null> {
 }
 
 it('writes the time at most once in the interval', async () => {
-  const id = await userId()
+  const person = await signedIn()
   expect(await lastActive()).toBeNull()
-  await recordUserActivity(harness.env.DB, id, TEST_TIME)
+  await recordUserActivity(harness.env.DB, person, TEST_TIME)
   expect(await lastActive()).toBe(TEST_TIME)
-  await recordUserActivity(harness.env.DB, id, TEST_TIME + 30_000)
+  await recordUserActivity(harness.env.DB, person, TEST_TIME + 30_000)
   expect(await lastActive()).toBe(TEST_TIME)
   const later = TEST_TIME + ACTIVITY_WRITE_INTERVAL_MS
-  await recordUserActivity(harness.env.DB, id, later)
+  await recordUserActivity(harness.env.DB, person, later)
   expect(await lastActive()).toBe(later)
+})
+
+it('writes nothing when the sign-in session of the request is gone', async () => {
+  const person = await signedIn()
+  await harness.env.DB.prepare('DELETE FROM sessions WHERE id = ?')
+    .bind(person.sessionId)
+    .run()
+  await recordUserActivity(harness.env.DB, person, TEST_TIME)
+  expect(await lastActive()).toBeNull()
+  await recordUserActivity(
+    harness.env.DB,
+    { ...person, sessionId: 'another-session' },
+    TEST_TIME,
+  )
+  expect(await lastActive()).toBeNull()
 })
 
 it('hands the write to the execution context when one is given', async () => {
   const pending: Promise<unknown>[] = []
-  await recordUserActivity(harness.env.DB, await userId(), TEST_TIME, {
+  await recordUserActivity(harness.env.DB, await signedIn(), TEST_TIME, {
     waitUntil: (promise) => pending.push(promise),
   })
   expect(pending).toHaveLength(1)
@@ -71,7 +94,7 @@ it('warns and does not fail when the write fails', async () => {
     }),
   } as unknown as D1Database
   await expect(
-    recordUserActivity(failing, 'user', TEST_TIME),
+    recordUserActivity(failing, await signedIn(), TEST_TIME),
   ).resolves.toBeUndefined()
   expect(warn).toHaveBeenCalledWith(
     expect.objectContaining({ kind: 'user_activity_failed' }),

@@ -149,9 +149,13 @@ the requirement.
 - Agent tools and routines do not pass these routes, so their actions do
   not count.
 - `recordUserActivity` in [data/user-activity.ts](data/user-activity.ts)
-  writes only when the stored time is older than 1 minute. It runs in
-  `waitUntil` when the entry has an execution context. A failed write logs
-  the `user_activity_failed` warning and never fails the request.
+  takes the signed-in person that the session gate returns, with the
+  sign-in session ID. Shared code of agent tools and routines holds no
+  sign-in session, so it cannot record an action. The write runs only
+  while that session exists, and only when the stored time is older than
+  1 minute. It runs in `waitUntil` when the entry has an execution
+  context. A failed write logs the `user_activity_failed` warning and
+  never fails the request.
 
 ## Workspace object connections
 

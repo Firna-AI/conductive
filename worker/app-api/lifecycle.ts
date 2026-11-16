@@ -118,11 +118,6 @@ export async function chatLifecycleRoute(
     },
   )
   if (create && response?.status === 201)
-    await recordUserActivity(
-      env.DB,
-      context.user.id,
-      dependencies.now(),
-      execution,
-    )
+    await recordUserActivity(env.DB, context, dependencies.now(), execution)
   return response
 }

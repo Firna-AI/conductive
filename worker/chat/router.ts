@@ -47,7 +47,7 @@ export async function routeChat(
     /^\/api\/orgs\/[^/]+\/workspaces\/([^/]+)\/(?:events|history|sessions(?:\/.*)?)$/,
   )
   if (!match) return null
-  const { user } = await sessionGate(request, env, now())
+  const person = await sessionGate(request, env, now())
   let workspaceId: string
   try {
     workspaceId = decodeURIComponent(match[1])
@@ -60,7 +60,7 @@ export async function routeChat(
   }
   const response = await forwardWorkspaceRequest(request, env, workspaceId)
   if (request.method === 'POST' && response.ok && SENT_MESSAGE.test(path))
-    await recordUserActivity(env.DB, user.id, now(), execution)
+    await recordUserActivity(env.DB, person, now(), execution)
   return response
 }
 

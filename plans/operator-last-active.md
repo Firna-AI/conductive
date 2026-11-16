@@ -88,10 +88,21 @@ otherwise.
   and never fails the request of the person. It runs in `waitUntil` where
   the route has an execution context, so it adds no wait to the answer.
 - **Backfill.** The migration sets each existing user's time to the
-  creation time of the newest workspace that the user owns. Chat messages
-  live in the workspace objects, so a migration cannot read them. A user
-  with no workspace keeps no time. Reason: an approximate time is more
-  useful than an empty column for the existing accounts.
+  creation time of the newest workspace that the person created in the
+  app. It leaves out the workspaces of agent tools and of routine runs,
+  and each workspace after the end of the last sign-in session, 7 days
+  after `users.updated_at`. Chat messages live in the workspace objects,
+  so a migration cannot read them. A user with no such workspace keeps
+  no time. Reason: an approximate time is more useful than an empty
+  column, and it must never be later than a real action of the person.
+  Changed on 16 November 2026 after review finding 1: the first backfill
+  took the newest owned workspace, also one of a routine, an agent tool,
+  or another member.
+- **Signed-in write.** The write takes the signed-in person that the
+  session gate returns, with the sign-in session ID, and writes only
+  while that session exists. Reason: shared code of agent tools and
+  routines holds no sign-in session, so it cannot record an action. Made
+  on 16 November 2026 after review finding 2.
 - **Table.** A desktop column "Last active" after Joined, with the width
   of Joined. A time of today shows as the time of day, such as 14:32.
   Another day shows as Joined does, such as 12 Nov. No time shows
@@ -102,9 +113,10 @@ otherwise.
 - **Order.** The list stays newest first. A sort by last activity changes
   the rule of the protocol doc and the cursor, so it can be a later
   request.
-- **Privacy.** The Privacy page says that the app records the time of
-  the last new workspace or sent message of each account, and that the
-  operator sees it. It gets a new effective date.
+- **Privacy.** The Privacy page says that the app keeps one time for
+  each account, the time of the last new workspace or sent chat message
+  in the app, and that the operator sees it. It gets a new effective
+  date. Reworded on 16 November 2026 after review finding 4.
 
 ## Milestone 1: Mockups
 
@@ -183,13 +195,20 @@ Depends on: 3
 
 Depends on: every other milestone
 
-- [ ] Run the targeted tests and `npm run check`.
-- [ ] Commit with Conventional Commits and push the branch.
+- [x] Run the targeted tests and `npm run check`. Logs:
+      `.context/operator-last-active/`.
+- [x] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
       once, and report.
+  - [x] Round 1 on 16 November 2026: five findings, all confirmed.
+        Fixed the backfill (1), the guard and tests that agent tools and
+        routines do not count (2), the Privacy wording (4), and the
+        polling waits of the feature test (5). Finding 3, whether a press
+        of Run now counts, waits for the user.
+  - [ ] Re-review the fixes once.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the
