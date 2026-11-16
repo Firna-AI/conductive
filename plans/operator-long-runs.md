@@ -31,7 +31,7 @@ Contract owners:
 - The [lifecycle README](../worker/lifecycle/README.md).
 - The [migrations README](../migrations/README.md).
 - The [operator catalogue](../docs/mockups/catalogue-operator.md), at
-  `app/operator`.
+  `app/operator` and `app/operator/long-runs`.
 
 ## Decisions
 
@@ -117,10 +117,16 @@ Contract owners:
   `runningWorkspacePredicate` and `running_since IS NOT NULL`, keeps the
   read small. It holds only the rows that the list can show.
 - `OperatorOverview` in `src/shared/operator.ts` gets `longRuns`. Each
-  entry gives the workspace ID and number, the org ID, name, and
-  initials, the owner's GitHub ID and login, the cloud computer ID, the
-  org status, the state, `runningSince`, and `lastActivityAt`. The cloud
-  computer ID is null until the provider gives the computer.
+  entry gives the workspace ID and number, the org ID and name, the
+  owner's GitHub ID, login, and status, the cloud computer ID, the org
+  status, the state, `runningSince`, and `lastActivityAt`. The cloud
+  computer ID is null until the provider gives the computer. The entry
+  has no org initials, because the rows show no org mark.
+- The org status is active, suspended, or deleted. A deleted org that is
+  also suspended is deleted, as on the Orgs tab
+  (`worker/operator/org-directory.ts`).
+- The owner status is active or suspended, as on the Users tab. A person
+  who waits owns no workspace.
 - My design calls, 16 November 2026:
   - The list is a section of the Overview, below "Workspaces by state".
     Reason: a new tab would change the tab list of decisions 147 and 160.
@@ -140,7 +146,50 @@ Contract owners:
     runs need the operator most.
   - The rows have no Stop action. A Stop would be a new operator action,
     which needs its own decision. Suspend exists on the org and user pages.
-  - An empty list says that no cloud computer runs now.
+- The orchestrator's design call, 16 November 2026, from item 1 of the
+  mockup report:
+  - A run whose owner is suspended shows a Suspended mark in the owner
+    cell, in the style of the mark of a suspended org. Reason: the plan
+    keeps suspended orgs marked because those runs need the operator
+    most, and the same reason holds for a suspended owner.
+- My design calls from the mockups, 16 November 2026:
+  - An empty list says which workspaces show in it: "The workspaces with
+    the longest runs show here." It does not say that no cloud computer
+    runs now. Reason: Running now also counts the builds, which the list
+    leaves out. A run without a time, such as after the deploy, does not
+    show either. So that sentence can be false while the tile counts
+    computers. The words follow the empty list of the largest orgs in
+    the app: "The orgs with the most workspaces show here." The
+    workspaces by state above the list still give the Running count.
+  - The rows show no org mark, as the largest orgs do. Reason: the page
+    column is 640 px or less, and in the narrow desktop frame of the
+    catalogue the mark cut off the org names and the Suspended mark.
+  - The workspace number goes under the owner's login, as the label of
+    the header writes it, such as `W-12`. The state mark goes under the
+    run length: the glyph of the header and its word. A phone keeps only
+    the org and that run cell. Reason: five columns fit the page column,
+    and the run cell is the same on a phone and on a desktop.
+  - A run length gives its two largest units, such as 3d 4h or 5h 12m. A
+    run under an hour gives its minutes, such as 48m, and a run under a
+    minute its seconds, such as 41s. Reason: the chat writes lengths in
+    the same units, such as 1h 12m, and the column stays narrow.
+  - The last activity uses the words of `formatWhen` in `src/app/time.ts`:
+    3 minutes ago, Yesterday, or 5 Nov. Reason: an idle time of minutes
+    or hours needs a relative time, and an older time shows the day, as
+    the other operator lists do.
+  - The mark of a suspended owner goes under the login, and the workspace
+    number moves to a third line. Reason: the column is too narrow for
+    the number and the mark on one line, and the mark beside the login
+    reads as the state of the owner.
+  - A phone adds a line under the org for a suspended owner: the login as
+    a link to the user page, and the mark. Reason: a phone leaves out the
+    owner column, and a mark without the login would read as the state
+    of the org.
+  - The loading view keeps the place of the section with 10 placeholder
+    rows, as it does for the other parts of the Overview.
+  - `longRunsCopy.ts` in `docs/mockups/src/components/operator/` holds the
+    words and the run length format. It imports no fixture, so the app
+    uses it too, as it uses `operatorCopy.ts`.
 
 ## Milestone 1: Mockups
 
@@ -148,16 +197,18 @@ Tags: mockup
 
 Depends on: none
 
-- [ ] Add the "Long runs" section to the Overview mockup of
+- [x] Add the "Long runs" section to the Overview mockup of
       `app/operator`, beside `LargestOrgs` in
       `docs/mockups/src/components/operator/`, with fixture rows in
-      `docs/mockups/src/fixtures/operator.ts`.
-- [ ] Show the desktop and the phone layouts, the empty list, a deleted
-      org, and a suspended org.
-- [ ] Update `docs/mockups/catalogue-operator.md` and the `app/operator`
+      `docs/mockups/src/fixtures/operatorRuns.ts`, beside `operator.ts`.
+- [x] Show the desktop and the phone layouts, the empty list, a deleted
+      org, and a suspended org. The Overview also shows a suspended
+      owner. The child page `app/operator/long-runs` shows a row without
+      a cloud computer ID, and its `empty` variant shows the empty list.
+- [x] Update `docs/mockups/catalogue-operator.md` and the `app/operator`
       row of `docs/mockups/catalogue.md`.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages.
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
 
 ## Milestone 2: Documentation and protocol
@@ -188,7 +239,8 @@ Depends on: 2
       a deleted org.
 - [ ] Add `longRuns` to `OperatorOverview` and to `readOperatorOverview`.
       Test the order, the tie, the limit of 10, archived and stopped rows,
-      a null time, a null computer ID, and deleted and suspended orgs.
+      a null time, a null computer ID, deleted and suspended orgs, and a
+      suspended owner.
 - [ ] Update the dev fake in `src/app/dev/` and the test fixtures in
       `src/test-support/fixtures/operator.ts`.
 - [ ] Update `worker/operator/overview.md` and `worker/lifecycle/README.md`.
@@ -200,9 +252,14 @@ Tags: ui
 Depends on: 3
 
 - [ ] Add the section to `src/shell/operator/`, as the mockup shows. Keep
-      each file under 300 lines.
+      each file under 300 lines. Take its words and the run length format
+      from `longRunsCopy.ts` in `docs/mockups/src/components/operator/`.
+- [ ] Keep the place of the section in the loading view of the Overview,
+      with 10 placeholder rows, as `app/operator/error/loading` shows.
 - [ ] Add tests beside the code for the rows, the links, Copy, the empty
-      list, and the phone layout.
+      list, the loading rows, and the phone layout. Test the mark of a
+      suspended owner on a desktop and on a phone. Test the run length
+      format for seconds, minutes, hours, and days.
 - [ ] Check the section in a browser with `npm run dev`, on a desktop and
       a phone width.
 

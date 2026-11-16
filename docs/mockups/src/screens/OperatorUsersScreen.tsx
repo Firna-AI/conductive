@@ -7,6 +7,7 @@ import {
   TargetState,
 } from '../components/operator/directory'
 import { OperatorPage } from '../components/operator/OperatorPage'
+import { userPagePath } from '../components/operator/targetPages'
 import { NameLink, TargetMark } from '../components/operator/targets'
 import { operatorTotals } from '../fixtures/operator'
 import {
@@ -50,12 +51,6 @@ function detailOf(row: UserRow) {
   return row.name
 }
 
-/** The users whose own page the catalogue draws. Others open Dana Kim. */
-const userPagePaths: Readonly<Record<string, string>> = {
-  'rho-9': paths.operatorUserInviteCode,
-  'tide-sam': paths.operatorUserReferralCode,
-}
-
 /** The page of each state, or the page drawn for the user. */
 function pageOf(row: UserRow): string {
   switch (row.status) {
@@ -64,7 +59,7 @@ function pageOf(row: UserRow): string {
     case 'waiting':
       return paths.operatorUserWaiting
     case 'active':
-      return userPagePaths[row.login] ?? paths.operatorUser
+      return userPagePath(row.login)
   }
 }
 
