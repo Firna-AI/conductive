@@ -237,6 +237,13 @@ It keeps every other preference and every saved view.
 An unset view now uses the dialog, so only accounts made after this migration get the dialog without a choice.
 [The preference](../docs/protocol/create-a-workspace.md#the-preference) gives the requirement.
 
+`202611160900_workspace_running_since.sql` adds the nullable Unix millisecond
+column `workspaces.running_since`. It keeps only the start of the current run.
+Existing rows keep null until their next lifecycle save. It guesses no time.
+The partial index `workspaces_running_since` holds running, unarchived rows
+with a non-null time. Its running states match `runningWorkspacePredicate`.
+The [operator Overview](../worker/operator/overview.md) uses this index to read the ten oldest runs.
+
 ## Reserved ranges
 
 Each milestone owns the complete inclusive range below.

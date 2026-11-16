@@ -236,21 +236,26 @@ Depends on: 1
 
 Depends on: 2
 
-- [ ] Add the migration `migrations/<YYYYMMDDHHMM>_workspace_running_since.sql`
+- [x] Add the migration `migrations/<YYYYMMDDHHMM>_workspace_running_since.sql`
       with the column and the partial index. Describe it in
       `migrations/README.md`.
-- [ ] Write `running_since` in `persistLifecycleState`. Test a start, a
+- [x] Write `running_since` in `persistLifecycleState`. Test a start, a
       resume, a stop, an error, and an archive.
-- [ ] Set the time in the direct writers that the design names. Test the
+- [x] Set the time in the direct writers that the design names. Test the
       archive of a running workspace, and the stop and the disk restart of
       a deleted org.
-- [ ] Add `longRuns` to `OperatorOverview` and to `readOperatorOverview`.
+- [x] Add `longRuns` to `OperatorOverview` and to `readOperatorOverview`.
       Test the order, the tie, the limit of 10, archived and stopped rows,
       a null time, a null computer ID, deleted and suspended orgs, and a
       suspended owner.
-- [ ] Update the dev fake in `src/app/dev/` and the test fixtures in
+- [x] Update the dev fake in `src/app/dev/` and the test fixtures in
       `src/test-support/fixtures/operator.ts`.
-- [ ] Update `worker/operator/overview.md` and `worker/lifecycle/README.md`.
+- [x] Update `worker/operator/overview.md` and `worker/lifecycle/README.md`.
+- [x] Read `longRuns` in the browser reader of the Overview,
+      `src/app/api/read-operator-runs.ts`, with a test.
+- [x] Clear the time in `restoreArchiveRecord` too, which writes
+      `stopped` at a restore. The device input writers keep the time,
+      because they change the shown state within one run.
 
 ## Milestone 4: The Long runs section
 
