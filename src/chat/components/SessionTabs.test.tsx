@@ -39,6 +39,7 @@ function tabBar(
       mobile={false}
       onCancelRename={() => {}}
       onClose={() => {}}
+      onCloseTabs={() => {}}
       onCopy={() => {}}
       onMove={() => {}}
       onNew={() => {}}

@@ -117,3 +117,29 @@ export function moveTab(
   const kept = mark !== null && tabKey(mark) === key
   return { ...view, tabs, temporaryTab: kept ? null : mark }
 }
+
+/**
+ * The view without the given file and diff tabs, as Close tabs to the right
+ * of the tab menu closes them. A session tab closes through the server
+ * instead, so this keeps each session tab. A closed temporary tab loses its
+ * mark. A closed active tab leaves no active tab, so close it after the
+ * row shows another tab. A change that closes nothing gives the same view.
+ */
+export function withoutTabs(
+  view: WorkspaceView,
+  closed: readonly WorkspaceTab[],
+): WorkspaceView {
+  const keys = new Set(
+    closed.filter((tab) => tab.kind !== 'session').map(tabKey),
+  )
+  const tabs = view.tabs.filter((tab) => !keys.has(tabKey(tab)))
+  if (tabs.length === view.tabs.length) return view
+  const { activeTab, temporaryTab } = view
+  return {
+    ...view,
+    tabs,
+    activeTab: activeTab && keys.has(tabKey(activeTab)) ? null : activeTab,
+    temporaryTab:
+      temporaryTab && keys.has(tabKey(temporaryTab)) ? null : temporaryTab,
+  }
+}
