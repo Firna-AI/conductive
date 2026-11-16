@@ -95,8 +95,10 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         the credential of the turn, to another address. A commit, the agent,
         or other code can change those settings. The setting that lets other
         members use a login does not change this. After Stop, a credential
-        can start no new request. A request that still runs ends within 30
-        seconds after the turn ends. If the member who started the session
+        can start no new request. A request that still runs ends at the
+        first check of its turn that answers after the turn ends.
+        ${productName} checks every 15 seconds. While no check answers, the
+        request can run to the end of its answer. If the member who started the session
         removes or changes the login, or loses access to the org, the turn
         ends at its next model request.`,
       text`The run of your routine for a pull request reads the comments,
