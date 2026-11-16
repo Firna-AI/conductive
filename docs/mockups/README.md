@@ -193,9 +193,12 @@ waitlist, the commands that an agent runs on the Mac, and This Mac.
 ## The marketing site
 
 [The marketing site](marketing-site.md) gives the home page and its
-pictures, the header and the footer, and [the docs pages](marketing-site.md#the-docs).
+pictures, the header and the footer, [the docs pages](marketing-site.md#the-docs),
+and [the pricing page](marketing-site.md#the-pricing-page).
 It also gives the Terms, Privacy, and not-found pages, and the page before
-GitHub. The pictures are captures of
+GitHub. The pricing page reads its plans, its prices, and its words from
+`src/marketing/pricing.ts`, the module that the site also reads. The
+pictures are captures of
 real screens, such as the workspace
 screen with its chat and composer. A change to a screen or a shared part
 that a picture shows needs a new capture, with the
