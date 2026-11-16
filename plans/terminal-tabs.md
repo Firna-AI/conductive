@@ -20,9 +20,10 @@ tab, Big Terminal Mode, or presets that start agent programs.
 
 Contract owners:
 
-- [Tools of a workspace](../docs/protocol/workspace-tools.md#terminal).
+- [Terminal](../docs/protocol/terminal.md).
 - [Terminal, previews, and desktop](../docs/protocol/terminal-previews-and-desktop.md#terminal).
-- [Command palette](../docs/protocol/command-palette.md#actions).
+- [Command palette: actions and settings](../docs/protocol/command-palette-actions.md#actions).
+- [Keyboard shortcuts: the keys](../docs/protocol/keyboard-shortcuts-keys.md#the-default-keys).
 - The [terminal backend README](../worker/terminal/README.md).
 - The [terminal README](../src/terminal/README.md).
 - The [tools part](../src/shell/workspace/screen-parts.md#the-tools-part).
@@ -285,6 +286,10 @@ All design calls are of 10 November 2026, by the agent.
   command. Conductor's key for a new terminal tab, ⌘T while the terminal
   has the focus, runs New session in this app. On Windows and Linux the
   terminal keeps every key. This call is of 12 November 2026.
+- New terminal is a command of the Workspace group of the Keyboard
+  shortcuts tab, after Go to Preview. Reason: the palette offers it after
+  the Go to rows, which are commands of that group. This call is of 16
+  November 2026.
 
 ### Related follow-up items
 
@@ -347,39 +352,58 @@ Depends on: 1
 
 The requirements and decisions for several terminals.
 
-- [ ] Update "Terminal" in `docs/protocol/workspace-tools.md`:
-  - [ ] A workspace has up to 10 terminals (terminal tabs decision 2). Its members
+- [x] Update "Terminal" in `docs/protocol/workspace-tools.md`:
+  - [x] A workspace has up to 10 terminals (terminal tabs decision 2). Its members
         share them. Each opens in the repository folder.
-  - [ ] The + opens a terminal. A close ends its shell for every member,
+  - [x] The + opens a terminal. A close ends its shell for every member,
         after a confirmation. The last terminal has no close.
-  - [ ] Each terminal keeps its shell across dropped connections. The
+  - [x] Each terminal keeps its shell across dropped connections. The
         `exit` rule and the stop rule hold for each terminal.
-  - [ ] The names, from Terminal 1 to Terminal 10.
-  - [ ] A workspace whose cloud computer software is older shows one
+  - [x] The names, from Terminal 1 to Terminal 10.
+  - [x] A workspace whose cloud computer software is older shows one
         terminal.
-  - [ ] Cite terminal tabs decision 1, with the rejected options C, D,
+  - [x] Cite terminal tabs decision 1, with the rejected options C, D,
         and E and their reasons. Say which change the name "terminal tabs"
         names, as the architecture doc asks.
-  - [ ] When the doc passes about 250 lines, move "Terminal" to its own
+  - [x] When the doc passes about 250 lines, move "Terminal" to its own
         linked page.
-- [ ] Update "Terminal" in `docs/protocol/terminal-previews-and-desktop.md`:
+- [x] Update "Terminal" in `docs/protocol/terminal-previews-and-desktop.md`:
       only the Worker chooses the terminal of a socket, a socket for an
       unknown terminal gets no shell, and the create and the close use the
       access of a socket.
-- [ ] Update `docs/protocol/github-tokens.md` where it says that the
+- [x] Update `docs/protocol/github-tokens.md` where it says that the
       terminal is shared, so that it names the shared terminals.
-- [ ] Add "New terminal" after the Go to rows in the actions of
+- [x] Add "New terminal" after the Go to rows in the actions of
       `docs/protocol/command-palette.md`, with when it shows (terminal tabs
       decision 3 B).
-- [ ] Add New terminal to the commands of `docs/protocol/keyboard-shortcuts.md`
+- [x] Add New terminal to the commands of `docs/protocol/keyboard-shortcuts.md`
       and `docs/protocol/keyboard-shortcuts-keys.md`, with no default key
       and the reason that the design call gives.
-- [ ] Read `docs/architecture.md`. Change it only when a component or a
+- [x] Read `docs/architecture.md`. Change it only when a component or a
       boundary changes.
-- [ ] Read both legal pages in full, `src/marketing/terms.ts` and
+- [x] Read both legal pages in full, `src/marketing/terms.ts` and
       `src/marketing/privacy.ts`. Update each sentence that restates a
       changed fact.
-- [ ] Check each relative link of each changed Markdown file.
+- [x] Check each relative link of each changed Markdown file.
+
+Done on 16 November 2026. The Terminal section moved to
+`docs/protocol/terminal.md`. New terminal went to
+`docs/protocol/command-palette-actions.md`, where the palette actions now
+live. Evidence: the link check in `.context/terminal-tabs/m2-link-check.log`.
+
+## Milestone 2a: Mockup text of older software
+
+Tags: mockup
+
+Depends on: 1
+
+Milestone 2 found that the page `app/tools/older-software` said that only
+a new workspace after the next Build computer gets terminal tabs. The
+design call says that the automatic software update brings them.
+
+- [x] Change the description and the rationale of the page, with no change
+      to the drawing.
+- [x] Run `npm run mockups:check`.
 
 ## Milestone 3: Terminal software for several shells
 

@@ -236,7 +236,7 @@ to the tmux session in control mode, where tmux sends the raw output of the
 shell as messages and draws no screen. So the screen gets every byte that
 the shell writes, and xterm.js keeps the output history itself. A plain tmux
 client sends only the lines that end on its screen, so fast output never
-reached the screen in full. [Terminal](../../docs/protocol/workspace-tools.md#terminal)
+reached the screen in full. [The screen](../../docs/protocol/terminal.md#the-screen)
 gives the requirements.
 
 - **Connect.** The bridge attaches with the client flag `ignore-size`, and
@@ -331,4 +331,4 @@ Terminal status reads remain available.
 - [The workspace lifecycle](../lifecycle/README.md) runs the package command in each build. After the startup script of each create and resume, it runs the setup command and then the password read. Its restore watch calls `markTerminalRestoreEnded`.
 
 See [terminal, previews, and desktop](../../docs/protocol/terminal-previews-and-desktop.md#terminal) and
-[workspace tools](../../docs/protocol/workspace-tools.md#terminal).
+[terminal](../../docs/protocol/terminal.md).

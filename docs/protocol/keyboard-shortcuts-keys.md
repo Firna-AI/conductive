@@ -7,7 +7,9 @@ browser. It belongs to [Keyboard shortcuts](keyboard-shortcuts.md), which
 gives the rules and the terms. A decision number names a dated record, as
 [Decision numbers](../architecture.md#decision-numbers) says. A fast mode
 decision number names a decision of the change that adds
-[fast mode](fast-mode.md), as that doc says.
+[fast mode](fast-mode.md), as that doc says. A terminal tabs decision
+number names a decision of the change that adds terminal tabs to the
+Terminal tool, as [Terminal](terminal.md) says.
 
 ## The default keys
 
@@ -75,6 +77,7 @@ decision number names a decision of the change that adds
 | Workspace | Go to Checks | – | – | Palette |
 | Workspace | Go to Terminal | ⌘J | Ctrl+J | Palette |
 | Workspace | Go to Preview | – | – | Palette |
+| Workspace | New terminal | – | – | Palette |
 | Chat | New session | ⌘T, ⌥⌘T | Ctrl+T, Alt+Shift+T | Palette |
 | Chat | Session history | – | – | Palette |
 | Chat | Focus the message field | ⌘L, ⇧⌘L | Ctrl+L, Ctrl+Shift+L | Workspace |
@@ -90,6 +93,15 @@ decision number names a decision of the change that adds
   Ctrl+Shift+E (fast mode decision 258). Reason: members who move from
   Conductor press that key. No key, a row of the palette, and a key that
   opens the model menu were rejected for that reason.
+- New terminal has no default key. Reason: Conductor opens a terminal tab
+  on ⌘T while its terminal has the focus, but ⌘T runs New session in this
+  app. On Windows and Linux, no key reaches the app while the terminal has
+  the focus, as [Where a key goes](keyboard-shortcuts.md#where-a-key-goes)
+  says.
+- A default key of New terminal that also works while the terminal has
+  the focus was rejected (terminal tabs decision 3). Reason: such a key
+  must be free in each browser, in each shell, on each keyboard layout,
+  and in the message field. Such a key is hard to find.
 - No two commands share a default key on the same keyboard.
 - The command Commit and push also presses Push, which the bar shows in
   its place when the local work is only commits, as

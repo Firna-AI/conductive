@@ -5,19 +5,38 @@ of the terminal, the port previews, and the desktop. It also covers the
 proxies to a sandbox. It belongs to
 [Access and security](access-and-security.md), which covers sign-in, the
 gates of the Worker, the request bodies, and the content security policy.
-[Tools of a workspace](workspace-tools.md) states what these tools show.
-The terms are those of the [architecture doc](../architecture.md#terms). A
-decision number names a dated record, as
-[Decision numbers](../architecture.md#decision-numbers) says.
+[Tools of a workspace](workspace-tools.md) and [Terminal](terminal.md)
+state what these tools show. The terms are those of the
+[architecture doc](../architecture.md#terms). A decision number names a
+dated record, as [Decision numbers](../architecture.md#decision-numbers)
+says. A terminal tabs decision number names a decision of the change that
+adds terminal tabs to the Terminal tool, as [Terminal](terminal.md) says.
 
 ## Terminal
 
-- The terminal socket runs on `app.conductive.build`, behind its gate.
+- The socket of each terminal runs on `app.conductive.build`, behind its
+  gate.
 - The terminal listens on a private port of the sandbox. The Worker
   connects to it with Boat's port cookie and a password for each
   workspace.
 - Reason: sandbox code can make a port public, and the password still
   guards the terminal.
+- Only the Worker chooses the shell that a socket reaches. It chooses a
+  terminal from the list of terminals of the workspace (terminal tabs
+  decision 1).
+- The sandbox also checks the terminal that the Worker names. It opens no
+  shell for a name that is not valid.
+- Reason: the browser then passes no value of its own to a program in the
+  sandbox. The password of each workspace still guards each terminal.
+- A socket for a terminal that is not in the list of the workspace gets no
+  shell. A socket for a terminal whose close has started gets no shell
+  either.
+- Reason: a reconnect during a close would otherwise start a shell that no
+  tab shows.
+- The open and the close of a terminal pass the same checks as its
+  socket. So the sandbox must run, and neither the workspace owner nor the
+  org may be suspended.
+- Reason: the Terminal tool shows only while the sandbox runs.
 
 ## Port previews
 

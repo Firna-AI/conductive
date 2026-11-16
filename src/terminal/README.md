@@ -243,5 +243,5 @@ each link that opens, in place of opening it.
   echo terminal and its held reads.
 
 See [the previews](../previews/README.md), [the desktop](../desktop/README.md),
-[Workspaces and sandboxes](../../docs/protocol/workspace-tools.md#terminal),
+[Terminal](../../docs/protocol/terminal.md),
 and [Access and security](../../docs/protocol/terminal-previews-and-desktop.md#terminal).

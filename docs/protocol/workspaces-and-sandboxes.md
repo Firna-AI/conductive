@@ -184,8 +184,8 @@ for, downloads, and applies an update.
 
 ### Terminal
 
-- [Terminal](workspace-tools.md#terminal) holds the requirements of the
-  shell of a workspace.
+- [Terminal](terminal.md) holds the requirements of the terminals of a
+  workspace and their shells.
 
 ### Port previews
 

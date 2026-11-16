@@ -69,6 +69,8 @@ app.
   [The keys](keyboard-shortcuts-keys.md) gives another key and its reason.
 - A command without a key in Conductor starts with no key. The person can
   give it one.
+- New terminal is a command too. It starts with no key, although Conductor
+  has one, as [The default keys](keyboard-shortcuts-keys.md#the-default-keys) says.
 - Go to Desktop has no command while the app hides Desktop, as
   [Desktop](workspace-tools.md#desktop) says.
 - The commands come in five groups, as in Conductor: General, View,

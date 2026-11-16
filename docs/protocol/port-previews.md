@@ -6,7 +6,9 @@ previews of the Preview tool. It belongs to
 number names a dated record, as
 [Decision numbers](../architecture.md#decision-numbers) says. A chat link
 decision number names a decision of the change that makes each web
-address of chat text a link, as [Chat links](chat-links.md) says.
+address of chat text a link, as [Chat links](chat-links.md) says. A
+terminal links decision number names a decision of the change that makes
+the addresses in the terminal open, as [Terminal](terminal.md) says.
 
 - A preview shows in a frame inside the app, with an "Open" link that
   opens it in a new tab. Reason: Safari blocks the cookies of the
@@ -45,7 +47,7 @@ address of chat text a link, as [Chat links](chat-links.md) says.
   with the same request and checks as a typed port. A preview of that port
   that is open already shows with no new request. The path, the query,
   and the hash of the address do not carry over, as
-  [Terminal](workspace-tools.md#terminal) says (terminal links decision
+  [Links](terminal.md#links) says (terminal links decision
   1 B).
 - A click on a server opens its preview with the same request and checks
   as a typed port. A port that has an open preview leaves the list,
