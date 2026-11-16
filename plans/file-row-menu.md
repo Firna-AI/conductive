@@ -118,7 +118,8 @@ Answered on 16 November 2026: **B**.
 
 ### 4. Which message field Add to chat writes into
 
-Open. It blocks Milestones 5 and 6 only.
+Answered on 16 November 2026: **A**. The user chose A over the
+recommended F.
 
 - **Severity:** Low. **Effort:** Medium.
 - **Source:** Design.
@@ -182,8 +183,7 @@ Open. It blocks Milestones 5 and 6 only.
 - **Recommendation:** F. It keeps the one press of A, uses the target that
   the pull request bar already uses, and also works while a field is not
   mounted. The first recommendation was A. The options check changed it.
-- **Action:** ask the user, because the change of view and the case with
-  no open session are new behaviour that no requirement covers.
+- **Action:** answered by the user: A.
 
 ## Design
 
@@ -199,7 +199,7 @@ Open. It blocks Milestones 5 and 6 only.
   then Copy path. Reason: the tab menu groups its items by kind
   (decision 188), and an action comes before a copy item, as Rename
   session comes before Copy link. Working agent's call, 16 November 2026.
-- Until Milestone 6 lands, the menu holds only Copy path.
+- Until Milestone 5 lands, the menu holds only Copy path.
 - Escape, Tab, or a press outside closes the menu. The focus goes back to
   the row. The row of an open menu gets the mark that a tab with an open
   menu has.
@@ -268,11 +268,17 @@ Open. It blocks Milestones 5 and 6 only.
 
 ### Add to chat
 
-Milestones 5 and 6 build it after decision 4.
+Decision 4 A sets the target. Milestone 5 builds it.
 
-- Add to chat puts the chip of the file or the folder into a message
-  field, with a space after it, as a pick from the `@` list does. A folder
-  chip names the folder with a final `/`, as `mentionText` writes it.
+- Add to chat puts the chip of the file or the folder into the message
+  field of the session tab that the member saw last, at its caret, with a
+  space after it, as a pick from the `@` list does. A folder chip names
+  the folder with a final `/`, as `mentionText` writes it.
+- The app shows that session tab first. On a phone, it switches to the
+  chat of that session. A field that mounts again has no caret, so the
+  chip then goes at the end of the text.
+- With no open session tab, the item starts a new session, through
+  `newSession` of the chat controller, and the chip goes into its field.
 - The item shows only for a path that the `@` list offers, as
   `findMentioned` of `src/chat/mentions/MentionsContext.tsx` checks.
   Reason: the field turns any other mention back into text.
@@ -280,10 +286,13 @@ Milestones 5 and 6 build it after decision 4.
   takes no change. A Changes row of a deleted file leaves it out too,
   because the chip would name a file that the branch does not hold.
   Working agent's calls.
+- While a bar of the computer takes the place of the message field, such
+  as while the computer is stopped, the item does not show. Reason: no
+  field can take the chip, and decision 4 A chose the field, not the
+  draft. Working agent's call, 16 November 2026.
 - On a phone, the field does not take the focus after Add to chat, so no
-  keyboard opens by itself. Working agent's call.
-- A stopped sandbox, the change of view, and the result that the member
-  sees follow the answer to decision 4.
+  keyboard opens by itself. On desktop, the field takes the focus. Working
+  agent's call.
 
 ## Milestone 1: Mockups
 
@@ -291,8 +300,8 @@ Tags: mockup
 
 Depends on: none
 
-Draw the row menu and the new tab menu item in the `app/files` pages, on
-desktop and on a phone.
+Draw the row menu, the new tab menu item, and the result of Add to chat
+in the `app/files` pages, on desktop and on a phone.
 
 - [ ] Add the page `app/files/menu`. Its canonical screen has the row menu
       of a file row of All files, with Add to chat, a line, and Copy path.
@@ -300,8 +309,10 @@ desktop and on a phone.
       - [ ] Variant `changes`: the row menu of a row of Changes.
       - [ ] Variant `copied`: the toast "Path copied" after the press.
       - [ ] Variant `read-only`: the row menu with only Copy path.
+      - [ ] Variant `added`: the session tab that Add to chat showed, with
+            the chip of the file in its message field.
       - [ ] The phone view: the row menu as a sheet with the name of the
-            row.
+            row, and the chat with the chip after Add to chat.
 - [ ] Update the `menu` variant of `app/files/temporary`: Keep open, a
       line, Copy path, a line, Move left and Move right, a line, Close tabs
       to the right.
@@ -317,9 +328,8 @@ desktop and on a phone.
 
 Depends on: 1
 
-State the row menu, Copy path, and Add to chat as requirements. Decision
-4 stays open in this plan, so the docs state Add to chat without its
-target until the user answers.
+State the row menu, Copy path, and Add to chat as requirements, with the
+decisions of this plan.
 
 - [ ] `docs/protocol/workspace-tools.md`, "Files and changes": the row
       menu, how it opens, its items, Copy path, and the rule for a row
@@ -331,8 +341,9 @@ target until the user answers.
       choose a menu on each file row for Keep open. The row menu has no
       Keep open.
 - [ ] `docs/protocol/file-mentions.md`: Add to chat as a way to put a chip
-      in the message field.
-- [ ] `src/files/labels.md` and `src/files/README.md`.
+      in the message field, with its target (decision 4 A).
+- [ ] `src/files/labels.md`, `src/files/README.md`, and
+      `src/chat/README.md`.
 - [ ] The public guide `src/marketing/docs/files-and-changes.md`.
 - [ ] Read the Terms page `src/marketing/terms.ts` and the Privacy page
       `src/marketing/privacy.ts` in full. Update each sentence that
@@ -372,47 +383,34 @@ Depends on: 3
 
 - [ ] Add Copy path to the tab menu of a file or diff tab in
       `src/chat/components/useTabMenu.ts`, in its own group after Keep
-      open.
+      open. The shell gives the item through `RenderTab`.
 - [ ] Keep it in a read-only workspace, so a read-only file tab opens a
       menu with only Copy path. Leave it out on a tab whose label hides a
       secret.
 - [ ] Tests: the items of each file tab menu, the copied text, and the
       read-only tab.
 
-## Milestone 5: Mockups for the result of Add to chat
-
-Tags: mockup
-
-Depends on: 1, and the answer to decision 4
-
-This mockup milestone comes after Milestones 3 and 4, because it waits
-for decision 4. It covers only what the member sees after Add to chat.
-Milestone 1 draws the item itself.
-
-- [ ] Draw the result that decision 4 chooses, on desktop and on a phone:
-      for example the chat with the new chip, or the toast of option E.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
-- [ ] Update the design and the TODOs of this plan for each problem that
-      the mockups show.
-
-## Milestone 6: Add to chat
+## Milestone 5: Add to chat
 
 Tags: ui
 
-Depends on: 3 and 5
+Depends on: 3
 
-- [ ] Update the docs of Milestone 2 with the target that decision 4
-      chooses.
 - [ ] Add Add to chat to the row menu, before Copy path, with a line
       between them.
-- [ ] Put the chip into the chosen message field with the insertion of a
-      pick from the `@` list. Give the field the focus.
-- [ ] Leave the item out in a read-only workspace, on a deleted file of
-      Changes, and on a path that `findMentioned` refuses.
-- [ ] Tests: a file chip, a folder chip, the target of decision 4, and
-      each row that leaves the item out.
+- [ ] Show the session tab that the member saw last, or start a new
+      session when no session tab is open. On a phone, switch to its chat.
+- [ ] Put the chip into its message field with the insertion of a pick
+      from the `@` list, once the field shows. Give the field the focus on
+      desktop only.
+- [ ] Leave the item out in a read-only workspace, while a bar of the
+      computer replaces the field, on a deleted file of Changes, and on a
+      path that `findMentioned` refuses.
+- [ ] Tests: a file chip, a folder chip, a shown session, a session behind
+      a file tab, no open session, the phone, and each row that leaves the
+      item out.
 
-## Milestone 7: Verification, commit, review, and pull request
+## Milestone 6: Verification, commit, review, and pull request
 
 Depends on: every other milestone
 
