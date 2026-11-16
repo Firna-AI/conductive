@@ -3,15 +3,16 @@ import type { Viewport } from '@mokly/mokly'
 import type { ChatItem } from '../../fixtures/conversations'
 import type { PersonKey } from '../../fixtures/members'
 import type { StartingLog } from '../../fixtures/starting'
+import { plainData } from '../../defined'
 import { classes } from '../common/classes'
 import { DrawnChoices } from '../mac/CommandActions'
 import { useMacApp } from '../mac/MacApp'
-import { SandboxBar } from '../workspace/SandboxNotice'
+import { sandboxBar } from '../../entries/components/workspace/SandboxNotice.mockup'
 import {
   replacesComposer,
   type SandboxNoticeState,
 } from '../workspace/sandboxNoticeState'
-import { StartingCard } from '../workspace/StartingCard'
+import { startingCard } from '../../entries/components/workspace/StartingCard.mockup'
 import { ChatItemView } from './ChatItemView'
 import { Composer, type ComposerState } from './Composer'
 import { groupItems } from './groupItems'
@@ -101,7 +102,12 @@ export function ChatPane(props: {
                   )
               }
             })}
-            {props.starting ? <StartingCard log={props.starting} /> : null}
+            {props.starting ? (
+              <startingCard.Component
+                log={props.starting}
+                moklyInstance="starting-card"
+              />
+            ) : null}
           </div>
         </div>
       )}
@@ -124,7 +130,12 @@ export function ChatPane(props: {
         ) : null}
         {mac?.choicesOpen && pending.length > 0 ? <DrawnChoices /> : null}
         {props.notice}
-        {props.problem ? <SandboxBar {...props.problem} /> : null}
+        {props.problem ? (
+          <sandboxBar.Component
+            moklyInstance="sandbox-bar"
+            state={plainData(props.problem)}
+          />
+        ) : null}
         {composer ? <Composer {...props.composer} /> : null}
       </div>
     </section>

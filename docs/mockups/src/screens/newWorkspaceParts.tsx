@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { ConnectAgentNotice } from '../components/chat/ConnectAgentNotice'
 import { fileMark, withoutMarks } from '../../../../src/app/draft-marks'
-import { CreateFailedNotice } from '../components/new-workspace/notices'
+import { createFailedNotice } from '../entries/components/new-workspace/notices.mockup'
 import { repositoryWaits } from '../components/settings/repositoryChangeCopy'
 import {
   firstMessageBeforeDrop,
@@ -137,7 +137,13 @@ export function formNotices(
 ): ReactNode[] {
   const notices: ReactNode[] = []
   if (failed) {
-    notices.push(<CreateFailedNotice key="failed" ready={ready} />)
+    notices.push(
+      <createFailedNotice.Component
+        key="failed"
+        moklyInstance="create-failed-notice"
+        ready={ready}
+      />,
+    )
   }
   if (state.login === 'missing') {
     notices.push(<ConnectAgentNotice choice={newWorkspaceChoice} key="login" />)

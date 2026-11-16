@@ -3,7 +3,7 @@ import { paths } from '../../paths'
 import { actionButton } from '../../entries/components/common/actions.mockup'
 import { notice } from '../../entries/components/common/Notice.mockup'
 import { ScreenLink } from '../common/ScreenLink'
-import { OrgTile } from '../orgs/OrgTile'
+import { orgTile } from '../../entries/components/orgs/OrgTile.mockup'
 import { DeletedOrgList } from './DeletedOrgList'
 import { deletedOrgsCopy as copy } from './deletedOrgsCopy'
 
@@ -39,7 +39,13 @@ export function DeletedOrgsSection(props: {
       rows={[
         {
           id: org.id,
-          tile: <OrgTile org={org} size={26} />,
+          tile: (
+            <orgTile.Component
+              moklyInstance={`tile-${org.key}`}
+              org={org}
+              size={26}
+            />
+          ),
           name: org.name,
           detail: suspended ? copy.suspended(day) : copy.deletes(day),
           action: suspended ? undefined : (

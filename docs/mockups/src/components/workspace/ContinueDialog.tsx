@@ -10,7 +10,7 @@ import {
 } from '../../entries/components/common/ConfirmDialog.mockup'
 import { ScreenLink } from '../common/ScreenLink'
 import { continueQuestion } from './barCopy'
-import { LocalWorkList } from './LocalWorkList'
+import { localWorkList } from '../../entries/components/workspace/LocalWorkList.mockup'
 
 /**
  * The question of Continue, after its check found local work. The changed
@@ -51,7 +51,7 @@ export function ContinueDialog(props: {
       <dialogText.Component moklyInstance="intro">
         {continueQuestion.intro(base)}
       </dialogText.Component>
-      <LocalWorkList commits={commits} files={files} />
+      <localWorkList.Component commits={commits} files={files} />
       <dialogText.Component moklyInstance="outcome">
         {continueQuestion.outcome(commits)}
       </dialogText.Component>

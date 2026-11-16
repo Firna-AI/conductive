@@ -20,7 +20,7 @@ import { ResetShortcutsDialog } from '../components/settings/ResetShortcutsDialo
 import { ShortcutsTab } from '../components/settings/ShortcutsSections'
 import { ThisMacSection } from '../components/settings/ThisMacSection'
 import { workspaceSections } from '../components/workspaces/sections'
-import { Sidebar } from '../components/workspaces/Sidebar'
+import { sidebar as sidebarPart } from '../entries/components/workspaces/Sidebar.mockup'
 import { account, orgList, orgs } from '../fixtures/orgs'
 import {
   editedShortcuts,
@@ -31,7 +31,7 @@ import { viewerMembership } from '../fixtures/members'
 import { paths } from '../paths'
 import type { AccountState, AccountView } from './accountState'
 import { agentsFor } from './accountAgents'
-import { defined } from '../defined'
+import { defined, plainData } from '../defined'
 
 const connectedRail: RailState = { orgs: orgList, current: 'account' }
 
@@ -149,9 +149,10 @@ export function AccountScreen(props: {
   }
   // The Mac app keeps the sidebar of the org beside the account.
   const sidebar = mac ? (
-    <Sidebar
+    <sidebarPart.Component
+      moklyInstance="sidebar"
       org={orgs.acme}
-      sections={workspaceSections(undefined, mac.needsInput)}
+      sections={plainData(workspaceSections(undefined, mac.needsInput))}
       shortcuts={changes}
       viewer={viewerMembership('admin')}
     />

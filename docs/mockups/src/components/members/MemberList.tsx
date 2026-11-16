@@ -16,7 +16,7 @@ import {
   iconButton,
 } from '../../entries/components/common/actions.mockup'
 import { ScreenLink } from '../common/ScreenLink'
-import { PersonAvatar } from '../orgs/OrgTile'
+import { personAvatar } from '../../entries/components/orgs/OrgTile.mockup'
 import styles from './Members.module.css'
 
 /** How many workspaces of the org a member owns. */
@@ -92,7 +92,11 @@ function MemberRow(props: {
   const yours = membership.person === props.viewer
   return (
     <li className={styles.row}>
-      <PersonAvatar initials={person.initials} size={28} />
+      <personAvatar.Component
+        initials={person.initials}
+        moklyInstance={`member-${person.key}`}
+        size={28}
+      />
       <span className={styles.text}>
         <span className={styles.name}>
           {person.name}

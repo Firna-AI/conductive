@@ -9,11 +9,11 @@ import {
   suspendedSections,
   workspaceSections,
 } from '../components/workspaces/sections'
-import { Sidebar } from '../components/workspaces/Sidebar'
+import { sidebar } from '../entries/components/workspaces/Sidebar.mockup'
 import { memberViewer, people } from '../fixtures/members'
 import { orgs, suspendedOrg } from '../fixtures/orgs'
 import { viewerOf, type RoutineState } from './routineState'
-import { defined } from '../defined'
+import { defined, plainData } from '../defined'
 
 /**
  * The app around a routine page: the rail and the sidebar of Acme on
@@ -46,10 +46,13 @@ export function RoutineFrame(props: {
         ...(state.viewer === 'member' ? { person: people[memberViewer] } : {}),
       }}
       sidebar={
-        <Sidebar
+        <sidebar.Component
           current="routines"
+          moklyInstance="sidebar"
           org={orgs.acme}
-          sections={suspended ? suspendedSections() : workspaceSections()}
+          sections={plainData(
+            suspended ? suspendedSections() : workspaceSections(),
+          )}
           suspended={suspended}
           viewer={{ person: viewerOf(state), role: state.viewer }}
         />

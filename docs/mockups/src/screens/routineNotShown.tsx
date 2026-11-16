@@ -4,7 +4,7 @@ import { loadFailure } from '../entries/components/common/LoadFailure.mockup'
 import { ScreenLink } from '../components/common/ScreenLink'
 import { actionButton } from '../entries/components/common/actions.mockup'
 import { page } from '../entries/components/layout/Page.mockup'
-import { SuspendedOrgNotice } from '../components/orgs/SuspendedOrgNotice'
+import { suspendedOrgNotice } from '../entries/components/orgs/SuspendedOrgNotice.mockup'
 import { orgs, suspendedOrg } from '../fixtures/orgs'
 import { paths } from '../paths'
 import type { RoutineState } from './routineState'
@@ -65,7 +65,12 @@ export function RoutineNotShown(props: {
     : { routine: paths.routine, routines: paths.routines }
   const content = (
     <>
-      {props.suspended ? <SuspendedOrgNotice org={orgs[suspendedOrg]} /> : null}
+      {props.suspended ? (
+        <suspendedOrgNotice.Component
+          moklyInstance="suspended-org-notice"
+          org={{ name: orgs[suspendedOrg].name }}
+        />
+      ) : null}
       <Content pages={pages} read={props.read} />
     </>
   )

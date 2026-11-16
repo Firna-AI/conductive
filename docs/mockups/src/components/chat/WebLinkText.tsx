@@ -26,7 +26,7 @@ const portScreens: ReadonlyMap<number, string> = new Map([
  * An anchor that opens a page outside the app in a new tab, with no opener
  * and no referrer, so the page gets no address of the app.
  */
-function NewTabAnchor(props: LinkOpener & { href: string }) {
+export function NewTabAnchor(props: LinkOpener & { href: string }) {
   const { href, ...link } = props
   return (
     <a

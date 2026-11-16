@@ -8,14 +8,13 @@ import {
   MessageSquare,
   SquareTerminal,
 } from 'lucide-react'
-import { instanceKey } from '../../instanceKey'
 import { menu as menuPart } from '../../entries/components/common/Menu.mockup'
 import type { MenuEntryData } from '../../entries/components/common/menuEntries'
 import { ScreenLink } from '../common/ScreenLink'
 import { iconButton } from '../../entries/components/common/actions.mockup'
 import a11y from '../common/a11y.module.css'
 import { classes } from '../common/classes'
-import { RenameField } from './RenameField'
+import { renameField } from '../../entries/components/workspace/RenameField.mockup'
 import tabDrag from './TabDrag.module.css'
 import styles from './WorkspaceTabs.module.css'
 
@@ -118,7 +117,7 @@ export function TabItem(props: {
     <iconButton.Component
       icon="x"
       label={`Close ${tab.title}`}
-      moklyInstance={`close-${instanceKey(tab.key)}`}
+      moklyInstance="close"
       quiet
     />
   )
@@ -131,7 +130,7 @@ export function TabItem(props: {
           styles.renaming,
         )}
       >
-        <RenameField title={tab.title} />
+        <renameField.Component title={tab.title} />
       </li>
     )
   }
@@ -166,7 +165,7 @@ export function TabItem(props: {
         <menuPart.Component
           entries={menu.entries}
           label={tab.title}
-          moklyInstance={`menu-${instanceKey(tab.key)}`}
+          moklyInstance="menu"
           placement="below-start"
         />
       ) : null}

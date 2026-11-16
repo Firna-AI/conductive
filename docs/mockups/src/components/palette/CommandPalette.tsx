@@ -17,7 +17,8 @@ import {
   type PaletteContext,
 } from './paletteContent'
 import type { PaletteFilters } from './paletteFilters'
-import { PaletteResults, type PaletteKeys } from './PaletteRows'
+import type { PaletteKeys } from './PaletteRows'
+import { paletteResults } from '../../entries/components/palette/PaletteRows.mockup'
 import {
   macPaletteTabPaths,
   paletteTabLabels,
@@ -147,9 +148,13 @@ function TabBar(props: {
 /**
  * The palette on a phone: a page that fills the screen, with the search
  * field and Cancel at the top. Cancel goes back to the list, where the
- * Search row opened it.
+ * Search row opened it. `content` is the content of `view` and `context`.
  */
-function PalettePage(props: { content: PaletteContent }) {
+function PalettePage(props: {
+  content: PaletteContent
+  view: OpenPaletteView
+  context: PaletteContext
+}) {
   const { content } = props
   return (
     <section aria-label="Search" className={styles.page}>
@@ -169,7 +174,7 @@ function PalettePage(props: { content: PaletteContent }) {
           <Filters filters={content.filters} mobile />
         </div>
       ) : null}
-      <PaletteResults content={content} />
+      <paletteResults.Component context={props.context} view={props.view} />
       {content.filters?.repositoryMenu ? (
         <sheet.Component moklyInstance="repository-sheet" title="Repository">
           <menu.Component
@@ -199,7 +204,9 @@ export function CommandPalette(props: {
 }) {
   const { context } = props
   const content = paletteContent(props.view, context)
-  if (props.viewport === 'mobile') return <PalettePage content={content} />
+  if (props.viewport === 'mobile') {
+    return <PalettePage content={content} context={context} view={props.view} />
+  }
   const keys: PaletteKeys = {
     changes: context.shortcuts ?? {},
     host: pageHost(context.mac === true),
@@ -217,7 +224,11 @@ export function CommandPalette(props: {
           <SearchField content={content} mobile={false} />
         </div>
         <TabBar content={content} mac={context.mac} mobile={false} />
-        <PaletteResults content={content} keys={keys} />
+        <paletteResults.Component
+          context={context}
+          keys={keys}
+          view={props.view}
+        />
       </section>
     </div>
   )

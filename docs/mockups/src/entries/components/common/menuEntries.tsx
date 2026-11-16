@@ -1,7 +1,8 @@
 import type { SchemaProps } from '@mokly/mokly'
 import type { MenuEntry, MenuPlacement } from '../../../components/common/Menu'
 import { AgentMark } from '../../../components/chat/AgentMark'
-import { PersonAvatar } from '../../../components/orgs/OrgTile'
+import { instanceKey } from '../../../instanceKey'
+import { personAvatar } from '../orgs/OrgTile.mockup'
 import { agentKeys } from '../../../fixtures/agents'
 import { iconKeys, icons } from './icons'
 
@@ -120,10 +121,17 @@ export type MenuEntryData = SchemaProps<typeof menuSchema>['entries'][number]
 
 type ItemData = Extract<MenuEntryData, { kind: 'item' }>
 
-/** The mark of an item: the avatar of a person, or the mark of an agent. */
-function markOf(mark: NonNullable<ItemData['mark']>) {
+/**
+ * The mark of an item: the avatar of a person, or the mark of an agent.
+ * `label` is the label of the item, which names the avatar for Mokly.
+ */
+function markOf(mark: NonNullable<ItemData['mark']>, label: string) {
   return mark.kind === 'person' ? (
-    <PersonAvatar initials={mark.initials} size={18} />
+    <personAvatar.Component
+      initials={mark.initials}
+      moklyInstance={`mark-${instanceKey(label)}`}
+      size={18}
+    />
   ) : (
     <AgentMark agent={mark.agent} />
   )
@@ -137,6 +145,6 @@ export function plainEntry(entry: MenuEntryData): MenuEntry {
     ...item,
     icon: icon === undefined ? undefined : icons[icon],
     trailingIcon: trailingIcon === undefined ? undefined : icons[trailingIcon],
-    mark: mark === undefined ? undefined : markOf(mark),
+    mark: mark === undefined ? undefined : markOf(mark, item.label),
   }
 }

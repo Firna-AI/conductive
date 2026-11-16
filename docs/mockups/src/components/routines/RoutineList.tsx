@@ -5,8 +5,8 @@ import { classes } from '../common/classes'
 import { ScreenLink } from '../common/ScreenLink'
 import type { StatusTone } from '../common/StatusText'
 import { statusText } from '../../entries/components/common/StatusText.mockup'
-import { PersonAvatar } from '../orgs/OrgTile'
-import { StatusGlyph } from '../workspaces/StatusGlyph'
+import { personAvatar } from '../../entries/components/orgs/OrgTile.mockup'
+import { statusGlyph } from '../../entries/components/workspaces/StatusGlyph.mockup'
 import { runStateLabels } from './runCopy'
 import { triggersSummary } from './triggerCopy'
 import styles from './RoutineList.module.css'
@@ -20,7 +20,10 @@ function LastRun(props: { row: RoutineRow }) {
       className={styles.lastRun}
       title={`Last run: ${runStateLabels[run.state]}, ${run.when}`}
     >
-      <StatusGlyph status={run.state} />
+      <statusGlyph.Component
+        moklyInstance={`last-run-${props.row.routine.key}`}
+        status={run.state}
+      />
       <span className={styles.when}>{run.when}</span>
     </span>
   )
@@ -30,7 +33,11 @@ function Owner(props: { row: RoutineRow }) {
   const { owner } = props.row.routine
   return (
     <span className={styles.owner} title={`By ${owner.name}`}>
-      <PersonAvatar initials={owner.initials} size={18} />
+      <personAvatar.Component
+        initials={owner.initials}
+        moklyInstance={`owner-${props.row.routine.key}`}
+        size={18}
+      />
       <span className={styles.ownerName}>{owner.name}</span>
     </span>
   )

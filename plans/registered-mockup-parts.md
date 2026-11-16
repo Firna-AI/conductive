@@ -75,8 +75,8 @@ counts and test under `.context/mokly-html/` of this workspace.
   "Mokly markers require a sidecar render context".
 - Repeated siblings need distinct `moklyInstance` names, in lowercase
   kebab-case. Duplicates in one scope fail the build.
-- The app reaches 59 of the 292 TSX files of `docs/mockups/src/components/`
-  and `docs/mockups/src/screens/`. Those files hold 71 of the parts below.
+- After the merge of `main` on 2026-11-16, the app reaches 61 of the 297
+  TSX files of `docs/mockups/src/components/` and `docs/mockups/src/screens/`.
 - Some parts nest other parts. Mokly attributes a child's edit to the
   child when the child renders through its wrapper, and to the parent
   when the child is plain.
@@ -175,7 +175,9 @@ These are design calls of the agent, made on 2026-11-13:
   for the toasts, and falls back to the render context on its own pages.
   Reason: the Mac app views and the `phone` and `mac` marketing pictures
   draw a screen of the other viewport.
-- **Inputs from React context** (2026-11-16). Milestone 6 registers
+- **Inputs from React context** (2026-11-16). `CopyLinkButton`,
+  `OwnerPicker`, and `GitHubLink` read the touch sizes, and `SearchLink`
+  reads the Mac app. Milestone 6 registers
   `MacScreen` with the Mac app state as data and the banner as a slot. The
   parts with touch sizes get a variant with the touch sizes through a prop
   that only their own pages pass. Milestone 7 states the inputs that stay
@@ -188,7 +190,20 @@ These are design calls of the agent, made on 2026-11-13:
   `docs/mockups/src/entries/components/common/icons.ts`. Menu entries are
   JSON. `defined()` drops undefined props before a wrapper. `instanceKey()`
   and `shortcutKey()` make names from fixture keys and shortcuts.
-- **Uses that stay plain** (2026-11-16). `InlineText` in the blocks of
+- **Deep plain data** (2026-11-16). `plainData()` in
+  `docs/mockups/src/defined.ts` drops undefined values at any depth, for
+  data from builders that the app shares, such as `barModel`. Reason: a
+  wrapper fails on an undefined value.
+- **Data in place of callbacks** (2026-11-16). `ArchivedGroup`,
+  `PaletteStatusPart`, and `NewWorkspaceDialog` take data in place of a
+  derived callback or an array of elements. `SuspendedList` draws only the
+  main area, and the list screen draws the rail and the sidebar. Reason:
+  the props of a part are JSON, and an own page must not draw a whole
+  screen.
+- **Uses that stay plain** (2026-11-16). `TextLink` in `WebLinkText` stays
+  plain, because a link in chat text has no stable key, and one chat
+  fixture shows the same address twice. `MarkGrid` has no wrapper use,
+  because only app-shared files draw it. `InlineText` in the blocks of
   `MarkdownView` stays plain, because the blocks have no stable key.
   `RailLink` and `RailTile` inside `OrgItem` stay plain, because they share
   its file, and a wrapper there would import the file's own entry module.
@@ -268,30 +283,30 @@ Register the parts of the workspace lists, the workspace page, the orgs,
 the palette, and New workspace, and the parts that `main` added to
 the folders of Milestone 1: 73 parts.
 
-- [ ] Register `TextLink` of `components/common/`, which `main` added after
+- [x] Register `TextLink` of `components/common/`, which `main` added after
       Milestone 1.
-- [ ] Move each plain use of a part of Milestone 1 that the merge of
+- [x] Move each plain use of a part of Milestone 1 that the merge of
       `main` added, such as `ActionButton` in
       `components/settings/EndpointDetails.tsx`, to the wrapper, unless the
       app reaches the file.
-- [ ] Register the other 12 parts of `components/workspaces/`.
-- [ ] Register the 30 parts of `components/workspace/`.
-- [ ] Register the 8 parts of `components/orgs/`, the 5 of
+- [x] Register the other 12 parts of `components/workspaces/`.
+- [x] Register the 30 parts of `components/workspace/`.
+- [x] Register the 8 parts of `components/orgs/`, the 5 of
       `components/palette/`, and the 5 of `components/new-workspace/`.
-- [ ] Register the 12 helper parts of `screens/listParts.tsx`,
+- [x] Register the 12 helper parts of `screens/listParts.tsx`,
       `screens/listSheets.tsx`, `screens/newWorkspaceStart.tsx`, and
       `screens/workspaceParts.tsx`.
-- [ ] Move each mockup-only consumer of these parts to the wrapper.
+- [x] Move each mockup-only consumer of these parts to the wrapper.
       Keep the plain part in each file that the app reaches. Check this
       with `.context/mokly-html/closure2.mjs`.
-- [ ] Run `npm run mockups:check`, `npm run lint`, `npm run format:check`,
+- [x] Run `npm run mockups:check`, `npm run lint`, `npm run format:check`,
       and `npm run exports:check`.
-- [ ] Compare the built screen documents with a build of the merge base
+- [x] Compare the built screen documents with a build of the merge base
       without markers, as the design says. Save the result under
       `.context/registered-mockup-parts/`.
-- [ ] Smoke-test the new component pages and five screens that use them,
+- [x] Smoke-test the new component pages and five screens that use them,
       at both sizes, in light and dark.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
 
 ## Milestone 3: Mockups, chat, files, and tools
@@ -302,7 +317,9 @@ Depends on: 2
 
 Register the parts of the chat, the files, and the tools: 72 parts.
 
-- [ ] Register the 49 parts of `components/chat/`.
+- [ ] Register the 49 parts of `components/chat/`. Keep
+      `docs/mockups/src/screens/WorkspaceScreen.tsx` under 300 lines; it
+      has 298, so split it before it grows.
 - [ ] Register the 13 parts of `components/files/` and the 9 of
       `components/tools/`.
 - [ ] Register `FirstBuildNotice` of `screens/firstBuildNotice.tsx`.
@@ -384,6 +401,7 @@ Mac app: 34 parts.
 
 - [ ] Register the other 23 parts of `components/marketing/` and the 3 of
       `components/pricing/`.
+- [ ] Add a `_folder.json` to `docs/mockups/src/entries/components/marketing/`.
 - [ ] Register the 8 parts of `components/mac/`. `MacScreen` takes the Mac
       app state as data and the banner as a slot, as the design says.
 - [ ] Give the parts with touch sizes a variant with the touch sizes.

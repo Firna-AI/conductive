@@ -6,8 +6,8 @@ import {
   type FormRepositories,
   type FormRepository,
   formWait,
-  WaitingRepositoryNotice,
 } from '../components/new-workspace/waitingRepository'
+import { waitingRepositoryNotice } from '../entries/components/new-workspace/waitingRepository.mockup'
 import {
   menuNotes,
   type RepositoryWait,
@@ -102,9 +102,9 @@ export function waitingNotice(props: {
   const waits = formWait(props.form)
   if (!waits) return null
   return (
-    <WaitingRepositoryNotice
-      action={(wait) => (
-        <ScreenLink asChild to={computerPages[wait]}>
+    <waitingRepositoryNotice.Component
+      action={
+        <ScreenLink asChild to={computerPages[props.wait]}>
           <actionButton.Component
             icon="arrow-right"
             moklyInstance="open-computer"
@@ -112,10 +112,11 @@ export function waitingNotice(props: {
             {firstBuildCopy.settings}
           </actionButton.Component>
         </ScreenLink>
-      )}
+      }
       admin={props.admin}
       alternative={waits.alternative}
       key="waiting-repository"
+      moklyInstance="waiting-repository-notice"
       names={waits.names}
       wait={props.wait}
     />

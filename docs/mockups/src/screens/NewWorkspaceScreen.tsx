@@ -25,8 +25,8 @@ import {
   waits,
 } from './newWorkspaceParts'
 import { repositoryMenu, waitingNotice } from './newWorkspaceRepositories'
-import { Start } from './newWorkspaceStart'
-import { defined } from '../defined'
+import { newWorkspaceStart } from '../entries/components/screens/newWorkspaceStart.mockup'
+import { defined, plainData } from '../defined'
 
 export const newWorkspaceSchema = {
   type: 'object',
@@ -147,15 +147,17 @@ function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
       }}
       empty={
         suspended ? undefined : (
-          <Start
+          <newWorkspaceStart.Component
             admin={admin}
             chosen={state.repositories !== 'none'}
-            menu={
-              menuOpen && props.viewport === 'desktop'
-                ? repositoryMenu(page, state.waitingBuild)
-                : undefined
-            }
-            page={page}
+            moklyInstance="start"
+            page={plainData(page)}
+            {...defined({
+              menu:
+                menuOpen && props.viewport === 'desktop'
+                  ? repositoryMenu(page, state.waitingBuild)
+                  : undefined,
+            })}
           />
         )
       }

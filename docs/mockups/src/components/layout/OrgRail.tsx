@@ -13,9 +13,10 @@ import type { Shortcut } from '../common/KeyChips'
 import { classes } from '../common/classes'
 import { logoTile } from '../../entries/components/brand/Logo.mockup'
 import { useMacApp } from '../mac/MacApp'
-import { OrgDrop, placeAfterDrop, type OrgDrag } from '../orgs/OrgDrop'
+import { placeAfterDrop, type OrgDrag } from '../orgs/OrgDrop'
+import { orgDrop } from '../../entries/components/orgs/OrgDrop.mockup'
 import { tileMenuItems } from '../orgs/orgTileMenu'
-import { PersonAvatar } from '../orgs/OrgTile'
+import { personAvatar } from '../../entries/components/orgs/OrgTile.mockup'
 import type { OrgState } from './RailItems'
 import {
   orgItem,
@@ -132,7 +133,7 @@ export function OrgRail(props: RailState) {
   const dragged = orgs[from]
   const dropAt = (index: number) =>
     dragged && drag?.index === index ? (
-      <OrgDrop
+      <orgDrop.Component
         at="rail"
         count={orgs.length}
         name={dragged.name}
@@ -143,7 +144,7 @@ export function OrgRail(props: RailState) {
           moklyInstance="lifted-tile"
           org={dragged}
         />
-      </OrgDrop>
+      </orgDrop.Component>
     ) : null
   return (
     <nav aria-label="Orgs" className={styles.rail}>
@@ -197,7 +198,10 @@ export function OrgRail(props: RailState) {
         moklyInstance="account"
         to={props.firstRun ? paths.accountSetup : paths.account}
       >
-        <PersonAvatar initials={(props.person ?? account).initials} size={24} />
+        <personAvatar.Component
+          initials={(props.person ?? account).initials}
+          size={24}
+        />
       </railLink.Component>
     </nav>
   )

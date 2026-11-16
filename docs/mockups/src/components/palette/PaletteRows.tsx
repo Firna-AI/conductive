@@ -13,12 +13,16 @@ import { ScreenLink } from '../common/ScreenLink'
 import { instanceKey } from '../../instanceKey'
 import a11y from '../common/a11y.module.css'
 import { classes } from '../common/classes'
-import { OrgTile } from '../orgs/OrgTile'
+import { orgTile } from '../../entries/components/orgs/OrgTile.mockup'
 import { activityPresentation, listMarkLabel } from '../workspaces/status'
 import type { CommandLead } from './paletteCommands'
 import type { PaletteContent, PaletteRow } from './paletteContent'
-import { EmptyTab, NoResults } from './PaletteEmpty'
-import { PaletteStatusPart } from './PaletteStatus'
+import {
+  emptyTab,
+  noResults,
+} from '../../entries/components/palette/PaletteEmpty.mockup'
+import { paletteStatusPart } from '../../entries/components/palette/PaletteStatus.mockup'
+import { defined } from '../../defined'
 import styles from './CommandPalette.module.css'
 
 function Lead(props: {
@@ -33,7 +37,13 @@ function Lead(props: {
       return <Icon aria-hidden className={styles.icon} size={14} />
     }
     case 'org':
-      return <OrgTile org={lead.org} size={16} />
+      return (
+        <orgTile.Component
+          moklyInstance={`org-${props.name}`}
+          org={lead.org}
+          size={16}
+        />
+      )
     case 'github':
       return (
         <githubMark.Component
@@ -157,12 +167,12 @@ export function PaletteResults(props: {
   content: PaletteContent
   keys?: PaletteKeys
 }) {
-  const { groups, query, empty, status } = props.content
+  const { groups, query, empty, status, tab } = props.content
   if (groups.length === 0 && !status) {
     return empty ? (
-      <EmptyTab line={empty} />
+      <emptyTab.Component line={empty} />
     ) : (
-      <NoResults
+      <noResults.Component
         hint="Try a workspace name, a branch, or a repository."
         query={query}
       />
@@ -171,7 +181,11 @@ export function PaletteResults(props: {
   const first = groups[0]?.rows[0]
   return (
     <div className={styles.results} data-mokly-scroll="palette-results">
-      <PaletteStatusPart content={props.content} />
+      <paletteStatusPart.Component
+        query={query}
+        tab={tab}
+        {...defined({ status })}
+      />
       {groups.map((group) => (
         <section
           aria-label={group.label}

@@ -144,9 +144,10 @@ export type NewWorkspaceDialogProps = {
   /**
    * The notices of the New workspace page, above the footer: a failed
    * create, a repository that waits for its build, a missing agent login,
-   * or an org without repositories.
+   * or an org without repositories. Without them, the dialog has no row of
+   * notices.
    */
-  notices: readonly ReactNode[]
+  notices?: ReactNode
   /**
    * The message has text, and it waits for no agent login and no
    * repository. Create is then on, once each file is uploaded.
@@ -202,9 +203,9 @@ export function NewWorkspaceDialog(props: NewWorkspaceDialogProps) {
             text={props.text}
           />
         </div>
-        {props.notices.length > 0 ? (
+        {props.notices === undefined ? null : (
           <div className={styles.notices}>{props.notices}</div>
-        ) : null}
+        )}
         <div className={styles.footer}>
           <ModelPicker choice={props.choice} />
           <span className={styles.spacer} />

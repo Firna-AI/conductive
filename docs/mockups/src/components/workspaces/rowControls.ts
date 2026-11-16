@@ -1,3 +1,4 @@
+import { defined } from '../../defined'
 import type { Membership } from '../../fixtures/members'
 import { sections, type SectionKey } from '../../fixtures/sections'
 import { iconKeyOf } from '../../entries/components/common/icons'
@@ -139,7 +140,9 @@ export function rowControls(
       at: context.sheet ? 'sheet' : 'pointer',
       label: workspace.name,
       entries,
-      submenu: submenu && submenuOf(submenu, row, context, entries),
+      ...defined({
+        submenu: submenu && submenuOf(submenu, row, context, entries),
+      }),
     },
   }
 }

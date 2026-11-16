@@ -25,7 +25,7 @@ import {
   type ShortcutGroup,
 } from '../../fixtures/shortcuts'
 import { searchField } from '../../entries/components/common/SearchField.mockup'
-import { NoResults } from '../palette/PaletteEmpty'
+import { noResults } from '../../entries/components/palette/PaletteEmpty.mockup'
 import { Section } from './Section'
 import { ShortcutIntro } from './ShortcutIntro'
 import { shortcutPages, type ShortcutPages } from './shortcutPages'
@@ -198,8 +198,9 @@ export function ShortcutsTab(props: {
         resetAllTo={pages.resetAll}
       />
       {shown.length === 0 ? (
-        <NoResults
+        <noResults.Component
           hint="Try a command name, such as Close tab."
+          moklyInstance="no-results"
           query={query}
         />
       ) : null}

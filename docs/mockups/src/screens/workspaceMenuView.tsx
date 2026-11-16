@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
 import { failureToast } from '../entries/components/common/FailureToast.mockup'
 import { acmeRail, type RailState } from '../components/layout/OrgRail'
-import { ArchivedToast } from '../components/workspace/ArchivedToast'
+import { archivedToast } from '../entries/components/workspace/ArchivedToast.mockup'
 import {
   rowControls,
   type RowFocus,
@@ -27,7 +27,7 @@ import { suspendedOrg } from '../fixtures/orgs'
 import { defaultSection, sections } from '../fixtures/sections'
 import { workspaceList } from '../fixtures/workspaces'
 import { menuTarget, offline } from '../fixtures/workspaceMenu'
-import { WorkspaceMenuSheet } from './listSheets'
+import { workspaceMenuSheet } from '../entries/components/screens/listSheets.mockup'
 import {
   scenarios,
   type Scenario,
@@ -146,7 +146,12 @@ function sheetOf(view: Omit<MenuListView, 'over'>): ReactNode {
     readOnly: false,
     sheet: true,
   })?.open
-  return open ? <WorkspaceMenuSheet menu={open} /> : null
+  return open ? (
+    <workspaceMenuSheet.Component
+      menu={open}
+      moklyInstance="workspace-menu-sheet"
+    />
+  ) : null
 }
 
 function overOf(
@@ -173,7 +178,11 @@ function overOf(
       // Archive took the workspace to the Archived group at once, and its
       // toast offers Restore.
       return target ? (
-        <ArchivedToast name={target.name} phone={viewport === 'mobile'} />
+        <archivedToast.Component
+          moklyInstance="archived-toast"
+          name={target.name}
+          phone={viewport === 'mobile'}
+        />
       ) : null
   }
 }

@@ -18,7 +18,10 @@ import {
 } from './barCopy'
 import { agentIcons } from './barIcons'
 import type { BarAction, BarModel } from './barModel'
-import { BarGitHubLink, GitHubLink } from './barParts'
+import {
+  barGitHubLink,
+  githubLink,
+} from '../../entries/components/workspace/barParts.mockup'
 import { barTint } from './prStatus'
 import { iconKeyOf } from '../../entries/components/common/icons'
 import styles from './BarActions.module.css'
@@ -198,9 +201,8 @@ export function BarMessage(props: {
         {barMessageText(props.kind, branches)}
       </span>
       {props.kind === 'merge-refused' ? (
-        <GitHubLink
+        <githubLink.Component
           href={pullRequest.url}
-          id="message"
           label={barLabels.openOnGitHub}
         />
       ) : null}
@@ -223,7 +225,7 @@ export function ChecksActions(props: { bar: BarModel; workspace: Workspace }) {
       ) : null}
       <div className={styles.buttons}>
         <BarButtons bar={bar} />
-        {bar.link ? <BarGitHubLink /> : null}
+        {bar.link ? <barGitHubLink.Component /> : null}
       </div>
     </div>
   )

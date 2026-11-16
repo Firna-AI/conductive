@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { linkTabs } from '../../entries/components/common/LinkTabs.mockup'
-import { PanelBar } from './PanelBar'
+import { panelBar } from '../../entries/components/workspace/PanelBar.mockup'
 import { toolTabs, type ToolKey } from './tools'
 import styles from './ToolsPanel.module.css'
 
@@ -16,13 +16,13 @@ export function ToolsPanel(props: { tool: ToolKey; children: ReactNode }) {
   }))
   return (
     <section aria-label="Tools" className={styles.panel}>
-      <PanelBar>
+      <panelBar.Component>
         <linkTabs.Component
           label="Tools"
           moklyInstance="tools-tabs"
           tabs={tabs}
         />
-      </PanelBar>
+      </panelBar.Component>
       <div className={styles.body}>{props.children}</div>
     </section>
   )

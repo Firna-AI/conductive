@@ -5,7 +5,8 @@ import { ScreenLink } from '../common/ScreenLink'
 import { iconButton } from '../../entries/components/common/actions.mockup'
 import a11y from '../common/a11y.module.css'
 import { classes } from '../common/classes'
-import { RowPointMenu, type RowControls } from './RowMenu'
+import { rowPointMenu } from '../../entries/components/workspaces/RowMenu.mockup'
+import type { RowControls } from './RowMenu'
 import type { WorkspaceRow } from './sections'
 import { activityPresentation, listMarkLabel } from './status'
 import rowMenu from './RowMenu.module.css'
@@ -15,17 +16,6 @@ import styles from './WorkspaceRow.module.css'
 export type RowDrag = 'lifted' | 'placeholder'
 
 type Variant = 'sidebar' | 'page'
-
-/**
- * The Mokly instance name of the mark of a row: the list and the key of
- * the workspace, such as `sidebar-apple-pay`, which stay the same when the
- * rows move. The copy that a drag lifts has its own name, because the faint
- * row stays in the list.
- */
-function markInstance(row: WorkspaceRow, variant: Variant, drag?: RowDrag) {
-  const name = `${variant}-${row.workspace.key}`
-  return drag === 'lifted' ? `${name}-lifted` : name
-}
 
 /**
  * The row of a workspace that the user renames from its menu. The field
@@ -47,11 +37,7 @@ function RenameRow(props: {
         row.selected && styles.selected,
       )}
     >
-      <workspaceMark.Component
-        github={row.github}
-        moklyInstance={markInstance(row, props.variant)}
-        status={row.status}
-      />
+      <workspaceMark.Component github={row.github} status={row.status} />
       <span
         aria-label="Workspace name"
         className={classes(rowMenu.field, page && rowMenu.fieldPage)}
@@ -70,14 +56,12 @@ function RenameRow(props: {
 /**
  * The one action of a row: Archive for a workspace in a section, which
  * archives it at once, or Restore for an archived one, which puts it back
- * in its section. `name` is the instance name of the row, which names the
- * button for Mokly.
+ * in its section.
  */
 function rowAction(
   row: WorkspaceRow,
   archivable: boolean,
   restorable: boolean,
-  name: string,
 ): ReactNode {
   if (row.status === 'archived') {
     return restorable ? (
@@ -85,7 +69,7 @@ function rowAction(
         <iconButton.Component
           icon="archive-restore"
           label="Restore workspace"
-          moklyInstance={`${name}-restore`}
+          moklyInstance="restore"
           quiet
         />
       </ScreenLink>
@@ -96,7 +80,7 @@ function rowAction(
       <iconButton.Component
         icon="archive"
         label="Archive workspace"
-        moklyInstance={`${name}-archive`}
+        moklyInstance="archive"
         quiet
       />
     </ScreenLink>
@@ -138,11 +122,7 @@ export function WorkspaceRowView(props: {
   )
   const content = (
     <>
-      <workspaceMark.Component
-        github={row.github}
-        moklyInstance={markInstance(row, props.variant, props.drag)}
-        status={row.status}
-      />
+      <workspaceMark.Component github={row.github} status={row.status} />
       <span className={styles.name}>{row.workspace.name}</span>
       <span className={styles.time}>{row.workspace.updated}</span>
       <span className={a11y.hidden}>
@@ -155,7 +135,6 @@ export function WorkspaceRowView(props: {
     row,
     props.archivable === true,
     props.restorable === true,
-    markInstance(row, props.variant),
   )
   // The pointer of a right click lies over the row of its menu. A sheet
   // keeps its row marked, without a hover.
@@ -184,7 +163,7 @@ export function WorkspaceRowView(props: {
       {action === null ? null : (
         <span className={styles.archive}>{action}</span>
       )}
-      {controls ? <RowPointMenu controls={controls} /> : null}
+      {controls ? <rowPointMenu.Component controls={controls} /> : null}
     </span>
   )
 }

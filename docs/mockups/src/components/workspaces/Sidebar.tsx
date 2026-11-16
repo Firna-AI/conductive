@@ -1,3 +1,4 @@
+import { defined } from '../../defined'
 import type { Org } from '../../fixtures/orgs'
 import type { Membership } from '../../fixtures/members'
 import {
@@ -14,13 +15,13 @@ import type {
   SidebarSection,
   WorkspaceRow,
 } from './sections'
-import { SectionList } from './SectionList'
+import { sectionList } from '../../entries/components/workspaces/SectionList.mockup'
 import {
-  NewWorkspaceLink,
-  RoutinesLink,
-  SearchLink,
-  SettingsLink,
-} from './SidebarLinks'
+  newWorkspaceLink,
+  routinesLink,
+  searchLink,
+  settingsLink,
+} from '../../entries/components/workspaces/SidebarLinks.mockup'
 import styles from './Sidebar.module.css'
 
 /**
@@ -61,10 +62,12 @@ export function Sidebar(props: {
     <>
       <div className={styles.top}>
         <h2 className={styles.org}>{props.org.name}</h2>
-        <SettingsLink
-          alert={props.settingsAlert}
+        <settingsLink.Component
           current={props.current === 'settings'}
-          to={suspended ? paths.suspendedSettings : undefined}
+          {...defined({
+            alert: props.settingsAlert,
+            to: suspended ? paths.suspendedSettings : undefined,
+          })}
         />
       </div>
       <div
@@ -76,38 +79,39 @@ export function Sidebar(props: {
       >
         <div className={styles.links}>
           {suspended ? null : (
-            <NewWorkspaceLink
+            <newWorkspaceLink.Component
               current={props.current === 'new-workspace'}
-              to={props.newWorkspaceTo}
               variant="sidebar"
+              {...defined({ to: props.newWorkspaceTo })}
             />
           )}
-          <RoutinesLink
+          <routinesLink.Component
             current={props.current === 'routines'}
-            to={suspended ? paths.suspendedRoutines : undefined}
             variant="sidebar"
+            {...defined({
+              to: suspended ? paths.suspendedRoutines : undefined,
+            })}
           />
-          <SearchLink
-            shortcut={paletteShortcut(props.shortcuts)}
+          <searchLink.Component
             variant="sidebar"
+            {...defined({ shortcut: paletteShortcut(props.shortcuts) })}
           />
         </div>
         {props.failed ? (
-          <loadFailure.Component
-            moklyInstance="sidebar-load-failure"
-            title="The workspaces didn't load"
-          />
+          <loadFailure.Component title="The workspaces didn't load" />
         ) : (
-          <SectionList
-            archived={props.archived}
-            archivedCollapsed={props.archivedCollapsed}
-            drag={props.drag}
-            menu={props.menu}
-            focus={props.focus}
+          <sectionList.Component
             readOnly={suspended}
             sections={props.sections}
             variant="sidebar"
             viewer={props.viewer}
+            {...defined({
+              archived: props.archived,
+              archivedCollapsed: props.archivedCollapsed,
+              drag: props.drag,
+              menu: props.menu,
+              focus: props.focus,
+            })}
           />
         )}
       </div>

@@ -5,13 +5,13 @@ import { menu as menuPart } from '../entries/components/common/Menu.mockup'
 import { ScreenLink } from '../components/common/ScreenLink'
 import { sheet } from '../entries/components/common/Sheet.mockup'
 import orgDrag from '../components/orgs/OrgDrag.module.css'
-import {
-  OrgDrop,
-  placeAfterDrop,
-  type OrgDrag,
-} from '../components/orgs/OrgDrop'
+import { placeAfterDrop, type OrgDrag } from '../components/orgs/OrgDrop'
+import { orgDrop } from '../entries/components/orgs/OrgDrop.mockup'
 import { orgLinks } from '../components/orgs/orgLinks'
-import { AccountAvatar, OrgTile } from '../components/orgs/OrgTile'
+import {
+  accountAvatar,
+  orgTile,
+} from '../entries/components/orgs/OrgTile.mockup'
 import { sectionMenu } from '../components/workspaces/menus'
 import type { RowMenuOpen } from '../components/workspaces/RowMenu'
 import { orgList, type Org, type OrgKey } from '../fixtures/orgs'
@@ -54,11 +54,20 @@ function SheetRow(props: {
   )
 }
 
-/** The square and the name of an org, in a row of the org switcher. */
-function OrgRowContent(props: { org: Org; current: boolean }) {
+/**
+ * The square and the name of an org, in a row of the org switcher. `name`
+ * names its square for Mokly, because the lifted copy of a drag shows the
+ * same org.
+ */
+function OrgRowContent(props: { org: Org; current: boolean; name: string }) {
   return (
     <>
-      <OrgTile current={props.current} org={props.org} size={26} />
+      <orgTile.Component
+        current={props.current}
+        moklyInstance={props.name}
+        org={props.org}
+        size={26}
+      />
       <span className={styles.sheetLabel}>{props.org.name}</span>
     </>
   )
@@ -82,7 +91,7 @@ export function OrgSwitcherSheet(props: {
   const dragged = orgs[from]
   const dropAt = (index: number) =>
     dragged && props.drag?.index === index ? (
-      <OrgDrop
+      <orgDrop.Component
         at="sheet"
         count={orgs.length}
         name={dragged.name}
@@ -91,10 +100,11 @@ export function OrgSwitcherSheet(props: {
         <SheetRow current={dragged.key === props.current}>
           <OrgRowContent
             current={dragged.key === props.current}
+            name={`tile-${dragged.key}-lifted`}
             org={dragged}
           />
         </SheetRow>
-      </OrgDrop>
+      </orgDrop.Component>
     ) : null
   return (
     <sheet.Component moklyInstance="org-sheet" title="Orgs">
@@ -111,6 +121,7 @@ export function OrgSwitcherSheet(props: {
                 >
                   <OrgRowContent
                     current={org.key === props.current}
+                    name={`tile-${org.key}`}
                     org={org}
                   />
                 </SheetRow>
@@ -129,7 +140,7 @@ export function OrgSwitcherSheet(props: {
         </ul>
         <hr className={styles.sheetDivider} />
         <SheetRow to={paths.account}>
-          <AccountAvatar size={26} />
+          <accountAvatar.Component size={26} />
           <span className={styles.sheetLabel}>Account</span>
         </SheetRow>
         {props.operator ? (

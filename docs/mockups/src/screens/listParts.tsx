@@ -5,32 +5,28 @@ import { defined } from '../defined'
 import a11y from '../components/common/a11y.module.css'
 import { emptyState } from '../entries/components/common/EmptyState.mockup'
 import { loadFailure } from '../entries/components/common/LoadFailure.mockup'
-import { appFrame } from '../entries/components/layout/AppFrame.mockup'
-import { acmeRail, type RailState } from '../components/layout/OrgRail'
 import responsive from '../components/layout/responsive.module.css'
-import { OrgTile } from '../components/orgs/OrgTile'
+import { orgTile } from '../entries/components/orgs/OrgTile.mockup'
 import {
-  SuspendedOrgAbove,
-  SuspendedOrgNotice,
-  SuspendedOrgPanel,
-} from '../components/orgs/SuspendedOrgNotice'
+  suspendedOrgAbove,
+  suspendedOrgNotice,
+  suspendedOrgPanel,
+} from '../entries/components/orgs/SuspendedOrgNotice.mockup'
 import type { RowFocus } from '../components/workspaces/rowControls'
 import type { MenuStyle } from '../components/workspaces/SectionList'
-import { SectionList } from '../components/workspaces/SectionList'
-import {
-  suspendedSections,
-  type ListDrag,
-  type ListMenu,
-  type SidebarSection,
-  type WorkspaceRow,
+import { sectionList } from '../entries/components/workspaces/SectionList.mockup'
+import type {
+  ListDrag,
+  ListMenu,
+  SidebarSection,
+  WorkspaceRow,
 } from '../components/workspaces/sections'
-import { Sidebar } from '../components/workspaces/Sidebar'
 import {
-  NewWorkspaceLink,
-  RoutinesLink,
-  SearchLink,
-  SettingsLink,
-} from '../components/workspaces/SidebarLinks'
+  newWorkspaceLink,
+  routinesLink,
+  searchLink,
+  settingsLink,
+} from '../entries/components/workspaces/SidebarLinks.mockup'
 import { deletedOrg, orgs, suspendedOrg, type Org } from '../fixtures/orgs'
 import type { Membership } from '../fixtures/members'
 import { paletteShortcut } from '../fixtures/shortcutChanges'
@@ -69,12 +65,14 @@ export function ListHeader(props: {
   return (
     <header className={styles.header}>
       <ScreenLink className={styles.switcher} to={paths.orgs}>
-        <OrgTile current org={props.org} size={24} />
+        <orgTile.Component current org={props.org} size={24} />
         <span className={a11y.hidden}>Switch org: </span>
         <span className={styles.orgName}>{props.org.name}</span>
         <ChevronDown aria-hidden className={styles.chevron} size={15} />
       </ScreenLink>
-      {props.settings === false ? null : <SettingsLink to={props.settingsTo} />}
+      {props.settings === false ? null : (
+        <settingsLink.Component {...defined({ to: props.settingsTo })} />
+      )}
     </header>
   )
 }
@@ -117,37 +115,45 @@ export function HomeList(props: {
         settingsTo={suspended ? paths.suspendedSettings : undefined}
       />
       <div className={styles.scroll} data-mokly-scroll="workspace-page">
-        {suspended ? <SuspendedOrgNotice org={props.org} /> : null}
+        {suspended ? (
+          <suspendedOrgNotice.Component org={{ name: props.org.name }} />
+        ) : null}
         <div className={styles.links}>
           {suspended ? null : (
-            <NewWorkspaceLink to={props.newWorkspaceTo} variant="page" />
+            <newWorkspaceLink.Component
+              variant="page"
+              {...defined({ to: props.newWorkspaceTo })}
+            />
           )}
-          <RoutinesLink
-            to={suspended ? paths.suspendedRoutines : undefined}
+          <routinesLink.Component
             variant="page"
+            {...defined({
+              to: suspended ? paths.suspendedRoutines : undefined,
+            })}
           />
-          <SearchLink
-            shortcut={props.keys ? paletteShortcut() : undefined}
+          <searchLink.Component
             variant="page"
+            {...defined({
+              shortcut: props.keys ? paletteShortcut() : undefined,
+            })}
           />
         </div>
         {props.failed ? (
-          <loadFailure.Component
-            moklyInstance="list-load-failure"
-            title="The workspaces didn't load"
-          />
+          <loadFailure.Component title="The workspaces didn't load" />
         ) : (
-          <SectionList
-            archived={props.archived}
-            archivedCollapsed={props.archivedCollapsed}
-            drag={props.drag}
-            focus={props.focus}
-            menu={props.menu}
+          <sectionList.Component
             menuStyle={props.menuStyle}
             readOnly={suspended}
             sections={props.sections}
             variant="page"
             viewer={props.viewer}
+            {...defined({
+              archived: props.archived,
+              archivedCollapsed: props.archivedCollapsed,
+              drag: props.drag,
+              focus: props.focus,
+              menu: props.menu,
+            })}
           />
         )}
       </div>
@@ -156,36 +162,22 @@ export function HomeList(props: {
 }
 
 /**
- * The list of a suspended org on desktop. The main area shows the notice
- * of the org in place of New workspace. A narrow window shows the list as
- * a page, with the notice at its top. The menu of each row holds only Copy
- * link. `focus` names the row whose menu or hover the view draws. `rail` is
- * the rail before the org shows as suspended in it, such as a rail in the
- * middle of a reorder.
+ * The main area of the list of a suspended org on desktop: the notice of
+ * the org in place of New workspace. A narrow window shows the list as a
+ * page, with the notice at its top. The menu of each row holds only Copy
+ * link. `focus` names the row whose menu or hover the view draws. The
+ * screen draws the rail and the sidebar around it.
  */
 export function SuspendedList(props: {
   viewer: Membership
   focus?: RowFocus
-  sections?: readonly SidebarSection[]
-  rail?: RailState
+  sections: readonly SidebarSection[]
 }) {
   const org = orgs[suspendedOrg]
-  const sections = props.sections ?? suspendedSections()
   return (
-    <appFrame.Component
-      rail={{ ...(props.rail ?? acmeRail), suspended: suspendedOrg }}
-      sidebar={
-        <Sidebar
-          focus={props.focus}
-          org={org}
-          sections={sections}
-          suspended
-          viewer={props.viewer}
-        />
-      }
-    >
+    <>
       <div className={`${responsive.wideOnly} ${styles.choose}`}>
-        <SuspendedOrgPanel org={org} />
+        <suspendedOrgPanel.Component org={{ name: org.name }} />
       </div>
       <div className={`${responsive.narrowOnly} ${styles.narrowList}`}>
         <HomeList
@@ -193,12 +185,12 @@ export function SuspendedList(props: {
           keys
           menuStyle="anchored"
           org={org}
-          sections={sections}
+          sections={props.sections}
           suspended
           viewer={props.viewer}
         />
       </div>
-    </appFrame.Component>
+    </>
   )
 }
 
@@ -274,5 +266,9 @@ export function DeletedOrg(props: { suspended?: boolean }) {
     />
   )
   if (!props.suspended) return page
-  return <SuspendedOrgAbove org={org}>{page}</SuspendedOrgAbove>
+  return (
+    <suspendedOrgAbove.Component org={{ name: org.name }}>
+      {page}
+    </suspendedOrgAbove.Component>
+  )
 }

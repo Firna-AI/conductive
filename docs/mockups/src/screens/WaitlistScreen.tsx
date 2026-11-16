@@ -5,7 +5,7 @@ import { notice } from '../entries/components/common/Notice.mockup'
 import { ScreenLink } from '../components/common/ScreenLink'
 import { useControlSizes } from '../components/common/touch'
 import { PendingInviteList } from '../components/members/PendingInvites'
-import { PersonAvatar } from '../components/orgs/OrgTile'
+import { personAvatar } from '../entries/components/orgs/OrgTile.mockup'
 import {
   typedCode,
   waitingEmail,
@@ -147,7 +147,11 @@ function Invitations(props: { paused: boolean; stacked: boolean }) {
 function AccountRow() {
   return (
     <div className={styles.account}>
-      <PersonAvatar initials={waitingPerson.initials} size={32} />
+      <personAvatar.Component
+        initials={waitingPerson.initials}
+        moklyInstance="waiting-person"
+        size={32}
+      />
       <span className={styles.person}>
         <span className={styles.name}>{waitingPerson.name}</span>
         <span className={styles.login}>@{waitingPerson.login}</span>

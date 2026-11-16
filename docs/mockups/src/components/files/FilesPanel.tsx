@@ -7,7 +7,7 @@ import { allFilesUnavailable } from '../chat/lostCopy'
 import { LostUpdateRow } from '../chat/LostUpdate'
 import { emptyState } from '../../entries/components/common/EmptyState.mockup'
 import { linkTabs } from '../../entries/components/common/LinkTabs.mockup'
-import { PanelBar } from '../workspace/PanelBar'
+import { panelBar } from '../../entries/components/workspace/PanelBar.mockup'
 import { ChangeList } from './ChangeList'
 import { ChecksList } from './ChecksList'
 import { FileTree } from './FileTree'
@@ -63,7 +63,7 @@ function FileTabs(props: {
   banner: BannerState
 }) {
   return (
-    <PanelBar>
+    <panelBar.Component moklyInstance="files-bar">
       <linkTabs.Component
         label="Files"
         moklyInstance="files-tabs"
@@ -86,7 +86,7 @@ function FileTabs(props: {
           },
         ]}
       />
-    </PanelBar>
+    </panelBar.Component>
   )
 }
 

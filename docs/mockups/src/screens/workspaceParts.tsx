@@ -6,18 +6,12 @@ import type { BackLink } from '../components/layout/Page'
 import { DesktopView } from '../components/tools/DesktopView'
 import { PreviewTool } from '../components/tools/PortPreview'
 import { TerminalTool } from '../components/tools/TerminalTool'
-import { SandboxPanel } from '../components/workspace/SandboxNotice'
+import { sandboxPanel } from '../entries/components/workspace/SandboxNotice.mockup'
 import {
   replacesList,
   replacesShownFile,
 } from '../components/workspace/sandboxNoticeState'
-import {
-  archivedSections,
-  suspendedSections,
-  workspaceSections,
-  type ChangedWorkspace,
-} from '../components/workspaces/sections'
-import { Sidebar } from '../components/workspaces/Sidebar'
+import { plainData } from '../defined'
 import { unpushedWork } from '../fixtures/barActions'
 import {
   creatingLog,
@@ -25,11 +19,7 @@ import {
   resumingLog,
   type StartingLog,
 } from '../fixtures/starting'
-import { orgs } from '../fixtures/orgs'
-import type { Membership } from '../fixtures/members'
-import type { ShortcutChanges } from '../fixtures/shortcutChanges'
 import { terminalSets } from '../fixtures/terminals'
-import type { ActivityStatus, Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
 import { freshPromptFor, runStartingLog } from './workspaceRun'
 import { panelState } from './workspaceSandbox'
@@ -115,7 +105,12 @@ export function filePlaceholder(
 ): ReactNode {
   const panel = panelState(state)
   return panel && (panel.problem === 'starting' || replacesShownFile(panel)) ? (
-    <SandboxPanel phone={withAction} place="file" state={panel} />
+    <sandboxPanel.Component
+      moklyInstance="sandbox-file"
+      phone={withAction}
+      place="file"
+      state={plainData(panel)}
+    />
   ) : undefined
 }
 
@@ -128,7 +123,12 @@ export function filePlaceholder(
 function listsPlaceholder(state: WorkspaceState, phone: boolean): ReactNode {
   const panel = panelState(state)
   return panel && replacesList(panel, !isNew(state)) ? (
-    <SandboxPanel phone={phone} place="files" state={panel} />
+    <sandboxPanel.Component
+      moklyInstance="sandbox-files"
+      phone={phone}
+      place="files"
+      state={plainData(panel)}
+    />
   ) : undefined
 }
 
@@ -152,7 +152,14 @@ export function FilesContent(props: {
   const phone = props.viewport === 'mobile'
   const panel = panelState(state)
   if (panel?.problem === 'archived') {
-    return <SandboxPanel phone={phone} place="files" state={panel} />
+    return (
+      <sandboxPanel.Component
+        moklyInstance="sandbox-files"
+        phone={phone}
+        place="files"
+        state={plainData(panel)}
+      />
+    )
   }
   const open = openFile(state)
   if (phone && open) {
@@ -218,7 +225,16 @@ export function ToolContent(props: {
   const { state } = props
   const mobile = props.viewport === 'mobile'
   const panel = panelState(state)
-  if (panel) return <SandboxPanel phone={mobile} place="tools" state={panel} />
+  if (panel) {
+    return (
+      <sandboxPanel.Component
+        moklyInstance="sandbox-tools"
+        phone={mobile}
+        place="tools"
+        state={plainData(panel)}
+      />
+    )
+  }
   switch (state.tool) {
     case 'terminal':
       return <TerminalContent state={state} viewport={props.viewport} />
@@ -227,49 +243,4 @@ export function ToolContent(props: {
     case 'desktop':
       return <DesktopView />
   }
-}
-
-/**
- * The sidebar beside an open workspace, which shows its current status. An
- * archived workspace sits in the open Archived group. In a suspended org
- * every row shows stopped, and nothing in the sidebar changes the org.
- */
-export function workspaceSidebar(props: {
-  workspace: Workspace
-  status: ActivityStatus
-  suspended: boolean
-  viewer: Membership
-  /** The rows that differ from the list of when the app opens, by then. */
-  changed: readonly ChangedWorkspace[]
-  /** The last day of Restore of the archived workspace has not passed. */
-  restoreOpen: boolean
-  /** The person's changes to the shortcuts, for the key of the Search row. */
-  shortcuts?: ShortcutChanges
-}): ReactNode {
-  const { workspace, status, suspended, viewer, changed, shortcuts } = props
-  if (status !== 'archived') {
-    const sections = suspended
-      ? suspendedSections(workspace)
-      : workspaceSections({ workspace, status }, undefined, changed)
-    return (
-      <Sidebar
-        org={orgs.acme}
-        sections={sections}
-        shortcuts={shortcuts}
-        suspended={suspended}
-        viewer={viewer}
-      />
-    )
-  }
-  const list = archivedSections(workspace, suspended, props.restoreOpen)
-  return (
-    <Sidebar
-      archived={list.archived}
-      org={orgs.acme}
-      sections={list.sections}
-      shortcuts={shortcuts}
-      suspended={suspended}
-      viewer={viewer}
-    />
-  )
 }

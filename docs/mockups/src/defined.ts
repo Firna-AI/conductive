@@ -12,3 +12,23 @@ export function defined<T extends object>(props: T): Partial<T> {
   }
   return result
 }
+
+/**
+ * A copy of data without the object keys whose value is undefined, at any
+ * depth. A Mokly wrapper also fails on an undefined value inside a data
+ * prop, and the builders of rows, menus, and bars leave an optional field
+ * undefined, as a plain part treats it as a missing one. Pass only data,
+ * never a React element: a slot goes through `defined` instead.
+ */
+export function plainData<T>(value: T): T
+export function plainData(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map((item) => plainData(item))
+  if (typeof value !== 'object' || value === null) return value
+  // A class instance stays as it is, so the wrapper names it as not data.
+  if (Object.getPrototypeOf(value) !== Object.prototype) return value
+  const result: Record<string, unknown> = {}
+  for (const [key, item] of Object.entries(value)) {
+    if (item !== undefined) result[key] = plainData(item)
+  }
+  return result
+}

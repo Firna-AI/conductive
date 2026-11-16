@@ -1,6 +1,6 @@
 import type { Viewport } from '@mokly/mokly'
 import { page } from '../entries/components/layout/Page.mockup'
-import { SuspendedOrgNotice } from '../components/orgs/SuspendedOrgNotice'
+import { suspendedOrgNotice } from '../entries/components/orgs/SuspendedOrgNotice.mockup'
 import { DeleteRoutineDialog } from '../components/routines/DeleteRoutineDialog'
 import { RunsPanel } from '../components/routines/RunsPanel'
 import { offersRunNow } from '../components/routines/triggerCopy'
@@ -91,7 +91,10 @@ export function RoutineScreen(props: {
     />
   )
   const notice = suspended ? (
-    <SuspendedOrgNotice org={orgs[suspendedOrg]} />
+    <suspendedOrgNotice.Component
+      moklyInstance="suspended-org-notice"
+      org={{ name: orgs[suspendedOrg].name }}
+    />
   ) : null
   const runs = (
     <RunsPanel

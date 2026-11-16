@@ -2,7 +2,7 @@ import type { PersonKey } from '../../../fixtures/members'
 import type { OrgKey } from '../../../fixtures/orgs'
 
 /** The keys of the orgs of the fixtures, as `OrgKey` lists them. */
-const orgKeys = [
+export const orgKeys = [
   'acme',
   'futex',
   'firna',
@@ -10,7 +10,7 @@ const orgKeys = [
 ] as const satisfies readonly OrgKey[]
 
 /** The keys of the people of the fixtures, as `PersonKey` lists them. */
-const personKeys = [
+export const personKeys = [
   'cal',
   'priya',
   'jonas',
@@ -32,7 +32,7 @@ export const orgSchema = {
 } as const
 
 /** A person of the fixtures as JSON, with the fields of `Person`. */
-const personSchema = {
+export const personSchema = {
   type: 'object',
   additionalProperties: false,
   required: ['key', 'name', 'login', 'initials'],

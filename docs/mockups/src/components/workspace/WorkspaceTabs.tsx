@@ -8,7 +8,13 @@ import type { MenuEntryData } from '../../entries/components/common/menuEntries'
 import { ScreenLink } from '../common/ScreenLink'
 import { iconButton } from '../../entries/components/common/actions.mockup'
 import { classes } from '../common/classes'
-import { DropPlace, TabItem, type WorkspaceTab } from './TabItem'
+import { defined } from '../../defined'
+import { instanceKey } from '../../instanceKey'
+import {
+  dropPlace,
+  tabItem,
+} from '../../entries/components/workspace/TabItem.mockup'
+import type { WorkspaceTab } from './TabItem'
 import { tabMenuOf } from './TabMenu'
 import tabScroll from './TabScroll.module.css'
 import styles from './WorkspaceTabs.module.css'
@@ -123,7 +129,7 @@ export function WorkspaceTabs(props: {
   const overRow = dragged !== undefined || (menuOpen && !phone)
   const dropAt = (index: number) =>
     dragged && drag?.index === index ? (
-      <DropPlace
+      <dropPlace.Component
         count={tabs.length}
         place={placeAfterDrop(from, index)}
         tab={dragged}
@@ -146,15 +152,17 @@ export function WorkspaceTabs(props: {
         {tabs.map((tab, index) => (
           <Fragment key={tab.key}>
             {dropAt(index)}
-            <TabItem
-              menu={
-                menuOpen && tab.key === menuTab
-                  ? { entries: menu, anchored: !phone }
-                  : undefined
-              }
+            <tabItem.Component
+              moklyInstance={`tab-${instanceKey(tab.key)}`}
               placeholder={tab === dragged}
               renaming={tab.key === props.renaming}
               tab={tab}
+              {...defined({
+                menu:
+                  menuOpen && tab.key === menuTab
+                    ? { entries: menu, anchored: !phone }
+                    : undefined,
+              })}
             />
           </Fragment>
         ))}

@@ -9,7 +9,8 @@ import {
   suspendedSections,
   workspaceSections,
 } from '../components/workspaces/sections'
-import { Sidebar } from '../components/workspaces/Sidebar'
+import { defined, plainData } from '../defined'
+import { sidebar } from '../entries/components/workspaces/Sidebar.mockup'
 import { type AgentChoice, defaultChoice } from '../fixtures/agents'
 import { firstGoodBuild, lastBuild } from '../fixtures/computer'
 import { savedCartsMessage } from '../fixtures/newWorkspaceConversations'
@@ -128,35 +129,38 @@ export function sidebarOf(
     case 'suspended':
       // The sidebar of a suspended org has no New workspace to select.
       return (
-        <Sidebar
+        <sidebar.Component
+          moklyInstance="sidebar"
           org={orgs.acme}
-          sections={suspendedSections()}
-          shortcuts={shortcuts}
+          sections={plainData(suspendedSections())}
           suspended
           viewer={viewer}
+          {...defined({ shortcuts })}
         />
       )
     case 'new':
       return (
-        <Sidebar
+        <sidebar.Component
           current="new-workspace"
+          moklyInstance="sidebar"
           newWorkspaceTo={paths.firstBuildWorkspace}
           org={orgs.firna}
           sections={newOrgSections()}
           settingsAlert={state.firstBuild === 'failed'}
-          shortcuts={shortcuts}
           viewer={viewer}
+          {...defined({ shortcuts })}
         />
       )
     case 'active':
       return (
-        <Sidebar
+        <sidebar.Component
           current="new-workspace"
+          moklyInstance="sidebar"
           org={orgs.acme}
-          sections={workspaceSections(undefined, needsInput)}
+          sections={plainData(workspaceSections(undefined, needsInput))}
           settingsAlert={acmeBuildFailed(state)}
-          shortcuts={shortcuts}
           viewer={viewer}
+          {...defined({ shortcuts })}
         />
       )
   }

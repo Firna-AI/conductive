@@ -1,7 +1,8 @@
 import type { SchemaProps, Viewport } from '@mokly/mokly'
 import { appFrame } from '../entries/components/layout/AppFrame.mockup'
-import { NewWorkspaceDialog } from '../components/new-workspace/NewWorkspaceDialog'
-import { ChooseRepositoriesNotice } from '../components/new-workspace/notices'
+import { defined } from '../defined'
+import { newWorkspaceDialog } from '../entries/components/new-workspace/NewWorkspaceDialog.mockup'
+import { chooseRepositoriesNotice } from '../entries/components/new-workspace/notices.mockup'
 import { formWait } from '../components/new-workspace/waitingRepository'
 import { newOrg } from '../fixtures/repositories'
 import type { MenuEntryData } from '../entries/components/common/menuEntries'
@@ -12,7 +13,10 @@ import {
   newWorkspaceSchema,
 } from './NewWorkspaceScreen'
 import { FirstBuildNotice } from './firstBuildNotice'
-import { NewOrgEmpty } from './listParts'
+import {
+  newOrgEmpty,
+  newOrgOf,
+} from '../entries/components/screens/listParts.mockup'
 import { pageOrg, railOf, sidebarOf } from './newWorkspacePageParts'
 import {
   formNotices,
@@ -126,33 +130,36 @@ export function NewWorkspaceDialogScreen(props: {
   if (repositoryWait) notices.splice(failed ? 1 : 0, 0, repositoryWait)
   if (!chosen) {
     notices.push(
-      <ChooseRepositoriesNotice
+      <chooseRepositoriesNotice.Component
         admin={state.viewer === 'admin'}
         key="repositories"
+        moklyInstance="choose-repositories-notice"
         org={org.name}
       />,
     )
   }
   const ownDraft = (state.org === 'new' || waiting) && state.draft !== 'empty'
   const dialog = (
-    <NewWorkspaceDialog
+    <newWorkspaceDialog.Component
       attachments={draft.files}
-      caret={ownDraft ? undefined : draft.caret}
       choice={page.choice}
       drop={state.files === 'drop-over'}
-      notices={notices}
+      moklyInstance="new-workspace-dialog"
       place={`${org.name} · ${sections[defaultSection].name}`}
       section={sections[defaultSection].name}
-      sectionMenu={state.sectionMenu === 'open' ? sectionMenu : undefined}
       placeholder={taskPlaceholder}
       ready={hasWords(draft.text) && !waits(state) && !building && !waiting}
-      repository={chosen ? page.repository.name : undefined}
-      repositoryMenu={
-        chosen && state.repositoryMenu === 'open'
-          ? repositoryMenu(page, state.waitingBuild)
-          : undefined
-      }
       text={ownDraft ? page.draft : draft.text}
+      {...defined({
+        caret: ownDraft ? undefined : draft.caret,
+        notices: notices.length > 0 ? notices : undefined,
+        repository: chosen ? page.repository.name : undefined,
+        repositoryMenu:
+          chosen && state.repositoryMenu === 'open'
+            ? repositoryMenu(page, state.waitingBuild)
+            : undefined,
+        sectionMenu: state.sectionMenu === 'open' ? sectionMenu : undefined,
+      })}
     />
   )
   if (state.org === 'new') {
@@ -162,7 +169,10 @@ export function NewWorkspaceDialogScreen(props: {
         rail={railOf(pageState)}
         sidebar={sidebarOf(pageState)}
       >
-        <NewOrgEmpty org={newOrg} />
+        <newOrgEmpty.Component
+          moklyInstance="new-org-empty"
+          org={newOrgOf(newOrg)}
+        />
       </appFrame.Component>
     )
   }

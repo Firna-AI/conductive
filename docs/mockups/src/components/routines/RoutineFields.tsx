@@ -9,7 +9,7 @@ import { noop } from '../../noop'
 import { actionButton } from '../../entries/components/common/actions.mockup'
 import type { IconKey } from '../../entries/components/common/icons'
 import { useControlSizes } from '../common/touch'
-import { PersonAvatar } from '../orgs/OrgTile'
+import { personAvatar } from '../../entries/components/orgs/OrgTile.mockup'
 import { DetailList } from '../settings/DetailList'
 import form from './form.module.css'
 import styles from './RoutineFields.module.css'
@@ -56,7 +56,11 @@ function Creator(props: { routine: Routine }) {
   return (
     <span className={styles.by}>
       By
-      <PersonAvatar initials={owner.initials} size={18} />
+      <personAvatar.Component
+        initials={owner.initials}
+        moklyInstance="creator"
+        size={18}
+      />
       <span className={styles.person}>{owner.name}</span>
     </span>
   )

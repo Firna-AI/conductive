@@ -1,5 +1,6 @@
 import type { Viewport } from '@mokly/mokly'
 import { FolderGit2 } from 'lucide-react'
+import { defined } from '../../defined'
 import { people } from '../../fixtures/members'
 import { repositories } from '../../fixtures/repositories'
 import type { ActivityStatus, Workspace } from '../../fixtures/workspaces'
@@ -9,16 +10,18 @@ import { shortcutTip } from '../../entries/components/common/ShortcutTip.mockup'
 import { iconButton } from '../../entries/components/common/actions.mockup'
 import { workspaceLabel } from '../workspaces/label'
 import { activityPresentation } from '../workspaces/status'
-import { StatusGlyph } from '../workspaces/StatusGlyph'
-import { CopyLinkButton, type CopyResult } from './CopyLinkButton'
-import { OwnerPicker } from './OwnerPicker'
-import { RunLinks, type RunSource } from './RunLinks'
+import { statusGlyph } from '../../entries/components/workspaces/StatusGlyph.mockup'
+import { copyLinkButton } from '../../entries/components/workspace/CopyLinkButton.mockup'
+import type { CopyResult } from './CopyLinkButton'
+import { ownerPicker } from '../../entries/components/workspace/OwnerPicker.mockup'
+import { runLinks } from '../../entries/components/workspace/RunLinks.mockup'
+import type { RunSource } from './RunLinks'
 import styles from './WorkspaceHeader.module.css'
 
 function State(props: { status: ActivityStatus }) {
   return (
     <span className={styles.state}>
-      <StatusGlyph status={props.status} />
+      <statusGlyph.Component status={props.status} />
       {activityPresentation[props.status].label}
     </span>
   )
@@ -57,11 +60,11 @@ export function WorkspaceHeader(props: {
   const { workspace, name } = props
   const repository = repositories[workspace.repository].name
   const owner = (
-    <OwnerPicker
+    <ownerPicker.Component
       compact={props.viewport === 'mobile'}
-      open={props.ownerOpen}
       owner={people[workspace.owner]}
       readOnly={!props.canReassign}
+      {...defined({ open: props.ownerOpen })}
     />
   )
   const label = workspaceLabel(workspace.number)
@@ -71,10 +74,10 @@ export function WorkspaceHeader(props: {
       label={`Copy link to ${label}`}
       moklyInstance="copy-link-tip"
     >
-      <CopyLinkButton
+      <copyLinkButton.Component
         inline={props.viewport === 'mobile'}
         label={label}
-        result={props.copy}
+        {...defined({ result: props.copy })}
       />
     </shortcutTip.Component>
   )
@@ -125,7 +128,7 @@ export function WorkspaceHeader(props: {
   return (
     <>
       {header}
-      <RunLinks run={props.run} />
+      <runLinks.Component run={props.run} />
     </>
   )
 }

@@ -13,7 +13,7 @@ import type { MenuEntryData } from '../../entries/components/common/menuEntries'
 import { ScreenLink } from '../common/ScreenLink'
 import a11y from '../common/a11y.module.css'
 import { useControlSizes } from '../common/touch'
-import { PersonAvatar } from '../orgs/OrgTile'
+import { personAvatar } from '../../entries/components/orgs/OrgTile.mockup'
 import styles from './OwnerPicker.module.css'
 
 /**
@@ -55,12 +55,12 @@ export function OwnerPicker(props: {
 }) {
   const control = useControlSizes()
   const { owner } = props
-  const avatar = <PersonAvatar initials={owner.initials} size={18} />
+  const avatar = <personAvatar.Component initials={owner.initials} size={18} />
   if (props.readOnly) {
     return (
       <span className={styles.plain} title={`Owner: ${owner.name}`}>
         {props.compact ? (
-          <PersonAvatar initials={owner.initials} size={24} />
+          <personAvatar.Component initials={owner.initials} size={24} />
         ) : (
           avatar
         )}
@@ -72,7 +72,7 @@ export function OwnerPicker(props: {
     )
   }
   const content = props.compact ? (
-    <PersonAvatar initials={owner.initials} size={24} />
+    <personAvatar.Component initials={owner.initials} size={24} />
   ) : (
     <span className={styles.trigger} style={{ fontSize: control.labelSize }}>
       {avatar}

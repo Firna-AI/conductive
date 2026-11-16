@@ -1,7 +1,6 @@
-import { RefreshCw } from 'lucide-react'
 import { agents, type AgentKey } from '../../fixtures/agents'
 import { loginLabels, type EndpointLogin } from '../../fixtures/logins'
-import { ActionButton } from '../common/actions'
+import { actionButton } from '../../entries/components/common/actions.mockup'
 import { EndpointModels } from './EndpointModels'
 import { EndpointAddressNote, EndpointReadFailed } from './EndpointRead'
 import { endpointReadCopy as copy } from './endpointReadCopy'
@@ -21,12 +20,13 @@ export function EndpointDetails(props: {
 }) {
   const { login } = props
   const refresh = (
-    <ActionButton
+    <actionButton.Component
       accessibilityLabel={copy.refreshLabel(agents[props.agent].name)}
-      icon={RefreshCw}
+      icon="refresh-cw"
+      moklyInstance={`refresh-${props.agent}`}
     >
       {copy.refresh}
-    </ActionButton>
+    </actionButton.Component>
   )
   return (
     <>

@@ -7,17 +7,17 @@ import {
 import { page as pagePart } from '../entries/components/layout/Page.mockup'
 import { LeaveOrgDialog } from '../components/members/LeaveOrgDialog'
 import { RemoveMemberDialog } from '../components/members/RemoveMemberDialog'
-import { SuspendedOrgNotice } from '../components/orgs/SuspendedOrgNotice'
+import { suspendedOrgNotice } from '../entries/components/orgs/SuspendedOrgNotice.mockup'
 import { failedBuildOf } from '../components/settings/BuildSection'
 import { DeleteOrgDialog } from '../components/settings/DeleteOrgDialog'
 import { SettingsTabs } from '../components/settings/OrgSections'
-import { Sidebar } from '../components/workspaces/Sidebar'
+import { sidebar as sidebarPart } from '../entries/components/workspaces/Sidebar.mockup'
 import { memberViewer, people, viewerMembership } from '../fixtures/members'
 import { type Org, orgList } from '../fixtures/orgs'
 import { repositoryChanges } from '../fixtures/repositories'
 import { settingsViewer, TabBody } from './orgSettingsTabs'
 import { settingsOrg } from './settingsOrgs'
-import { defined } from '../defined'
+import { defined, plainData } from '../defined'
 
 export const orgSettingsSchema = {
   type: 'object',
@@ -141,7 +141,12 @@ export function OrgSettingsScreen(props: {
       title={org.name}
       viewport={viewport}
     >
-      {suspended ? <SuspendedOrgNotice org={org} /> : null}
+      {suspended ? (
+        <suspendedOrgNotice.Component
+          moklyInstance="suspended-org-notice"
+          org={{ name: org.name }}
+        />
+      ) : null}
       <TabBody state={state} />
     </pagePart.Component>
   )
@@ -154,11 +159,12 @@ export function OrgSettingsScreen(props: {
     )
   }
   const sidebar = (
-    <Sidebar
+    <sidebarPart.Component
       current="settings"
+      moklyInstance="sidebar"
       newWorkspaceTo={settings.newWorkspace}
       org={org}
-      sections={settings.sections}
+      sections={plainData(settings.sections)}
       settingsAlert={failedBuildOf(state.build) !== undefined}
       suspended={suspended}
       viewer={viewerMembership(state.viewer)}

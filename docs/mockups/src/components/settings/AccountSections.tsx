@@ -11,7 +11,7 @@ import { account, installations } from '../../fixtures/orgs'
 import { noop } from '../../noop'
 import { actionButton } from '../../entries/components/common/actions.mockup'
 import { classes } from '../common/classes'
-import { AccountAvatar } from '../orgs/OrgTile'
+import { accountAvatar } from '../../entries/components/orgs/OrgTile.mockup'
 import { statusText } from '../../entries/components/common/StatusText.mockup'
 import { AgentConnectForm } from './AgentConnectForm'
 import { EndpointDetails } from './EndpointDetails'
@@ -41,7 +41,7 @@ function Connected(props: { name: string }) {
 export function SignInSection() {
   return (
     <section aria-label="Sign-in" className={styles.signIn}>
-      <AccountAvatar size={32} />
+      <accountAvatar.Component moklyInstance="sign-in-avatar" size={32} />
       <span className={styles.signInText}>
         Signed in with GitHub as{' '}
         <span className={styles.login}>@{account.login}</span>

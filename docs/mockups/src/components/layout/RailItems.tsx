@@ -10,7 +10,7 @@ import a11y from '../common/a11y.module.css'
 import { classes } from '../common/classes'
 import orgDrag from '../orgs/OrgDrag.module.css'
 import { orgLinks } from '../orgs/orgLinks'
-import { OrgTile } from '../orgs/OrgTile'
+import { orgTile } from '../../entries/components/orgs/OrgTile.mockup'
 import styles from './OrgRail.module.css'
 
 export function RailLink(props: {
@@ -59,7 +59,7 @@ function orgLink(
 
 /** The square of an org in the rail. */
 export function RailTile(props: { org: Org; current: boolean }) {
-  return <OrgTile current={props.current} org={props.org} size={26} />
+  return <orgTile.Component current={props.current} org={props.org} size={26} />
 }
 
 /**

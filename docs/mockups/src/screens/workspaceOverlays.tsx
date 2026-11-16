@@ -11,13 +11,14 @@ import { failureToast } from '../entries/components/common/FailureToast.mockup'
 import { menu } from '../entries/components/common/Menu.mockup'
 import { ScreenLink } from '../components/common/ScreenLink'
 import { sheet } from '../entries/components/common/Sheet.mockup'
-import { CommandPalette } from '../components/palette/CommandPalette'
+import { commandPalette } from '../entries/components/palette/CommandPalette.mockup'
 import type { PaletteContext } from '../components/palette/paletteContent'
-import { ArchivedToast } from '../components/workspace/ArchivedToast'
-import { ContinueDialog } from '../components/workspace/ContinueDialog'
+import { archivedToast } from '../entries/components/workspace/ArchivedToast.mockup'
+import { continueDialog } from '../entries/components/workspace/ContinueDialog.mockup'
 import { reassignMenu } from '../components/workspace/OwnerPicker'
 import type { WorkspaceTab } from '../components/workspace/TabItem'
-import { TabMenuSheet } from '../components/workspace/TabMenu'
+import { tabMenuSheet } from '../entries/components/workspace/TabMenu.mockup'
+import { plainData } from '../defined'
 import { transcriptToasts } from '../components/workspace/transcriptCopy'
 import { workspaceSessions } from '../fixtures/sessions'
 import { closedTerminal, cloudComputerSilent } from '../fixtures/terminals'
@@ -34,8 +35,11 @@ export function workspacePalette(
 ): ReactNode {
   if (state.palette === 'closed') return null
   return (
-    <CommandPalette
-      context={viewport === 'mobile' ? { archivable: false } : context}
+    <commandPalette.Component
+      context={plainData(
+        viewport === 'mobile' ? { archivable: false } : context,
+      )}
+      moklyInstance="command-palette"
       view={state.palette}
       viewport={viewport}
     />
@@ -175,7 +179,13 @@ export function workspaceOverlay(
     case 'close-session':
       return <CloseSessionDialog viewport={viewport} />
     case 'continue-unpushed':
-      return <ContinueDialog viewport={viewport} workspace={workspace} />
+      return (
+        <continueDialog.Component
+          moklyInstance="continue-dialog"
+          viewport={viewport}
+          workspace={workspace}
+        />
+      )
     case 'history':
       return mobile ? (
         <sheet.Component moklyInstance="history-sheet" title="Session history">
@@ -200,10 +210,11 @@ export function workspaceOverlay(
       ) : null
     case 'tab-menu':
       return mobile && row.menuTab ? (
-        <TabMenuSheet
+        <tabMenuSheet.Component
+          moklyInstance="tab-menu-sheet"
           readOnly={row.readOnly}
           tab={row.menuTab}
-          tabs={row.tabs}
+          tabs={plainData(row.tabs)}
         />
       ) : null
     case 'close-terminal':
@@ -240,7 +251,11 @@ export function workspaceToast(
       return null
     case 'archived':
       return (
-        <ArchivedToast name={workspace.name} phone={viewport === 'mobile'} />
+        <archivedToast.Component
+          moklyInstance="archived-toast"
+          name={workspace.name}
+          phone={viewport === 'mobile'}
+        />
       )
   }
 }

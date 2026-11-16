@@ -8,18 +8,18 @@ import {
 } from '../entries/components/layout/AppFrame.mockup'
 import { acmeRail } from '../components/layout/OrgRail'
 import { page as pagePart } from '../entries/components/layout/Page.mockup'
-import { SuspendedOrgNotice } from '../components/orgs/SuspendedOrgNotice'
+import { suspendedOrgNotice } from '../entries/components/orgs/SuspendedOrgNotice.mockup'
 import { RoutineList } from '../components/routines/RoutineList'
 import { SectionText } from '../components/settings/Section'
 import {
   suspendedSections,
   workspaceSections,
 } from '../components/workspaces/sections'
-import { Sidebar } from '../components/workspaces/Sidebar'
+import { sidebar } from '../entries/components/workspaces/Sidebar.mockup'
 import { orgs, suspendedOrg } from '../fixtures/orgs'
 import { routineRows, suspendedRoutineRows } from '../fixtures/routineRows'
 import { paths } from '../paths'
-import { defined } from '../defined'
+import { defined, plainData } from '../defined'
 
 export const routinesSchema = {
   type: 'object',
@@ -103,7 +103,12 @@ export function RoutinesScreen(props: {
         />
       ) : (
         <>
-          {suspended ? <SuspendedOrgNotice org={orgs[suspendedOrg]} /> : null}
+          {suspended ? (
+            <suspendedOrgNotice.Component
+              moklyInstance="suspended-org-notice"
+              org={{ name: orgs[suspendedOrg].name }}
+            />
+          ) : null}
           <SectionText muted>{routineWords}</SectionText>
           <RoutineList
             links={suspended ? suspendedLinks : routineLinks}
@@ -119,10 +124,13 @@ export function RoutinesScreen(props: {
     <appFrame.Component
       rail={{ ...acmeRail, ...(suspended ? { suspended: suspendedOrg } : {}) }}
       sidebar={
-        <Sidebar
+        <sidebar.Component
           current="routines"
+          moklyInstance="sidebar"
           org={org}
-          sections={suspended ? suspendedSections() : workspaceSections()}
+          sections={plainData(
+            suspended ? suspendedSections() : workspaceSections(),
+          )}
           suspended={suspended}
           viewer={{ person: 'cal', role: 'admin' }}
         />

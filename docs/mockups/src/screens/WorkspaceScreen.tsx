@@ -10,55 +10,41 @@ import {
 } from '../entries/components/layout/AppFrame.mockup'
 import { acmeRail } from '../components/layout/OrgRail'
 import { useMacApp } from '../components/mac/MacApp'
-import { SuspendedOrgNotice } from '../components/orgs/SuspendedOrgNotice'
-import { ChecksActions } from '../components/workspace/BarActions'
-import { MobileTabBar } from '../components/workspace/MobileTabBar'
-import {
-  PullRequestBar,
-  PullRequestRow,
-} from '../components/workspace/PullRequestBar'
-import { ToolsPanel } from '../components/workspace/ToolsPanel'
-import { WorkspaceBody } from '../components/workspace/WorkspaceBody'
-import { WorkspaceHeader } from '../components/workspace/WorkspaceHeader'
-import { WorkspaceTabs } from '../components/workspace/WorkspaceTabs'
-import { mayArchiveWorkspace } from '../components/workspaces/permissions'
+import { suspendedOrgNotice } from '../entries/components/orgs/SuspendedOrgNotice.mockup'
+import { checksActions } from '../entries/components/workspace/BarActions.mockup'
+import { WorkspaceMobile } from './workspaceMobile'
+import { pullRequestBar } from '../entries/components/workspace/PullRequestBar.mockup'
+import { toolsPanel } from '../entries/components/workspace/ToolsPanel.mockup'
+import { workspaceBody } from '../entries/components/workspace/WorkspaceBody.mockup'
+import { workspaceHeader } from '../entries/components/workspace/WorkspaceHeader.mockup'
+import { workspaceTabs } from '../entries/components/workspace/WorkspaceTabs.mockup'
+import { defined, plainData } from '../defined'
 import { chatItemsFor } from '../fixtures/maskedFiles'
 import { memberViewer, people } from '../fixtures/members'
 import { orgs, suspendedOrg } from '../fixtures/orgs'
-import { bannerSummary } from '../fixtures/pullRequests'
 import type { ShortcutChanges } from '../fixtures/shortcutChanges'
-import { suspendedOwner } from '../fixtures/startRefusals'
 import { paths } from '../paths'
 import { composerFor } from './composerFor'
 import { composerNotice } from './composerNotice'
 import { placeLostUpdate } from './lostUpdates'
-import { changedWorkspaces, chatWorkspacesOf } from './orgWorkspaces'
-import { viewerOf } from './sessionStarter'
-import { barOf, branchOf } from './workspaceBar'
+import { chatWorkspacesOf } from './orgWorkspaces'
+import { workspaceOpen } from './workspaceOpen'
 import {
-  FilesContent,
-  filePlaceholder,
-  openFile,
-  startingLogFor,
-  ToolContent,
-  workspaceSidebar,
-} from './workspaceParts'
+  filesContent,
+  toolContent,
+} from '../entries/components/screens/workspaceParts.mockup'
+import { filePlaceholder, openFile, startingLogFor } from './workspaceParts'
+import { workspaceSidebar } from './workspaceSidebar'
 import {
   transcriptToast,
   workspaceOverlay,
   workspacePalette,
   workspaceToast,
 } from './workspaceOverlays'
-import { openWorkspace } from './workspaceRun'
-import {
-  activityOf,
-  archiveRestore,
-  drawnState,
-  sandboxNotice,
-} from './workspaceSandbox'
+import { sandboxNotice } from './workspaceSandbox'
 import type { WorkspaceState } from './workspaceState'
 import { tabRowOf } from './workspaceTabRow'
-import { historyFor, tabsFor, workspaceName } from './workspaceTabs'
+import { historyFor, tabsFor } from './workspaceTabs'
 import styles from './WorkspaceScreen.module.css'
 
 /** The right column in the middle of a drag that widens it, in px. */
@@ -88,34 +74,21 @@ export function WorkspaceScreen(props: {
 }) {
   const { viewport } = props
   const mac = useMacApp()
-  const state = drawnState(props.state)
-  const suspended = state.org === 'suspended'
-  const open = openWorkspace(state)
-  const record = open.record
-  // An owner's refused start belongs to a suspended member, whom an active
-  // admin sees. A suspended org refuses the start of every owner.
-  const ownerRefused = state.sandbox === 'refused' && !suspended
-  const owner = ownerRefused ? suspendedOwner : record.owner
-  // Its row in the list shows the GitHub state of its pull request bar.
-  const workspace = {
-    ...record,
-    owner,
-    name: workspaceName(state, record),
-    branch: branchOf(state, record),
-    github: bannerSummary(state.banner),
-  }
-  const status = activityOf(state)
-  const archived = state.sandbox === 'archived'
-  const readOnly = archived || suspended
+  const {
+    state,
+    open,
+    workspace,
+    status,
+    suspended,
+    archived,
+    readOnly,
+    viewer,
+    membership,
+    archivable,
+    restorable,
+    bar,
+  } = workspaceOpen(props.state)
   const admin = state.viewer === 'admin'
-  const viewer = viewerOf(state)
-  const membership = { person: viewer, role: state.viewer }
-  // Decision 42: the workspace's owner and the org's admins archive it.
-  const archivable =
-    !readOnly && mayArchiveWorkspace(membership, workspace.owner)
-  // Every member restores it while the app keeps its cloud computer.
-  const restorable = archiveRestore(state) === 'available'
-  const bar = barOf(state, { archivable, readOnly })
   const problem = sandboxNotice(state)
   const fresh = state.tab === 'new-session'
   const rightHidden = state.rightColumn === 'hidden'
@@ -138,7 +111,10 @@ export function WorkspaceScreen(props: {
           // An archived workspace keeps its archived bar, so the notice of a
           // suspended org shows above it.
           archived && suspended ? (
-            <SuspendedOrgNotice org={orgs[suspendedOrg]} />
+            <suspendedOrgNotice.Component
+              moklyInstance="suspended-org-notice"
+              org={{ name: orgs[suspendedOrg].name }}
+            />
           ) : (
             composerNotice(state, workspace)
           )
@@ -150,18 +126,21 @@ export function WorkspaceScreen(props: {
       />
     </ChatWorkspaces>
   )
-  const workspaceHeader = (
-    <WorkspaceHeader
-      back={suspended ? paths.suspendedOrg : undefined}
+  const headerBar = (
+    <workspaceHeader.Component
       canReassign={admin && !readOnly}
-      copy={state.copyLink === 'none' ? undefined : state.copyLink}
+      moklyInstance="workspace-header"
       name={workspace.name}
       ownerOpen={state.overlay === 'reassign'}
-      run={open.run}
       rightHidden={rightHidden}
       status={status}
       viewport={viewport}
       workspace={workspace}
+      {...defined({
+        back: suspended ? paths.suspendedOrg : undefined,
+        copy: state.copyLink === 'none' ? undefined : state.copyLink,
+        run: open.run,
+      })}
     />
   )
   // A phone and an archived workspace show only the session tabs.
@@ -181,30 +160,48 @@ export function WorkspaceScreen(props: {
     </ChatWorkspaces>
   )
   const tabRow = (
-    <WorkspaceTabs
-      drag={row.drag}
-      full={row.full}
+    <workspaceTabs.Component
       historyEntries={historyFor(state)}
       historyOpen={state.overlay === 'history'}
-      menuTab={row.menuTab}
+      moklyInstance="workspace-tabs"
       readOnly={readOnly}
-      renaming={row.renaming}
-      tabs={tabs}
+      tabs={plainData(tabs)}
       viewport={viewport}
+      {...defined({
+        drag: row.drag,
+        full: row.full,
+        menuTab: row.menuTab,
+        renaming: row.renaming,
+      })}
     />
   )
   // A phone shows the actions of the bar at the top of the Checks tab.
   const checksTop =
     viewport === 'mobile' ? (
-      <ChecksActions bar={bar} workspace={workspace} />
+      <checksActions.Component
+        bar={plainData(bar)}
+        moklyInstance="checks-actions"
+        workspace={workspace}
+      />
     ) : undefined
   const { header, files } = placeLostUpdate(state, {
-    header: workspaceHeader,
+    header: headerBar,
     files: (
-      <FilesContent checksTop={checksTop} state={state} viewport={viewport} />
+      <filesContent.Component
+        moklyInstance="files-content"
+        state={state}
+        viewport={viewport}
+        {...defined({ checksTop })}
+      />
     ),
   })
-  const tool = <ToolContent state={state} viewport={viewport} />
+  const tool = (
+    <toolContent.Component
+      moklyInstance="tool-content"
+      state={state}
+      viewport={viewport}
+    />
+  )
   const toast = workspaceToast(state, workspace, viewport)
   const palette = workspacePalette(state, viewport, {
     open: { workspace, status },
@@ -218,7 +215,7 @@ export function WorkspaceScreen(props: {
     if (state.palette !== 'closed') {
       return <mobileFrame.Component>{palette}</mobileFrame.Component>
     }
-    const body = {
+    const views = {
       chat: (
         <>
           {tabRow}
@@ -229,20 +226,19 @@ export function WorkspaceScreen(props: {
       tool,
     }
     return (
-      <mobileFrame.Component>
-        {header}
-        {archived ? null : <PullRequestRow bar={bar} />}
-        <div className={styles.mobileBody}>
-          {archived ? body.chat : body[state.focus]}
-        </div>
-        {archived ? null : (
-          <MobileTabBar
-            selected={state.focus === 'tool' ? state.tool : state.focus}
-          />
-        )}
-        {overlay}
-        {toast}
-      </mobileFrame.Component>
+      <WorkspaceMobile
+        archived={archived}
+        bar={bar}
+        header={header}
+        overlay={overlay}
+        selected={state.focus === 'tool' ? state.tool : state.focus}
+        toast={toast}
+        body={
+          <div className={styles.mobileBody}>
+            {archived ? views.chat : views[state.focus]}
+          </div>
+        }
+      />
     )
   }
   const file = openFile(state)
@@ -260,20 +256,14 @@ export function WorkspaceScreen(props: {
         ...(admin ? {} : { person: people[memberViewer] }),
       }}
       sidebar={workspaceSidebar({
-        // The toast of an Archive shows at once, so the row shows that Archive.
-        workspace:
-          state.toast === 'archived'
-            ? { ...workspace, updated: 'now' }
-            : workspace,
+        state,
+        workspace,
         status,
-        suspended,
         viewer: membership,
-        changed: changedWorkspaces(state),
-        restoreOpen: state.archive === 'kept',
         shortcuts: props.shortcuts,
       })}
     >
-      <WorkspaceBody
+      <workspaceBody.Component
         center={
           file ? (
             <FilePage placeholder={filePlaceholder(state, true)} view={file} />
@@ -282,17 +272,26 @@ export function WorkspaceScreen(props: {
           )
         }
         files={files}
-        filesShare={state.resize === 'split' ? raisedSplit : undefined}
         header={header}
-        pullRequest={<PullRequestBar bar={bar} workspace={workspace} />}
-        rightHidden={rightHidden}
-        rightWidth={state.resize === 'right' ? widenedRight : undefined}
-        tabs={tabRow}
-        tools={
-          archived ? undefined : (
-            <ToolsPanel tool={state.tool}>{tool}</ToolsPanel>
-          )
+        moklyInstance="workspace-body"
+        pullRequest={
+          <pullRequestBar.Component
+            bar={plainData(bar)}
+            moklyInstance="pull-request-bar"
+            workspace={workspace}
+          />
         }
+        rightHidden={rightHidden}
+        tabs={tabRow}
+        {...defined({
+          filesShare: state.resize === 'split' ? raisedSplit : undefined,
+          rightWidth: state.resize === 'right' ? widenedRight : undefined,
+          tools: archived ? undefined : (
+            <toolsPanel.Component moklyInstance="tools-panel" tool={state.tool}>
+              {tool}
+            </toolsPanel.Component>
+          ),
+        })}
       />
     </appFrame.Component>
   )

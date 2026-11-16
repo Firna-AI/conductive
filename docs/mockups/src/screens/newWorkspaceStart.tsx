@@ -2,10 +2,8 @@ import { ChevronDown, Sparkles } from 'lucide-react'
 import { actionButton } from '../entries/components/common/actions.mockup'
 import { menu } from '../entries/components/common/Menu.mockup'
 import type { MenuEntryData } from '../entries/components/common/menuEntries'
-import {
-  ChooseRepositoriesButton,
-  chooseRepositoriesFirst,
-} from '../components/new-workspace/notices'
+import { chooseRepositoriesFirst } from '../components/new-workspace/notices'
+import { chooseRepositoriesButton } from '../entries/components/new-workspace/notices.mockup'
 import { formWait } from '../components/new-workspace/waitingRepository'
 import type { PageOrg } from './newWorkspacePageParts'
 import styles from './NewWorkspaceScreen.module.css'
@@ -74,7 +72,7 @@ export function Start(props: {
       {props.chosen ? (
         <RepositoryPicker menu={props.menu} repository={page.repository.name} />
       ) : props.admin ? (
-        <ChooseRepositoriesButton />
+        <chooseRepositoriesButton.Component />
       ) : null}
       {props.chosen && ready && page.built ? (
         <p className={styles.note}>

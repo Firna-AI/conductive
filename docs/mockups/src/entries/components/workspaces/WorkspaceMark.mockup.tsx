@@ -1,34 +1,6 @@
 import { defineComponent } from '@mokly/mokly'
-import type { GitHubSummary } from '../../../../../../src/shared/generated/GitHubSummary'
 import { WorkspaceMark } from '../../../components/workspaces/WorkspaceMark'
-import type { ActivityStatus } from '../../../fixtures/workspaces'
-
-/**
- * The GitHub states of a pull request that the mark shows in colour. A
- * state that a screen passes and this list leaves out fails the build.
- */
-const githubStates = [
-  'checks-running',
-  'checks-failed',
-  'ready-to-merge',
-  'merged',
-  'conflict',
-  'changes-requested',
-  'draft',
-  'blocked',
-] as const satisfies readonly GitHubSummary[]
-
-/** The states of a workspace that the mark shows. */
-const activityStatuses = [
-  'working',
-  'input',
-  'unread',
-  'ready',
-  'starting',
-  'stopped',
-  'error',
-  'archived',
-] as const satisfies readonly ActivityStatus[]
+import { activityStatuses, githubSchema } from './workspaceSchemas'
 
 /**
  * The list mark of a workspace, registered with Mokly. Mockup-only parts
@@ -55,8 +27,7 @@ export const workspaceMark = defineComponent({
     additionalProperties: false,
     required: ['github', 'status'],
     properties: {
-      /** The GitHub state of the pull request, or `null` without one. */
-      github: { enum: [...githubStates, null] },
+      github: githubSchema,
       status: { enum: activityStatuses },
     },
   } as const,
